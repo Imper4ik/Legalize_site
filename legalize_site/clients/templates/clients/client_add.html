@@ -1,0 +1,12 @@
+{% extends "clients/base.html" %}
+{% block title %}Добавить клиента{% endblock %}
+{% block content %}
+<h1>Добавить клиента</h1>
+<form method="post">
+  {% csrf_token %}
+  <table>
+    {{ form.as_table }}
+  </table>
+  <button type="submit">Сохранить</button>
+</form>
+{% endblock %}

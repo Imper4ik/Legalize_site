@@ -1,0 +1,14 @@
+{% extends "clients/base.html" %}
+
+{% block title %}Подтверждение удаления документа{% endblock %}
+
+{% block content %}
+  <h2>Удалить документ?</h2>
+  <p>Вы уверены, что хотите удалить документ "{{ document.get_doc_type_display }}" клиента {{ document.client.first_name }} {{ document.client.last_name }}?</p>
+
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit">Да, удалить</button>
+    <a href="{% url 'client_detail' document.client.id %}">Отмена</a>
+  </form>
+{% endblock %}

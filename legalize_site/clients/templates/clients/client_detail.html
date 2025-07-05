@@ -1,0 +1,53 @@
+{% extends "clients/base.html" %}
+{% load document_tags %}
+
+{% block content %}
+<div style="display: flex; gap: 40px;">
+
+  <!-- Левая колонка: документы -->
+  <div style="width: 40%; border-right: 1px solid #ccc; padding-right: 20px;">
+    <h2>Документы</h2>
+      <ul style="list-style: none; padding: 0;">
+        {% for doc_type, doc_name in docs %}
+          <li style="margin-bottom: 15px;">
+            <strong>{{ doc_name }}</strong><br>
+
+            {% with doc=client.documents|get_by_type:doc_type %}
+              {% if doc %}
+                <a href="{{ doc.file.url }}" target="_blank">Просмотреть файл</a> |
+                <a href="{% url 'document_edit' doc.id %}">Редактировать</a> |
+                <a href="{% url 'delete_document' doc.pk %}" onclick="return confirm('Удалить документ?')">Удалить</a><br>
+                <label>
+                  <input type="checkbox" {% if doc.is_provided %}checked{% endif %} disabled>
+                  Сдано
+                </label>
+              {% else %}
+                <span style="color: #888;">Не предоставлен</span>
+              {% endif %}
+            {% endwith %}
+          </li>
+        {% endfor %}
+      </ul>
+
+  </div>
+
+  <!-- Правая колонка: данные клиента -->
+  <div style="width: 55%; padding-left: 20px;">
+    <h2>Информация о клиенте</h2>
+    <p><strong>Имя:</strong> {{ client.first_name }}</p>
+    <p><strong>Фамилия:</strong> {{ client.last_name }}</p>
+    <p><strong>Гражданство:</strong> {{ client.citizenship }}</p>
+    <p><strong>Телефон:</strong> {{ client.phone }}</p>
+    <p><strong>Email:</strong> {{ client.email }}</p>
+    <p><strong>Основание:</strong> {{ client.get_legal_basis_display }}</p>
+    <p><strong>Язык:</strong> {{ client.get_language_display }}</p>
+    <p><strong>Статус:</strong> {{ client.get_status_display }}</p>
+    <p><strong>Дата создания:</strong> {{ client.created_at|date:"d.m.Y H:i" }}</p>
+
+    <!-- Можно добавить кнопку для редактирования клиента -->
+    <a href="{% url 'client_edit' client.id %}">Редактировать клиента</a>
+
+  </div>
+
+</div>
+{% endblock %}

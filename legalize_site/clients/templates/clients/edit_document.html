@@ -1,0 +1,13 @@
+{% extends "clients/base.html" %}
+
+{% block content %}
+<h2>Редактировать документ {{ document.get_doc_type_display }} для {{ document.client.first_name }} {{ document.client.last_name }}</h2>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Сохранить</button>
+</form>
+
+<a href="{{ document.client.get_absolute_url }}">← Назад к профилю клиента</a>
+{% endblock %}

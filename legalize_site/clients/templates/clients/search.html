@@ -1,0 +1,28 @@
+{% extends "clients/base.html" %}
+
+{% block title %}Поиск клиентов{% endblock %}
+
+{% block content %}
+<h1>Поиск клиентов</h1>
+
+<form method="get">
+    <input type="text" name="q" placeholder="Введите имя, фамилию, email..." value="{{ query }}">
+    <button type="submit">Искать</button>
+</form>
+
+{% if results %}
+    <h2>Результаты:</h2>
+    <ul>
+    {% for client in results %}
+      <li>
+        <a href="{{ client.get_absolute_url }}">
+          {{ client.first_name }} {{ client.last_name }} — {{ client.email }} ({{ client.phone }})
+        </a>
+      </li>
+    {% endfor %}
+    </ul>
+
+{% elif query %}
+    <p>Ничего не найдено по запросу "{{ query }}".</p>
+{% endif %}
+{% endblock %}
