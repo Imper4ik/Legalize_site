@@ -1,0 +1,15 @@
+{% extends "clients/base.html" %}
+
+{% block title %}Добавить документ{% endblock %}
+
+{% block content %}
+<h2>Добавить документ для {{ client.first_name }} {{ client.last_name }}</h2>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Сохранить</button>
+</form>
+
+<a href="{% url 'client_detail' client.id %}">← Назад к профилю</a>
+{% endblock %}

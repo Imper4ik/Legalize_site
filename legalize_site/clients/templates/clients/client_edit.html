@@ -1,0 +1,84 @@
+{% extends "clients/base.html" %}
+
+{% block content %}
+<h2>Редактировать клиента</h2>
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  <fieldset>
+    <legend>Данные клиента</legend>
+    {{ form.as_p }}
+  </fieldset>
+
+  <fieldset id="formset-area">
+    <legend>Документы</legend>
+
+    {{ formset.management_form }}
+
+    {% for doc_form in formset %}
+      <div class="doc-form" style="display: flex; gap: 20px; align-items: center; margin-bottom: 20px; border: 1px solid #ccc; padding: 10px; border-radius: 10px;">
+        <div>
+          {{ doc_form.doc_type.label_tag }}<br>
+          {{ doc_form.doc_type }}
+        </div>
+        <div>
+          {{ doc_form.file.label_tag }}<br>
+          {{ doc_form.file }}
+        </div>
+        <div>
+          {{ doc_form.is_provided.label_tag }}<br>
+          {{ doc_form.is_provided }}
+        </div>
+        <div>
+          {{ doc_form.DELETE.label_tag }}<br>
+          {{ doc_form.DELETE }}
+        </div>
+      </div>
+    {% endfor %}
+
+    <button type="button" id="add-document-btn">➕ Добавить документ</button>
+  </fieldset>
+
+  <button type="submit">💾 Сохранить</button>
+</form>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const addBtn = document.getElementById("add-document-btn");
+    const formsetArea = document.getElementById("formset-area");
+    const totalForms = document.querySelector("#id_form-TOTAL_FORMS");
+
+    addBtn.addEventListener("click", function () {
+        const formCount = parseInt(totalForms.value);
+        const formExample = document.querySelector(".doc-form");
+
+        if (!formExample) return;
+
+        const newForm = formExample.cloneNode(true);
+
+        newForm.querySelectorAll("input, select").forEach(input => {
+            const name = input.name.replace(/form-\d+-/, `form-${formCount}-`);
+            const id = input.id.replace(/form-\d+-/, `form-${formCount}-`);
+
+            input.name = name;
+            input.id = id;
+
+            if (input.type === "checkbox") {
+                input.checked = false;
+            } else {
+                input.value = "";
+            }
+        });
+
+        newForm.querySelectorAll("label").forEach(label => {
+            const newFor = label.htmlFor?.replace(/form-\d+-/, `form-${formCount}-`);
+            if (newFor) label.htmlFor = newFor;
+        });
+
+        formsetArea.insertBefore(newForm, addBtn);
+        totalForms.value = formCount + 1;
+    });
+});
+</script>
+{% endblock %}
