@@ -1,34 +1,65 @@
 {% extends "base.html" %}
+
 {% block title %}Список клиентов{% endblock %}
+
 {% block content %}
-<h1>Список клиентов</h1>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Список клиентов</h1>
+    <a href="{% url 'client_add' %}" class="btn btn-primary">Добавить нового клиента</a>
+  </div>
 
-<form method="get" action="{% url 'client_list' %}">
-    <input type="text" name="q" placeholder="Поиск клиентов" value="{{ query }}">
-    <button type="submit">Найти</button>
-    {% if query %}
-        <a href="{% url 'client_list' %}">Сбросить</a>
-    {% endif %}
-</form>
+  <form method="get" class="mb-4">
+    <div class="input-group">
+      <input type="text" name="q" class="form-control" placeholder="Поиск..." value="{{ query }}">
+      <button class="btn btn-outline-secondary" type="submit">Найти</button>
+    </div>
+  </form>
 
-<table border="1" cellpadding="5" cellspacing="0">
-  <thead>
-    <tr>
-      <th>Имя</th>
-      <th>Телефон</th>
-      <th>Детали</th>
-    </tr>
-  </thead>
-  <tbody>
-  {% for client in clients %}
-    <tr>
-      <td>{{ client.first_name }} {{ client.last_name }}</td>
-      <td>{{ client.phone }}</td>
-      <td><a href="{% url 'client_detail' client.pk %}">Подробнее</a></td>
-    </tr>
-  {% empty %}
-    <tr><td colspan="3">Клиенты не найдены</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
+  <table class="table table-hover align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>Email</th>
+        <th>Полное имя</th>
+        <th>Основание и дата окончания</th>
+        <th style="width: 30%;">Uwagi / Заметки</th>
+        <th>Телефон</th>
+        <th>Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for client in clients %}
+        <tr>
+          <td>{{ client.email }}</td>
+          <td>{{ client.first_name }} {{ client.last_name }}</td>
+
+          <td>
+            {{ client.basis_of_stay|default:"—" }}
+            {% if client.legal_basis_end_date %}
+              <br>
+              <small class="text-muted">до {{ client.legal_basis_end_date|date:"d.m.Y" }}</small>
+            {% endif %}
+          </td>
+
+          <td>
+            <form action="{% url 'update_client_notes' pk=client.pk %}" method="post" class="d-flex align-items-center">
+              {% csrf_token %}
+              <input type="text" name="notes" class="form-control form-control-sm" value="{{ client.notes|default:'' }}" placeholder="Добавить заметку...">
+              <button type="submit" class="btn btn-success btn-sm ms-2">✓</button>
+            </form>
+          </td>
+
+          <td>{{ client.phone }}</td>
+          <td>
+            <a href="{% url 'client_detail' pk=client.pk %}" class="btn btn-info btn-sm">Подробнее</a>
+            <a href="{% url 'client_delete' pk=client.pk %}" class="btn btn-danger btn-sm">Удалить</a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="6" class="text-center">Клиенты не найдены.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
 {% endblock %}
