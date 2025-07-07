@@ -1,21 +1,21 @@
+# clients/urls.py
+
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.home, name='home'),  # главная страница
-    path('search/', views.client_search, name='client_search'),
-    path('clients/', views.client_list, name='client_list'),
+    # Маршрут для главной страницы и списка клиентов
+    path('', views.client_list, name='client_list'),
 
-    # Клиенты
+    # Маршруты для работы с клиентами
+    path('client/add/', views.client_add, name='client_add'),
     path('client/<int:pk>/', views.client_detail, name='client_detail'),
     path('client/<int:pk>/edit/', views.client_edit, name='client_edit'),
-    path('client/add/', views.client_add, name='client_add'),
 
+    # Маршруты для работы с документами
+    # Этот URL позволяет добавлять файл для конкретного типа документа
+    path('client/<int:client_id>/add_document/<str:doc_type>/', views.add_document, name='add_document'),
 
-
-    # Документы
-    path('document/<int:pk>/edit/', views.edit_document, name='document_edit'),
-    path('document/<int:pk>/delete/', views.document_delete, name='delete_document'),
-    path('clients/<int:client_id>/add_document/', views.add_document, name='add_document'),
-    path('client/<int:client_id>/update_documents/', views.update_documents, name='update_documents'),
+    # Этот URL удаляет конкретный загруженный файл (по его ID)
+    path('document/<int:pk>/delete/', views.document_delete, name='document_delete'),
 ]

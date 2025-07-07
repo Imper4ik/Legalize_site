@@ -58,11 +58,16 @@ class Document(models.Model):
         ('other', 'Другое'),
     ]
 
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='documents')
-    doc_type = models.CharField(max_length=50, choices=DOC_TYPES)
+    client = models.ForeignKey('Client', on_delete=models.CASCADE, related_name='documents')
+    document_type = models.CharField(max_length=50, choices=DOC_TYPES)
     file = models.FileField(upload_to='documents/')
-    is_provided = models.BooleanField(default=False)  # добавлен чекбокс
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        verbose_name = ("Document")
+        verbose_name_plural = ("Documents")
+        # УДАЛИТЕ ИЛИ ЗАКОММЕНТИРУЙТЕ ЭТУ СТРОКУ
+        # unique_together = ('client', 'document_type')
+
     def __str__(self):
-        return f"{self.get_doc_type_display()} для {self.client}"
+        return f"{self.get_document_type_display()} for {self.client}"
