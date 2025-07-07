@@ -16,11 +16,11 @@
           <div class="card-body">
             <div class="mb-3">
               <label for="start_date" class="form-label">Дата начала обучения</label>
-              <input type="date" class="form-control" name="start_date" value="{{ form_data.start_date }}" required>
+              <input type="text" class="form-control" name="start_date" id="start_date_input" value="{{ form_data.start_date }}" placeholder="дд.мм.гггг" required>
             </div>
             <div class="mb-3">
               <label for="end_date" class="form-label">Дата окончания обучения</label>
-              <input type="date" class="form-control" name="end_date" value="{{ form_data.end_date }}" required>
+              <input type="text" class="form-control" name="end_date" id="end_date_input" value="{{ form_data.end_date }}" placeholder="дд.мм.гггг" required>
             </div>
             <div class="mb-3">
               <label for="monthly_fee" class="form-label">Стоимость обучения в месяц (zł)</label>
@@ -30,25 +30,25 @@
         </div>
 
         <div class="card">
-          <div class="card-header">Часть 2: Расчёт расходов на проживание</div>
-          <div class="card-body">
-            <div class="mb-3">
-              <label for="rent" class="form-label">Стоимость аренды жилья в месяц (zł)</label>
-              <input type="number" step="0.01" class="form-control" name="rent" value="{{ form_data.rent }}" required>
+            <div class="card-header">Часть 2: Расчёт расходов на проживание</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="rent" class="form-label">Стоимость аренды жилья в месяц (zł)</label>
+                    <input type="number" step="0.01" class="form-control" name="rent" value="{{ form_data.rent }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="num_people" class="form-label">Количество человек</label>
+                    <input type="number" class="form-control" name="num_people" value="{{ form_data.num_people|default:1 }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="months_living" class="form-label">Количество месяцев пребывания</label>
+                    <input type="number" class="form-control" name="months_living" value="{{ form_data.months_living|default:12 }}" required>
+                </div>
+                <div class="mb-3">
+                    <label for="return_ticket" class="form-label">Стоимость обратного билета (zł)</label>
+                    <input type="number" step="0.01" class="form-control" name="return_ticket" value="{{ form_data.return_ticket|default:2500 }}" required>
+                </div>
             </div>
-            <div class="mb-3">
-              <label for="num_people" class="form-label">Количество человек</label>
-              <input type="number" class="form-control" name="num_people" value="{{ form_data.num_people|default:1 }}" required>
-            </div>
-            <div class="mb-3">
-              <label for="months_living" class="form-label">Количество месяцев пребывания</label>
-              <input type="number" class="form-control" name="months_living" value="{{ form_data.months_living|default:12 }}" required>
-            </div>
-            <div class="mb-3">
-              <label for="return_ticket" class="form-label">Стоимость обратного билета (zł)</label>
-              <input type="number" step="0.01" class="form-control" name="return_ticket" value="{{ form_data.return_ticket|default:2500 }}" required>
-            </div>
-          </div>
         </div>
 
         <button type="submit" class="btn btn-primary mt-4 w-100">Рассчитать итоговую сумму</button>
@@ -56,31 +56,31 @@
 
       <div class="col-lg-5">
         {% if results %}
-          <div class="card sticky-top" style="top: 20px;">
-            <div class="card-header">Результат расчёта</div>
-            <div class="card-body">
-              <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex justify-content-between">
-                  <span>1. Расходы на проживание и аренду:</span>
-                  <strong>{{ results.total_living_expenses }} zł</strong>
-                </li>
-                <li class="list-group-item d-flex justify-content-between">
-                  <span>2. Полная стоимость обучения (за {{ results.num_months_tuition }} мес.):</span>
-                  <strong>{{ results.total_tuition }} zł</strong>
-                </li>
-                <li class="list-group-item d-flex justify-content-between">
-                  <span>3. Стоимость обратного билета:</span>
-                  <strong>{{ results.return_ticket }} zł</strong>
-                </li>
-              </ul>
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header">Результат расчёта</div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>1. Расходы на проживание и аренду:</span>
+                            <strong>{{ results.total_living_expenses }} zł</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>2. Полная стоимость обучения (за {{ results.num_months_tuition }} мес.):</span>
+                            <strong>{{ results.total_tuition }} zł</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>3. Стоимость обратного билета:</span>
+                            <strong>{{ results.return_ticket }} zł</strong>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-success text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Итоговая сумма на счету:</h5>
+                        <h4 class="mb-0">{{ results.final_total_required }} zł</h4>
+                    </div>
+                </div>
             </div>
-            <div class="card-footer bg-success text-white">
-              <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Итоговая сумма на счету:</h5>
-                <h4 class="mb-0">{{ results.final_total_required }} zł</h4>
-              </div>
-            </div>
-          </div>
         {% else %}
             <div class="alert alert-info">
                 Заполните все поля слева и нажмите "Рассчитать", чтобы увидеть результат.
@@ -89,4 +89,15 @@
       </div>
     </div>
   </form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  flatpickr("#start_date_input", {
+    dateFormat: "d.m.Y",
+  });
+  flatpickr("#end_date_input", {
+    dateFormat: "d.m.Y",
+  });
+</script>
 {% endblock %}
