@@ -1,5 +1,7 @@
 {% extends "base.html" %}
-{% load form_filters %} {% block title %}{{ title }}{% endblock %}
+{# Больше не нужен {% load form_filters %} #}
+
+{% block title %}{{ title }}{% endblock %}
 
 {% block content %}
   <h1>{{ title }}</h1>
@@ -13,8 +15,7 @@
 
           {% if field.name == 'legal_basis_end_date' %}
             <div class="input-group" id="date_picker_wrapper">
-              {{ field|add_attr:"data-input" }}
-              <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle>
+              {{ field }} <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle>
                 <i class="bi bi-calendar3"></i>
               </a>
             </div>
@@ -37,12 +38,12 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-  flatpickr("#date_picker_wrapper", {
-    wrap: true,
-    dateFormat: "d.m.Y",
-    allowInput: true,
-    clickOpens: false,
-  });
-</script>
+  {{ block.super }} <script>
+    flatpickr("#date_picker_wrapper", {
+      wrap: true,
+      dateFormat: "d.m.Y",
+      allowInput: true,
+      clickOpens: false,
+    });
+  </script>
 {% endblock %}
