@@ -7,18 +7,20 @@ class ClientForm(forms.ModelForm):
     # Явно переопределяем поле для даты
     legal_basis_end_date = forms.DateField(
         label="Дата окончания основания",
-        required=False,  # Поле не обязательное
-        # Указываем, что мы ожидаем дату в этом формате
+        required=False,
         input_formats=['%d.%m.%Y'],
-        # Используем обычное текстовое поле, чтобы наш календарь мог с ним работать
-        widget=forms.TextInput(attrs={'placeholder': 'дд.мм.гггг'})
+        # ИЗМЕНЕНИЕ ЗДЕСЬ: добавляем все нужные атрибуты прямо в виджет
+        widget=forms.TextInput(attrs={
+            'placeholder': 'дд.мм.гггг',
+            'data-input': ''  # Атрибут, который ищет flatpickr
+        })
     )
 
     class Meta:
         model = Client
-        fields = '__all__' # Включаем все поля модели
+        fields = '__all__'
 
-    # Этот метод добавит красивые стили Bootstrap ко всем полям
+    # Этот метод добавляет стили Bootstrap ко всем полям
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():

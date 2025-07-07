@@ -51,17 +51,14 @@
 
     {% block extra_js %}
         <script>
+            // Этот скрипт будет выполняться на всех страницах
             document.addEventListener('DOMContentLoaded', (event) => {
-                // Find all dismissible alerts
                 const alerts = document.querySelectorAll('.alert-dismissible');
-
                 alerts.forEach(function(alert) {
-                    // Set a timeout to close the alert
                     setTimeout(function() {
-                        // Use Bootstrap's Alert instance to close it smoothly
                         const bsAlert = new bootstrap.Alert(alert);
                         bsAlert.close();
-                    }, 5000); // 5000 milliseconds = 3 seconds
+                    }, 3000);
                 });
             });
         </script>
