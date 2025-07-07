@@ -1,6 +1,5 @@
 {% extends "base.html" %}
-
-{% block title %}{{ title }}{% endblock %}
+{% load form_filters %} {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
   <h1>{{ title }}</h1>
@@ -43,6 +42,7 @@
     wrap: true,
     dateFormat: "d.m.Y",
     allowInput: true,
+    clickOpens: false,
   });
 </script>
 {% endblock %}
