@@ -11,7 +11,18 @@
       {% for field in form %}
         <div class="col-md-6 mb-3">
           <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-          {{ field }}
+
+          {% if field.name == 'legal_basis_end_date' %}
+            <div class="input-group" id="date_picker_wrapper">
+              {{ field|add_attr:"data-input" }}
+              <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle>
+                <i class="bi bi-calendar3"></i>
+              </a>
+            </div>
+          {% else %}
+            {{ field }}
+          {% endif %}
+
           {% for error in field.errors %}
             <div class="alert alert-danger mt-1 p-2">
               {{ error }}
@@ -28,7 +39,8 @@
 
 {% block extra_js %}
 <script>
-  flatpickr("#id_legal_basis_end_date", {
+  flatpickr("#date_picker_wrapper", {
+    wrap: true,
     dateFormat: "d.m.Y",
     allowInput: true,
   });
