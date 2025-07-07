@@ -1,25 +1,17 @@
+# clients/admin.py
+
 from django.contrib import admin
-
-# Register your models here.
-
 from .models import Client, Document
-
-
-class DocumentInline(admin.TabularInline):
-    model = Document
-    extra = 1
-
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    list_display = ('first_name', 'last_name', 'citizenship', 'phone', 'email', 'status', 'created_at')
-    list_filter = ('status',)
-    search_fields = ('first_name', 'last_name', 'citizenship', 'phone', 'email')
-    inlines = [DocumentInline]
-
-
+    list_display = ('first_name', 'last_name', 'email', 'phone', 'status', 'created_at')
+    list_filter = ('status', 'legal_basis', 'language')
+    search_fields = ('first_name', 'last_name', 'email', 'phone')
 
 @admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):
-    list_display = ('doc_type', 'client', 'uploaded_at')
-
+    # ИСПРАВЛЕНИЕ ЗДЕСЬ: 'doc_type' -> 'document_type'
+    list_display = ('client', 'document_type', 'uploaded_at')
+    list_filter = ('document_type',)
+    search_fields = ('client__first_name', 'client__last_name')
