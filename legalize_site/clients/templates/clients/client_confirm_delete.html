@@ -1,0 +1,24 @@
+\{% extends "base.html" %}
+
+{% block title %}Подтверждение удаления{% endblock %}
+
+{% block content %}
+  <div class="card border-danger">
+    <div class="card-header bg-danger text-white">
+      Подтверждение удаления
+    </div>
+    <div class="card-body">
+      <h5 class="card-title">Вы уверены, что хотите удалить клиента?</h5>
+      <p class="card-text">
+        <strong>{{ client.first_name }} {{ client.last_name }} ({{ client.email }})</strong>
+      </p>
+      <p class="text-danger">Это действие нельзя будет отменить. Все связанные с клиентом документы также будут удалены.</p>
+
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Да, удалить</button>
+        <a href="{% url 'client_list' %}" class="btn btn-secondary">Отмена</a>
+      </form>
+    </div>
+  </div>
+{% endblock %}

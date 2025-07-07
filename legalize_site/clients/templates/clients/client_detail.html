@@ -1,51 +1,53 @@
 {% extends "base.html" %}
 
-{% block title %}Детали: {{ client.first_name }} {{ client.last_name }}{% endblock %}
+{% block title %}Детали клиента: {{ client.first_name }}{% endblock %}
 
 {% block content %}
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>{{ client.first_name }} {{ client.last_name }}</h1>
-    <a href="{% url 'client_edit' client.pk %}" class="btn btn-secondary">Редактировать данные клиента</a>
-  </div>
-
-  <p><strong>Статус:</strong> {{ client.get_status_display }}</p>
-  <p><strong>Email:</strong> {{ client.email }}</p>
-  <p><strong>Телефон:</strong> {{ client.phone }}</p>
   <hr>
 
-  <h2>Документы</h2>
+  <h2>Чеклист документов</h2>
 
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-success">{{ message }}</div>
-    {% endfor %}
-  {% endif %}
+  <div class="accordion" id="documentAccordion">
+    {% for item in document_status_list %}
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="heading{{ item.code }}">
+          <button class="accordion-button {% if not item.is_uploaded %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ item.code }}" aria-expanded="true" aria-controls="collapse{{ item.code }}">
+            {{ item.name }}
+            {% if item.is_uploaded %}
+              <span class="badge bg-success ms-3">{{ item.documents|length }} шт.</span>
+            {% else %}
+              <span class="badge bg-danger ms-3">Отсутствует</span>
+            {% endif %}
+          </button>
+        </h2>
+        <div id="collapse{{ item.code }}" class="accordion-collapse collapse {% if item.is_uploaded %}show{% endif %}" aria-labelledby="heading{{ item.code }}" data-bs-parent="#documentAccordion">
+          <div class="accordion-body">
 
-  <div class="row">
-    {% for doc_type_name, data in documents_grouped.items %}
-      <div class="col-md-6 mb-4">
-        <div class="card">
-          <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">{{ doc_type_name }}</h5>
-            <a href="{% url 'add_document' client_id=client.id doc_type=data.code %}" class="btn btn-success btn-sm">
-              + Добавить
+            {% if item.is_uploaded %}
+              <ul class="list-group list-group-flush mb-3">
+                {% for doc in item.documents %}
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <a href="{{ doc.file.url }}" target="_blank">
+                      Файл от {{ doc.uploaded_at|date:"d.m.Y H:i" }}
+                    </a>
+                    <a href="{% url 'document_delete' doc.pk %}" class="btn btn-warning btn-sm">Удалить</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% else %}
+              <p class="text-muted">Документы этого типа еще не загружены.</p>
+            {% endif %}
+
+            <a href="{% url 'add_document' client_id=client.id doc_type=item.code %}" class="btn btn-primary btn-sm">
+              + Добавить еще один файл
             </a>
+
           </div>
-          <ul class="list-group list-group-flush">
-            {% for doc in data.files %}
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <a href="{{ doc.file.url }}" target="_blank">
-                  Файл от {{ doc.uploaded_at|date:"d.m.Y H:i" }}
-                </a>
-                <a href="{% url 'document_delete' doc.pk %}" class="btn btn-danger btn-sm">Удалить</a>
-              </li>
-            {% empty %}
-              <li class="list-group-item">
-                <span class="text-muted">Файлы не загружены</span>
-              </li>
-            {% endfor %}
-          </ul>
         </div>
+      </div>
+    {% empty %}
+      <div class="alert alert-warning">
+        Для цели "{{ client.get_application_purpose_display }}" на языке "{{ client.get_language_display }}" чеклист документов не определен.
       </div>
     {% endfor %}
   </div>

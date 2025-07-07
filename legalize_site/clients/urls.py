@@ -4,18 +4,18 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # Маршрут для главной страницы и списка клиентов
+    # Список клиентов (главная страница)
     path('', views.client_list, name='client_list'),
 
-    # Маршруты для работы с клиентами
+    # Работа с клиентами
     path('client/add/', views.client_add, name='client_add'),
     path('client/<int:pk>/', views.client_detail, name='client_detail'),
     path('client/<int:pk>/edit/', views.client_edit, name='client_edit'),
+    path('client/<int:pk>/delete/', views.client_delete, name='client_delete'),
+    path('client/<int:pk>/update_notes/', views.update_client_notes, name='update_client_notes'),
+    path('calculator/', views.calculator_view, name='calculator'),
 
-    # Маршруты для работы с документами
-    # Этот URL позволяет добавлять файл для конкретного типа документа
+    # Работа с документами
     path('client/<int:client_id>/add_document/<str:doc_type>/', views.add_document, name='add_document'),
-
-    # Этот URL удаляет конкретный загруженный файл (по его ID)
     path('document/<int:pk>/delete/', views.document_delete, name='document_delete'),
 ]
