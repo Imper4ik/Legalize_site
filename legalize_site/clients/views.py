@@ -192,3 +192,11 @@ def calculator_view(request):
             messages.error(request, "Ошибка. Пожалуйста, заполните все поля корректными значениями.")
 
     return render(request, 'clients/calculator.html', context)
+
+
+def client_print_view(request, pk):
+    """
+    Готовит страницу с данными клиента для печати.
+    """
+    client = get_object_or_404(Client, pk=pk)
+    return render(request, 'clients/client_printable.html', {'client': client})

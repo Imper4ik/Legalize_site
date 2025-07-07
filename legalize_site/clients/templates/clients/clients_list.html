@@ -10,7 +10,7 @@
 
   <form method="get" class="mb-4">
     <div class="input-group">
-      <input type="text" name="q" class="form-control" placeholder="Поиск..." value="{{ query }}">
+      <input type="text" name="q" class="form-control" placeholder="Поиск по имени, почте или номеру дела..." value="{{ query }}">
       <button class="btn btn-outline-secondary" type="submit">Найти</button>
     </div>
   </form>
@@ -20,9 +20,9 @@
       <tr>
         <th>Email</th>
         <th>Полное имя</th>
+        <th>Номер дела</th>
         <th>Основание и дата окончания</th>
-        <th style="width: 30%;">Uwagi / Заметки</th>
-        <th>Телефон</th>
+        <th style="width: 25%;">Uwagi / Заметки</th>
         <th>Действия</th>
       </tr>
     </thead>
@@ -31,6 +31,8 @@
         <tr>
           <td>{{ client.email }}</td>
           <td>{{ client.first_name }} {{ client.last_name }}</td>
+
+          <td><strong>{{ client.case_number|default:"—" }}</strong></td>
 
           <td>
             {{ client.basis_of_stay|default:"—" }}
@@ -48,7 +50,6 @@
             </form>
           </td>
 
-          <td>{{ client.phone }}</td>
           <td>
             <a href="{% url 'client_detail' pk=client.pk %}" class="btn btn-info btn-sm">Подробнее</a>
             <a href="{% url 'client_delete' pk=client.pk %}" class="btn btn-danger btn-sm">Удалить</a>
@@ -56,7 +57,7 @@
         </tr>
       {% empty %}
         <tr>
-          <td colspan="6" class="text-center">Клиенты не найдены.</td>
+          <td colspan="7" class="text-center">Клиенты не найдены.</td>
         </tr>
       {% endfor %}
     </tbody>
