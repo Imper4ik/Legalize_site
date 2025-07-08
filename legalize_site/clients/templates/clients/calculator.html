@@ -4,60 +4,74 @@
 
 {% block content %}
   <h1>Калькулятор выписки из банка</h1>
-  <p class="text-muted">Рассчитайте полную сумму, необходимую на счету для подачи на карту побыту по учёбе.</p>
+  <p class="text-muted">
+    Введите данные, чтобы рассчитать итоговую сумму на счету.
+    Актуальный курс: <strong>1 EUR = {{ eur_to_pln_rate }} PLN</strong>
+  </p>
 
   <form method="post" class="mt-4">
     {% csrf_token %}
     <div class="row">
       <div class="col-lg-7">
 
-        <div class="card mb-4">
-          <div class="card-header">Часть 1: Расчёт стоимости обучения</div>
-          <div class="card-body">
-            <div class="mb-3">
-              <label for="start_date_input" class="form-label">Дата начала обучения</label>
-              <div class="input-group" id="start_date_picker">
-                <input type="text" class="form-control" name="start_date" value="{{ form_data.start_date }}" placeholder="дд.мм.гггг" data-input required>
-                <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle>
-                  <i class="bi bi-calendar3"></i>
-                </a>
-              </div>
-            </div>
-            <div class="mb-3">
-              <label for="end_date_input" class="form-label">Дата окончания обучения</label>
-              <div class="input-group" id="end_date_picker">
-                <input type="text" class="form-control" name="end_date" value="{{ form_data.end_date }}" placeholder="дд.мм.гггг" data-input required>
-                <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle>
-                  <i class="bi bi-calendar3"></i>
-                </a>
-              </div>
-            </div>
-            <div class="mb-3">
-              <label for="monthly_fee" class="form-label">Стоимость обучения в месяц (zł)</label>
-              <input type="number" step="0.01" class="form-control" name="monthly_fee" value="{{ form_data.monthly_fee }}" required>
-            </div>
-          </div>
-        </div>
-
         <div class="card">
-          <div class="card-header">Часть 2: Расчёт расходов на проживание</div>
           <div class="card-body">
+
             <div class="mb-3">
-              <label for="rent" class="form-label">Стоимость аренды жилья в месяц (zł)</label>
-              <input type="number" step="0.01" class="form-control" name="rent" value="{{ form_data.rent }}" required>
+              <label class="form-label">Когда заканчивается учёба?</label>
+              <div class="input-group" id="total_end_date_picker">
+                <input type="text" class="form-control" name="total_end_date" value="{{ form_data.total_end_date }}" placeholder="дд.мм.гггг" data-input required>
+                <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle><i class="bi bi-calendar3"></i></a>
+              </div>
             </div>
+            <hr>
+
             <div class="mb-3">
-              <label for="num_people" class="form-label">Количество человек в семье</label>
-              <input type="number" class="form-control" name="num_people" value="{{ form_data.num_people|default:1 }}" required>
+              <label class="form-label">Оплата за обучение</label>
+              <div class="input-group">
+                <input type="number" step="0.01" class="form-control" name="tuition_fee" value="{{ form_data.tuition_fee }}" placeholder="Оплаченная сумма" required>
+                <select class="form-select" name="tuition_currency" style="max-width: 100px;">
+                  <option value="PLN" {% if form_data.tuition_currency == 'PLN' %}selected{% endif %}>PLN</option>
+                  <option value="EUR" {% if form_data.tuition_currency == 'EUR' %}selected{% endif %}>EUR</option>
+                </select>
+                <div class="input-group" id="tuition_end_date_picker" style="max-width: 220px;">
+                    <input type="text" class="form-control" name="tuition_end_date" value="{{ form_data.tuition_end_date }}" placeholder="Действует до: дд.мм.гггг" data-input required>
+                    <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle><i class="bi bi-calendar3"></i></a>
+                </div>
+              </div>
             </div>
+            <hr>
+
             <div class="mb-3">
-              <label for="months_living" class="form-label">Количество месяцев пребывания</label>
-              <input type="number" class="form-control" name="months_living" value="{{ form_data.months_living|default:12 }}" required>
+              <label for="rent_and_bills" class="form-label">Аренда + счётчики в месяц</label>
+              <div class="input-group">
+                <input type="number" step="0.01" class="form-control" id="rent_and_bills" name="rent_and_bills" value="{{ form_data.rent_and_bills }}" required>
+                <select class="form-select" name="rent_currency" style="max-width: 100px;">
+                  <option value="PLN" {% if form_data.rent_currency == 'PLN' %}selected{% endif %}>PLN</option>
+                  <option value="EUR" {% if form_data.rent_currency == 'EUR' %}selected{% endif %}>EUR</option>
+                </select>
+              </div>
             </div>
-            <div class="mb-3">
-              <label for="return_ticket" class="form-label">Стоимость обратного билета (zł)</label>
-              <input type="number" step="0.01" class="form-control" name="return_ticket" value="{{ form_data.return_ticket|default:2500 }}" required>
+            <hr>
+
+            <div class="row">
+               <div class="col-md-6 mb-3">
+                  <label for="num_people" class="form-label">Кол-во человек (включая вас)</label>
+                  <input type="number" class="form-control" name="num_people" value="{{ form_data.num_people|default:1 }}" required>
+               </div>
+               <div class="col-md-6 mb-3">
+                  <label for="total_period_months" class="form-label">Срок карты побыту (мес.)</label>
+                  <input type="number" class="form-control" name="total_period_months" value="{{ form_data.total_period_months|default:12 }}" required>
+               </div>
+             </div>
+
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" name="has_border" id="has_border" {% if form_data.has_border %}checked{% endif %}>
+              <label class="form-check-label" for="has_border">
+                Страна граничит с Польшей (билет 500 zł)
+              </label>
             </div>
+
           </div>
         </div>
 
@@ -67,47 +81,40 @@
       <div class="col-lg-5">
         {% if results %}
           <div class="card sticky-top" style="top: 20px;">
-            <div class="card-header">Итоговая сумма на счету:</div>
-            <div class="card-body bg-success text-white">
-                <h3 class="text-center mb-0">{{ results.final_total_required }} zł</h3>
-            </div>
-
+            <div class="card-header"><h5>Детализация расчёта</h5></div>
             <div class="card-body">
-                <h5 class="card-title">Детализация расчёта:</h5>
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item px-0">
-                        <strong>1. Расходы на проживание:</strong>
-                        {% if form_data.num_people == '1' %}
-                            <p class="mb-0 small text-muted">((Аренда + Прожиточный минимум) × Кол-во месяцев)</p>
-                            <p class="mb-0">
-                                (({{ form_data.rent }} + {{ living_cost_single }}) × {{ form_data.months_living }}) = <strong>{{ results.total_living_expenses }} zł</strong>
-                            </p>
-                        {% else %}
-                            <p class="mb-0 small text-muted">((Аренда + (ПМ на 1-го + ПМ на семью × доп. люди)) × Кол-во месяцев)</p>
-                            <p class="mb-0">
-                                (({{ form_data.rent }} + ({{ living_cost_single }} + {{ living_cost_family }} × {{ form_data.num_people|add:"-1" }})) × {{ form_data.months_living }}) = <strong>{{ results.total_living_expenses }} zł</strong>
-                            </p>
-                        {% endif %}
-                    </li>
-                    <li class="list-group-item px-0">
-                        <strong>2. Расходы на обучение:</strong>
-                        <p class="mb-0 small text-muted">(Кол-во месяцев обучения × Стоимость в месяц)</p>
-                         <p class="mb-0">
-                            ({{ results.num_months_tuition }} мес. × {{ form_data.monthly_fee }}) = <strong>{{ results.total_tuition }} zł</strong>
-                        </p>
-                    </li>
-                    <li class="list-group-item px-0">
-                        <strong>3. Расходы на обратный билет:</strong>
-                        <p class="mb-0">
-                           <strong>{{ results.return_ticket }} zł</strong>
-                        </p>
-                    </li>
+
+                <p class="mb-2"><strong>1. Расчёт ежемесячных расходов:</strong></p>
+                <ul class="list-group mb-3">
+                    <li class="list-group-item d-flex justify-content-between"><span>Стоимость жилья:</span> <span>{{ results.monthly_rent_and_bills }} zł</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>Стоимость обучения:</span> <span>{{ results.monthly_tuition }} zł</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>Прожиточный минимум:</span> <span>{{ results.living_allowance }} zł</span></li>
+                    <li class="list-group-item list-group-item-info d-flex justify-content-between"><strong>Итого в месяц:</strong> <strong>{{ results.total_monthly_costs }} zł</strong></li>
                 </ul>
+
+                <p class="mb-2"><strong>2. Расчёт общей суммы на проживание и учёбу:</strong></p>
+                <ul class="list-group mb-3">
+                    <li class="list-group-item d-flex justify-content-between"><span>Ежемесячные расходы:</span> <span>{{ results.total_monthly_costs }} zł</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>Количество месяцев для расчёта:</span> <span>× {{ results.months_for_calc }}</span></li>
+                    <li class="list-group-item list-group-item-info d-flex justify-content-between"><strong>Промежуточный итог:</strong> <strong>{{ results.total_living_and_tuition }} zł</strong></li>
+                </ul>
+
+                <p class="mb-2"><strong>3. Финальный расчёт:</strong></p>
+                <ul class="list-group">
+                    <li class="list-group-item d-flex justify-content-between"><span>Промежуточный итог:</span> <span>{{ results.total_living_and_tuition }} zł</span></li>
+                    <li class="list-group-item d-flex justify-content-between"><span>Стоимость обратного билета:</span> <span>+ {{ results.return_ticket }} zł</span></li>
+                </ul>
+            </div>
+            <div class="card-footer bg-success text-white">
+              <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Итоговая сумма на счету:</h5>
+                <h4 class="mb-0">{{ results.final_total_required }} zł</h4>
+              </div>
             </div>
           </div>
         {% else %}
             <div class="alert alert-info">
-                Заполните все поля слева и нажмите "Рассчитать", чтобы увидеть результат.
+                Заполните все поля и нажмите "Рассчитать", чтобы увидеть результат.
             </div>
         {% endif %}
       </div>
@@ -116,18 +123,9 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-  flatpickr("#start_date_picker", {
-    wrap: true,
-    dateFormat: "d.m.Y",
-    allowInput: true,
-    clickOpens: false,
-  });
-  flatpickr("#end_date_picker", {
-    wrap: true,
-    dateFormat: "d.m.Y",
-    allowInput: true,
-    clickOpens: false,
-  });
-</script>
+  {{ block.super }}
+  <script>
+    flatpickr("#total_end_date_picker", { wrap: true, dateFormat: "d.m.Y", allowInput: true, clickOpens: false });
+    flatpickr("#tuition_end_date_picker", { wrap: true, dateFormat: "d.m.Y", allowInput: true, clickOpens: false });
+  </script>
 {% endblock %}

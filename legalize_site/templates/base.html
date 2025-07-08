@@ -32,7 +32,7 @@
         </nav>
     </header>
 
-    <main class="container">
+    <main class="container mb-5">
         {% if messages %}
             {% for message in messages %}
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -51,7 +51,6 @@
 
     {% block extra_js %}
         <script>
-            // Этот скрипт будет выполняться на всех страницах
             document.addEventListener('DOMContentLoaded', (event) => {
                 const alerts = document.querySelectorAll('.alert-dismissible');
                 alerts.forEach(function(alert) {
