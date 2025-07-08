@@ -27,24 +27,39 @@
         <h5 class="mb-3">Детали дела</h5>
         <div class="p-3 rounded mb-4" style="background-color: #e7f3ff;">
           <div class="row">
-            <div class="col-md-6 mb-3"><label class="form-label">{{ form.case_number.label }}</label>{{ form.case_number }}</div>
-            <div class="col-md-6 mb-3"><label class="form-label">{{ form.status.label }}</label>{{ form.status }}</div>
+            {% if form.case_number %}
+              <div class="col-md-6 mb-3"><label class="form-label">{{ form.case_number.label }}</label>{{ form.case_number }}</div>
+            {% endif %}
+            {% if form.status %}
+              <div class="col-md-6 mb-3"><label class="form-label">{{ form.status.label }}</label>{{ form.status }}</div>
+            {% endif %}
             <div class="col-md-6 mb-3"><label class="form-label">{{ form.application_purpose.label }}</label>{{ form.application_purpose }}</div>
             <div class="col-md-6 mb-3"><label class="form-label">{{ form.language.label }}</label>{{ form.language }}</div>
             <div class="col-md-6 mb-3"><label class="form-label">{{ form.basis_of_stay.label }}</label>{{ form.basis_of_stay }}</div>
-
             <div class="col-md-6 mb-3">
-              <label for="id_legal_basis_end_date" class="form-label">{{ form.legal_basis_end_date.label }}</label>
-              <div class="input-group" id="date_picker_wrapper">
-                <input type="text" name="legal_basis_end_date" class="form-control"
-                       value="{{ form.legal_basis_end_date.value|default:'' }}"
-                       placeholder="дд.мм.гггг" data-input>
-                <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle>
-                  <i class="bi bi-calendar3"></i>
-                </a>
+              <label class="form-label">{{ form.legal_basis_end_date.label }}</label>
+              <div class="input-group" id="legal_basis_end_date_picker">
+                {{ form.legal_basis_end_date }}
+                <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle><i class="bi bi-calendar3"></i></a>
               </div>
             </div>
-
+            <div class="col-md-6 mb-3"><label class="form-label">{{ form.employer_phone.label }}</label>{{ form.employer_phone }}</div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">{{ form.submission_date.label }}</label>
+              <div class="input-group" id="submission_date_picker">
+                {{ form.submission_date }}
+                <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle><i class="bi bi-calendar3"></i></a>
+              </div>
+            </div>
+            {% if form.fingerprints_date %}
+              <div class="col-md-6 mb-3">
+                <label class="form-label">{{ form.fingerprints_date.label }}</label>
+                <div class="input-group" id="fingerprints_date_picker">
+                  {{ form.fingerprints_date }}
+                  <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle><i class="bi bi-calendar3"></i></a>
+                </div>
+              </div>
+            {% endif %}
           </div>
         </div>
 
@@ -53,8 +68,8 @@
             <div class="editor-toolbar border rounded-top p-2 bg-light">
                 <button type="button" class="btn btn-light btn-sm format-button" data-format="bold" title="Жирный"><b>B</b></button>
             </div>
-            <div class="form-control notes-editor-main" id="notes-editor" contenteditable="true" style="height: 120px;">{{ form.notes.value|safe|default:'' }}</div>
-            <input type="hidden" name="notes" id="id_notes_hidden" value="{{ form.notes.value|default:'' }}">
+            <div class="form-control notes-editor-main" id="notes-editor" contenteditable="true" style="height: 120px;">{% if form.notes.value %}{{ form.notes.value|safe }}{% endif %}</div>
+            <input type="hidden" name="notes" id="id_notes_hidden">
         </div>
 
         {% if form.errors %}
@@ -76,18 +91,21 @@
   {{ block.super }}
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // СКРИПТ ДЛЯ КАЛЕНДАРЯ (теперь он будет работать)
-      flatpickr("#date_picker_wrapper", {
-        wrap: true,
-        dateFormat: "d.m.Y",
-        allowInput: true,
-        clickOpens: false,
-      });
+      // Инициализация календарей
+      flatpickr("#legal_basis_end_date_picker", { wrap: true, dateFormat: "d.m.Y", allowInput: true, clickOpens: false });
+      flatpickr("#fingerprints_date_picker", { wrap: true, dateFormat: "d.m.Y", allowInput: true, clickOpens: false });
+      flatpickr("#submission_date_picker", { wrap: true, dateFormat: "d.m.Y", allowInput: true, clickOpens: false });
 
-      // ... (скрипт для редактора заметок) ...
+      // Логика для редактора заметок
       const mainEditor = document.getElementById('notes-editor');
       const hiddenInput = document.getElementById('id_notes_hidden');
       const form = mainEditor.closest('form');
+
+      // Устанавливаем начальное значение для скрытого поля, если оно есть
+      if (mainEditor.innerHTML) {
+          hiddenInput.value = mainEditor.innerHTML;
+      }
+
       document.querySelector('.format-button[data-format="bold"]').addEventListener('click', function(e) { e.preventDefault(); document.execCommand('bold', false, null); mainEditor.focus(); });
       if (form) { form.addEventListener('submit', function() { if (hiddenInput && mainEditor) { hiddenInput.value = mainEditor.innerHTML; } }); }
     });

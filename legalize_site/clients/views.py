@@ -134,6 +134,16 @@ from dateutil.relativedelta import relativedelta
 # ... (остальные импорты и представления) ...
 
 
+# clients/views.py
+
+from django.shortcuts import render
+from django.contrib import messages
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+
+
+# ... (other imports and views) ...
+
 def calculator_view(request):
     # --- КОНСТАНТЫ ---
     LIVING_ALLOWANCE = 1010
@@ -150,24 +160,23 @@ def calculator_view(request):
 
     if request.method == 'POST':
         try:
-            # --- ЧАСТЬ 1: Расчёт месячной стоимости обучения ---
+            # --- ЧАСТЬ 1: Расчёт месячной стоимости обучения (финальная логика) ---
             tuition_fee = float(request.POST.get('tuition_fee', 0))
             if request.POST.get('tuition_currency') == 'EUR':
                 tuition_fee *= EUR_TO_PLN_RATE
 
-            tuition_end_date_str = request.POST.get('tuition_end_date')
-            tuition_end_date = datetime.strptime(tuition_end_date_str, '%d.%m.%Y')
+            # Получаем количество месяцев из формы
+            months_in_period = int(request.POST.get('months_in_period', 1))
 
-            tuition_period_delta = relativedelta(tuition_end_date, datetime.now())
-            tuition_months_count = tuition_period_delta.years * 12 + tuition_period_delta.months + 1
-            monthly_tuition = tuition_fee / tuition_months_count if tuition_months_count > 0 else 0
+            # Рассчитываем точную месячную ставку
+            monthly_tuition = tuition_fee / months_in_period if months_in_period > 0 else 0
 
             # --- ЧАСТЬ 2: Расчёт месячной стоимости жилья ---
             monthly_rent_and_bills = float(request.POST.get('rent_and_bills', 0))
             if request.POST.get('rent_currency') == 'EUR':
                 monthly_rent_and_bills *= EUR_TO_PLN_RATE
 
-            # --- ЧАСТЬ 3: Определяем расчётный период ---
+            # --- ЧАСТЬ 3: Определяем ОБЩИЙ расчётный период ---
             total_end_date_str = request.POST.get('total_end_date')
             total_end_date = datetime.strptime(total_end_date_str, '%d.%m.%Y')
 
@@ -175,23 +184,24 @@ def calculator_view(request):
             total_months_real = total_period_delta.years * 12 + total_period_delta.months + 1
             months_for_calc = min(total_months_real, MAX_MONTHS_LIVING)
 
-            # Определяем стоимость билета
+            # Определяем остальные данные
             has_border = request.POST.get('has_border')
             return_ticket = TICKET_BORDER if has_border else TICKET_NO_BORDER
+            num_people = int(request.POST.get('num_people', 1))
 
             # --- ЧАСТЬ 4: Финальный расчёт ---
             total_monthly_costs = monthly_rent_and_bills + monthly_tuition + LIVING_ALLOWANCE
-            total_living_and_tuition = total_monthly_costs * months_for_calc
-            final_total_required = total_living_and_tuition + return_ticket
+            total_base_cost = total_monthly_costs * months_for_calc
+            final_total_required = total_base_cost + return_ticket
 
             # --- ЧАСТЬ 5: Форматирование и передача в шаблон ---
             context['results'] = {
                 'monthly_rent_and_bills': f"{monthly_rent_and_bills:,.2f}".replace(",", " "),
-                'monthly_tuition': f"{monthly_tuition:,.2f}".replace(",", " "),
+                'monthly_tuition_calculated': f"{monthly_tuition:,.2f}".replace(",", " "),
                 'living_allowance': f"{LIVING_ALLOWANCE:,.2f}".replace(",", " "),
                 'total_monthly_costs': f"{total_monthly_costs:,.2f}".replace(",", " "),
                 'months_for_calc': months_for_calc,
-                'total_living_and_tuition': f"{total_living_and_tuition:,.2f}".replace(",", " "),
+                'total_base_cost': f"{total_base_cost:,.2f}".replace(",", " "),
                 'return_ticket': f"{return_ticket:,.2f}".replace(",", " "),
                 'final_total_required': f"{final_total_required:,.2f}".replace(",", " "),
             }
