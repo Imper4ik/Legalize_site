@@ -32,6 +32,9 @@ class Client(models.Model):
     email = models.EmailField(verbose_name="Email")
     passport_num = models.CharField(max_length=50, null=True, blank=True, verbose_name="Номер паспорта")
     case_number = models.CharField(max_length=100, blank=True, null=True, verbose_name="Номер дела")
+    employer_phone = models.CharField(max_length=20, blank=True, null=True, verbose_name="Телефон работодателя")
+    fingerprints_date = models.DateField(null=True, blank=True, verbose_name="Дата сдачи отпечатков")
+    submission_date = models.DateField(null=True, blank=True, verbose_name="Дата подачи (Złożone)")
 
     # Новые поля для динамических чеклистов
     application_purpose = models.CharField(
