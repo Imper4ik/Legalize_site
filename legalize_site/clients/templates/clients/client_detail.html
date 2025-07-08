@@ -21,6 +21,12 @@
         {% if client.legal_basis_end_date %}
             <p><strong>Дата окончания основания:</strong> {{ client.legal_basis_end_date|date:"d.m.Y" }}</p>
         {% endif %}
+
+        {% if client.notes %}
+          <hr>
+          <p class="mb-1"><strong>Заметки:</strong></p>
+          <div>{{ client.notes|safe }}</div>
+        {% endif %}
     </div>
   </div>
 

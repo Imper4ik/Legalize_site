@@ -15,52 +15,111 @@
     </div>
   </form>
 
-  <table class="table table-hover align-middle">
-    <thead class="table-light">
-      <tr>
-        <th>Email</th>
-        <th>Полное имя</th>
-        <th>Номер дела</th>
-        <th>Основание и дата окончания</th>
-        <th style="width: 25%;">Uwagi / Заметки</th>
-        <th>Действия</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for client in clients %}
+  <style>
+    .table-container {
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .table-container thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+  </style>
+
+  <div class="table-container">
+    <table class="table table-bordered table-hover align-middle">
+      <thead class="table-light">
         <tr>
-          <td>{{ client.email }}</td>
-          <td>{{ client.first_name }} {{ client.last_name }}</td>
-
-          <td><strong>{{ client.case_number|default:"—" }}</strong></td>
-
-          <td>
-            {{ client.basis_of_stay|default:"—" }}
-            {% if client.legal_basis_end_date %}
-              <br>
-              <small class="text-muted">до {{ client.legal_basis_end_date|date:"d.m.Y" }}</small>
-            {% endif %}
-          </td>
-
-          <td>
-            <form action="{% url 'update_client_notes' pk=client.pk %}" method="post" class="d-flex align-items-center">
-              {% csrf_token %}
-              <input type="text" name="notes" class="form-control form-control-sm" value="{{ client.notes|default:'' }}" placeholder="Добавить заметку...">
-              <button type="submit" class="btn btn-success btn-sm ms-2">✓</button>
-            </form>
-          </td>
-
-          <td>
-            <a href="{% url 'client_detail' pk=client.pk %}" class="btn btn-info btn-sm">Подробнее</a>
-            <a href="{% url 'client_delete' pk=client.pk %}" class="btn btn-danger btn-sm">Удалить</a>
-          </td>
+          <th style="background-color: #e7f3ff;">Email</th>
+          <th style="background-color: #ffffff;">Полное имя</th>
+          <th style="background-color: #e7f3ff;">Номер дела</th>
+          <th style="background-color: #ffffff;">Основание и дата окончания</th>
+          <th style="background-color: #e7f3ff; width: 30%;">
+            <div class="d-flex justify-content-between align-items-center">
+              <span>Uwagi / Заметки</span>
+              <div class="editor-toolbar d-flex align-items-center">
+                <button type="button" class="btn btn-light btn-sm format-button" data-format="bold" title="Жирный"><b>B</b></button>
+                <i class="bi bi-check-lg text-success ms-1" id="bold-indicator" style="display: none;"></i>
+              </div>
+            </div>
+          </th>
+          <th style="background-color: #ffffff;">Действия</th>
         </tr>
-      {% empty %}
-        <tr>
-          <td colspan="7" class="text-center">Клиенты не найдены.</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {% for client in clients %}
+          <tr>
+            <td style="background-color: #e7f3ff;">{{ client.email }}</td>
+            <td style="background-color: #ffffff;">{{ client.first_name }} {{ client.last_name }}</td>
+            <td style="background-color: #e7f3ff;"><strong>{{ client.case_number|default:"—" }}</strong></td>
+            <td style="background-color: #ffffff;">
+              {{ client.basis_of_stay|default:"—" }}
+              {% if client.legal_basis_end_date %}
+                <br>
+                <small class="text-muted">до {{ client.legal_basis_end_date|date:"d.m.Y" }}</small>
+              {% endif %}
+            </td>
+            <td style="background-color: #e7f3ff;">
+              <form action="{% url 'update_client_notes' pk=client.pk %}" method="post" class="notes-form">
+                {% csrf_token %}
+                <input type="hidden" name="notes" class="hidden-notes-input">
+                <div class="form-control notes-editor" contenteditable="true" style="min-height: 38px;">{{ client.notes|safe }}</div>
+                <button class="btn btn-outline-secondary btn-sm mt-2 w-100" type="submit">Сохранить</button>
+              </form>
+            </td>
+            <td style="background-color: #ffffff;">
+              <div class="d-grid gap-2">
+                <a href="{% url 'client_detail' pk=client.pk %}" class="btn btn-info btn-sm">Подробнее</a>
+                <a href="{% url 'client_delete' pk=client.pk %}" class="btn btn-danger btn-sm">Удалить</a>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="6" class="text-center">Клиенты не найдены.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}
 
+
+{% block extra_js %}
+  {{ block.super }}
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const formatButton = document.querySelector('.format-button[data-format="bold"]');
+      const boldIndicator = document.getElementById('bold-indicator');
+
+      function updateIndicator() {
+        if (document.queryCommandState('bold')) {
+          boldIndicator.style.display = 'inline-block';
+        } else {
+          boldIndicator.style.display = 'none';
+        }
+      }
+
+      formatButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.execCommand('bold', false, null);
+        updateIndicator();
+      });
+
+      document.querySelectorAll('.notes-editor').forEach(editor => {
+        editor.addEventListener('keyup', updateIndicator);
+        editor.addEventListener('mouseup', updateIndicator);
+      });
+
+      document.querySelectorAll('.notes-form').forEach(form => {
+        form.addEventListener('submit', function() {
+          const editor = this.querySelector('.notes-editor');
+          const hiddenInput = this.querySelector('.hidden-notes-input');
+          hiddenInput.value = editor.innerHTML;
+        });
+      });
+    });
+  </script>
 {% endblock %}
