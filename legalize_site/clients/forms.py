@@ -5,7 +5,7 @@ from .models import Client, Document, Payment
 
 
 class ClientForm(forms.ModelForm):
-    # Явно определяем поля для дат, чтобы они правильно работали с календарём
+    # Explicitly define date fields for custom formatting and widgets
     legal_basis_end_date = forms.DateField(
         label="Дата окончания основания", required=False, input_formats=['%d.%m.%Y'],
         widget=forms.TextInput(attrs={'placeholder': 'дд.мм.гггг', 'data-input': ''})
@@ -26,20 +26,20 @@ class ClientForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Применяем стили Bootstrap ко всем полям
+        # Apply Bootstrap class to all fields
         for field_name, field in self.fields.items():
             field.widget.attrs.update({'class': 'form-control'})
 
-        # ИЗМЕНЕНИЕ: Мы больше не скрываем поле 'submission_date'
-        # Теперь при создании нового клиента будут скрыты только номер дела и статус,
-        # так как они присваиваются позже.
+        # If this is a new client, hide fields that are not yet relevant
         if not self.instance.pk:
-            del self.fields['case_number']
-            del self.fields['status']
-            # Поле fingerprints_date тоже оставляем только для редактирования
-            del self.fields['fingerprints_date']
-
-        # Эта форма для загрузки файлов
+            if 'case_number' in self.fields:
+                del self.fields['case_number']
+            if 'fingerprints_date' in self.fields:
+                del self.fields['fingerprints_date']
+            if 'status' in self.fields:
+                del self.fields['status']
+            if 'submission_date' in self.fields:
+                del self.fields['submission_date']
 
 
 class DocumentUploadForm(forms.ModelForm):
@@ -53,7 +53,6 @@ class PaymentForm(forms.ModelForm):
         label="Дата оплаты", required=False, input_formats=['%d.%m.%Y'],
         widget=forms.TextInput(attrs={'placeholder': 'дд.мм.гггг', 'data-input': ''})
     )
-    # НОВОЕ ПОЛЕ ДЛЯ ФОРМЫ
     due_date = forms.DateField(
         label="Оплатить до", required=False, input_formats=['%d.%m.%Y'],
         widget=forms.TextInput(attrs={'placeholder': 'дд.мм.гггг', 'data-input': ''})
@@ -61,10 +60,14 @@ class PaymentForm(forms.ModelForm):
 
     class Meta:
         model = Payment
-        # Добавляем due_date в список полей
-        fields = ['service_description', 'total_amount', 'amount_paid', 'status', 'payment_date', 'due_date', 'payment_method', 'transaction_id']
+        fields = ['service_description', 'total_amount', 'amount_paid', 'status', 'payment_date', 'due_date',
+                  'payment_method', 'transaction_id']
+        widgets = {
+            'service_description': forms.Select(attrs={'class': 'form-select'}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
-            field.widget.attrs.update({'class': 'form-control'})
+            if 'class' not in field.widget.attrs:
+                field.widget.attrs.update({'class': 'form-control'})

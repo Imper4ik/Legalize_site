@@ -119,7 +119,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # --- Настройки для django-allauth ---
-
 AUTHENTICATION_BACKENDS = [
     # Нужен для входа в админку с логином и паролем
     'django.contrib.auth.backends.ModelBackend',
@@ -130,17 +129,20 @@ AUTHENTICATION_BACKENDS = [
 SITE_ID = 1
 
 # URL-адреса для перенаправлений
-LOGIN_URL = 'login'  # Указываем Django, где наша страница входа
+LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'client_list'
 LOGOUT_REDIRECT_URL = 'client_list'
 
-# New, modern settings for django-allauth
+# --- САМЫЕ СОВРЕМЕННЫЕ НАСТРОЙКИ ALLAUTH ---
+
+# Способ входа: только по email
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
+# Поля, которые будут запрашиваться при регистрации
+ACCOUNT_SIGNUP_FIELDS = ['email']
+# Не требуем подтверждения email для простоты
 ACCOUNT_EMAIL_VERIFICATION = 'none'
-ACCOUNT_ADAPTER = 'allauth.account.adapter.DefaultAccountAdapter' # ADD THIS LINE
-SOCIALACCOUNT_ADAPTER = 'allauth.socialaccount.adapter.DefaultSocialAccountAdapter' # AND THIS LINE
+# Автоматически создавать пользователя после входа через соц. сеть
+SOCIALACCOUNT_AUTO_SIGNUP = True
 
 # Настройки для провайдера Google
 SOCIALACCOUNT_PROVIDERS = {
