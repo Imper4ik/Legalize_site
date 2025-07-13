@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Завершение регистрации{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <h4 class="mb-0">Завершение регистрации</h4>
+      </div>
+      <div class="card-body">
+        <p>Вы вошли через аккаунт Google (<strong>{{ user.email }}</strong>).</p>
+
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <p><strong>Пожалуйста, исправьте ошибки:</strong></p>
+                {{ form.errors }}
+            </div>
+        {% else %}
+            <p>Пожалуйста, подтвердите данные, чтобы завершить создание вашего аккаунта на нашем сайте.</p>
+        {% endif %}
+
+        <hr>
+
+        <form class="signup" id="signup_form" method="post" action="{% url 'socialaccount_signup' %}">
+          {% csrf_token %}
+
+          {{ form.as_p }}
+
+          <button type="submit" class="btn btn-primary mt-3 w-100">Завершить регистрацию</button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

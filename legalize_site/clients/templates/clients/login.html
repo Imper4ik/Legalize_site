@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load socialaccount %} {% block content %}
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header"><h4>Вход</h4></div>
+        <div class="card-body">
+
+          <a href="{% provider_login_url 'google' %}" class="btn btn-danger w-100 mb-3">
+            <i class="bi bi-google"></i> Войти через Google
+          </a>
+          <hr>
+
+          <p class="text-center text-muted">Или войдите с помощью логина и пароля:</p>
+          <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary mt-3 w-100">Войти</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
