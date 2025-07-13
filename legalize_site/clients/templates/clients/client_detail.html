@@ -37,7 +37,7 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4>Финансы</h4>
     <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
-      + Добавить счёт/платёж
+      + Добавить счёт
     </button>
   </div>
   <div class="card mb-4">
@@ -45,7 +45,28 @@
           {% for payment in client.payments.all %}
               <li class="list-group-item">
                   <div class="d-flex justify-content-between">
-                      <span>{{ payment.service_description }}</span>
+                      <div>
+                          <span>{{ payment.get_service_description_display }}</span>
+                          <button type="button" class="btn btn-link btn-sm p-0 ms-2 edit-payment-btn"
+                                  data-bs-toggle="modal" data-bs-target="#editPaymentModal"
+                                  data-url="{% url 'edit_payment' payment.id %}"
+                                  data-service="{{ payment.service_description }}"
+                                  data-total_amount="{{ payment.total_amount }}"
+                                  data-amount_paid="{{ payment.amount_paid }}"
+                                  data-status="{{ payment.status }}"
+                                  data-payment_date="{{ payment.payment_date|date:'Y-m-d' }}"
+                                  data-due_date="{{ payment.due_date|date:'Y-m-d' }}"
+                                  data-payment_method="{{ payment.payment_method|default:'' }}"
+                                  data-transaction_id="{{ payment.transaction_id|default:'' }}">
+                              <i class="bi bi-pencil-square"></i>
+                          </button>
+                          <form action="{% url 'delete_payment' payment.id %}" method="post" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите удалить этот платёж?');">
+                              {% csrf_token %}
+                              <button type="submit" class="btn btn-link btn-sm p-0 text-danger" title="Удалить платёж">
+                                  <i class="bi bi-trash"></i>
+                              </button>
+                          </form>
+                      </div>
                       <span class="badge
                           {% if payment.status == 'paid' %}bg-success
                           {% elif payment.status == 'partial' %}bg-warning
@@ -137,7 +158,13 @@
             {% csrf_token %}
             <div class="mb-3">
                 <label for="id_service_description" class="form-label">Описание услуги</label>
-                <input type="text" name="service_description" class="form-control" required id="id_service_description">
+                <select name="service_description" class="form-select" required id="id_service_description">
+                    <option value="" selected>---------</option>
+                    <option value="work_permit" data-price="1800.00">Работа</option>
+                    <option value="student_visa" data-price="1400.00">Учёба</option>
+                    <option value="photo_service" data-price="40.00">Фото</option>
+                    <option value="consultation" data-price="180.00">Консультация</option>
+                </select>
             </div>
             <div class="row">
                 <div class="col-md-6 mb-3">
@@ -198,13 +225,139 @@
       </div>
     </div>
   </div>
+
+  <div class="modal fade" id="editPaymentModal" tabindex="-1" aria-labelledby="editPaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editPaymentModalLabel">Редактировать платёж</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form action="" method="post" id="edit-payment-form">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="edit_service_description" class="form-label">Описание услуги</label>
+                <select name="service_description" class="form-select" required id="edit_service_description">
+                    <option value="work_permit">Работа</option>
+                    <option value="student_visa">Учёба</option>
+                    <option value="photo_service">Фото</option>
+                    <option value="consultation">Консультация</option>
+                </select>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="edit_total_amount" class="form-label">Общая сумма</label>
+                    <input type="number" step="0.01" name="total_amount" class="form-control" required id="edit_total_amount">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="edit_amount_paid" class="form-label">Оплаченная сумма</label>
+                    <input type="number" step="0.01" name="amount_paid" class="form-control" required id="edit_amount_paid">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="edit_status" class="form-label">Статус оплаты</label>
+                <select name="status" class="form-select" id="edit_status">
+                  <option value="pending">Ожидает оплаты</option>
+                  <option value="partial">Частично оплачен</option>
+                  <option value="paid">Оплачен полностью</option>
+                  <option value="refunded">Возврат</option>
+                </select>
+            </div>
+             <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="edit_payment_date" class="form-label">Дата оплаты</label>
+                    <div class="input-group" id="edit_payment_date_picker">
+                        <input type="text" name="payment_date" class="form-control" id="edit_payment_date" placeholder="дд.мм.гггг" data-input>
+                        <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle><i class="bi bi-calendar3"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="edit_due_date" class="form-label">Оплатить до</label>
+                    <div class="input-group" id="edit_due_date_picker">
+                        <input type="text" name="due_date" class="form-control" id="edit_due_date" placeholder="дд.мм.гггг" data-input>
+                        <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle><i class="bi bi-calendar3"></i></a>
+                    </div>
+                </div>
+            </div>
+             <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="edit_payment_method" class="form-label">Способ оплаты</label>
+                    <select name="payment_method" class="form-select" id="edit_payment_method">
+                        <option value="">---------</option>
+                        <option value="card">Карта</option>
+                        <option value="cash">Наличные</option>
+                        <option value="transfer">Перевод</option>
+                    </select>
+                </div>
+                 <div class="col-md-6 mb-3">
+                    <label for="edit_transaction_id" class="form-label">ID транзакции</label>
+                    <input type="text" name="transaction_id" class="form-control" id="edit_transaction_id">
+                </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+          <button type="submit" form="edit-payment-form" class="btn btn-primary">Сохранить изменения</button>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block extra_js %}
   {{ block.super }}
   <script>
-    // Активируем календари для полей в модальном окне
-    flatpickr("#payment_date_picker_modal", { wrap: true, dateFormat: "d.m.Y", allowInput: true, clickOpens: false });
-    flatpickr("#due_date_picker_modal", { wrap: true, dateFormat: "d.m.Y", allowInput: true, clickOpens: false });
+    document.addEventListener('DOMContentLoaded', function() {
+        // Календари для окна ДОБАВЛЕНИЯ
+        flatpickr("#payment_date_picker_modal", { wrap: true, dateFormat: "d.m.Y", allowInput: true, clickOpens: false });
+        flatpickr("#due_date_picker_modal", { wrap: true, dateFormat: "d.m.Y", allowInput: true, clickOpens: false });
+
+        // Автозаполнение цены в окне ДОБАВЛЕНИЯ
+        const serviceSelector = document.getElementById('id_service_description');
+        const totalAmountInput = document.getElementById('id_total_amount');
+        if (serviceSelector && totalAmountInput) {
+            serviceSelector.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const price = selectedOption.dataset.price;
+                totalAmountInput.value = price ? price : '';
+            });
+        }
+
+        // Календари для окна РЕДАКТИРОВАНИЯ
+        const editPaymentDate = flatpickr("#edit_payment_date_picker", { wrap: true, dateFormat: "d.m.Y", allowInput: true, clickOpens: false });
+        const editDueDate = flatpickr("#edit_due_date_picker", { wrap: true, dateFormat: "d.m.Y", allowInput: true, clickOpens: false });
+
+        // Заполнение формы РЕДАКТИРОВАНИЯ
+        const editPaymentModal = document.getElementById('editPaymentModal');
+        if (editPaymentModal) {
+            editPaymentModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const form = editPaymentModal.querySelector('#edit-payment-form');
+                form.action = button.dataset.url;
+
+                // Заполняем все поля
+                form.querySelector('#edit_service_description').value = button.dataset.service;
+                form.querySelector('#edit_total_amount').value = button.dataset.total_amount;
+                form.querySelector('#edit_amount_paid').value = button.dataset.amount_paid;
+                form.querySelector('#edit_status').value = button.dataset.status;
+                form.querySelector('#edit_payment_method').value = button.dataset.payment_method;
+                form.querySelector('#edit_transaction_id').value = button.dataset.transaction_id;
+
+                // Устанавливаем даты с помощью API календаря
+                if (button.dataset.payment_date) {
+                    editPaymentDate.setDate(button.dataset.payment_date, true, "Y-m-d");
+                } else {
+                    editPaymentDate.clear();
+                }
+                if (button.dataset.due_date) {
+                    editDueDate.setDate(button.dataset.due_date, true, "Y-m-d");
+                } else {
+                    editDueDate.clear();
+                }
+            });
+        }
+    });
   </script>
 {% endblock %}

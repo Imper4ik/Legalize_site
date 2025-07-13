@@ -10,11 +10,12 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 
 # Импортируем модели, константы и наши кастомные формы
-from .models import Client, Document, Reminder
+from .models import Client, Document, Reminder, Payment
 from .constants import DOCUMENT_CHECKLIST
 from .forms import ClientForm, DocumentUploadForm
 from .forms import ClientForm, DocumentUploadForm, PaymentForm
 from django.utils import timezone
+from django.core.management import call_command
 
 
 # --- Представления (Views) ---
@@ -134,8 +135,8 @@ def document_delete(request, pk):
     return render(request, 'clients/document_confirm_delete.html', {'document': document})
 
 
-@login_required
 def calculator_view(request):
+    # --- КОНСТАНТЫ ---
     LIVING_ALLOWANCE = 1010
     TICKET_BORDER = 500
     TICKET_NO_BORDER = 2500
@@ -150,6 +151,7 @@ def calculator_view(request):
 
     if request.method == 'POST':
         try:
+            # --- ЧАСТЬ 1: Расчёт месячной стоимости обучения ---
             tuition_fee = float(request.POST.get('tuition_fee', 0))
             if request.POST.get('tuition_currency') == 'EUR':
                 tuition_fee *= EUR_TO_PLN_RATE
@@ -162,10 +164,16 @@ def calculator_view(request):
             else:
                 monthly_tuition = tuition_fee
 
+            # --- ЧАСТЬ 2: Расчёт месячной стоимости жилья ---
             monthly_rent_and_bills = float(request.POST.get('rent_and_bills', 0))
             if request.POST.get('rent_currency') == 'EUR':
                 monthly_rent_and_bills *= EUR_TO_PLN_RATE
 
+            num_people = int(request.POST.get('num_people', 1))
+            # Делим стоимость жилья на количество человек
+            rent_per_person = monthly_rent_and_bills / num_people if num_people > 0 else 0
+
+            # --- ЧАСТЬ 3: Определяем расчётный период ---
             total_end_date_str = request.POST.get('total_end_date')
             total_end_date = datetime.strptime(total_end_date_str, '%d.%m.%Y')
 
@@ -176,12 +184,15 @@ def calculator_view(request):
             has_border = request.POST.get('has_border')
             return_ticket = TICKET_BORDER if has_border else TICKET_NO_BORDER
 
-            total_monthly_costs = monthly_rent_and_bills + monthly_tuition + LIVING_ALLOWANCE
+            # --- ЧАСТЬ 4: Финальный расчёт ---
+            # ИЗМЕНЕНИЕ: Складываем долю жилья, а не всю сумму
+            total_monthly_costs = rent_per_person + monthly_tuition + LIVING_ALLOWANCE
             total_base_cost = total_monthly_costs * months_for_calc
             final_total_required = total_base_cost + return_ticket
 
+            # --- ЧАСТЬ 5: Форматирование и передача в шаблон ---
             context['results'] = {
-                'monthly_rent_and_bills': f"{monthly_rent_and_bills:,.2f}".replace(",", " "),
+                'rent_per_person': f"{rent_per_person:,.2f}".replace(",", " "),
                 'monthly_tuition_calculated': f"{monthly_tuition:,.2f}".replace(",", " "),
                 'living_allowance': f"{LIVING_ALLOWANCE:,.2f}".replace(",", " "),
                 'total_monthly_costs': f"{total_monthly_costs:,.2f}".replace(",", " "),
@@ -235,6 +246,51 @@ def add_payment(request, client_id):
 
 @login_required
 def reminder_list(request):
-    # Показываем только активные напоминания с датой в будущем
     reminders = Reminder.objects.filter(is_active=True, due_date__gte=timezone.now().date())
     return render(request, 'clients/reminder_list.html', {'reminders': reminders})
+
+@login_required
+def run_create_reminders(request):
+    try:
+        call_command('create_reminders')
+        messages.success(request, "Проверка завершена, новые напоминания успешно созданы!")
+    except Exception as e:
+        messages.error(request, f"Произошла ошибка при создании напоминаний: {e}")
+    return redirect('reminder_list')
+
+# --- УБЕДИТЕСЬ, ЧТО ЭТА ФУНКЦИЯ ВЫГЛЯДИТ ТАК ---
+@login_required
+def delete_reminder(request, reminder_id):
+    reminder = get_object_or_404(Reminder, pk=reminder_id)
+    if request.method == 'POST':
+        reminder_title = reminder.title
+        reminder.delete()
+        messages.success(request, f"Напоминание '{reminder_title}' успешно удалено.")
+    return redirect('reminder_list')
+
+
+@login_required
+def edit_payment(request, payment_id):
+    payment = get_object_or_404(Payment, pk=payment_id)
+    client_id = payment.client.id
+    if request.method == 'POST':
+        form = PaymentForm(request.POST, instance=payment)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Платёж успешно обновлён.")
+            return redirect('client_detail', pk=client_id)
+    # Если метод не POST, просто перенаправляем обратно,
+    # так как форма отображается через модальное окно.
+    return redirect('client_detail', pk=client_id)
+
+
+@login_required
+def delete_payment(request, payment_id):
+    payment = get_object_or_404(Payment, pk=payment_id)
+    client_id = payment.client.id  # Сохраняем id клиента для перенаправления
+
+    if request.method == 'POST':
+        payment.delete()
+        messages.success(request, f"Платёж '{payment.service_description}' успешно удалён.")
+
+    return redirect('client_detail', pk=client_id)

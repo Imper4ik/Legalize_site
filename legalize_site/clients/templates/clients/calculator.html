@@ -18,7 +18,7 @@
           <div class="card-body">
 
             <div class="mb-3">
-              <label class="form-label">Когда заканчивается весь период учёбы?</label>
+              <label class="form-label">Когда заканчивается учёба?</label>
               <div class="input-group" id="total_end_date_picker">
                 <input type="text" class="form-control" name="total_end_date" value="{{ form_data.total_end_date }}" placeholder="дд.мм.гггг" data-input required>
                 <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle><i class="bi bi-calendar3"></i></a>
@@ -54,7 +54,7 @@
             <hr>
 
             <div class="mb-3">
-              <label for="rent_and_bills" class="form-label">Аренда + счётчики в месяц</label>
+              <label for="rent_and_bills" class="form-label">Аренда + счётчики в месяц (на всю квартиру)</label>
               <div class="input-group">
                 <input type="number" step="0.01" class="form-control" id="rent_and_bills" name="rent_and_bills" value="{{ form_data.rent_and_bills }}" required>
                 <select class="form-select" name="rent_currency" style="max-width: 100px;">
@@ -65,12 +65,12 @@
             </div>
             <hr>
 
-            <div class="mb-3">
-                <label for="num_people" class="form-label">Кол-во человек (включая вас)</label>
+             <div class="mb-3">
+                <label for="num_people" class="form-label">Кол-во человек, проживающих вместе</label>
                 <input type="number" class="form-control" name="num_people" value="{{ form_data.num_people|default:1 }}" required>
             </div>
 
-            <div class="mb-3">
+             <div class="mb-3">
               <label for="return_ticket" class="form-label">Стоимость обратного билета</label>
               <div class="input-group">
                 <input type="number" step="0.01" class="form-control" name="return_ticket" value="{{ form_data.return_ticket|default:2500 }}" required>
@@ -106,9 +106,9 @@
                 <ul class="list-group list-group-flush">
                     <li class="list-group-item px-0">
                         <strong>Ежемесячные расходы:</strong>
-                        <p class="mb-0 small text-muted">Жильё + Обучение (приведенное) + Прожиточный минимум ({{ living_allowance }} zł)</p>
+                        <p class="mb-0 small text-muted">(Жильё / Кол-во чел.) + Обучение + Прожиточный минимум</p>
                          <p class="mb-0">
-                            {{ results.monthly_rent_and_bills }} + {{ results.monthly_tuition_calculated }} + {{ living_allowance }} = <strong>{{ results.total_monthly_costs }} zł/мес.</strong>
+                            {{ results.rent_per_person }} + {{ results.monthly_tuition_calculated }} + {{ living_allowance }} = <strong>{{ results.total_monthly_costs }} zł/мес.</strong>
                         </p>
                     </li>
                     <li class="list-group-item px-0">
@@ -143,18 +143,12 @@
     document.addEventListener('DOMContentLoaded', function() {
         const feeTypeSelector = document.getElementById('fee_type_selector');
         const monthsInput = document.getElementById('months_in_period_input');
-
         function updateMonths() {
             const selectedOption = feeTypeSelector.options[feeTypeSelector.selectedIndex];
             monthsInput.value = selectedOption.dataset.months;
         }
-
         feeTypeSelector.addEventListener('change', updateMonths);
-
-        // Устанавливаем начальное значение при загрузке
         updateMonths();
-
-        // Инициализация календаря
         flatpickr("#total_end_date_picker", { wrap: true, dateFormat: "d.m.Y", allowInput: true, clickOpens: false });
     });
   </script>

@@ -1,3 +1,5 @@
+# clients/models.py
+
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
@@ -10,13 +12,11 @@ class Client(models.Model):
         ('work', 'Работа'),
         ('family', 'Воссоединение семьи'),
     ]
-
     LANGUAGE_CHOICES = [
         ('pl', 'Польский'),
         ('en', 'Английский'),
         ('ru', 'Русский'),
     ]
-
     STATUS_CHOICES = [
         ('new', 'Новый'),
         ('pending', 'В ожидании'),
@@ -32,29 +32,19 @@ class Client(models.Model):
     email = models.EmailField(verbose_name="Email")
     passport_num = models.CharField(max_length=50, null=True, blank=True, verbose_name="Номер паспорта")
     case_number = models.CharField(max_length=100, blank=True, null=True, verbose_name="Номер дела")
-    employer_phone = models.CharField(max_length=20, blank=True, null=True, verbose_name="Телефон работодателя")
-    fingerprints_date = models.DateField(null=True, blank=True, verbose_name="Дата сдачи отпечатков")
-    submission_date = models.DateField(null=True, blank=True, verbose_name="Дата подачи (Złożone)")
-
-    # Новые поля для динамических чеклистов
     application_purpose = models.CharField(
-        max_length=20,
-        choices=APPLICATION_PURPOSE_CHOICES,
-        default='study',
-        verbose_name="Цель подачи"
+        max_length=20, choices=APPLICATION_PURPOSE_CHOICES, default='study', verbose_name="Цель подачи"
     )
     basis_of_stay = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        verbose_name="Основание пребывания (виза, TRC и т.д.)"
+        max_length=100, blank=True, null=True, verbose_name="Основание пребывания (виза, TRC и т.д.)"
     )
     language = models.CharField(max_length=5, choices=LANGUAGE_CHOICES, default='pl', verbose_name="Язык документов")
-
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new', verbose_name="Статус")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     legal_basis_end_date = models.DateField(null=True, blank=True, verbose_name="Дата окончания основания")
-
+    submission_date = models.DateField(null=True, blank=True, verbose_name="Дата подачи (Złożone)")
+    employer_phone = models.CharField(max_length=20, blank=True, null=True, verbose_name="Телефон работодателя")
+    fingerprints_date = models.DateField(null=True, blank=True, verbose_name="Дата сдачи отпечатков")
     notes = models.TextField(blank=True, null=True, verbose_name="Uwagi / Заметки")
 
     def __str__(self):
@@ -65,22 +55,15 @@ class Client(models.Model):
 
 
 class Document(models.Model):
-    # Этот список определяет ВСЕ возможные типы документов,
-    # которые в принципе можно загрузить в систему.
     DOC_TYPES = [
-        # Для учёбы
         ('passport', 'Паспорт'),
         ('certificate_enrolment', 'Справка о зачислении'),
         ('certificate_fees', 'Справка об оплате обучения'),
         ('health_insurance', 'Медицинская страховка'),
         ('rental_contract', 'Договор аренды'),
         ('financial_means', 'Документ о средствах'),
-
-        # Для работы
         ('work_permit', 'Разрешение на работу (Залончник №1)'),
         ('employment_contract', 'Трудовой договор'),
-
-        # Общие/Другие
         ('other', 'Другое'),
     ]
 
@@ -110,25 +93,35 @@ class Payment(models.Model):
         ('cash', 'Наличные'),
         ('transfer', 'Перевод'),
     ]
+    SERVICE_CHOICES = [
+        ('work_permit', 'Работа'),
+        ('student_visa', 'Учёба'),
+        ('photo_service', 'Фото'),
+        ('consultation', 'Консультация'),
+    ]
+    SERVICE_PRICES = {
+        'work_permit': 1800.00,
+        'student_visa': 1400.00,
+        'photo_service': 40.00,
+        'consultation': 180.00,
+    }
 
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='payments', verbose_name="Клиент")
-    service_description = models.CharField(max_length=255, verbose_name="Описание услуги")
+    service_description = models.CharField(max_length=100, choices=SERVICE_CHOICES, verbose_name="Описание услуги")
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Общая сумма")
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Оплаченная сумма")
     status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending', verbose_name="Статус оплаты")
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, blank=True, null=True, verbose_name="Способ оплаты")
     payment_date = models.DateField(blank=True, null=True, verbose_name="Дата оплаты")
-    transaction_id = models.CharField(max_length=255, blank=True, null=True, verbose_name="ID транзакции (если есть)")
-
-    # НОВОЕ ПОЛЕ: Срок оплаты
     due_date = models.DateField(blank=True, null=True, verbose_name="Оплатить до")
-
+    transaction_id = models.CharField(max_length=255, blank=True, null=True, verbose_name="ID транзакции (если есть)")
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания счёта")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата последнего обновления")
 
     def __str__(self):
         return f"Счёт на {self.total_amount} для {self.client}"
 
+    # --- ИСПРАВЛЕНИЕ: ВОТ ЭТИХ МЕТОДОВ НЕ ХВАТАЛО ---
     @property
     def is_fully_paid(self):
         return self.amount_paid >= self.total_amount
@@ -146,10 +139,14 @@ class Reminder(models.Model):
     ]
 
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='reminders', verbose_name="Клиент")
-    reminder_type = models.CharField(max_length=20, choices=REMINDER_TYPE_CHOICES, default='document', verbose_name="Тип напоминания")
+    # НОВОЕ ПОЛЕ: Прямая связь с платежом
+    payment = models.OneToOneField(Payment, on_delete=models.CASCADE, null=True, blank=True, related_name="reminder")
+
+    reminder_type = models.CharField(max_length=20, choices=REMINDER_TYPE_CHOICES, default='document',
+                                     verbose_name="Тип напоминания")
     title = models.CharField(max_length=255, verbose_name="Заголовок напоминания")
     notes = models.TextField(blank=True, null=True, verbose_name="Детали")
-    due_date = models.DateField(verbose_name="Ключевая дата (окончание/оплата до)")
+    due_date = models.DateField(verbose_name="Ключевая дата")
     is_active = models.BooleanField(default=True, verbose_name="Активно")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -157,4 +154,4 @@ class Reminder(models.Model):
         return f"Напоминание для {self.client}: {self.title}"
 
     class Meta:
-        ordering = ['due_date'] # Сортируем по дате
+        ordering = ['due_date']
