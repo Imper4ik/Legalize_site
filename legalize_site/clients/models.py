@@ -96,3 +96,65 @@ class Document(models.Model):
 
     def __str__(self):
         return f"{self.get_document_type_display()} для {self.client}"
+
+
+class Payment(models.Model):
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'Ожидает оплаты'),
+        ('partial', 'Частично оплачен'),
+        ('paid', 'Оплачен полностью'),
+        ('refunded', 'Возврат'),
+    ]
+    PAYMENT_METHOD_CHOICES = [
+        ('card', 'Карта'),
+        ('cash', 'Наличные'),
+        ('transfer', 'Перевод'),
+    ]
+
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='payments', verbose_name="Клиент")
+    service_description = models.CharField(max_length=255, verbose_name="Описание услуги")
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Общая сумма")
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Оплаченная сумма")
+    status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending', verbose_name="Статус оплаты")
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, blank=True, null=True, verbose_name="Способ оплаты")
+    payment_date = models.DateField(blank=True, null=True, verbose_name="Дата оплаты")
+    transaction_id = models.CharField(max_length=255, blank=True, null=True, verbose_name="ID транзакции (если есть)")
+
+    # НОВОЕ ПОЛЕ: Срок оплаты
+    due_date = models.DateField(blank=True, null=True, verbose_name="Оплатить до")
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания счёта")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата последнего обновления")
+
+    def __str__(self):
+        return f"Счёт на {self.total_amount} для {self.client}"
+
+    @property
+    def is_fully_paid(self):
+        return self.amount_paid >= self.total_amount
+
+    @property
+    def amount_due(self):
+        return self.total_amount - self.amount_paid
+
+
+class Reminder(models.Model):
+    REMINDER_TYPE_CHOICES = [
+        ('payment', 'Оплата'),
+        ('document', 'Документ'),
+        ('other', 'Другое'),
+    ]
+
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='reminders', verbose_name="Клиент")
+    reminder_type = models.CharField(max_length=20, choices=REMINDER_TYPE_CHOICES, default='document', verbose_name="Тип напоминания")
+    title = models.CharField(max_length=255, verbose_name="Заголовок напоминания")
+    notes = models.TextField(blank=True, null=True, verbose_name="Детали")
+    due_date = models.DateField(verbose_name="Ключевая дата (окончание/оплата до)")
+    is_active = models.BooleanField(default=True, verbose_name="Активно")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Напоминание для {self.client}: {self.title}"
+
+    class Meta:
+        ordering = ['due_date'] # Сортируем по дате

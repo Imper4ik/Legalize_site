@@ -1,7 +1,7 @@
 # clients/forms.py
 
 from django import forms
-from .models import Client, Document
+from .models import Client, Document, Payment
 
 
 class ClientForm(forms.ModelForm):
@@ -46,3 +46,25 @@ class DocumentUploadForm(forms.ModelForm):
     class Meta:
         model = Document
         fields = ['file']
+
+
+class PaymentForm(forms.ModelForm):
+    payment_date = forms.DateField(
+        label="Дата оплаты", required=False, input_formats=['%d.%m.%Y'],
+        widget=forms.TextInput(attrs={'placeholder': 'дд.мм.гггг', 'data-input': ''})
+    )
+    # НОВОЕ ПОЛЕ ДЛЯ ФОРМЫ
+    due_date = forms.DateField(
+        label="Оплатить до", required=False, input_formats=['%d.%m.%Y'],
+        widget=forms.TextInput(attrs={'placeholder': 'дд.мм.гггг', 'data-input': ''})
+    )
+
+    class Meta:
+        model = Payment
+        # Добавляем due_date в список полей
+        fields = ['service_description', 'total_amount', 'amount_paid', 'status', 'payment_date', 'due_date', 'payment_method', 'transaction_id']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control'})

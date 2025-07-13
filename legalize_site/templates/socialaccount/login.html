@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Вход через Google{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <h4 class="mb-0">Вход через аккаунт Google</h4>
+      </div>
+      <div class="card-body">
+        <p>Вы собираетесь войти на сайт, используя свой аккаунт Google.</p>
+        <p>Нажмите "Продолжить", чтобы перейти к Google для аутентификации.</p>
+        <hr>
+
+        <form method="post">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary w-100">Продолжить</button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

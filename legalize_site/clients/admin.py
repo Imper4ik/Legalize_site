@@ -1,7 +1,7 @@
 # clients/admin.py
 
 from django.contrib import admin
-from .models import Client, Document
+from .models import Client, Document, Payment
 
 
 @admin.register(Client)
@@ -41,3 +41,11 @@ class DocumentAdmin(admin.ModelAdmin):
     list_display = ('client', 'document_type', 'uploaded_at')
     list_filter = ('document_type',)
     search_fields = ('client__first_name', 'client__last_name')
+
+
+class PaymentInline(admin.TabularInline):
+    model = Payment
+    extra = 1
+    readonly_fields = ('created_at', 'updated_at')
+    # Добавляем новые поля в список
+    fields = ('service_description', 'total_amount', 'amount_paid', 'status', 'payment_date', 'payment_method', 'transaction_id', 'created_at', 'updated_at')

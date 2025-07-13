@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Активные напоминания{% endblock %}
+
+{% block content %}
+  <h1>Активные напоминания</h1>
+  <p class="text-muted">Список предстоящих дат окончания документов и оплат.</p>
+
+  <div class="list-group">
+    {% for reminder in reminders %}
+      <a href="{% url 'client_detail' reminder.client.pk %}" class="list-group-item list-group-item-action">
+        <div class="d-flex w-100 justify-content-between">
+          <h5 class="mb-1">{{ reminder.title }}</h5>
+          <small class="text-danger">
+            <strong>До: {{ reminder.due_date|date:"d.m.Y" }}</strong>
+          </small>
+        </div>
+        <p class="mb-1">
+          <strong>Клиент:</strong> {{ reminder.client.first_name }} {{ reminder.client.last_name }}
+        </p>
+        {% if reminder.notes %}
+          <small class="text-muted">{{ reminder.notes }}</small>
+        {% endif %}
+      </a>
+    {% empty %}
+      <div class="alert alert-success">Активных напоминаний нет.</div>
+    {% endfor %}
+  </div>
+{% endblock %}

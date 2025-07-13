@@ -6,28 +6,33 @@ from django.db.models import Q
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from collections import defaultdict
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.decorators import login_required
 
-# Импортируем модели и константы
-from .models import Client, Document
+# Импортируем модели, константы и наши кастомные формы
+from .models import Client, Document, Reminder
 from .constants import DOCUMENT_CHECKLIST
-# Импортируем наши правильные формы из файла forms.py
 from .forms import ClientForm, DocumentUploadForm
+from .forms import ClientForm, DocumentUploadForm, PaymentForm
+from django.utils import timezone
 
 
 # --- Представления (Views) ---
 
+@login_required
 def client_list(request):
     query = request.GET.get('q', '')
     if query:
         clients = Client.objects.filter(
             Q(first_name__icontains=query) | Q(last_name__icontains=query) |
-            Q(email__icontains=query) | Q(phone__icontains=query)
+            Q(email__icontains=query) | Q(phone__icontains=query) | Q(case_number__icontains=query)
         ).distinct()
     else:
         clients = Client.objects.all().order_by('-created_at')
     return render(request, 'clients/clients_list.html', {'clients': clients, 'query': query})
 
 
+@login_required
 def client_detail(request, pk):
     client = get_object_or_404(Client, pk=pk)
     checklist_key = (client.application_purpose, client.language)
@@ -50,9 +55,10 @@ def client_detail(request, pk):
     })
 
 
+@login_required
 def client_add(request):
     if request.method == 'POST':
-        form = ClientForm(request.POST) # <-- Теперь используется правильная форма из forms.py
+        form = ClientForm(request.POST)
         if form.is_valid():
             client = form.save()
             messages.success(request, "Клиент успешно создан!")
@@ -62,10 +68,11 @@ def client_add(request):
     return render(request, 'clients/client_form.html', {'form': form, 'title': 'Добавить клиента'})
 
 
+@login_required
 def client_edit(request, pk):
     client = get_object_or_404(Client, pk=pk)
     if request.method == 'POST':
-        form = ClientForm(request.POST, instance=client) # <-- Теперь используется правильная форма из forms.py
+        form = ClientForm(request.POST, instance=client)
         if form.is_valid():
             form.save()
             messages.success(request, "Данные клиента успешно обновлены!")
@@ -75,6 +82,7 @@ def client_edit(request, pk):
     return render(request, 'clients/client_form.html', {'form': form, 'title': 'Редактировать клиента'})
 
 
+@login_required
 def client_delete(request, pk):
     client = get_object_or_404(Client, pk=pk)
     if request.method == 'POST':
@@ -85,6 +93,7 @@ def client_delete(request, pk):
     return render(request, 'clients/client_confirm_delete.html', {'client': client})
 
 
+@login_required
 def update_client_notes(request, pk):
     if request.method == 'POST':
         client = get_object_or_404(Client, pk=pk)
@@ -94,6 +103,7 @@ def update_client_notes(request, pk):
     return redirect('client_list')
 
 
+@login_required
 def add_document(request, client_id, doc_type):
     client = get_object_or_404(Client, pk=client_id)
     document_type_display = dict(Document.DOC_TYPES).get(doc_type, doc_type)
@@ -112,6 +122,7 @@ def add_document(request, client_id, doc_type):
                   {'form': form, 'client': client, 'document_type_display': document_type_display})
 
 
+@login_required
 def document_delete(request, pk):
     document = get_object_or_404(Document, pk=pk)
     client_id = document.client.id
@@ -123,29 +134,8 @@ def document_delete(request, pk):
     return render(request, 'clients/document_confirm_delete.html', {'document': document})
 
 
-# clients/views.py
-
-from django.shortcuts import render
-from django.contrib import messages
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
-
-
-# ... (остальные импорты и представления) ...
-
-
-# clients/views.py
-
-from django.shortcuts import render
-from django.contrib import messages
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
-
-
-# ... (other imports and views) ...
-
+@login_required
 def calculator_view(request):
-    # --- КОНСТАНТЫ ---
     LIVING_ALLOWANCE = 1010
     TICKET_BORDER = 500
     TICKET_NO_BORDER = 2500
@@ -160,23 +150,22 @@ def calculator_view(request):
 
     if request.method == 'POST':
         try:
-            # --- ЧАСТЬ 1: Расчёт месячной стоимости обучения (финальная логика) ---
             tuition_fee = float(request.POST.get('tuition_fee', 0))
             if request.POST.get('tuition_currency') == 'EUR':
                 tuition_fee *= EUR_TO_PLN_RATE
 
-            # Получаем количество месяцев из формы
-            months_in_period = int(request.POST.get('months_in_period', 1))
+            fee_type = request.POST.get('fee_type')
+            if fee_type == 'per_semester':
+                monthly_tuition = tuition_fee / 5
+            elif fee_type == 'per_year':
+                monthly_tuition = tuition_fee / 10
+            else:
+                monthly_tuition = tuition_fee
 
-            # Рассчитываем точную месячную ставку
-            monthly_tuition = tuition_fee / months_in_period if months_in_period > 0 else 0
-
-            # --- ЧАСТЬ 2: Расчёт месячной стоимости жилья ---
             monthly_rent_and_bills = float(request.POST.get('rent_and_bills', 0))
             if request.POST.get('rent_currency') == 'EUR':
                 monthly_rent_and_bills *= EUR_TO_PLN_RATE
 
-            # --- ЧАСТЬ 3: Определяем ОБЩИЙ расчётный период ---
             total_end_date_str = request.POST.get('total_end_date')
             total_end_date = datetime.strptime(total_end_date_str, '%d.%m.%Y')
 
@@ -184,17 +173,13 @@ def calculator_view(request):
             total_months_real = total_period_delta.years * 12 + total_period_delta.months + 1
             months_for_calc = min(total_months_real, MAX_MONTHS_LIVING)
 
-            # Определяем остальные данные
             has_border = request.POST.get('has_border')
             return_ticket = TICKET_BORDER if has_border else TICKET_NO_BORDER
-            num_people = int(request.POST.get('num_people', 1))
 
-            # --- ЧАСТЬ 4: Финальный расчёт ---
             total_monthly_costs = monthly_rent_and_bills + monthly_tuition + LIVING_ALLOWANCE
             total_base_cost = total_monthly_costs * months_for_calc
             final_total_required = total_base_cost + return_ticket
 
-            # --- ЧАСТЬ 5: Форматирование и передача в шаблон ---
             context['results'] = {
                 'monthly_rent_and_bills': f"{monthly_rent_and_bills:,.2f}".replace(",", " "),
                 'monthly_tuition_calculated': f"{monthly_tuition:,.2f}".replace(",", " "),
@@ -213,6 +198,43 @@ def calculator_view(request):
     return render(request, 'clients/calculator.html', context)
 
 
+@login_required
 def client_print_view(request, pk):
     client = get_object_or_404(Client, pk=pk)
     return render(request, 'clients/client_printable.html', {'client': client})
+
+
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            messages.success(request, f'Аккаунт для {username} успешно создан! Теперь вы можете войти.')
+            return redirect('login')
+    else:
+        form = UserCreationForm()
+    return render(request, 'clients/register.html', {'form': form})
+
+
+@login_required
+def add_payment(request, client_id):
+    client = get_object_or_404(Client, pk=client_id)
+    if request.method == 'POST':
+        form = PaymentForm(request.POST)
+        if form.is_valid():
+            payment = form.save(commit=False)
+            payment.client = client
+            payment.save()
+            messages.success(request, "Платёж успешно добавлен.")
+            return redirect('client_detail', pk=client.id)
+    # Если форма невалидна или это GET-запрос, просто вернёмся на страницу клиента.
+    # Обработка ошибок валидации будет происходить на стороне клиента, если понадобится.
+    return redirect('client_detail', pk=client.id)
+
+
+@login_required
+def reminder_list(request):
+    # Показываем только активные напоминания с датой в будущем
+    reminders = Reminder.objects.filter(is_active=True, due_date__gte=timezone.now().date())
+    return render(request, 'clients/reminder_list.html', {'reminders': reminders})
