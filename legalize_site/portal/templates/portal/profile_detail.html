@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Мой профиль{% endblock %}
+
+{% block content %}
+{# --- Блок с персональными данными --- #}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h4 class="mb-0"><i class="fas fa-user-circle me-2"></i>Мой профиль</h4>
+        <a href="{% url 'portal:profile_edit' %}" class="btn btn-primary btn-sm"><i class="fas fa-pencil-alt me-1"></i> Редактировать</a>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6"><p><strong>Имя:</strong> {{ profile.first_name }}</p><p><strong>Фамилия:</strong> {{ profile.last_name }}</p></div>
+            <div class="col-md-6"><p><strong>Email:</strong> {{ profile.email }}</p><p><strong>Телефон:</strong> {{ profile.phone|default:"Не указан" }}</p></div>
+        </div>
+    </div>
+</div>
+
+{# --- Блок счетов --- #}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-light"><h4 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Мои счета</h4></div>
+    <div class="card-body">
+        {% if payments %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead><tr><th>Услуга</th><th>Общая сумма</th><th>Оплачено</th><th>Осталось оплатить</th><th>Срок оплаты</th><th>Статус</th></tr></thead>
+                    <tbody>
+                        {% for payment in payments %}
+                        <tr>
+                            <td>{{ payment.get_service_description_display }}</td>
+                            <td>{{ payment.total_amount }} PLN</td>
+                            <td>{{ payment.amount_paid }} PLN</td>
+                            <td>{% if payment.amount_due > 0 %}<strong class="text-danger">{{ payment.amount_due }} PLN</strong>{% else %}<span class="text-success">0.00 PLN</span>{% endif %}</td>
+                            <td>{{ payment.due_date|date:"d.m.Y"|default:"Не указан" }}</td>
+                            <td>{% if payment.status == 'paid' %}<span class="badge bg-success">{{ payment.get_status_display }}</span>{% elif payment.status == 'pending' %}<span class="badge bg-warning text-dark">{{ payment.get_status_display }}</span>{% else %}<span class="badge bg-secondary">{{ payment.get_status_display }}</span>{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-center text-muted">У вас пока нет выставленных счетов.</p>
+        {% endif %}
+    </div>
+</div>
+
+{# --- Блок для загрузки документов --- #}
+{% if document_status_list %}
+<div class="card shadow-sm">
+    <div class="card-header bg-light"><h4 class="mb-0"><i class="fas fa-folder-open me-2"></i>Необходимые документы</h4></div>
+    <div class="card-body">
+        <ul class="list-group list-group-flush">
+            {% for item in document_status_list %}
+            <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                <div class="me-3">
+                    {{ item.name }}
+                    {% if item.uploaded_doc %}
+                        <br>
+                        <small class="text-muted">
+                            <a href="{{ item.uploaded_doc.file.url }}" target="_blank">{{ item.uploaded_doc.file.name|cut:"documents/" }}</a>
+                            (загружен {{ item.uploaded_doc.uploaded_at|date:"d.m.Y" }})
+                        </small>
+                    {% endif %}
+                </div>
+                <div class="mt-2 mt-md-0">
+                    {% if item.uploaded_doc %}
+                        {% if item.uploaded_doc.verified %}
+                            <span class="badge bg-success p-2"><i class="fas fa-check-circle me-1"></i> Проверен</span>
+                        {% else %}
+                            <span class="badge bg-info text-dark p-2"><i class="fas fa-clock me-1"></i> Ожидает проверки</span>
+                        {% endif %}
+                    {% else %}
+                         <form action="{% url 'portal:document_upload' item.code %}" method="post" enctype="multipart/form-data" class="d-inline-flex align-items-center">
+                            {% csrf_token %}
+                            {{ item.form.file }}
+                            <button type="submit" class="btn btn-sm btn-primary ms-2">Загрузить</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

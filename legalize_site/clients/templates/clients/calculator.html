@@ -18,10 +18,10 @@
           <div class="card-body">
 
             <div class="mb-3">
-              <label class="form-label">Когда заканчивается учёба?</label>
-              <div class="input-group" id="total_end_date_picker">
-                <input type="text" class="form-control" name="total_end_date" value="{{ form_data.total_end_date }}" placeholder="дд.мм.гггг" data-input required>
-                <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle><i class="bi bi-calendar3"></i></a>
+              <label class="form-label">Когда заканчивается основание пребывания?</label>
+              <div class="input-group" id="date-picker-wrapper">
+                <input type="text" class="form-control" name="total_end_date" id="id_total_end_date" value="{{ form_data.total_end_date }}" placeholder="дд-мм-гггг" required>
+                <button class="btn btn-outline-secondary" type="button" id="date-picker-button"><i class="bi bi-calendar3"></i></button>
               </div>
             </div>
             <hr>
@@ -30,7 +30,7 @@
               <label class="form-label">Оплата за обучение</label>
               <div class="row g-2">
                 <div class="col-sm-5">
-                  <input type="number" step="0.01" class="form-control" name="tuition_fee" value="{{ form_data.tuition_fee }}" placeholder="Сумма оплаты" required>
+                  <input type="number" step="0.01" class="form-control" name="tuition_fee" value="{{ form_data.tuition_fee|default:0 }}" placeholder="Сумма оплаты" required>
                 </div>
                 <div class="col-sm-3">
                    <select class="form-select" name="tuition_currency">
@@ -56,7 +56,7 @@
             <div class="mb-3">
               <label for="rent_and_bills" class="form-label">Аренда + счётчики в месяц (на всю квартиру)</label>
               <div class="input-group">
-                <input type="number" step="0.01" class="form-control" id="rent_and_bills" name="rent_and_bills" value="{{ form_data.rent_and_bills }}" required>
+                <input type="number" step="0.01" class="form-control" id="rent_and_bills" name="rent_and_bills" value="{{ form_data.rent_and_bills|default:0 }}" required>
                 <select class="form-select" name="rent_currency" style="max-width: 100px;">
                   <option value="PLN" {% if form_data.rent_currency == 'PLN' %}selected{% endif %}>PLN</option>
                   <option value="EUR" {% if form_data.rent_currency == 'EUR' %}selected{% endif %}>EUR</option>
@@ -69,23 +69,17 @@
                 <label for="num_people" class="form-label">Кол-во человек, проживающих вместе</label>
                 <input type="number" class="form-control" name="num_people" value="{{ form_data.num_people|default:1 }}" required>
             </div>
+            <hr>
 
-             <div class="mb-3">
-              <label for="return_ticket" class="form-label">Стоимость обратного билета</label>
-              <div class="input-group">
-                <input type="number" step="0.01" class="form-control" name="return_ticket" value="{{ form_data.return_ticket|default:2500 }}" required>
-                <select class="form-select" name="ticket_currency" style="max-width: 100px;">
-                    <option value="PLN" {% if form_data.ticket_currency == 'PLN' %}selected{% endif %}>PLN</option>
-                    <option value="EUR" {% if form_data.ticket_currency == 'EUR' %}selected{% endif %}>EUR</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" name="has_border" id="has_border" {% if form_data.has_border %}checked{% endif %}>
-              <label class="form-check-label" for="has_border">
-                Страна граничит с Польшей (билет 500 zł)
-              </label>
+            <div class="mb-3">
+                <label class="form-label">Обратный билет</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="has_border" id="has_border_checkbox" {% if form_data.has_border %}checked{% endif %}>
+                  <label class="form-check-label" for="has_border_checkbox">
+                    Страна граничит с Польшей? (билет 500 zł, иначе 2500 zł)
+                  </label>
+                </div>
+                <p id="ticket_price_display" class="form-text mt-1"></p>
             </div>
 
           </div>
@@ -129,7 +123,7 @@
           </div>
         {% else %}
             <div class="alert alert-info">
-                Заполните все поля и нажмите "Рассчитать", чтобы увидеть результат.
+                Заполните все поля слева и нажмите "Рассчитать", чтобы увидеть результат.
             </div>
         {% endif %}
       </div>
@@ -138,9 +132,18 @@
 {% endblock %}
 
 {% block extra_js %}
-  {{ block.super }}
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // --- Календарь ---
+        flatpickr("#id_total_end_date", {
+            dateFormat: "d-m-Y", // Формат ДД-ММ-ГГГГ
+            allowInput: true,
+        });
+        document.getElementById('date-picker-button').addEventListener('click', function() {
+            document.getElementById('id_total_end_date')._flatpickr.toggle();
+        });
+
+        // --- Автозаполнение месяцев ---
         const feeTypeSelector = document.getElementById('fee_type_selector');
         const monthsInput = document.getElementById('months_in_period_input');
         function updateMonths() {
@@ -148,8 +151,20 @@
             monthsInput.value = selectedOption.dataset.months;
         }
         feeTypeSelector.addEventListener('change', updateMonths);
-        updateMonths();
-        flatpickr("#total_end_date_picker", { wrap: true, dateFormat: "d.m.Y", allowInput: true, clickOpens: false });
+        updateMonths(); // Вызываем при загрузке
+
+        // --- Авто-обновление цены билета ---
+        const borderCheckbox = document.getElementById('has_border_checkbox');
+        const ticketDisplay = document.getElementById('ticket_price_display');
+        function updateTicketPrice() {
+            if (borderCheckbox.checked) {
+                ticketDisplay.textContent = 'Цена билета: 500 zł';
+            } else {
+                ticketDisplay.textContent = 'Цена билета: 2500 zł';
+            }
+        }
+        borderCheckbox.addEventListener('change', updateTicketPrice);
+        updateTicketPrice(); // Вызываем при загрузке
     });
   </script>
 {% endblock %}

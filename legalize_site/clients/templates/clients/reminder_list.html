@@ -5,41 +5,39 @@
 {% block content %}
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Активные напоминания</h1>
-    <a href="{% url 'run_create_reminders' %}" class="btn btn-primary">
-      <i class="bi bi-arrow-clockwise"></i> Проверить и создать напоминания
+    {# --- ИСПРАВЛЕНО ЗДЕСЬ --- #}
+    <a href="{% url 'clients:create_reminders' %}" class="btn btn-primary">
+      Проверить и создать напоминания
     </a>
   </div>
 
-  <p class="text-muted">Список предстоящих дат окончания документов и оплат.</p>
-
-  <div class="list-group">
-    {% for reminder in reminders %}
-      <div class="list-group-item list-group-item-action">
-        <div class="d-flex w-100 justify-content-between">
+  {% if reminders %}
+    <div class="list-group">
+      {% for reminder in reminders %}
+        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
           <div>
-            <a href="{% url 'client_detail' reminder.client.pk %}" class="text-decoration-none text-dark">
-              <h5 class="mb-1 d-inline">{{ reminder.title }}</h5>
-            </a>
-            <form action="{% url 'delete_reminder' reminder.id %}" method="post" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите удалить это напоминание?');">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-link btn-sm p-0 text-danger" title="Удалить напоминание">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </form>
+            <h5 class="mb-1">
+              <a href="{% url 'clients:client_detail' reminder.client.pk %}">{{ reminder.client }}</a>
+            </h5>
+            <p class="mb-1">{{ reminder.title }}</p>
+            <small class="text-danger">Срок: {{ reminder.due_date|date:"d.m.Y" }}</small>
           </div>
-          <small class="text-danger">
-            <strong>До: {{ reminder.due_date|date:"d.m.Y" }}</strong>
-          </small>
+          <form action="{% url 'clients:delete_reminder' reminder.id %}" method="post" onsubmit="return confirm('Вы уверены, что хотите удалить это напоминание?');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger btn-sm" title="Удалить">
+              <i class="bi bi-trash"></i>
+            </button>
+          </form>
         </div>
-        <p class="mb-1">
-          <strong>Клиент:</strong> {{ reminder.client.first_name }} {{ reminder.client.last_name }}
-        </p>
-        {% if reminder.notes %}
-          <small class="text-muted">{{ reminder.notes }}</small>
-        {% endif %}
-      </div>
-    {% empty %}
-      <div class="alert alert-success">Активных напоминаний нет.</div>
-    {% endfor %}
-  </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-success">
+      <h4 class="alert-heading">Всё в порядке!</h4>
+      <p>Активных напоминаний на ближайшее время нет.</p>
+      <hr>
+      <p class="mb-0">Вы можете запустить проверку вручную, чтобы создать напоминания для клиентов, у которых скоро заканчиваются документы.</p>
+    </div>
+  {% endif %}
+
 {% endblock %}

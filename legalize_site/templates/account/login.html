@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load socialaccount %}
+
+{% block title %}Вход в систему{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7 col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-header text-center">
+        <h4 class="mb-0">Вход в систему</h4>
+      </div>
+      <div class="card-body">
+        <a href="{% provider_login_url 'google' %}" class="btn btn-outline-danger w-100 mb-3">
+          <i class="bi bi-google"></i> Продолжить с Google
+        </a>
+        <div class="text-center my-3"><small class="text-muted">ИЛИ</small></div>
+
+        <form class="login" method="POST" action="{% url 'account_login' %}">
+          {% csrf_token %}
+
+          <div class="mb-3">
+            <label for="id_login" class="form-label">Адрес электронной почты</label>
+            <input type="email" name="login" class="form-control" id="id_login" required autocomplete="off">
+          </div>
+
+          <div class="mb-3">
+            <label for="id_password" class="form-label">Пароль</label>
+            <input type="password" name="password" class="form-control" id="id_password" required>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="form-check">
+              <input type="checkbox" name="remember" class="form-check-input" id="id_remember">
+              <label class="form-check-label" for="id_remember">Запомнить меня</label>
+            </div>
+            <a href="{% url 'account_reset_password' %}">Забыли пароль?</a>
+          </div>
+
+          {% if form.errors %}
+            <div class="alert alert-danger mt-3">Неверный email или пароль.</div>
+          {% endif %}
+
+          <button type="submit" class="btn btn-primary mt-3 w-100">Войти</button>
+        </form>
+
+        <div class="border-top pt-3 mt-3 text-center">
+            <small class="text-muted">Ещё нет аккаунта? <a class="ms-2" href="{% url 'account_signup' %}">Зарегистрироваться</a></small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -6,8 +6,8 @@
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>{{ client.first_name }} {{ client.last_name }}</h1>
     <div>
-        <a href="{% url 'client_print' client.pk %}" class="btn btn-secondary">Распечатать</a>
-        <a href="{% url 'client_edit' client.pk %}" class="btn btn-primary">Редактировать данные</a>
+        <a href="{% url 'clients:client_print' pk=client.pk %}" class="btn btn-secondary me-2">Печать</a>
+        <a href="{% url 'clients:client_edit' client.pk %}" class="btn btn-primary">Редактировать данные</a>
     </div>
   </div>
 
@@ -20,16 +20,6 @@
         <p><strong>Основание пребывания:</strong> {{ client.basis_of_stay|default:"Не указано" }}</p>
         {% if client.legal_basis_end_date %}
             <p><strong>Дата окончания основания:</strong> {{ client.legal_basis_end_date|date:"d.m.Y" }}</p>
-        {% endif %}
-        <hr>
-        <p><strong>Zgłoszenie (запись создана):</strong> {{ client.created_at|date:"d.m.Y" }}</p>
-        {% if client.submission_date %}
-            <p><strong>Złożone (документы поданы):</strong> {{ client.submission_date|date:"d.m.Y" }}</p>
-        {% endif %}
-        {% if client.notes %}
-          <hr>
-          <p class="mb-1"><strong>Заметки:</strong></p>
-          <div>{{ client.notes|safe }}</div>
         {% endif %}
     </div>
   </div>
@@ -49,46 +39,26 @@
                           <span>{{ payment.get_service_description_display }}</span>
                           <button type="button" class="btn btn-link btn-sm p-0 ms-2 edit-payment-btn"
                                   data-bs-toggle="modal" data-bs-target="#editPaymentModal"
-                                  data-url="{% url 'edit_payment' payment.id %}"
+                                  data-url="{% url 'clients:edit_payment' payment.id %}"
                                   data-service="{{ payment.service_description }}"
                                   data-total_amount="{{ payment.total_amount }}"
                                   data-amount_paid="{{ payment.amount_paid }}"
-                                  data-status="{{ payment.status }}"
-                                  data-payment_date="{{ payment.payment_date|date:'Y-m-d' }}"
-                                  data-due_date="{{ payment.due_date|date:'Y-m-d' }}"
-                                  data-payment_method="{{ payment.payment_method|default:'' }}"
-                                  data-transaction_id="{{ payment.transaction_id|default:'' }}">
+                                  data-status="{{ payment.status }}">
                               <i class="bi bi-pencil-square"></i>
                           </button>
-                          <form action="{% url 'delete_payment' payment.id %}" method="post" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите удалить этот платёж?');">
+                          <form action="{% url 'clients:delete_payment' payment.id %}" method="post" class="d-inline" onsubmit="return confirm('Вы уверены?');">
                               {% csrf_token %}
                               <button type="submit" class="btn btn-link btn-sm p-0 text-danger" title="Удалить платёж">
                                   <i class="bi bi-trash"></i>
                               </button>
                           </form>
                       </div>
-                      <span class="badge
-                          {% if payment.status == 'paid' %}bg-success
-                          {% elif payment.status == 'partial' %}bg-warning
-                          {% else %}bg-danger{% endif %}">
+                      <span class="badge {% if payment.status == 'paid' %}bg-success{% elif payment.status == 'partial' %}bg-warning{% else %}bg-danger{% endif %}">
                           {{ payment.get_status_display }}
                       </span>
                   </div>
-                  {% if payment.payment_date %}
-                  <p class="mb-1 mt-2 small text-muted">
-                      Последний платёж: {{ payment.payment_date|date:"d.m.Y" }} ({{ payment.get_payment_method_display }})
-                  </p>
-                  {% endif %}
-                  {% if payment.status == 'partial' and payment.due_date %}
-                      <p class="mb-1 small"><strong><span class="text-danger">Оплатить до: {{ payment.due_date|date:"d.m.Y" }}</span></strong></p>
-                  {% endif %}
                   <div class="progress mt-1" style="height: 20px;">
-                      <div class="progress-bar" role="progressbar"
-                           style="width: {% widthratio payment.amount_paid payment.total_amount 100 %}%;"
-                           aria-valuenow="{{ payment.amount_paid }}"
-                           aria-valuemin="0"
-                           aria-valuemax="{{ payment.total_amount }}">
-                      </div>
+                      <div class="progress-bar" role="progressbar" style="width: {% widthratio payment.amount_paid payment.total_amount 100 %}%;"></div>
                   </div>
                   <div class="d-flex justify-content-between mt-1">
                       <small>Оплачено: {{ payment.amount_paid }} zł</small>
@@ -108,7 +78,7 @@
     {% for item in document_status_list %}
       <div class="accordion-item">
         <h2 class="accordion-header" id="heading{{ item.code }}">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ item.code }}" aria-expanded="false" aria-controls="collapse{{ item.code }}">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ item.code }}">
             {{ item.name }}
             {% if item.is_uploaded %}
               <span class="badge bg-success ms-3">{{ item.documents|length }} шт.</span>
@@ -117,23 +87,38 @@
             {% endif %}
           </button>
         </h2>
-        <div id="collapse{{ item.code }}" class="accordion-collapse collapse" aria-labelledby="heading{{ item.code }}" data-bs-parent="#documentAccordion">
+        <div id="collapse{{ item.code }}" class="accordion-collapse collapse" data-bs-parent="#documentAccordion">
           <div class="accordion-body">
             {% if item.is_uploaded %}
               <ul class="list-group list-group-flush mb-3">
                 {% for doc in item.documents %}
                   <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <a href="{{ doc.file.url }}" target="_blank">
-                      Файл от {{ doc.uploaded_at|date:"d.m.Y H:i" }}
-                    </a>
-                    <a href="{% url 'document_delete' doc.pk %}" class="btn btn-warning btn-sm">Удалить</a>
+                    <div>
+                      <a href="{{ doc.file.url }}" target="_blank">
+                        Файл от {{ doc.uploaded_at|date:"d.m.Y H:i" }}
+                      </a>
+                      {% if doc.verified %}
+                          <span class="badge bg-success ms-2">Проверен</span>
+                      {% else %}
+                          <span class="badge bg-warning text-dark ms-2">Ожидает проверки</span>
+                      {% endif %}
+                    </div>
+                    <div>
+                      <form action="{% url 'clients:toggle_document_verification' doc.id %}" method="post" class="d-inline">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-sm btn-outline-primary me-2">
+                              {% if doc.verified %}Снять отметку{% else %}Проверить{% endif %}
+                          </button>
+                      </form>
+                      <a href="{% url 'clients:document_delete' doc.pk %}" class="btn btn-warning btn-sm">Удалить</a>
+                    </div>
                   </li>
                 {% endfor %}
               </ul>
             {% else %}
               <p class="text-muted">Документы этого типа еще не загружены.</p>
             {% endif %}
-            <a href="{% url 'add_document' client_id=client.id doc_type=item.code %}" class="btn btn-primary btn-sm">
+            <a href="{% url 'clients:add_document' client_id=client.id doc_type=item.code %}" class="btn btn-primary btn-sm">
               + Добавить еще один файл
             </a>
           </div>
@@ -147,160 +132,97 @@
   </div>
 
   <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="addPaymentModalLabel">Добавить новый счёт для {{ client.first_name }} {{ client.last_name }}</h5>
+          <h5 class="modal-title" id="addPaymentModalLabel">Добавить новый счёт</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body">
-          <form action="{% url 'add_payment' client.id %}" method="post" id="payment-form">
-            {% csrf_token %}
+        <form action="{% url 'clients:add_payment' client.id %}" method="post">
+          {% csrf_token %}
+          <div class="modal-body">
             <div class="mb-3">
-                <label for="id_service_description" class="form-label">Описание услуги</label>
-                <select name="service_description" class="form-select" required id="id_service_description">
-                    <option value="" selected>---------</option>
-                    <option value="work_permit" data-price="1800.00">Работа</option>
-                    <option value="student_visa" data-price="1400.00">Учёба</option>
-                    <option value="photo_service" data-price="40.00">Фото</option>
-                    <option value="consultation" data-price="180.00">Консультация</option>
-                </select>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="id_total_amount" class="form-label">Общая сумма</label>
-                    <input type="number" step="0.01" name="total_amount" class="form-control" required id="id_total_amount">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="id_amount_paid" class="form-label">Оплаченная сумма</label>
-                    <input type="number" step="0.01" name="amount_paid" class="form-control" value="0" required id="id_amount_paid">
-                </div>
+              <label for="id_service_description" class="form-label">Услуга</label>
+              <select name="service_description" class="form-select" id="id_service_description" required>
+                {% for choice_value, choice_label in payment_form.service_description.field.choices %}
+                  <option value="{{ choice_value }}">{{ choice_label }}</option>
+                {% endfor %}
+              </select>
             </div>
             <div class="mb-3">
-                <label for="id_status" class="form-label">Статус оплаты</label>
-                <select name="status" class="form-select" id="id_status">
-                  <option value="pending" selected>Ожидает оплаты</option>
-                  <option value="partial">Частично оплачен</option>
-                  <option value="paid">Оплачен полностью</option>
-                  <option value="refunded">Возврат</option>
-                </select>
+              <label for="id_total_amount" class="form-label">Общая сумма</label>
+              <input type="number" step="0.01" name="total_amount" class="form-control" id="id_total_amount" required>
             </div>
-             <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="id_payment_date" class="form-label">Дата оплаты</label>
-                    <div class="input-group" id="payment_date_picker_modal">
-                        <input type="text" name="payment_date" class="form-control" placeholder="дд.мм.гггг" data-input>
-                        <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle><i class="bi bi-calendar3"></i></a>
-                    </div>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="id_due_date" class="form-label">Оплатить до</label>
-                    <div class="input-group" id="due_date_picker_modal">
-                        <input type="text" name="due_date" class="form-control" placeholder="дд.мм.гггг" data-input>
-                        <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle><i class="bi bi-calendar3"></i></a>
-                    </div>
-                </div>
+            <div class="mb-3">
+              <label for="id_amount_paid" class="form-label">Оплачено</label>
+              <input type="number" step="0.01" name="amount_paid" class="form-control" id="id_amount_paid" value="0.00" required>
             </div>
-             <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="id_payment_method" class="form-label">Способ оплаты</label>
-                    <select name="payment_method" class="form-select" id="id_payment_method">
-                        <option value="">---------</option>
-                        <option value="card">Карта</option>
-                        <option value="cash">Наличные</option>
-                        <option value="transfer">Перевод</option>
-                    </select>
-                </div>
-                 <div class="col-md-6 mb-3">
-                    <label for="id_transaction_id" class="form-label">ID транзакции (если есть)</label>
-                    <input type="text" name="transaction_id" class="form-control" id="id_transaction_id">
-                </div>
+            <div class="mb-3">
+              <label for="id_due_date" class="form-label">Дата оплаты (если есть)</label>
+              <input type="date" name="due_date" class="form-control" id="id_due_date">
             </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-          <button type="submit" form="payment-form" class="btn btn-primary">Сохранить платёж</button>
-        </div>
+            <div class="mb-3">
+              <label for="id_status" class="form-label">Статус</label>
+              <select name="status" class="form-select" id="id_status" required>
+                {% for choice_value, choice_label in payment_form.status.field.choices %}
+                  <option value="{{ choice_value }}">{{ choice_label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+            <button type="submit" class="btn btn-primary">Сохранить счёт</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
 
   <div class="modal fade" id="editPaymentModal" tabindex="-1" aria-labelledby="editPaymentModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="editPaymentModalLabel">Редактировать платёж</h5>
+          <h5 class="modal-title" id="editPaymentModalLabel">Редактировать счёт</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body">
-          <form action="" method="post" id="edit-payment-form">
-            {% csrf_token %}
+        <form id="editPaymentForm" method="post">
+          {% csrf_token %}
+          <div class="modal-body">
             <div class="mb-3">
-                <label for="edit_service_description" class="form-label">Описание услуги</label>
-                <select name="service_description" class="form-select" required id="edit_service_description">
-                    <option value="work_permit">Работа</option>
-                    <option value="student_visa">Учёба</option>
-                    <option value="photo_service">Фото</option>
-                    <option value="consultation">Консультация</option>
-                </select>
-            </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="edit_total_amount" class="form-label">Общая сумма</label>
-                    <input type="number" step="0.01" name="total_amount" class="form-control" required id="edit_total_amount">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="edit_amount_paid" class="form-label">Оплаченная сумма</label>
-                    <input type="number" step="0.01" name="amount_paid" class="form-control" required id="edit_amount_paid">
-                </div>
+              <label for="edit_id_service_description" class="form-label">Услуга</label>
+              <select name="service_description" class="form-select" id="edit_id_service_description" required>
+                {% for choice_value, choice_label in payment_form.service_description.field.choices %}
+                  <option value="{{ choice_value }}">{{ choice_label }}</option>
+                {% endfor %}
+              </select>
             </div>
             <div class="mb-3">
-                <label for="edit_status" class="form-label">Статус оплаты</label>
-                <select name="status" class="form-select" id="edit_status">
-                  <option value="pending">Ожидает оплаты</option>
-                  <option value="partial">Частично оплачен</option>
-                  <option value="paid">Оплачен полностью</option>
-                  <option value="refunded">Возврат</option>
-                </select>
+              <label for="edit_id_total_amount" class="form-label">Общая сумма</label>
+              <input type="number" step="0.01" name="total_amount" class="form-control" id="edit_id_total_amount" required>
             </div>
-             <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="edit_payment_date" class="form-label">Дата оплаты</label>
-                    <div class="input-group" id="edit_payment_date_picker">
-                        <input type="text" name="payment_date" class="form-control" id="edit_payment_date" placeholder="дд.мм.гггг" data-input>
-                        <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle><i class="bi bi-calendar3"></i></a>
-                    </div>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label for="edit_due_date" class="form-label">Оплатить до</label>
-                    <div class="input-group" id="edit_due_date_picker">
-                        <input type="text" name="due_date" class="form-control" id="edit_due_date" placeholder="дд.мм.гггг" data-input>
-                        <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle><i class="bi bi-calendar3"></i></a>
-                    </div>
-                </div>
+            <div class="mb-3">
+              <label for="edit_id_amount_paid" class="form-label">Оплачено</label>
+              <input type="number" step="0.01" name="amount_paid" class="form-control" id="edit_id_amount_paid" required>
             </div>
-             <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label for="edit_payment_method" class="form-label">Способ оплаты</label>
-                    <select name="payment_method" class="form-select" id="edit_payment_method">
-                        <option value="">---------</option>
-                        <option value="card">Карта</option>
-                        <option value="cash">Наличные</option>
-                        <option value="transfer">Перевод</option>
-                    </select>
-                </div>
-                 <div class="col-md-6 mb-3">
-                    <label for="edit_transaction_id" class="form-label">ID транзакции</label>
-                    <input type="text" name="transaction_id" class="form-control" id="edit_transaction_id">
-                </div>
+            <div class="mb-3">
+              <label for="edit_id_due_date" class="form-label">Дата оплаты (если есть)</label>
+              <input type="date" name="due_date" class="form-control" id="edit_id_due_date">
             </div>
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-          <button type="submit" form="edit-payment-form" class="btn btn-primary">Сохранить изменения</button>
-        </div>
+            <div class="mb-3">
+              <label for="edit_id_status" class="form-label">Статус</label>
+              <select name="status" class="form-select" id="edit_id_status" required>
+                {% for choice_value, choice_label in payment_form.status.field.choices %}
+                  <option value="{{ choice_value }}">{{ choice_label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -310,54 +232,43 @@
   {{ block.super }}
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Календари для окна ДОБАВЛЕНИЯ
-        flatpickr("#payment_date_picker_modal", { wrap: true, dateFormat: "d.m.Y", allowInput: true, clickOpens: false });
-        flatpickr("#due_date_picker_modal", { wrap: true, dateFormat: "d.m.Y", allowInput: true, clickOpens: false });
+      // --- Логика для авто-заполнения цены ---
+      const serviceSelect = document.getElementById('id_service_description');
+      const totalAmountInput = document.getElementById('id_total_amount');
+      // Данные о ценах передаются из views.py
+      const servicePrices = JSON.parse('{{ service_prices_json|escapejs|default:"{}" }}');
 
-        // Автозаполнение цены в окне ДОБАВЛЕНИЯ
-        const serviceSelector = document.getElementById('id_service_description');
-        const totalAmountInput = document.getElementById('id_total_amount');
-        if (serviceSelector && totalAmountInput) {
-            serviceSelector.addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                const price = selectedOption.dataset.price;
-                totalAmountInput.value = price ? price : '';
-            });
-        }
+      if (serviceSelect) {
+          serviceSelect.addEventListener('change', function() {
+            const selectedService = this.value;
+            if (selectedService && servicePrices[selectedService]) {
+              totalAmountInput.value = servicePrices[selectedService];
+            } else {
+              totalAmountInput.value = '';
+            }
+          });
+      }
 
-        // Календари для окна РЕДАКТИРОВАНИЯ
-        const editPaymentDate = flatpickr("#edit_payment_date_picker", { wrap: true, dateFormat: "d.m.Y", allowInput: true, clickOpens: false });
-        const editDueDate = flatpickr("#edit_due_date_picker", { wrap: true, dateFormat: "d.m.Y", allowInput: true, clickOpens: false });
+      // --- Логика для модального окна редактирования ---
+      const editPaymentModal = document.getElementById('editPaymentModal');
+      if (editPaymentModal) {
+          editPaymentModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const url = button.getAttribute('data-url');
+            const service = button.getAttribute('data-service');
+            const totalAmount = button.getAttribute('data-total_amount');
+            const amountPaid = button.getAttribute('data-amount_paid');
+            const status = button.getAttribute('data-status');
 
-        // Заполнение формы РЕДАКТИРОВАНИЯ
-        const editPaymentModal = document.getElementById('editPaymentModal');
-        if (editPaymentModal) {
-            editPaymentModal.addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
-                const form = editPaymentModal.querySelector('#edit-payment-form');
-                form.action = button.dataset.url;
+            const form = editPaymentModal.querySelector('#editPaymentForm');
+            form.action = url;
 
-                // Заполняем все поля
-                form.querySelector('#edit_service_description').value = button.dataset.service;
-                form.querySelector('#edit_total_amount').value = button.dataset.total_amount;
-                form.querySelector('#edit_amount_paid').value = button.dataset.amount_paid;
-                form.querySelector('#edit_status').value = button.dataset.status;
-                form.querySelector('#edit_payment_method').value = button.dataset.payment_method;
-                form.querySelector('#edit_transaction_id').value = button.dataset.transaction_id;
-
-                // Устанавливаем даты с помощью API календаря
-                if (button.dataset.payment_date) {
-                    editPaymentDate.setDate(button.dataset.payment_date, true, "Y-m-d");
-                } else {
-                    editPaymentDate.clear();
-                }
-                if (button.dataset.due_date) {
-                    editDueDate.setDate(button.dataset.due_date, true, "Y-m-d");
-                } else {
-                    editDueDate.clear();
-                }
-            });
-        }
+            editPaymentModal.querySelector('#edit_id_service_description').value = service;
+            editPaymentModal.querySelector('#edit_id_total_amount').value = totalAmount;
+            editPaymentModal.querySelector('#edit_id_amount_paid').value = amountPaid;
+            editPaymentModal.querySelector('#edit_id_status').value = status;
+          });
+      }
     });
   </script>
 {% endblock %}

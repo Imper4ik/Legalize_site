@@ -1,24 +1,36 @@
-\{% extends "base.html" %}
+{% extends "base.html" %}
 
-{% block title %}Подтверждение удаления{% endblock %}
+{% block title %}Удаление клиента{% endblock %}
 
 {% block content %}
-  <div class="card border-danger">
-    <div class="card-header bg-danger text-white">
-      Подтверждение удаления
-    </div>
-    <div class="card-body">
-      <h5 class="card-title">Вы уверены, что хотите удалить клиента?</h5>
-      <p class="card-text">
-        <strong>{{ client.first_name }} {{ client.last_name }} ({{ client.email }})</strong>
-      </p>
-      <p class="text-danger">Это действие нельзя будет отменить. Все связанные с клиентом документы также будут удалены.</p>
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm border-danger">
+            <div class="card-header bg-danger text-white">
+                <h4 class="mb-0">Подтверждение удаления</h4>
+            </div>
+            <div class="card-body p-4">
+                <p class="lead">Вы уверены, что хотите навсегда удалить клиента?</p>
 
-      <form method="post">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger">Да, удалить</button>
-        <a href="{% url 'client_list' %}" class="btn btn-secondary">Отмена</a>
-      </form>
+                <div class="alert alert-secondary">
+                    <h5 class="alert-heading">{{ client.first_name }} {{ client.last_name }}</h5>
+                    <p class="mb-0">Email: {{ client.email }}</p>
+                </div>
+
+                <p class="text-danger fw-bold mt-3">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Это действие необратимо! Все связанные с клиентом документы, платежи и напоминания также будут удалены.
+                </p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-danger btn-lg">Да, я уверен, удалить</button>
+                        <a href="{% url 'clients:client_detail' client.pk %}" class="btn btn-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-  </div>
+</div>
 {% endblock %}

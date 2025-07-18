@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Email подтверждён{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card text-center shadow-sm">
+             <div class="card-header">
+                <h4 class="mb-0">Отлично!</h4>
+            </div>
+            <div class="card-body">
+                <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+                <h5 class="card-title mt-3">Ваш аккаунт успешно активирован!</h5>
+                <p class="card-text">Теперь вы можете войти на сайт, используя свой логин и пароль.</p>
+                <a href="{% url 'login' %}" class="btn btn-primary">Перейти ко входу</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

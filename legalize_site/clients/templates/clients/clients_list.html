@@ -5,7 +5,7 @@
 {% block content %}
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Список клиентов</h1>
-    <a href="{% url 'client_add' %}" class="btn btn-primary">Добавить нового клиента</a>
+    <a href="{% url 'clients:client_add' %}" class="btn btn-primary">Добавить нового клиента</a>
   </div>
 
   <form method="get" class="mb-4">
@@ -61,7 +61,7 @@
               {% endif %}
             </td>
             <td style="background-color: #e7f3ff;">
-              <form action="{% url 'update_client_notes' pk=client.pk %}" method="post" class="notes-form">
+              <form action="{% url 'clients:update_client_notes' pk=client.pk %}" method="post" class="notes-form">
                 {% csrf_token %}
                 <input type="hidden" name="notes" class="hidden-notes-input">
                 <div class="form-control notes-editor" contenteditable="true" style="min-height: 38px;">{{ client.notes|safe }}</div>
@@ -70,8 +70,8 @@
             </td>
             <td style="background-color: #ffffff;">
               <div class="d-grid gap-2">
-                <a href="{% url 'client_detail' pk=client.pk %}" class="btn btn-info btn-sm">Подробнее</a>
-                <a href="{% url 'client_delete' pk=client.pk %}" class="btn btn-danger btn-sm">Удалить</a>
+                <a href="{% url 'clients:client_detail' pk=client.pk %}" class="btn btn-info btn-sm">Подробнее</a>
+                <a href="{% url 'clients:client_delete' pk=client.pk %}" class="btn btn-danger btn-sm">Удалить</a>
               </div>
             </td>
           </tr>
@@ -88,7 +88,6 @@
 
 {% block extra_js %}
   {{ block.super }}
-
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const formatButton = document.querySelector('.format-button[data-format="bold"]');
