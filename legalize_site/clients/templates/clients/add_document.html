@@ -17,13 +17,24 @@
             {% csrf_token %}
 
             <div class="mb-3">
-              <label for="id_file" class="form-label">Выберите файл для загрузки:</label>
-              <input class="form-control" type="file" id="id_file" name="file" required>
+              <label for="{{ form.file.id_for_label }}" class="form-label">Выберите файл для загрузки:</label>
+              {{ form.file }}
+            </div>
+
+            <div class="mb-3">
+              <label for="{{ form.expiry_date.id_for_label }}" class="form-label">Действителен до (необязательно):</label>
+              {{ form.expiry_date }}
             </div>
 
             {% if form.errors %}
               <div class="alert alert-danger">
-                {{ form.errors }}
+                <ul class="mb-0">
+                {% for field, error_list in form.errors.items %}
+                  {% for error in error_list %}
+                    <li>{{ error }}</li>
+                  {% endfor %}
+                {% endfor %}
+                </ul>
               </div>
             {% endif %}
 

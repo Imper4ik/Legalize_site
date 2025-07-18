@@ -38,7 +38,14 @@ class ClientForm(forms.ModelForm):
 class DocumentUploadForm(forms.ModelForm):
     class Meta:
         model = Document
-        fields = ['file']
+        # ИСПРАВЛЕНО: Добавляем 'expiry_date' в список полей
+        fields = ['file', 'expiry_date']
+        widgets = {
+            'file': forms.FileInput(attrs={'class': 'form-control'}),
+            'expiry_date': forms.DateInput(
+                attrs={'class': 'form-control', 'type': 'date'}
+            ),
+        }
 
 
 class PaymentForm(forms.ModelForm):
