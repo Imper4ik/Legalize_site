@@ -56,7 +56,7 @@ class Client(models.Model):
     def get_absolute_url(self):
         return reverse('clients:client_detail', kwargs={'pk': self.id})
 
-    # --- НОВЫЕ МЕТОДЫ ДЛЯ ЧЕКЛИСТА ---
+    # --- МЕТОДЫ ДЛЯ ЧЕКЛИСТА ---
     def get_document_checklist(self):
         """
         Возвращает чеклист для клиента с информацией о загруженных документах.
@@ -115,6 +115,7 @@ class Document(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='documents', verbose_name="Клиент")
     document_type = models.CharField(max_length=50, choices=DOC_TYPES, verbose_name="Тип документа")
     file = models.FileField(upload_to='documents/', verbose_name="Файл")
+    expiry_date = models.DateField(null=True, blank=True, verbose_name="Действителен до")
     uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата загрузки")
     verified = models.BooleanField(default=False, verbose_name="Проверено")
 
@@ -185,7 +186,11 @@ class Reminder(models.Model):
     ]
 
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='reminders', verbose_name="Клиент")
+
+    # --- ИСПРАВЛЕНО: Добавлена связь с документом ---
     payment = models.OneToOneField(Payment, on_delete=models.CASCADE, null=True, blank=True, related_name="reminder")
+    document = models.OneToOneField(Document, on_delete=models.CASCADE, null=True, blank=True, related_name="reminder")
+
     reminder_type = models.CharField(max_length=20, choices=REMINDER_TYPE_CHOICES, default='document',
                                      verbose_name="Тип напоминания")
     title = models.CharField(max_length=255, verbose_name="Заголовок напоминания")

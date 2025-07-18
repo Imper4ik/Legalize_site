@@ -42,7 +42,7 @@
                   <select class="form-select" name="fee_type" id="fee_type_selector">
                     <option value="per_month" data-months="1" {% if form_data.fee_type == 'per_month' %}selected{% endif %}>в месяц</option>
                     <option value="per_semester" data-months="5" {% if form_data.fee_type == 'per_semester' %}selected{% endif %}>за семестр</option>
-                    <option value="per_year" data-months="10" {% if form_data.fee_type == 'per_year' %}selected{% endif %}>за год</option>
+                    <option value="per_year" data-months="12" {% if form_data.fee_type == 'per_year' %}selected{% endif %}>за год</option>
                   </select>
                 </div>
               </div>
@@ -136,9 +136,13 @@
     document.addEventListener('DOMContentLoaded', function() {
         // --- Календарь ---
         flatpickr("#id_total_end_date", {
-            dateFormat: "d-m-Y", // Формат ДД-ММ-ГГГГ
+            dateFormat: "d-m-Y",
             allowInput: true,
+            // ИСПРАВЛЕНО: Эта опция отключает открытие календаря по клику на поле
+            clickOpens: false
         });
+
+        // Этот код оставляет открытие календаря по клику на иконку
         document.getElementById('date-picker-button').addEventListener('click', function() {
             document.getElementById('id_total_end_date')._flatpickr.toggle();
         });
@@ -151,7 +155,7 @@
             monthsInput.value = selectedOption.dataset.months;
         }
         feeTypeSelector.addEventListener('change', updateMonths);
-        updateMonths(); // Вызываем при загрузке
+        updateMonths();
 
         // --- Авто-обновление цены билета ---
         const borderCheckbox = document.getElementById('has_border_checkbox');
@@ -164,7 +168,7 @@
             }
         }
         borderCheckbox.addEventListener('change', updateTicketPrice);
-        updateTicketPrice(); // Вызываем при загрузке
+        updateTicketPrice();
     });
   </script>
 {% endblock %}
