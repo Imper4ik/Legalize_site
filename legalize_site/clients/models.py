@@ -1,8 +1,8 @@
-# clients/models.py
-
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from django.conf import settings
+from .constants import DOCUMENT_CHECKLIST  # <-- Убедитесь, что этот импорт есть
 
 
 class Client(models.Model):
@@ -29,7 +29,7 @@ class Client(models.Model):
     last_name = models.CharField(max_length=100, verbose_name="Фамилия")
     citizenship = models.CharField(max_length=100, verbose_name="Гражданство")
     phone = models.CharField(max_length=20, verbose_name="Телефон")
-    email = models.EmailField(verbose_name="Email")
+    email = models.EmailField(verbose_name="Email", unique=True)
     passport_num = models.CharField(max_length=50, null=True, blank=True, verbose_name="Номер паспорта")
     case_number = models.CharField(max_length=100, blank=True, null=True, verbose_name="Номер дела")
     application_purpose = models.CharField(
@@ -47,30 +47,76 @@ class Client(models.Model):
     fingerprints_date = models.DateField(null=True, blank=True, verbose_name="Дата сдачи отпечатков")
     notes = models.TextField(blank=True, null=True, verbose_name="Uwagi / Заметки")
 
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='client_profile',
+                                null=True, blank=True)
+
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
     def get_absolute_url(self):
-        return reverse('client_detail', args=[str(self.id)])
+        return reverse('clients:client_detail', kwargs={'pk': self.id})
+
+    # --- НОВЫЕ МЕТОДЫ ДЛЯ ЧЕКЛИСТА ---
+    def get_document_checklist(self):
+        """
+        Возвращает чеклист для клиента с информацией о загруженных документах.
+        """
+        checklist_key = (self.application_purpose, self.language)
+        required_docs = DOCUMENT_CHECKLIST.get(checklist_key, [])
+        if not required_docs:
+            return []
+
+        uploaded_docs = self.documents.all().order_by('-uploaded_at')
+
+        docs_map = {}
+        for doc in uploaded_docs:
+            if doc.document_type not in docs_map:
+                docs_map[doc.document_type] = []
+            docs_map[doc.document_type].append(doc)
+
+        status_list = []
+        for code, name in required_docs:
+            documents = docs_map.get(code, [])
+            status_list.append({
+                'code': code,
+                'name': name,
+                'is_uploaded': bool(documents),
+                'documents': documents
+            })
+        return status_list
+
+    def get_document_name_by_code(self, doc_code):
+        """Возвращает читаемое имя документа по его коду."""
+        checklist_key = (self.application_purpose, self.language)
+        required_docs = DOCUMENT_CHECKLIST.get(checklist_key, [])
+        for code, name in required_docs:
+            if code == doc_code:
+                return name
+        return doc_code.replace('_', ' ').capitalize()
 
 
 class Document(models.Model):
+    # Коды документов должны совпадать с кодами в constants.py
     DOC_TYPES = [
+        ('photos', 'Фотографии'),
+        ('payment_confirmation', 'Подтверждение оплаты'),
         ('passport', 'Паспорт'),
-        ('certificate_enrolment', 'Справка о зачислении'),
-        ('certificate_fees', 'Справка об оплате обучения'),
+        ('enrollment_certificate', 'Справка о зачислении'),
+        ('tuition_fee_proof', 'Справка об оплате обучения'),
         ('health_insurance', 'Медицинская страховка'),
-        ('rental_contract', 'Договор аренды'),
-        ('financial_means', 'Документ о средствах'),
-        ('work_permit', 'Разрешение на работу (Залончник №1)'),
+        ('address_proof', 'Подтверждение адреса'),
+        ('financial_proof', 'Подтверждение финансов'),
+        ('załącznik_nr_1', 'Załącznik nr 1'),
+        ('starosta_info', 'Informacja starosty'),
         ('employment_contract', 'Трудовой договор'),
-        ('other', 'Другое'),
+        ('pit_proof', 'PIT-37 / Zaświadczenie o niezaleganiu'),
     ]
 
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='documents', verbose_name="Клиент")
     document_type = models.CharField(max_length=50, choices=DOC_TYPES, verbose_name="Тип документа")
     file = models.FileField(upload_to='documents/', verbose_name="Файл")
     uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата загрузки")
+    verified = models.BooleanField(default=False, verbose_name="Проверено")
 
     class Meta:
         verbose_name = _("Документ")
@@ -82,6 +128,7 @@ class Document(models.Model):
 
 
 class Payment(models.Model):
+    # --- Списки для выбора ---
     PAYMENT_STATUS_CHOICES = [
         ('pending', 'Ожидает оплаты'),
         ('partial', 'Частично оплачен'),
@@ -94,24 +141,24 @@ class Payment(models.Model):
         ('transfer', 'Перевод'),
     ]
     SERVICE_CHOICES = [
-        ('work_permit', 'Работа'),
-        ('student_visa', 'Учёба'),
-        ('photo_service', 'Фото'),
+        ('work_service', 'Сопровождение (Работа)'),
+        ('study_service', 'Сопровождение (Учеба)'),
         ('consultation', 'Консультация'),
+        ('document_preparation', 'Подготовка документов'),
+        ('full_service', 'Полное сопровождение'),
+        ('deposit', 'Задаток'),
+        ('other', 'Другое'),
     ]
-    SERVICE_PRICES = {
-        'work_permit': 1800.00,
-        'student_visa': 1400.00,
-        'photo_service': 40.00,
-        'consultation': 180.00,
-    }
 
+    # --- Поля модели ---
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='payments', verbose_name="Клиент")
     service_description = models.CharField(max_length=100, choices=SERVICE_CHOICES, verbose_name="Описание услуги")
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Общая сумма")
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Оплаченная сумма")
-    status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending', verbose_name="Статус оплаты")
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, blank=True, null=True, verbose_name="Способ оплаты")
+    status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending',
+                              verbose_name="Статус оплаты")
+    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, blank=True, null=True,
+                                      verbose_name="Способ оплаты")
     payment_date = models.DateField(blank=True, null=True, verbose_name="Дата оплаты")
     due_date = models.DateField(blank=True, null=True, verbose_name="Оплатить до")
     transaction_id = models.CharField(max_length=255, blank=True, null=True, verbose_name="ID транзакции (если есть)")
@@ -121,7 +168,6 @@ class Payment(models.Model):
     def __str__(self):
         return f"Счёт на {self.total_amount} для {self.client}"
 
-    # --- ИСПРАВЛЕНИЕ: ВОТ ЭТИХ МЕТОДОВ НЕ ХВАТАЛО ---
     @property
     def is_fully_paid(self):
         return self.amount_paid >= self.total_amount
@@ -139,9 +185,7 @@ class Reminder(models.Model):
     ]
 
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='reminders', verbose_name="Клиент")
-    # НОВОЕ ПОЛЕ: Прямая связь с платежом
     payment = models.OneToOneField(Payment, on_delete=models.CASCADE, null=True, blank=True, related_name="reminder")
-
     reminder_type = models.CharField(max_length=20, choices=REMINDER_TYPE_CHOICES, default='document',
                                      verbose_name="Тип напоминания")
     title = models.CharField(max_length=255, verbose_name="Заголовок напоминания")

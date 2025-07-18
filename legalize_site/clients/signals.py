@@ -1,8 +1,9 @@
 # clients/signals.py
-
+from django.conf import settings
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from .models import Payment, Reminder
+from .models import Payment, Reminder, Client
+
 
 @receiver(post_save, sender=Payment)
 def sync_payment_reminder_on_save(sender, instance, **kwargs):
@@ -24,6 +25,7 @@ def sync_payment_reminder_on_save(sender, instance, **kwargs):
     else:
         Reminder.objects.filter(payment=instance).delete()
 
+
 # --- НОВЫЙ СИГНАЛ: Реагирует на УДАЛЕНИЕ платежа ---
 @receiver(post_delete, sender=Payment)
 def sync_payment_reminder_on_delete(sender, instance, **kwargs):
@@ -31,3 +33,15 @@ def sync_payment_reminder_on_delete(sender, instance, **kwargs):
     Автоматически удаляет связанное напоминание при УДАЛЕНИИ платежа.
     """
     Reminder.objects.filter(payment=instance).delete()
+
+
+# --- НОВЫЙ СИГНАЛ: Автоматически создаёт профиль клиента ---
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_client_profile_for_new_user(sender, instance, created, **kwargs):
+    """
+    Создает профиль клиента для каждого нового зарегистрированного пользователя.
+    """
+    if created:
+        # Если пользователь не является персоналом, создаем для него профиль
+        if not instance.is_staff:
+            Client.objects.create(user=instance, email=instance.email)

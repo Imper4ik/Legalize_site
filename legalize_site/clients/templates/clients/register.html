@@ -4,9 +4,9 @@
 
 {% block content %}
 <div class="row justify-content-center">
-  <div class="col-md-6">
+  <div class="col-md-7 col-lg-5">
     <div class="card shadow-sm">
-      <div class="card-header">
+      <div class="card-header text-center">
         <h4 class="mb-0">Создать аккаунт</h4>
       </div>
       <div class="card-body">
@@ -16,32 +16,35 @@
 
           {% if form.errors %}
             <div class="alert alert-danger">
-                Пожалуйста, исправьте ошибки ниже.
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                        <p class="mb-0">{{ error }}</p>
+                    {% endfor %}
+                {% endfor %}
             </div>
           {% endif %}
 
-          {% for field in form %}
-            <div class="mb-3">
-                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                <input type="{{ field.field.widget.input_type }}"
-                       name="{{ field.name }}"
-                       class="form-control"
-                       id="{{ field.id_for_label }}">
-                {% if field.help_text %}
-                    <small class="form-text text-muted">{{ field.help_text|safe }}</small>
-                {% endif %}
-                {% for error in field.errors %}
-                    <div class="invalid-feedback d-block">{{ error }}</div>
-                {% endfor %}
-            </div>
-          {% endfor %}
+          <div class="form-floating mb-3">
+            <input type="email" name="email" class="form-control" id="id_email" placeholder="email" required>
+            <label for="id_email">Адрес электронной почты</label>
+          </div>
+
+          <div class="form-floating mb-3">
+            <input type="password" name="password1" class="form-control" id="id_password1" placeholder="password" required>
+            <label for="id_password1">Пароль</label>
+          </div>
+
+          <div class="form-floating mb-3">
+            <input type="password" name="password2" class="form-control" id="id_password2" placeholder="password confirmation" required>
+            <label for="id_password2">Подтвердите пароль</label>
+          </div>
 
           <button type="submit" class="btn btn-primary mt-3 w-100">Зарегистрироваться</button>
         </form>
 
         <div class="border-top pt-3 mt-3 text-center">
             <small class="text-muted">
-                Уже есть аккаунт? <a class="ms-2" href="{% url 'login' %}">Войти</a>
+                Уже есть аккаунт? <a class="ms-2" href="{% url 'account_login' %}">Войти</a>
             </small>
         </div>
 

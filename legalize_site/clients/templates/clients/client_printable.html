@@ -50,7 +50,7 @@
     <div class="form-container">
         <div class="no-print" style="text-align: center; margin-bottom: 30px;">
             <button onclick="window.print();" style="padding: 10px 20px; font-size: 16px;">Распечатать</button>
-            <a href="{{ client.get_absolute_url }}" style="padding: 10px 20px; font-size: 16px;">Вернуться к профилю</a>
+            <a href="{% url 'clients:client_detail' client.pk %}" style="padding: 10px 20px; font-size: 16px;">Вернуться к профилю</a>
         </div>
 
         <div class="name-section">

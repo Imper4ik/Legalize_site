@@ -1,5 +1,7 @@
 {% extends "base.html" %}
-{% load socialaccount %} {% block title %}Вход{% endblock %}
+{% load socialaccount %}
+
+{% block title %}Вход{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -21,8 +23,8 @@
         <form method="POST">
           {% csrf_token %}
           <div class="mb-3">
-            <label for="id_username" class="form-label">Имя пользователя</label>
-            <input type="text" name="username" class="form-control" required id="id_username">
+            <label for="id_login" class="form-label">Адрес электронной почты</label>
+            <input type="email" name="login" class="form-control" required id="id_login">
           </div>
           <div class="mb-3">
             <label for="id_password" class="form-label">Пароль</label>
@@ -31,7 +33,7 @@
 
           {% if form.errors %}
             <div class="alert alert-danger mt-3">
-              Неверное имя пользователя или пароль. Попробуйте снова.
+              Неверный email или пароль. Попробуйте снова.
             </div>
           {% endif %}
 

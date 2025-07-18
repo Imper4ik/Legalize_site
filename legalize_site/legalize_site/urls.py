@@ -1,28 +1,25 @@
-"""
-URL configuration for legalize_site project.
+# legalize_site/legalize_site/urls.py
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from clients import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('clients.urls')),
+
+    # Все адреса для аутентификации (вход, выход, регистрация)
     path('accounts/', include('allauth.urls')),
+
+    # Все адреса для клиентского портала (личный кабинет)
+    path('portal/', include('portal.urls', namespace='portal')),
+
+    # Все адреса для сотрудников (список клиентов, калькулятор и т.д.)
+    path('staff/', include('clients.urls', namespace='clients')),
+
+    # Главная страница сайта, которая перенаправляет куда нужно
+    path('', views.dashboard_redirect, name='root_dashboard'),
 ]
 
 if settings.DEBUG:

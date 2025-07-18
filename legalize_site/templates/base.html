@@ -3,85 +3,99 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Legalize Site{% endblock %}</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    <title>{% block title %}Legalize Site{% endblock %}</title>
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
-            <div class="container">
-                <a class="navbar-brand" href="{% url 'client_list' %}">Legalize Site</a>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'client_list' %}">Список клиентов</a>
+
+<header class="mb-4">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'root_dashboard' %}">
+                <i class="fas fa-balance-scale me-2"></i>Legalize Site
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                {% if user.is_authenticated and user.is_staff %}
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'clients:client_list' %}">Клиенты</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'clients:client_add' %}">Добавить клиента</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'clients:calculator' %}">Калькулятор</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'clients:reminder_list' %}">Напоминания</a></li>
+                </ul>
+                {% endif %}
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle me-1"></i>
+                                {{ user.first_name|default:user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
+                                {% if not user.is_staff %}
+                                    <li><a class="dropdown-item" href="{% url 'portal:profile_detail' %}">Мой профиль</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                {% endif %}
+                                <li>
+                                    <form id="logout-form" method="post" action="{% url 'account_logout' %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="fas fa-sign-out-alt me-2"></i>Выход
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'client_add' %}">Добавить клиента</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'calculator' %}">Калькулятор</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'reminder_list' %}">Напоминания</a>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav">
-                        {% if user.is_authenticated %}
-                            <li class="nav-item">
-                              <form method="post" action="{% url 'logout' %}">
-                                {% csrf_token %}
-                                <button type="submit" class="nav-link btn btn-link" style="border:none; background:none; cursor:pointer;">Выход</button>
-                              </form>
-                            </li>
-                        {% else %}
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'login' %}">Вход</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{% url 'register' %}">Регистрация</a>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </div>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'account_login' %}">Вход</a></li>
+                        <li class="nav-item"><a class="btn btn-primary btn-sm" href="{% url 'account_signup' %}">Регистрация</a></li>
+                    {% endif %}
+                </ul>
             </div>
-        </nav>
-    </header>
+        </div>
+    </nav>
+</header>
 
-    <main class="container mb-5">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            {% endfor %}
-        {% endif %}
+{% if messages %}
+<div class="container">
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
 
-        {% block content %}
-        {% endblock %}
-    </main>
+<main class="container mb-5">
+    {% block content %}{% endblock %}
+</main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-    <script>
-        // This script for auto-closing alerts will run on all pages
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const alerts = document.querySelectorAll('.alert-dismissible');
-            alerts.forEach(function(alert) {
-                setTimeout(function() {
-                    const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
-                }, 3000);
-            });
+<script>
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const alerts = document.querySelectorAll('.alert.alert-dismissible');
+        alerts.forEach((alert) => {
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 3000); // 3 секунды
         });
-    </script>
+    });
+</script>
 
-    {% block extra_js %}{% endblock %}
+{% block extra_js %}
+{# Этот блок предназначен для скриптов конкретной страницы, например, для инициализации календаря #}
+{% endblock %}
+
 </body>
 </html>
