@@ -4,10 +4,12 @@ from . import views
 app_name = 'portal'
 
 urlpatterns = [
-    # --- ИСПРАВЛЕНО: Используем .as_view() для классовых представлений ---
+    # URL для просмотра профиля клиента
     path('profile/', views.ProfileDetailView.as_view(), name='profile_detail'),
+
+    # URL для редактирования профиля клиента
     path('profile/edit/', views.ProfileUpdateView.as_view(), name='profile_edit'),
 
-    # --- Путь для загрузки документов остается без изменений ---
-    path('documents/upload/<str:doc_type>/', views.document_upload, name='document_upload'),
+    path('upload-document/<str:doc_type>/', views.portal_document_upload, name='portal_document_upload'),
+    path('api/checklist-status/', views.checklist_status_api, name='checklist_status_api'),
 ]

@@ -46,6 +46,7 @@ class Client(models.Model):
     employer_phone = models.CharField(max_length=20, blank=True, null=True, verbose_name="Телефон работодателя")
     fingerprints_date = models.DateField(null=True, blank=True, verbose_name="Дата сдачи отпечатков")
     notes = models.TextField(blank=True, null=True, verbose_name="Uwagi / Заметки")
+    has_checklist_access = models.BooleanField(default=False, verbose_name="Доступ к чеклисту предоставлен")
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='client_profile',
                                 null=True, blank=True)
@@ -56,11 +57,16 @@ class Client(models.Model):
     def get_absolute_url(self):
         return reverse('clients:client_detail', kwargs={'pk': self.id})
 
-    # --- МЕТОДЫ ДЛЯ ЧЕКЛИСТА ---
+    # --- ИСПРАВЛЕННЫЙ МЕТОД ДЛЯ ЧЕКЛИСТА ---
     def get_document_checklist(self):
         """
-        Возвращает чеклист для клиента с информацией о загруженных документах.
+        Возвращает чеклист, ТОЛЬКО ЕСЛИ у клиента есть доступ.
         """
+        # 1. Если галочка доступа не стоит, возвращаем пустой список
+        if not self.has_checklist_access:
+            return []
+
+        # 2. Если доступ есть, работает остальная логика
         checklist_key = (self.application_purpose, self.language)
         required_docs = DOCUMENT_CHECKLIST.get(checklist_key, [])
         if not required_docs:
@@ -87,6 +93,10 @@ class Client(models.Model):
 
     def get_document_name_by_code(self, doc_code):
         """Возвращает читаемое имя документа по его коду."""
+        # Убедимся, что этот метод также зависит от галочки доступа
+        if not self.has_checklist_access:
+            return doc_code.replace('_', ' ').capitalize()
+
         checklist_key = (self.application_purpose, self.language)
         required_docs = DOCUMENT_CHECKLIST.get(checklist_key, [])
         for code, name in required_docs:

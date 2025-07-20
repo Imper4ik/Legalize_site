@@ -3,6 +3,28 @@ from .models import Client, Document, Payment
 
 
 class ClientForm(forms.ModelForm):
+    # --- FIXED HERE ---
+    # We explicitly define the date fields to make them not required
+    # and to specify the correct date format from the calendar.
+    legal_basis_end_date = forms.DateField(
+        label="Дата окончания основания",
+        required=False,
+        input_formats=['%d-%m-%Y'],
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'})
+    )
+    submission_date = forms.DateField(
+        label="Дата подачи (Złożone)",
+        required=False,
+        input_formats=['%d-%m-%Y'],
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'})
+    )
+    fingerprints_date = forms.DateField(
+        label="Дата сдачи отпечатков",
+        required=False,
+        input_formats=['%d-%m-%Y'],
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'})
+    )
+
     class Meta:
         model = Client
         fields = [
@@ -11,9 +33,8 @@ class ClientForm(forms.ModelForm):
             'status',
             'basis_of_stay', 'legal_basis_end_date', 'submission_date',
             'employer_phone',
-            'fingerprints_date', 'notes'
+            'fingerprints_date', 'notes', 'has_checklist_access'
         ]
-        # ИСПРАВЛЕНО: Добавлены виджеты для всех полей, чтобы обеспечить единый стиль
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -26,25 +47,19 @@ class ClientForm(forms.ModelForm):
             'language': forms.Select(attrs={'class': 'form-select'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
             'basis_of_stay': forms.TextInput(attrs={'class': 'form-control'}),
-            # Используем type="text" и плейсхолдер, чтобы flatpickr работал корректно
-            'legal_basis_end_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд.мм.гггг'}),
-            'submission_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд.мм.гггг'}),
-            'fingerprints_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд.мм.гггг'}),
             'employer_phone': forms.TextInput(attrs={'class': 'form-control'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'has_checklist_access': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
 
 class DocumentUploadForm(forms.ModelForm):
     class Meta:
         model = Document
-        # ИСПРАВЛЕНО: Добавляем 'expiry_date' в список полей
         fields = ['file', 'expiry_date']
         widgets = {
             'file': forms.FileInput(attrs={'class': 'form-control'}),
-            'expiry_date': forms.DateInput(
-                attrs={'class': 'form-control', 'type': 'date'}
-            ),
+            'expiry_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
         }
 
 
@@ -55,10 +70,9 @@ class PaymentForm(forms.ModelForm):
             'service_description', 'total_amount', 'amount_paid', 'status',
             'payment_method', 'payment_date', 'due_date', 'transaction_id'
         ]
-        # Здесь тоже меняем виджеты на TextInput для единообразия с flatpickr
         widgets = {
-            'payment_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд.мм.гггг'}),
-            'due_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд.мм.гггг'}),
+            'payment_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'}),
+            'due_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'}),
             'service_description': forms.Select(attrs={'class': 'form-select'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
             'payment_method': forms.Select(attrs={'class': 'form-select'}),

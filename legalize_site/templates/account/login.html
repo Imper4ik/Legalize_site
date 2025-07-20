@@ -1,52 +1,61 @@
 {% extends "base.html" %}
-{% load socialaccount %}
+{% load i18n %}
+{% load allauth account %}
+{% load form_filters %}
 
-{% block title %}Вход в систему{% endblock %}
+{% block title %}{% translate "Вход" %}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
-  <div class="col-md-7 col-lg-5">
+  <div class="col-md-6 col-lg-5">
     <div class="card shadow-sm">
-      <div class="card-header text-center">
-        <h4 class="mb-0">Вход в систему</h4>
+      <div class="card-header text-center bg-light py-3">
+        <h2 class="mb-0">{% translate "Вход в систему" %}</h2>
       </div>
-      <div class="card-body">
-        <a href="{% provider_login_url 'google' %}" class="btn btn-outline-danger w-100 mb-3">
-          <i class="bi bi-google"></i> Продолжить с Google
-        </a>
-        <div class="text-center my-3"><small class="text-muted">ИЛИ</small></div>
+      <div class="card-body p-4">
 
-        <form class="login" method="POST" action="{% url 'account_login' %}">
-          {% csrf_token %}
+        {% url 'account_login' as login_url %}
+        <form class="login" method="post" action="{{ login_url }}">
+            {% csrf_token %}
 
-          <div class="mb-3">
-            <label for="id_login" class="form-label">Адрес электронной почты</label>
-            <input type="email" name="login" class="form-control" id="id_login" required autocomplete="off">
-          </div>
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors.as_text }}</div>
+            {% endif %}
 
-          <div class="mb-3">
-            <label for="id_password" class="form-label">Пароль</label>
-            <input type="password" name="password" class="form-control" id="id_password" required>
-          </div>
-
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="form-check">
-              <input type="checkbox" name="remember" class="form-check-input" id="id_remember">
-              <label class="form-check-label" for="id_remember">Запомнить меня</label>
+            <div class="mb-3">
+                <label for="{{ form.login.id_for_label }}" class="form-label">{{ form.login.label }}</label>
+                {{ form.login|add_class:"form-control"|add_placeholder:_("Адрес электронной почты") }}
             </div>
-            <a href="{% url 'account_reset_password' %}">Забыли пароль?</a>
-          </div>
 
-          {% if form.errors %}
-            <div class="alert alert-danger mt-3">Неверный email или пароль.</div>
-          {% endif %}
+            <div class="mb-3">
+                <label for="{{ form.password.id_for_label }}" class="form-label">{{ form.password.label }}</label>
+                {{ form.password|add_class:"form-control"|add_placeholder:_("Пароль") }}
+            </div>
 
-          <button type="submit" class="btn btn-primary mt-3 w-100">Войти</button>
+            {% if form.remember %}
+            <div class="form-check mb-3">
+                {{ form.remember|add_class:"form-check-input" }}
+                <label for="{{ form.remember.id_for_label }}" class="form-check-label">{{ form.remember.label }}</label>
+            </div>
+            {% endif %}
+
+            {% if redirect_field_value %}
+                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+            {% endif %}
+
+            <div class="d-grid gap-2 mt-4">
+                <button class="btn btn-primary btn-lg" type="submit">{% translate "Войти" %}</button>
+            </div>
+
+            <div class="text-center mt-3">
+                <a href="{% url 'account_reset_password' %}">
+                  {% translate "Забыли пароль?" %}
+                </a>
+            </div>
         </form>
-
-        <div class="border-top pt-3 mt-3 text-center">
-            <small class="text-muted">Ещё нет аккаунта? <a class="ms-2" href="{% url 'account_signup' %}">Зарегистрироваться</a></small>
-        </div>
+      </div>
+      <div class="card-footer text-center py-3 bg-light">
+        <p class="mb-0">{% blocktranslate %}Нет аккаунта? <a href="{{ signup_url }}">Зарегистрироваться</a>{% endblocktranslate %}</p>
       </div>
     </div>
   </div>

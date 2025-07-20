@@ -1,34 +1,40 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Детали клиента: {{ client.first_name }}{% endblock %}
+{% block title %}{% blocktranslate with client_name=client.first_name %}Детали клиента: {{ client_name }}{% endblocktranslate %}{% endblock %}
 
 {% block content %}
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>{{ client.first_name }} {{ client.last_name }}</h1>
     <div>
-        <a href="{% url 'clients:client_print' pk=client.pk %}" class="btn btn-secondary me-2">Печать</a>
-        <a href="{% url 'clients:client_edit' client.pk %}" class="btn btn-primary">Редактировать данные</a>
+        <a href="{% url 'clients:client_print' pk=client.pk %}" class="btn btn-secondary me-2">{% translate "Печать" %}</a>
+        <a href="{% url 'clients:client_edit' client.pk %}" class="btn btn-primary">{% translate "Редактировать данные" %}</a>
     </div>
   </div>
 
-  <div class="card mb-4">
+  <div class="card mb-4 shadow-sm">
     <div class="card-body">
-        <p><strong>Номер дела:</strong> <span class="fs-5 text-primary"><strong>{{ client.case_number|default:"Не указан" }}</strong></span></p>
+        <p><strong>{% translate "Номер дела" %}:</strong> <span class="fs-5 text-primary"><strong>{{ client.case_number|default:_("Не указан") }}</strong></span></p>
         <p><strong>Email:</strong> {{ client.email }}</p>
-        <p><strong>Телефон:</strong> {{ client.phone }}</p>
-        <p><strong>Цель подачи:</strong> {{ client.get_application_purpose_display }}</p>
-        <p><strong>Основание пребывания:</strong> {{ client.basis_of_stay|default:"Не указано" }}</p>
+        <p><strong>{% translate "Телефон" %}:</strong> {{ client.phone }}</p>
+        <p><strong>{% translate "Цель подачи" %}:</strong> {{ client.get_application_purpose_display }}</p>
+        <p><strong>{% translate "Основание пребывания" %}:</strong> {{ client.basis_of_stay|default:_("Не указано") }}</p>
         {% if client.legal_basis_end_date %}
-            <p><strong>Дата окончания основания:</strong> {{ client.legal_basis_end_date|date:"d.m.Y" }}</p>
+            <p><strong>{% translate "Дата окончания основания" %}:</strong> <span class="fw-bold">{{ client.legal_basis_end_date|date:"d.m.Y" }}</span></p>
         {% endif %}
     </div>
   </div>
 
+  <div class="card border-primary mb-4 shadow">
+    <div class="card-header bg-primary text-white"><h5 class="mb-0">🔑 {% translate "Управление доступом клиента" %}</h5></div>
+    <div class="card-body text-center" id="access-management-container">
+        {% include 'clients/partials/access_management_block.html' with client=client %}
+    </div>
+  </div>
+
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4>Финансы</h4>
-    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
-      + Добавить счёт
-    </button>
+    <h4>{% translate "Финансы" %}</h4>
+    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPaymentModal">+ {% translate "Добавить счёт" %}</button>
   </div>
   <div class="card mb-4">
       <ul class="list-group list-group-flush" id="payment-list-container">
@@ -37,76 +43,16 @@
                   {% include 'clients/partials/payment_item.html' with payment=payment %}
               </li>
           {% empty %}
-              <li class="list-group-item text-muted" id="no-payments-message">Счета на оплату еще не созданы.</li>
+              <li class="list-group-item text-muted" id="no-payments-message">{% translate "Счета на оплату еще не созданы." %}</li>
           {% endfor %}
       </ul>
   </div>
 
   <hr>
 
-  <h2>Чеклист документов</h2>
+  <h2>{% translate "Чеклист документов" %}</h2>
   <div class="accordion" id="documentAccordion">
-    {% for item in document_status_list %}
-      <div class="accordion-item">
-        <h2 class="accordion-header" id="heading{{ item.code }}">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ item.code }}">
-            {{ item.name }}
-            {% if item.is_uploaded %}
-              <span class="badge bg-success ms-3">{{ item.documents|length }} шт.</span>
-            {% else %}
-              <span class="badge bg-danger ms-3">Отсутствует</span>
-            {% endif %}
-          </button>
-        </h2>
-        <div id="collapse{{ item.code }}" class="accordion-collapse collapse" data-bs-parent="#documentAccordion">
-          <div class="accordion-body">
-            {% if item.is_uploaded %}
-              <ul class="list-group list-group-flush mb-3">
-                {% for doc in item.documents %}
-                  <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                      <a href="{{ doc.file.url }}" target="_blank">
-                        Файл от {{ doc.uploaded_at|date:"d.m.Y H:i" }}
-                      </a>
-                      {% if doc.expiry_date %}
-                        <br>
-                        <small class="text-danger">Действителен до: {{ doc.expiry_date|date:"d.m.Y" }}</small>
-                      {% endif %}
-                      {% if doc.verified %}
-                          <span class="badge bg-success ms-2">Проверен</span>
-                      {% else %}
-                          <span class="badge bg-warning text-dark ms-2">Ожидает проверки</span>
-                      {% endif %}
-                    </div>
-                    <div>
-                      <form action="{% url 'clients:toggle_document_verification' doc.id %}" method="post" class="d-inline">
-                          {% csrf_token %}
-                          <button type="submit" class="btn btn-sm btn-outline-primary me-2">
-                              {% if doc.verified %}Снять отметку{% else %}Проверить{% endif %}
-                          </button>
-                      </form>
-                      <form action="{% url 'clients:document_delete' doc.pk %}" method="post" class="d-inline" onsubmit="return confirm('Вы уверены, что хотите удалить этот файл?');">
-                          {% csrf_token %}
-                          <button type="submit" class="btn btn-danger btn-sm">Удалить</button>
-                      </form>
-                    </div>
-                  </li>
-                {% endfor %}
-              </ul>
-            {% else %}
-              <p class="text-muted">Документы этого типа еще не загружены.</p>
-            {% endif %}
-            <a href="{% url 'clients:add_document' client_id=client.id doc_type=item.code %}" class="btn btn-primary btn-sm">
-              + Добавить еще один файл
-            </a>
-          </div>
-        </div>
-      </div>
-    {% empty %}
-      <div class="alert alert-warning">
-        Для цели "{{ client.get_application_purpose_display }}" на языке "{{ client.get_language_display }}" чеклист документов не определен.
-      </div>
-    {% endfor %}
+      {% include 'clients/partials/document_checklist.html' with document_status_list=document_status_list client=client %}
   </div>
 
   {% include 'clients/partials/modals.html' %}
@@ -118,29 +64,66 @@
   {{ block.super }}
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // --- ОБЩИЕ ПЕРЕМЕННЫЕ ---
+        const mainContent = document.body;
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const documentAccordion = document.getElementById('documentAccordion');
         const paymentListContainer = document.getElementById('payment-list-container');
-        const noPaymentsMessage = document.getElementById('no-payments-message');
         const addPaymentModalEl = document.getElementById('addPaymentModal');
         const editPaymentModalEl = document.getElementById('editPaymentModal');
         const addPaymentModal = new bootstrap.Modal(addPaymentModalEl);
         const editPaymentModal = new bootstrap.Modal(editPaymentModalEl);
 
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
+        // --- "ЖИВАЯ" ФУНКЦИЯ ОБНОВЛЕНИЯ ЧЕКЛИСТА ---
+        function updateChecklist() {
+            fetch("{% url 'clients:client_status_api' client.pk %}")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success' && documentAccordion) {
+                        documentAccordion.innerHTML = data.checklist_html;
                     }
-                }
-            }
-            return cookieValue;
+                });
         }
-        const csrftoken = getCookie('csrftoken');
 
+        // --- УНИВЕРСАЛЬНЫЙ ОБРАБОТЧИК ДЛЯ AJAX-ФОРМ ---
+        mainContent.addEventListener('submit', function(e) {
+            const form = e.target;
+
+            // --- Предоставление доступа ---
+            if (form.matches('#grant-access-form')) { e.preventDefault(); /* ... */ }
+            // --- Переключение верификации ---
+            if (form.matches('.toggle-verification-form')) { e.preventDefault(); /* ... */ }
+            // --- Удаление документа ---
+            if (form.matches('.delete-document-form')) { e.preventDefault(); /* ... */ }
+        });
+
+        // --- ФОНОВОЕ ОБНОВЛЕНИЕ КАЖДЫЕ 15 СЕКУНД ---
+        setInterval(updateChecklist, 15000);
+
+        // --- ЛОГИКА ДЛЯ ПЛАТЕЖЕЙ И МОДАЛЬНЫХ ОКОН (ПОЛНАЯ ВЕРСИЯ) ---
+
+        // 1. Авто-заполнение цены при добавлении
+        const serviceSelect = addPaymentModalEl.querySelector('#id_service_description');
+        const totalAmountInput = addPaymentModalEl.querySelector('#id_total_amount');
+        const servicePrices = JSON.parse('{{ service_prices_json|escapejs|default:"{}" }}');
+
+        serviceSelect.addEventListener('change', function() {
+            const selectedService = this.value;
+            totalAmountInput.value = servicePrices[selectedService] || '';
+        });
+
+        // 2. Заполнение формы при редактировании
+        editPaymentModalEl.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const form = editPaymentModalEl.querySelector('form');
+            form.action = button.dataset.url;
+            editPaymentModalEl.querySelector('#edit_id_service_description').value = button.dataset.service;
+            editPaymentModalEl.querySelector('#edit_id_total_amount').value = button.dataset.total_amount;
+            editPaymentModalEl.querySelector('#edit_id_amount_paid').value = button.dataset.amount_paid;
+            editPaymentModalEl.querySelector('#edit_id_status').value = button.dataset.status;
+        });
+
+        // 3. AJAX-обработка форм добавления и редактирования платежей
         function handlePaymentFormSubmit(form, modalInstance) {
             const formData = new FormData(form);
             const submitButton = form.querySelector('button[type="submit"]');
@@ -151,13 +134,10 @@
             fetch(form.action, {
                 method: 'POST',
                 body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': csrftoken
-                }
+                headers: { 'X-CSRFToken': csrftoken, 'X-Requested-With': 'XMLHttpRequest' }
             })
-            .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, body: data })))
-            .then(({ ok, status, body }) => {
+            .then(response => response.json().then(data => ({ ok: response.ok, body: data })))
+            .then(({ ok, body }) => {
                 if (ok) {
                     const paymentId = body.payment_id;
                     const newItemHTML = body.html;
@@ -165,7 +145,8 @@
                         const oldItem = paymentListContainer.querySelector(`[data-payment-id="${paymentId}"]`);
                         if (oldItem) oldItem.innerHTML = newItemHTML;
                     } else {
-                        if (noPaymentsMessage) noPaymentsMessage.style.display = 'none';
+                        const noPaymentsMessage = document.getElementById('no-payments-message');
+                        if (noPaymentsMessage) noPaymentsMessage.remove();
                         const newItem = document.createElement('li');
                         newItem.classList.add('list-group-item');
                         newItem.dataset.paymentId = paymentId;
@@ -176,7 +157,7 @@
                     form.reset();
                 } else {
                     const errorMsg = Object.values(body.errors).map(e => e.join(' ')).join('\n');
-                    alert('Ошибка валидации:\n' + errorMsg);
+                    alert('Ошибка сохранения. Пожалуйста, проверьте поля:\n\n' + errorMsg);
                 }
             })
             .catch(error => console.error('Error:', error))
@@ -187,60 +168,31 @@
         }
 
         const addPaymentForm = addPaymentModalEl.querySelector('form');
-        addPaymentForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            handlePaymentFormSubmit(this, addPaymentModal);
-        });
+        addPaymentForm.addEventListener('submit', function(e) { e.preventDefault(); handlePaymentFormSubmit(this, addPaymentModal); });
 
         const editPaymentForm = editPaymentModalEl.querySelector('form');
-        editPaymentForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            handlePaymentFormSubmit(this, editPaymentModal);
-        });
+        editPaymentForm.addEventListener('submit', function(e) { e.preventDefault(); handlePaymentFormSubmit(this, editPaymentModal); });
 
+        // 4. AJAX-удаление платежа (через делегирование)
         paymentListContainer.addEventListener('submit', function(e) {
-            if (e.target.classList.contains('delete-payment-form')) {
+            if (e.target.matches('.delete-payment-form')) {
                 e.preventDefault();
                 if (confirm('Вы уверены?')) {
                     const form = e.target;
                     fetch(form.action, {
                         method: 'POST',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRFToken': csrftoken
-                        }
+                        headers: { 'X-CSRFToken': csrftoken, 'X-Requested-With': 'XMLHttpRequest' },
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === 'success') {
-                            const itemToRemove = form.closest('.list-group-item');
-                            itemToRemove.remove();
-                            if (paymentListContainer.children.length === 0) {
-                                paymentListContainer.innerHTML = '<li class="list-group-item text-muted" id="no-payments-message">Счета на оплату еще не созданы.</li>';
-                            }
+                            form.closest('.list-group-item').remove();
                         } else {
-                            alert('Не удалось удалить платёж');
+                            alert('Не удалось удалить платёж.');
                         }
                     });
                 }
             }
-        });
-
-        editPaymentModalEl.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            editPaymentForm.action = button.dataset.url;
-            editPaymentModalEl.querySelector('#edit_id_service_description').value = button.dataset.service;
-            editPaymentModalEl.querySelector('#edit_id_total_amount').value = button.dataset.total_amount;
-            editPaymentModalEl.querySelector('#edit_id_amount_paid').value = button.dataset.amount_paid;
-            editPaymentModalEl.querySelector('#edit_id_status').value = button.dataset.status;
-        });
-
-        const serviceSelect = addPaymentModalEl.querySelector('#id_service_description');
-        const totalAmountInput = addPaymentModalEl.querySelector('#id_total_amount');
-        const servicePrices = JSON.parse('{{ service_prices_json|escapejs|default:"{}" }}');
-        serviceSelect.addEventListener('change', function() {
-            const selectedService = this.value;
-            totalAmountInput.value = servicePrices[selectedService] || '';
         });
     });
   </script>
