@@ -4,8 +4,20 @@ Django settings for legalize_site project.
 
 from pathlib import Path
 import os
+from django.utils.translation import gettext_lazy as _
+
+LANGUAGES = [
+    ('ru', _('Русский')),
+    ('pl', _('Polski')),
+    ('en', _('English')),
+]
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+LOCALE_PATHS = [
+    os.path.join(BASE_DIR, 'locale'),
+]
+
 SECRET_KEY = 'django-insecure-wr&zre@01k3+-y#r)sdv5itm2g3uw@hs8*=endlh+m5m$t8qc$'
 DEBUG = True
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.0.41']
@@ -37,6 +49,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
 ]
 
 ROOT_URLCONF = 'legalize_site.urls'
@@ -118,3 +131,5 @@ SOCIALACCOUNT_PROVIDERS = {
         }
     }
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
