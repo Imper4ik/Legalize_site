@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: legalize-site
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn legalize_site.wsgi:application"
