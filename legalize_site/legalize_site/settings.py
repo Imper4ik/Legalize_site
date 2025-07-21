@@ -98,28 +98,32 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # --- Django Allauth Settings ---
 
+# Бэкенды аутентификации
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
+# ID сайта (обязательно для allauth)
 SITE_ID = 1
 
+# --- Настройки входа и регистрации по Email ---
+ACCOUNT_AUTHENTICATION_METHOD = 'email'  # Устанавливаем метод входа по email
+ACCOUNT_EMAIL_REQUIRED = True            # Делаем email обязательным для регистрации
+ACCOUNT_USERNAME_REQUIRED = False        # Отключаем требование вводить "Имя пользователя" (username)
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None # Сообщаем allauth, что у нашей модели User нет поля username
+ACCOUNT_EMAIL_VERIFICATION = 'optional'  # Верификация email (можно 'mandatory' или 'none')
+
+# Адреса для перенаправлений
 LOGIN_URL = 'account_login'
 LOGIN_REDIRECT_URL = 'root_dashboard'
 LOGOUT_REDIRECT_URL = 'account_login'
 
-# Modern Allauth Configuration
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_EMAIL_VERIFICATION = 'none'
-SOCIALACCOUNT_AUTO_SIGNUP = True
-
-# **THE FIX IS HERE:** This line tells allauth to use our custom form
+# Кастомная форма регистрации (если используется)
 ACCOUNT_SIGNUP_FORM_CLASS = 'portal.forms.CustomSignupForm'
 
-# Google Provider Settings
+# Настройки для входа через соцсети (Google и др.)
+SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': [

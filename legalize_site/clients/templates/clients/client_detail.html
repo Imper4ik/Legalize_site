@@ -63,136 +63,92 @@
 {% block extra_js %}
   {{ block.super }}
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // --- ОБЩИЕ ПЕРЕМЕННЫЕ ---
-        const mainContent = document.body;
-        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        const documentAccordion = document.getElementById('documentAccordion');
-        const paymentListContainer = document.getElementById('payment-list-container');
-        const addPaymentModalEl = document.getElementById('addPaymentModal');
-        const editPaymentModalEl = document.getElementById('editPaymentModal');
-        const addPaymentModal = new bootstrap.Modal(addPaymentModalEl);
-        const editPaymentModal = new bootstrap.Modal(editPaymentModalEl);
+    document.addEventListener('DOMContentLoaded', function () {
+        // Находим основной контейнер контента.
+        // Если у вашего главного div в base.html есть другой id, укажите его.
+        const mainContent = document.querySelector('main') || document.body;
 
-        // --- "ЖИВАЯ" ФУНКЦИЯ ОБНОВЛЕНИЯ ЧЕКЛИСТА ---
-        function updateChecklist() {
-            fetch("{% url 'clients:client_status_api' client.pk %}")
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success' && documentAccordion) {
-                        documentAccordion.innerHTML = data.checklist_html;
+        // --- Получение CSRF-токена для безопасных POST-запросов ---
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
                     }
-                });
+                }
+            }
+            return cookieValue;
         }
+        const csrftoken = getCookie('csrftoken');
+
+        // --- Функция для обновления всего чеклиста (необходима после удаления) ---
+        // Эта функция перезагрузит весь блок с документами, чтобы обновить
+        // счётчики и статусы у категорий.
+        function updateChecklist() {
+            const checklistContainer = document.querySelector('#documentAccordion');
+            if (!checklistContainer) return;
+
+            // URL для получения обновленного HTML чеклиста.
+            // Вам нужно будет создать этот view и url.
+            const url = `{% url 'clients:client_checklist_partial' client.pk %}`;
+
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    checklistContainer.innerHTML = html;
+                })
+                .catch(error => console.error('Ошибка при обновлении чеклиста:', error));
+        }
+
 
         // --- УНИВЕРСАЛЬНЫЙ ОБРАБОТЧИК ДЛЯ AJAX-ФОРМ ---
         mainContent.addEventListener('submit', function(e) {
             const form = e.target;
 
-            // --- Предоставление доступа ---
-            if (form.matches('#grant-access-form')) { e.preventDefault(); /* ... */ }
-            // --- Переключение верификации ---
-            if (form.matches('.toggle-verification-form')) { e.preventDefault(); /* ... */ }
             // --- Удаление документа ---
-            if (form.matches('.delete-document-form')) { e.preventDefault(); /* ... */ }
-        });
-
-        // --- ФОНОВОЕ ОБНОВЛЕНИЕ КАЖДЫЕ 15 СЕКУНД ---
-        setInterval(updateChecklist, 15000);
-
-        // --- ЛОГИКА ДЛЯ ПЛАТЕЖЕЙ И МОДАЛЬНЫХ ОКОН (ПОЛНАЯ ВЕРСИЯ) ---
-
-        // 1. Авто-заполнение цены при добавлении
-        const serviceSelect = addPaymentModalEl.querySelector('#id_service_description');
-        const totalAmountInput = addPaymentModalEl.querySelector('#id_total_amount');
-        const servicePrices = JSON.parse('{{ service_prices_json|escapejs|default:"{}" }}');
-
-        serviceSelect.addEventListener('change', function() {
-            const selectedService = this.value;
-            totalAmountInput.value = servicePrices[selectedService] || '';
-        });
-
-        // 2. Заполнение формы при редактировании
-        editPaymentModalEl.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const form = editPaymentModalEl.querySelector('form');
-            form.action = button.dataset.url;
-            editPaymentModalEl.querySelector('#edit_id_service_description').value = button.dataset.service;
-            editPaymentModalEl.querySelector('#edit_id_total_amount').value = button.dataset.total_amount;
-            editPaymentModalEl.querySelector('#edit_id_amount_paid').value = button.dataset.amount_paid;
-            editPaymentModalEl.querySelector('#edit_id_status').value = button.dataset.status;
-        });
-
-        // 3. AJAX-обработка форм добавления и редактирования платежей
-        function handlePaymentFormSubmit(form, modalInstance) {
-            const formData = new FormData(form);
-            const submitButton = form.querySelector('button[type="submit"]');
-            const originalButtonText = submitButton.innerHTML;
-            submitButton.disabled = true;
-            submitButton.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Сохранение...`;
-
-            fetch(form.action, {
-                method: 'POST',
-                body: formData,
-                headers: { 'X-CSRFToken': csrftoken, 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(response => response.json().then(data => ({ ok: response.ok, body: data })))
-            .then(({ ok, body }) => {
-                if (ok) {
-                    const paymentId = body.payment_id;
-                    const newItemHTML = body.html;
-                    if (form.id === 'editPaymentForm') {
-                        const oldItem = paymentListContainer.querySelector(`[data-payment-id="${paymentId}"]`);
-                        if (oldItem) oldItem.innerHTML = newItemHTML;
-                    } else {
-                        const noPaymentsMessage = document.getElementById('no-payments-message');
-                        if (noPaymentsMessage) noPaymentsMessage.remove();
-                        const newItem = document.createElement('li');
-                        newItem.classList.add('list-group-item');
-                        newItem.dataset.paymentId = paymentId;
-                        newItem.innerHTML = newItemHTML;
-                        paymentListContainer.appendChild(newItem);
-                    }
-                    modalInstance.hide();
-                    form.reset();
-                } else {
-                    const errorMsg = Object.values(body.errors).map(e => e.join(' ')).join('\n');
-                    alert('Ошибка сохранения. Пожалуйста, проверьте поля:\n\n' + errorMsg);
-                }
-            })
-            .catch(error => console.error('Error:', error))
-            .finally(() => {
-                submitButton.disabled = false;
-                submitButton.innerHTML = originalButtonText.includes('Сохранить') ? originalButtonText : 'Сохранить';
-            });
-        }
-
-        const addPaymentForm = addPaymentModalEl.querySelector('form');
-        addPaymentForm.addEventListener('submit', function(e) { e.preventDefault(); handlePaymentFormSubmit(this, addPaymentModal); });
-
-        const editPaymentForm = editPaymentModalEl.querySelector('form');
-        editPaymentForm.addEventListener('submit', function(e) { e.preventDefault(); handlePaymentFormSubmit(this, editPaymentModal); });
-
-        // 4. AJAX-удаление платежа (через делегирование)
-        paymentListContainer.addEventListener('submit', function(e) {
-            if (e.target.matches('.delete-payment-form')) {
+            if (form.matches('.delete-document-form')) {
                 e.preventDefault();
-                if (confirm('Вы уверены?')) {
-                    const form = e.target;
+                if (confirm('Вы уверены, что хотите удалить этот документ?')) {
                     fetch(form.action, {
                         method: 'POST',
-                        headers: { 'X-CSRFToken': csrftoken, 'X-Requested-With': 'XMLHttpRequest' },
+                        headers: {
+                            'X-CSRFToken': csrftoken,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: new FormData(form)
                     })
-                    .then(response => response.json())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
                     .then(data => {
                         if (data.status === 'success') {
-                            form.closest('.list-group-item').remove();
+                            // Находим родительский элемент li и удаляем его
+                            const listItem = form.closest('.list-group-item');
+                            if (listItem) {
+                                listItem.remove();
+                            }
+                            // Перезагружаем чеклист, чтобы обновить статусы
+                            updateChecklist();
                         } else {
-                            alert('Не удалось удалить платёж.');
+                            alert('Ошибка удаления: ' + (data.message || 'Неизвестная ошибка'));
                         }
+                    })
+                    .catch(err => {
+                        console.error('Fetch Error:', err);
+                        alert('Произошла ошибка при отправке запроса.');
                     });
                 }
             }
+
+            // Здесь будет логика для других форм (верификация, доступ),
+            // когда вы решите её реализовать.
         });
     });
   </script>

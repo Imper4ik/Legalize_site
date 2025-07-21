@@ -6,10 +6,13 @@ from django.views.generic import DetailView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.utils.translation import gettext as _  # Импортируем для _()
 
 from clients.models import Client, Document
 from clients.forms import DocumentUploadForm
 from .forms import ProfileEditForm
+from django.utils import translation
+from django.urls import resolve, reverse
 
 
 class ProfileDetailView(LoginRequiredMixin, DetailView):
@@ -25,6 +28,16 @@ class ProfileDetailView(LoginRequiredMixin, DetailView):
         client = self.get_object()
         if client.has_checklist_access:
             context['document_status_list'] = client.get_document_checklist()
+
+        # --- ADDED: Pass all necessary translated strings to the JavaScript context ---
+        context['js_messages'] = {
+            'no_docs_message': _("Вы еще не загрузили файлы этого типа."),
+            'verified_status': _("Проверен"),
+            'pending_verification_status': _("Ожидает проверки"),
+            'required_status': _("Требуется"),
+            'uploaded_status': _("Загружено"),
+        }
+        # --------------------------------------------------------------------------
         return context
 
 
@@ -42,7 +55,8 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
 def portal_document_upload(request, doc_type):
     client = get_object_or_404(Client, user=request.user)
     if not client.has_checklist_access:
-        return JsonResponse({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
+        # Улучшенное сообщение об ошибке для AJAX
+        return JsonResponse({'status': 'error', 'message': _('Доступ запрещен')}, status=403)
 
     if request.method == 'POST':
         form = DocumentUploadForm(request.POST, request.FILES)
@@ -53,17 +67,22 @@ def portal_document_upload(request, doc_type):
             document.save()
 
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                html = render_to_string('portal/partials/document_item.html', {'doc': document})
+                # --- ВАЖНО: Убедитесь, что 'portal/partials/document_item.html' рендерит ОДИН LI-ЭЛЕМЕНТ ---
+                html = render_to_string('portal/partials/document_item.html', {'doc': document}, request=request)
                 return JsonResponse({
                     'status': 'success',
                     'html': html,
+                    'doc_id': document.id,  # Добавим ID для удобства
                     'doc_type': doc_type,
-                    'message': 'Файл успешно загружен и ожидает проверки.'
+                    'message': _('Файл успешно загружен и ожидает проверки.')
                 })
         else:
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'status': 'error', 'errors': form.errors.as_json()}, status=400)
+                # Возвращаем ошибки формы в виде словаря, а не строки JSON
+                # JS будет легче обработать объект data.errors
+                return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
 
+    # Если это не AJAX-запрос или метод не POST (что маловероятно для этой точки)
     return redirect('portal:profile_detail')
 
 
@@ -71,14 +90,18 @@ def portal_document_upload(request, doc_type):
 def checklist_status_api(request):
     """
     Возвращает статусы верификации и ID существующих документов клиента.
+    Для более "живого" обновления, можно было бы возвращать полный HTML обновленных списков документов
+    или HTML новых документов, но это усложнит API.
+    Текущая логика в JS обновляет и удаляет элементы на основе этих статусов.
     """
     client = get_object_or_404(Client, user=request.user)
     if not client.has_checklist_access:
-        return JsonResponse({'status': 'no_access'})
+        return JsonResponse({'status': 'no_access', 'message': _('Доступ к чеклисту документов не предоставлен.')})
 
-    # Создаем словарь: {id_документа: True/False}
+    # Создаем словарь: {id_документа (строка): True/False}
+    # Преобразуем ID в строку, так как JS получает их как строки из data-doc-id
     verification_statuses = {
-        doc.id: doc.verified
+        str(doc.id): doc.verified
         for doc in client.documents.all()
     }
 

@@ -8,523 +8,813 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-07-20 18:15+0200\n"
+"POT-Creation-Date: 2025-07-21 18:50+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-#: .\clients\models.py:133
-msgid "Документ"
-msgstr ""
 
-#: .\clients\models.py:134
+#: .\clients\constants.py:8 .\clients\constants.py:20 .\clients\models.py:105
+msgid "Фотографии"
+msgstr "Photographs"
+
+#: .\clients\constants.py:9 .\clients\constants.py:22 .\clients\models.py:106
+msgid "Подтверждение оплаты"
+msgstr "Payment confirmation"
+
+#: .\clients\constants.py:10 .\clients\constants.py:21 .\clients\models.py:107
+msgid "Паспорт"
+msgstr "Passport"
+
+#: .\clients\constants.py:11 .\clients\models.py:108
+msgid "Справка о зачислении"
+msgstr "Certificate of enrollment"
+
+#: .\clients\constants.py:12 .\clients\models.py:109
+msgid "Справка об оплате обучения"
+msgstr "Proof of tuition fee payment"
+
+#: .\clients\constants.py:13 .\clients\constants.py:25 .\clients\models.py:110
+msgid "Медицинская страховка"
+msgstr "Health insurance"
+
+#: .\clients\constants.py:14 .\clients\models.py:111
+msgid "Подтверждение адреса"
+msgstr "Proof of address"
+
+#: .\clients\constants.py:15 .\clients\models.py:112
+msgid "Подтверждение финансов"
+msgstr "Proof of financial means"
+
+#: .\clients\constants.py:23 .\clients\models.py:113
+msgid "Załącznik nr 1"
+msgstr "Attachment no. 1"
+
+#: .\clients\constants.py:24 .\clients\models.py:114
+msgid "Informacja starosty"
+msgstr "Starosta's information"
+
+#: .\clients\constants.py:26 .\clients\models.py:115
+msgid "Трудовой договор"
+msgstr "Employment contract"
+
+#: .\clients\constants.py:27 .\clients\models.py:116
+msgid "PIT-37 / Zaświadczenie o niezaleganiu"
+msgstr "PIT-37 / Certificate of no arrears"
+
+#: .\clients\models.py:10
+msgid "Учёба"
+msgstr "Study"
+
+#: .\clients\models.py:11
+msgid "Работа"
+msgstr "Work"
+
+#: .\clients\models.py:12
+msgid "Воссоединение семьи"
+msgstr "Family reunification"
+
+#: .\clients\models.py:15
+msgid "Польский"
+msgstr "Polish"
+
+#: .\clients\models.py:16
+msgid "Английский"
+msgstr "English"
+
+#: .\clients\models.py:17 .\legalize_site\settings.py:10
+msgid "Русский"
+msgstr "Russian"
+
+#: .\clients\models.py:20
+msgid "Новый"
+msgstr "New"
+
+#: .\clients\models.py:21
+msgid "В ожидании"
+msgstr "Pending"
+
+#: .\clients\models.py:22
+msgid "Одобрен"
+msgstr "Approved"
+
+#: .\clients\models.py:23
+msgid "Отклонён"
+msgstr "Rejected"
+
+#: .\clients\models.py:27
+msgid "Имя"
+msgstr "First Name"
+
+#: .\clients\models.py:28
+msgid "Фамилия"
+msgstr "Last Name"
+
+#: .\clients\models.py:29
+msgid "Гражданство"
+msgstr "Citizenship"
+
+#: .\clients\models.py:30 .\clients\templates\clients\client_detail.html:19
+#: .\portal\templates\portal\profile_detail.html:16
+msgid "Телефон"
+msgstr "Phone"
+
+#: .\clients\models.py:32
+msgid "Номер паспорта"
+msgstr "Passport number"
+
+#: .\clients\models.py:33 .\clients\templates\clients\client_detail.html:17
+#: .\clients\templates\clients\clients_list.html:37
+msgid "Номер дела"
+msgstr "Case number"
+
+#: .\clients\models.py:35 .\clients\templates\clients\client_detail.html:20
+msgid "Цель подачи"
+msgstr "Purpose of application"
+
+#: .\clients\models.py:38
+msgid "Основание пребывания (виза, TRC и т.д.)"
+msgstr "Basis of stay (visa, TRC, etc.)"
+
+#: .\clients\models.py:40
+msgid "Язык документов"
+msgstr "Document language"
+
+#: .\clients\models.py:41
+msgid "Статус"
+msgstr "Status"
+
+#: .\clients\models.py:42
+msgid "Дата создания"
+msgstr "Creation date"
+
+#: .\clients\models.py:43 .\clients\templates\clients\client_detail.html:23
+msgid "Дата окончания основания"
+msgstr "Basis end date"
+
+#: .\clients\models.py:44
+msgid "Дата подачи (Złożone)"
+msgstr "Submission date (Złożone)"
+
+#: .\clients\models.py:45
+msgid "Телефон работодателя"
+msgstr "Employer's phone"
+
+#: .\clients\models.py:46
+msgid "Дата сдачи отпечатков"
+msgstr "Date of fingerprints submission"
+
+#: .\clients\models.py:47 .\clients\templates\clients\clients_list.html:41
+msgid "Uwagi / Заметки"
+msgstr "Uwagi / Notes"
+
+#: .\clients\models.py:48
+msgid "Доступ к чеклисту предоставлен"
+msgstr "Access to checklist granted"
+
+#: .\clients\models.py:119 .\clients\models.py:157 .\clients\models.py:190
+msgid "Клиент"
+msgstr "Client"
+
+#: .\clients\models.py:120
+msgid "Тип документа"
+msgstr "Document type"
+
+#: .\clients\models.py:121
+msgid "Файл"
+msgstr "File"
+
+#: .\clients\models.py:122
+msgid "Действителен до"
+msgstr "Valid until"
+
+#: .\clients\models.py:123
+msgid "Дата загрузки"
+msgstr "Upload date"
+
+#: .\clients\models.py:124
+msgid "Проверено"
+msgstr "Verified"
+
+#: .\clients\models.py:127 .\clients\models.py:186
+msgid "Документ"
+msgstr "Document"
+
+#: .\clients\models.py:128
 msgid "Документы"
-msgstr ""
+msgstr "Documents"
+
+#: .\clients\models.py:137
+msgid "Ожидает оплаты"
+msgstr "Pending payment"
+
+#: .\clients\models.py:138
+msgid "Частично оплачен"
+msgstr "Partially paid"
+
+#: .\clients\models.py:139
+msgid "Оплачен полностью"
+msgstr "Paid in full"
+
+#: .\clients\models.py:140
+msgid "Возврат"
+msgstr "Refunded"
+
+#: .\clients\models.py:143
+msgid "Карта"
+msgstr "Card"
+
+#: .\clients\models.py:144
+msgid "Наличные"
+msgstr "Cash"
+
+#: .\clients\models.py:145
+msgid "Перевод"
+msgstr "Transfer"
+
+#: .\clients\models.py:148
+msgid "Сопровождение (Работа)"
+msgstr "Support (Work)"
+
+#: .\clients\models.py:149
+msgid "Сопровождение (Учеба)"
+msgstr "Support (Study)"
+
+#: .\clients\models.py:150
+msgid "Консультация"
+msgstr "Consultation"
+
+#: .\clients\models.py:151
+msgid "Подготовка документов"
+msgstr "Document preparation"
+
+#: .\clients\models.py:152
+msgid "Полное сопровождение"
+msgstr "Full support"
+
+#: .\clients\models.py:153
+msgid "Задаток"
+msgstr "Deposit"
+
+#: .\clients\models.py:154 .\clients\models.py:187
+msgid "Другое"
+msgstr "Other"
+
+#: .\clients\models.py:158
+msgid "Описание услуги"
+msgstr "Service description"
+
+#: .\clients\models.py:159
+msgid "Общая сумма"
+msgstr "Total amount"
+
+#: .\clients\models.py:160
+msgid "Оплаченная сумма"
+msgstr "Amount paid"
+
+#: .\clients\models.py:162
+msgid "Статус оплаты"
+msgstr "Payment status"
+
+#: .\clients\models.py:164
+msgid "Способ оплаты"
+msgstr "Payment method"
+
+#: .\clients\models.py:165
+msgid "Дата оплаты"
+msgstr "Payment date"
+
+#: .\clients\models.py:166
+msgid "Оплатить до"
+msgstr "Due date"
+
+#: .\clients\models.py:167
+msgid "ID транзакции (если есть)"
+msgstr "Transaction ID (if any)"
+
+#: .\clients\models.py:168
+msgid "Дата создания счёта"
+msgstr "Invoice creation date"
+
+#: .\clients\models.py:169
+msgid "Дата последнего обновления"
+msgstr "Last update date"
+
+#: .\clients\models.py:185
+msgid "Оплата"
+msgstr "Payment"
+
+#: .\clients\models.py:194
+msgid "Тип напоминания"
+msgstr "Reminder type"
+
+#: .\clients\models.py:195
+msgid "Заголовок напоминания"
+msgstr "Reminder title"
+
+#: .\clients\models.py:196
+msgid "Детали"
+msgstr "Details"
+
+#: .\clients\models.py:197
+msgid "Ключевая дата"
+msgstr "Key date"
+
+#: .\clients\models.py:198
+msgid "Активно"
+msgstr "Active"
 
 #: .\clients\templates\clients\calculator.html:4
 #: .\clients\templates\clients\calculator.html:7
 msgid "Калькулятор выписки из банка"
-msgstr ""
+msgstr "Bank Statement Calculator"
 
 #: .\clients\templates\clients\calculator.html:9
 msgid "Введите данные, чтобы рассчитать итоговую сумму на счету."
-msgstr ""
+msgstr "Enter the data to calculate the final amount on the account."
 
 #: .\clients\templates\clients\calculator.html:10
 #, python-format
 msgid "Актуальный курс: <strong>1 EUR = %(rate)s PLN</strong>"
-msgstr ""
+msgstr "Current rate: <strong>1 EUR = %(rate)s PLN</strong>"
 
-#: .\clients\templates\clients\calculator.html:22
+#: .\clients\templates\clients\calculator.html:21
 msgid "Когда заканчивается основание пребывания?"
-msgstr ""
+msgstr "When does the basis of stay end?"
 
-#: .\clients\templates\clients\calculator.html:24
+#: .\clients\templates\clients\calculator.html:23
 msgid "дд-мм-гггг"
-msgstr ""
+msgstr "dd-mm-yyyy"
 
-#: .\clients\templates\clients\calculator.html:31
+#: .\clients\templates\clients\calculator.html:30
 msgid "Оплата за обучение"
-msgstr ""
+msgstr "Tuition Fee"
 
-#: .\clients\templates\clients\calculator.html:34
+#: .\clients\templates\clients\calculator.html:33
 msgid "Сумма оплаты"
-msgstr ""
+msgstr "Payment amount"
+
+#: .\clients\templates\clients\calculator.html:43
+msgid "в месяц"
+msgstr "per month"
 
 #: .\clients\templates\clients\calculator.html:44
-msgid "в месяц"
-msgstr ""
+msgid "за семестр"
+msgstr "per semester"
 
 #: .\clients\templates\clients\calculator.html:45
-msgid "за семестр"
-msgstr ""
-
-#: .\clients\templates\clients\calculator.html:46
 msgid "за год"
-msgstr ""
+msgstr "per year"
 
-#: .\clients\templates\clients\calculator.html:52
+#: .\clients\templates\clients\calculator.html:51
 msgid "Кол-во месяцев в этом периоде (можно изменить)"
-msgstr ""
+msgstr "Number of months in this period (can be changed)"
 
-#: .\clients\templates\clients\calculator.html:58
+#: .\clients\templates\clients\calculator.html:57
 msgid "Аренда + счётчики в месяц (на всю квартиру)"
-msgstr ""
+msgstr "Rent + utilities per month (for the whole apartment)"
 
-#: .\clients\templates\clients\calculator.html:70
+#: .\clients\templates\clients\calculator.html:69
 msgid "Кол-во человек, проживающих вместе"
-msgstr ""
+msgstr "Number of people living together"
 
-#: .\clients\templates\clients\calculator.html:76
+#: .\clients\templates\clients\calculator.html:75
 msgid "Обратный билет"
-msgstr ""
+msgstr "Return ticket"
 
-#: .\clients\templates\clients\calculator.html:80
+#: .\clients\templates\clients\calculator.html:79
 msgid "Страна граничит с Польшей? (билет 500 zł, иначе 2500 zł)"
-msgstr ""
+msgstr "Does the country border Poland? (ticket 500 zł, otherwise 2500 zł)"
 
-#: .\clients\templates\clients\calculator.html:89
+#: .\clients\templates\clients\calculator.html:87
 msgid "Рассчитать итоговую сумму"
-msgstr ""
+msgstr "Calculate the final amount"
 
-#: .\clients\templates\clients\calculator.html:95
+#: .\clients\templates\clients\calculator.html:93
 msgid "Итоговая сумма на счету:"
-msgstr ""
+msgstr "Total amount on the account:"
 
-#: .\clients\templates\clients\calculator.html:100
+#: .\clients\templates\clients\calculator.html:99
 msgid "Детализация расчёта:"
-msgstr ""
+msgstr "Calculation details:"
 
 #: .\clients\templates\clients\calculator.html:103
-msgid "Ежемесячные расходы:"
-msgstr ""
-
-#: .\clients\templates\clients\calculator.html:104
-msgid "Жильё"
-msgstr ""
-
-#: .\clients\templates\clients\calculator.html:104
-msgid "Кол-во чел."
-msgstr ""
-
-#: .\clients\templates\clients\calculator.html:104
-msgid "Обучение"
-msgstr ""
-
-#: .\clients\templates\clients\calculator.html:104
-msgid "Прожиточный минимум"
-msgstr ""
-
-#: .\clients\templates\clients\calculator.html:106
-#: .\clients\templates\clients\calculator.html:113
-msgid "мес."
-msgstr ""
+msgid "Жильё в месяц (на 1 чел.)"
+msgstr "Housing per month (per person)"
 
 #: .\clients\templates\clients\calculator.html:110
-msgid "Итого за проживание и учёбу:"
-msgstr ""
-
-#: .\clients\templates\clients\calculator.html:111
-msgid "Ежемесячные расходы"
-msgstr ""
-
-#: .\clients\templates\clients\calculator.html:111
-msgid "Кол-во месяцев для расчёта"
-msgstr ""
+msgid "Обучение в месяц"
+msgstr "Tuition per month"
 
 #: .\clients\templates\clients\calculator.html:117
-msgid "Плюс обратный билет:"
-msgstr ""
+msgid "Прожиточный минимум"
+msgstr "Living wage"
 
-#: .\clients\templates\clients\calculator.html:127
-msgid ""
-"Заполните все поля слева и нажмите \"Рассчитать\", чтобы увидеть результат."
-msgstr ""
+#: .\clients\templates\clients\calculator.html:120
+msgid "фиксированная сумма"
+msgstr "fixed amount"
+
+#: .\clients\templates\clients\calculator.html:124
+msgid "Итого ежемесячные расходы:"
+msgstr "Total monthly expenses:"
+
+#: .\clients\templates\clients\calculator.html:130
+msgid "Количество месяцев для расчёта"
+msgstr "Number of months for calculation"
+
+#: .\clients\templates\clients\calculator.html:131
+msgid "мес."
+msgstr "mo."
+
+#: .\clients\templates\clients\calculator.html:134
+#, python-format
+msgid "реальный срок %(real)s мес., но расчет ограничен максимумом в %(max)s мес."
+msgstr "actual period is %(real)s mo., but the calculation is limited to a maximum of %(max)s mo."
+
+#: .\clients\templates\clients\calculator.html:136
+#, python-format
+msgid "полный срок пребывания: %(real)s мес."
+msgstr "full period of stay: %(real)s mo."
+
+#: .\clients\templates\clients\calculator.html:141
+msgid "Стоимость обратного билета"
+msgstr "Return ticket cost"
+
+#: .\clients\templates\clients\calculator.html:150
+msgid "Заполните все поля слева и нажмите \"Рассчитать\", чтобы увидеть результат."
+msgstr "Fill in all fields on the left and click \"Calculate\" to see the result."
+
+#: .\clients\templates\clients\calculator.html:187
+msgid "Цена билета: 500 zł"
+msgstr "Ticket price: 500 zł"
+
+#: .\clients\templates\clients\calculator.html:189
+msgid "Цена билета: 2500 zł"
+msgstr "Ticket price: 2500 zł"
 
 #: .\clients\templates\clients\client_detail.html:4
 #, python-format
 msgid "Детали клиента: %(client_name)s"
-msgstr ""
+msgstr "Client details: %(client_name)s"
 
 #: .\clients\templates\clients\client_detail.html:10
 msgid "Печать"
-msgstr ""
+msgstr "Print"
 
 #: .\clients\templates\clients\client_detail.html:11
 msgid "Редактировать данные"
-msgstr ""
-
-#: .\clients\templates\clients\client_detail.html:17
-#: .\clients\templates\clients\clients_list.html:37
-msgid "Номер дела"
-msgstr ""
+msgstr "Edit data"
 
 #: .\clients\templates\clients\client_detail.html:17
 msgid "Не указан"
-msgstr ""
-
-#: .\clients\templates\clients\client_detail.html:19
-#: .\portal\templates\portal\profile_detail.html:16
-msgid "Телефон"
-msgstr ""
-
-#: .\clients\templates\clients\client_detail.html:20
-msgid "Цель подачи"
-msgstr ""
+msgstr "Not specified"
 
 #: .\clients\templates\clients\client_detail.html:21
 msgid "Основание пребывания"
-msgstr ""
+msgstr "Basis of stay"
 
 #: .\clients\templates\clients\client_detail.html:21
 msgid "Не указано"
-msgstr ""
-
-#: .\clients\templates\clients\client_detail.html:23
-msgid "Дата окончания основания"
-msgstr ""
+msgstr "Not specified"
 
 #: .\clients\templates\clients\client_detail.html:29
 msgid "Управление доступом клиента"
-msgstr ""
+msgstr "Client Access Management"
 
 #: .\clients\templates\clients\client_detail.html:36
 msgid "Финансы"
-msgstr ""
+msgstr "Finances"
 
 #: .\clients\templates\clients\client_detail.html:37
 msgid "Добавить счёт"
-msgstr ""
+msgstr "Add invoice"
 
 #: .\clients\templates\clients\client_detail.html:46
 msgid "Счета на оплату еще не созданы."
-msgstr ""
+msgstr "Invoices have not been created yet."
 
 #: .\clients\templates\clients\client_detail.html:53
 msgid "Чеклист документов"
-msgstr ""
+msgstr "Document Checklist"
 
-#: .\clients\templates\clients\client_form.html:24
+#: .\clients\templates\clients\client_form.html:23
 msgid "Основная информация"
-msgstr ""
+msgstr "Basic Information"
 
-#: .\clients\templates\clients\client_form.html:58
+#: .\clients\templates\clients\client_form.html:59
 msgid "Детали дела"
-msgstr ""
+msgstr "Case Details"
 
-#: .\clients\templates\clients\client_form.html:88
+#: .\clients\templates\clients\client_form.html:72
 msgid "Важные даты"
-msgstr ""
+msgstr "Important Dates"
 
-#: .\clients\templates\clients\client_form.html:118
+#: .\clients\templates\clients\client_form.html:101
 msgid "Доступы"
-msgstr ""
+msgstr "Access"
 
-#: .\clients\templates\clients\client_form.html:125
-msgid ""
-"Если включено, клиент увидит на своей странице список необходимых документов."
-msgstr ""
+#: .\clients\templates\clients\client_form.html:106
+msgid "Если включено, клиент увидит на своей странице список необходимых документов."
+msgstr "If enabled, the client will see a list of required documents on their page."
 
-#: .\clients\templates\clients\client_form.html:131
+#: .\clients\templates\clients\client_form.html:112
 msgid "Дополнительно"
-msgstr ""
+msgstr "Additionally"
 
-#: .\clients\templates\clients\client_form.html:141
+#: .\clients\templates\clients\client_form.html:122
 msgid "Отмена"
-msgstr ""
+msgstr "Cancel"
 
-#: .\clients\templates\clients\client_form.html:142
+#: .\clients\templates\clients\client_form.html:123
 #: .\clients\templates\clients\clients_list.html:69
 msgid "Сохранить"
-msgstr ""
+msgstr "Save"
 
 #: .\clients\templates\clients\clients_list.html:4
 #: .\clients\templates\clients\clients_list.html:8
 msgid "Список клиентов"
-msgstr ""
+msgstr "Client List"
 
 #: .\clients\templates\clients\clients_list.html:9
 msgid "Добавить нового клиента"
-msgstr ""
+msgstr "Add New Client"
 
 #: .\clients\templates\clients\clients_list.html:14
 msgid "Поиск по имени, почте или номеру дела..."
-msgstr ""
+msgstr "Search by name, email, or case number..."
 
 #: .\clients\templates\clients\clients_list.html:15
 msgid "Найти"
-msgstr ""
+msgstr "Find"
 
 #: .\clients\templates\clients\clients_list.html:36
 msgid "Полное имя"
-msgstr ""
+msgstr "Full name"
 
 #: .\clients\templates\clients\clients_list.html:38
 msgid "Основание и дата окончания"
-msgstr ""
-
-#: .\clients\templates\clients\clients_list.html:41
-msgid "Uwagi / Заметки"
-msgstr ""
+msgstr "Basis and end date"
 
 #: .\clients\templates\clients\clients_list.html:48
 msgid "Действия"
-msgstr ""
+msgstr "Actions"
 
 #: .\clients\templates\clients\clients_list.html:61
 #, python-format
 msgid "до %(date)s"
-msgstr ""
+msgstr "until %(date)s"
 
 #: .\clients\templates\clients\clients_list.html:74
 msgid "Подробнее"
-msgstr ""
+msgstr "Details"
 
 #: .\clients\templates\clients\clients_list.html:75
 msgid "Удалить"
-msgstr ""
+msgstr "Delete"
 
 #: .\clients\templates\clients\clients_list.html:81
 msgid "Клиенты не найдены."
-msgstr ""
-
-#: .\legalize_site\settings.py:10
-msgid "Русский"
-msgstr ""
+msgstr "No clients found."
 
 #: .\legalize_site\settings.py:11
 msgid "Polski"
-msgstr ""
+msgstr "Polish"
 
 #: .\legalize_site\settings.py:12
 msgid "English"
-msgstr ""
+msgstr "English"
+
+#: .\portal\templates\portal\partials\document_item.html:5
+#: .\portal\templates\portal\profile_detail.html:48
+#, python-format
+msgid "Файл от %(date)s"
+msgstr "File from %(date)s"
+
+#: .\portal\templates\portal\partials\document_item.html:8
+#: .\portal\templates\portal\profile_detail.html:51 .\portal\views.py:36
+msgid "Ожидает проверки"
+msgstr "Pending verification"
 
 #: .\portal\templates\portal\profile_detail.html:4
 msgid "Ваш профиль"
-msgstr ""
+msgstr "Your profile"
 
 #: .\portal\templates\portal\profile_detail.html:8
 #, python-format
 msgid "Личный кабинет, %(client.first_name)s"
-msgstr ""
+msgstr "Personal account, %(client.first_name)s"
 
 #: .\portal\templates\portal\profile_detail.html:9
 msgid "Редактировать профиль"
-msgstr ""
+msgstr "Edit profile"
 
 #: .\portal\templates\portal\profile_detail.html:13
 msgid "Ваши данные"
-msgstr ""
+msgstr "Your data"
 
 #: .\portal\templates\portal\profile_detail.html:17
 msgid "Статус вашего дела"
-msgstr ""
+msgstr "Your case status"
 
 #: .\portal\templates\portal\profile_detail.html:22
 msgid "Список документов"
-msgstr ""
+msgstr "Document List"
 
 #: .\portal\templates\portal\profile_detail.html:25
 msgid "Ниже представлен ваш персональный список документов для загрузки."
-msgstr ""
+msgstr "Below is your personal list of documents to upload."
 
-#: .\portal\templates\portal\profile_detail.html:33
-#, python-format
-msgid "Загружено (%(number)s)"
-msgstr ""
+#: .\portal\templates\portal\profile_detail.html:34 .\portal\views.py:38
+msgid "Загружено"
+msgstr "Uploaded"
 
-#: .\portal\templates\portal\profile_detail.html:33
+#: .\portal\templates\portal\profile_detail.html:36 .\portal\views.py:37
 msgid "Требуется"
-msgstr ""
+msgstr "Required"
 
-#: .\portal\templates\portal\profile_detail.html:44
-#, python-format
-msgid "Файл от %(date)s"
-msgstr ""
-
-#: .\portal\templates\portal\profile_detail.html:47
+#: .\portal\templates\portal\profile_detail.html:51 .\portal\views.py:35
 msgid "Проверен"
-msgstr ""
+msgstr "Verified"
 
-#: .\portal\templates\portal\profile_detail.html:47
-msgid "Ожидает проверки"
-msgstr ""
-
-#: .\portal\templates\portal\profile_detail.html:51
+#: .\portal\templates\portal\profile_detail.html:55 .\portal\views.py:34
 msgid "Вы еще не загрузили файлы этого типа."
-msgstr ""
-
-#: .\portal\templates\portal\profile_detail.html:55
-msgid "Загрузить новый файл"
-msgstr ""
+msgstr "You have not uploaded files of this type yet."
 
 #: .\portal\templates\portal\profile_detail.html:59
+msgid "Загрузить новый файл"
+msgstr "Upload new file"
+
+#: .\portal\templates\portal\profile_detail.html:63
 msgid "Срок действия (если есть)"
-msgstr ""
+msgstr "Expiry date (if any)"
 
-#: .\portal\templates\portal\profile_detail.html:60
+#: .\portal\templates\portal\profile_detail.html:64
 msgid "Загрузить"
-msgstr ""
+msgstr "Upload"
 
-#: .\portal\templates\portal\profile_detail.html:69
+#: .\portal\templates\portal\profile_detail.html:73
 msgid "Список документов пока не доступен"
-msgstr ""
+msgstr "The document list is not yet available"
 
-#: .\portal\templates\portal\profile_detail.html:70
-msgid ""
-"Ваш персональный чеклист появится здесь после подтверждения от нашего "
-"сотрудника."
-msgstr ""
+#: .\portal\templates\portal\profile_detail.html:74
+msgid "Ваш персональный чеклист появится здесь после подтверждения от нашего сотрудника."
+msgstr "Your personal checklist will appear here after confirmation from our staff."
+
+#: .\portal\views.py:59
+msgid "Доступ запрещен"
+msgstr "Access denied"
+
+#: .\portal\views.py:77
+msgid "Файл успешно загружен и ожидает проверки."
+msgstr "File successfully uploaded and is pending verification."
+
+#: .\portal\views.py:99
+msgid "Доступ к чеклисту документов не предоставлен."
+msgstr "Access to the document checklist has not been granted."
 
 #: .\templates\account\email_confirmation_sent.html:4
 #: .\templates\account\email_confirmation_sent.html:12
 msgid "Подтвердите ваш E-mail"
-msgstr ""
+msgstr "Confirm Your E-mail"
 
 #: .\templates\account\email_confirmation_sent.html:13
-msgid ""
-"Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
-"завершить регистрацию."
-msgstr ""
+msgid "Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы завершить регистрацию."
+msgstr "We have sent you a verification email. Please follow the link in the email to complete your registration."
 
 #: .\templates\account\email_confirmation_sent.html:15
-msgid ""
-"Если вы не видите письмо во входящих, проверьте папку \"Спам\". Пожалуйста, "
-"свяжитесь с нами, если не получили письмо в течение нескольких минут."
-msgstr ""
+msgid "Если вы не видите письмо во входящих, проверьте папку \"Спам\". Пожалуйста, свяжитесь с нами, если не получили письмо в течение нескольких минут."
+msgstr "If you don't see the email in your inbox, check your spam folder. Please contact us if you don't receive the email within a few minutes."
 
-#: .\templates\account\login.html:6 .\templates\base.html:75
+#: .\templates\account\login.html:6 .\templates\base.html:76
 msgid "Вход"
-msgstr ""
+msgstr "Login"
 
 #: .\templates\account\login.html:13
 msgid "Вход в систему"
-msgstr ""
+msgstr "Log in to the system"
 
 #: .\templates\account\login.html:27
 msgid "Адрес электронной почты"
-msgstr ""
+msgstr "Email address"
 
 #: .\templates\account\login.html:32
 msgid "Пароль"
-msgstr ""
+msgstr "Password"
 
 #: .\templates\account\login.html:47
 msgid "Войти"
-msgstr ""
+msgstr "Log in"
 
 #: .\templates\account\login.html:52
 msgid "Забыли пароль?"
-msgstr ""
+msgstr "Forgot password?"
 
 #: .\templates\account\login.html:58
 #, python-format
 msgid "Нет аккаунта? <a href=\"%(signup_url)s\">Зарегистрироваться</a>"
-msgstr ""
+msgstr "No account? <a href=\"%(signup_url)s\">Sign up</a>"
 
 #: .\templates\account\password_reset.html:5
 #: .\templates\account\password_reset.html:12
 #: .\templates\account\password_reset_done.html:4
 msgid "Сброс пароля"
-msgstr ""
+msgstr "Password Reset"
 
 #: .\templates\account\password_reset.html:15
-msgid ""
-"Забыли пароль? Введите ваш email, и мы пришлем вам письмо с инструкциями по "
-"восстановлению."
-msgstr ""
+msgid "Забыли пароль? Введите ваш email, и мы пришлем вам письмо с инструкциями по восстановлению."
+msgstr "Forgot your password? Enter your email, and we'll send you instructions to reset it."
 
 #: .\templates\account\password_reset.html:23
 msgid "Сбросить пароль"
-msgstr ""
+msgstr "Reset password"
 
 #: .\templates\account\password_reset_done.html:12
 msgid "Письмо отправлено"
-msgstr ""
+msgstr "Email sent"
 
 #: .\templates\account\password_reset_done.html:13
-msgid ""
-"Мы отправили вам письмо с инструкциями. Если вы его не получили, проверьте "
-"папку \"Спам\"."
-msgstr ""
+msgid "Мы отправили вам письмо с инструкциями. Если вы его не получили, проверьте папку \"Спам\"."
+msgstr "We've sent you an email with instructions. If you didn't receive it, please check your spam folder."
 
 #: .\templates\account\password_reset_from_key.html:5
 msgid "Новый пароль"
-msgstr ""
+msgstr "New password"
 
 #: .\templates\account\password_reset_from_key.html:12
 msgid "Создайте новый пароль"
-msgstr ""
+msgstr "Create a new password"
 
 #: .\templates\account\password_reset_from_key.html:16
 msgid "Ссылка недействительна."
-msgstr ""
+msgstr "The link is invalid."
 
 #: .\templates\account\password_reset_from_key.html:31
 msgid "Сохранить новый пароль"
-msgstr ""
+msgstr "Save new password"
 
 #: .\templates\account\password_reset_from_key_done.html:4
 msgid "Пароль изменен"
-msgstr ""
+msgstr "Password changed"
 
 #: .\templates\account\password_reset_from_key_done.html:16
 msgid "Пароль успешно изменен"
-msgstr ""
+msgstr "Password successfully changed"
 
 #: .\templates\account\password_reset_from_key_done.html:17
 msgid "Теперь вы можете войти в систему с вашим новым паролем."
-msgstr ""
+msgstr "You can now log in with your new password."
 
 #: .\templates\account\password_reset_from_key_done.html:18
-msgid ""
-"Вы будете автоматически перенаправлены на страницу входа через 3 секунды..."
-msgstr ""
+msgid "Вы будете автоматически перенаправлены на страницу входа через 3 секунды..."
+msgstr "You will be automatically redirected to the login page in 3 seconds..."
 
 #: .\templates\account\password_reset_from_key_done.html:19
 msgid "Перейти ко входу сейчас"
-msgstr ""
+msgstr "Go to login now"
 
 #: .\templates\account\signup.html:6 .\templates\socialaccount\signup.html:5
 msgid "Signup"
-msgstr ""
+msgstr "Sign up"
 
 #: .\templates\base.html:29
 msgid "Клиенты"
-msgstr ""
+msgstr "Clients"
 
 #: .\templates\base.html:30
 msgid "Добавить клиента"
-msgstr ""
+msgstr "Add client"
 
 #: .\templates\base.html:31
 msgid "Калькулятор"
-msgstr ""
+msgstr "Calculator"
 
 #: .\templates\base.html:32
 msgid "Напоминания"
-msgstr ""
+msgstr "Reminders"
 
-#: .\templates\base.html:61
+#: .\templates\base.html:33
+msgid "Напоминания платежей"
+msgstr "Payment Reminders"
+
+#: .\templates\base.html:62
 msgid "Мой профиль"
-msgstr ""
+msgstr "My profile"
 
-#: .\templates\base.html:68
+#: .\templates\base.html:69
 msgid "Выход"
-msgstr ""
+msgstr "Logout"
 
-#: .\templates\base.html:76
+#: .\templates\base.html:77
 msgid "Регистрация"
-msgstr ""
+msgstr "Sign up"
 
 #: .\templates\socialaccount\login.html:4
 msgid "Social Network Login"
-msgstr ""
+msgstr "Social Network Login"
 
 #: .\templates\socialaccount\login.html:16
 #, python-format
@@ -534,3 +824,7 @@ msgid ""
 "%(provider)s.\n"
 "                    "
 msgstr ""
+"\n"
+"                    You are about to log in to the site using your "
+"%(provider)s account.\n"
+"                    "

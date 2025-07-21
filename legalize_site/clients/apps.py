@@ -1,5 +1,4 @@
 # clients/apps.py
-
 from django.apps import AppConfig
 
 
@@ -8,6 +7,5 @@ class ClientsConfig(AppConfig):
     name = 'clients'
 
     def ready(self):
-        # Этот импорт абсолютно корректен.
-        # Django рекомендует регистрировать сигналы именно в методе ready().
+        # Этот импорт для регистрации сигналов
         import clients.signals
