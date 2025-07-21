@@ -2,51 +2,50 @@ from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
-from .constants import DOCUMENT_CHECKLIST  # <-- Убедитесь, что этот импорт есть
-
+from .constants import DOCUMENT_CHECKLIST
 
 class Client(models.Model):
     # --- Списки для выбора ---
     APPLICATION_PURPOSE_CHOICES = [
-        ('study', 'Учёба'),
-        ('work', 'Работа'),
-        ('family', 'Воссоединение семьи'),
+        ('study', _('Учёба')),
+        ('work', _('Работа')),
+        ('family', _('Воссоединение семьи')),
     ]
     LANGUAGE_CHOICES = [
-        ('pl', 'Польский'),
-        ('en', 'Английский'),
-        ('ru', 'Русский'),
+        ('pl', _('Польский')),
+        ('en', _('Английский')),
+        ('ru', _('Русский')),
     ]
     STATUS_CHOICES = [
-        ('new', 'Новый'),
-        ('pending', 'В ожидании'),
-        ('approved', 'Одобрен'),
-        ('rejected', 'Отклонён'),
+        ('new', _('Новый')),
+        ('pending', _('В ожидании')),
+        ('approved', _('Одобрен')),
+        ('rejected', _('Отклонён')),
     ]
 
     # --- Поля модели ---
-    first_name = models.CharField(max_length=100, verbose_name="Имя")
-    last_name = models.CharField(max_length=100, verbose_name="Фамилия")
-    citizenship = models.CharField(max_length=100, verbose_name="Гражданство")
-    phone = models.CharField(max_length=20, verbose_name="Телефон")
+    first_name = models.CharField(max_length=100, verbose_name=_("Имя"))
+    last_name = models.CharField(max_length=100, verbose_name=_("Фамилия"))
+    citizenship = models.CharField(max_length=100, verbose_name=_("Гражданство"))
+    phone = models.CharField(max_length=20, verbose_name=_("Телефон"))
     email = models.EmailField(verbose_name="Email", unique=True)
-    passport_num = models.CharField(max_length=50, null=True, blank=True, verbose_name="Номер паспорта")
-    case_number = models.CharField(max_length=100, blank=True, null=True, verbose_name="Номер дела")
+    passport_num = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("Номер паспорта"))
+    case_number = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("Номер дела"))
     application_purpose = models.CharField(
-        max_length=20, choices=APPLICATION_PURPOSE_CHOICES, default='study', verbose_name="Цель подачи"
+        max_length=20, choices=APPLICATION_PURPOSE_CHOICES, default='study', verbose_name=_("Цель подачи")
     )
     basis_of_stay = models.CharField(
-        max_length=100, blank=True, null=True, verbose_name="Основание пребывания (виза, TRC и т.д.)"
+        max_length=100, blank=True, null=True, verbose_name=_("Основание пребывания (виза, TRC и т.д.)")
     )
-    language = models.CharField(max_length=5, choices=LANGUAGE_CHOICES, default='pl', verbose_name="Язык документов")
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new', verbose_name="Статус")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
-    legal_basis_end_date = models.DateField(null=True, blank=True, verbose_name="Дата окончания основания")
-    submission_date = models.DateField(null=True, blank=True, verbose_name="Дата подачи (Złożone)")
-    employer_phone = models.CharField(max_length=20, blank=True, null=True, verbose_name="Телефон работодателя")
-    fingerprints_date = models.DateField(null=True, blank=True, verbose_name="Дата сдачи отпечатков")
-    notes = models.TextField(blank=True, null=True, verbose_name="Uwagi / Заметки")
-    has_checklist_access = models.BooleanField(default=False, verbose_name="Доступ к чеклисту предоставлен")
+    language = models.CharField(max_length=5, choices=LANGUAGE_CHOICES, default='pl', verbose_name=_("Язык документов"))
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new', verbose_name=_("Статус"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Дата создания"))
+    legal_basis_end_date = models.DateField(null=True, blank=True, verbose_name=_("Дата окончания основания"))
+    submission_date = models.DateField(null=True, blank=True, verbose_name=_("Дата подачи (Złożone)"))
+    employer_phone = models.CharField(max_length=20, blank=True, null=True, verbose_name=_("Телефон работодателя"))
+    fingerprints_date = models.DateField(null=True, blank=True, verbose_name=_("Дата сдачи отпечатков"))
+    notes = models.TextField(blank=True, null=True, verbose_name=_("Uwagi / Заметки"))
+    has_checklist_access = models.BooleanField(default=False, verbose_name=_("Доступ к чеклисту предоставлен"))
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='client_profile',
                                 null=True, blank=True)
@@ -57,16 +56,13 @@ class Client(models.Model):
     def get_absolute_url(self):
         return reverse('clients:client_detail', kwargs={'pk': self.id})
 
-    # --- ИСПРАВЛЕННЫЙ МЕТОД ДЛЯ ЧЕКЛИСТА ---
     def get_document_checklist(self):
         """
         Возвращает чеклист, ТОЛЬКО ЕСЛИ у клиента есть доступ.
         """
-        # 1. Если галочка доступа не стоит, возвращаем пустой список
         if not self.has_checklist_access:
             return []
 
-        # 2. Если доступ есть, работает остальная логика
         checklist_key = (self.application_purpose, self.language)
         required_docs = DOCUMENT_CHECKLIST.get(checklist_key, [])
         if not required_docs:
@@ -93,7 +89,6 @@ class Client(models.Model):
 
     def get_document_name_by_code(self, doc_code):
         """Возвращает читаемое имя документа по его коду."""
-        # Убедимся, что этот метод также зависит от галочки доступа
         if not self.has_checklist_access:
             return doc_code.replace('_', ' ').capitalize()
 
@@ -106,28 +101,27 @@ class Client(models.Model):
 
 
 class Document(models.Model):
-    # Коды документов должны совпадать с кодами в constants.py
     DOC_TYPES = [
-        ('photos', 'Фотографии'),
-        ('payment_confirmation', 'Подтверждение оплаты'),
-        ('passport', 'Паспорт'),
-        ('enrollment_certificate', 'Справка о зачислении'),
-        ('tuition_fee_proof', 'Справка об оплате обучения'),
-        ('health_insurance', 'Медицинская страховка'),
-        ('address_proof', 'Подтверждение адреса'),
-        ('financial_proof', 'Подтверждение финансов'),
-        ('załącznik_nr_1', 'Załącznik nr 1'),
-        ('starosta_info', 'Informacja starosty'),
-        ('employment_contract', 'Трудовой договор'),
-        ('pit_proof', 'PIT-37 / Zaświadczenie o niezaleganiu'),
+        ('photos', _('Фотографии')),
+        ('payment_confirmation', _('Подтверждение оплаты')),
+        ('passport', _('Паспорт')),
+        ('enrollment_certificate', _('Справка о зачислении')),
+        ('tuition_fee_proof', _('Справка об оплате обучения')),
+        ('health_insurance', _('Медицинская страховка')),
+        ('address_proof', _('Подтверждение адреса')),
+        ('financial_proof', _('Подтверждение финансов')),
+        ('załącznik_nr_1', _('Załącznik nr 1')),
+        ('starosta_info', _('Informacja starosty')),
+        ('employment_contract', _('Трудовой договор')),
+        ('pit_proof', _('PIT-37 / Zaświadczenie o niezaleganiu')),
     ]
 
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='documents', verbose_name="Клиент")
-    document_type = models.CharField(max_length=50, choices=DOC_TYPES, verbose_name="Тип документа")
-    file = models.FileField(upload_to='documents/', verbose_name="Файл")
-    expiry_date = models.DateField(null=True, blank=True, verbose_name="Действителен до")
-    uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата загрузки")
-    verified = models.BooleanField(default=False, verbose_name="Проверено")
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='documents', verbose_name=_("Клиент"))
+    document_type = models.CharField(max_length=50, choices=DOC_TYPES, verbose_name=_("Тип документа"))
+    file = models.FileField(upload_to='documents/', verbose_name=_("Файл"))
+    expiry_date = models.DateField(null=True, blank=True, verbose_name=_("Действителен до"))
+    uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Дата загрузки"))
+    verified = models.BooleanField(default=False, verbose_name=_("Проверено"))
 
     class Meta:
         verbose_name = _("Документ")
@@ -139,42 +133,40 @@ class Document(models.Model):
 
 
 class Payment(models.Model):
-    # --- Списки для выбора ---
     PAYMENT_STATUS_CHOICES = [
-        ('pending', 'Ожидает оплаты'),
-        ('partial', 'Частично оплачен'),
-        ('paid', 'Оплачен полностью'),
-        ('refunded', 'Возврат'),
+        ('pending', _('Ожидает оплаты')),
+        ('partial', _('Частично оплачен')),
+        ('paid', _('Оплачен полностью')),
+        ('refunded', _('Возврат')),
     ]
     PAYMENT_METHOD_CHOICES = [
-        ('card', 'Карта'),
-        ('cash', 'Наличные'),
-        ('transfer', 'Перевод'),
+        ('card', _('Карта')),
+        ('cash', _('Наличные')),
+        ('transfer', _('Перевод')),
     ]
     SERVICE_CHOICES = [
-        ('work_service', 'Сопровождение (Работа)'),
-        ('study_service', 'Сопровождение (Учеба)'),
-        ('consultation', 'Консультация'),
-        ('document_preparation', 'Подготовка документов'),
-        ('full_service', 'Полное сопровождение'),
-        ('deposit', 'Задаток'),
-        ('other', 'Другое'),
+        ('work_service', _('Сопровождение (Работа)')),
+        ('study_service', _('Сопровождение (Учеба)')),
+        ('consultation', _('Консультация')),
+        ('document_preparation', _('Подготовка документов')),
+        ('full_service', _('Полное сопровождение')),
+        ('deposit', _('Задаток')),
+        ('other', _('Другое')),
     ]
 
-    # --- Поля модели ---
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='payments', verbose_name="Клиент")
-    service_description = models.CharField(max_length=100, choices=SERVICE_CHOICES, verbose_name="Описание услуги")
-    total_amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Общая сумма")
-    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Оплаченная сумма")
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='payments', verbose_name=_("Клиент"))
+    service_description = models.CharField(max_length=100, choices=SERVICE_CHOICES, verbose_name=_("Описание услуги"))
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=_("Общая сумма"))
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name=_("Оплаченная сумма"))
     status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending',
-                              verbose_name="Статус оплаты")
+                              verbose_name=_("Статус оплаты"))
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHOD_CHOICES, blank=True, null=True,
-                                      verbose_name="Способ оплаты")
-    payment_date = models.DateField(blank=True, null=True, verbose_name="Дата оплаты")
-    due_date = models.DateField(blank=True, null=True, verbose_name="Оплатить до")
-    transaction_id = models.CharField(max_length=255, blank=True, null=True, verbose_name="ID транзакции (если есть)")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания счёта")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата последнего обновления")
+                                      verbose_name=_("Способ оплаты"))
+    payment_date = models.DateField(blank=True, null=True, verbose_name=_("Дата оплаты"))
+    due_date = models.DateField(blank=True, null=True, verbose_name=_("Оплатить до"))
+    transaction_id = models.CharField(max_length=255, blank=True, null=True, verbose_name=_("ID транзакции (если есть)"))
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Дата создания счёта"))
+    updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Дата последнего обновления"))
 
     def __str__(self):
         return f"Счёт на {self.total_amount} для {self.client}"
@@ -190,23 +182,20 @@ class Payment(models.Model):
 
 class Reminder(models.Model):
     REMINDER_TYPE_CHOICES = [
-        ('payment', 'Оплата'),
-        ('document', 'Документ'),
-        ('other', 'Другое'),
+        ('payment', _('Оплата')),
+        ('document', _('Документ')),
+        ('other', _('Другое')),
     ]
 
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='reminders', verbose_name="Клиент")
-
-    # --- ИСПРАВЛЕНО: Добавлена связь с документом ---
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='reminders', verbose_name=_("Клиент"))
     payment = models.OneToOneField(Payment, on_delete=models.CASCADE, null=True, blank=True, related_name="reminder")
     document = models.OneToOneField(Document, on_delete=models.CASCADE, null=True, blank=True, related_name="reminder")
-
     reminder_type = models.CharField(max_length=20, choices=REMINDER_TYPE_CHOICES, default='document',
-                                     verbose_name="Тип напоминания")
-    title = models.CharField(max_length=255, verbose_name="Заголовок напоминания")
-    notes = models.TextField(blank=True, null=True, verbose_name="Детали")
-    due_date = models.DateField(verbose_name="Ключевая дата")
-    is_active = models.BooleanField(default=True, verbose_name="Активно")
+                                     verbose_name=_("Тип напоминания"))
+    title = models.CharField(max_length=255, verbose_name=_("Заголовок напоминания"))
+    notes = models.TextField(blank=True, null=True, verbose_name=_("Детали"))
+    due_date = models.DateField(verbose_name=_("Ключевая дата"))
+    is_active = models.BooleanField(default=True, verbose_name=_("Активно"))
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

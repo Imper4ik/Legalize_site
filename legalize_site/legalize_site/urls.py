@@ -18,7 +18,6 @@ urlpatterns += i18n_patterns(
     path('portal/', include('portal.urls', namespace='portal')),
     path('staff/', include('clients.urls', namespace='clients')),
     path('', views.dashboard_redirect, name='root_dashboard'),
-    # prefix_default_language=False # Раскомментируйте, если не хотите префикс для языка по умолчанию
 )
 
 if settings.DEBUG:

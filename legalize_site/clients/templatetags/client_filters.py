@@ -1,4 +1,4 @@
-# clients/templatetags/form_filters.py
+# clients/templatetags/client_filters.py
 
 from django import template
 

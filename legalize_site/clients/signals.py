@@ -2,7 +2,7 @@
 from django.conf import settings
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
-from .models import Payment, Reminder, Client
+from .models import Payment, Reminder, Client, Document
 
 
 @receiver(post_save, sender=Payment)
@@ -45,3 +45,12 @@ def create_client_profile_for_new_user(sender, instance, created, **kwargs):
         # Если пользователь не является персоналом, создаем для него профиль
         if not instance.is_staff:
             Client.objects.create(user=instance, email=instance.email)
+
+
+@receiver(post_delete, sender=Document)
+def delete_document_file_on_delete(sender, instance, **kwargs):
+    """
+    Автоматически удаляет связанный файл при УДАЛЕНИИ объекта Document.
+    """
+    if instance.file:
+        instance.file.delete(save=False)

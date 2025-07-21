@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import Q
@@ -154,17 +154,25 @@ def add_document(request, client_id, doc_type):
 @login_required
 def document_delete(request, pk):
     if not request.user.is_staff:
+        # Для AJAX возвращаем JSON, иначе - редирект
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
         return redirect('portal:profile_detail')
+
     document = get_object_or_404(Document, pk=pk)
     client_id = document.client.id
+
     if request.method == "POST":
         doc_type_display = document.get_document_type_display()
-        if document.file:
-            document.file.delete(save=False)
-        document.delete()
+        document.delete()  # Сигнал позаботится об удалении файла
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'success', 'message': f"Документ '{doc_type_display}' удалён."})
+
         messages.success(request, f"Документ '{doc_type_display}' успешно удалён.")
     else:
         messages.warning(request, "Удаление возможно только через кнопку.")
+
     return redirect('clients:client_detail', pk=client_id)
 
 
@@ -554,3 +562,23 @@ def reminder_action(request, reminder_id):
     # --- ИСПРАВЛЕНИЕ: Перенаправление на страницу напоминаний по документам ---
     # Это было предыдущее исправление, оставляем его, так как оно логично после действия над одним напоминанием
     return redirect('clients:document_reminder_list')
+
+
+@login_required
+def client_checklist_partial(request, pk):
+    """
+    Возвращает только HTML-фрагмент чеклиста документов.
+    Используется для AJAX-обновления.
+    """
+    if not request.user.is_staff:
+        return HttpResponseForbidden()
+
+    client = get_object_or_404(Client, pk=pk)
+
+    # ИСПОЛЬЗУЕМ ПРАВИЛЬНЫЙ МЕТОД ИЗ МОДЕЛИ
+    document_status_list = client.get_document_checklist()
+
+    return render(request, 'clients/partials/document_checklist.html', {
+        'client': client,
+        'document_status_list': document_status_list
+    })
