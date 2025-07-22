@@ -22,6 +22,16 @@ SECRET_KEY = 'django-insecure-wr&zre@01k3+-y#r)sdv5itm2g3uw@hs8*=endlh+m5m$t8qc$
 DEBUG = False
 ALLOWED_HOSTS = ['legalize-site.onrender.com', '127.0.0.1', 'localhost', '192.168.0.41']
 
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'apikey')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+
+DEFAULT_FROM_EMAIL = 'noreply@legalize-site.onrender.com'
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',

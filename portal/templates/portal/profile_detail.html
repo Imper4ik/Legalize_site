@@ -104,7 +104,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const formData = new FormData(form);
                 const docCode = form.action.split('/').filter(Boolean).pop();
 
-                fetch(form.action, {
+                // ИСПРАВЛЕНИЕ 1: Используем new URL().pathname, чтобы получить относительный путь
+                fetch(new URL(form.action).pathname, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': csrftoken,
@@ -155,6 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // LIVE UPDATE
         setInterval(function() {
+            // ИСПРАВЛЕНИЕ 2: Также используем new URL().pathname для API запроса
             const apiUrl = "{% url 'portal:checklist_status_api' %}";
             fetch(new URL(apiUrl).pathname)
                 .then(response => response.json())
