@@ -20,7 +20,7 @@ LOCALE_PATHS = [
 
 SECRET_KEY = 'django-insecure-wr&zre@01k3+-y#r)sdv5itm2g3uw@hs8*=endlh+m5m$t8qc$'
 DEBUG = False
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '192.168.0.41']
+ALLOWED_HOSTS = ['legalize-site.onrender.com', '127.0.0.1', 'localhost', '192.168.0.41']
 
 # Application definition
 INSTALLED_APPS = [
