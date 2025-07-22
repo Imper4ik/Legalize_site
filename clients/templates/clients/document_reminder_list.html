@@ -1,0 +1,78 @@
+{# clients/templates/clients/document_reminder_list.html #}
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+  {{ title|default:"Напоминания" }}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">
+      <i class="fas fa-bell text-warning"></i> {{ title }} ({{ total_reminders_count }})
+    </h2>
+    <div>
+      <form action="{% url 'clients:run_update_reminders' %}" method="post" class="d-inline">
+        {% csrf_token %}
+        {# ДОБАВЛЕНО: Скрытое поле для указания страницы возврата #}
+        <input type="hidden" name="next" value="documents">
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-sync-alt"></i> Проверить и создать новые
+        </button>
+      </form>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="reminders-section mt-4" id="documents-section">
+    <h4 class="mb-3"><i class="fas fa-file-alt text-info"></i> Напоминания по документам ({{ document_reminders.count }})</h4>
+
+    <div class="card card-body mb-4 shadow-sm bg-light">
+      <form method="get" action="#documents-section" class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label for="doc_client" class="form-label"><strong>Клиент</strong></label>
+          <select name="doc_client" id="doc_client" class="form-select">
+            <option value="">Все клиенты</option>
+            {% for client in all_clients %}
+              <option value="{{ client.id }}" {% if doc_client_filter_id == client.id %}selected{% endif %}>{{ client }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label for="doc_start_date" class="form-label"><strong>Дата от</strong></label>
+          <input type="date" name="doc_start_date" id="doc_start_date" class="form-control" value="{{ doc_filter_values.doc_start_date|default:'' }}">
+        </div>
+        <div class="col-md-3">
+          <label for="doc_end_date" class="form-label"><strong>Дата до</strong></label>
+          <input type="date" name="doc_end_date" id="doc_end_date" class="form-control" value="{{ doc_filter_values.doc_end_date|default:'' }}">
+        </div>
+        <div class="col-md-2 d-flex flex-column">
+          <button type="submit" class="btn btn-info w-100">Фильтровать</button>
+          {# Проверьте, что это перенаправляет именно на эту страницу, если это основной шаблон #}
+          <a href="{% url 'clients:document_reminder_list' %}#documents-section" class="btn btn-secondary w-100 mt-2">Сбросить</a>
+        </div>
+      </form>
+    </div>
+
+    <div class="list-group">
+      {% for reminder in document_reminders %}
+        {% if reminder.id %}
+          {% include 'clients/partials/reminder_item.html' with reminder=reminder icon='fa-file-alt' %}
+        {% endif %}
+      {% empty %}
+        <p class="text-muted">Нет напоминаний по документам, соответствующих фильтрам.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  </div>
+{% endblock %}

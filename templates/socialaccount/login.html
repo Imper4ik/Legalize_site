@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block head_title %}{% trans "Social Network Login" %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-header text-center">
+                <h4 class="mb-0">Вход через аккаунт Google</h4>
+            </div>
+            <div class="card-body p-4 text-center">
+
+                <p class="lead">
+                    {% blocktrans with provider.name as provider %}
+                    Вы собираетесь войти на сайт, используя свой аккаунт {{ provider }}.
+                    {% endblocktrans %}
+                </p>
+
+                <p class="text-muted">
+                    Нажмите "Продолжить", чтобы перейти к Google для аутентификации.
+                </p>
+
+                {# Эта форма является ключевой. Она должна отправить POST-запрос, чтобы запустить перенаправление. #}
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg mt-3">
+                            <i class="fab fa-google me-2"></i>
+                            Продолжить
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

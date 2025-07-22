@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% blocktranslate with client_name=client.first_name %}Детали клиента: {{ client_name }}{% endblocktranslate %}{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ client.first_name }} {{ client.last_name }}</h1>
+    <div>
+        <a href="{% url 'clients:client_print' pk=client.pk %}" class="btn btn-secondary me-2">{% translate "Печать" %}</a>
+        <a href="{% url 'clients:client_edit' client.pk %}" class="btn btn-primary">{% translate "Редактировать данные" %}</a>
+    </div>
+  </div>
+
+  <div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <p><strong>{% translate "Номер дела" %}:</strong> <span class="fs-5 text-primary"><strong>{{ client.case_number|default:_("Не указан") }}</strong></span></p>
+        <p><strong>Email:</strong> {{ client.email }}</p>
+        <p><strong>{% translate "Телефон" %}:</strong> {{ client.phone }}</p>
+        <p><strong>{% translate "Цель подачи" %}:</strong> {{ client.get_application_purpose_display }}</p>
+        <p><strong>{% translate "Основание пребывания" %}:</strong> {{ client.basis_of_stay|default:_("Не указано") }}</p>
+        {% if client.legal_basis_end_date %}
+            <p><strong>{% translate "Дата окончания основания" %}:</strong> <span class="fw-bold">{{ client.legal_basis_end_date|date:"d.m.Y" }}</span></p>
+        {% endif %}
+    </div>
+  </div>
+
+  <div class="card border-primary mb-4 shadow">
+    <div class="card-header bg-primary text-white"><h5 class="mb-0">🔑 {% translate "Управление доступом клиента" %}</h5></div>
+    <div class="card-body text-center" id="access-management-container">
+        {% include 'clients/partials/access_management_block.html' with client=client %}
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4>{% translate "Финансы" %}</h4>
+    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPaymentModal">+ {% translate "Добавить счёт" %}</button>
+  </div>
+  <div class="card mb-4">
+      <ul class="list-group list-group-flush" id="payment-list-container">
+          {% for payment in client.payments.all %}
+              <li class="list-group-item" data-payment-id="{{ payment.id }}">
+                  {% include 'clients/partials/payment_item.html' with payment=payment %}
+              </li>
+          {% empty %}
+              <li class="list-group-item text-muted" id="no-payments-message">{% translate "Счета на оплату еще не созданы." %}</li>
+          {% endfor %}
+      </ul>
+  </div>
+
+  <hr>
+
+  <h2>{% translate "Чеклист документов" %}</h2>
+  <div class="accordion" id="documentAccordion">
+      {% include 'clients/partials/document_checklist.html' with document_status_list=document_status_list client=client %}
+  </div>
+
+  {% include 'clients/partials/modals.html' %}
+
+{% endblock %}
+
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Находим основной контейнер контента.
+        // Если у вашего главного div в base.html есть другой id, укажите его.
+        const mainContent = document.querySelector('main') || document.body;
+
+        // --- Получение CSRF-токена для безопасных POST-запросов ---
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+
+        // --- Функция для обновления всего чеклиста (необходима после удаления) ---
+        // Эта функция перезагрузит весь блок с документами, чтобы обновить
+        // счётчики и статусы у категорий.
+        function updateChecklist() {
+            const checklistContainer = document.querySelector('#documentAccordion');
+            if (!checklistContainer) return;
+
+            // URL для получения обновленного HTML чеклиста.
+            // Вам нужно будет создать этот view и url.
+            const url = `{% url 'clients:client_checklist_partial' client.pk %}`;
+
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    checklistContainer.innerHTML = html;
+                })
+                .catch(error => console.error('Ошибка при обновлении чеклиста:', error));
+        }
+
+
+        // --- УНИВЕРСАЛЬНЫЙ ОБРАБОТЧИК ДЛЯ AJAX-ФОРМ ---
+        mainContent.addEventListener('submit', function(e) {
+            const form = e.target;
+
+            // --- Удаление документа ---
+            if (form.matches('.delete-document-form')) {
+                e.preventDefault();
+                if (confirm('Вы уверены, что хотите удалить этот документ?')) {
+                    fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrftoken,
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: new FormData(form)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // Находим родительский элемент li и удаляем его
+                            const listItem = form.closest('.list-group-item');
+                            if (listItem) {
+                                listItem.remove();
+                            }
+                            // Перезагружаем чеклист, чтобы обновить статусы
+                            updateChecklist();
+                        } else {
+                            alert('Ошибка удаления: ' + (data.message || 'Неизвестная ошибка'));
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Fetch Error:', err);
+                        alert('Произошла ошибка при отправке запроса.');
+                    });
+                }
+            }
+
+            // Здесь будет логика для других форм (верификация, доступ),
+            // когда вы решите её реализовать.
+        });
+    });
+  </script>
+{% endblock %}
