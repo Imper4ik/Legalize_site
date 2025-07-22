@@ -1,21 +1,20 @@
-# legalize_site/settings.py (ПОЛНОСТЬЮ ИСПРАВЛЕННАЯ ВЕРСИЯ ДЛЯ RENDER)
+# legalize_site/settings.py (ИСПРАВЛЕННАЯ ВЕРСИЯ ДЛЯ RENDER)
 
 from pathlib import Path
 import os
-import dj_database_url # <--- Добавлено для работы с базой данных Render
+import dj_database_url
 from django.utils.translation import gettext_lazy as _
 
 # --- БАЗОВЫЕ НАСТРОЙКИ ---
 BASE_DIR = Path(__file__).resolve().parent.parent
-# ВАЖНО: Храните SECRET_KEY в переменных окружения на Render для безопасности
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-wr&zre@01k3+-y#r)sdv5itm2g3uw@hs8*=endlh+m5m$t8qc$')
-# DEBUG должен быть False на сервере
+SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+
 ALLOWED_HOSTS = []
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-ALLOWED_HOSTS.extend(['127.0.0.1', 'localhost']) # Для локальной разработки
+ALLOWED_HOSTS.extend(['127.0.0.1', 'localhost'])
 
 # --- ПРИЛОЖЕНИЯ И MIDDLEWARE ---
 INSTALLED_APPS = [
@@ -24,7 +23,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'whitenoise.runserver_nostatic', # <--- Добавлено для статики
+    'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
     'clients',
     'portal',
@@ -37,9 +36,9 @@ INSTALLED_APPS = [
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # <--- Добавлено для статики
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware', # <--- Перемещено выше для правильной работы языков
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -93,19 +92,19 @@ USE_TZ = True
 
 # --- СТАТИКА И МЕДИА (НАСТРОЕНО ДЛЯ RENDER С WHITENOISE) ---
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') # <-- Папка, куда collectstatic соберет все файлы
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage' # <-- Способ хранения
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# --- НАСТРОЙКИ ПОЧТЫ (SENDGRID) ---
+# --- НАСТРОЙКИ ПОЧТЫ (SENDGRID) - ИСПРАВЛЕНАЯ ВЕРСИЯ ---
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.sendgrid.net'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'apikey')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = 'noreply@legalize-site.onrender.com'
+EMAIL_HOST_USER = 'apikey'  # ВАЖНО: Это должно быть просто слово 'apikey'
+EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_API_KEY') # <--- ИСПРАВЛЕНО
+DEFAULT_FROM_EMAIL = 'noreply@legalize-site.onrender.com' # Убедитесь, что этот отправитель верифицирован в SendGrid
 
 # --- НАСТРОЙКИ DJANGO-ALLAUTH ---
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend', 'allauth.account.auth_backends.AuthenticationBackend']
