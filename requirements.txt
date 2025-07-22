@@ -7,5 +7,4 @@ cryptography
 dj-database-url
 psycopg2-binary
 whitenoise
-sendgridpip
 django-sendgrid-v5
