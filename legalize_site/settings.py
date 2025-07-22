@@ -1,29 +1,21 @@
-# legalize_site/settings.py (ИСПРАВЛЕННАЯ ВЕРСИЯ)
+# legalize_site/settings.py (ПОЛНОСТЬЮ ИСПРАВЛЕННАЯ ВЕРСИЯ ДЛЯ RENDER)
 
 from pathlib import Path
 import os
+import dj_database_url # <--- Добавлено для работы с базой данных Render
 from django.utils.translation import gettext_lazy as _
 
 # --- БАЗОВЫЕ НАСТРОЙКИ ---
 BASE_DIR = Path(__file__).resolve().parent.parent
-SECRET_KEY = 'django-insecure-wr&zre@01k3+-y#r)sdv5itm2g3uw@hs8*=endlh+m5m$t8qc$'
-DEBUG = False
-ALLOWED_HOSTS = ['legalize-site.onrender.com', '127.0.0.1', 'localhost', '192.168.0.41']
-ROOT_URLCONF = 'legalize_site.urls'
-WSGI_APPLICATION = 'legalize_site.wsgi.application'
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# --- ИНТЕРНАЦИОНАЛИЗАЦИЯ (ЯЗЫКИ) ---
-LANGUAGES = [
-    ('ru', _('Русский')),
-    ('pl', _('Polski')),
-    ('en', _('English')),
-]
-LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
-LANGUAGE_CODE = 'ru-ru'
-TIME_ZONE = 'Europe/Warsaw'
-USE_I18N = True
-USE_TZ = True
+# ВАЖНО: Храните SECRET_KEY в переменных окружения на Render для безопасности
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-wr&zre@01k3+-y#r)sdv5itm2g3uw@hs8*=endlh+m5m$t8qc$')
+# DEBUG должен быть False на сервере
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = []
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+ALLOWED_HOSTS.extend(['127.0.0.1', 'localhost']) # Для локальной разработки
 
 # --- ПРИЛОЖЕНИЯ И MIDDLEWARE ---
 INSTALLED_APPS = [
@@ -32,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'whitenoise.runserver_nostatic', # <--- Добавлено для статики
     'django.contrib.staticfiles',
     'clients',
     'portal',
@@ -44,17 +37,20 @@ INSTALLED_APPS = [
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # <--- Добавлено для статики
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware', # <--- Перемещено выше для правильной работы языков
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
 ]
+ROOT_URLCONF = 'legalize_site.urls'
+WSGI_APPLICATION = 'legalize_site.wsgi.application'
 
-# --- ШАБЛОНЫ (TEMPLATES) ---
+# --- ШАБЛОНЫ ---
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -71,12 +67,12 @@ TEMPLATES = [
     },
 ]
 
-# --- БАЗА ДАННЫХ ---
+# --- БАЗА ДАННЫХ (НАСТРОЕНО ДЛЯ RENDER) ---
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
+        conn_max_age=600
+    )
 }
 
 # --- ВАЛИДАТОРЫ ПАРОЛЕЙ ---
@@ -87,8 +83,18 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# --- СТАТИКА И МЕДИА ---
-STATIC_URL = 'static/'
+# --- ИНТЕРНАЦИОНАЛИЗАЦИЯ ---
+LANGUAGES = [('ru', _('Русский')), ('pl', _('Polski')), ('en', _('English'))]
+LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
+LANGUAGE_CODE = 'ru-ru'
+TIME_ZONE = 'Europe/Warsaw'
+USE_I18N = True
+USE_TZ = True
+
+# --- СТАТИКА И МЕДИА (НАСТРОЕНО ДЛЯ RENDER С WHITENOISE) ---
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') # <-- Папка, куда collectstatic соберет все файлы
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage' # <-- Способ хранения
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -102,10 +108,7 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = 'noreply@legalize-site.onrender.com'
 
 # --- НАСТРОЙКИ DJANGO-ALLAUTH ---
-AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
-    'allauth.account.auth_backends.AuthenticationBackend',
-]
+AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend', 'allauth.account.auth_backends.AuthenticationBackend']
 SITE_ID = 1
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
@@ -117,9 +120,4 @@ LOGIN_REDIRECT_URL = 'root_dashboard'
 LOGOUT_REDIRECT_URL = 'account_login'
 ACCOUNT_SIGNUP_FORM_CLASS = 'portal.forms.CustomSignupForm'
 SOCIALACCOUNT_AUTO_SIGNUP = True
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': ['profile', 'email'],
-        'AUTH_PARAMS': {'access_type': 'online'}
-    }
-}
+SOCIALACCOUNT_PROVIDERS = {'google': {'SCOPE': ['profile', 'email'], 'AUTH_PARAMS': {'access_type': 'online'}}}

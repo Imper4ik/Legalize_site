@@ -4,3 +4,6 @@ gunicorn
 requests
 PyJWT
 cryptography
+dj-database-url
+psycopg2-binary
+whitenoise
