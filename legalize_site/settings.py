@@ -98,13 +98,16 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # --- НАСТРОЙКИ ПОЧТЫ (SENDGRID) - ИСПРАВЛЕНАЯ ВЕРСИЯ ---
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'apikey'  # ВАЖНО: Это должно быть просто слово 'apikey'
-EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_API_KEY') # <--- ИСПРАВЛЕНО
-DEFAULT_FROM_EMAIL = 'noreply@legalize-site.onrender.com' # Убедитесь, что этот отправитель верифицирован в SendGrid
+# 1. Указываем Django использовать бэкенд от django-sendgrid-v5
+EMAIL_BACKEND = "sendgrid_backend.SendGridBackend"
+
+# 2. Передаем ключ API. Бэкенд найдет его и будет использовать.
+# Убедитесь, что на Render есть переменная окружения SENDGRID_API_KEY
+SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
+
+# 3. Адрес отправителя по умолчанию.
+# Убедитесь, что вы верифицировали этот домен или email в SendGrid!
+DEFAULT_FROM_EMAIL = 'noreply@legalize-site.onrender.com'
 
 # --- НАСТРОЙКИ DJANGO-ALLAUTH ---
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend', 'allauth.account.auth_backends.AuthenticationBackend']
