@@ -4,6 +4,7 @@ from pathlib import Path
 import os
 import dj_database_url
 from django.utils.translation import gettext_lazy as _
+from django.urls import reverse_lazy # <-- ДОБАВЬТЕ ЭТОТ ИМПОРТ
 
 # --- БАЗОВЫЕ НАСТРОЙКИ ---
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -108,18 +109,18 @@ DEFAULT_FROM_EMAIL = 'nindse@gmail.com'
 # --- НАСТРОЙКИ DJANGO-ALLAUTH ---
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend', 'allauth.account.auth_backends.AuthenticationBackend']
 SITE_ID = 1
-
-# Вот эта строка исправляет последнюю ошибку
 ACCOUNT_UNIQUE_EMAIL = True
-
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+
+# --- ИСПРАВЛЕННЫЕ НАСТРОЙКИ РЕДИРЕКТА ---
 LOGIN_URL = 'account_login'
-LOGIN_REDIRECT_URL = 'root_dashboard'
-LOGOUT_REDIRECT_URL = 'account_login'
+LOGIN_REDIRECT_URL = reverse_lazy('portal:root_dashboard') # <--- ВОТ ГЛАВНОЕ ИСПРАВЛЕНИЕ
+LOGOUT_REDIRECT_URL = reverse_lazy('account_login')
+
 ACCOUNT_SIGNUP_FORM_CLASS = 'portal.forms.CustomSignupForm'
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_PROVIDERS = {'google': {'SCOPE': ['profile', 'email'], 'AUTH_PARAMS': {'access_type': 'online'}}}
