@@ -1,17 +1,17 @@
-# portal/urls.py (ФИНАЛЬНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ)
+# portal/urls.py (ФИНАЛЬНАЯ ВЕРСИЯ)
 
 from django.urls import path
-from django.views.generic import RedirectView # <-- Добавьте этот импорт
 from . import views
 
 app_name = 'portal'
 
 urlpatterns = [
-    # --- ДОБАВЛЕНО: Главная страница портала ---
-    # При заходе в корень портала, перенаправляем пользователя на его профиль
-    path('', RedirectView.as_view(pattern_name='portal:profile_detail'), name='root_dashboard'),
+    # Главная страница портала теперь будет вести на профиль
+    # и будет иметь имя 'root_dashboard'
+    path('', views.ProfileDetailView.as_view(), name='root_dashboard'),
 
     # URL для просмотра и редактирования профиля
+    # (Имя 'profile_detail' тоже будет работать)
     path('profile/', views.ProfileDetailView.as_view(), name='profile_detail'),
     path('profile/edit/', views.ProfileUpdateView.as_view(), name='profile_edit'),
 
