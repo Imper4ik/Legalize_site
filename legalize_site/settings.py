@@ -110,7 +110,6 @@ DEFAULT_FROM_EMAIL = 'nindse@gmail.com'
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend', 'allauth.account.auth_backends.AuthenticationBackend']
 SITE_ID = 1
 
-# --- ВОТ СТРОКА, КОТОРАЯ ИСПРАВЛЯЕТ ОШИБКУ ---
 ACCOUNT_UNIQUE_EMAIL = True
 
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
@@ -118,6 +117,7 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_ADAPTER = 'portal.adapters.CustomAccountAdapter'
 
 # --- ИСПРАВЛЕННЫЕ НАСТРОЙКИ РЕДИРЕКТА ---
 LOGIN_URL = 'account_login'
