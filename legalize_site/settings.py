@@ -1,4 +1,4 @@
-# legalize_site/settings.py (ФИНАЛЬНАЯ ВЕРСИЯ С ANYMAIL)
+# legalize_site/settings.py (ФИНАЛЬНАЯ И ПОЛНОСТЬЮ ИСПРАВЛЕННАЯ ВЕРСИЯ)
 
 from pathlib import Path
 import os
@@ -33,7 +33,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    'anymail',  # <-- ДОБАВЛЕНО
+    'anymail',
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -108,6 +108,10 @@ DEFAULT_FROM_EMAIL = 'nindse@gmail.com'
 # --- НАСТРОЙКИ DJANGO-ALLAUTH ---
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend', 'allauth.account.auth_backends.AuthenticationBackend']
 SITE_ID = 1
+
+# Вот эта строка исправляет последнюю ошибку
+ACCOUNT_UNIQUE_EMAIL = True
+
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
