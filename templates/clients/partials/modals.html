@@ -1,97 +1,128 @@
 {# templates/clients/partials/modals.html #}
 
+<!-- Модалка для добавления нового счёта -->
 <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="addPaymentModalLabel">Добавить новый счёт</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <form action="{% url 'clients:add_payment' client.id %}" method="post">
-          {% csrf_token %}
-          <div class="modal-body">
-            <div class="mb-3">
-              <label for="id_service_description" class="form-label">Услуга</label>
-              <select name="service_description" class="form-select" id="id_service_description" required>
-                {% for choice_value, choice_label in payment_form.service_description.field.choices %}
-                  <option value="{{ choice_value }}">{{ choice_label }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="id_total_amount" class="form-label">Общая сумма</label>
-              <input type="number" step="0.01" name="total_amount" class="form-control" id="id_total_amount" required>
-            </div>
-            <div class="mb-3">
-              <label for="id_amount_paid" class="form-label">Оплачено</label>
-              <input type="number" step="0.01" name="amount_paid" class="form-control" id="id_amount_paid" required>
-            </div>
-            <div class="mb-3">
-              <label for="id_due_date" class="form-label">Дата оплаты (если есть)</label>
-              <input type="date" name="due_date" class="form-control" id="id_due_date">
-            </div>
-            <div class="mb-3">
-              <label for="id_status" class="form-label">Статус</label>
-              <select name="status" class="form-select" id="id_status" required>
-                {% for choice_value, choice_label in payment_form.status.field.choices %}
-                  <option value="{{ choice_value }}">{{ choice_label }}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-            <button type="submit" class="btn btn-primary">Сохранить счёт</button>
-          </div>
-        </form>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addPaymentModalLabel">Добавить новый счёт</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+      <form action="{% url 'staff:add_payment' client.id %}" method="post">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="id_service_description" class="form-label">Услуга</label>
+            <select name="service_description" class="form-select" id="id_service_description" required>
+              {% for choice_value, choice_label in payment_form.service_description.field.choices %}
+                <option value="{{ choice_value }}">{{ choice_label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="id_total_amount" class="form-label">Общая сумма</label>
+            <input type="number" step="0.01" name="total_amount" class="form-control" id="id_total_amount" required>
+          </div>
+          <div class="mb-3">
+            <label for="id_amount_paid" class="form-label">Оплачено</label>
+            <input type="number" step="0.01" name="amount_paid" class="form-control" id="id_amount_paid" required>
+          </div>
+          <div class="mb-3">
+            <label for="id_due_date" class="form-label">Дата оплаты (если есть)</label>
+            <input type="date" name="due_date" class="form-control" id="id_due_date">
+          </div>
+          <div class="mb-3">
+            <label for="id_status" class="form-label">Статус</label>
+            <select name="status" class="form-select" id="id_status" required>
+              {% for choice_value, choice_label in payment_form.status.field.choices %}
+                <option value="{{ choice_value }}">{{ choice_label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+          <button type="submit" class="btn btn-primary">Сохранить счёт</button>
+        </div>
+      </form>
     </div>
+  </div>
 </div>
 
+<!-- Модалка для редактирования существующего счёта -->
 <div class="modal fade" id="editPaymentModal" tabindex="-1" aria-labelledby="editPaymentModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="editPaymentModalLabel">Редактировать счёт</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <form id="editPaymentForm" method="post">
-          {% csrf_token %}
-          <div class="modal-body">
-            <div class="mb-3">
-              <label for="id_service_description" class="form-label">Услуга</label>
-              <select name="service_description" class="form-select" id="id_service_description" required>
-                {% for choice_value, choice_label in payment_form.service_description.field.choices %}
-                  <option value="{{ choice_value }}">{{ choice_label }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="id_total_amount" class="form-label">Общая сумма</label>
-              <input type="number" step="0.01" name="total_amount" class="form-control" id="id_total_amount" required>
-            </div>
-            <div class="mb-3">
-              <label for="id_amount_paid" class="form-label">Оплачено</label>
-              <input type="number" step="0.01" name="amount_paid" class="form-control" id="id_amount_paid" required>
-            </div>
-            <div class="mb-3">
-              <label for="id_due_date" class="form-label">Дата оплаты (если есть)</label>
-              <input type="date" name="due_date" class="form-control" id="id_due_date">
-            </div>
-            <div class="mb-3">
-              <label for="id_status" class="form-label">Статус</label>
-              <select name="status" class="form-select" id="id_status" required>
-                {% for choice_value, choice_label in payment_form.status.field.choices %}
-                  <option value="{{ choice_value }}">{{ choice_label }}</option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-            <button type="submit" class="btn btn-primary">Сохранить изменения</button>
-          </div>
-        </form>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editPaymentModalLabel">Редактировать счёт</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+      <form id="editPaymentForm" method="post">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="edit_id_service_description" class="form-label">Услуга</label>
+            <select name="service_description" class="form-select" id="edit_id_service_description" required>
+              {% for choice_value, choice_label in payment_form.service_description.field.choices %}
+                <option value="{{ choice_value }}">{{ choice_label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="edit_id_total_amount" class="form-label">Общая сумма</label>
+            <input type="number" step="0.01" name="total_amount" class="form-control" id="edit_id_total_amount" required>
+          </div>
+          <div class="mb-3">
+            <label for="edit_id_amount_paid" class="form-label">Оплачено</label>
+            <input type="number" step="0.01" name="amount_paid" class="form-control" id="edit_id_amount_paid" required>
+          </div>
+          <div class="mb-3">
+            <label for="edit_id_due_date" class="form-label">Дата оплаты (если есть)</label>
+            <input type="date" name="due_date" class="form-control" id="edit_id_due_date">
+          </div>
+          <div class="mb-3">
+            <label for="edit_id_status" class="form-label">Статус</label>
+            <select name="status" class="form-select" id="edit_id_status" required>
+              {% for choice_value, choice_label in payment_form.status.field.choices %}
+                <option value="{{ choice_value }}">{{ choice_label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+          <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+        </div>
+      </form>
     </div>
+  </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const editButtons = document.querySelectorAll('.edit-payment-btn');
+    const form = document.getElementById('editPaymentForm');
+
+    editButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        // Получаем данные из атрибутов кнопки
+        const serviceDescription = this.getAttribute('data-service_description');
+        const totalAmount = this.getAttribute('data-total_amount');
+        const amountPaid = this.getAttribute('data-amount_paid');
+        const dueDate = this.getAttribute('data-due_date');
+        const status = this.getAttribute('data-status');
+        const url = this.getAttribute('data-url');  // URL для отправки формы редактирования
+
+        // Обновляем action формы редактирования, чтобы отправлять на правильный адрес
+        form.action = url;
+
+        // Заполняем поля формы текущими значениями
+        form.querySelector('#edit_id_service_description').value = serviceDescription;
+        form.querySelector('#edit_id_total_amount').value = totalAmount;
+        form.querySelector('#edit_id_amount_paid').value = amountPaid;
+        form.querySelector('#edit_id_due_date').value = dueDate;
+        form.querySelector('#edit_id_status').value = status;
+      });
+    });
+  });
+</script>
