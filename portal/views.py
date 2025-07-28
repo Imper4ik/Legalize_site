@@ -10,9 +10,11 @@ from django.utils.translation import gettext as _  # Импортируем дл
 
 from clients.models import Client, Document
 from clients.forms import DocumentUploadForm
-from .forms import ProfileEditForm
+from .forms import ProfileEditForm, ClientApplicationForm
 from django.utils import translation
 from django.urls import resolve, reverse
+
+from .models import ClientApplication
 
 
 class ProfileDetailView(LoginRequiredMixin, DetailView):
@@ -106,3 +108,35 @@ def checklist_status_api(request):
     }
 
     return JsonResponse({'status': 'success', 'statuses': verification_statuses})
+
+@login_required
+def client_application_view(request):
+    # Проверяем, есть ли у пользователя уже заявка, чтобы не создавать новую
+    try:
+        application = request.user.application
+    except ClientApplication.DoesNotExist:
+        application = None
+
+    if request.method == 'POST':
+        # Если заявка уже есть, обновляем ее. Если нет - создаем.
+        form = ClientApplicationForm(request.POST, request.FILES, instance=application)
+        if form.is_valid():
+            # Привязываем заявку к текущему пользователю перед сохранением
+            application_instance = form.save(commit=False)
+            application_instance.user = request.user
+            application_instance.save()
+            # Перенаправляем на страницу успеха
+            return redirect('application_success')
+    else:
+        # Показываем пустую форму или заполненную, если данные уже есть
+        form = ClientApplicationForm(instance=application)
+
+    context = {
+        'form': form
+    }
+    return render(request, 'portal/client_form.html', context)
+
+# Простая страница "успеха"
+@login_required
+def application_success_view(request):
+    return render(request, 'portal/application_success.html')

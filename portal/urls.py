@@ -12,4 +12,6 @@ urlpatterns = [
 
     path('upload-document/<str:doc_type>/', views.portal_document_upload, name='portal_document_upload'),
     path('api/checklist-status/', views.checklist_status_api, name='checklist_status_api'),
+    path('application/new/', views.application_success_view, name='application_success'),
+    path('application/success/', views.application_success_view, name='client_application'),
 ]

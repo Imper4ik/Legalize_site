@@ -1,11 +1,25 @@
-
-from django import forms
 from clients.models import Client, Document
 
 
-# --- Форма для регистрации нового пользователя ---
-# Эта форма добавляет поля "Имя" и "Фамилия" на страницу регистрации
-# и АДАПТИВНО создает или обновляет связанный профиль клиента.
+# portal/forms.py
+from django import forms
+from .models import ClientApplication
+
+
+class ClientApplicationForm(forms.ModelForm):
+    class Meta:
+        model = ClientApplication
+        # Включаем все поля, кроме пользователя (он будет назначен автоматически)
+        exclude = ['user']
+
+        # Можно добавить виджеты для красивого отображения полей
+        widgets = {
+            'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
+            'last_entry_date': forms.DateInput(attrs={'type': 'date'}),
+            'purpose_of_stay': forms.Select(attrs={'class': 'form-control'}),
+            # Добавьте другие виджеты по аналогии для остальных полей
+        }
+
 
 class CustomSignupForm(forms.Form):
     first_name = forms.CharField(max_length=100, label='Имя')
