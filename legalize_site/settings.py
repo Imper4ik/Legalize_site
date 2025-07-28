@@ -109,7 +109,10 @@ DEFAULT_FROM_EMAIL = 'nindse@gmail.com'
 # --- НАСТРОЙКИ DJANGO-ALLAUTH ---
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend', 'allauth.account.auth_backends.AuthenticationBackend']
 SITE_ID = 1
+
+# --- ВОТ СТРОКА, КОТОРАЯ ИСПРАВЛЯЕТ ОШИБКУ ---
 ACCOUNT_UNIQUE_EMAIL = True
+
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
