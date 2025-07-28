@@ -103,7 +103,7 @@ EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
 ANYMAIL = {
     "SENDGRID_API_KEY": os.environ.get('SENDGRID_API_KEY'),
 }
-DEFAULT_FROM_EMAIL = 'noreply@legalize-site.onrender.com'
+DEFAULT_FROM_EMAIL = 'nindse@gmail.com'
 
 # --- НАСТРОЙКИ DJANGO-ALLAUTH ---
 AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend', 'allauth.account.auth_backends.AuthenticationBackend']
