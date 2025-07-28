@@ -59,28 +59,28 @@
           {% csrf_token %}
           <div class="modal-body">
             <div class="mb-3">
-              <label for="edit_id_service_description" class="form-label">Услуга</label>
-              <select name="service_description" class="form-select" id="edit_id_service_description" required>
+              <label for="id_service_description" class="form-label">Услуга</label>
+              <select name="service_description" class="form-select" id="id_service_description" required>
                 {% for choice_value, choice_label in payment_form.service_description.field.choices %}
                   <option value="{{ choice_value }}">{{ choice_label }}</option>
                 {% endfor %}
               </select>
             </div>
             <div class="mb-3">
-              <label for="edit_id_total_amount" class="form-label">Общая сумма</label>
-              <input type="number" step="0.01" name="total_amount" class="form-control" id="edit_id_total_amount" required>
+              <label for="id_total_amount" class="form-label">Общая сумма</label>
+              <input type="number" step="0.01" name="total_amount" class="form-control" id="id_total_amount" required>
             </div>
             <div class="mb-3">
-              <label for="edit_id_amount_paid" class="form-label">Оплачено</label>
-              <input type="number" step="0.01" name="amount_paid" class="form-control" id="edit_id_amount_paid" required>
+              <label for="id_amount_paid" class="form-label">Оплачено</label>
+              <input type="number" step="0.01" name="amount_paid" class="form-control" id="id_amount_paid" required>
             </div>
             <div class="mb-3">
-              <label for="edit_id_due_date" class="form-label">Дата оплаты (если есть)</label>
-              <input type="date" name="due_date" class="form-control" id="edit_id_due_date">
+              <label for="id_due_date" class="form-label">Дата оплаты (если есть)</label>
+              <input type="date" name="due_date" class="form-control" id="id_due_date">
             </div>
             <div class="mb-3">
-              <label for="edit_id_status" class="form-label">Статус</label>
-              <select name="status" class="form-select" id="edit_id_status" required>
+              <label for="id_status" class="form-label">Статус</label>
+              <select name="status" class="form-select" id="id_status" required>
                 {% for choice_value, choice_label in payment_form.status.field.choices %}
                   <option value="{{ choice_value }}">{{ choice_label }}</option>
                 {% endfor %}
