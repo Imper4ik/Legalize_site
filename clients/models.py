@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from .constants import DOCUMENT_CHECKLIST
 
+
 class Client(models.Model):
     # --- Списки для выбора ---
     APPLICATION_PURPOSE_CHOICES = [
@@ -145,8 +146,8 @@ class Payment(models.Model):
         ('transfer', _('Перевод')),
     ]
     SERVICE_CHOICES = [
-        ('work_service', _('Сопровождение (Работа)')),
-        ('study_service', _('Сопровождение (Учеба)')),
+        ('work_service', _('Работа')),
+        ('study_service', _('Учеба')),
         ('consultation', _('Консультация')),
         ('document_preparation', _('Подготовка документов')),
         ('full_service', _('Полное сопровождение')),

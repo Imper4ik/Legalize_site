@@ -15,6 +15,7 @@ urlpatterns = [
     path('client/<int:pk>/edit/', views.ClientUpdateView.as_view(), name='client_edit'),
     path('client/<int:pk>/delete/', views.ClientDeleteView.as_view(), name='client_delete'),
     path('api/client-status/<int:pk>/', views.client_status_api, name='client_status_api'),
+    path('api/get-price/<str:service_value>/', views.get_price_for_service, name='get_price_for_service'),
 
     # URL для печати
     path('client/<int:pk>/print/', views.client_print_view, name='client_print'),

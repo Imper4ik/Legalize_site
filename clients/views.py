@@ -462,44 +462,53 @@ def document_reminder_list(request):
     if not request.user.is_staff:
         return redirect('portal:profile_detail')
 
-    # Запрос только для напоминаний по документам
-    document_query = Reminder.objects.filter(is_active=True, reminder_type='document').select_related('client').order_by('due_date')
+    # --- ИЗМЕНЕННАЯ ЛОГИКА ---
+    # 1. Базовый запрос: выбираем все активные напоминания по документам.
+    base_query = Reminder.objects.filter(is_active=True, reminder_type='document').select_related('client')
 
-    # Получение и применение фильтров для документов
+    # 2. Получаем фильтры из GET-запроса.
     doc_client_filter = request.GET.get('doc_client', '')
     doc_start_date_filter = request.GET.get('doc_start_date', '')
     doc_end_date_filter = request.GET.get('doc_end_date', '')
 
+    # 3. Если пользователь НЕ использовал фильтры дат, показываем все просроченные напоминания.
+    if not doc_start_date_filter and not doc_end_date_filter:
+        today = timezone.now().date()
+        # Показываем все, что уже просрочено
+        document_query = base_query.filter(due_date__lte=today).order_by('due_date')
+    else:
+        # Если фильтры есть, применяем их как раньше.
+        document_query = base_query.order_by('due_date')
+        if doc_start_date_filter:
+            try:
+                start_date = datetime.datetime.strptime(doc_start_date_filter, '%Y-%m-%d').date()
+                document_query = document_query.filter(due_date__gte=start_date)
+            except ValueError:
+                messages.error(request, "Неверный формат начальной даты для документов.")
+        if doc_end_date_filter:
+            try:
+                end_date = datetime.datetime.strptime(doc_end_date_filter, '%Y-%m-%d').date()
+                document_query = document_query.filter(due_date__lte=end_date)
+            except ValueError:
+                messages.error(request, "Неверный формат конечной даты для документов.")
+
+    # Применяем фильтр по клиенту в любом случае
     doc_client_filter_id = None
     if doc_client_filter.isdigit():
         doc_client_filter_id = int(doc_client_filter)
         document_query = document_query.filter(client_id=doc_client_filter_id)
-    if doc_start_date_filter:
-        try:
-            doc_start_date_filter = datetime.datetime.strptime(doc_start_date_filter, '%Y-%m-%d').date()
-            document_query = document_query.filter(due_date__gte=doc_start_date_filter)
-        except ValueError:
-            messages.error(request, "Неверный формат начальной даты для документов.")
-    if doc_end_date_filter:
-        try:
-            doc_end_date_filter = datetime.datetime.strptime(doc_end_date_filter, '%Y-%m-%d').date()
-            document_query = document_query.filter(due_date__lte=doc_end_date_filter)
-        except ValueError:
-            messages.error(request, "Неверный формат конечной даты для документов.")
 
-    # Удаляем отладочные print-операторы, если они больше не нужны
-    # print(f"--- Document Reminders: Получено {document_query.count()} напоминаний по документам после фильтрации ---")
+    # --------------------------
 
     context = {
         'title': 'Напоминания по документам',
-        'document_reminders': document_query,  # Напоминания для документов
-        'total_reminders_count': document_query.count(), # Общее количество напоминаний только на этой странице
-        'all_clients': Client.objects.all().order_by('last_name', 'first_name'),
-        'doc_filter_values': request.GET,      # Значения фильтров для полей формы
-        'doc_client_filter_id': doc_client_filter_id, # ID выбранного клиента для предвыбора в дропдауне
+        'document_reminders': document_query,
+        'total_reminders_count': document_query.count(),
+        'all_clients': Client.objects.filter(user__is_staff=False).order_by('last_name', 'first_name'),
+        'doc_filter_values': request.GET,
+        'doc_client_filter_id': doc_client_filter_id,
     }
 
-    # Важно: рендерим шаблон, предназначенный специально для документов
     return render(request, 'clients/document_reminder_list.html', context)
 
 
@@ -623,3 +632,14 @@ def dashboard_redirect_view(request):
         return redirect('clients:client_list')
     else:
         return redirect('portal:profile_detail')
+
+
+def get_price_for_service(request, service_value):
+
+    prices = {
+        'consultation': 180.00,
+        'study': 1400,
+        'work': 1800,
+    }
+    price = prices.get(service_value, 0.00) # Возвращает 0.00, если услуга не найдена
+    return JsonResponse({'price': price})
