@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.core.management import call_command
-from datetime import datetime
+from datetime import datetime, timezone
 from django.template.loader import render_to_string
 
 # ... (Импорты ваших моделей и форм)
