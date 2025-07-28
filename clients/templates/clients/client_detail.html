@@ -108,7 +108,7 @@
             // ... (ваш код для getCookie) ...
         }
         const csrftoken = getCookie('csrftoken');
-        
+
         function updateChecklist() {
             // ... (ваш код для updateChecklist) ...
         }
@@ -118,4 +118,21 @@
         });
     });
   </script>
+    
+   <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // ... код для AJAX-цен из Шага 1 ...
+
+        // --- JavaScript для редактирования платежа ---
+        const editPaymentModal = document.getElementById('editPaymentModal');
+        if (editPaymentModal) {
+            editPaymentModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const formAction = button.getAttribute('data-form-action');
+                const form = editPaymentModal.querySelector('#editPaymentForm');
+                form.setAttribute('action', formAction);
+            });
+        }
+    });
+  </script>  
 {% endblock %}
