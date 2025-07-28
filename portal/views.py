@@ -109,6 +109,7 @@ def checklist_status_api(request):
 
     return JsonResponse({'status': 'success', 'statuses': verification_statuses})
 
+
 @login_required
 def client_application_view(request):
     # Проверяем, есть ли у пользователя уже заявка, чтобы не создавать новую
