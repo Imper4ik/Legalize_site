@@ -7,6 +7,3 @@ pip install -r requirements.txt
 
 python manage.py collectstatic --no-input
 python manage.py migrate
-
-# --- ДОБАВЬТЕ ЭТУ СТРОКУ В КОНЕЦ ---
-python promote_user.py
