@@ -4,7 +4,6 @@ from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.db.models import Q
-from django.utils import timezone
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -612,3 +611,15 @@ def client_checklist_partial(request, pk):
         'client': client,
         'document_status_list': document_status_list
     })
+
+
+@login_required
+def dashboard_redirect_view(request):
+    """
+    Перенаправляет пользователя в зависимости от его статуса.
+    Сотрудников - на список клиентов, клиентов - на их профиль.
+    """
+    if request.user.is_staff:
+        return redirect('clients:client_list')
+    else:
+        return redirect('portal:profile_detail')

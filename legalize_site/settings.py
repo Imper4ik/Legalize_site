@@ -118,7 +118,7 @@ ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
 # --- ИСПРАВЛЕННЫЕ НАСТРОЙКИ РЕДИРЕКТА ---
 LOGIN_URL = 'account_login'
-LOGIN_REDIRECT_URL = reverse_lazy('portal:root_dashboard') # <--- ВОТ ГЛАВНОЕ ИСПРАВЛЕНИЕ
+LOGIN_REDIRECT_URL = reverse_lazy('portal:root_dashboard')
 LOGOUT_REDIRECT_URL = reverse_lazy('account_login')
 
 ACCOUNT_SIGNUP_FORM_CLASS = 'portal.forms.CustomSignupForm'
