@@ -547,5 +547,6 @@ def get_price_for_service(request, service_value):
         'work_service': 1800.00,
         'consultation': 180.00,
     }
+    # Находим цену по ключу. Если ключа нет, вернется 0.00
     price = prices.get(service_value, 0.00)
     return JsonResponse({'price': price})

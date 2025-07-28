@@ -1,0 +1,30 @@
+{# clients/templates/clients/partials/payment_item.html #}
+{% load i18n %}
+
+<div class="d-flex justify-content-between align-items-center">
+    <div>
+        <h6 class="mb-1">{{ payment.get_service_description_display }}</h6>
+        <small class="text-muted">
+            {% translate "Счёт от" %} {{ payment.created_at|date:"d.m.Y" }}
+            {% if payment.due_date %} | {% translate "Оплатить до" %}: <span class="fw-bold">{{ payment.due_date|date:"d.m.Y" }}</span>{% endif %}
+        </small>
+    </div>
+    <div class="d-flex align-items-center">
+        <span class="fs-5 me-3">
+            <strong>{{ payment.amount_paid|floatformat:2 }} / {{ payment.total_amount|floatformat:2 }} PLN</strong>
+        </span>
+        <span class="badge 
+            {% if payment.status == 'paid' %}bg-success
+            {% elif payment.status == 'partial' %}bg-warning text-dark
+            {% else %}bg-secondary{% endif %} me-3">
+            {{ payment.get_status_display }}
+        </span>
+        
+        <button type-="button" class="btn btn-outline-secondary btn-sm"
+                data-bs-toggle="modal"
+                data-bs-target="#editPaymentModal"
+                data-form-action="{% url 'clients:edit_payment' payment.id %}">
+            <i class="fas fa-pencil-alt"></i> {% translate "Редактировать" %}
+        </button>
+        </div>
+</div>

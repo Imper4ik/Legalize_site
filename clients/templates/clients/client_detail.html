@@ -64,91 +64,57 @@
   {{ block.super }}
   <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Находим основной контейнер контента.
-        // Если у вашего главного div в base.html есть другой id, укажите его.
+        // --- AJAX для автоматического заполнения цены в модальном окне "Добавить счёт" ---
+        const addPaymentModal = document.getElementById('addPaymentModal');
+        if (addPaymentModal) {
+            const serviceSelect = addPaymentModal.querySelector('#id_service_description'); // Находим select внутри модального окна
+            const priceInput = addPaymentModal.querySelector('#id_total_amount');       // Находим input внутри модального окна
+
+            if (serviceSelect && priceInput) {
+                serviceSelect.addEventListener('change', function() {
+                    const serviceValue = this.value;
+                    if (!serviceValue) {
+                        priceInput.value = '0.00';
+                        return;
+                    }
+
+                    // Отправляем запрос на сервер по правильному URL
+                    fetch(`/staff/api/get-price/${serviceValue}/`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.price !== undefined) {
+                                priceInput.value = data.price.toFixed(2);
+                            } else {
+                                priceInput.value = '0.00';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Ошибка при получении цены:', error);
+                            priceInput.value = '0.00';
+                        });
+                });
+            }
+        }
+
+        // --- Здесь ваш остальной JavaScript (например, для удаления документов) ---
         const mainContent = document.querySelector('main') || document.body;
 
-        // --- Получение CSRF-токена для безопасных POST-запросов ---
         function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
+            // ... (ваш код для getCookie) ...
         }
         const csrftoken = getCookie('csrftoken');
-
-        // --- Функция для обновления всего чеклиста (необходима после удаления) ---
-        // Эта функция перезагрузит весь блок с документами, чтобы обновить
-        // счётчики и статусы у категорий.
+        
         function updateChecklist() {
-            const checklistContainer = document.querySelector('#documentAccordion');
-            if (!checklistContainer) return;
-
-            // URL для получения обновленного HTML чеклиста.
-            // Вам нужно будет создать этот view и url.
-            const url = `{% url 'clients:client_checklist_partial' client.pk %}`;
-
-            fetch(url)
-                .then(response => response.text())
-                .then(html => {
-                    checklistContainer.innerHTML = html;
-                })
-                .catch(error => console.error('Ошибка при обновлении чеклиста:', error));
+            // ... (ваш код для updateChecklist) ...
         }
 
-
-        // --- УНИВЕРСАЛЬНЫЙ ОБРАБОТЧИК ДЛЯ AJAX-ФОРМ ---
         mainContent.addEventListener('submit', function(e) {
-            const form = e.target;
-
-            // --- Удаление документа ---
-            if (form.matches('.delete-document-form')) {
-                e.preventDefault();
-                if (confirm('Вы уверены, что хотите удалить этот документ?')) {
-                    fetch(form.action, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': csrftoken,
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: new FormData(form)
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.status === 'success') {
-                            // Находим родительский элемент li и удаляем его
-                            const listItem = form.closest('.list-group-item');
-                            if (listItem) {
-                                listItem.remove();
-                            }
-                            // Перезагружаем чеклист, чтобы обновить статусы
-                            updateChecklist();
-                        } else {
-                            alert('Ошибка удаления: ' + (data.message || 'Неизвестная ошибка'));
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Fetch Error:', err);
-                        alert('Произошла ошибка при отправке запроса.');
-                    });
-                }
-            }
-
-            // Здесь будет логика для других форм (верификация, доступ),
-            // когда вы решите её реализовать.
+            // ... (ваш код для обработки форм) ...
         });
     });
   </script>
