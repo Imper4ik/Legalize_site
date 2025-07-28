@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+# clients/views.py (ФИНАЛЬНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ)
+
 import json
 from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
@@ -9,10 +10,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.core.management import call_command
-from datetime import datetime, timezone
+from datetime import datetime
+from django.utils import timezone # Используем timezone для корректной работы с датами
 from django.template.loader import render_to_string
 
-# ... (Импорты ваших моделей и форм)
 from .models import Client, Document, Payment, Reminder
 from .forms import ClientForm, DocumentUploadForm, PaymentForm
 
@@ -29,18 +30,13 @@ class ClientListView(StaffRequiredMixin, ListView):
     paginate_by = 15
 
     def get_queryset(self):
-        # Сначала получаем базовый список, ИСКЛЮЧАЯ всех сотрудников и админов
         queryset = Client.objects.filter(user__is_staff=False)
-
-        # Затем применяем логику поиска, если есть поисковый запрос
         query = self.request.GET.get('q', '')
         if query:
             return queryset.filter(
                 Q(first_name__icontains=query) | Q(last_name__icontains=query) |
                 Q(email__icontains=query) | Q(phone__icontains=query) | Q(case_number__icontains=query)
             ).distinct().order_by('-created_at')
-
-        # Если поиска нет, возвращаем отфильтрованный список
         return queryset.order_by('-created_at')
 
     def get_context_data(self, **kwargs):
@@ -57,16 +53,12 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         client = self.get_object()
         context['payment_form'] = PaymentForm()
-        price_map = {
-            'work_service': "1800.00", 'study_service': "1400.00", 'consultation': "150.00",
-            'document_preparation': "500.00", 'full_service': "1200.00", 'deposit': "300.00", 'other': '0.00'
-        }
-        context['service_prices_json'] = json.dumps(price_map)
         if hasattr(client, 'get_document_checklist'):
             context['document_status_list'] = client.get_document_checklist()
         return context
 
 
+# ... (Ваши ClientCreateView, ClientUpdateView, ClientDeleteView остаются без изменений) ...
 class ClientCreateView(StaffRequiredMixin, CreateView):
     model = Client
     form_class = ClientForm
@@ -113,12 +105,17 @@ class ClientDeleteView(StaffRequiredMixin, DeleteView):
 
 
 @login_required
-def dashboard_redirect(request):
+def dashboard_redirect_view(request):
+    """
+    Перенаправляет пользователя в зависимости от его статуса.
+    Сотрудников - на список клиентов, клиентов - на их профиль.
+    """
     if request.user.is_staff:
         return redirect('clients:client_list')
-    return redirect('portal:profile_detail')
+    else:
+        return redirect('portal:profile_detail')
 
-
+# ... (Ваши add_document, document_delete, add_payment и другие функции остаются без изменений) ...
 @login_required
 def update_client_notes(request, pk):
     if not request.user.is_staff:
@@ -392,23 +389,7 @@ def client_print_view(request, pk):
     return render(request, 'clients/client_printable.html', {'client': client})
 
 
-@login_required
-def grant_checklist_access(request, pk):
-    """
-    Предоставляет клиенту доступ к чеклисту документов.
-    """
-    if not request.user.is_staff:
-        return redirect('portal:profile_detail')
-
-    client = get_object_or_404(Client, pk=pk)
-    if request.method == 'POST':
-        client.has_checklist_access = True
-        client.save()
-        messages.success(request, f"Доступ к документам для клиента {client} успешно предоставлен!")
-
-    return redirect('clients:client_detail', pk=pk)
-
-
+# --- ИСПРАВЛЕНО: Удалена дублирующаяся функция ---
 @login_required
 def grant_checklist_access(request, pk):
     """Предоставляет клиенту доступ к чеклисту. Поддерживает AJAX."""
@@ -421,7 +402,6 @@ def grant_checklist_access(request, pk):
         client.save()
 
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            # Отрендерим обновленный блок и вернем его как HTML
             html = render_to_string('clients/partials/access_management_block.html', {'client': client})
             return JsonResponse({'status': 'success', 'html': html})
 
@@ -433,7 +413,6 @@ def grant_checklist_access(request, pk):
 def client_status_api(request, pk):
     """Возвращает актуальный чеклист клиента в формате JSON для 'живого' обновления."""
     client = get_object_or_404(Client, pk=pk)
-    # Проверка, что только сотрудник может запрашивать эти данные
     if not request.user.is_staff:
         return JsonResponse({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
 
@@ -445,60 +424,29 @@ def client_status_api(request, pk):
 
 
 # --- НАПОМИНАНИЯ (REMindERS) ---
-# Эта секция была улучшена
-
-@login_required
-def reminder_list_redirect(request):
-    """
-    НОВАЯ ФУНКЦИЯ: Перенаправляет старую ссылку на напоминания
-    на новую страницу с напоминаниями по документам.
-    Это исправляет ошибку в навигационном меню.
-    """
-    return redirect('clients:document_reminder_list')
-
-
 @login_required
 def document_reminder_list(request):
     if not request.user.is_staff:
         return redirect('portal:profile_detail')
 
-    # --- ИЗМЕНЕННАЯ ЛОГИКА ---
-    # 1. Базовый запрос: выбираем все активные напоминания по документам.
     base_query = Reminder.objects.filter(is_active=True, reminder_type='document').select_related('client')
-
-    # 2. Получаем фильтры из GET-запроса.
     doc_client_filter = request.GET.get('doc_client', '')
     doc_start_date_filter = request.GET.get('doc_start_date', '')
     doc_end_date_filter = request.GET.get('doc_end_date', '')
 
-    # 3. Если пользователь НЕ использовал фильтры дат, показываем все просроченные напоминания.
     if not doc_start_date_filter and not doc_end_date_filter:
-        today = timezone.now().date()
-        # Показываем все, что уже просрочено
-        document_query = base_query.filter(due_date__lte=today).order_by('due_date')
+        document_query = base_query.order_by('due_date') # Показываем все по умолчанию
     else:
-        # Если фильтры есть, применяем их как раньше.
         document_query = base_query.order_by('due_date')
         if doc_start_date_filter:
-            try:
-                start_date = datetime.datetime.strptime(doc_start_date_filter, '%Y-%m-%d').date()
-                document_query = document_query.filter(due_date__gte=start_date)
-            except ValueError:
-                messages.error(request, "Неверный формат начальной даты для документов.")
+            document_query = document_query.filter(due_date__gte=doc_start_date_filter)
         if doc_end_date_filter:
-            try:
-                end_date = datetime.datetime.strptime(doc_end_date_filter, '%Y-%m-%d').date()
-                document_query = document_query.filter(due_date__lte=end_date)
-            except ValueError:
-                messages.error(request, "Неверный формат конечной даты для документов.")
+            document_query = document_query.filter(due_date__lte=doc_end_date_filter)
 
-    # Применяем фильтр по клиенту в любом случае
     doc_client_filter_id = None
     if doc_client_filter.isdigit():
         doc_client_filter_id = int(doc_client_filter)
         document_query = document_query.filter(client_id=doc_client_filter_id)
-
-    # --------------------------
 
     context = {
         'title': 'Напоминания по документам',
@@ -508,39 +456,38 @@ def document_reminder_list(request):
         'doc_filter_values': request.GET,
         'doc_client_filter_id': doc_client_filter_id,
     }
-
     return render(request, 'clients/document_reminder_list.html', context)
 
 
+# --- ИСПРАВЛЕНО: Добавлена логика для напоминаний по платежам ---
 @login_required
 def payment_reminder_list(request):
-    """
-    Отображает список активных напоминаний ТОЛЬКО ПО ОПЛАТАМ.
-    """
     if not request.user.is_staff:
         return redirect('portal:profile_detail')
 
-    query = Reminder.objects.filter(is_active=True, reminder_type='payment').select_related('client').order_by('due_date')
-
-    # Обратите внимание: здесь используются 'client', 'start_date', 'end_date'
-    # Убедитесь, что ваша HTML-форма для платежей использует именно эти имена!
+    base_query = Reminder.objects.filter(is_active=True, reminder_type='payment').select_related('client')
     client_filter = request.GET.get('client', '')
     start_date_filter = request.GET.get('start_date', '')
     end_date_filter = request.GET.get('end_date', '')
+
+    if not start_date_filter and not end_date_filter:
+        query = base_query.order_by('due_date')
+    else:
+        query = base_query.order_by('due_date')
+        if start_date_filter:
+            query = query.filter(due_date__gte=start_date_filter)
+        if end_date_filter:
+            query = query.filter(due_date__lte=end_date_filter)
 
     client_filter_id = None
     if client_filter.isdigit():
         client_filter_id = int(client_filter)
         query = query.filter(client_id=client_filter_id)
-    if start_date_filter:
-        query = query.filter(due_date__gte=start_date_filter)
-    if end_date_filter:
-        query = query.filter(due_date__lte=end_date_filter)
 
     context = {
         'title': 'Напоминания по оплатам',
         'reminders': query,
-        'all_clients': Client.objects.all().order_by('last_name', 'first_name'),
+        'all_clients': Client.objects.filter(user__is_staff=False).order_by('last_name', 'first_name'),
         'filter_values': request.GET,
         'client_filter_id': client_filter_id,
     }
@@ -551,97 +498,54 @@ def payment_reminder_list(request):
 def run_update_reminders(request):
     if not request.user.is_staff:
         return redirect('portal:profile_detail')
-
     if request.method == 'POST':
         try:
-            # print("Вызов команды update_reminders...") # Можно оставить для отладки
             call_command('update_reminders')
             messages.success(request, "Проверка завершена. Новые напоминания, если были найдены, успешно созданы!")
         except Exception as e:
             messages.error(request, f"Произошла ошибка при создании напоминаний: {e}")
-
-        # --- ЭТОТ БЛОК ЛОГИКИ ОЧЕНЬ ВАЖЕН ---
-        next_page = request.POST.get('next', 'documents') # Получаем значение из скрытого поля 'next'
-                                                          # По умолчанию 'documents', если 'next' не передан
-
+        next_page = request.POST.get('next', 'documents')
         if next_page == 'payments':
             return redirect('clients:payment_reminder_list')
-        else: # Это покроет 'documents' и любые неожиданные значения
+        else:
             return redirect('clients:document_reminder_list')
-        # ------------------------------------
-
-    else: # Если кто-то пытается зайти на этот URL методом GET
+    else:
         messages.warning(request, "Эту операцию можно выполнить только через специальную кнопку.")
-        return redirect('clients:document_reminder_list') # Перенаправляем на страницу документов
+        return redirect('clients:document_reminder_list')
 
 
 @login_required
 def reminder_action(request, reminder_id):
-    """
-    Обрабатывает действия с напоминанием: деактивация или удаление.
-    """
     if not request.user.is_staff:
         return redirect('portal:profile_detail')
-
     reminder = get_object_or_404(Reminder, pk=reminder_id)
-
     if request.method == 'POST':
         action = request.POST.get('action')
-
         if action == 'delete':
-            reminder_title = reminder.title
             reminder.delete()
-            messages.success(request, f"Напоминание '{reminder_title}' было безвозвратно удалено.")
         elif action == 'deactivate':
             reminder.is_active = False
             reminder.save()
-            messages.success(request, f"Напоминание '{reminder.title}' было отмечено как выполненное.")
-
-    # --- ИСПРАВЛЕНИЕ: Перенаправление на страницу напоминаний по документам ---
-    # Это было предыдущее исправление, оставляем его, так как оно логично после действия над одним напоминанием
     return redirect('clients:document_reminder_list')
 
 
 @login_required
 def client_checklist_partial(request, pk):
-    """
-    Возвращает только HTML-фрагмент чеклиста документов.
-    Используется для AJAX-обновления.
-    """
     if not request.user.is_staff:
         return HttpResponseForbidden()
-
     client = get_object_or_404(Client, pk=pk)
-
-    # ИСПОЛЬЗУЕМ ПРАВИЛЬНЫЙ МЕТОД ИЗ МОДЕЛИ
     document_status_list = client.get_document_checklist()
-
     return render(request, 'clients/partials/document_checklist.html', {
         'client': client,
         'document_status_list': document_status_list
     })
 
 
-@login_required
-def dashboard_redirect_view(request):
-    """
-    Перенаправляет пользователя в зависимости от его статуса.
-    Сотрудников - на список клиентов, клиентов - на их профиль.
-    """
-    if request.user.is_staff:
-        return redirect('clients:client_list')
-    else:
-        return redirect('portal:profile_detail')
-
-
 def get_price_for_service(request, service_value):
-    # Словарь с вашими ценами
     prices = {
         'study_service': 1400.00,
         'work_service': 1800.00,
         'consultation': 180.00,
-        # Добавьте остальные цены по аналогии
     }
-    # Находим цену по ключу. Если ключа нет, вернется 0.00
     price = prices.get(service_value, 0.00)
     return JsonResponse({'price': price})
