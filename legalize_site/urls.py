@@ -15,8 +15,7 @@ urlpatterns = [
 # Эти URL будут многоязычными (например, /ru/staff/, /en/portal/)
 urlpatterns += i18n_patterns(
     path('accounts/', include('allauth.urls')),
-    path(''
-         '', include('portal.urls', namespace='portal')),
+    path('', include('portal.urls', namespace='portal')),
     path('staff/', include('clients.urls', namespace='clients')),
     path('', views.dashboard_redirect, name='root_dashboard'),
 )
