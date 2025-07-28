@@ -17,7 +17,8 @@
 <header class="mb-4">
     <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="{% url 'portal:root_dashboard' %}">
+
+            <a class="navbar-brand fw-bold" href="{% if user.is_authenticated %}{% url 'portal:root_dashboard' %}{% else %}{% url 'account_login' %}{% endif %}">
                 <i class="fas fa-balance-scale me-2"></i>Legalize Site
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
