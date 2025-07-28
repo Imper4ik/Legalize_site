@@ -30,13 +30,19 @@ class ClientListView(StaffRequiredMixin, ListView):
     paginate_by = 15
 
     def get_queryset(self):
+        # Сначала получаем базовый список, ИСКЛЮЧАЯ всех сотрудников и админов
+        queryset = Client.objects.filter(user__is_staff=False)
+
+        # Затем применяем логику поиска, если есть поисковый запрос
         query = self.request.GET.get('q', '')
         if query:
-            return Client.objects.filter(
+            return queryset.filter(
                 Q(first_name__icontains=query) | Q(last_name__icontains=query) |
                 Q(email__icontains=query) | Q(phone__icontains=query) | Q(case_number__icontains=query)
             ).distinct().order_by('-created_at')
-        return Client.objects.all().order_by('-created_at')
+
+        # Если поиска нет, возвращаем отфильтрованный список
+        return queryset.order_by('-created_at')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
