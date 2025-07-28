@@ -635,11 +635,13 @@ def dashboard_redirect_view(request):
 
 
 def get_price_for_service(request, service_value):
-
+    # Словарь с вашими ценами
     prices = {
+        'study_service': 1400.00,
+        'work_service': 1800.00,
         'consultation': 180.00,
-        'study': 1400,
-        'work': 1800,
+        # Добавьте остальные цены по аналогии
     }
-    price = prices.get(service_value, 0.00) # Возвращает 0.00, если услуга не найдена
+    # Находим цену по ключу. Если ключа нет, вернется 0.00
+    price = prices.get(service_value, 0.00)
     return JsonResponse({'price': price})

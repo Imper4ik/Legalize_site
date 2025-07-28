@@ -149,10 +149,6 @@ class Payment(models.Model):
         ('work_service', _('Работа')),
         ('study_service', _('Учеба')),
         ('consultation', _('Консультация')),
-        ('document_preparation', _('Подготовка документов')),
-        ('full_service', _('Полное сопровождение')),
-        ('deposit', _('Задаток')),
-        ('other', _('Другое')),
     ]
 
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='payments', verbose_name=_("Клиент"))
