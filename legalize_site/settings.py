@@ -1,4 +1,4 @@
-# legalize_site/settings.py (ИСПРАВЛЕННАЯ ВЕРСИЯ ДЛЯ RENDER)
+# legalize_site/settings.py (ФИНАЛЬНАЯ ВЕРСИЯ С ANYMAIL)
 
 from pathlib import Path
 import os
@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'anymail',  # <-- ДОБАВЛЕНО
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -97,16 +98,11 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# --- НАСТРОЙКИ ПОЧТЫ (SENDGRID) - ИСПРАВЛЕНАЯ ВЕРСИЯ ---
-# 1. Указываем Django использовать бэкенд от django-sendgrid-v5
-EMAIL_BACKEND = "sendgrid_backend.SendGridBackend"
-
-# 2. Передаем ключ API. Бэкенд найдет его и будет использовать.
-# Убедитесь, что на Render есть переменная окружения SENDGRID_API_KEY
-SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
-
-# 3. Адрес отправителя по умолчанию.
-# Убедитесь, что вы верифицировали этот домен или email в SendGrid!
+# --- НАСТРОЙКИ ПОЧТЫ (DJANGO ANYMAIL + SENDGRID) ---
+EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
+ANYMAIL = {
+    "SENDGRID_API_KEY": os.environ.get('SENDGRID_API_KEY'),
+}
 DEFAULT_FROM_EMAIL = 'noreply@legalize-site.onrender.com'
 
 # --- НАСТРОЙКИ DJANGO-ALLAUTH ---

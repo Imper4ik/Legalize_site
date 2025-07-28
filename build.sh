@@ -2,13 +2,12 @@
 # exit on error
 set -o errexit
 
-# Обновляем сам установщик, чтобы избежать проблем
 pip install --upgrade pip
 
-# Принудительно удаляем старые версии перед установкой
-pip uninstall -y django-sendgrid-v5 sendgrid
+# Принудительно удаляем ВСЕ старые почтовые пакеты
+pip uninstall -y django-sendgrid-v5 sendgrid django-anymail
 
-# Устанавливаем все пакеты заново из вашего requirements.txt
+# Устанавливаем все заново
 pip install -r requirements.txt
 
 # Ваши стандартные команды
