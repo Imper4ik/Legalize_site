@@ -1,11 +1,15 @@
-# legalize_site/settings.py (ФИНАЛЬНАЯ И ПОЛНОСТЬЮ ИСПРАВЛЕННАЯ ВЕРСИЯ)
+# legalize_site/settings.py
 
 from pathlib import Path
-import os
-import dj_database_url
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse_lazy
+from dotenv import load_dotenv
+import dj_database_url
+import os
+import dj_database_url
 
+
+load_dotenv()
 # --- БАЗОВЫЕ НАСТРОЙКИ ---
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY')
