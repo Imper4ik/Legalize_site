@@ -4,7 +4,7 @@ from pathlib import Path
 import os
 import dj_database_url
 from django.utils.translation import gettext_lazy as _
-from django.urls import reverse_lazy # <-- ДОБАВЬТЕ ЭТОТ ИМПОРТ
+from django.urls import reverse_lazy
 
 # --- БАЗОВЫЕ НАСТРОЙКИ ---
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -71,8 +71,7 @@ TEMPLATES = [
 # --- БАЗА ДАННЫХ (НАСТРОЕНО ДЛЯ RENDER) ---
 DATABASES = {
     'default': dj_database_url.config(
-        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
-        conn_max_age=600
+        default=os.environ.get('DATABASE_URL')
     )
 }
 

@@ -1,6 +1,5 @@
 # clients/views.py (ФИНАЛЬНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ)
 
-import json
 from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
@@ -11,7 +10,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.core.management import call_command
 from datetime import datetime
-from django.utils import timezone # Используем timezone для корректной работы с датами
 from django.template.loader import render_to_string
 
 from .models import Client, Document, Payment, Reminder
@@ -58,7 +56,6 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         return context
 
 
-# ... (Ваши ClientCreateView, ClientUpdateView, ClientDeleteView остаются без изменений) ...
 class ClientCreateView(StaffRequiredMixin, CreateView):
     model = Client
     form_class = ClientForm
@@ -115,7 +112,7 @@ def dashboard_redirect_view(request):
     else:
         return redirect('portal:profile_detail')
 
-# ... (Ваши add_document, document_delete, add_payment и другие функции остаются без изменений) ...
+
 @login_required
 def update_client_notes(request, pk):
     if not request.user.is_staff:
@@ -151,10 +148,8 @@ def add_document(request, client_id, doc_type):
             document.document_type = doc_type
             document.save()
 
-            # --- НАЧАЛО ИЗМЕНЕНИЙ ---
             # Если это AJAX-запрос, отправляем JSON
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                # Вы можете отправить любой полезный JSON, например, ID документа
                 return JsonResponse({
                     'status': 'success',
                     'message': f"Документ '{document_type_display}' успешно добавлен.",
@@ -164,9 +159,7 @@ def add_document(request, client_id, doc_type):
             # Если это обычный запрос, оставляем как было
             messages.success(request, f"Документ '{document_type_display}' успешно добавлен.")
             return redirect('clients:client_detail', pk=client.id)
-            # --- КОНЕЦ ИЗМЕНЕНИЙ ---
         else:
-            # Также хорошая практика - возвращать ошибки формы для AJAX
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                 return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
 
@@ -330,7 +323,6 @@ def calculator_view(request):
             total_end_date = datetime.strptime(total_end_date_str, '%d-%m-%Y')
             now = datetime.now()
 
-            # --- Более точный расчет месяцев ---
             if total_end_date < now:
                 total_months_real = 1
             else:
@@ -350,7 +342,6 @@ def calculator_view(request):
             total_base_cost = total_monthly_costs * months_for_calc
             final_total_required = total_base_cost + return_ticket
 
-            # --- НОВЫЙ, БОЛЕЕ ПОДРОБНЫЙ КОНТЕКСТ ДЛЯ ШАБЛОНА ---
             context['results'] = {
                 'rent_total': f"{monthly_rent_and_bills:,.2f}".replace(",", " "),
                 'num_people': num_people,
@@ -389,7 +380,6 @@ def client_print_view(request, pk):
     return render(request, 'clients/client_printable.html', {'client': client})
 
 
-# --- ИСПРАВЛЕНО: Удалена дублирующаяся функция ---
 @login_required
 def grant_checklist_access(request, pk):
     """Предоставляет клиенту доступ к чеклисту. Поддерживает AJAX."""
@@ -459,7 +449,6 @@ def document_reminder_list(request):
     return render(request, 'clients/document_reminder_list.html', context)
 
 
-# --- ИСПРАВЛЕНО: Добавлена логика для напоминаний по платежам ---
 @login_required
 def payment_reminder_list(request):
     if not request.user.is_staff:
