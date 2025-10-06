@@ -3,3 +3,4 @@ django-allauth
 gunicorn
 dj_database_url
 requests
+django-anymail[brevo]
