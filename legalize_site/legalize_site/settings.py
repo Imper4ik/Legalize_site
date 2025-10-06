@@ -2,6 +2,7 @@
 Django settings for legalize_site project.
 """
 
+from importlib.util import find_spec
 from pathlib import Path
 import os
 import dj_database_url
@@ -48,8 +49,20 @@ INSTALLED_APPS = [
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
-    "allauth.socialaccount.providers.google",
 ]
+
+_SOCIALACCOUNT_PROVIDER_SETTINGS = {
+    "google": {
+        "SCOPE": ["profile", "email"],
+        "AUTH_PARAMS": {"access_type": "online"},
+    }
+}
+
+if find_spec("requests") is not None:
+    INSTALLED_APPS.append("allauth.socialaccount.providers.google")
+    SOCIALACCOUNT_PROVIDERS = _SOCIALACCOUNT_PROVIDER_SETTINGS
+else:
+    SOCIALACCOUNT_PROVIDERS = {}
 
 SITE_ID = int(os.getenv("SITE_ID", "1"))
 
@@ -121,7 +134,6 @@ AUTHENTICATION_BACKENDS = [
 # Используем вход только по email, username не обязателен
 ACCOUNT_LOGIN_METHODS = {"email"}                   # замена устаревшему ACCOUNT_AUTHENTICATION_METHOD
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]  # замена устаревшим EMAIL_REQUIRED/USERNAME_REQUIRED
-ACCOUNT_USERNAME_REQUIRED = False
 # НЕ задаём ACCOUNT_USER_MODEL_USERNAME_FIELD=None, т.к. стандартная модель User имеет username
 
 # Верификация email: mandatory/optional/none
@@ -132,12 +144,6 @@ LOGIN_REDIRECT_URL = "root_dashboard"
 LOGOUT_REDIRECT_URL = "account_login"
 
 SOCIALACCOUNT_AUTO_SIGNUP = True
-SOCIALACCOUNT_PROVIDERS = {
-    "google": {
-        "SCOPE": ["profile", "email"],
-        "AUTH_PARAMS": {"access_type": "online"},
-    }
-}
 
 # ==== ПОЧТА (Brevo SMTP) ====
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp-relay.brevo.com")
