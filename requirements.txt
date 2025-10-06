@@ -7,4 +7,4 @@ cryptography
 dj-database-url
 psycopg2-binary
 whitenoise
-django-anymail[sendgrid]
+python-dotenv
