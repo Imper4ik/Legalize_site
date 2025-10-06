@@ -8,3 +8,4 @@ register = template.Library()
 
 register.filter("add_class", add_class)
 register.filter("add_placeholder", add_placeholder)
+
