@@ -140,11 +140,21 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 # ==== ПОЧТА (Brevo SMTP) ====
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp-relay.brevo.com")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() in ("1", "true", "yes", "on")
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")              # ваш SMTP login из Brevo (без пробелов)
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")      # SMTP key из Brevo
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
+
+_DEFAULT_SMTP_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
+if not EMAIL_BACKEND:
+    if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+        EMAIL_BACKEND = _DEFAULT_SMTP_BACKEND
+    else:
+        # В режиме разработки (без настроенного SMTP) выводим письма в консоль,
+        # чтобы формы сброса пароля не падали с 500 ошибкой.
+        EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL") or EMAIL_HOST_USER or "webmaster@localhost"
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
