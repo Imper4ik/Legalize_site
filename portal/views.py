@@ -21,16 +21,12 @@ class ProfileDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'client'
 
     def get_object(self, queryset=None):
-        # --- ВОТ ГЛАВНОЕ ИСПРАВЛЕНИЕ ---
-        # Эта строка теперь не просто ищет клиента, а создает его, если он не найден.
-        # Это решает проблему, если профиль клиента был случайно удален.
-        client, created = Client.objects.get_or_create(user=self.request.user)
-        return client
-        # --------------------------------
+        """Возвращает профиль клиента, связанный с текущим пользователем."""
+        return get_object_or_404(Client, user=self.request.user)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        client = self.get_object()
+        client = context.get('client') or self.object
         if client.has_checklist_access:
             context['document_status_list'] = client.get_document_checklist()
 
@@ -51,9 +47,7 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy('portal:profile_detail')
 
     def get_object(self, queryset=None):
-        # Применяем то же исправление и здесь для надежности
-        client, created = Client.objects.get_or_create(user=self.request.user)
-        return client
+        return get_object_or_404(Client, user=self.request.user)
 
 @login_required
 def portal_document_upload(request, doc_type):

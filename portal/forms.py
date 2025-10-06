@@ -35,18 +35,31 @@ class CustomSignupForm(forms.Form):
         user.last_name = self.cleaned_data['last_name']
         user.save()
 
-        # 2. ИСПОЛЬЗУЕМ UPDATE_OR_CREATE ДЛЯ НАДЕЖНОСТИ
-        # Этот метод ищет клиента по email. Если находит - обновляет его.
-        # Если не находит - создает нового.
-        Client.objects.update_or_create(
-            email=user.email,  # Ищем по email
-            defaults={         # Данные для обновления или создания
-                'user': user,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'status': 'new'
-            }
-        )
+        # 2. Обновляем уже существующего клиента по email.
+        #    Создание новой записи без обязательных полей (телефон, гражданство и т.д.)
+        #    вызывало ошибки IntegrityError, поэтому просто связываем существующий профиль.
+        client = Client.objects.filter(email=user.email).first()
+        if client:
+            fields_to_update = []
+
+            if client.user != user:
+                client.user = user
+                fields_to_update.append('user')
+
+            if not client.first_name and user.first_name:
+                client.first_name = user.first_name
+                fields_to_update.append('first_name')
+
+            if not client.last_name and user.last_name:
+                client.last_name = user.last_name
+                fields_to_update.append('last_name')
+
+            if not client.status:
+                client.status = 'new'
+                fields_to_update.append('status')
+
+            if fields_to_update:
+                client.save(update_fields=fields_to_update)
         return user
 
 
