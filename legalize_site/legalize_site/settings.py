@@ -145,8 +145,8 @@ EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() in ("1", "true", "yes", "on")
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")              # ваш SMTP login из Brevo (без пробелов)
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")      # SMTP key из Brevo
+_DEFAULT_SMTP_BACKEND = "legalize_site.mail.SafeSMTPEmailBackend"
 
-_DEFAULT_SMTP_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
 if not EMAIL_BACKEND:
     if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
