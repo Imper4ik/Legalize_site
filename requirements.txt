@@ -6,3 +6,4 @@ requests
 django-anymail[brevo]
 psycopg2-binary
 python-dotenv
+PyJWT[crypto]
