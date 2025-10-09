@@ -3,75 +3,9 @@
 
 {% block title %}{% translate "Вход" %}{% endblock %}
 
+{% block body_class %}auth-page{% endblock %}
+
 {% block content %}
-<section class="auth-card">
-  <div class="auth-panel inverse">
-    <span class="auth-badge">⚡ {% translate "Мгновенный доступ" %}</span>
-    <h2 class="auth-heading">{% translate "Управляйте Legalize с любого устройства" %}</h2>
-    <p class="auth-muted">{% translate "Следите за клиентами, платежами и задачами в едином окне управления." %}</p>
-    <ul class="auth-features">
-      <li class="auth-feature">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M8.5 12.5L11 14l4.5-5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <div>
-          <strong>{% translate "Безопасная авторизация" %}</strong>
-          <p class="auth-muted">{% translate "Двухуровневая защита и контроль входов команды." %}</p>
-        </div>
-      </li>
-      <li class="auth-feature">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M4 19h16" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-          <path d="M6.5 19V6.8a1 1 0 01.5-.87l4.5-2.5a1 1 0 011 0l4.5 2.5a1 1 0 01.5.87V19" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M9 19v-6h6v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <div>
-          <strong>{% translate "Цифровая админка" %}</strong>
-          <p class="auth-muted">{% translate "Работайте с клиентами, платежами и документами из одного окна." %}</p>
-        </div>
-      </li>
-      <li class="auth-feature">
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 12a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M4 21a8 8 0 0116 0" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <div>
-          <strong>{% translate "Совместная работа" %}</strong>
-          <p class="auth-muted">{% translate "Приглашайте коллег и назначайте роли мгновенно." %}</p>
-        </div>
-      </li>
-    </ul>
-  </div>
-  <div class="auth-panel auth-form">
-    <header>
-      <h1>{% translate "С возвращением!" %}</h1>
-      <p>{% translate "Войдите, чтобы продолжить работу с Legalize Platform." %}</p>
-    </header>
-
-    {% if form.non_field_errors %}
-      <div class="auth-alert">{{ form.non_field_errors|striptags }}</div>
-    {% endif %}
-
-    {% url 'account_login' as login_url %}
-    <form class="login" method="post" action="{{ login_url }}">
-      {% csrf_token %}
-      <div class="auth-field">
-        <label for="{{ form.login.id_for_label }}">{{ form.login.label }}</label>
-        {{ form.login|add_class:"auth-input"|add_placeholder:_("Адрес электронной почты") }}
-        {% if form.login.errors %}
-          <div class="auth-alert">{{ form.login.errors|striptags }}</div>
-        {% endif %}
-      </div>
-      <div class="auth-field">
-        <div class="auth-links" style="justify-content: space-between; align-items: center;">
-          <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
-          <a href="{% url 'account_reset_password' %}">{% translate "Забыли пароль?" %}</a>
-        </div>
-        {{ form.password|add_class:"auth-input"|add_placeholder:_("Пароль") }}
-        {% if form.password.errors %}
-          <div class="auth-alert">{{ form.password.errors|striptags }}</div>
-        {% endif %}
       </div>
 
       {% if form.remember %}
