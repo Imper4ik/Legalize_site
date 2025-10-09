@@ -1,11 +1,16 @@
 {# portal/templates/portal/partials/document_checklist_content.html #}
+{% load i18n %}
 {% for item in document_status_list %}
   <div class="accordion-item">
     <h2 class="accordion-header" id="heading{{ item.code }}">
       <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ item.code }}">
         {{ item.name }}
         <span class="badge {% if item.is_uploaded %}bg-success{% else %}bg-danger{% endif %} ms-3" id="badge-{{ item.code }}">
-          {% if item.is_uploaded %}Загружено ({{ item.documents|length }}){% else %}Требуется{% endif %}
+          {% if item.is_uploaded %}
+            {% blocktranslate with count=item.documents|length %}Загружено ({{ count }}){% endblocktranslate %}
+          {% else %}
+            {% translate "Требуется" %}
+          {% endif %}
         </span>
       </button>
     </h2>
@@ -15,16 +20,16 @@
           {% for doc in item.documents %}
             {% include 'portal/partials/document_item.html' with doc=doc %}
           {% empty %}
-            <li class="list-group-item text-muted no-docs-message">Вы еще не загрузили файлы этого типа.</li>
+            <li class="list-group-item text-muted no-docs-message">{% translate "Вы еще не загрузили файлы этого типа." %}</li>
           {% endfor %}
         </ul>
         <hr>
-        <p class="mb-2"><strong>Загрузить новый файл:</strong></p>
+        <p class="mb-2"><strong>{% translate "Загрузить новый файл" %}:</strong></p>
         <form action="{% url 'portal:portal_document_upload' item.code %}" method="post" enctype="multipart/form-data" class="upload-form">
           {% csrf_token %}
           <div class="mb-3"><input type="file" name="file" class="form-control" required></div>
-          <div class="mb-3"><input type="date" name="expiry_date" class="form-control" title="Срок действия (если есть)"></div>
-          <button type="submit" class="btn btn-primary btn-sm">Загрузить</button>
+          <div class="mb-3"><input type="date" name="expiry_date" class="form-control" title="{% translate 'Срок действия (если есть)' %}"></div>
+          <button type="submit" class="btn btn-primary btn-sm">{% translate "Загрузить" %}</button>
         </form>
       </div>
     </div>

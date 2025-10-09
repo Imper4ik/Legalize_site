@@ -94,6 +94,22 @@ def checklist_status_api(request):
 
 
 @login_required
+def portal_checklist_partial(request):
+    client = get_object_or_404(Client, user=request.user)
+    if not client.has_checklist_access:
+        return JsonResponse({'status': 'no_access', 'message': _('Доступ к чеклисту документов не предоставлен.')}, status=403)
+
+    document_status_list = client.get_document_checklist()
+    html = render_to_string(
+        'portal/partials/document_checklist_content.html',
+        {'document_status_list': document_status_list},
+        request=request
+    )
+
+    return JsonResponse({'status': 'success', 'html': html})
+
+
+@login_required
 def client_application_view(request):
     try:
         application = request.user.application
