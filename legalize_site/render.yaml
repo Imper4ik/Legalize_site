@@ -3,5 +3,13 @@ services:
     name: Legalize_site-1
     env: python
     rootDir: legalize_site
-    buildCommand: "./build.sh"
-    startCommand: "gunicorn legalize_site.wsgi:application"
+    buildCommand: |
+      pip install -r ../requirements.txt
+      python manage.py collectstatic --noinput
+      python manage.py migrate
+    startCommand: gunicorn --chdir /opt/render/project/src/legalize_site legalize_site.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.6
+      - key: DJANGO_SETTINGS_MODULE
+        value: legalize_site.settings
