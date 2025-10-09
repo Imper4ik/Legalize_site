@@ -18,6 +18,7 @@ urlpatterns = [
     # URL для загрузки документов
     path('upload-document/<str:doc_type>/', views.portal_document_upload, name='portal_document_upload'),
     path('api/checklist-status/', views.checklist_status_api, name='checklist_status_api'),
+    path('checklist/partial/', views.portal_checklist_partial, name='document_checklist_partial'),
 
     # URL для анкеты
     path('application/new/', views.client_application_view, name='client_application'),
