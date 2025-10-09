@@ -51,7 +51,7 @@
   <hr>
 
   <h2>{% translate "Чеклист документов" %}</h2>
-  <div class="accordion" id="documentAccordion">
+  <div class="accordion" id="documentAccordion" data-refresh-url="{% url 'clients:client_checklist_partial' client.pk %}">
       {% include 'clients/partials/document_checklist.html' with document_status_list=document_status_list client=client %}
   </div>
 
@@ -134,5 +134,86 @@
             });
         }
     });
-  </script>  
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const accordion = document.getElementById('documentAccordion');
+        if (!accordion) {
+            return;
+        }
+
+        function buildUrl(url) {
+            if (!url) {
+                return url;
+            }
+            try {
+                return new URL(url, window.location.origin).toString();
+            } catch (error) {
+                console.error('Не удалось разобрать URL', url, error);
+                return url;
+            }
+        }
+
+        const refreshUrl = buildUrl(accordion.dataset.refreshUrl);
+        if (!refreshUrl) {
+            return;
+        }
+
+        function restoreExpandedPanels(previouslyExpandedIds) {
+            previouslyExpandedIds.forEach(id => {
+                const collapseEl = accordion.querySelector(`#${id}`);
+                if (collapseEl) {
+                    const collapseInstance = bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
+                    collapseInstance.show();
+                    const triggerButton = accordion.querySelector(`[data-bs-target="#${id}"]`);
+                    if (triggerButton) {
+                        triggerButton.classList.remove('collapsed');
+                        triggerButton.setAttribute('aria-expanded', 'true');
+                    }
+                }
+            });
+        }
+
+        let isFetching = false;
+
+        async function refreshChecklist() {
+            if (isFetching) {
+                return;
+            }
+            if (document.body.classList.contains('modal-open')) {
+                return;
+            }
+            isFetching = true;
+            const expandedPanels = Array.from(accordion.querySelectorAll('.accordion-collapse.show')).map(panel => panel.id);
+
+            try {
+                const response = await fetch(refreshUrl, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin',
+                    cache: 'no-store'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const html = await response.text();
+                const tempWrapper = document.createElement('div');
+                tempWrapper.innerHTML = html.trim();
+                accordion.innerHTML = tempWrapper.innerHTML;
+                restoreExpandedPanels(expandedPanels);
+            } catch (error) {
+                console.error('Ошибка при обновлении чеклиста клиента:', error);
+            } finally {
+                isFetching = false;
+            }
+        }
+
+        refreshChecklist();
+        setInterval(refreshChecklist, 8000);
+    });
+  </script>
 {% endblock %}
