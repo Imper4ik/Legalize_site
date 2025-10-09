@@ -1,0 +1,293 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}{{ site_title|default:_('Администрирование Legalize') }}{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --admin-primary: #2563eb;
+            --admin-secondary: #8b5cf6;
+            --admin-accent: #10b981;
+            --admin-bg: #0f172a;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        #header {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.95), rgba(139, 92, 246, 0.9));
+            border-bottom: none;
+            box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
+        }
+
+        #header h1 a:link,
+        #header h1 a:visited {
+            color: #f8fafc;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        #branding h1 {
+            font-size: 1.35rem;
+        }
+
+        #user-tools {
+            color: rgba(248, 250, 252, 0.85);
+        }
+
+        #user-tools a {
+            color: #f8fafc;
+            font-weight: 500;
+        }
+
+        .module h2, .module caption, .inline-group h2 {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(139, 92, 246, 0.12));
+            color: #1e293b;
+            border: none;
+        }
+
+        .button, input[type=submit], button {
+            background: linear-gradient(135deg, var(--admin-primary), var(--admin-secondary));
+            border: none;
+            border-radius: 0.75rem;
+            padding: 0.6rem 1.5rem;
+            font-weight: 600;
+            color: #f8fafc;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .button:hover, input[type=submit]:hover, button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 25px rgba(37, 99, 235, 0.35);
+        }
+
+        body.login {
+            background: radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.3), transparent 55%),
+                        radial-gradient(circle at 100% 0%, rgba(139, 92, 246, 0.3), transparent 45%),
+                        linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.92));
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        body.login #header,
+        body.login #footer {
+            display: none;
+        }
+
+        body.login #container,
+        body.login #content,
+        body.login #content-main {
+            width: 100%;
+            max-width: 960px;
+            padding: 0;
+            margin: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .admin-auth-wrapper {
+            width: 100%;
+        }
+
+        .admin-auth-card {
+            display: flex;
+            flex-direction: column;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 35px 70px rgba(15, 23, 42, 0.35);
+            backdrop-filter: blur(12px);
+        }
+
+        .admin-auth-card .admin-illustration {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.92), rgba(139, 92, 246, 0.92));
+            color: #f8fafc;
+            padding: 3rem 2.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.75rem;
+        }
+
+        .admin-auth-card .admin-illustration h2 {
+            font-weight: 600;
+            font-size: 1.75rem;
+        }
+
+        .admin-auth-card .admin-illustration p {
+            color: rgba(248, 250, 252, 0.8);
+        }
+
+        .admin-auth-card .admin-illustration ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .admin-auth-card .admin-illustration li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .admin-auth-card .admin-illustration li span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(15, 23, 42, 0.25);
+            border: 1px solid rgba(248, 250, 252, 0.25);
+        }
+
+        .admin-form-panel {
+            padding: 3rem 2.75rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-form-panel h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #0f172a;
+        }
+
+        .admin-form-panel p.description {
+            color: #64748b;
+            margin-bottom: 1.75rem;
+        }
+
+        .admin-alert {
+            background: rgba(248, 113, 113, 0.15);
+            border-left: 4px solid #ef4444;
+            border-radius: 0.85rem;
+            padding: 0.75rem 1rem;
+            color: #b91c1c;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .admin-message {
+            background: rgba(16, 185, 129, 0.12);
+            border-left: 4px solid #10b981;
+            border-radius: 0.85rem;
+            padding: 0.75rem 1rem;
+            color: #047857;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .admin-field {
+            margin-bottom: 1.25rem;
+        }
+
+        .admin-field label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.55rem;
+            color: #1e293b;
+        }
+
+        .admin-input {
+            width: 100%;
+            border-radius: 0.95rem;
+            border: 1px solid rgba(148, 163, 184, 0.6);
+            padding: 0.8rem 1rem;
+            font-size: 1rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background: rgba(255, 255, 255, 0.98);
+        }
+
+        .admin-input:focus {
+            outline: none;
+            border-color: rgba(37, 99, 235, 0.6);
+            box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.18);
+        }
+
+        .admin-help {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-top: 0.35rem;
+        }
+
+        .admin-button {
+            width: 100%;
+            border-radius: 0.95rem;
+            border: none;
+            padding: 0.85rem 1rem;
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: #f8fafc;
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--admin-primary), var(--admin-secondary));
+            box-shadow: 0 18px 30px rgba(37, 99, 235, 0.35);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .admin-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 24px 40px rgba(37, 99, 235, 0.4);
+        }
+
+        .admin-meta {
+            text-align: center;
+            margin-top: 1.75rem;
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
+        .admin-meta a {
+            color: var(--admin-primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .admin-meta a:hover {
+            text-decoration: underline;
+        }
+
+        @media (min-width: 992px) {
+            .admin-auth-card {
+                flex-direction: row;
+            }
+
+            .admin-auth-card .admin-illustration,
+            .admin-form-panel {
+                flex: 1 1 50%;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .admin-auth-card {
+                border-radius: 1.25rem;
+            }
+
+            .admin-form-panel,
+            .admin-auth-card .admin-illustration {
+                padding: 2.25rem 1.75rem;
+            }
+        }
+    </style>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><span style="opacity: .85;">Legalize</span> Admin</h1>
+{% endblock %}
+
+{% block nav-global %}
+<div id="legalize-admin-subtitle">{% translate "Центр управления Legalize" %}</div>
+{% endblock %}

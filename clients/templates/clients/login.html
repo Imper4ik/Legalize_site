@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load socialaccount %}
+
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <h4 class="mb-0">Вход в систему</h4>
+      </div>
+      <div class="card-body">
+
+        <a href="{% provider_login_url 'google' %}" class="btn btn-danger w-100 mb-3">
+          <i class="bi bi-google"></i> Войти через Google
+        </a>
+
+        <div class="text-center my-3">
+          <small class="text-muted">ИЛИ</small>
+        </div>
+
+        <form method="POST">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="id_login" class="form-label">Адрес электронной почты</label>
+            <input type="email" name="login" class="form-control" required id="id_login">
+          </div>
+          <div class="mb-3">
+            <label for="id_password" class="form-label">Пароль</label>
+            <input type="password" name="password" class="form-control" required id="id_password">
+          </div>
+
+          {% if form.errors %}
+            <div class="alert alert-danger mt-3">
+              Неверный email или пароль. Попробуйте снова.
+            </div>
+          {% endif %}
+
+          <button type="submit" class="btn btn-primary mt-3 w-100">Войти</button>
+        </form>
+
+        <div class="border-top pt-3 mt-3 text-center">
+            <small class="text-muted">
+                Ещё нет аккаунта? <a class="ms-2" href="{% url 'register' %}">Зарегистрироваться</a>
+            </small>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

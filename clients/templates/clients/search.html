@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Поиск клиентов{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-header">
+          <h4 class="mb-0">Поиск клиентов</h4>
+        </div>
+        <div class="card-body">
+          <form method="get" class="mb-4">
+            <div class="input-group">
+              <input type="text" name="q" class="form-control" placeholder="Введите имя, фамилию, email или номер дела..." value="{{ query }}">
+              <button class="btn btn-primary" type="submit">Искать</button>
+            </div>
+          </form>
+
+          {% if results %}
+              <h5 class="mb-3">Результаты поиска по запросу "{{ query }}":</h5>
+              <div class="list-group">
+                  {% for client in results %}
+                      <a href="{% url 'clients:client_detail' client.pk %}" class="list-group-item list-group-item-action">
+                          <div class="d-flex w-100 justify-content-between">
+                              <h6 class="mb-1">{{ client.first_name }} {{ client.last_name }}</h6>
+                              <small class="text-muted">{{ client.email }}</small>
+                          </div>
+                          <p class="mb-1 text-muted">{{ client.phone }}</p>
+                      </a>
+                  {% endfor %}
+              </div>
+          {% elif query %}
+              <div class="alert alert-warning">
+                  Ничего не найдено по запросу "{{ query }}".
+              </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

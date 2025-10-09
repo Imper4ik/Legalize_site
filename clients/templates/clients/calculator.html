@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Калькулятор выписки из банка" %}{% endblock %}
+
+{% block content %}
+  <h1>{% translate "Калькулятор выписки из банка" %}</h1>
+  <p class="text-muted">
+    {% translate "Введите данные, чтобы рассчитать итоговую сумму на счету." %}
+    {% blocktranslate with rate=eur_to_pln_rate %}Актуальный курс: <strong>1 EUR = {{ rate }} PLN</strong>{% endblocktranslate %}
+  </p>
+
+  <form method="post" class="mt-4">
+    {% csrf_token %}
+    <div class="row">
+      <div class="col-lg-7">
+        <div class="card shadow-sm">
+          <div class="card-body">
+
+            <div class="mb-3">
+              <label class="form-label">{% translate "Когда заканчивается основание пребывания?" %}</label>
+              <div class="input-group" id="date-picker-wrapper">
+                <input type="text" class="form-control" name="total_end_date" id="id_total_end_date" value="{{ form_data.total_end_date }}" placeholder="{% translate 'дд-мм-гггг' %}" required>
+                <button class="btn btn-outline-secondary" type="button" id="date-picker-button"><i class="bi bi-calendar3"></i></button>
+              </div>
+            </div>
+            <hr>
+
+            <div class="mb-3">
+              <label class="form-label">{% translate "Оплата за обучение" %}</label>
+              <div class="row g-2">
+                <div class="col-sm-5">
+                  <input type="number" step="0.01" class="form-control" name="tuition_fee" value="{{ form_data.tuition_fee|default:0 }}" placeholder="{% translate 'Сумма оплаты' %}" required>
+                </div>
+                <div class="col-sm-3">
+                   <select class="form-select" name="tuition_currency">
+                    <option value="PLN" {% if form_data.tuition_currency == 'PLN' %}selected{% endif %}>PLN</option>
+                    <option value="EUR" {% if form_data.tuition_currency == 'EUR' %}selected{% endif %}>EUR</option>
+                  </select>
+                </div>
+                <div class="col-sm-4">
+                  <select class="form-select" name="fee_type" id="fee_type_selector">
+                    <option value="per_month" data-months="1" {% if form_data.fee_type == 'per_month' %}selected{% endif %}>{% translate "в месяц" %}</option>
+                    <option value="per_semester" data-months="5" {% if form_data.fee_type == 'per_semester' %}selected{% endif %}>{% translate "за семестр" %}</option>
+                    <option value="per_year" data-months="12" {% if form_data.fee_type == 'per_year' %}selected{% endif %}>{% translate "за год" %}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+                <label for="months_in_period" class="form-label small text-muted">{% translate "Кол-во месяцев в этом периоде (можно изменить)" %}</label>
+                <input type="number" step="1" class="form-control" name="months_in_period" id="months_in_period_input" value="{{ form_data.months_in_period|default:1 }}" required>
+            </div>
+            <hr>
+
+            <div class="mb-3">
+              <label for="rent_and_bills" class="form-label">{% translate "Аренда + счётчики в месяц (на всю квартиру)" %}</label>
+              <div class="input-group">
+                <input type="number" step="0.01" class="form-control" id="rent_and_bills" name="rent_and_bills" value="{{ form_data.rent_and_bills|default:0 }}" required>
+                <select class="form-select" name="rent_currency" style="max-width: 100px;">
+                  <option value="PLN" {% if form_data.rent_currency == 'PLN' %}selected{% endif %}>PLN</option>
+                  <option value="EUR" {% if form_data.rent_currency == 'EUR' %}selected{% endif %}>EUR</option>
+                </select>
+              </div>
+            </div>
+            <hr>
+
+             <div class="mb-3">
+                <label for="num_people" class="form-label">{% translate "Кол-во человек, проживающих вместе" %}</label>
+                <input type="number" class="form-control" name="num_people" value="{{ form_data.num_people|default:1 }}" required>
+            </div>
+            <hr>
+
+            <div class="mb-3">
+                <label class="form-label">{% translate "Обратный билет" %}</label>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="has_border" id="has_border_checkbox" {% if form_data.has_border %}checked{% endif %}>
+                  <label class="form-check-label" for="has_border_checkbox">
+                    {% translate "Страна граничит с Польшей? (билет 500 zł, иначе 2500 zł)" %}
+                  </label>
+                </div>
+                <p id="ticket_price_display" class="form-text mt-1"></p>
+            </div>
+
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary mt-4 w-100">{% translate "Рассчитать итоговую сумму" %}</button>
+      </div>
+
+      <div class="col-lg-5">
+        {% if results %}
+          <div class="card sticky-top" style="top: 20px;">
+            <div class="card-header"><h5>{% translate "Итоговая сумма на счету:" %}</h5></div>
+            <div class="card-body bg-success text-white">
+                <h3 class="text-center mb-0">{{ results.final_total_required }} zł</h3>
+            </div>
+
+            <div class="card-body">
+                <h5 class="card-title">{% translate "Детализация расчёта:" %}</h5>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <span>1. {% translate "Жильё в месяц (на 1 чел.)" %}</span>
+                            <span class="fw-bold">{{ results.rent_per_person }} zł</span>
+                        </div>
+                        <small class="text-muted d-block text-end">({{ results.rent_total }} zł / {{ results.num_people }} чел.)</small>
+                    </li>
+                    <li class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <span>2. {% translate "Обучение в месяц" %}</span>
+                            <span class="fw-bold">{{ results.monthly_tuition_calculated }} zł</span>
+                        </div>
+                        <small class="text-muted d-block text-end">({{ results.tuition_total }} zł / {{ results.months_in_period }} мес.)</small>
+                    </li>
+                     <li class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <span>3. {% translate "Прожиточный минимум" %}</span>
+                            <span class="fw-bold">{{ living_allowance }} zł</span>
+                        </div>
+                        <small class="text-muted d-block text-end">({% translate "фиксированная сумма" %})</small>
+                    </li>
+                     <li class="list-group-item px-0 bg-light">
+                        <div class="d-flex justify-content-between">
+                            <strong>{% translate "Итого ежемесячные расходы:" %}</strong>
+                            <strong class="text-primary">{{ results.total_monthly_costs }} zł</strong>
+                        </div>
+                    </li>
+                    <li class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <span>4. {% translate "Количество месяцев для расчёта" %}</span>
+                            <span class="fw-bold">{{ results.months_for_calc }} {% translate "мес." %}</span>
+                        </div>
+                        {% if results.is_capped %}
+                        <small class="text-muted d-block text-end">({% blocktranslate with real=results.total_months_real max=max_months_living %}реальный срок {{ real }} мес., но расчет ограничен максимумом в {{ max }} мес.{% endblocktranslate %})</small>
+                        {% else %}
+                        <small class="text-muted d-block text-end">({% blocktranslate with real=results.total_months_real %}полный срок пребывания: {{ real }} мес.{% endblocktranslate %})</small>
+                        {% endif %}
+                    </li>
+                    <li class="list-group-item px-0">
+                        <div class="d-flex justify-content-between">
+                            <span>5. {% translate "Стоимость обратного билета" %}</span>
+                            <span class="fw-bold">{{ results.return_ticket }} zł</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+          </div>
+        {% else %}
+            <div class="alert alert-info">
+                {% translate 'Заполните все поля слева и нажмите "Рассчитать", чтобы увидеть результат.' %}
+            </div>
+        {% endif %}
+      </div>
+    </div>
+  </form>
+{% endblock %}
+
+
+{% block extra_js %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Календарь ---
+        flatpickr("#id_total_end_date", {
+            dateFormat: "d-m-Y",
+            allowInput: true,
+            clickOpens: false
+        });
+        document.getElementById('date-picker-button').addEventListener('click', function() {
+            document.getElementById('id_total_end_date')._flatpickr.toggle();
+        });
+
+        // --- Автозаполнение месяцев ---
+        const feeTypeSelector = document.getElementById('fee_type_selector');
+        const monthsInput = document.getElementById('months_in_period_input');
+        function updateMonths() {
+            const selectedOption = feeTypeSelector.options[feeTypeSelector.selectedIndex];
+            monthsInput.value = selectedOption.dataset.months;
+        }
+        feeTypeSelector.addEventListener('change', updateMonths);
+        updateMonths();
+
+        // --- Авто-обновление цены билета ---
+        const borderCheckbox = document.getElementById('has_border_checkbox');
+        const ticketDisplay = document.getElementById('ticket_price_display');
+        function updateTicketPrice() {
+            if (borderCheckbox.checked) {
+                ticketDisplay.textContent = '{% translate "Цена билета: 500 zł" %}';
+            } else {
+                ticketDisplay.textContent = '{% translate "Цена билета: 2500 zł" %}';
+            }
+        }
+        borderCheckbox.addEventListener('change', updateTicketPrice);
+        updateTicketPrice();
+    });
+  </script>
+{% endblock %}

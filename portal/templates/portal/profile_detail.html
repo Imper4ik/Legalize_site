@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Ваш профиль" %}{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{% blocktranslate %}Личный кабинет, {{ client.first_name }}{% endblocktranslate %}</h1>
+    <a href="{% url 'portal:profile_edit' %}" class="btn btn-primary">{% translate "Редактировать профиль" %}</a>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header"><h5>{% translate "Ваши данные" %}</h5></div>
+    <div class="card-body">
+      <p><strong>Email:</strong> {{ client.email }}</p>
+      <p><strong>{% translate "Телефон" %}:</strong> {{ client.phone }}</p>
+      <p><strong>{% translate "Статус вашего дела" %}:</strong> <span class="badge bg-primary">{{ client.get_status_display }}</span></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><h5>{% translate "Список документов" %}</h5></div>
+    <div class="card-body">
+      {% if document_status_list %}
+        <p>{% translate "Ниже представлен ваш персональный список документов для загрузки." %}</p>
+        <div class="accordion" id="documentAccordion">
+          {% for item in document_status_list %}
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="heading{{ item.code }}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ item.code }}">
+                  {{ item.name }}
+                  <span class="badge {% if item.is_uploaded %}bg-success{% else %}bg-danger{% endif %} ms-3" id="badge-{{ item.code }}">
+                    {% if item.is_uploaded %}
+                        {% translate "Загружено" %} ({{ item.documents|length }})
+                    {% else %}
+                        {% translate "Требуется" %}
+                    {% endif %}
+                  </span>
+                </button>
+              </h2>
+              <div id="collapse{{ item.code }}" class="accordion-collapse collapse" data-bs-parent="#documentAccordion">
+                <div class="accordion-body">
+                  <ul class="list-group mb-3" id="doc-list-{{ item.code }}">
+                    {% for doc in item.documents %}
+                      <li class="list-group-item d-flex justify-content-between align-items-center" data-doc-id="{{ doc.id }}">
+                          <div>
+                            <i class="bi bi-file-earmark-check text-success"></i>
+                            <a href="{{ doc.file.url }}" target="_blank" class="ms-2">{% blocktranslate with date=doc.uploaded_at|date:"d.m.Y" %}Файл от {{ date }}{% endblocktranslate %}</a>
+                          </div>
+                          <span class="badge {% if doc.verified %}bg-success{% else %}bg-warning text-dark{% endif %} verification-badge">
+                            {% if doc.verified %}{% translate "Проверен" %}{% else %}{% translate "Ожидает проверки" %}{% endif %}
+                          </span>
+                      </li>
+                    {% empty %}
+                      <li class="list-group-item text-muted no-docs-message">{% translate "Вы еще не загрузили файлы этого типа." %}</li>
+                    {% endfor %}
+                  </ul>
+                  <hr>
+                  <p class="mb-2"><strong>{% translate "Загрузить новый файл" %}:</strong></p>
+                  <form action="{% url 'portal:portal_document_upload' item.code %}" method="post" enctype="multipart/form-data" class="upload-form">
+                    {% csrf_token %}
+                    <div class="mb-3"><input type="file" name="file" class="form-control" required></div>
+                    <div class="mb-3"><input type="date" name="expiry_date" class="form-control" title="{% translate 'Срок действия (если есть)' %}"></div>
+                    <button type="submit" class="btn btn-primary btn-sm">{% translate "Загрузить" %}</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="alert alert-info mb-0">
+          <h4 class="alert-heading">{% translate "Список документов пока не доступен" %}</h4>
+          <p class="mb-0">{% translate "Ваш персональный чеклист появится здесь после подтверждения от нашего сотрудника." %}</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+
+
+{% block extra_js %}
+  {{ js_messages|json_script:"js-messages" }}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    const accordion = document.getElementById('documentAccordion');
+
+    const JS_MESSAGES = document.getElementById('js-messages');
+    const parsedMessages = JSON.parse(JS_MESSAGES.textContent);
+    const NO_DOCS_MESSAGE = parsedMessages.no_docs_message;
+    const VERIFIED_STATUS = parsedMessages.verified_status;
+    const PENDING_VERIFICATION_STATUS = parsedMessages.pending_verification_status;
+    const REQUIRED_STATUS = parsedMessages.required_status;
+    const UPLOADED_STATUS = parsedMessages.uploaded_status;
+
+    if (accordion) {
+        accordion.addEventListener('submit', function(e) {
+            if (e.target.classList.contains('upload-form')) {
+                e.preventDefault();
+
+                const form = e.target;
+                const formData = new FormData(form);
+                const docCode = form.action.split('/').filter(Boolean).pop();
+
+                // ИСПРАВЛЕНИЕ 1: Используем new URL().pathname, чтобы получить относительный путь
+                fetch(new URL(form.action).pathname, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrftoken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => Promise.reject(err));
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        const docList = document.getElementById(`doc-list-${docCode}`);
+                        const badge = document.getElementById(`badge-${docCode}`);
+
+                        if (docList) {
+                            const noDocsMessageEl = docList.querySelector('.no-docs-message');
+                            if (noDocsMessageEl) noDocsMessageEl.remove();
+
+                            const tempDiv = document.createElement('div');
+                            tempDiv.innerHTML = data.html;
+
+                            Array.from(tempDiv.children).forEach(child => {
+                                if (child.tagName === 'LI') docList.appendChild(child);
+                            });
+                        }
+
+                        if (badge) {
+                            const currentCount = docList.querySelectorAll('li[data-doc-id]').length;
+                            badge.textContent = `${UPLOADED_STATUS} (${currentCount})`;
+                            badge.className = 'badge bg-success ms-3';
+                        }
+                        form.reset();
+                        alert(data.message || 'Документ успешно загружен!');
+                    } else {
+                        alert('Ошибка загрузки документа: ' + (data.message || JSON.stringify(data.errors)));
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при загрузке файла:', error);
+                    alert('Произошла ошибка при загрузке файла.');
+                });
+            }
+        });
+
+        // LIVE UPDATE
+        setInterval(function() {
+            // ИСПРАВЛЕНИЕ 2: Также используем new URL().pathname для API запроса
+            const apiUrl = "{% url 'portal:checklist_status_api' %}";
+            fetch(new URL(apiUrl).pathname)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const serverDocsStatus = data.statuses;
+                        const serverDocIds = Object.keys(serverDocsStatus);
+
+                        accordion.querySelectorAll('ul[id^="doc-list-"]').forEach(docList => {
+                            const docTypeCode = docList.id.replace('doc-list-', '');
+                            const badge = document.getElementById(`badge-${docTypeCode}`);
+                            let currentUploadedCount = 0;
+
+                            docList.querySelectorAll('li[data-doc-id]').forEach(li => {
+                                const docId = li.dataset.docId;
+                                if (serverDocIds.includes(docId)) {
+                                    currentUploadedCount++;
+                                    const isVerified = serverDocsStatus[docId];
+                                    const verificationBadge = li.querySelector('.verification-badge');
+                                    if (verificationBadge) {
+                                        if (isVerified) {
+                                            verificationBadge.textContent = VERIFIED_STATUS;
+                                            verificationBadge.className = 'badge bg-success verification-badge';
+                                        } else {
+                                            verificationBadge.textContent = PENDING_VERIFICATION_STATUS;
+                                            verificationBadge.className = 'badge bg-warning text-dark verification-badge';
+                                        }
+                                    }
+                                } else {
+                                    li.remove();
+                                }
+                            });
+
+                            if (badge) {
+                                if (currentUploadedCount === 0) {
+                                    badge.textContent = REQUIRED_STATUS;
+                                    badge.className = 'badge bg-danger ms-3';
+                                    if (!docList.querySelector('.no-docs-message')) {
+                                        docList.innerHTML = `<li class="list-group-item text-muted no-docs-message">${NO_DOCS_MESSAGE}</li>`;
+                                    }
+                                } else {
+                                    badge.textContent = `${UPLOADED_STATUS} (${currentUploadedCount})`;
+                                    badge.className = 'badge bg-success ms-3';
+                                    const noDocsMessageEl = docList.querySelector('.no-docs-message');
+                                    if (noDocsMessageEl) noDocsMessageEl.remove();
+                                }
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при получении статусов документов:', error);
+                });
+        }, 8000);
+    }
+});
+</script>
+{% endblock %}

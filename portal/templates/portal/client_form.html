@@ -1,0 +1,17 @@
+{% extends "base.html" %} {% block content %}
+<div class="container mt-5">
+    <h2>Форма для подачи на карту временного пребывания</h2>
+    <p>Пожалуйста, заполняйте все поля внимательно, как в ваших официальных документах.</p>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <h4>Шаг 1: Основная цель пребывания</h4>
+        {{ form.purpose_of_stay.label_tag }} {{ form.purpose_of_stay }}
+        <hr>
+        <h4>Шаг 2: Личные данные</h4>
+        {{ form.as_p }} <hr>
+        <button type="submit" class="btn btn-primary">Отправить данные</button>
+    </form>
+</div>
+{% endblock %}
