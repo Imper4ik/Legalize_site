@@ -1,0 +1,74 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static portal_filters %}
+
+{% block bodyclass %}{{ block.super }} enhanced-login{% endblock %}
+
+{% block content %}
+<div class="admin-auth-wrapper">
+  <div class="admin-auth-card">
+    <div class="admin-illustration">
+      <div>
+        <span class="auth-badge" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.4rem 0.9rem;border-radius:9999px;background:rgba(15,23,42,0.25);border:1px solid rgba(248,250,252,0.25);font-weight:600;">
+          <span class="bi bi-speedometer2"></span>
+          {% translate "Панель администратора" %}
+        </span>
+        <h2 class="mt-4">{% translate "Контролируйте Legalize в режиме реального времени" %}</h2>
+        <p>{% translate "Управляйте клиентами, платежами и документооборотом из единого центра." %}</p>
+      </div>
+      <ul>
+        <li><span class="bi bi-shield-lock"></span> {% translate "Двухуровневая защита и журнал действий" %}</li>
+        <li><span class="bi bi-graph-up"></span> {% translate "Дашборды с ключевыми показателями" %}</li>
+        <li><span class="bi bi-people"></span> {% translate "Гибкие роли для команды" %}</li>
+      </ul>
+    </div>
+    <div class="admin-form-panel">
+      <h1>{% translate "Вход в админку" %}</h1>
+      <p class="description">{% translate "Используйте корпоративные учетные данные для входа." %}</p>
+
+      {% if form.non_field_errors %}
+        <div class="admin-alert">{{ form.non_field_errors|striptags }}</div>
+      {% elif form.errors %}
+        <div class="admin-alert">
+          {% translate "Проверьте логин и пароль и попробуйте снова." %}
+        </div>
+      {% endif %}
+
+      {% if user.is_authenticated %}
+        <div class="admin-message">
+          {% blocktrans %}Вы уже вошли как {{ user }}. У вас может не быть прав доступа к этой странице.{% endblocktrans %}
+        </div>
+      {% endif %}
+
+      <form action="{{ app_path }}" method="post" id="login-form">
+        {% csrf_token %}
+        <div class="admin-field">
+          <label for="id_username">{{ form.username.label }}</label>
+          {{ form.username|add_class:"admin-input" }}
+          {% if form.username.errors %}
+            <div class="admin-alert" style="margin-top:0.75rem;">{{ form.username.errors|striptags }}</div>
+          {% endif %}
+        </div>
+        <div class="admin-field">
+          <label for="id_password">{{ form.password.label }}</label>
+          {{ form.password|add_class:"admin-input" }}
+          {% if form.password.errors %}
+            <div class="admin-alert" style="margin-top:0.75rem;">{{ form.password.errors|striptags }}</div>
+          {% endif %}
+        </div>
+
+        {% if next %}
+          <input type="hidden" name="next" value="{{ next }}">
+        {% endif %}
+
+        <button type="submit" class="admin-button">
+          <span class="bi bi-box-arrow-in-right" style="margin-right:0.5rem;"></span>{% translate "Войти" %}
+        </button>
+      </form>
+
+      <div class="admin-meta">
+        <a href="{% url 'account_reset_password' %}">{% translate "Забыли пароль?" %}</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

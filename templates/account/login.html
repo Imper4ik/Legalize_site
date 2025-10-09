@@ -1,0 +1,30 @@
+{% extends "account/auth_base.html" %}
+{% load i18n allauth account portal_filters %}
+
+{% block title %}{% translate "Вход" %}{% endblock %}
+
+{% block body_class %}auth-page{% endblock %}
+
+{% block content %}
+      </div>
+
+      {% if form.remember %}
+      <label class="auth-checkbox">
+        {{ form.remember }}
+        <span>{{ form.remember.label }}</span>
+      </label>
+      {% endif %}
+
+      {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+      {% endif %}
+
+      <button class="auth-button" type="submit">{% translate "Войти" %}</button>
+    </form>
+
+    <div class="auth-meta">
+      {% blocktranslate %}Нет аккаунта? <a href="{{ signup_url }}">Создайте его за минуту</a>{% endblocktranslate %}
+    </div>
+  </div>
+</section>
+{% endblock %}
