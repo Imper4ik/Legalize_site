@@ -7,7 +7,7 @@ services:
       pip install -r ../requirements.txt
       python manage.py collectstatic --noinput
       python manage.py migrate
-    startCommand: gunicorn --chdir /opt/render/project/src/legalize_site legalize_site.wsgi:application
+    startCommand: bash -lc "python manage.py migrate --noinput && gunicorn --chdir ./legalize_site legalize_site.wsgi:application"
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.6

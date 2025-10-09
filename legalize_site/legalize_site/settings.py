@@ -64,6 +64,8 @@ INSTALLED_APPS = [
     "anymail",
 ]
 
+SITE_ID = int(os.getenv("SITE_ID", "1"))
+
 # Опционально добавим провайдера Google, если установлен requests (как в исходнике)
 _SOCIALACCOUNT_PROVIDER_SETTINGS = {
     "google": {
