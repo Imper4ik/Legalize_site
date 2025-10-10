@@ -1,7 +1,7 @@
 import uuid
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import translation
 
@@ -75,3 +75,19 @@ class PortalDocumentUploadTests(TestCase):
         payload = response.json()
         self.assertEqual(payload['status'], 'error')
         self.assertIn('file', payload['errors'])
+
+    @override_settings(DATA_UPLOAD_MAX_MEMORY_SIZE=1024, FILE_UPLOAD_MAX_MEMORY_SIZE=1024)
+    def test_too_large_file_returns_clear_error_message(self):
+        big_file = SimpleUploadedFile('huge.pdf', b'a' * 2048, content_type='application/pdf')
+
+        response = self.client.post(
+            self.upload_url,
+            data={'file': big_file},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+
+        self.assertEqual(response.status_code, 413)
+        self.assertEqual(response['Cache-Control'], 'no-store')
+        payload = response.json()
+        self.assertEqual(payload['status'], 'error')
+        self.assertIn('слишком', payload['message'].lower())
