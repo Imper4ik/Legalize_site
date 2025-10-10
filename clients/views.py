@@ -12,8 +12,15 @@ from django.core.management import call_command
 from datetime import datetime
 from django.template.loader import render_to_string
 
+from legalize_site.utils.http import request_is_ajax
 from .models import Client, Document, Payment, Reminder
 from .forms import ClientForm, DocumentUploadForm, PaymentForm
+
+
+def json_no_store(payload, *, status=200):
+    response = JsonResponse(payload, status=status)
+    response['Cache-Control'] = 'no-store'
+    return response
 
 
 class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -116,13 +123,15 @@ def dashboard_redirect_view(request):
 @login_required
 def update_client_notes(request, pk):
     if not request.user.is_staff:
-        return JsonResponse({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
+        return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
     client = get_object_or_404(Client, pk=pk)
+    expects_json = request_is_ajax(request)
+
     if request.method == 'POST':
         client.notes = request.POST.get('notes', '')
         client.save()
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'status': 'success', 'message': 'Заметка сохранена'})
+        if expects_json:
+            return json_no_store({'status': 'success', 'message': 'Заметка сохранена'})
         messages.success(request, "Заметка сохранена.")
         return redirect('clients:client_detail', pk=pk)
     return redirect('clients:client_list')
@@ -133,12 +142,13 @@ def add_document(request, client_id, doc_type):
     # Эта проверка доступа для персонала должна быть в начале
     if not request.user.is_staff:
         # Для AJAX возвращаем ошибку, иначе - редирект
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
+        if request_is_ajax(request):
+            return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
         return redirect('portal:profile_detail')
 
     client = get_object_or_404(Client, pk=client_id)
     document_type_display = client.get_document_name_by_code(doc_type)
+    expects_json = request_is_ajax(request)
 
     if request.method == 'POST':
         form = DocumentUploadForm(request.POST, request.FILES)
@@ -149,8 +159,8 @@ def add_document(request, client_id, doc_type):
             document.save()
 
             # Если это AJAX-запрос, отправляем JSON
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({
+            if expects_json:
+                return json_no_store({
                     'status': 'success',
                     'message': f"Документ '{document_type_display}' успешно добавлен.",
                     'doc_id': document.id
@@ -160,8 +170,12 @@ def add_document(request, client_id, doc_type):
             messages.success(request, f"Документ '{document_type_display}' успешно добавлен.")
             return redirect('clients:client_detail', pk=client.id)
         else:
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+            if expects_json:
+                return json_no_store({
+                    'status': 'error',
+                    'errors': form.errors,
+                    'message': 'Проверьте правильность заполнения формы.'
+                }, status=400)
 
     # Для GET-запроса ничего не меняем
     form = DocumentUploadForm()
@@ -174,19 +188,20 @@ def add_document(request, client_id, doc_type):
 def document_delete(request, pk):
     if not request.user.is_staff:
         # Для AJAX возвращаем JSON, иначе - редирект
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
+        if request_is_ajax(request):
+            return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
         return redirect('portal:profile_detail')
 
     document = get_object_or_404(Document, pk=pk)
     client_id = document.client.id
+    expects_json = request_is_ajax(request)
 
     if request.method == "POST":
         doc_type_display = document.get_document_type_display()
         document.delete()  # Сигнал позаботится об удалении файла
 
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'status': 'success', 'message': f"Документ '{doc_type_display}' удалён."})
+        if expects_json:
+            return json_no_store({'status': 'success', 'message': f"Документ '{doc_type_display}' удалён."})
 
         messages.success(request, f"Документ '{doc_type_display}' успешно удалён.")
     else:
@@ -201,16 +216,17 @@ def toggle_document_verification(request, doc_id):
     Переключает статус верификации документа. Поддерживает AJAX.
     """
     if not request.user.is_staff:
-        return JsonResponse({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
+        return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
 
     document = get_object_or_404(Document, pk=doc_id)
+    expects_json = request_is_ajax(request)
     if request.method == 'POST':
         document.verified = not document.verified
         document.save()
 
         # Если это AJAX-запрос, отправляем JSON-ответ
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({
+        if expects_json:
+            return json_no_store({
                 'status': 'success',
                 'verified': document.verified,
                 'button_text': "Снять отметку" if document.verified else "Проверить"
@@ -224,23 +240,28 @@ def toggle_document_verification(request, doc_id):
 @login_required
 def add_payment(request, client_id):
     if not request.user.is_staff:
-        return JsonResponse({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
+        return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
 
     client = get_object_or_404(Client, pk=client_id)
+    expects_json = request_is_ajax(request)
     if request.method == 'POST':
         form = PaymentForm(request.POST)
         if form.is_valid():
             payment = form.save(commit=False)
             payment.client = client
             payment.save()
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            if expects_json:
                 html = render_to_string('clients/partials/payment_item.html', {'payment': payment})
-                return JsonResponse({'status': 'success', 'html': html, 'payment_id': payment.id})
+                return json_no_store({'status': 'success', 'html': html, 'payment_id': payment.id})
             messages.success(request, "Платёж успешно добавлен.")
             return redirect('clients:client_detail', pk=client.id)
         else:
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+            if expects_json:
+                return json_no_store({
+                    'status': 'error',
+                    'errors': form.errors,
+                    'message': 'Проверьте правильность заполнения формы.'
+                }, status=400)
 
     return redirect('clients:client_detail', pk=client.id)
 
@@ -248,21 +269,26 @@ def add_payment(request, client_id):
 @login_required
 def edit_payment(request, payment_id):
     if not request.user.is_staff:
-        return JsonResponse({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
+        return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
 
     payment = get_object_or_404(Payment, pk=payment_id)
+    expects_json = request_is_ajax(request)
     if request.method == 'POST':
         form = PaymentForm(request.POST, instance=payment)
         if form.is_valid():
             payment = form.save()
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            if expects_json:
                 html = render_to_string('clients/partials/payment_item.html', {'payment': payment})
-                return JsonResponse({'status': 'success', 'html': html, 'payment_id': payment.id})
+                return json_no_store({'status': 'success', 'html': html, 'payment_id': payment.id})
             messages.success(request, "Платёж успешно обновлён.")
             return redirect('clients:client_detail', pk=payment.client.id)
         else:
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+            if expects_json:
+                return json_no_store({
+                    'status': 'error',
+                    'errors': form.errors,
+                    'message': 'Проверьте правильность заполнения формы.'
+                }, status=400)
 
     return redirect('clients:client_detail', pk=payment.client.id)
 
@@ -270,14 +296,15 @@ def edit_payment(request, payment_id):
 @login_required
 def delete_payment(request, payment_id):
     if not request.user.is_staff:
-        return JsonResponse({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
+        return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
 
     payment = get_object_or_404(Payment, pk=payment_id)
     client_id = payment.client.id
+    expects_json = request_is_ajax(request)
     if request.method == 'POST':
         payment.delete()
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            return JsonResponse({'status': 'success'})
+        if expects_json:
+            return json_no_store({'status': 'success'})
         messages.success(request, "Платёж успешно удалён.")
     return redirect('clients:client_detail', pk=client_id)
 
@@ -384,16 +411,17 @@ def client_print_view(request, pk):
 def grant_checklist_access(request, pk):
     """Предоставляет клиенту доступ к чеклисту. Поддерживает AJAX."""
     if not request.user.is_staff:
-        return JsonResponse({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
+        return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
 
     client = get_object_or_404(Client, pk=pk)
+    expects_json = request_is_ajax(request)
     if request.method == 'POST':
         client.has_checklist_access = True
         client.save()
 
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        if expects_json:
             html = render_to_string('clients/partials/access_management_block.html', {'client': client})
-            return JsonResponse({'status': 'success', 'html': html})
+            return json_no_store({'status': 'success', 'html': html})
 
         messages.success(request, f"Доступ для клиента {client} предоставлен!")
     return redirect('clients:client_detail', pk=pk)
@@ -404,24 +432,24 @@ def client_status_api(request, pk):
     """Возвращает актуальный чеклист клиента в формате JSON для 'живого' обновления."""
     client = get_object_or_404(Client, pk=pk)
     if not request.user.is_staff:
-        return JsonResponse({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
+        return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
 
     checklist_html = render_to_string('clients/partials/document_checklist.html', {
         'document_status_list': client.get_document_checklist(),
         'client': client
     })
-    return JsonResponse({'status': 'success', 'checklist_html': checklist_html})
+    return json_no_store({'status': 'success', 'checklist_html': checklist_html})
 
 
 @login_required
 def client_overview_partial(request, pk):
     """Возвращает HTML со сводной информацией о клиенте для автообновления на странице сотрудника."""
     if not request.user.is_staff:
-        return JsonResponse({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
+        return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
 
     client = get_object_or_404(Client, pk=pk)
     overview_html = render_to_string('clients/partials/client_overview.html', {'client': client}, request=request)
-    return JsonResponse({'status': 'success', 'html': overview_html})
+    return json_no_store({'status': 'success', 'html': overview_html})
 
 
 # --- НАПОМИНАНИЯ (REMindERS) ---
@@ -535,10 +563,12 @@ def client_checklist_partial(request, pk):
         return HttpResponseForbidden()
     client = get_object_or_404(Client, pk=pk)
     document_status_list = client.get_document_checklist()
-    return render(request, 'clients/partials/document_checklist.html', {
+    response = render(request, 'clients/partials/document_checklist.html', {
         'client': client,
         'document_status_list': document_status_list
     })
+    response['Cache-Control'] = 'no-store'
+    return response
 
 
 def get_price_for_service(request, service_value):
@@ -549,4 +579,4 @@ def get_price_for_service(request, service_value):
     }
     # Находим цену по ключу. Если ключа нет, вернется 0.00
     price = prices.get(service_value, 0.00)
-    return JsonResponse({'price': price})
+    return json_no_store({'price': price})
