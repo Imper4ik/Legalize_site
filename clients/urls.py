@@ -30,6 +30,7 @@ urlpatterns = [
     path('document/<int:doc_id>/toggle-verification/', views.toggle_document_verification,
          name='toggle_document_verification'),
     path('<int:pk>/checklist-partial/', views.client_checklist_partial, name='client_checklist_partial'),
+    path('<int:pk>/overview-partial/', views.client_overview_partial, name='client_overview_partial'),
 
     # URL для работы с платежами
     path('client/<int:client_id>/payments/add/', views.add_payment, name='add_payment'),
