@@ -4,25 +4,8 @@
 {% block title %}{% blocktranslate with client_name=client.first_name %}Детали клиента: {{ client_name }}{% endblocktranslate %}{% endblock %}
 
 {% block content %}
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>{{ client.first_name }} {{ client.last_name }}</h1>
-    <div>
-        <a href="{% url 'clients:client_print' pk=client.pk %}" class="btn btn-secondary me-2">{% translate "Печать" %}</a>
-        <a href="{% url 'clients:client_edit' client.pk %}" class="btn btn-primary">{% translate "Редактировать данные" %}</a>
-    </div>
-  </div>
-
-  <div class="card mb-4 shadow-sm">
-    <div class="card-body">
-        <p><strong>{% translate "Номер дела" %}:</strong> <span class="fs-5 text-primary"><strong>{{ client.case_number|default:_("Не указан") }}</strong></span></p>
-        <p><strong>Email:</strong> {{ client.email }}</p>
-        <p><strong>{% translate "Телефон" %}:</strong> {{ client.phone }}</p>
-        <p><strong>{% translate "Цель подачи" %}:</strong> {{ client.get_application_purpose_display }}</p>
-        <p><strong>{% translate "Основание пребывания" %}:</strong> {{ client.basis_of_stay|default:_("Не указано") }}</p>
-        {% if client.legal_basis_end_date %}
-            <p><strong>{% translate "Дата окончания основания" %}:</strong> <span class="fw-bold">{{ client.legal_basis_end_date|date:"d.m.Y" }}</span></p>
-        {% endif %}
-    </div>
+  <div id="client-overview" data-refresh-url="{% url 'clients:client_overview_partial' client.pk %}">
+    {% include 'clients/partials/client_overview.html' with client=client %}
   </div>
 
   <div class="card border-primary mb-4 shadow">
@@ -51,7 +34,7 @@
   <hr>
 
   <h2>{% translate "Чеклист документов" %}</h2>
-  <div class="accordion" id="documentAccordion">
+  <div class="accordion" id="documentAccordion" data-refresh-url="{% url 'clients:client_checklist_partial' client.pk %}">
       {% include 'clients/partials/document_checklist.html' with document_status_list=document_status_list client=client %}
   </div>
 
@@ -134,5 +117,137 @@
             });
         }
     });
-  </script>  
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        function buildUrl(url) {
+            if (!url) {
+                return url;
+            }
+            try {
+                return new URL(url, window.location.origin).toString();
+            } catch (error) {
+                console.error('Не удалось разобрать URL', url, error);
+                return url;
+            }
+        }
+
+        const refreshers = [];
+
+        const overviewContainer = document.getElementById('client-overview');
+        if (overviewContainer) {
+            const overviewUrl = buildUrl(overviewContainer.dataset.refreshUrl);
+            if (overviewUrl) {
+                let overviewFetching = false;
+
+                const refreshOverview = async () => {
+                    if (overviewFetching) {
+                        return;
+                    }
+                    overviewFetching = true;
+                    try {
+                        const response = await fetch(overviewUrl, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            credentials: 'same-origin',
+                            cache: 'no-store'
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}`);
+                        }
+
+                        const payload = await response.json();
+                        if (payload && payload.status === 'success' && typeof payload.html === 'string') {
+                            overviewContainer.innerHTML = payload.html;
+                        }
+                    } catch (error) {
+                        console.error('Ошибка при обновлении данных клиента:', error);
+                    } finally {
+                        overviewFetching = false;
+                    }
+                };
+
+                refreshers.push(refreshOverview);
+            }
+        }
+
+        const accordion = document.getElementById('documentAccordion');
+        if (!accordion) {
+            if (refreshers.length) {
+                refreshers.forEach(fn => fn());
+                setInterval(() => refreshers.forEach(fn => fn()), 8000);
+            }
+            return;
+        }
+
+        const refreshUrl = buildUrl(accordion.dataset.refreshUrl);
+        if (!refreshUrl) {
+            if (refreshers.length) {
+                refreshers.forEach(fn => fn());
+                setInterval(() => refreshers.forEach(fn => fn()), 8000);
+            }
+            return;
+        }
+
+        function restoreExpandedPanels(previouslyExpandedIds) {
+            previouslyExpandedIds.forEach(id => {
+                const collapseEl = accordion.querySelector(`#${id}`);
+                if (collapseEl) {
+                    const collapseInstance = bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
+                    collapseInstance.show();
+                    const triggerButton = accordion.querySelector(`[data-bs-target="#${id}"]`);
+                    if (triggerButton) {
+                        triggerButton.classList.remove('collapsed');
+                        triggerButton.setAttribute('aria-expanded', 'true');
+                    }
+                }
+            });
+        }
+
+        let isFetching = false;
+
+        async function refreshChecklist() {
+            if (isFetching) {
+                return;
+            }
+            if (document.body.classList.contains('modal-open')) {
+                return;
+            }
+            isFetching = true;
+            const expandedPanels = Array.from(accordion.querySelectorAll('.accordion-collapse.show')).map(panel => panel.id);
+
+            try {
+                const response = await fetch(refreshUrl, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin',
+                    cache: 'no-store'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const html = await response.text();
+                const tempWrapper = document.createElement('div');
+                tempWrapper.innerHTML = html.trim();
+                accordion.innerHTML = tempWrapper.innerHTML;
+                restoreExpandedPanels(expandedPanels);
+            } catch (error) {
+                console.error('Ошибка при обновлении чеклиста клиента:', error);
+            } finally {
+                isFetching = false;
+            }
+        }
+
+        refreshers.push(refreshChecklist);
+
+        refreshers.forEach(fn => fn());
+        setInterval(() => refreshers.forEach(fn => fn()), 8000);
+    });
+  </script>
 {% endblock %}
