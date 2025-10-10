@@ -1,10 +1,14 @@
 # legalize_site/settings.py
 
 from pathlib import Path
+import importlib.util
 from django.utils.translation import gettext_lazy as _
 from django.urls import reverse_lazy
 import dj_database_url
 import os
+
+
+WHITENOISE_AVAILABLE = importlib.util.find_spec('whitenoise') is not None
 
 
 # --- БАЗОВЫЕ НАСТРОЙКИ ---
@@ -29,7 +33,6 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
     'clients',
     'portal',
@@ -41,9 +44,15 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'anymail',
 ]
+if WHITENOISE_AVAILABLE:
+    INSTALLED_APPS.insert(INSTALLED_APPS.index('django.contrib.staticfiles'), 'whitenoise.runserver_nostatic')
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+]
+if WHITENOISE_AVAILABLE:
+    MIDDLEWARE.append('whitenoise.middleware.WhiteNoiseMiddleware')
+MIDDLEWARE += [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -99,7 +108,8 @@ USE_TZ = True
 # --- СТАТИКА И МЕДИА (НАСТРОЕНО ДЛЯ RENDER С WHITENOISE) ---
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+if WHITENOISE_AVAILABLE:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 

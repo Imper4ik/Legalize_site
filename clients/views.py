@@ -413,6 +413,17 @@ def client_status_api(request, pk):
     return JsonResponse({'status': 'success', 'checklist_html': checklist_html})
 
 
+@login_required
+def client_overview_partial(request, pk):
+    """Возвращает HTML со сводной информацией о клиенте для автообновления на странице сотрудника."""
+    if not request.user.is_staff:
+        return JsonResponse({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
+
+    client = get_object_or_404(Client, pk=pk)
+    overview_html = render_to_string('clients/partials/client_overview.html', {'client': client}, request=request)
+    return JsonResponse({'status': 'success', 'html': overview_html})
+
+
 # --- НАПОМИНАНИЯ (REMindERS) ---
 @login_required
 def document_reminder_list(request):
