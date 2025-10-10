@@ -58,7 +58,7 @@
               {{ client.basis_of_stay|default:"—" }}
               {% if client.legal_basis_end_date %}
                 <br>
-                <small class="text-muted">{% blocktranslate with date=client.legal_basis_end_date|date:"d.m.Y" %}до {{ date }}{% endblocktranslate %}</small>
+                <small class="text-muted">{% blocktrans with date=client.legal_basis_end_date|date:"d.m.Y" %}до {{ date }}{% endblocktrans %}</small>
               {% endif %}
             </td>
             <td style="background-color: #e7f3ff;">
