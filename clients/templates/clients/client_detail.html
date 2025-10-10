@@ -121,6 +121,11 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const accordion = document.getElementById('documentAccordion');
+        if (!accordion) {
+            return;
+        }
+
         function buildUrl(url) {
             if (!url) {
                 return url;
@@ -133,62 +138,8 @@
             }
         }
 
-        const refreshers = [];
-
-        const overviewContainer = document.getElementById('client-overview');
-        if (overviewContainer) {
-            const overviewUrl = buildUrl(overviewContainer.dataset.refreshUrl);
-            if (overviewUrl) {
-                let overviewFetching = false;
-
-                const refreshOverview = async () => {
-                    if (overviewFetching) {
-                        return;
-                    }
-                    overviewFetching = true;
-                    try {
-                        const response = await fetch(overviewUrl, {
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            },
-                            credentials: 'same-origin',
-                            cache: 'no-store'
-                        });
-
-                        if (!response.ok) {
-                            throw new Error(`HTTP ${response.status}`);
-                        }
-
-                        const payload = await response.json();
-                        if (payload && payload.status === 'success' && typeof payload.html === 'string') {
-                            overviewContainer.innerHTML = payload.html;
-                        }
-                    } catch (error) {
-                        console.error('Ошибка при обновлении данных клиента:', error);
-                    } finally {
-                        overviewFetching = false;
-                    }
-                };
-
-                refreshers.push(refreshOverview);
-            }
-        }
-
-        const accordion = document.getElementById('documentAccordion');
-        if (!accordion) {
-            if (refreshers.length) {
-                refreshers.forEach(fn => fn());
-                setInterval(() => refreshers.forEach(fn => fn()), 8000);
-            }
-            return;
-        }
-
         const refreshUrl = buildUrl(accordion.dataset.refreshUrl);
         if (!refreshUrl) {
-            if (refreshers.length) {
-                refreshers.forEach(fn => fn());
-                setInterval(() => refreshers.forEach(fn => fn()), 8000);
-            }
             return;
         }
 
@@ -244,10 +195,8 @@
             }
         }
 
-        refreshers.push(refreshChecklist);
-
-        refreshers.forEach(fn => fn());
-        setInterval(() => refreshers.forEach(fn => fn()), 8000);
+        refreshChecklist();
+        setInterval(refreshChecklist, 8000);
     });
   </script>
 {% endblock %}
