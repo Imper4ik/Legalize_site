@@ -49,6 +49,14 @@ class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     def get_object(self, queryset=None):
         return get_object_or_404(Client, user=self.request.user)
 
+def _is_ajax(request):
+    """Определяет, является ли запрос AJAX/FETCH, даже если заголовок записан иначе."""
+    return (
+        request.headers.get('x-requested-with') == 'XMLHttpRequest'
+        or request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest'
+    )
+
+
 @login_required
 def portal_document_upload(request, doc_type):
     client = get_object_or_404(Client, user=request.user)
@@ -63,7 +71,7 @@ def portal_document_upload(request, doc_type):
             document.document_type = doc_type
             document.save()
 
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            if _is_ajax(request):
                 html = render_to_string('portal/partials/document_item.html', {'doc': document}, request=request)
                 return JsonResponse({
                     'status': 'success',
@@ -73,7 +81,7 @@ def portal_document_upload(request, doc_type):
                     'message': _('Файл успешно загружен и ожидает проверки.')
                 })
         else:
-            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            if _is_ajax(request):
                 return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
 
     return redirect('portal:profile_detail')
