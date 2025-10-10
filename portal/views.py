@@ -13,6 +13,7 @@ from clients.models import Client
 from clients.forms import DocumentUploadForm
 from .forms import ProfileEditForm, ClientApplicationForm
 from .models import ClientApplication
+from legalize_site.utils.http import request_is_ajax
 
 
 class ProfileDetailView(LoginRequiredMixin, DetailView):
@@ -63,6 +64,8 @@ def portal_document_upload(request, doc_type):
     if not client.has_checklist_access:
         return JsonResponse({'status': 'error', 'message': _('Доступ запрещен')}, status=403)
 
+    expects_json = request_is_ajax(request)
+
     if request.method == 'POST':
         form = DocumentUploadForm(request.POST, request.FILES)
         if form.is_valid():
@@ -73,13 +76,15 @@ def portal_document_upload(request, doc_type):
 
             if _is_ajax(request):
                 html = render_to_string('portal/partials/document_item.html', {'doc': document}, request=request)
-                return JsonResponse({
+                response = JsonResponse({
                     'status': 'success',
                     'html': html,
                     'doc_id': document.id,
                     'doc_type': doc_type,
                     'message': _('Файл успешно загружен и ожидает проверки.')
                 })
+                response['Cache-Control'] = 'no-store'
+                return response
         else:
             if _is_ajax(request):
                 return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
@@ -91,21 +96,27 @@ def portal_document_upload(request, doc_type):
 def checklist_status_api(request):
     client = get_object_or_404(Client, user=request.user)
     if not client.has_checklist_access:
-        return JsonResponse({'status': 'no_access', 'message': _('Доступ к чеклисту документов не предоставлен.')})
+        response = JsonResponse({'status': 'no_access', 'message': _('Доступ к чеклисту документов не предоставлен.')})
+        response['Cache-Control'] = 'no-store'
+        return response
 
     verification_statuses = {
         str(doc.id): doc.verified
         for doc in client.documents.all()
     }
 
-    return JsonResponse({'status': 'success', 'statuses': verification_statuses})
+    response = JsonResponse({'status': 'success', 'statuses': verification_statuses})
+    response['Cache-Control'] = 'no-store'
+    return response
 
 
 @login_required
 def portal_checklist_partial(request):
     client = get_object_or_404(Client, user=request.user)
     if not client.has_checklist_access:
-        return JsonResponse({'status': 'no_access', 'message': _('Доступ к чеклисту документов не предоставлен.')}, status=403)
+        response = JsonResponse({'status': 'no_access', 'message': _('Доступ к чеклисту документов не предоставлен.')}, status=403)
+        response['Cache-Control'] = 'no-store'
+        return response
 
     document_status_list = client.get_document_checklist()
     html = render_to_string(
@@ -114,7 +125,9 @@ def portal_checklist_partial(request):
         request=request
     )
 
-    return JsonResponse({'status': 'success', 'html': html})
+    response = JsonResponse({'status': 'success', 'html': html})
+    response['Cache-Control'] = 'no-store'
+    return response
 
 
 @login_required

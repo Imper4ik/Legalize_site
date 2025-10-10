@@ -45,7 +45,19 @@ document.addEventListener('DOMContentLoaded', function() {
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
     const accordion = document.getElementById('documentAccordion');
 
-    function buildUrl(url) {
+    const JS_MESSAGES = document.getElementById('js-messages');
+    const parsedMessages = JS_MESSAGES ? JSON.parse(JS_MESSAGES.textContent) : {};
+    const UPLOADED_STATUS = parsedMessages.uploaded_status || 'Загружено';
+    const LOADING_MESSAGE = parsedMessages.pending_verification_status ? `${parsedMessages.pending_verification_status}...` : 'Загрузка...';
+
+    const escapeSelector = (value) => {
+        if (window.CSS && CSS.escape) {
+            return CSS.escape(value);
+        }
+        return value.replace(/[\s"'\\:#.\[\],>~+*=]/g, '\\$&');
+    };
+
+    const buildUrl = (url) => {
         if (!url) {
             return url;
         }
@@ -55,42 +67,164 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Не удалось разобрать URL', url, error);
             return url;
         }
+    };
+
+    function showFeedback(docCode, message, level = 'info') {
+        if (!accordion || !docCode) {
+            return;
+        }
+        const feedback = accordion.querySelector(`.upload-feedback[data-doc-code="${escapeSelector(docCode)}"]`);
+        if (!feedback) {
+            return;
+        }
+        feedback.classList.remove('text-success', 'text-danger', 'text-warning', 'text-muted');
+        if (level === 'success') {
+            feedback.classList.add('text-success');
+        } else if (level === 'error') {
+            feedback.classList.add('text-danger');
+        } else {
+            feedback.classList.add('text-muted');
+        }
+        feedback.textContent = message;
     }
 
-    const JS_MESSAGES = document.getElementById('js-messages');
-    const parsedMessages = JS_MESSAGES ? JSON.parse(JS_MESSAGES.textContent) : {};
-    const UPLOADED_STATUS = parsedMessages.uploaded_status || 'Загружено';
+    function setUploadingState(button, isUploading) {
+        if (!button) {
+            return;
+        }
+        const spinner = button.querySelector('.spinner-border');
+        const textSpan = button.querySelector('.button-text');
+        if (spinner) {
+            spinner.classList.toggle('d-none', !isUploading);
+        }
+        if (textSpan) {
+            textSpan.classList.toggle('opacity-75', isUploading);
+        }
+        button.disabled = isUploading;
+    }
+
+    function formatErrors(errors) {
+        if (!errors) {
+            return '';
+        }
+        try {
+            if (Array.isArray(errors)) {
+                return errors.join(' ');
+            }
+            return Object.values(errors).flat().join(' ');
+        } catch (err) {
+            return typeof errors === 'string' ? errors : '';
+        }
+    }
 
     if (accordion) {
-        accordion.addEventListener('submit', function(e) {
-            if (e.target.classList.contains('upload-form')) {
-                e.preventDefault();
+        const partialUrl = buildUrl("{% url 'portal:document_checklist_partial' %}");
 
-                const form = e.target;
-                const formData = new FormData(form);
-                const docCode = form.action.split('/').filter(Boolean).pop();
-
-                const resolvedAction = buildUrl(form.action);
-
-                // Отправляем запрос по безопасно собранному URL
-                const headers = {
-                    'X-Requested-With': 'XMLHttpRequest'
-                };
-                if (csrftoken) {
-                    headers['X-CSRFToken'] = csrftoken;
+        const restoreExpandedPanels = (previouslyExpandedIds) => {
+            previouslyExpandedIds.forEach(id => {
+                const collapseEl = accordion.querySelector(`#${id}`);
+                if (collapseEl) {
+                    const collapseInstance = bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
+                    collapseInstance.show();
+                    const triggerButton = accordion.querySelector(`[data-bs-target="#${id}"]`);
+                    if (triggerButton) {
+                        triggerButton.classList.remove('collapsed');
+                        triggerButton.setAttribute('aria-expanded', 'true');
+                    }
                 }
+            });
+        };
 
-                fetch(resolvedAction, {
-                    method: 'POST',
-                    headers,
-                    body: formData,
-                    credentials: 'same-origin'
-                })
+        let isRefreshing = false;
+
+        const refreshChecklistFromServer = (force = false) => {
+            if (!partialUrl || isRefreshing) {
+                return;
+            }
+
+            if (!force) {
+                const hasPendingUpload = Array.from(accordion.querySelectorAll('.upload-form input[type="file"]')).some(input => input.files && input.files.length > 0);
+                if (hasPendingUpload) {
+                    return;
+                }
+            }
+
+            isRefreshing = true;
+            const expandedPanels = Array.from(accordion.querySelectorAll('.accordion-collapse.show')).map(panel => panel.id);
+
+            fetch(partialUrl, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin',
+                cache: 'no-store'
+            })
                 .then(response => {
                     if (!response.ok) {
-                        return response.json().then(err => Promise.reject(err));
+                        throw new Error(`HTTP ${response.status}`);
                     }
                     return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success' && typeof data.html === 'string') {
+                        const tempWrapper = document.createElement('div');
+                        tempWrapper.innerHTML = data.html.trim();
+                        accordion.innerHTML = tempWrapper.innerHTML;
+                        restoreExpandedPanels(expandedPanels);
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при обновлении списка документов:', error);
+                })
+                .finally(() => {
+                    isRefreshing = false;
+                });
+        };
+
+        accordion.addEventListener('submit', function(e) {
+            const form = e.target.closest('.upload-form');
+            if (!form) {
+                return;
+            }
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            const docCode = form.dataset.docCode || form.action.split('/').filter(Boolean).pop();
+            const submitButton = form.querySelector('button[type="submit"]');
+
+            const resolvedAction = buildUrl(form.action);
+
+            const headers = {
+                'X-Requested-With': 'XMLHttpRequest'
+            };
+            if (csrftoken) {
+                headers['X-CSRFToken'] = csrftoken;
+            }
+
+            setUploadingState(submitButton, true);
+            showFeedback(docCode, LOADING_MESSAGE, 'info');
+
+            fetch(resolvedAction, {
+                method: 'POST',
+                headers,
+                body: formData,
+                credentials: 'same-origin',
+                cache: 'no-store'
+            })
+                .then(response => {
+                    const contentType = response.headers.get('Content-Type') || '';
+                    if (!response.ok) {
+                        if (contentType.includes('application/json')) {
+                            return response.json().then(err => Promise.reject(err));
+                        }
+                        return response.text().then(text => Promise.reject({ status: 'error', message: text }));
+                    }
+
+                    if (contentType.includes('application/json')) {
+                        return response.json();
+                    }
+
+                    return response.text().then(text => ({ status: 'html', body: text }));
                 })
                 .then(data => {
                     if (data.status === 'success') {
@@ -100,7 +234,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         let currentCount = 0;
                         if (docList) {
                             const noDocsMessageEl = docList.querySelector('.no-docs-message');
-                            if (noDocsMessageEl) noDocsMessageEl.remove();
+                            if (noDocsMessageEl) {
+                                noDocsMessageEl.remove();
+                            }
 
                             const tempDiv = document.createElement('div');
                             tempDiv.innerHTML = data.html;
@@ -122,81 +258,27 @@ document.addEventListener('DOMContentLoaded', function() {
                             badge.className = 'badge bg-success ms-3';
                         }
                         form.reset();
-                        alert(data.message || 'Документ успешно загружен!');
-                        refreshChecklistFromServer();
+                        showFeedback(docCode, data.message || (parsedMessages.uploaded_status || 'Документ успешно загружен!'), 'success');
+                        refreshChecklistFromServer(true);
+                    } else if (data.status === 'html') {
+                        window.location.reload();
                     } else {
-                        alert('Ошибка загрузки документа: ' + (data.message || JSON.stringify(data.errors)));
+                        const message = data.message || formatErrors(data.errors) || 'Ошибка загрузки документа.';
+                        showFeedback(docCode, message, 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Ошибка при загрузке файла:', error);
-                    alert('Произошла ошибка при загрузке файла.');
+                    const message = error?.message || formatErrors(error?.errors) || 'Произошла ошибка при загрузке файла.';
+                    showFeedback(docCode, message, 'error');
+                })
+                .finally(() => {
+                    setUploadingState(submitButton, false);
                 });
-            }
         });
 
-        const partialUrl = buildUrl("{% url 'portal:document_checklist_partial' %}");
-
-        function restoreExpandedPanels(previouslyExpandedIds) {
-            previouslyExpandedIds.forEach(id => {
-                const collapseEl = accordion.querySelector(`#${id}`);
-                if (collapseEl) {
-                    const collapseInstance = bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
-                    collapseInstance.show();
-                    const triggerButton = accordion.querySelector(`[data-bs-target="#${id}"]`);
-                    if (triggerButton) {
-                        triggerButton.classList.remove('collapsed');
-                        triggerButton.setAttribute('aria-expanded', 'true');
-                    }
-                }
-            });
-        }
-
-        let isRefreshing = false;
-
-        function refreshChecklistFromServer() {
-            if (!partialUrl || isRefreshing) {
-                return;
-            }
-
-            const hasPendingUpload = Array.from(accordion.querySelectorAll('.upload-form input[type="file"]')).some(input => input.files && input.files.length > 0);
-            if (hasPendingUpload) {
-                return;
-            }
-
-            isRefreshing = true;
-            const expandedPanels = Array.from(accordion.querySelectorAll('.accordion-collapse.show')).map(panel => panel.id);
-
-            fetch(partialUrl, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.status === 'success' && typeof data.html === 'string') {
-                    const tempWrapper = document.createElement('div');
-                    tempWrapper.innerHTML = data.html.trim();
-                    accordion.innerHTML = tempWrapper.innerHTML;
-                    restoreExpandedPanels(expandedPanels);
-                }
-            })
-            .catch(error => {
-                console.error('Ошибка при обновлении списка документов:', error);
-            })
-            .finally(() => {
-                isRefreshing = false;
-            });
-        }
-
         refreshChecklistFromServer();
-        setInterval(refreshChecklistFromServer, 8000);
+        setInterval(() => refreshChecklistFromServer(), 8000);
     }
 });
 </script>
