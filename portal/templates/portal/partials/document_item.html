@@ -1,17 +1,25 @@
 {# portal/templates/portal/partials/document_item.html #}
 {% load i18n %}
 <li class="list-group-item d-flex justify-content-between align-items-center" data-doc-id="{{ doc.id }}">
-  <div>
-    <i class="bi bi-file-earmark-check text-success"></i>
-    <a href="{{ doc.file.url }}" target="_blank" class="ms-2">
-      {% blocktrans with date=doc.uploaded_at|date:"d.m.Y" %}Файл от {{ date }}{% endblocktrans %}
-    </a>
+  <div class="d-flex align-items-center">
+    <i class="bi bi-file-earmark-check text-success" aria-hidden="true"></i>
+
+    {% if doc.file %}
+      <a href="{{ doc.file.url }}" target="_blank" rel="noopener" class="ms-2 text-decoration-none">
+        {% blocktrans with date=doc.uploaded_at|date:"d.m.Y" %}Файл от {{ date }}{% endblocktrans %}
+      </a>
+    {% else %}
+      <span class="ms-2 text-muted">
+        {% blocktrans with date=doc.uploaded_at|date:"d.m.Y" %}Файл от {{ date }}{% endblocktrans %}
+      </span>
+    {% endif %}
   </div>
+
   <span class="badge {% if doc.verified %}bg-success{% else %}bg-warning text-dark{% endif %} verification-badge">
     {% if doc.verified %}
-      {% translate "Проверен" %}
+      {% trans "Проверен" %}
     {% else %}
-      {% translate "Ожидает проверки" %}
+      {% trans "Ожидает проверки" %}
     {% endif %}
   </span>
 </li>
