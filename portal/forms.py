@@ -4,6 +4,7 @@ from clients.models import Client, Document
 # portal/forms.py
 from django import forms
 from .models import ClientApplication
+from clients.models import Document
 
 
 class ClientApplicationForm(forms.ModelForm):

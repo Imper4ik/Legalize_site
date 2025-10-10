@@ -45,6 +45,7 @@ def ensure_site_exists(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
+        ("sites", "0002_alter_domain_unique"),
         ("portal", "0001_initial"),
     ]
 
