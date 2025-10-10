@@ -1,13 +1,16 @@
 # portal/views.py (ФИНАЛЬНАЯ ВЕРСИЯ С ЗАЩИТОЙ ОТ ОШИБКИ)
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse_lazy
-from django.views.generic import DetailView, UpdateView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import JsonResponse
-from django.template.loader import render_to_string
-from django.utils.translation import gettext as _
+from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import RequestDataTooBig
+from django.http import JsonResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import render_to_string
+from django.urls import reverse_lazy
+from django.utils.translation import gettext as _
+from django.views.generic import DetailView, UpdateView
 
 from clients.models import Client
 from clients.forms import DocumentUploadForm
@@ -58,6 +61,34 @@ def _is_ajax(request):
     )
 
 
+def _format_upload_limit():
+    """Возвращает максимально допустимый размер файла в МБ для отображения пользователю."""
+    limit = getattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE', None)
+    if not limit:
+        return '2.5'
+
+    size_mb = limit / (1024 * 1024)
+    if float(size_mb).is_integer():
+        return str(int(size_mb))
+    return f"{size_mb:.1f}"
+
+
+def _file_too_large_response(request, wants_json):
+    message = _('Размер файла слишком большой. Максимум %(size)s МБ.') % {'size': _format_upload_limit()}
+
+    if wants_json:
+        response = JsonResponse({
+            'status': 'error',
+            'message': message,
+            'code': 'file_too_large'
+        }, status=413)
+        response['Cache-Control'] = 'no-store'
+        return response
+
+    messages.error(request, message)
+    return redirect('portal:profile_detail')
+
+
 @login_required
 def portal_document_upload(request, doc_type):
     client = get_object_or_404(Client, user=request.user)
@@ -65,16 +96,26 @@ def portal_document_upload(request, doc_type):
         return JsonResponse({'status': 'error', 'message': _('Доступ запрещен')}, status=403)
 
     expects_json = request_is_ajax(request)
+    wants_json = _is_ajax(request) or expects_json
 
     if request.method == 'POST':
-        form = DocumentUploadForm(request.POST, request.FILES)
+        try:
+            form = DocumentUploadForm(request.POST, request.FILES)
+        except RequestDataTooBig:
+            return _file_too_large_response(request, wants_json)
+
+        uploaded_file = request.FILES.get('file')
+        max_bytes = getattr(settings, 'DATA_UPLOAD_MAX_MEMORY_SIZE', None)
+        if uploaded_file and max_bytes and uploaded_file.size > max_bytes:
+            return _file_too_large_response(request, wants_json)
+
         if form.is_valid():
             document = form.save(commit=False)
             document.client = client
             document.document_type = doc_type
             document.save()
 
-            if _is_ajax(request):
+            if wants_json:
                 html = render_to_string('portal/partials/document_item.html', {'doc': document}, request=request)
                 response = JsonResponse({
                     'status': 'success',
@@ -86,8 +127,10 @@ def portal_document_upload(request, doc_type):
                 response['Cache-Control'] = 'no-store'
                 return response
         else:
-            if _is_ajax(request):
-                return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+            if wants_json:
+                response = JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
+                response['Cache-Control'] = 'no-store'
+                return response
 
     return redirect('portal:profile_detail')
 

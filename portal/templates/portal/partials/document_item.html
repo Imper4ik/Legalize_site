@@ -4,7 +4,7 @@
   <div>
     <i class="bi bi-file-earmark-check text-success"></i>
     <a href="{{ doc.file.url }}" target="_blank" class="ms-2">
-      {% blocktranslate with date=doc.uploaded_at|date:"d.m.Y" %}Файл от {{ date }}{% endblocktranslate %}
+      {% blocktrans with date=doc.uploaded_at|date:"d.m.Y" %}Файл от {{ date }}{% endblocktrans %}
     </a>
   </div>
   <span class="badge {% if doc.verified %}bg-success{% else %}bg-warning text-dark{% endif %} verification-badge">
