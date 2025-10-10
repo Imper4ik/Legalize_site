@@ -24,49 +24,7 @@
       {% if document_status_list %}
         <p>{% translate "Ниже представлен ваш персональный список документов для загрузки." %}</p>
         <div class="accordion" id="documentAccordion">
-          {% for item in document_status_list %}
-            <div class="accordion-item">
-              <h2 class="accordion-header" id="heading{{ item.code }}">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ item.code }}">
-                  {{ item.name }}
-                  <span class="badge {% if item.is_uploaded %}bg-success{% else %}bg-danger{% endif %} ms-3" id="badge-{{ item.code }}">
-                    {% if item.is_uploaded %}
-                        {% translate "Загружено" %} ({{ item.documents|length }})
-                    {% else %}
-                        {% translate "Требуется" %}
-                    {% endif %}
-                  </span>
-                </button>
-              </h2>
-              <div id="collapse{{ item.code }}" class="accordion-collapse collapse" data-bs-parent="#documentAccordion">
-                <div class="accordion-body">
-                  <ul class="list-group mb-3" id="doc-list-{{ item.code }}">
-                    {% for doc in item.documents %}
-                      <li class="list-group-item d-flex justify-content-between align-items-center" data-doc-id="{{ doc.id }}">
-                          <div>
-                            <i class="bi bi-file-earmark-check text-success"></i>
-                            <a href="{{ doc.file.url }}" target="_blank" class="ms-2">{% blocktranslate with date=doc.uploaded_at|date:"d.m.Y" %}Файл от {{ date }}{% endblocktranslate %}</a>
-                          </div>
-                          <span class="badge {% if doc.verified %}bg-success{% else %}bg-warning text-dark{% endif %} verification-badge">
-                            {% if doc.verified %}{% translate "Проверен" %}{% else %}{% translate "Ожидает проверки" %}{% endif %}
-                          </span>
-                      </li>
-                    {% empty %}
-                      <li class="list-group-item text-muted no-docs-message">{% translate "Вы еще не загрузили файлы этого типа." %}</li>
-                    {% endfor %}
-                  </ul>
-                  <hr>
-                  <p class="mb-2"><strong>{% translate "Загрузить новый файл" %}:</strong></p>
-                  <form action="{% url 'portal:portal_document_upload' item.code %}" method="post" enctype="multipart/form-data" class="upload-form">
-                    {% csrf_token %}
-                    <div class="mb-3"><input type="file" name="file" class="form-control" required></div>
-                    <div class="mb-3"><input type="date" name="expiry_date" class="form-control" title="{% translate 'Срок действия (если есть)' %}"></div>
-                    <button type="submit" class="btn btn-primary btn-sm">{% translate "Загрузить" %}</button>
-                  </form>
-                </div>
-              </div>
-            </div>
-          {% endfor %}
+          {% include 'portal/partials/document_checklist_content.html' with document_status_list=document_status_list %}
         </div>
       {% else %}
         <div class="alert alert-info mb-0">
@@ -87,13 +45,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
     const accordion = document.getElementById('documentAccordion');
 
+    function buildUrl(url) {
+        if (!url) {
+            return url;
+        }
+        try {
+            return new URL(url, window.location.origin).toString();
+        } catch (error) {
+            console.error('Не удалось разобрать URL', url, error);
+            return url;
+        }
+    }
+
     const JS_MESSAGES = document.getElementById('js-messages');
-    const parsedMessages = JSON.parse(JS_MESSAGES.textContent);
-    const NO_DOCS_MESSAGE = parsedMessages.no_docs_message;
-    const VERIFIED_STATUS = parsedMessages.verified_status;
-    const PENDING_VERIFICATION_STATUS = parsedMessages.pending_verification_status;
-    const REQUIRED_STATUS = parsedMessages.required_status;
-    const UPLOADED_STATUS = parsedMessages.uploaded_status;
+    const parsedMessages = JS_MESSAGES ? JSON.parse(JS_MESSAGES.textContent) : {};
+    const UPLOADED_STATUS = parsedMessages.uploaded_status || 'Загружено';
 
     if (accordion) {
         accordion.addEventListener('submit', function(e) {
@@ -104,14 +70,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 const formData = new FormData(form);
                 const docCode = form.action.split('/').filter(Boolean).pop();
 
-                // ИСПРАВЛЕНИЕ 1: Используем new URL().pathname, чтобы получить относительный путь
-                fetch(new URL(form.action).pathname, {
+                const resolvedAction = buildUrl(form.action);
+
+                // Отправляем запрос по безопасно собранному URL
+                const headers = {
+                    'X-Requested-With': 'XMLHttpRequest'
+                };
+                if (csrftoken) {
+                    headers['X-CSRFToken'] = csrftoken;
+                }
+
+                fetch(resolvedAction, {
                     method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrftoken,
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    body: formData
+                    headers,
+                    body: formData,
+                    credentials: 'same-origin'
                 })
                 .then(response => {
                     if (!response.ok) {
@@ -124,6 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         const docList = document.getElementById(`doc-list-${docCode}`);
                         const badge = document.getElementById(`badge-${docCode}`);
 
+                        let currentCount = 0;
                         if (docList) {
                             const noDocsMessageEl = docList.querySelector('.no-docs-message');
                             if (noDocsMessageEl) noDocsMessageEl.remove();
@@ -132,17 +106,24 @@ document.addEventListener('DOMContentLoaded', function() {
                             tempDiv.innerHTML = data.html;
 
                             Array.from(tempDiv.children).forEach(child => {
-                                if (child.tagName === 'LI') docList.appendChild(child);
+                                if (child.tagName === 'LI') {
+                                    docList.appendChild(child);
+                                }
                             });
+                            currentCount = docList.querySelectorAll('li[data-doc-id]').length;
                         }
 
                         if (badge) {
-                            const currentCount = docList.querySelectorAll('li[data-doc-id]').length;
-                            badge.textContent = `${UPLOADED_STATUS} (${currentCount})`;
+                            if (currentCount === 0) {
+                                badge.textContent = UPLOADED_STATUS;
+                            } else {
+                                badge.textContent = `${UPLOADED_STATUS} (${currentCount})`;
+                            }
                             badge.className = 'badge bg-success ms-3';
                         }
                         form.reset();
                         alert(data.message || 'Документ успешно загружен!');
+                        refreshChecklistFromServer();
                     } else {
                         alert('Ошибка загрузки документа: ' + (data.message || JSON.stringify(data.errors)));
                     }
@@ -154,63 +135,68 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // LIVE UPDATE
-        setInterval(function() {
-            // ИСПРАВЛЕНИЕ 2: Также используем new URL().pathname для API запроса
-            const apiUrl = "{% url 'portal:checklist_status_api' %}";
-            fetch(new URL(apiUrl).pathname)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        const serverDocsStatus = data.statuses;
-                        const serverDocIds = Object.keys(serverDocsStatus);
+        const partialUrl = buildUrl("{% url 'portal:document_checklist_partial' %}");
 
-                        accordion.querySelectorAll('ul[id^="doc-list-"]').forEach(docList => {
-                            const docTypeCode = docList.id.replace('doc-list-', '');
-                            const badge = document.getElementById(`badge-${docTypeCode}`);
-                            let currentUploadedCount = 0;
-
-                            docList.querySelectorAll('li[data-doc-id]').forEach(li => {
-                                const docId = li.dataset.docId;
-                                if (serverDocIds.includes(docId)) {
-                                    currentUploadedCount++;
-                                    const isVerified = serverDocsStatus[docId];
-                                    const verificationBadge = li.querySelector('.verification-badge');
-                                    if (verificationBadge) {
-                                        if (isVerified) {
-                                            verificationBadge.textContent = VERIFIED_STATUS;
-                                            verificationBadge.className = 'badge bg-success verification-badge';
-                                        } else {
-                                            verificationBadge.textContent = PENDING_VERIFICATION_STATUS;
-                                            verificationBadge.className = 'badge bg-warning text-dark verification-badge';
-                                        }
-                                    }
-                                } else {
-                                    li.remove();
-                                }
-                            });
-
-                            if (badge) {
-                                if (currentUploadedCount === 0) {
-                                    badge.textContent = REQUIRED_STATUS;
-                                    badge.className = 'badge bg-danger ms-3';
-                                    if (!docList.querySelector('.no-docs-message')) {
-                                        docList.innerHTML = `<li class="list-group-item text-muted no-docs-message">${NO_DOCS_MESSAGE}</li>`;
-                                    }
-                                } else {
-                                    badge.textContent = `${UPLOADED_STATUS} (${currentUploadedCount})`;
-                                    badge.className = 'badge bg-success ms-3';
-                                    const noDocsMessageEl = docList.querySelector('.no-docs-message');
-                                    if (noDocsMessageEl) noDocsMessageEl.remove();
-                                }
-                            }
-                        });
+        function restoreExpandedPanels(previouslyExpandedIds) {
+            previouslyExpandedIds.forEach(id => {
+                const collapseEl = accordion.querySelector(`#${id}`);
+                if (collapseEl) {
+                    const collapseInstance = bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
+                    collapseInstance.show();
+                    const triggerButton = accordion.querySelector(`[data-bs-target="#${id}"]`);
+                    if (triggerButton) {
+                        triggerButton.classList.remove('collapsed');
+                        triggerButton.setAttribute('aria-expanded', 'true');
                     }
-                })
-                .catch(error => {
-                    console.error('Ошибка при получении статусов документов:', error);
-                });
-        }, 8000);
+                }
+            });
+        }
+
+        let isRefreshing = false;
+
+        function refreshChecklistFromServer() {
+            if (!partialUrl || isRefreshing) {
+                return;
+            }
+
+            const hasPendingUpload = Array.from(accordion.querySelectorAll('.upload-form input[type="file"]')).some(input => input.files && input.files.length > 0);
+            if (hasPendingUpload) {
+                return;
+            }
+
+            isRefreshing = true;
+            const expandedPanels = Array.from(accordion.querySelectorAll('.accordion-collapse.show')).map(panel => panel.id);
+
+            fetch(partialUrl, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success' && typeof data.html === 'string') {
+                    const tempWrapper = document.createElement('div');
+                    tempWrapper.innerHTML = data.html.trim();
+                    accordion.innerHTML = tempWrapper.innerHTML;
+                    restoreExpandedPanels(expandedPanels);
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка при обновлении списка документов:', error);
+            })
+            .finally(() => {
+                isRefreshing = false;
+            });
+        }
+
+        refreshChecklistFromServer();
+        setInterval(refreshChecklistFromServer, 8000);
     }
 });
 </script>
