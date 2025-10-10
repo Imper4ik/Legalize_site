@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktranslate with client_name=client.first_name %}Детали клиента: {{ client_name }}{% endblocktranslate %}{% endblock %}
+{% block title %}{% blocktrans with client_name=client.first_name %}Детали клиента: {{ client_name }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
   <div id="client-overview" data-refresh-url="{% url 'clients:client_overview_partial' client.pk %}">
