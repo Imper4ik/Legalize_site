@@ -7,7 +7,7 @@
   <h1>{% translate "Калькулятор выписки из банка" %}</h1>
   <p class="text-muted">
     {% translate "Введите данные, чтобы рассчитать итоговую сумму на счету." %}
-    {% blocktranslate with rate=eur_to_pln_rate %}Актуальный курс: <strong>1 EUR = {{ rate }} PLN</strong>{% endblocktranslate %}
+    {% blocktrans with rate=eur_to_pln_rate %}Актуальный курс: <strong>1 EUR = {{ rate }} PLN</strong>{% endblocktrans %}
   </p>
 
   <form method="post" class="mt-4">
@@ -131,9 +131,9 @@
                             <span class="fw-bold">{{ results.months_for_calc }} {% translate "мес." %}</span>
                         </div>
                         {% if results.is_capped %}
-                        <small class="text-muted d-block text-end">({% blocktranslate with real=results.total_months_real max=max_months_living %}реальный срок {{ real }} мес., но расчет ограничен максимумом в {{ max }} мес.{% endblocktranslate %})</small>
+                        <small class="text-muted d-block text-end">({% blocktrans with real=results.total_months_real max=max_months_living %}реальный срок {{ real }} мес., но расчет ограничен максимумом в {{ max }} мес.{% endblocktrans %})</small>
                         {% else %}
-                        <small class="text-muted d-block text-end">({% blocktranslate with real=results.total_months_real %}полный срок пребывания: {{ real }} мес.{% endblocktranslate %})</small>
+                        <small class="text-muted d-block text-end">({% blocktrans with real=results.total_months_real %}полный срок пребывания: {{ real }} мес.{% endblocktrans %})</small>
                         {% endif %}
                     </li>
                     <li class="list-group-item px-0">

@@ -7,7 +7,7 @@
         {{ item.name }}
         <span class="badge {% if item.is_uploaded %}bg-success{% else %}bg-danger{% endif %} ms-3" id="badge-{{ item.code }}">
           {% if item.is_uploaded %}
-            {% blocktranslate with count=item.documents|length %}Загружено ({{ count }}){% endblocktranslate %}
+            {% blocktrans with count=item.documents|length %}Загружено ({{ count }}){% endblocktrans %}
           {% else %}
             {% translate "Требуется" %}
           {% endif %}
