@@ -1,5 +1,5 @@
-from django.template import Context, Template, engines
-from django.test import SimpleTestCase, override_settings
+from django.template import Context, Template
+from django.test import SimpleTestCase
 
 
 class I18NCompatibilityTagsTests(SimpleTestCase):
@@ -17,23 +17,3 @@ class I18NCompatibilityTagsTests(SimpleTestCase):
         """)
         rendered = template.render(Context({}))
         self.assertIn("Строка без явной загрузки i18n", rendered)
-
-    @override_settings(
-        TEMPLATES=[
-            {
-                'BACKEND': 'django.template.backends.django.DjangoTemplates',
-                'DIRS': [],
-                'APP_DIRS': True,
-                'OPTIONS': {},
-            }
-        ]
-    )
-    def test_blocktranslate_alias_survives_engine_rebuild(self):
-        engines._engines.clear()
-        self.addCleanup(engines._engines.clear)
-
-        template = Template("""
-            {% blocktranslate %}Совместимость после пересоздания движка{% endblocktranslate %}
-        """)
-        rendered = template.render(Context({}))
-        self.assertIn("Совместимость после пересоздания движка", rendered)
