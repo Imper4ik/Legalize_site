@@ -1,32 +1,54 @@
 {% load i18n static %}
 <!DOCTYPE html>
-<html lang="{{ LANGUAGE_CODE }}">
+<html lang="{{ LANGUAGE_CODE }}" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Legalize{% endblock %}</title>
     <style>
         :root {
-            color-scheme: light dark;
-            --auth-bg-dark: #0f172a;
-            --auth-bg-light: #f8fafc;
-            --auth-card: rgba(255, 255, 255, 0.92);
-            --auth-card-dark: rgba(15, 23, 42, 0.85);
-            --auth-primary: #2563eb;
-            --auth-primary-dark: #93c5fd;
-            --auth-secondary: #9333ea;
+            color-scheme: light;
             --auth-radius: 24px;
+            --auth-primary: #2563eb;
+            --auth-secondary: #9333ea;
+            --auth-bg: linear-gradient(145deg, rgba(226, 232, 240, 0.95), rgba(248, 250, 252, 0.95));
+            --auth-card: rgba(255, 255, 255, 0.95);
+            --auth-card-inverse: linear-gradient(140deg, rgba(37, 99, 235, 0.92), rgba(147, 51, 234, 0.9));
             --auth-text: #0f172a;
             --auth-text-muted: #475569;
-            --auth-text-dark: #cbd5f5;
+            --auth-inverse-text: #f8fafc;
+            --auth-inverse-muted: rgba(248, 250, 252, 0.82);
+            --auth-border: rgba(148, 163, 184, 0.25);
+            --auth-input-bg: rgba(255, 255, 255, 0.9);
+            --auth-input-border: rgba(148, 163, 184, 0.45);
+            --auth-focus-ring: rgba(37, 99, 235, 0.2);
+            --auth-link: #2563eb;
+            --auth-toolbar-bg: rgba(255, 255, 255, 0.85);
+            --auth-toolbar-border: rgba(148, 163, 184, 0.25);
+            --auth-toolbar-text: #0f172a;
+            --auth-toggle-hover: rgba(37, 99, 235, 0.12);
         }
 
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --auth-card: rgba(15, 23, 42, 0.92);
-                --auth-text: #e2e8f0;
-                --auth-text-muted: #94a3b8;
-            }
+        :root[data-theme="dark"] {
+            color-scheme: dark;
+            --auth-bg: radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.35), transparent 60%),
+                        radial-gradient(circle at 100% 10%, rgba(147, 51, 234, 0.35), transparent 50%),
+                        linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.95));
+            --auth-card: rgba(15, 23, 42, 0.85);
+            --auth-card-inverse: linear-gradient(140deg, rgba(37, 99, 235, 0.92), rgba(147, 51, 234, 0.9));
+            --auth-text: #e2e8f0;
+            --auth-text-muted: #94a3b8;
+            --auth-inverse-text: #f8fafc;
+            --auth-inverse-muted: rgba(248, 250, 252, 0.75);
+            --auth-border: rgba(148, 163, 184, 0.35);
+            --auth-input-bg: rgba(15, 23, 42, 0.78);
+            --auth-input-border: rgba(148, 163, 184, 0.4);
+            --auth-focus-ring: rgba(96, 165, 250, 0.25);
+            --auth-link: #93c5fd;
+            --auth-toolbar-bg: rgba(15, 23, 42, 0.6);
+            --auth-toolbar-border: rgba(148, 163, 184, 0.35);
+            --auth-toolbar-text: #f8fafc;
+            --auth-toggle-hover: rgba(148, 163, 184, 0.16);
         }
 
         * {
@@ -36,15 +58,84 @@
         body {
             margin: 0;
             font-family: 'Segoe UI', 'SF Pro Display', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-            background: radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.35), transparent 60%),
-                        radial-gradient(circle at 100% 10%, rgba(147, 51, 234, 0.35), transparent 50%),
-                        linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.95));
+            background: var(--auth-bg);
             color: var(--auth-text);
             min-height: 100vh;
             display: flex;
-            align-items: stretch;
+            flex-direction: column;
+            align-items: center;
             justify-content: center;
             padding: 32px 20px;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        .auth-toolbar {
+            width: min(1120px, 100%);
+            margin-bottom: 28px;
+            padding: 12px 20px;
+            border-radius: 999px;
+            background: var(--auth-toolbar-bg);
+            border: 1px solid var(--auth-toolbar-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            backdrop-filter: blur(14px);
+            box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
+            color: var(--auth-toolbar-text);
+            transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .auth-brand {
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 0.02em;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .auth-toolbar-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .auth-theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.9rem;
+            border-radius: 999px;
+            border: 1px solid var(--auth-toolbar-border);
+            background: transparent;
+            color: var(--auth-toolbar-text);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .auth-theme-toggle:hover,
+        .auth-theme-toggle:focus {
+            background: var(--auth-toggle-hover);
+            transform: translateY(-1px);
+            outline: none;
+        }
+
+        .auth-theme-toggle .icon-sun,
+        .auth-theme-toggle .icon-moon {
+            font-size: 1rem;
+        }
+
+        .auth-theme-toggle .icon-moon {
+            display: none;
+        }
+
+        :root[data-theme="dark"] .auth-theme-toggle .icon-sun {
+            display: none;
+        }
+
+        :root[data-theme="dark"] .auth-theme-toggle .icon-moon {
+            display: inline;
         }
 
         .auth-shell {
@@ -61,22 +152,25 @@
         .auth-panel {
             border-radius: var(--auth-radius);
             background: var(--auth-card);
+            color: var(--auth-text);
+            border: 1px solid var(--auth-border);
             backdrop-filter: blur(18px);
-            box-shadow: 0 25px 55px rgba(15, 23, 42, 0.35);
+            box-shadow: 0 25px 55px rgba(15, 23, 42, 0.25);
             padding: clamp(28px, 4vw, 44px);
             display: flex;
             flex-direction: column;
             justify-content: center;
             gap: 24px;
+            transition: background 0.4s ease, color 0.4s ease, border-color 0.4s ease;
         }
 
         .auth-panel.inverse {
-            background: linear-gradient(140deg, rgba(37, 99, 235, 0.92), rgba(147, 51, 234, 0.9));
-            color: #f8fafc;
+            background: var(--auth-card-inverse);
+            color: var(--auth-inverse-text);
         }
 
         .auth-panel.inverse .auth-muted {
-            color: rgba(248, 250, 252, 0.8);
+            color: var(--auth-inverse-muted);
         }
 
         .auth-badge {
@@ -92,6 +186,10 @@
             letter-spacing: 0.02em;
         }
 
+        :root[data-theme="dark"] .auth-badge {
+            background: rgba(248, 250, 252, 0.16);
+        }
+
         .auth-heading {
             font-size: clamp(1.75rem, 2.4vw, 2.3rem);
             font-weight: 700;
@@ -104,6 +202,7 @@
             color: var(--auth-text-muted);
             font-size: 0.95rem;
             line-height: 1.5;
+            transition: color 0.3s ease;
         }
 
         .auth-features {
@@ -127,6 +226,10 @@
             padding: 8px;
             border-radius: 12px;
             background: rgba(15, 23, 42, 0.18);
+        }
+
+        :root[data-theme="dark"] .auth-feature svg {
+            background: rgba(248, 250, 252, 0.18);
         }
 
         .auth-form h1 {
@@ -157,18 +260,18 @@
         .auth-input {
             width: 100%;
             border-radius: 14px;
-            border: 1px solid rgba(148, 163, 184, 0.5);
+            border: 1px solid var(--auth-input-border);
             padding: 14px 16px;
             font-size: 1rem;
-            background: rgba(255, 255, 255, 0.9);
-            color: inherit;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            background: var(--auth-input-bg);
+            color: var(--auth-text);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
         }
 
         .auth-input:focus {
             outline: none;
-            border-color: rgba(37, 99, 235, 0.85);
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+            border-color: var(--auth-link);
+            box-shadow: 0 0 0 4px var(--auth-focus-ring);
         }
 
         .auth-button {
@@ -203,7 +306,8 @@
             width: 18px;
             height: 18px;
             border-radius: 6px;
-            border: 1px solid rgba(148, 163, 184, 0.65);
+            border: 1px solid var(--auth-input-border);
+            background: var(--auth-input-bg);
             accent-color: var(--auth-primary);
         }
 
@@ -214,7 +318,7 @@
         }
 
         .auth-meta a {
-            color: var(--auth-primary-dark);
+            color: var(--auth-link);
             font-weight: 600;
             text-decoration: none;
         }
@@ -250,7 +354,7 @@
         }
 
         .auth-links a {
-            color: var(--auth-primary-dark);
+            color: var(--auth-link);
             font-weight: 600;
             text-decoration: none;
         }
@@ -287,12 +391,12 @@
             gap: 10px;
             padding: 10px 18px;
             border-radius: 16px;
-            background: rgba(15, 23, 42, 0.08);
-            border: 1px solid rgba(15, 23, 42, 0.12);
+            background: var(--auth-input-bg);
+            border: 1px solid var(--auth-border);
             color: var(--auth-text);
             font-weight: 600;
             text-decoration: none;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
         }
 
         .socialaccount_providers a:hover {
@@ -303,6 +407,11 @@
         @media (max-width: 960px) {
             body {
                 padding: 24px 16px;
+            }
+
+            .auth-toolbar {
+                margin-bottom: 20px;
+                padding: 10px 16px;
             }
 
             .auth-shell {
@@ -319,16 +428,111 @@
                 padding: 20px 12px;
             }
 
+            .auth-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+
             .auth-panel {
                 padding: 24px 20px;
             }
         }
     </style>
+    <script>
+        (function () {
+            const storageKey = 'preferredTheme';
+            try {
+                const storedTheme = localStorage.getItem(storageKey);
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = storedTheme || (prefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (error) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
+    <header class="auth-toolbar" role="banner">
+        <a class="auth-brand" href="{% url 'account_login' %}">Legalize</a>
+        <div class="auth-toolbar-controls">
+            <button class="auth-theme-toggle" type="button" aria-pressed="false" aria-label="{% translate 'Переключить тему' %}">
+                <span class="icon-sun">☀️</span>
+                <span class="icon-moon">🌙</span>
+                <span class="auth-theme-toggle-text"></span>
+            </button>
+        </div>
+    </header>
     <main class="auth-shell">
         {% block content %}{% endblock %}
     </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const storageKey = 'preferredTheme';
+            const root = document.documentElement;
+            const toggle = document.querySelector('.auth-theme-toggle');
+            const prefersDark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+            const updateToggle = (theme) => {
+                if (!toggle) {
+                    return;
+                }
+                toggle.setAttribute('aria-pressed', theme === 'dark');
+                const text = toggle.querySelector('.auth-theme-toggle-text');
+                if (text) {
+                    text.textContent = theme === 'dark' ? '{% translate "Тёмная тема" %}' : '{% translate "Светлая тема" %}';
+                }
+            };
+
+            const applyTheme = (theme) => {
+                root.setAttribute('data-theme', theme);
+                updateToggle(theme);
+            };
+
+            let storedTheme = null;
+            try {
+                storedTheme = localStorage.getItem(storageKey);
+            } catch (error) {
+                storedTheme = null;
+            }
+
+            const initialTheme = storedTheme || (prefersDark && prefersDark.matches ? 'dark' : 'light');
+            applyTheme(initialTheme);
+
+            if (prefersDark) {
+                const handleChange = (event) => {
+                    let themeFromStorage = null;
+                    try {
+                        themeFromStorage = localStorage.getItem(storageKey);
+                    } catch (error) {
+                        themeFromStorage = null;
+                    }
+                    if (!themeFromStorage) {
+                        applyTheme(event.matches ? 'dark' : 'light');
+                    }
+                };
+
+                if (typeof prefersDark.addEventListener === 'function') {
+                    prefersDark.addEventListener('change', handleChange);
+                } else if (typeof prefersDark.addListener === 'function') {
+                    prefersDark.addListener(handleChange);
+                }
+            }
+
+            if (toggle) {
+                toggle.addEventListener('click', () => {
+                    const nextTheme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                    applyTheme(nextTheme);
+                    try {
+                        localStorage.setItem(storageKey, nextTheme);
+                    } catch (error) {
+                        // ignore storage errors
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
