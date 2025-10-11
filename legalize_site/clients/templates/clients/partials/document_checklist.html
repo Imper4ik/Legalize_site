@@ -39,10 +39,6 @@
   </div>
 {% empty %}
   <div class="alert alert-info mx-2">
-    {% if client.has_checklist_access %}
-        Для цели "{{ client.get_application_purpose_display }}" на языке "{{ client.get_language_display }}" чеклист не определен в настройках.
-    {% else %}
-        <strong>Чеклист скрыт.</strong> Чтобы он появился, предоставьте клиенту доступ в блоке "Управление доступом" выше.
-    {% endif %}
+    Для цели "{{ client.get_application_purpose_display }}" на языке "{{ client.get_language_display }}" чеклист не определен в настройках.
   </div>
 {% endfor %}
