@@ -53,7 +53,6 @@ INSTALLED_APPS = [
 
     # проект
     "clients",
-    "portal",
 
     # allauth
     "allauth",
@@ -115,6 +114,9 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
             ],
+            "libraries": {
+                "form_filters": "clients.templatetags.form_filters",
+            },
         },
     },
 ]
@@ -161,7 +163,7 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]  # вместо �
 ACCOUNT_EMAIL_VERIFICATION = os.getenv("ACCOUNT_EMAIL_VERIFICATION", "mandatory")
 
 LOGIN_URL = "account_login"
-LOGIN_REDIRECT_URL = "root_dashboard"
+LOGIN_REDIRECT_URL = "clients:client_list"
 LOGOUT_REDIRECT_URL = "account_login"
 
 SOCIALACCOUNT_AUTO_SIGNUP = True

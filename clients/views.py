@@ -116,8 +116,7 @@ def dashboard_redirect_view(request):
     """
     if request.user.is_staff:
         return redirect('clients:client_list')
-    else:
-        return redirect('portal:profile_detail')
+    return HttpResponseForbidden('Доступ запрещен')
 
 
 @login_required
@@ -144,7 +143,7 @@ def add_document(request, client_id, doc_type):
         # Для AJAX возвращаем ошибку, иначе - редирект
         if request_is_ajax(request):
             return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
-        return redirect('portal:profile_detail')
+        return HttpResponseForbidden('Доступ запрещен')
 
     client = get_object_or_404(Client, pk=client_id)
     document_type_display = client.get_document_name_by_code(doc_type)
@@ -190,7 +189,7 @@ def document_delete(request, pk):
         # Для AJAX возвращаем JSON, иначе - редирект
         if request_is_ajax(request):
             return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
-        return redirect('portal:profile_detail')
+        return HttpResponseForbidden('Доступ запрещен')
 
     document = get_object_or_404(Document, pk=pk)
     client_id = document.client.id
@@ -314,7 +313,7 @@ def delete_payment(request, payment_id):
 def calculator_view(request):
     """Отображает и обрабатывает калькулятор для выписки из банка."""
     if not request.user.is_staff:
-        return redirect('portal:profile_detail')
+        return HttpResponseForbidden('Доступ запрещен')
 
     # Константы для расчетов
     LIVING_ALLOWANCE = 1010
@@ -401,7 +400,7 @@ def calculator_view(request):
 def client_print_view(request, pk):
     """Генерирует страницу с данными клиента для печати."""
     if not request.user.is_staff:
-        return redirect('portal:profile_detail')
+        return HttpResponseForbidden('Доступ запрещен')
 
     client = get_object_or_404(Client, pk=pk)
     return render(request, 'clients/client_printable.html', {'client': client})
@@ -456,7 +455,7 @@ def client_overview_partial(request, pk):
 @login_required
 def document_reminder_list(request):
     if not request.user.is_staff:
-        return redirect('portal:profile_detail')
+        return HttpResponseForbidden('Доступ запрещен')
 
     base_query = Reminder.objects.filter(is_active=True, reminder_type='document').select_related('client')
     doc_client_filter = request.GET.get('doc_client', '')
@@ -491,7 +490,7 @@ def document_reminder_list(request):
 @login_required
 def payment_reminder_list(request):
     if not request.user.is_staff:
-        return redirect('portal:profile_detail')
+        return HttpResponseForbidden('Доступ запрещен')
 
     base_query = Reminder.objects.filter(is_active=True, reminder_type='payment').select_related('client')
     client_filter = request.GET.get('client', '')
@@ -525,7 +524,7 @@ def payment_reminder_list(request):
 @login_required
 def run_update_reminders(request):
     if not request.user.is_staff:
-        return redirect('portal:profile_detail')
+        return HttpResponseForbidden('Доступ запрещен')
     if request.method == 'POST':
         try:
             call_command('update_reminders')
@@ -545,7 +544,7 @@ def run_update_reminders(request):
 @login_required
 def reminder_action(request, reminder_id):
     if not request.user.is_staff:
-        return redirect('portal:profile_detail')
+        return HttpResponseForbidden('Доступ запрещен')
     reminder = get_object_or_404(Reminder, pk=reminder_id)
     if request.method == 'POST':
         action = request.POST.get('action')
