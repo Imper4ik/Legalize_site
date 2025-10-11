@@ -21,7 +21,6 @@ urlpatterns = [
 
     # URL для обновления заметок и доступов
     path('client/<int:pk>/update-notes/', views.update_client_notes, name='update_client_notes'),
-    path('client/<int:pk>/grant-access/', views.grant_checklist_access, name='grant_checklist_access'),
 
     # URL для работы с документами
     path('client/<int:client_id>/documents/add/<str:doc_type>/', views.add_document, name='add_document'),

@@ -364,43 +364,6 @@ def client_print_view(request, pk):
 
 
 @login_required
-def grant_checklist_access(request, pk):
-    """
-    Предоставляет клиенту доступ к чеклисту документов.
-    """
-    if not request.user.is_staff:
-        return HttpResponseForbidden('Доступ запрещен')
-
-    client = get_object_or_404(Client, pk=pk)
-    if request.method == 'POST':
-        client.has_checklist_access = True
-        client.save()
-        messages.success(request, f"Доступ к документам для клиента {client} успешно предоставлен!")
-
-    return redirect('clients:client_detail', pk=pk)
-
-
-@login_required
-def grant_checklist_access(request, pk):
-    """Предоставляет клиенту доступ к чеклисту. Поддерживает AJAX."""
-    if not request.user.is_staff:
-        return JsonResponse({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
-
-    client = get_object_or_404(Client, pk=pk)
-    if request.method == 'POST':
-        client.has_checklist_access = True
-        client.save()
-
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            # Отрендерим обновленный блок и вернем его как HTML
-            html = render_to_string('clients/partials/access_management_block.html', {'client': client})
-            return JsonResponse({'status': 'success', 'html': html})
-
-        messages.success(request, f"Доступ для клиента {client} предоставлен!")
-    return redirect('clients:client_detail', pk=pk)
-
-
-@login_required
 def client_status_api(request, pk):
     """Возвращает актуальный чеклист клиента в формате JSON для 'живого' обновления."""
     client = get_object_or_404(Client, pk=pk)

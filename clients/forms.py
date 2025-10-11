@@ -33,7 +33,7 @@ class ClientForm(forms.ModelForm):
             'status',
             'basis_of_stay', 'legal_basis_end_date', 'submission_date',
             'employer_phone',
-            'fingerprints_date', 'notes', 'has_checklist_access'
+            'fingerprints_date', 'notes'
         ]
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -49,7 +49,6 @@ class ClientForm(forms.ModelForm):
             'basis_of_stay': forms.TextInput(attrs={'class': 'form-control'}),
             'employer_phone': forms.TextInput(attrs={'class': 'form-control'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'has_checklist_access': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
 

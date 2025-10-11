@@ -25,13 +25,6 @@
     </div>
   </div>
 
-  <div class="card border-primary mb-4 shadow">
-    <div class="card-header bg-primary text-white"><h5 class="mb-0">🔑 {% translate "Управление доступом клиента" %}</h5></div>
-    <div class="card-body text-center" id="access-management-container">
-        {% include 'clients/partials/access_management_block.html' with client=client %}
-    </div>
-  </div>
-
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4>{% translate "Финансы" %}</h4>
     <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPaymentModal">+ {% translate "Добавить счёт" %}</button>

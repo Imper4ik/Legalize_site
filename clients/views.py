@@ -407,26 +407,6 @@ def client_print_view(request, pk):
 
 
 @login_required
-def grant_checklist_access(request, pk):
-    """Предоставляет клиенту доступ к чеклисту. Поддерживает AJAX."""
-    if not request.user.is_staff:
-        return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
-
-    client = get_object_or_404(Client, pk=pk)
-    expects_json = request_is_ajax(request)
-    if request.method == 'POST':
-        client.has_checklist_access = True
-        client.save()
-
-        if expects_json:
-            html = render_to_string('clients/partials/access_management_block.html', {'client': client})
-            return json_no_store({'status': 'success', 'html': html})
-
-        messages.success(request, f"Доступ для клиента {client} предоставлен!")
-    return redirect('clients:client_detail', pk=pk)
-
-
-@login_required
 def client_status_api(request, pk):
     """Возвращает актуальный чеклист клиента в формате JSON для 'живого' обновления."""
     client = get_object_or_404(Client, pk=pk)
