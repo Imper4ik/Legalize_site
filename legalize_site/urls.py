@@ -15,7 +15,6 @@ urlpatterns = [
 urlpatterns += i18n_patterns(
     path('accounts/', include('allauth.urls')),
     path('staff/', include('clients.urls', namespace='clients')),
-    path('portal/', include('portal.urls', namespace='portal')),
 
     # Эта строка теперь будет главной страницей после входа
     path('', views.dashboard_redirect_view, name='root_dashboard'),

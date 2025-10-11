@@ -175,7 +175,7 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
         <div class="container">
 
-            <a class="navbar-brand fw-bold" href="{% if user.is_authenticated %}{% url 'portal:root_dashboard' %}{% else %}{% url 'account_login' %}{% endif %}">
+            <a class="navbar-brand fw-bold" href="{% if user.is_authenticated and user.is_staff %}{% url 'clients:client_list' %}{% else %}{% url 'account_login' %}{% endif %}">
                 <i class="fas fa-balance-scale me-2"></i>Legalize Site
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -216,10 +216,6 @@
                                 {{ user.first_name|default:user.username }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
-                                {% if not user.is_staff %}
-                                    <li><a class="dropdown-item" href="{% url 'portal:profile_detail' %}">{% translate "Мой профиль" %}</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                {% endif %}
                                 <li>
                                     <form id="logout-form" method="post" action="{% url 'account_logout' %}">
                                         {% csrf_token %}
@@ -232,7 +228,6 @@
                         </li>
                     {% else %}
                         <li class="nav-item"><a class="nav-link" href="{% url 'account_login' %}">{% translate "Вход" %}</a></li>
-                        <li class="nav-item"><a class="btn btn-primary btn-sm" href="{% url 'account_signup' %}">{% translate "Регистрация" %}</a></li>
                     {% endif %}
                 </ul>
             </div>
