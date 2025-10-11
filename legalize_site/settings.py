@@ -78,6 +78,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
+            'builtins': ['legalize_site.templatetags.i18n_compat'],
         },
     },
 ]
@@ -112,6 +113,11 @@ if WHITENOISE_AVAILABLE:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# --- ДОПУСТИМЫЙ РАЗМЕР ЗАГРУЗОК ---
+MAX_UPLOAD_SIZE_MB = int(os.environ.get('MAX_UPLOAD_SIZE_MB', '20'))
+DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024
+FILE_UPLOAD_MAX_MEMORY_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE
 
 # --- НАСТРОЙКИ ПОЧТЫ (DJANGO ANYMAIL + SENDGRID) ---
 EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
