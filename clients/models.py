@@ -58,12 +58,9 @@ class Client(models.Model):
         return reverse('clients:client_detail', kwargs={'pk': self.id})
 
     def get_document_checklist(self):
-        """
-        Возвращает чеклист, ТОЛЬКО ЕСЛИ у клиента есть доступ.
-        """
-        if not self.has_checklist_access:
-            return []
-
+        """Возвращает чеклист документов для клиента."""
+        # Клиентский портал больше не используется, поэтому ограничение
+        # на доступ к чеклисту было снято. Сотрудники видят список всегда.
         checklist_key = (self.application_purpose, self.language)
         required_docs = DOCUMENT_CHECKLIST.get(checklist_key, [])
         if not required_docs:
@@ -90,9 +87,6 @@ class Client(models.Model):
 
     def get_document_name_by_code(self, doc_code):
         """Возвращает читаемое имя документа по его коду."""
-        if not self.has_checklist_access:
-            return doc_code.replace('_', ' ').capitalize()
-
         checklist_key = (self.application_purpose, self.language)
         required_docs = DOCUMENT_CHECKLIST.get(checklist_key, [])
         for code, name in required_docs:
