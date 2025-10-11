@@ -35,7 +35,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'clients',
-    'portal',
     'django.contrib.humanize',
     'django.contrib.sites',
     'allauth',
@@ -137,13 +136,11 @@ ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-ACCOUNT_ADAPTER = 'portal.adapters.CustomAccountAdapter'
 
 # --- ИСПРАВЛЕННЫЕ НАСТРОЙКИ РЕДИРЕКТА ---
 LOGIN_URL = 'account_login'
-LOGIN_REDIRECT_URL = reverse_lazy('portal:root_dashboard')
+LOGIN_REDIRECT_URL = reverse_lazy('clients:client_list')
 LOGOUT_REDIRECT_URL = reverse_lazy('account_login')
 
-ACCOUNT_SIGNUP_FORM_CLASS = 'portal.forms.CustomSignupForm'
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_PROVIDERS = {'google': {'SCOPE': ['profile', 'email'], 'AUTH_PARAMS': {'access_type': 'online'}}}
