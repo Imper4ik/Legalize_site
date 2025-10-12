@@ -43,6 +43,10 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'anymail',
 ]
+
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [ BASE_DIR / "static" ]
+
 if WHITENOISE_AVAILABLE:
     INSTALLED_APPS.insert(INSTALLED_APPS.index('django.contrib.staticfiles'), 'whitenoise.runserver_nostatic')
 
