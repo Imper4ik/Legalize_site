@@ -563,13 +563,18 @@
         <a class="auth-brand" href="{% url 'account_login' %}">Legalize</a>
         <div class="auth-toolbar-controls">
             <button
-                class="auth-theme-toggle"
+                class="auth-theme-toggle theme-toggle"
                 type="button"
                 aria-pressed="false"
                 aria-label="{% translate 'Переключить тему' %}"
+                title="{% translate 'Переключить на тёмную тему' %}"
                 data-theme-toggle
                 data-theme-light-text="{% translate 'Светлая тема' %}"
                 data-theme-dark-text="{% translate 'Тёмная тема' %}"
+                data-theme-light-title="{% translate 'Переключить на тёмную тему' %}"
+                data-theme-dark-title="{% translate 'Переключить на светлую тему' %}"
+                data-theme-light-label="{% translate 'Переключить на тёмную тему' %}"
+                data-theme-dark-label="{% translate 'Переключить на светлую тему' %}"
             >
                 <span class="icon-sun">☀️</span>
                 <span class="icon-moon">🌙</span>

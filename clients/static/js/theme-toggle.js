@@ -1,4 +1,12 @@
 (function () {
+  if (typeof window !== 'undefined') {
+    if (window.__themeToggleInitialized) {
+      return;
+    }
+
+    window.__themeToggleInitialized = true;
+  }
+
   const storageKey = 'preferredTheme';
   const toggles = [];
 
@@ -56,6 +64,15 @@
 
     if (title) {
       toggle.setAttribute('title', title);
+    }
+
+    const label =
+      theme === 'dark'
+        ? toggle.dataset.themeDarkLabel
+        : toggle.dataset.themeLightLabel;
+
+    if (label) {
+      toggle.setAttribute('aria-label', label);
     }
   };
 
