@@ -531,15 +531,27 @@
 
             const apply = (theme) => {
                 const normalized = theme === 'dark' ? 'dark' : 'light';
+
                 root.setAttribute('data-theme', normalized);
+                root.setAttribute('data-bs-theme', normalized);
                 root.dataset.theme = normalized;
                 root.classList.toggle('theme-dark', normalized === 'dark');
                 root.classList.toggle('theme-light', normalized !== 'dark');
+
+                if (document.body) {
+                    document.body.setAttribute('data-theme', normalized);
+                    document.body.setAttribute('data-bs-theme', normalized);
+                    document.body.dataset.theme = normalized;
+                    document.body.classList.toggle('theme-dark', normalized === 'dark');
+                    document.body.classList.toggle('theme-light', normalized !== 'dark');
+                }
 
                 const meta = document.querySelector('meta[name="color-scheme"]');
                 if (meta) {
                     meta.setAttribute('content', normalized === 'dark' ? 'dark light' : 'light dark');
                 }
+
+                return normalized;
             };
 
             try {
