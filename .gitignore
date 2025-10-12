@@ -37,3 +37,4 @@ Thumbs.db
 .idea/
 __pycache__/
 *.py[cod]
+staticfiles
