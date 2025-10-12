@@ -15,6 +15,7 @@
             --admin-secondary: #8b5cf6;
             --admin-accent: #10b981;
             --admin-bg: #0f172a;
+            --selected-row: transparent;
         }
 
         body {
@@ -52,6 +53,16 @@
             background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(139, 92, 246, 0.12));
             color: #1e293b;
             border: none;
+        }
+
+        /* Убираем серую подсветку строк при наведении в списках */
+        #result_list tbody tr:hover,
+        #result_list tbody tr:hover > th,
+        #result_list tbody tr:hover > td,
+        .module table tbody tr:hover,
+        .module table tbody tr:hover > th,
+        .module table tbody tr:hover > td {
+            background-color: inherit !important;
         }
 
         .button, input[type=submit], button {
