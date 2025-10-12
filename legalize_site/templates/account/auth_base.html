@@ -1,0 +1,585 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>{% block title %}Legalize{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        :root {
+            color-scheme: light;
+            --auth-radius: 24px;
+            --auth-primary: #2563eb;
+            --auth-secondary: #9333ea;
+            --auth-bg: linear-gradient(145deg, rgba(226, 232, 240, 0.95), rgba(248, 250, 252, 0.95));
+            --auth-card: rgba(255, 255, 255, 0.95);
+            --auth-card-inverse: linear-gradient(140deg, rgba(37, 99, 235, 0.92), rgba(147, 51, 234, 0.9));
+            --auth-text: #0f172a;
+            --auth-text-muted: #475569;
+            --auth-inverse-text: #f8fafc;
+            --auth-inverse-muted: rgba(248, 250, 252, 0.82);
+            --auth-border: rgba(148, 163, 184, 0.25);
+            --auth-input-bg: rgba(255, 255, 255, 0.9);
+            --auth-input-border: rgba(148, 163, 184, 0.45);
+            --auth-focus-ring: rgba(37, 99, 235, 0.2);
+            --auth-link: #2563eb;
+            --auth-toolbar-bg: rgba(255, 255, 255, 0.85);
+            --auth-toolbar-border: rgba(148, 163, 184, 0.25);
+            --auth-toolbar-text: #0f172a;
+            --auth-toggle-hover: rgba(37, 99, 235, 0.12);
+            --theme-toggle-bg: rgba(255, 255, 255, 0.78);
+            --theme-toggle-border: rgba(15, 23, 42, 0.14);
+            --theme-toggle-shadow: 0 14px 32px rgba(15, 23, 42, 0.14);
+            --theme-toggle-text: #0f172a;
+            --theme-toggle-icon: #0f172a;
+            --theme-toggle-track: rgba(37, 99, 235, 0.2);
+            --theme-toggle-thumb: linear-gradient(135deg, #fbbf24, #fb7185);
+            --theme-toggle-thumb-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+        }
+
+        :root[data-theme="dark"] {
+            color-scheme: dark;
+            --auth-bg: radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.35), transparent 60%),
+                        radial-gradient(circle at 100% 10%, rgba(147, 51, 234, 0.35), transparent 50%),
+                        linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.95));
+            --auth-card: rgba(15, 23, 42, 0.85);
+            --auth-card-inverse: linear-gradient(140deg, rgba(37, 99, 235, 0.92), rgba(147, 51, 234, 0.9));
+            --auth-text: #e2e8f0;
+            --auth-text-muted: #94a3b8;
+            --auth-inverse-text: #f8fafc;
+            --auth-inverse-muted: rgba(248, 250, 252, 0.75);
+            --auth-border: rgba(148, 163, 184, 0.35);
+            --auth-input-bg: rgba(15, 23, 42, 0.78);
+            --auth-input-border: rgba(148, 163, 184, 0.4);
+            --auth-focus-ring: rgba(96, 165, 250, 0.25);
+            --auth-link: #93c5fd;
+            --auth-toolbar-bg: rgba(15, 23, 42, 0.6);
+            --auth-toolbar-border: rgba(148, 163, 184, 0.35);
+            --auth-toolbar-text: #f8fafc;
+            --auth-toggle-hover: rgba(148, 163, 184, 0.16);
+            --theme-toggle-bg: rgba(15, 23, 42, 0.55);
+            --theme-toggle-border: rgba(148, 163, 184, 0.35);
+            --theme-toggle-shadow: 0 20px 46px rgba(2, 6, 23, 0.65);
+            --theme-toggle-text: #f8fafc;
+            --theme-toggle-icon: #fefce8;
+            --theme-toggle-track: rgba(148, 163, 184, 0.3);
+            --theme-toggle-thumb: linear-gradient(135deg, #38bdf8, #6366f1);
+            --theme-toggle-thumb-shadow: 0 12px 28px rgba(2, 6, 23, 0.65);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', 'SF Pro Display', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--auth-bg);
+            color: var(--auth-text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 20px;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        .auth-toolbar {
+            width: min(1120px, 100%);
+            margin-bottom: 28px;
+            padding: 12px 20px;
+            border-radius: 999px;
+            background: var(--auth-toolbar-bg);
+            border: 1px solid var(--auth-toolbar-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            backdrop-filter: blur(14px);
+            box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18);
+            color: var(--auth-toolbar-text);
+            transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .auth-brand {
+            font-weight: 700;
+            font-size: 1rem;
+            letter-spacing: 0.02em;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .auth-toolbar-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .theme-toggle .theme-icon-moon {
+            display: none;
+        }
+
+        :root[data-theme="dark"] .theme-toggle .theme-icon-sun {
+            display: none;
+        }
+
+        :root[data-theme="dark"] .theme-toggle .theme-icon-moon {
+            display: inline;
+        }
+
+        .auth-toolbar .theme-toggle {
+            border-radius: 999px;
+            border: 1px solid var(--theme-toggle-border);
+            background: var(--theme-toggle-bg);
+            color: var(--theme-toggle-text);
+            font-weight: 600;
+            padding: 0.4rem 0.9rem;
+            cursor: pointer;
+        }
+
+        .auth-toolbar .theme-toggle:hover,
+        .auth-toolbar .theme-toggle:focus {
+            background: var(--auth-toggle-hover);
+            color: var(--auth-toolbar-text);
+            border-color: var(--auth-toolbar-border);
+            transform: translateY(-1px);
+            outline: none;
+            transform: translateY(-1px);
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
+        }
+
+        .auth-toolbar .theme-toggle .theme-icon-sun,
+        .auth-toolbar .theme-toggle .theme-icon-moon {
+            font-size: 1rem;
+        }
+
+        .auth-toolbar .theme-toggle .theme-toggle-text {
+            font-weight: 600;
+        }
+
+        .auth-shell {
+            width: min(1120px, 100%);
+            display: grid;
+            gap: 24px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+
+        .auth-card {
+            display: contents;
+        }
+
+        .auth-panel {
+            border-radius: var(--auth-radius);
+            background: var(--auth-card);
+            color: var(--auth-text);
+            border: 1px solid var(--auth-border);
+            backdrop-filter: blur(18px);
+            box-shadow: 0 25px 55px rgba(15, 23, 42, 0.25);
+            padding: clamp(28px, 4vw, 44px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 24px;
+            transition: background 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+        }
+
+        .auth-panel.inverse {
+            background: var(--auth-card-inverse);
+            color: var(--auth-inverse-text);
+        }
+
+        .auth-panel.inverse .auth-muted {
+            color: var(--auth-inverse-muted);
+        }
+
+        .auth-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: rgba(15, 23, 42, 0.2);
+            color: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        :root[data-theme="dark"] .auth-badge {
+            background: rgba(248, 250, 252, 0.16);
+        }
+
+        .auth-heading {
+            font-size: clamp(1.75rem, 2.4vw, 2.3rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin: 0;
+        }
+
+        .auth-muted {
+            margin: 0;
+            color: var(--auth-text-muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+            transition: color 0.3s ease;
+        }
+
+        .auth-features {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 16px;
+        }
+
+        .auth-feature {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+        }
+
+        .auth-feature-icon {
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.18);
+            color: inherit;
+            font-size: 1.05rem;
+        }
+
+        :root[data-theme="dark"] .auth-feature-icon {
+            background: rgba(248, 250, 252, 0.18);
+            color: inherit;
+        }
+
+        .auth-form h1 {
+            font-size: clamp(1.5rem, 2vw, 1.9rem);
+            margin: 0;
+        }
+
+        .auth-form p {
+            margin: 0;
+            color: var(--auth-text-muted);
+        }
+
+        .auth-form-header {
+            display: grid;
+            gap: 0.4rem;
+        }
+
+        .auth-messages {
+            display: grid;
+            gap: 10px;
+        }
+
+        .auth-alert {
+            padding: 12px 14px;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .auth-alert p {
+            margin: 0;
+        }
+
+        .auth-alert-error {
+            background: rgba(220, 38, 38, 0.12);
+            border: 1px solid rgba(220, 38, 38, 0.28);
+            color: #b91c1c;
+        }
+
+        .auth-alert-success {
+            background: rgba(22, 163, 74, 0.12);
+            border: 1px solid rgba(22, 163, 74, 0.28);
+            color: #15803d;
+        }
+
+        .auth-alert-warning {
+            background: rgba(250, 204, 21, 0.16);
+            border: 1px solid rgba(202, 138, 4, 0.3);
+            color: #ca8a04;
+        }
+
+        .auth-alert-info {
+            background: rgba(59, 130, 246, 0.14);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #1d4ed8;
+        }
+
+        form {
+            display: grid;
+            gap: 18px;
+        }
+
+        .auth-field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .auth-field label {
+            font-weight: 600;
+            font-size: 0.92rem;
+        }
+
+        .auth-input {
+            width: 100%;
+            border-radius: 14px;
+            border: 1px solid var(--auth-input-border);
+            padding: 14px 16px;
+            font-size: 1rem;
+            background: var(--auth-input-bg);
+            color: var(--auth-text);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .auth-error {
+            color: #dc2626;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .auth-help {
+            font-size: 0.85rem;
+            color: var(--auth-text-muted);
+        }
+
+        .auth-input:focus {
+            outline: none;
+            border-color: var(--auth-link);
+            box-shadow: 0 0 0 4px var(--auth-focus-ring);
+        }
+
+        .auth-button {
+            border: none;
+            border-radius: 16px;
+            padding: 15px 18px;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #f8fafc;
+            background: linear-gradient(135deg, var(--auth-primary), var(--auth-secondary));
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .auth-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 32px rgba(37, 99, 235, 0.45);
+        }
+
+        .auth-button:active {
+            transform: translateY(0);
+        }
+
+        .auth-checkbox {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .auth-checkbox input {
+            width: 18px;
+            height: 18px;
+            border-radius: 6px;
+            border: 1px solid var(--auth-input-border);
+            background: var(--auth-input-bg);
+            accent-color: var(--auth-primary);
+        }
+
+        .auth-meta {
+            text-align: center;
+            font-size: 0.92rem;
+            color: var(--auth-text-muted);
+        }
+
+        .auth-meta a {
+            color: var(--auth-link);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .auth-meta a:hover {
+            text-decoration: underline;
+        }
+
+        .auth-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .auth-link {
+            color: var(--auth-link);
+            font-weight: 600;
+            text-decoration: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .auth-link:hover,
+        .auth-link:focus {
+            opacity: 0.85;
+        }
+
+        .auth-link.subtle {
+            font-weight: 500;
+        }
+
+        .auth-progress {
+            display: flex;
+            gap: 10px;
+        }
+
+        .auth-progress span {
+            flex: 1;
+            height: 6px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.3);
+        }
+
+        .auth-progress span.active {
+            background: linear-gradient(135deg, var(--auth-primary), var(--auth-secondary));
+        }
+
+        .socialaccount_providers {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .socialaccount_providers a {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 18px;
+            border-radius: 16px;
+            background: var(--auth-input-bg);
+            border: 1px solid var(--auth-border);
+            color: var(--auth-text);
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+        }
+
+        .socialaccount_providers a:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 26px rgba(15, 23, 42, 0.12);
+        }
+
+        @media (max-width: 960px) {
+            body {
+                padding: 24px 16px;
+            }
+
+            .auth-toolbar {
+                margin-bottom: 20px;
+                padding: 10px 16px;
+            }
+
+            .auth-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .auth-panel.inverse {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 520px) {
+            body {
+                padding: 20px 12px;
+            }
+
+            .auth-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+
+            .auth-panel {
+                padding: 24px 20px;
+            }
+        }
+    </style>
+    <script>
+        (function () {
+            const root = document.documentElement;
+            const storageKey = 'preferredTheme';
+
+            const apply = (theme) => {
+                const normalized = theme === 'dark' ? 'dark' : 'light';
+                root.setAttribute('data-theme', normalized);
+                root.dataset.theme = normalized;
+                root.classList.toggle('theme-dark', normalized === 'dark');
+                root.classList.toggle('theme-light', normalized !== 'dark');
+
+                const meta = document.querySelector('meta[name="color-scheme"]');
+                if (meta) {
+                    meta.setAttribute('content', normalized === 'dark' ? 'dark light' : 'light dark');
+                }
+            };
+
+            try {
+                const storedTheme = localStorage.getItem(storageKey);
+                if (storedTheme === 'dark' || storedTheme === 'light') {
+                    apply(storedTheme);
+                } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    apply('dark');
+                } else {
+                    apply('light');
+                }
+            } catch (error) {
+                apply('light');
+            }
+        })();
+    </script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header class="auth-toolbar" role="banner">
+        <a class="auth-brand" href="{% url 'account_login' %}">Legalize</a>
+        <div class="auth-toolbar-controls">
+            <button
+                class="auth-theme-toggle"
+                type="button"
+                aria-pressed="false"
+                aria-label="{% translate 'Переключить тему' %}"
+                data-theme-toggle
+                data-theme-light-text="{% translate 'Светлая тема' %}"
+                data-theme-dark-text="{% translate 'Тёмная тема' %}"
+            >
+                <span class="icon-sun">☀️</span>
+                <span class="icon-moon">🌙</span>
+                <span class="auth-theme-toggle-text" data-theme-toggle-text>{% translate "Светлая тема" %}</span>
+            </button>
+        </div>
+    </header>
+    <main class="auth-shell">
+        {% block content %}{% endblock %}
+    </main>
+    <script src="{% static 'js/theme-toggle.js' %}"></script>
+</body>
+</html>
