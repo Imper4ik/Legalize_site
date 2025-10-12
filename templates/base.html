@@ -145,39 +145,7 @@
 
     {% block extra_head %}{% endblock %}
 
-    <script>
-        (function () {
-            const root = document.documentElement;
-            const storageKey = 'preferredTheme';
-
-            const apply = (theme) => {
-                const normalized = theme === 'dark' ? 'dark' : 'light';
-                root.setAttribute('data-theme', normalized);
-                root.dataset.theme = normalized;
-                root.classList.toggle('theme-dark', normalized === 'dark');
-                root.classList.toggle('theme-light', normalized !== 'dark');
-
-                const meta = document.querySelector('meta[name="color-scheme"]');
-                if (meta) {
-                    meta.setAttribute('content', normalized === 'dark' ? 'dark light' : 'light dark');
-                }
-            };
-
-            try {
-                const storedTheme = localStorage.getItem(storageKey);
-                if (storedTheme) {
-                    document.documentElement.setAttribute('data-theme', storedTheme);
-                    return;
-                }
-                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                }
-            } catch (error) {
-                apply('light');
-            }
-        })();
-    </script>
-</head>
+    </head>
 <body class="{% block body_class %}{% endblock %}">
 <header class="mb-4">
     <nav class="navbar navbar-expand-lg shadow-sm theme-navbar">
@@ -215,8 +183,7 @@
                             <span
                                 class="theme-toggle-text d-none d-md-inline"
                                 data-theme-toggle-text
-                            >{% translate "Светлая тема" %}</span>
-                        </button>
+                            ></span> </button>
                     </li>
                     <li class="nav-item">
                         <form action="{% url 'set_language' %}" method="post" class="d-flex align-items-center">
