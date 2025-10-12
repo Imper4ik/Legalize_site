@@ -128,6 +128,26 @@
     .table-modern tbody tr{transition:background .2s ease}
     .table-modern tbody tr:hover{background:rgba(99,102,241,.06)}
 
+    /* ==== Dark theme: better table contrast ==== */
+    :root[data-theme="dark"] .table-modern thead th {
+      color: #f8fafc;
+      background: rgba(148, 163, 184, 0.10);
+      border-bottom-color: rgba(148, 163, 184, 0.35);
+    }
+    :root[data-theme="dark"] .table-modern tbody td {
+      color: #e5e7eb;
+      border-top-color: rgba(148, 163, 184, 0.20);
+    }
+    :root[data-theme="dark"] .table-modern tbody tr:hover {
+      background: rgba(96, 165, 250, 0.12);
+    }
+    :root[data-theme="dark"] .table-modern.table-striped tbody tr:nth-of-type(odd) {
+      background-color: rgba(255,255,255,0.04);
+    }
+    :root[data-theme="dark"] .table-modern thead {
+      box-shadow: inset 0 -1px 0 rgba(148,163,184,0.25);
+    }
+
     /* Forms */
     .form-control, .form-select, .input-group-text{background:var(--surface); color:var(--fg); border-color:var(--border)}
     .form-control:focus, .form-select:focus{border-color:#60a5fa; box-shadow:0 0 0 .25rem rgba(13,110,253,.2)}
@@ -171,7 +191,10 @@
 
           <ul class="navbar-nav ms-auto align-items-center">
             <li class="nav-item me-3">
-              <button class="btn btn-sm theme-toggle" type="button" aria-pressed="false" aria-label="{% translate 'Переключить тему' %}" data-theme-toggle data-theme-light-text="{% translate 'Светлая тема' %}" data-theme-dark-text="{% translate 'Тёмная тема' %}">
+              <button class="btn btn-sm theme-toggle" type="button" aria-pressed="false" aria-label="{% translate 'Переключить тему' %}"
+                      data-theme-toggle
+                      data-theme-light-text="{% translate 'Светлая тема' %}"
+                      data-theme-dark-text="{% translate 'Тёмная тема' %}">
                 <i class="bi bi-sun-fill theme-icon-sun"></i>
                 <i class="bi bi-moon-stars-fill theme-icon-moon"></i>
                 <span class="theme-toggle-text d-none d-md-inline" data-theme-toggle-text></span>
@@ -199,7 +222,9 @@
                 <li>
                   <form id="logout-form" method="post" action="{% url 'account_logout' %}">
                     {% csrf_token %}
-                    <button type="submit" class="dropdown-item"><i class="fas fa-sign-out-alt me-2"></i>{% translate "Выход" %}</button>
+                    <button type="submit" class="dropdown-item">
+                      <i class="fas fa-sign-out-alt me-2"></i>{% translate "Выход" %}
+                    </button>
                   </form>
                 </li>
               </ul>
@@ -228,8 +253,7 @@
   <!-- PAGE CONTENT WRAPPER -->
   <main class="container page-surface mb-5">
     {% block page_header %}
-    {# Optional: nice header with title/actions on any page #}
-    {#
+    <!-- Optional: pretty header with title/actions -->
     <div class="section-header">
       <div>
         <h1 class="h3 mb-1">{% block page_title %}Заголовок страницы{% endblock %}</h1>
@@ -242,7 +266,6 @@
         {% endblock %}
       </div>
     </div>
-    #}
     {% endblock %}
 
     {% block content %}{% endblock %}
