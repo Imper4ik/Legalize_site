@@ -458,81 +458,24 @@
     <header class="auth-toolbar" role="banner">
         <a class="auth-brand" href="{% url 'account_login' %}">Legalize</a>
         <div class="auth-toolbar-controls">
-            <button class="auth-theme-toggle" type="button" aria-pressed="false" aria-label="{% translate 'Переключить тему' %}">
+            <button
+                class="auth-theme-toggle"
+                type="button"
+                aria-pressed="false"
+                aria-label="{% translate 'Переключить тему' %}"
+                data-theme-toggle
+                data-theme-light-text="{% translate 'Светлая тема' %}"
+                data-theme-dark-text="{% translate 'Тёмная тема' %}"
+            >
                 <span class="icon-sun">☀️</span>
                 <span class="icon-moon">🌙</span>
-                <span class="auth-theme-toggle-text">{% translate "Светлая тема" %}</span>
+                <span class="auth-theme-toggle-text" data-theme-toggle-text>{% translate "Светлая тема" %}</span>
             </button>
         </div>
     </header>
     <main class="auth-shell">
         {% block content %}{% endblock %}
     </main>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const storageKey = 'preferredTheme';
-            const root = document.documentElement;
-            const toggle = document.querySelector('.auth-theme-toggle');
-            const prefersDark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-
-            const updateToggle = (theme) => {
-                if (!toggle) {
-                    return;
-                }
-                toggle.setAttribute('aria-pressed', theme === 'dark');
-                const text = toggle.querySelector('.auth-theme-toggle-text');
-                if (text) {
-                    text.textContent = theme === 'dark' ? '{% translate "Тёмная тема" %}' : '{% translate "Светлая тема" %}';
-                }
-            };
-
-            const applyTheme = (theme) => {
-                root.setAttribute('data-theme', theme);
-                updateToggle(theme);
-            };
-
-            let storedTheme = null;
-            try {
-                storedTheme = localStorage.getItem(storageKey);
-            } catch (error) {
-                storedTheme = null;
-            }
-
-            const initialTheme = storedTheme || (prefersDark && prefersDark.matches ? 'dark' : 'light');
-            applyTheme(initialTheme);
-
-            if (prefersDark) {
-                const handleChange = (event) => {
-                    let themeFromStorage = null;
-                    try {
-                        themeFromStorage = localStorage.getItem(storageKey);
-                    } catch (error) {
-                        themeFromStorage = null;
-                    }
-                    if (!themeFromStorage) {
-                        applyTheme(event.matches ? 'dark' : 'light');
-                    }
-                };
-
-                if (typeof prefersDark.addEventListener === 'function') {
-                    prefersDark.addEventListener('change', handleChange);
-                } else if (typeof prefersDark.addListener === 'function') {
-                    prefersDark.addListener(handleChange);
-                }
-            }
-
-            if (toggle) {
-                toggle.addEventListener('click', () => {
-                    const nextTheme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-                    applyTheme(nextTheme);
-                    try {
-                        localStorage.setItem(storageKey, nextTheme);
-                    } catch (error) {
-                        // ignore storage errors
-                    }
-                });
-            }
-        });
-    </script>
+    <script src="{% static 'js/theme-toggle.js' %}"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-{% load i18n %}
+{% load i18n static %}
 <html lang="{{ LANGUAGE_CODE }}" data-theme="light">
 <head>
     <meta charset="UTF-8" />
@@ -372,10 +372,21 @@
                 <ul class="navbar-nav ms-auto align-items-center">
 
                     <li class="nav-item me-3">
-                        <button class="btn btn-sm theme-toggle" type="button" aria-pressed="false" aria-label="Переключить тему">
+                        <button
+                            class="btn btn-sm theme-toggle"
+                            type="button"
+                            aria-pressed="false"
+                            aria-label="{% translate 'Переключить тему' %}"
+                            data-theme-toggle
+                            data-theme-light-text="{% translate 'Светлая тема' %}"
+                            data-theme-dark-text="{% translate 'Тёмная тема' %}"
+                        >
                             <i class="bi bi-sun-fill theme-icon-sun"></i>
                             <i class="bi bi-moon-stars-fill theme-icon-moon"></i>
-                            <span class="theme-toggle-text d-none d-md-inline">{% translate "Светлая тема" %}</span>
+                            <span
+                                class="theme-toggle-text d-none d-md-inline"
+                                data-theme-toggle-text
+                            >{% translate "Светлая тема" %}</span>
                         </button>
                     </li>
 
@@ -440,7 +451,7 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', (event) => {
+    document.addEventListener('DOMContentLoaded', () => {
         const alerts = document.querySelectorAll('.alert.alert-dismissible');
         alerts.forEach((alert) => {
             setTimeout(() => {
@@ -449,65 +460,10 @@
             }, 3000);
         });
 
-        const storageKey = 'preferredTheme';
-        const root = document.documentElement;
-        const toggles = document.querySelectorAll('.theme-toggle');
-        const prefersDark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-
-        const applyTheme = (theme) => {
-            root.setAttribute('data-theme', theme);
-            toggles.forEach((toggle) => {
-                toggle.setAttribute('aria-pressed', theme === 'dark');
-                const text = toggle.querySelector('.theme-toggle-text');
-                if (text) {
-                    text.textContent = theme === 'dark' ? '{% translate "Тёмная тема" %}' : '{% translate "Светлая тема" %}';
-                }
-            });
-        };
-
-        let storedTheme;
-        try {
-            storedTheme = localStorage.getItem(storageKey);
-        } catch (error) {
-            storedTheme = null;
-        }
-
-        const initialTheme = storedTheme || (prefersDark && prefersDark.matches ? 'dark' : 'light');
-        applyTheme(initialTheme);
-
-        if (prefersDark) {
-            const handlePrefersDarkChange = (event) => {
-                let themeFromStorage = null;
-                try {
-                    themeFromStorage = localStorage.getItem(storageKey);
-                } catch (error) {
-                    themeFromStorage = null;
-                }
-                if (!themeFromStorage) {
-                    applyTheme(event.matches ? 'dark' : 'light');
-                }
-            };
-
-            if (typeof prefersDark.addEventListener === 'function') {
-                prefersDark.addEventListener('change', handlePrefersDarkChange);
-            } else if (typeof prefersDark.addListener === 'function') {
-                prefersDark.addListener(handlePrefersDarkChange);
-            }
-        }
-
-        toggles.forEach((toggle) => {
-            toggle.addEventListener('click', () => {
-                const nextTheme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-                applyTheme(nextTheme);
-                try {
-                    localStorage.setItem(storageKey, nextTheme);
-                } catch (error) {
-                    // Ignore write errors (e.g., private mode)
-                }
-            });
-        });
     });
 </script>
+
+<script src="{% static 'js/theme-toggle.js' %}"></script>
 
 {% block extra_js %}
 {# Этот блок предназначен для ваших кастомных скриптов #}
