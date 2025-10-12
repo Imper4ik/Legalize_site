@@ -77,7 +77,11 @@
   };
 
   const applyTheme = (theme) => {
+    document.documentElement.setAttribute('data-theme', theme);
     document.documentElement.setAttribute('data-bs-theme', theme);
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.classList.toggle('theme-dark', theme === 'dark');
+    document.documentElement.classList.toggle('theme-light', theme !== 'dark');
     toggles.forEach((toggle) => updateToggle(toggle, theme));
   };
 
@@ -85,7 +89,9 @@
     toggles.push(toggle);
 
     toggle.addEventListener('click', () => {
-      const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+      const currentTheme =
+        document.documentElement.getAttribute('data-theme') ||
+        document.documentElement.getAttribute('data-bs-theme');
       const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
       applyTheme(nextTheme);
       saveTheme(nextTheme);
@@ -104,7 +110,9 @@
       .querySelectorAll('[data-theme-toggle]')
       .forEach((toggle) => setupToggle(toggle));
 
-    const themeFromDom = document.documentElement.getAttribute('data-bs-theme');
+    const themeFromDom =
+      document.documentElement.getAttribute('data-theme') ||
+      document.documentElement.getAttribute('data-bs-theme');
     const initialTheme = themeFromDom || getPreferredTheme();
     applyTheme(initialTheme);
 
