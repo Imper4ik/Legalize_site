@@ -27,6 +27,14 @@
             --muted-color: #6c757d;
             --navbar-bg: #ffffff;
             --navbar-color: #212529;
+            --page-gradient-base: linear-gradient(140deg, rgba(248, 250, 252, 0.95), rgba(226, 232, 240, 0.9));
+            --page-gradient-1: radial-gradient(circle at 12% 18%, rgba(37, 99, 235, 0.16), transparent 58%);
+            --page-gradient-2: radial-gradient(circle at 88% 14%, rgba(147, 51, 234, 0.16), transparent 55%);
+            --page-gradient-3: radial-gradient(circle at 65% 85%, rgba(16, 185, 129, 0.14), transparent 58%);
+            --page-noise-opacity: 0.25;
+            --page-surface-bg: rgba(255, 255, 255, 0.9);
+            --page-surface-border: rgba(15, 23, 42, 0.08);
+            --page-surface-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
         }
 
         :root[data-theme="dark"] {
@@ -39,12 +47,54 @@
             --muted-color: #94a3b8;
             --navbar-bg: #111827;
             --navbar-color: #f8fafc;
+            --page-gradient-base: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.98));
+            --page-gradient-1: radial-gradient(circle at 15% 12%, rgba(59, 130, 246, 0.22), transparent 55%);
+            --page-gradient-2: radial-gradient(circle at 90% 0%, rgba(192, 132, 252, 0.22), transparent 55%);
+            --page-gradient-3: radial-gradient(circle at 48% 88%, rgba(34, 197, 94, 0.16), transparent 60%);
+            --page-noise-opacity: 0.12;
+            --page-surface-bg: rgba(15, 23, 42, 0.78);
+            --page-surface-border: rgba(148, 163, 184, 0.22);
+            --page-surface-shadow: 0 32px 70px rgba(2, 6, 23, 0.65);
         }
 
         body {
             background-color: var(--body-bg);
             color: var(--body-color);
-            transition: background-color 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        body::before {
+            z-index: -2;
+            background: var(--page-gradient-base),
+                        var(--page-gradient-1),
+                        var(--page-gradient-2),
+                        var(--page-gradient-3);
+            background-blend-mode: normal;
+        }
+
+        body::after {
+            z-index: -1;
+            background-image: radial-gradient(rgba(15, 23, 42, 0.12) 1px, transparent 1px);
+            background-size: 26px 26px;
+            mix-blend-mode: multiply;
+            opacity: var(--page-noise-opacity);
+        }
+
+        :root[data-theme="dark"] body::after {
+            background-image: radial-gradient(rgba(148, 163, 184, 0.2) 1px, transparent 1px);
+            mix-blend-mode: soft-light;
         }
 
         a {
@@ -133,6 +183,36 @@
 
         :root[data-theme="dark"] .theme-toggle .theme-icon-moon {
             display: inline;
+        }
+
+        .page-surface {
+            position: relative;
+            z-index: 1;
+            margin-top: clamp(2rem, 6vw, 3.5rem);
+            margin-bottom: clamp(3rem, 7vw, 4.5rem) !important;
+            padding: clamp(1.75rem, 4vw, 3rem);
+            background: var(--page-surface-bg);
+            border-radius: clamp(20px, 4vw, 28px);
+            border: 1px solid var(--page-surface-border);
+            box-shadow: var(--page-surface-shadow);
+            backdrop-filter: blur(16px);
+            overflow: hidden;
+        }
+
+        .page-surface > :first-child {
+            margin-top: 0;
+        }
+
+        .page-surface > :last-child {
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 767.98px) {
+            .page-surface {
+                margin-top: 1.5rem;
+                padding: 1.5rem;
+                border-radius: 20px;
+            }
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -235,7 +315,7 @@
 </div>
 {% endif %}
 
-<main class="container mb-5">
+<main class="container page-surface mb-5">
     {% block content %}{% endblock %}
 </main>
 
