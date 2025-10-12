@@ -16,7 +16,7 @@
     <style>
     /*
      * ==========================================
-     * СВЕТЛАЯ ТЕМА (ПО УМОЛЧАЛЬНИЮ)
+     * СВЕТЛАЯ ТЕМА (ПО УМОЛЧАНИЮ)
      * ==========================================
      */
     :root {
@@ -51,40 +51,45 @@
 
     /*
      * ==========================================
-     * ТЁМНАЯ ТЕМА (КРАСИВАЯ, ГЛУБОКАЯ)
+     * ТЁМНАЯ ТЕМА (ПОД СТИЛЬ АВТОРИЗАЦИИ)
      * ==========================================
      */
     :root[data-theme="dark"] {
         color-scheme: dark;
-        /* Основные цвета */
-        --link-color: #58A6FF;
-        --muted-color: #8B949E;
+        /* Основные цвета (взяты из auth_base) */
+        --link-color: #93c5fd;
+        --muted-color: #94a3b8;
+        --auth-primary: #2563eb;
+        --auth-secondary: #9333ea;
 
-        /* Фоны и поверхности */
-        --body-bg: #0D1117;
-        --body-color: #C9D1D9;
-        --surface-bg: #161B22;
-        --surface-border: #30363D;
+        /* Фоны и поверхности (взяты из auth_base) */
+        --body-bg: #0f172a;
+        --body-color: #e2e8f0;
+        --surface-bg: #1e293b;
+        --surface-border: rgba(148, 163, 184, 0.35);
 
         /* Навигация */
-        --navbar-bg: #161B22;
-        --navbar-color: #C9D1D9;
+        --navbar-bg: #111827;
+        --navbar-color: #f8fafc;
 
         /* Градиенты и тени */
-        --page-gradient-base: linear-gradient(135deg, rgba(13, 17, 23, 0.96), rgba(13, 17, 23, 0.98));
+        --page-gradient-base: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.98));
         --page-gradient-1: radial-gradient(circle at 15% 12%, rgba(59, 130, 246, 0.28), transparent 55%);
         --page-gradient-2: radial-gradient(circle at 90% 0%, rgba(192, 132, 252, 0.28), transparent 55%);
         --page-gradient-3: radial-gradient(circle at 48% 88%, rgba(34, 197, 94, 0.22), transparent 60%);
         --page-noise-opacity: 0.18;
-        --page-surface-bg: rgba(22, 27, 34, 0.9);
-        --page-surface-border: #30363D;
-        --page-surface-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+        --page-surface-bg: rgba(30, 41, 59, 0.9);
+        --page-surface-border: rgba(148, 163, 184, 0.22);
+        --page-surface-shadow: 0 32px 70px rgba(2, 6, 23, 0.65);
 
         /* Цвета оповещений для Dark Mode */
-        --bs-success-rgb: 34,197,94; /* Зеленый */
-        --bs-info-rgb: 94,197,255;   /* Голубой */
-        --bs-warning-rgb: 255,197,94; /* Желтый */
-        --bs-danger-rgb: 255,94,94;  /* Красный */
+        --bs-success-rgb: 34,197,94;
+        --bs-info-rgb: 94,197,255;
+        --bs-warning-rgb: 255,197,94;
+        --bs-danger-rgb: 255,94,94;
+
+        /* Новые переменные для градиентов кнопок */
+        --btn-primary-gradient: linear-gradient(135deg, var(--auth-primary), var(--auth-secondary));
     }
 
     /*
@@ -129,8 +134,12 @@
     }
 
     :root[data-theme="dark"] body::after {
-        background-image: radial-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px);
+        background-image: radial-gradient(rgba(148, 163, 184, 0.1) 1px, transparent 1px);
         mix-blend-mode: soft-light;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        color: var(--body-color); /* Убедимся, что заголовки используют правильный цвет */
     }
 
     a {
@@ -169,7 +178,6 @@
     /* ОСНОВНЫЕ ПОВЕРХНОСТИ (КАРТОЧКИ, МОДАЛЬНЫЕ ОКНА) */
     .card,
     .dropdown-menu,
-    .modal-content,
     .list-group-item,
     .offcanvas,
     .popover,
@@ -177,6 +185,22 @@
         background-color: var(--surface-bg);
         color: var(--body-color);
         border-color: var(--surface-border);
+    }
+
+    .modal-content { /* Отдельно для modal-content, чтобы переопределить все внутренние элементы */
+        background-color: var(--surface-bg);
+        color: var(--body-color);
+        border-color: var(--surface-border);
+    }
+    .modal-header, .modal-footer {
+        border-color: var(--surface-border);
+        background-color: var(--surface-bg); /* Убедимся, что фон соответствует */
+    }
+    .modal-title {
+        color: var(--body-color); /* Чтобы заголовки в модальных окнах были правильного цвета */
+    }
+    .modal-header .btn-close {
+        filter: invert(1) grayscale(100%); /* Делаем крестик светлым в темной теме */
     }
 
     .dropdown-item {
@@ -194,16 +218,24 @@
     .form-select,
     .form-check-input,
     .input-group-text {
-        background-color: var(--surface-bg);
+        background-color: var(--surface-bg); /* Изначальный фон */
         color: var(--body-color);
         border-color: var(--surface-border);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+    }
+    :root[data-theme="dark"] .form-control,
+    :root[data-theme="dark"] .form-select,
+    :root[data-theme="dark"] .form-check-input,
+    :root[data-theme="dark"] .input-group-text {
+        background-color: #1a2434; /* Чуть темнее, чтобы контрастировало с surface-bg */
+        border-color: rgba(148, 163, 184, 0.4); /* Чуть более выраженная граница */
     }
 
     .form-control:focus,
     .form-select:focus,
     .form-check-input:focus {
         border-color: var(--link-color);
-        box-shadow: 0 0 0 0.25rem rgba(94, 166, 255, 0.25);
+        box-shadow: 0 0 0 0.25rem rgba(147, 51, 234, 0.25); /* Фокусный градиент из auth_base */
     }
 
     /* -------------------------------------- */
@@ -215,8 +247,14 @@
         --bs-table-bg: var(--surface-bg);
         --bs-table-color: var(--body-color);
         --bs-table-border-color: var(--surface-border);
-        --bs-table-striped-bg: #1c232f;
-        --bs-table-hover-bg: #222935;
+        --bs-table-striped-bg: #283748; /* Контрастный фон для полос */
+        --bs-table-hover-bg: #324157;   /* Цвет при наведении */
+    }
+    :root[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+        background-color: #283748; /* Для полосатых строк в dark mode */
+    }
+    :root[data-theme="dark"] .table-hover > tbody > tr:hover > * {
+        background-color: #324157; /* Для ховера строк в dark mode */
     }
 
     .table thead, .table tfoot {
@@ -225,6 +263,23 @@
     }
 
     /* КОРРЕКЦИЯ КНОПОК */
+    .btn-primary {
+        background: var(--btn-primary-gradient);
+        border: none;
+        color: #f8fafc;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.35);
+        background: var(--btn-primary-gradient); /* Переопределить, чтобы градиент не менялся */
+        color: #f8fafc;
+    }
+    .btn-primary:active {
+        transform: translateY(0);
+        box-shadow: none;
+    }
+
     .btn-secondary {
         --bs-btn-bg: var(--surface-border);
         --bs-btn-color: var(--body-color);
@@ -236,36 +291,46 @@
         color: #fff !important;
     }
 
+    .btn-info { /* Если используются кнопки info */
+        --bs-btn-bg: var(--link-color);
+        --bs-btn-color: #fff;
+        --bs-btn-border-color: var(--link-color);
+    }
+    .btn-info:hover {
+        --bs-btn-bg: #60a5fa; /* Чуть светлее */
+        --bs-btn-border-color: #60a5fa;
+    }
+
+
     /* ОПОВЕЩЕНИЯ (ALERTS) */
     :root[data-theme="dark"] .alert {
-        color: var(--body-color); /* Светлый текст по умолчанию */
-        background-color: var(--surface-bg); /* Темный фон по умолчанию */
+        color: var(--body-color);
+        background-color: var(--surface-bg);
         border-color: var(--surface-border);
     }
 
-    /* Переопределение цветов для конкретных типов оповещений в Dark Mode */
     :root[data-theme="dark"] .alert-success {
         color: #B5F1CC;
-        background-color: rgba(34, 197, 94, 0.15); /* Нежный зеленый фон */
+        background-color: rgba(34, 197, 94, 0.15);
         border-color: rgba(34, 197, 94, 0.35);
     }
     :root[data-theme="dark"] .alert-danger {
         color: #FFC4C4;
-        background-color: rgba(255, 94, 94, 0.15); /* Нежный красный фон */
+        background-color: rgba(255, 94, 94, 0.15);
         border-color: rgba(255, 94, 94, 0.35);
     }
     :root[data-theme="dark"] .alert-info {
         color: #C1E1FF;
-        background-color: rgba(94, 197, 255, 0.15); /* Нежный голубой фон */
+        background-color: rgba(94, 197, 255, 0.15);
         border-color: rgba(94, 197, 255, 0.35);
     }
     :root[data-theme="dark"] .alert-warning {
         color: #FFE6A8;
-        background-color: rgba(255, 197, 94, 0.15); /* Нежный желтый фон */
+        background-color: rgba(255, 197, 94, 0.15);
         border-color: rgba(255, 197, 94, 0.35);
     }
     :root[data-theme="dark"] .alert .btn-close {
-        filter: invert(1); /* Делает крестик светлым */
+        filter: invert(1);
     }
 
 
