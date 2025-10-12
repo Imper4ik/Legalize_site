@@ -1,78 +1,182 @@
 {# clients/templates/clients/document_reminder_list.html #}
 {% extends "base.html" %}
-{% load static %}
+{% load static i18n %}
 
 {% block title %}
-  {{ title|default:"Напоминания" }}
+  {{ title|default:_("Напоминания") }}
+{% endblock %}
+
+{% block page_header %}
+<div class="section-header">
+  <div>
+    <h1 class="h3 mb-1">
+      <i class="fas fa-bell me-2 text-warning"></i>
+      {{ title|default:_("Напоминания") }}
+    </h1>
+    <div class="text-muted">
+      {% translate "Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и периодам" %}
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <form action="{% url 'clients:run_update_reminders' %}" method="post" class="d-inline">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="documents">
+      <button type="submit" class="btn btn-gradient">
+        <i class="fas fa-sync-alt me-2"></i>{% translate "Проверить и создать новые" %}
+      </button>
+    </form>
+  </div>
+</div>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0">
-      <i class="fas fa-bell text-warning"></i> {{ title }} ({{ total_reminders_count }})
-    </h2>
-    <div>
-      <form action="{% url 'clients:run_update_reminders' %}" method="post" class="d-inline">
-        {% csrf_token %}
-        {# ДОБАВЛЕНО: Скрытое поле для указания страницы возврата #}
-        <input type="hidden" name="next" value="documents">
-        <button type="submit" class="btn btn-primary">
-          <i class="fas fa-sync-alt"></i> Проверить и создать новые
-        </button>
-      </form>
+
+<style>
+  /* Карточка фильтров с лёгким стеклянным эффектом */
+  .filters-card {
+    border-radius: 16px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    box-shadow: var(--shadow-1);
+  }
+
+  /* Заголовок секции */
+  .reminders-title {
+    display: flex; align-items: center; gap: .5rem;
+    margin-bottom: 1rem;
+  }
+
+  /* list-group — лучшая читаемость в тёмной теме */
+  html[data-theme="dark"] .list-group-item {
+    background-color: var(--surface);
+    color: var(--fg);
+    border-color: var(--border);
+  }
+  .list-group-item + .list-group-item {
+    border-top-color: var(--border);
+  }
+  .list-group-item:hover {
+    background-color: rgba(96,165,250,0.08);
+  }
+
+  /* Плашки-счётчики */
+  .count-badge {
+    font-weight: 600;
+    padding: .25rem .5rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,.5);
+  }
+  html[data-theme="dark"] .count-badge {
+    background: rgba(255,255,255,.06);
+  }
+
+  /* Кнопки фильтров */
+  .btn-soft {
+    background: rgba(13,110,253,.08);
+    color: #0d6efd;
+    border: 1px solid rgba(13,110,253,.15);
+  }
+
+  /* Сетка фильтров компактнее на мобильном */
+  @media (max-width: 768px) {
+    .filters-card .row > [class^="col-"] { margin-bottom: .5rem; }
+  }
+</style>
+
+{# Блок сообщений (если вдруг не поймались глобально) #}
+{% if messages %}
+  {% for message in messages %}
+    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% translate 'Закрыть' %}"></button>
     </div>
+  {% endfor %}
+{% endif %}
+
+{# Секция: Напоминания по документам #}
+<section id="documents-section" class="reminders-section">
+  <div class="reminders-title">
+    <i class="fas fa-file-alt text-info"></i>
+    <h4 class="mb-0">
+      {% translate "Напоминания по документам" %}
+      <span class="count-badge">{{ document_reminders.count }}</span>
+    </h4>
   </div>
 
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  <div class="card filters-card card-body mb-4">
+    <form method="get" action="#documents-section" class="row g-3 align-items-end">
+      <div class="col-md-4">
+        <label for="doc_client" class="form-label"><strong>{% translate "Клиент" %}</strong></label>
+        <select name="doc_client" id="doc_client" class="form-select">
+          <option value="">{% translate "Все клиенты" %}</option>
+          {% for client in all_clients %}
+            <option value="{{ client.id }}" {% if doc_client_filter_id == client.id %}selected{% endif %}>{{ client }}</option>
+          {% endfor %}
+        </select>
       </div>
-    {% endfor %}
+
+      <div class="col-md-3">
+        <label for="doc_start_date" class="form-label"><strong>{% translate "Дата от" %}</strong></label>
+        <input type="date"
+               name="doc_start_date"
+               id="doc_start_date"
+               class="form-control"
+               value="{{ doc_filter_values.doc_start_date|default:'' }}">
+      </div>
+
+      <div class="col-md-3">
+        <label for="doc_end_date" class="form-label"><strong>{% translate "Дата до" %}</strong></label>
+        <input type="date"
+               name="doc_end_date"
+               id="doc_end_date"
+               class="form-control"
+               value="{{ doc_filter_values.doc_end_date|default:'' }}">
+      </div>
+
+      <div class="col-md-2 d-flex flex-column">
+        <button type="submit" class="btn btn-soft w-100">
+          <i class="bi bi-funnel me-1"></i>{% translate "Фильтровать" %}
+        </button>
+        <a href="{% url 'clients:document_reminder_list' %}#documents-section" class="btn btn-outline-secondary w-100 mt-2">
+          {% translate "Сбросить" %}
+        </a>
+      </div>
+    </form>
+  </div>
+
+  {% if total_reminders_count %}
+    <div class="mb-3">
+      <span class="text-muted">
+        {% translate "Всего напоминаний" %}: <strong>{{ total_reminders_count }}</strong>
+      </span>
+    </div>
   {% endif %}
 
-  <div class="reminders-section mt-4" id="documents-section">
-    <h4 class="mb-3"><i class="fas fa-file-alt text-info"></i> Напоминания по документам ({{ document_reminders.count }})</h4>
-
-    <div class="card card-body mb-4 shadow-sm bg-light">
-      <form method="get" action="#documents-section" class="row g-3 align-items-end">
-        <div class="col-md-4">
-          <label for="doc_client" class="form-label"><strong>Клиент</strong></label>
-          <select name="doc_client" id="doc_client" class="form-select">
-            <option value="">Все клиенты</option>
-            {% for client in all_clients %}
-              <option value="{{ client.id }}" {% if doc_client_filter_id == client.id %}selected{% endif %}>{{ client }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-md-3">
-          <label for="doc_start_date" class="form-label"><strong>Дата от</strong></label>
-          <input type="date" name="doc_start_date" id="doc_start_date" class="form-control" value="{{ doc_filter_values.doc_start_date|default:'' }}">
-        </div>
-        <div class="col-md-3">
-          <label for="doc_end_date" class="form-label"><strong>Дата до</strong></label>
-          <input type="date" name="doc_end_date" id="doc_end_date" class="form-control" value="{{ doc_filter_values.doc_end_date|default:'' }}">
-        </div>
-        <div class="col-md-2 d-flex flex-column">
-          <button type="submit" class="btn btn-info w-100">Фильтровать</button>
-          {# Проверьте, что это перенаправляет именно на эту страницу, если это основной шаблон #}
-          <a href="{% url 'clients:document_reminder_list' %}#documents-section" class="btn btn-secondary w-100 mt-2">Сбросить</a>
-        </div>
-      </form>
-    </div>
-
-    <div class="list-group">
-      {% for reminder in document_reminders %}
-        {% if reminder.id %}
-          {% include 'clients/partials/reminder_item.html' with reminder=reminder icon='fa-file-alt' %}
-        {% endif %}
-      {% empty %}
-        <p class="text-muted">Нет напоминаний по документам, соответствующих фильтрам.</p>
-      {% endfor %}
-    </div>
+  <div class="list-group">
+    {% for reminder in document_reminders %}
+      {% if reminder.id %}
+        {# Рендер отдельного элемента — используем твой существующий partial #}
+        {% include 'clients/partials/reminder_item.html' with reminder=reminder icon='fa-file-alt' %}
+      {% endif %}
+    {% empty %}
+      <p class="text-muted mb-0">{% translate "Нет напоминаний по документам, соответствующих фильтрам." %}</p>
+    {% endfor %}
   </div>
+</section>
 
-  </div>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script>
+    // Если захочешь flatpickr для более приятного выбора дат — раскомментируй блок ниже.
+    // document.addEventListener('DOMContentLoaded', function () {
+    //   if (window.flatpickr) {
+    //     flatpickr('#doc_start_date', { dateFormat: 'Y-m-d' });
+    //     flatpickr('#doc_end_date',   { dateFormat: 'Y-m-d' });
+    //   }
+    // });
+  </script>
 {% endblock %}
