@@ -11,6 +11,8 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.core.management import call_command
 from datetime import datetime
 from django.template.loader import render_to_string
+from django.utils.translation import gettext as _
+from django.conf import settings
 
 from legalize_site.utils.http import request_is_ajax
 from .models import Client, Document, Payment, Reminder
@@ -116,7 +118,13 @@ def dashboard_redirect_view(request):
     """
     if request.user.is_staff:
         return redirect('clients:client_list')
-    return HttpResponseForbidden('Доступ запрещен')
+
+    support_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'support@example.com')
+    context = {
+        'support_email': support_email,
+        'error_title': _('Доступ запрещен'),
+    }
+    return render(request, '403.html', context=context, status=403)
 
 
 @login_required
