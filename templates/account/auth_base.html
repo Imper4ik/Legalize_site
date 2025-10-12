@@ -29,6 +29,14 @@
             --auth-toolbar-border: rgba(148, 163, 184, 0.25);
             --auth-toolbar-text: #0f172a;
             --auth-toggle-hover: rgba(37, 99, 235, 0.12);
+            --theme-toggle-bg: rgba(255, 255, 255, 0.78);
+            --theme-toggle-border: rgba(15, 23, 42, 0.14);
+            --theme-toggle-shadow: 0 14px 32px rgba(15, 23, 42, 0.14);
+            --theme-toggle-text: #0f172a;
+            --theme-toggle-icon: #0f172a;
+            --theme-toggle-track: rgba(37, 99, 235, 0.2);
+            --theme-toggle-thumb: linear-gradient(135deg, #fbbf24, #fb7185);
+            --theme-toggle-thumb-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
         }
 
         :root[data-theme="dark"] {
@@ -51,6 +59,14 @@
             --auth-toolbar-border: rgba(148, 163, 184, 0.35);
             --auth-toolbar-text: #f8fafc;
             --auth-toggle-hover: rgba(148, 163, 184, 0.16);
+            --theme-toggle-bg: rgba(15, 23, 42, 0.55);
+            --theme-toggle-border: rgba(148, 163, 184, 0.35);
+            --theme-toggle-shadow: 0 20px 46px rgba(2, 6, 23, 0.65);
+            --theme-toggle-text: #f8fafc;
+            --theme-toggle-icon: #fefce8;
+            --theme-toggle-track: rgba(148, 163, 184, 0.3);
+            --theme-toggle-thumb: linear-gradient(135deg, #38bdf8, #6366f1);
+            --theme-toggle-thumb-shadow: 0 12px 28px rgba(2, 6, 23, 0.65);
         }
 
         * {
@@ -122,13 +138,12 @@
 
         .auth-toolbar .theme-toggle {
             border-radius: 999px;
-            border: 1px solid var(--auth-toolbar-border);
-            background: transparent;
-            color: var(--auth-toolbar-text);
+            border: 1px solid var(--theme-toggle-border);
+            background: var(--theme-toggle-bg);
+            color: var(--theme-toggle-text);
             font-weight: 600;
             padding: 0.4rem 0.9rem;
             cursor: pointer;
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
         }
 
         .auth-toolbar .theme-toggle:hover,
@@ -138,6 +153,8 @@
             border-color: var(--auth-toolbar-border);
             transform: translateY(-1px);
             outline: none;
+            transform: translateY(-1px);
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
         }
 
         .auth-toolbar .theme-toggle .theme-icon-sun,
