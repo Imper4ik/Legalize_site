@@ -143,18 +143,49 @@
 
     <script>
         (function () {
+            const root = document.documentElement;
             const storageKey = 'preferredTheme';
+
+            const apply = (theme) => {
+                const normalized = theme === 'dark' ? 'dark' : 'light';
+
+                root.setAttribute('data-theme', normalized);
+                root.setAttribute('data-bs-theme', normalized);
+                root.dataset.theme = normalized;
+                root.classList.toggle('theme-dark', normalized === 'dark');
+                root.classList.toggle('theme-light', normalized !== 'dark');
+
+                if (document.body) {
+                    document.body.setAttribute('data-theme', normalized);
+                    document.body.setAttribute('data-bs-theme', normalized);
+                    document.body.dataset.theme = normalized;
+                    document.body.classList.toggle('theme-dark', normalized === 'dark');
+                    document.body.classList.toggle('theme-light', normalized !== 'dark');
+                }
+
+                const meta = document.querySelector('meta[name="color-scheme"]');
+                if (meta) {
+                    meta.setAttribute('content', normalized === 'dark' ? 'dark light' : 'light dark');
+                }
+
+                return normalized;
+            };
+
             try {
                 const storedTheme = localStorage.getItem(storageKey);
                 if (storedTheme) {
-                    document.documentElement.setAttribute('data-theme', storedTheme);
+                    apply(storedTheme);
                     return;
                 }
+
                 if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                    document.documentElement.setAttribute('data-theme', 'dark');
+                    apply('dark');
+                    return;
                 }
+
+                apply('light');
             } catch (error) {
-                document.documentElement.setAttribute('data-theme', 'light');
+                apply('light');
             }
         })();
     </script>
