@@ -54,8 +54,8 @@
     box-shadow: inset 0 -1px 0 var(--border);
   }
 
-  /* Светлая тема — шахматка по колонкам */
-  html:not([data-theme="dark"]) .table-modern td:nth-child(odd) { background: rgba(13, 110, 253, 0.06); }
+  /* Светлая тема — лёгкая шахматка по колонкам */
+  html:not([data-theme="dark"]) .table-modern td:nth-child(odd) { background: rgba(13,110,253,0.06); }
   html:not([data-theme="dark"]) .table-modern td:nth-child(even){ background: transparent; }
 
   /* Тёмная тема — читаемость */
@@ -76,6 +76,7 @@
   .notes-editor {
     min-height: 38px;
     overflow-y: auto;
+    white-space: pre-wrap;
   }
   /* Серый цвет для искусственного “None” */
   .notes-editor.is-none { color: var(--muted); opacity: .9; }
@@ -123,8 +124,12 @@
             <form action="{% url 'clients:update_client_notes' pk=client.pk %}" method="post" class="notes-form">
               {% csrf_token %}
               <input type="hidden" name="notes" class="hidden-notes-input">
-              <!-- Показываем “None”, если пусто, но очищаем его на фокусе (JS ниже) -->
-              <div class="form-control notes-editor">
+              <!-- “None” видно до фокуса; на фокусе очищаем; на blur возвращаем, если пусто -->
+              <div class="form-control notes-editor"
+                   contenteditable="true"
+                   role="textbox"
+                   aria-multiline="true"
+                   tabindex="0">
                 {{ client.notes|default:"None"|safe }}
               </div>
               <button class="btn btn-outline-secondary btn-sm mt-2 w-100" type="submit">
@@ -160,7 +165,7 @@
   {{ block.super }}
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Индикатор жирного (для простоты execCommand)
+      // Индикатор жирного (execCommand для простоты)
       const formatButton = document.querySelector('.format-button[data-format="bold"]');
       const boldIndicator = document.getElementById('bold-indicator');
 
@@ -188,7 +193,7 @@
           }
         };
 
-        // Инициализация: если пусто — показать None
+        // Инициализация: если реально пусто (на всякий случай), показать None
         let initial = (ed.textContent || '').trim();
         if (initial === '') {
           ed.innerHTML = 'None';
@@ -222,7 +227,7 @@
           const hidden = this.querySelector('.hidden-notes-input');
           const txt = (ed.textContent || '').trim();
           if (txt.toLowerCase() === 'none') {
-            hidden.value = ''; // ничего не сохраняем
+            hidden.value = ''; // пусто в БД
           } else {
             hidden.value = ed.innerHTML;
           }
