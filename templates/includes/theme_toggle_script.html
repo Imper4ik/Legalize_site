@@ -1,0 +1,160 @@
+<script>
+  (function () {
+    const storageKey = 'preferredTheme';
+    const root = document.documentElement;
+    const toggles = new Set();
+    let prefersDarkQuery = null;
+
+    const readStoredTheme = () => {
+      try {
+        const stored = localStorage.getItem(storageKey);
+        if (stored === 'dark' || stored === 'light') {
+          return stored;
+        }
+      } catch (error) {
+        // Ignore storage access issues (private mode, etc.)
+      }
+      return null;
+    };
+
+    const getSystemPreference = () => {
+      if (!prefersDarkQuery && window.matchMedia) {
+        prefersDarkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      }
+      return prefersDarkQuery;
+    };
+
+    const computePreferredTheme = () => {
+      const stored = readStoredTheme();
+      if (stored) {
+        return stored;
+      }
+      const query = getSystemPreference();
+      if (query && typeof query.matches === 'boolean') {
+        return query.matches ? 'dark' : 'light';
+      }
+      return 'light';
+    };
+
+    const updateMetaColorScheme = (theme) => {
+      const meta = document.querySelector('meta[name="color-scheme"]');
+      if (meta) {
+        meta.setAttribute('content', theme === 'dark' ? 'dark light' : 'light dark');
+      }
+    };
+
+    const reflectTheme = (theme) => {
+      const normalized = theme === 'dark' ? 'dark' : 'light';
+
+      root.setAttribute('data-theme', normalized);
+      root.dataset.theme = normalized;
+      root.classList.toggle('theme-dark', normalized === 'dark');
+      root.classList.toggle('theme-light', normalized !== 'dark');
+
+      if (document.body) {
+        document.body.setAttribute('data-theme', normalized);
+        document.body.dataset.theme = normalized;
+        document.body.classList.toggle('theme-dark', normalized === 'dark');
+        document.body.classList.toggle('theme-light', normalized !== 'dark');
+      }
+
+      updateMetaColorScheme(normalized);
+
+      toggles.forEach((toggle) => {
+        toggle.setAttribute('aria-pressed', normalized === 'dark' ? 'true' : 'false');
+        toggle.dataset.themeState = normalized;
+        toggle.classList.toggle('is-dark', normalized === 'dark');
+        toggle.classList.toggle('is-light', normalized !== 'dark');
+
+        const textElement = toggle.querySelector('[data-theme-toggle-text]');
+        if (textElement) {
+          const nextText =
+            normalized === 'dark'
+              ? toggle.dataset.themeDarkText
+              : toggle.dataset.themeLightText;
+          if (nextText) {
+            textElement.textContent = nextText;
+          }
+        }
+
+        const title =
+          normalized === 'dark'
+            ? toggle.dataset.themeDarkTitle
+            : toggle.dataset.themeLightTitle;
+        if (title) {
+          toggle.setAttribute('title', title);
+        }
+
+        const label =
+          normalized === 'dark'
+            ? toggle.dataset.themeDarkLabel
+            : toggle.dataset.themeLightLabel;
+        if (label) {
+          toggle.setAttribute('aria-label', label);
+        }
+      });
+
+      return normalized;
+    };
+
+    const persistTheme = (theme) => {
+      try {
+        localStorage.setItem(storageKey, theme);
+      } catch (error) {
+        // Silently ignore storage errors
+      }
+    };
+
+    const setTheme = (theme, { remember } = { remember: false }) => {
+      const normalized = reflectTheme(theme);
+      if (remember) {
+        persistTheme(normalized);
+      }
+    };
+
+    const toggleTheme = () => {
+      const current = root.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      setTheme(next, { remember: true });
+    };
+
+    const observeSystemPreference = () => {
+      const query = getSystemPreference();
+      if (!query) {
+        return;
+      }
+
+      const onChange = (event) => {
+        if (!readStoredTheme()) {
+          setTheme(event.matches ? 'dark' : 'light');
+        }
+      };
+
+      if (typeof query.addEventListener === 'function') {
+        query.addEventListener('change', onChange);
+      } else if (typeof query.addListener === 'function') {
+        query.addListener(onChange);
+      }
+    };
+
+    const registerToggle = (toggle) => {
+      if (toggles.has(toggle)) {
+        return;
+      }
+      toggles.add(toggle);
+      toggle.addEventListener('click', toggleTheme);
+    };
+
+    const init = () => {
+      document.querySelectorAll('[data-theme-toggle]').forEach(registerToggle);
+      reflectTheme(computePreferredTheme());
+      observeSystemPreference();
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init, { once: true });
+    } else {
+      init();
+    }
+  })();
+</script>
