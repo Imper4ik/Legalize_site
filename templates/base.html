@@ -14,408 +14,160 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
     <style>
-    /*
-     * ==========================================
-     * СВЕТЛАЯ ТЕМА (ПО УМОЛЧАНИЮ)
-     * ==========================================
-     */
-    :root {
-        color-scheme: light;
-        /* Основные цвета */
-        --auth-primary: #2563eb;
-        --auth-secondary: #8b5cf6;
-        --auth-accent: #10b981;
-        --link-color: #0d6efd;
-        --muted-color: #6c757d;
+        /* -------------------------------------- */
+        /* ПЕРЕМЕННЫЕ ЦВЕТА */
+        /* -------------------------------------- */
+        :root {
+            color-scheme: light;
+            --body-bg: #f8f9fa;
+            --body-color: #212529;
+            --surface-bg: #ffffff;
+            --surface-border: rgba(0, 0, 0, 0.1);
+            --link-color: #0d6efd;
+            --muted-color: #6c757d;
+            --navbar-bg: #ffffff;
+            --navbar-color: #212529;
+        }
 
-        /* Фоны и поверхности */
-        --body-bg: #f8f9fa;
-        --body-color: #212529;
-        --surface-bg: #ffffff;         /* Фон карточек, модальных окон */
-        --surface-border: rgba(0, 0, 0, 0.1);
+        :root[data-theme="dark"] {
+            color-scheme: dark;
+            --body-bg: #212529;
+            --body-color: #f8f9fa;
+            --surface-bg: #343a40;
+            --surface-border: rgba(255, 255, 255, 0.15);
+            --link-color: #93c5fd;
+            --muted-color: #adb5bd;
+            --navbar-bg: #212529;
+            --navbar-color: #f8f9fa;
+        }
 
-        /* Навигация */
-        --navbar-bg: #ffffff;
-        --navbar-color: #212529;
+        /* -------------------------------------- */
+        /* ОБЩИЕ СТИЛИ */
+        /* -------------------------------------- */
+        body {
+            background-color: var(--body-bg);
+            color: var(--body-color);
+            min-height: 100vh;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
 
-        /* Градиенты и тени */
-        --page-gradient-base: linear-gradient(140deg, rgba(248, 250, 252, 0.95), rgba(226, 232, 240, 0.9));
-        --page-gradient-1: radial-gradient(circle at 12% 18%, rgba(37, 99, 235, 0.16), transparent 58%);
-        --page-gradient-2: radial-gradient(circle at 88% 14%, rgba(147, 51, 234, 0.16), transparent 55%);
-        --page-gradient-3: radial-gradient(circle at 65% 85%, rgba(16, 185, 129, 0.14), transparent 58%);
-        --page-noise-opacity: 0.25;
-        --page-surface-bg: rgba(255, 255, 255, 0.9);
-        --page-surface-border: rgba(15, 23, 42, 0.08);
-        --page-surface-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+        a {
+            color: var(--link-color);
+        }
 
-        /* Новые переменные для градиентов кнопок */
-        --btn-primary-gradient: linear-gradient(135deg, var(--auth-primary), var(--auth-secondary));
-    }
+        .text-muted {
+            color: var(--muted-color) !important;
+        }
 
-    /*
-     * ==========================================
-     * ТЁМНАЯ ТЕМА (ПОД СТИЛЬ АВТОРИЗАЦИИ)
-     * ==========================================
-     */
-    :root[data-theme="dark"] {
-        color-scheme: dark;
-        /* Основные цвета (взяты из auth_base) */
-        --link-color: #93c5fd;
-        --muted-color: #94a3b8;
-        --auth-primary: #2563eb;
-        --auth-secondary: #9333ea;
+        /* НАВИГАЦИОННАЯ ПАНЕЛЬ */
+        .theme-navbar {
+            background-color: var(--navbar-bg) !important;
+            border-bottom: 1px solid var(--surface-border);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
 
-        /* Фоны и поверхности (взяты из auth_base) */
-        --body-bg: #0f172a;
-        --body-color: #e2e8f0;
-        --surface-bg: #1e293b;
-        --surface-border: rgba(148, 163, 184, 0.35);
+        .theme-navbar .navbar-brand,
+        .theme-navbar .nav-link,
+        .theme-navbar .navbar-text {
+            color: var(--navbar-color) !important;
+        }
 
-        /* Навигация */
-        --navbar-bg: #111827;
-        --navbar-color: #f8fafc;
+        /* ПОВЕРХНОСТИ (Карточки, модальные окна, дропдауны) */
+        .card,
+        .dropdown-menu,
+        .modal-content,
+        .list-group-item,
+        .offcanvas,
+        .popover,
+        .toast {
+            background-color: var(--surface-bg);
+            color: var(--body-color);
+            border-color: var(--surface-border);
+        }
 
-        /* Градиенты и тени */
-        --page-gradient-base: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.98));
-        --page-gradient-1: radial-gradient(circle at 15% 12%, rgba(59, 130, 246, 0.28), transparent 55%);
-        --page-gradient-2: radial-gradient(circle at 90% 0%, rgba(192, 132, 252, 0.28), transparent 55%);
-        --page-gradient-3: radial-gradient(circle at 48% 88%, rgba(34, 197, 94, 0.22), transparent 60%);
-        --page-noise-opacity: 0.18;
-        --page-surface-bg: rgba(30, 41, 59, 0.9);
-        --page-surface-border: rgba(148, 163, 184, 0.22);
-        --page-surface-shadow: 0 32px 70px rgba(2, 6, 23, 0.65);
+        /* Модальные окна: крестик для темной темы */
+        .modal-header .btn-close {
+            filter: invert(1) grayscale(100%);
+        }
+        :root[data-theme="light"] .modal-header .btn-close {
+            filter: none;
+        }
 
-        /* Цвета оповещений для Dark Mode */
-        --bs-success-rgb: 34,197,94;
-        --bs-info-rgb: 94,197,255;
-        --bs-warning-rgb: 255,197,94;
-        --bs-danger-rgb: 255,94,94;
+        /* ФОРМЫ */
+        .form-control,
+        .form-select,
+        .form-check-input,
+        .input-group-text {
+            background-color: var(--surface-bg);
+            color: var(--body-color);
+            border-color: var(--surface-border);
+        }
 
-        /* Новые переменные для градиентов кнопок */
-        --btn-primary-gradient: linear-gradient(135deg, var(--auth-primary), var(--auth-secondary));
-    }
+        /* -------------------------------------- */
+        /* ИСПРАВЛЕНИЯ ДЛЯ ТАБЛИЦ */
+        /* -------------------------------------- */
 
-    /*
-     * ==========================================
-     * ОБЩИЕ СТИЛИ ЭЛЕМЕНТОВ
-     * ==========================================
-     */
+        /* ТАБЛИЦЫ */
+        .table {
+            --bs-table-bg: var(--surface-bg);
+            --bs-table-color: var(--body-color);
+            --bs-table-border-color: var(--surface-border);
+            /* Устанавливаем фон для полосатых строк в темной теме */
+            --bs-table-striped-bg: #495057;
+            --bs-table-hover-bg: transparent;
+        }
 
-    body {
-        background-color: var(--body-bg);
-        color: var(--body-color);
-        min-height: 100vh;
-        position: relative;
-        overflow-x: hidden;
-        transition: background-color 0.4s ease, color 0.4s ease;
-    }
+        /* Отключаем hover-эффект для ВСЕХ таблиц */
+        .table > tbody > tr:hover > *,
+        .table-hover > tbody > tr:hover > * {
+            background-color: inherit !important;
+            color: inherit !important;
+        }
 
-    body::before,
-    body::after {
-        content: "";
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        transition: opacity 0.4s ease;
-    }
+        /* -------------------------------------- */
+        /* ТЕМА TOGGLE */
+        /* -------------------------------------- */
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
 
-    body::before {
-        z-index: -2;
-        background: var(--page-gradient-base),
-                    var(--page-gradient-1),
-                    var(--page-gradient-2),
-                    var(--page-gradient-3);
-        background-blend-mode: normal;
-    }
+        .theme-toggle .theme-icon-moon {
+            display: none;
+        }
 
-    body::after {
-        z-index: -1;
-        background-image: radial-gradient(rgba(15, 23, 42, 0.12) 1px, transparent 1px);
-        background-size: 26px 26px;
-        mix-blend-mode: multiply;
-        opacity: var(--page-noise-opacity);
-    }
+        :root[data-theme="dark"] .theme-toggle .theme-icon-sun {
+            display: none;
+        }
 
-    :root[data-theme="dark"] body::after {
-        background-image: radial-gradient(rgba(148, 163, 184, 0.1) 1px, transparent 1px);
-        mix-blend-mode: soft-light;
-    }
+        :root[data-theme="dark"] .theme-toggle .theme-icon-moon {
+            display: inline;
+        }
 
-    h1, h2, h3, h4, h5, h6 {
-        color: var(--body-color);
-    }
-
-    a {
-        color: var(--link-color);
-    }
-
-    a:hover,
-    a:focus {
-        color: var(--link-color);
-        opacity: 0.85;
-    }
-
-    .text-muted {
-        color: var(--muted-color) !important;
-    }
-
-    /* НАВИГАЦИОННАЯ ПАНЕЛЬ */
-    .theme-navbar {
-        background-color: var(--navbar-bg) !important;
-        border-bottom: 1px solid var(--surface-border);
-        transition: background-color 0.3s ease, border-color 0.3s ease;
-    }
-
-    .theme-navbar .navbar-brand,
-    .theme-navbar .nav-link,
-    .theme-navbar .navbar-text {
-        color: var(--navbar-color) !important;
-    }
-
-    .theme-navbar .nav-link.active,
-    .theme-navbar .nav-link:focus,
-    .theme-navbar .nav-link:hover {
-        color: var(--link-color) !important;
-    }
-
-    /* ОСНОВНЫЕ ПОВЕРХНОСТИ (КАРТОЧКИ, МОДАЛЬНЫЕ ОКНА) */
-    .card,
-    .dropdown-menu,
-    .list-group-item,
-    .offcanvas,
-    .popover,
-    .toast {
-        background-color: var(--surface-bg);
-        color: var(--body-color);
-        border-color: var(--surface-border);
-    }
-    .modal-content {
-        background-color: var(--surface-bg);
-        color: var(--body-color);
-        border-color: var(--surface-border);
-    }
-    .modal-header, .modal-footer {
-        border-color: var(--surface-border);
-        background-color: var(--surface-bg);
-    }
-    .modal-title {
-        color: var(--body-color);
-    }
-    .modal-header .btn-close {
-        /* Делаем крестик светлым в темной теме */
-        filter: invert(1) grayscale(100%);
-    }
-
-    .dropdown-item {
-        color: var(--body-color);
-    }
-
-    .dropdown-item:hover,
-    .dropdown-item:focus {
-        background-color: rgba(94, 166, 255, 0.1);
-        color: var(--link-color);
-    }
-
-    /* ФОРМЫ */
-    .form-control,
-    .form-select,
-    .form-check-input,
-    .input-group-text {
-        background-color: var(--surface-bg);
-        color: var(--body-color);
-        border-color: var(--surface-border);
-        transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
-    }
-    :root[data-theme="dark"] .form-control,
-    :root[data-theme="dark"] .form-select,
-    :root[data-theme="dark"] .form-check-input,
-    :root[data-theme="dark"] .input-group-text {
-        background-color: #1a2434;
-        border-color: rgba(148, 163, 184, 0.4);
-    }
-
-    .form-control:focus,
-    .form-select:focus,
-    .form-check-input:focus {
-        border-color: var(--link-color);
-        /* Фокусный градиент из auth_base */
-        box-shadow: 0 0 0 0.25rem rgba(147, 51, 234, 0.25);
-    }
-
-    /* -------------------------------------- */
-    /* ИСПРАВЛЕНИЯ ДЛЯ ТАБЛИЦ И ЭЛЕМЕНТОВ БАЗЫ */
-    /* -------------------------------------- */
-
-    /* ТАБЛИЦЫ */
-    .table {
-        --bs-table-bg: var(--surface-bg);
-        --bs-table-color: var(--body-color);
-        --bs-table-border-color: var(--surface-border);
-        --bs-table-striped-bg: #283748;
-        --bs-table-hover-bg: transparent; /* Устанавливаем прозрачность */
-    }
-
-    /* Отключаем hover-эффект для ВСЕХ таблиц */
-    .table > tbody > tr:hover > *,
-    .table-hover > tbody > tr:hover > * {
-        background-color: inherit !important; /* Наследует фон от родителя/полосы */
-        color: inherit !important;
-    }
-
-    /* Сохраняем полосатые строки */
-    :root[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
-        background-color: #283748;
-    }
-
-    .table thead, .table tfoot {
-        color: var(--navbar-color);
-        border-bottom-color: var(--surface-border);
-    }
-
-    /* КОРРЕКЦИЯ КНОПОК */
-    .btn-primary {
-        background: var(--btn-primary-gradient);
-        border: none;
-        color: #f8fafc;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .btn-primary:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.35);
-        background: var(--btn-primary-gradient);
-        color: #f8fafc;
-    }
-    .btn-primary:active {
-        transform: translateY(0);
-        box-shadow: none;
-    }
-
-    .btn-secondary {
-        --bs-btn-bg: var(--surface-border);
-        --bs-btn-color: var(--body-color);
-        --bs-btn-border-color: var(--surface-border);
-    }
-    .btn-secondary:hover {
-        --bs-btn-bg: var(--muted-color);
-        --bs-btn-border-color: var(--muted-color);
-        color: #fff !important;
-    }
-
-    .btn-info {
-        --bs-btn-bg: var(--link-color);
-        --bs-btn-color: #fff;
-        --bs-btn-border-color: var(--link-color);
-    }
-    .btn-info:hover {
-        --bs-btn-bg: #60a5fa;
-        --bs-btn-border-color: #60a5fa;
-    }
-
-
-    /* ОПОВЕЩЕНИЯ (ALERTS) */
-    :root[data-theme="dark"] .alert {
-        color: var(--body-color);
-        background-color: var(--surface-bg);
-        border-color: var(--surface-border);
-    }
-
-    :root[data-theme="dark"] .alert-success {
-        color: #B5F1CC;
-        background-color: rgba(34, 197, 94, 0.15);
-        border-color: rgba(34, 197, 94, 0.35);
-    }
-    :root[data-theme="dark"] .alert-danger {
-        color: #FFC4C4;
-        background-color: rgba(255, 94, 94, 0.15);
-        border-color: rgba(255, 94, 94, 0.35);
-    }
-    :root[data-theme="dark"] .alert-info {
-        color: #C1E1FF;
-        background-color: rgba(94, 197, 255, 0.15);
-        border-color: rgba(94, 197, 255, 0.35);
-    }
-    :root[data-theme="dark"] .alert-warning {
-        color: #FFE6A8;
-        background-color: rgba(255, 197, 94, 0.15);
-        border-color: rgba(255, 197, 94, 0.35);
-    }
-    :root[data-theme="dark"] .alert .btn-close {
-        filter: invert(1);
-    }
-
-
-    /* ПАГИНАЦИЯ */
-    .pagination .page-item .page-link {
-        background-color: var(--surface-bg);
-        color: var(--link-color);
-        border-color: var(--surface-border);
-    }
-
-    .pagination .page-item.active .page-link {
-        background-color: var(--link-color);
-        color: var(--surface-bg);
-        border-color: var(--link-color);
-    }
-
-    /* -------------------------------------- */
-    /* СТИЛИ ДЛЯ ПЕРЕКЛЮЧАТЕЛЯ ТЕМЫ */
-    /* -------------------------------------- */
-    .theme-toggle {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-    }
-
-    .theme-toggle .theme-icon-moon {
-        display: none;
-    }
-
-    :root[data-theme="dark"] .theme-toggle .theme-icon-sun {
-        display: none;
-    }
-
-    :root[data-theme="dark"] .theme-toggle .theme-icon-moon {
-        display: inline;
-    }
-
-    /* ГЛАВНАЯ ПОВЕРХНОСТЬ КОНТЕНТА */
-    .page-surface {
-        position: relative;
-        z-index: 1;
-        margin-top: clamp(2rem, 6vw, 3.5rem);
-        margin-bottom: clamp(3rem, 7vw, 4.5rem) !important;
-        padding: clamp(1.75rem, 4vw, 3rem);
-        background: var(--page-surface-bg);
-        border-radius: clamp(20px, 4vw, 28px);
-        border: 1px solid var(--page-surface-border);
-        box-shadow: var(--page-surface-shadow);
-        backdrop-filter: blur(16px);
-        overflow: hidden;
-    }
-
-    .page-surface > :first-child {
-        margin-top: 0;
-    }
-
-    .page-surface > :last-child {
-        margin-bottom: 0;
-    }
-
-    @media (max-width: 767.98px) {
         .page-surface {
-            margin-top: 1.5rem;
             padding: 1.5rem;
-            border-radius: 20px;
+            border-radius: 0.5rem;
+            background-color: var(--surface-bg);
+            border: 1px solid var(--surface-border);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
         }
-    }
+        :root[data-theme="dark"] .page-surface {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
+        }
 
-    @media (prefers-reduced-motion: reduce) {
-        * {
-            transition-duration: 0.01ms !important;
-            animation-duration: 0.01ms !important;
+        /* Оповещения: крестик для темной темы */
+        :root[data-theme="dark"] .alert .btn-close {
+            filter: invert(1);
         }
-    }
-</style>
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition-duration: 0.01ms !important;
+                animation-duration: 0.01ms !important;
+            }
+        }
+    </style>
 
     {% block extra_head %}{% endblock %}
 
@@ -443,51 +195,51 @@
                 <ul class="navbar-nav ms-auto align-items-center">
 
                     <li class="nav-item me-3">
-                        <button
-                            class="btn btn-sm theme-toggle"
-                            type="button"
-                            aria-pressed="false"
-                            aria-label="{% translate 'Переключить тему' %}"
-                            data-theme-toggle
-                            data-theme-light-text="{% translate 'Светлая тема' %}"
-                            data-theme-dark-text="{% translate 'Тёмная тема' %}"
-                        >
-                            <i class="bi bi-sun-fill theme-icon-sun"></i>
-                            <i class="bi bi-moon-stars-fill theme-icon-moon"></i>
-                            <span
-                                class="theme-toggle-text d-none d-md-inline"
-                                data-theme-toggle-text
-                            ></span> </button>
+                         <button
+                             class="btn btn-sm btn-outline-secondary theme-toggle"
+                             type="button"
+                             aria-pressed="false"
+                             aria-label="{% translate 'Переключить тему' %}"
+                             data-theme-toggle
+                             data-theme-light-text="{% translate 'Светлая тема' %}"
+                             data-theme-dark-text="{% translate 'Тёмная тема' %}"
+                         >
+                             <i class="bi bi-sun-fill theme-icon-sun"></i>
+                             <i class="bi bi-moon-stars-fill theme-icon-moon"></i>
+                             <span
+                                 class="theme-toggle-text d-none d-md-inline"
+                                 data-theme-toggle-text
+                             ></span> </button>
                     </li>
                     <li class="nav-item">
-                        <form action="{% url 'set_language' %}" method="post" class="d-flex align-items-center">
-                            {% csrf_token %}
-                            <input name="next" type="hidden" value="/{{ request.get_full_path|slice:'4:' }}">
-                            <select name="language" onchange="this.form.submit()" class="form-select form-select-sm" aria-label="Language selection">
-                                {% get_current_language as LANGUAGE_CODE %}
-                                {% get_available_languages as LANGUAGES %}
-                                {% for lang_code, lang_name in LANGUAGES %}
-                                    <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>{{ lang_code|upper }}</option>
-                                {% endfor %}
-                            </select>
-                        </form>
+                         <form action="{% url 'set_language' %}" method="post" class="d-flex align-items-center">
+                             {% csrf_token %}
+                             <input name="next" type="hidden" value="/{{ request.get_full_path|slice:'4:' }}">
+                             <select name="language" onchange="this.form.submit()" class="form-select form-select-sm" aria-label="Language selection">
+                                 {% get_current_language as LANGUAGE_CODE %}
+                                 {% get_available_languages as LANGUAGES %}
+                                 {% for lang_code, lang_name in LANGUAGES %}
+                                     <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>{{ lang_code|upper }}</option>
+                                 {% endfor %}
+                             </select>
+                         </form>
                     </li>
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-user-circle me-1"></i>
-                                {{ user.first_name|default:user.username }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
-                                <li>
-                                    <form id="logout-form" method="post" action="{% url 'account_logout' %}">
-                                        {% csrf_token %}
-                                        <button type="submit" class="dropdown-item">
-                                            <i class="fas fa-sign-out-alt me-2"></i>{% translate "Выход" %}
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
+                             <a class="nav-link dropdown-toggle" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                 <i class="fas fa-user-circle me-1"></i>
+                                 {{ user.first_name|default:user.username }}
+                             </a>
+                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
+                                 <li>
+                                     <form id="logout-form" method="post" action="{% url 'account_logout' %}">
+                                         {% csrf_token %}
+                                         <button type="submit" class="dropdown-item">
+                                             <i class="fas fa-sign-out-alt me-2"></i>{% translate "Выход" %}
+                                         </button>
+                                     </form>
+                                 </li>
+                             </ul>
                         </li>
                     {% else %}
                         <li class="nav-item"><a class="nav-link" href="{% url 'account_login' %}">{% translate "Вход" %}</a></li>
@@ -509,8 +261,10 @@
 </div>
 {% endif %}
 
-<main class="container page-surface mb-5">
-    {% block content %}{% endblock %}
+<main class="container mb-5">
+     <div class="page-surface">
+         {% block content %}{% endblock %}
+     </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -519,6 +273,7 @@
     document.addEventListener('DOMContentLoaded', () => {
         const alerts = document.querySelectorAll('.alert.alert-dismissible');
         alerts.forEach((alert) => {
+            // Скрипт для автоматического закрытия оповещений через 3 секунды
             setTimeout(() => {
                 const instance = bootstrap.Alert.getOrCreateInstance(alert);
                 instance.close();
