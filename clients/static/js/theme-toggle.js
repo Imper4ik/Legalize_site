@@ -77,7 +77,7 @@
   };
 
   const applyTheme = (theme) => {
-    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-bs-theme', theme);
     toggles.forEach((toggle) => updateToggle(toggle, theme));
   };
 
@@ -85,7 +85,7 @@
     toggles.push(toggle);
 
     toggle.addEventListener('click', () => {
-      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const currentTheme = document.documentElement.getAttribute('data-bs-theme');
       const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
       applyTheme(nextTheme);
       saveTheme(nextTheme);
@@ -104,7 +104,7 @@
       .querySelectorAll('[data-theme-toggle]')
       .forEach((toggle) => setupToggle(toggle));
 
-    const themeFromDom = document.documentElement.getAttribute('data-theme');
+    const themeFromDom = document.documentElement.getAttribute('data-bs-theme');
     const initialTheme = themeFromDom || getPreferredTheme();
     applyTheme(initialTheme);
 
