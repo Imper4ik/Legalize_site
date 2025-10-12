@@ -54,6 +54,16 @@
             border: none;
         }
 
+        /* Убираем серую подсветку строк при наведении в списках */
+        #result_list tbody tr:hover,
+        #result_list tbody tr:hover > th,
+        #result_list tbody tr:hover > td,
+        .module table tbody tr:hover,
+        .module table tbody tr:hover > th,
+        .module table tbody tr:hover > td {
+            background-color: inherit !important;
+        }
+
         .button, input[type=submit], button {
             background: linear-gradient(135deg, var(--admin-primary), var(--admin-secondary));
             border: none;
