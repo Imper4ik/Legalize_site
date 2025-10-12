@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Legalize{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         :root {
             color-scheme: light;
@@ -27,6 +29,14 @@
             --auth-toolbar-border: rgba(148, 163, 184, 0.25);
             --auth-toolbar-text: #0f172a;
             --auth-toggle-hover: rgba(37, 99, 235, 0.12);
+            --theme-toggle-bg: rgba(255, 255, 255, 0.78);
+            --theme-toggle-border: rgba(15, 23, 42, 0.14);
+            --theme-toggle-shadow: 0 14px 32px rgba(15, 23, 42, 0.14);
+            --theme-toggle-text: #0f172a;
+            --theme-toggle-icon: #0f172a;
+            --theme-toggle-track: rgba(37, 99, 235, 0.2);
+            --theme-toggle-thumb: linear-gradient(135deg, #fbbf24, #fb7185);
+            --theme-toggle-thumb-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
         }
 
         :root[data-theme="dark"] {
@@ -49,6 +59,14 @@
             --auth-toolbar-border: rgba(148, 163, 184, 0.35);
             --auth-toolbar-text: #f8fafc;
             --auth-toggle-hover: rgba(148, 163, 184, 0.16);
+            --theme-toggle-bg: rgba(15, 23, 42, 0.55);
+            --theme-toggle-border: rgba(148, 163, 184, 0.35);
+            --theme-toggle-shadow: 0 20px 46px rgba(2, 6, 23, 0.65);
+            --theme-toggle-text: #f8fafc;
+            --theme-toggle-icon: #fefce8;
+            --theme-toggle-track: rgba(148, 163, 184, 0.3);
+            --theme-toggle-thumb: linear-gradient(135deg, #38bdf8, #6366f1);
+            --theme-toggle-thumb-shadow: 0 12px 28px rgba(2, 6, 23, 0.65);
         }
 
         * {
@@ -100,42 +118,119 @@
             gap: 0.75rem;
         }
 
-        .auth-theme-toggle {
+        .theme-toggle {
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
-            padding: 0.4rem 0.9rem;
+            gap: 0.75rem;
+            padding: 0.45rem 1rem;
             border-radius: 999px;
-            border: 1px solid var(--auth-toolbar-border);
+            border: 1px solid var(--theme-toggle-border);
+            background: var(--theme-toggle-bg);
+            color: var(--theme-toggle-text);
+            font-weight: 600;
+            font-size: 0.95rem;
+            line-height: 1;
+            box-shadow: var(--theme-toggle-shadow);
+            backdrop-filter: blur(16px);
+            transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, transform 0.25s ease;
+            cursor: pointer;
+        }
+
+        .theme-toggle:hover,
+        .theme-toggle:focus {
+            text-decoration: none;
+            outline: none;
+            transform: translateY(-1px);
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
+        }
+
+        :root[data-theme="dark"] .theme-toggle:hover,
+        :root[data-theme="dark"] .theme-toggle:focus {
+            box-shadow: 0 22px 50px rgba(2, 6, 23, 0.7);
+        }
+
+        .theme-toggle-track {
+            width: 48px;
+            height: 26px;
+            border-radius: 999px;
+            background: var(--theme-toggle-track);
+            display: inline-flex;
+            align-items: center;
+            position: relative;
+            padding: 0 2px;
+            transition: background 0.3s ease;
+        }
+
+        .theme-toggle-thumb {
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            background: var(--theme-toggle-thumb);
+            box-shadow: var(--theme-toggle-thumb-shadow);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--theme-toggle-icon);
+            transform: translateX(0);
+            transition: transform 0.3s ease, background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .theme-toggle-thumb i {
+            font-size: 0.9rem;
+            line-height: 1;
+        }
+
+        .theme-toggle-thumb .theme-icon-moon {
+            opacity: 0;
+            transform: scale(0.6);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .theme-toggle-thumb .theme-icon-sun {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        :root[data-theme="dark"] .theme-toggle-thumb {
+            transform: translateX(24px);
+        }
+
+        :root[data-theme="dark"] .theme-toggle-thumb .theme-icon-sun {
+            opacity: 0;
+            transform: scale(0.6);
+        }
+
+        :root[data-theme="dark"] .theme-toggle-thumb .theme-icon-moon {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .theme-toggle-text {
+            white-space: nowrap;
+        }
+
+        .auth-toolbar .theme-toggle {
+            font-size: 0.9rem;
+            padding: 0.4rem 0.9rem;
+            gap: 0.65rem;
+            box-shadow: none;
             background: transparent;
             color: var(--auth-toolbar-text);
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+            border-color: var(--auth-toolbar-border);
         }
 
-        .auth-theme-toggle:hover,
-        .auth-theme-toggle:focus {
+        .auth-toolbar .theme-toggle:hover,
+        .auth-toolbar .theme-toggle:focus {
             background: var(--auth-toggle-hover);
-            transform: translateY(-1px);
-            outline: none;
+            color: var(--auth-toolbar-text);
+            box-shadow: none;
         }
 
-        .auth-theme-toggle .icon-sun,
-        .auth-theme-toggle .icon-moon {
-            font-size: 1rem;
-        }
-
-        .auth-theme-toggle .icon-moon {
-            display: none;
-        }
-
-        :root[data-theme="dark"] .auth-theme-toggle .icon-sun {
-            display: none;
-        }
-
-        :root[data-theme="dark"] .auth-theme-toggle .icon-moon {
-            display: inline;
+        @media (max-width: 600px) {
+            .theme-toggle-text {
+                display: none;
+            }
         }
 
         .auth-shell {
@@ -458,81 +553,12 @@
     <header class="auth-toolbar" role="banner">
         <a class="auth-brand" href="{% url 'account_login' %}">Legalize</a>
         <div class="auth-toolbar-controls">
-            <button class="auth-theme-toggle" type="button" aria-pressed="false" aria-label="{% translate 'Переключить тему' %}">
-                <span class="icon-sun">☀️</span>
-                <span class="icon-moon">🌙</span>
-                <span class="auth-theme-toggle-text"></span>
-            </button>
+            {% include "includes/theme_toggle.html" %}
         </div>
     </header>
     <main class="auth-shell">
         {% block content %}{% endblock %}
     </main>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const storageKey = 'preferredTheme';
-            const root = document.documentElement;
-            const toggle = document.querySelector('.auth-theme-toggle');
-            const prefersDark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
-
-            const updateToggle = (theme) => {
-                if (!toggle) {
-                    return;
-                }
-                toggle.setAttribute('aria-pressed', theme === 'dark');
-                const text = toggle.querySelector('.auth-theme-toggle-text');
-                if (text) {
-                    text.textContent = theme === 'dark' ? '{% translate "Тёмная тема" %}' : '{% translate "Светлая тема" %}';
-                }
-            };
-
-            const applyTheme = (theme) => {
-                root.setAttribute('data-theme', theme);
-                updateToggle(theme);
-            };
-
-            let storedTheme = null;
-            try {
-                storedTheme = localStorage.getItem(storageKey);
-            } catch (error) {
-                storedTheme = null;
-            }
-
-            const initialTheme = storedTheme || (prefersDark && prefersDark.matches ? 'dark' : 'light');
-            applyTheme(initialTheme);
-
-            if (prefersDark) {
-                const handleChange = (event) => {
-                    let themeFromStorage = null;
-                    try {
-                        themeFromStorage = localStorage.getItem(storageKey);
-                    } catch (error) {
-                        themeFromStorage = null;
-                    }
-                    if (!themeFromStorage) {
-                        applyTheme(event.matches ? 'dark' : 'light');
-                    }
-                };
-
-                if (typeof prefersDark.addEventListener === 'function') {
-                    prefersDark.addEventListener('change', handleChange);
-                } else if (typeof prefersDark.addListener === 'function') {
-                    prefersDark.addListener(handleChange);
-                }
-            }
-
-            if (toggle) {
-                toggle.addEventListener('click', () => {
-                    const nextTheme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-                    applyTheme(nextTheme);
-                    try {
-                        localStorage.setItem(storageKey, nextTheme);
-                    } catch (error) {
-                        // ignore storage errors
-                    }
-                });
-            }
-        });
-    </script>
+    <script src="{% static 'js/theme-toggle.js' %}"></script>
 </body>
 </html>

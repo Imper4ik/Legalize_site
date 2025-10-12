@@ -1,0 +1,25 @@
+{% load i18n %}
+<button
+  class="theme-toggle"
+  type="button"
+  aria-pressed="false"
+  aria-label="{% translate 'Переключить тему' %}"
+  title="{% translate 'Переключить на тёмную тему' %}"
+  data-theme-toggle
+  data-theme-light-text="{% translate 'Тёмная тема' %}"
+  data-theme-dark-text="{% translate 'Светлая тема' %}"
+  data-theme-light-title="{% translate 'Переключить на тёмную тему' %}"
+  data-theme-dark-title="{% translate 'Переключить на светлую тему' %}"
+  data-theme-light-label="{% translate 'Переключить на тёмную тему' %}"
+  data-theme-dark-label="{% translate 'Переключить на светлую тему' %}"
+>
+  <span class="theme-toggle-track" aria-hidden="true">
+    <span class="theme-toggle-thumb">
+      <i class="bi bi-sun-fill theme-icon-sun"></i>
+      <i class="bi bi-moon-stars-fill theme-icon-moon"></i>
+    </span>
+  </span>
+  <span class="theme-toggle-text" data-theme-toggle-text>
+    {% translate "Тёмная тема" %}
+  </span>
+</button>
