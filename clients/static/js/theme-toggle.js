@@ -57,15 +57,6 @@
     if (title) {
       toggle.setAttribute('title', title);
     }
-
-    const label =
-      theme === 'dark'
-        ? toggle.dataset.themeDarkLabel
-        : toggle.dataset.themeLightLabel;
-
-    if (label) {
-      toggle.setAttribute('aria-label', label);
-    }
   };
 
   const applyTheme = (theme) => {
