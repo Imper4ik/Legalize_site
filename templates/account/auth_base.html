@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Legalize{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         :root {
             color-scheme: light;
@@ -100,42 +102,51 @@
             gap: 0.75rem;
         }
 
-        .auth-theme-toggle {
+        .theme-toggle {
             display: inline-flex;
             align-items: center;
             gap: 0.4rem;
-            padding: 0.4rem 0.9rem;
+        }
+
+        .theme-toggle .theme-icon-moon {
+            display: none;
+        }
+
+        :root[data-theme="dark"] .theme-toggle .theme-icon-sun {
+            display: none;
+        }
+
+        :root[data-theme="dark"] .theme-toggle .theme-icon-moon {
+            display: inline;
+        }
+
+        .auth-toolbar .theme-toggle {
             border-radius: 999px;
             border: 1px solid var(--auth-toolbar-border);
             background: transparent;
             color: var(--auth-toolbar-text);
             font-weight: 600;
+            padding: 0.4rem 0.9rem;
             cursor: pointer;
             transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
         }
 
-        .auth-theme-toggle:hover,
-        .auth-theme-toggle:focus {
+        .auth-toolbar .theme-toggle:hover,
+        .auth-toolbar .theme-toggle:focus {
             background: var(--auth-toggle-hover);
+            color: var(--auth-toolbar-text);
+            border-color: var(--auth-toolbar-border);
             transform: translateY(-1px);
             outline: none;
         }
 
-        .auth-theme-toggle .icon-sun,
-        .auth-theme-toggle .icon-moon {
+        .auth-toolbar .theme-toggle .theme-icon-sun,
+        .auth-toolbar .theme-toggle .theme-icon-moon {
             font-size: 1rem;
         }
 
-        .auth-theme-toggle .icon-moon {
-            display: none;
-        }
-
-        :root[data-theme="dark"] .auth-theme-toggle .icon-sun {
-            display: none;
-        }
-
-        :root[data-theme="dark"] .auth-theme-toggle .icon-moon {
-            display: inline;
+        .auth-toolbar .theme-toggle .theme-toggle-text {
+            font-weight: 600;
         }
 
         .auth-shell {
