@@ -469,7 +469,19 @@
     <header class="auth-toolbar" role="banner">
         <a class="auth-brand" href="{% url 'account_login' %}">Legalize</a>
         <div class="auth-toolbar-controls">
-            {% include "includes/theme_toggle.html" %}
+            <button
+                class="auth-theme-toggle"
+                type="button"
+                aria-pressed="false"
+                aria-label="{% translate 'Переключить тему' %}"
+                data-theme-toggle
+                data-theme-light-text="{% translate 'Светлая тема' %}"
+                data-theme-dark-text="{% translate 'Тёмная тема' %}"
+            >
+                <span class="icon-sun">☀️</span>
+                <span class="icon-moon">🌙</span>
+                <span class="auth-theme-toggle-text" data-theme-toggle-text>{% translate "Светлая тема" %}</span>
+            </button>
         </div>
     </header>
     <main class="auth-shell">
