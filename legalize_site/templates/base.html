@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-{% load i18n %}
-<html lang="{{ LANGUAGE_CODE }}">
+{% load i18n static %}
+<html lang="{{ LANGUAGE_CODE }}" data-theme="light">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,11 +11,252 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
+    <style>
+        :root {
+            color-scheme: light;
+            --body-bg: #f8f9fa;
+            --body-color: #212529;
+            --surface-bg: #ffffff;
+            --surface-border: rgba(0, 0, 0, 0.1);
+            --link-color: #0d6efd;
+            --muted-color: #6c757d;
+            --navbar-bg: #ffffff;
+            --navbar-color: #212529;
+            --theme-toggle-bg: rgba(15, 23, 42, 0.08);
+            --theme-toggle-border: rgba(15, 23, 42, 0.12);
+            --theme-toggle-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+            --theme-toggle-text: #0f172a;
+            --theme-toggle-icon: #0f172a;
+            --theme-toggle-track: rgba(15, 23, 42, 0.1);
+            --theme-toggle-thumb: #ffffff;
+            --theme-toggle-thumb-shadow: 0 6px 16px rgba(15, 23, 42, 0.18);
+        }
+
+        :root[data-theme="dark"] {
+            color-scheme: dark;
+            --body-bg: #0f172a;
+            --body-color: #e2e8f0;
+            --surface-bg: #1e293b;
+            --surface-border: rgba(148, 163, 184, 0.35);
+            --link-color: #60a5fa;
+            --muted-color: #94a3b8;
+            --navbar-bg: #111827;
+            --navbar-color: #f8fafc;
+            --theme-toggle-bg: rgba(148, 163, 184, 0.16);
+            --theme-toggle-border: rgba(148, 163, 184, 0.28);
+            --theme-toggle-shadow: 0 16px 36px rgba(2, 6, 23, 0.55);
+            --theme-toggle-text: #e2e8f0;
+            --theme-toggle-icon: #f8fafc;
+            --theme-toggle-track: rgba(148, 163, 184, 0.2);
+            --theme-toggle-thumb: #0f172a;
+            --theme-toggle-thumb-shadow: 0 10px 24px rgba(2, 6, 23, 0.65);
+        }
+
+        body {
+            background-color: var(--body-bg);
+            color: var(--body-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        a {
+            color: var(--link-color);
+        }
+
+        a:hover,
+        a:focus {
+            color: var(--link-color);
+            opacity: 0.85;
+        }
+
+        .text-muted {
+            color: var(--muted-color) !important;
+        }
+
+        .theme-navbar {
+            background-color: var(--navbar-bg) !important;
+            border-bottom: 1px solid var(--surface-border);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .theme-navbar .navbar-brand,
+        .theme-navbar .nav-link,
+        .theme-navbar .navbar-text {
+            color: var(--navbar-color) !important;
+        }
+
+        .theme-navbar .nav-link.active,
+        .theme-navbar .nav-link:focus,
+        .theme-navbar .nav-link:hover {
+            color: var(--link-color) !important;
+        }
+
+        .card,
+        .dropdown-menu,
+        .modal-content,
+        .list-group-item,
+        .offcanvas,
+        .popover,
+        .toast {
+            background-color: var(--surface-bg);
+            color: var(--body-color);
+            border-color: var(--surface-border);
+        }
+
+        .dropdown-item {
+            color: var(--body-color);
+        }
+
+        .dropdown-item:hover,
+        .dropdown-item:focus {
+            background-color: rgba(13, 110, 253, 0.1);
+            color: var(--link-color);
+        }
+
+        .form-control,
+        .form-select,
+        .form-check-input,
+        .input-group-text {
+            background-color: var(--surface-bg);
+            color: var(--body-color);
+            border-color: var(--surface-border);
+        }
+
+        .form-control:focus,
+        .form-select:focus,
+        .form-check-input:focus {
+            border-color: var(--link-color);
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.4rem 0.95rem;
+            border-radius: 999px;
+            border: 1px solid var(--theme-toggle-border);
+            background: var(--theme-toggle-bg);
+            color: var(--theme-toggle-text);
+            font-weight: 600;
+            font-size: 0.9rem;
+            line-height: 1;
+            box-shadow: var(--theme-toggle-shadow);
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, transform 0.25s ease;
+        }
+
+        .theme-toggle:hover,
+        .theme-toggle:focus {
+            text-decoration: none;
+            outline: none;
+            transform: translateY(-1px);
+            box-shadow: 0 16px 32px rgba(15, 23, 42, 0.15);
+        }
+
+        :root[data-theme="dark"] .theme-toggle:hover,
+        :root[data-theme="dark"] .theme-toggle:focus {
+            box-shadow: 0 18px 42px rgba(2, 6, 23, 0.55);
+        }
+
+        .theme-toggle-track {
+            width: 46px;
+            height: 24px;
+            border-radius: 999px;
+            background: var(--theme-toggle-track);
+            display: inline-flex;
+            align-items: center;
+            position: relative;
+            padding: 0 2px;
+            transition: background 0.3s ease;
+        }
+
+        .theme-toggle-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 999px;
+            background: var(--theme-toggle-thumb);
+            box-shadow: var(--theme-toggle-thumb-shadow);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--theme-toggle-icon);
+            transform: translateX(0);
+            transition: transform 0.3s ease, background 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .theme-toggle-thumb i {
+            font-size: 0.85rem;
+            line-height: 1;
+        }
+
+        .theme-toggle-thumb .theme-icon-moon {
+            opacity: 0;
+            transform: scale(0.6);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .theme-toggle-thumb .theme-icon-sun {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        :root[data-theme="dark"] .theme-toggle-thumb {
+            transform: translateX(22px);
+        }
+
+        :root[data-theme="dark"] .theme-toggle-thumb .theme-icon-sun {
+            opacity: 0;
+            transform: scale(0.6);
+        }
+
+        :root[data-theme="dark"] .theme-toggle-thumb .theme-icon-moon {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .theme-toggle-text {
+            white-space: nowrap;
+        }
+
+        @media (max-width: 575.98px) {
+            .theme-toggle-text {
+                display: none;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                transition-duration: 0.01ms !important;
+                animation-duration: 0.01ms !important;
+            }
+        }
+    </style>
+
     {% block extra_head %}{% endblock %}
+
+    <script>
+        (function () {
+            const storageKey = 'preferredTheme';
+            try {
+                const storedTheme = localStorage.getItem(storageKey);
+                if (storedTheme) {
+                    document.documentElement.setAttribute('data-theme', storedTheme);
+                    return;
+                }
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                }
+            } catch (error) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
 <header class="mb-4">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+    <nav class="navbar navbar-expand-lg shadow-sm theme-navbar">
         <div class="container">
             <a class="navbar-brand fw-bold" href="{% if user.is_authenticated and user.is_staff %}{% url 'clients:client_list' %}{% else %}{% url 'account_login' %}{% endif %}">
                 <i class="fas fa-balance-scale me-2"></i>Legalize Site
@@ -33,24 +274,23 @@
                     <li class="nav-item"><a class="nav-link" href="{% url 'clients:payment_reminder_list' %}">{% translate "Напоминания платежей" %}</a></li>
                 </ul>
                 {% endif %}
-                <ul class="navbar-nav ms-auto align-items-center">
-
-                    <li class="nav-item me-3">
-                        <form action="{% url 'set_language' %}" method="post">
+                <ul class="navbar-nav ms-auto align-items-center gap-3">
+                    <li class="nav-item">
+                        {% include "includes/theme_toggle.html" %}
+                    </li>
+                    <li class="nav-item">
+                        <form action="{% url 'set_language' %}" method="post" class="d-flex align-items-center">
                             {% csrf_token %}
                             <input name="next" type="hidden" value="/{{ request.get_full_path|slice:'4:' }}">
                             <select name="language" onchange="this.form.submit()" class="form-select form-select-sm" aria-label="Language selection">
                                 {% get_current_language as LANGUAGE_CODE %}
                                 {% get_available_languages as LANGUAGES %}
                                 {% for lang_code, lang_name in LANGUAGES %}
-                                    <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>
-                                        {{ lang_code|upper }}
-                                    </option>
+                                    <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>{{ lang_code|upper }}</option>
                                 {% endfor %}
                             </select>
                         </form>
                     </li>
-
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -94,22 +334,17 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
 <script>
-    document.addEventListener('DOMContentLoaded', (event) => {
-        const alerts = document.querySelectorAll('.alert.alert-dismissible');
-        alerts.forEach((alert) => {
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.alert.alert-dismissible').forEach((alert) => {
             setTimeout(() => {
-                const bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
+                const instance = bootstrap.Alert.getOrCreateInstance(alert);
+                instance.close();
             }, 3000);
         });
     });
 </script>
-
-{% block extra_js %}
-{# Этот блок предназначен для ваших кастомных скриптов #}
-{% endblock %}
-
+<script src="{% static 'js/theme-toggle.js' %}"></script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>
