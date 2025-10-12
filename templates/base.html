@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 {% load i18n %}
-<html lang="{{ LANGUAGE_CODE }}">
+<html lang="{{ LANGUAGE_CODE }}" data-theme="light">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,9 +13,173 @@
 
     <style>
         :root {
+            color-scheme: light;
             --auth-primary: #2563eb;
             --auth-secondary: #8b5cf6;
             --auth-accent: #10b981;
+            --body-bg: #f8f9fa;
+            --body-color: #212529;
+            --surface-bg: #ffffff;
+            --surface-alt: #f8f9fa;
+            --border-color: rgba(0, 0, 0, 0.1);
+            --navbar-bg: #ffffff;
+            --navbar-border: rgba(0, 0, 0, 0.08);
+            --navbar-text: #212529;
+            --link-color: #0d6efd;
+            --focus-ring: rgba(13, 110, 253, 0.25);
+            --muted-color: #6c757d;
+            --table-hover-bg: rgba(13, 110, 253, 0.05);
+        }
+
+        :root[data-theme="dark"] {
+            color-scheme: dark;
+            --body-bg: #0f172a;
+            --body-color: #e2e8f0;
+            --surface-bg: #1e293b;
+            --surface-alt: #1f2937;
+            --border-color: rgba(148, 163, 184, 0.35);
+            --navbar-bg: #111827;
+            --navbar-border: rgba(148, 163, 184, 0.25);
+            --navbar-text: #f8fafc;
+            --link-color: #60a5fa;
+            --focus-ring: rgba(96, 165, 250, 0.45);
+            --muted-color: #94a3b8;
+            --table-hover-bg: rgba(96, 165, 250, 0.15);
+        }
+
+        body {
+            background-color: var(--body-bg);
+            color: var(--body-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        a {
+            color: var(--link-color);
+        }
+
+        a:hover,
+        a:focus {
+            color: var(--link-color);
+            opacity: 0.85;
+        }
+
+        .text-muted {
+            color: var(--muted-color) !important;
+        }
+
+        .theme-navbar {
+            background-color: var(--navbar-bg) !important;
+            border-bottom: 1px solid var(--navbar-border);
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .theme-navbar .navbar-brand,
+        .theme-navbar .nav-link,
+        .theme-navbar .navbar-text {
+            color: var(--navbar-text) !important;
+        }
+
+        .theme-navbar .nav-link.active,
+        .theme-navbar .nav-link:focus,
+        .theme-navbar .nav-link:hover {
+            color: var(--link-color) !important;
+        }
+
+        .card,
+        .dropdown-menu,
+        .modal-content,
+        .list-group-item,
+        .offcanvas,
+        .popover,
+        .toast {
+            background-color: var(--surface-bg);
+            color: var(--body-color);
+            border-color: var(--border-color);
+        }
+
+        .dropdown-item {
+            color: var(--body-color);
+        }
+
+        .dropdown-item:hover,
+        .dropdown-item:focus {
+            background-color: var(--surface-alt);
+            color: var(--link-color);
+        }
+
+        .form-control,
+        .form-select,
+        .form-check-input,
+        .input-group-text {
+            background-color: var(--surface-alt);
+            color: var(--body-color);
+            border-color: var(--border-color);
+        }
+
+        .form-control:focus,
+        .form-select:focus,
+        .form-check-input:focus {
+            border-color: var(--link-color);
+            box-shadow: 0 0 0 0.25rem var(--focus-ring);
+        }
+
+        .alert {
+            color: var(--body-color);
+        }
+
+        .table {
+            color: var(--body-color);
+        }
+
+        .table tbody tr:hover {
+            background-color: var(--table-hover-bg);
+        }
+
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background-color: var(--surface-alt);
+            color: var(--body-color);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .theme-toggle:hover,
+        .theme-toggle:focus {
+            background-color: var(--surface-bg);
+            color: var(--link-color);
+            border-color: var(--link-color);
+        }
+
+        .theme-toggle .theme-icon-moon {
+            display: none;
+        }
+
+        :root[data-theme="dark"] .theme-toggle {
+            border-color: var(--border-color);
+        }
+
+        :root[data-theme="dark"] .theme-toggle:hover,
+        :root[data-theme="dark"] .theme-toggle:focus {
+            background-color: var(--surface-alt);
+        }
+
+        :root[data-theme="dark"] .theme-toggle .theme-icon-sun {
+            display: none;
+        }
+
+        :root[data-theme="dark"] .theme-toggle .theme-icon-moon {
+            display: inline;
+        }
+
+        .theme-toggle .theme-icon-sun,
+        .theme-toggle .theme-icon-moon {
+            font-size: 1rem;
+        }
+
+        .theme-toggle .theme-toggle-text {
+            font-weight: 600;
         }
 
         body.auth-page {
@@ -169,10 +333,24 @@
     </style>
 
     {% block extra_head %}{% endblock %}
+
+    <script>
+        (function () {
+            const storageKey = 'preferredTheme';
+            try {
+                const storedTheme = localStorage.getItem(storageKey);
+                const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = storedTheme || (prefersDark ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (error) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
 </head>
 <body class="{% block body_class %}{% endblock %}">
 <header class="mb-4">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+    <nav class="navbar navbar-expand-lg theme-navbar shadow-sm">
         <div class="container">
 
             <a class="navbar-brand fw-bold" href="{% if user.is_authenticated and user.is_staff %}{% url 'clients:client_list' %}{% else %}{% url 'account_login' %}{% endif %}">
@@ -192,6 +370,14 @@
                 </ul>
                 {% endif %}
                 <ul class="navbar-nav ms-auto align-items-center">
+
+                    <li class="nav-item me-3">
+                        <button class="btn btn-sm theme-toggle" type="button" aria-pressed="false" aria-label="Переключить тему">
+                            <i class="bi bi-sun-fill theme-icon-sun"></i>
+                            <i class="bi bi-moon-stars-fill theme-icon-moon"></i>
+                            <span class="theme-toggle-text d-none d-md-inline">{% translate "Светлая тема" %}</span>
+                        </button>
+                    </li>
 
                     <li class="nav-item me-3">
                         <form action="{% url 'set_language' %}" method="post">
@@ -261,6 +447,64 @@
                 const bsAlert = new bootstrap.Alert(alert);
                 bsAlert.close();
             }, 3000);
+        });
+
+        const storageKey = 'preferredTheme';
+        const root = document.documentElement;
+        const toggles = document.querySelectorAll('.theme-toggle');
+        const prefersDark = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+        const applyTheme = (theme) => {
+            root.setAttribute('data-theme', theme);
+            toggles.forEach((toggle) => {
+                toggle.setAttribute('aria-pressed', theme === 'dark');
+                const text = toggle.querySelector('.theme-toggle-text');
+                if (text) {
+                    text.textContent = theme === 'dark' ? '{% translate "Тёмная тема" %}' : '{% translate "Светлая тема" %}';
+                }
+            });
+        };
+
+        let storedTheme;
+        try {
+            storedTheme = localStorage.getItem(storageKey);
+        } catch (error) {
+            storedTheme = null;
+        }
+
+        const initialTheme = storedTheme || (prefersDark && prefersDark.matches ? 'dark' : 'light');
+        applyTheme(initialTheme);
+
+        if (prefersDark) {
+            const handlePrefersDarkChange = (event) => {
+                let themeFromStorage = null;
+                try {
+                    themeFromStorage = localStorage.getItem(storageKey);
+                } catch (error) {
+                    themeFromStorage = null;
+                }
+                if (!themeFromStorage) {
+                    applyTheme(event.matches ? 'dark' : 'light');
+                }
+            };
+
+            if (typeof prefersDark.addEventListener === 'function') {
+                prefersDark.addEventListener('change', handlePrefersDarkChange);
+            } else if (typeof prefersDark.addListener === 'function') {
+                prefersDark.addListener(handlePrefersDarkChange);
+            }
+        }
+
+        toggles.forEach((toggle) => {
+            toggle.addEventListener('click', () => {
+                const nextTheme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                applyTheme(nextTheme);
+                try {
+                    localStorage.setItem(storageKey, nextTheme);
+                } catch (error) {
+                    // Ignore write errors (e.g., private mode)
+                }
+            });
         });
     });
 </script>
