@@ -200,6 +200,7 @@
         color: var(--body-color);
     }
     .modal-header .btn-close {
+        /* Делаем крестик светлым в темной теме */
         filter: invert(1) grayscale(100%);
     }
 
@@ -235,6 +236,7 @@
     .form-select:focus,
     .form-check-input:focus {
         border-color: var(--link-color);
+        /* Фокусный градиент из auth_base */
         box-shadow: 0 0 0 0.25rem rgba(147, 51, 234, 0.25);
     }
 
@@ -248,18 +250,17 @@
         --bs-table-color: var(--body-color);
         --bs-table-border-color: var(--surface-border);
         --bs-table-striped-bg: #283748;
-        /* УДАЛЕНА ПЕРЕМЕННАЯ --bs-table-hover-bg */
+        --bs-table-hover-bg: transparent;
     }
 
     /* Отключаем hover-эффект для ВСЕХ таблиц */
-    .table:not(.table-hover) > tbody > tr:hover > *,
+    .table > tbody > tr:hover > *,
     .table-hover > tbody > tr:hover > * {
-        background-color: inherit !important; /* Наследует фон от родителя */
-        color: inherit !important; /* Наследует цвет текста от родителя */
-        --bs-table-hover-bg: transparent; /* Устанавливаем прозрачность */
+        background-color: inherit !important; /* Наследует фон от родителя/полосы */
+        color: inherit !important;
     }
 
-    /* Сохраняем полосатые строки, но отключаем hover */
+    /* Сохраняем полосатые строки */
     :root[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
         background-color: #283748;
     }
@@ -416,7 +417,7 @@
 
     {% block extra_head %}{% endblock %}
 
-    </head>
+</head>
 <body class="{% block body_class %}{% endblock %}">
 <header class="mb-4">
     <nav class="navbar navbar-expand-lg shadow-sm theme-navbar">
