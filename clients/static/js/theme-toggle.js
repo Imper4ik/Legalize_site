@@ -37,7 +37,6 @@
 
   const updateToggle = (toggle, theme) => {
     toggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
-    toggle.dataset.themeState = theme;
 
     const textElement = toggle.querySelector('[data-theme-toggle-text]');
     if (textElement) {
@@ -58,22 +57,10 @@
     if (title) {
       toggle.setAttribute('title', title);
     }
-
-    const label =
-      theme === 'dark'
-        ? toggle.dataset.themeDarkLabel
-        : toggle.dataset.themeLightLabel;
-
-    if (label) {
-      toggle.setAttribute('aria-label', label);
-    }
   };
 
   const applyTheme = (theme) => {
     document.documentElement.setAttribute('data-theme', theme);
-    if (document.body) {
-      document.body.setAttribute('data-theme', theme);
-    }
     toggles.forEach((toggle) => updateToggle(toggle, theme));
   };
 
