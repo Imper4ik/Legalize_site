@@ -1,4 +1,4 @@
-(function () {
+  (function () {
   if (typeof window !== 'undefined') {
     if (window.__themeToggleInitialized) {
       return;
