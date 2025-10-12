@@ -139,7 +139,7 @@
     }
 
     h1, h2, h3, h4, h5, h6 {
-        color: var(--body-color); /* Убедимся, что заголовки используют правильный цвет */
+        color: var(--body-color);
     }
 
     a {
@@ -187,20 +187,20 @@
         border-color: var(--surface-border);
     }
 
-    .modal-content { /* Отдельно для modal-content, чтобы переопределить все внутренние элементы */
+    .modal-content {
         background-color: var(--surface-bg);
         color: var(--body-color);
         border-color: var(--surface-border);
     }
     .modal-header, .modal-footer {
         border-color: var(--surface-border);
-        background-color: var(--surface-bg); /* Убедимся, что фон соответствует */
+        background-color: var(--surface-bg);
     }
     .modal-title {
-        color: var(--body-color); /* Чтобы заголовки в модальных окнах были правильного цвета */
+        color: var(--body-color);
     }
     .modal-header .btn-close {
-        filter: invert(1) grayscale(100%); /* Делаем крестик светлым в темной теме */
+        filter: invert(1) grayscale(100%);
     }
 
     .dropdown-item {
@@ -218,7 +218,7 @@
     .form-select,
     .form-check-input,
     .input-group-text {
-        background-color: var(--surface-bg); /* Изначальный фон */
+        background-color: var(--surface-bg);
         color: var(--body-color);
         border-color: var(--surface-border);
         transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
@@ -227,15 +227,15 @@
     :root[data-theme="dark"] .form-select,
     :root[data-theme="dark"] .form-check-input,
     :root[data-theme="dark"] .input-group-text {
-        background-color: #1a2434; /* Чуть темнее, чтобы контрастировало с surface-bg */
-        border-color: rgba(148, 163, 184, 0.4); /* Чуть более выраженная граница */
+        background-color: #1a2434;
+        border-color: rgba(148, 163, 184, 0.4);
     }
 
     .form-control:focus,
     .form-select:focus,
     .form-check-input:focus {
         border-color: var(--link-color);
-        box-shadow: 0 0 0 0.25rem rgba(147, 51, 234, 0.25); /* Фокусный градиент из auth_base */
+        box-shadow: 0 0 0 0.25rem rgba(147, 51, 234, 0.25);
     }
 
     /* -------------------------------------- */
@@ -247,14 +247,21 @@
         --bs-table-bg: var(--surface-bg);
         --bs-table-color: var(--body-color);
         --bs-table-border-color: var(--surface-border);
-        --bs-table-striped-bg: #283748; /* Контрастный фон для полос */
-        --bs-table-hover-bg: #324157;   /* Цвет при наведении */
+        --bs-table-striped-bg: #283748;
+        /* УДАЛЕНА ПЕРЕМЕННАЯ --bs-table-hover-bg */
     }
+
+    /* Отключаем hover-эффект для ВСЕХ таблиц */
+    .table:not(.table-hover) > tbody > tr:hover > *,
+    .table-hover > tbody > tr:hover > * {
+        background-color: inherit !important; /* Наследует фон от родителя */
+        color: inherit !important; /* Наследует цвет текста от родителя */
+        --bs-table-hover-bg: transparent; /* Устанавливаем прозрачность */
+    }
+
+    /* Сохраняем полосатые строки, но отключаем hover */
     :root[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
-        background-color: #283748; /* Для полосатых строк в dark mode */
-    }
-    :root[data-theme="dark"] .table-hover > tbody > tr:hover > * {
-        background-color: #324157; /* Для ховера строк в dark mode */
+        background-color: #283748;
     }
 
     .table thead, .table tfoot {
@@ -272,7 +279,7 @@
     .btn-primary:hover {
         transform: translateY(-1px);
         box-shadow: 0 10px 20px rgba(37, 99, 235, 0.35);
-        background: var(--btn-primary-gradient); /* Переопределить, чтобы градиент не менялся */
+        background: var(--btn-primary-gradient);
         color: #f8fafc;
     }
     .btn-primary:active {
@@ -291,13 +298,13 @@
         color: #fff !important;
     }
 
-    .btn-info { /* Если используются кнопки info */
+    .btn-info {
         --bs-btn-bg: var(--link-color);
         --bs-btn-color: #fff;
         --bs-btn-border-color: var(--link-color);
     }
     .btn-info:hover {
-        --bs-btn-bg: #60a5fa; /* Чуть светлее */
+        --bs-btn-bg: #60a5fa;
         --bs-btn-border-color: #60a5fa;
     }
 
