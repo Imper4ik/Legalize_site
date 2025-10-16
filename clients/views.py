@@ -80,6 +80,13 @@ class ClientCreateView(StaffRequiredMixin, CreateView):
         messages.success(self.request, "Клиент успешно создан!")
         return super().form_valid(form)
 
+    def form_invalid(self, form):
+        messages.error(
+            self.request,
+            "Не удалось сохранить клиента. Проверьте выделенные поля и попробуйте снова.",
+        )
+        return super().form_invalid(form)
+
 
 class ClientUpdateView(StaffRequiredMixin, UpdateView):
     model = Client
