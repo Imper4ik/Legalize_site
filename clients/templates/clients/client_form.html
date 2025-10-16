@@ -8,7 +8,7 @@
   <div class="col-lg-10 col-xl-9">
     <h2 class="mb-4 text-center">{{ title }}</h2>
 
-    <form method="post" novalidate>
+    <form method="post" novalidate data-client-form>
         {% csrf_token %}
 
         {% if form.non_field_errors %}
@@ -109,7 +109,16 @@
 
         <div class="mt-4 d-flex justify-content-end">
             <a href="{% if object %}{% url 'clients:client_detail' object.pk %}{% else %}{% url 'clients:client_list' %}{% endif %}" class="btn btn-secondary btn-lg me-3">{% translate "Отмена" %}</a>
-            <button type="submit" class="btn btn-primary btn-lg px-5">{% translate "Сохранить" %}</button>
+            <button
+                type="submit"
+                class="btn btn-primary btn-lg px-5 d-inline-flex align-items-center"
+                data-submit-button
+                data-default-text="{% translate 'Сохранить' %}"
+                data-loading-text="{% translate 'Сохранить' %}…"
+            >
+                <span class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true" data-spinner></span>
+                <span data-button-text>{% translate "Сохранить" %}</span>
+            </button>
         </div>
     </form>
   </div>
@@ -117,6 +126,87 @@
 {% endblock %}
 
 {% block extra_js %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.querySelector('form[data-client-form]');
+      if (!form) {
+        return;
+      }
+
+      const submitButton = form.querySelector('[data-submit-button]');
+      const spinner = submitButton ? submitButton.querySelector('[data-spinner]') : null;
+      const buttonText = submitButton ? submitButton.querySelector('[data-button-text]') : null;
+      const defaultText = submitButton ? submitButton.getAttribute('data-default-text') : null;
+      const loadingText = submitButton ? submitButton.getAttribute('data-loading-text') : null;
+
+      const showSpinner = () => {
+        if (!submitButton || !spinner || !buttonText) {
+          return;
+        }
+        submitButton.disabled = true;
+        spinner.classList.remove('d-none');
+        buttonText.textContent = loadingText || buttonText.textContent;
+      };
+
+      const hideSpinner = () => {
+        if (!submitButton || !spinner || !buttonText) {
+          return;
+        }
+        submitButton.disabled = false;
+        spinner.classList.add('d-none');
+        buttonText.textContent = defaultText || buttonText.textContent;
+      };
+
+      const markInvalidFields = () => {
+        const invalidFields = form.querySelectorAll(':invalid');
+        invalidFields.forEach((field) => {
+          field.classList.add('is-invalid');
+        });
+        if (invalidFields.length) {
+          invalidFields[0].focus();
+        }
+      };
+
+      // Highlight any server-side errors on initial render
+      form.querySelectorAll('.invalid-feedback').forEach((feedback) => {
+        const container = feedback.parentElement;
+        if (!container) {
+          return;
+        }
+        const formField = container.querySelector('input, select, textarea');
+        if (formField && feedback.textContent.trim().length) {
+          formField.classList.add('is-invalid');
+        }
+      });
+
+      form.addEventListener('submit', function(event) {
+        // Remove previous invalid styling so we can re-evaluate
+        form.querySelectorAll('.is-invalid').forEach((el) => el.classList.remove('is-invalid'));
+
+        if (!form.checkValidity()) {
+          event.preventDefault();
+          event.stopPropagation();
+          hideSpinner();
+          markInvalidFields();
+          return;
+        }
+
+        showSpinner();
+      });
+
+      form.addEventListener('input', function(event) {
+        const target = event.target;
+        if (target.classList.contains('is-invalid') && target.checkValidity()) {
+          target.classList.remove('is-invalid');
+        }
+      }, true);
+
+      form.addEventListener('invalid', function(event) {
+        const target = event.target;
+        target.classList.add('is-invalid');
+      }, true);
+    });
+  </script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
         function setupFlatpickr(inputId, buttonId) {
