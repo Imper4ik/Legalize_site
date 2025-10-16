@@ -38,3 +38,6 @@ Thumbs.db
 __pycache__/
 *.py[cod]
 staticfiles
+
+# Компилированные файлы переводов
+*.mo
