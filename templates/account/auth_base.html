@@ -119,6 +119,48 @@
             gap: 0.75rem;
         }
 
+        .auth-language-form {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            border: 1px solid var(--auth-toolbar-border);
+            background: var(--theme-toggle-bg);
+            color: inherit;
+        }
+
+        .auth-language-label {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .auth-language-select {
+            border: none;
+            background: transparent;
+            color: inherit;
+            font-weight: 600;
+            font-size: 0.9rem;
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .auth-language-select option {
+            color: #0f172a;
+        }
+
+        :root[data-theme="dark"] .auth-language-select option {
+            color: #f8fafc;
+        }
+
         .theme-toggle {
             display: inline-flex;
             align-items: center;
@@ -574,6 +616,18 @@
     <header class="auth-toolbar" role="banner">
         <a class="auth-brand" href="{% url 'account_login' %}">Legalize</a>
         <div class="auth-toolbar-controls">
+            <form action="{% url 'set_language' %}" method="post" class="auth-language-form">
+                {% csrf_token %}
+                <input name="next" type="hidden" value="/{{ request.get_full_path|slice:'4:' }}">
+                <label class="auth-language-label" for="auth-language-select">{% translate "Выбор языка интерфейса" %}</label>
+                <select id="auth-language-select" name="language" class="auth-language-select" onchange="this.form.submit()">
+                    {% get_current_language as LANGUAGE_CODE %}
+                    {% get_available_languages as LANGUAGES %}
+                    {% for lang_code, lang_name in LANGUAGES %}
+                        <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>{{ lang_code|upper }}</option>
+                    {% endfor %}
+                </select>
+            </form>
             <button
                 class="auth-theme-toggle theme-toggle"
                 type="button"
