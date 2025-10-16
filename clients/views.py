@@ -37,7 +37,7 @@ class ClientListView(StaffRequiredMixin, ListView):
     paginate_by = 15
 
     def get_queryset(self):
-        queryset = Client.objects.filter(user__is_staff=False)
+        queryset = Client.objects.filter(Q(user__is_staff=False) | Q(user__isnull=True))
         query = self.request.GET.get('q', '')
         if query:
             return queryset.filter(
@@ -339,12 +339,14 @@ def calculator_view(request):
     if request.method == 'POST':
         try:
             # --- Сбор данных из формы ---
-            tuition_fee = float(request.POST.get('tuition_fee', 0))
+            tuition_fee_pln = float(request.POST.get('tuition_fee', 0))
             if request.POST.get('tuition_currency') == 'EUR':
-                tuition_fee *= EUR_TO_PLN_RATE
+                tuition_fee_pln *= EUR_TO_PLN_RATE
 
             months_in_period = int(request.POST.get('months_in_period', 1))
-            monthly_tuition = tuition_fee / months_in_period if months_in_period > 0 else 0
+            months_in_period = max(months_in_period, 1)
+            monthly_tuition = tuition_fee_pln
+            tuition_total = monthly_tuition * months_in_period
 
             monthly_rent_and_bills = float(request.POST.get('rent_and_bills', 0))
             if request.POST.get('rent_currency') == 'EUR':
@@ -381,7 +383,7 @@ def calculator_view(request):
                 'num_people': num_people,
                 'rent_per_person': f"{rent_per_person:,.2f}".replace(",", " "),
 
-                'tuition_total': f"{tuition_fee:,.2f}".replace(",", " "),
+                'tuition_total': f"{tuition_total:,.2f}".replace(",", " "),
                 'months_in_period': months_in_period,
                 'monthly_tuition_calculated': f"{monthly_tuition:,.2f}".replace(",", " "),
 
