@@ -123,12 +123,11 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.25rem 0.75rem;
+            padding: 0.25rem 0.6rem;
             border-radius: 999px;
             border: 1px solid var(--auth-toolbar-border);
             background: var(--theme-toggle-bg);
             color: inherit;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
         }
 
         .auth-language-label {
@@ -152,31 +151,14 @@
             outline: none;
             appearance: none;
             cursor: pointer;
-            padding: 0.25rem 0;
         }
 
         .auth-language-select option {
             color: #0f172a;
-            background-color: #f8fafc;
         }
 
         :root[data-theme="dark"] .auth-language-select option {
             color: #f8fafc;
-            background-color: #1f2937;
-        }
-
-        .auth-language-form:focus-within {
-            border-color: var(--auth-link);
-            box-shadow: 0 0 0 3px var(--auth-focus-ring);
-        }
-
-        :root[data-theme="dark"] .auth-language-form {
-            background: rgba(148, 163, 184, 0.18);
-            border-color: rgba(148, 163, 184, 0.45);
-        }
-
-        :root[data-theme="dark"] .auth-language-form:focus-within {
-            box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.35);
         }
 
         .theme-toggle {
@@ -642,7 +624,7 @@
                     {% get_current_language as LANGUAGE_CODE %}
                     {% get_available_languages as LANGUAGES %}
                     {% for lang_code, lang_name in LANGUAGES %}
-                        <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>{{ lang_name }}</option>
+                        <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>{{ lang_code|upper }}</option>
                     {% endfor %}
                 </select>
             </form>
