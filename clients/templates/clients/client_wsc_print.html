@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>WSC - {{ client.first_name }} {{ client.last_name }}</title>
+    <style>
+        :root {
+            --border-color: #000;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20mm;
+            font-family: "Times New Roman", serif;
+            font-size: 12pt;
+            color: #000;
+            background: #fff;
+        }
+
+        .print-actions {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .print-actions a,
+        .print-actions button {
+            padding: 8px 18px;
+            font-size: 14px;
+            border: 1px solid #333;
+            background: #f5f5f5;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .print-actions button {
+            background: #e8e8e8;
+        }
+
+        .sheet {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            border: 1px solid transparent;
+            padding: 5mm 10mm 15mm;
+        }
+
+        .sheet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10mm;
+        }
+
+        .header-left {
+            white-space: pre-line;
+        }
+
+        .header-right {
+            text-align: right;
+            white-space: pre-line;
+            font-weight: 600;
+        }
+
+        .block-title {
+            font-weight: 600;
+            margin: 10mm 0 4mm;
+        }
+
+        .line-field {
+            border-bottom: 1px solid var(--border-color);
+            min-height: 8mm;
+            display: flex;
+            align-items: center;
+            padding: 0 3mm;
+            font-weight: 600;
+        }
+
+        .line-field.upper {
+            font-size: 15pt;
+            letter-spacing: 1px;
+        }
+
+        .line-label {
+            margin-top: 6mm;
+            font-size: 11pt;
+        }
+
+        .checkbox-row {
+            display: flex;
+            gap: 18mm;
+            margin-top: 6mm;
+        }
+
+        .checkbox {
+            display: inline-flex;
+            align-items: center;
+            gap: 5mm;
+        }
+
+        .checkbox-square {
+            width: 8mm;
+            height: 8mm;
+            border: 1px solid var(--border-color);
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12mm;
+            margin-top: 8mm;
+        }
+
+        .note-area {
+            border: 1px solid var(--border-color);
+            height: 40mm;
+            margin-top: 8mm;
+        }
+
+        .signature-line {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 14mm;
+        }
+
+        .signature-line span {
+            display: inline-block;
+            width: 70mm;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            padding-top: 3mm;
+        }
+
+        @media print {
+            body {
+                padding: 10mm 14mm;
+            }
+
+            .print-actions {
+                display: none;
+            }
+
+            .sheet {
+                border: none;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="print-actions">
+    <a href="{% url 'clients:client_detail' client.pk %}">Powrót</a>
+    <button type="button" onclick="window.print()">Drukuj</button>
+</div>
+
+<div class="sheet">
+    <div class="sheet-header">
+        <div class="header-left">
+            Warszawa, dn. ____________________<br>
+            A__________________________<br>
+            LOKALIZACJA
+        </div>
+        <div class="header-right">
+            Mazowiecki Urząd Wojewódzki<br>
+            w Warszawie<br>
+            Ul. Marszałkowska 3/5<br>
+            00-624 Warszawa
+        </div>
+    </div>
+
+    <div class="block-title">Dot. sprawy o zezwolenie na pobyt:</div>
+    <div class="line-field upper">{{ client.last_name|default_if_none:""|default:""|upper }} {{ client.first_name|default_if_none:""|default:""|upper }}</div>
+
+    <div class="line-label">Numer sprawy / WSC:</div>
+    <div class="line-field">{{ client.case_number|default_if_none:""|default:"" }}</div>
+
+    <div class="line-label">Data złożenia wniosku:</div>
+    <div class="line-field">{{ client.submission_date|date:"d.m.Y"|default:"" }}</div>
+
+    <div class="checkbox-row">
+        <div class="checkbox"><span class="checkbox-square"></span> Pełny wniosek</div>
+        <div class="checkbox"><span class="checkbox-square"></span> Nowy wniosek</div>
+        <div class="checkbox"><span class="checkbox-square"></span> Inne</div>
+    </div>
+
+    <div class="block-title" style="margin-top: 12mm;">Dane kontaktowe:</div>
+    <div class="two-column">
+        <div>
+            <div class="line-label">Telefon:</div>
+            <div class="line-field">{{ client.phone|default_if_none:""|default:"" }}</div>
+        </div>
+        <div>
+            <div class="line-label">Adres e-mail:</div>
+            <div class="line-field">{{ client.email|default_if_none:""|default:"" }}</div>
+        </div>
+    </div>
+
+    <div class="note-area"></div>
+
+    <div class="signature-line"><span>podpis</span></div>
+</div>
+</body>
+</html>
