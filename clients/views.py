@@ -416,27 +416,19 @@ def calculator_view(request):
     return render(request, 'clients/calculator.html', context)
 
 
-class ClientPrintView(StaffRequiredMixin, DetailView):
-    """Печатная форма с общей информацией о клиенте."""
+class ClientPrintBaseView(StaffRequiredMixin, DetailView):
+    """Базовое представление для печати данных клиента."""
 
     model = Client
     context_object_name = 'client'
+
+
+class ClientPrintView(ClientPrintBaseView):
     template_name = 'clients/client_printable.html'
 
 
-class ClientWSCPrintView(StaffRequiredMixin, DetailView):
-    """Печатная форма WSC для клиента."""
-
-    model = Client
-    context_object_name = 'client'
+class ClientWSCPrintView(ClientPrintBaseView):
     template_name = 'clients/client_wsc_print.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        from django.templatetags.static import static
-
-        context['wsc_form_background'] = static('clients/img/wsc_form_bg.svg')
-        return context
 
 
 # Функции-обёртки сохраняют прежние точки входа, чтобы не переписывать URLConf
