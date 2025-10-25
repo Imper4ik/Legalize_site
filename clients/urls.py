@@ -38,10 +38,10 @@ urlpatterns = [
 
     # --- ИСПРАВЛЕННЫЕ URL ДЛЯ НАПОМИНАНИЙ ---
     # Страница для напоминаний по документам (бывшая общая страница)
-    path('reminders/documents/', views.document_reminder_list, name='document_reminder_list'),
+    path('reminders/documents/', views.DocumentReminderListView.as_view(), name='document_reminder_list'),
 
     # НОВАЯ страница для напоминаний по оплатам
-    path('reminders/payments/', views.payment_reminder_list, name='payment_reminder_list'),
+    path('reminders/payments/', views.PaymentReminderListView.as_view(), name='payment_reminder_list'),
 
     # Общие URL для действий с напоминаниями
     path('reminders/run-update/', views.run_update_reminders, name='run_update_reminders'),
