@@ -427,15 +427,6 @@ def client_print_view(request, pk):
 
 @login_required
 @staff_required_view
-def client_wsc_print_view(request, pk):
-    """Генерирует лист WSC c базовыми данными клиента."""
-
-    client = get_object_or_404(Client, pk=pk)
-    return render(request, 'clients/client_wsc_print.html', {'client': client})
-
-
-@login_required
-@staff_required_view
 def client_status_api(request, pk):
     """Возвращает актуальный чеклист клиента в формате JSON для 'живого' обновления."""
     client = get_object_or_404(Client, pk=pk)
