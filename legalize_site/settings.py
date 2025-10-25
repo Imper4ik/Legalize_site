@@ -44,8 +44,8 @@ INSTALLED_APPS = [
     'anymail',
 ]
 
-STATIC_URL = "/static/"
-STATICFILES_DIRS = [ BASE_DIR / "static" ]
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 if WHITENOISE_AVAILABLE:
     INSTALLED_APPS.insert(INSTALLED_APPS.index('django.contrib.staticfiles'), 'whitenoise.runserver_nostatic')
@@ -113,7 +113,6 @@ USE_I18N = True
 USE_TZ = True
 
 # --- СТАТИКА И МЕДИА (НАСТРОЕНО ДЛЯ RENDER С WHITENOISE) ---
-STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 if WHITENOISE_AVAILABLE:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'

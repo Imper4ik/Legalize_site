@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 210 297">
+  <style>
+    .base { font-family: 'DejaVu Sans', Arial, sans-serif; fill: #000; }
+    .label { font-size: 3.8mm; }
+    .label-small { font-size: 3.4mm; }
+    .title { font-size: 4.4mm; font-weight: 600; }
+    .underline { stroke: #000; stroke-width: 0.3; }
+    .divider { stroke: #000; stroke-width: 0.2; }
+  </style>
+  <rect width="210" height="297" fill="#fff"/>
+
+  <!-- Header area matching positioned inputs -->
+  <text class="base label" x="18" y="26">Warszawa, dn.</text>
+  <line class="underline" x1="52" y1="24.5" x2="100" y2="24.5"/>
+
+  <text class="base label" x="18" y="34">A</text>
+  <line class="underline" x1="27" y1="32.5" x2="100" y2="32.5"/>
+
+  <text class="base label" x="18" y="42">LOKALIZACJA</text>
+  <line class="underline" x1="55" y1="40.5" x2="100" y2="40.5"/>
+
+  <text class="base label" x="138" y="24">Mazowiecki Urząd Wojewódzki</text>
+  <text class="base label" x="166" y="30">w Warszawie</text>
+  <text class="base label" x="158" y="36">ul. Marszałkowska 3/5</text>
+  <text class="base label" x="160" y="42">00-624 Warszawa</text>
+
+  <!-- Case heading -->
+  <text class="base title" x="18" y="56">Dot. sprawy o zezwolenie na pobyt:</text>
+  <line class="underline" x1="18" y1="62" x2="192" y2="62"/>
+
+  <!-- Case number row aligned to top:41mm -->
+  <text class="base label" x="18" y="73">Numer sprawy / WSC:</text>
+  <line class="underline" x1="63" y1="71.5" x2="134" y2="71.5"/>
+
+  <text class="base label" x="140" y="73">Inne:</text>
+  <line class="underline" x1="157" y1="71.5" x2="192" y2="71.5"/>
+
+  <!-- Checkbox column references top 53-68mm -->
+  <text class="base label" x="18" y="83">Rodzaj sprawy:</text>
+  <rect x="27" y="74.5" width="5" height="5" fill="none" stroke="#000" stroke-width="0.3"/>
+  <text class="base label-small" x="34" y="78.5">pobyt czasowy</text>
+
+  <rect x="27" y="79.5" width="5" height="5" fill="none" stroke="#000" stroke-width="0.3"/>
+  <text class="base label-small" x="34" y="83.5">pobyt stały</text>
+
+  <rect x="27" y="84.5" width="5" height="5" fill="none" stroke="#000" stroke-width="0.3"/>
+  <text class="base label-small" x="34" y="88.5">uznanie obywatelstwa</text>
+
+  <rect x="27" y="89.5" width="5" height="5" fill="none" stroke="#000" stroke-width="0.3"/>
+  <text class="base label-small" x="34" y="93.5">nadanie obywatelstwa</text>
+
+  <rect x="118" y="74.5" width="5" height="5" fill="none" stroke="#000" stroke-width="0.3"/>
+  <text class="base label-small" x="125" y="78.5">rezydent UE</text>
+
+  <rect x="118" y="79.5" width="5" height="5" fill="none" stroke="#000" stroke-width="0.3"/>
+  <text class="base label-small" x="125" y="83.5">świadczenia</text>
+
+  <rect x="118" y="84.5" width="5" height="5" fill="none" stroke="#000" stroke-width="0.3"/>
+  <text class="base label-small" x="125" y="88.5">potwierdzenie posiadania</text>
+
+  <rect x="118" y="89.5" width="5" height="5" fill="none" stroke="#000" stroke-width="0.3"/>
+  <text class="base label-small" x="125" y="93.5">inne</text>
+
+  <line class="divider" x1="18" y1="100" x2="192" y2="100"/>
+
+  <!-- Detailed fields aligning to template positions -->
+  <text class="base label" x="18" y="110">MOS ID:</text>
+  <line class="underline" x1="55" y1="108.5" x2="105" y2="108.5"/>
+
+  <text class="base label" x="120" y="110">InPOL ID:</text>
+  <line class="underline" x1="145" y1="108.5" x2="192" y2="108.5"/>
+
+  <text class="base label" x="18" y="121">Data złożenia wniosku:</text>
+  <line class="underline" x1="80" y1="119.5" x2="135" y2="119.5"/>
+
+  <text class="base label" x="18" y="133">Imię i nazwisko wnioskodawcy:</text>
+  <line class="underline" x1="82" y1="131.5" x2="192" y2="131.5"/>
+
+  <text class="base label" x="18" y="144">Data urodzenia:</text>
+  <line class="underline" x1="61" y1="142.5" x2="110" y2="142.5"/>
+
+  <text class="base label" x="18" y="155">Obywatelstwo:</text>
+  <line class="underline" x1="64" y1="153.5" x2="120" y2="153.5"/>
+
+  <text class="base label" x="18" y="166">Telefon:</text>
+  <line class="underline" x1="55" y1="164.5" x2="110" y2="164.5"/>
+
+  <text class="base label" x="120" y="166">Adres e-mail:</text>
+  <line class="underline" x1="150" y1="164.5" x2="192" y2="164.5"/>
+
+  <line class="divider" x1="18" y1="174" x2="192" y2="174"/>
+
+  <text class="base label" x="18" y="184">Załączniki (liczba):</text>
+  <line class="underline" x1="150" y1="182.5" x2="192" y2="182.5"/>
+
+  <text class="base label" x="18" y="196">Uwagi:</text>
+  <rect x="18" y="186" width="174" height="30" fill="none" stroke="#000" stroke-width="0.2"/>
+
+  <text class="base label" x="18" y="224">Informacje dodatkowe:</text>
+  <rect x="18" y="214" width="174" height="36" fill="none" stroke="#000" stroke-width="0.2"/>
+
+  <text class="base label" x="125" y="260">Podpis składającego:</text>
+  <line class="underline" x1="125" y1="258.5" x2="192" y2="258.5"/>
+
+  <text class="base label-small" x="18" y="265">Wypełniający:</text>
+  <line class="underline" x1="42" y1="263.5" x2="120" y2="263.5"/>
+</svg>
