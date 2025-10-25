@@ -416,19 +416,20 @@ def calculator_view(request):
     return render(request, 'clients/calculator.html', context)
 
 
-class ClientPrintView(StaffRequiredMixin, DetailView):
-    """Печатная форма с общей информацией о клиенте."""
+@login_required
+@staff_required_view
+def client_print_view(request, pk):
+    """Генерирует страницу с данными клиента для печати."""
 
     model = Client
     context_object_name = 'client'
+
+
+class ClientPrintView(ClientPrintBaseView):
     template_name = 'clients/client_printable.html'
 
 
-class ClientWSCPrintView(StaffRequiredMixin, DetailView):
-    """Печатная форма WSC для клиента."""
-
-    model = Client
-    context_object_name = 'client'
+class ClientWSCPrintView(ClientPrintBaseView):
     template_name = 'clients/client_wsc_print.html'
 
 
