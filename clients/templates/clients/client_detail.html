@@ -55,7 +55,7 @@
                     }
 
                     // Отправляем запрос на сервер по правильному URL
-                    fetch(`/staff/api/get-price/${serviceValue}/`)
+                    fetch(`/clients/api/get-price/${serviceValue}/`)
                         .then(response => {
                             if (!response.ok) {
                                 throw new Error('Network response was not ok');
