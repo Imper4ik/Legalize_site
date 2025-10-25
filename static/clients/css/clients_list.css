@@ -1,0 +1,65 @@
+.table-container {
+  max-height: 70vh;
+  overflow-y: auto;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+
+.table-modern thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  backdrop-filter: blur(8px);
+}
+
+.table-modern thead {
+  box-shadow: inset 0 -1px 0 var(--border);
+}
+
+html:not([data-theme="dark"]) .table-modern td:nth-child(odd) {
+  background: rgba(13, 110, 253, 0.06);
+}
+
+html:not([data-theme="dark"]) .table-modern td:nth-child(even) {
+  background: transparent;
+}
+
+html[data-theme="dark"] .table-modern thead th {
+  color: #f8fafc !important;
+  background: rgba(148, 163, 184, 0.10) !important;
+  border-bottom-color: rgba(148, 163, 184, 0.35) !important;
+}
+
+html[data-theme="dark"] .table-modern tbody td {
+  color: #e5e7eb !important;
+  border-top-color: rgba(148, 163, 184, 0.20) !important;
+}
+
+html[data-theme="dark"] .table-modern tbody tr:hover {
+  background: rgba(96, 165, 250, 0.12) !important;
+}
+
+html[data-theme="dark"] .table-modern td:nth-child(odd) {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+html[data-theme="dark"] .table-modern td:nth-child(even) {
+  background: transparent !important;
+}
+
+.notes-editor {
+  min-height: 38px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+}
+
+.notes-editor.is-none {
+  color: var(--muted);
+  opacity: 0.9;
+}
+
+.editor-toolbar .btn {
+  line-height: 1;
+}

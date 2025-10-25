@@ -1,5 +1,10 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
+
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'clients/css/clients_list.css' %}">
+{% endblock %}
 
 {% block title %}{% translate "Список клиентов" %}{% endblock %}
 
@@ -32,57 +37,6 @@
   </div>
 </form>
 
-<style>
-  /* Контейнер таблицы с липким thead */
-  .table-container {
-    max-height: 70vh;
-    overflow-y: auto;
-    border-radius: 16px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    box-shadow: var(--shadow-1);
-  }
-
-  /* Липкая шапка */
-  .table-modern thead th {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    backdrop-filter: blur(8px);
-  }
-  .table-modern thead {
-    box-shadow: inset 0 -1px 0 var(--border);
-  }
-
-  /* Светлая тема — лёгкая шахматка по колонкам */
-  html:not([data-theme="dark"]) .table-modern td:nth-child(odd) { background: rgba(13,110,253,0.06); }
-  html:not([data-theme="dark"]) .table-modern td:nth-child(even){ background: transparent; }
-
-  /* Тёмная тема — читаемость */
-  html[data-theme="dark"] .table-modern thead th {
-    color: #f8fafc !important;
-    background: rgba(148,163,184,0.10) !important;
-    border-bottom-color: rgba(148,163,184,0.35) !important;
-  }
-  html[data-theme="dark"] .table-modern tbody td {
-    color: #e5e7eb !important;
-    border-top-color: rgba(148,163,184,0.20) !important;
-  }
-  html[data-theme="dark"] .table-modern tbody tr:hover { background: rgba(96,165,250,0.12) !important; }
-  html[data-theme="dark"] .table-modern td:nth-child(odd) { background: rgba(255,255,255,0.04) !important; }
-  html[data-theme="dark"] .table-modern td:nth-child(even){ background: transparent !important; }
-
-  /* Редактор заметок */
-  .notes-editor {
-    min-height: 38px;
-    overflow-y: auto;
-    white-space: pre-wrap;
-  }
-  /* Серый цвет для искусственного “None” */
-  .notes-editor.is-none { color: var(--muted); opacity: .9; }
-  .editor-toolbar .btn { line-height: 1; }
-</style>
-
 <div class="table-container">
   <table class="table table-modern table-hover align-middle mb-0">
     <thead>
@@ -95,10 +49,10 @@
           <div class="d-flex justify-content-between align-items-center">
             <span>{% translate "Uwagi / Заметки" %}</span>
             <div class="editor-toolbar d-flex align-items-center">
-              <button type="button" class="btn btn-light btn-sm format-button" data-format="bold" title="{% translate 'Жирный' %}">
+              <button type="button" class="btn btn-light btn-sm" data-notes-bold title="{% translate 'Жирный' %}">
                 <b>B</b>
               </button>
-              <i class="bi bi-check-lg text-success ms-1" id="bold-indicator" style="display:none;"></i>
+              <i class="bi bi-check-lg text-success ms-1" data-bold-indicator style="display:none;"></i>
             </div>
           </div>
         </th>
@@ -129,7 +83,8 @@
                    contenteditable="true"
                    role="textbox"
                    aria-multiline="true"
-                   tabindex="0">
+                   tabindex="0"
+                   data-notes-editor>
                 {{ client.notes|default:"None"|safe }}
               </div>
               <button class="btn btn-outline-secondary btn-sm mt-2 w-100" type="submit">
@@ -163,76 +118,5 @@
 
 {% block extra_js %}
   {{ block.super }}
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Индикатор жирного (execCommand для простоты)
-      const formatButton = document.querySelector('.format-button[data-format="bold"]');
-      const boldIndicator = document.getElementById('bold-indicator');
-
-      function updateIndicator() {
-        try {
-          boldIndicator.style.display = document.queryCommandState('bold') ? 'inline-block' : 'none';
-        } catch (e) { /* ignore */ }
-      }
-      if (formatButton) {
-        formatButton.addEventListener('click', function(e) {
-          e.preventDefault();
-          document.execCommand('bold', false, null);
-          updateIndicator();
-        });
-      }
-
-      // Поведение “None”: видно до фокуса, очищается при фокусе, возвращается на blur если пусто
-      document.querySelectorAll('.notes-editor').forEach(ed => {
-        const setNoneClass = () => {
-          const txt = (ed.textContent || '').trim();
-          if (txt.toLowerCase() === 'none') {
-            ed.classList.add('is-none');
-          } else {
-            ed.classList.remove('is-none');
-          }
-        };
-
-        // Инициализация: если реально пусто (на всякий случай), показать None
-        let initial = (ed.textContent || '').trim();
-        if (initial === '') {
-          ed.innerHTML = 'None';
-        }
-        setNoneClass();
-
-        ed.addEventListener('focus', () => {
-          if ((ed.textContent || '').trim().toLowerCase() === 'none') {
-            ed.innerHTML = '';
-            ed.classList.remove('is-none');
-          }
-        });
-
-        ed.addEventListener('blur', () => {
-          if ((ed.textContent || '').trim() === '') {
-            ed.innerHTML = 'None';
-            ed.classList.add('is-none');
-          } else {
-            setNoneClass();
-          }
-        });
-
-        ed.addEventListener('keyup', updateIndicator);
-        ed.addEventListener('mouseup', updateIndicator);
-      });
-
-      // Перед отправкой — если в редакторе “None”, в hidden кладём пустую строку
-      document.querySelectorAll('.notes-form').forEach(form => {
-        form.addEventListener('submit', function() {
-          const ed = this.querySelector('.notes-editor');
-          const hidden = this.querySelector('.hidden-notes-input');
-          const txt = (ed.textContent || '').trim();
-          if (txt.toLowerCase() === 'none') {
-            hidden.value = ''; // пусто в БД
-          } else {
-            hidden.value = ed.innerHTML;
-          }
-        });
-      });
-    });
-  </script>
+  <script src="{% static 'clients/js/clients_list.js' %}" defer></script>
 {% endblock %}
