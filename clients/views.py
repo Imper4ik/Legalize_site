@@ -416,8 +416,10 @@ def calculator_view(request):
     return render(request, 'clients/calculator.html', context)
 
 
-class ClientPrintBaseView(StaffRequiredMixin, DetailView):
-    """Базовое представление для печатных форм клиента."""
+@login_required
+@staff_required_view
+def client_print_view(request, pk):
+    """Генерирует страницу с данными клиента для печати."""
 
     model = Client
     context_object_name = 'client'
