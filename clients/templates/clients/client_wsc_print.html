@@ -1,271 +1,209 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-    <meta charset="utf-8">
-    <title>WSC – {{ client.first_name }} {{ client.last_name }}</title>
+    <meta charset="UTF-8">
+    <title>WSC - {{ client.first_name }} {{ client.last_name }}</title>
     <style>
-        @page {
-            size: A4;
-            margin: 0;
+        :root {
+            --border-color: #000;
         }
 
-        html,
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
-            padding: 0;
-            height: 100%;
-            background: #f1f1f1;
-            font-family: "DejaVu Sans", Arial, sans-serif;
-        }
-
-        .toolbar {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            padding: 8px 12px;
+            padding: 20mm;
+            font-family: "Times New Roman", serif;
+            font-size: 12pt;
+            color: #000;
             background: #fff;
-            border-bottom: 1px solid #c8c8c8;
         }
 
-        .toolbar a,
-        .toolbar button {
-            padding: 6px 12px;
-            font-size: 12px;
-            border: 1px solid #9b9b9b;
+        .print-actions {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .print-actions a,
+        .print-actions button {
+            padding: 8px 18px;
+            font-size: 14px;
+            border: 1px solid #333;
             background: #f5f5f5;
             cursor: pointer;
             text-decoration: none;
             color: inherit;
         }
 
-        .toolbar button {
-            background: #ededed;
+        .print-actions button {
+            background: #e8e8e8;
         }
 
-        .page {
-            position: relative;
+        .sheet {
             width: 210mm;
-            height: 297mm;
+            min-height: 297mm;
             margin: 0 auto;
-            background: #fff url("{{ wsc_form_background }}") no-repeat top left / 100% 100%;
+            border: 1px solid transparent;
+            padding: 5mm 10mm 15mm;
         }
 
-        .page input[type="text"],
-        .page input[type="date"] {
-            position: absolute;
-            width: 60mm;
-            background: transparent;
-            border: none;
-            outline: none;
-            padding: 0;
+        .sheet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10mm;
+        }
+
+        .header-left {
+            white-space: pre-line;
+        }
+
+        .header-right {
+            text-align: right;
+            white-space: pre-line;
+            font-weight: 600;
+        }
+
+        .block-title {
+            font-weight: 600;
+            margin: 10mm 0 4mm;
+        }
+
+        .line-field {
+            border-bottom: 1px solid var(--border-color);
+            min-height: 8mm;
+            display: flex;
+            align-items: center;
+            padding: 0 3mm;
+            font-weight: 600;
+        }
+
+        .line-field.upper {
+            font-size: 15pt;
+            letter-spacing: 1px;
+        }
+
+        .line-label {
+            margin-top: 6mm;
             font-size: 11pt;
-            color: #000;
-            line-height: 1;
         }
 
-        .page input[type="text"]::placeholder,
-        .page input[type="date"]::placeholder {
-            color: rgba(0, 0, 0, 0.35);
+        .checkbox-row {
+            display: flex;
+            gap: 18mm;
+            margin-top: 6mm;
         }
 
-        .page .checkbox {
-            position: absolute;
-            width: 10mm;
-            height: 10mm;
+        .checkbox {
+            display: inline-flex;
+            align-items: center;
+            gap: 5mm;
+        }
+
+        .checkbox-square {
+            width: 8mm;
+            height: 8mm;
+            border: 1px solid var(--border-color);
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12mm;
+            margin-top: 8mm;
+        }
+
+        .note-area {
+            border: 1px solid var(--border-color);
+            height: 40mm;
+            margin-top: 8mm;
+        }
+
+        .signature-line {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 14mm;
+        }
+
+        .signature-line span {
             display: inline-block;
-        }
-
-        .page .checkbox input {
-            appearance: none;
-            -webkit-appearance: none;
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-        }
-
-        .page .checkbox span {
-            position: absolute;
-            left: 1mm;
-            top: -0.5mm;
-            font-size: 12pt;
-            color: #000;
-            opacity: 0;
-            user-select: none;
-        }
-
-        .page .checkbox input:checked + span {
-            opacity: 1;
+            width: 70mm;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            padding-top: 3mm;
         }
 
         @media print {
             body {
-                background: none;
+                padding: 10mm 14mm;
             }
 
-            .toolbar {
+            .print-actions {
                 display: none;
             }
 
-            .page {
-                margin: 0;
+            .sheet {
+                border: none;
+                padding: 0;
             }
         }
     </style>
 </head>
 <body>
-<div class="toolbar">
+<div class="print-actions">
     <a href="{% url 'clients:client_detail' client.pk %}">Powrót</a>
-    <button type="button" onclick="window.print()">Drukuj / Zapisz PDF</button>
-    <button type="button" onclick="exportJSON()">Eksportuj dane (JSON)</button>
-    <button type="button" onclick="importJSON()">Załaduj dane (JSON)</button>
-    <input type="file" id="jsonfile" accept="application/json" style="display: none;">
+    <button type="button" onclick="window.print()">Drukuj</button>
 </div>
 
-<div class="page">
-    <input class="txt" type="text" name="miasto_data"
-           placeholder="Data"
-           style="left:52mm; top:22mm; width:45mm; height:7mm;"
-           value="{{ client.submission_date|date:'d.m.Y'|default:'' }}">
+<div class="sheet">
+    <div class="sheet-header">
+        <div class="header-left">
+            Warszawa, dn. ____________________<br>
+            A__________________________<br>
+            LOKALIZACJA
+        </div>
+        <div class="header-right">
+            Mazowiecki Urząd Wojewódzki<br>
+            w Warszawie<br>
+            Ul. Marszałkowska 3/5<br>
+            00-624 Warszawa
+        </div>
+    </div>
 
-    <input class="txt" type="text" name="wsc_sygnatura"
-           placeholder="WSC / sygnatura (tylko numer)"
-           style="left:63mm; top:68mm; width:70mm; height:7mm;"
-           value="{{ client.case_number|default_if_none:'' }}">
+    <div class="block-title">Dot. sprawy o zezwolenie na pobyt:</div>
+    <div class="line-field upper">{{ client.last_name|default_if_none:""|default:""|upper }} {{ client.first_name|default_if_none:""|default:""|upper }}</div>
 
-    <input class="txt" type="text" name="inne_opis"
-           placeholder="Opis"
-           style="left:157mm; top:68mm; width:35mm; height:7mm;">
+    <div class="line-label">Numer sprawy / WSC:</div>
+    <div class="line-field">{{ client.case_number|default_if_none:""|default:"" }}</div>
 
-    <input class="txt" type="text" name="mos_id"
-           placeholder="MOS ID"
-           style="left:55mm; top:106mm; width:50mm; height:7mm;">
+    <div class="line-label">Data złożenia wniosku:</div>
+    <div class="line-field">{{ client.submission_date|date:"d.m.Y"|default:"" }}</div>
 
-    <input class="txt" type="text" name="inpol_id"
-           placeholder="Numer"
-           style="left:145mm; top:106mm; width:47mm; height:7mm;">
+    <div class="checkbox-row">
+        <div class="checkbox"><span class="checkbox-square"></span> Pełny wniosek</div>
+        <div class="checkbox"><span class="checkbox-square"></span> Nowy wniosek</div>
+        <div class="checkbox"><span class="checkbox-square"></span> Inne</div>
+    </div>
 
-    <input class="txt" type="text" name="data_zlozenia"
-           placeholder="Data złożenia"
-           style="left:80mm; top:118mm; width:55mm; height:7mm;"
-           value="{{ client.submission_date|date:'d.m.Y'|default:'' }}">
+    <div class="block-title" style="margin-top: 12mm;">Dane kontaktowe:</div>
+    <div class="two-column">
+        <div>
+            <div class="line-label">Telefon:</div>
+            <div class="line-field">{{ client.phone|default_if_none:""|default:"" }}</div>
+        </div>
+        <div>
+            <div class="line-label">Adres e-mail:</div>
+            <div class="line-field">{{ client.email|default_if_none:""|default:"" }}</div>
+        </div>
+    </div>
 
-    <input class="txt" type="text" name="imie_nazwisko"
-           placeholder="Imię i nazwisko"
-           style="left:82mm; top:130mm; width:110mm; height:7mm;"
-           value="{{ client.first_name|default_if_none:'' }}{% if client.first_name and client.last_name %} {% endif %}{{ client.last_name|default_if_none:'' }}">
+    <div class="note-area"></div>
 
-    <input class="txt" type="text" name="data_urodzenia"
-           placeholder="Data urodzenia"
-           style="left:61mm; top:141mm; width:50mm; height:7mm;">
-
-    <input class="txt" type="text" name="obywatelstwo"
-           placeholder="Obywatelstwo"
-           style="left:64mm; top:152mm; width:55mm; height:7mm;"
-           value="{{ client.citizenship|default_if_none:'' }}">
-
-    <input class="txt" type="text" name="telefon"
-           placeholder="Telefon"
-           style="left:55mm; top:164mm; width:55mm; height:7mm;"
-           value="{{ client.phone|default_if_none:'' }}">
-
-    <input class="txt" type="text" name="email"
-           placeholder="Adres e-mail"
-           style="left:150mm; top:164mm; width:42mm; height:7mm;"
-           value="{{ client.email|default_if_none:'' }}">
-
-    <input class="txt" type="text" name="zalaczniki_liczba"
-           placeholder="Załączniki (liczba)"
-           style="left:150mm; top:179mm; width:20mm; height:12mm;">
-
-    <input class="txt" type="text" name="podpis_skladajacego"
-           placeholder="Podpis składającego"
-           style="left:125mm; top:254mm; width:65mm; height:7mm;"
-           value="{{ client.first_name|default_if_none:'' }}{% if client.first_name and client.last_name %} {% endif %}{{ client.last_name|default_if_none:'' }}">
-
-    <label class="checkbox" style="left:27mm; top:75mm;">
-        <input type="checkbox" name="pobyt_czasowy"><span>✓</span>
-    </label>
-    <label class="checkbox" style="left:27mm; top:80mm;">
-        <input type="checkbox" name="pobyt_staly"><span>✓</span>
-    </label>
-    <label class="checkbox" style="left:27mm; top:85mm;">
-        <input type="checkbox" name="uznanie_obywatelstwo"><span>✓</span>
-    </label>
-    <label class="checkbox" style="left:27mm; top:90mm;">
-        <input type="checkbox" name="nadanie_obywatelstwo"><span>✓</span>
-    </label>
-
-    <label class="checkbox" style="left:118mm; top:75mm;">
-        <input type="checkbox" name="dlugoterminowy_ue"><span>✓</span>
-    </label>
-    <label class="checkbox" style="left:118mm; top:80mm;">
-        <input type="checkbox" name="swiadczenia"><span>✓</span>
-    </label>
-    <label class="checkbox" style="left:118mm; top:85mm;">
-        <input type="checkbox" name="potw_posiadania"><span>✓</span>
-    </label>
-    <label class="checkbox" style="left:118mm; top:90mm;">
-        <input type="checkbox" name="inne"><span>✓</span>
-    </label>
+    <div class="signature-line"><span>podpis</span></div>
 </div>
-
-<script>
-    function exportJSON() {
-        const data = {};
-        document.querySelectorAll('.page input.txt').forEach((el) => {
-            data[el.name] = el.value;
-        });
-        document.querySelectorAll('.page .checkbox input[type="checkbox"]').forEach((el) => {
-            data[el.name] = el.checked;
-        });
-
-        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `wsc_form_${Date.now()}.json`;
-        link.click();
-        URL.revokeObjectURL(link.href);
-    }
-
-    function importJSON() {
-        const fileInput = document.getElementById('jsonfile');
-        fileInput.onchange = () => {
-            const file = fileInput.files[0];
-            if (!file) {
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                try {
-                    const data = JSON.parse(event.target.result);
-                    Object.entries(data).forEach(([key, value]) => {
-                        const textInput = document.querySelector(`.page input.txt[name="${key}"]`);
-                        const checkbox = document.querySelector(`.page .checkbox input[name="${key}"]`);
-                        if (textInput) {
-                            textInput.value = value ?? '';
-                        }
-                        if (checkbox) {
-                            checkbox.checked = Boolean(value);
-                        }
-                    });
-                } catch (error) {
-                    alert('Niepoprawny plik JSON');
-                }
-            };
-
-            reader.readAsText(file);
-        };
-
-        fileInput.click();
-    }
-</script>
 </body>
 </html>
