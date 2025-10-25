@@ -30,9 +30,12 @@
   <div class="accordion" id="documentAccordion" data-refresh-url="{% url 'clients:client_checklist_partial' client.pk %}">
       {% include 'clients/partials/document_checklist.html' with document_status_list=document_status_list client=client %}
   </div>
+{% endblock %}
 
+
+{% block modals %}
+  {{ block.super }}
   {% include 'clients/partials/modals.html' %}
-
 {% endblock %}
 
 
