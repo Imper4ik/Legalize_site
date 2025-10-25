@@ -1,7 +1,8 @@
 {# templates/clients/partials/modals.html #}
 
 <!-- Модалка для добавления нового счёта -->
-<div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel" aria-hidden="true">
+<div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel" aria-hidden="true"
+     data-price-url-template="{% url 'clients:get_price_for_service' '__service__' %}">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -98,31 +99,3 @@
   </div>
 </div>
 
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const editButtons = document.querySelectorAll('.edit-payment-btn');
-    const form = document.getElementById('editPaymentForm');
-
-    editButtons.forEach(button => {
-      button.addEventListener('click', function() {
-        // Получаем данные из атрибутов кнопки
-        const serviceDescription = this.getAttribute('data-service_description');
-        const totalAmount = this.getAttribute('data-total_amount');
-        const amountPaid = this.getAttribute('data-amount_paid');
-        const dueDate = this.getAttribute('data-due_date');
-        const status = this.getAttribute('data-status');
-        const url = this.getAttribute('data-url');  // URL для отправки формы редактирования
-
-        // Обновляем action формы редактирования, чтобы отправлять на правильный адрес
-        form.action = url;
-
-        // Заполняем поля формы текущими значениями
-        form.querySelector('#edit_id_service_description').value = serviceDescription;
-        form.querySelector('#edit_id_total_amount').value = totalAmount;
-        form.querySelector('#edit_id_amount_paid').value = amountPaid;
-        form.querySelector('#edit_id_due_date').value = dueDate;
-        form.querySelector('#edit_id_status').value = status;
-      });
-    });
-  });
-</script>
