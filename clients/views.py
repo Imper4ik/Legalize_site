@@ -3,7 +3,7 @@
 from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.urls import reverse_lazy
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -13,6 +13,7 @@ from datetime import datetime
 from django.template.loader import render_to_string
 from django.utils.translation import gettext as _
 from django.conf import settings
+from functools import wraps
 
 from legalize_site.utils.http import request_is_ajax
 from .models import Client, Document, Payment, Reminder
@@ -23,6 +24,19 @@ def json_no_store(payload, *, status=200):
     response = JsonResponse(payload, status=status)
     response['Cache-Control'] = 'no-store'
     return response
+
+
+def staff_required_view(view_func):
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        if not request.user.is_staff:
+            message = _('Доступ запрещен')
+            if request_is_ajax(request):
+                return json_no_store({'status': 'error', 'message': message}, status=403)
+            return HttpResponseForbidden(message)
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped
 
 
 class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
@@ -56,9 +70,19 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
     model = Client
     template_name = 'clients/client_detail.html'
 
+    def get_queryset(self):
+        return (
+            Client.objects.select_related('user')
+            .prefetch_related(
+                Prefetch('payments', queryset=Payment.objects.order_by('-created_at')),
+                Prefetch('documents', queryset=Document.objects.order_by('-uploaded_at')),
+                'reminders',
+            )
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        client = self.get_object()
+        client = self.object
         context['payment_form'] = PaymentForm()
         if hasattr(client, 'get_document_checklist'):
             context['document_status_list'] = client.get_document_checklist()
@@ -135,9 +159,8 @@ def dashboard_redirect_view(request):
 
 
 @login_required
+@staff_required_view
 def update_client_notes(request, pk):
-    if not request.user.is_staff:
-        return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
     client = get_object_or_404(Client, pk=pk)
     expects_json = request_is_ajax(request)
 
@@ -152,14 +175,8 @@ def update_client_notes(request, pk):
 
 
 @login_required
+@staff_required_view
 def add_document(request, client_id, doc_type):
-    # Эта проверка доступа для персонала должна быть в начале
-    if not request.user.is_staff:
-        # Для AJAX возвращаем ошибку, иначе - редирект
-        if request_is_ajax(request):
-            return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
-        return HttpResponseForbidden('Доступ запрещен')
-
     client = get_object_or_404(Client, pk=client_id)
     document_type_display = client.get_document_name_by_code(doc_type)
     expects_json = request_is_ajax(request)
@@ -199,13 +216,8 @@ def add_document(request, client_id, doc_type):
 
 
 @login_required
+@staff_required_view
 def document_delete(request, pk):
-    if not request.user.is_staff:
-        # Для AJAX возвращаем JSON, иначе - редирект
-        if request_is_ajax(request):
-            return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
-        return HttpResponseForbidden('Доступ запрещен')
-
     document = get_object_or_404(Document, pk=pk)
     client_id = document.client.id
     expects_json = request_is_ajax(request)
@@ -225,13 +237,11 @@ def document_delete(request, pk):
 
 
 @login_required
+@staff_required_view
 def toggle_document_verification(request, doc_id):
     """
     Переключает статус верификации документа. Поддерживает AJAX.
     """
-    if not request.user.is_staff:
-        return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
-
     document = get_object_or_404(Document, pk=doc_id)
     expects_json = request_is_ajax(request)
     if request.method == 'POST':
@@ -252,10 +262,8 @@ def toggle_document_verification(request, doc_id):
 
 
 @login_required
+@staff_required_view
 def add_payment(request, client_id):
-    if not request.user.is_staff:
-        return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
-
     client = get_object_or_404(Client, pk=client_id)
     expects_json = request_is_ajax(request)
     if request.method == 'POST':
@@ -281,10 +289,8 @@ def add_payment(request, client_id):
 
 
 @login_required
+@staff_required_view
 def edit_payment(request, payment_id):
-    if not request.user.is_staff:
-        return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
-
     payment = get_object_or_404(Payment, pk=payment_id)
     expects_json = request_is_ajax(request)
     if request.method == 'POST':
@@ -308,10 +314,8 @@ def edit_payment(request, payment_id):
 
 
 @login_required
+@staff_required_view
 def delete_payment(request, payment_id):
-    if not request.user.is_staff:
-        return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
-
     payment = get_object_or_404(Payment, pk=payment_id)
     client_id = payment.client.id
     expects_json = request_is_ajax(request)
@@ -325,10 +329,9 @@ def delete_payment(request, payment_id):
 
 # --- Инструменты ---
 @login_required
+@staff_required_view
 def calculator_view(request):
     """Отображает и обрабатывает калькулятор для выписки из банка."""
-    if not request.user.is_staff:
-        return HttpResponseForbidden('Доступ запрещен')
 
     # Константы для расчетов
     LIVING_ALLOWANCE = 1010
@@ -413,22 +416,39 @@ def calculator_view(request):
     return render(request, 'clients/calculator.html', context)
 
 
+class ClientPrintView(StaffRequiredMixin, DetailView):
+    """Печатная форма с общей информацией о клиенте."""
+
+    model = Client
+    context_object_name = 'client'
+    template_name = 'clients/client_printable.html'
+
+
+class ClientWSCPrintView(StaffRequiredMixin, DetailView):
+    """Печатная форма WSC для клиента."""
+
+    model = Client
+    context_object_name = 'client'
+    template_name = 'clients/client_wsc_print.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from django.templatetags.static import static
+
+        context['wsc_form_background'] = static('clients/img/wsc_form_bg.svg')
+        return context
+
+
+# Функции-обёртки сохраняют прежние точки входа, чтобы не переписывать URLConf
+client_print_view = ClientPrintView.as_view()
+client_wsc_print_view = ClientWSCPrintView.as_view()
+
+
 @login_required
-def client_print_view(request, pk):
-    """Генерирует страницу с данными клиента для печати."""
-    if not request.user.is_staff:
-        return HttpResponseForbidden('Доступ запрещен')
-
-    client = get_object_or_404(Client, pk=pk)
-    return render(request, 'clients/client_printable.html', {'client': client})
-
-
-@login_required
+@staff_required_view
 def client_status_api(request, pk):
     """Возвращает актуальный чеклист клиента в формате JSON для 'живого' обновления."""
     client = get_object_or_404(Client, pk=pk)
-    if not request.user.is_staff:
-        return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
 
     checklist_html = render_to_string('clients/partials/document_checklist.html', {
         'document_status_list': client.get_document_checklist(),
@@ -438,10 +458,9 @@ def client_status_api(request, pk):
 
 
 @login_required
+@staff_required_view
 def client_overview_partial(request, pk):
     """Возвращает HTML со сводной информацией о клиенте для автообновления на странице сотрудника."""
-    if not request.user.is_staff:
-        return json_no_store({'status': 'error', 'message': 'Доступ запрещен'}, status=403)
 
     client = get_object_or_404(Client, pk=pk)
     overview_html = render_to_string('clients/partials/client_overview.html', {'client': client}, request=request)
@@ -449,79 +468,79 @@ def client_overview_partial(request, pk):
 
 
 # --- НАПОМИНАНИЯ (REMindERS) ---
+
+
+class ReminderListView(StaffRequiredMixin, ListView):
+    model = Reminder
+    context_object_name = 'reminders'
+    reminder_type = None
+    template_name = ''
+    title = ''
+    client_param = 'client'
+    start_date_param = 'start_date'
+    end_date_param = 'end_date'
+
+    def get_queryset(self):
+        queryset = (
+            Reminder.objects.filter(is_active=True, reminder_type=self.reminder_type)
+            .select_related('client')
+            .order_by('due_date')
+        )
+
+        start_date = self.request.GET.get(self.start_date_param, '')
+        if start_date:
+            queryset = queryset.filter(due_date__gte=start_date)
+
+        end_date = self.request.GET.get(self.end_date_param, '')
+        if end_date:
+            queryset = queryset.filter(due_date__lte=end_date)
+
+        client_value = self.request.GET.get(self.client_param, '')
+        self.client_filter_id = None
+        if client_value.isdigit():
+            self.client_filter_id = int(client_value)
+            queryset = queryset.filter(client_id=self.client_filter_id)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        reminders = context['reminders']
+        context.update(
+            {
+                'title': self.title,
+                'all_clients': Client.objects.filter(user__is_staff=False).order_by('last_name', 'first_name'),
+                'filter_values': self.request.GET,
+                'client_filter_id': getattr(self, 'client_filter_id', None),
+                'reminders_count': reminders.count() if hasattr(reminders, 'count') else len(reminders),
+            }
+        )
+        return context
+
+
+class DocumentReminderListView(ReminderListView):
+    reminder_type = 'document'
+    template_name = 'clients/document_reminder_list.html'
+    title = _('Напоминания по документам')
+    client_param = 'doc_client'
+    start_date_param = 'doc_start_date'
+    end_date_param = 'doc_end_date'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['total_reminders_count'] = context['reminders_count']
+        return context
+
+
+class PaymentReminderListView(ReminderListView):
+    reminder_type = 'payment'
+    template_name = 'clients/payment_reminder_list.html'
+    title = _('Напоминания по оплатам')
+
+
 @login_required
-def document_reminder_list(request):
-    if not request.user.is_staff:
-        return HttpResponseForbidden('Доступ запрещен')
-
-    base_query = Reminder.objects.filter(is_active=True, reminder_type='document').select_related('client')
-    doc_client_filter = request.GET.get('doc_client', '')
-    doc_start_date_filter = request.GET.get('doc_start_date', '')
-    doc_end_date_filter = request.GET.get('doc_end_date', '')
-
-    if not doc_start_date_filter and not doc_end_date_filter:
-        document_query = base_query.order_by('due_date') # Показываем все по умолчанию
-    else:
-        document_query = base_query.order_by('due_date')
-        if doc_start_date_filter:
-            document_query = document_query.filter(due_date__gte=doc_start_date_filter)
-        if doc_end_date_filter:
-            document_query = document_query.filter(due_date__lte=doc_end_date_filter)
-
-    doc_client_filter_id = None
-    if doc_client_filter.isdigit():
-        doc_client_filter_id = int(doc_client_filter)
-        document_query = document_query.filter(client_id=doc_client_filter_id)
-
-    context = {
-        'title': 'Напоминания по документам',
-        'document_reminders': document_query,
-        'total_reminders_count': document_query.count(),
-        'all_clients': Client.objects.filter(user__is_staff=False).order_by('last_name', 'first_name'),
-        'doc_filter_values': request.GET,
-        'doc_client_filter_id': doc_client_filter_id,
-    }
-    return render(request, 'clients/document_reminder_list.html', context)
-
-
-@login_required
-def payment_reminder_list(request):
-    if not request.user.is_staff:
-        return HttpResponseForbidden('Доступ запрещен')
-
-    base_query = Reminder.objects.filter(is_active=True, reminder_type='payment').select_related('client')
-    client_filter = request.GET.get('client', '')
-    start_date_filter = request.GET.get('start_date', '')
-    end_date_filter = request.GET.get('end_date', '')
-
-    if not start_date_filter and not end_date_filter:
-        query = base_query.order_by('due_date')
-    else:
-        query = base_query.order_by('due_date')
-        if start_date_filter:
-            query = query.filter(due_date__gte=start_date_filter)
-        if end_date_filter:
-            query = query.filter(due_date__lte=end_date_filter)
-
-    client_filter_id = None
-    if client_filter.isdigit():
-        client_filter_id = int(client_filter)
-        query = query.filter(client_id=client_filter_id)
-
-    context = {
-        'title': 'Напоминания по оплатам',
-        'reminders': query,
-        'all_clients': Client.objects.filter(user__is_staff=False).order_by('last_name', 'first_name'),
-        'filter_values': request.GET,
-        'client_filter_id': client_filter_id,
-    }
-    return render(request, 'clients/payment_reminder_list.html', context)
-
-
-@login_required
+@staff_required_view
 def run_update_reminders(request):
-    if not request.user.is_staff:
-        return HttpResponseForbidden('Доступ запрещен')
     if request.method == 'POST':
         try:
             call_command('update_reminders')
@@ -539,9 +558,8 @@ def run_update_reminders(request):
 
 
 @login_required
+@staff_required_view
 def reminder_action(request, reminder_id):
-    if not request.user.is_staff:
-        return HttpResponseForbidden('Доступ запрещен')
     reminder = get_object_or_404(Reminder, pk=reminder_id)
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -554,9 +572,8 @@ def reminder_action(request, reminder_id):
 
 
 @login_required
+@staff_required_view
 def client_checklist_partial(request, pk):
-    if not request.user.is_staff:
-        return HttpResponseForbidden()
     client = get_object_or_404(Client, pk=pk)
     document_status_list = client.get_document_checklist()
     response = render(request, 'clients/partials/document_checklist.html', {
@@ -567,6 +584,8 @@ def client_checklist_partial(request, pk):
     return response
 
 
+@login_required
+@staff_required_view
 def get_price_for_service(request, service_value):
     prices = {
         'study_service': 1400.00,

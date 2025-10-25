@@ -1,0 +1,271 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8">
+    <title>WSC – {{ client.first_name }} {{ client.last_name }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background: #f1f1f1;
+            font-family: "DejaVu Sans", Arial, sans-serif;
+        }
+
+        .toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            padding: 8px 12px;
+            background: #fff;
+            border-bottom: 1px solid #c8c8c8;
+        }
+
+        .toolbar a,
+        .toolbar button {
+            padding: 6px 12px;
+            font-size: 12px;
+            border: 1px solid #9b9b9b;
+            background: #f5f5f5;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .toolbar button {
+            background: #ededed;
+        }
+
+        .page {
+            position: relative;
+            width: 210mm;
+            height: 297mm;
+            margin: 0 auto;
+            background: #fff url("{{ wsc_form_background }}") no-repeat center center / contain;
+        }
+
+        .page input[type="text"],
+        .page input[type="date"] {
+            position: absolute;
+            width: 60mm;
+            background: transparent;
+            border: none;
+            outline: none;
+            padding: 0;
+            font-size: 10pt;
+            color: #000;
+            line-height: 1;
+        }
+
+        .page input[type="text"]::placeholder,
+        .page input[type="date"]::placeholder {
+            color: rgba(0, 0, 0, 0.35);
+        }
+
+        .page .checkbox {
+            position: absolute;
+            width: 10mm;
+            height: 10mm;
+            display: inline-block;
+        }
+
+        .page .checkbox input {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        .page .checkbox span {
+            position: absolute;
+            left: 1mm;
+            top: -0.5mm;
+            font-size: 12pt;
+            color: #000;
+            opacity: 0;
+            user-select: none;
+        }
+
+        .page .checkbox input:checked + span {
+            opacity: 1;
+        }
+
+        @media print {
+            body {
+                background: none;
+            }
+
+            .toolbar {
+                display: none;
+            }
+
+            .page {
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="toolbar">
+    <a href="{% url 'clients:client_detail' client.pk %}">Powrót</a>
+    <button type="button" onclick="window.print()">Drukuj / Zapisz PDF</button>
+    <button type="button" onclick="exportJSON()">Eksportuj dane (JSON)</button>
+    <button type="button" onclick="importJSON()">Załaduj dane (JSON)</button>
+    <input type="file" id="jsonfile" accept="application/json" style="display: none;">
+</div>
+
+<div class="page">
+    <input class="txt" type="text" name="miasto_data"
+           placeholder="Miasto, data"
+           style="left:29mm; top:22mm; width:70mm; height:7mm;"
+           value="{% if client.submission_date %}Warszawa, {{ client.submission_date|date:'d.m.Y' }}{% endif %}">
+
+    <input class="txt" type="text" name="wsc_sygnatura"
+           placeholder="WSC / sygnatura (tylko numer)"
+           style="left:84mm; top:41mm; width:80mm; height:7mm;"
+           value="{{ client.case_number|default_if_none:'' }}">
+
+    <input class="txt" type="text" name="inne_opis"
+           placeholder="Inne — opis"
+           style="left:140mm; top:66mm; width:45mm; height:7mm;">
+
+    <input class="txt" type="text" name="mos_id"
+           placeholder="MOS ID"
+           style="left:29mm; top:78mm; width:70mm; height:7mm;">
+
+    <input class="txt" type="text" name="inpol_id"
+           placeholder="InPOL ID (tylko numer)"
+           style="left:127mm; top:78mm; width:70mm; height:7mm;">
+
+    <input class="txt" type="text" name="data_zlozenia"
+           placeholder="Data złożenia"
+           style="left:29mm; top:90mm; width:70mm; height:7mm;"
+           value="{{ client.submission_date|date:'d.m.Y'|default:'' }}">
+
+    <input class="txt" type="text" name="imie_nazwisko"
+           placeholder="Imię i nazwisko"
+           style="left:29mm; top:102mm; width:120mm; height:7mm;"
+           value="{{ client.first_name|default_if_none:'' }}{% if client.first_name and client.last_name %} {% endif %}{{ client.last_name|default_if_none:'' }}">
+
+    <input class="txt" type="text" name="data_urodzenia"
+           placeholder="Data urodzenia"
+           style="left:29mm; top:113mm; width:70mm; height:7mm;">
+
+    <input class="txt" type="text" name="obywatelstwo"
+           placeholder="Obywatelstwo"
+           style="left:29mm; top:124mm; width:70mm; height:7mm;"
+           value="{{ client.citizenship|default_if_none:'' }}">
+
+    <input class="txt" type="text" name="telefon"
+           placeholder="Telefon"
+           style="left:29mm; top:136mm; width:70mm; height:7mm;"
+           value="{{ client.phone|default_if_none:'' }}">
+
+    <input class="txt" type="text" name="email"
+           placeholder="Adres e-mail"
+           style="left:107mm; top:136mm; width:90mm; height:7mm;"
+           value="{{ client.email|default_if_none:'' }}">
+
+    <input class="txt" type="text" name="zalaczniki_liczba"
+           placeholder="Załączniki (liczba)"
+           style="left:150mm; top:162mm; width:20mm; height:12mm;">
+
+    <input class="txt" type="text" name="podpis_skladajacego"
+           placeholder="Podpis składającego"
+           style="left:131mm; top:212mm; width:55mm; height:7mm;"
+           value="{{ client.first_name|default_if_none:'' }}{% if client.first_name and client.last_name %} {% endif %}{{ client.last_name|default_if_none:'' }}">
+
+    <label class="checkbox" style="left:28mm; top:53mm;">
+        <input type="checkbox" name="pobyt_czasowy"><span>✓</span>
+    </label>
+    <label class="checkbox" style="left:28mm; top:58mm;">
+        <input type="checkbox" name="pobyt_staly"><span>✓</span>
+    </label>
+    <label class="checkbox" style="left:28mm; top:63mm;">
+        <input type="checkbox" name="uznanie_obywatelstwo"><span>✓</span>
+    </label>
+    <label class="checkbox" style="left:28mm; top:68mm;">
+        <input type="checkbox" name="nadanie_obywatelstwo"><span>✓</span>
+    </label>
+
+    <label class="checkbox" style="left:118mm; top:53mm;">
+        <input type="checkbox" name="dlugoterminowy_ue"><span>✓</span>
+    </label>
+    <label class="checkbox" style="left:118mm; top:58mm;">
+        <input type="checkbox" name="swiadczenia"><span>✓</span>
+    </label>
+    <label class="checkbox" style="left:118mm; top:63mm;">
+        <input type="checkbox" name="potw_posiadania"><span>✓</span>
+    </label>
+    <label class="checkbox" style="left:118mm; top:68mm;">
+        <input type="checkbox" name="inne"><span>✓</span>
+    </label>
+</div>
+
+<script>
+    function exportJSON() {
+        const data = {};
+        document.querySelectorAll('.page input.txt').forEach((el) => {
+            data[el.name] = el.value;
+        });
+        document.querySelectorAll('.page .checkbox input[type="checkbox"]').forEach((el) => {
+            data[el.name] = el.checked;
+        });
+
+        const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `wsc_form_${Date.now()}.json`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+
+    function importJSON() {
+        const fileInput = document.getElementById('jsonfile');
+        fileInput.onchange = () => {
+            const file = fileInput.files[0];
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    Object.entries(data).forEach(([key, value]) => {
+                        const textInput = document.querySelector(`.page input.txt[name="${key}"]`);
+                        const checkbox = document.querySelector(`.page .checkbox input[name="${key}"]`);
+                        if (textInput) {
+                            textInput.value = value ?? '';
+                        }
+                        if (checkbox) {
+                            checkbox.checked = Boolean(value);
+                        }
+                    });
+                } catch (error) {
+                    alert('Niepoprawny plik JSON');
+                }
+            };
+
+            reader.readAsText(file);
+        };
+
+        fileInput.click();
+    }
+</script>
+</body>
+</html>
