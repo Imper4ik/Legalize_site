@@ -63,6 +63,17 @@ class DocumentUploadForm(forms.ModelForm):
 
 
 class PaymentForm(forms.ModelForm):
+    payment_date = forms.DateField(
+        required=False,
+        input_formats=['%d-%m-%Y'],
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'})
+    )
+    due_date = forms.DateField(
+        required=False,
+        input_formats=['%d-%m-%Y'],
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'})
+    )
+
     class Meta:
         model = Payment
         fields = [
@@ -70,8 +81,6 @@ class PaymentForm(forms.ModelForm):
             'payment_method', 'payment_date', 'due_date', 'transaction_id'
         ]
         widgets = {
-            'payment_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'}),
-            'due_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'}),
             'service_description': forms.Select(attrs={'class': 'form-select'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
             'payment_method': forms.Select(attrs={'class': 'form-select'}),

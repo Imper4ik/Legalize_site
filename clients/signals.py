@@ -41,10 +41,22 @@ def create_client_profile_for_new_user(sender, instance, created, **kwargs):
     """
     Создает профиль клиента для каждого нового зарегистрированного пользователя.
     """
-    if created:
-        # Если пользователь не является персоналом, создаем для него профиль
-        if not instance.is_staff:
-            Client.objects.create(user=instance, email=instance.email)
+    if not created or instance.is_staff:
+        return
+
+    # Для корректного создания требуются обязательные поля модели Client.
+    required_fields = ('first_name', 'last_name', 'email', 'phone', 'citizenship')
+    defaults = {field: getattr(instance, field, '') for field in required_fields}
+
+    if not defaults['email']:
+        return
+
+    # Если какие-то обязательные поля отсутствуют, не создаём пустой профиль,
+    # чтобы избежать IntegrityError. Профиль будет создан через форму.
+    if any(not defaults[field] for field in ('first_name', 'last_name', 'phone', 'citizenship')):
+        return
+
+    Client.objects.get_or_create(user=instance, defaults=defaults)
 
 
 @receiver(post_delete, sender=Document)
