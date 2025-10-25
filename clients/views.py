@@ -421,8 +421,21 @@ def calculator_view(request):
 def client_print_view(request, pk):
     """Генерирует страницу с данными клиента для печати."""
 
-    client = get_object_or_404(Client, pk=pk)
-    return render(request, 'clients/client_printable.html', {'client': client})
+    model = Client
+    context_object_name = 'client'
+
+
+class ClientPrintView(ClientPrintBaseView):
+    template_name = 'clients/client_printable.html'
+
+
+class ClientWSCPrintView(ClientPrintBaseView):
+    template_name = 'clients/client_wsc_print.html'
+
+
+# Функции-обёртки сохраняют прежние точки входа, чтобы не переписывать URLConf
+client_print_view = ClientPrintView.as_view()
+client_wsc_print_view = ClientWSCPrintView.as_view()
 
 
 @login_required
