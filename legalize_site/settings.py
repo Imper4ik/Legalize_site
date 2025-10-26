@@ -138,6 +138,7 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE
 
 # --- ПОЧТА (SMTP SendGrid) ---
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+ACCOUNT_EMAIL_VERIFICATION = "optional"
 EMAIL_HOST = "smtp.sendgrid.net"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
