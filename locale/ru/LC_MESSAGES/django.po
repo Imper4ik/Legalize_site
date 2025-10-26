@@ -771,11 +771,52 @@ msgstr ""
 
 #: .\templates\account\email_confirmation_sent.html:15
 msgid ""
-"Если вы не видите письмо во входящих, проверьте папку \"Спам\". Пожалуйста, "
-"свяжитесь с нами, если не получили письмо в течение нескольких минут."
+"Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
+"\"Промоакции\"."
 msgstr ""
-"Если вы не видите письмо во входящих, проверьте папку \"Спам\". Пожалуйста, "
-"свяжитесь с нами, если не получили письмо в течение нескольких минут."
+"Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
+"\"Промоакции\"."
+
+#: .\templates\account\email_confirm.html:82
+#: .\templates\account\email_confirmation_sent.html:101
+msgid "Запросить новую ссылку"
+msgstr "Запросить новую ссылку"
+
+#: .\templates\account\email_confirmation_sent.html:52
+msgid "Письмо уже в пути"
+msgstr "Письмо уже в пути"
+
+#: .\templates\account\email_confirmation_sent.html:63
+msgid "Что происходит дальше"
+msgstr "Что происходит дальше"
+
+#: .\templates\account\email_confirmation_sent.html:64
+msgid "Ссылка действует 24 часа"
+msgstr "Ссылка действует 24 часа"
+
+#: .\templates\account\email_confirmation_sent.html:74
+msgid "Проверьте входящие"
+msgstr "Проверьте входящие"
+
+#: .\templates\account\email_confirmation_sent.html:75
+msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
+msgstr "Откройте письмо от Legalize и кликните по кнопке подтверждения."
+
+#: .\templates\account\email_confirmation_sent.html:83
+msgid "Не нашли письмо"
+msgstr "Не нашли письмо"
+
+#: .\templates\account\email_confirmation_sent.html:92
+msgid "Нужно новое письмо"
+msgstr "Нужно новое письмо"
+
+#: .\templates\account\email_confirmation_sent.html:93
+msgid "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
+msgstr "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
+
+#: .\templates\account\email_confirmation_sent.html:106
+msgid "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
+msgstr "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
 
 #: .\templates\account\login.html:6 .\templates\base.html:76
 msgid "Вход"
