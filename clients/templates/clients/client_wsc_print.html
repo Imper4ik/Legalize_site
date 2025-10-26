@@ -14,7 +14,7 @@
 
         body {
             margin: 0;
-            padding: 20mm;
+            padding: 0;
             font-family: "Times New Roman", serif;
             font-size: 12pt;
             color: #000;
@@ -25,7 +25,7 @@
             display: flex;
             justify-content: center;
             gap: 16px;
-            margin-bottom: 18px;
+            padding: 16px 0;
         }
 
         .print-actions a,
@@ -47,8 +47,8 @@
             width: 210mm;
             min-height: 297mm;
             margin: 0 auto;
-            border: 1px solid transparent;
-            padding: 5mm 10mm 15mm;
+            border: 1px solid var(--border-color);
+            padding: 14mm 18mm 20mm;
         }
 
         .sheet-header {
@@ -56,24 +56,111 @@
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 10mm;
+            gap: 10mm;
         }
 
         .header-left {
-            white-space: pre-line;
+            font-size: 11pt;
+            font-weight: 600;
+        }
+
+        .header-note {
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin-bottom: 4mm;
+        }
+
+        .header-line {
+            display: flex;
+            align-items: center;
+            gap: 4mm;
+            margin-bottom: 3mm;
+            text-transform: none;
+            font-weight: 500;
+        }
+
+        .header-line .label {
+            white-space: nowrap;
+        }
+
+        .header-line .line-fill {
+            flex: 1;
+            border-bottom: 1px solid var(--border-color);
+            height: 0;
         }
 
         .header-right {
             text-align: right;
-            white-space: pre-line;
             font-weight: 600;
+            white-space: pre-line;
         }
 
-        .block-title {
+        .section {
+            margin-bottom: 10mm;
+        }
+
+        .section:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 4mm;
+        }
+
+        .section-title.small {
+            font-size: 11pt;
+            text-transform: none;
+        }
+
+        .section-subtitle {
             font-weight: 600;
-            margin: 10mm 0 4mm;
+            margin-bottom: 4mm;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 4mm 8mm;
+        }
+
+        .checkbox-grid.grid-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .checkbox {
+            display: inline-flex;
+            align-items: center;
+            gap: 4mm;
+            font-size: 11pt;
+        }
+
+        .checkbox-square {
+            width: 8mm;
+            height: 8mm;
+            border: 1px solid var(--border-color);
+        }
+
+        .line-pair {
+            display: flex;
+            align-items: flex-end;
+            gap: 6mm;
+            margin-bottom: 5mm;
+        }
+
+        .line-pair:last-child {
+            margin-bottom: 0;
+        }
+
+        .field-label {
+            min-width: 60mm;
+            font-size: 11pt;
+            font-weight: 500;
         }
 
         .line-field {
+            flex: 1;
             border-bottom: 1px solid var(--border-color);
             min-height: 8mm;
             display: flex;
@@ -84,62 +171,60 @@
 
         .line-field.upper {
             font-size: 15pt;
-            letter-spacing: 1px;
-        }
-
-        .line-label {
-            margin-top: 6mm;
-            font-size: 11pt;
-        }
-
-        .checkbox-row {
-            display: flex;
-            gap: 18mm;
-            margin-top: 6mm;
-        }
-
-        .checkbox {
-            display: inline-flex;
-            align-items: center;
-            gap: 5mm;
-        }
-
-        .checkbox-square {
-            width: 8mm;
-            height: 8mm;
-            border: 1px solid var(--border-color);
+            letter-spacing: 0.8px;
         }
 
         .two-column {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12mm;
-            margin-top: 8mm;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6mm 12mm;
+        }
+
+        .two-column .field-label {
+            display: block;
+            margin-bottom: 2mm;
+        }
+
+        .two-column .line-field {
+            margin-top: 0;
         }
 
         .note-area {
             border: 1px solid var(--border-color);
-            height: 40mm;
-            margin-top: 8mm;
+            min-height: 40mm;
+        }
+
+        .note-area.tall {
+            min-height: 50mm;
+        }
+
+        .signature-block {
+            margin-top: 18mm;
+            text-align: right;
         }
 
         .signature-line {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 14mm;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3mm;
         }
 
         .signature-line span {
             display: inline-block;
             width: 70mm;
             border-top: 1px solid var(--border-color);
-            text-align: center;
-            padding-top: 3mm;
+            height: 0;
+        }
+
+        .signature-caption {
+            font-size: 10pt;
+            margin-top: 3mm;
         }
 
         @media print {
             body {
-                padding: 10mm 14mm;
+                padding: 0;
             }
 
             .print-actions {
@@ -147,8 +232,7 @@
             }
 
             .sheet {
-                border: none;
-                padding: 0;
+                padding: 10mm 12mm 14mm;
             }
         }
     </style>
@@ -162,48 +246,86 @@
 <div class="sheet">
     <div class="sheet-header">
         <div class="header-left">
-            Warszawa, dn. ____________________<br>
-            A__________________________<br>
-            LOKALIZACJA
+            <div class="header-note">NIE WYPEŁNIAĆ</div>
+            <div class="header-line"><span class="label">Warszawa, dn.</span><span class="line-fill"></span></div>
+            <div class="header-line"><span class="label">Adnotacje urzędowe</span><span class="line-fill"></span></div>
+            <div class="header-line"><span class="label">Lokalizacja</span><span class="line-fill"></span></div>
         </div>
         <div class="header-right">
-            Mazowiecki Urząd Wojewódzki<br>
-            w Warszawie<br>
-            Ul. Marszałkowska 3/5<br>
+            Mazowiecki Urząd Wojewódzki
+            w Warszawie
+            Ul. Marszałkowska 3/5
             00-624 Warszawa
         </div>
     </div>
 
-    <div class="block-title">Dot. sprawy o zezwolenie na pobyt:</div>
-    <div class="line-field upper">{{ client.last_name|default_if_none:""|default:""|upper }} {{ client.first_name|default_if_none:""|default:""|upper }}</div>
-
-    <div class="line-label">Numer sprawy / WSC:</div>
-    <div class="line-field">{{ client.case_number|default_if_none:""|default:"" }}</div>
-
-    <div class="line-label">Data złożenia wniosku:</div>
-    <div class="line-field">{{ client.submission_date|date:"d.m.Y"|default:"" }}</div>
-
-    <div class="checkbox-row">
-        <div class="checkbox"><span class="checkbox-square"></span> Pełny wniosek</div>
-        <div class="checkbox"><span class="checkbox-square"></span> Nowy wniosek</div>
-        <div class="checkbox"><span class="checkbox-square"></span> Inne</div>
-    </div>
-
-    <div class="block-title" style="margin-top: 12mm;">Dane kontaktowe:</div>
-    <div class="two-column">
-        <div>
-            <div class="line-label">Telefon:</div>
-            <div class="line-field">{{ client.phone|default_if_none:""|default:"" }}</div>
-        </div>
-        <div>
-            <div class="line-label">Adres e-mail:</div>
-            <div class="line-field">{{ client.email|default_if_none:""|default:"" }}</div>
+    <div class="section">
+        <div class="section-title">Dot. sprawy o zezwolenie na pobyt:</div>
+        <div class="checkbox-grid">
+            <div class="checkbox"><span class="checkbox-square"></span> Pobyt czasowy</div>
+            <div class="checkbox"><span class="checkbox-square"></span> Pobyt stały</div>
+            <div class="checkbox"><span class="checkbox-square"></span> Zezwolenie rezydenta długoterminowego UE</div>
+            <div class="checkbox"><span class="checkbox-square"></span> Świadczenie pieniężne</div>
+            <div class="checkbox"><span class="checkbox-square"></span> Zezwolenie na pobyt obywatela UE / RP</div>
+            <div class="checkbox"><span class="checkbox-square"></span> Inne</div>
         </div>
     </div>
 
-    <div class="note-area"></div>
+    <div class="section">
+        <div class="line-pair">
+            <div class="field-label">Dot. sprawy o sygnaturę WSC:</div>
+            <div class="line-field">{{ client.case_number|default_if_none:""|default:"" }}</div>
+        </div>
+        <div class="line-pair">
+            <div class="field-label">Nazwisko i imię:</div>
+            <div class="line-field upper">{{ client.last_name|default_if_none:""|default:""|upper }} {{ client.first_name|default_if_none:""|default:""|upper }}</div>
+        </div>
+        <div class="line-pair">
+            <div class="field-label">Data złożenia wniosku:</div>
+            <div class="line-field">{{ client.submission_date|date:"d.m.Y"|default:"" }}</div>
+        </div>
+    </div>
 
-    <div class="signature-line"><span>podpis</span></div>
+    <div class="section">
+        <div class="section-subtitle">Rodzaj pisma:</div>
+        <div class="checkbox-grid grid-2">
+            <div class="checkbox"><span class="checkbox-square"></span> Do wniosku</div>
+            <div class="checkbox"><span class="checkbox-square"></span> Wniosek w form MOS / z MOS</div>
+            <div class="checkbox"><span class="checkbox-square"></span> Nowy wniosek</div>
+            <div class="checkbox"><span class="checkbox-square"></span> Inne</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Dane kontaktowe / Контактні дані:</div>
+        <div class="two-column">
+            <div>
+                <span class="field-label">Telefon / Телефон:</span>
+                <div class="line-field">{{ client.phone|default_if_none:""|default:"" }}</div>
+            </div>
+            <div>
+                <span class="field-label">Adres e-mail / Електронна пошта:</span>
+                <div class="line-field">{{ client.email|default_if_none:""|default:"" }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <span class="field-label">Pełnomocnik / Представник:</span>
+        <div class="line-field"></div>
+    </div>
+
+    <div class="section">
+        <div class="section-title small">Załączniki (wpisać jakie) / Attachments (what kind) / Додатки (вкажіть які):</div>
+        <div class="note-area tall"></div>
+    </div>
+
+    <div class="signature-block">
+        <div class="signature-line">
+            <span></span>
+            <div class="signature-caption">( podpis osoby składającej dokument )</div>
+        </div>
+    </div>
 </div>
 </body>
 </html>
