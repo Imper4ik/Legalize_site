@@ -23,23 +23,38 @@ def sendgrid_configuration_check(app_configs=None, **kwargs):
     CI.
     """
 
-    if settings.EMAIL_BACKEND != "django.core.mail.backends.smtp.EmailBackend":
-        # Project does not use the SendGrid SMTP backend right now (e.g. when
+    backend_mode = {
+        "django.core.mail.backends.smtp.EmailBackend": "smtp",
+        "anymail.backends.sendgrid.EmailBackend": "api",
+    }.get(settings.EMAIL_BACKEND)
+
+    if not backend_mode:
+        # Project does not use a SendGrid related backend right now (e.g. when
         # running tests with the console backend). Skip the SendGrid specific
         # validation to avoid false positives.
         return []
 
     messages = []
-    api_key = getattr(settings, "EMAIL_HOST_PASSWORD", None) or os.getenv("SENDGRID_API_KEY")
+    if backend_mode == "api":
+        api_key = getattr(settings, "ANYMAIL", {}).get("SENDGRID_API_KEY") or os.getenv("SENDGRID_API_KEY")
+        hint = (
+            "Set the SENDGRID_API_KEY environment variable so the "
+            "anymail SendGrid backend can authenticate when calling the "
+            "SendGrid Web API."
+        )
+    else:
+        api_key = getattr(settings, "EMAIL_HOST_PASSWORD", None) or os.getenv("SENDGRID_API_KEY")
+        hint = (
+            "Set the SENDGRID_API_KEY environment variable or provide a "
+            "value for settings.EMAIL_HOST_PASSWORD so Django can "
+            "authenticate with smtp.sendgrid.net."
+        )
+
     if not api_key:
         messages.append(
             Error(
                 "SendGrid API key is not configured.",
-                hint=(
-                    "Set the SENDGRID_API_KEY environment variable or provide "
-                    "a value for settings.EMAIL_HOST_PASSWORD so Django can "
-                    "authenticate with smtp.sendgrid.net."
-                ),
+                hint=hint,
                 id=SENDGRID_ERROR_ID,
             )
         )
