@@ -14,3 +14,8 @@ with suppress(Exception):
     builtin_path = "legalize_site.templatetags.i18n_compat"
     if builtin_path not in Engine.default_builtins:
         Engine.default_builtins.append(builtin_path)
+
+with suppress(Exception):
+    # Import project specific system checks so they register with Django's
+    # checks framework as soon as the package is loaded.
+    import legalize_site.checks  # noqa: F401  (imported for side effects)
