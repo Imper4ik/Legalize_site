@@ -7,9 +7,7 @@ from django.urls import reverse_lazy
 import dj_database_url
 import os
 
-
 WHITENOISE_AVAILABLE = importlib.util.find_spec('whitenoise') is not None
-
 
 # --- БАЗОВЫЕ НАСТРОЙКИ ---
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,6 +24,9 @@ CSRF_TRUSTED_ORIGINS = [origin for origin in os.environ.get('CSRF_TRUSTED_ORIGIN
 if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
 
+# За прокси (Render) — чтобы Django корректно видел HTTPS
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 # --- ПРИЛОЖЕНИЯ И MIDDLEWARE ---
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -34,21 +35,26 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'clients',
+
     'django.contrib.humanize',
     'django.contrib.sites',
+
+    'clients',
+
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    'anymail',
 ]
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 if WHITENOISE_AVAILABLE:
-    INSTALLED_APPS.insert(INSTALLED_APPS.index('django.contrib.staticfiles'), 'whitenoise.runserver_nostatic')
+    INSTALLED_APPS.insert(
+        INSTALLED_APPS.index('django.contrib.staticfiles'),
+        'whitenoise.runserver_nostatic'
+    )
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -65,6 +71,7 @@ MIDDLEWARE += [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
 ]
+
 ROOT_URLCONF = 'legalize_site.urls'
 WSGI_APPLICATION = 'legalize_site.wsgi.application'
 
@@ -105,17 +112,22 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # --- ИНТЕРНАЦИОНАЛИЗАЦИЯ ---
-LANGUAGES = [('ru', _('Русский')), ('pl', _('Polski')), ('en', _('English'))]
+LANGUAGES = [
+    ('ru', _('Русский')),
+    ('pl', _('Polski')),
+    ('en', _('English')),
+]
 LOCALE_PATHS = [os.path.join(BASE_DIR, 'locale')]
 LANGUAGE_CODE = 'ru-ru'
 TIME_ZONE = 'Europe/Warsaw'
 USE_I18N = True
 USE_TZ = True
 
-# --- СТАТИКА И МЕДИА (НАСТРОЕНО ДЛЯ RENDER С WHITENOISE) ---
+# --- СТАТИКА И МЕДИА (WHITENOISE) ---
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 if WHITENOISE_AVAILABLE:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -124,29 +136,42 @@ MAX_UPLOAD_SIZE_MB = int(os.environ.get('MAX_UPLOAD_SIZE_MB', '20'))
 DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE
 
-# --- НАСТРОЙКИ ПОЧТЫ (DJANGO ANYMAIL + SENDGRID) ---
-EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
-ANYMAIL = {
-    "SENDGRID_API_KEY": os.environ.get('SENDGRID_API_KEY'),
-}
-DEFAULT_FROM_EMAIL = 'nindse@gmail.com'
+# --- ПОЧТА (SMTP SendGrid) ---
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.sendgrid.net"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "apikey"  # именно строка 'apikey'
+EMAIL_HOST_PASSWORD = os.getenv("SENDGRID_API_KEY")  # ключ из переменных окружения Render
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@yourdomain.tld")
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+# Удобно иметь для Reply-To (используется в send_mail(..., reply_to=[EMAIL_REPLY_TO]))
+EMAIL_REPLY_TO = os.getenv("REPLY_TO_EMAIL", DEFAULT_FROM_EMAIL)
 
-# --- НАСТРОЙКИ DJANGO-ALLAUTH ---
-AUTHENTICATION_BACKENDS = ['django.contrib.auth.backends.ModelBackend', 'allauth.account.auth_backends.AuthenticationBackend']
+# --- DJANGO-ALLAUTH ---
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
 SITE_ID = 1
 
 ACCOUNT_UNIQUE_EMAIL = True
-
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
-# --- ИСПРАВЛЕННЫЕ НАСТРОЙКИ РЕДИРЕКТА ---
+# Новые ключи (вместо устаревших ACCOUNT_AUTHENTICATION_METHOD / ACCOUNT_EMAIL_REQUIRED / ACCOUNT_USERNAME_REQUIRED)
+ACCOUNT_LOGIN_METHODS = {"email"}  # логин только по email
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']  # поля регистрации
+
+# Редиректы
 LOGIN_URL = 'account_login'
 LOGIN_REDIRECT_URL = reverse_lazy('clients:client_list')
 LOGOUT_REDIRECT_URL = reverse_lazy('account_login')
 
+# Соц. вход через Google (по желанию)
 SOCIALACCOUNT_AUTO_SIGNUP = True
-SOCIALACCOUNT_PROVIDERS = {'google': {'SCOPE': ['profile', 'email'], 'AUTH_PARAMS': {'access_type': 'online'}}}
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'},
+    }
+}
