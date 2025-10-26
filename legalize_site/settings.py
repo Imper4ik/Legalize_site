@@ -138,15 +138,21 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE
 
 # --- ПОЧТА (SMTP SendGrid) ---
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+# Пока диагностируем — можно оставить optional. После починки верни 'mandatory'.
 ACCOUNT_EMAIL_VERIFICATION = "optional"
+
 EMAIL_HOST = "smtp.sendgrid.net"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "apikey"  # именно строка 'apikey'
-EMAIL_HOST_PASSWORD = os.getenv("SENDGRID_API_KEY")  # ключ из переменных окружения Render
+EMAIL_HOST_USER = "apikey"                               # именно это слово
+EMAIL_HOST_PASSWORD = os.getenv("SENDGRID_API_KEY")      # твой ключ из Render env
+
+# Обязательно укажи доменный адрес, подтверждённый в SendGrid (Domain Auth или Single Sender)
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@yourdomain.tld")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
-# Удобно иметь для Reply-To (используется в send_mail(..., reply_to=[EMAIL_REPLY_TO]))
+
+# Куда уйдёт ответ на письмо
 EMAIL_REPLY_TO = os.getenv("REPLY_TO_EMAIL", DEFAULT_FROM_EMAIL)
 
 # --- DJANGO-ALLAUTH ---
