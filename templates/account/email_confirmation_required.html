@@ -1,21 +1,101 @@
-{% extends "base.html" %}
+{% extends "account/auth_base.html" %}
+{% load i18n %}
 
-{% block title %}Подтвердите ваш Email{% endblock %}
+{% block title %}{% translate "Подтвердите вашу почту" %}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card text-center shadow-sm">
-            <div class="card-header">
-                <h4 class="mb-0">Остался один шаг!</h4>
-            </div>
-            <div class="card-body">
-                <i class="bi bi-envelope-check-fill text-primary" style="font-size: 4rem;"></i>
-                <h5 class="card-title mt-3">Подтвердите ваш Email</h5>
-                <p class="card-text">Мы отправили письмо с подтверждением на ваш адрес. Пожалуйста, перейдите по ссылке в письме, чтобы активировать ваш аккаунт и получить доступ ко всем функциям сайта.</p>
-                <p class="text-muted small">Если вы не видите письма, проверьте папку "Спам".</p>
-            </div>
+<section class="auth-shell">
+  <div class="auth-panel inverse">
+    <span class="auth-badge">
+      <i class="bi bi-envelope-heart"></i>
+      {% translate "Защита вашего аккаунта" %}
+    </span>
+    <h1 class="auth-heading">{% translate "Остался один шаг" %}</h1>
+    <p class="auth-muted">
+      {% translate "Подтверждённая почта помогает нам защищать ваши данные, восстанавливать доступ и уведомлять о важных событиях." %}
+    </p>
+    <ul class="auth-features">
+      <li class="auth-feature">
+        <div class="auth-feature-icon">
+          <i class="bi bi-shield-check"></i>
         </div>
+        <div>
+          <strong>{% translate "Безопасность" %}</strong>
+          <p class="auth-muted">{% translate "Мы проверяем, что именно вы управляете аккаунтом." %}</p>
+        </div>
+      </li>
+      <li class="auth-feature">
+        <div class="auth-feature-icon">
+          <i class="bi bi-bell-fill"></i>
+        </div>
+        <div>
+          <strong>{% translate "Своевременные уведомления" %}</strong>
+          <p class="auth-muted">{% translate "Получайте напоминания о дедлайнах и изменениях." %}</p>
+        </div>
+      </li>
+      <li class="auth-feature">
+        <div class="auth-feature-icon">
+          <i class="bi bi-people-fill"></i>
+        </div>
+        <div>
+          <strong>{% translate "Доступ для команды" %}</strong>
+          <p class="auth-muted">{% translate "Подтверждённая почта упрощает добавление коллег." %}</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <div class="auth-panel auth-form">
+    <header class="auth-form-header">
+      <span class="auth-badge">
+        <i class="bi bi-envelope-check-fill"></i>
+        {% translate "Подтвердите ваш email" %}
+      </span>
+      <h1>{% translate "Мы отправили письмо с подтверждением" %}</h1>
+      <p>{% blocktrans %}Перейдите по ссылке в письме, чтобы активировать ваш аккаунт и получить доступ ко всем функциям Legalize.{% endblocktrans %}</p>
+    </header>
+
+    <div class="auth-summary">
+      <div class="auth-summary-icon">
+        <i class="bi bi-mailbox"></i>
+      </div>
+      <div>
+        <p class="auth-summary-label">{% translate "Не видите письмо?" %}</p>
+        <p class="auth-summary-value">{% translate "Проверьте папку 'Спам' или 'Промоакции'." %}</p>
+      </div>
     </div>
-</div>
+
+    <ul class="auth-features">
+      <li class="auth-feature">
+        <div class="auth-feature-icon">
+          <i class="bi bi-hourglass-split"></i>
+        </div>
+        <div>
+          <strong>{% translate "Ссылка действует ограниченное время" %}</strong>
+          <p class="auth-muted">{% translate "Чтобы не потерять прогресс, подтвердите почту в течение 24 часов." %}</p>
+        </div>
+      </li>
+      <li class="auth-feature">
+        <div class="auth-feature-icon">
+          <i class="bi bi-envelope-open"></i>
+        </div>
+        <div>
+          <strong>{% translate "Используйте письмо" %}</strong>
+          <p class="auth-muted">{% translate "Откройте письмо от Legalize и нажмите на кнопку подтверждения." %}</p>
+        </div>
+      </li>
+    </ul>
+
+    {% url 'account_email' as email_url %}
+    <div class="auth-actions">
+      <a class="auth-link" href="{{ email_url }}">
+        <i class="bi bi-arrow-repeat me-2"></i>{% translate "Отправить ссылку ещё раз" %}
+      </a>
+    </div>
+
+    <div class="auth-meta">
+      <p>{% translate "Если письмо не пришло в течение нескольких минут, напишите в поддержку — мы поможем." %}</p>
+    </div>
+  </div>
+</section>
 {% endblock %}
