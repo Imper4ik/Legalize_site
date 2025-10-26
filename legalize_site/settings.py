@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
+    'anymail',
 ]
 
 STATIC_URL = '/static/'
@@ -136,17 +137,27 @@ MAX_UPLOAD_SIZE_MB = int(os.environ.get('MAX_UPLOAD_SIZE_MB', '20'))
 DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE
 
-# --- ПОЧТА (SMTP SendGrid) ---
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# --- ПОЧТА (SendGrid через API или SMTP) ---
+SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 
-# Пока диагностируем — можно оставить optional. После починки верни 'mandatory'.
-ACCOUNT_EMAIL_VERIFICATION = "optional"
+# Позволяет переопределить бэкенд явно через переменную окружения.
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
 
-EMAIL_HOST = "smtp.sendgrid.net"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "apikey"                               # именно это слово
-EMAIL_HOST_PASSWORD = os.getenv("SENDGRID_API_KEY")      # твой ключ из Render env
+# Настройки SMTP (используются только когда выбран SMTP-бэкенд).
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.sendgrid.net")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() in ("1", "true", "yes", "on")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "apikey")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD") or SENDGRID_API_KEY
+
+if not EMAIL_BACKEND:
+    if SENDGRID_API_KEY:
+        EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
+    else:
+        EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+if EMAIL_BACKEND == "anymail.backends.sendgrid.EmailBackend" and SENDGRID_API_KEY:
+    ANYMAIL = {"SENDGRID_API_KEY": SENDGRID_API_KEY}
 
 # Обязательно укажи доменный адрес, подтверждённый в SendGrid (Domain Auth или Single Sender)
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@yourdomain.tld")
