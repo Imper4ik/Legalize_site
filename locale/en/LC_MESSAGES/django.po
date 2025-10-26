@@ -723,11 +723,52 @@ msgstr ""
 
 #: templates/account/email_confirmation_sent.html:15
 msgid ""
-"Если вы не видите письмо во входящих, проверьте папку \"Спам\". Пожалуйста, "
-"свяжитесь с нами, если не получили письмо в течение нескольких минут."
+"Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
+"\"Промоакции\"."
 msgstr ""
-"If you don't see the email in your inbox, check your spam folder. Please "
-"contact us if you don't receive the email within a few minutes."
+"If you don't see the email in your inbox, check the Spam or Promotions "
+"folder."
+
+#: templates/account/email_confirm.html:82
+#: templates/account/email_confirmation_sent.html:101
+msgid "Запросить новую ссылку"
+msgstr "Request a new link"
+
+#: templates/account/email_confirmation_sent.html:52
+msgid "Письмо уже в пути"
+msgstr "Your email is on its way"
+
+#: templates/account/email_confirmation_sent.html:63
+msgid "Что происходит дальше"
+msgstr "What happens next"
+
+#: templates/account/email_confirmation_sent.html:64
+msgid "Ссылка действует 24 часа"
+msgstr "The link is active for 24 hours"
+
+#: templates/account/email_confirmation_sent.html:74
+msgid "Проверьте входящие"
+msgstr "Check your inbox"
+
+#: templates/account/email_confirmation_sent.html:75
+msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
+msgstr "Open the email from Legalize and press the confirmation button."
+
+#: templates/account/email_confirmation_sent.html:83
+msgid "Не нашли письмо"
+msgstr "Can't find the email"
+
+#: templates/account/email_confirmation_sent.html:92
+msgid "Нужно новое письмо"
+msgstr "Need another email"
+
+#: templates/account/email_confirmation_sent.html:93
+msgid "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
+msgstr "Request another link from your dashboard if the previous one expired."
+
+#: templates/account/email_confirmation_sent.html:106
+msgid "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
+msgstr "Contact our support team if the email never arrives."
 
 #: templates/account/login.html:4 templates/base.html:233
 msgid "Вход"

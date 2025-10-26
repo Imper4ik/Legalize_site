@@ -5,6 +5,8 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import translation
 
+from allauth.account.models import EmailAddress
+
 from .models import Client
 
 
@@ -91,3 +93,54 @@ class ClientPrintingViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         # Ensure no placeholder text is injected for missing optional fields.
         self.assertNotIn('None', response.content.decode())
+
+
+class ClientAccountLifecycleTests(TestCase):
+    def setUp(self):
+        self.user_model = get_user_model()
+
+    def test_deleting_client_removes_linked_user_account(self):
+        user = self.user_model.objects.create_user(
+            username='client-user', email='client@example.com', password='secret123'
+        )
+        EmailAddress.objects.create(
+            user=user,
+            email='client@example.com',
+            primary=True,
+            verified=True,
+        )
+
+        client = Client.objects.create(
+            first_name='Client',
+            last_name='User',
+            citizenship='PL',
+            phone='+48111222333',
+            email='client@example.com',
+            user=user,
+        )
+
+        client.delete()
+
+        self.assertFalse(self.user_model.objects.filter(pk=user.pk).exists())
+        self.assertFalse(EmailAddress.objects.filter(email='client@example.com').exists())
+
+    def test_staff_accounts_are_preserved_when_client_deleted(self):
+        staff_user = self.user_model.objects.create_user(
+            username='staff-owned',
+            email='staff-owned@example.com',
+            password='secret123',
+            is_staff=True,
+        )
+
+        client = Client.objects.create(
+            first_name='Support',
+            last_name='Owner',
+            citizenship='PL',
+            phone='+48123456789',
+            email='staff-owned@example.com',
+            user=staff_user,
+        )
+
+        client.delete()
+
+        self.assertTrue(self.user_model.objects.filter(pk=staff_user.pk).exists())
