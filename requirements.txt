@@ -9,3 +9,4 @@ PyJWT[crypto]
 cryptography
 whitenoise
 django-anymail[brevo,sendgrid]
+sendgrid
