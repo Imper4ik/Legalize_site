@@ -623,12 +623,12 @@ msgstr ""
 msgid "Тёмная тема"
 msgstr "Kwota zapłacona"
 
-#: legalize_site/templates/account/email_confirmation_sent.html:4
-#: legalize_site/templates/account/email_confirmation_sent.html:12
+#: legalize_site/templates/account/verification_sent.html:4
+#: legalize_site/templates/account/verification_sent.html:12
 msgid "Подтвердите ваш E-mail"
 msgstr "Potwierdź swój E-mail"
 
-#: legalize_site/templates/account/email_confirmation_sent.html:13
+#: legalize_site/templates/account/verification_sent.html:13
 msgid ""
 "Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
 "завершить регистрацию."
@@ -636,7 +636,7 @@ msgstr ""
 "Wysłaliśmy Ci e-mail weryfikacyjny. Kliknij link w e-mailu, aby dokończyć "
 "rejestrację."
 
-#: legalize_site/templates/account/email_confirmation_sent.html:15
+#: legalize_site/templates/account/verification_sent.html:15
 msgid ""
 "Если вы не видите письмо во входящих, проверьте папку \"Спам\". Пожалуйста, "
 "свяжитесь с нами, если не получили письмо в течение нескольких минут."

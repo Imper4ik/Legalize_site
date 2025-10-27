@@ -756,12 +756,12 @@ msgstr ""
 msgid "Доступ к чеклисту документов не предоставлен."
 msgstr "Список документов пока не доступен"
 
-#: .\templates\account\email_confirmation_sent.html:4
-#: .\templates\account\email_confirmation_sent.html:12
+#: .\templates\account\verification_sent.html:4
+#: .\templates\account\verification_sent.html:12
 msgid "Подтвердите ваш E-mail"
 msgstr "Подтвердите ваш E-mail"
 
-#: .\templates\account\email_confirmation_sent.html:13
+#: .\templates\account\verification_sent.html:13
 msgid ""
 "Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
 "завершить регистрацию."
@@ -769,7 +769,7 @@ msgstr ""
 "Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
 "завершить регистрацию."
 
-#: .\templates\account\email_confirmation_sent.html:15
+#: .\templates\account\verification_sent.html:15
 msgid ""
 "Если вы не видите письмо во входящих, проверьте папку \"Спам\". Пожалуйста, "
 "свяжитесь с нами, если не получили письмо в течение нескольких минут."
