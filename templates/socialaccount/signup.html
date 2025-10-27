@@ -9,14 +9,14 @@
     <div class="col-md-8 col-lg-6">
         <div class="card shadow-sm border-0 rounded-3">
             <div class="card-header bg-light text-center p-4 border-bottom-0">
-                <h3 class="mb-0 fw-bold">Завершение регистрации</h3>
+                <h3 class="mb-0 fw-bold">{% translate "Завершение регистрации" %}</h3>
             </div>
             <div class="card-body p-4 p-sm-5">
 
                 <div class="text-center mb-4">
-                    <p class="text-muted">Вы вошли через {{ sociallogin.account.provider|capfirst }} как:</p>
+                    <p class="text-muted">{% blocktranslate with provider=sociallogin.account.provider|capfirst %}Вы вошли через {{ provider }} как:{% endblocktranslate %}</p>
                     <p class="fw-bold fs-5">{{ sociallogin.account.user.email }}</p>
-                    <p class="mt-3">Нажмите кнопку ниже, чтобы создать аккаунт.</p>
+                    <p class="mt-3">{% translate "Нажмите кнопку ниже, чтобы создать аккаунт." %}</p>
                 </div>
 
                 <form class="signup" id="signup_form" method="post" action="{% url 'socialaccount_signup' %}">
@@ -25,7 +25,7 @@
                     {# Этот блок нужен, если allauth потребует ввести дополнительные данные #}
                     {% if form.as_p %}
                         <hr class="my-4">
-                        <p class="text-center text-muted">Пожалуйста, заполните недостающие поля:</p>
+                        <p class="text-center text-muted">{% translate "Пожалуйста, заполните недостающие поля:" %}</p>
                         {% for field in form %}
                           <div class="mb-3">
                             <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
@@ -44,9 +44,9 @@
                     <div class="d-grid gap-2 mt-4">
                         <button type="submit" class="btn btn-primary btn-lg fw-bold">
                             <i class="fas fa-user-check me-2"></i>
-                            Создать аккаунт и войти
+                            {% translate "Создать аккаунт и войти" %}
                         </button>
-                        <a href="{% url 'account_login' %}" class="btn btn-outline-secondary">Отмена</a>
+                        <a href="{% url 'account_login' %}" class="btn btn-outline-secondary">{% translate "Отмена" %}</a>
                     </div>
                 </form>
             </div>
