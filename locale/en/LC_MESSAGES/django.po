@@ -708,65 +708,97 @@ msgstr "Amount paid"
 msgid "Переключить на светлую тему"
 msgstr ""
 
-#: templates/account/email_confirmation_sent.html:4
-#: templates/account/email_confirmation_sent.html:12
+#: templates/account/verification_sent.html:4
+#: templates/account/verification_sent.html:12
 msgid "Подтвердите ваш E-mail"
 msgstr "Confirm Your E-mail"
 
-#: templates/account/email_confirmation_sent.html:13
+#: templates/account/email_confirm.html:11 templates/account/email_confirmation_required.html:11 templates/account/verification_sent.html:11
+msgid "Защита вашего аккаунта"
+msgstr "Keeping your account safe"
+
+#: templates/account/email_confirm.html:13 templates/account/email_confirmation_required.html:13 templates/account/verification_sent.html:13
+msgid "Остался один шаг"
+msgstr "One final step"
+
+#: templates/account/email_confirm.html:15 templates/account/email_confirmation_required.html:15 templates/account/verification_sent.html:15
+msgid "Подтверждённая почта помогает нам защищать ваши данные, восстанавливать доступ и уведомлять о важных событиях."
+msgstr "A verified email helps us secure your data, restore access, and notify you about important updates."
+
+#: templates/account/email_confirm.html:23 templates/account/email_confirmation_required.html:23 templates/account/verification_sent.html:23
+msgid "Безопасность"
+msgstr "Security"
+
+#: templates/account/email_confirm.html:24 templates/account/email_confirmation_required.html:24 templates/account/verification_sent.html:24
+msgid "Мы проверяем, что именно вы управляете аккаунтом."
+msgstr "We confirm that it's really you controlling the account."
+
+#: templates/account/email_confirm.html:32 templates/account/email_confirmation_required.html:32 templates/account/verification_sent.html:32
+msgid "Своевременные уведомления"
+msgstr "Timely notifications"
+
+#: templates/account/email_confirm.html:33 templates/account/email_confirmation_required.html:33 templates/account/verification_sent.html:33
+msgid "Получайте напоминания о дедлайнах и изменениях."
+msgstr "Get reminders about deadlines and changes."
+
+#: templates/account/email_confirm.html:41 templates/account/email_confirmation_required.html:41 templates/account/verification_sent.html:41
+msgid "Доступ для команды"
+msgstr "Team access"
+
+#: templates/account/email_confirm.html:42 templates/account/email_confirmation_required.html:42 templates/account/verification_sent.html:42
+msgid "Подтверждённая почта упрощает добавление коллег."
+msgstr "A verified email makes it easier to add teammates."
+
+#: templates/account/verification_sent.html:13
 msgid ""
 "Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
 "завершить регистрацию."
-msgstr ""
-"We have sent you a verification email. Please follow the link in the email "
-"to complete your registration."
+msgstr "We've sent you a verification email. Follow the link inside to complete your registration."
 
-#: templates/account/email_confirmation_sent.html:15
+#: templates/account/verification_sent.html:15
 msgid ""
 "Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
 "\"Промоакции\"."
-msgstr ""
-"If you don't see the email in your inbox, check the Spam or Promotions "
-"folder."
+msgstr "If you can't see the email in your inbox, check the Spam or Promotions folder."
 
 #: templates/account/email_confirm.html:82
-#: templates/account/email_confirmation_sent.html:101
+#: templates/account/verification_sent.html:101
 msgid "Запросить новую ссылку"
 msgstr "Request a new link"
 
-#: templates/account/email_confirmation_sent.html:52
+#: templates/account/verification_sent.html:52
 msgid "Письмо уже в пути"
-msgstr "Your email is on its way"
+msgstr "Email on the way"
 
-#: templates/account/email_confirmation_sent.html:63
+#: templates/account/verification_sent.html:63
 msgid "Что происходит дальше"
 msgstr "What happens next"
 
-#: templates/account/email_confirmation_sent.html:64
+#: templates/account/verification_sent.html:64
 msgid "Ссылка действует 24 часа"
-msgstr "The link is active for 24 hours"
+msgstr "The link is valid for 24 hours"
 
-#: templates/account/email_confirmation_sent.html:74
+#: templates/account/verification_sent.html:74
 msgid "Проверьте входящие"
 msgstr "Check your inbox"
 
-#: templates/account/email_confirmation_sent.html:75
+#: templates/account/verification_sent.html:75
 msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
-msgstr "Open the email from Legalize and press the confirmation button."
+msgstr "Open the email from Legalize and click the confirmation button."
 
-#: templates/account/email_confirmation_sent.html:83
+#: templates/account/verification_sent.html:83
 msgid "Не нашли письмо"
-msgstr "Can't find the email"
+msgstr "Didn't find the email"
 
-#: templates/account/email_confirmation_sent.html:92
+#: templates/account/verification_sent.html:92
 msgid "Нужно новое письмо"
-msgstr "Need another email"
+msgstr "Need a new email"
 
-#: templates/account/email_confirmation_sent.html:93
+#: templates/account/verification_sent.html:93
 msgid "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
-msgstr "Request another link from your dashboard if the previous one expired."
+msgstr "Request another link in your account if the previous one expired."
 
-#: templates/account/email_confirmation_sent.html:106
+#: templates/account/verification_sent.html:106
 msgid "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
 msgstr "Contact our support team if the email never arrives."
 
@@ -776,7 +808,7 @@ msgstr "Login"
 
 #: templates/account/login.html:13
 msgid "Панель для специалистов"
-msgstr "Specialist workspace"
+msgstr "Specialist dashboard"
 
 #: templates/account/login.html:15
 msgid "Добро пожаловать обратно"
@@ -784,23 +816,23 @@ msgstr "Welcome back"
 
 #: templates/account/login.html:17
 msgid "Следите за клиентами, сроками и платежами из единого интерфейса."
-msgstr "Track clients, deadlines, and payments from a single workspace."
+msgstr "Stay on top of clients, deadlines, and payments from one place."
 
 #: templates/account/login.html:25
 msgid "Живые напоминания"
-msgstr "Real-time reminders"
+msgstr "Live reminders"
 
 #: templates/account/login.html:26
 msgid "Автоматические уведомления о ключевых дедлайнах и событиях."
-msgstr "Automatic alerts for key deadlines and milestones."
+msgstr "Automatic updates about critical deadlines and events."
 
 #: templates/account/login.html:34
 msgid "Понятная аналитика"
-msgstr "Clear analytics"
+msgstr "Insightful analytics"
 
 #: templates/account/login.html:35
 msgid "Контролируйте показатели и платежи на одной панели."
-msgstr "Monitor metrics and payments from one dashboard."
+msgstr "Keep metrics and payments on a single dashboard."
 
 #: templates/account/login.html:43
 msgid "Безопасный доступ"
@@ -808,7 +840,7 @@ msgstr "Secure access"
 
 #: templates/account/login.html:44
 msgid "Только авторизованные сотрудники получают доступ к данным."
-msgstr "Only authorized staff can access client data."
+msgstr "Only authorized teammates can access your data."
 
 #: templates/account/login.html:51
 msgid "Вход в систему"
