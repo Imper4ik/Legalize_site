@@ -843,6 +843,26 @@ msgstr "Log in to the system"
 msgid "Используйте корпоративную почту и пароль."
 msgstr "Use your corporate email and password."
 
+#: clients/templates/clients/login.html:16
+msgid "Войти через Google"
+msgstr "Sign in with Google"
+
+#: clients/templates/clients/login.html:20
+msgid "ИЛИ"
+msgstr "OR"
+
+#: clients/templates/clients/login.html:26
+msgid "Адрес электронной почты"
+msgstr "Email address"
+
+#: clients/templates/clients/login.html:30
+msgid "Пароль"
+msgstr "Password"
+
+#: clients/templates/clients/login.html:36
+msgid "Неверный email или пароль. Попробуйте снова."
+msgstr "Incorrect email or password. Please try again."
+
 #: templates/account/login.html:104 templates/admin/login.html:69
 msgid "Забыли пароль?"
 msgstr "Forgot password?"
@@ -853,6 +873,13 @@ msgid ""
 "Нет аккаунта? <a href=\"%(signup_url)s\">Зарегистрируйтесь за минуту</a>"
 msgstr ""
 "Don't have an account? <a href=\"%(signup_url)s\">Register in a minute</a>"
+
+#: clients/templates/clients/login.html:47
+#, python-format
+msgid ""
+"Ещё нет аккаунта? <a class=\"ms-2\" href=\"%(register_url)s\">Зарегистрироваться</a>"
+msgstr ""
+"Don't have an account yet? <a class=\"ms-2\" href=\"%(register_url)s\">Sign up</a>"
 
 #: templates/account/password_reset.html:4
 #, fuzzy
@@ -1318,12 +1345,6 @@ msgstr "Create account and sign in"
 
 #~ msgid "Доступ к чеклисту документов не предоставлен."
 #~ msgstr "Access to the document checklist has not been granted."
-
-#~ msgid "Адрес электронной почты"
-#~ msgstr "Email address"
-
-#~ msgid "Пароль"
-#~ msgstr "Password"
 
 #~ msgid "Сброс пароля"
 #~ msgstr "Password Reset"
