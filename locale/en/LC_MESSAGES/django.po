@@ -717,17 +717,13 @@ msgstr "Confirm Your E-mail"
 msgid ""
 "Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
 "завершить регистрацию."
-msgstr ""
-"We have sent you a verification email. Please follow the link in the email "
-"to complete your registration."
+msgstr "We've sent you a verification email. Follow the link inside to complete your registration."
 
 #: templates/account/verification_sent.html:15
 msgid ""
 "Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
 "\"Промоакции\"."
-msgstr ""
-"If you don't see the email in your inbox, check the Spam or Promotions "
-"folder."
+msgstr "If you can't see the email in your inbox, check the Spam or Promotions folder."
 
 #: templates/account/email_confirm.html:82
 #: templates/account/verification_sent.html:101
@@ -736,7 +732,7 @@ msgstr "Request a new link"
 
 #: templates/account/verification_sent.html:52
 msgid "Письмо уже в пути"
-msgstr "Your email is on its way"
+msgstr "Email on the way"
 
 #: templates/account/verification_sent.html:63
 msgid "Что происходит дальше"
@@ -744,7 +740,7 @@ msgstr "What happens next"
 
 #: templates/account/verification_sent.html:64
 msgid "Ссылка действует 24 часа"
-msgstr "The link is active for 24 hours"
+msgstr "The link is valid for 24 hours"
 
 #: templates/account/verification_sent.html:74
 msgid "Проверьте входящие"
@@ -752,19 +748,19 @@ msgstr "Check your inbox"
 
 #: templates/account/verification_sent.html:75
 msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
-msgstr "Open the email from Legalize and press the confirmation button."
+msgstr "Open the email from Legalize and click the confirmation button."
 
 #: templates/account/verification_sent.html:83
 msgid "Не нашли письмо"
-msgstr "Can't find the email"
+msgstr "Didn't find the email"
 
 #: templates/account/verification_sent.html:92
 msgid "Нужно новое письмо"
-msgstr "Need another email"
+msgstr "Need a new email"
 
 #: templates/account/verification_sent.html:93
 msgid "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
-msgstr "Request another link from your dashboard if the previous one expired."
+msgstr "Request another link in your account if the previous one expired."
 
 #: templates/account/verification_sent.html:106
 msgid "Свяжитесь с нашей поддержкой, если письмо так и не пришло."

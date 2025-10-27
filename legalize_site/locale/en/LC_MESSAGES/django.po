@@ -630,17 +630,52 @@ msgstr "Confirm Your E-mail"
 msgid ""
 "Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
 "завершить регистрацию."
-msgstr ""
-"We have sent you a verification email. Please follow the link in the email "
-"to complete your registration."
+msgstr "We've sent you a verification email. Follow the link inside to complete your registration."
 
 #: legalize_site/templates/account/verification_sent.html:15
 msgid ""
-"Если вы не видите письмо во входящих, проверьте папку \"Спам\". Пожалуйста, "
-"свяжитесь с нами, если не получили письмо в течение нескольких минут."
-msgstr ""
-"If you don't see the email in your inbox, check your spam folder. Please "
-"contact us if you don't receive the email within a few minutes."
+"Если вы не видите письмо во входящих, проверьте папку \"Спам\" или \"Промоакции\"."
+msgstr "If you can't see the email in your inbox, check the Spam or Promotions folder."
+
+#: legalize_site/templates/account/email_confirm.html:82 legalize_site/templates/account/verification_sent.html:101
+msgid "Запросить новую ссылку"
+msgstr "Request a new link"
+
+#: legalize_site/templates/account/verification_sent.html:52
+msgid "Письмо уже в пути"
+msgstr "Email on the way"
+
+#: legalize_site/templates/account/verification_sent.html:63
+msgid "Что происходит дальше"
+msgstr "What happens next"
+
+#: legalize_site/templates/account/verification_sent.html:64
+msgid "Ссылка действует 24 часа"
+msgstr "The link is valid for 24 hours"
+
+#: legalize_site/templates/account/verification_sent.html:74
+msgid "Проверьте входящие"
+msgstr "Check your inbox"
+
+#: legalize_site/templates/account/verification_sent.html:75
+msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
+msgstr "Open the email from Legalize and click the confirmation button."
+
+#: legalize_site/templates/account/verification_sent.html:83
+msgid "Не нашли письмо"
+msgstr "Didn't find the email"
+
+#: legalize_site/templates/account/verification_sent.html:92
+msgid "Нужно новое письмо"
+msgstr "Need a new email"
+
+#: legalize_site/templates/account/verification_sent.html:93
+msgid "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
+msgstr "Request another link in your account if the previous one expired."
+
+#: legalize_site/templates/account/verification_sent.html:106
+msgid "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
+msgstr "Contact our support team if the email never arrives."
 
 #: legalize_site/templates/account/login.html:4
 #: legalize_site/templates/base.html:248
