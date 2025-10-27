@@ -756,12 +756,12 @@ msgstr ""
 msgid "Доступ к чеклисту документов не предоставлен."
 msgstr "Список документов пока не доступен"
 
-#: .\templates\account\email_confirmation_sent.html:4
-#: .\templates\account\email_confirmation_sent.html:12
+#: .\templates\account\verification_sent.html:4
+#: .\templates\account\verification_sent.html:12
 msgid "Подтвердите ваш E-mail"
 msgstr "Подтвердите ваш E-mail"
 
-#: .\templates\account\email_confirmation_sent.html:13
+#: .\templates\account\verification_sent.html:13
 msgid ""
 "Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
 "завершить регистрацию."
@@ -769,7 +769,7 @@ msgstr ""
 "Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
 "завершить регистрацию."
 
-#: .\templates\account\email_confirmation_sent.html:15
+#: .\templates\account\verification_sent.html:15
 msgid ""
 "Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
 "\"Промоакции\"."
@@ -778,43 +778,43 @@ msgstr ""
 "\"Промоакции\"."
 
 #: .\templates\account\email_confirm.html:82
-#: .\templates\account\email_confirmation_sent.html:101
+#: .\templates\account\verification_sent.html:101
 msgid "Запросить новую ссылку"
 msgstr "Запросить новую ссылку"
 
-#: .\templates\account\email_confirmation_sent.html:52
+#: .\templates\account\verification_sent.html:52
 msgid "Письмо уже в пути"
 msgstr "Письмо уже в пути"
 
-#: .\templates\account\email_confirmation_sent.html:63
+#: .\templates\account\verification_sent.html:63
 msgid "Что происходит дальше"
 msgstr "Что происходит дальше"
 
-#: .\templates\account\email_confirmation_sent.html:64
+#: .\templates\account\verification_sent.html:64
 msgid "Ссылка действует 24 часа"
 msgstr "Ссылка действует 24 часа"
 
-#: .\templates\account\email_confirmation_sent.html:74
+#: .\templates\account\verification_sent.html:74
 msgid "Проверьте входящие"
 msgstr "Проверьте входящие"
 
-#: .\templates\account\email_confirmation_sent.html:75
+#: .\templates\account\verification_sent.html:75
 msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
 msgstr "Откройте письмо от Legalize и кликните по кнопке подтверждения."
 
-#: .\templates\account\email_confirmation_sent.html:83
+#: .\templates\account\verification_sent.html:83
 msgid "Не нашли письмо"
 msgstr "Не нашли письмо"
 
-#: .\templates\account\email_confirmation_sent.html:92
+#: .\templates\account\verification_sent.html:92
 msgid "Нужно новое письмо"
 msgstr "Нужно новое письмо"
 
-#: .\templates\account\email_confirmation_sent.html:93
+#: .\templates\account\verification_sent.html:93
 msgid "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
 msgstr "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
 
-#: .\templates\account\email_confirmation_sent.html:106
+#: .\templates\account\verification_sent.html:106
 msgid "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
 msgstr "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
 
