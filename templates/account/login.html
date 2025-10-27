@@ -1,7 +1,7 @@
 {% extends "account/auth_base.html" %}
 {% load i18n allauth account form_filters %}
 
-{% block title %}{% translate "Вход" %}{% endblock %}
+{% block title %}{% trans "Вход" %}{% endblock %}
 
 {% block body_class %}auth-page{% endblock %}
 
@@ -10,11 +10,11 @@
   <div class="auth-panel inverse">
     <span class="auth-badge">
       <i class="bi bi-stars"></i>
-      {% translate "Панель для специалистов" %}
+      {% trans "Панель для специалистов" %}
     </span>
-    <h1 class="auth-heading">{% translate "Добро пожаловать обратно" %}</h1>
+    <h1 class="auth-heading">{% trans "Добро пожаловать обратно" %}</h1>
     <p class="auth-muted">
-      {% translate "Следите за клиентами, сроками и платежами из единого интерфейса." %}
+      {% trans "Следите за клиентами, сроками и платежами из единого интерфейса." %}
     </p>
     <ul class="auth-features">
       <li class="auth-feature">
@@ -22,8 +22,8 @@
           <i class="bi bi-calendar-check-fill"></i>
         </div>
         <div>
-          <strong>{% translate "Живые напоминания" %}</strong>
-          <p class="auth-muted">{% translate "Автоматические уведомления о ключевых дедлайнах и событиях." %}</p>
+          <strong>{% trans "Живые напоминания" %}</strong>
+          <p class="auth-muted">{% trans "Автоматические уведомления о ключевых дедлайнах и событиях." %}</p>
         </div>
       </li>
       <li class="auth-feature">
@@ -31,8 +31,8 @@
           <i class="bi bi-graph-up-arrow"></i>
         </div>
         <div>
-          <strong>{% translate "Понятная аналитика" %}</strong>
-          <p class="auth-muted">{% translate "Контролируйте показатели и платежи на одной панели." %}</p>
+          <strong>{% trans "Понятная аналитика" %}</strong>
+          <p class="auth-muted">{% trans "Контролируйте показатели и платежи на одной панели." %}</p>
         </div>
       </li>
       <li class="auth-feature">
@@ -40,16 +40,16 @@
           <i class="bi bi-shield-lock-fill"></i>
         </div>
         <div>
-          <strong>{% translate "Безопасный доступ" %}</strong>
-          <p class="auth-muted">{% translate "Только авторизованные сотрудники получают доступ к данным." %}</p>
+          <strong>{% trans "Безопасный доступ" %}</strong>
+          <p class="auth-muted">{% trans "Только авторизованные сотрудники получают доступ к данным." %}</p>
         </div>
       </li>
     </ul>
   </div>
   <div class="auth-panel auth-form">
     <header class="auth-form-header">
-      <h1>{% translate "Вход в систему" %}</h1>
-      <p>{% translate "Используйте корпоративную почту и пароль." %}</p>
+      <h1>{% trans "Вход в систему" %}</h1>
+      <p>{% trans "Используйте корпоративную почту и пароль." %}</p>
     </header>
 
     {% if messages %}
@@ -101,11 +101,11 @@
       {% endif %}
 
       <div class="auth-actions">
-        <a class="auth-link subtle" href="{% url 'account_reset_password' %}">{% translate "Забыли пароль?" %}</a>
+        <a class="auth-link subtle" href="{% url 'account_reset_password' %}">{% trans "Забыли пароль?" %}</a>
       </div>
 
       <button class="auth-button" type="submit">
-        <i class="bi bi-box-arrow-in-right me-2"></i>{% translate "Войти" %}
+        <i class="bi bi-box-arrow-in-right me-2"></i>{% trans "Войти" %}
       </button>
     </form>
 
