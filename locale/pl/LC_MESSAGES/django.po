@@ -843,6 +843,26 @@ msgstr "Logowanie do systemu"
 msgid "Используйте корпоративную почту и пароль."
 msgstr "Użyj firmowego e-maila i hasła."
 
+#: clients/templates/clients/login.html:16
+msgid "Войти через Google"
+msgstr "Zaloguj się przez Google"
+
+#: clients/templates/clients/login.html:20
+msgid "ИЛИ"
+msgstr "LUB"
+
+#: clients/templates/clients/login.html:26
+msgid "Адрес электронной почты"
+msgstr "Adres e-mail"
+
+#: clients/templates/clients/login.html:30
+msgid "Пароль"
+msgstr "Hasło"
+
+#: clients/templates/clients/login.html:36
+msgid "Неверный email или пароль. Попробуйте снова."
+msgstr "Nieprawidłowy e-mail lub hasło. Spróbuj ponownie."
+
 #: templates/account/login.html:104 templates/admin/login.html:69
 msgid "Забыли пароль?"
 msgstr "Zapomniałeś hasła?"
@@ -853,6 +873,13 @@ msgid ""
 "Нет аккаунта? <a href=\"%(signup_url)s\">Зарегистрируйтесь за минуту</a>"
 msgstr ""
 "Nie masz konta? <a href=\"%(signup_url)s\">Zarejestruj się w minutę</a>"
+
+#: clients/templates/clients/login.html:47
+#, python-format
+msgid ""
+"Ещё нет аккаунта? <a class=\"ms-2\" href=\"%(register_url)s\">Зарегистрироваться</a>"
+msgstr ""
+"Nie masz jeszcze konta? <a class=\"ms-2\" href=\"%(register_url)s\">Zarejestruj się</a>"
 
 #: templates/account/password_reset.html:4
 #, fuzzy
@@ -1319,12 +1346,6 @@ msgstr "Utwórz konto i zaloguj się"
 
 #~ msgid "Доступ к чеклисту документов не предоставлен."
 #~ msgstr "Dostęp do listy kontrolnej dokumentów nie został przyznany."
-
-#~ msgid "Адрес электронной почты"
-#~ msgstr "Adres e-mail"
-
-#~ msgid "Пароль"
-#~ msgstr "Hasło"
 
 #~ msgid "Сброс пароля"
 #~ msgstr "Resetowanie hasła"
