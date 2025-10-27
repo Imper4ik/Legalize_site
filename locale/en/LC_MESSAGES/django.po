@@ -732,20 +732,27 @@ msgstr ""
 
 #: templates/account/verification_sent.html:4
 #: templates/account/verification_sent.html:12
+#: templates/account/verification_sent.html:54
 msgid "Подтвердите ваш E-mail"
 msgstr "Confirm Your E-mail"
 
 #: templates/account/verification_sent.html:13
+#: templates/account/verification_sent.html:55
 msgid ""
 "Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
 "завершить регистрацию."
-msgstr "We've sent you a verification email. Follow the link inside to complete your registration."
+msgstr ""
+"We've sent you a verification email. Follow the link inside to complete your "
+"registration."
 
 #: templates/account/verification_sent.html:15
+#: templates/account/verification_sent.html:84
 msgid ""
 "Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
 "\"Промоакции\"."
-msgstr "If you can't see the email in your inbox, check the Spam or Promotions folder."
+msgstr ""
+"If you can't see the email in your inbox, check the Spam or Promotions "
+"folder."
 
 #: templates/account/email_confirm.html:82
 #: templates/account/verification_sent.html:101
@@ -836,6 +843,26 @@ msgstr "Log in to the system"
 msgid "Используйте корпоративную почту и пароль."
 msgstr "Use your corporate email and password."
 
+#: clients/templates/clients/login.html:16
+msgid "Войти через Google"
+msgstr "Sign in with Google"
+
+#: clients/templates/clients/login.html:20
+msgid "ИЛИ"
+msgstr "OR"
+
+#: clients/templates/clients/login.html:26
+msgid "Адрес электронной почты"
+msgstr "Email address"
+
+#: clients/templates/clients/login.html:30
+msgid "Пароль"
+msgstr "Password"
+
+#: clients/templates/clients/login.html:36
+msgid "Неверный email или пароль. Попробуйте снова."
+msgstr "Incorrect email or password. Please try again."
+
 #: templates/account/login.html:104 templates/admin/login.html:69
 msgid "Забыли пароль?"
 msgstr "Forgot password?"
@@ -846,6 +873,13 @@ msgid ""
 "Нет аккаунта? <a href=\"%(signup_url)s\">Зарегистрируйтесь за минуту</a>"
 msgstr ""
 "Don't have an account? <a href=\"%(signup_url)s\">Register in a minute</a>"
+
+#: clients/templates/clients/login.html:47
+#, python-format
+msgid ""
+"Ещё нет аккаунта? <a class=\"ms-2\" href=\"%(register_url)s\">Зарегистрироваться</a>"
+msgstr ""
+"Don't have an account yet? <a class=\"ms-2\" href=\"%(register_url)s\">Sign up</a>"
 
 #: templates/account/password_reset.html:4
 #, fuzzy
@@ -1023,63 +1057,6 @@ msgstr ""
 #: templates/account/signup.html:125
 msgid "Войдите"
 msgstr ""
-
-#: templates/account/verification_sent.html:4
-#: templates/account/verification_sent.html:54
-msgid "Подтвердите ваш E-mail"
-msgstr "Confirm Your E-mail"
-
-#: templates/account/verification_sent.html:52
-msgid "Письмо уже в пути"
-msgstr "Email on the way"
-
-#: templates/account/verification_sent.html:55
-msgid ""
-"Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
-"завершить регистрацию."
-msgstr ""
-"We've sent you a verification email. Follow the link inside to complete your "
-"registration."
-
-#: templates/account/verification_sent.html:63
-msgid "Что происходит дальше"
-msgstr "What happens next"
-
-#: templates/account/verification_sent.html:64
-msgid "Ссылка действует 24 часа"
-msgstr "The link is valid for 24 hours"
-
-#: templates/account/verification_sent.html:74
-msgid "Проверьте входящие"
-msgstr "Check your inbox"
-
-#: templates/account/verification_sent.html:75
-msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
-msgstr "Open the email from Legalize and click the confirmation button."
-
-#: templates/account/verification_sent.html:83
-msgid "Не нашли письмо"
-msgstr "Didn't find the email"
-
-#: templates/account/verification_sent.html:84
-msgid ""
-"Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
-"\"Промоакции\"."
-msgstr ""
-"If you can't see the email in your inbox, check the Spam or Promotions "
-"folder."
-
-#: templates/account/verification_sent.html:92
-msgid "Нужно новое письмо"
-msgstr "Need a new email"
-
-#: templates/account/verification_sent.html:93
-msgid "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
-msgstr "Request another link in your account if the previous one expired."
-
-#: templates/account/verification_sent.html:106
-msgid "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
-msgstr "Contact our support team if the email never arrives."
 
 #: templates/admin/base_site.html:4
 msgid "Администрирование Legalize"
@@ -1368,12 +1345,6 @@ msgstr "Create account and sign in"
 
 #~ msgid "Доступ к чеклисту документов не предоставлен."
 #~ msgstr "Access to the document checklist has not been granted."
-
-#~ msgid "Адрес электронной почты"
-#~ msgstr "Email address"
-
-#~ msgid "Пароль"
-#~ msgstr "Password"
 
 #~ msgid "Сброс пароля"
 #~ msgstr "Password Reset"
