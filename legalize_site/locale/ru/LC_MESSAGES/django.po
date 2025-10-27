@@ -761,42 +761,6 @@ msgstr "Список документов пока не доступен"
 msgid "Подтвердите ваш E-mail"
 msgstr "Подтвердите ваш E-mail"
 
-#: .\templates\account\email_confirm.html:11 .\templates\account\email_confirmation_required.html:11 .\templates\account\verification_sent.html:11
-msgid "Защита вашего аккаунта"
-msgstr "Защита вашего аккаунта"
-
-#: .\templates\account\email_confirm.html:13 .\templates\account\email_confirmation_required.html:13 .\templates\account\verification_sent.html:13
-msgid "Остался один шаг"
-msgstr "Остался один шаг"
-
-#: .\templates\account\email_confirm.html:15 .\templates\account\email_confirmation_required.html:15 .\templates\account\verification_sent.html:15
-msgid "Подтверждённая почта помогает нам защищать ваши данные, восстанавливать доступ и уведомлять о важных событиях."
-msgstr "Подтверждённая почта помогает нам защищать ваши данные, восстанавливать доступ и уведомлять о важных событиях."
-
-#: .\templates\account\email_confirm.html:23 .\templates\account\email_confirmation_required.html:23 .\templates\account\verification_sent.html:23
-msgid "Безопасность"
-msgstr "Безопасность"
-
-#: .\templates\account\email_confirm.html:24 .\templates\account\email_confirmation_required.html:24 .\templates\account\verification_sent.html:24
-msgid "Мы проверяем, что именно вы управляете аккаунтом."
-msgstr "Мы проверяем, что именно вы управляете аккаунтом."
-
-#: .\templates\account\email_confirm.html:32 .\templates\account\email_confirmation_required.html:32 .\templates\account\verification_sent.html:32
-msgid "Своевременные уведомления"
-msgstr "Своевременные уведомления"
-
-#: .\templates\account\email_confirm.html:33 .\templates\account\email_confirmation_required.html:33 .\templates\account\verification_sent.html:33
-msgid "Получайте напоминания о дедлайнах и изменениях."
-msgstr "Получайте напоминания о дедлайнах и изменениях."
-
-#: .\templates\account\email_confirm.html:41 .\templates\account\email_confirmation_required.html:41 .\templates\account\verification_sent.html:41
-msgid "Доступ для команды"
-msgstr "Доступ для команды"
-
-#: .\templates\account\email_confirm.html:42 .\templates\account\email_confirmation_required.html:42 .\templates\account\verification_sent.html:42
-msgid "Подтверждённая почта упрощает добавление коллег."
-msgstr "Подтверждённая почта упрощает добавление коллег."
-
 #: .\templates\account\verification_sent.html:13
 msgid ""
 "Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "

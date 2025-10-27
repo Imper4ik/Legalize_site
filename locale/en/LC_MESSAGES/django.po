@@ -713,42 +713,6 @@ msgstr ""
 msgid "Подтвердите ваш E-mail"
 msgstr "Confirm Your E-mail"
 
-#: templates/account/email_confirm.html:11 templates/account/email_confirmation_required.html:11 templates/account/verification_sent.html:11
-msgid "Защита вашего аккаунта"
-msgstr "Keeping your account safe"
-
-#: templates/account/email_confirm.html:13 templates/account/email_confirmation_required.html:13 templates/account/verification_sent.html:13
-msgid "Остался один шаг"
-msgstr "One final step"
-
-#: templates/account/email_confirm.html:15 templates/account/email_confirmation_required.html:15 templates/account/verification_sent.html:15
-msgid "Подтверждённая почта помогает нам защищать ваши данные, восстанавливать доступ и уведомлять о важных событиях."
-msgstr "A verified email helps us secure your data, restore access, and notify you about important updates."
-
-#: templates/account/email_confirm.html:23 templates/account/email_confirmation_required.html:23 templates/account/verification_sent.html:23
-msgid "Безопасность"
-msgstr "Security"
-
-#: templates/account/email_confirm.html:24 templates/account/email_confirmation_required.html:24 templates/account/verification_sent.html:24
-msgid "Мы проверяем, что именно вы управляете аккаунтом."
-msgstr "We confirm that it's really you controlling the account."
-
-#: templates/account/email_confirm.html:32 templates/account/email_confirmation_required.html:32 templates/account/verification_sent.html:32
-msgid "Своевременные уведомления"
-msgstr "Timely notifications"
-
-#: templates/account/email_confirm.html:33 templates/account/email_confirmation_required.html:33 templates/account/verification_sent.html:33
-msgid "Получайте напоминания о дедлайнах и изменениях."
-msgstr "Get reminders about deadlines and changes."
-
-#: templates/account/email_confirm.html:41 templates/account/email_confirmation_required.html:41 templates/account/verification_sent.html:41
-msgid "Доступ для команды"
-msgstr "Team access"
-
-#: templates/account/email_confirm.html:42 templates/account/email_confirmation_required.html:42 templates/account/verification_sent.html:42
-msgid "Подтверждённая почта упрощает добавление коллег."
-msgstr "A verified email makes it easier to add teammates."
-
 #: templates/account/verification_sent.html:13
 msgid ""
 "Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "

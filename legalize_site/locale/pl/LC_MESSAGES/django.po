@@ -628,42 +628,6 @@ msgstr "Kwota zapłacona"
 msgid "Подтвердите ваш E-mail"
 msgstr "Potwierdź swój E-mail"
 
-#: legalize_site/templates/account/email_confirm.html:11 legalize_site/templates/account/email_confirmation_required.html:11 legalize_site/templates/account/verification_sent.html:11
-msgid "Защита вашего аккаунта"
-msgstr "Ochrona Twojego konta"
-
-#: legalize_site/templates/account/email_confirm.html:13 legalize_site/templates/account/email_confirmation_required.html:13 legalize_site/templates/account/verification_sent.html:13
-msgid "Остался один шаг"
-msgstr "Pozostał już tylko jeden krok"
-
-#: legalize_site/templates/account/email_confirm.html:15 legalize_site/templates/account/email_confirmation_required.html:15 legalize_site/templates/account/verification_sent.html:15
-msgid "Подтверждённая почта помогает нам защищать ваши данные, восстанавливать доступ и уведомлять о важных событиях."
-msgstr "Zweryfikowany e-mail pomaga nam chronić Twoje dane, przywracać dostęp i informować o ważnych wydarzeniach."
-
-#: legalize_site/templates/account/email_confirm.html:23 legalize_site/templates/account/email_confirmation_required.html:23 legalize_site/templates/account/verification_sent.html:23
-msgid "Безопасность"
-msgstr "Bezpieczeństwo"
-
-#: legalize_site/templates/account/email_confirm.html:24 legalize_site/templates/account/email_confirmation_required.html:24 legalize_site/templates/account/verification_sent.html:24
-msgid "Мы проверяем, что именно вы управляете аккаунтом."
-msgstr "Sprawdzamy, czy to naprawdę Ty zarządzasz kontem."
-
-#: legalize_site/templates/account/email_confirm.html:32 legalize_site/templates/account/email_confirmation_required.html:32 legalize_site/templates/account/verification_sent.html:32
-msgid "Своевременные уведомления"
-msgstr "Terminowe powiadomienia"
-
-#: legalize_site/templates/account/email_confirm.html:33 legalize_site/templates/account/email_confirmation_required.html:33 legalize_site/templates/account/verification_sent.html:33
-msgid "Получайте напоминания о дедлайнах и изменениях."
-msgstr "Otrzymuj przypomnienia o terminach i zmianach."
-
-#: legalize_site/templates/account/email_confirm.html:41 legalize_site/templates/account/email_confirmation_required.html:41 legalize_site/templates/account/verification_sent.html:41
-msgid "Доступ для команды"
-msgstr "Dostęp dla zespołu"
-
-#: legalize_site/templates/account/email_confirm.html:42 legalize_site/templates/account/email_confirmation_required.html:42 legalize_site/templates/account/verification_sent.html:42
-msgid "Подтверждённая почта упрощает добавление коллег."
-msgstr "Zweryfikowany e-mail ułatwia dodawanie współpracowników."
-
 #: legalize_site/templates/account/verification_sent.html:13
 msgid ""
 "Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
