@@ -1,19 +1,19 @@
 {# templates/clients/partials/modals.html #}
+{% load i18n %}
 
-<!-- Модалка для добавления нового счёта -->
 <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel" aria-hidden="true"
      data-price-url-template="{% url 'clients:get_price_for_service' '__service__' %}">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="addPaymentModalLabel">Добавить новый счёт</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="addPaymentModalLabel">{% translate "Добавить новый счёт" %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
       </div>
       <form action="{% url 'clients:add_payment' client.id %}" method="post">
         {% csrf_token %}
         <div class="modal-body">
           <div class="mb-3">
-            <label for="id_service_description" class="form-label">Услуга</label>
+            <label for="id_service_description" class="form-label">{% translate "Услуга" %}</label>
             <select name="service_description" class="form-select" id="id_service_description" required>
               {% for choice_value, choice_label in payment_form.service_description.field.choices %}
                 <option value="{{ choice_value }}">{{ choice_label }}</option>
@@ -21,19 +21,19 @@
             </select>
           </div>
           <div class="mb-3">
-            <label for="id_total_amount" class="form-label">Общая сумма</label>
+            <label for="id_total_amount" class="form-label">{% translate "Общая сумма" %}</label>
             <input type="number" step="0.01" name="total_amount" class="form-control" id="id_total_amount" required>
           </div>
           <div class="mb-3">
-            <label for="id_amount_paid" class="form-label">Оплачено</label>
+            <label for="id_amount_paid" class="form-label">{% translate "Оплачено" %}</label>
             <input type="number" step="0.01" name="amount_paid" class="form-control" id="id_amount_paid" required>
           </div>
           <div class="mb-3">
-            <label for="id_due_date" class="form-label">Дата оплаты (если есть)</label>
+            <label for="id_due_date" class="form-label">{% translate "Дата оплаты (если есть)" %}</label>
             <input type="date" name="due_date" class="form-control" id="id_due_date">
           </div>
           <div class="mb-3">
-            <label for="id_status" class="form-label">Статус</label>
+            <label for="id_status" class="form-label">{% translate "Статус" %}</label>
             <select name="status" class="form-select" id="id_status" required>
               {% for choice_value, choice_label in payment_form.status.field.choices %}
                 <option value="{{ choice_value }}">{{ choice_label }}</option>
@@ -42,27 +42,26 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-          <button type="submit" class="btn btn-primary">Сохранить счёт</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+          <button type="submit" class="btn btn-primary">{% translate "Сохранить счёт" %}</button>
         </div>
       </form>
     </div>
   </div>
 </div>
 
-<!-- Модалка для редактирования существующего счёта -->
 <div class="modal fade" id="editPaymentModal" tabindex="-1" aria-labelledby="editPaymentModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="editPaymentModalLabel">Редактировать счёт</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="editPaymentModalLabel">{% translate "Редактировать счёт" %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
       </div>
       <form id="editPaymentForm" method="post">
         {% csrf_token %}
         <div class="modal-body">
           <div class="mb-3">
-            <label for="edit_id_service_description" class="form-label">Услуга</label>
+            <label for="edit_id_service_description" class="form-label">{% translate "Услуга" %}</label>
             <select name="service_description" class="form-select" id="edit_id_service_description" required>
               {% for choice_value, choice_label in payment_form.service_description.field.choices %}
                 <option value="{{ choice_value }}">{{ choice_label }}</option>
@@ -70,19 +69,19 @@
             </select>
           </div>
           <div class="mb-3">
-            <label for="edit_id_total_amount" class="form-label">Общая сумма</label>
+            <label for="edit_id_total_amount" class="form-label">{% translate "Общая сумма" %}</label>
             <input type="number" step="0.01" name="total_amount" class="form-control" id="edit_id_total_amount" required>
           </div>
           <div class="mb-3">
-            <label for="edit_id_amount_paid" class="form-label">Оплачено</label>
+            <label for="edit_id_amount_paid" class="form-label">{% translate "Оплачено" %}</label>
             <input type="number" step="0.01" name="amount_paid" class="form-control" id="edit_id_amount_paid" required>
           </div>
           <div class="mb-3">
-            <label for="edit_id_due_date" class="form-label">Дата оплаты (если есть)</label>
+            <label for="edit_id_due_date" class="form-label">{% translate "Дата оплаты (если есть)" %}</label>
             <input type="date" name="due_date" class="form-control" id="edit_id_due_date">
           </div>
           <div class="mb-3">
-            <label for="edit_id_status" class="form-label">Статус</label>
+            <label for="edit_id_status" class="form-label">{% translate "Статус" %}</label>
             <select name="status" class="form-select" id="edit_id_status" required>
               {% for choice_value, choice_label in payment_form.status.field.choices %}
                 <option value="{{ choice_value }}">{{ choice_label }}</option>
@@ -91,8 +90,8 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-          <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+          <button type="submit" class="btn btn-primary">{% translate "Сохранить изменения" %}</button>
         </div>
       </form>
     </div>

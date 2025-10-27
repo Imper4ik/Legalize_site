@@ -1,4 +1,5 @@
 {# legalize_site/legalize_site/clients/templates/clients/partials/payment_item.html #}
+{% load i18n %}
 
 <div class="d-flex justify-content-between">
     <div>
@@ -14,7 +15,7 @@
         </button>
         <form action="{% url 'clients:delete_payment' payment.id %}" method="post" class="d-inline delete-payment-form">
             {% csrf_token %}
-            <button type="submit" class="btn btn-link btn-sm p-0 text-danger" title="Удалить платёж">
+            <button type="submit" class="btn btn-link btn-sm p-0 text-danger" title="{% translate 'Удалить платёж' %}">
                 <i class="bi bi-trash"></i>
             </button>
         </form>
@@ -27,6 +28,6 @@
     <div class="progress-bar" role="progressbar" style="width: {% widthratio payment.amount_paid payment.total_amount 100 %}%;" aria-valuenow="{{ payment.amount_paid }}" aria-valuemin="0" aria-valuemax="{{ payment.total_amount }}"></div>
 </div>
 <div class="d-flex justify-content-between mt-1">
-    <small>Оплачено: {{ payment.amount_paid }} zł</small>
-    <small>Всего: {{ payment.total_amount }} zł</small>
+    <small>{% translate "Оплачено" %}: {{ payment.amount_paid }} zł</small>
+    <small>{% translate "Всего" %}: {{ payment.total_amount }} zł</small>
 </div>
