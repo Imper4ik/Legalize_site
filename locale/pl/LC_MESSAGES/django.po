@@ -710,12 +710,12 @@ msgstr "Kwota zapłacona"
 msgid "Переключить на светлую тему"
 msgstr ""
 
-#: templates/account/email_confirmation_sent.html:4
-#: templates/account/email_confirmation_sent.html:12
+#: templates/account/verification_sent.html:4
+#: templates/account/verification_sent.html:12
 msgid "Подтвердите ваш E-mail"
 msgstr "Potwierdź swój E-mail"
 
-#: templates/account/email_confirmation_sent.html:13
+#: templates/account/verification_sent.html:13
 msgid ""
 "Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
 "завершить регистрацию."
@@ -723,7 +723,7 @@ msgstr ""
 "Wysłaliśmy Ci e-mail weryfikacyjny. Kliknij link w e-mailu, aby dokończyć "
 "rejestrację."
 
-#: templates/account/email_confirmation_sent.html:15
+#: templates/account/verification_sent.html:15
 msgid ""
 "Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
 "\"Промоакции\"."
@@ -732,43 +732,43 @@ msgstr ""
 "Oferty."
 
 #: templates/account/email_confirm.html:82
-#: templates/account/email_confirmation_sent.html:101
+#: templates/account/verification_sent.html:101
 msgid "Запросить новую ссылку"
 msgstr "Poproś o nowy link"
 
-#: templates/account/email_confirmation_sent.html:52
+#: templates/account/verification_sent.html:52
 msgid "Письмо уже в пути"
 msgstr "E-mail jest w drodze"
 
-#: templates/account/email_confirmation_sent.html:63
+#: templates/account/verification_sent.html:63
 msgid "Что происходит дальше"
 msgstr "Co dalej"
 
-#: templates/account/email_confirmation_sent.html:64
+#: templates/account/verification_sent.html:64
 msgid "Ссылка действует 24 часа"
 msgstr "Link jest aktywny przez 24 godziny"
 
-#: templates/account/email_confirmation_sent.html:74
+#: templates/account/verification_sent.html:74
 msgid "Проверьте входящие"
 msgstr "Sprawdź skrzynkę odbiorczą"
 
-#: templates/account/email_confirmation_sent.html:75
+#: templates/account/verification_sent.html:75
 msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
 msgstr "Otwórz e-mail od Legalize i kliknij przycisk potwierdzenia."
 
-#: templates/account/email_confirmation_sent.html:83
+#: templates/account/verification_sent.html:83
 msgid "Не нашли письмо"
 msgstr "Nie ma wiadomości"
 
-#: templates/account/email_confirmation_sent.html:92
+#: templates/account/verification_sent.html:92
 msgid "Нужно новое письмо"
 msgstr "Potrzebujesz nowej wiadomości"
 
-#: templates/account/email_confirmation_sent.html:93
+#: templates/account/verification_sent.html:93
 msgid "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
 msgstr "Poproś o kolejny link w panelu, jeśli poprzedni wygasł."
 
-#: templates/account/email_confirmation_sent.html:106
+#: templates/account/verification_sent.html:106
 msgid "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
 msgstr "Skontaktuj się z naszym wsparciem, jeśli wiadomość nie dotarła."
 
