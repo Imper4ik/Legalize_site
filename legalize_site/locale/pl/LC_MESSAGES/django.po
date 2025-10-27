@@ -632,17 +632,52 @@ msgstr "Potwierdź swój E-mail"
 msgid ""
 "Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
 "завершить регистрацию."
-msgstr ""
-"Wysłaliśmy Ci e-mail weryfikacyjny. Kliknij link w e-mailu, aby dokończyć "
-"rejestrację."
+msgstr "Wysłaliśmy do Ciebie e-mail weryfikacyjny. Wejdź w link w wiadomości, aby zakończyć rejestrację."
 
 #: legalize_site/templates/account/verification_sent.html:15
 msgid ""
-"Если вы не видите письмо во входящих, проверьте папку \"Спам\". Пожалуйста, "
-"свяжитесь с нами, если не получили письмо в течение нескольких минут."
-msgstr ""
-"Jeśli nie widzisz e-maila w skrzynce odbiorczej, sprawdź folder spam. "
-"Skontaktuj się z nami, jeśli nie otrzymasz e-maila w ciągu kilku minut."
+"Если вы не видите письмо во входящих, проверьте папку \"Спам\" или \"Промоакции\"."
+msgstr "Jeśli wiadomości nie ma w skrzynce odbiorczej, sprawdź folder Spam lub Oferty."
+
+#: legalize_site/templates/account/email_confirm.html:82 legalize_site/templates/account/verification_sent.html:101
+msgid "Запросить новую ссылку"
+msgstr "Poproś o nowy link"
+
+#: legalize_site/templates/account/verification_sent.html:52
+msgid "Письмо уже в пути"
+msgstr "E-mail jest już w drodze"
+
+#: legalize_site/templates/account/verification_sent.html:63
+msgid "Что происходит дальше"
+msgstr "Co dalej"
+
+#: legalize_site/templates/account/verification_sent.html:64
+msgid "Ссылка действует 24 часа"
+msgstr "Link działa przez 24 godziny"
+
+#: legalize_site/templates/account/verification_sent.html:74
+msgid "Проверьте входящие"
+msgstr "Sprawdź skrzynkę odbiorczą"
+
+#: legalize_site/templates/account/verification_sent.html:75
+msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
+msgstr "Otwórz wiadomość od Legalize i kliknij przycisk potwierdzenia."
+
+#: legalize_site/templates/account/verification_sent.html:83
+msgid "Не нашли письмо"
+msgstr "Nie ma wiadomości?"
+
+#: legalize_site/templates/account/verification_sent.html:92
+msgid "Нужно новое письмо"
+msgstr "Potrzebujesz nowej wiadomości"
+
+#: legalize_site/templates/account/verification_sent.html:93
+msgid "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
+msgstr "Poproś o kolejny link w panelu klienta, jeśli poprzedni wygasł."
+
+#: legalize_site/templates/account/verification_sent.html:106
+msgid "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
+msgstr "Skontaktuj się z naszym wsparciem, jeśli wiadomość nadal nie dotarła."
 
 #: legalize_site/templates/account/login.html:4
 #: legalize_site/templates/base.html:248
