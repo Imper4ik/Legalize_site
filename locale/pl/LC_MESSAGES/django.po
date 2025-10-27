@@ -708,46 +708,51 @@ msgstr "Wybór języka interfejsu"
 #: templates/account/auth_base.html:687 templates/base.html:194
 #: templates/includes/theme_toggle.html:6
 msgid "Переключить тему"
-msgstr ""
+msgstr "Przełącz motyw"
 
 #: templates/account/auth_base.html:688 templates/account/auth_base.html:692
 #: templates/account/auth_base.html:694
 msgid "Переключить на тёмную тему"
-msgstr ""
+msgstr "Przełącz na ciemny motyw"
 
 #: templates/account/auth_base.html:690 templates/account/auth_base.html:699
 #: templates/base.html:196 templates/includes/theme_toggle.html:8
 #: templates/includes/theme_toggle.html:14
 msgid "Светлая тема"
-msgstr ""
+msgstr "Jasny motyw"
 
 #: templates/account/auth_base.html:691 templates/base.html:197
 #: templates/includes/theme_toggle.html:9
-#, fuzzy
-#| msgid "Оплаченная сумма"
 msgid "Тёмная тема"
-msgstr "Kwota zapłacona"
+msgstr "Ciemny motyw"
 
 #: templates/account/auth_base.html:693 templates/account/auth_base.html:695
 msgid "Переключить на светлую тему"
-msgstr ""
+msgstr "Przełącz na jasny motyw"
 
 #: templates/account/verification_sent.html:4
 #: templates/account/verification_sent.html:12
+#: templates/account/verification_sent.html:54
 msgid "Подтвердите ваш E-mail"
 msgstr "Potwierdź swój E-mail"
 
 #: templates/account/verification_sent.html:13
+#: templates/account/verification_sent.html:55
 msgid ""
 "Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
 "завершить регистрацию."
-msgstr "Wysłaliśmy do Ciebie e-mail weryfikacyjny. Wejdź w link w wiadomości, aby zakończyć rejestrację."
+msgstr ""
+"Wysłaliśmy do Ciebie e-mail weryfikacyjny. Wejdź w link w wiadomości, aby "
+"zakończyć rejestrację."
 
 #: templates/account/verification_sent.html:15
+#: templates/account/verification_sent.html:84
 msgid ""
 "Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
 "\"Промоакции\"."
-msgstr "Jeśli wiadomości nie ma w skrzynce odbiorczej, sprawdź folder Spam lub Oferty."
+msgstr ""
+"Jeśli wiadomości nie ma w skrzynce odbiorczej, sprawdź folder Spam lub "
+"Oferty."
 
 #: templates/account/email_confirm.html:82
 #: templates/account/verification_sent.html:101
@@ -1026,63 +1031,6 @@ msgstr ""
 #: templates/account/signup.html:125
 msgid "Войдите"
 msgstr ""
-
-#: templates/account/verification_sent.html:4
-#: templates/account/verification_sent.html:54
-msgid "Подтвердите ваш E-mail"
-msgstr "Potwierdź swój E-mail"
-
-#: templates/account/verification_sent.html:52
-msgid "Письмо уже в пути"
-msgstr "E-mail jest już w drodze"
-
-#: templates/account/verification_sent.html:55
-msgid ""
-"Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
-"завершить регистрацию."
-msgstr ""
-"Wysłaliśmy do Ciebie e-mail weryfikacyjny. Wejdź w link w wiadomości, aby "
-"zakończyć rejestrację."
-
-#: templates/account/verification_sent.html:63
-msgid "Что происходит дальше"
-msgstr "Co dalej"
-
-#: templates/account/verification_sent.html:64
-msgid "Ссылка действует 24 часа"
-msgstr "Link działa przez 24 godziny"
-
-#: templates/account/verification_sent.html:74
-msgid "Проверьте входящие"
-msgstr "Sprawdź skrzynkę odbiorczą"
-
-#: templates/account/verification_sent.html:75
-msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
-msgstr "Otwórz wiadomość od Legalize i kliknij przycisk potwierdzenia."
-
-#: templates/account/verification_sent.html:83
-msgid "Не нашли письмо"
-msgstr "Nie ma wiadomości?"
-
-#: templates/account/verification_sent.html:84
-msgid ""
-"Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
-"\"Промоакции\"."
-msgstr ""
-"Jeśli wiadomości nie ma w skrzynce odbiorczej, sprawdź folder Spam lub "
-"Oferty."
-
-#: templates/account/verification_sent.html:92
-msgid "Нужно новое письмо"
-msgstr "Potrzebujesz nowej wiadomości"
-
-#: templates/account/verification_sent.html:93
-msgid "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
-msgstr "Poproś o kolejny link w panelu klienta, jeśli poprzedni wygasł."
-
-#: templates/account/verification_sent.html:106
-msgid "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
-msgstr "Skontaktuj się z naszym wsparciem, jeśli wiadomość nadal nie dotarła."
 
 #: templates/admin/base_site.html:4
 msgid "Администрирование Legalize"
