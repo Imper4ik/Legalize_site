@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light dark">
-    <title>{% block title %}Legalize Site{% endblock %}</title>
+    <title>{% block title %}{% translate "Legalize Site" %}{% endblock %}</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -195,9 +195,9 @@
     <nav class="navbar navbar-expand-lg shadow-sm theme-navbar">
         <div class="container">
             <a class="navbar-brand fw-bold" href="{% if user.is_authenticated and user.is_staff %}{% url 'clients:client_list' %}{% else %}{% url 'account_login' %}{% endif %}">
-                <i class="fas fa-balance-scale me-2"></i>Legalize Site
+                <i class="fas fa-balance-scale me-2"></i>{% translate "Legalize Site" %}
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="{% translate 'Переключить навигацию' %}">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -218,7 +218,7 @@
                         <form action="{% url 'set_language' %}" method="post" class="d-flex align-items-center">
                             {% csrf_token %}
                             <input name="next" type="hidden" value="/{{ request.get_full_path|slice:'4:' }}">
-                            <select name="language" onchange="this.form.submit()" class="form-select form-select-sm" aria-label="Language selection">
+                            <select name="language" onchange="this.form.submit()" class="form-select form-select-sm" aria-label="{% translate 'Выбор языка интерфейса' %}">
                                 {% get_current_language as LANGUAGE_CODE %}
                                 {% get_available_languages as LANGUAGES %}
                                 {% for lang_code, lang_name in LANGUAGES %}
@@ -258,7 +258,7 @@
     {% for message in messages %}
         <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
             {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% translate 'Закрыть' %}"></button>
         </div>
     {% endfor %}
 </div>

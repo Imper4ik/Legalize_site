@@ -6,7 +6,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark">
-  <title>{% block title %}Legalize Site{% endblock %}</title>
+  <title>{% block title %}{% translate "Legalize Site" %}{% endblock %}</title>
 
   <!-- Vendor CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -173,9 +173,9 @@
     <nav class="navbar navbar-expand-lg theme-navbar shadow-sm">
       <div class="container">
         <a class="navbar-brand fw-semibold" href="{% if user.is_authenticated and user.is_staff %}{% url 'clients:client_list' %}{% else %}{% url 'account_login' %}{% endif %}">
-          <i class="fas fa-balance-scale me-2"></i>Legalize
+          <i class="fas fa-balance-scale me-2"></i>{% translate "Legalize" %}
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="{% translate 'Переключить навигацию' %}">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
@@ -204,7 +204,7 @@
               <form action="{% url 'set_language' %}" method="post" class="d-flex align-items-center">
                 {% csrf_token %}
                 <input name="next" type="hidden" value="/{{ request.get_full_path|slice:'4:' }}">
-                <select name="language" onchange="this.form.submit()" class="form-select form-select-sm" aria-label="Language selection">
+                <select name="language" onchange="this.form.submit()" class="form-select form-select-sm" aria-label="{% translate 'Выбор языка интерфейса' %}">
                   {% get_current_language as LANGUAGE_CODE %}
                   {% get_available_languages as LANGUAGES %}
                   {% for lang_code, lang_name in LANGUAGES %}
@@ -244,7 +244,7 @@
     {% for message in messages %}
     <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
       {{ message }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% translate 'Закрыть' %}"></button>
     </div>
     {% endfor %}
   </div>
@@ -256,13 +256,13 @@
     <!-- Optional: pretty header with title/actions -->
     <div class="section-header">
       <div>
-        <h1 class="h3 mb-1">{% block page_title %}Заголовок страницы{% endblock %}</h1>
-        <div class="text-muted">{% block page_subtitle %}Короткое описание страницы{% endblock %}</div>
+        <h1 class="h3 mb-1">{% block page_title %}{% translate "Заголовок страницы" %}{% endblock %}</h1>
+        <div class="text-muted">{% block page_subtitle %}{% translate "Короткое описание страницы" %}{% endblock %}</div>
       </div>
       <div class="d-flex gap-2">
         {% block page_actions %}
-        <a href="#" class="btn btn-soft"><i class="bi bi-funnel me-1"></i>Фильтр</a>
-        <a href="#" class="btn btn-gradient"><i class="bi bi-plus-lg me-1"></i>Добавить</a>
+        <a href="#" class="btn btn-soft"><i class="bi bi-funnel me-1"></i>{% translate "Фильтр" %}</a>
+        <a href="#" class="btn btn-gradient"><i class="bi bi-plus-lg me-1"></i>{% translate "Добавить" %}</a>
         {% endblock %}
       </div>
     </div>
