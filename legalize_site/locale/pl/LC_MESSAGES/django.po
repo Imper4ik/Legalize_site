@@ -728,130 +728,61 @@ msgstr ""
 msgid "Тёмная тема"
 msgstr "Kwota zapłacona"
 
-#: templates/account/auth_base.html:693 templates/account/auth_base.html:695
-msgid "Переключить на светлую тему"
-msgstr ""
-
-#: templates/account/email_confirm.html:4
-#, fuzzy
-#| msgid "Подтверждение оплаты"
-msgid "Подтверждение почты"
-msgstr "Potwierdzenie opłaty"
-
-#: templates/account/email_confirm.html:11
-#: templates/account/email_confirmation_required.html:11
-#: templates/account/verification_sent.html:11
-msgid "Защита вашего аккаунта"
-msgstr "Ochrona Twojego konta"
-
-#: templates/account/email_confirm.html:13
-#: templates/account/email_confirmation_required.html:13
-#: templates/account/verification_sent.html:13
-msgid "Остался один шаг"
-msgstr "Pozostał już tylko jeden krok"
-
-#: templates/account/email_confirm.html:15
-#: templates/account/email_confirmation_required.html:15
-#: templates/account/verification_sent.html:15
-msgid ""
-"Подтверждённая почта помогает нам защищать ваши данные, восстанавливать "
-"доступ и уведомлять о важных событиях."
-msgstr ""
-"Zweryfikowany e-mail pomaga nam chronić Twoje dane, przywracać dostęp i "
-"informować o ważnych wydarzeniach."
-
-#: templates/account/email_confirm.html:23
-#: templates/account/email_confirmation_required.html:23
-#: templates/account/verification_sent.html:23
-msgid "Безопасность"
-msgstr "Bezpieczeństwo"
-
-#: templates/account/email_confirm.html:24
-#: templates/account/email_confirmation_required.html:24
-#: templates/account/verification_sent.html:24
-msgid "Мы проверяем, что именно вы управляете аккаунтом."
-msgstr "Sprawdzamy, czy to naprawdę Ty zarządzasz kontem."
-
-#: templates/account/email_confirm.html:32
-#: templates/account/email_confirmation_required.html:32
-#: templates/account/verification_sent.html:32
-msgid "Своевременные уведомления"
-msgstr "Terminowe powiadomienia"
-
-#: templates/account/email_confirm.html:33
-#: templates/account/email_confirmation_required.html:33
-#: templates/account/verification_sent.html:33
-msgid "Получайте напоминания о дедлайнах и изменениях."
-msgstr "Otrzymuj przypomnienia o terminach i zmianach."
-
-#: templates/account/email_confirm.html:41
-#: templates/account/email_confirmation_required.html:41
-#: templates/account/verification_sent.html:41
-msgid "Доступ для команды"
-msgstr "Dostęp dla zespołu"
-
-#: templates/account/email_confirm.html:42
-#: templates/account/email_confirmation_required.html:42
-#: templates/account/verification_sent.html:42
-msgid "Подтверждённая почта упрощает добавление коллег."
-msgstr "Zweryfikowany e-mail ułatwia dodawanie współpracowników."
-
-#: templates/account/email_confirm.html:49
-#, fuzzy
-#| msgid "Подтвердите ваш E-mail"
-msgid "Подтвердите email"
+#: legalize_site/templates/account/verification_sent.html:4
+#: legalize_site/templates/account/verification_sent.html:12
+msgid "Подтвердите ваш E-mail"
 msgstr "Potwierdź swój E-mail"
 
-#: templates/account/email_confirm.html:50
-msgid "Убедитесь, что адрес принадлежит вам, чтобы продолжить работу."
-msgstr ""
-
-#: templates/account/email_confirm.html:59
-msgid "Адрес для подтверждения"
-msgstr ""
-
-#: templates/account/email_confirm.html:67
-#, fuzzy
-#| msgid "Подтвердите ваш E-mail"
-msgid "Подтвердить почту"
-msgstr "Potwierdź swój E-mail"
-
-#: templates/account/email_confirm.html:72
+#: legalize_site/templates/account/verification_sent.html:13
 msgid ""
-"Если это не ваш адрес, просто проигнорируйте письмо и запросите новую ссылку "
-"из личного кабинета."
-msgstr ""
+"Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
+"завершить регистрацию."
+msgstr "Wysłaliśmy do Ciebie e-mail weryfikacyjny. Wejdź w link w wiadomości, aby zakończyć rejestrację."
 
-#: templates/account/email_confirm.html:77
-msgid "Ссылка для подтверждения недействительна или уже была использована."
-msgstr ""
+#: legalize_site/templates/account/verification_sent.html:15
+msgid ""
+"Если вы не видите письмо во входящих, проверьте папку \"Спам\" или \"Промоакции\"."
+msgstr "Jeśli wiadomości nie ma w skrzynce odbiorczej, sprawdź folder Spam lub Oferty."
 
-#: templates/account/email_confirm.html:82
-#: templates/account/verification_sent.html:101
+#: legalize_site/templates/account/email_confirm.html:82 legalize_site/templates/account/verification_sent.html:101
 msgid "Запросить новую ссылку"
 msgstr "Poproś o nowy link"
 
-#: templates/account/email_confirmation_required.html:4
-#, fuzzy
-#| msgid "Подтвердите ваш E-mail"
-msgid "Подтвердите вашу почту"
-msgstr "Potwierdź swój E-mail"
+#: legalize_site/templates/account/verification_sent.html:52
+msgid "Письмо уже в пути"
+msgstr "E-mail jest już w drodze"
 
-#: templates/account/email_confirmation_required.html:52
-#, fuzzy
-#| msgid "Подтвердите ваш E-mail"
-msgid "Подтвердите ваш email"
-msgstr "Potwierdź swój E-mail"
+#: legalize_site/templates/account/verification_sent.html:63
+msgid "Что происходит дальше"
+msgstr "Co dalej"
 
-#: templates/account/email_confirmation_required.html:54
-msgid "Мы отправили письмо с подтверждением"
-msgstr ""
+#: legalize_site/templates/account/verification_sent.html:64
+msgid "Ссылка действует 24 часа"
+msgstr "Link działa przez 24 godziny"
 
-#: templates/account/email_confirmation_required.html:55
-msgid ""
-"Перейдите по ссылке в письме, чтобы активировать ваш аккаунт и получить "
-"доступ ко всем функциям Legalize."
-msgstr ""
+#: legalize_site/templates/account/verification_sent.html:74
+msgid "Проверьте входящие"
+msgstr "Sprawdź skrzynkę odbiorczą"
+
+#: legalize_site/templates/account/verification_sent.html:75
+msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
+msgstr "Otwórz wiadomość od Legalize i kliknij przycisk potwierdzenia."
+
+#: legalize_site/templates/account/verification_sent.html:83
+msgid "Не нашли письмо"
+msgstr "Nie ma wiadomości?"
+
+#: legalize_site/templates/account/verification_sent.html:92
+msgid "Нужно новое письмо"
+msgstr "Potrzebujesz nowej wiadomości"
+
+#: legalize_site/templates/account/verification_sent.html:93
+msgid "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
+msgstr "Poproś o kolejny link w panelu klienta, jeśli poprzedni wygasł."
+
+#: legalize_site/templates/account/verification_sent.html:106
+msgid "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
+msgstr "Skontaktuj się z naszym wsparciem, jeśli wiadomość nadal nie dotarła."
 
 #: templates/account/email_confirmation_required.html:63
 #, fuzzy
