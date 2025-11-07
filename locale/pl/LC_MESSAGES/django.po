@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-27 20:15+0100\n"
+"POT-Creation-Date: 2025-11-07 11:19+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -182,6 +182,7 @@ msgstr "Dostęp do listy kontrolnej przyznany"
 
 #: clients/models.py:114 clients/models.py:148 clients/models.py:181
 #: clients/templates/clients/document_reminder_list.html:111
+#: clients/templates/clients/payment_reminder_list.html:29
 msgid "Клиент"
 msgstr "Klient"
 
@@ -550,6 +551,7 @@ msgid "Подробнее"
 msgstr "Szczegóły"
 
 #: clients/templates/clients/clients_list.html:101
+#: clients/templates/clients/partials/reminder_item.html:71
 msgid "Удалить"
 msgstr "Usuń"
 
@@ -566,13 +568,12 @@ msgstr "Przypomnienia"
 #: clients/templates/clients/document_reminder_list.html:17
 msgid ""
 "Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и периодам"
-msgstr ""
+msgstr "Sprawdź i wygeneruj aktualne przypomnienia, przefiltruj po kliencie i terminach"
 
 #: clients/templates/clients/document_reminder_list.html:25
-#, fuzzy
-#| msgid "Редактировать данные"
+#: clients/templates/clients/payment_reminder_list.html:20
 msgid "Проверить и создать новые"
-msgstr "Edytuj dane"
+msgstr "Sprawdź i utwórz nowe"
 
 #: clients/templates/clients/document_reminder_list.html:93
 #: templates/base.html:247 templates/clients/partials/modals.html:10
@@ -582,38 +583,33 @@ msgstr "Zamknij"
 
 #: clients/templates/clients/document_reminder_list.html:103
 #: clients/views.py:516
-#, fuzzy
-#| msgid "Напоминания платежей"
 msgid "Напоминания по документам"
-msgstr "Przypomnienia o płatnościach"
+msgstr "Przypomnienia o dokumentach"
 
 #: clients/templates/clients/document_reminder_list.html:113
-#, fuzzy
-#| msgid "Клиенты"
+#: clients/templates/clients/payment_reminder_list.html:31
 msgid "Все клиенты"
-msgstr "Klienci"
+msgstr "Wszyscy klienci"
 
 #: clients/templates/clients/document_reminder_list.html:121
-#, fuzzy
-#| msgid "Дата оплаты"
+#: clients/templates/clients/payment_reminder_list.html:38
 msgid "Дата от"
-msgstr "Data płatności"
+msgstr "Data od"
 
 #: clients/templates/clients/document_reminder_list.html:130
-#, fuzzy
-#| msgid "Дата оплаты"
+#: clients/templates/clients/payment_reminder_list.html:42
 msgid "Дата до"
-msgstr "Data płatności"
+msgstr "Data do"
 
 #: clients/templates/clients/document_reminder_list.html:140
+#: clients/templates/clients/payment_reminder_list.html:46
 msgid "Фильтровать"
-msgstr ""
+msgstr "Filtruj"
 
 #: clients/templates/clients/document_reminder_list.html:143
-#, fuzzy
-#| msgid "Сбросить пароль"
+#: clients/templates/clients/payment_reminder_list.html:47
 msgid "Сбросить"
-msgstr "Zresetuj hasło"
+msgstr "Resetuj"
 
 #: clients/templates/clients/document_reminder_list.html:152
 #, fuzzy
@@ -624,6 +620,49 @@ msgstr "Typ przypomnienia"
 #: clients/templates/clients/document_reminder_list.html:164
 msgid "Нет напоминаний по документам, соответствующих фильтрам."
 msgstr ""
+
+#: clients/templates/clients/login.html:4 templates/account/login.html:4
+#: templates/base.html:233
+msgid "Вход"
+msgstr "Logowanie"
+
+#: clients/templates/clients/login.html:11 templates/account/login.html:51
+msgid "Вход в систему"
+msgstr "Logowanie do systemu"
+
+#: clients/templates/clients/login.html:16
+msgid "Войти через Google"
+msgstr "Zaloguj się przez Google"
+
+#: clients/templates/clients/login.html:20
+msgid "ИЛИ"
+msgstr "LUB"
+
+#: clients/templates/clients/login.html:26
+msgid "Адрес электронной почты"
+msgstr "Adres e-mail"
+
+#: clients/templates/clients/login.html:30
+msgid "Пароль"
+msgstr "Hasło"
+
+#: clients/templates/clients/login.html:36
+msgid "Неверный email или пароль. Попробуйте снова."
+msgstr "Nieprawidłowy e-mail lub hasło. Spróbuj ponownie."
+
+#: clients/templates/clients/login.html:40 templates/403.html:25
+#: templates/account/login.html:108 templates/admin/login.html:64
+msgid "Войти"
+msgstr "Zaloguj się"
+
+#: clients/templates/clients/login.html:46
+#, python-format
+msgid ""
+"Ещё нет аккаунта? <a class=\"ms-2\" "
+"href=\"%(register_url)s\">Зарегистрироваться</a>"
+msgstr ""
+"Nie masz jeszcze konta? <a class=\"ms-2\" "
+"href=\"%(register_url)s\">Zarejestruj się</a>"
 
 #: clients/templates/clients/partials/client_overview.html:5
 #, fuzzy
@@ -651,31 +690,48 @@ msgstr "Podstawa pobytu"
 msgid "Не указано"
 msgstr "Nie podano"
 
-#: clients/templates/clients/partials/payment_item.html:8
-msgid "Счёт от"
-msgstr ""
+#: clients/templates/clients/partials/reminder_item.html:32
+#, python-format
+msgid "К дата: %(due)s"
+msgstr "Termin: %(due)s"
 
-#: clients/templates/clients/partials/payment_item.html:27
-#, fuzzy
-#| msgid "Редактировать данные"
-msgid "Редактировать"
-msgstr "Edytuj dane"
+#: clients/templates/clients/partials/reminder_item.html:34
+msgid "Просрочено"
+msgstr "Przeterminowane"
 
-#: clients/templates/clients/partials/payment_item.html:30
-#, fuzzy
-#| msgid "Клиенты не найдены."
-msgid "ID платежа не найден"
-msgstr "Nie znaleziono klientów."
+#: clients/templates/clients/partials/reminder_item.html:36
+msgid "Срочно"
+msgstr "Pilne"
+
+#: clients/templates/clients/partials/reminder_item.html:43
+#: clients/templates/clients/partials/reminder_item.html:48
+msgid "Клиент:"
+msgstr "Klient:"
+
+#: clients/templates/clients/partials/reminder_item.html:48
+msgid "(не указан)"
+msgstr "(brak danych)"
+
+#: clients/templates/clients/partials/reminder_item.html:64
+msgid "Выполнено"
+msgstr "Wykonano"
+
+#: clients/templates/clients/partials/reminder_item.html:70
+msgid "Вы уверены, что хотите безвозвратно удалить это напоминание?"
+msgstr "Czy na pewno chcesz trwale usunąć to przypomnienie?"
+
+#: clients/templates/clients/payment_reminder_list.html:5
+#: clients/templates/clients/payment_reminder_list.html:12 clients/views.py:530
+msgid "Напоминания по оплатам"
+msgstr "Przypomnienia o płatnościach"
+
+#: clients/templates/clients/payment_reminder_list.html:58
+msgid "Нет напоминаний по оплатам, соответствующих фильтрам."
+msgstr "Brak przypomnień o płatnościach spełniających kryteria."
 
 #: clients/views.py:33 clients/views.py:156 templates/403.html:4
 msgid "Доступ запрещен"
 msgstr "Dostęp zabroniony"
-
-#: clients/views.py:530
-#, fuzzy
-#| msgid "Напоминания платежей"
-msgid "Напоминания по оплатам"
-msgstr "Przypomnienia o płatnościach"
 
 #: templates/403.html:14
 msgid "У вас нет доступа к этой странице"
@@ -691,11 +747,6 @@ msgstr ""
 #: templates/403.html:21
 msgid "Выйти и войти под другим аккаунтом"
 msgstr ""
-
-#: templates/403.html:25 templates/account/login.html:108
-#: templates/admin/login.html:64
-msgid "Войти"
-msgstr "Zaloguj się"
 
 #: templates/403.html:29
 msgid "Связаться с поддержкой"
@@ -730,74 +781,182 @@ msgstr "Ciemny motyw"
 msgid "Переключить на светлую тему"
 msgstr "Przełącz na jasny motyw"
 
-#: templates/account/verification_sent.html:4
-#: templates/account/verification_sent.html:12
-#: templates/account/verification_sent.html:54
-msgid "Подтвердите ваш E-mail"
+#: templates/account/email_confirm.html:4
+#, fuzzy
+#| msgid "Подтверждение оплаты"
+msgid "Подтверждение почты"
+msgstr "Potwierdzenie opłaty"
+
+#: templates/account/email_confirm.html:11
+#: templates/account/email_confirmation_required.html:11
+#: templates/account/verification_sent.html:11
+#, fuzzy
+#| msgid "Создайте новый пароль"
+msgid "Защита вашего аккаунта"
+msgstr "Utwórz nowe hasło"
+
+#: templates/account/email_confirm.html:13
+#: templates/account/email_confirmation_required.html:13
+#: templates/account/verification_sent.html:13
+msgid "Остался один шаг"
+msgstr ""
+
+#: templates/account/email_confirm.html:15
+#: templates/account/email_confirmation_required.html:15
+#: templates/account/verification_sent.html:15
+msgid ""
+"Подтверждённая почта помогает нам защищать ваши данные, восстанавливать "
+"доступ и уведомлять о важных событиях."
+msgstr ""
+
+#: templates/account/email_confirm.html:23
+#: templates/account/email_confirmation_required.html:23
+#: templates/account/verification_sent.html:23
+#, fuzzy
+#| msgid "Безопасный доступ"
+msgid "Безопасность"
+msgstr "Bezpieczny dostęp"
+
+#: templates/account/email_confirm.html:24
+#: templates/account/email_confirmation_required.html:24
+#: templates/account/verification_sent.html:24
+msgid "Мы проверяем, что именно вы управляете аккаунтом."
+msgstr ""
+
+#: templates/account/email_confirm.html:32
+#: templates/account/email_confirmation_required.html:32
+#: templates/account/verification_sent.html:32
+#, fuzzy
+#| msgid "Дата последнего обновления"
+msgid "Своевременные уведомления"
+msgstr "Data ostatniej aktualizacji"
+
+#: templates/account/email_confirm.html:33
+#: templates/account/email_confirmation_required.html:33
+#: templates/account/verification_sent.html:33
+#, fuzzy
+#| msgid "Автоматические уведомления о ключевых дедлайнах и событиях."
+msgid "Получайте напоминания о дедлайнах и изменениях."
+msgstr "Automatyczne powiadomienia o najważniejszych terminach i wydarzeniach."
+
+#: templates/account/email_confirm.html:41
+#: templates/account/email_confirmation_required.html:41
+#: templates/account/verification_sent.html:41
+#, fuzzy
+#| msgid "Доступ запрещен"
+msgid "Доступ для команды"
+msgstr "Dostęp zabroniony"
+
+#: templates/account/email_confirm.html:42
+#: templates/account/email_confirmation_required.html:42
+#: templates/account/verification_sent.html:42
+msgid "Подтверждённая почта упрощает добавление коллег."
+msgstr ""
+
+#: templates/account/email_confirm.html:49
+#, fuzzy
+#| msgid "Подтвердите ваш E-mail"
+msgid "Подтвердите email"
 msgstr "Potwierdź swój E-mail"
 
-#: templates/account/verification_sent.html:13
-#: templates/account/verification_sent.html:55
-msgid ""
-"Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
-"завершить регистрацию."
+#: templates/account/email_confirm.html:50
+msgid "Убедитесь, что адрес принадлежит вам, чтобы продолжить работу."
 msgstr ""
-"Wysłaliśmy do Ciebie e-mail weryfikacyjny. Wejdź w link w wiadomości, aby "
-"zakończyć rejestrację."
 
-#: templates/account/verification_sent.html:15
-#: templates/account/verification_sent.html:84
-msgid ""
-"Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
-"\"Промоакции\"."
+#: templates/account/email_confirm.html:59
+msgid "Адрес для подтверждения"
 msgstr ""
-"Jeśli wiadomości nie ma w skrzynce odbiorczej, sprawdź folder Spam lub "
-"Oferty."
+
+#: templates/account/email_confirm.html:67
+#, fuzzy
+#| msgid "Подтвердите ваш E-mail"
+msgid "Подтвердить почту"
+msgstr "Potwierdź swój E-mail"
+
+#: templates/account/email_confirm.html:72
+msgid ""
+"Если это не ваш адрес, просто проигнорируйте письмо и запросите новую ссылку "
+"из личного кабинета."
+msgstr ""
+
+#: templates/account/email_confirm.html:77
+msgid "Ссылка для подтверждения недействительна или уже была использована."
+msgstr ""
 
 #: templates/account/email_confirm.html:82
 #: templates/account/verification_sent.html:101
 msgid "Запросить новую ссылку"
 msgstr "Poproś o nowy link"
 
-#: templates/account/verification_sent.html:52
-msgid "Письмо уже в пути"
-msgstr "E-mail jest już w drodze"
+#: templates/account/email_confirmation_required.html:4
+#, fuzzy
+#| msgid "Подтвердите ваш E-mail"
+msgid "Подтвердите вашу почту"
+msgstr "Potwierdź swój E-mail"
 
-#: templates/account/verification_sent.html:63
-msgid "Что происходит дальше"
-msgstr "Co dalej"
+#: templates/account/email_confirmation_required.html:52
+#, fuzzy
+#| msgid "Подтвердите ваш E-mail"
+msgid "Подтвердите ваш email"
+msgstr "Potwierdź swój E-mail"
 
-#: templates/account/verification_sent.html:64
-msgid "Ссылка действует 24 часа"
-msgstr "Link działa przez 24 godziny"
+#: templates/account/email_confirmation_required.html:54
+msgid "Мы отправили письмо с подтверждением"
+msgstr ""
 
-#: templates/account/verification_sent.html:74
-msgid "Проверьте входящие"
-msgstr "Sprawdź skrzynkę odbiorczą"
+#: templates/account/email_confirmation_required.html:55
+msgid ""
+"Перейдите по ссылке в письме, чтобы активировать ваш аккаунт и получить "
+"доступ ко всем функциям Legalize."
+msgstr ""
 
-#: templates/account/verification_sent.html:75
-msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
-msgstr "Otwórz wiadomość od Legalize i kliknij przycisk potwierdzenia."
-
-#: templates/account/verification_sent.html:83
-msgid "Не нашли письмо"
+#: templates/account/email_confirmation_required.html:63
+#, fuzzy
+#| msgid "Не нашли письмо"
+msgid "Не видите письмо?"
 msgstr "Nie ma wiadomości?"
 
-#: templates/account/verification_sent.html:92
-msgid "Нужно новое письмо"
+#: templates/account/email_confirmation_required.html:64
+#, fuzzy
+#| msgid ""
+#| "Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
+#| "\"Промоакции\"."
+msgid "Проверьте папку 'Спам' или 'Промоакции'."
+msgstr ""
+"Jeśli wiadomości nie ma w skrzynce odbiorczej, sprawdź folder Spam lub "
+"Oferty."
+
+#: templates/account/email_confirmation_required.html:74
+#, fuzzy
+#| msgid "Ссылка действует 24 часа"
+msgid "Ссылка действует ограниченное время"
+msgstr "Link działa przez 24 godziny"
+
+#: templates/account/email_confirmation_required.html:75
+msgid "Чтобы не потерять прогресс, подтвердите почту в течение 24 часов."
+msgstr ""
+
+#: templates/account/email_confirmation_required.html:83
+#, fuzzy
+#| msgid "Нужно новое письмо"
+msgid "Используйте письмо"
 msgstr "Potrzebujesz nowej wiadomości"
 
-#: templates/account/verification_sent.html:93
-msgid "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
-msgstr "Poproś o kolejny link w panelu klienta, jeśli poprzedni wygasł."
+#: templates/account/email_confirmation_required.html:84
+#, fuzzy
+#| msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
+msgid "Откройте письмо от Legalize и нажмите на кнопку подтверждения."
+msgstr "Otwórz wiadomość od Legalize i kliknij przycisk potwierdzenia."
 
-#: templates/account/verification_sent.html:106
-msgid "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
-msgstr "Skontaktuj się z naszym wsparciem, jeśli wiadomość nadal nie dotarła."
+#: templates/account/email_confirmation_required.html:92
+msgid "Отправить ссылку ещё раз"
+msgstr ""
 
-#: templates/account/login.html:4 templates/base.html:233
-msgid "Вход"
-msgstr "Logowanie"
+#: templates/account/email_confirmation_required.html:97
+msgid ""
+"Если письмо не пришло в течение нескольких минут, напишите в поддержку — мы "
+"поможем."
+msgstr ""
 
 #: templates/account/login.html:13
 msgid "Панель для специалистов"
@@ -835,33 +994,9 @@ msgstr "Bezpieczny dostęp"
 msgid "Только авторизованные сотрудники получают доступ к данным."
 msgstr "Wyłącznie upoważnieni członkowie zespołu mają dostęp do danych."
 
-#: templates/account/login.html:51
-msgid "Вход в систему"
-msgstr "Logowanie do systemu"
-
 #: templates/account/login.html:52
 msgid "Используйте корпоративную почту и пароль."
 msgstr "Użyj firmowego e-maila i hasła."
-
-#: clients/templates/clients/login.html:16
-msgid "Войти через Google"
-msgstr "Zaloguj się przez Google"
-
-#: clients/templates/clients/login.html:20
-msgid "ИЛИ"
-msgstr "LUB"
-
-#: clients/templates/clients/login.html:26
-msgid "Адрес электронной почты"
-msgstr "Adres e-mail"
-
-#: clients/templates/clients/login.html:30
-msgid "Пароль"
-msgstr "Hasło"
-
-#: clients/templates/clients/login.html:36
-msgid "Неверный email или пароль. Попробуйте снова."
-msgstr "Nieprawidłowy e-mail lub hasło. Spróbuj ponownie."
 
 #: templates/account/login.html:104 templates/admin/login.html:69
 msgid "Забыли пароль?"
@@ -873,13 +1008,6 @@ msgid ""
 "Нет аккаунта? <a href=\"%(signup_url)s\">Зарегистрируйтесь за минуту</a>"
 msgstr ""
 "Nie masz konta? <a href=\"%(signup_url)s\">Zarejestruj się w minutę</a>"
-
-#: clients/templates/clients/login.html:47
-#, python-format
-msgid ""
-"Ещё нет аккаунта? <a class=\"ms-2\" href=\"%(register_url)s\">Зарегистрироваться</a>"
-msgstr ""
-"Nie masz jeszcze konta? <a class=\"ms-2\" href=\"%(register_url)s\">Zarejestruj się</a>"
 
 #: templates/account/password_reset.html:4
 #, fuzzy
@@ -1058,6 +1186,63 @@ msgstr ""
 #: templates/account/signup.html:125
 msgid "Войдите"
 msgstr ""
+
+#: templates/account/verification_sent.html:4
+#: templates/account/verification_sent.html:54
+msgid "Подтвердите ваш E-mail"
+msgstr "Potwierdź swój E-mail"
+
+#: templates/account/verification_sent.html:52
+msgid "Письмо уже в пути"
+msgstr "E-mail jest już w drodze"
+
+#: templates/account/verification_sent.html:55
+msgid ""
+"Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
+"завершить регистрацию."
+msgstr ""
+"Wysłaliśmy do Ciebie e-mail weryfikacyjny. Wejdź w link w wiadomości, aby "
+"zakończyć rejestrację."
+
+#: templates/account/verification_sent.html:63
+msgid "Что происходит дальше"
+msgstr "Co dalej"
+
+#: templates/account/verification_sent.html:64
+msgid "Ссылка действует 24 часа"
+msgstr "Link działa przez 24 godziny"
+
+#: templates/account/verification_sent.html:74
+msgid "Проверьте входящие"
+msgstr "Sprawdź skrzynkę odbiorczą"
+
+#: templates/account/verification_sent.html:75
+msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
+msgstr "Otwórz wiadomość od Legalize i kliknij przycisk potwierdzenia."
+
+#: templates/account/verification_sent.html:83
+msgid "Не нашли письмо"
+msgstr "Nie ma wiadomości?"
+
+#: templates/account/verification_sent.html:84
+msgid ""
+"Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
+"\"Промоакции\"."
+msgstr ""
+"Jeśli wiadomości nie ma w skrzynce odbiorczej, sprawdź folder Spam lub "
+"Oferty."
+
+#: templates/account/verification_sent.html:92
+msgid "Нужно новое письмо"
+msgstr "Potrzebujesz nowej wiadomości"
+
+#: templates/account/verification_sent.html:93
+msgid "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
+msgstr "Poproś o kolejny link w panelu klienta, jeśli poprzedni wygasł."
+
+#: templates/account/verification_sent.html:106
+msgid "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
+msgstr "Skontaktuj się z naszym wsparciem, jeśli wiadomość nadal nie dotarła."
 
 #: templates/admin/base_site.html:4
 msgid "Администрирование Legalize"
@@ -1369,3 +1554,15 @@ msgstr "Utwórz konto i zaloguj się"
 
 #~ msgid "Мой профиль"
 #~ msgstr "Mój profil"
+#: clients/templates/clients/partials/payment_item.html:8
+msgid "Счёт от"
+msgstr "Rachunek z"
+
+#: clients/templates/clients/partials/payment_item.html:24
+msgid "Редактировать"
+msgstr "Edytuj"
+
+#: clients/templates/clients/partials/payment_item.html:27
+msgid "ID платежа не найден"
+msgstr "Nie znaleziono identyfikatora płatności"
+
