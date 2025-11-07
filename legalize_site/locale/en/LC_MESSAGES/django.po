@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-27 20:15+0100\n"
+"POT-Creation-Date: 2025-11-07 11:19+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,723 +18,241 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: clients/constants.py:8 clients/constants.py:20 clients/models.py:100
-msgid "Фотографии"
-msgstr "Photographs"
-
-#: clients/constants.py:9 clients/constants.py:22 clients/models.py:101
-msgid "Подтверждение оплаты"
-msgstr "Payment confirmation"
-
-#: clients/constants.py:10 clients/constants.py:21 clients/models.py:102
-msgid "Паспорт"
-msgstr "Passport"
-
-#: clients/constants.py:11 clients/models.py:103
-msgid "Справка о зачислении"
-msgstr "Certificate of enrollment"
-
-#: clients/constants.py:12 clients/models.py:104
-msgid "Справка об оплате обучения"
-msgstr "Proof of tuition fee payment"
-
-#: clients/constants.py:13 clients/constants.py:25 clients/models.py:105
-msgid "Медицинская страховка"
-msgstr "Health insurance"
-
-#: clients/constants.py:14 clients/models.py:106
-msgid "Подтверждение адреса"
-msgstr "Proof of address"
-
-#: clients/constants.py:15 clients/models.py:107
-msgid "Подтверждение финансов"
-msgstr "Proof of financial means"
-
-#: clients/constants.py:23 clients/models.py:108
-msgid "Załącznik nr 1"
-msgstr "Attachment no. 1"
-
-#: clients/constants.py:24 clients/models.py:109
-msgid "Informacja starosty"
-msgstr "Starosta's information"
-
-#: clients/constants.py:26 clients/models.py:110
-msgid "Трудовой договор"
-msgstr "Employment contract"
-
-#: clients/constants.py:27 clients/models.py:111
-msgid "PIT-37 / Zaświadczenie o niezaleganiu"
-msgstr "PIT-37 / Certificate of no arrears"
-
-#: clients/models.py:11
-msgid "Учёба"
-msgstr "Study"
-
-#: clients/models.py:12 clients/models.py:143
-msgid "Работа"
-msgstr "Work"
-
-#: clients/models.py:13
-msgid "Воссоединение семьи"
-msgstr "Family reunification"
-
-#: clients/models.py:16
-msgid "Польский"
-msgstr "Polish"
-
-#: clients/models.py:17
-msgid "Английский"
-msgstr "English"
-
-#: clients/models.py:18
+#: legalize_site/legalize_site/settings.py:35 legalize_site/settings.py:117
 msgid "Русский"
 msgstr "Russian"
 
-#: clients/models.py:21
-msgid "Новый"
-msgstr "New"
-
-#: clients/models.py:22
-msgid "В ожидании"
-msgstr "Pending"
-
-#: clients/models.py:23
-msgid "Одобрен"
-msgstr "Approved"
-
-#: clients/models.py:24
-msgid "Отклонён"
-msgstr "Rejected"
-
-#: clients/models.py:28
-msgid "Имя"
-msgstr "First Name"
-
-#: clients/models.py:29
-msgid "Фамилия"
-msgstr "Last Name"
-
-#: clients/models.py:30
-msgid "Гражданство"
-msgstr "Citizenship"
-
-#: clients/models.py:31
-#: clients/templates/clients/partials/client_overview.html:15
-msgid "Телефон"
-msgstr "Phone"
-
-#: clients/models.py:33
-msgid "Номер паспорта"
-msgstr "Passport number"
-
-#: clients/models.py:34 clients/templates/clients/clients_list.html:46
-#: clients/templates/clients/partials/client_overview.html:13
-msgid "Номер дела"
-msgstr "Case number"
-
-#: clients/models.py:36
-#: clients/templates/clients/partials/client_overview.html:16
-msgid "Цель подачи"
-msgstr "Purpose of application"
-
-#: clients/models.py:39
-msgid "Основание пребывания (виза, TRC и т.д.)"
-msgstr "Basis of stay (visa, TRC, etc.)"
-
-#: clients/models.py:41
-msgid "Язык документов"
-msgstr "Document language"
-
-#: clients/models.py:42 templates/clients/partials/modals.html:36
-#: templates/clients/partials/modals.html:84
-msgid "Статус"
-msgstr "Status"
-
-#: clients/models.py:43
-msgid "Дата создания"
-msgstr "Creation date"
-
-#: clients/models.py:44
-#: clients/templates/clients/partials/client_overview.html:19
-msgid "Дата окончания основания"
-msgstr "Basis end date"
-
-#: clients/models.py:45
-msgid "Дата подачи (Złożone)"
-msgstr "Submission date (Złożone)"
-
-#: clients/models.py:46
-msgid "Телефон работодателя"
-msgstr "Employer's phone"
-
-#: clients/models.py:47
-msgid "Дата сдачи отпечатков"
-msgstr "Date of fingerprints submission"
-
-#: clients/models.py:48 clients/templates/clients/clients_list.html:50
-msgid "Uwagi / Заметки"
-msgstr "Uwagi / Notes"
-
-#: clients/models.py:49
-msgid "Доступ к чеклисту предоставлен"
-msgstr "Access to checklist granted"
-
-#: clients/models.py:114 clients/models.py:148 clients/models.py:181
-#: clients/templates/clients/document_reminder_list.html:111
-msgid "Клиент"
-msgstr "Client"
-
-#: clients/models.py:115
-msgid "Тип документа"
-msgstr "Document type"
-
-#: clients/models.py:116
-msgid "Файл"
-msgstr "File"
-
-#: clients/models.py:117
-msgid "Действителен до"
-msgstr "Valid until"
-
-#: clients/models.py:118
-msgid "Дата загрузки"
-msgstr "Upload date"
-
-#: clients/models.py:119
-msgid "Проверено"
-msgstr "Verified"
-
-#: clients/models.py:122 clients/models.py:177
-msgid "Документ"
-msgstr "Document"
-
-#: clients/models.py:123
-msgid "Документы"
-msgstr "Documents"
-
-#: clients/models.py:132
-msgid "Ожидает оплаты"
-msgstr "Pending payment"
-
-#: clients/models.py:133
-msgid "Частично оплачен"
-msgstr "Partially paid"
-
-#: clients/models.py:134
-msgid "Оплачен полностью"
-msgstr "Paid in full"
-
-#: clients/models.py:135
-msgid "Возврат"
-msgstr "Refunded"
-
-#: clients/models.py:138
-msgid "Карта"
-msgstr "Card"
-
-#: clients/models.py:139
-msgid "Наличные"
-msgstr "Cash"
-
-#: clients/models.py:140
-msgid "Перевод"
-msgstr "Transfer"
-
-#: clients/models.py:144
-msgid "Учеба"
-msgstr ""
-
-#: clients/models.py:145
-msgid "Консультация"
-msgstr "Consultation"
-
-#: clients/models.py:149
-msgid "Описание услуги"
-msgstr "Service description"
-
-#: clients/models.py:150 templates/clients/partials/modals.html:24
-#: templates/clients/partials/modals.html:72
-msgid "Общая сумма"
-msgstr "Total amount"
-
-#: clients/models.py:151
-msgid "Оплаченная сумма"
-msgstr "Amount paid"
-
-#: clients/models.py:153
-msgid "Статус оплаты"
-msgstr "Payment status"
-
-#: clients/models.py:155
-msgid "Способ оплаты"
-msgstr "Payment method"
-
-#: clients/models.py:156
-msgid "Дата оплаты"
-msgstr "Payment date"
-
-#: clients/models.py:157
-msgid "Оплатить до"
-msgstr "Due date"
-
-#: clients/models.py:158
-msgid "ID транзакции (если есть)"
-msgstr "Transaction ID (if any)"
-
-#: clients/models.py:159
-msgid "Дата создания счёта"
-msgstr "Invoice creation date"
-
-#: clients/models.py:160
-msgid "Дата последнего обновления"
-msgstr "Last update date"
-
-#: clients/models.py:176
-msgid "Оплата"
-msgstr "Payment"
-
-#: clients/models.py:178
-msgid "Другое"
-msgstr "Other"
-
-#: clients/models.py:185
-msgid "Тип напоминания"
-msgstr "Reminder type"
-
-#: clients/models.py:186
-msgid "Заголовок напоминания"
-msgstr "Reminder title"
-
-#: clients/models.py:187
-msgid "Детали"
-msgstr "Details"
-
-#: clients/models.py:188
-msgid "Ключевая дата"
-msgstr "Key date"
-
-#: clients/models.py:189
-msgid "Активно"
-msgstr "Active"
-
-#: clients/templates/clients/calculator.html:4
-#: clients/templates/clients/calculator.html:7
-msgid "Калькулятор выписки из банка"
-msgstr "Bank Statement Calculator"
-
-#: clients/templates/clients/calculator.html:9
-msgid "Введите данные, чтобы рассчитать итоговую сумму на счету."
-msgstr "Enter the data to calculate the final amount on the account."
-
-#: clients/templates/clients/calculator.html:10
-#, python-format
-msgid "Актуальный курс: <strong>1 EUR = %(rate)s PLN</strong>"
-msgstr "Current rate: <strong>1 EUR = %(rate)s PLN</strong>"
-
-#: clients/templates/clients/calculator.html:21
-msgid "Когда заканчивается основание пребывания?"
-msgstr "When does the basis of stay end?"
-
-#: clients/templates/clients/calculator.html:23
-msgid "дд-мм-гггг"
-msgstr "dd-mm-yyyy"
-
-#: clients/templates/clients/calculator.html:30
-msgid "Оплата за обучение"
-msgstr "Tuition Fee"
-
-#: clients/templates/clients/calculator.html:33
-msgid "Сумма оплаты"
-msgstr "Payment amount"
-
-#: clients/templates/clients/calculator.html:43
-msgid "в месяц"
-msgstr "per month"
-
-#: clients/templates/clients/calculator.html:44
-msgid "за семестр"
-msgstr "per semester"
-
-#: clients/templates/clients/calculator.html:45
-msgid "за год"
-msgstr "per year"
-
-#: clients/templates/clients/calculator.html:51
-msgid "Кол-во месяцев в этом периоде (можно изменить)"
-msgstr "Number of months in this period (can be changed)"
-
-#: clients/templates/clients/calculator.html:57
-msgid "Аренда + счётчики в месяц (на всю квартиру)"
-msgstr "Rent + utilities per month (for the whole apartment)"
-
-#: clients/templates/clients/calculator.html:69
-msgid "Кол-во человек, проживающих вместе"
-msgstr "Number of people living together"
-
-#: clients/templates/clients/calculator.html:75
-msgid "Обратный билет"
-msgstr "Return ticket"
-
-#: clients/templates/clients/calculator.html:79
-msgid "Страна граничит с Польшей? (билет 500 zł, иначе 2500 zł)"
-msgstr "Does the country border Poland? (ticket 500 zł, otherwise 2500 zł)"
-
-#: clients/templates/clients/calculator.html:87
-msgid "Рассчитать итоговую сумму"
-msgstr "Calculate the final amount"
-
-#: clients/templates/clients/calculator.html:93
-msgid "Итоговая сумма на счету:"
-msgstr "Total amount on the account:"
-
-#: clients/templates/clients/calculator.html:99
-msgid "Детализация расчёта:"
-msgstr "Calculation details:"
-
-#: clients/templates/clients/calculator.html:103
-msgid "Жильё в месяц (на 1 чел.)"
-msgstr "Housing per month (per person)"
-
-#: clients/templates/clients/calculator.html:110
-msgid "Обучение в месяц"
-msgstr "Tuition per month"
-
-#: clients/templates/clients/calculator.html:117
-msgid "Прожиточный минимум"
-msgstr "Living wage"
-
-#: clients/templates/clients/calculator.html:120
-msgid "фиксированная сумма"
-msgstr "fixed amount"
-
-#: clients/templates/clients/calculator.html:124
-msgid "Итого ежемесячные расходы:"
-msgstr "Total monthly expenses:"
-
-#: clients/templates/clients/calculator.html:130
-msgid "Количество месяцев для расчёта"
-msgstr "Number of months for calculation"
-
-#: clients/templates/clients/calculator.html:131
-msgid "мес."
-msgstr "mo."
-
-#: clients/templates/clients/calculator.html:134
-#, python-format
-msgid ""
-"реальный срок %(real)s мес., но расчет ограничен максимумом в %(max)s мес."
-msgstr ""
-"actual period is %(real)s mo., but the calculation is limited to a maximum "
-"of %(max)s mo."
-
-#: clients/templates/clients/calculator.html:136
-#, python-format
-msgid "полный срок пребывания: %(real)s мес."
-msgstr "full period of stay: %(real)s mo."
-
-#: clients/templates/clients/calculator.html:141
-msgid "Стоимость обратного билета"
-msgstr "Return ticket cost"
-
-#: clients/templates/clients/calculator.html:150
-msgid ""
-"Заполните все поля слева и нажмите \"Рассчитать\", чтобы увидеть результат."
-msgstr ""
-"Fill in all fields on the left and click \"Calculate\" to see the result."
-
-#: clients/templates/clients/calculator.html:187
-msgid "Цена билета: 500 zł"
-msgstr "Ticket price: 500 zł"
-
-#: clients/templates/clients/calculator.html:189
-msgid "Цена билета: 2500 zł"
-msgstr "Ticket price: 2500 zł"
-
-#: clients/templates/clients/client_detail.html:4
-#, python-format
-msgid "Детали клиента: %(client_name)s"
-msgstr "Client details: %(client_name)s"
-
-#: clients/templates/clients/client_detail.html:12
-msgid "Финансы"
-msgstr "Finances"
-
-#: clients/templates/clients/client_detail.html:13
-msgid "Добавить счёт"
-msgstr "Add invoice"
-
-#: clients/templates/clients/client_detail.html:22
-msgid "Счета на оплату еще не созданы."
-msgstr "Invoices have not been created yet."
-
-#: clients/templates/clients/client_detail.html:29
-msgid "Чеклист документов"
-msgstr "Document Checklist"
-
-#: clients/templates/clients/client_form.html:23
-msgid "Основная информация"
-msgstr "Basic Information"
-
-#: clients/templates/clients/client_form.html:59
-msgid "Детали дела"
-msgstr "Case Details"
-
-#: clients/templates/clients/client_form.html:72
-msgid "Важные даты"
-msgstr "Important Dates"
-
-#: clients/templates/clients/client_form.html:101
-msgid "Дополнительно"
-msgstr "Additionally"
-
-#: clients/templates/clients/client_form.html:111
-#: templates/clients/partials/modals.html:45
-#: templates/clients/partials/modals.html:93
-#: templates/socialaccount/signup.html:49
-msgid "Отмена"
-msgstr "Cancel"
-
-#: clients/templates/clients/client_form.html:116
-#: clients/templates/clients/client_form.html:117
-#: clients/templates/clients/client_form.html:120
-#: clients/templates/clients/clients_list.html:91
-msgid "Сохранить"
-msgstr "Save"
-
-#: clients/templates/clients/clients_list.html:9
-#: clients/templates/clients/clients_list.html:14
-msgid "Список клиентов"
-msgstr "Client List"
-
-#: clients/templates/clients/clients_list.html:15
-msgid "Поиск, быстрые заметки и переход в карточку клиента"
-msgstr ""
-
-#: clients/templates/clients/clients_list.html:19
-msgid "Добавить нового клиента"
-msgstr "Add New Client"
-
-#: clients/templates/clients/clients_list.html:32
-msgid "Поиск по имени, почте или номеру дела..."
-msgstr "Search by name, email, or case number..."
-
-#: clients/templates/clients/clients_list.html:35
-msgid "Найти"
-msgstr "Find"
-
-#: clients/templates/clients/clients_list.html:45
-msgid "Полное имя"
-msgstr "Full name"
-
-#: clients/templates/clients/clients_list.html:47
-msgid "Основание и дата окончания"
-msgstr "Basis and end date"
-
-#: clients/templates/clients/clients_list.html:52
-msgid "Жирный"
-msgstr ""
-
-#: clients/templates/clients/clients_list.html:59
-msgid "Действия"
-msgstr "Actions"
-
-#: clients/templates/clients/clients_list.html:73
-#, python-format
-msgid "до %(date)s"
-msgstr "until %(date)s"
-
-#: clients/templates/clients/clients_list.html:98
-msgid "Подробнее"
-msgstr "Details"
-
-#: clients/templates/clients/clients_list.html:101
-msgid "Удалить"
-msgstr "Delete"
-
-#: clients/templates/clients/clients_list.html:109
-msgid "Клиенты не найдены."
-msgstr "No clients found."
-
-#: clients/templates/clients/document_reminder_list.html:6
-#: clients/templates/clients/document_reminder_list.html:14
-#: templates/account/signup.html:63 templates/base.html:187
-msgid "Напоминания"
-msgstr "Reminders"
-
-#: clients/templates/clients/document_reminder_list.html:17
-msgid ""
-"Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и периодам"
-msgstr ""
-
-#: clients/templates/clients/document_reminder_list.html:25
-#, fuzzy
-#| msgid "Редактировать данные"
-msgid "Проверить и создать новые"
-msgstr "Edit data"
-
-#: clients/templates/clients/document_reminder_list.html:93
-#: templates/base.html:247 templates/clients/partials/modals.html:10
-#: templates/clients/partials/modals.html:58
-msgid "Закрыть"
-msgstr "Close"
-
-#: clients/templates/clients/document_reminder_list.html:103
-#: clients/views.py:516
-#, fuzzy
-#| msgid "Напоминания платежей"
-msgid "Напоминания по документам"
-msgstr "Payment Reminders"
-
-#: clients/templates/clients/document_reminder_list.html:113
-#, fuzzy
-#| msgid "Клиенты"
-msgid "Все клиенты"
-msgstr "Clients"
-
-#: clients/templates/clients/document_reminder_list.html:121
-#, fuzzy
-#| msgid "Дата оплаты"
-msgid "Дата от"
-msgstr "Payment date"
-
-#: clients/templates/clients/document_reminder_list.html:130
-#, fuzzy
-#| msgid "Дата оплаты"
-msgid "Дата до"
-msgstr "Payment date"
-
-#: clients/templates/clients/document_reminder_list.html:140
-msgid "Фильтровать"
-msgstr ""
-
-#: clients/templates/clients/document_reminder_list.html:143
-#, fuzzy
-#| msgid "Сбросить пароль"
-msgid "Сбросить"
-msgstr "Reset password"
-
-#: clients/templates/clients/document_reminder_list.html:152
-#, fuzzy
-#| msgid "Тип напоминания"
-msgid "Всего напоминаний"
-msgstr "Reminder type"
-
-#: clients/templates/clients/document_reminder_list.html:164
-msgid "Нет напоминаний по документам, соответствующих фильтрам."
-msgstr ""
-
-#: clients/templates/clients/partials/client_overview.html:5
-#, fuzzy
-#| msgid "Печать"
-msgid "Печать WSC"
-msgstr "Print"
-
-#: clients/templates/clients/partials/client_overview.html:6
-msgid "Печать"
-msgstr "Print"
-
-#: clients/templates/clients/partials/client_overview.html:7
-msgid "Редактировать данные"
-msgstr "Edit data"
-
-#: clients/templates/clients/partials/client_overview.html:13
-msgid "Не указан"
-msgstr "Not specified"
-
-#: clients/templates/clients/partials/client_overview.html:17
-msgid "Основание пребывания"
-msgstr "Basis of stay"
-
-#: clients/templates/clients/partials/client_overview.html:17
-msgid "Не указано"
-msgstr "Not specified"
-
-#: clients/templates/clients/partials/payment_item.html:8
-msgid "Счёт от"
-msgstr ""
-
-#: clients/templates/clients/partials/payment_item.html:27
-#, fuzzy
-#| msgid "Редактировать данные"
-msgid "Редактировать"
-msgstr "Edit data"
-
-#: clients/templates/clients/partials/payment_item.html:30
-#, fuzzy
-#| msgid "Клиенты не найдены."
-msgid "ID платежа не найден"
-msgstr "No clients found."
-
-#: clients/views.py:33 clients/views.py:156 templates/403.html:4
-msgid "Доступ запрещен"
-msgstr "Access denied"
-
-#: clients/views.py:530
-#, fuzzy
-#| msgid "Напоминания платежей"
-msgid "Напоминания по оплатам"
-msgstr "Payment Reminders"
-
-#: templates/403.html:14
-msgid "У вас нет доступа к этой странице"
-msgstr ""
-
-#: templates/403.html:16
-msgid ""
-"Вы вошли в систему, но ваш профиль не имеет прав для просмотра раздела "
-"сотрудников. Если вы считаете, что это ошибка, обратитесь к администратору "
-"сайта."
-msgstr ""
-
-#: templates/403.html:21
-msgid "Выйти и войти под другим аккаунтом"
-msgstr ""
-
-#: templates/403.html:25 templates/account/login.html:108
-#: templates/admin/login.html:64
-msgid "Войти"
-msgstr "Log in"
-
-#: templates/403.html:29
-msgid "Связаться с поддержкой"
-msgstr ""
-
-#: templates/account/auth_base.html:674 templates/base.html:207
-msgid "Выбор языка интерфейса"
-msgstr "Interface language selection"
-
-#: templates/account/auth_base.html:687 templates/base.html:194
-#: templates/includes/theme_toggle.html:6
+#: legalize_site/legalize_site/settings.py:36 legalize_site/settings.py:118
+msgid "Polski"
+msgstr "Polish"
+
+#: legalize_site/legalize_site/settings.py:37 legalize_site/settings.py:119
+msgid "English"
+msgstr "English"
+
+#: legalize_site/templates/account/auth_base.html:581
+#: legalize_site/templates/includes/theme_toggle.html:6
 msgid "Переключить тему"
 msgstr ""
 
-#: templates/account/auth_base.html:688 templates/account/auth_base.html:692
-#: templates/account/auth_base.html:694
-msgid "Переключить на тёмную тему"
-msgstr ""
-
-#: templates/account/auth_base.html:690 templates/account/auth_base.html:699
-#: templates/base.html:196 templates/includes/theme_toggle.html:8
-#: templates/includes/theme_toggle.html:14
+#: legalize_site/templates/account/auth_base.html:583
+#: legalize_site/templates/account/auth_base.html:588
+#: legalize_site/templates/includes/theme_toggle.html:9
+#: legalize_site/templates/includes/theme_toggle.html:19
 msgid "Светлая тема"
 msgstr ""
 
-#: templates/account/auth_base.html:691 templates/base.html:197
-#: templates/includes/theme_toggle.html:9
+#: legalize_site/templates/account/auth_base.html:584
+#: legalize_site/templates/includes/theme_toggle.html:10
 #, fuzzy
 #| msgid "Оплаченная сумма"
 msgid "Тёмная тема"
 msgstr "Amount paid"
 
+#: legalize_site/templates/account/login.html:4
+#: legalize_site/templates/base.html:248
+msgid "Вход"
+msgstr "Login"
+
+#: legalize_site/templates/account/login.html:13
+msgid "Панель для специалистов"
+msgstr "Specialist dashboard"
+
+#: legalize_site/templates/account/login.html:15
+msgid "Добро пожаловать обратно"
+msgstr "Welcome back"
+
+#: legalize_site/templates/account/login.html:17
+msgid "Следите за клиентами, сроками и платежами из единого интерфейса."
+msgstr "Stay on top of clients, deadlines, and payments from one place."
+
+#: legalize_site/templates/account/login.html:25
+msgid "Живые напоминания"
+msgstr "Live reminders"
+
+#: legalize_site/templates/account/login.html:26
+msgid "Автоматические уведомления о ключевых дедлайнах и событиях."
+msgstr "Automatic updates about critical deadlines and events."
+
+#: legalize_site/templates/account/login.html:34
+msgid "Понятная аналитика"
+msgstr "Insightful analytics"
+
+#: legalize_site/templates/account/login.html:35
+msgid "Контролируйте показатели и платежи на одной панели."
+msgstr "Keep metrics and payments on a single dashboard."
+
+#: legalize_site/templates/account/login.html:43
+msgid "Безопасный доступ"
+msgstr "Secure access"
+
+#: legalize_site/templates/account/login.html:44
+msgid "Только авторизованные сотрудники получают доступ к данным."
+msgstr "Only authorized teammates can access your data."
+
+#: legalize_site/templates/account/login.html:51
+msgid "Вход в систему"
+msgstr "Log in to the system"
+
+#: legalize_site/templates/account/login.html:52
+msgid "Используйте корпоративную почту и пароль."
+msgstr "Use your corporate email and password."
+
+#: legalize_site/templates/account/login.html:104
+msgid "Забыли пароль?"
+msgstr "Forgot password?"
+
+#: legalize_site/templates/account/login.html:108
+msgid "Войти"
+msgstr "Log in"
+
+#: legalize_site/templates/account/login.html:113
+#, python-format
+msgid ""
+"Нет аккаунта? <a href=\"%(signup_url)s\">Зарегистрируйтесь за минуту</a>"
+msgstr ""
+"Don't have an account? <a href=\"%(signup_url)s\">Register in a minute</a>"
+
+#: legalize_site/templates/account/password_reset.html:5
+#: legalize_site/templates/account/password_reset.html:12
+#: legalize_site/templates/account/password_reset_done.html:4
+msgid "Сброс пароля"
+msgstr "Password Reset"
+
+#: legalize_site/templates/account/password_reset.html:15
+msgid ""
+"Забыли пароль? Введите ваш email, и мы пришлем вам письмо с инструкциями по "
+"восстановлению."
+msgstr ""
+"Forgot your password? Enter your email, and we'll send you instructions to "
+"reset it."
+
+#: legalize_site/templates/account/password_reset.html:23
+#, fuzzy
+#| msgid "Сброс пароля"
+msgid "Сбросить пароль"
+msgstr "Password Reset"
+
+#: legalize_site/templates/account/password_reset_done.html:12
+msgid "Письмо отправлено"
+msgstr "Email sent"
+
+#: legalize_site/templates/account/password_reset_done.html:13
+msgid ""
+"Мы отправили вам письмо с инструкциями. Если вы его не получили, проверьте "
+"папку \"Спам\"."
+msgstr ""
+"We've sent you an email with instructions. If you didn't receive it, please "
+"check your spam folder."
+
+#: legalize_site/templates/account/password_reset_from_key.html:5
+#, fuzzy
+#| msgid "Забыли пароль?"
+msgid "Новый пароль"
+msgstr "Forgot password?"
+
+#: legalize_site/templates/account/password_reset_from_key.html:12
+msgid "Создайте новый пароль"
+msgstr "Create a new password"
+
+#: legalize_site/templates/account/password_reset_from_key.html:16
+msgid "Ссылка недействительна."
+msgstr "The link is invalid."
+
+#: legalize_site/templates/account/password_reset_from_key.html:31
+msgid "Сохранить новый пароль"
+msgstr "Save new password"
+
+#: legalize_site/templates/account/password_reset_from_key_done.html:4
+msgid "Пароль изменен"
+msgstr "Password changed"
+
+#: legalize_site/templates/account/password_reset_from_key_done.html:16
+msgid "Пароль успешно изменен"
+msgstr "Password successfully changed"
+
+#: legalize_site/templates/account/password_reset_from_key_done.html:17
+#, fuzzy
+#| msgid "Теперь вы можете войти в систему с вашим новым паролем."
+msgid "Теперь вы можете войти в систему с вашим новым паролем."
+msgstr "You can now log in with your new password."
+
+#: legalize_site/templates/account/password_reset_from_key_done.html:18
+#, fuzzy
+#| msgid ""
+#| "Вы будете автоматически перенаправлены на страницу входа через 3 "
+#| "секунды..."
+msgid ""
+"Вы будете автоматически перенаправлены на страницу входа через 3 секунды..."
+msgstr "You will be automatically redirected to the login page in 3 seconds..."
+
+#: legalize_site/templates/account/password_reset_from_key_done.html:19
+msgid "Перейти ко входу сейчас"
+msgstr "Go to login now"
+
+#: legalize_site/templates/account/signup.html:6
+#: legalize_site/templates/socialaccount/signup.html:5
+msgid "Signup"
+msgstr "Sign up"
+
 #: legalize_site/templates/account/verification_sent.html:4
-#: legalize_site/templates/account/verification_sent.html:12
-#: templates/account/verification_sent.html:4
-#: templates/account/verification_sent.html:54
+#: legalize_site/templates/account/verification_sent.html:54
 msgid "Подтвердите ваш E-mail"
 msgstr "Confirm Your E-mail"
 
+#: legalize_site/templates/account/verification_sent.html:11
+#, fuzzy
+#| msgid "Создайте новый пароль"
+msgid "Защита вашего аккаунта"
+msgstr "Create a new password"
+
 #: legalize_site/templates/account/verification_sent.html:13
-#: templates/account/verification_sent.html:55
+msgid "Остался один шаг"
+msgstr ""
+
+#: legalize_site/templates/account/verification_sent.html:15
+msgid ""
+"Подтверждённая почта помогает нам защищать ваши данные, восстанавливать "
+"доступ и уведомлять о важных событиях."
+msgstr ""
+
+#: legalize_site/templates/account/verification_sent.html:23
+#, fuzzy
+#| msgid "Безопасный доступ"
+msgid "Безопасность"
+msgstr "Secure access"
+
+#: legalize_site/templates/account/verification_sent.html:24
+msgid "Мы проверяем, что именно вы управляете аккаунтом."
+msgstr ""
+
+#: legalize_site/templates/account/verification_sent.html:32
+#, fuzzy
+#| msgid "Дата последнего обновления"
+msgid "Своевременные уведомления"
+msgstr "Last update date"
+
+#: legalize_site/templates/account/verification_sent.html:33
+#, fuzzy
+#| msgid "Автоматические уведомления о ключевых дедлайнах и событиях."
+msgid "Получайте напоминания о дедлайнах и изменениях."
+msgstr "Automatic updates about critical deadlines and events."
+
+#: legalize_site/templates/account/verification_sent.html:41
+#, fuzzy
+#| msgid "Доступ запрещен"
+msgid "Доступ для команды"
+msgstr "Access denied"
+
+#: legalize_site/templates/account/verification_sent.html:42
+msgid "Подтверждённая почта упрощает добавление коллег."
+msgstr ""
+
+#: legalize_site/templates/account/verification_sent.html:52
+msgid "Письмо уже в пути"
+msgstr "Email on the way"
+
+#: legalize_site/templates/account/verification_sent.html:55
 msgid ""
 "Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
 "завершить регистрацию."
@@ -742,8 +260,27 @@ msgstr ""
 "We've sent you a verification email. Follow the link inside to complete your "
 "registration."
 
-#: legalize_site/templates/account/verification_sent.html:15
-#: templates/account/verification_sent.html:84
+#: legalize_site/templates/account/verification_sent.html:63
+msgid "Что происходит дальше"
+msgstr "What happens next"
+
+#: legalize_site/templates/account/verification_sent.html:64
+msgid "Ссылка действует 24 часа"
+msgstr "The link is valid for 24 hours"
+
+#: legalize_site/templates/account/verification_sent.html:74
+msgid "Проверьте входящие"
+msgstr "Check your inbox"
+
+#: legalize_site/templates/account/verification_sent.html:75
+msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
+msgstr "Open the email from Legalize and click the confirmation button."
+
+#: legalize_site/templates/account/verification_sent.html:83
+msgid "Не нашли письмо"
+msgstr "Didn't find the email"
+
+#: legalize_site/templates/account/verification_sent.html:84
 msgid ""
 "Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
 "\"Промоакции\"."
@@ -751,489 +288,142 @@ msgstr ""
 "If you can't see the email in your inbox, check the Spam or Promotions "
 "folder."
 
-#: legalize_site/templates/account/email_confirm.html:82
-#: legalize_site/templates/account/verification_sent.html:101
-msgid "Запросить новую ссылку"
-msgstr "Request a new link"
-
-#: legalize_site/templates/account/verification_sent.html:52
-#: templates/account/verification_sent.html:52
-msgid "Письмо уже в пути"
-msgstr "Email on the way"
-
-#: legalize_site/templates/account/verification_sent.html:63
-#: templates/account/verification_sent.html:63
-msgid "Что происходит дальше"
-msgstr "What happens next"
-
-#: legalize_site/templates/account/verification_sent.html:64
-#: templates/account/verification_sent.html:64
-msgid "Ссылка действует 24 часа"
-msgstr "The link is valid for 24 hours"
-
-#: legalize_site/templates/account/verification_sent.html:74
-#: templates/account/verification_sent.html:74
-msgid "Проверьте входящие"
-msgstr "Check your inbox"
-
-#: legalize_site/templates/account/verification_sent.html:75
-#: templates/account/verification_sent.html:75
-msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
-msgstr "Open the email from Legalize and click the confirmation button."
-
-#: legalize_site/templates/account/verification_sent.html:83
-#: templates/account/verification_sent.html:83
-msgid "Не нашли письмо"
-msgstr "Didn't find the email"
-
 #: legalize_site/templates/account/verification_sent.html:92
-#: templates/account/verification_sent.html:92
 msgid "Нужно новое письмо"
 msgstr "Need a new email"
 
 #: legalize_site/templates/account/verification_sent.html:93
-#: templates/account/verification_sent.html:93
 msgid "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
 msgstr "Request another link in your account if the previous one expired."
 
+#: legalize_site/templates/account/verification_sent.html:101
+msgid "Запросить новую ссылку"
+msgstr "Request a new link"
+
 #: legalize_site/templates/account/verification_sent.html:106
-#: templates/account/verification_sent.html:106
 msgid "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
 msgstr "Contact our support team if the email never arrives."
 
-#: templates/account/email_confirmation_required.html:63
-#, fuzzy
-#| msgid "Не нашли письмо"
-msgid "Не видите письмо?"
-msgstr "Didn't find the email"
-
-#: templates/account/email_confirmation_required.html:64
-#, fuzzy
-#| msgid ""
-#| "Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
-#| "\"Промоакции\"."
-msgid "Проверьте папку 'Спам' или 'Промоакции'."
-msgstr ""
-"If you can't see the email in your inbox, check the Spam or Promotions "
-"folder."
-
-#: templates/account/email_confirmation_required.html:74
-#, fuzzy
-#| msgid "Ссылка действует 24 часа"
-msgid "Ссылка действует ограниченное время"
-msgstr "The link is valid for 24 hours"
-
-#: templates/account/email_confirmation_required.html:75
-msgid "Чтобы не потерять прогресс, подтвердите почту в течение 24 часов."
-msgstr ""
-
-#: templates/account/email_confirmation_required.html:83
-#, fuzzy
-#| msgid "Нужно новое письмо"
-msgid "Используйте письмо"
-msgstr "Need a new email"
-
-#: templates/account/email_confirmation_required.html:84
-#, fuzzy
-#| msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
-msgid "Откройте письмо от Legalize и нажмите на кнопку подтверждения."
-msgstr "Open the email from Legalize and click the confirmation button."
-
-#: templates/account/email_confirmation_required.html:92
-msgid "Отправить ссылку ещё раз"
-msgstr ""
-
-#: templates/account/email_confirmation_required.html:97
-msgid ""
-"Если письмо не пришло в течение нескольких минут, напишите в поддержку — мы "
-"поможем."
-msgstr ""
-
-#: templates/account/login.html:4 templates/base.html:233
-msgid "Вход"
-msgstr "Login"
-
-#: templates/account/login.html:13
-msgid "Панель для специалистов"
-msgstr "Specialist dashboard"
-
-#: templates/account/login.html:15
-msgid "Добро пожаловать обратно"
-msgstr "Welcome back"
-
-#: templates/account/login.html:17
-msgid "Следите за клиентами, сроками и платежами из единого интерфейса."
-msgstr "Stay on top of clients, deadlines, and payments from one place."
-
-#: templates/account/login.html:25
-msgid "Живые напоминания"
-msgstr "Live reminders"
-
-#: templates/account/login.html:26
-msgid "Автоматические уведомления о ключевых дедлайнах и событиях."
-msgstr "Automatic updates about critical deadlines and events."
-
-#: templates/account/login.html:34
-msgid "Понятная аналитика"
-msgstr "Insightful analytics"
-
-#: templates/account/login.html:35
-msgid "Контролируйте показатели и платежи на одной панели."
-msgstr "Keep metrics and payments on a single dashboard."
-
-#: templates/account/login.html:43
-msgid "Безопасный доступ"
-msgstr "Secure access"
-
-#: templates/account/login.html:44
-msgid "Только авторизованные сотрудники получают доступ к данным."
-msgstr "Only authorized teammates can access your data."
-
-#: templates/account/login.html:51
-msgid "Вход в систему"
-msgstr "Log in to the system"
-
-#: templates/account/login.html:52
-msgid "Используйте корпоративную почту и пароль."
-msgstr "Use your corporate email and password."
-
-#: templates/account/login.html:104 templates/admin/login.html:69
-msgid "Забыли пароль?"
-msgstr "Forgot password?"
-
-#: templates/account/login.html:113
-#, python-format
-msgid ""
-"Нет аккаунта? <a href=\"%(signup_url)s\">Зарегистрируйтесь за минуту</a>"
-msgstr ""
-"Don't have an account? <a href=\"%(signup_url)s\">Register in a minute</a>"
-
-#: templates/account/password_reset.html:4
-#, fuzzy
-#| msgid "Воссоединение семьи"
-msgid "Восстановление пароля"
-msgstr "Family reunification"
-
-#: templates/account/password_reset.html:15
-msgid "Поможем восстановить доступ"
-msgstr ""
-
-#: templates/account/password_reset.html:16
-msgid ""
-"Введите электронную почту, привязанную к аккаунту, и мы отправим вам "
-"инструкции."
-msgstr ""
-
-#: templates/account/password_reset.html:23
-msgid "example@mail.com"
-msgstr ""
-
-#: templates/account/password_reset.html:27
-msgid "Получить инструкции"
-msgstr ""
-
-#: templates/account/password_reset.html:33
-#: templates/account/password_reset_done.html:18
-#, fuzzy
-#| msgid "Перейти ко входу сейчас"
-msgid "Вернуться ко входу"
-msgstr "Go to login now"
-
-#: templates/account/password_reset_done.html:4
-#: templates/account/password_reset_done.html:14
-msgid "Письмо отправлено"
-msgstr "Email sent"
-
-#: templates/account/password_reset_done.html:15
-msgid ""
-"Проверьте вашу электронную почту. Если письма нет, загляните в папку «Спам» "
-"или запросите инструкцию повторно через несколько минут."
-msgstr ""
-
-#: templates/account/password_reset_from_key.html:4
-#, fuzzy
-#| msgid "Создайте новый пароль"
-msgid "Создание нового пароля"
-msgstr "Create a new password"
-
-#: templates/account/password_reset_from_key.html:15
-msgid "Создайте новый пароль"
-msgstr "Create a new password"
-
-#: templates/account/password_reset_from_key.html:16
-msgid "Придумайте надежную комбинацию, которую будете помнить только вы."
-msgstr ""
-
-#: templates/account/password_reset_from_key.html:20
-msgid "Ссылка недействительна или устарела. Запросите новую инструкцию."
-msgstr ""
-
-#: templates/account/password_reset_from_key.html:36
-msgid "Сохранить новый пароль"
-msgstr "Save new password"
-
-#: templates/account/password_reset_from_key_done.html:4
-msgid "Пароль изменен"
-msgstr "Password changed"
-
-#: templates/account/password_reset_from_key_done.html:18
-msgid "Пароль успешно изменен"
-msgstr "Password successfully changed"
-
-#: templates/account/password_reset_from_key_done.html:19
-#, fuzzy
-#| msgid "Теперь вы можете войти в систему с вашим новым паролем."
-msgid "Теперь вы можете войти в систему, используя новую комбинацию."
-msgstr "You can now log in with your new password."
-
-#: templates/account/password_reset_from_key_done.html:20
-#, fuzzy
-#| msgid ""
-#| "Вы будете автоматически перенаправлены на страницу входа через 3 "
-#| "секунды..."
-msgid "Мы автоматически перенаправим вас на страницу входа через 3 секунды."
-msgstr "You will be automatically redirected to the login page in 3 seconds..."
-
-#: templates/account/password_reset_from_key_done.html:21
-msgid "Перейти ко входу сейчас"
-msgstr "Go to login now"
-
-#: templates/account/signup.html:4
-msgid "Регистрация"
-msgstr "Sign up"
-
-#: templates/account/signup.html:16
-msgid "Новый аккаунт за 3 шага"
-msgstr ""
-
-#: templates/account/signup.html:18
-msgid "Добро пожаловать в Legalize Platform"
-msgstr ""
-
-#: templates/account/signup.html:19
-msgid ""
-"Зарегистрируйтесь, чтобы следить за документами, платежами и клиентами в "
-"одном месте."
-msgstr ""
-
-#: templates/account/signup.html:27
-msgid ""
-"Оставайтесь на шаг впереди с автоматическими напоминаниями и аналитикой."
-msgstr ""
-
-#: templates/account/signup.html:32
-msgid "Умные уведомления о дедлайнах"
-msgstr ""
-
-#: templates/account/signup.html:36
-msgid "Защищенный доступ и контроль ролей"
-msgstr ""
-
-#: templates/account/signup.html:40
-#, fuzzy
-#| msgid "Список документов пока не доступен"
-msgid "Хранение документов в облаке"
-msgstr "The document list is not yet available"
-
-#: templates/account/signup.html:48
-#, fuzzy
-#| msgid "Новый пароль"
-msgid "Новый аккаунт"
-msgstr "New password"
-
-#: templates/account/signup.html:52
-#, fuzzy
-#| msgid "Создайте новый пароль"
-msgid "Создайте аккаунт"
-msgstr "Create a new password"
-
-#: templates/account/signup.html:53
-msgid "Это бесплатно и займет не больше минуты."
-msgstr ""
-
-#: templates/account/signup.html:64
-msgid "Своевременные уведомления о платежах и сроках документов."
-msgstr ""
-
-#: templates/account/signup.html:74
-msgid "Рост вместе с вами"
-msgstr ""
-
-#: templates/account/signup.html:75
-msgid "Добавляйте новые направления и пользователей по мере роста."
-msgstr ""
-
-#: templates/account/signup.html:82
-msgid "Присоединяйтесь к Legalize"
-msgstr ""
-
-#: templates/account/signup.html:83
-msgid "Заполните форму, чтобы создать рабочую учетную запись."
-msgstr ""
-
-#: templates/account/signup.html:118
-#, fuzzy
-#| msgid "Регистрация"
-msgid "Зарегистрироваться"
-msgstr "Sign up"
-
-#: templates/account/signup.html:124
-msgid "Уже есть аккаунт?"
-msgstr ""
-
-#: templates/account/signup.html:125
-msgid "Войдите"
-msgstr ""
-
-#: templates/admin/base_site.html:4
-msgid "Администрирование Legalize"
-msgstr ""
-
-#: templates/admin/base_site.html:303
-msgid "Центр управления Legalize"
-msgstr ""
-
-#: templates/admin/login.html:13
-msgid "Панель администратора"
-msgstr ""
-
-#: templates/admin/login.html:15
-msgid "Контролируйте Legalize в режиме реального времени"
-msgstr ""
-
-#: templates/admin/login.html:16
-msgid "Управляйте клиентами, платежами и документооборотом из единого центра."
-msgstr ""
-
-#: templates/admin/login.html:19
-msgid "Двухуровневая защита и журнал действий"
-msgstr ""
-
-#: templates/admin/login.html:20
-msgid "Дашборды с ключевыми показателями"
-msgstr ""
-
-#: templates/admin/login.html:21
-msgid "Гибкие роли для команды"
-msgstr ""
-
-#: templates/admin/login.html:25
-#, fuzzy
-#| msgid "Вход в систему"
-msgid "Вход в админку"
-msgstr "Log in to the system"
-
-#: templates/admin/login.html:26
-msgid "Используйте корпоративные учетные данные для входа."
-msgstr ""
-
-#: templates/admin/login.html:32
-msgid "Проверьте логин и пароль и попробуйте снова."
-msgstr ""
-
-#: templates/admin/login.html:38
-#, python-format
-msgid ""
-"Вы уже вошли как %(user)s. У вас может не быть прав доступа к этой странице."
-msgstr ""
-
-#: templates/base.html:9
+#: legalize_site/templates/base.html:8 legalize_site/templates/base.html:198
 msgid "Legalize Site"
 msgstr "Legalize Site"
 
-#: templates/base.html:176
-msgid "Legalize"
-msgstr "Legalize"
-
-#: templates/base.html:178
+#: legalize_site/templates/base.html:200
 msgid "Переключить навигацию"
 msgstr "Toggle navigation"
 
-#: templates/base.html:184
+#: legalize_site/templates/base.html:206
 msgid "Клиенты"
 msgstr "Clients"
 
-#: templates/base.html:185
+#: legalize_site/templates/base.html:207
 msgid "Добавить клиента"
 msgstr "Add client"
 
-#: templates/base.html:186
+#: legalize_site/templates/base.html:208
 msgid "Калькулятор"
 msgstr "Calculator"
 
-#: templates/base.html:188
+#: legalize_site/templates/base.html:209
+msgid "Напоминания"
+msgstr "Reminders"
+
+#: legalize_site/templates/base.html:210
 msgid "Напоминания платежей"
 msgstr "Payment Reminders"
 
-#: templates/base.html:226
+#: legalize_site/templates/base.html:221
+msgid "Выбор языка интерфейса"
+msgstr "Interface language selection"
+
+#: legalize_site/templates/base.html:241
 msgid "Выход"
 msgstr "Logout"
 
-#: templates/base.html:259
-msgid "Заголовок страницы"
-msgstr "Page title"
+#: legalize_site/templates/base.html:261
+#: legalize_site/templates/clients/partials/modals.html:9
+#: legalize_site/templates/clients/partials/modals.html:57
+msgid "Закрыть"
+msgstr "Close"
 
-#: templates/base.html:260
-msgid "Короткое описание страницы"
-msgstr "Short page description"
-
-#: templates/base.html:264
-msgid "Фильтр"
-msgstr "Filter"
-
-#: templates/base.html:265
-msgid "Добавить"
-msgstr "Add"
-
-#: templates/clients/partials/modals.html:9
+#: legalize_site/templates/clients/partials/modals.html:8
 msgid "Добавить новый счёт"
 msgstr "Add new invoice"
 
-#: templates/clients/partials/modals.html:16
-#: templates/clients/partials/modals.html:64
+#: legalize_site/templates/clients/partials/modals.html:15
+#: legalize_site/templates/clients/partials/modals.html:63
 msgid "Услуга"
 msgstr "Service"
 
-#: templates/clients/partials/modals.html:28
-#: templates/clients/partials/modals.html:76
-#: templates/clients/partials/payment_item.html:31
+#: legalize_site/templates/clients/partials/modals.html:23
+#: legalize_site/templates/clients/partials/modals.html:71
+msgid "Общая сумма"
+msgstr "Total amount"
+
+#: legalize_site/templates/clients/partials/modals.html:27
+#: legalize_site/templates/clients/partials/modals.html:75
+#: legalize_site/templates/clients/partials/payment_item.html:31
 msgid "Оплачено"
 msgstr "Paid"
 
-#: templates/clients/partials/modals.html:32
-#: templates/clients/partials/modals.html:80
+#: legalize_site/templates/clients/partials/modals.html:31
+#: legalize_site/templates/clients/partials/modals.html:79
 msgid "Дата оплаты (если есть)"
 msgstr "Payment date (if any)"
 
-#: templates/clients/partials/modals.html:46
+#: legalize_site/templates/clients/partials/modals.html:35
+#: legalize_site/templates/clients/partials/modals.html:83
+msgid "Статус"
+msgstr "Status"
+
+#: legalize_site/templates/clients/partials/modals.html:44
+#: legalize_site/templates/clients/partials/modals.html:92
+#: legalize_site/templates/socialaccount/signup.html:49
+msgid "Отмена"
+msgstr "Cancel"
+
+#: legalize_site/templates/clients/partials/modals.html:45
 msgid "Сохранить счёт"
 msgstr "Save invoice"
 
-#: templates/clients/partials/modals.html:57
+#: legalize_site/templates/clients/partials/modals.html:56
 msgid "Редактировать счёт"
 msgstr "Edit invoice"
 
-#: templates/clients/partials/modals.html:94
+#: legalize_site/templates/clients/partials/modals.html:93
 msgid "Сохранить изменения"
 msgstr "Save changes"
 
-#: templates/clients/partials/payment_item.html:18
+#: legalize_site/templates/clients/partials/payment_item.html:18
 msgid "Удалить платёж"
 msgstr "Delete payment"
 
-#: templates/clients/partials/payment_item.html:32
+#: legalize_site/templates/clients/partials/payment_item.html:32
 msgid "Всего"
 msgstr "Total"
 
-#: templates/socialaccount/login.html:4
+#: legalize_site/templates/includes/theme_toggle.html:7
+#: legalize_site/templates/includes/theme_toggle.html:11
+#: legalize_site/templates/includes/theme_toggle.html:13
+msgid "Переключить на тёмную тему"
+msgstr ""
+
+#: legalize_site/templates/includes/theme_toggle.html:12
+#: legalize_site/templates/includes/theme_toggle.html:14
+#, fuzzy
+#| msgid "Переключить навигацию"
+msgid "Переключить на светлую тему"
+msgstr "Toggle navigation"
+
+#: legalize_site/templates/socialaccount/login.html:4
 msgid "Social Network Login"
 msgstr "Social Network Login"
 
-#: templates/socialaccount/login.html:11
+#: legalize_site/templates/socialaccount/login.html:11
 msgid "Вход через аккаунт Google"
 msgstr "Sign in with Google account"
 
-#: templates/socialaccount/login.html:16
+#: legalize_site/templates/socialaccount/login.html:16
 #, python-format
 msgid ""
 "\n"
@@ -1246,38 +436,557 @@ msgstr ""
 "%(provider)s account.\n"
 "                    "
 
-#: templates/socialaccount/login.html:22
+#: legalize_site/templates/socialaccount/login.html:22
 msgid "Нажмите \"Продолжить\", чтобы перейти к Google для аутентификации."
 msgstr "Click \"Continue\" to go to Google for authentication."
 
-#: templates/socialaccount/login.html:31
+#: legalize_site/templates/socialaccount/login.html:31
 msgid "Продолжить"
 msgstr "Continue"
 
-#: templates/socialaccount/signup.html:5
-msgid "Signup"
-msgstr "Sign up"
-
-#: templates/socialaccount/signup.html:12
+#: legalize_site/templates/socialaccount/signup.html:12
 msgid "Завершение регистрации"
 msgstr "Complete registration"
 
-#: templates/socialaccount/signup.html:17
+#: legalize_site/templates/socialaccount/signup.html:17
 #, python-format
 msgid "Вы вошли через %(provider)s как:"
 msgstr "You signed in via %(provider)s as:"
 
-#: templates/socialaccount/signup.html:19
+#: legalize_site/templates/socialaccount/signup.html:19
 msgid "Нажмите кнопку ниже, чтобы создать аккаунт."
 msgstr "Click the button below to create an account."
 
-#: templates/socialaccount/signup.html:28
+#: legalize_site/templates/socialaccount/signup.html:28
 msgid "Пожалуйста, заполните недостающие поля:"
 msgstr "Please fill in the missing fields:"
 
-#: templates/socialaccount/signup.html:47
+#: legalize_site/templates/socialaccount/signup.html:47
 msgid "Создать аккаунт и войти"
 msgstr "Create account and sign in"
+
+#~ msgid "Фотографии"
+#~ msgstr "Photographs"
+
+#~ msgid "Подтверждение оплаты"
+#~ msgstr "Payment confirmation"
+
+#~ msgid "Паспорт"
+#~ msgstr "Passport"
+
+#~ msgid "Справка о зачислении"
+#~ msgstr "Certificate of enrollment"
+
+#~ msgid "Справка об оплате обучения"
+#~ msgstr "Proof of tuition fee payment"
+
+#~ msgid "Медицинская страховка"
+#~ msgstr "Health insurance"
+
+#~ msgid "Подтверждение адреса"
+#~ msgstr "Proof of address"
+
+#~ msgid "Подтверждение финансов"
+#~ msgstr "Proof of financial means"
+
+#~ msgid "Załącznik nr 1"
+#~ msgstr "Attachment no. 1"
+
+#~ msgid "Informacja starosty"
+#~ msgstr "Starosta's information"
+
+#~ msgid "Трудовой договор"
+#~ msgstr "Employment contract"
+
+#~ msgid "PIT-37 / Zaświadczenie o niezaleganiu"
+#~ msgstr "PIT-37 / Certificate of no arrears"
+
+#~ msgid "Учёба"
+#~ msgstr "Study"
+
+#~ msgid "Работа"
+#~ msgstr "Work"
+
+#~ msgid "Воссоединение семьи"
+#~ msgstr "Family reunification"
+
+#~ msgid "Польский"
+#~ msgstr "Polish"
+
+#~ msgid "Английский"
+#~ msgstr "English"
+
+#~ msgid "Новый"
+#~ msgstr "New"
+
+#~ msgid "В ожидании"
+#~ msgstr "Pending"
+
+#~ msgid "Одобрен"
+#~ msgstr "Approved"
+
+#~ msgid "Отклонён"
+#~ msgstr "Rejected"
+
+#~ msgid "Имя"
+#~ msgstr "First Name"
+
+#~ msgid "Фамилия"
+#~ msgstr "Last Name"
+
+#~ msgid "Гражданство"
+#~ msgstr "Citizenship"
+
+#~ msgid "Телефон"
+#~ msgstr "Phone"
+
+#~ msgid "Номер паспорта"
+#~ msgstr "Passport number"
+
+#~ msgid "Номер дела"
+#~ msgstr "Case number"
+
+#~ msgid "Цель подачи"
+#~ msgstr "Purpose of application"
+
+#~ msgid "Основание пребывания (виза, TRC и т.д.)"
+#~ msgstr "Basis of stay (visa, TRC, etc.)"
+
+#~ msgid "Язык документов"
+#~ msgstr "Document language"
+
+#~ msgid "Дата создания"
+#~ msgstr "Creation date"
+
+#~ msgid "Дата окончания основания"
+#~ msgstr "Basis end date"
+
+#~ msgid "Дата подачи (Złożone)"
+#~ msgstr "Submission date (Złożone)"
+
+#~ msgid "Телефон работодателя"
+#~ msgstr "Employer's phone"
+
+#~ msgid "Дата сдачи отпечатков"
+#~ msgstr "Date of fingerprints submission"
+
+#~ msgid "Uwagi / Заметки"
+#~ msgstr "Uwagi / Notes"
+
+#~ msgid "Доступ к чеклисту предоставлен"
+#~ msgstr "Access to checklist granted"
+
+#~ msgid "Клиент"
+#~ msgstr "Client"
+
+#~ msgid "Тип документа"
+#~ msgstr "Document type"
+
+#~ msgid "Файл"
+#~ msgstr "File"
+
+#~ msgid "Действителен до"
+#~ msgstr "Valid until"
+
+#~ msgid "Дата загрузки"
+#~ msgstr "Upload date"
+
+#~ msgid "Проверено"
+#~ msgstr "Verified"
+
+#~ msgid "Документ"
+#~ msgstr "Document"
+
+#~ msgid "Документы"
+#~ msgstr "Documents"
+
+#~ msgid "Ожидает оплаты"
+#~ msgstr "Pending payment"
+
+#~ msgid "Частично оплачен"
+#~ msgstr "Partially paid"
+
+#~ msgid "Оплачен полностью"
+#~ msgstr "Paid in full"
+
+#~ msgid "Возврат"
+#~ msgstr "Refunded"
+
+#~ msgid "Карта"
+#~ msgstr "Card"
+
+#~ msgid "Наличные"
+#~ msgstr "Cash"
+
+#~ msgid "Перевод"
+#~ msgstr "Transfer"
+
+#~ msgid "Консультация"
+#~ msgstr "Consultation"
+
+#~ msgid "Описание услуги"
+#~ msgstr "Service description"
+
+#~ msgid "Оплаченная сумма"
+#~ msgstr "Amount paid"
+
+#~ msgid "Статус оплаты"
+#~ msgstr "Payment status"
+
+#~ msgid "Способ оплаты"
+#~ msgstr "Payment method"
+
+#~ msgid "Дата оплаты"
+#~ msgstr "Payment date"
+
+#~ msgid "Оплатить до"
+#~ msgstr "Due date"
+
+#~ msgid "ID транзакции (если есть)"
+#~ msgstr "Transaction ID (if any)"
+
+#~ msgid "Дата создания счёта"
+#~ msgstr "Invoice creation date"
+
+#~ msgid "Оплата"
+#~ msgstr "Payment"
+
+#~ msgid "Другое"
+#~ msgstr "Other"
+
+#~ msgid "Тип напоминания"
+#~ msgstr "Reminder type"
+
+#~ msgid "Заголовок напоминания"
+#~ msgstr "Reminder title"
+
+#~ msgid "Детали"
+#~ msgstr "Details"
+
+#~ msgid "Ключевая дата"
+#~ msgstr "Key date"
+
+#~ msgid "Активно"
+#~ msgstr "Active"
+
+#~ msgid "Калькулятор выписки из банка"
+#~ msgstr "Bank Statement Calculator"
+
+#~ msgid "Введите данные, чтобы рассчитать итоговую сумму на счету."
+#~ msgstr "Enter the data to calculate the final amount on the account."
+
+#, python-format
+#~ msgid "Актуальный курс: <strong>1 EUR = %(rate)s PLN</strong>"
+#~ msgstr "Current rate: <strong>1 EUR = %(rate)s PLN</strong>"
+
+#~ msgid "Когда заканчивается основание пребывания?"
+#~ msgstr "When does the basis of stay end?"
+
+#~ msgid "дд-мм-гггг"
+#~ msgstr "dd-mm-yyyy"
+
+#~ msgid "Оплата за обучение"
+#~ msgstr "Tuition Fee"
+
+#~ msgid "Сумма оплаты"
+#~ msgstr "Payment amount"
+
+#~ msgid "в месяц"
+#~ msgstr "per month"
+
+#~ msgid "за семестр"
+#~ msgstr "per semester"
+
+#~ msgid "за год"
+#~ msgstr "per year"
+
+#~ msgid "Кол-во месяцев в этом периоде (можно изменить)"
+#~ msgstr "Number of months in this period (can be changed)"
+
+#~ msgid "Аренда + счётчики в месяц (на всю квартиру)"
+#~ msgstr "Rent + utilities per month (for the whole apartment)"
+
+#~ msgid "Кол-во человек, проживающих вместе"
+#~ msgstr "Number of people living together"
+
+#~ msgid "Обратный билет"
+#~ msgstr "Return ticket"
+
+#~ msgid "Страна граничит с Польшей? (билет 500 zł, иначе 2500 zł)"
+#~ msgstr "Does the country border Poland? (ticket 500 zł, otherwise 2500 zł)"
+
+#~ msgid "Рассчитать итоговую сумму"
+#~ msgstr "Calculate the final amount"
+
+#~ msgid "Итоговая сумма на счету:"
+#~ msgstr "Total amount on the account:"
+
+#~ msgid "Детализация расчёта:"
+#~ msgstr "Calculation details:"
+
+#~ msgid "Жильё в месяц (на 1 чел.)"
+#~ msgstr "Housing per month (per person)"
+
+#~ msgid "Обучение в месяц"
+#~ msgstr "Tuition per month"
+
+#~ msgid "Прожиточный минимум"
+#~ msgstr "Living wage"
+
+#~ msgid "фиксированная сумма"
+#~ msgstr "fixed amount"
+
+#~ msgid "Итого ежемесячные расходы:"
+#~ msgstr "Total monthly expenses:"
+
+#~ msgid "Количество месяцев для расчёта"
+#~ msgstr "Number of months for calculation"
+
+#~ msgid "мес."
+#~ msgstr "mo."
+
+#, python-format
+#~ msgid ""
+#~ "реальный срок %(real)s мес., но расчет ограничен максимумом в %(max)s мес."
+#~ msgstr ""
+#~ "actual period is %(real)s mo., but the calculation is limited to a "
+#~ "maximum of %(max)s mo."
+
+#, python-format
+#~ msgid "полный срок пребывания: %(real)s мес."
+#~ msgstr "full period of stay: %(real)s mo."
+
+#~ msgid "Стоимость обратного билета"
+#~ msgstr "Return ticket cost"
+
+#~ msgid ""
+#~ "Заполните все поля слева и нажмите \"Рассчитать\", чтобы увидеть "
+#~ "результат."
+#~ msgstr ""
+#~ "Fill in all fields on the left and click \"Calculate\" to see the result."
+
+#~ msgid "Цена билета: 500 zł"
+#~ msgstr "Ticket price: 500 zł"
+
+#~ msgid "Цена билета: 2500 zł"
+#~ msgstr "Ticket price: 2500 zł"
+
+#, python-format
+#~ msgid "Детали клиента: %(client_name)s"
+#~ msgstr "Client details: %(client_name)s"
+
+#~ msgid "Финансы"
+#~ msgstr "Finances"
+
+#~ msgid "Добавить счёт"
+#~ msgstr "Add invoice"
+
+#~ msgid "Счета на оплату еще не созданы."
+#~ msgstr "Invoices have not been created yet."
+
+#~ msgid "Чеклист документов"
+#~ msgstr "Document Checklist"
+
+#~ msgid "Основная информация"
+#~ msgstr "Basic Information"
+
+#~ msgid "Детали дела"
+#~ msgstr "Case Details"
+
+#~ msgid "Важные даты"
+#~ msgstr "Important Dates"
+
+#~ msgid "Дополнительно"
+#~ msgstr "Additionally"
+
+#~ msgid "Сохранить"
+#~ msgstr "Save"
+
+#~ msgid "Список клиентов"
+#~ msgstr "Client List"
+
+#~ msgid "Добавить нового клиента"
+#~ msgstr "Add New Client"
+
+#~ msgid "Поиск по имени, почте или номеру дела..."
+#~ msgstr "Search by name, email, or case number..."
+
+#~ msgid "Найти"
+#~ msgstr "Find"
+
+#~ msgid "Полное имя"
+#~ msgstr "Full name"
+
+#~ msgid "Основание и дата окончания"
+#~ msgstr "Basis and end date"
+
+#~ msgid "Действия"
+#~ msgstr "Actions"
+
+#, python-format
+#~ msgid "до %(date)s"
+#~ msgstr "until %(date)s"
+
+#~ msgid "Подробнее"
+#~ msgstr "Details"
+
+#~ msgid "Удалить"
+#~ msgstr "Delete"
+
+#~ msgid "Клиенты не найдены."
+#~ msgstr "No clients found."
+
+#, fuzzy
+#~| msgid "Редактировать данные"
+#~ msgid "Проверить и создать новые"
+#~ msgstr "Edit data"
+
+#, fuzzy
+#~| msgid "Напоминания платежей"
+#~ msgid "Напоминания по документам"
+#~ msgstr "Payment Reminders"
+
+#, fuzzy
+#~| msgid "Клиенты"
+#~ msgid "Все клиенты"
+#~ msgstr "Clients"
+
+#, fuzzy
+#~| msgid "Дата оплаты"
+#~ msgid "Дата от"
+#~ msgstr "Payment date"
+
+#, fuzzy
+#~| msgid "Дата оплаты"
+#~ msgid "Дата до"
+#~ msgstr "Payment date"
+
+#, fuzzy
+#~| msgid "Сбросить пароль"
+#~ msgid "Сбросить"
+#~ msgstr "Reset password"
+
+#, fuzzy
+#~| msgid "Тип напоминания"
+#~ msgid "Всего напоминаний"
+#~ msgstr "Reminder type"
+
+#, fuzzy
+#~| msgid "Печать"
+#~ msgid "Печать WSC"
+#~ msgstr "Print"
+
+#~ msgid "Печать"
+#~ msgstr "Print"
+
+#~ msgid "Редактировать данные"
+#~ msgstr "Edit data"
+
+#~ msgid "Не указан"
+#~ msgstr "Not specified"
+
+#~ msgid "Основание пребывания"
+#~ msgstr "Basis of stay"
+
+#~ msgid "Не указано"
+#~ msgstr "Not specified"
+
+#, fuzzy
+#~| msgid "Редактировать данные"
+#~ msgid "Редактировать"
+#~ msgstr "Edit data"
+
+#, fuzzy
+#~| msgid "Клиенты не найдены."
+#~ msgid "ID платежа не найден"
+#~ msgstr "No clients found."
+
+#, fuzzy
+#~| msgid "Напоминания платежей"
+#~ msgid "Напоминания по оплатам"
+#~ msgstr "Payment Reminders"
+
+#, fuzzy
+#~| msgid "Не нашли письмо"
+#~ msgid "Не видите письмо?"
+#~ msgstr "Didn't find the email"
+
+#, fuzzy
+#~| msgid ""
+#~| "Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
+#~| "\"Промоакции\"."
+#~ msgid "Проверьте папку 'Спам' или 'Промоакции'."
+#~ msgstr ""
+#~ "If you can't see the email in your inbox, check the Spam or Promotions "
+#~ "folder."
+
+#, fuzzy
+#~| msgid "Ссылка действует 24 часа"
+#~ msgid "Ссылка действует ограниченное время"
+#~ msgstr "The link is valid for 24 hours"
+
+#, fuzzy
+#~| msgid "Нужно новое письмо"
+#~ msgid "Используйте письмо"
+#~ msgstr "Need a new email"
+
+#, fuzzy
+#~| msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
+#~ msgid "Откройте письмо от Legalize и нажмите на кнопку подтверждения."
+#~ msgstr "Open the email from Legalize and click the confirmation button."
+
+#, fuzzy
+#~| msgid "Воссоединение семьи"
+#~ msgid "Восстановление пароля"
+#~ msgstr "Family reunification"
+
+#, fuzzy
+#~| msgid "Перейти ко входу сейчас"
+#~ msgid "Вернуться ко входу"
+#~ msgstr "Go to login now"
+
+#, fuzzy
+#~| msgid "Создайте новый пароль"
+#~ msgid "Создание нового пароля"
+#~ msgstr "Create a new password"
+
+#~ msgid "Регистрация"
+#~ msgstr "Sign up"
+
+#, fuzzy
+#~| msgid "Список документов пока не доступен"
+#~ msgid "Хранение документов в облаке"
+#~ msgstr "The document list is not yet available"
+
+#, fuzzy
+#~| msgid "Новый пароль"
+#~ msgid "Новый аккаунт"
+#~ msgstr "New password"
+
+#, fuzzy
+#~| msgid "Регистрация"
+#~ msgid "Зарегистрироваться"
+#~ msgstr "Sign up"
+
+#, fuzzy
+#~| msgid "Вход в систему"
+#~ msgid "Вход в админку"
+#~ msgstr "Log in to the system"
+
+#~ msgid "Legalize"
+#~ msgstr "Legalize"
+
+#~ msgid "Заголовок страницы"
+#~ msgstr "Page title"
+
+#~ msgid "Короткое описание страницы"
+#~ msgstr "Short page description"
+
+#~ msgid "Фильтр"
+#~ msgstr "Filter"
+
+#~ msgid "Добавить"
+#~ msgstr "Add"
 
 #~ msgid "Сопровождение (Работа)"
 #~ msgstr "Support (Work)"
@@ -1306,12 +1015,6 @@ msgstr "Create account and sign in"
 #~ msgstr ""
 #~ "If enabled, the client will see a list of required documents on their "
 #~ "page."
-
-#~ msgid "Polski"
-#~ msgstr "Polish"
-
-#~ msgid "English"
-#~ msgstr "English"
 
 #, python-format
 #~ msgid "Файл от %(date)s"
@@ -1378,26 +1081,6 @@ msgstr "Create account and sign in"
 
 #~ msgid "Пароль"
 #~ msgstr "Password"
-
-#~ msgid "Сброс пароля"
-#~ msgstr "Password Reset"
-
-#~ msgid ""
-#~ "Забыли пароль? Введите ваш email, и мы пришлем вам письмо с инструкциями "
-#~ "по восстановлению."
-#~ msgstr ""
-#~ "Forgot your password? Enter your email, and we'll send you instructions "
-#~ "to reset it."
-
-#~ msgid ""
-#~ "Мы отправили вам письмо с инструкциями. Если вы его не получили, "
-#~ "проверьте папку \"Спам\"."
-#~ msgstr ""
-#~ "We've sent you an email with instructions. If you didn't receive it, "
-#~ "please check your spam folder."
-
-#~ msgid "Ссылка недействительна."
-#~ msgstr "The link is invalid."
 
 #~ msgid "Мой профиль"
 #~ msgstr "My profile"
