@@ -1,5 +1,5 @@
 {# clients/templates/clients/partials/reminder_item.html #}
-{% load tz %}
+{% load tz i18n %}
 
 {% comment %}
   Этот шаблон использует фильтр |add с секундами для вычисления будущих временных меток,
@@ -28,22 +28,23 @@
           {{ reminder.title }}
         </h5>
         <small>
-          <strong>К дата: {{ reminder.due_date|date:"d.m.Y" }}</strong>
+          <strong>{% blocktrans with due=reminder.due_date|date:"d.m.Y" %}К дата: {{ due }}{% endblocktrans %}</strong>
           {% if due_date_ts < now_timestamp %}
-            <span class="badge bg-danger ms-2">Просрочено</span>
+            <span class="badge bg-danger ms-2">{% translate "Просрочено" %}</span>
           {% elif due_date_ts < three_days_from_now_ts %}
-            <span class="badge bg-warning text-dark ms-2">Срочно</span>
+            <span class="badge bg-warning text-dark ms-2">{% translate "Срочно" %}</span>
           {% endif %}
         </small>
       </div>
 
       {% if reminder.client %}
         <p class="mb-1">
-          <strong>Клиент:</strong> <a href="{% url 'clients:client_detail' reminder.client.id %}">{{ reminder.client }}</a>
+          <strong>{% translate "Клиент:" %}</strong>
+          <a href="{% url 'clients:client_detail' reminder.client.id %}">{{ reminder.client }}</a>
         </p>
       {% else %}
         <p class="mb-1 text-danger">
-          <strong>Клиент:</strong> (не указан)
+          <strong>{% translate "Клиент:" %}</strong> {% translate "(не указан)" %}
         </p>
       {% endif %}
 
@@ -59,14 +60,14 @@
               {% csrf_token %}
               <input type="hidden" name="action" value="deactivate">
               <button type="submit" class="btn btn-sm btn-success">
-                  <i class="fas fa-check"></i> Выполнено
+                  <i class="fas fa-check"></i> {% translate "Выполнено" %}
               </button>
           </form>
           <form action="{% url 'clients:reminder_action' reminder.id %}" method="post" class="d-inline">
               {% csrf_token %}
               <input type="hidden" name="action" value="delete">
-              <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Вы уверены, что хотите безвозвратно удалить это напоминание?');">
-                  <i class="fas fa-trash"></i> Удалить
+              <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{% translate "Вы уверены, что хотите безвозвратно удалить это напоминание?" %}');">
+                  <i class="fas fa-trash"></i> {% translate "Удалить" %}
               </button>
           </form>
         </div>
