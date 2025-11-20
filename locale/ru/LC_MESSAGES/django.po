@@ -717,7 +717,7 @@ msgstr "Клиенты не найдены."
 #, python-format
 #| msgid "до %(date)s"
 msgid "К дата: %(due)s"
-msgstr "до %(date)s"
+msgstr "К дата: %(due)s"
 
 #: clients/templates/clients/partials/reminder_item.html:34
 #| msgid "Оплачено"
