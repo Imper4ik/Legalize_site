@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, TestCase
@@ -41,8 +42,9 @@ class CalculatorViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('results', response.context)
         results = response.context['results']
-        self.assertEqual(results['monthly_tuition_calculated'], '1 000.00')
-        self.assertEqual(results['tuition_total'], '6 000.00')
+        self.assertIsNotNone(results)
+        self.assertEqual(results.monthly_tuition_calculated, Decimal('1000.00'))
+        self.assertEqual(results.tuition_total, Decimal('6000.00'))
 
 
 class ClientPrintingViewTests(TestCase):
