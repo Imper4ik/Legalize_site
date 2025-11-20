@@ -29,6 +29,15 @@ BACKENDS = {
 }
 
 
+def _smtp_provider() -> str:
+    """Return provider name inferred from EMAIL_HOST."""
+
+    host = (settings.EMAIL_HOST or "").lower()
+    if "brevo" in host or "sendinblue" in host:
+        return "Brevo"
+    return "SendGrid"
+
+
 @register("legalize_site")
 def email_configuration_check(app_configs=None, **kwargs):
     """Validate the production email settings.
@@ -38,18 +47,28 @@ def email_configuration_check(app_configs=None, **kwargs):
     activation emails working when deployments happen.
     """
 
-    backend = BACKENDS.get(settings.EMAIL_BACKEND)
-    if not backend:
-        # Project does not use a supported email backend right now (e.g. when
-        # running tests with the console backend). Skip validation to avoid
-        # false positives.
-        return []
+    provider = None
+    env_var = None
+    mode = None
+
+    if settings.EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
+        provider = _smtp_provider()
+        env_var = "BREVO_SMTP_PASSWORD" if provider == "Brevo" else "SENDGRID_API_KEY"
+        mode = "smtp"
+    else:
+        backend = BACKENDS.get(settings.EMAIL_BACKEND)
+        if not backend:
+            # Project does not use a supported email backend right now (e.g. when
+            # running tests with the console backend). Skip validation to avoid
+            # false positives.
+            return []
+        provider = backend["provider"]
+        env_var = backend["env_var"]
+        mode = backend["mode"]
 
     messages = []
-    provider = backend["provider"]
-    env_var = backend["env_var"]
 
-    if backend["mode"] == "api":
+    if mode == "api":
         api_key = getattr(settings, "ANYMAIL", {}).get(env_var) or os.getenv(env_var)
         hint = (
             f"Set the {env_var} environment variable so the anymail {provider} "
