@@ -184,19 +184,27 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE
 # --- ПОЧТА (SendGrid или Brevo через API или SMTP) ---
 SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 BREVO_API_KEY = os.getenv("BREVO_API_KEY")
+BREVO_SMTP_PASSWORD = os.getenv("BREVO_SMTP_PASSWORD")
+BREVO_SMTP_USER = os.getenv("BREVO_SMTP_USER", "apikey")
+BREVO_SMTP_HOST = os.getenv("BREVO_SMTP_HOST", "smtp-relay.brevo.com")
 
 # Позволяет переопределить бэкенд явно через переменную окружения.
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
 
 # Настройки SMTP (используются, когда выбран SMTP-бэкенд или заданы учётные данные).
-EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.sendgrid.net")
+EMAIL_HOST = os.getenv("EMAIL_HOST")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() in ("1", "true", "yes", "on")
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "apikey")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD") or SENDGRID_API_KEY
 
 if not EMAIL_BACKEND:
-    if SENDGRID_API_KEY:
+    if BREVO_SMTP_PASSWORD:
+        EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+        EMAIL_HOST = EMAIL_HOST or BREVO_SMTP_HOST
+        EMAIL_HOST_USER = EMAIL_HOST_USER or BREVO_SMTP_USER
+        EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD or BREVO_SMTP_PASSWORD
+    elif SENDGRID_API_KEY:
         EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
     elif BREVO_API_KEY:
         EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
@@ -204,6 +212,11 @@ if not EMAIL_BACKEND:
         EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
     else:
         EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
+    if not EMAIL_HOST:
+        EMAIL_HOST = BREVO_SMTP_HOST if BREVO_SMTP_PASSWORD else "smtp.sendgrid.net"
+    EMAIL_HOST_USER = EMAIL_HOST_USER or (BREVO_SMTP_USER if "brevo" in EMAIL_HOST else "apikey")
 
 ANYMAIL = {}
 if EMAIL_BACKEND == "anymail.backends.sendgrid.EmailBackend" and SENDGRID_API_KEY:
