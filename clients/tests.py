@@ -1,13 +1,15 @@
+import json
 from datetime import datetime, timedelta
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import translation
 
 from allauth.account.models import EmailAddress
 
 from .models import Client
+from clients.services.responses import NO_STORE_HEADER, ResponseHelper
 
 
 class CalculatorViewTests(TestCase):
@@ -144,3 +146,46 @@ class ClientAccountLifecycleTests(TestCase):
         client.delete()
 
         self.assertTrue(self.user_model.objects.filter(pk=staff_user.pk).exists())
+
+
+class ResponseHelperTests(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_expects_json_true_for_ajax_header(self):
+        request = self.factory.get('/path', HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        helper = ResponseHelper(request)
+        self.assertTrue(helper.expects_json)
+
+    def test_success_response_contains_no_store_header(self):
+        request = self.factory.post('/path')
+        helper = ResponseHelper(request)
+
+        response = helper.success(message='ok', extra='yes')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Cache-Control'], NO_STORE_HEADER)
+        self.assertJSONEqual(response.content, {'status': 'success', 'message': 'ok', 'extra': 'yes'})
+
+    def test_error_response_includes_errors_and_status(self):
+        request = self.factory.post('/path')
+        helper = ResponseHelper(request)
+
+        response = helper.error(message='bad', status=422, errors={'field': ['error']})
+
+        self.assertEqual(response.status_code, 422)
+        self.assertJSONEqual(
+            response.content,
+            {'status': 'error', 'message': 'bad', 'errors': {'field': ['error']}}
+        )
+
+    def test_forbidden_response_has_error_status(self):
+        request = self.factory.get('/path', HTTP_ACCEPT='application/json')
+        helper = ResponseHelper(request)
+
+        response = helper.forbidden()
+
+        self.assertEqual(response.status_code, 403)
+        content = json.loads(response.content)
+        self.assertEqual(content['status'], 'error')
+        self.assertIn('message', content)

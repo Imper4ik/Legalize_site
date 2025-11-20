@@ -1,0 +1,57 @@
+from clients.views.base import StaffRequiredMixin, staff_required_view
+from clients.views.clients import (
+    ClientCreateView,
+    ClientDeleteView,
+    ClientDetailView,
+    ClientListView,
+    ClientUpdateView,
+    calculator_view,
+    client_print_view,
+    client_wsc_print_view,
+    dashboard_redirect_view,
+)
+from clients.views.documents import (
+    add_document,
+    client_checklist_partial,
+    client_overview_partial,
+    client_status_api,
+    document_delete,
+    toggle_document_verification,
+    update_client_notes,
+)
+from clients.views.payments import add_payment, delete_payment, edit_payment, get_price_for_service
+from clients.views.reminders import (
+    DocumentReminderListView,
+    PaymentReminderListView,
+    reminder_action,
+    run_update_reminders,
+)
+
+__all__ = [
+    'StaffRequiredMixin',
+    'staff_required_view',
+    'ClientCreateView',
+    'ClientDeleteView',
+    'ClientDetailView',
+    'ClientListView',
+    'ClientUpdateView',
+    'calculator_view',
+    'client_print_view',
+    'client_wsc_print_view',
+    'dashboard_redirect_view',
+    'add_document',
+    'client_checklist_partial',
+    'client_overview_partial',
+    'client_status_api',
+    'document_delete',
+    'toggle_document_verification',
+    'update_client_notes',
+    'add_payment',
+    'delete_payment',
+    'edit_payment',
+    'get_price_for_service',
+    'DocumentReminderListView',
+    'PaymentReminderListView',
+    'reminder_action',
+    'run_update_reminders',
+]
