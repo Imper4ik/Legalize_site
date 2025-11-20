@@ -3,15 +3,14 @@
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Legalize Site 1.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-11-07 11:19+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"PO-Revision-Date: 2024-06-20 00:00+0000\n"
+"Last-Translator: Legalize Team <noreply@legalize.example>\n"
+"Language-Team: Legalize Team\n"
 "Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -610,7 +609,6 @@ msgid "Сбросить"
 msgstr "Reset"
 
 #: clients/templates/clients/document_reminder_list.html:152
-#, fuzzy
 #| msgid "Тип напоминания"
 msgid "Всего напоминаний"
 msgstr "Reminder type"
@@ -663,7 +661,6 @@ msgstr ""
 "up</a>"
 
 #: clients/templates/clients/partials/client_overview.html:5
-#, fuzzy
 #| msgid "Печать"
 msgid "Печать WSC"
 msgstr "Print"
@@ -784,7 +781,6 @@ msgstr ""
 
 #: templates/account/auth_base.html:691 templates/base.html:197
 #: templates/includes/theme_toggle.html:9
-#, fuzzy
 #| msgid "Оплаченная сумма"
 msgid "Тёмная тема"
 msgstr "Amount paid"
@@ -794,7 +790,6 @@ msgid "Переключить на светлую тему"
 msgstr ""
 
 #: templates/account/email_confirm.html:4
-#, fuzzy
 #| msgid "Подтверждение оплаты"
 msgid "Подтверждение почты"
 msgstr "Payment confirmation"
@@ -802,7 +797,6 @@ msgstr "Payment confirmation"
 #: templates/account/email_confirm.html:11
 #: templates/account/email_confirmation_required.html:11
 #: templates/account/verification_sent.html:11
-#, fuzzy
 #| msgid "Создайте новый пароль"
 msgid "Защита вашего аккаунта"
 msgstr "Create a new password"
@@ -824,7 +818,6 @@ msgstr ""
 #: templates/account/email_confirm.html:23
 #: templates/account/email_confirmation_required.html:23
 #: templates/account/verification_sent.html:23
-#, fuzzy
 #| msgid "Безопасный доступ"
 msgid "Безопасность"
 msgstr "Secure access"
@@ -838,7 +831,6 @@ msgstr ""
 #: templates/account/email_confirm.html:32
 #: templates/account/email_confirmation_required.html:32
 #: templates/account/verification_sent.html:32
-#, fuzzy
 #| msgid "Дата последнего обновления"
 msgid "Своевременные уведомления"
 msgstr "Last update date"
@@ -846,7 +838,6 @@ msgstr "Last update date"
 #: templates/account/email_confirm.html:33
 #: templates/account/email_confirmation_required.html:33
 #: templates/account/verification_sent.html:33
-#, fuzzy
 #| msgid "Автоматические уведомления о ключевых дедлайнах и событиях."
 msgid "Получайте напоминания о дедлайнах и изменениях."
 msgstr "Automatic updates about critical deadlines and events."
@@ -854,7 +845,6 @@ msgstr "Automatic updates about critical deadlines and events."
 #: templates/account/email_confirm.html:41
 #: templates/account/email_confirmation_required.html:41
 #: templates/account/verification_sent.html:41
-#, fuzzy
 #| msgid "Доступ запрещен"
 msgid "Доступ для команды"
 msgstr "Access denied"
@@ -866,7 +856,6 @@ msgid "Подтверждённая почта упрощает добавлен
 msgstr ""
 
 #: templates/account/email_confirm.html:49
-#, fuzzy
 #| msgid "Подтвердите ваш E-mail"
 msgid "Подтвердите email"
 msgstr "Confirm Your E-mail"
@@ -880,7 +869,6 @@ msgid "Адрес для подтверждения"
 msgstr ""
 
 #: templates/account/email_confirm.html:67
-#, fuzzy
 #| msgid "Подтвердите ваш E-mail"
 msgid "Подтвердить почту"
 msgstr "Confirm Your E-mail"
@@ -901,13 +889,11 @@ msgid "Запросить новую ссылку"
 msgstr "Request a new link"
 
 #: templates/account/email_confirmation_required.html:4
-#, fuzzy
 #| msgid "Подтвердите ваш E-mail"
 msgid "Подтвердите вашу почту"
 msgstr "Confirm Your E-mail"
 
 #: templates/account/email_confirmation_required.html:52
-#, fuzzy
 #| msgid "Подтвердите ваш E-mail"
 msgid "Подтвердите ваш email"
 msgstr "Confirm Your E-mail"
@@ -923,13 +909,11 @@ msgid ""
 msgstr ""
 
 #: templates/account/email_confirmation_required.html:63
-#, fuzzy
 #| msgid "Не нашли письмо"
 msgid "Не видите письмо?"
 msgstr "Didn't find the email"
 
 #: templates/account/email_confirmation_required.html:64
-#, fuzzy
 #| msgid ""
 #| "Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
 #| "\"Промоакции\"."
@@ -939,7 +923,6 @@ msgstr ""
 "folder."
 
 #: templates/account/email_confirmation_required.html:74
-#, fuzzy
 #| msgid "Ссылка действует 24 часа"
 msgid "Ссылка действует ограниченное время"
 msgstr "The link is valid for 24 hours"
@@ -949,13 +932,11 @@ msgid "Чтобы не потерять прогресс, подтвердите
 msgstr ""
 
 #: templates/account/email_confirmation_required.html:83
-#, fuzzy
 #| msgid "Нужно новое письмо"
 msgid "Используйте письмо"
 msgstr "Need a new email"
 
 #: templates/account/email_confirmation_required.html:84
-#, fuzzy
 #| msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
 msgid "Откройте письмо от Legalize и нажмите на кнопку подтверждения."
 msgstr "Open the email from Legalize and click the confirmation button."
@@ -1022,7 +1003,6 @@ msgstr ""
 "Don't have an account? <a href=\"%(signup_url)s\">Register in a minute</a>"
 
 #: templates/account/password_reset.html:4
-#, fuzzy
 #| msgid "Воссоединение семьи"
 msgid "Восстановление пароля"
 msgstr "Family reunification"
@@ -1047,7 +1027,6 @@ msgstr ""
 
 #: templates/account/password_reset.html:33
 #: templates/account/password_reset_done.html:18
-#, fuzzy
 #| msgid "Перейти ко входу сейчас"
 msgid "Вернуться ко входу"
 msgstr "Go to login now"
@@ -1064,7 +1043,6 @@ msgid ""
 msgstr ""
 
 #: templates/account/password_reset_from_key.html:4
-#, fuzzy
 #| msgid "Создайте новый пароль"
 msgid "Создание нового пароля"
 msgstr "Create a new password"
@@ -1094,13 +1072,11 @@ msgid "Пароль успешно изменен"
 msgstr "Password successfully changed"
 
 #: templates/account/password_reset_from_key_done.html:19
-#, fuzzy
 #| msgid "Теперь вы можете войти в систему с вашим новым паролем."
 msgid "Теперь вы можете войти в систему, используя новую комбинацию."
 msgstr "You can now log in with your new password."
 
 #: templates/account/password_reset_from_key_done.html:20
-#, fuzzy
 #| msgid ""
 #| "Вы будете автоматически перенаправлены на страницу входа через 3 "
 #| "секунды..."
@@ -1143,19 +1119,16 @@ msgid "Защищенный доступ и контроль ролей"
 msgstr ""
 
 #: templates/account/signup.html:40
-#, fuzzy
 #| msgid "Список документов пока не доступен"
 msgid "Хранение документов в облаке"
 msgstr "The document list is not yet available"
 
 #: templates/account/signup.html:48
-#, fuzzy
 #| msgid "Новый пароль"
 msgid "Новый аккаунт"
 msgstr "New password"
 
 #: templates/account/signup.html:52
-#, fuzzy
 #| msgid "Создайте новый пароль"
 msgid "Создайте аккаунт"
 msgstr "Create a new password"
@@ -1185,7 +1158,6 @@ msgid "Заполните форму, чтобы создать рабочую �
 msgstr ""
 
 #: templates/account/signup.html:118
-#, fuzzy
 #| msgid "Регистрация"
 msgid "Зарегистрироваться"
 msgstr "Sign up"
@@ -1288,7 +1260,6 @@ msgid "Гибкие роли для команды"
 msgstr ""
 
 #: templates/admin/login.html:25
-#, fuzzy
 #| msgid "Вход в систему"
 msgid "Вход в админку"
 msgstr "Log in to the system"

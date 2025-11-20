@@ -670,7 +670,7 @@
         <div class="auth-toolbar-controls">
             <form action="{% url 'set_language' %}" method="post" class="auth-language-form">
                 {% csrf_token %}
-                <input name="next" type="hidden" value="/{{ request.get_full_path|slice:'4:' }}">
+                <input name="next" type="hidden" value="{{ request.get_full_path|default:'/' }}">
                 <label class="auth-language-label" for="auth-language-select">{% translate "Выбор языка интерфейса" %}</label>
                 <select id="auth-language-select" name="language" class="auth-language-select" onchange="this.form.submit()">
                     {% get_current_language as LANGUAGE_CODE %}
