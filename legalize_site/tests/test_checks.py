@@ -23,15 +23,22 @@ class EmailConfigurationCheckTests(SimpleTestCase):
             self.assertEqual(messages[0].id, "legalize_site.E001")
 
     def test_error_when_smtp_backend_missing_key(self):
-        with override_settings(
-            EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend",
-            EMAIL_HOST_PASSWORD="",
-            DEFAULT_FROM_EMAIL="notifications@example.com",
-        ):
-            messages = run_checks(tags=["legalize_site"])
+        cases = [
+            {"EMAIL_HOST": "smtp.sendgrid.net"},
+            {"EMAIL_HOST": "smtp-relay.brevo.com"},
+        ]
 
-        self.assertEqual(len(messages), 1)
-        self.assertEqual(messages[0].id, "legalize_site.E001")
+        for overrides in cases:
+            with self.subTest(overrides=overrides), override_settings(
+                EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend",
+                EMAIL_HOST_PASSWORD="",
+                DEFAULT_FROM_EMAIL="notifications@example.com",
+                **overrides,
+            ):
+                messages = run_checks(tags=["legalize_site"])
+
+            self.assertEqual(len(messages), 1)
+            self.assertEqual(messages[0].id, "legalize_site.E001")
 
     def test_warning_when_default_from_email_placeholder(self):
         cases = [
@@ -46,6 +53,11 @@ class EmailConfigurationCheckTests(SimpleTestCase):
             {
                 "EMAIL_BACKEND": "django.core.mail.backends.smtp.EmailBackend",
                 "EMAIL_HOST_PASSWORD": "secret",
+            },
+            {
+                "EMAIL_BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+                "EMAIL_HOST_PASSWORD": "secret",
+                "EMAIL_HOST": "smtp-relay.brevo.com",
             },
         ]
 
