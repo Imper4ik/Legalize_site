@@ -3,6 +3,7 @@
 import importlib.util
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 import dj_database_url
 from django.urls import reverse_lazy
@@ -39,6 +40,21 @@ ALLOWED_HOSTS.extend(['127.0.0.1', 'localhost'])
 CSRF_TRUSTED_ORIGINS = [origin for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin]
 if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
+
+RAILWAY_STATIC_URL = os.environ.get('RAILWAY_STATIC_URL')
+if RAILWAY_STATIC_URL:
+    parsed = urlparse(RAILWAY_STATIC_URL)
+    if parsed.hostname:
+        ALLOWED_HOSTS.append(parsed.hostname)
+        scheme = parsed.scheme or 'https'
+        CSRF_TRUSTED_ORIGINS.append(f"{scheme}://{parsed.hostname}")
+
+RAILWAY_PUBLIC_DOMAIN = os.environ.get('RAILWAY_PUBLIC_DOMAIN')
+if RAILWAY_PUBLIC_DOMAIN:
+    hostname = RAILWAY_PUBLIC_DOMAIN.replace('https://', '').replace('http://', '')
+    if hostname:
+        ALLOWED_HOSTS.append(hostname)
+        CSRF_TRUSTED_ORIGINS.append(f"https://{hostname}")
 
 # За прокси (Render) — чтобы Django корректно видел HTTPS
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
