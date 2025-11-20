@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="{% static 'css/theme.css' %}">
+  <meta name="csrf-token" content="{% csrf_token %}">
 
   {% block extra_head %}{% endblock %}
 </head>
@@ -128,6 +129,7 @@
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
   <!-- Helpers -->
+  <script src="{% static 'js/csrf.js' %}" defer></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       // Auto-dismiss alerts
