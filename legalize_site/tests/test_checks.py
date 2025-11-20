@@ -2,21 +2,25 @@ from django.core.checks import run_checks
 from django.test import SimpleTestCase, override_settings
 
 
-class SendGridConfigurationCheckTests(SimpleTestCase):
-    def test_skip_when_not_using_sendgrid_backend(self):
+class EmailConfigurationCheckTests(SimpleTestCase):
+    def test_skip_when_not_using_supported_backend(self):
         with override_settings(EMAIL_BACKEND="django.core.mail.backends.console.EmailBackend"):
             self.assertEqual(run_checks(tags=["legalize_site"]), [])
 
     def test_error_when_api_backend_missing_key(self):
-        with override_settings(
-            EMAIL_BACKEND="anymail.backends.sendgrid.EmailBackend",
-            ANYMAIL={},
-            DEFAULT_FROM_EMAIL="notifications@example.com",
+        for backend, anymail_key in (
+            ("anymail.backends.sendgrid.EmailBackend", "SENDGRID_API_KEY"),
+            ("anymail.backends.brevo.EmailBackend", "BREVO_API_KEY"),
         ):
-            messages = run_checks(tags=["legalize_site"])
+            with self.subTest(backend=backend), override_settings(
+                EMAIL_BACKEND=backend,
+                ANYMAIL={anymail_key: ""},
+                DEFAULT_FROM_EMAIL="notifications@example.com",
+            ):
+                messages = run_checks(tags=["legalize_site"])
 
-        self.assertEqual(len(messages), 1)
-        self.assertEqual(messages[0].id, "legalize_site.E001")
+            self.assertEqual(len(messages), 1)
+            self.assertEqual(messages[0].id, "legalize_site.E001")
 
     def test_error_when_smtp_backend_missing_key(self):
         with override_settings(
@@ -34,6 +38,10 @@ class SendGridConfigurationCheckTests(SimpleTestCase):
             {
                 "EMAIL_BACKEND": "anymail.backends.sendgrid.EmailBackend",
                 "ANYMAIL": {"SENDGRID_API_KEY": "key"},
+            },
+            {
+                "EMAIL_BACKEND": "anymail.backends.brevo.EmailBackend",
+                "ANYMAIL": {"BREVO_API_KEY": "key"},
             },
             {
                 "EMAIL_BACKEND": "django.core.mail.backends.smtp.EmailBackend",
