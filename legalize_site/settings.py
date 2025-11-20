@@ -136,11 +136,17 @@ TEMPLATES = [
 ]
 
 # --- БАЗА ДАННЫХ (НАСТРОЕНО ДЛЯ RENDER) ---
+DEFAULT_DATABASE_URL = f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
 DATABASES = {
     'default': dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
+        default=os.environ.get('DATABASE_URL') or DEFAULT_DATABASE_URL
     )
 }
+
+# dj_database_url returns an empty dict if DATABASE_URL is set but blank; guard
+# against that so Django always receives a valid ENGINE configuration.
+if not DATABASES['default'].get('ENGINE'):
+    DATABASES['default'] = dj_database_url.parse(DEFAULT_DATABASE_URL)
 
 # --- ВАЛИДАТОРЫ ПАРОЛЕЙ ---
 AUTH_PASSWORD_VALIDATORS = [
