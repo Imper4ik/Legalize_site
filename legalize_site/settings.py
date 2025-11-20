@@ -3,6 +3,7 @@
 import importlib.util
 import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 import dj_database_url
 from django.urls import reverse_lazy
@@ -39,6 +40,21 @@ ALLOWED_HOSTS.extend(['127.0.0.1', 'localhost'])
 CSRF_TRUSTED_ORIGINS = [origin for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if origin]
 if RENDER_EXTERNAL_HOSTNAME:
     CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
+
+RAILWAY_STATIC_URL = os.environ.get('RAILWAY_STATIC_URL')
+if RAILWAY_STATIC_URL:
+    parsed = urlparse(RAILWAY_STATIC_URL)
+    if parsed.hostname:
+        ALLOWED_HOSTS.append(parsed.hostname)
+        scheme = parsed.scheme or 'https'
+        CSRF_TRUSTED_ORIGINS.append(f"{scheme}://{parsed.hostname}")
+
+RAILWAY_PUBLIC_DOMAIN = os.environ.get('RAILWAY_PUBLIC_DOMAIN')
+if RAILWAY_PUBLIC_DOMAIN:
+    hostname = RAILWAY_PUBLIC_DOMAIN.replace('https://', '').replace('http://', '')
+    if hostname:
+        ALLOWED_HOSTS.append(hostname)
+        CSRF_TRUSTED_ORIGINS.append(f"https://{hostname}")
 
 # За прокси (Render) — чтобы Django корректно видел HTTPS
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
@@ -120,11 +136,17 @@ TEMPLATES = [
 ]
 
 # --- БАЗА ДАННЫХ (НАСТРОЕНО ДЛЯ RENDER) ---
+DEFAULT_DATABASE_URL = f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
 DATABASES = {
     'default': dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
+        default=os.environ.get('DATABASE_URL') or DEFAULT_DATABASE_URL
     )
 }
+
+# dj_database_url returns an empty dict if DATABASE_URL is set but blank; guard
+# against that so Django always receives a valid ENGINE configuration.
+if not DATABASES['default'].get('ENGINE'):
+    DATABASES['default'] = dj_database_url.parse(DEFAULT_DATABASE_URL)
 
 # --- ВАЛИДАТОРЫ ПАРОЛЕЙ ---
 AUTH_PASSWORD_VALIDATORS = [
@@ -165,7 +187,7 @@ SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 # Позволяет переопределить бэкенд явно через переменную окружения.
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
 
-# Настройки SMTP (используются только когда выбран SMTP-бэкенд).
+# Настройки SMTP (используются, когда выбран SMTP-бэкенд или заданы учётные данные).
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.sendgrid.net")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() in ("1", "true", "yes", "on")
@@ -175,6 +197,8 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD") or SENDGRID_API_KEY
 if not EMAIL_BACKEND:
     if SENDGRID_API_KEY:
         EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
+    elif EMAIL_HOST_PASSWORD:
+        EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
     else:
         EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
