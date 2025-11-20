@@ -2,7 +2,7 @@ from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
-from .constants import DOCUMENT_CHECKLIST
+from .constants import DOCUMENT_CHECKLIST, DocumentType
 
 
 class Client(models.Model):
@@ -96,20 +96,7 @@ class Client(models.Model):
 
 
 class Document(models.Model):
-    DOC_TYPES = [
-        ('photos', _('Фотографии')),
-        ('payment_confirmation', _('Подтверждение оплаты')),
-        ('passport', _('Паспорт')),
-        ('enrollment_certificate', _('Справка о зачислении')),
-        ('tuition_fee_proof', _('Справка об оплате обучения')),
-        ('health_insurance', _('Медицинская страховка')),
-        ('address_proof', _('Подтверждение адреса')),
-        ('financial_proof', _('Подтверждение финансов')),
-        ('załącznik_nr_1', _('Załącznik nr 1')),
-        ('starosta_info', _('Informacja starosty')),
-        ('employment_contract', _('Трудовой договор')),
-        ('pit_proof', _('PIT-37 / Zaświadczenie o niezaleganiu')),
-    ]
+    DOC_TYPES = DocumentType.choices
 
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='documents', verbose_name=_("Клиент"))
     document_type = models.CharField(max_length=50, choices=DOC_TYPES, verbose_name=_("Тип документа"))
