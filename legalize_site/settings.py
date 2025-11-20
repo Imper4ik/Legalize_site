@@ -187,7 +187,7 @@ SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
 # Позволяет переопределить бэкенд явно через переменную окружения.
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
 
-# Настройки SMTP (используются только когда выбран SMTP-бэкенд).
+# Настройки SMTP (используются, когда выбран SMTP-бэкенд или заданы учётные данные).
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.sendgrid.net")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() in ("1", "true", "yes", "on")
@@ -197,6 +197,8 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD") or SENDGRID_API_KEY
 if not EMAIL_BACKEND:
     if SENDGRID_API_KEY:
         EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
+    elif EMAIL_HOST_PASSWORD:
+        EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
     else:
         EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
