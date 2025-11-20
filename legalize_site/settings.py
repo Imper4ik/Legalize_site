@@ -1,16 +1,20 @@
 # legalize_site/settings.py
 
-from pathlib import Path
 import importlib.util
-from django.utils.translation import gettext_lazy as _
-from django.urls import reverse_lazy
-import dj_database_url
 import os
+from pathlib import Path
+
+import dj_database_url
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
+
+from .env import BASE_DIR, load_env
+
+load_env()
 
 WHITENOISE_AVAILABLE = importlib.util.find_spec('whitenoise') is not None
 
 # --- БАЗОВЫЕ НАСТРОЙКИ ---
-BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-me')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
@@ -27,6 +31,12 @@ if RENDER_EXTERNAL_HOSTNAME:
 # За прокси (Render) — чтобы Django корректно видел HTTPS
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+SECURE_SSL_REDIRECT = not DEBUG
+if not DEBUG:
+    SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '3600'))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = os.environ.get('SECURE_HSTS_PRELOAD', 'True').lower() in ('1', 'true', 'yes', 'on')
+
 # --- ПРИЛОЖЕНИЯ И MIDDLEWARE ---
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -39,7 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'django.contrib.sites',
 
-    'clients',
+    'clients.apps.ClientsConfig',
 
     'allauth',
     'allauth.account',
