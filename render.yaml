@@ -2,8 +2,8 @@ services:
   - type: web
     name: legalize-site
     env: python
-    buildCommand: "./build.sh"
-    startCommand: "./start.sh"
+    buildCommand: ./build.sh
+    startCommand: ./start.sh
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -11,6 +11,9 @@ services:
           property: connectionString
       - key: DJANGO_SETTINGS_MODULE
         value: legalize_site.settings
+      - key: PYTHON_VERSION
+        value: 3.12.6
+
 databases:
   - name: legalize-site-postgres
     databaseName: legalize_site
