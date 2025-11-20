@@ -11,6 +11,9 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
+from legalize_site.env import load_env
+
+load_env()
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'legalize_site.settings')
 
 application = get_wsgi_application()
