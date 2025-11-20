@@ -9,7 +9,8 @@ from django.utils import translation
 
 from allauth.account.models import EmailAddress
 
-from .models import Client
+from .models import Client, Document
+from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper
 
 
@@ -148,6 +149,19 @@ class ClientAccountLifecycleTests(TestCase):
         client.delete()
 
         self.assertTrue(self.user_model.objects.filter(pk=staff_user.pk).exists())
+
+
+
+class DocumentTypeConsistencyTests(TestCase):
+    def test_document_model_choices_follow_enum(self):
+        self.assertEqual(list(Document.DOC_TYPES), list(DocumentType.choices))
+
+    def test_document_checklist_labels_match_enum(self):
+        enum_map = {choice.value: choice.label for choice in DocumentType}
+        for docs in DOCUMENT_CHECKLIST.values():
+            for code, label in docs:
+                self.assertIn(code, enum_map)
+                self.assertEqual(label, enum_map[code])
 
 
 class ResponseHelperTests(TestCase):
