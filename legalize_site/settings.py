@@ -10,13 +10,25 @@ from django.utils.translation import gettext_lazy as _
 
 from .env import BASE_DIR, load_env
 
+
+def env_flag(name: str, default: str = 'False') -> bool:
+    """Return environment variable value as a boolean flag.
+
+    Treats common truthy strings ("1", "true", "yes", "on") as ``True`` and
+    everything else as ``False``. Providing a default keeps local development and
+    test environments predictable when the variable is absent.
+    """
+
+    return os.environ.get(name, default).lower() in ("1", "true", "yes", "on")
+
+
 load_env()
 
 WHITENOISE_AVAILABLE = importlib.util.find_spec('whitenoise') is not None
 
 # --- БАЗОВЫЕ НАСТРОЙКИ ---
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-change-me')
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = env_flag('DEBUG', 'True')
 
 ALLOWED_HOSTS = [host for host in os.environ.get('ALLOWED_HOSTS', '').split(',') if host]
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
@@ -31,8 +43,8 @@ if RENDER_EXTERNAL_HOSTNAME:
 # За прокси (Render) — чтобы Django корректно видел HTTPS
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-SECURE_SSL_REDIRECT = not DEBUG
-if not DEBUG:
+SECURE_SSL_REDIRECT = env_flag('SECURE_SSL_REDIRECT', 'False')
+if SECURE_SSL_REDIRECT:
     SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', '3600'))
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = os.environ.get('SECURE_HSTS_PRELOAD', 'True').lower() in ('1', 'true', 'yes', 'on')
