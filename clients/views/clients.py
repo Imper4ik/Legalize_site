@@ -122,6 +122,9 @@ def dashboard_redirect_view(request):
     Перенаправляет пользователя в зависимости от его статуса.
     Сотрудников - на список клиентов, клиентов - на их профиль.
     """
+    if not request.user.is_authenticated:
+        return redirect('account_login')
+
     if request.user.is_staff:
         return redirect('clients:client_list')
 
