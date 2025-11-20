@@ -181,8 +181,9 @@ MAX_UPLOAD_SIZE_MB = int(os.environ.get('MAX_UPLOAD_SIZE_MB', '20'))
 DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE
 
-# --- ПОЧТА (SendGrid через API или SMTP) ---
+# --- ПОЧТА (SendGrid или Brevo через API или SMTP) ---
 SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")
+BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 
 # Позволяет переопределить бэкенд явно через переменную окружения.
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
@@ -197,13 +198,18 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD") or SENDGRID_API_KEY
 if not EMAIL_BACKEND:
     if SENDGRID_API_KEY:
         EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
+    elif BREVO_API_KEY:
+        EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
     elif EMAIL_HOST_PASSWORD:
         EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
     else:
         EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
+ANYMAIL = {}
 if EMAIL_BACKEND == "anymail.backends.sendgrid.EmailBackend" and SENDGRID_API_KEY:
-    ANYMAIL = {"SENDGRID_API_KEY": SENDGRID_API_KEY}
+    ANYMAIL["SENDGRID_API_KEY"] = SENDGRID_API_KEY
+if EMAIL_BACKEND == "anymail.backends.brevo.EmailBackend" and BREVO_API_KEY:
+    ANYMAIL["BREVO_API_KEY"] = BREVO_API_KEY
 
 # Обязательно укажи доменный адрес, подтверждённый в SendGrid (Domain Auth или Single Sender)
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@yourdomain.tld")
