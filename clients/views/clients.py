@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
-
 from django.contrib import messages
 from django.db.models import Prefetch, Q
 from django.shortcuts import redirect, render
@@ -10,8 +8,14 @@ from django.utils.translation import gettext as _
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from django.conf import settings
 
-from clients.forms import ClientForm, PaymentForm
+from clients.forms import CalculatorForm, ClientForm, PaymentForm
 from clients.models import Client, Document, Payment
+from clients.services.calculator import (
+    EUR_TO_PLN_RATE,
+    LIVING_ALLOWANCE,
+    MAX_MONTHS_LIVING,
+    calculate_calculator_result,
+)
 from clients.views.base import StaffRequiredMixin
 from clients.services.responses import apply_no_store
 
@@ -134,86 +138,25 @@ def dashboard_redirect_view(request):
 def calculator_view(request):
     """Отображает и обрабатывает калькулятор для выписки из банка."""
 
-    # Константы для расчетов
-    LIVING_ALLOWANCE = 1010
-    TICKET_BORDER = 500
-    TICKET_NO_BORDER = 2500
-    MAX_MONTHS_LIVING = 15
-    EUR_TO_PLN_RATE = 4.3
+    form = CalculatorForm(request.POST or None)
+    form_data = {}
+    result = None
+    if request.method == 'POST':
+        if form.is_valid():
+            result = calculate_calculator_result(form.cleaned_data)
+            form_data = form.cleaned_data
+        else:
+            form_data = form.data
+            messages.error(request, _("Ошибка. Пожалуйста, заполните все поля корректными значениями."))
 
     context = {
         'living_allowance': LIVING_ALLOWANCE,
-        'eur_to_pln_rate': EUR_TO_PLN_RATE,
-        'max_months_living': MAX_MONTHS_LIVING
+        'eur_to_pln_rate': float(EUR_TO_PLN_RATE),
+        'max_months_living': MAX_MONTHS_LIVING,
+        'form': form,
+        'form_data': form_data,
+        'results': result,
     }
-
-    if request.method == 'POST':
-        try:
-            # --- Сбор данных из формы ---
-            tuition_fee_pln = float(request.POST.get('tuition_fee', 0))
-            if request.POST.get('tuition_currency') == 'EUR':
-                tuition_fee_pln *= EUR_TO_PLN_RATE
-
-            months_in_period = int(request.POST.get('months_in_period', 1))
-            months_in_period = max(months_in_period, 1)
-            monthly_tuition = tuition_fee_pln
-            tuition_total = monthly_tuition * months_in_period
-
-            monthly_rent_and_bills = float(request.POST.get('rent_and_bills', 0))
-            if request.POST.get('rent_currency') == 'EUR':
-                monthly_rent_and_bills *= EUR_TO_PLN_RATE
-
-            num_people = int(request.POST.get('num_people', 1))
-            rent_per_person = monthly_rent_and_bills / num_people if num_people > 0 else 0
-
-            total_end_date_str = request.POST.get('total_end_date')
-            total_end_date = datetime.strptime(total_end_date_str, '%d-%m-%Y')
-            now = datetime.now()
-
-            if total_end_date < now:
-                total_months_real = 1
-            else:
-                year_diff = total_end_date.year - now.year
-                month_diff = total_end_date.month - now.month
-                total_months_real = year_diff * 12 + month_diff + 1
-            if total_months_real <= 0:
-                total_months_real = 1
-
-            months_for_calc = min(total_months_real, MAX_MONTHS_LIVING)
-            is_capped = total_months_real > MAX_MONTHS_LIVING
-
-            has_border = request.POST.get('has_border') == 'on'
-            return_ticket = TICKET_BORDER if has_border else TICKET_NO_BORDER
-
-            # --- Финальные расчеты ---
-            total_monthly_costs = rent_per_person + monthly_tuition + LIVING_ALLOWANCE
-            total_base_cost = total_monthly_costs * months_for_calc
-            final_total_required = total_base_cost + return_ticket
-
-            context['results'] = {
-                'rent_total': f"{monthly_rent_and_bills:,.2f}".replace(",", " "),
-                'num_people': num_people,
-                'rent_per_person': f"{rent_per_person:,.2f}".replace(",", " "),
-
-                'tuition_total': f"{tuition_total:,.2f}".replace(",", " "),
-                'months_in_period': months_in_period,
-                'monthly_tuition_calculated': f"{monthly_tuition:,.2f}".replace(",", " "),
-
-                'total_monthly_costs': f"{total_monthly_costs:,.2f}".replace(",", " "),
-
-                'total_months_real': total_months_real,
-                'months_for_calc': months_for_calc,
-                'is_capped': is_capped,
-
-                'total_base_cost': f"{total_base_cost:,.2f}".replace(",", " "),
-                'return_ticket': f"{return_ticket:,.2f}".replace(",", " "),
-                'final_total_required': f"{final_total_required:,.2f}".replace(",", " "),
-            }
-            context['form_data'] = request.POST
-
-        except (ValueError, TypeError, AttributeError) as e:
-            messages.error(request,
-                           f"Ошибка. Пожалуйста, заполните все поля корректными значениями. (Системная ошибка: {e})")
 
     response = render(request, 'clients/calculator.html', context)
     return apply_no_store(response)
