@@ -1,30 +1,48 @@
-# clients/constants.py
-
+from django.db import models
 from django.utils.translation import gettext_lazy as _
+
+
+class DocumentType(models.TextChoices):
+    PHOTOS = 'photos', _('Фотографии')
+    PAYMENT_CONFIRMATION = 'payment_confirmation', _('Подтверждение оплаты')
+    PASSPORT = 'passport', _('Паспорт')
+    ENROLLMENT_CERTIFICATE = 'enrollment_certificate', _('Справка о зачислении')
+    TUITION_FEE_PROOF = 'tuition_fee_proof', _('Справка об оплате обучения')
+    HEALTH_INSURANCE = 'health_insurance', _('Медицинская страховка')
+    ADDRESS_PROOF = 'address_proof', _('Подтверждение адреса')
+    FINANCIAL_PROOF = 'financial_proof', _('Подтверждение финансов')
+    ZALACZNIK_NR_1 = 'załącznik_nr_1', _('Załącznik nr 1')
+    STAROSTA_INFO = 'starosta_info', _('Informacja starosty')
+    EMPLOYMENT_CONTRACT = 'employment_contract', _('Трудовой договор')
+    PIT_PROOF = 'pit_proof', _('PIT-37 / Zaświadczenie o niezaleganiu')
+
+
+def doc_entry(doc_type: DocumentType) -> tuple[str, str]:
+    return doc_type.value, doc_type.label
 
 
 # Dokumenty dla CELU: STUDIA
 STUDY_DOCS = [
-    ('photos', _('Фотографии')),
-    ('payment_confirmation', _('Подтверждение оплаты')),
-    ('passport', _('Паспорт')),
-    ('enrollment_certificate', _('Справка о зачислении')),
-    ('tuition_fee_proof', _('Справка об оплате обучения')),
-    ('health_insurance', _('Медицинская страховка')),
-    ('address_proof', _('Подтверждение адреса')),
-    ('financial_proof', _('Подтверждение финансов')),
+    doc_entry(DocumentType.PHOTOS),
+    doc_entry(DocumentType.PAYMENT_CONFIRMATION),
+    doc_entry(DocumentType.PASSPORT),
+    doc_entry(DocumentType.ENROLLMENT_CERTIFICATE),
+    doc_entry(DocumentType.TUITION_FEE_PROOF),
+    doc_entry(DocumentType.HEALTH_INSURANCE),
+    doc_entry(DocumentType.ADDRESS_PROOF),
+    doc_entry(DocumentType.FINANCIAL_PROOF),
 ]
 
 # Dokumenty dla CELU: PRACA
 WORK_DOCS = [
-    ('photos', _('Фотографии')),
-    ('passport', _('Паспорт')),
-    ('payment_confirmation', _('Подтверждение оплаты')),
-    ('załącznik_nr_1', _('Załącznik nr 1')),
-    ('starosta_info', _('Informacja starosty')),
-    ('health_insurance', _('Медицинская страховка')),
-    ('employment_contract', _('Трудовой договор')),
-    ('pit_proof', _('PIT-37 / Zaświadczenie o niezaleganiu')),
+    doc_entry(DocumentType.PHOTOS),
+    doc_entry(DocumentType.PASSPORT),
+    doc_entry(DocumentType.PAYMENT_CONFIRMATION),
+    doc_entry(DocumentType.ZALACZNIK_NR_1),
+    doc_entry(DocumentType.STAROSTA_INFO),
+    doc_entry(DocumentType.HEALTH_INSURANCE),
+    doc_entry(DocumentType.EMPLOYMENT_CONTRACT),
+    doc_entry(DocumentType.PIT_PROOF),
 ]
 
 # Główna lista kontrolna.
