@@ -1,4 +1,6 @@
 from django import forms
+
+from clients.services.calculator import CURRENCY_EUR, CURRENCY_PLN
 from .models import Client, Document, Payment
 
 
@@ -88,3 +90,21 @@ class PaymentForm(forms.ModelForm):
             'amount_paid': forms.NumberInput(attrs={'class': 'form-control'}),
             'transaction_id': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+
+class CalculatorForm(forms.Form):
+    total_end_date = forms.DateField(
+        input_formats=['%d-%m-%Y'],
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'}),
+    )
+    tuition_fee = forms.DecimalField(min_value=0, decimal_places=2, max_digits=10)
+    tuition_currency = forms.ChoiceField(choices=((CURRENCY_PLN, 'PLN'), (CURRENCY_EUR, 'EUR')))
+    fee_type = forms.ChoiceField(
+        choices=(('per_month', 'per_month'), ('per_semester', 'per_semester'), ('per_year', 'per_year')),
+        required=False,
+    )
+    months_in_period = forms.IntegerField(min_value=1)
+    rent_and_bills = forms.DecimalField(min_value=0, decimal_places=2, max_digits=10)
+    rent_currency = forms.ChoiceField(choices=((CURRENCY_PLN, 'PLN'), (CURRENCY_EUR, 'EUR')))
+    num_people = forms.IntegerField(min_value=1)
+    has_border = forms.BooleanField(required=False)

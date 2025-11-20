@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n formatting %}
 
 {% block title %}{% translate "Калькулятор выписки из банка" %}{% endblock %}
 
@@ -92,7 +92,7 @@
           <div class="card sticky-top" style="top: 20px;">
             <div class="card-header"><h5>{% translate "Итоговая сумма на счету:" %}</h5></div>
             <div class="card-body bg-success text-white">
-                <h3 class="text-center mb-0">{{ results.final_total_required }} zł</h3>
+                <h3 class="text-center mb-0">{{ results.final_total_required|format_currency }} zł</h3>
             </div>
 
             <div class="card-body">
@@ -101,28 +101,28 @@
                     <li class="list-group-item px-0">
                         <div class="d-flex justify-content-between">
                             <span>1. {% translate "Жильё в месяц (на 1 чел.)" %}</span>
-                            <span class="fw-bold">{{ results.rent_per_person }} zł</span>
+                            <span class="fw-bold">{{ results.rent_per_person|format_currency }} zł</span>
                         </div>
-                        <small class="text-muted d-block text-end">({{ results.rent_total }} zł / {{ results.num_people }} чел.)</small>
+                        <small class="text-muted d-block text-end">({{ results.rent_total|format_currency }} zł / {{ results.num_people }} чел.)</small>
                     </li>
                     <li class="list-group-item px-0">
                         <div class="d-flex justify-content-between">
                             <span>2. {% translate "Обучение в месяц" %}</span>
-                            <span class="fw-bold">{{ results.monthly_tuition_calculated }} zł</span>
+                            <span class="fw-bold">{{ results.monthly_tuition_calculated|format_currency }} zł</span>
                         </div>
-                        <small class="text-muted d-block text-end">({{ results.tuition_total }} zł / {{ results.months_in_period }} мес.)</small>
+                        <small class="text-muted d-block text-end">({{ results.tuition_total|format_currency }} zł / {{ results.months_in_period }} мес.)</small>
                     </li>
                      <li class="list-group-item px-0">
                         <div class="d-flex justify-content-between">
                             <span>3. {% translate "Прожиточный минимум" %}</span>
-                            <span class="fw-bold">{{ living_allowance }} zł</span>
+                            <span class="fw-bold">{{ living_allowance|format_currency }} zł</span>
                         </div>
                         <small class="text-muted d-block text-end">({% translate "фиксированная сумма" %})</small>
                     </li>
                      <li class="list-group-item px-0 bg-light">
                         <div class="d-flex justify-content-between">
                             <strong>{% translate "Итого ежемесячные расходы:" %}</strong>
-                            <strong class="text-primary">{{ results.total_monthly_costs }} zł</strong>
+                            <strong class="text-primary">{{ results.total_monthly_costs|format_currency }} zł</strong>
                         </div>
                     </li>
                     <li class="list-group-item px-0">
@@ -139,7 +139,7 @@
                     <li class="list-group-item px-0">
                         <div class="d-flex justify-content-between">
                             <span>5. {% translate "Стоимость обратного билета" %}</span>
-                            <span class="fw-bold">{{ results.return_ticket }} zł</span>
+                            <span class="fw-bold">{{ results.return_ticket|format_currency }} zł</span>
                         </div>
                     </li>
                 </ul>
