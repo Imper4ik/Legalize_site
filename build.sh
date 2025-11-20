@@ -10,5 +10,6 @@ fi
 pip install --upgrade pip
 pip install -r requirements.txt
 
-python manage.py compilemessages
+# Skip translating files shipped in the virtualenv to avoid permission errors
+python manage.py compilemessages --ignore "venv" --ignore ".venv"
 python manage.py collectstatic --no-input
