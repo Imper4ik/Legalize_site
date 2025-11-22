@@ -18,7 +18,7 @@
           </a>
         {% endfor %}
       </div>
-      <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#addDocumentRequirementModal">
+      <button class="btn btn-sm btn-gradient" type="button" data-bs-toggle="modal" data-bs-target="#addDocumentRequirementModal">
         <i class="bi bi-plus-lg me-1"></i>{% translate "Добавить документ" %}
       </button>
     </div>
@@ -45,13 +45,15 @@
         <button type="submit" class="btn btn-primary">
           <i class="bi bi-save me-1"></i>{% translate "Сохранить чеклист" %}
         </button>
-        <button type="button" class="btn btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#addDocumentRequirementModal">
+        <button type="button" class="btn btn-gradient ms-2" data-bs-toggle="modal" data-bs-target="#addDocumentRequirementModal">
           <i class="bi bi-plus-lg me-1"></i>{% translate "Добавить новый документ" %}
         </button>
       </div>
     </form>
   </div>
   </div>
+
+{% endblock %}
 
 {% block modals %}
   {{ block.super }}
@@ -80,5 +82,4 @@
       </div>
     </div>
   </div>
-{% endblock %}
 {% endblock %}
