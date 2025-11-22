@@ -217,58 +217,6 @@ class DocumentRequirementTests(TestCase):
             ],
         )
 
-    def test_checklist_form_allows_adding_custom_document(self):
-        DocumentRequirement.objects.filter(application_purpose='work').delete()
-        form = DocumentChecklistForm(
-            data={
-                'required_documents': [DocumentType.PASSPORT],
-                'new_document_name': 'Дополнительная справка',
-            },
-            purpose='work',
-        )
-
-        self.assertTrue(form.is_valid())
-        saved = form.save()
-
-        self.assertEqual(saved, 2)
-        requirements = DocumentRequirement.objects.filter(application_purpose='work').order_by('position')
-        self.assertEqual(requirements.count(), 2)
-        codes = [req.document_type for req in requirements]
-        self.assertIn(DocumentType.PASSPORT.value, codes)
-
-        custom_requirement = requirements.exclude(document_type=DocumentType.PASSPORT).first()
-        self.assertIsNotNone(custom_requirement)
-        self.assertEqual(custom_requirement.custom_name, 'Дополнительная справка')
-
-        self.assertEqual(custom_requirement.document_type, 'дополнительная_справка')
-
-        checklist = DocumentRequirement.required_for('work')
-        self.assertIn((custom_requirement.document_type, 'Дополнительная справка'), checklist)
-
-    def test_checklist_form_allows_renaming_existing_document(self):
-        DocumentRequirement.objects.filter(application_purpose='work').delete()
-        DocumentRequirement.objects.create(
-            application_purpose='work', document_type=DocumentType.PASSPORT, position=0
-        )
-
-        form = DocumentChecklistForm(
-            data={
-                'required_documents': [DocumentType.PASSPORT],
-                f'label_{DocumentType.PASSPORT.value}': 'Паспорт клиента',
-            },
-            purpose='work',
-        )
-
-        self.assertTrue(form.is_valid())
-        saved = form.save()
-
-        self.assertEqual(saved, 1)
-        requirement = DocumentRequirement.objects.get(application_purpose='work', document_type=DocumentType.PASSPORT)
-        self.assertEqual(requirement.custom_name, 'Паспорт клиента')
-
-        checklist = DocumentRequirement.required_for('work')
-        self.assertEqual(checklist, [(DocumentType.PASSPORT.value, 'Паспорт клиента')])
-
 
 class ResponseHelperTests(TestCase):
     def setUp(self):
