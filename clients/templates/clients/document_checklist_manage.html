@@ -4,11 +4,7 @@
 {% block title %}{% translate "Настройка чеклистов" %}{% endblock %}
 {% block page_title %}{% translate "Настройка чеклистов" %}{% endblock %}
 {% block page_subtitle %}{% translate "Управляйте списком обязательных документов для каждой цели подачи." %}{% endblock %}
-{% block page_actions %}
-<a href="#new-document" class="btn btn-primary">
-  <i class="bi bi-plus-lg me-1"></i>{% translate "Добавить документ" %}
-</a>
-{% endblock %}
+{% block page_actions %}{% endblock %}
 
 {% block content %}
 <div class="card shadow-sm">
@@ -23,52 +19,21 @@
     </div>
   </div>
   <div class="card-body">
-    <form method="post" class="row g-4">
+    <form method="post" class="row g-3">
       {% csrf_token %}
       <input type="hidden" name="purpose" value="{{ current_purpose }}">
       <div class="col-12">
-        <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-2">
-          <h6 class="text-muted mb-0">{% translate "Отметьте документы, которые должны отображаться в чеклисте" %}</h6>
-          <div class="d-flex align-items-center gap-2">
-            <span class="text-muted small">{% translate "Можно переименовать любой пункт и сразу добавить новый" %}</span>
-            <a href="#new-document" class="btn btn-outline-primary btn-sm">
-              <i class="bi bi-plus-lg me-1"></i>{% translate "Добавить документ" %}
-            </a>
-          </div>
-        </div>
+        <h6 class="text-muted mb-3">{% translate "Отметьте документы, которые должны отображаться в чеклисте" %}</h6>
         {{ form.required_documents.errors }}
-        <div class="row row-cols-1 row-cols-md-2 g-3 mt-2">
+        <div class="row row-cols-1 row-cols-md-2 g-2">
           {% for checkbox in form.required_documents %}
             <div class="col">
-              <div class="form-check p-3 border rounded-3 h-100 bg-body-secondary">
-                <div class="d-flex gap-2 align-items-start">
-                  {{ checkbox.tag }}
-                  <div class="flex-grow-1">
-                    <label class="form-check-label fw-semibold" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
-                    {% with field_name='label_'|add:checkbox.choice_value %}
-                      <div class="mt-2">
-                        {{ form[field_name] }}
-                        <div class="form-text">{% translate "Название, отображаемое в чеклисте" %}</div>
-                      </div>
-                    {% endwith %}
-                  </div>
-                </div>
+              <div class="form-check">
+                {{ checkbox.tag }}
+                <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
               </div>
             </div>
           {% endfor %}
-        </div>
-      </div>
-      <div class="col-12" id="new-document">
-        <div class="border rounded-3 p-3 bg-body-secondary">
-          <label for="{{ form.new_document_name.id_for_label }}" class="form-label fw-semibold">{% translate "Добавить новый документ" %}</label>
-          <div class="input-group">
-            <span class="input-group-text"><i class="bi bi-plus-lg"></i></span>
-            {{ form.new_document_name }}
-            <button class="btn btn-primary" type="submit" name="action" value="add_document">
-              <i class="bi bi-check-lg me-1"></i>{% translate "Добавить" %}
-            </button>
-          </div>
-          <div class="form-text">{% translate "Введите название и нажмите «Добавить», затем сохраните чеклист." %}</div>
         </div>
       </div>
       <div class="col-12 d-flex justify-content-end">
