@@ -16,6 +16,10 @@ from clients.services.calculator import (
     MAX_MONTHS_LIVING,
     calculate_calculator_result,
 )
+from clients.services.notifications import (
+    send_expired_documents_email,
+    send_required_documents_email,
+)
 from clients.views.base import StaffRequiredMixin
 from clients.services.responses import apply_no_store
 
@@ -78,7 +82,11 @@ class ClientCreateView(StaffRequiredMixin, CreateView):
 
     def form_valid(self, form):
         messages.success(self.request, "Клиент успешно создан!")
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        sent_count = send_required_documents_email(self.object)
+        if sent_count:
+            messages.info(self.request, "Список необходимых документов отправлен на email клиента.")
+        return response
 
     def form_invalid(self, form):
         messages.error(
@@ -102,8 +110,20 @@ class ClientUpdateView(StaffRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
+        previous_fingerprints_date = self.object.fingerprints_date
         messages.success(self.request, "Данные клиента успешно обновлены!")
-        return super().form_valid(form)
+        response = super().form_valid(form)
+
+        new_fingerprints_date = form.cleaned_data.get("fingerprints_date")
+        if new_fingerprints_date and new_fingerprints_date != previous_fingerprints_date:
+            sent_count = send_expired_documents_email(self.object)
+            if sent_count:
+                messages.info(
+                    self.request,
+                    "Письмо с просроченными документами отправлено клиенту.",
+                )
+
+        return response
 
 
 class ClientDeleteView(StaffRequiredMixin, DeleteView):
