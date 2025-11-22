@@ -2,21 +2,33 @@ from __future__ import annotations
 
 from django.contrib import messages
 from django.db.models import Prefetch, Q
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
+from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 from django.conf import settings
 
-from clients.forms import CalculatorForm, ClientForm, PaymentForm
-from clients.models import Client, Document, Payment
+from clients.constants import DOCUMENT_CHECKLIST
+from clients.forms import (
+    CalculatorForm,
+    ClientForm,
+    DocumentRequirementAddForm,
+    DocumentRequirementEditForm,
+    PaymentForm,
+)
+from clients.models import Client, Document, DocumentRequirement, Payment
 from clients.services.calculator import (
     EUR_TO_PLN_RATE,
     LIVING_ALLOWANCE,
     MAX_MONTHS_LIVING,
     calculate_calculator_result,
 )
-from clients.views.base import StaffRequiredMixin
+from clients.services.notifications import (
+    send_expired_documents_email,
+    send_required_documents_email,
+)
+from clients.views.base import StaffRequiredMixin, staff_required_view
 from clients.services.responses import apply_no_store
 
 
@@ -78,7 +90,11 @@ class ClientCreateView(StaffRequiredMixin, CreateView):
 
     def form_valid(self, form):
         messages.success(self.request, "Клиент успешно создан!")
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        sent_count = send_required_documents_email(self.object)
+        if sent_count:
+            messages.info(self.request, "Список необходимых документов отправлен на email клиента.")
+        return response
 
     def form_invalid(self, form):
         messages.error(
@@ -102,8 +118,20 @@ class ClientUpdateView(StaffRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
+        previous_fingerprints_date = self.object.fingerprints_date
         messages.success(self.request, "Данные клиента успешно обновлены!")
-        return super().form_valid(form)
+        response = super().form_valid(form)
+
+        new_fingerprints_date = form.cleaned_data.get("fingerprints_date")
+        if new_fingerprints_date and new_fingerprints_date != previous_fingerprints_date:
+            sent_count = send_expired_documents_email(self.object)
+            if sent_count:
+                messages.info(
+                    self.request,
+                    "Письмо с просроченными документами отправлено клиенту.",
+                )
+
+        return response
 
 
 class ClientDeleteView(StaffRequiredMixin, DeleteView):
@@ -178,6 +206,72 @@ class ClientPrintView(ClientPrintBaseView):
 
 class ClientWSCPrintView(ClientPrintBaseView):
     template_name = 'clients/client_wsc_print.html'
+
+
+@staff_required_view
+def document_checklist_manage_view(request):
+    current_purpose = request.GET.get('purpose') or request.POST.get('purpose') or 'study'
+    allowed = [choice[0] for choice in Client.APPLICATION_PURPOSE_CHOICES]
+    if current_purpose not in allowed:
+        current_purpose = allowed[0]
+
+    if not DocumentRequirement.objects.filter(application_purpose=current_purpose).exists():
+        initial_docs = DOCUMENT_CHECKLIST.get((current_purpose, 'pl'), [])
+        for idx, (code, label) in enumerate(initial_docs):
+            DocumentRequirement.objects.create(
+                application_purpose=current_purpose,
+                document_type=code,
+                custom_name=label,
+                position=idx,
+                is_required=True,
+            )
+
+    requirements = DocumentRequirement.objects.filter(application_purpose=current_purpose).order_by('position', 'id')
+    add_form = DocumentRequirementAddForm(purpose=current_purpose)
+
+    context = {
+        'current_purpose': current_purpose,
+        'purpose_choices': Client.APPLICATION_PURPOSE_CHOICES,
+        'requirements': requirements,
+        'add_form': add_form,
+    }
+    return render(request, 'clients/document_checklist_manage.html', context)
+
+
+@staff_required_view
+@require_POST
+def add_document_requirement(request):
+    purpose = request.POST.get('purpose')
+    form = DocumentRequirementAddForm(request.POST, purpose=purpose)
+    if form.is_valid():
+        form.save()
+        messages.success(request, _("Новый документ успешно добавлен в чеклист."))
+    else:
+        messages.error(request, _("Ошибка при добавлении. Возможно, имя некорректно."))
+    return redirect(f"{reverse_lazy('clients:document_checklist_manage')}?purpose={purpose}")
+
+
+@staff_required_view
+@require_POST
+def edit_document_requirement(request, pk):
+    requirement = get_object_or_404(DocumentRequirement, pk=pk)
+    form = DocumentRequirementEditForm(request.POST, instance=requirement)
+    if form.is_valid():
+        form.save()
+        messages.success(request, _("Изменения сохранены."))
+    else:
+        messages.error(request, _("Ошибка сохранения."))
+    return redirect(f"{reverse_lazy('clients:document_checklist_manage')}?purpose={requirement.application_purpose}")
+
+
+@staff_required_view
+@require_POST
+def delete_document_requirement(request, pk):
+    requirement = get_object_or_404(DocumentRequirement, pk=pk)
+    purpose = requirement.application_purpose
+    requirement.delete()
+    messages.success(request, _("Документ удалён из списка требований."))
+    return redirect(f"{reverse_lazy('clients:document_checklist_manage')}?purpose={purpose}")
 
 
 # Функции-обёртки сохраняют прежние точки входа, чтобы не переписывать URLConf

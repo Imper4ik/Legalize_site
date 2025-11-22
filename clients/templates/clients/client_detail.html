@@ -12,6 +12,7 @@
     <h4>{% translate "Финансы" %}</h4>
     <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPaymentModal">+ {% translate "Добавить счёт" %}</button>
   </div>
+  <div id="payment-alerts" class="mb-2"></div>
   <div class="card mb-4">
       <ul class="list-group list-group-flush" id="payment-list-container">
           {% for payment in client.payments.all %}
