@@ -294,8 +294,7 @@
 
     async function refresh() {
       const hasOpenModal = Boolean(document.querySelector('.modal.show'));
-      const hasBackdrop = document.body.classList.contains('modal-open') || Boolean(document.querySelector('.modal-backdrop'));
-      if (isFetching || document.visibilityState !== 'visible' || hasOpenModal || hasBackdrop) {
+      if (isFetching || document.visibilityState !== 'visible' || hasOpenModal) {
         return;
       }
 
@@ -356,13 +355,6 @@
       // Restart the refresher only when all modals are closed
       if (!document.querySelector('.modal.show')) {
         startInterval();
-      }
-    });
-
-    accordion.addEventListener('click', (event) => {
-      const target = event.target.closest('[data-bs-target="#uploadDocumentModal"]');
-      if (target) {
-        stopInterval();
       }
     });
 
