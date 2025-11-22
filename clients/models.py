@@ -175,36 +175,6 @@ class DocumentRequirement(models.Model):
                 items.append((item.document_type, item.document_type.replace('_', ' ').capitalize()))
         return items
 
-
-class DocumentRequirement(models.Model):
-    application_purpose = models.CharField(
-        max_length=20,
-        choices=Client.APPLICATION_PURPOSE_CHOICES,
-        verbose_name=_("Цель подачи"),
-    )
-    document_type = models.CharField(
-        max_length=50,
-        choices=DocumentType.choices,
-        verbose_name=_("Тип документа"),
-    )
-    position = models.PositiveIntegerField(default=0, verbose_name=_("Порядок отображения"))
-    is_required = models.BooleanField(default=True, verbose_name=_("Обязательный документ"))
-
-    class Meta:
-        unique_together = ("application_purpose", "document_type")
-        ordering = ["position", "id"]
-        verbose_name = _("Требование к документу")
-        verbose_name_plural = _("Требования к документам")
-
-    def __str__(self):
-        return f"{self.get_application_purpose_display()}: {self.get_document_type_display()}"
-
-    @classmethod
-    def required_for(cls, purpose: str) -> list[tuple[str, str]]:
-        records = cls.objects.filter(application_purpose=purpose, is_required=True).order_by("position", "id")
-        return [(item.document_type, DocumentType(item.document_type).label) for item in records]
-
-
 class Payment(models.Model):
     PAYMENT_STATUS_CHOICES = [
         ('pending', _('Ожидает оплаты')),
