@@ -232,6 +232,16 @@ class DocumentChecklistManageView(StaffRequiredMixin, FormView):
         context['current_purpose'] = self.get_purpose()
         context['purpose_choices'] = Client.APPLICATION_PURPOSE_CHOICES
         context['add_form'] = DocumentRequirementAddForm(purpose=self.get_purpose())
+        requirements = DocumentRequirement.objects.filter(
+            application_purpose=self.get_purpose()
+        ).order_by('position', 'id')
+        context['editable_requirements'] = [
+            (
+                requirement,
+                DocumentRequirementEditForm(instance=requirement, prefix=f"req-{requirement.id}"),
+            )
+            for requirement in requirements
+        ]
         return context
 
 
