@@ -14,6 +14,7 @@ from clients.forms import (
     DocumentChecklistForm,
     DocumentRequirementAddForm,
     DocumentRequirementEditForm,
+    DocumentUploadForm,
     PaymentForm,
 )
 from clients.models import Client, Document, DocumentRequirement, Payment
@@ -71,6 +72,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         client = self.object
         context['payment_form'] = PaymentForm()
+        context['document_upload_form'] = DocumentUploadForm()
         if hasattr(client, 'get_document_checklist'):
             context['document_status_list'] = client.get_document_checklist()
         return context
