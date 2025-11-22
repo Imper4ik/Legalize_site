@@ -4,7 +4,7 @@
 
 По нашей информации следующие документы истекли или истекают:
 {% if expired_documents %}
-{% for document in expired_documents %}- {{ document.display_name }} (действителен до {{ document.expiry_date|date:"d.m.Y" }})
+{% for document in expired_documents %}- {{ document.get_document_type_display }} (действителен до {{ document.expiry_date|date:"d.m.Y" }})
 {% endfor %}
 {% else %}- На данный момент истекших документов нет.
 {% endif %}

@@ -50,8 +50,5 @@ urlpatterns = [
 
     # URL для калькулятора
     path('calculator/', views.calculator_view, name='calculator'),
-    path('checklists/manage/', views.document_checklist_manage_view, name='document_checklist_manage'),
-    path('checklists/add/', views.add_document_requirement, name='checklist_add_doc'),
-    path('checklists/edit/<int:pk>/', views.edit_document_requirement, name='checklist_edit_doc'),
-    path('checklists/delete/<int:pk>/', views.delete_document_requirement, name='checklist_delete_doc'),
+    path('checklists/manage/', views.DocumentChecklistManageView.as_view(), name='document_checklist_manage'),
 ]
