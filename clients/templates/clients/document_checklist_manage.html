@@ -53,8 +53,6 @@
   </div>
   </div>
 
-{% endblock %}
-
 {% block modals %}
   {{ block.super }}
   <div class="modal fade" id="addDocumentRequirementModal" tabindex="-1" aria-labelledby="addDocumentRequirementLabel" aria-hidden="true">
@@ -83,23 +81,4 @@
     </div>
   </div>
 {% endblock %}
-
-{% block extra_js %}
-  {{ block.super }}
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const modalEl = document.getElementById('addDocumentRequirementModal');
-      if (!modalEl) return;
-
-      // Ensure the modal is attached directly to <body> so backdrop stacking works reliably
-      if (modalEl.parentElement !== document.body) {
-        document.body.appendChild(modalEl);
-      }
-
-      modalEl.addEventListener('shown.bs.modal', () => {
-        const input = modalEl.querySelector('input[name="name"]');
-        if (input) input.focus();
-      });
-    });
-  </script>
 {% endblock %}
