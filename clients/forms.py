@@ -109,7 +109,7 @@ class DocumentRequirementEditForm(forms.ModelForm):
 class DocumentRequirementAddForm(forms.Form):
     name = forms.CharField(
         label=_('Название документа'),
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('Например: ZUS RCA')}),
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
     )
 
     def __init__(self, *args, purpose: str | None = None, **kwargs):
