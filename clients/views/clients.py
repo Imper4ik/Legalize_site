@@ -244,6 +244,10 @@ class DocumentChecklistManageView(StaffRequiredMixin, FormView):
             )
             for requirement in requirements
         ]
+        context['requirement_lookup'] = {
+            requirement.document_type: (requirement, edit_form)
+            for requirement, edit_form in context['editable_requirements']
+        }
         return context
 
 
@@ -301,3 +305,21 @@ def document_requirement_edit(request, pk):
             )
 
     return redirect(reverse_lazy('clients:document_checklist_manage') + f'?purpose={requirement.application_purpose}')
+
+
+@staff_required_view
+def document_requirement_delete(request, pk):
+    requirement = get_object_or_404(DocumentRequirement, pk=pk)
+
+    if request.method == 'POST':
+        purpose = requirement.application_purpose
+        name = requirement.custom_name or requirement.document_type.replace('_', ' ').capitalize()
+        requirement.delete()
+        messages.success(
+            request,
+            _("Документ удалён: %(name)s.") % {"name": name},
+        )
+        return redirect(reverse_lazy('clients:document_checklist_manage') + f'?purpose={purpose}')
+
+    messages.error(request, _("Удаление доступно только через POST-запрос."))
+    return redirect(reverse_lazy('clients:document_checklist_manage'))
