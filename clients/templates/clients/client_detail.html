@@ -36,11 +36,60 @@
 
 {% block modals %}
   {{ block.super }}
+  
   {% include 'clients/partials/modals.html' %}
+
+  <div class="modal fade" 
+       id="uploadDocumentModal" 
+       tabindex="-1" 
+       aria-labelledby="uploadDocumentModalLabel" 
+       aria-hidden="true"
+       data-action-template="{% url 'clients:add_document' client_id=client.id doc_type='placeholder' %}">
+       <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="uploadDocumentModalLabel">{% translate "Загрузка документа" %}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          <div class="modal-body">
+            <p id="uploadDocumentDescription" class="fw-bold text-primary mb-3"></p>
+
+            <div class="mb-3">
+              <label for="id_file" class="form-label">{% translate "Выберите файл" %}</label>
+              <input type="file" name="file" class="form-control" id="id_file" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="id_expiry_date" class="form-label">{% translate "Действителен до (необязательно)" %}</label>
+              <input type="date" name="expiry_date" class="form-control" id="id_expiry_date">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+            <button type="submit" class="btn btn-primary">{% translate "Загрузить" %}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 {% endblock %}
 
 
 {% block extra_js %}
   {{ block.super }}
   <script src="{% static 'clients/js/client_detail.js' %}" defer></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('uploadDocumentModal');
+        if(modal) {
+            let template = modal.getAttribute('data-action-template');
+            template = template.replace('placeholder', '__doc_type__');
+            modal.setAttribute('data-action-template', template);
+        }
+    });
+  </script>
 {% endblock %}
