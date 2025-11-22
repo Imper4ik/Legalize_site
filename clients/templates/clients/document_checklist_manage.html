@@ -59,17 +59,8 @@
               {% csrf_token %}
               <div class="row g-3 align-items-center">
                 <div class="col-lg-7 col-md-6">
-                  <div class="d-flex align-items-center gap-2 mb-1">
-                    <span class="small text-muted">{% translate "Название документа" %}</span>
-                    <button type="button" class="btn btn-link p-0 text-decoration-none" data-bs-toggle="collapse" data-bs-target="#editName-{{ requirement.id }}" aria-expanded="false" aria-controls="editName-{{ requirement.id }}" title="{% translate 'Изменить название' %}">
-                      <i class="bi bi-pencil-square"></i>
-                    </button>
-                  </div>
-                  <div class="fw-semibold">{{ requirement.custom_name|default:edit_form.custom_name.initial|default:requirement.document_type }}</div>
-                  <div class="collapse mt-2" id="editName-{{ requirement.id }}">
-                    <label for="{{ edit_form.custom_name.id_for_label }}" class="form-label mb-1 small text-muted">{% translate "Новое название" %}</label>
-                    {{ edit_form.custom_name }}
-                  </div>
+                  <label for="{{ edit_form.custom_name.id_for_label }}" class="form-label mb-1 small text-muted">{% translate "Название документа" %}</label>
+                  {{ edit_form.custom_name }}
                   <div class="form-text">{% translate "Код" %}: {{ requirement.document_type }}</div>
                 </div>
                 <div class="col-lg-3 col-md-4">
@@ -79,14 +70,9 @@
                   </div>
                 </div>
                 <div class="col-lg-2 col-md-2 text-md-end">
-                  <div class="d-flex flex-column gap-2 align-items-stretch">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#addDocumentRequirementModal">
-                      <i class="bi bi-plus-lg me-1"></i>{% translate "Новый" %}
-                    </button>
-                    <button type="submit" class="btn btn-outline-primary btn-sm w-100 w-md-auto">
-                      <i class="bi bi-save me-1"></i>{% translate "Сохранить" %}
-                    </button>
-                  </div>
+                  <button type="submit" class="btn btn-outline-primary btn-sm w-100 w-md-auto mt-2 mt-md-0">
+                    <i class="bi bi-save me-1"></i>{% translate "Сохранить" %}
+                  </button>
                 </div>
               </div>
             </form>
