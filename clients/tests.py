@@ -3,13 +3,15 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import translation
 
 from allauth.account.models import EmailAddress
 
-from .models import Client, Document
+from .forms import DocumentRequirementAddForm, DocumentRequirementEditForm
+from .models import Client, Document, DocumentRequirement
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper
 
@@ -153,15 +155,108 @@ class ClientAccountLifecycleTests(TestCase):
 
 
 class DocumentTypeConsistencyTests(TestCase):
-    def test_document_model_choices_follow_enum(self):
-        self.assertEqual(list(Document.DOC_TYPES), list(DocumentType.choices))
-
     def test_document_checklist_labels_match_enum(self):
         enum_map = {choice.value: choice.label for choice in DocumentType}
         for docs in DOCUMENT_CHECKLIST.values():
             for code, label in docs:
                 self.assertIn(code, enum_map)
                 self.assertEqual(label, enum_map[code])
+
+    def test_document_display_name_prefers_custom_label(self):
+        client = Client.objects.create(
+            first_name='Jan',
+            last_name='Kowalski',
+            citizenship='PL',
+            phone='+48123123123',
+            email='jan@example.com',
+            application_purpose='work',
+        )
+        DocumentRequirement.objects.create(
+            application_purpose='work', document_type='zus_rca', custom_name='ZUS RCA'
+        )
+        doc = Document.objects.create(
+            client=client,
+            document_type='zus_rca',
+            file=SimpleUploadedFile('test.pdf', b'filecontent'),
+        )
+
+        self.assertEqual(doc.display_name, 'ZUS RCA')
+
+
+class DocumentRequirementTests(TestCase):
+    def test_required_for_respects_database_overrides(self):
+        DocumentRequirement.objects.filter(application_purpose='work').delete()
+        DocumentRequirement.objects.create(
+            application_purpose='work', document_type=DocumentType.PASSPORT, position=1
+        )
+        DocumentRequirement.objects.create(
+            application_purpose='work', document_type=DocumentType.PHOTOS, position=0
+        )
+
+        self.assertEqual(
+            DocumentRequirement.required_for('work'),
+            [
+                (DocumentType.PHOTOS.value, DocumentType.PHOTOS.label),
+                (DocumentType.PASSPORT.value, DocumentType.PASSPORT.label),
+            ],
+        )
+
+    def test_client_checklist_falls_back_when_no_records(self):
+        DocumentRequirement.objects.filter(application_purpose='work').delete()
+        client = Client.objects.create(
+            first_name='Anna',
+            last_name='Nowak',
+            citizenship='PL',
+            phone='+48123123123',
+            email='anna@example.com',
+            application_purpose='work',
+            language='pl',
+        )
+
+        checklist = client.get_document_checklist()
+        fallback = DOCUMENT_CHECKLIST.get(('work', 'pl'))
+        self.assertEqual(len(checklist), len(fallback))
+
+    def test_add_form_allows_custom_document(self):
+        DocumentRequirement.objects.filter(application_purpose='work').delete()
+        form = DocumentRequirementAddForm(data={'name': 'Дополнительная справка'}, purpose='work')
+
+        self.assertTrue(form.is_valid())
+        requirement = form.save()
+
+        self.assertEqual(requirement.document_type, 'дополнительная_справка')
+        self.assertEqual(requirement.custom_name, 'Дополнительная справка')
+        self.assertTrue(requirement.is_required)
+
+    def test_add_form_generates_unique_slug_when_exists(self):
+        DocumentRequirement.objects.filter(application_purpose='study').delete()
+        DocumentRequirement.objects.create(
+            application_purpose='study', document_type='custom_doc', custom_name='Test', position=0
+        )
+
+        form = DocumentRequirementAddForm(data={'name': 'Custom doc'}, purpose='study')
+        self.assertTrue(form.is_valid())
+        saved = form.save()
+
+        self.assertNotEqual(saved.document_type, 'custom_doc')
+        self.assertTrue(saved.document_type.startswith('custom_doc'))
+
+    def test_edit_form_updates_required_flag(self):
+        DocumentRequirement.objects.filter(application_purpose='work', document_type=DocumentType.PASSPORT).delete()
+        requirement = DocumentRequirement.objects.create(
+            application_purpose='work', document_type=DocumentType.PASSPORT, custom_name='Паспорт', position=0
+        )
+
+        form = DocumentRequirementEditForm(
+            data={'custom_name': 'Паспорт клиента', 'is_required': False},
+            instance=requirement,
+        )
+
+        self.assertTrue(form.is_valid())
+        updated = form.save()
+
+        self.assertFalse(updated.is_required)
+        self.assertEqual(updated.custom_name, 'Паспорт клиента')
 
 
 class ResponseHelperTests(TestCase):
