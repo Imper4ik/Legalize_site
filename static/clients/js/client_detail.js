@@ -244,7 +244,7 @@
       const docName = button.getAttribute('data-doc-name');
 
       if (docType) {
-        form.setAttribute('action', actionTemplate.replace('placeholder', encodeURIComponent(docType)));
+        form.setAttribute('action', actionTemplate.replace('__doc_type__', encodeURIComponent(docType)));
       }
 
       if (description) {

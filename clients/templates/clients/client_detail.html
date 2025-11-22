@@ -28,6 +28,7 @@
   <hr>
 
   <h2>{% translate "Чеклист документов" %}</h2>
+  
   <div class="accordion" id="documentAccordion" data-refresh-url="{% url 'clients:client_checklist_partial' client.pk %}">
       {% include 'clients/partials/document_checklist.html' with document_status_list=document_status_list client=client %}
   </div>
@@ -44,8 +45,9 @@
        tabindex="-1" 
        aria-labelledby="uploadDocumentModalLabel" 
        aria-hidden="true"
-       data-action-template="{% url 'clients:add_document' client_id=client.id doc_type='placeholder' %}">
-       <div class="modal-dialog">
+       data-action-template="{% url 'clients:add_document' client_id=client.id doc_type='__doc_type__' %}">
+       
+    <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="uploadDocumentModalLabel">{% translate "Загрузка документа" %}</h5>
@@ -81,15 +83,4 @@
 {% block extra_js %}
   {{ block.super }}
   <script src="{% static 'clients/js/client_detail.js' %}" defer></script>
-  
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const modal = document.getElementById('uploadDocumentModal');
-        if(modal) {
-            let template = modal.getAttribute('data-action-template');
-            template = template.replace('placeholder', '__doc_type__');
-            modal.setAttribute('data-action-template', template);
-        }
-    });
-  </script>
 {% endblock %}
