@@ -5,6 +5,17 @@ from django.conf import settings
 from .constants import DOCUMENT_CHECKLIST, DocumentType
 
 
+def get_fallback_document_checklist(purpose: str, language: str | None = None):
+    checklist_key = (purpose, language)
+    if checklist_key in DOCUMENT_CHECKLIST:
+        return DOCUMENT_CHECKLIST[checklist_key]
+
+    for (stored_purpose, _lang), documents in DOCUMENT_CHECKLIST.items():
+        if stored_purpose == purpose:
+            return documents
+    return []
+
+
 class Client(models.Model):
     # --- Списки для выбора ---
     APPLICATION_PURPOSE_CHOICES = [
@@ -61,8 +72,9 @@ class Client(models.Model):
         """Возвращает чеклист документов для клиента."""
         # Клиентский портал больше не используется, поэтому ограничение
         # на доступ к чеклисту было снято. Сотрудники видят список всегда.
-        checklist_key = (self.application_purpose, self.language)
-        required_docs = DOCUMENT_CHECKLIST.get(checklist_key, [])
+        required_docs = DocumentRequirement.required_for(self.application_purpose)
+        if not required_docs:
+            required_docs = get_fallback_document_checklist(self.application_purpose, self.language)
         if not required_docs:
             return []
 
@@ -87,8 +99,10 @@ class Client(models.Model):
 
     def get_document_name_by_code(self, doc_code):
         """Возвращает читаемое имя документа по его коду."""
-        checklist_key = (self.application_purpose, self.language)
-        required_docs = DOCUMENT_CHECKLIST.get(checklist_key, [])
+        required_docs = DocumentRequirement.required_for(self.application_purpose)
+        if not required_docs:
+            required_docs = get_fallback_document_checklist(self.application_purpose, self.language)
+
         for code, name in required_docs:
             if code == doc_code:
                 return name
@@ -112,6 +126,44 @@ class Document(models.Model):
 
     def __str__(self):
         return f"{self.get_document_type_display()} для {self.client}"
+
+
+class DocumentRequirement(models.Model):
+    application_purpose = models.CharField(
+        max_length=20,
+        choices=Client.APPLICATION_PURPOSE_CHOICES,
+        verbose_name=_("Цель подачи"),
+    )
+    document_type = models.CharField(
+        max_length=50,
+        verbose_name=_("Тип документа"),
+    )
+    custom_name = models.CharField(max_length=255, blank=True, verbose_name=_("Название документа"))
+    position = models.PositiveIntegerField(default=0, verbose_name=_("Порядок отображения"))
+    is_required = models.BooleanField(default=True, verbose_name=_("Обязательный документ"))
+
+    class Meta:
+        unique_together = ("application_purpose", "document_type")
+        ordering = ["position", "id"]
+        verbose_name = _("Требование к документу")
+        verbose_name_plural = _("Требования к документам")
+
+    def __str__(self):
+        return f"{self.get_application_purpose_display()}: {self.custom_name or self.document_type}"
+
+    @classmethod
+    def required_for(cls, purpose: str) -> list[tuple[str, str]]:
+        records = cls.objects.filter(application_purpose=purpose, is_required=True).order_by("position", "id")
+        items: list[tuple[str, str]] = []
+        for item in records:
+            if item.custom_name:
+                items.append((item.document_type, item.custom_name))
+                continue
+            try:
+                items.append((item.document_type, DocumentType(item.document_type).label))
+            except ValueError:
+                items.append((item.document_type, item.document_type.replace('_', ' ').capitalize()))
+        return items
 
 
 class Payment(models.Model):
