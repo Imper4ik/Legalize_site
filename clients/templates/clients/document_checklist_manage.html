@@ -32,7 +32,7 @@
         {{ form.required_documents.errors }}
         <div class="row row-cols-1 row-cols-md-2 g-2">
           {% for checkbox in form.required_documents %}
-            {% with requirement_pair=requirement_lookup|get_item:checkbox.choice_value %}
+            {% with requirement_pair=requirement_lookup|get_item:checkbox.data.value %}
               {% if requirement_pair %}
                 {% with requirement=requirement_pair.0 edit_form=requirement_pair.1 %}
                   <div class="col">
