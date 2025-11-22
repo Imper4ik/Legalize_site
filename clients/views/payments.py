@@ -6,6 +6,7 @@ from django.template.loader import render_to_string
 
 from clients.forms import PaymentForm
 from clients.models import Client, Payment
+from clients.services.pricing import get_service_price
 from clients.services.responses import ResponseHelper
 from clients.views.base import staff_required_view
 
@@ -71,11 +72,6 @@ def delete_payment(request, payment_id):
 
 @staff_required_view
 def get_price_for_service(request, service_value):
-    prices = {
-        'study_service': 1400.00,
-        'work_service': 1800.00,
-        'consultation': 180.00,
-    }
-    price = prices.get(service_value, 0.00)
+    price = get_service_price(service_value)
     helper = ResponseHelper(request)
     return helper.success(price=price)
