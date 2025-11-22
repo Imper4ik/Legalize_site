@@ -1,11 +1,34 @@
 <!DOCTYPE html>
 {% load static %}
 {% load i18n static %}
-<html lang="{{ LANGUAGE_CODE }}" data-theme="light">
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark">
+  <script>
+    (function () {
+      var docEl = document.documentElement;
+      var theme = "light";
+
+      try {
+        var stored = localStorage.getItem("preferredTheme");
+        if (stored) theme = stored;
+      } catch (_) {}
+
+      if (theme !== "dark") {
+        var mq = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
+        if (mq && typeof mq.matches === "boolean" && mq.matches) theme = "dark";
+      }
+
+      theme = theme === "dark" ? "dark" : "light";
+      docEl.setAttribute("data-theme", theme);
+      docEl.setAttribute("data-bs-theme", theme);
+
+      var meta = document.querySelector('meta[name="color-scheme"]');
+      if (meta) meta.setAttribute("content", theme === "dark" ? "dark light" : "light dark");
+    })();
+  </script>
   <title>{% block title %}{% translate "Legalize Site" %}{% endblock %}</title>
 
   <!-- Vendor CSS -->
