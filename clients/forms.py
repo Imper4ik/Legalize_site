@@ -115,6 +115,7 @@ class DocumentRequirementAddForm(forms.Form):
     def __init__(self, *args, purpose: str | None = None, **kwargs):
         self.purpose = purpose
         super().__init__(*args, **kwargs)
+        self.fields['name'].widget.attrs.setdefault('autofocus', 'autofocus')
 
     def clean_name(self):
         name = (self.cleaned_data.get('name') or '').strip()
