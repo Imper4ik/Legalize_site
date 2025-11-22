@@ -5,10 +5,10 @@ from django.db.models import Prefetch, Q
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 from django.conf import settings
 
-from clients.forms import CalculatorForm, ClientForm, PaymentForm
+from clients.forms import CalculatorForm, ClientForm, DocumentChecklistForm, PaymentForm
 from clients.models import Client, Document, Payment
 from clients.services.calculator import (
     EUR_TO_PLN_RATE,
@@ -191,6 +191,40 @@ class ClientPrintView(ClientPrintBaseView):
 
 class ClientWSCPrintView(ClientPrintBaseView):
     template_name = 'clients/client_wsc_print.html'
+
+
+class DocumentChecklistManageView(StaffRequiredMixin, FormView):
+    template_name = 'clients/document_checklist_manage.html'
+    form_class = DocumentChecklistForm
+
+    def get_purpose(self) -> str:
+        requested = self.request.GET.get('purpose') or self.request.POST.get('purpose')
+        allowed = [choice[0] for choice in Client.APPLICATION_PURPOSE_CHOICES]
+        if requested in allowed:
+            return requested
+        return allowed[0]
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['purpose'] = self.get_purpose()
+        return kwargs
+
+    def form_valid(self, form):
+        updated = form.save()
+        messages.success(
+            self.request,
+            _("Чеклист обновлён. Выбрано документов: %(count)s") % {"count": updated},
+        )
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('clients:document_checklist_manage') + f'?purpose={self.get_purpose()}'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['current_purpose'] = self.get_purpose()
+        context['purpose_choices'] = Client.APPLICATION_PURPOSE_CHOICES
+        return context
 
 
 # Функции-обёртки сохраняют прежние точки входа, чтобы не переписывать URLConf

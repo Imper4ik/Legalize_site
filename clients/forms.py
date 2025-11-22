@@ -1,7 +1,9 @@
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from clients.services.calculator import CURRENCY_EUR, CURRENCY_PLN
-from .models import Client, Document, Payment
+from .constants import DOCUMENT_CHECKLIST, DocumentType
+from .models import Client, Document, DocumentRequirement, Payment
 
 
 class ClientForm(forms.ModelForm):
@@ -90,6 +92,56 @@ class PaymentForm(forms.ModelForm):
             'amount_paid': forms.NumberInput(attrs={'class': 'form-control'}),
             'transaction_id': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+
+class DocumentChecklistForm(forms.Form):
+    required_documents = forms.MultipleChoiceField(
+        label=_('Необходимые документы'),
+        required=False,
+        widget=forms.CheckboxSelectMultiple,
+        choices=DocumentType.choices,
+    )
+
+    def __init__(self, *args, purpose: str | None = None, **kwargs):
+        self.purpose = purpose
+        super().__init__(*args, **kwargs)
+        self.fields['required_documents'].choices = DocumentType.choices
+
+        if 'required_documents' not in self.initial:
+            self.initial['required_documents'] = self._initial_documents()
+
+    def _initial_documents(self):
+        existing = (
+            DocumentRequirement.objects.filter(application_purpose=self.purpose, is_required=True)
+            .order_by('position', 'id')
+            .values_list('document_type', flat=True)
+        )
+        if existing:
+            return list(existing)
+
+        for (purpose, _), docs in DOCUMENT_CHECKLIST.items():
+            if purpose == self.purpose:
+                return [code for code, _ in docs]
+        return []
+
+    def save(self) -> int:
+        if self.purpose is None:
+            return 0
+
+        selected_codes = list(self.cleaned_data.get('required_documents', []))
+
+        DocumentRequirement.objects.filter(application_purpose=self.purpose).exclude(
+            document_type__in=selected_codes
+        ).delete()
+
+        for position, code in enumerate(selected_codes):
+            DocumentRequirement.objects.update_or_create(
+                application_purpose=self.purpose,
+                document_type=code,
+                defaults={'is_required': True, 'position': position},
+            )
+
+        return len(selected_codes)
 
 
 class CalculatorForm(forms.Form):
