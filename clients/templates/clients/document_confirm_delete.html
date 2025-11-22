@@ -12,7 +12,7 @@
       <div class="card-body">
         <h5 class="card-title">Вы уверены, что хотите удалить этот документ?</h5>
         <p class="card-text">
-          Документ: <strong>"{{ document.get_document_type_display }}"</strong><br>
+          Документ: <strong>"{{ document.display_name }}"</strong><br>
           Клиент: <strong>{{ document.client.first_name }} {{ document.client.last_name }}</strong>
         </p>
         <p class="text-danger mt-3">Это действие нельзя будет отменить.</p>

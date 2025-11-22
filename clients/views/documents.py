@@ -66,7 +66,7 @@ def document_delete(request, pk):
     helper = ResponseHelper(request)
 
     if request.method == "POST":
-        doc_type_display = document.get_document_type_display()
+        doc_type_display = document.display_name
         document.delete()  # Сигнал позаботится об удалении файла
 
         if helper.expects_json:
