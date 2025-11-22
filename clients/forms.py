@@ -1,5 +1,7 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from django.utils.crypto import get_random_string
+from django.utils.text import slugify
 
 from clients.services.calculator import CURRENCY_EUR, CURRENCY_PLN
 from .constants import DOCUMENT_CHECKLIST, DocumentType
@@ -78,6 +80,21 @@ class PaymentForm(forms.ModelForm):
         widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
     )
 
+    class Meta:
+        model = Payment
+        fields = [
+            'service_description', 'total_amount', 'amount_paid', 'status',
+            'payment_method', 'payment_date', 'due_date', 'transaction_id'
+        ]
+        widgets = {
+            'service_description': forms.Select(attrs={'class': 'form-select'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'payment_method': forms.Select(attrs={'class': 'form-select'}),
+            'total_amount': forms.NumberInput(attrs={'class': 'form-control'}),
+            'amount_paid': forms.NumberInput(attrs={'class': 'form-control'}),
+            'transaction_id': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
 
 class DocumentRequirementEditForm(forms.ModelForm):
     class Meta:
@@ -121,21 +138,6 @@ class DocumentRequirementAddForm(forms.Form):
             is_required=True,
             position=position,
         )
-
-    class Meta:
-        model = Payment
-        fields = [
-            'service_description', 'total_amount', 'amount_paid', 'status',
-            'payment_method', 'payment_date', 'due_date', 'transaction_id'
-        ]
-        widgets = {
-            'service_description': forms.Select(attrs={'class': 'form-select'}),
-            'status': forms.Select(attrs={'class': 'form-select'}),
-            'payment_method': forms.Select(attrs={'class': 'form-select'}),
-            'total_amount': forms.NumberInput(attrs={'class': 'form-control'}),
-            'amount_paid': forms.NumberInput(attrs={'class': 'form-control'}),
-            'transaction_id': forms.TextInput(attrs={'class': 'form-control'}),
-        }
 
 
 class DocumentChecklistForm(forms.Form):
