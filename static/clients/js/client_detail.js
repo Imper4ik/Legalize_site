@@ -293,7 +293,8 @@
     }
 
     async function refresh() {
-      if (isFetching || document.visibilityState !== 'visible' || document.body.classList.contains('modal-open')) {
+      const hasOpenModal = Boolean(document.querySelector('.modal.show'));
+      if (isFetching || document.visibilityState !== 'visible' || hasOpenModal) {
         return;
       }
 
@@ -331,15 +332,39 @@
       }
     }
 
-    const intervalId = window.setInterval(refresh, 8000);
-    document.addEventListener('visibilitychange', refresh);
-    window.addEventListener('beforeunload', () => {
-      window.clearInterval(intervalId);
+    let intervalId = null;
+
+    function startInterval() {
+      if (intervalId === null) {
+        intervalId = window.setInterval(refresh, 8000);
+      }
+    }
+
+    function stopInterval() {
+      if (intervalId !== null) {
+        window.clearInterval(intervalId);
+        intervalId = null;
+      }
       if (controller) {
         controller.abort();
       }
+    }
+
+    document.addEventListener('show.bs.modal', stopInterval);
+    document.addEventListener('hidden.bs.modal', () => {
+      // Restart the refresher only when all modals are closed
+      if (!document.querySelector('.modal.show')) {
+        startInterval();
+      }
     });
 
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener('beforeunload', () => {
+      stopInterval();
+      document.removeEventListener('show.bs.modal', stopInterval);
+    });
+
+    startInterval();
     refresh();
   }
 
