@@ -50,64 +50,36 @@
         </button>
       </div>
     </form>
-    <div class="mt-4">
-      <h6 class="text-muted mb-3">{% translate "Редактировать существующие документы" %}</h6>
-      {% if editable_requirements %}
-        <div class="list-group">
-          {% for requirement, edit_form in editable_requirements %}
-            <form method="post" action="{% url 'clients:document_requirement_edit' requirement.id %}" class="list-group-item list-group-item-action">
-              {% csrf_token %}
-              <div class="row g-3 align-items-center">
-                <div class="col-lg-7 col-md-6">
-                  <label for="{{ edit_form.custom_name.id_for_label }}" class="form-label mb-1 small text-muted">{% translate "Название документа" %}</label>
-                  {{ edit_form.custom_name }}
-                  <div class="form-text">{% translate "Код" %}: {{ requirement.document_type }}</div>
-                </div>
-                <div class="col-lg-3 col-md-4">
-                  <div class="form-check mt-md-4">
-                    {{ edit_form.is_required }}
-                    <label class="form-check-label" for="{{ edit_form.is_required.id_for_label }}">{% translate "Отображать в чеклисте" %}</label>
-                  </div>
-                </div>
-                <div class="col-lg-2 col-md-2 text-md-end">
-                  <button type="submit" class="btn btn-outline-primary btn-sm w-100 w-md-auto mt-2 mt-md-0">
-                    <i class="bi bi-save me-1"></i>{% translate "Сохранить" %}
-                  </button>
-                </div>
-              </div>
-            </form>
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="alert alert-info mb-0">{% translate "Для этой цели пока нет добавленных документов." %}</div>
-      {% endif %}
-    </div>
   </div>
-</div>
+  </div>
 
-<div class="modal fade" id="addDocumentRequirementModal" tabindex="-1" aria-labelledby="addDocumentRequirementLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addDocumentRequirementLabel">{% translate "Добавить новый документ" %}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
-      </div>
-      <form action="{% url 'clients:document_requirement_add' %}" method="post">
-        {% csrf_token %}
-        <input type="hidden" name="purpose" value="{{ current_purpose }}">
-        <div class="modal-body">
-          <div class="mb-3">
-            <label for="{{ add_form.name.id_for_label }}" class="form-label">{% translate "Название документа" %}</label>
-            {{ add_form.name }}
+{% endblock %}
+
+{% block modals %}
+  {{ block.super }}
+  <div class="modal fade" id="addDocumentRequirementModal" tabindex="-1" aria-labelledby="addDocumentRequirementLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addDocumentRequirementLabel">{% translate "Добавить новый документ" %}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
+        </div>
+        <form action="{% url 'clients:document_requirement_add' %}" method="post">
+          {% csrf_token %}
+          <input type="hidden" name="purpose" value="{{ current_purpose }}">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="{{ add_form.name.id_for_label }}" class="form-label">{% translate "Название документа" %}</label>
+              {{ add_form.name }}
+            </div>
+            <p class="text-muted small mb-0">{% translate "Документ сразу будет добавлен в текущий чеклист." %}</p>
           </div>
-          <p class="text-muted small mb-0">{% translate "Документ сразу будет добавлен в текущий чеклист." %}</p>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
-          <button type="submit" class="btn btn-primary">{% translate "Добавить" %}</button>
-        </div>
-      </form>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+            <button type="submit" class="btn btn-primary">{% translate "Добавить" %}</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
-</div>
 {% endblock %}
