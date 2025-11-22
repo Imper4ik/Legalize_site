@@ -5,16 +5,20 @@ from django.db.models import Prefetch, Q
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
-from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 from django.conf import settings
 
-from clients.forms import CalculatorForm, ClientForm, PaymentForm
+from clients.forms import CalculatorForm, ClientForm, DocumentChecklistForm, PaymentForm
 from clients.models import Client, Document, Payment
 from clients.services.calculator import (
     EUR_TO_PLN_RATE,
     LIVING_ALLOWANCE,
     MAX_MONTHS_LIVING,
     calculate_calculator_result,
+)
+from clients.services.notifications import (
+    send_expired_documents_email,
+    send_required_documents_email,
 )
 from clients.views.base import StaffRequiredMixin
 from clients.services.responses import apply_no_store
@@ -78,7 +82,11 @@ class ClientCreateView(StaffRequiredMixin, CreateView):
 
     def form_valid(self, form):
         messages.success(self.request, "Клиент успешно создан!")
-        return super().form_valid(form)
+        response = super().form_valid(form)
+        sent_count = send_required_documents_email(self.object)
+        if sent_count:
+            messages.info(self.request, "Список необходимых документов отправлен на email клиента.")
+        return response
 
     def form_invalid(self, form):
         messages.error(
@@ -102,8 +110,20 @@ class ClientUpdateView(StaffRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form):
+        previous_fingerprints_date = self.object.fingerprints_date
         messages.success(self.request, "Данные клиента успешно обновлены!")
-        return super().form_valid(form)
+        response = super().form_valid(form)
+
+        new_fingerprints_date = form.cleaned_data.get("fingerprints_date")
+        if new_fingerprints_date and new_fingerprints_date != previous_fingerprints_date:
+            sent_count = send_expired_documents_email(self.object)
+            if sent_count:
+                messages.info(
+                    self.request,
+                    "Письмо с просроченными документами отправлено клиенту.",
+                )
+
+        return response
 
 
 class ClientDeleteView(StaffRequiredMixin, DeleteView):
@@ -178,6 +198,40 @@ class ClientPrintView(ClientPrintBaseView):
 
 class ClientWSCPrintView(ClientPrintBaseView):
     template_name = 'clients/client_wsc_print.html'
+
+
+class DocumentChecklistManageView(StaffRequiredMixin, FormView):
+    template_name = 'clients/document_checklist_manage.html'
+    form_class = DocumentChecklistForm
+
+    def get_purpose(self) -> str:
+        requested = self.request.GET.get('purpose') or self.request.POST.get('purpose')
+        allowed = [choice[0] for choice in Client.APPLICATION_PURPOSE_CHOICES]
+        if requested in allowed:
+            return requested
+        return allowed[0]
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['purpose'] = self.get_purpose()
+        return kwargs
+
+    def form_valid(self, form):
+        updated = form.save()
+        messages.success(
+            self.request,
+            _("Чеклист обновлён. Выбрано документов: %(count)s") % {"count": updated},
+        )
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('clients:document_checklist_manage') + f'?purpose={self.get_purpose()}'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['current_purpose'] = self.get_purpose()
+        context['purpose_choices'] = Client.APPLICATION_PURPOSE_CHOICES
+        return context
 
 
 # Функции-обёртки сохраняют прежние точки входа, чтобы не переписывать URLConf
