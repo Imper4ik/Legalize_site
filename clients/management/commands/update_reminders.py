@@ -61,7 +61,7 @@ class Command(BaseCommand):
             Reminder.objects.create(
                 client=doc.client,
                 document=doc,  # Связываем с конкретным документом
-                title=f"Истекает срок документа: {doc.get_document_type_display()}",
+                title=f"Истекает срок документа: {doc.display_name}",
                 notes=f"Документ для клиента {doc.client} действителен до {doc.expiry_date.strftime('%d.%m.%Y')}.",
                 due_date=doc.expiry_date,
                 reminder_type='document'
