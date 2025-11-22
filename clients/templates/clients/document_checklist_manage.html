@@ -4,109 +4,44 @@
 {% block title %}{% translate "Настройка чеклистов" %}{% endblock %}
 {% block page_title %}{% translate "Настройка чеклистов" %}{% endblock %}
 {% block page_subtitle %}{% translate "Управляйте списком обязательных документов для каждой цели подачи." %}{% endblock %}
+{% block page_actions %}{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-  <div class="card shadow-sm">
-    <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
-      <div class="nav nav-pills gap-2">
-        {% for value, label in purpose_choices %}
-          <a class="btn btn-sm {% if value == current_purpose %}btn-primary{% else %}btn-outline-primary{% endif %}"
-             href="?purpose={{ value }}">
-            {{ label }}
-          </a>
-        {% endfor %}
-      </div>
-      <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addDocModal">
-        <i class="bi bi-plus-circle me-1"></i>{% translate "Добавить документ" %}
-      </button>
-    </div>
-
-    <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle">
-          <thead class="table-light">
-            <tr>
-              <th class="w-75">{% translate "Название документа (в чеклисте)" %}</th>
-              <th class="text-center">{% translate "Включено" %}</th>
-              <th class="text-end">{% translate "Действия" %}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for req in requirements %}
-              <form id="edit-{{ req.id }}" method="post" action="{% url 'clients:checklist_edit_doc' req.pk %}">
-                {% csrf_token %}
-              </form>
-              <tr>
-                <td>
-                  <input type="text" name="custom_name" form="edit-{{ req.id }}" value="{{ req.custom_name|default:req.document_type }}" class="form-control" required>
-                </td>
-                <td class="text-center">
-                  <div class="form-check d-inline-block">
-                    <input class="form-check-input" type="checkbox" name="is_required" form="edit-{{ req.id }}" id="req_{{ req.id }}" {% if req.is_required %}checked{% endif %}>
-                  </div>
-                </td>
-                <td class="text-end">
-                  <button type="submit" form="edit-{{ req.id }}" class="btn btn-sm btn-primary" title="{% translate "Сохранить изменения" %}"><i class="bi bi-save"></i></button>
-                  <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteDocModal{{ req.id }}" title="{% translate "Удалить" %}"><i class="bi bi-trash"></i></button>
-                </td>
-              </tr>
-
-              <div class="modal fade" id="deleteDocModal{{ req.id }}" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title">{% translate "Удалить документ?" %}</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                      {% blocktrans with name=req.custom_name|default:req.document_type %}Вы действительно хотите удалить "{{ name }}" из чеклиста?{% endblocktrans %}
-                      <br><small class="text-muted">{% translate "Загруженные файлы этого типа у клиентов останутся, но перестанут отображаться в требованиях." %}</small>
-                    </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
-                      <form action="{% url 'clients:checklist_delete_doc' req.pk %}" method="post">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-danger">{% translate "Удалить" %}</button>
-                      </form>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            {% empty %}
-              <tr>
-                <td colspan="3" class="text-center text-muted">{% translate "Список документов пуст. Нажмите 'Добавить документ'." %}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+<div class="card shadow-sm">
+  <div class="card-header bg-body">
+    <div class="nav nav-pills gap-2">
+      {% for value, label in purpose_choices %}
+        <a class="btn btn-sm {% if value == current_purpose %}btn-primary{% else %}btn-outline-primary{% endif %}"
+           href="?purpose={{ value }}">
+          {{ label }}
+        </a>
+      {% endfor %}
     </div>
   </div>
-</div>
-
-<div class="modal fade" id="addDocModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">{% translate "Добавить новый документ" %}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  <div class="card-body">
+    <form method="post" class="row g-3">
+      {% csrf_token %}
+      <input type="hidden" name="purpose" value="{{ current_purpose }}">
+      <div class="col-12">
+        <h6 class="text-muted mb-3">{% translate "Отметьте документы, которые должны отображаться в чеклисте" %}</h6>
+        {{ form.required_documents.errors }}
+        <div class="row row-cols-1 row-cols-md-2 g-2">
+          {% for checkbox in form.required_documents %}
+            <div class="col">
+              <div class="form-check">
+                {{ checkbox.tag }}
+                <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
       </div>
-      <form method="post" action="{% url 'clients:checklist_add_doc' %}">
-        <div class="modal-body">
-          {% csrf_token %}
-          <input type="hidden" name="purpose" value="{{ current_purpose }}">
-          <div class="mb-3">
-            <label for="id_name" class="form-label">{% translate "Название документа (например, ZUS RCA)" %}</label>
-            {{ add_form.name }}
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
-          <button type="submit" name="action" value="add" class="btn btn-success">{% translate "Добавить" %}</button>
-        </div>
-      </form>
-    </div>
+      <div class="col-12 d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-save me-1"></i>{% translate "Сохранить чеклист" %}
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 {% endblock %}
