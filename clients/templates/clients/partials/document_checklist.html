@@ -33,7 +33,16 @@
         {% else %}
           <p class="text-muted">Документы этого типа еще не загружены.</p>
         {% endif %}
-        <a href="{% url 'clients:add_document' client_id=client.id doc_type=item.code %}" class="btn btn-primary btn-sm">+ Добавить еще один файл</a>
+        <button
+          type="button"
+          class="btn btn-primary btn-sm"
+          data-bs-toggle="modal"
+          data-bs-target="#uploadDocumentModal"
+          data-doc-type="{{ item.code }}"
+          data-doc-name="{{ item.name }}"
+        >
+          + Добавить еще один файл
+        </button>
       </div>
     </div>
   </div>
