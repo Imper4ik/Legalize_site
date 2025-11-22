@@ -32,11 +32,4 @@ def get_item(mapping, key):
 
     if isinstance(mapping, dict):
         return mapping.get(key)
-
-    getter = getattr(mapping, "get", None)
-    if callable(getter):
-        return getter(key)
-
-    if hasattr(mapping, key):
-        return getattr(mapping, key)
     return None
