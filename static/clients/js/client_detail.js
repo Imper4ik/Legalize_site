@@ -224,6 +224,44 @@
     });
   }
 
+  function initDocumentUploadModal() {
+    const modal = document.getElementById('uploadDocumentModal');
+    if (!modal) {
+      return;
+    }
+
+    const description = modal.querySelector('#uploadDocumentDescription');
+    const form = modal.querySelector('form');
+    const actionTemplate = modal.dataset.actionTemplate;
+
+    modal.addEventListener('show.bs.modal', (event) => {
+      const button = event.relatedTarget;
+      if (!button || !form || !actionTemplate) {
+        return;
+      }
+
+      const docType = button.getAttribute('data-doc-type');
+      const docName = button.getAttribute('data-doc-name');
+
+      if (docType) {
+        form.setAttribute('action', actionTemplate.replace('__doc_type__', encodeURIComponent(docType)));
+      }
+
+      if (description) {
+        description.textContent = docName ? `Вы загружаете документ: "${docName}"` : '';
+      }
+    });
+
+    modal.addEventListener('hidden.bs.modal', () => {
+      if (form) {
+        form.reset();
+      }
+      if (description) {
+        description.textContent = '';
+      }
+    });
+  }
+
   function initChecklistRefresher() {
     const accordion = document.getElementById('documentAccordion');
     if (!accordion) {
@@ -255,7 +293,8 @@
     }
 
     async function refresh() {
-      if (isFetching || document.visibilityState !== 'visible' || document.body.classList.contains('modal-open')) {
+      const hasOpenModal = Boolean(document.querySelector('.modal.show'));
+      if (isFetching || document.visibilityState !== 'visible' || hasOpenModal) {
         return;
       }
 
@@ -293,15 +332,39 @@
       }
     }
 
-    const intervalId = window.setInterval(refresh, 8000);
-    document.addEventListener('visibilitychange', refresh);
-    window.addEventListener('beforeunload', () => {
-      window.clearInterval(intervalId);
+    let intervalId = null;
+
+    function startInterval() {
+      if (intervalId === null) {
+        intervalId = window.setInterval(refresh, 8000);
+      }
+    }
+
+    function stopInterval() {
+      if (intervalId !== null) {
+        window.clearInterval(intervalId);
+        intervalId = null;
+      }
       if (controller) {
         controller.abort();
       }
+    }
+
+    document.addEventListener('show.bs.modal', stopInterval);
+    document.addEventListener('hidden.bs.modal', () => {
+      // Restart the refresher only when all modals are closed
+      if (!document.querySelector('.modal.show')) {
+        startInterval();
+      }
     });
 
+    document.addEventListener('visibilitychange', refresh);
+    window.addEventListener('beforeunload', () => {
+      stopInterval();
+      document.removeEventListener('show.bs.modal', stopInterval);
+    });
+
+    startInterval();
     refresh();
   }
 
@@ -309,6 +372,7 @@
     initPriceAutoFill();
     initAddPaymentForm();
     initEditPaymentModal();
+    initDocumentUploadModal();
     initChecklistRefresher();
   });
 })();
