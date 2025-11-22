@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n form_filters %}
 
 {% block title %}{% translate "Настройка чеклистов" %}{% endblock %}
 {% block page_title %}{% translate "Настройка чеклистов" %}{% endblock %}
@@ -18,7 +18,7 @@
           </a>
         {% endfor %}
       </div>
-      <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#addDocumentRequirementModal">
+      <button class="btn btn-sm btn-gradient" type="button" data-bs-toggle="modal" data-bs-target="#addDocumentRequirementModal">
         <i class="bi bi-plus-lg me-1"></i>{% translate "Добавить документ" %}
       </button>
     </div>
@@ -32,12 +32,39 @@
         {{ form.required_documents.errors }}
         <div class="row row-cols-1 row-cols-md-2 g-2">
           {% for checkbox in form.required_documents %}
-            <div class="col">
-              <div class="form-check">
-                {{ checkbox.tag }}
-                <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
-              </div>
-            </div>
+            {% with checkbox.data|get_item:'value' as checkbox_value %}
+            {% with requirement_pair=requirement_lookup|get_item:checkbox_value %}
+              {% if requirement_pair %}
+                {% with requirement=requirement_pair.0 edit_form=requirement_pair.1 %}
+                  <div class="col">
+                    <div class="border rounded px-3 py-2 h-100">
+                      <div class="d-flex align-items-start gap-2 justify-content-between">
+                        <div class="form-check flex-grow-1">
+                          {{ checkbox.tag }}
+                          <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                        </div>
+                        <div class="btn-group btn-group-sm" role="group" aria-label="{% translate 'Действия с документом' %}">
+                          <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#editRequirementModal{{ requirement.id }}" title="{% translate 'Редактировать документ' %}">
+                            <i class="bi bi-pencil"></i>
+                          </button>
+                          <button class="btn btn-outline-danger" type="submit" form="deleteRequirement{{ requirement.id }}" title="{% translate 'Удалить документ' %}" onclick="return confirm('{% translate "Удалить этот документ из чеклиста?" %}');">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endwith %}
+              {% else %}
+                <div class="col">
+                  <div class="form-check">
+                    {{ checkbox.tag }}
+                    <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                  </div>
+                </div>
+              {% endif %}
+            {% endwith %}
+            {% endwith %}
           {% endfor %}
         </div>
       </div>
@@ -45,13 +72,15 @@
         <button type="submit" class="btn btn-primary">
           <i class="bi bi-save me-1"></i>{% translate "Сохранить чеклист" %}
         </button>
-        <button type="button" class="btn btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#addDocumentRequirementModal">
+        <button type="button" class="btn btn-gradient ms-2" data-bs-toggle="modal" data-bs-target="#addDocumentRequirementModal">
           <i class="bi bi-plus-lg me-1"></i>{% translate "Добавить новый документ" %}
         </button>
       </div>
     </form>
   </div>
   </div>
+
+{% endblock %}
 
 {% block modals %}
   {{ block.super }}
@@ -80,5 +109,38 @@
       </div>
     </div>
   </div>
-{% endblock %}
+
+  {% for requirement, edit_form in editable_requirements %}
+    <form id="deleteRequirement{{ requirement.id }}" action="{% url 'clients:document_requirement_delete' requirement.id %}" method="post" class="d-none">
+      {% csrf_token %}
+    </form>
+
+    <div class="modal fade" id="editRequirementModal{{ requirement.id }}" tabindex="-1" aria-labelledby="editRequirementLabel{{ requirement.id }}" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editRequirementLabel{{ requirement.id }}">{% translate "Редактировать документ" %}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
+          </div>
+          <form action="{% url 'clients:document_requirement_edit' requirement.id %}" method="post">
+            {% csrf_token %}
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="{{ edit_form.custom_name.id_for_label }}" class="form-label">{% translate "Название документа" %}</label>
+                {{ edit_form.custom_name }}
+              </div>
+              <div class="form-check form-switch">
+                {{ edit_form.is_required }}
+                <label class="form-check-label" for="{{ edit_form.is_required.id_for_label }}">{% translate "Обязательный" %}</label>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+              <button type="submit" class="btn btn-primary">{% translate "Сохранить" %}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
 {% endblock %}
