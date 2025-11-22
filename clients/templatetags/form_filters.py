@@ -24,3 +24,19 @@ def add_placeholder(field, placeholder_text):
         attrs["placeholder"] = placeholder_text
         return field.as_widget(attrs=attrs)
     return field
+
+
+@register.filter(name="get_item")
+def get_item(mapping, key):
+    """Safely fetch a dictionary item in templates."""
+
+    if isinstance(mapping, dict):
+        return mapping.get(key)
+
+    getter = getattr(mapping, "get", None)
+    if callable(getter):
+        return getter(key)
+
+    if hasattr(mapping, key):
+        return getattr(mapping, key)
+    return None
