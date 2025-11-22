@@ -8,8 +8,15 @@ from django.utils.translation import gettext as _
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 from django.conf import settings
 
-from clients.forms import CalculatorForm, ClientForm, DocumentChecklistForm, PaymentForm
-from clients.models import Client, Document, Payment
+from clients.forms import (
+    CalculatorForm,
+    ClientForm,
+    DocumentChecklistForm,
+    DocumentRequirementAddForm,
+    DocumentRequirementEditForm,
+    PaymentForm,
+)
+from clients.models import Client, Document, DocumentRequirement, Payment
 from clients.services.calculator import (
     EUR_TO_PLN_RATE,
     LIVING_ALLOWANCE,
@@ -20,7 +27,7 @@ from clients.services.notifications import (
     send_expired_documents_email,
     send_required_documents_email,
 )
-from clients.views.base import StaffRequiredMixin
+from clients.views.base import StaffRequiredMixin, staff_required_view
 from clients.services.responses import apply_no_store
 
 
@@ -224,9 +231,61 @@ class DocumentChecklistManageView(StaffRequiredMixin, FormView):
         context = super().get_context_data(**kwargs)
         context['current_purpose'] = self.get_purpose()
         context['purpose_choices'] = Client.APPLICATION_PURPOSE_CHOICES
+        context['add_form'] = DocumentRequirementAddForm(purpose=self.get_purpose())
         return context
 
 
 # Функции-обёртки сохраняют прежние точки входа, чтобы не переписывать URLConf
 client_print_view = ClientPrintView.as_view()
 client_wsc_print_view = ClientWSCPrintView.as_view()
+
+
+@staff_required_view
+def document_requirement_add(request):
+    purpose = request.POST.get('purpose') or request.GET.get('purpose')
+    allowed = [choice[0] for choice in Client.APPLICATION_PURPOSE_CHOICES]
+    if purpose not in allowed:
+        purpose = allowed[0]
+
+    form = DocumentRequirementAddForm(request.POST or None, purpose=purpose)
+    if request.method == 'POST':
+        if form.is_valid():
+            requirement = form.save()
+            messages.success(
+                request,
+                _("Документ '%(name)s' добавлен в чеклист.")
+                % {"name": requirement.custom_name or requirement.document_type},
+            )
+        else:
+            messages.error(
+                request,
+                _("Не удалось добавить документ. Проверьте форму."),
+            )
+
+    return redirect(reverse_lazy('clients:document_checklist_manage') + f'?purpose={purpose}')
+
+
+@staff_required_view
+def document_requirement_edit(request, pk):
+    requirement = get_object_or_404(DocumentRequirement, pk=pk)
+    form = DocumentRequirementEditForm(request.POST or None, instance=requirement)
+
+    if request.method == 'POST':
+        if form.is_valid():
+            updated = form.save()
+            status_text = _("обязательный") if updated.is_required else _("необязательный")
+            messages.success(
+                request,
+                _("Документ обновлён: %(name)s (%(status)s).")
+                % {
+                    "name": updated.custom_name or updated.document_type.replace('_', ' ').capitalize(),
+                    "status": status_text,
+                },
+            )
+        else:
+            messages.error(
+                request,
+                _("Не удалось сохранить изменения. Проверьте форму."),
+            )
+
+    return redirect(reverse_lazy('clients:document_checklist_manage') + f'?purpose={requirement.application_purpose}')
