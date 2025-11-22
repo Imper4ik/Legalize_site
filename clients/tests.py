@@ -10,7 +10,7 @@ from django.utils import translation
 
 from allauth.account.models import EmailAddress
 
-from .forms import DocumentRequirementAddForm, DocumentRequirementEditForm
+from .forms import DocumentChecklistForm
 from .models import Client, Document, DocumentRequirement
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper
@@ -257,6 +257,59 @@ class DocumentRequirementTests(TestCase):
 
         self.assertFalse(updated.is_required)
         self.assertEqual(updated.custom_name, 'Паспорт клиента')
+
+
+class DocumentRequirementTests(TestCase):
+    def test_required_for_respects_database_overrides(self):
+        DocumentRequirement.objects.filter(application_purpose='work').delete()
+        DocumentRequirement.objects.create(
+            application_purpose='work', document_type=DocumentType.PASSPORT, position=1
+        )
+        DocumentRequirement.objects.create(
+            application_purpose='work', document_type=DocumentType.PHOTOS, position=0
+        )
+
+        self.assertEqual(
+            DocumentRequirement.required_for('work'),
+            [
+                (DocumentType.PHOTOS.value, DocumentType.PHOTOS.label),
+                (DocumentType.PASSPORT.value, DocumentType.PASSPORT.label),
+            ],
+        )
+
+    def test_client_checklist_falls_back_when_no_records(self):
+        DocumentRequirement.objects.filter(application_purpose='work').delete()
+        client = Client.objects.create(
+            first_name='Anna',
+            last_name='Nowak',
+            citizenship='PL',
+            phone='+48123123123',
+            email='anna@example.com',
+            application_purpose='work',
+            language='pl',
+        )
+
+        checklist = client.get_document_checklist()
+        fallback = DOCUMENT_CHECKLIST.get(('work', 'pl'))
+        self.assertEqual(len(checklist), len(fallback))
+
+    def test_checklist_form_saves_selected_documents(self):
+        DocumentRequirement.objects.filter(application_purpose='study').delete()
+        form = DocumentChecklistForm(
+            data={'required_documents': [DocumentType.PASSPORT, DocumentType.PAYMENT_CONFIRMATION]},
+            purpose='study',
+        )
+        self.assertTrue(form.is_valid())
+        saved_count = form.save()
+
+        self.assertEqual(saved_count, 2)
+        self.assertEqual(
+            DocumentRequirement.required_for('study'),
+            [
+                (DocumentType.PASSPORT.value, DocumentType.PASSPORT.label),
+                (DocumentType.PAYMENT_CONFIRMATION.value, DocumentType.PAYMENT_CONFIRMATION.label),
+            ],
+        )
 
 
 class ResponseHelperTests(TestCase):
