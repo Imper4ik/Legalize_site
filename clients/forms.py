@@ -1,5 +1,4 @@
 from django import forms
-from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 from clients.services.calculator import CURRENCY_EUR, CURRENCY_PLN
@@ -102,16 +101,11 @@ class DocumentChecklistForm(forms.Form):
         widget=forms.CheckboxSelectMultiple,
         choices=DocumentType.choices,
     )
-    new_document_name = forms.CharField(
-        label=_('Добавить новый документ'),
-        required=False,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('Например: Подтверждение проживания')}),
-    )
 
     def __init__(self, *args, purpose: str | None = None, **kwargs):
         self.purpose = purpose
         super().__init__(*args, **kwargs)
-        self.fields['required_documents'].choices = self._choices()
+        self.fields['required_documents'].choices = DocumentType.choices
 
         if 'required_documents' not in self.initial:
             self.initial['required_documents'] = self._initial_documents()
@@ -130,57 +124,21 @@ class DocumentChecklistForm(forms.Form):
                 return [code for code, _ in docs]
         return []
 
-    def _choices(self):
-        base_choices = list(DocumentType.choices)
-        existing = DocumentRequirement.objects.filter(application_purpose=self.purpose)
-        seen = {code for code, _ in base_choices}
-        for doc in existing:
-            if doc.document_type not in seen:
-                label = doc.custom_name or doc.document_type.replace('_', ' ').capitalize()
-                base_choices.append((doc.document_type, label))
-                seen.add(doc.document_type)
-        return base_choices
-
-    def _slug_from_name(self, name: str) -> str:
-        base = slugify(name, allow_unicode=True).replace('-', '_')
-        if not base:
-            return ''
-        candidate = base
-        counter = 1
-        while DocumentRequirement.objects.filter(application_purpose=self.purpose, document_type=candidate).exists():
-            counter += 1
-            candidate = f"{base}_{counter}"
-        return candidate
-
     def save(self) -> int:
         if self.purpose is None:
             return 0
 
         selected_codes = list(self.cleaned_data.get('required_documents', []))
-        new_name = (self.cleaned_data.get('new_document_name') or '').strip()
-        custom_labels = {}
-
-        if new_name:
-            slug = self._slug_from_name(new_name)
-            if slug:
-                if slug not in selected_codes:
-                    selected_codes.append(slug)
-                custom_labels[slug] = new_name
-
-        existing_labels = dict(
-            DocumentRequirement.objects.filter(application_purpose=self.purpose).values_list('document_type', 'custom_name')
-        )
 
         DocumentRequirement.objects.filter(application_purpose=self.purpose).exclude(
             document_type__in=selected_codes
         ).delete()
 
         for position, code in enumerate(selected_codes):
-            custom_name = custom_labels.get(code, '') or existing_labels.get(code, '')
             DocumentRequirement.objects.update_or_create(
                 application_purpose=self.purpose,
                 document_type=code,
-                defaults={'is_required': True, 'position': position, 'custom_name': custom_name},
+                defaults={'is_required': True, 'position': position},
             )
 
         return len(selected_codes)

@@ -83,9 +83,7 @@ class ClientCreateView(StaffRequiredMixin, CreateView):
     def form_valid(self, form):
         messages.success(self.request, "Клиент успешно создан!")
         response = super().form_valid(form)
-        sent_count = send_required_documents_email(self.object)
-        if sent_count:
-            messages.info(self.request, "Список необходимых документов отправлен на email клиента.")
+        send_required_documents_email(self.object)
         return response
 
     def form_invalid(self, form):
@@ -116,12 +114,7 @@ class ClientUpdateView(StaffRequiredMixin, UpdateView):
 
         new_fingerprints_date = form.cleaned_data.get("fingerprints_date")
         if new_fingerprints_date and new_fingerprints_date != previous_fingerprints_date:
-            sent_count = send_expired_documents_email(self.object)
-            if sent_count:
-                messages.info(
-                    self.request,
-                    "Письмо с просроченными документами отправлено клиенту.",
-                )
+            send_expired_documents_email(self.object)
 
         return response
 

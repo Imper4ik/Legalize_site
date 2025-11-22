@@ -136,9 +136,9 @@ class DocumentRequirement(models.Model):
     )
     document_type = models.CharField(
         max_length=50,
+        choices=DocumentType.choices,
         verbose_name=_("Тип документа"),
     )
-    custom_name = models.CharField(max_length=255, blank=True, verbose_name=_("Название документа"))
     position = models.PositiveIntegerField(default=0, verbose_name=_("Порядок отображения"))
     is_required = models.BooleanField(default=True, verbose_name=_("Обязательный документ"))
 
@@ -149,21 +149,12 @@ class DocumentRequirement(models.Model):
         verbose_name_plural = _("Требования к документам")
 
     def __str__(self):
-        return f"{self.get_application_purpose_display()}: {self.custom_name or self.document_type}"
+        return f"{self.get_application_purpose_display()}: {self.get_document_type_display()}"
 
     @classmethod
     def required_for(cls, purpose: str) -> list[tuple[str, str]]:
         records = cls.objects.filter(application_purpose=purpose, is_required=True).order_by("position", "id")
-        items: list[tuple[str, str]] = []
-        for item in records:
-            if item.custom_name:
-                items.append((item.document_type, item.custom_name))
-                continue
-            try:
-                items.append((item.document_type, DocumentType(item.document_type).label))
-            except ValueError:
-                items.append((item.document_type, item.document_type.replace('_', ' ').capitalize()))
-        return items
+        return [(item.document_type, DocumentType(item.document_type).label) for item in records]
 
 
 class Payment(models.Model):
