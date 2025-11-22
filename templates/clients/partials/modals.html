@@ -98,3 +98,38 @@
   </div>
 </div>
 
+<div
+  class="modal fade"
+  id="uploadDocumentModal"
+  tabindex="-1"
+  aria-labelledby="uploadDocumentModalLabel"
+  aria-hidden="true"
+  data-action-template="{% url 'clients:add_document' client_id=client.id doc_type='__doc_type__' %}"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="uploadDocumentModalLabel">{% translate "Добавить документ" %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
+      </div>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-body">
+          <p class="mb-3 text-muted" id="uploadDocumentDescription"></p>
+          <div class="mb-3">
+            <label for="{{ document_upload_form.file.id_for_label }}" class="form-label">{% translate "Выберите файл" %}</label>
+            {{ document_upload_form.file }}
+          </div>
+          <div class="mb-3">
+            <label for="{{ document_upload_form.expiry_date.id_for_label }}" class="form-label">{% translate "Действителен до (необязательно)" %}</label>
+            {{ document_upload_form.expiry_date }}
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+          <button type="submit" class="btn btn-primary">{% translate "Сохранить" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

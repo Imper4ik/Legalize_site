@@ -224,6 +224,44 @@
     });
   }
 
+  function initDocumentUploadModal() {
+    const modal = document.getElementById('uploadDocumentModal');
+    if (!modal) {
+      return;
+    }
+
+    const description = modal.querySelector('#uploadDocumentDescription');
+    const form = modal.querySelector('form');
+    const actionTemplate = modal.dataset.actionTemplate;
+
+    modal.addEventListener('show.bs.modal', (event) => {
+      const button = event.relatedTarget;
+      if (!button || !form || !actionTemplate) {
+        return;
+      }
+
+      const docType = button.getAttribute('data-doc-type');
+      const docName = button.getAttribute('data-doc-name');
+
+      if (docType) {
+        form.setAttribute('action', actionTemplate.replace('__doc_type__', encodeURIComponent(docType)));
+      }
+
+      if (description) {
+        description.textContent = docName ? `Вы загружаете документ: "${docName}"` : '';
+      }
+    });
+
+    modal.addEventListener('hidden.bs.modal', () => {
+      if (form) {
+        form.reset();
+      }
+      if (description) {
+        description.textContent = '';
+      }
+    });
+  }
+
   function initChecklistRefresher() {
     const accordion = document.getElementById('documentAccordion');
     if (!accordion) {
@@ -309,6 +347,7 @@
     initPriceAutoFill();
     initAddPaymentForm();
     initEditPaymentModal();
+    initDocumentUploadModal();
     initChecklistRefresher();
   });
 })();
