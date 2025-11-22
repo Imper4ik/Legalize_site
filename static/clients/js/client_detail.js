@@ -54,6 +54,121 @@
     });
   }
 
+  function showPaymentAlert(message, type = 'success') {
+    const container = document.getElementById('payment-alerts');
+    if (!container || !message) {
+      return;
+    }
+
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.role = 'alert';
+    alert.textContent = message;
+
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'btn-close';
+    closeButton.setAttribute('data-bs-dismiss', 'alert');
+    closeButton.setAttribute('aria-label', 'Close');
+    alert.appendChild(closeButton);
+
+    container.append(alert);
+
+    window.setTimeout(() => {
+      bootstrap.Alert.getOrCreateInstance(alert).close();
+    }, 3500);
+  }
+
+  function prependPaymentItem(html, paymentId) {
+    const list = document.getElementById('payment-list-container');
+    if (!list || !html) {
+      return;
+    }
+
+    const newItem = document.createElement('li');
+    newItem.className = 'list-group-item';
+    newItem.dataset.paymentId = paymentId;
+    newItem.innerHTML = html.trim();
+
+    const emptyState = document.getElementById('no-payments-message');
+    if (emptyState) {
+      emptyState.remove();
+    }
+
+    list.prepend(newItem);
+  }
+
+  function updatePaymentItem(html, paymentId) {
+    const list = document.getElementById('payment-list-container');
+    if (!list || !html || !paymentId) {
+      return;
+    }
+
+    const existing = list.querySelector(`[data-payment-id="${paymentId}"]`);
+    if (existing) {
+      existing.innerHTML = html.trim();
+    }
+  }
+
+  function getErrorMessage(errors) {
+    if (!errors) {
+      return 'Не удалось сохранить платёж. Попробуйте ещё раз.';
+    }
+
+    if (typeof errors === 'string') {
+      return errors;
+    }
+
+    const firstField = Object.values(errors)[0];
+    if (Array.isArray(firstField) && firstField.length > 0) {
+      return firstField[0];
+    }
+
+    return 'Не удалось сохранить платёж. Попробуйте ещё раз.';
+  }
+
+  function initAddPaymentForm() {
+    const modal = document.getElementById('addPaymentModal');
+    if (!modal) {
+      return;
+    }
+
+    const form = modal.querySelector('form');
+    if (!form) {
+      return;
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const submitButton = form.querySelector('[type="submit"]');
+      submitButton?.setAttribute('disabled', 'disabled');
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          body: new FormData(form),
+        });
+
+        const data = await response.json();
+        if (data.status === 'success' && data.html) {
+          prependPaymentItem(data.html, data.payment_id);
+          bootstrap.Modal.getOrCreateInstance(modal).hide();
+          form.reset();
+          showPaymentAlert('Платёж успешно добавлен.');
+          return;
+        }
+
+        showPaymentAlert(getErrorMessage(data.errors || data.message), 'danger');
+      } catch (error) {
+        console.error('Ошибка при создании платежа', error);
+        showPaymentAlert('Не удалось создать платёж. Попробуйте ещё раз.', 'danger');
+      } finally {
+        submitButton?.removeAttribute('disabled');
+      }
+    });
+  }
+
   function initEditPaymentModal() {
     const modal = document.getElementById('editPaymentModal');
     if (!modal) {
@@ -71,6 +186,40 @@
       const form = modal.querySelector('#editPaymentForm');
       if (form) {
         form.setAttribute('action', action);
+      }
+    });
+
+    const form = modal.querySelector('#editPaymentForm');
+    if (!form) {
+      return;
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const submitButton = form.querySelector('[type="submit"]');
+      submitButton?.setAttribute('disabled', 'disabled');
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          body: new FormData(form),
+        });
+
+        const data = await response.json();
+        if (data.status === 'success' && data.html && data.payment_id) {
+          updatePaymentItem(data.html, data.payment_id);
+          bootstrap.Modal.getOrCreateInstance(modal).hide();
+          showPaymentAlert('Платёж успешно обновлён.');
+          return;
+        }
+
+        showPaymentAlert(getErrorMessage(data.errors || data.message), 'danger');
+      } catch (error) {
+        console.error('Ошибка при обновлении платежа', error);
+        showPaymentAlert('Не удалось обновить платёж. Попробуйте ещё раз.', 'danger');
+      } finally {
+        submitButton?.removeAttribute('disabled');
       }
     });
   }
@@ -158,6 +307,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     initPriceAutoFill();
+    initAddPaymentForm();
     initEditPaymentModal();
     initChecklistRefresher();
   });
