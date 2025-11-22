@@ -115,6 +115,7 @@ class DocumentRequirementAddForm(forms.Form):
     def __init__(self, *args, purpose: str | None = None, **kwargs):
         self.purpose = purpose
         super().__init__(*args, **kwargs)
+        self.fields['name'].widget.attrs.setdefault('autofocus', 'autofocus')
 
     def clean_name(self):
         name = (self.cleaned_data.get('name') or '').strip()
@@ -151,10 +152,33 @@ class DocumentChecklistForm(forms.Form):
     def __init__(self, *args, purpose: str | None = None, **kwargs):
         self.purpose = purpose
         super().__init__(*args, **kwargs)
-        self.fields['required_documents'].choices = DocumentType.choices
+        existing_requirements = list(
+            DocumentRequirement.objects.filter(application_purpose=self.purpose)
+            .order_by('position', 'id')
+        )
+
+        existing_codes = {item.document_type for item in existing_requirements}
+        choices = []
+
+        for requirement in existing_requirements:
+            label = requirement.custom_name or self._label_for_code(requirement.document_type)
+            choices.append((requirement.document_type, label))
+
+        for code, label in DocumentType.choices:
+            if code not in existing_codes:
+                choices.append((code, label))
+
+        self.fields['required_documents'].choices = choices
 
         if 'required_documents' not in self.initial:
             self.initial['required_documents'] = self._initial_documents()
+
+    @staticmethod
+    def _label_for_code(code: str) -> str:
+        try:
+            return DocumentType(code).label
+        except ValueError:
+            return code.replace('_', ' ').capitalize()
 
     def _initial_documents(self):
         existing = (
@@ -175,17 +199,31 @@ class DocumentChecklistForm(forms.Form):
             return 0
 
         selected_codes = list(self.cleaned_data.get('required_documents', []))
+        selected_positions = {code: pos for pos, code in enumerate(selected_codes)}
 
-        DocumentRequirement.objects.filter(application_purpose=self.purpose).exclude(
-            document_type__in=selected_codes
-        ).delete()
+        existing = {
+            requirement.document_type: requirement
+            for requirement in DocumentRequirement.objects.filter(application_purpose=self.purpose)
+        }
 
-        for position, code in enumerate(selected_codes):
-            DocumentRequirement.objects.update_or_create(
-                application_purpose=self.purpose,
-                document_type=code,
-                defaults={'is_required': True, 'position': position},
-            )
+        for code in selected_codes:
+            if code in existing:
+                requirement = existing[code]
+                requirement.is_required = True
+                requirement.position = selected_positions.get(code, requirement.position)
+                requirement.save(update_fields=['is_required', 'position'])
+            else:
+                DocumentRequirement.objects.create(
+                    application_purpose=self.purpose,
+                    document_type=code,
+                    is_required=True,
+                    position=selected_positions.get(code, 0),
+                )
+
+        for requirement in existing.values():
+            if requirement.document_type not in selected_positions and requirement.is_required:
+                requirement.is_required = False
+                requirement.save(update_fields=['is_required'])
 
         return len(selected_codes)
 

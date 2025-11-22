@@ -9,13 +9,18 @@
 {% block content %}
 <div class="card shadow-sm">
   <div class="card-header bg-body">
-    <div class="nav nav-pills gap-2">
-      {% for value, label in purpose_choices %}
-        <a class="btn btn-sm {% if value == current_purpose %}btn-primary{% else %}btn-outline-primary{% endif %}"
-           href="?purpose={{ value }}">
-          {{ label }}
-        </a>
-      {% endfor %}
+    <div class="d-flex flex-column flex-md-row gap-2 align-items-md-center justify-content-between">
+      <div class="nav nav-pills gap-2 flex-wrap">
+        {% for value, label in purpose_choices %}
+          <a class="btn btn-sm {% if value == current_purpose %}btn-primary{% else %}btn-outline-primary{% endif %}"
+             href="?purpose={{ value }}">
+            {{ label }}
+          </a>
+        {% endfor %}
+      </div>
+      <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#addDocumentRequirementModal">
+        <i class="bi bi-plus-lg me-1"></i>{% translate "Добавить документ" %}
+      </button>
     </div>
   </div>
   <div class="card-body">
@@ -40,6 +45,33 @@
         <button type="submit" class="btn btn-primary">
           <i class="bi bi-save me-1"></i>{% translate "Сохранить чеклист" %}
         </button>
+        <button type="button" class="btn btn-outline-primary ms-2" data-bs-toggle="modal" data-bs-target="#addDocumentRequirementModal">
+          <i class="bi bi-plus-lg me-1"></i>{% translate "Добавить новый документ" %}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal fade" id="addDocumentRequirementModal" tabindex="-1" aria-labelledby="addDocumentRequirementLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form action="{% url 'clients:document_requirement_add' %}" method="post" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addDocumentRequirementLabel">{% translate "Добавить новый документ" %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
+      </div>
+      {% csrf_token %}
+      <input type="hidden" name="purpose" value="{{ current_purpose }}">
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="{{ add_form.name.id_for_label }}" class="form-label">{% translate "Название документа" %}</label>
+          {{ add_form.name }}
+        </div>
+        <p class="text-muted small mb-0">{% translate "Документ сразу будет добавлен в текущий чеклист." %}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+        <button type="submit" class="btn btn-primary">{% translate "Добавить" %}</button>
       </div>
     </form>
   </div>
