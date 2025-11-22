@@ -110,10 +110,8 @@ class Client(models.Model):
 
 
 class Document(models.Model):
-    DOC_TYPES = DocumentType.choices
-
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='documents', verbose_name=_("Клиент"))
-    document_type = models.CharField(max_length=50, choices=DOC_TYPES, verbose_name=_("Тип документа"))
+    document_type = models.CharField(max_length=100, verbose_name=_("Тип документа"))
     file = models.FileField(upload_to='documents/', verbose_name=_("Файл"))
     expiry_date = models.DateField(null=True, blank=True, verbose_name=_("Действителен до"))
     uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Дата загрузки"))
@@ -125,7 +123,57 @@ class Document(models.Model):
         ordering = ['-uploaded_at']
 
     def __str__(self):
-        return f"{self.get_document_type_display()} для {self.client}"
+        return f"{self.display_name} для {self.client}"
+
+    @property
+    def display_name(self) -> str:
+        requirement = DocumentRequirement.objects.filter(
+            application_purpose=self.client.application_purpose,
+            document_type=self.document_type,
+        ).first()
+        if requirement and requirement.custom_name:
+            return requirement.custom_name
+        if self.document_type in [choice.value for choice in DocumentType]:
+            return DocumentType(self.document_type).label
+        return self.document_type.replace('_', ' ').capitalize()
+
+
+class DocumentRequirement(models.Model):
+    application_purpose = models.CharField(
+        max_length=20,
+        choices=Client.APPLICATION_PURPOSE_CHOICES,
+        verbose_name=_("Цель подачи"),
+    )
+    document_type = models.CharField(
+        max_length=100,
+        verbose_name=_("Код типа документа"),
+    )
+    custom_name = models.CharField(max_length=255, blank=True, null=True, verbose_name=_("Название документа"))
+    position = models.PositiveIntegerField(default=0, verbose_name=_("Порядок отображения"))
+    is_required = models.BooleanField(default=True, verbose_name=_("Обязательный документ"))
+
+    class Meta:
+        unique_together = ("application_purpose", "document_type")
+        ordering = ["position", "id"]
+        verbose_name = _("Требование к документу")
+        verbose_name_plural = _("Требования к документам")
+
+    def __str__(self):
+        return f"{self.get_application_purpose_display()}: {self.custom_name or self.document_type}"
+
+    @classmethod
+    def required_for(cls, purpose: str) -> list[tuple[str, str]]:
+        records = cls.objects.filter(application_purpose=purpose, is_required=True).order_by("position", "id")
+        items: list[tuple[str, str]] = []
+        for item in records:
+            if item.custom_name:
+                items.append((item.document_type, item.custom_name))
+                continue
+            if item.document_type in [choice.value for choice in DocumentType]:
+                items.append((item.document_type, DocumentType(item.document_type).label))
+            else:
+                items.append((item.document_type, item.document_type.replace('_', ' ').capitalize()))
+        return items
 
 
 class DocumentRequirement(models.Model):

@@ -78,6 +78,50 @@ class PaymentForm(forms.ModelForm):
         widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
     )
 
+
+class DocumentRequirementEditForm(forms.ModelForm):
+    class Meta:
+        model = DocumentRequirement
+        fields = ['custom_name', 'is_required']
+        widgets = {
+            'custom_name': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
+            'is_required': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+
+
+class DocumentRequirementAddForm(forms.Form):
+    name = forms.CharField(
+        label=_('Название документа'),
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('Например: ZUS RCA')}),
+    )
+
+    def __init__(self, *args, purpose: str | None = None, **kwargs):
+        self.purpose = purpose
+        super().__init__(*args, **kwargs)
+
+    def clean_name(self):
+        name = (self.cleaned_data.get('name') or '').strip()
+        slug = slugify(name, allow_unicode=True).replace('-', '_')
+        if not slug:
+            slug = f"custom_doc_{get_random_string(5)}"
+
+        candidate = slug
+        while DocumentRequirement.objects.filter(application_purpose=self.purpose, document_type=candidate).exists():
+            candidate = f"{slug}_{get_random_string(4)}"
+
+        self.cleaned_data['slug'] = candidate
+        return name
+
+    def save(self):
+        position = DocumentRequirement.objects.filter(application_purpose=self.purpose).count()
+        return DocumentRequirement.objects.create(
+            application_purpose=self.purpose,
+            document_type=self.cleaned_data['slug'],
+            custom_name=self.cleaned_data['name'],
+            is_required=True,
+            position=position,
+        )
+
     class Meta:
         model = Payment
         fields = [

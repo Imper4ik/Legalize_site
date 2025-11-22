@@ -7,6 +7,7 @@ from clients.views.clients import (
     ClientUpdateView,
     DocumentChecklistManageView,
     calculator_view,
+    edit_document_requirement,
     client_print_view,
     client_wsc_print_view,
     dashboard_redirect_view,
