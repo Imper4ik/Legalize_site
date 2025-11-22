@@ -12,9 +12,11 @@ class DocumentType(models.TextChoices):
     ADDRESS_PROOF = 'address_proof', _('Подтверждение адреса')
     FINANCIAL_PROOF = 'financial_proof', _('Подтверждение финансов')
     ZALACZNIK_NR_1 = 'załącznik_nr_1', _('Załącznik nr 1')
-    STAROSTA_INFO = 'starosta_info', _('Informacja starosty')
     EMPLOYMENT_CONTRACT = 'employment_contract', _('Трудовой договор')
     PIT_PROOF = 'pit_proof', _('PIT-37 / Zaświadczenie o niezaleganiu')
+    TAX_CLEARANCE_EMPLOYER = 'tax_clearance_employer', _('Справка об отсутствии налоговой задолженности работодателя')
+    TAX_CLEARANCE_FOREIGNER = 'tax_clearance_foreigner', _('Справка об отсутствии налоговой задолженности иностранца')
+    NO_DEPENDENTS_STATEMENT = 'no_dependents_statement', _('Заявление об отсутствии иждивенцев в Польше')
 
 
 def doc_entry(doc_type: DocumentType) -> tuple[str, str]:
@@ -39,7 +41,9 @@ WORK_DOCS = [
     doc_entry(DocumentType.PASSPORT),
     doc_entry(DocumentType.PAYMENT_CONFIRMATION),
     doc_entry(DocumentType.ZALACZNIK_NR_1),
-    doc_entry(DocumentType.STAROSTA_INFO),
+    doc_entry(DocumentType.TAX_CLEARANCE_EMPLOYER),
+    doc_entry(DocumentType.TAX_CLEARANCE_FOREIGNER),
+    doc_entry(DocumentType.NO_DEPENDENTS_STATEMENT),
     doc_entry(DocumentType.HEALTH_INSURANCE),
     doc_entry(DocumentType.EMPLOYMENT_CONTRACT),
     doc_entry(DocumentType.PIT_PROOF),
