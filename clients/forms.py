@@ -169,16 +169,14 @@ class DocumentChecklistForm(forms.Form):
             .order_by('position', 'id')
         )
 
-        existing_codes = {item.document_type for item in existing_requirements}
         choices = []
 
-        for requirement in existing_requirements:
-            label = requirement.custom_name or self._label_for_code(requirement.document_type)
-            choices.append((requirement.document_type, label))
-
-        for code, label in DocumentType.choices:
-            if code not in existing_codes:
-                choices.append((code, label))
+        if existing_requirements:
+            for requirement in existing_requirements:
+                label = requirement.custom_name or self._label_for_code(requirement.document_type)
+                choices.append((requirement.document_type, label))
+        else:
+            choices.extend(DocumentType.choices)
 
         self.fields['required_documents'].choices = choices
 
@@ -197,6 +195,9 @@ class DocumentChecklistForm(forms.Form):
         )
         if existing:
             return list(existing)
+
+        if DocumentRequirement.objects.filter(application_purpose=self.purpose).exists():
+            return []
 
         for (purpose, _), docs in DOCUMENT_CHECKLIST.items():
             if purpose == self.purpose:
