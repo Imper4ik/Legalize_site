@@ -2,8 +2,9 @@
 
 The watcher works against the documented JSON/XHR endpoints instead of
 scraping HTML pages. It authenticates via the ``sign-in`` endpoint, requests
-active proceedings from ``active-proceedings`` and persists snapshots in a
-local SQLite database so changes between checks can be detected.
+active proceedings from ``active-proceedings`` and persists snapshots in the
+project database (e.g., Railway PostgreSQL) so changes between checks can be
+detected.
 """
 from __future__ import annotations
 
