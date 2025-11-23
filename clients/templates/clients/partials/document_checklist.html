@@ -25,7 +25,9 @@
                 </div>
                 <div class="btn-group">
                   <form action="{% url 'clients:toggle_document_verification' doc.id %}" method="post" class="d-inline toggle-verification-form">{% csrf_token %}<button type="submit" class="btn btn-sm btn-outline-primary">{% if doc.verified %}Снять отметку{% else %}Проверить{% endif %}</button></form>
-                  <form action="{% url 'clients:document_delete' doc.pk %}" method="post" class="d-inline delete-document-form">{% csrf_token %}<button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button></form>
+                  {% if not doc.is_standard_type %}
+                    <form action="{% url 'clients:document_delete' doc.pk %}" method="post" class="d-inline delete-document-form">{% csrf_token %}<button type="button" class="btn btn-sm btn-outline-danger delete-document-button">Удалить</button></form>
+                  {% endif %}
                 </div>
               </li>
             {% endfor %}
