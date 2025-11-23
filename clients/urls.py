@@ -50,6 +50,7 @@ urlpatterns = [
 
     # URL для калькулятора
     path('calculator/', views.calculator_view, name='calculator'),
+    path('inpol/account/', views.InpolAccountView.as_view(), name='inpol_account'),
     path('checklists/requirements/add/', views.document_requirement_add, name='document_requirement_add'),
     path('checklists/requirements/<int:pk>/edit/', views.document_requirement_edit, name='document_requirement_edit'),
     path('checklists/requirements/<int:pk>/delete/', views.document_requirement_delete, name='document_requirement_delete'),
