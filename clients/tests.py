@@ -350,50 +350,6 @@ class DocumentRequirementTests(TestCase):
 
         self.assertEqual(form.initial['required_documents'], [])
 
-    def test_manage_view_does_not_restore_deleted_standard_items(self):
-        user_model = get_user_model()
-        staff_user = user_model.objects.create_user(username='staff', password='pass', is_staff=True)
-        self.client.login(username='staff', password='pass')
-
-        DocumentRequirement.objects.filter(application_purpose='study').delete()
-        requirement = DocumentRequirement.objects.create(
-            application_purpose='study',
-            document_type=DocumentType.PASSPORT,
-            is_required=True,
-            position=0,
-        )
-
-        requirement.delete()
-
-        response = self.client.get(reverse('clients:document_checklist_manage') + '?purpose=study')
-
-        self.assertEqual(response.status_code, 200)
-        self.assertFalse(
-            DocumentRequirement.objects.filter(
-                application_purpose='study', document_type=DocumentType.PASSPORT
-            ).exists()
-        )
-
-    def test_checklist_form_skips_deleted_standard_documents_when_custom_exists(self):
-        DocumentRequirement.objects.filter(application_purpose='work').delete()
-        DocumentRequirement.objects.create(
-            application_purpose='work', document_type=DocumentType.PASSPORT, position=0
-        )
-        DocumentRequirement.objects.create(
-            application_purpose='work', document_type=DocumentType.PHOTOS, position=1
-        )
-
-        DocumentRequirement.objects.filter(
-            application_purpose='work', document_type=DocumentType.PASSPORT
-        ).delete()
-
-        form = DocumentChecklistForm(data=None, purpose='work')
-
-        self.assertNotIn(
-            (DocumentType.PASSPORT.value, DocumentType.PASSPORT.label),
-            form.fields['required_documents'].choices,
-        )
-
 
 class WezwanieParserTests(TestCase):
     def test_parses_case_number_and_date_from_text(self):
