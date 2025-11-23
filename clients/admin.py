@@ -2,7 +2,7 @@
 
 from django.contrib import admin
 
-from .models import Client, Document, InpolAccount, InpolProceedingSnapshot, Payment
+from .models import Client, Document, Payment
 
 
 @admin.register(Client)
@@ -12,8 +12,6 @@ class ClientAdmin(admin.ModelAdmin):
         'first_name',
         'last_name',
         'case_number',
-        'inpol_status',
-        'inpol_updated_at',
         'application_purpose',  # New field
         'status',
         'phone',
@@ -38,16 +36,6 @@ class ClientAdmin(admin.ModelAdmin):
         ('Статус и Заметки', {
             'fields': ('status', 'notes')
         }),
-        (
-            'inPOL',
-            {
-                'fields': (
-                    'case_number',
-                    'inpol_status',
-                    'inpol_updated_at',
-                )
-            },
-        ),
     )
 
 
@@ -76,29 +64,3 @@ class PaymentInline(admin.TabularInline):
     )
 
 
-@admin.register(InpolProceedingSnapshot)
-class InpolProceedingSnapshotAdmin(admin.ModelAdmin):
-    list_display = (
-        'case_number',
-        'status',
-        'proceeding_id',
-        'updated_at',
-    )
-    search_fields = ('case_number', 'proceeding_id', 'status')
-    list_filter = ('status',)
-    ordering = ('-updated_at', 'proceeding_id')
-
-
-@admin.register(InpolAccount)
-class InpolAccountAdmin(admin.ModelAdmin):
-    list_display = (
-        'name',
-        'email',
-        'base_url',
-        'is_active',
-        'updated_at',
-    )
-    list_filter = ('is_active',)
-    search_fields = ('name', 'email')
-    ordering = ('-updated_at', 'name')
-    readonly_fields = ('created_at', 'updated_at')

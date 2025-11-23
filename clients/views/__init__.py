@@ -9,7 +9,6 @@ from clients.views.clients import (
     document_requirement_add,
     document_requirement_edit,
     document_requirement_delete,
-    check_inpol_status,
     calculator_view,
     client_print_view,
     client_wsc_print_view,
@@ -31,7 +30,6 @@ from clients.views.reminders import (
     reminder_action,
     run_update_reminders,
 )
-from clients.views.inpol import InpolAccountView
 
 __all__ = [
     'StaffRequiredMixin',
@@ -45,7 +43,6 @@ __all__ = [
     'document_requirement_add',
     'document_requirement_edit',
     'document_requirement_delete',
-    'check_inpol_status',
     'calculator_view',
     'client_print_view',
     'client_wsc_print_view',
@@ -65,5 +62,4 @@ __all__ = [
     'PaymentReminderListView',
     'reminder_action',
     'run_update_reminders',
-    'InpolAccountView',
 ]

@@ -15,7 +15,7 @@ from django.utils import translation
 from allauth.account.models import EmailAddress
 
 from .forms import DocumentChecklistForm
-from .models import Client, Document, DocumentRequirement, InpolAccount
+from .models import Client, Document, DocumentRequirement
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.services.notifications import send_missing_documents_email
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper
@@ -187,35 +187,6 @@ class DocumentTypeConsistencyTests(TestCase):
         )
 
         self.assertEqual(doc.display_name, 'ZUS RCA')
-
-
-class InpolAccountFormViewTests(TestCase):
-    def setUp(self):
-        user_model = get_user_model()
-        self.staff_user = user_model.objects.create_user(
-            username='staff', password='pass', is_staff=True
-        )
-
-    def test_staff_can_save_inpol_credentials_via_form(self):
-        login_successful = self.client.login(username='staff', password='pass')
-        self.assertTrue(login_successful)
-
-        response = self.client.post(
-            reverse('clients:inpol_account'),
-            {
-                'name': 'Primary inPOL',
-                'base_url': 'https://cudzoziemcy.mazowieckie.pl/inpol',
-                'email': 'inpol@example.com',
-                'password': 'super-secret',
-                'is_active': True,
-            },
-            follow=True,
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(InpolAccount.objects.filter(email='inpol@example.com').exists())
-
-
 class DocumentRequirementTests(TestCase):
     def test_required_for_respects_database_overrides(self):
         DocumentRequirement.objects.filter(application_purpose='work').delete()
