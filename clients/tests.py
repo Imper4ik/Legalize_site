@@ -1,9 +1,12 @@
 import json
-from datetime import datetime, timedelta
+import tempfile
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
@@ -14,7 +17,9 @@ from allauth.account.models import EmailAddress
 from .forms import DocumentChecklistForm
 from .models import Client, Document, DocumentRequirement, InpolAccount
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
+from clients.services.notifications import send_missing_documents_email
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper
+from clients.services.wezwanie_parser import parse_wezwanie
 
 
 class CalculatorViewTests(TestCase):
@@ -338,6 +343,113 @@ class DocumentRequirementTests(TestCase):
                 (DocumentType.PAYMENT_CONFIRMATION.value, DocumentType.PAYMENT_CONFIRMATION.label),
             ],
         )
+
+
+class WezwanieParserTests(TestCase):
+    def test_parses_case_number_and_date_from_text(self):
+        content = "Wezwanie\nNumer sprawy: ABC/123/24\nw dniu 12.05.2024 pobrano odciski"
+        with tempfile.NamedTemporaryFile("w+", suffix=".txt", delete=False) as temp:
+            temp.write(content)
+            temp_path = temp.name
+
+        parsed = parse_wezwanie(temp_path)
+
+        self.assertEqual(parsed.case_number, "ABC/123/24")
+        self.assertEqual(parsed.fingerprints_date, date(2024, 5, 12))
+
+        Path(temp_path).unlink(missing_ok=True)
+
+
+class MissingDocumentsEmailTests(TestCase):
+    def setUp(self):
+        self.client_record = Client.objects.create(
+            first_name="Anna",
+            last_name="Nowak",
+            citizenship="PL",
+            phone="+48123123123",
+            email="anna@example.com",
+            application_purpose="work",
+            language="pl",
+        )
+
+        mail.outbox = []
+
+        DocumentRequirement.objects.filter(application_purpose="work").delete()
+        DocumentRequirement.objects.create(
+            application_purpose="work", document_type=DocumentType.PASSPORT, position=0
+        )
+
+    def test_sends_email_when_documents_missing(self):
+        sent = send_missing_documents_email(self.client_record)
+        self.assertEqual(sent, 1)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn("Паспорт", mail.outbox[0].body)
+
+    def test_skips_email_when_nothing_missing(self):
+        Document.objects.create(
+            client=self.client_record,
+            document_type=DocumentType.PASSPORT,
+            file=SimpleUploadedFile("passport.pdf", b"content"),
+        )
+
+        sent = send_missing_documents_email(self.client_record)
+        self.assertEqual(sent, 0)
+        self.assertEqual(len(mail.outbox), 0)
+
+
+class WezwanieUploadFlowTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.staff_user = user_model.objects.create_user(
+            username="staff_wezwanie", password="pass", is_staff=True
+        )
+
+        DocumentRequirement.objects.filter(application_purpose="work").delete()
+        DocumentRequirement.objects.create(
+            application_purpose="work", document_type=DocumentType.PASSPORT, position=0
+        )
+        DocumentRequirement.objects.create(
+            application_purpose="work", document_type=DocumentType.PHOTOS, position=1
+        )
+
+        self.client_record = Client.objects.create(
+            first_name="Jan",
+            last_name="Test",
+            citizenship="PL",
+            phone="+48123123123",
+            email="wezwanie@example.com",
+            application_purpose="work",
+            language="pl",
+        )
+
+        mail.outbox = []
+
+    def test_uploading_wezwanie_updates_fields_and_sends_missing_docs_email(self):
+        login_successful = self.client.login(username="staff_wezwanie", password="pass")
+        self.assertTrue(login_successful)
+
+        content = b"Numer sprawy: ZZ/987/24\nw dniu 05-06-2024 pobrano odciski"
+        upload = SimpleUploadedFile("wezwanie.txt", content)
+        url = reverse(
+            "clients:add_document",
+            kwargs={"client_id": self.client_record.pk, "doc_type": "wezwanie"},
+        )
+
+        response = self.client.post(url, {"file": upload}, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+
+        updated_client = Client.objects.get(pk=self.client_record.pk)
+        self.assertEqual(updated_client.case_number, "ZZ/987/24")
+        self.assertEqual(updated_client.fingerprints_date, date(2024, 6, 5))
+
+        self.assertTrue(
+            Document.objects.filter(client=updated_client, document_type="wezwanie").exists()
+        )
+
+        self.assertGreaterEqual(len(mail.outbox), 1)
+        self.assertIn("Паспорт", mail.outbox[0].body)
+        self.assertIn("Фотографии", mail.outbox[0].body)
 
 
 class ResponseHelperTests(TestCase):
