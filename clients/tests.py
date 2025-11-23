@@ -3,6 +3,7 @@ import tempfile
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -362,6 +363,106 @@ class WezwanieParserTests(TestCase):
 
         self.assertEqual(parsed.case_number, "ABC/123/24")
         self.assertEqual(parsed.fingerprints_date, date(2024, 5, 12))
+
+        Path(temp_path).unlink(missing_ok=True)
+
+    def test_normalizes_case_number_with_spaces_and_noise(self):
+        content = (
+            "Numer sprawy:  40 93 66 ;\\n"
+            "w dniu 12.05.2024 pobrano odciski"
+        )
+        with tempfile.NamedTemporaryFile("w+", suffix=".txt", delete=False) as temp:
+            temp.write(content)
+            temp_path = temp.name
+
+        parsed = parse_wezwanie(temp_path)
+
+        self.assertEqual(parsed.case_number, "409366")
+        self.assertEqual(parsed.fingerprints_date, date(2024, 5, 12))
+
+        Path(temp_path).unlink(missing_ok=True)
+
+    def test_prefers_full_case_number_when_multiple_matches_exist(self):
+        content = (
+            "X0/77 pisze ten numer, ale właściwy jest WSC-II-S.6151.97770.2023."
+            "\nOdciski pobrano dnia 01/03/2023"
+        )
+        with tempfile.NamedTemporaryFile("w+", suffix=".txt", delete=False) as temp:
+            temp.write(content)
+            temp_path = temp.name
+
+        parsed = parse_wezwanie(temp_path)
+
+        self.assertEqual(parsed.case_number, "WSC-II-S.6151.97770.2023")
+        self.assertEqual(parsed.fingerprints_date, date(2023, 3, 1))
+
+        Path(temp_path).unlink(missing_ok=True)
+
+    def test_prioritizes_wsc_prefixed_case_numbers(self):
+        content = (
+            "Sygn. akt: ABC-II.12345.2023 oraz WSC-II-S.9876.11.2024."
+            "\nOdciski pobrano dnia 02-04-2024"
+        )
+        with tempfile.NamedTemporaryFile("w+", suffix=".txt", delete=False) as temp:
+            temp.write(content)
+            temp_path = temp.name
+
+        parsed = parse_wezwanie(temp_path)
+
+        self.assertEqual(parsed.case_number, "WSC-II-S.9876.11.2024")
+        self.assertEqual(parsed.fingerprints_date, date(2024, 4, 2))
+
+        Path(temp_path).unlink(missing_ok=True)
+
+    def test_picks_wsc_number_with_spaces_and_mixed_case(self):
+        content = (
+            "X0/77 ciągle się pojawia, ale właściwy numer to wsc ii s 6151 97770 2023."
+            "\nOdciski pobrano 2023-03-01"
+        )
+        with tempfile.NamedTemporaryFile("w+", suffix=".txt", delete=False) as temp:
+            temp.write(content)
+            temp_path = temp.name
+
+        parsed = parse_wezwanie(temp_path)
+
+        self.assertEqual(parsed.case_number, "WSC-II-S-6151-97770-2023")
+        self.assertEqual(parsed.fingerprints_date, date(2023, 3, 1))
+
+        Path(temp_path).unlink(missing_ok=True)
+
+    def test_reads_jpg_via_ocr_instead_of_raw_bytes(self):
+        with tempfile.NamedTemporaryFile("wb", suffix=".jpg", delete=False) as temp:
+            temp.write(b"\xff\xd8\xff\xd9")
+            temp_path = temp.name
+
+        with patch("clients.services.wezwanie_parser._extract_image_text", return_value="WSC-123\n12.05.2024") as ocr_mock, patch(
+            "clients.services.wezwanie_parser._read_plain_text"
+        ) as read_mock:
+            parsed = parse_wezwanie(temp_path)
+
+        self.assertTrue(ocr_mock.called)
+        read_mock.assert_not_called()
+        self.assertEqual(parsed.case_number, "WSC-123")
+        self.assertEqual(parsed.fingerprints_date, date(2024, 5, 12))
+        self.assertEqual(parsed.text, "WSC-123\n12.05.2024")
+
+        Path(temp_path).unlink(missing_ok=True)
+
+    def test_image_without_ocr_support_does_not_parse_gibberish(self):
+        with tempfile.NamedTemporaryFile("wb", suffix=".png", delete=False) as temp:
+            temp.write(b"not-an-image")
+            temp_path = temp.name
+
+        with patch("clients.services.wezwanie_parser._extract_image_text", return_value="") as ocr_mock, patch(
+            "clients.services.wezwanie_parser._read_plain_text"
+        ) as read_mock:
+            parsed = parse_wezwanie(temp_path)
+
+        self.assertTrue(ocr_mock.called)
+        read_mock.assert_not_called()
+        self.assertIsNone(parsed.case_number)
+        self.assertIsNone(parsed.fingerprints_date)
+        self.assertEqual(parsed.text, "")
 
         Path(temp_path).unlink(missing_ok=True)
 

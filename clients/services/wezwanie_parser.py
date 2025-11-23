@@ -12,15 +12,18 @@ logger = logging.getLogger(__name__)
 
 DATE_FORMATS = ("%d.%m.%Y", "%d-%m-%Y", "%d/%m/%Y", "%Y-%m-%d")
 CASE_NUMBER_PATTERNS = (
-    re.compile(r"numer\s+sprawy[:\s]*([A-Za-z0-9./-]+)", re.IGNORECASE),
-    re.compile(r"nr\s+sprawy[:\s]*([A-Za-z0-9./-]+)", re.IGNORECASE),
-    re.compile(r"sygn\.\s*akt[:\s]*([A-Za-z0-9./-]+)", re.IGNORECASE),
-    re.compile(r"\b([A-Z]{1,3}\/?\d{1,4}/\d{2,4})\b"),
+    re.compile(r"\b(WSC(?:[\s.-]?[A-Z0-9]{1,8}){2,6})\b", re.IGNORECASE),
+    re.compile(r"numer\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
+    re.compile(r"nr\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
+    re.compile(r"sygn\.\s*akt[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
+    re.compile(r"\b([A-Z]{1,4}(?:[-.][A-Z0-9]{1,8}){2,5})\b", re.IGNORECASE),
+    re.compile(r"\b([A-Z]{1,3}\/?\d{1,4}/\d{2,4})\b", re.IGNORECASE),
 )
 DATE_PATTERNS = (
     re.compile(r"(?:dniu|dnia|dn\.)?\s*(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
     re.compile(r"(\d{4}-\d{2}-\d{2})"),
 )
+IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp"}
 
 
 @dataclass
@@ -60,6 +63,22 @@ def _extract_pdf_text(path: Path) -> str:
         return ""
 
 
+def _extract_image_text(path: Path) -> str:
+    try:
+        from PIL import Image
+        import pytesseract
+    except ImportError:  # pragma: no cover - optional dependency
+        logger.warning("OCR dependencies (Pillow, pytesseract) are not installed; skipping OCR")
+        return ""
+
+    try:
+        with Image.open(path) as img:
+            return pytesseract.image_to_string(img)
+    except Exception:  # pragma: no cover - defensive logging
+        logger.exception("Не удалось прочитать изображение %s через OCR", path)
+        return ""
+
+
 def _read_plain_text(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8", errors="ignore")
@@ -78,8 +97,13 @@ def extract_text(path: str | Path) -> str:
     file_path = Path(path)
 
     text = ""
-    if file_path.suffix.lower() == ".pdf":
+    suffix = file_path.suffix.lower()
+
+    if suffix == ".pdf":
         text = _extract_pdf_text(file_path)
+
+    if suffix in IMAGE_SUFFIXES:
+        return _extract_image_text(file_path)
 
     if not text:
         text = _read_plain_text(file_path)
@@ -88,11 +112,24 @@ def extract_text(path: str | Path) -> str:
 
 
 def _find_case_number(text: str) -> str | None:
+    candidates: list[str] = []
     for pattern in CASE_NUMBER_PATTERNS:
-        match = pattern.search(text)
-        if match:
-            return match.group(1).strip()
-    return None
+        for match in pattern.finditer(text):
+            raw_match = match.group(1).strip().splitlines()[0]
+            prefers_separators = raw_match.lstrip().upper().startswith("WSC")
+            spaced = re.sub(r"\s+", "-" if prefers_separators else "", raw_match)
+            normalized = re.sub(r"[^A-Za-z0-9./-]", "", spaced).upper()
+            if normalized:
+                candidates.append(normalized)
+
+    if not candidates:
+        return None
+
+    prioritized = [candidate for candidate in candidates if candidate.startswith("WSC")]
+    if not prioritized:
+        prioritized = candidates
+
+    return max(prioritized, key=lambda candidate: (len(candidate), sum(ch.isdigit() for ch in candidate)))
 
 
 def _find_first_date(text: str) -> date | None:
