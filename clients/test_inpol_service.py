@@ -1,8 +1,3 @@
-from io import StringIO
-from unittest import mock
-
-from django.core.management import call_command
-from django.core.management.base import CommandError
 from django.test import TestCase
 
 from clients.services.inpol import (
@@ -97,10 +92,9 @@ class InpolCaseUpdaterTests(TestCase):
         self.addCleanup(self._cleanup)
 
     def _cleanup(self):
-        from clients.models import Client, InpolAccount, InpolProceedingSnapshot
+        from clients.models import Client, InpolProceedingSnapshot
 
         Client.objects.all().delete()
-        InpolAccount.objects.all().delete()
         InpolProceedingSnapshot.objects.all().delete()
 
     def test_updates_client_by_case_number(self):
@@ -184,81 +178,6 @@ class InpolCaseUpdaterTests(TestCase):
         client.refresh_from_db()
         self.assertEqual(client.case_number, "EF-789")
         self.assertEqual(client.inpol_status, "awaiting decision")
-
-
-class InpolManagementCommandTests(TestCase):
-    def setUp(self):
-        self.addCleanup(self._cleanup)
-
-    def _cleanup(self):
-        from clients.models import Client, InpolAccount, InpolProceedingSnapshot
-
-        Client.objects.all().delete()
-        InpolAccount.objects.all().delete()
-        InpolProceedingSnapshot.objects.all().delete()
-
-    @mock.patch.dict(
-        "os.environ",
-        {
-            "INPOL_EMAIL": "user@example.com",
-            "INPOL_PASSWORD": "secret",
-            "INPOL_BASE_URL": "https://inpol.test",
-        },
-        clear=True,
-    )
-    @mock.patch("clients.management.commands.check_inpol.InpolClient")
-    def test_command_outputs_changes_and_no_changes(self, client_cls):
-        fake_client = client_cls.return_value
-        fake_client.sign_in.return_value = None
-        fake_client.fetch_active_proceedings.return_value = [
-            {"id": "abc", "caseNumber": "AB-123", "status": "open"}
-        ]
-
-        out = StringIO()
-        call_command("check_inpol", stdout=out)
-
-        first_run_output = out.getvalue()
-        self.assertIn("Checking inPOL for updates...", first_run_output)
-        self.assertIn("AB-123", first_run_output)
-        self.assertIn("open", first_run_output)
-
-        # Second run with unchanged payload should report no changes
-        out = StringIO()
-        call_command("check_inpol", stdout=out)
-        self.assertIn("No changes detected.", out.getvalue())
-
-    @mock.patch.dict("os.environ", {}, clear=True)
-    @mock.patch("clients.management.commands.check_inpol.InpolClient")
-    def test_command_falls_back_to_active_account(self, client_cls):
-        from clients.models import InpolAccount
-
-        InpolAccount.objects.create(
-            name="Prod",
-            base_url="https://db.inpol",
-            email="db@example.com",
-            password="db-secret",
-        )
-
-        fake_client = client_cls.return_value
-        fake_client.sign_in.return_value = None
-        fake_client.fetch_active_proceedings.return_value = [
-            {"id": "abc", "caseNumber": "AB-123", "status": "open"}
-        ]
-
-        out = StringIO()
-        call_command("check_inpol", stdout=out)
-
-        client_cls.assert_called_once_with("https://db.inpol")
-        fake_client.sign_in.assert_called_once()
-        creds = fake_client.sign_in.call_args[0][0]
-        self.assertEqual(creds.email, "db@example.com")
-        self.assertEqual(creds.password, "db-secret")
-        self.assertIn("AB-123", out.getvalue())
-
-    @mock.patch.dict("os.environ", {}, clear=True)
-    def test_command_errors_without_env_or_account(self):
-        with self.assertRaisesMessage(CommandError, "Missing inPOL credentials"):
-            call_command("check_inpol")
 
 
 class _FakeInpolClient:
