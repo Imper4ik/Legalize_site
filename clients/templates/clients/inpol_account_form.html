@@ -11,6 +11,20 @@
       {% translate "Сохраните email и пароль inPOL. Последняя активная запись используется при проверке статуса дела." %}
     </p>
 
+    <div class="alert alert-info" role="alert">
+      <h6 class="alert-heading mb-2">{% translate "Что делать после сохранения" %}</h6>
+      <ol class="mb-2">
+        <li>{% translate "Убедитесь, что запись отмечена как активная." %}</li>
+        <li>{% translate "Проверьте, что у клиентов заполнены номер дела или email для сопоставления." %}</li>
+        <li>
+          {% blocktrans with minutes=inpol_poll_interval_minutes %}
+            inPOL проверяется автоматически каждые {{ minutes }} минут через активную учётку.
+          {% endblocktrans %}
+        </li>
+      </ol>
+      <p class="mb-0">{% translate "На карточке клиента есть кнопка \"Проверить статус сейчас\" для ручного запроса." %}</p>
+    </div>
+
     <div class="card shadow-sm">
       <div class="card-body">
         <form method="post" novalidate>

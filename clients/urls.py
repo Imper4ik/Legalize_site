@@ -11,6 +11,7 @@ urlpatterns = [
     # CRUD для Клиентов (используя CBV)
     path('', views.ClientListView.as_view(), name='client_list'),
     path('client/<int:pk>/', views.ClientDetailView.as_view(), name='client_detail'),
+    path('client/<int:pk>/inpol-check/', views.check_inpol_status, name='client_inpol_check'),
     path('client/add/', views.ClientCreateView.as_view(), name='client_add'),
     path('client/<int:pk>/edit/', views.ClientUpdateView.as_view(), name='client_edit'),
     path('client/<int:pk>/delete/', views.ClientDeleteView.as_view(), name='client_delete'),

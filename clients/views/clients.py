@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 from django.contrib import messages
 from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404, redirect, render
@@ -29,6 +31,8 @@ from clients.services.notifications import (
     send_expired_documents_email,
     send_required_documents_email,
 )
+from clients.services.inpol import InpolClient, InpolStatusRepository, check_inpol_for_client
+from clients.services.inpol_credentials import resolve_inpol_config
 from clients.views.base import StaffRequiredMixin, staff_required_view
 from clients.services.responses import apply_no_store
 
@@ -76,6 +80,12 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         context['document_upload_form'] = DocumentUploadForm()
         if hasattr(client, 'get_document_checklist'):
             context['document_status_list'] = client.get_document_checklist()
+        poll_interval = os.environ.get("INPOL_POLL_INTERVAL", "900")
+        try:
+            interval_seconds = int(poll_interval)
+        except ValueError:
+            interval_seconds = 900
+        context['inpol_poll_interval_minutes'] = max(1, interval_seconds // 60)
         return context
 
 
@@ -358,3 +368,50 @@ def document_requirement_delete(request, pk):
 
     messages.error(request, _("Удаление доступно только через POST-запрос."))
     return redirect(reverse_lazy('clients:document_checklist_manage'))
+
+
+@staff_required_view
+def check_inpol_status(request, pk):
+    client = get_object_or_404(Client, pk=pk)
+
+    if request.method != 'POST':
+        return redirect(client)
+
+    try:
+        config = resolve_inpol_config()
+    except Exception as exc:  # pragma: no cover - configuration branch
+        messages.error(request, str(exc))
+        return redirect(client)
+
+    inpol_client = InpolClient(config.base_url)
+    repository = InpolStatusRepository()
+
+    try:
+        changes = check_inpol_for_client(
+            config.credentials,
+            inpol_client,
+            repository,
+            target_client=client,
+        )
+    except Exception as exc:  # pragma: no cover - network errors
+        messages.error(
+            request,
+            _("Не удалось выполнить проверку inPOL: %(error)s") % {"error": exc},
+        )
+        return redirect(client)
+
+    if not changes:
+        messages.info(request, _("Для этого клиента новых статусов в inPOL нет."))
+        return redirect(client)
+
+    statuses = "; ".join(
+        f"{change.proceeding.case_number or change.proceeding.proceeding_id}: "
+        f"{change.proceeding.status or _('(пусто)')}"
+        for change in changes
+    )
+
+    messages.success(
+        request,
+        _("Статус inPOL обновлён: %(statuses)s") % {"statuses": statuses},
+    )
+    return redirect(client)
