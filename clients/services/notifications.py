@@ -60,3 +60,24 @@ def send_expired_documents_email(client: Client) -> int:
     subject = _("Истекшие документы после сдачи отпечатков")
     body = render_to_string("clients/email/expired_documents.txt", context)
     return _send_email(subject, body, [client.email])
+
+
+def send_missing_documents_email(client: Client) -> int:
+    """Send a reminder listing documents that are still missing for the client."""
+
+    if not client.email:
+        return 0
+
+    checklist = client.get_document_checklist()
+    missing = [item.get("name") for item in checklist if not item.get("is_uploaded")]
+
+    if not missing:
+        return 0
+
+    context = {
+        "client": client,
+        "documents": missing,
+    }
+    subject = _("Список недостающих документов")
+    body = render_to_string("clients/email/missing_documents.txt", context)
+    return _send_email(subject, body, [client.email])
