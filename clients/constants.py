@@ -17,6 +17,7 @@ class DocumentType(models.TextChoices):
     TAX_CLEARANCE_EMPLOYER = 'tax_clearance_employer', _('Справка об отсутствии налоговой задолженности работодателя')
     TAX_CLEARANCE_FOREIGNER = 'tax_clearance_foreigner', _('Справка об отсутствии налоговой задолженности иностранца')
     NO_DEPENDENTS_STATEMENT = 'no_dependents_statement', _('Заявление об отсутствии иждивенцев в Польше')
+    WEZWANIE = 'wezwanie', _('Wezwanie')
 
 
 def doc_entry(doc_type: DocumentType) -> tuple[str, str]:
