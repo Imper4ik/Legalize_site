@@ -12,9 +12,10 @@ logger = logging.getLogger(__name__)
 
 DATE_FORMATS = ("%d.%m.%Y", "%d-%m-%Y", "%d/%m/%Y", "%Y-%m-%d")
 CASE_NUMBER_PATTERNS = (
-    re.compile(r"numer\s+sprawy[:\s]*([A-Za-z0-9./-]+)", re.IGNORECASE),
-    re.compile(r"nr\s+sprawy[:\s]*([A-Za-z0-9./-]+)", re.IGNORECASE),
-    re.compile(r"sygn\.\s*akt[:\s]*([A-Za-z0-9./-]+)", re.IGNORECASE),
+    re.compile(r"numer\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
+    re.compile(r"nr\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
+    re.compile(r"sygn\.\s*akt[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
+    re.compile(r"\b([A-Z]{1,4}(?:[-.][A-Z0-9]{1,8}){2,5})\b"),
     re.compile(r"\b([A-Z]{1,3}\/?\d{1,4}/\d{2,4})\b"),
 )
 DATE_PATTERNS = (
@@ -88,11 +89,21 @@ def extract_text(path: str | Path) -> str:
 
 
 def _find_case_number(text: str) -> str | None:
+    candidates: list[str] = []
     for pattern in CASE_NUMBER_PATTERNS:
-        match = pattern.search(text)
-        if match:
-            return match.group(1).strip()
-    return None
+        for match in pattern.finditer(text):
+            normalized = re.sub(r"[^A-Za-z0-9./-]", "", match.group(1)).upper()
+            if normalized:
+                candidates.append(normalized)
+
+    if not candidates:
+        return None
+
+    prioritized = [candidate for candidate in candidates if candidate.startswith("WSC")]
+    if not prioritized:
+        prioritized = candidates
+
+    return max(prioritized, key=lambda candidate: (len(candidate), sum(ch.isdigit() for ch in candidate)))
 
 
 def _find_first_date(text: str) -> date | None:
