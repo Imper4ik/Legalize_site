@@ -365,6 +365,22 @@ class WezwanieParserTests(TestCase):
 
         Path(temp_path).unlink(missing_ok=True)
 
+    def test_normalizes_case_number_with_spaces_and_noise(self):
+        content = (
+            "Numer sprawy:  40 93 66 ;\\n"
+            "w dniu 12.05.2024 pobrano odciski"
+        )
+        with tempfile.NamedTemporaryFile("w+", suffix=".txt", delete=False) as temp:
+            temp.write(content)
+            temp_path = temp.name
+
+        parsed = parse_wezwanie(temp_path)
+
+        self.assertEqual(parsed.case_number, "409366")
+        self.assertEqual(parsed.fingerprints_date, date(2024, 5, 12))
+
+        Path(temp_path).unlink(missing_ok=True)
+
 
 class MissingDocumentsEmailTests(TestCase):
     def setUp(self):
