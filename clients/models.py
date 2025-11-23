@@ -175,6 +175,20 @@ class DocumentRequirement(models.Model):
                 items.append((item.document_type, item.document_type.replace('_', ' ').capitalize()))
         return items
 
+
+class InpolProceedingSnapshot(models.Model):
+    proceeding_id = models.CharField(max_length=255, unique=True)
+    case_number = models.CharField(max_length=255)
+    status = models.CharField(max_length=255)
+    raw_payload = models.JSONField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at", "proceeding_id"]
+
+    def __str__(self) -> str:  # pragma: no cover - trivial
+        return f"{self.case_number or self.proceeding_id}: {self.status}"
+
 class Payment(models.Model):
     PAYMENT_STATUS_CHOICES = [
         ('pending', _('Ожидает оплаты')),
