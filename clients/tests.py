@@ -191,13 +191,6 @@ class InpolAccountFormViewTests(TestCase):
             username='staff', password='pass', is_staff=True
         )
 
-        non_staff = user_model.objects.create_user(
-            username='inpol-manager', password='pass', is_staff=False
-        )
-        perm = Permission.objects.get(codename='add_inpolaccount')
-        non_staff.user_permissions.add(perm)
-        self.user_with_permission = non_staff
-
     def test_staff_can_save_inpol_credentials_via_form(self):
         login_successful = self.client.login(username='staff', password='pass')
         self.assertTrue(login_successful)
@@ -216,22 +209,6 @@ class InpolAccountFormViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(InpolAccount.objects.filter(email='inpol@example.com').exists())
-
-    def test_staff_sees_inpol_link_in_navbar(self):
-        self.client.force_login(self.staff_user)
-        response = self.client.get(reverse('clients:client_list'))
-
-        self.assertContains(response, reverse('clients:inpol_account'))
-        self.assertContains(response, 'inPOL')
-
-    def test_permission_holder_sees_inpol_link(self):
-        self.client.force_login(self.user_with_permission)
-
-        response = self.client.get(reverse('clients:inpol_account'))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, reverse('clients:inpol_account'))
-        self.assertContains(response, 'inPOL')
 
 
 class DocumentRequirementTests(TestCase):

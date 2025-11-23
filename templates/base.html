@@ -62,10 +62,7 @@
             <li class="nav-item"><a class="nav-link" href="{% url 'clients:document_checklist_manage' %}">{% translate "Чеклисты" %}</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'clients:document_reminder_list' %}">{% translate "Напоминания" %}</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'clients:payment_reminder_list' %}">{% translate "Напоминания платежей" %}</a></li>
-            {% endif %}
-            {% if user.is_staff or perms.clients.add_inpolaccount or perms.clients.change_inpolaccount %}
             <li class="nav-item"><a class="nav-link" href="{% url 'clients:inpol_account' %}">{% translate "inPOL" %}</a></li>
-            {% endif %}
           </ul>
           {% endif %}
 
