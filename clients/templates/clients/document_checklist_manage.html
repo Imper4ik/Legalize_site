@@ -29,36 +29,49 @@
       <input type="hidden" name="purpose" value="{{ current_purpose }}">
       <div class="col-12">
         <h6 class="text-muted mb-3">{% translate "Отметьте документы, которые должны отображаться в чеклисте" %}</h6>
+        <p class="text-muted small mb-3">
+          {% translate "Плашка «Стандартный документ» означает базовый список для выбранной цели. Такие позиции берутся из типовых документов и появляются, пока для них нет отдельной настройки. Их можно включать или отключать чекбоксом, а чтобы отредактировать название или обязательность — добавьте собственный вариант через кнопку «Добавить документ»." %}
+        </p>
         {{ form.required_documents.errors }}
         <div class="row row-cols-1 row-cols-md-2 g-2">
           {% for checkbox in form.required_documents %}
             {% with requirement_pair=requirement_lookup|get_item:checkbox.data.value %}
-              {% if requirement_pair %}{% with requirement=requirement_pair.0 edit_form=requirement_pair.1 %}{% endif %}
-              <div class="col">
-                <div class="border rounded px-3 py-2 h-100">
-                  <div class="d-flex align-items-start gap-2 justify-content-between">
-                    <div class="form-check flex-grow-1">
-                      {{ checkbox.tag }}
-                      <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
-                    </div>
-                    {% if requirement_pair %}
-                      <div class="btn-group btn-group-sm" role="group" aria-label="{% translate 'Действия с документом' %}">
-                        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#editRequirementModal{{ requirement.id }}" title="{% translate 'Редактировать документ' %}">
-                          <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn btn-outline-danger" type="submit" form="deleteRequirement{{ requirement.id }}" title="{% translate 'Удалить документ' %}" onclick="return confirm('{% translate "Удалить этот документ из чеклиста?" %}');">
-                          <i class="bi bi-trash"></i>
-                        </button>
+              {% if requirement_pair %}
+                {% with requirement=requirement_pair.0 edit_form=requirement_pair.1 %}
+                  <div class="col">
+                    <div class="border rounded px-3 py-2 h-100">
+                      <div class="d-flex align-items-start gap-2 justify-content-between">
+                        <div class="form-check flex-grow-1">
+                          {{ checkbox.tag }}
+                          <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                        </div>
+                        <div class="btn-group btn-group-sm" role="group" aria-label="{% translate 'Действия с документом' %}">
+                          <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#editRequirementModal{{ requirement.id }}" title="{% translate 'Редактировать документ' %}">
+                            <i class="bi bi-pencil"></i>
+                          </button>
+                          <button class="btn btn-outline-danger" type="submit" form="deleteRequirement{{ requirement.id }}" title="{% translate 'Удалить документ' %}" onclick="return confirm('{% translate "Удалить этот документ из чеклиста?" %}');">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        </div>
                       </div>
-                    {% else %}
+                    </div>
+                  </div>
+                {% endwith %}
+              {% else %}
+                <div class="col">
+                  <div class="border rounded px-3 py-2 h-100">
+                    <div class="d-flex align-items-start gap-2 justify-content-between">
+                      <div class="form-check flex-grow-1">
+                        {{ checkbox.tag }}
+                        <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                      </div>
                       <div class="text-muted small align-self-center">
                         {% translate "Стандартный документ" %}
                       </div>
-                    {% endif %}
+                    </div>
                   </div>
                 </div>
-              </div>
-              {% if requirement_pair %}{% endwith %}{% endif %}
+              {% endif %}
             {% endwith %}
           {% endfor %}
         </div>
