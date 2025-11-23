@@ -6,10 +6,10 @@ from django.views.generic import FormView
 
 from clients.forms import InpolAccountForm
 from clients.models import InpolAccount
-from clients.views.base import InpolCredentialsAccessMixin
+from clients.views.base import StaffRequiredMixin
 
 
-class InpolAccountView(InpolCredentialsAccessMixin, FormView):
+class InpolAccountView(StaffRequiredMixin, FormView):
     template_name = "clients/inpol_account_form.html"
     form_class = InpolAccountForm
     success_url = reverse_lazy("clients:inpol_account")
