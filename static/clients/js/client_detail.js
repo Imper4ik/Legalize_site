@@ -1,4 +1,5 @@
 (function () {
+  let refreshChecklist = null;
   function initPriceAutoFill() {
     const addPaymentModal = document.getElementById('addPaymentModal');
     if (!addPaymentModal) {
@@ -332,6 +333,8 @@
       }
     }
 
+    refreshChecklist = refresh;
+
     let intervalId = null;
 
     function startInterval() {
@@ -368,11 +371,52 @@
     refresh();
   }
 
+  function initDocumentDeletion() {
+    const accordion = document.getElementById('documentAccordion');
+    if (!accordion) {
+      return;
+    }
+
+    accordion.addEventListener('submit', async (event) => {
+      const form = event.target;
+      if (!(form instanceof HTMLFormElement) || !form.classList.contains('delete-document-form')) {
+        return;
+      }
+
+      event.preventDefault();
+      const submitButton = form.querySelector('[type="submit"]');
+      submitButton?.setAttribute('disabled', 'disabled');
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          body: new FormData(form),
+          credentials: 'same-origin',
+        });
+
+        const data = await response.json();
+        if (data.status === 'success') {
+          if (typeof refreshChecklist === 'function') {
+            await refreshChecklist();
+          } else {
+            window.location.reload();
+          }
+        }
+      } catch (error) {
+        console.error('Не удалось удалить документ из чеклиста:', error);
+      } finally {
+        submitButton?.removeAttribute('disabled');
+      }
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     initPriceAutoFill();
     initAddPaymentForm();
     initEditPaymentModal();
     initDocumentUploadModal();
     initChecklistRefresher();
+    initDocumentDeletion();
   });
 })();
