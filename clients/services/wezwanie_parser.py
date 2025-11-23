@@ -88,6 +88,7 @@ def extract_text(path: str | Path) -> str:
 
 
 def _find_case_number(text: str) -> str | None:
+    candidates: list[str] = []
     for pattern in CASE_NUMBER_PATTERNS:
         match = pattern.search(text)
         if match:
