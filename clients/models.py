@@ -137,6 +137,12 @@ class Document(models.Model):
             return DocumentType(self.document_type).label
         return self.document_type.replace('_', ' ').capitalize()
 
+    @property
+    def is_standard_type(self) -> bool:
+        """Возвращает True, если документ относится к стандартным типам чеклиста."""
+
+        return self.document_type in [choice.value for choice in DocumentType]
+
 
 class DocumentRequirement(models.Model):
     application_purpose = models.CharField(

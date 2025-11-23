@@ -377,15 +377,19 @@
       return;
     }
 
-    accordion.addEventListener('submit', async (event) => {
-      const form = event.target;
+    accordion.addEventListener('click', async (event) => {
+      const button = event.target.closest('.delete-document-button');
+      if (!button) {
+        return;
+      }
+
+      const form = button.closest('form');
       if (!(form instanceof HTMLFormElement) || !form.classList.contains('delete-document-form')) {
         return;
       }
 
       event.preventDefault();
-      const submitButton = form.querySelector('[type="submit"]');
-      submitButton?.setAttribute('disabled', 'disabled');
+      button.setAttribute('disabled', 'disabled');
 
       try {
         const response = await fetch(form.action, {
@@ -406,7 +410,7 @@
       } catch (error) {
         console.error('Не удалось удалить документ из чеклиста:', error);
       } finally {
-        submitButton?.removeAttribute('disabled');
+        button.removeAttribute('disabled');
       }
     });
   }
