@@ -221,31 +221,6 @@ class DocumentChecklistManageView(StaffRequiredMixin, FormView):
             return requested
         return allowed[0]
 
-    def ensure_all_document_requirements(self) -> None:
-        purpose = self.get_purpose()
-        requirements = list(
-            DocumentRequirement.objects.filter(application_purpose=purpose).order_by('position', 'id')
-        )
-        existing_codes = {requirement.document_type for requirement in requirements}
-        next_position = requirements[-1].position + 1 if requirements else 0
-        default_required_codes = set(self._default_required_codes(purpose))
-
-        for code, _ in DocumentType.choices:
-            if code in existing_codes:
-                continue
-
-            DocumentRequirement.objects.create(
-                application_purpose=purpose,
-                document_type=code,
-                is_required=code in default_required_codes,
-                position=next_position,
-            )
-            next_position += 1
-
-    def get_form(self, form_class=None):
-        self.ensure_all_document_requirements()
-        return super().get_form(form_class)
-
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         kwargs['purpose'] = self.get_purpose()

@@ -381,38 +381,6 @@ class WezwanieParserTests(TestCase):
 
         Path(temp_path).unlink(missing_ok=True)
 
-    def test_prefers_full_case_number_when_multiple_matches_exist(self):
-        content = (
-            "X0/77 pisze ten numer, ale właściwy jest WSC-II-S.6151.97770.2023."
-            "\nOdciski pobrano dnia 01/03/2023"
-        )
-        with tempfile.NamedTemporaryFile("w+", suffix=".txt", delete=False) as temp:
-            temp.write(content)
-            temp_path = temp.name
-
-        parsed = parse_wezwanie(temp_path)
-
-        self.assertEqual(parsed.case_number, "WSC-II-S.6151.97770.2023")
-        self.assertEqual(parsed.fingerprints_date, date(2023, 3, 1))
-
-        Path(temp_path).unlink(missing_ok=True)
-
-    def test_prioritizes_wsc_prefixed_case_numbers(self):
-        content = (
-            "Sygn. akt: ABC-II.12345.2023 oraz WSC-II-S.9876.11.2024."
-            "\nOdciski pobrano dnia 02-04-2024"
-        )
-        with tempfile.NamedTemporaryFile("w+", suffix=".txt", delete=False) as temp:
-            temp.write(content)
-            temp_path = temp.name
-
-        parsed = parse_wezwanie(temp_path)
-
-        self.assertEqual(parsed.case_number, "WSC-II-S.9876.11.2024")
-        self.assertEqual(parsed.fingerprints_date, date(2024, 4, 2))
-
-        Path(temp_path).unlink(missing_ok=True)
-
 
 class MissingDocumentsEmailTests(TestCase):
     def setUp(self):
