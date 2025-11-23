@@ -80,7 +80,7 @@ class InpolClient:
     """HTTP client for the inPOL XHR API."""
 
     def __init__(self, base_url: str, *, session: Optional[requests.Session] = None, timeout: float = 15.0):
-        self.base_url = base_url.rstrip("/")
+        self.base_url = _normalize_base_url(base_url)
         self.session = session or requests.Session()
         self.timeout = timeout
 
@@ -307,6 +307,19 @@ def _coalesce(source: Mapping[str, Any], keys: List[str], default: Any = None) -
         if key in source and source[key] not in (None, ""):
             return source[key]
     return default
+
+
+def _normalize_base_url(base_url: str) -> str:
+    """Remove trailing ``/login`` so API calls hit the correct inPOL host."""
+
+    parsed = requests.utils.urlparse(base_url.strip())
+    path = parsed.path.rstrip("/")
+
+    if path.endswith("/login"):
+        path = path[: -len("/login")].rstrip("/")
+
+    normalized = parsed._replace(path=path, params="", query="", fragment="")
+    return requests.utils.urlunparse(normalized).rstrip("/")
 
 
 __all__ = [
