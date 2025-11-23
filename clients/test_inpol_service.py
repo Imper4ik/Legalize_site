@@ -1,10 +1,13 @@
 from django.test import TestCase
 
 from clients.services.inpol import (
+    InpolCaseUpdater,
     InpolCredentials,
     InpolProceeding,
+    InpolChange,
     InpolStatusRepository,
     InpolStatusWatcher,
+    check_inpol_and_update_clients,
 )
 
 
@@ -81,6 +84,100 @@ class InpolStatusWatcherTests(TestCase):
         changes_by_case = {change.proceeding.case_number: change for change in second_changes}
         self.assertEqual(changes_by_case["AB-123"].previous_status, "open")
         self.assertIsNone(changes_by_case["CD-456"].previous_status)
+
+
+class InpolCaseUpdaterTests(TestCase):
+    def setUp(self):
+        self.repo = InpolStatusRepository()
+        self.addCleanup(self._cleanup)
+
+    def _cleanup(self):
+        from clients.models import Client, InpolProceedingSnapshot
+
+        Client.objects.all().delete()
+        InpolProceedingSnapshot.objects.all().delete()
+
+    def test_updates_client_by_case_number(self):
+        from clients.models import Client
+
+        client = Client.objects.create(
+            first_name="Ivan",
+            last_name="Ivanov",
+            citizenship="PL",
+            phone="123",
+            email="ivan@example.com",
+            case_number="AB-123",
+        )
+
+        proceeding = InpolProceeding(
+            proceeding_id="abc",
+            case_number="AB-123",
+            status="decision issued",
+            raw={},
+        )
+
+        updater = InpolCaseUpdater()
+        updater.apply_changes([InpolChange(proceeding=proceeding, previous_status=None)])
+
+        client.refresh_from_db()
+        self.assertEqual(client.inpol_status, "decision issued")
+        self.assertIsNotNone(client.inpol_updated_at)
+
+    def test_sets_case_number_when_missing_and_email_matches(self):
+        from clients.models import Client
+
+        client = Client.objects.create(
+            first_name="Anna",
+            last_name="Nowak",
+            citizenship="PL",
+            phone="321",
+            email="user@example.com",
+        )
+
+        proceeding = InpolProceeding(
+            proceeding_id="xyz",
+            case_number="CD-456",
+            status="processing",
+            raw={},
+        )
+
+        updater = InpolCaseUpdater()
+        updater.apply_changes(
+            [InpolChange(proceeding=proceeding, previous_status=None)],
+            account_email="user@example.com",
+        )
+
+        client.refresh_from_db()
+        self.assertEqual(client.case_number, "CD-456")
+        self.assertEqual(client.inpol_status, "processing")
+
+    def test_helper_runs_full_flow(self):
+        from clients.models import Client
+
+        client = Client.objects.create(
+            first_name="Piotr",
+            last_name="Kowalski",
+            citizenship="PL",
+            phone="987",
+            email="piotr@example.com",
+        )
+
+        credentials = InpolCredentials(email="piotr@example.com", password="secret")
+        fake_client = _FakeInpolClient(
+            payloads=[{"id": "abc", "caseNumber": "EF-789", "status": "awaiting decision"}]
+        )
+
+        changes = check_inpol_and_update_clients(
+            credentials,
+            fake_client,
+            self.repo,
+        )
+
+        self.assertEqual(len(changes), 1)
+
+        client.refresh_from_db()
+        self.assertEqual(client.case_number, "EF-789")
+        self.assertEqual(client.inpol_status, "awaiting decision")
 
 
 class _FakeInpolClient:
