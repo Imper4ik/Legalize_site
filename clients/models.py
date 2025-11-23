@@ -59,6 +59,10 @@ class Client(models.Model):
     notes = models.TextField(blank=True, null=True, verbose_name=_("Uwagi / Заметки"))
     has_checklist_access = models.BooleanField(default=False, verbose_name=_("Доступ к чеклисту предоставлен"))
 
+    # Последнее состояние дела из inPOL
+    inpol_status = models.CharField(max_length=255, null=True, blank=True, verbose_name=_("Статус inPOL"))
+    inpol_updated_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Дата обновления inPOL"))
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='client_profile',
                                 null=True, blank=True)
 
@@ -174,6 +178,38 @@ class DocumentRequirement(models.Model):
             else:
                 items.append((item.document_type, item.document_type.replace('_', ' ').capitalize()))
         return items
+
+
+class InpolAccount(models.Model):
+    name = models.CharField(max_length=255, verbose_name=_("Название учётки"))
+    base_url = models.URLField(verbose_name=_("Базовый URL inPOL"))
+    email = models.EmailField(verbose_name=_("Email для входа"))
+    password = models.CharField(max_length=255, verbose_name=_("Пароль для входа"))
+    is_active = models.BooleanField(default=True, verbose_name=_("Активный"))
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at", "-id"]
+        verbose_name = _("Учётная запись inPOL")
+        verbose_name_plural = _("Учётные записи inPOL")
+
+    def __str__(self) -> str:  # pragma: no cover - trivial
+        return self.name
+
+
+class InpolProceedingSnapshot(models.Model):
+    proceeding_id = models.CharField(max_length=255, unique=True)
+    case_number = models.CharField(max_length=255)
+    status = models.CharField(max_length=255)
+    raw_payload = models.JSONField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at", "proceeding_id"]
+
+    def __str__(self) -> str:  # pragma: no cover - trivial
+        return f"{self.case_number or self.proceeding_id}: {self.status}"
 
 class Payment(models.Model):
     PAYMENT_STATUS_CHOICES = [

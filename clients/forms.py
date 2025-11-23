@@ -5,7 +5,7 @@ from django.utils.text import slugify
 
 from clients.services.calculator import CURRENCY_EUR, CURRENCY_PLN
 from .constants import DOCUMENT_CHECKLIST, DocumentType
-from .models import Client, Document, DocumentRequirement, Payment
+from .models import Client, Document, DocumentRequirement, InpolAccount, Payment
 
 
 def _label_for_document_type(code: str) -> str:
@@ -235,6 +235,25 @@ class DocumentChecklistForm(forms.Form):
                 requirement.save(update_fields=['is_required'])
 
         return len(selected_codes)
+
+
+class InpolAccountForm(forms.ModelForm):
+    class Meta:
+        model = InpolAccount
+        fields = ["name", "base_url", "email", "password", "is_active"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control", "placeholder": "Название учётки"}),
+            "base_url": forms.URLInput(
+                attrs={"class": "form-control", "placeholder": "https://cudzoziemcy.mazowieckie.pl/inpol"}
+            ),
+            "email": forms.EmailInput(attrs={"class": "form-control", "placeholder": "inpol@example.com"}),
+            "password": forms.PasswordInput(attrs={"class": "form-control", "autocomplete": "new-password"}),
+            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+
+    def clean_password(self):
+        # Keep the password as provided; this hook exists to allow later validation/rotation rules.
+        return self.cleaned_data.get("password")
 
 
 class CalculatorForm(forms.Form):
