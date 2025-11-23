@@ -73,7 +73,11 @@ class Client(models.Model):
         # Клиентский портал больше не используется, поэтому ограничение
         # на доступ к чеклисту было снято. Сотрудники видят список всегда.
         required_docs = DocumentRequirement.required_for(self.application_purpose)
-        if not required_docs:
+        has_custom_checklist = DocumentRequirement.objects.filter(
+            application_purpose=self.application_purpose
+        ).exists()
+
+        if not required_docs and not has_custom_checklist:
             required_docs = get_fallback_document_checklist(self.application_purpose, self.language)
         if not required_docs:
             return []

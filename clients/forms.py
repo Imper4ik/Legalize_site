@@ -198,6 +198,9 @@ class DocumentChecklistForm(forms.Form):
         if existing:
             return list(existing)
 
+        if DocumentRequirement.objects.filter(application_purpose=self.purpose).exists():
+            return []
+
         for (purpose, _), docs in DOCUMENT_CHECKLIST.items():
             if purpose == self.purpose:
                 return [code for code, _ in docs]

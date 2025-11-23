@@ -49,8 +49,9 @@
                           <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#editRequirementModal{{ requirement.id }}" title="{% translate 'Редактировать документ' %}">
                             <i class="bi bi-pencil"></i>
                           </button>
-                          <button class="btn btn-outline-danger" type="button" title="{% translate 'Удалить документ' %}"
-                                  onclick="if(confirm('{% translate 'Удалить этот документ из чеклиста?' %}')) document.getElementById('deleteRequirement{{ requirement.id }}').submit();">
+                          <button class="btn btn-outline-danger" type="submit" title="{% translate 'Удалить документ' %}"
+                                  form="deleteRequirement{{ requirement.id }}" formnovalidate
+                                  onclick="return confirm('{% translate 'Удалить этот документ из чеклиста?' %}');">
                             <i class="bi bi-trash"></i>
                           </button>
                         </div>
