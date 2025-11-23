@@ -15,7 +15,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional
 import requests
 from django.utils import timezone
 
-from clients.models import InpolProceedingSnapshot
+from clients.models import Client, InpolProceedingSnapshot
 
 
 @dataclass
@@ -190,6 +190,63 @@ class InpolStatusWatcher:
 
         self.repository.save_snapshot(current)
         return changes
+
+
+class InpolCaseUpdater:
+    """Propagates detected inPOL changes into related ``Client`` records."""
+
+    def __init__(self, client_model=Client):
+        self.client_model = client_model
+
+    def apply_changes(self, changes: Iterable[InpolChange], *, account_email: Optional[str] = None) -> None:
+        """Update matching clients with case numbers and latest inPOL status."""
+
+        for change in changes:
+            self._apply_change(change, account_email)
+
+    def _apply_change(self, change: InpolChange, account_email: Optional[str]) -> None:
+        proceeding = change.proceeding
+        case_number = proceeding.case_number.strip() if proceeding.case_number else ""
+
+        matched_clients: List[Client] = []
+
+        if case_number:
+            matched_clients = list(self.client_model.objects.filter(case_number=case_number))
+
+        if not matched_clients and account_email:
+            matched_clients = list(self.client_model.objects.filter(email__iexact=account_email))
+
+        if not matched_clients:
+            return
+
+        for client in matched_clients:
+            updates: Dict[str, Any] = {
+                "inpol_status": proceeding.status,
+                "inpol_updated_at": timezone.now(),
+            }
+
+            if case_number and not client.case_number:
+                updates["case_number"] = case_number
+
+            self.client_model.objects.filter(pk=client.pk).update(**updates)
+
+
+def check_inpol_and_update_clients(
+    credentials: InpolCredentials,
+    client: InpolClient,
+    repository: InpolStatusRepository,
+    *,
+    case_updater: Optional[InpolCaseUpdater] = None,
+) -> List[InpolChange]:
+    """Run the watcher and push detected changes into ``Client`` records."""
+
+    watcher = InpolStatusWatcher(client, repository)
+    changes = watcher.check(credentials)
+
+    updater = case_updater or InpolCaseUpdater()
+    updater.apply_changes(changes, account_email=credentials.email)
+
+    return changes
 
 
 def _coalesce(source: Mapping[str, Any], keys: List[str], default: Any = None) -> Any:

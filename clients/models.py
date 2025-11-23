@@ -59,6 +59,10 @@ class Client(models.Model):
     notes = models.TextField(blank=True, null=True, verbose_name=_("Uwagi / Заметки"))
     has_checklist_access = models.BooleanField(default=False, verbose_name=_("Доступ к чеклисту предоставлен"))
 
+    # Последнее состояние дела из inPOL
+    inpol_status = models.CharField(max_length=255, null=True, blank=True, verbose_name=_("Статус inPOL"))
+    inpol_updated_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Дата обновления inPOL"))
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='client_profile',
                                 null=True, blank=True)
 
