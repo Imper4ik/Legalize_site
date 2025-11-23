@@ -180,24 +180,6 @@ class DocumentRequirement(models.Model):
         return items
 
 
-class InpolAccount(models.Model):
-    name = models.CharField(max_length=255, verbose_name=_("Название учётки"))
-    base_url = models.URLField(verbose_name=_("Базовый URL inPOL"))
-    email = models.EmailField(verbose_name=_("Email для входа"))
-    password = models.CharField(max_length=255, verbose_name=_("Пароль для входа"))
-    is_active = models.BooleanField(default=True, verbose_name=_("Активный"))
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ["-updated_at", "-id"]
-        verbose_name = _("Учётная запись inPOL")
-        verbose_name_plural = _("Учётные записи inPOL")
-
-    def __str__(self) -> str:  # pragma: no cover - trivial
-        return self.name
-
-
 class InpolProceedingSnapshot(models.Model):
     proceeding_id = models.CharField(max_length=255, unique=True)
     case_number = models.CharField(max_length=255)
