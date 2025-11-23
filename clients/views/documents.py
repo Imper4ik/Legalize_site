@@ -4,9 +4,12 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 
+from clients.constants import DocumentType
 from clients.forms import DocumentUploadForm
 from clients.models import Client, Document
+from clients.services.notifications import send_missing_documents_email
 from clients.services.responses import ResponseHelper, apply_no_store
+from clients.services.wezwanie_parser import parse_wezwanie
 from clients.views.base import staff_required_view
 
 
@@ -39,13 +42,40 @@ def add_document(request, client_id, doc_type):
             document.document_type = doc_type
             document.save()
 
+            auto_updates: list[str] = []
+            if doc_type == DocumentType.WEZWANIE or doc_type == DocumentType.WEZWANIE.value:
+                parsed = parse_wezwanie(document.file.path)
+
+                updated_fields = []
+                if parsed.case_number and parsed.case_number != client.case_number:
+                    client.case_number = parsed.case_number
+                    updated_fields.append("case_number")
+                    auto_updates.append(f"номер дела: {parsed.case_number}")
+                if parsed.fingerprints_date and parsed.fingerprints_date != client.fingerprints_date:
+                    client.fingerprints_date = parsed.fingerprints_date
+                    updated_fields.append("fingerprints_date")
+                    auto_updates.append(
+                        f"дата сдачи отпечатков: {parsed.fingerprints_date.strftime('%d.%m.%Y')}"
+                    )
+
+                if updated_fields:
+                    client.save(update_fields=updated_fields)
+
+                emails_sent = send_missing_documents_email(client)
+                if emails_sent:
+                    auto_updates.append("отправлено письмо с недостающими документами")
+
+            success_message = f"Документ '{document_type_display}' успешно добавлен."
+            if auto_updates:
+                success_message = success_message + " " + " ; ".join(auto_updates)
+
             if helper.expects_json:
                 return helper.success(
-                    message=f"Документ '{document_type_display}' успешно добавлен.",
+                    message=success_message,
                     doc_id=document.id,
                 )
 
-            messages.success(request, f"Документ '{document_type_display}' успешно добавлен.")
+            messages.success(request, success_message)
             return redirect('clients:client_detail', pk=client.id)
         if helper.expects_json:
             return helper.error(
