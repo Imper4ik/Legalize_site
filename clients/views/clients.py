@@ -284,7 +284,9 @@ def document_requirement_add(request):
 @staff_required_view
 def document_requirement_edit(request, pk):
     requirement = get_object_or_404(DocumentRequirement, pk=pk)
-    form = DocumentRequirementEditForm(request.POST or None, instance=requirement)
+    form = DocumentRequirementEditForm(
+        request.POST or None, instance=requirement, prefix=f"req-{requirement.id}"
+    )
 
     if request.method == 'POST':
         if form.is_valid():

@@ -32,36 +32,35 @@
         {{ form.required_documents.errors }}
         <div class="row row-cols-1 row-cols-md-2 g-2">
           {% for checkbox in form.required_documents %}
-            {% with requirement_pair=requirement_lookup|get_item:checkbox.data.value %}
-              {% if requirement_pair %}
-                {% with requirement=requirement_pair.0 edit_form=requirement_pair.1 %}
-                  <div class="col">
-                    <div class="border rounded px-3 py-2 h-100">
-                      <div class="d-flex align-items-start gap-2 justify-content-between">
-                        <div class="form-check flex-grow-1">
-                          {{ checkbox.tag }}
-                          <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
-                        </div>
-                        <div class="btn-group btn-group-sm" role="group" aria-label="{% translate 'Действия с документом' %}">
-                          <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#editRequirementModal{{ requirement.id }}" title="{% translate 'Редактировать документ' %}">
-                            <i class="bi bi-pencil"></i>
-                          </button>
-                          <button class="btn btn-outline-danger" type="submit" form="deleteRequirement{{ requirement.id }}" title="{% translate 'Удалить документ' %}" onclick="return confirm('{% translate "Удалить этот документ из чеклиста?" %}');">
-                            <i class="bi bi-trash"></i>
-                          </button>
-                        </div>
-                      </div>
+            {% with requirement_lookup|get_item:checkbox.data.value as requirement_pair %}
+              <div class="col">
+                <div class="border rounded px-3 py-2 h-100">
+                  <div class="d-flex align-items-start gap-2 justify-content-between">
+                    <div class="form-check flex-grow-1">
+                      {{ checkbox.tag }}
+                      <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
                     </div>
-                  </div>
-                {% endwith %}
-              {% else %}
-                <div class="col">
-                  <div class="form-check">
-                    {{ checkbox.tag }}
-                    <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                    {% if requirement_pair %}
+                      {% with requirement_pair.0 as requirement %}
+                        {% with requirement_pair.1 as edit_form %}
+                          <div class="btn-group btn-group-sm" role="group" aria-label="{% translate 'Действия с документом' %}">
+                            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#editRequirementModal{{ requirement.id }}" title="{% translate 'Редактировать документ' %}">
+                              <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-outline-danger" type="submit" form="deleteRequirement{{ requirement.id }}" title="{% translate 'Удалить документ' %}" onclick="return confirm('{% translate "Удалить этот документ из чеклиста?" %}');">
+                              <i class="bi bi-trash"></i>
+                            </button>
+                          </div>
+                        {% endwith %}
+                      {% endwith %}
+                    {% else %}
+                      <div class="text-muted small align-self-center">
+                        {% translate "Стандартный документ" %}
+                      </div>
+                    {% endif %}
                   </div>
                 </div>
-              {% endif %}
+              </div>
             {% endwith %}
           {% endfor %}
         </div>
@@ -107,4 +106,38 @@
       </div>
     </div>
   </div>
+
+  {% for requirement, edit_form in editable_requirements %}
+    <form id="deleteRequirement{{ requirement.id }}" action="{% url 'clients:document_requirement_delete' requirement.id %}" method="post" class="d-none">
+      {% csrf_token %}
+    </form>
+
+    <div class="modal fade" id="editRequirementModal{{ requirement.id }}" tabindex="-1" aria-labelledby="editRequirementLabel{{ requirement.id }}" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editRequirementLabel{{ requirement.id }}">{% translate "Редактировать документ" %}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
+          </div>
+          <form action="{% url 'clients:document_requirement_edit' requirement.id %}" method="post">
+            {% csrf_token %}
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="{{ edit_form.custom_name.id_for_label }}" class="form-label">{% translate "Название документа" %}</label>
+                {{ edit_form.custom_name }}
+              </div>
+              <div class="form-check">
+                {{ edit_form.is_required }}
+                <label class="form-check-label" for="{{ edit_form.is_required.id_for_label }}">{% translate "Обязательный документ" %}</label>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+              <button type="submit" class="btn btn-primary">{% translate "Сохранить изменения" %}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
 {% endblock %}
