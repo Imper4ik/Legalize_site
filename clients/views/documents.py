@@ -149,18 +149,10 @@ def client_overview_partial(request, pk):
     """Возвращает HTML со сводной информацией о клиенте для автообновления на странице сотрудника."""
 
     client = get_object_or_404(Client, pk=pk)
-    from os import environ
-
-    poll_interval = environ.get("INPOL_POLL_INTERVAL", "900")
-    try:
-        interval_seconds = int(poll_interval)
-    except ValueError:
-        interval_seconds = 900
     overview_html = render_to_string(
         'clients/partials/client_overview.html',
         {
             'client': client,
-            'inpol_poll_interval_minutes': max(1, interval_seconds // 60),
         },
         request=request,
     )
