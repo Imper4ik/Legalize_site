@@ -2,6 +2,7 @@ from django.test import TestCase
 
 from clients.services.inpol import (
     InpolCaseUpdater,
+    InpolClient,
     InpolCredentials,
     InpolProceeding,
     InpolChange,
@@ -23,6 +24,18 @@ class InpolProceedingTests(TestCase):
         self.assertEqual(proceeding.proceeding_id, "42")
         self.assertEqual(proceeding.case_number, "42")
         self.assertEqual(proceeding.status, "processing")
+
+
+class InpolClientTests(TestCase):
+    def test_normalizes_base_url_without_login_suffix(self):
+        client = InpolClient("https://inpol.mazowieckie.pl/login/")
+
+        self.assertEqual(client.base_url, "https://inpol.mazowieckie.pl")
+
+    def test_preserves_additional_path_segments(self):
+        client = InpolClient("https://cudzoziemcy.mazowieckie.pl/inpol/login")
+
+        self.assertEqual(client.base_url, "https://cudzoziemcy.mazowieckie.pl/inpol")
 
 
 class InpolStatusRepositoryTests(TestCase):
