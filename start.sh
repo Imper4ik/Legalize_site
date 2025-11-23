@@ -30,5 +30,18 @@ EOF
 fi
 # === конец блока создания суперюзера ===
 
+if [ "${INPOL_AUTO_POLL:-1}" != "0" ]; then
+  POLL_INTERVAL="${INPOL_POLL_INTERVAL:-900}"
+  echo "Starting inPOL auto check every ${POLL_INTERVAL}s"
+  (
+    while true; do
+      if ! python manage.py check_inpol --silent; then
+        echo "inPOL auto check failed, retrying after ${POLL_INTERVAL}s"
+      fi
+      sleep "${POLL_INTERVAL}"
+    done
+  ) &
+fi
+
 : "${PORT:=8000}"
 exec gunicorn legalize_site.wsgi:application --bind 0.0.0.0:"${PORT}"

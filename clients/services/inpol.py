@@ -204,6 +204,42 @@ class InpolCaseUpdater:
         for change in changes:
             self._apply_change(change, account_email)
 
+    def apply_changes_for_client(
+        self,
+        changes: Iterable[InpolChange],
+        target_client: Client,
+        *,
+        account_email: Optional[str] = None,
+    ) -> List[InpolChange]:
+        """Apply updates only to the specified client and return applied changes."""
+
+        applied: List[InpolChange] = []
+
+        for change in changes:
+            proceeding = change.proceeding
+            case_number = proceeding.case_number.strip() if proceeding.case_number else ""
+
+            matches_case = bool(case_number and target_client.case_number and target_client.case_number == case_number)
+            matches_email = bool(
+                account_email and target_client.email and target_client.email.lower() == account_email.lower()
+            )
+
+            if not (matches_case or matches_email):
+                continue
+
+            updates: Dict[str, Any] = {
+                "inpol_status": proceeding.status,
+                "inpol_updated_at": timezone.now(),
+            }
+
+            if case_number and not target_client.case_number:
+                updates["case_number"] = case_number
+
+            self.client_model.objects.filter(pk=target_client.pk).update(**updates)
+            applied.append(change)
+
+        return applied
+
     def _apply_change(self, change: InpolChange, account_email: Optional[str]) -> None:
         proceeding = change.proceeding
         case_number = proceeding.case_number.strip() if proceeding.case_number else ""
@@ -249,6 +285,23 @@ def check_inpol_and_update_clients(
     return changes
 
 
+def check_inpol_for_client(
+    credentials: InpolCredentials,
+    client: InpolClient,
+    repository: InpolStatusRepository,
+    *,
+    target_client: Client,
+    case_updater: Optional[InpolCaseUpdater] = None,
+) -> List[InpolChange]:
+    """Run the watcher and apply only changes relevant to a specific client."""
+
+    watcher = InpolStatusWatcher(client, repository)
+    changes = watcher.check(credentials)
+
+    updater = case_updater or InpolCaseUpdater()
+    return updater.apply_changes_for_client(changes, target_client, account_email=credentials.email)
+
+
 def _coalesce(source: Mapping[str, Any], keys: List[str], default: Any = None) -> Any:
     for key in keys:
         if key in source and source[key] not in (None, ""):
@@ -262,6 +315,9 @@ __all__ = [
     "InpolClient",
     "InpolCredentials",
     "InpolProceeding",
+    "InpolCaseUpdater",
     "InpolStatusRepository",
     "InpolStatusWatcher",
+    "check_inpol_and_update_clients",
+    "check_inpol_for_client",
 ]
