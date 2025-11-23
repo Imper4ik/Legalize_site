@@ -221,6 +221,28 @@ class DocumentRequirementTests(TestCase):
         fallback = DOCUMENT_CHECKLIST.get(('work', 'pl'))
         self.assertEqual(len(checklist), len(fallback))
 
+    def test_client_checklist_respects_disabled_custom_items(self):
+        DocumentRequirement.objects.filter(application_purpose='work').delete()
+        DocumentRequirement.objects.create(
+            application_purpose='work',
+            document_type=DocumentType.PASSPORT,
+            is_required=False,
+            position=0,
+        )
+
+        client = Client.objects.create(
+            first_name='Anna',
+            last_name='Nowak',
+            citizenship='PL',
+            phone='+48123123123',
+            email='anna-disabled@example.com',
+            application_purpose='work',
+            language='pl',
+        )
+
+        checklist = client.get_document_checklist()
+        self.assertEqual(checklist, [])
+
     def test_add_form_allows_custom_document(self):
         DocumentRequirement.objects.filter(application_purpose='work').delete()
         form = DocumentRequirementAddForm(data={'name': 'Дополнительная справка'}, purpose='work')
@@ -313,6 +335,63 @@ class DocumentRequirementTests(TestCase):
                 (DocumentType.PASSPORT.value, DocumentType.PASSPORT.label),
                 (DocumentType.PAYMENT_CONFIRMATION.value, DocumentType.PAYMENT_CONFIRMATION.label),
             ],
+        )
+
+    def test_checklist_form_keeps_all_unchecked_when_custom_exists(self):
+        DocumentRequirement.objects.filter(application_purpose='study').delete()
+        DocumentRequirement.objects.create(
+            application_purpose='study',
+            document_type=DocumentType.PASSPORT,
+            is_required=False,
+            position=0,
+        )
+
+        form = DocumentChecklistForm(data=None, purpose='study')
+
+        self.assertEqual(form.initial['required_documents'], [])
+
+    def test_manage_view_does_not_restore_deleted_standard_items(self):
+        user_model = get_user_model()
+        staff_user = user_model.objects.create_user(username='staff', password='pass', is_staff=True)
+        self.client.login(username='staff', password='pass')
+
+        DocumentRequirement.objects.filter(application_purpose='study').delete()
+        requirement = DocumentRequirement.objects.create(
+            application_purpose='study',
+            document_type=DocumentType.PASSPORT,
+            is_required=True,
+            position=0,
+        )
+
+        requirement.delete()
+
+        response = self.client.get(reverse('clients:document_checklist_manage') + '?purpose=study')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            DocumentRequirement.objects.filter(
+                application_purpose='study', document_type=DocumentType.PASSPORT
+            ).exists()
+        )
+
+    def test_checklist_form_skips_deleted_standard_documents_when_custom_exists(self):
+        DocumentRequirement.objects.filter(application_purpose='work').delete()
+        DocumentRequirement.objects.create(
+            application_purpose='work', document_type=DocumentType.PASSPORT, position=0
+        )
+        DocumentRequirement.objects.create(
+            application_purpose='work', document_type=DocumentType.PHOTOS, position=1
+        )
+
+        DocumentRequirement.objects.filter(
+            application_purpose='work', document_type=DocumentType.PASSPORT
+        ).delete()
+
+        form = DocumentChecklistForm(data=None, purpose='work')
+
+        self.assertNotIn(
+            (DocumentType.PASSPORT.value, DocumentType.PASSPORT.label),
+            form.fields['required_documents'].choices,
         )
 
 
