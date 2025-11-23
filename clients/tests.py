@@ -221,6 +221,28 @@ class DocumentRequirementTests(TestCase):
         fallback = DOCUMENT_CHECKLIST.get(('work', 'pl'))
         self.assertEqual(len(checklist), len(fallback))
 
+    def test_client_checklist_respects_disabled_custom_items(self):
+        DocumentRequirement.objects.filter(application_purpose='work').delete()
+        DocumentRequirement.objects.create(
+            application_purpose='work',
+            document_type=DocumentType.PASSPORT,
+            is_required=False,
+            position=0,
+        )
+
+        client = Client.objects.create(
+            first_name='Anna',
+            last_name='Nowak',
+            citizenship='PL',
+            phone='+48123123123',
+            email='anna-disabled@example.com',
+            application_purpose='work',
+            language='pl',
+        )
+
+        checklist = client.get_document_checklist()
+        self.assertEqual(checklist, [])
+
     def test_add_form_allows_custom_document(self):
         DocumentRequirement.objects.filter(application_purpose='work').delete()
         form = DocumentRequirementAddForm(data={'name': 'Дополнительная справка'}, purpose='work')
@@ -314,6 +336,19 @@ class DocumentRequirementTests(TestCase):
                 (DocumentType.PAYMENT_CONFIRMATION.value, DocumentType.PAYMENT_CONFIRMATION.label),
             ],
         )
+
+    def test_checklist_form_keeps_all_unchecked_when_custom_exists(self):
+        DocumentRequirement.objects.filter(application_purpose='study').delete()
+        DocumentRequirement.objects.create(
+            application_purpose='study',
+            document_type=DocumentType.PASSPORT,
+            is_required=False,
+            position=0,
+        )
+
+        form = DocumentChecklistForm(data=None, purpose='study')
+
+        self.assertEqual(form.initial['required_documents'], [])
 
 
 class WezwanieParserTests(TestCase):
