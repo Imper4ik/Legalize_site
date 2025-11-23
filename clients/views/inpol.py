@@ -36,3 +36,15 @@ class InpolAccountView(StaffRequiredMixin, FormView):
         else:
             messages.success(self.request, "Учётные данные inPOL сохранены.")
         return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from os import environ
+
+        poll_interval = environ.get("INPOL_POLL_INTERVAL", "900")
+        try:
+            interval_seconds = int(poll_interval)
+        except ValueError:
+            interval_seconds = 900
+        context["inpol_poll_interval_minutes"] = max(1, interval_seconds // 60)
+        return context
