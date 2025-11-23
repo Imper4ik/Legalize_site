@@ -193,6 +193,24 @@ class InpolProceedingSnapshot(models.Model):
     def __str__(self) -> str:  # pragma: no cover - trivial
         return f"{self.case_number or self.proceeding_id}: {self.status}"
 
+
+class InpolAccount(models.Model):
+    name = models.CharField(max_length=255, verbose_name="Название учётки")
+    base_url = models.URLField(verbose_name="Базовый URL inPOL")
+    email = models.EmailField(verbose_name="Email для входа")
+    password = models.CharField(max_length=255, verbose_name="Пароль для входа")
+    is_active = models.BooleanField(default=True, verbose_name="Активный")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at", "-id"]
+        verbose_name = "Учётная запись inPOL"
+        verbose_name_plural = "Учётные записи inPOL"
+
+    def __str__(self) -> str:  # pragma: no cover - trivial
+        return f"{self.name} ({self.email})"
+
 class Payment(models.Model):
     PAYMENT_STATUS_CHOICES = [
         ('pending', _('Ожидает оплаты')),
