@@ -53,14 +53,19 @@
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-          {% if user.is_authenticated and user.is_staff %}
+          {% if user.is_authenticated %}
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            {% if user.is_staff %}
             <li class="nav-item"><a class="nav-link" href="{% url 'clients:client_list' %}">{% translate "Клиенты" %}</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'clients:client_add' %}">{% translate "Добавить клиента" %}</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'clients:calculator' %}">{% translate "Калькулятор" %}</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'clients:document_checklist_manage' %}">{% translate "Чеклисты" %}</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'clients:document_reminder_list' %}">{% translate "Напоминания" %}</a></li>
             <li class="nav-item"><a class="nav-link" href="{% url 'clients:payment_reminder_list' %}">{% translate "Напоминания платежей" %}</a></li>
+            {% endif %}
+            {% if user.is_staff or perms.clients.add_inpolaccount or perms.clients.change_inpolaccount %}
+            <li class="nav-item"><a class="nav-link" href="{% url 'clients:inpol_account' %}">{% translate "inPOL" %}</a></li>
+            {% endif %}
           </ul>
           {% endif %}
 

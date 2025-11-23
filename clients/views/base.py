@@ -15,6 +15,22 @@ class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         return self.request.user.is_staff
 
 
+class InpolCredentialsAccessMixin(LoginRequiredMixin, UserPassesTestMixin):
+    """Allow access to users who can manage inPOL credentials.
+
+    Staff members retain access, but projects that delegate permissions
+    (e.g., via a custom group) can grant the inPOL account permissions
+    without toggling ``is_staff``. This keeps the credential form reachable
+    even if the admin account isn't marked as staff in production.
+    """
+
+    perm_codename = "clients.add_inpolaccount"
+
+    def test_func(self):
+        user = self.request.user
+        return user.is_staff or user.has_perm(self.perm_codename)
+
+
 def staff_required_view(view_func):
     @wraps(view_func)
     @login_required
