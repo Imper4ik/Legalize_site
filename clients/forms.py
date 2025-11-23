@@ -8,6 +8,13 @@ from .constants import DOCUMENT_CHECKLIST, DocumentType
 from .models import Client, Document, DocumentRequirement, Payment
 
 
+def _label_for_document_type(code: str) -> str:
+    try:
+        return DocumentType(code).label
+    except ValueError:
+        return code.replace('_', ' ').capitalize()
+
+
 class ClientForm(forms.ModelForm):
     # --- FIXED HERE ---
     # We explicitly define the date fields to make them not required
@@ -97,6 +104,11 @@ class PaymentForm(forms.ModelForm):
 
 
 class DocumentRequirementEditForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.instance.custom_name:
+            self.initial.setdefault('custom_name', _label_for_document_type(self.instance.document_type))
+
     class Meta:
         model = DocumentRequirement
         fields = ['custom_name', 'is_required']
@@ -175,10 +187,7 @@ class DocumentChecklistForm(forms.Form):
 
     @staticmethod
     def _label_for_code(code: str) -> str:
-        try:
-            return DocumentType(code).label
-        except ValueError:
-            return code.replace('_', ' ').capitalize()
+        return _label_for_document_type(code)
 
     def _initial_documents(self):
         existing = (
