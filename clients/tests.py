@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
@@ -11,7 +12,7 @@ from django.utils import translation
 from allauth.account.models import EmailAddress
 
 from .forms import DocumentChecklistForm
-from .models import Client, Document, DocumentRequirement
+from .models import Client, Document, DocumentRequirement, InpolAccount
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper
 
@@ -181,6 +182,56 @@ class DocumentTypeConsistencyTests(TestCase):
         )
 
         self.assertEqual(doc.display_name, 'ZUS RCA')
+
+
+class InpolAccountFormViewTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.staff_user = user_model.objects.create_user(
+            username='staff', password='pass', is_staff=True
+        )
+
+        non_staff = user_model.objects.create_user(
+            username='inpol-manager', password='pass', is_staff=False
+        )
+        perm = Permission.objects.get(codename='add_inpolaccount')
+        non_staff.user_permissions.add(perm)
+        self.user_with_permission = non_staff
+
+    def test_staff_can_save_inpol_credentials_via_form(self):
+        login_successful = self.client.login(username='staff', password='pass')
+        self.assertTrue(login_successful)
+
+        response = self.client.post(
+            reverse('clients:inpol_account'),
+            {
+                'name': 'Primary inPOL',
+                'base_url': 'https://cudzoziemcy.mazowieckie.pl/inpol',
+                'email': 'inpol@example.com',
+                'password': 'super-secret',
+                'is_active': True,
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(InpolAccount.objects.filter(email='inpol@example.com').exists())
+
+    def test_staff_sees_inpol_link_in_navbar(self):
+        self.client.force_login(self.staff_user)
+        response = self.client.get(reverse('clients:client_list'))
+
+        self.assertContains(response, reverse('clients:inpol_account'))
+        self.assertContains(response, 'inPOL')
+
+    def test_permission_holder_sees_inpol_link(self):
+        self.client.force_login(self.user_with_permission)
+
+        response = self.client.get(reverse('clients:inpol_account'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse('clients:inpol_account'))
+        self.assertContains(response, 'inPOL')
 
 
 class DocumentRequirementTests(TestCase):
