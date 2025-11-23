@@ -84,6 +84,13 @@ class InpolClient:
         self.session = session or requests.Session()
         self.timeout = timeout
 
+        # Use browser-like defaults to avoid WAF blocking scripted requests
+        self.session.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+            "Accept": "application/json, text/plain, */*",
+            "Referer": self.base_url,
+        })
+
     def sign_in(self, credentials: InpolCredentials, endpoint: str = "account/sign-in") -> InpolAuthResult:
         """Authenticate against the sign-in endpoint.
 
