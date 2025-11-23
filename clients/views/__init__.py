@@ -30,6 +30,7 @@ from clients.views.reminders import (
     reminder_action,
     run_update_reminders,
 )
+from clients.views.inpol import InpolAccountView
 
 __all__ = [
     'StaffRequiredMixin',
@@ -62,4 +63,5 @@ __all__ = [
     'PaymentReminderListView',
     'reminder_action',
     'run_update_reminders',
+    'InpolAccountView',
 ]
