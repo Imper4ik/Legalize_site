@@ -11,7 +11,6 @@ urlpatterns = [
     # CRUD для Клиентов (используя CBV)
     path('', views.ClientListView.as_view(), name='client_list'),
     path('client/<int:pk>/', views.ClientDetailView.as_view(), name='client_detail'),
-    path('client/<int:pk>/inpol-check/', views.check_inpol_status, name='client_inpol_check'),
     path('client/add/', views.ClientCreateView.as_view(), name='client_add'),
     path('client/<int:pk>/edit/', views.ClientUpdateView.as_view(), name='client_edit'),
     path('client/<int:pk>/delete/', views.ClientDeleteView.as_view(), name='client_delete'),
@@ -51,7 +50,6 @@ urlpatterns = [
 
     # URL для калькулятора
     path('calculator/', views.calculator_view, name='calculator'),
-    path('inpol/account/', views.InpolAccountView.as_view(), name='inpol_account'),
     path('checklists/requirements/add/', views.document_requirement_add, name='document_requirement_add'),
     path('checklists/requirements/<int:pk>/edit/', views.document_requirement_edit, name='document_requirement_edit'),
     path('checklists/requirements/<int:pk>/delete/', views.document_requirement_delete, name='document_requirement_delete'),
