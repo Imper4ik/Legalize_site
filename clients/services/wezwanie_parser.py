@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 
 DATE_FORMATS = ("%d.%m.%Y", "%d-%m-%Y", "%d/%m/%Y", "%Y-%m-%d")
 CASE_NUMBER_PATTERNS = (
-    re.compile(r"numer\s+sprawy[:\s]*([A-Za-z0-9./-]+)", re.IGNORECASE),
-    re.compile(r"nr\s+sprawy[:\s]*([A-Za-z0-9./-]+)", re.IGNORECASE),
-    re.compile(r"sygn\.\s*akt[:\s]*([A-Za-z0-9./-]+)", re.IGNORECASE),
+    re.compile(r"numer\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
+    re.compile(r"nr\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
+    re.compile(r"sygn\.\s*akt[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     re.compile(r"\b([A-Z]{1,3}\/?\d{1,4}/\d{2,4})\b"),
 )
 DATE_PATTERNS = (
@@ -91,7 +91,9 @@ def _find_case_number(text: str) -> str | None:
     for pattern in CASE_NUMBER_PATTERNS:
         match = pattern.search(text)
         if match:
-            return match.group(1).strip()
+            normalized = re.sub(r"[^A-Za-z0-9./-]", "", match.group(1)).upper()
+            if normalized:
+                return normalized
     return None
 
 
