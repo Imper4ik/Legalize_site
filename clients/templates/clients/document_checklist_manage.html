@@ -29,6 +29,9 @@
       <input type="hidden" name="purpose" value="{{ current_purpose }}">
       <div class="col-12">
         <h6 class="text-muted mb-3">{% translate "Отметьте документы, которые должны отображаться в чеклисте" %}</h6>
+        <p class="text-muted small mb-3">
+          {% translate "Плашка «Стандартный документ» означает базовый список для выбранной цели. Такие позиции берутся из типовых документов и появляются, пока для них нет отдельной настройки. Их можно включать или отключать чекбоксом, а чтобы отредактировать название или обязательность — добавьте собственный вариант через кнопку «Добавить документ»." %}
+        </p>
         {{ form.required_documents.errors }}
         <div class="row row-cols-1 row-cols-md-2 g-2">
           {% for checkbox in form.required_documents %}
