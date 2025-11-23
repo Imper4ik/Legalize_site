@@ -21,6 +21,7 @@ DATE_PATTERNS = (
     re.compile(r"(?:dniu|dnia|dn\.)?\s*(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
     re.compile(r"(\d{4}-\d{2}-\d{2})"),
 )
+IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp"}
 
 
 @dataclass
@@ -60,6 +61,22 @@ def _extract_pdf_text(path: Path) -> str:
         return ""
 
 
+def _extract_image_text(path: Path) -> str:
+    try:
+        from PIL import Image
+        import pytesseract
+    except ImportError:  # pragma: no cover - optional dependency
+        logger.warning("OCR dependencies (Pillow, pytesseract) are not installed; skipping OCR")
+        return ""
+
+    try:
+        with Image.open(path) as img:
+            return pytesseract.image_to_string(img)
+    except Exception:  # pragma: no cover - defensive logging
+        logger.exception("Не удалось прочитать изображение %s через OCR", path)
+        return ""
+
+
 def _read_plain_text(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8", errors="ignore")
@@ -78,8 +95,13 @@ def extract_text(path: str | Path) -> str:
     file_path = Path(path)
 
     text = ""
-    if file_path.suffix.lower() == ".pdf":
+    suffix = file_path.suffix.lower()
+
+    if suffix == ".pdf":
         text = _extract_pdf_text(file_path)
+
+    if suffix in IMAGE_SUFFIXES:
+        return _extract_image_text(file_path)
 
     if not text:
         text = _read_plain_text(file_path)

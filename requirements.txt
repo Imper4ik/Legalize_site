@@ -9,4 +9,6 @@ PyJWT[crypto]
 cryptography
 whitenoise
 django-anymail[brevo,sendgrid]
+Pillow
+pytesseract
 
