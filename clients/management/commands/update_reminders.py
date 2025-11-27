@@ -6,8 +6,11 @@ from datetime import timedelta
 from django.db import transaction  # Импортируем для атомарных операций
 from collections import defaultdict
 
-from clients.models import Document, Payment, Reminder
-from clients.services.notifications import send_expiring_documents_email
+from clients.models import Client, Document, Payment, Reminder
+from clients.services.notifications import (
+    send_expiring_documents_email,
+    send_missing_documents_email,
+)
 
 
 class Command(BaseCommand):
