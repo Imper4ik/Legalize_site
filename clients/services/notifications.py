@@ -28,7 +28,7 @@ def send_required_documents_email(client: Client) -> int:
     if not client.email:
         return 0
 
-    checklist = client.get_document_checklist()
+    checklist = client.get_document_checklist() or []
     if not checklist:
         return 0
 
@@ -112,9 +112,25 @@ def send_expiring_documents_email(client: Client, documents: list[Document]) -> 
     if not client.email or not documents:
         return 0
 
+    checklist = client.get_document_checklist()
+    missing_documents = []
+
+    for item in checklist:
+        if item.get("is_uploaded"):
+            continue
+
+        latest_document = (item.get("documents") or [None])[0]
+        missing_documents.append(
+            {
+                "name": item.get("name"),
+                "expiry_date": getattr(latest_document, "expiry_date", None),
+            }
+        )
+
     context = {
         "client": client,
         "documents": sorted(documents, key=lambda doc: doc.expiry_date or timezone.localdate()),
+        "missing_documents": missing_documents,
     }
     subject = _("Документы скоро истекают")
     body = render_to_string("clients/email/expiring_documents.txt", context)
