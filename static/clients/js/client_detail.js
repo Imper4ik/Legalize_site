@@ -55,8 +55,8 @@
     });
   }
 
-  function showPaymentAlert(message, type = 'success') {
-    const container = document.getElementById('payment-alerts');
+  function showAlert(containerId, message, type = 'success') {
+    const container = document.getElementById(containerId);
     if (!container || !message) {
       return;
     }
@@ -78,6 +78,14 @@
     window.setTimeout(() => {
       bootstrap.Alert.getOrCreateInstance(alert).close();
     }, 3500);
+  }
+
+  function showPaymentAlert(message, type = 'success') {
+    showAlert('payment-alerts', message, type);
+  }
+
+  function showDocumentAlert(message, type = 'success') {
+    showAlert('document-alerts', message, type);
   }
 
   function prependPaymentItem(html, paymentId) {
@@ -415,6 +423,47 @@
     });
   }
 
+  function initBulkVerification() {
+    const form = document.getElementById('verify-all-documents-form');
+    if (!form) {
+      return;
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const submitButton = form.querySelector('[type="submit"]');
+      submitButton?.setAttribute('disabled', 'disabled');
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          body: new FormData(form),
+          credentials: 'same-origin',
+        });
+
+        const data = await response.json();
+        if (data.status === 'success') {
+          showDocumentAlert('Все загруженные документы отмечены как проверенные.');
+          if (typeof refreshChecklist === 'function') {
+            await refreshChecklist();
+          } else {
+            window.location.reload();
+          }
+          return;
+        }
+
+        showDocumentAlert(getErrorMessage(data.errors || data.message), 'danger');
+      } catch (error) {
+        console.error('Не удалось отметить все документы как проверенные:', error);
+        showDocumentAlert('Не удалось обновить статус документов. Попробуйте ещё раз.', 'danger');
+      } finally {
+        submitButton?.removeAttribute('disabled');
+      }
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     initPriceAutoFill();
     initAddPaymentForm();
@@ -422,5 +471,6 @@
     initDocumentUploadModal();
     initChecklistRefresher();
     initDocumentDeletion();
+    initBulkVerification();
   });
 })();
