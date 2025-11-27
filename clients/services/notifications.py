@@ -10,7 +10,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from clients.models import Client
+from clients.models import Client, Document
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,23 @@ def send_missing_documents_email(client: Client) -> int:
     context = {
         "client": client,
         "documents": missing,
+        "uploaded_with_expiry": uploaded_with_expiry,
     }
     subject = _("Список недостающих документов")
     body = render_to_string("clients/email/missing_documents.txt", context)
+    return _send_email(subject, body, [client.email])
+
+
+def send_expiring_documents_email(client: Client, documents: list[Document]) -> int:
+    """Send a notice about documents expiring soon (within the next week)."""
+
+    if not client.email or not documents:
+        return 0
+
+    context = {
+        "client": client,
+        "documents": sorted(documents, key=lambda doc: doc.expiry_date or timezone.localdate()),
+    }
+    subject = _("Документы скоро истекают")
+    body = render_to_string("clients/email/expiring_documents.txt", context)
     return _send_email(subject, body, [client.email])
