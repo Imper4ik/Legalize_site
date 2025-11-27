@@ -419,6 +419,29 @@ class MissingDocumentsEmailTests(TestCase):
         self.assertEqual(sent, 0)
         self.assertEqual(len(mail.outbox), 0)
 
+    def test_includes_uploaded_expiry_details_when_other_docs_missing(self):
+        DocumentRequirement.objects.create(
+            application_purpose="work",
+            document_type=DocumentType.PHOTOS,
+            position=1,
+        )
+
+        Document.objects.create(
+            client=self.client_record,
+            document_type=DocumentType.PASSPORT,
+            expiry_date=date.today(),
+            file=SimpleUploadedFile("passport.pdf", b"content"),
+        )
+
+        sent = send_missing_documents_email(self.client_record)
+
+        self.assertEqual(sent, 1)
+        self.assertEqual(len(mail.outbox), 1)
+        body = mail.outbox[0].body
+        self.assertIn("Паспорт", body)
+        self.assertIn("Фотографии", body)
+        self.assertIn(date.today().strftime("%d.%m.%Y"), body)
+
 
 class WezwanieUploadFlowTests(TestCase):
     def setUp(self):
