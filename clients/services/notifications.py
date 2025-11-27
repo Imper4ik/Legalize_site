@@ -10,7 +10,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from clients.models import Client
+from clients.models import Client, Document
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,28 @@ def send_missing_documents_email(client: Client) -> int:
         return 0
 
     checklist = client.get_document_checklist()
-    missing = [item.get("name") for item in checklist if not item.get("is_uploaded")]
+    missing = []
+    uploaded_with_expiry = []
+
+    for item in checklist:
+        latest_document = (item.get("documents") or [None])[0]
+
+        if item.get("is_uploaded"):
+            if getattr(latest_document, "expiry_date", None):
+                uploaded_with_expiry.append(
+                    {
+                        "name": item.get("name"),
+                        "expiry_date": latest_document.expiry_date,
+                    }
+                )
+            continue
+
+        missing.append(
+            {
+                "name": item.get("name"),
+                "expiry_date": getattr(latest_document, "expiry_date", None),
+            }
+        )
 
     if not missing:
         return 0
@@ -77,7 +98,23 @@ def send_missing_documents_email(client: Client) -> int:
     context = {
         "client": client,
         "documents": missing,
+        "uploaded_with_expiry": uploaded_with_expiry,
     }
     subject = _("Список недостающих документов")
     body = render_to_string("clients/email/missing_documents.txt", context)
+    return _send_email(subject, body, [client.email])
+
+
+def send_expiring_documents_email(client: Client, documents: list[Document]) -> int:
+    """Send a notice about documents expiring soon (within the next week)."""
+
+    if not client.email or not documents:
+        return 0
+
+    context = {
+        "client": client,
+        "documents": sorted(documents, key=lambda doc: doc.expiry_date or timezone.localdate()),
+    }
+    subject = _("Документы скоро истекают")
+    body = render_to_string("clients/email/expiring_documents.txt", context)
     return _send_email(subject, body, [client.email])
