@@ -117,17 +117,24 @@ def toggle_document_verification(request, doc_id):
     document = get_object_or_404(Document, pk=doc_id)
     helper = ResponseHelper(request)
     if request.method == 'POST':
+        was_verified = document.verified
         document.verified = not document.verified
         document.save()
+
+        emails_sent = 0
+        if document.verified and not was_verified:
+            emails_sent = send_missing_documents_email(document.client)
 
         if helper.expects_json:
             return helper.success(
                 verified=document.verified,
                 button_text="Снять отметку" if document.verified else "Проверить",
+                emails_sent=bool(emails_sent),
             )
 
         status = "проверен" if document.verified else "не проверен"
-        messages.success(request, f"Статус документа изменен на '{status}'.")
+        message_suffix = " Письмо с недостающими документами отправлено." if emails_sent else ""
+        messages.success(request, f"Статус документа изменен на '{status}'.{message_suffix}")
     return redirect('clients:client_detail', pk=document.client.id)
 
 
