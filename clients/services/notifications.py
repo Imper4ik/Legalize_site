@@ -70,9 +70,19 @@ def send_missing_documents_email(client: Client) -> int:
 
     checklist = client.get_document_checklist()
     missing = []
+    uploaded_with_expiry = []
 
     for item in checklist:
         if item.get("is_uploaded"):
+            latest_document = (item.get("documents") or [None])[0]
+            expiry_date = getattr(latest_document, "expiry_date", None)
+            if expiry_date:
+                uploaded_with_expiry.append(
+                    {
+                        "name": item.get("name"),
+                        "expiry_date": expiry_date,
+                    }
+                )
             continue
 
         latest_document = (item.get("documents") or [None])[0]
