@@ -27,8 +27,21 @@
 
   <hr>
 
-  <h2>{% translate "Чеклист документов" %}</h2>
-  
+  <div class="d-flex justify-content-between align-items-center">
+    <h2 class="mb-0">{% translate "Чеклист документов" %}</h2>
+    <form
+      id="verify-all-documents-form"
+      action="{% url 'clients:verify_all_documents' client_id=client.pk %}"
+      method="post"
+      class="ms-3"
+    >
+      {% csrf_token %}
+      <button type="submit" class="btn btn-outline-success btn-sm">{% translate "Проверить все загруженные" %}</button>
+    </form>
+  </div>
+
+  <div id="document-alerts" class="mb-2"></div>
+
   <div class="accordion" id="documentAccordion" data-refresh-url="{% url 'clients:client_checklist_partial' client.pk %}">
       {% include 'clients/partials/document_checklist.html' with document_status_list=document_status_list client=client %}
   </div>

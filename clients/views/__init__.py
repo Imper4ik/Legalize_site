@@ -21,6 +21,7 @@ from clients.views.documents import (
     client_status_api,
     document_delete,
     toggle_document_verification,
+    verify_all_documents,
     update_client_notes,
 )
 from clients.views.payments import add_payment, delete_payment, edit_payment, get_price_for_service
@@ -53,6 +54,7 @@ __all__ = [
     'client_status_api',
     'document_delete',
     'toggle_document_verification',
+    'verify_all_documents',
     'update_client_notes',
     'add_payment',
     'delete_payment',

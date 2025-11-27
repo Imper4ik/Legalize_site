@@ -498,6 +498,71 @@ class WezwanieUploadFlowTests(TestCase):
         self.assertIn("Фотографии", mail.outbox[0].body)
 
 
+class BulkDocumentVerificationTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.staff_user = user_model.objects.create_user(
+            username='checker', password='pass', is_staff=True
+        )
+
+        self.client_record = Client.objects.create(
+            first_name='Alex',
+            last_name='Nowak',
+            citizenship='PL',
+            phone='+48111111111',
+            email='alex@example.com',
+        )
+
+        self.unverified_doc = Document.objects.create(
+            client=self.client_record,
+            document_type=DocumentType.PASSPORT,
+            file=SimpleUploadedFile('passport.pdf', b'data'),
+            verified=False,
+        )
+
+        self.verified_doc = Document.objects.create(
+            client=self.client_record,
+            document_type=DocumentType.PHOTOS,
+            file=SimpleUploadedFile('photos.pdf', b'data'),
+            verified=True,
+        )
+
+    def test_marks_all_documents_verified_and_sends_email_once(self):
+        self.client.login(username='checker', password='pass')
+
+        url = reverse('clients:verify_all_documents', kwargs={'client_id': self.client_record.pk})
+        with patch('clients.views.documents.send_missing_documents_email') as mock_send:
+            mock_send.return_value = 1
+            response = self.client.post(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        self.assertEqual(response.status_code, 200)
+
+        payload = json.loads(response.content)
+        self.assertEqual(payload['status'], 'success')
+        self.assertEqual(payload['verified_count'], 1)
+        mock_send.assert_called_once_with(self.client_record)
+
+        refreshed = Document.objects.get(pk=self.unverified_doc.pk)
+        self.assertTrue(refreshed.verified)
+
+        still_verified = Document.objects.get(pk=self.verified_doc.pk)
+        self.assertTrue(still_verified.verified)
+
+    def test_skips_email_when_nothing_to_verify(self):
+        Document.objects.filter(pk=self.unverified_doc.pk).update(verified=True)
+        self.client.login(username='checker', password='pass')
+
+        url = reverse('clients:verify_all_documents', kwargs={'client_id': self.client_record.pk})
+        with patch('clients.views.documents.send_missing_documents_email') as mock_send:
+            response = self.client.post(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        self.assertEqual(response.status_code, 200)
+        payload = json.loads(response.content)
+        self.assertEqual(payload['status'], 'success')
+        self.assertEqual(payload['verified_count'], 0)
+        mock_send.assert_not_called()
+
+
 class ResponseHelperTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
