@@ -34,6 +34,12 @@ msgstr "Paszport"
 msgid "Справка о зачислении"
 msgstr "Zaświadczenie o przyjęciu na studia"
 
+#: clients/templates/clients/document_checklist_manage.html:1
+#: clients/templates/clients/document_checklist_manage.html:5
+#: clients/templates/clients/document_checklist_manage.html:6
+msgid "Настройка чеклистов"
+msgstr "Konfiguracja checklist"
+
 #: clients/constants.py:12 clients/models.py:104
 msgid "Справка об оплате обучения"
 msgstr "Dowód uiszczenia opłaty za naukę"
@@ -41,6 +47,10 @@ msgstr "Dowód uiszczenia opłaty za naukę"
 #: clients/constants.py:13 clients/constants.py:25 clients/models.py:105
 msgid "Медицинская страховка"
 msgstr "Ubezpieczenie zdrowotne"
+
+#: clients/templates/clients/document_checklist_manage.html:7
+msgid "Управляйте списком обязательных документов для каждой цели подачи."
+msgstr "Zarządzaj listą wymaganych dokumentów dla każdego celu złożenia wniosku."
 
 #: clients/constants.py:14 clients/models.py:106
 msgid "Подтверждение адреса"
@@ -62,6 +72,12 @@ msgstr "Informacja starosty"
 msgid "Трудовой договор"
 msgstr "Umowa o pracę"
 
+#: clients/templates/clients/document_checklist_manage.html:21
+#: clients/templates/clients/document_checklist_manage.html:93
+#: clients/templates/clients/document_checklist_manage.html:115
+msgid "Добавить документ"
+msgstr "Dodaj dokument"
+
 #: clients/constants.py:27 clients/models.py:111
 msgid "PIT-37 / Zaświadczenie o niezaleganiu"
 msgstr "PIT-37 / Zaświadczenie o niezaleganiu"
@@ -69,6 +85,14 @@ msgstr "PIT-37 / Zaświadczenie o niezaleganiu"
 #: clients/models.py:11
 msgid "Учёба"
 msgstr "Studia"
+
+#: clients/templates/clients/document_checklist_manage.html:30
+msgid "Отметьте документы, которые должны отображаться в чеклисте"
+msgstr "Zaznacz dokumenty, które powinny pojawiać się na checkliście"
+
+#: clients/templates/clients/document_checklist_manage.html:32
+msgid "Плашка «Стандартный документ» означает базовый список для выбранной цели. Такие позиции берутся из типов документов и появляются, пока для них нет отдельной настройки. Их можно включать или отключать чекбоксом, а чтобы отредактировать название или обязательность — добавьте собственный вариант через кнопку «Добавить документ»."
+msgstr "Etykieta „Dokument standardowy” oznacza bazową listę dla wybranego celu. Takie pozycje pochodzą z typów dokumentów i są widoczne, dopóki nie mają własnych ustawień. Można je włączać lub wyłączać za pomocą pola wyboru, a aby zmienić nazwę lub obowiązkowość — dodaj własny wariant przez przycisk „Dodaj dokument”."
 
 #: clients/models.py:12 clients/models.py:143
 msgid "Работа"
@@ -106,6 +130,24 @@ msgstr "Zatwierdzony"
 msgid "Отклонён"
 msgstr "Odrzucony"
 
+#: clients/templates/clients/document_checklist_manage.html:45
+msgid "Действия с документом"
+msgstr "Akcje dotyczące dokumentu"
+
+#: clients/templates/clients/document_checklist_manage.html:47
+#: clients/templates/clients/document_checklist_manage.html:120
+msgid "Редактировать документ"
+msgstr "Edytuj dokument"
+
+#: clients/templates/clients/document_checklist_manage.html:49
+#: clients/templates/clients/document_checklist_manage.html:70
+msgid "Удалить документ"
+msgstr "Usuń dokument"
+
+#: clients/templates/clients/document_checklist_manage.html:51
+msgid "Удалить этот документ из чеклиста?"
+msgstr "Usunąć ten dokument z checklisty?"
+
 #: clients/models.py:28
 msgid "Имя"
 msgstr "Imię"
@@ -123,6 +165,19 @@ msgstr "Obywatelstwo"
 msgid "Телефон"
 msgstr "Telefon"
 
+#: clients/templates/clients/document_checklist_manage.html:64
+msgid "Стандартный документ"
+msgstr "Dokument standardowy"
+
+#: clients/templates/clients/document_checklist_manage.html:82
+msgid "Сохранить чеклист"
+msgstr "Zapisz checklistę"
+
+#: clients/templates/clients/document_checklist_manage.html:87
+#: clients/templates/clients/document_checklist_manage.html:98
+msgid "Добавить новый документ"
+msgstr "Dodaj nowy dokument"
+
 #: clients/models.py:33
 msgid "Номер паспорта"
 msgstr "Numer paszportu"
@@ -136,6 +191,19 @@ msgstr "Numer sprawy"
 #: clients/templates/clients/partials/client_overview.html:16
 msgid "Цель подачи"
 msgstr "Cel złożenia wniosku"
+
+#: clients/templates/clients/document_checklist_manage.html:104
+#: clients/templates/clients/document_checklist_manage.html:125
+msgid "Название документа"
+msgstr "Nazwa dokumentu"
+
+#: clients/templates/clients/document_checklist_manage.html:108
+msgid "Документ сразу будет добавлен в текущий чеклист."
+msgstr "Dokument zostanie od razu dodany do bieżącej checklisty."
+
+#: clients/templates/clients/document_checklist_manage.html:128
+msgid "Обязательный документ"
+msgstr "Dokument obowiązkowy"
 
 #: clients/models.py:39
 msgid "Основание пребывания (виза, TRC и т.д.)"
