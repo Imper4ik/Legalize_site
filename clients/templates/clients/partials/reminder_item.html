@@ -55,7 +55,16 @@
       {% endif %}
 
       {% if reminder.id %}
-        <div class="d-flex justify-content-end gap-2">
+        <div class="d-flex justify-content-end flex-wrap gap-2">
+          {% if reminder.reminder_type == 'document' and reminder.document and reminder.document.expiry_date %}
+            <form action="{% url 'clients:reminder_action' reminder.id %}" method="post" class="d-inline">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="send_email">
+              <button type="submit" class="btn btn-sm btn-primary">
+                <i class="fas fa-envelope"></i> {% translate "Отправить email" %}
+              </button>
+            </form>
+          {% endif %}
           <form action="{% url 'clients:reminder_action' reminder.id %}" method="post" class="d-inline">
               {% csrf_token %}
               <input type="hidden" name="action" value="deactivate">
