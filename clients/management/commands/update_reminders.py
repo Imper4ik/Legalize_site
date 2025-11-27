@@ -22,6 +22,12 @@ class Command(BaseCommand):
         # Используем transaction.atomic, чтобы гарантировать, что либо все напоминания
         # в рамках одной функции будут созданы, либо ни одного, если произойдет ошибка.
         try:
+            self.stdout.write(self.style.HTTP_INFO("-> Проверяю клиентов на недостающие документы..."))
+            self.send_missing_document_notifications()
+
+            self.stdout.write(self.style.HTTP_INFO("-> Проверяю документы с приближающимся окончанием срока..."))
+            self.send_expiring_document_notifications()
+
             with transaction.atomic():
                 self.stdout.write(self.style.HTTP_INFO("-> Запускаю проверку документов..."))
                 self.create_document_reminders()
@@ -36,6 +42,50 @@ class Command(BaseCommand):
             # Если что-то пойдет не так, мы увидим ошибку в консоли
             self.stdout.write(self.style.ERROR(f"Произошла ошибка во время создания напоминаний: {e}"))
             self.stdout.write(self.style.ERROR("--- Проверка прервана ---"))
+
+
+    def send_missing_document_notifications(self):
+        """Автоматически отправляет письма клиентам с недостающими документами."""
+
+        clients = Client.objects.all()
+        sent_count = 0
+        for client in clients:
+            sent = send_missing_documents_email(client)
+            sent_count += sent
+
+        if sent_count:
+            self.stdout.write(self.style.SUCCESS(f"Отправлено {sent_count} писем о недостающих документах."))
+        else:
+            self.stdout.write("Клиентов с недостающими документами не найдено или письма уже отправлены.")
+
+
+    def send_expiring_document_notifications(self):
+        """Отправляет письма о документах, которые истекают в течение ближайших 7 дней."""
+
+        today = timezone.now().date()
+        cutoff = today + timedelta(days=7)
+        expiring_docs = Document.objects.filter(
+            expiry_date__isnull=False,
+            expiry_date__range=(today, cutoff),
+        )
+
+        if not expiring_docs.exists():
+            self.stdout.write("Нет документов, срок которых истекает в течение недели.")
+            return
+
+        docs_by_client: dict[int, list[Document]] = defaultdict(list)
+        for document in expiring_docs:
+            docs_by_client[document.client_id].append(document)
+
+        for client_id, documents in docs_by_client.items():
+            client = documents[0].client
+            sent = send_expiring_documents_email(client, documents)
+            if sent:
+                self.stdout.write(
+                    self.style.HTTP_INFO(
+                        f"Отправлено письмо о скором истечении для клиента {client} (документы: {len(documents)})."
+                    )
+                )
 
 
     def create_document_reminders(self):
