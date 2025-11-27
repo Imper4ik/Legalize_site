@@ -1,0 +1,14 @@
+{{ client.first_name }} {{ client.last_name }},
+
+Dziękujemy za złożenie odcisków palców{% if fingerprints_date %} w dniu {{ fingerprints_date|date:"d.m.Y" }}{% endif %}.
+
+Z naszych danych wynika, że następujące dokumenty wygasły lub wkrótce wygasną:
+{% if expired_documents %}
+{% for document in expired_documents %}- {{ document.get_document_type_display }} (ważny do {{ document.expiry_date|date:"d.m.Y" }})
+{% endfor %}
+{% else %}- Obecnie nie ma wygasłych dokumentów.
+{% endif %}
+Jeśli masz już ich aktualne wersje, prześlij nowe kopie, abyśmy mogli kontynuować prowadzenie sprawy.
+
+Pozdrawiamy,
+Zespół Legalize
