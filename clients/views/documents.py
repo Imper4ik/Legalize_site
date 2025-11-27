@@ -139,6 +139,39 @@ def toggle_document_verification(request, doc_id):
 
 
 @staff_required_view
+def verify_all_documents(request, client_id):
+    """Отмечает все загруженные документы клиента как проверенные одним действием."""
+
+    client = get_object_or_404(Client, pk=client_id)
+    helper = ResponseHelper(request)
+
+    if request.method != 'POST':
+        return redirect('clients:client_detail', pk=client.id)
+
+    updated_count = client.documents.filter(verified=False).update(verified=True)
+
+    emails_sent = 0
+    if updated_count:
+        emails_sent = send_missing_documents_email(client)
+
+    if helper.expects_json:
+        return helper.success(
+            verified_count=updated_count,
+            emails_sent=bool(emails_sent),
+        )
+
+    if updated_count:
+        message = f"Отмечено {updated_count} документов как проверенные."
+        if emails_sent:
+            message += " Письмо с недостающими документами отправлено."
+        messages.success(request, message)
+    else:
+        messages.info(request, "Все загруженные документы уже проверены.")
+
+    return redirect('clients:client_detail', pk=client.id)
+
+
+@staff_required_view
 def client_status_api(request, pk):
     """Возвращает актуальный чеклист клиента в формате JSON для 'живого' обновления."""
     client = get_object_or_404(Client, pk=pk)
