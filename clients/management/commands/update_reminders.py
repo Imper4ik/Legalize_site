@@ -6,8 +6,8 @@ from datetime import timedelta
 from django.db import transaction  # Импортируем для атомарных операций
 from collections import defaultdict
 
-from clients.models import Client, Document, Payment, Reminder
-from clients.services.notifications import send_expiring_documents_email, send_missing_documents_email
+from clients.models import Document, Payment, Reminder
+from clients.services.notifications import send_expiring_documents_email
 
 
 class Command(BaseCommand):
@@ -96,6 +96,7 @@ class Command(BaseCommand):
         """
         today = timezone.now().date()
         reminder_period_end = today + timedelta(days=30) # Период напоминания - 30 дней
+        expiring_email_cutoff = today + timedelta(days=7)
 
         # Ищем документы, которые истекают в ближайшие 30 дней и для которых еще нет напоминания
         expiring_docs = Document.objects.filter(
@@ -108,6 +109,7 @@ class Command(BaseCommand):
             self.stdout.write('Документов с истекающим сроком для создания напоминаний не найдено.')
             return
 
+        expiring_soon: dict[int, list[Document]] = defaultdict(list)
         count = 0
         for doc in expiring_docs:
             # Создаем новое напоминание
@@ -120,7 +122,19 @@ class Command(BaseCommand):
                 reminder_type='document'
             )
             count += 1
+            if doc.expiry_date <= expiring_email_cutoff:
+                expiring_soon[doc.client_id].append(doc)
         self.stdout.write(self.style.SUCCESS(f'Создано {count} новых напоминаний по документам.'))
+
+        for client_id, documents in expiring_soon.items():
+            client = documents[0].client
+            sent = send_expiring_documents_email(client, documents)
+            if sent:
+                self.stdout.write(
+                    self.style.HTTP_INFO(
+                        f"Отправлено письмо о скором истечении для клиента {client} (документы: {len(documents)})."
+                    )
+                )
 
 
     def create_payment_reminders(self):
