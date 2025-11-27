@@ -7,6 +7,7 @@ from django.utils.translation import gettext as _
 from django.views.generic import ListView
 
 from clients.models import Client, Reminder
+from clients.services.notifications import send_expiring_documents_email
 from clients.views.base import StaffRequiredMixin, staff_required_view
 
 
@@ -102,7 +103,18 @@ def reminder_action(request, reminder_id):
         action = request.POST.get('action')
         if action == 'delete':
             reminder.delete()
+            messages.success(request, _("Напоминание удалено."))
         elif action == 'deactivate':
             reminder.is_active = False
             reminder.save()
+            messages.success(request, _("Напоминание отмечено как выполненное."))
+        elif action == 'send_email' and reminder.reminder_type == 'document':
+            documents = []
+            if reminder.document and reminder.document.expiry_date:
+                documents.append(reminder.document)
+            sent = send_expiring_documents_email(reminder.client, documents)
+            if sent:
+                messages.success(request, _("Отправили письмо клиенту об истекающем документе."))
+            else:
+                messages.warning(request, _("Не удалось отправить письмо: нет email или даты истечения."))
     return redirect('clients:document_reminder_list')

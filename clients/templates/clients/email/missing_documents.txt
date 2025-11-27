@@ -1,8 +1,13 @@
 {{ client.first_name }} {{ client.last_name }},
 
-Мы получили от вас wezwanie. Для завершения оформления нам всё ещё не хватает следующих документов:
-{% for document in documents %}- {{ document }}
+Мы проверили загруженные документы. Для завершения оформления нам всё ещё не хватает следующих документов:
+{% for document in documents %}- {{ document.name }}{% if document.expiry_date %} (действителен до {{ document.expiry_date|date:"d.m.Y" }}){% endif %}
 {% endfor %}
+{% if uploaded_with_expiry %}
+Также у нас уже есть документы с указанным сроком действия:
+{% for document in uploaded_with_expiry %}- {{ document.name }}{% if document.expiry_date %} (действителен до {{ document.expiry_date|date:"d.m.Y" }}){% endif %}
+{% endfor %}
+{% endif %}
 Пожалуйста, подготовьте их и отправьте в ответ на это письмо. Если у вас есть вопросы или вы уже передали часть документов, просто ответьте на это письмо, и мы обновим информацию.
 
 С уважением,
