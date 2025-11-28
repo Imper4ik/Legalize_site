@@ -4,9 +4,6 @@ import logging
 from django.apps import AppConfig
 
 
-logger = logging.getLogger(__name__)
-
-
 def _compile_translations():
     """Compile translation catalogs so document names render in all locales.
 
@@ -17,16 +14,15 @@ def _compile_translations():
 
     try:
         from legalize_site.utils.i18n import compile_message_catalogs
-    except Exception as exc:  # pragma: no cover - defensive
-        logger.warning("Translation compilation unavailable: %s", exc)
+    except Exception:
         return
 
     try:
         compile_message_catalogs()
-    except Exception as exc:  # pragma: no cover - defensive
+    except Exception:
         # Avoid failing app initialization if compilation is not possible; in
         # that case untranslated strings will surface instead of crashing.
-        logger.warning("Could not compile translations at startup: %s", exc)
+        pass
 
 
 class ClientsConfig(AppConfig):

@@ -9,10 +9,13 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core import mail
+from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from django.utils import translation
+
+import shutil
 
 from allauth.account.models import EmailAddress
 
@@ -199,9 +202,9 @@ class DocumentTypeConsistencyTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        from legalize_site.utils.i18n import compile_message_catalogs
-
-        compile_message_catalogs()
+        cls._can_compile_messages = shutil.which("msgfmt") is not None
+        if cls._can_compile_messages:
+            call_command("compilemessages", verbosity=0, ignore=["venv", ".venv"])
 
     def test_document_checklist_labels_match_enum(self):
         enum_map = {choice.value: choice.label for choice in DocumentType}
@@ -211,6 +214,9 @@ class DocumentTypeConsistencyTests(TestCase):
                 self.assertEqual(label, enum_map[code])
 
     def test_translate_document_name_respects_language(self):
+        if not self._can_compile_messages:
+            self.skipTest("msgfmt is not available to compile translations")
+
         with translation.override("ru"):
             self.assertEqual(
                 translate_document_name(DocumentType.PHOTOS.label),
