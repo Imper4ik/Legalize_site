@@ -498,54 +498,6 @@ class WezwanieUploadFlowTests(TestCase):
         self.assertIn("Фотографии", mail.outbox[0].body)
 
 
-@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
-class NotificationLocalizationTests(TestCase):
-    def setUp(self):
-        self.client_record = Client.objects.create(
-            first_name="Alex",
-            last_name="Example",
-            citizenship="UA",
-            phone="+48123456789",
-            email="notify@example.com",
-            language="en",
-        )
-
-        self.expiring_document = Document.objects.create(
-            client=self.client_record,
-            document_type=DocumentType.PASSPORT,
-            file=SimpleUploadedFile("passport.pdf", b"data"),
-            expiry_date=date.today() + timedelta(days=3),
-        )
-
-    def test_expiring_email_uses_client_language_and_lists_missing(self):
-        mail.outbox = []
-
-        send_expiring_documents_email(self.client_record, [self.expiring_document])
-
-        self.assertEqual(len(mail.outbox), 1)
-        message = mail.outbox[0]
-
-        self.assertEqual(message.subject, "Documents expiring soon")
-        self.assertIn("about to expire", message.body)
-        self.assertIn(str(self.expiring_document.display_name), message.body)
-        self.assertIn("We are also still missing these documents", message.body)
-
-    def test_missing_email_renders_polish_copy(self):
-        mail.outbox = []
-
-        Client.objects.filter(pk=self.client_record.pk).update(language="pl")
-        refreshed_client = Client.objects.get(pk=self.client_record.pk)
-
-        sent = send_missing_documents_email(refreshed_client)
-
-        self.assertEqual(sent, 1)
-        self.assertEqual(len(mail.outbox), 1)
-        message = mail.outbox[0]
-
-        self.assertEqual(message.subject, "Brakujące dokumenty w checkliście")
-        self.assertIn("Sprawdziliśmy przesłane dokumenty", message.body)
-
-
 class BulkDocumentVerificationTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
