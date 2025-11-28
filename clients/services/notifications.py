@@ -8,37 +8,18 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import select_template
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from django.utils.translation import override
 
 from clients.models import Client, Document
 
 logger = logging.getLogger(__name__)
 
-EMAIL_SUBJECTS: dict[str, dict[str, str]] = {
-    "required_documents": {
-        "default": "Список необходимых документов",
-        "en": "Required documents checklist",
-        "pl": "Lista wymaganych dokumentów",
-        "ru": "Список необходимых документов",
-    },
-    "expired_documents": {
-        "default": "Истекшие документы после сдачи отпечатков",
-        "en": "Expired documents after fingerprints",
-        "pl": "Wygasłe dokumenty po złożeniu odcisków",
-        "ru": "Истекшие документы после сдачи отпечатков",
-    },
-    "missing_documents": {
-        "default": "Список недостающих документов",
-        "en": "Missing documents checklist",
-        "pl": "Brakujące dokumenty w checkliście",
-        "ru": "Список недостающих документов",
-    },
-    "expiring_documents": {
-        "default": "Документы скоро истекают",
-        "en": "Documents expiring soon",
-        "pl": "Dokumenty wkrótce tracą ważność",
-        "ru": "Документы скоро истекают",
-    },
+EMAIL_SUBJECTS: dict[str, str] = {
+    "required_documents": _("Список необходимых документов"),
+    "expired_documents": _("Истекшие документы после сдачи отпечатков"),
+    "missing_documents": _("Список недостающих документов"),
+    "expiring_documents": _("Документы скоро истекают"),
 }
 
 
@@ -47,8 +28,12 @@ def _get_preferred_language(client: Client) -> str:
 
 
 def _get_subject(key: str, language: str) -> str:
-    subjects = EMAIL_SUBJECTS.get(key, {})
-    return subjects.get(language) or subjects.get("default") or ""
+    subject = EMAIL_SUBJECTS.get(key, "")
+    if not subject:
+        return ""
+
+    with override(language):
+        return str(subject)
 
 
 def _render_email_body(template_key: str, context: dict, language: str) -> str:
@@ -74,6 +59,7 @@ def send_required_documents_email(client: Client) -> int:
     if not client.email:
         return 0
 
+    language = _get_preferred_language(client)
     checklist = client.get_document_checklist() or []
     if not checklist:
         return 0
@@ -161,6 +147,7 @@ def send_expiring_documents_email(client: Client, documents: list[Document]) -> 
     if not client.email or not documents:
         return 0
 
+    language = _get_preferred_language(client)
     checklist = client.get_document_checklist()
     missing_documents = []
 
