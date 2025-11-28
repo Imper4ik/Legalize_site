@@ -115,7 +115,7 @@ class Client(models.Model):
 
 class Document(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='documents', verbose_name=_("Клиент"))
-    document_type = models.CharField(max_length=100, verbose_name=_("Тип документа"))
+    document_type = models.CharField(max_length=255, verbose_name=_("Тип документа"))
     file = models.FileField(upload_to='documents/', verbose_name=_("Файл"))
     expiry_date = models.DateField(null=True, blank=True, verbose_name=_("Действителен до"))
     uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Дата загрузки"))
@@ -155,10 +155,10 @@ class DocumentRequirement(models.Model):
         verbose_name=_("Цель подачи"),
     )
     document_type = models.CharField(
-        max_length=100,
+        max_length=255,
         verbose_name=_("Код типа документа"),
     )
-    custom_name = models.CharField(max_length=255, blank=True, null=True, verbose_name=_("Название документа"))
+    custom_name = models.CharField(max_length=500, blank=True, null=True, verbose_name=_("Название документа"))
     position = models.PositiveIntegerField(default=0, verbose_name=_("Порядок отображения"))
     is_required = models.BooleanField(default=True, verbose_name=_("Обязательный документ"))
 

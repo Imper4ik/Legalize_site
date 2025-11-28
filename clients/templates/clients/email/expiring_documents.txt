@@ -5,5 +5,12 @@
 {% endfor %}
 Пожалуйста, подготовьте обновлённые версии и отправьте их нам в ответ на это письмо, чтобы избежать задержек.
 
+{% if missing_documents %}
+Также у нас все ещё нет следующих документов:
+{% for document in missing_documents %}- {{ document.name }}{% if document.expiry_date %} (действителен до {{ document.expiry_date|date:"d.m.Y" }}){% endif %}
+{% endfor %}
+Пожалуйста, пришлите их вместе с обновлёнными версиями документов.
+{% endif %}
+
 С уважением,
 Команда Legalize

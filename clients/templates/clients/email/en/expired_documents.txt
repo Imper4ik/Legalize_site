@@ -1,0 +1,14 @@
+{{ client.first_name }} {{ client.last_name }},
+
+Thank you for submitting your fingerprints{% if fingerprints_date %} on {{ fingerprints_date|date:"d.m.Y" }}{% endif %}.
+
+Our records show that the following documents have expired or are expiring:
+{% if expired_documents %}
+{% for document in expired_documents %}- {{ document.get_document_type_display }} (valid until {{ document.expiry_date|date:"d.m.Y" }})
+{% endfor %}
+{% else %}- No expired documents at this time.
+{% endif %}
+If you have already updated these documents, please send us the new copies so we can continue assisting you.
+
+Best regards,
+The Legalize Team
