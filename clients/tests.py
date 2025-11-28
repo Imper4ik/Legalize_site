@@ -2,6 +2,7 @@ import json
 import tempfile
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from gettext import GNUTranslations
 from pathlib import Path
 from unittest.mock import patch
 
@@ -10,7 +11,7 @@ from django.contrib.auth.models import Permission
 from django.core import mail
 from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import RequestFactory, TestCase, override_settings
+from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from django.utils import translation
 
@@ -24,6 +25,39 @@ from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.services.notifications import send_expiring_documents_email, send_missing_documents_email
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper
 from clients.services.wezwanie_parser import parse_wezwanie
+
+
+class PurePythonMsgfmtTests(SimpleTestCase):
+    def test_compiled_mo_file_is_valid_utf8(self):
+        from legalize_site.utils.i18n import _write_mo_file
+
+        with tempfile.TemporaryDirectory() as tmp:
+            locale_dir = Path(tmp) / "ru" / "LC_MESSAGES"
+            locale_dir.mkdir(parents=True)
+            po_path = locale_dir / "django.po"
+            po_path.write_text(
+                '\n'.join(
+                    [
+                        'msgid ""',
+                        'msgstr ""',
+                        '"Content-Type: text/plain; charset=UTF-8\\n"',
+                        '"Language: ru\\n"',
+                        '',
+                        'msgid "hello"',
+                        'msgstr "привет"',
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            mo_path = po_path.with_suffix(".mo")
+            _write_mo_file(po_path, mo_path)
+
+            with mo_path.open("rb") as fp:
+                translations = GNUTranslations(fp)
+
+            self.assertEqual(translations.gettext("hello"), "привет")
+            self.assertEqual(translations.gettext("missing"), "missing")
 
 
 class CalculatorViewTests(TestCase):
