@@ -1,0 +1,14 @@
+{{ client.first_name }} {{ client.last_name }},
+
+We reviewed the documents you uploaded. We still need the following to complete your file:
+{% for document in documents %}- {{ document.name }}{% if document.expiry_date %} (valid until {{ document.expiry_date|date:"d.m.Y" }}){% endif %}
+{% endfor %}
+{% if uploaded_with_expiry %}
+We already have documents with the following expiry dates:
+{% for document in uploaded_with_expiry %}- {{ document.name }}{% if document.expiry_date %} (valid until {{ document.expiry_date|date:"d.m.Y" }}){% endif %}
+{% endfor %}
+{% endif %}
+Please prepare these documents and send them in reply to this email. If you have already provided some of them, just reply here and we will update the record.
+
+Best regards,
+The Legalize Team
