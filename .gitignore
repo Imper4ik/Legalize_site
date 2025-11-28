@@ -39,5 +39,6 @@ __pycache__/
 *.py[cod]
 staticfiles
 
-# Компилированные файлы переводов
+# Compiled translation catalogs are regenerated at runtime.
 *.mo
+
