@@ -16,7 +16,7 @@ from django.utils import translation
 from allauth.account.models import EmailAddress
 
 from .forms import DocumentChecklistForm
-from .models import Client, Document, DocumentRequirement
+from .models import Client, Document, DocumentRequirement, translate_document_name
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.services.notifications import send_expiring_documents_email, send_missing_documents_email
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper
@@ -395,6 +395,10 @@ class MissingDocumentsEmailTests(TestCase):
             language="pl",
         )
 
+        with translation.override(self.client_record.language):
+            self.passport_label = translate_document_name(DocumentType.PASSPORT.label)
+            self.photos_label = translate_document_name(DocumentType.PHOTOS.label)
+
         mail.outbox = []
 
         DocumentRequirement.objects.filter(application_purpose="work").delete()
@@ -406,7 +410,7 @@ class MissingDocumentsEmailTests(TestCase):
         sent = send_missing_documents_email(self.client_record)
         self.assertEqual(sent, 1)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertIn("Паспорт", mail.outbox[0].body)
+        self.assertIn(self.passport_label, mail.outbox[0].body)
 
     def test_skips_email_when_nothing_missing(self):
         Document.objects.create(
@@ -438,8 +442,8 @@ class MissingDocumentsEmailTests(TestCase):
         self.assertEqual(sent, 1)
         self.assertEqual(len(mail.outbox), 1)
         body = mail.outbox[0].body
-        self.assertIn("Паспорт", body)
-        self.assertIn("Фотографии", body)
+        self.assertIn(self.passport_label, body)
+        self.assertIn(self.photos_label, body)
         self.assertIn(date.today().strftime("%d.%m.%Y"), body)
 
 
@@ -468,6 +472,10 @@ class WezwanieUploadFlowTests(TestCase):
             language="pl",
         )
 
+        with translation.override(self.client_record.language):
+            self.passport_label = translate_document_name(DocumentType.PASSPORT.label)
+            self.photos_label = translate_document_name(DocumentType.PHOTOS.label)
+
         mail.outbox = []
 
     def test_uploading_wezwanie_updates_fields_and_sends_missing_docs_email(self):
@@ -494,8 +502,8 @@ class WezwanieUploadFlowTests(TestCase):
         )
 
         self.assertGreaterEqual(len(mail.outbox), 1)
-        self.assertIn("Паспорт", mail.outbox[0].body)
-        self.assertIn("Фотографии", mail.outbox[0].body)
+        self.assertIn(self.passport_label, mail.outbox[0].body)
+        self.assertIn(self.photos_label, mail.outbox[0].body)
 
 
 class BulkDocumentVerificationTests(TestCase):
