@@ -99,53 +99,37 @@ def _write_mo_file(po_path: Path, mo_path: Path) -> None:
         if message_id is not None:
             _add_message()
 
+    # Build the binary .mo structure
     ids = sorted(messages.keys())
-    translated = ["\0".join(messages[msgid]) for msgid in ids]
-
-    # Header: magic, version, #strings, orig_tab_offset, trans_tab_offset, hash size/off
-    header_size = 7 * 4
-    ids_table_offset = header_size
-    strs_table_offset = ids_table_offset + len(ids) * 8
-
-    # Compute offsets for originals
-    orig_strings_offset = strs_table_offset + len(ids) * 8
-    orig_offsets: list[tuple[int, int]] = []
-    current = orig_strings_offset
+    offsets = []
+    strs = []
     for msgid in ids:
-        encoded = msgid.encode("utf-8")
-        orig_offsets.append((len(encoded), current))
-        current += len(encoded) + 1  # account for trailing NUL
+        msgstr = "\0".join(messages[msgid])
+        offsets.append((len("".join(strs)), len(msgstr)))
+        strs.append(msgstr)
 
-    # Compute offsets for translations
-    trans_offsets: list[tuple[int, int]] = []
-    trans_strings_offset = current
-    for msgstr in translated:
-        encoded = msgstr.encode("utf-8")
-        trans_offsets.append((len(encoded), trans_strings_offset))
-        trans_strings_offset += len(encoded) + 1
+    output = struct.pack("Iiiiiii",
+                         0x950412de,       # magic
+                         0,                # version
+                         len(ids),         # number of strings
+                         7 * 4,            # offset of table with original strings
+                         7 * 4 + len(ids) * 8,  # offset of table with translation strings
+                         0, 0)             # hash table offset and size
 
-    output = struct.pack(
-        "Iiiiiii",
-        0x950412de,  # magic
-        0,  # version
-        len(ids),  # number of strings
-        ids_table_offset,
-        strs_table_offset,
-        0,
-        0,
-    )
+    # offsets for original strings
+    ooffset = 7 * 4 + len(ids) * 16
+    toffset = ooffset + sum(len(i) + 1 for i in ids)
 
-    for length, offset in orig_offsets:
-        output += struct.pack("ii", length, offset)
-
-    for length, offset in trans_offsets:
-        output += struct.pack("ii", length, offset)
+    for msgid, (off, length) in zip(ids, offsets):
+        output += struct.pack("ii", len(msgid), ooffset)
+        ooffset += len(msgid) + 1
+        output += struct.pack("ii", length, toffset)
+        toffset += length + 1
 
     for msgid in ids:
         output += msgid.encode("utf-8") + b"\0"
-
-    for msgstr in translated:
-        output += msgstr.encode("utf-8") + b"\0"
+    for msg in strs:
+        output += msg.encode("utf-8") + b"\0"
 
     mo_path.parent.mkdir(parents=True, exist_ok=True)
     with mo_path.open("wb") as mo_file:
@@ -170,7 +154,7 @@ def compile_message_catalogs() -> None:
     msgfmt = shutil.which("msgfmt")
     if msgfmt:
         try:
-            call_command("compilemessages", verbosity=0, ignore=["venv", ".venv"])
+            call_command("compilemessages", verbosity=0, ignore_patterns=["venv", ".venv"])
             return
         except (OSError, CommandError) as exc:
             logger.warning("compilemessages failed with msgfmt at %s: %s", msgfmt, exc)

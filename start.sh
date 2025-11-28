@@ -4,14 +4,15 @@ set -o errexit
 python manage.py migrate --no-input
 
 # Ensure translation catalogs are compiled so UI strings and checklist items
-# render in the selected language. Uses gettext tooling when available and
-# falls back to a pure-Python compilation to avoid binary artifacts in the
-# repository.
-python manage.py shell <<'PY'
-from legalize_site.utils.i18n import compile_message_catalogs
-
-compile_message_catalogs()
-PY
+# render in the selected language. This is a no-op if msgfmt is unavailable
+# (e.g., in minimal containers) but prevents untranslated Polish labels when
+# it is present.
+if command -v msgfmt >/dev/null 2>&1; then
+  python manage.py compilemessages --ignore "venv" --ignore ".venv" || \
+    echo "Warning: compilemessages failed; using existing translations"
+else
+  echo "msgfmt not found; skipping compilemessages"
+fi
 
 # === Одноразовое создание суперюзера через env-переменные ===
 if [ "$DJANGO_SUPERUSER_EMAIL" ] && [ "$DJANGO_SUPERUSER_PASSWORD" ]; then
