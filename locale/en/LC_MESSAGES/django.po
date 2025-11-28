@@ -50,9 +50,6 @@ msgid "Подтверждение финансов"
 msgstr "Proof of financial means"
 
 #: clients/constants.py:23 clients/models.py:108
-msgid "Załącznik nr 1"
-msgstr "Attachment no. 1"
-
 #: clients/constants.py:24 clients/models.py:109
 msgid "Informacja starosty"
 msgstr "Starosta's information"
@@ -1419,6 +1416,101 @@ msgstr "Please fill in the missing fields:"
 #: templates/socialaccount/signup.html:47
 msgid "Создать аккаунт и войти"
 msgstr "Create account and sign in"
+
+# Document checklist translations
+msgid "4 zdjęcia (45x35 mm)"
+msgstr "4 photos (45x35 mm)"
+
+msgid "Potwierdzenie opłaty"
+msgstr "Payment confirmation"
+
+msgid "Opłata 340 zł + 17 zł pełnomocnictwo"
+msgstr "Fee 340 PLN + 17 PLN power of attorney"
+
+msgid "Opłata 440 zł + 17 zł pełnomocnictwo"
+msgstr "Fee 440 PLN + 17 PLN power of attorney"
+
+msgid "Paszport"
+msgstr "Passport"
+
+msgid "Karta pobytu"
+msgstr "Residence card"
+
+msgid "Zaświadczenie z uczelni o przyjęciu lub kontynuacji studiów"
+msgstr "University certificate of admission or continuation of studies"
+
+msgid "Zaświadczenie z uczelni o wysokości opłat za naukę"
+msgstr "University certificate of tuition fees"
+
+msgid "Dowód uiszczenia opłaty za naukę (czesne)"
+msgstr "Proof of tuition payment"
+
+msgid "Oceny / świadectwa"
+msgstr "Grades / certificates"
+
+msgid "Polisa ubezpieczeniowa 30 000 EUR"
+msgstr "Insurance policy 30,000 EUR"
+
+msgid "Dokumenty potwierdzające koszty zamieszkania (np. umowa najmu, rachunki)"
+msgstr "Documents confirming housing costs (e.g. lease agreement, bills)"
+
+msgid "Środki finansowe na utrzymanie w Polsce"
+msgstr "Financial means to live in Poland"
+
+msgid "Załącznik nr 1"
+msgstr "Attachment no. 1"
+
+msgid "Oryginały umów o pracę / zlecenia"
+msgstr "Original employment / contract agreements"
+
+msgid "Oświadczenie o powierzeniu pracy lub zezwolenie na pracę"
+msgstr "Statement of work entrustment or work permit"
+
+msgid "PIT-37 cudzoziemca z potwierdzeniem złożenia"
+msgstr "Foreign national's PIT-37 with filing confirmation"
+
+msgid "Zaświadczenie ZUS dot. braku zaległości pracodawcy"
+msgstr "ZUS certificate of employer's no arrears"
+
+msgid "Zaświadczenie o niezaleganiu opłacania składek cudzoziemca"
+msgstr "Certificate of no contribution arrears for the foreign national"
+
+msgid "Oświadczenie o braku osób na utrzymaniu w Polsce"
+msgstr "Statement on having no dependents in Poland"
+
+msgid "ZUS RCA lub polisa ubezpieczeniowa"
+msgstr "ZUS RCA or insurance policy"
+
+msgid "Zaświadczenie z ZUS o przebieгу ubezpieczenia cudzoziemca"
+msgstr "ZUS certificate of the foreign national's insurance history"
+
+msgid "CIT lub PIT pracodawcy"
+msgstr "Employer's CIT or PIT return"
+
+msgid "Zaświadczenie z ZUS o liczbie zgłoszonych pracowników i składkach"
+msgstr "ZUS certificate on number of registered employees and contributions"
+
+msgid "Oświadczenie „x”"
+msgstr "Statement \"x\""
+
+msgid "Oświadczenie o utrzymaniu"
+msgstr "Maintenance statement"
+
+msgid "Wezwanie"
+msgstr "Summons"
+
+# Email subjects
+msgid "Список необходимых документов"
+msgstr "Required documents checklist"
+
+msgid "Истекшие документы после сдачи отпечатков"
+msgstr "Expired documents after fingerprints"
+
+msgid "Список недостающих документов"
+msgstr "Missing documents checklist"
+
+msgid "Документы скоро истекают"
+msgstr "Documents expiring soon"
 
 #~ msgid "Сопровождение (Работа)"
 #~ msgstr "Support (Work)"

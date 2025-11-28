@@ -1474,6 +1474,19 @@ msgstr "Kliknij przycisk poniżej, aby utworzyć konto."
 msgid "Пожалуйста, заполните недостающие поля:"
 msgstr "Proszę uzupełnić brakujące pola:"
 
+# Email subjects
+msgid "Список необходимых документов"
+msgstr "Lista wymaganych dokumentów"
+
+msgid "Истекшие документы после сдачи отпечатков"
+msgstr "Wygasłe dokumenty po złożeniu odcisków"
+
+msgid "Список недостающих документов"
+msgstr "Brakujące dokumenty w checkliście"
+
+msgid "Документы скоро истекают"
+msgstr "Dokumenty wkrótce tracą ważność"
+
 #: templates/socialaccount/signup.html:47
 msgid "Создать аккаунт и войти"
 msgstr "Utwórz konto i zaloguj się"
