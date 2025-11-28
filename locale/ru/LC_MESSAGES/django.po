@@ -56,7 +56,7 @@ msgstr "Подтвердите ваш E-mail"
 
 #: clients/constants.py:23 clients/models.py:108
 msgid "Załącznik nr 1"
-msgstr ""
+msgstr "Приложение № 1"
 
 #: clients/constants.py:24 clients/models.py:109
 msgid "Informacja starosty"
@@ -1418,6 +1418,98 @@ msgstr ""
 #: templates/socialaccount/login.html:22
 msgid "Нажмите \"Продолжить\", чтобы перейти к Google для аутентификации."
 msgstr "Нажмите \"Продолжить\", чтобы перейти к Google для аутентификации."
+
+# Document checklist translations
+msgid "4 zdjęcia (45x35 mm)"
+msgstr "Фотографии (4 шт., 45x35 мм)"
+
+msgid "Potwierdzenie opłaty"
+msgstr "Подтверждение оплаты"
+
+msgid "Opłata 340 zł + 17 zł pełnomocnictwo"
+msgstr "Оплата 340 zł + 17 zł за доверенность"
+
+msgid "Opłata 440 zł + 17 zł pełnomocnictwo"
+msgstr "Оплата 440 zł + 17 zł за доверенность"
+
+msgid "Paszport"
+msgstr "Паспорт"
+
+msgid "Karta pobytu"
+msgstr "Карта пребывания"
+
+msgid "Zaświadczenie z uczelni o przyjęciu lub kontynuacji studiów"
+msgstr "Справка из вуза о поступлении или продолжении обучения"
+
+msgid "Zaświadczenie z uczelni o wysokości opłat za naukę"
+msgstr "Справка из вуза о размере платы за обучение"
+
+msgid "Dowód uiszczenia opłaty za naukę (czesne)"
+msgstr "Подтверждение оплаты за обучение"
+
+msgid "Oceny / świadectwa"
+msgstr "Оценки / аттестаты"
+
+msgid "Polisa ubezpieczeniowa 30 000 EUR"
+msgstr "Страховой полис 30 000 EUR"
+
+msgid "Dokumenty potwierdzające koszty zamieszkania (np. umowa najmu, rachunki)"
+msgstr "Документы, подтверждающие расходы на проживание (например, договор аренды, квитанции)"
+
+msgid "Środki finansowe na utrzymanie w Polsce"
+msgstr "Финансовые средства для проживания в Польше"
+
+msgid "Oryginały umów o pracę / zlecenia"
+msgstr "Оригиналы трудовых / гражданско-правовых договоров"
+
+msgid "Oświadczenie o powierzeniu pracy lub zezwolenie na pracę"
+msgstr "Заявление о поручении работы или разрешение на работу"
+
+msgid "PIT-37 cudzoziemca z potwierdzeniem złożenia"
+msgstr "PIT-37 иностранца с подтверждением подачи"
+
+msgid "Zaświadczenie ZUS dot. braku zaległości pracodawcy"
+msgstr "Справка ZUS об отсутствии задолженностей работодателя"
+
+msgid "Zaświadczenie o niezaleganiu opłacania składek cudzoziemca"
+msgstr "Справка об отсутствии задолженности по взносам иностранца"
+
+msgid "Oświadczenie o braku osób na utrzymaniu w Polsce"
+msgstr "Заявление об отсутствии иждивенцев в Польше"
+
+msgid "ZUS RCA lub polisa ubezpieczeniowa"
+msgstr "ZUS RCA или страховой полис"
+
+msgid "Zaświadczenie z ZUS o przebiegu ubezpieczenia cudzoziemca"
+msgstr "Справка из ZUS об истории страхования иностранца"
+
+msgid "CIT lub PIT pracodawcy"
+msgstr "CIT или PIT работодателя"
+
+msgid "Zaświadczenie z ZUS o liczbie zgłoszonych pracowników i składkach"
+msgstr "Справка из ZUS о количестве заявленных сотрудников и взносах"
+
+msgid "Oświadczenie „x”"
+msgstr "Заявление «x»"
+
+msgid "Oświadczenie o utrzymaniu"
+msgstr "Заявление о содержании"
+
+msgid "Wezwanie"
+msgstr "Повестка"
+
+# Email subjects
+msgid "Список необходимых документов"
+msgstr "Список необходимых документов"
+
+msgid "Истекшие документы после сдачи отпечатков"
+msgstr "Истекшие документы после сдачи отпечатков"
+
+msgid "Список недостающих документов"
+msgstr "Список недостающих документов"
+
+msgid "Документы скоро истекают"
+msgstr "Документы скоро истекают"
 
 #: templates/socialaccount/login.html:31
 msgid "Продолжить"
