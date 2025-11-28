@@ -1,0 +1,16 @@
+{{ client.first_name }} {{ client.last_name }},
+
+Przypominamy, że ważność poniższych dokumentów wkrótce się kończy:
+{% for document in documents %}- {{ document.display_name }} (ważny do {{ document.expiry_date|date:"d.m.Y" }})
+{% endfor %}
+Przygotuj proszę ich zaktualizowane wersje i odeślij w odpowiedzi na tę wiadomość, aby uniknąć opóźnień.
+
+{% if missing_documents %}
+Brakuje nam także tych dokumentów:
+{% for document in missing_documents %}- {{ document.name }}{% if document.expiry_date %} (ważny do {{ document.expiry_date|date:"d.m.Y" }}){% endif %}
+{% endfor %}
+Prześlij je razem z odnowionymi dokumentami.
+{% endif %}
+
+Pozdrawiamy,
+Zespół Legalize

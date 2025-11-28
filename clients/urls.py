@@ -29,6 +29,7 @@ urlpatterns = [
     path('document/<int:pk>/delete/', views.document_delete, name='document_delete'),
     path('document/<int:doc_id>/toggle-verification/', views.toggle_document_verification,
          name='toggle_document_verification'),
+    path('client/<int:client_id>/documents/verify-all/', views.verify_all_documents, name='verify_all_documents'),
     path('<int:pk>/checklist-partial/', views.client_checklist_partial, name='client_checklist_partial'),
     path('<int:pk>/overview-partial/', views.client_overview_partial, name='client_overview_partial'),
 

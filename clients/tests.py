@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import translation
 
@@ -18,7 +18,7 @@ from allauth.account.models import EmailAddress
 from .forms import DocumentChecklistForm
 from .models import Client, Document, DocumentRequirement
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
-from clients.services.notifications import send_missing_documents_email
+from clients.services.notifications import send_expiring_documents_email, send_missing_documents_email
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper
 from clients.services.wezwanie_parser import parse_wezwanie
 
@@ -496,6 +496,119 @@ class WezwanieUploadFlowTests(TestCase):
         self.assertGreaterEqual(len(mail.outbox), 1)
         self.assertIn("Паспорт", mail.outbox[0].body)
         self.assertIn("Фотографии", mail.outbox[0].body)
+
+
+@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+class NotificationLocalizationTests(TestCase):
+    def setUp(self):
+        self.client_record = Client.objects.create(
+            first_name="Alex",
+            last_name="Example",
+            citizenship="UA",
+            phone="+48123456789",
+            email="notify@example.com",
+            language="en",
+        )
+
+        self.expiring_document = Document.objects.create(
+            client=self.client_record,
+            document_type=DocumentType.PASSPORT,
+            file=SimpleUploadedFile("passport.pdf", b"data"),
+            expiry_date=date.today() + timedelta(days=3),
+        )
+
+    def test_expiring_email_uses_client_language_and_lists_missing(self):
+        mail.outbox = []
+
+        send_expiring_documents_email(self.client_record, [self.expiring_document])
+
+        self.assertEqual(len(mail.outbox), 1)
+        message = mail.outbox[0]
+
+        self.assertEqual(message.subject, "Documents expiring soon")
+        self.assertIn("about to expire", message.body)
+        self.assertIn(str(self.expiring_document.display_name), message.body)
+        self.assertIn("We are also still missing these documents", message.body)
+
+    def test_missing_email_renders_polish_copy(self):
+        mail.outbox = []
+
+        Client.objects.filter(pk=self.client_record.pk).update(language="pl")
+        refreshed_client = Client.objects.get(pk=self.client_record.pk)
+
+        sent = send_missing_documents_email(refreshed_client)
+
+        self.assertEqual(sent, 1)
+        self.assertEqual(len(mail.outbox), 1)
+        message = mail.outbox[0]
+
+        self.assertEqual(message.subject, "Brakujące dokumenty w checkliście")
+        self.assertIn("Sprawdziliśmy przesłane dokumenty", message.body)
+
+
+class BulkDocumentVerificationTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.staff_user = user_model.objects.create_user(
+            username='checker', password='pass', is_staff=True
+        )
+
+        self.client_record = Client.objects.create(
+            first_name='Alex',
+            last_name='Nowak',
+            citizenship='PL',
+            phone='+48111111111',
+            email='alex@example.com',
+        )
+
+        self.unverified_doc = Document.objects.create(
+            client=self.client_record,
+            document_type=DocumentType.PASSPORT,
+            file=SimpleUploadedFile('passport.pdf', b'data'),
+            verified=False,
+        )
+
+        self.verified_doc = Document.objects.create(
+            client=self.client_record,
+            document_type=DocumentType.PHOTOS,
+            file=SimpleUploadedFile('photos.pdf', b'data'),
+            verified=True,
+        )
+
+    def test_marks_all_documents_verified_and_sends_email_once(self):
+        self.client.login(username='checker', password='pass')
+
+        url = reverse('clients:verify_all_documents', kwargs={'client_id': self.client_record.pk})
+        with patch('clients.views.documents.send_missing_documents_email') as mock_send:
+            mock_send.return_value = 1
+            response = self.client.post(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        self.assertEqual(response.status_code, 200)
+
+        payload = json.loads(response.content)
+        self.assertEqual(payload['status'], 'success')
+        self.assertEqual(payload['verified_count'], 1)
+        mock_send.assert_called_once_with(self.client_record)
+
+        refreshed = Document.objects.get(pk=self.unverified_doc.pk)
+        self.assertTrue(refreshed.verified)
+
+        still_verified = Document.objects.get(pk=self.verified_doc.pk)
+        self.assertTrue(still_verified.verified)
+
+    def test_skips_email_when_nothing_to_verify(self):
+        Document.objects.filter(pk=self.unverified_doc.pk).update(verified=True)
+        self.client.login(username='checker', password='pass')
+
+        url = reverse('clients:verify_all_documents', kwargs={'client_id': self.client_record.pk})
+        with patch('clients.views.documents.send_missing_documents_email') as mock_send:
+            response = self.client.post(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+
+        self.assertEqual(response.status_code, 200)
+        payload = json.loads(response.content)
+        self.assertEqual(payload['status'], 'success')
+        self.assertEqual(payload['verified_count'], 0)
+        mock_send.assert_not_called()
 
 
 class ResponseHelperTests(TestCase):
