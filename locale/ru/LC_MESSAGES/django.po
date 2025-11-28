@@ -56,7 +56,7 @@ msgstr "Подтвердите ваш E-mail"
 
 #: clients/constants.py:23 clients/models.py:108
 msgid "Załącznik nr 1"
-msgstr ""
+msgstr "Приложение № 1"
 
 #: clients/constants.py:24 clients/models.py:109
 msgid "Informacja starosty"
