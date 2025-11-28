@@ -1,0 +1,16 @@
+{{ client.first_name }} {{ client.last_name }},
+
+A reminder that the following documents are about to expire:
+{% for document in documents %}- {{ document.display_name }} (valid until {{ document.expiry_date|date:"d.m.Y" }})
+{% endfor %}
+Please prepare updated versions and send them in reply to this email to avoid delays.
+
+{% if missing_documents %}
+We are also still missing these documents:
+{% for document in missing_documents %}- {{ document.name }}{% if document.expiry_date %} (valid until {{ document.expiry_date|date:"d.m.Y" }}){% endif %}
+{% endfor %}
+Please send them together with the renewed documents.
+{% endif %}
+
+Best regards,
+The Legalize Team

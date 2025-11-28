@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import translation
 
@@ -18,7 +18,7 @@ from allauth.account.models import EmailAddress
 from .forms import DocumentChecklistForm
 from .models import Client, Document, DocumentRequirement
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
-from clients.services.notifications import send_missing_documents_email
+from clients.services.notifications import send_expiring_documents_email, send_missing_documents_email
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper
 from clients.services.wezwanie_parser import parse_wezwanie
 
