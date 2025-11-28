@@ -154,7 +154,7 @@ def compile_message_catalogs() -> None:
     msgfmt = shutil.which("msgfmt")
     if msgfmt:
         try:
-            call_command("compilemessages", verbosity=0, ignore=["venv", ".venv"])
+            call_command("compilemessages", verbosity=0, ignore_patterns=["venv", ".venv"])
             return
         except (OSError, CommandError) as exc:
             logger.warning("compilemessages failed with msgfmt at %s: %s", msgfmt, exc)
