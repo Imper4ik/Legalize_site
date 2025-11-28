@@ -23,11 +23,11 @@ class Client(models.Model):
         ('work', _('Работа')),
         ('family', _('Воссоединение семьи')),
     ]
-    LANGUAGE_CHOICES = [
+    LANGUAGE_CHOICES = getattr(settings, "LANGUAGES", [
         ('pl', _('Польский')),
         ('en', _('Английский')),
         ('ru', _('Русский')),
-    ]
+    ])
     STATUS_CHOICES = [
         ('new', _('Новый')),
         ('pending', _('В ожидании')),
