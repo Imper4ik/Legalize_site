@@ -1,4 +1,6 @@
 # clients/apps.py
+import logging
+
 from django.apps import AppConfig
 
 
