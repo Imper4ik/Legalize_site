@@ -74,7 +74,6 @@ def send_required_documents_email(client: Client) -> int:
     if not client.email:
         return 0
 
-    language = _get_preferred_language(client)
     checklist = client.get_document_checklist() or []
     if not checklist:
         return 0
@@ -162,7 +161,6 @@ def send_expiring_documents_email(client: Client, documents: list[Document]) -> 
     if not client.email or not documents:
         return 0
 
-    language = _get_preferred_language(client)
     checklist = client.get_document_checklist()
     missing_documents = []
 
