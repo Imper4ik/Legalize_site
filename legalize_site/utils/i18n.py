@@ -101,35 +101,40 @@ def _write_mo_file(po_path: Path, mo_path: Path) -> None:
 
     # Build the binary .mo structure
     ids = sorted(messages.keys())
-    offsets = []
-    strs = []
-    for msgid in ids:
-        msgstr = "\0".join(messages[msgid])
-        offsets.append((len("".join(strs)), len(msgstr)))
-        strs.append(msgstr)
+    msgid_bytes = [msgid.encode("utf-8") for msgid in ids]
+    msgstr_bytes = ["\0".join(messages[msgid]).encode("utf-8") for msgid in ids]
 
-    output = struct.pack("Iiiiiii",
-                         0x950412de,       # magic
-                         0,                # version
-                         len(ids),         # number of strings
-                         7 * 4,            # offset of table with original strings
-                         7 * 4 + len(ids) * 8,  # offset of table with translation strings
-                         0, 0)             # hash table offset and size
+    output = struct.pack(
+        "Iiiiiii",
+        0x950412de,       # magic
+        0,                # version
+        len(ids),         # number of strings
+        7 * 4,            # offset of table with original strings
+        7 * 4 + len(ids) * 8,  # offset of table with translation strings
+        0,
+        0,
+    )
 
     # offsets for original strings
     ooffset = 7 * 4 + len(ids) * 16
-    toffset = ooffset + sum(len(i) + 1 for i in ids)
+    toffset = ooffset + sum(len(i) + 1 for i in msgid_bytes)
 
-    for msgid, (off, length) in zip(ids, offsets):
-        output += struct.pack("ii", len(msgid), ooffset)
+    orig_table = bytearray()
+    trans_table = bytearray()
+
+    for msgid, msgstr in zip(msgid_bytes, msgstr_bytes):
+        orig_table += struct.pack("ii", len(msgid), ooffset)
         ooffset += len(msgid) + 1
-        output += struct.pack("ii", length, toffset)
-        toffset += length + 1
+        trans_table += struct.pack("ii", len(msgstr), toffset)
+        toffset += len(msgstr) + 1
 
-    for msgid in ids:
-        output += msgid.encode("utf-8") + b"\0"
-    for msg in strs:
-        output += msg.encode("utf-8") + b"\0"
+    output += orig_table
+    output += trans_table
+
+    for msgid in msgid_bytes:
+        output += msgid + b"\0"
+    for msg in msgstr_bytes:
+        output += msg + b"\0"
 
     mo_path.parent.mkdir(parents=True, exist_ok=True)
     with mo_path.open("wb") as mo_file:
