@@ -2,6 +2,7 @@ import json
 import tempfile
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from gettext import GNUTranslations
 from pathlib import Path
 from unittest.mock import patch
 
@@ -9,18 +10,51 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import RequestFactory, TestCase, override_settings
+from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from django.utils import translation
 
 from allauth.account.models import EmailAddress
 
 from .forms import DocumentChecklistForm
-from .models import Client, Document, DocumentRequirement
+from .models import Client, Document, DocumentRequirement, translate_document_name
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.services.notifications import send_expiring_documents_email, send_missing_documents_email
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper
 from clients.services.wezwanie_parser import parse_wezwanie
+
+
+class PurePythonMsgfmtTests(SimpleTestCase):
+    def test_compiled_mo_file_is_valid_utf8(self):
+        from legalize_site.utils.i18n import _write_mo_file
+
+        with tempfile.TemporaryDirectory() as tmp:
+            locale_dir = Path(tmp) / "ru" / "LC_MESSAGES"
+            locale_dir.mkdir(parents=True)
+            po_path = locale_dir / "django.po"
+            po_path.write_text(
+                '\n'.join(
+                    [
+                        'msgid ""',
+                        'msgstr ""',
+                        '"Content-Type: text/plain; charset=UTF-8\\n"',
+                        '"Language: ru\\n"',
+                        '',
+                        'msgid "hello"',
+                        'msgstr "привет"',
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            mo_path = po_path.with_suffix(".mo")
+            _write_mo_file(po_path, mo_path)
+
+            with mo_path.open("rb") as fp:
+                translations = GNUTranslations(fp)
+
+            self.assertEqual(translations.gettext("hello"), "привет")
+            self.assertEqual(translations.gettext("missing"), "missing")
 
 
 class CalculatorViewTests(TestCase):
@@ -162,12 +196,32 @@ class ClientAccountLifecycleTests(TestCase):
 
 
 class DocumentTypeConsistencyTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        from legalize_site.utils.i18n import compile_message_catalogs
+
+        compile_message_catalogs()
+
     def test_document_checklist_labels_match_enum(self):
         enum_map = {choice.value: choice.label for choice in DocumentType}
         for docs in DOCUMENT_CHECKLIST.values():
             for code, label in docs:
                 self.assertIn(code, enum_map)
                 self.assertEqual(label, enum_map[code])
+
+    def test_translate_document_name_respects_language(self):
+        with translation.override("ru"):
+            self.assertEqual(
+                translate_document_name(DocumentType.PHOTOS.label),
+                "Фотографии (4 шт., 45x35 мм)",
+            )
+
+        with translation.override("en"):
+            self.assertEqual(
+                translate_document_name(DocumentType.PHOTOS.label),
+                "4 photos (45x35 mm)",
+            )
 
     def test_document_display_name_prefers_custom_label(self):
         client = Client.objects.create(
@@ -395,6 +449,10 @@ class MissingDocumentsEmailTests(TestCase):
             language="pl",
         )
 
+        with translation.override(self.client_record.language):
+            self.passport_label = translate_document_name(DocumentType.PASSPORT.label)
+            self.photos_label = translate_document_name(DocumentType.PHOTOS.label)
+
         mail.outbox = []
 
         DocumentRequirement.objects.filter(application_purpose="work").delete()
@@ -406,7 +464,7 @@ class MissingDocumentsEmailTests(TestCase):
         sent = send_missing_documents_email(self.client_record)
         self.assertEqual(sent, 1)
         self.assertEqual(len(mail.outbox), 1)
-        self.assertIn("Паспорт", mail.outbox[0].body)
+        self.assertIn(self.passport_label, mail.outbox[0].body)
 
     def test_skips_email_when_nothing_missing(self):
         Document.objects.create(
@@ -438,8 +496,8 @@ class MissingDocumentsEmailTests(TestCase):
         self.assertEqual(sent, 1)
         self.assertEqual(len(mail.outbox), 1)
         body = mail.outbox[0].body
-        self.assertIn("Паспорт", body)
-        self.assertIn("Фотографии", body)
+        self.assertIn(self.passport_label, body)
+        self.assertIn(self.photos_label, body)
         self.assertIn(date.today().strftime("%d.%m.%Y"), body)
 
 
@@ -468,6 +526,10 @@ class WezwanieUploadFlowTests(TestCase):
             language="pl",
         )
 
+        with translation.override(self.client_record.language):
+            self.passport_label = translate_document_name(DocumentType.PASSPORT.label)
+            self.photos_label = translate_document_name(DocumentType.PHOTOS.label)
+
         mail.outbox = []
 
     def test_uploading_wezwanie_updates_fields_and_sends_missing_docs_email(self):
@@ -494,8 +556,8 @@ class WezwanieUploadFlowTests(TestCase):
         )
 
         self.assertGreaterEqual(len(mail.outbox), 1)
-        self.assertIn("Паспорт", mail.outbox[0].body)
-        self.assertIn("Фотографии", mail.outbox[0].body)
+        self.assertIn(self.passport_label, mail.outbox[0].body)
+        self.assertIn(self.photos_label, mail.outbox[0].body)
 
 
 class BulkDocumentVerificationTests(TestCase):

@@ -3,6 +3,16 @@ set -o errexit
 
 python manage.py migrate --no-input
 
+# Ensure translation catalogs are compiled so UI strings and checklist items
+# render in the selected language. Uses gettext tooling when available and
+# falls back to a pure-Python compilation to avoid binary artifacts in the
+# repository.
+python manage.py shell <<'PY'
+from legalize_site.utils.i18n import compile_message_catalogs
+
+compile_message_catalogs()
+PY
+
 # === Одноразовое создание суперюзера через env-переменные ===
 if [ "$DJANGO_SUPERUSER_EMAIL" ] && [ "$DJANGO_SUPERUSER_PASSWORD" ]; then
   echo "Checking/creating superuser..."

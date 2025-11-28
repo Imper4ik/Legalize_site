@@ -1,6 +1,7 @@
 from django.db import models
 from django.urls import reverse
-from django.utils.translation import gettext_lazy as _
+from django.utils import translation
+from django.utils.translation import gettext, gettext_lazy as _
 from django.conf import settings
 from .constants import DOCUMENT_CHECKLIST, DocumentType
 
@@ -14,6 +15,23 @@ def get_fallback_document_checklist(purpose: str, language: str | None = None):
         if stored_purpose == purpose:
             return documents
     return []
+
+
+def translate_document_name(name: str, language: str | None = None) -> str:
+    """Translate a document name for the requested language.
+
+    Some choice labels were stored as lazy translations, but depending on the
+    active language when they were created, they could render in the fallback
+    language. Applying an explicit override ensures we always return the
+    correct translation for the interface language selected by the user.
+    """
+
+    lang = language or translation.get_language()
+    if not lang:
+        return gettext(name)
+
+    with translation.override(lang):
+        return gettext(name)
 
 
 class Client(models.Model):
@@ -91,11 +109,14 @@ class Client(models.Model):
             docs_map[doc.document_type].append(doc)
 
         status_list = []
+        current_language = translation.get_language() or self.language
+
         for code, name in required_docs:
+            translated_name = translate_document_name(name, current_language)
             documents = docs_map.get(code, [])
             status_list.append({
                 'code': code,
-                'name': name,
+                'name': translated_name,
                 'is_uploaded': bool(documents),
                 'documents': documents
             })
@@ -109,7 +130,7 @@ class Client(models.Model):
 
         for code, name in required_docs:
             if code == doc_code:
-                return name
+                return translate_document_name(name, translation.get_language() or self.language)
         return doc_code.replace('_', ' ').capitalize()
 
 
@@ -138,7 +159,7 @@ class Document(models.Model):
         if requirement and requirement.custom_name:
             return requirement.custom_name
         if self.document_type in [choice.value for choice in DocumentType]:
-            return DocumentType(self.document_type).label
+            return translate_document_name(DocumentType(self.document_type).label, translation.get_language() or self.client.language)
         return self.document_type.replace('_', ' ').capitalize()
 
     @property
