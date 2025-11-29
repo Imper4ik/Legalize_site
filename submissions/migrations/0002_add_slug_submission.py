@@ -42,10 +42,6 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(populate_slugs, migrations.RunPython.noop),
         migrations.RunPython(ensure_defaults, migrations.RunPython.noop),
-        migrations.RunSQL(
-            sql="DROP INDEX IF EXISTS submissions_submission_slug_dcff9617_like;",
-            reverse_sql=migrations.RunSQL.noop,
-        ),
         migrations.AlterField(
             model_name='submission',
             name='slug',
