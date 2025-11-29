@@ -19,6 +19,8 @@ from clients.forms import (
 )
 from clients.models import Client, Document, DocumentRequirement, Payment
 from clients.constants import DocumentType, DOCUMENT_CHECKLIST
+from submissions.forms import SubmissionForm
+from submissions.models import Submission
 from clients.services.calculator import (
     EUR_TO_PLN_RATE,
     LIVING_ALLOWANCE,
@@ -216,10 +218,12 @@ class DocumentChecklistManageView(StaffRequiredMixin, FormView):
 
     def get_purpose(self) -> str:
         requested = self.request.GET.get('purpose') or self.request.POST.get('purpose')
-        allowed = [choice[0] for choice in Client.APPLICATION_PURPOSE_CHOICES]
+        allowed = list(Submission.objects.values_list('slug', flat=True))
+        if not allowed:
+            allowed = [choice[0] for choice in Client.APPLICATION_PURPOSE_CHOICES]
         if requested in allowed:
             return requested
-        return allowed[0]
+        return allowed[0] if allowed else ''
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -240,13 +244,15 @@ class DocumentChecklistManageView(StaffRequiredMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['current_purpose'] = self.get_purpose()
-        context['purpose_choices'] = Client.APPLICATION_PURPOSE_CHOICES
+        context['purpose_choices'] = list(Submission.objects.all())
         context['add_form'] = DocumentRequirementAddForm(purpose=self.get_purpose())
+        purpose_lookup = {submission.slug: submission.name for submission in context['purpose_choices']}
         purpose_labels = dict(Client.APPLICATION_PURPOSE_CHOICES)
-        context['current_purpose_label'] = purpose_labels.get(
+        context['current_purpose_label'] = purpose_lookup.get(
             context['current_purpose'],
-            context['current_purpose'],
+            purpose_labels.get(context['current_purpose'], context['current_purpose']),
         )
+        context['submission_form'] = SubmissionForm()
         requirements = DocumentRequirement.objects.filter(
             application_purpose=self.get_purpose()
         ).order_by('position', 'id')
@@ -272,8 +278,10 @@ client_wsc_print_view = ClientWSCPrintView.as_view()
 @staff_required_view
 def document_requirement_add(request):
     purpose = request.POST.get('purpose') or request.GET.get('purpose')
-    allowed = [choice[0] for choice in Client.APPLICATION_PURPOSE_CHOICES]
-    if purpose not in allowed:
+    allowed = list(Submission.objects.values_list('slug', flat=True))
+    if not allowed:
+        allowed = [choice[0] for choice in Client.APPLICATION_PURPOSE_CHOICES]
+    if purpose not in allowed and allowed:
         purpose = allowed[0]
 
     form = DocumentRequirementAddForm(request.POST or None, purpose=purpose)
