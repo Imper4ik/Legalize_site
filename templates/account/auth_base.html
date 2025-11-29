@@ -145,17 +145,20 @@
 
         .auth-language-select {
             border: none;
-            background: transparent;
+            background-color: rgba(255, 255, 255, 0.14);
             color: inherit;
             font-weight: 600;
             font-size: 0.9rem;
             outline: none;
             appearance: none;
             cursor: pointer;
+            padding: 0.35rem 0.8rem;
+            border-radius: 999px;
         }
 
         .auth-language-select option {
             color: #0f172a;
+            background-color: #e2e8f0;
         }
 
         :root[data-theme="dark"] .auth-language-form {
@@ -165,11 +168,12 @@
 
         :root[data-theme="dark"] .auth-language-select {
             color: #e2e8f0;
+            background-color: rgba(30, 41, 59, 0.78);
         }
 
         :root[data-theme="dark"] .auth-language-select option {
-            color: #0f172a;
-            background-color: #f8fafc;
+            color: #e2e8f0;
+            background-color: #0f172a;
         }
 
         .theme-toggle {
