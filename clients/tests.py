@@ -383,7 +383,7 @@ class DocumentRequirementTests(TestCase):
     def test_checklist_form_saves_selected_documents(self):
         DocumentRequirement.objects.filter(application_purpose='study').delete()
         form = DocumentChecklistForm(
-            data={'required_documents': [DocumentType.PASSPORT, DocumentType.PAYMENT_CONFIRMATION]},
+            data={'required_documents': [DocumentType.PASSPORT, DocumentType.ENROLLMENT_CERTIFICATE]},
             purpose='study',
         )
         self.assertTrue(form.is_valid())
@@ -394,7 +394,10 @@ class DocumentRequirementTests(TestCase):
             DocumentRequirement.required_for('study'),
             [
                 (DocumentType.PASSPORT.value, DocumentType.PASSPORT.label),
-                (DocumentType.PAYMENT_CONFIRMATION.value, DocumentType.PAYMENT_CONFIRMATION.label),
+                (
+                    DocumentType.ENROLLMENT_CERTIFICATE.value,
+                    DocumentType.ENROLLMENT_CERTIFICATE.label,
+                ),
             ],
         )
 
@@ -410,6 +413,16 @@ class DocumentRequirementTests(TestCase):
         form = DocumentChecklistForm(data=None, purpose='study')
 
         self.assertEqual(form.initial['required_documents'], [])
+
+    def test_checklist_form_limits_choices_to_purpose(self):
+        DocumentRequirement.objects.filter(application_purpose='work').delete()
+
+        form = DocumentChecklistForm(data=None, purpose='work')
+
+        choice_keys = [value for value, _ in form.fields['required_documents'].choices]
+
+        self.assertIn(DocumentType.WORK_PERMIT_FEE, choice_keys)
+        self.assertNotIn(DocumentType.TUITION_FEE_PROOF, choice_keys)
 
 
 class WezwanieParserTests(TestCase):
