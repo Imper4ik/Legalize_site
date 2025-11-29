@@ -36,33 +36,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunSQL(
-            sql="""
-            DO $$
-            DECLARE idx record;
-            BEGIN
-                -- Drop any pre-existing index or constraint that references the slug field
-                IF EXISTS (
-                    SELECT 1 FROM pg_constraint
-                    WHERE conname = 'submissions_submission_slug_key'
-                        AND conrelid = 'submissions_submission'::regclass
-                ) THEN
-                    EXECUTE 'ALTER TABLE submissions_submission DROP CONSTRAINT IF EXISTS submissions_submission_slug_key';
-                END IF;
-
-                FOR idx IN
-                    SELECT n.nspname AS schemaname, c.relname AS indexname
-                    FROM pg_class c
-                    JOIN pg_namespace n ON n.oid = c.relnamespace
-                    WHERE c.relkind = 'i'
-                      AND c.relname LIKE 'submissions_submission_slug%'
-                LOOP
-                    EXECUTE 'DROP INDEX IF EXISTS '
-                        || quote_ident(idx.schemaname)
-                        || '.'
-                        || quote_ident(idx.indexname);
-                END LOOP;
-            END$$;
-            """,
+            sql="DROP INDEX IF EXISTS submissions_submission_slug_dcff9617_like",
             reverse_sql=migrations.RunSQL.noop,
         ),
         migrations.AddField(
