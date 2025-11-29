@@ -7,6 +7,7 @@ app_name = 'submissions'
 urlpatterns = [
     path('', views.SubmissionListView.as_view(), name='submission_list'),
     path('create/', views.SubmissionCreateView.as_view(), name='submission_create'),
+    path('quick-create/', views.submission_quick_create, name='submission_quick_create'),
     path('<int:pk>/', views.SubmissionDetailView.as_view(), name='submission_detail'),
 
     path('<int:submission_id>/documents/create/', views.DocumentCreateView.as_view(), name='document_create'),

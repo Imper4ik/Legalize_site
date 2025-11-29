@@ -6,7 +6,8 @@ from typing import Any
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.http import HttpRequest, HttpResponse, HttpResponseNotAllowed, JsonResponse
+from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
@@ -40,6 +41,23 @@ class SubmissionCreateView(StaffRequiredMixin, View):
             messages.success(request, _('Основание подачи создано'))
             return redirect('submissions:submission_detail', pk=submission.pk)
         return render(request, self.template_name, {'form': form})
+
+
+@staff_required_view
+def submission_quick_create(request: HttpRequest) -> HttpResponse:
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+
+    form = SubmissionForm(request.POST)
+    if form.is_valid():
+        submission = form.save()
+        messages.success(request, _('Основание подачи создано'))
+        redirect_url = request.META.get('HTTP_REFERER') or reverse_lazy('clients:document_checklist_manage')
+        return redirect(redirect_url)
+
+    messages.error(request, _('Не удалось создать основание'), extra_tags='danger')
+    redirect_url = request.META.get('HTTP_REFERER') or reverse_lazy('clients:document_checklist_manage')
+    return redirect(redirect_url)
 
 
 class SubmissionDetailView(StaffRequiredMixin, DetailView):
