@@ -53,6 +53,16 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(populate_slugs, migrations.RunPython.noop),
         migrations.RunPython(ensure_defaults, migrations.RunPython.noop),
+        migrations.RunSQL(
+            sql=(
+                "ALTER TABLE submissions_submission "
+                "ALTER COLUMN slug SET NOT NULL;"
+            ),
+            reverse_sql=(
+                "ALTER TABLE submissions_submission "
+                "ALTER COLUMN slug DROP NOT NULL;"
+            ),
+        ),
         migrations.AlterField(
             model_name='submission',
             name='slug',
