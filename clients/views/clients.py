@@ -3,7 +3,7 @@ from __future__ import annotations
 from django.contrib import messages
 from django.db.models import Prefetch, Q
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy
+from django.urls import NoReverseMatch, reverse, reverse_lazy
 from django.utils.translation import gettext as _
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 from django.conf import settings
@@ -246,6 +246,29 @@ class DocumentChecklistManageView(StaffRequiredMixin, FormView):
         context['current_purpose'] = self.get_purpose()
         context['purpose_choices'] = list(Submission.objects.all())
         context['add_form'] = DocumentRequirementAddForm(purpose=self.get_purpose())
+        context['submission_edit_forms'] = [
+            (submission, SubmissionForm(instance=submission, prefix=f"submission-{submission.id}"))
+            for submission in context['purpose_choices']
+        ]
+        submission_actions: dict[int, dict[str, str]] = {}
+        fallback_url = str(reverse_lazy('clients:document_checklist_manage'))
+        for submission in context['purpose_choices']:
+            try:
+                delete_url = reverse('submissions:submission_quick_delete', args=[submission.id])
+            except NoReverseMatch:
+                delete_url = fallback_url
+
+            try:
+                update_url = reverse('submissions:submission_quick_update', args=[submission.id])
+            except NoReverseMatch:
+                update_url = fallback_url
+
+            submission_actions[submission.id] = {
+                'delete_url': delete_url,
+                'update_url': update_url,
+            }
+
+        context['submission_actions'] = submission_actions
         purpose_lookup = {submission.slug: submission.name for submission in context['purpose_choices']}
         purpose_labels = dict(Client.APPLICATION_PURPOSE_CHOICES)
         context['current_purpose_label'] = purpose_lookup.get(
