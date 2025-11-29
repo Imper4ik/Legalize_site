@@ -672,11 +672,11 @@
     <header class="auth-toolbar" role="banner">
         <a class="auth-brand" href="{% url 'account_login' %}">Legalize</a>
         <div class="auth-toolbar-controls">
-            <form action="{% url 'set_language' %}" method="post" class="auth-language-form">
+            <form action="{% url 'set_language' %}" method="post" class="auth-language-form" data-language-switcher>
                 {% csrf_token %}
                 <input name="next" type="hidden" value="{{ request.get_full_path|default:'/' }}">
                 <label class="auth-language-label" for="auth-language-select">{% translate "Выбор языка интерфейса" %}</label>
-                <select id="auth-language-select" name="language" class="auth-language-select" onchange="this.form.submit()">
+                <select id="auth-language-select" name="language" class="auth-language-select">
                     {% get_current_language as LANGUAGE_CODE %}
                     {% get_available_languages as LANGUAGES %}
                     {% for lang_code, lang_name in LANGUAGES %}
@@ -707,6 +707,7 @@
     <main class="auth-shell">
         {% block content %}{% endblock %}
     </main>
+    <script src="{% static 'js/language-switcher.js' %}" defer></script>
     <script src="{% static 'js/theme-toggle.js' %}"></script>
 </body>
 </html>
