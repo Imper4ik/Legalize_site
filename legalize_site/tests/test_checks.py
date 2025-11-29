@@ -3,9 +3,12 @@ from django.test import SimpleTestCase, override_settings
 
 
 class EmailConfigurationCheckTests(SimpleTestCase):
-    def test_skip_when_not_using_supported_backend(self):
+    def test_warning_when_using_console_backend(self):
         with override_settings(EMAIL_BACKEND="django.core.mail.backends.console.EmailBackend"):
-            self.assertEqual(run_checks(tags=["legalize_site"]), [])
+            messages = run_checks(tags=["legalize_site"])
+
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(messages[0].id, "legalize_site.W002")
 
     def test_error_when_api_backend_missing_key(self):
         for backend, anymail_key in (
