@@ -3,7 +3,7 @@
 import importlib.util
 import os
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import quote_plus, urlparse
 
 import dj_database_url
 from django.urls import reverse_lazy
@@ -136,11 +136,34 @@ TEMPLATES = [
     },
 ]
 
-# --- БАЗА ДАННЫХ (НАСТРОЕНО ДЛЯ RENDER) ---
+# --- БАЗА ДАННЫХ (НАСТРОЕНО ДЛЯ RAILWAY/RENDER) ---
 DEFAULT_DATABASE_URL = f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
+
+
+def preferred_database_url() -> str:
+    """Prefer Railway-provisioned PostgreSQL credentials when present."""
+
+    for env_name in ("DATABASE_URL", "RAILWAY_DATABASE_URL"):
+        url = os.environ.get(env_name)
+        if url:
+            return url
+
+    pg_user = os.environ.get("PGUSER") or os.environ.get("POSTGRES_USER")
+    pg_password = os.environ.get("PGPASSWORD") or os.environ.get("POSTGRES_PASSWORD")
+    pg_host = os.environ.get("PGHOST") or os.environ.get("POSTGRES_HOST")
+    pg_port = os.environ.get("PGPORT") or os.environ.get("POSTGRES_PORT") or "5432"
+    pg_db = os.environ.get("PGDATABASE") or os.environ.get("POSTGRES_DB")
+
+    if pg_user and pg_host and pg_db:
+        password_part = f":{quote_plus(pg_password)}" if pg_password else ""
+        return f"postgresql://{pg_user}{password_part}@{pg_host}:{pg_port}/{pg_db}"
+
+    return DEFAULT_DATABASE_URL
+
+
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL') or DEFAULT_DATABASE_URL
+        default=preferred_database_url()
     )
 }
 
