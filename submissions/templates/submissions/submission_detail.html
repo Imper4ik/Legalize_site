@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load i18n form_filters %}
+
+{% block title %}{{ submission.name }}{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <p class="text-muted mb-1">{% translate "Основание подачи" %}</p>
+      <h1 class="h3 mb-0">{{ submission.name }}</h1>
+      <p class="mb-0"><span class="badge bg-secondary">{{ submission.get_status_display }}</span></p>
+    </div>
+    <div class="text-end">
+      <a class="btn btn-outline-secondary me-2" href="{% url 'submissions:submission_list' %}">{% translate "К списку" %}</a>
+      <a class="btn btn-primary" href="{% url 'submissions:document_create' submission.pk %}">{% translate "Создать документ" %}</a>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light fw-semibold">{% translate "Документы" %}</div>
+    <div class="card-body p-0">
+      {% if documents %}
+      <div class="table-responsive">
+        <table class="table mb-0 align-middle">
+          <thead>
+            <tr>
+              <th scope="col">{% translate "Название" %}</th>
+              <th scope="col">{% translate "Статус" %}</th>
+              <th scope="col">{% translate "Файл" %}</th>
+              <th scope="col">{% translate "Создан" %}</th>
+              <th scope="col" class="text-end">{% translate "Действия" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for document in documents %}
+            <tr>
+              <td>{{ document.title }}</td>
+              <td><span class="badge bg-secondary">{{ document.get_status_display }}</span></td>
+              <td>
+                {% if document.file_path %}
+                  <a href="{{ document.file_path.url }}" target="_blank">{% translate "Открыть" %}</a>
+                {% else %}
+                  <span class="text-muted">{% translate "Не загружен" %}</span>
+                {% endif %}
+              </td>
+              <td>{{ document.created_at|date:"d.m.Y H:i" }}</td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'submissions:document_edit' document.pk %}">{% translate "Редактировать" %}</a>
+                <form method="post" action="{% url 'submissions:document_delete' document.pk %}" class="d-inline">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-danger" type="submit" onclick="return confirm('{% translate "Удалить документ?" %}')">{% translate "Удалить" %}</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="p-3">
+        <p class="mb-0 text-muted">{% translate "Документы ещё не добавлены." %}</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-header bg-light fw-semibold">{% translate "Быстрое создание документа" %}</div>
+    <div class="card-body">
+      <form method="post" action="{% url 'submissions:document_create' submission.pk %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ document_form.non_field_errors }}
+        <div class="row g-3">
+          <div class="col-md-5">
+            <label class="form-label" for="id_title">{% translate "Название" %}</label>
+            {{ document_form.title|add_class:"form-control" }}
+            {{ document_form.title.errors }}
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="id_status">{% translate "Статус" %}</label>
+            {{ document_form.status|add_class:"form-select" }}
+            {{ document_form.status.errors }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="id_file_path">{% translate "Файл" %}</label>
+            {{ document_form.file_path|add_class:"form-control" }}
+            {{ document_form.file_path.errors }}
+          </div>
+        </div>
+        <div class="text-end mt-3">
+          <button class="btn btn-primary" type="submit">{% translate "Создать документ" %}</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
