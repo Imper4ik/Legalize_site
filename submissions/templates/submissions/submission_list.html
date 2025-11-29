@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% translate "Основания подачи" %}{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">{% translate "Основания подачи" %}</h1>
+    <a class="btn btn-primary" href="{% url 'submissions:submission_create' %}">{% translate "Создать основание подачи" %}</a>
+  </div>
+
+  {% if submissions %}
+  <div class="card shadow-sm">
+    <div class="table-responsive">
+      <table class="table mb-0 align-middle">
+        <thead>
+          <tr>
+            <th scope="col">{% translate "Название" %}</th>
+            <th scope="col">{% translate "Статус" %}</th>
+            <th scope="col">{% translate "Дата создания" %}</th>
+            <th scope="col" class="text-end">{% translate "Действия" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for submission in submissions %}
+          <tr>
+            <td>{{ submission.name }}</td>
+            <td>{{ submission.get_status_display }}</td>
+            <td>{{ submission.created_at|date:"d.m.Y H:i" }}</td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'submissions:submission_detail' submission.pk %}">{% translate "Открыть" %}</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-info">{% translate "Пока нет оснований подачи." %}</div>
+  {% endif %}
+</div>
+{% endblock %}
