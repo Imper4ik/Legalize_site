@@ -60,42 +60,6 @@ def submission_quick_create(request: HttpRequest) -> HttpResponse:
     return redirect(redirect_url)
 
 
-@staff_required_view
-def submission_quick_update(request: HttpRequest, pk: int) -> HttpResponse:
-    submission = get_object_or_404(Submission, pk=pk)
-    if request.method != 'POST':
-        return HttpResponseNotAllowed(['POST'])
-
-    form = SubmissionForm(request.POST, instance=submission)
-    if form.is_valid():
-        form.save()
-        messages.success(request, _('Основание обновлено'))
-    else:
-        messages.error(request, _('Не удалось обновить основание'), extra_tags='danger')
-
-    redirect_url = request.META.get('HTTP_REFERER') or reverse_lazy('clients:document_checklist_manage')
-    return redirect(redirect_url)
-
-
-@staff_required_view
-def submission_quick_delete(request: HttpRequest, pk: int) -> HttpResponse:
-    submission = get_object_or_404(Submission, pk=pk)
-    if request.method != 'POST':
-        return HttpResponseNotAllowed(['POST'])
-
-    deleted_slug = submission.slug
-    submission.delete()
-
-    # Remove custom checklist entries that referenced the deleted submission
-    from clients.models import DocumentRequirement
-
-    DocumentRequirement.objects.filter(application_purpose=deleted_slug).delete()
-    messages.success(request, _('Основание удалено'))
-
-    redirect_url = request.META.get('HTTP_REFERER') or reverse_lazy('clients:document_checklist_manage')
-    return redirect(redirect_url)
-
-
 class SubmissionDetailView(StaffRequiredMixin, DetailView):
     model = Submission
     template_name = 'submissions/submission_detail.html'
