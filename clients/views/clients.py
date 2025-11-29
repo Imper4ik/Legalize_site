@@ -250,25 +250,6 @@ class DocumentChecklistManageView(StaffRequiredMixin, FormView):
             (submission, SubmissionForm(instance=submission, prefix=f"submission-{submission.id}"))
             for submission in context['purpose_choices']
         ]
-        submission_actions: dict[int, dict[str, str]] = {}
-        fallback_url = str(reverse_lazy('clients:document_checklist_manage'))
-        for submission in context['purpose_choices']:
-            try:
-                delete_url = reverse('submissions:submission_quick_delete', args=[submission.id])
-            except NoReverseMatch:
-                delete_url = fallback_url
-
-            try:
-                update_url = reverse('submissions:submission_quick_update', args=[submission.id])
-            except NoReverseMatch:
-                update_url = fallback_url
-
-            submission_actions[submission.id] = {
-                'delete_url': delete_url,
-                'update_url': update_url,
-            }
-
-        context['submission_actions'] = submission_actions
         purpose_lookup = {submission.slug: submission.name for submission in context['purpose_choices']}
         purpose_labels = dict(Client.APPLICATION_PURPOSE_CHOICES)
         context['current_purpose_label'] = purpose_lookup.get(
