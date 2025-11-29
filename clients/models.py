@@ -171,8 +171,7 @@ class Document(models.Model):
 
 class DocumentRequirement(models.Model):
     application_purpose = models.CharField(
-        max_length=20,
-        choices=Client.APPLICATION_PURPOSE_CHOICES,
+        max_length=50,
         verbose_name=_("Цель подачи"),
     )
     document_type = models.CharField(
@@ -190,7 +189,7 @@ class DocumentRequirement(models.Model):
         verbose_name_plural = _("Требования к документам")
 
     def __str__(self):
-        return f"{self.get_application_purpose_display()}: {self.custom_name or self.document_type}"
+        return f"{self.application_purpose}: {self.custom_name or self.document_type}"
 
     @classmethod
     def required_for(cls, purpose: str) -> list[tuple[str, str]]:
