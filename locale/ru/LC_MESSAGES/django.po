@@ -949,7 +949,7 @@ msgstr "Ссылка действует 24 часа"
 
 #: templates/account/email_confirmation_required.html:75
 msgid "Чтобы не потерять прогресс, подтвердите почту в течение 24 часов."
-msgstr ""
+msgstr "Чтобы не потерять прогресс, подтвердите почту в течение 24 часов."
 
 #: templates/account/email_confirmation_required.html:83
 #| msgid "Нужно новое письмо"
@@ -973,46 +973,46 @@ msgstr ""
 
 #: templates/account/login.html:13
 msgid "Панель для специалистов"
-msgstr ""
+msgstr "Панель для специалистов"
 
 #: templates/account/login.html:15
 msgid "Добро пожаловать обратно"
-msgstr ""
+msgstr "Добро пожаловать обратно"
 
 #: templates/account/login.html:17
 msgid "Следите за клиентами, сроками и платежами из единого интерфейса."
-msgstr ""
+msgstr "Следите за клиентами, сроками и платежами из единого интерфейса."
 
 #: templates/account/login.html:25
 #| msgid "Напоминания"
 msgid "Живые напоминания"
-msgstr "Напоминания"
+msgstr "Живые напоминания"
 
 #: templates/account/login.html:26
 #| msgid "Получайте напоминания о дедлайнах и изменениях."
 msgid "Автоматические уведомления о ключевых дедлайнах и событиях."
-msgstr "Получайте напоминания о дедлайнах и изменениях."
+msgstr "Автоматические уведомления о ключевых дедлайнах и событиях."
 
 #: templates/account/login.html:34
 msgid "Понятная аналитика"
-msgstr ""
+msgstr "Понятная аналитика"
 
 #: templates/account/login.html:35
 msgid "Контролируйте показатели и платежи на одной панели."
-msgstr ""
+msgstr "Контролируйте показатели и платежи на одной панели."
 
 #: templates/account/login.html:43
 #| msgid "Безопасность"
 msgid "Безопасный доступ"
-msgstr "Безопасность"
+msgstr "Безопасный доступ"
 
 #: templates/account/login.html:44
 msgid "Только авторизованные сотрудники получают доступ к данным."
-msgstr ""
+msgstr "Только авторизованные сотрудники получают доступ к данным."
 
 #: templates/account/login.html:52
 msgid "Используйте корпоративную почту и пароль."
-msgstr ""
+msgstr "Используйте корпоративную почту и пароль."
 
 #: templates/account/login.html:104 templates/admin/login.html:69
 msgid "Забыли пароль?"
