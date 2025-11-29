@@ -98,7 +98,7 @@ msgstr "Русский"
 #: clients/models.py:21
 #| msgid "Новый пароль"
 msgid "Новый"
-msgstr "Новый пароль"
+msgstr "Новый"
 
 #: clients/models.py:22
 msgid "В ожидании"
@@ -1151,12 +1151,12 @@ msgstr "Список документов пока не доступен"
 #: templates/account/signup.html:48
 #| msgid "Новый пароль"
 msgid "Новый аккаунт"
-msgstr "Новый пароль"
+msgstr "Новый аккаунт"
 
 #: templates/account/signup.html:52
 #| msgid "Создайте новый пароль"
 msgid "Создайте аккаунт"
-msgstr "Создайте новый пароль"
+msgstr "Создайте аккаунт"
 
 #: templates/account/signup.html:53
 msgid "Это бесплатно и займет не больше минуты."
