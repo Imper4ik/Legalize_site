@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from django.db import models
+from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 
 class Submission(models.Model):
+    slug = models.SlugField(max_length=64, unique=True, verbose_name=_('Слаг основания'))
     class Status(models.TextChoices):
         DRAFT = 'draft', _('Черновик')
         IN_PROGRESS = 'in_progress', _('В работе')
@@ -26,6 +28,20 @@ class Submission(models.Model):
 
     def __str__(self) -> str:  # pragma: no cover - human friendly
         return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.name, allow_unicode=True) or 'submission'
+            candidate = base_slug
+            counter = 1
+
+            while Submission.objects.filter(slug=candidate).exclude(pk=self.pk).exists():
+                counter += 1
+                candidate = f"{base_slug}-{counter}"
+
+            self.slug = candidate
+
+        super().save(*args, **kwargs)
 
 
 class Document(models.Model):
