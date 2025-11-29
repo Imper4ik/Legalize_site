@@ -14,10 +14,37 @@
         <span class="text-muted small fw-semibold">{% translate "Цель подачи" %}:</span>
         <div class="nav nav-pills gap-2 flex-wrap">
           {% for submission in purpose_choices %}
-            <a class="btn btn-sm text-nowrap {% if submission.slug == current_purpose %}btn-primary{% else %}btn-outline-primary text-primary{% endif %}"
-               href="?purpose={{ submission.slug }}">
-              {{ submission.name }}
-            </a>
+            {% with actions=submission_actions|get_item:submission.id %}
+              <div class="btn-group btn-group-sm">
+                <a class="btn text-nowrap {% if submission.slug == current_purpose %}btn-primary{% else %}btn-outline-primary text-primary{% endif %}"
+                   href="?purpose={{ submission.slug }}">
+                  {{ submission.name }}
+                </a>
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
+                        data-bs-toggle="dropdown" aria-expanded="false" aria-label="{% translate 'Действия с основанием' %}">
+                  <span class="visually-hidden">{% translate "Действия" %}</span>
+                </button>
+                <ul class="dropdown-menu">
+                  <li>
+                    <button class="dropdown-item" type="button" data-bs-toggle="modal"
+                            data-bs-target="#editSubmissionModal{{ submission.id }}">
+                      <i class="bi bi-pencil me-2"></i>{% translate "Переименовать" %}
+                    </button>
+                  </li>
+                  {% if actions.delete_url %}
+                    <li>
+                      <form action="{{ actions.delete_url }}" method="post"
+                            onsubmit="return confirm('{% translate 'Удалить это основание и связанные документы?' %}');">
+                        {% csrf_token %}
+                        <button class="dropdown-item text-danger" type="submit">
+                          <i class="bi bi-trash me-2"></i>{% translate "Удалить" %}
+                        </button>
+                      </form>
+                    </li>
+                  {% endif %}
+                </ul>
+              </div>
+            {% endwith %}
           {% empty %}
             <span class="text-muted small">{% translate "Добавьте основание, чтобы настроить чеклист." %}</span>
           {% endfor %}
@@ -161,6 +188,38 @@
       </div>
     </div>
   </div>
+
+  {% for submission, edit_form in submission_edit_forms %}
+    <div class="modal fade" id="editSubmissionModal{{ submission.id }}" tabindex="-1" aria-labelledby="editSubmissionLabel{{ submission.id }}" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editSubmissionLabel{{ submission.id }}">{% translate "Редактировать основание подачи" %}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
+          </div>
+          {% with actions=submission_actions|get_item:submission.id %}
+          <form action="{{ actions.update_url }}" method="post">
+            {% csrf_token %}
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="{{ edit_form.name.id_for_label }}" class="form-label">{% translate "Название" %}</label>
+                {{ edit_form.name }}
+              </div>
+              <div class="mb-3">
+                <label for="{{ edit_form.status.id_for_label }}" class="form-label">{% translate "Статус" %}</label>
+                {{ edit_form.status }}
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+              <button type="submit" class="btn btn-primary">{% translate "Сохранить" %}</button>
+            </div>
+          </form>
+          {% endwith %}
+        </div>
+      </div>
+    </div>
+  {% endfor %}
 
   {% for requirement, edit_form in editable_requirements %}
     <form id="deleteRequirement{{ requirement.id }}" action="{% url 'clients:document_requirement_delete' requirement.id %}" method="post" class="d-none">
