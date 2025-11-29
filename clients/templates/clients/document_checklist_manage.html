@@ -13,17 +13,24 @@
       <div class="d-flex align-items-center gap-2 flex-wrap">
         <span class="text-muted small fw-semibold">{% translate "Цель подачи" %}:</span>
         <div class="nav nav-pills gap-2 flex-wrap">
-          {% for value, label in purpose_choices %}
-            <a class="btn btn-sm text-nowrap {% if value == current_purpose %}btn-primary{% else %}btn-outline-primary text-primary{% endif %}"
-               href="?purpose={{ value }}">
-              {{ label }}
+          {% for submission in purpose_choices %}
+            <a class="btn btn-sm text-nowrap {% if submission.slug == current_purpose %}btn-primary{% else %}btn-outline-primary text-primary{% endif %}"
+               href="?purpose={{ submission.slug }}">
+              {{ submission.name }}
             </a>
+          {% empty %}
+            <span class="text-muted small">{% translate "Добавьте основание, чтобы настроить чеклист." %}</span>
           {% endfor %}
         </div>
       </div>
-      <button class="btn btn-sm btn-gradient" type="button" data-bs-toggle="modal" data-bs-target="#addDocumentRequirementModal">
-        <i class="bi bi-plus-lg me-1"></i>{% translate "Добавить документ" %}
-      </button>
+      <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#addSubmissionModal">
+          <i class="bi bi-plus-circle me-1"></i>{% translate "Создать основание подачи" %}
+        </button>
+        <button class="btn btn-sm btn-gradient" type="button" data-bs-toggle="modal" data-bs-target="#addDocumentRequirementModal">
+          <i class="bi bi-plus-lg me-1"></i>{% translate "Добавить документ" %}
+        </button>
+      </div>
     </div>
   </div>
   <div class="card-body">
@@ -121,6 +128,34 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
             <button type="submit" class="btn btn-primary">{% translate "Добавить" %}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="addSubmissionModal" tabindex="-1" aria-labelledby="addSubmissionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addSubmissionLabel">{% translate "Создать основание подачи" %}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
+        </div>
+        <form action="{% url 'submissions:submission_quick_create' %}" method="post">
+          {% csrf_token %}
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="{{ submission_form.name.id_for_label }}" class="form-label">{% translate "Название" %}</label>
+              {{ submission_form.name }}
+            </div>
+            <div class="mb-3">
+              <label for="{{ submission_form.status.id_for_label }}" class="form-label">{% translate "Статус" %}</label>
+              {{ submission_form.status }}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+            <button type="submit" class="btn btn-primary">{% translate "Создать" %}</button>
           </div>
         </form>
       </div>
