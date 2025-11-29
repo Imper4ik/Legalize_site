@@ -1,6 +1,31 @@
 #!/usr/bin/env bash
 set -o errexit
 
+# === Настройка суперюзера по умолчанию (email: nindse@gmail.com) ===
+# Пароль можно передать через переменную окружения DJANGO_SUPERUSER_PASSWORD.
+# Если она не указана, скрипт сгенерирует одноразовый пароль и выведет его
+# в лог запуска, чтобы аккаунт точно создался на стенде.
+DEFAULT_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-"nindse@gmail.com"}
+DEFAULT_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME:-"admin"}
+SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD:-}
+
+if [ -z "$SUPERUSER_PASSWORD" ]; then
+  SUPERUSER_PASSWORD=$(python - <<'PY'
+import secrets
+import string
+
+alphabet = string.ascii_letters + string.digits
+print("".join(secrets.choice(alphabet) for _ in range(16)))
+PY
+  )
+  echo "DJANGO_SUPERUSER_PASSWORD was not set; generated password: $SUPERUSER_PASSWORD"
+fi
+
+export DJANGO_SUPERUSER_EMAIL="$DEFAULT_SUPERUSER_EMAIL"
+export DJANGO_SUPERUSER_USERNAME="$DEFAULT_SUPERUSER_USERNAME"
+export DJANGO_SUPERUSER_PASSWORD="$SUPERUSER_PASSWORD"
+# === конец настройки суперюзера ===
+
 python manage.py migrate --no-input
 
 # Ensure translation catalogs are compiled so UI strings and checklist items
