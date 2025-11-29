@@ -8,8 +8,6 @@ urlpatterns = [
     path('', views.SubmissionListView.as_view(), name='submission_list'),
     path('create/', views.SubmissionCreateView.as_view(), name='submission_create'),
     path('quick-create/', views.submission_quick_create, name='submission_quick_create'),
-    path('<int:pk>/quick-update/', views.submission_quick_update, name='submission_quick_update'),
-    path('<int:pk>/quick-delete/', views.submission_quick_delete, name='submission_quick_delete'),
     path('<int:pk>/', views.SubmissionDetailView.as_view(), name='submission_detail'),
 
     path('<int:submission_id>/documents/create/', views.DocumentCreateView.as_view(), name='document_create'),
