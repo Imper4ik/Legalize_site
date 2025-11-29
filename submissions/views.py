@@ -8,7 +8,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views import View
@@ -41,20 +40,6 @@ class SubmissionCreateView(StaffRequiredMixin, View):
             messages.success(request, _('Основание подачи создано'))
             return redirect('submissions:submission_detail', pk=submission.pk)
         return render(request, self.template_name, {'form': form})
-
-
-class SubmissionQuickCreateView(StaffRequiredMixin, View):
-    """Создание основания из модального окна чеклистов."""
-
-    def post(self, request: HttpRequest) -> HttpResponse:
-        form = SubmissionForm(request.POST)
-        if form.is_valid():
-            submission = form.save()
-            messages.success(request, _('Основание подачи создано'))
-            return redirect(reverse_lazy('clients:document_checklist_manage') + f'?purpose={submission.slug}')
-
-        messages.error(request, _('Не удалось создать основание'))
-        return redirect(reverse_lazy('clients:document_checklist_manage'))
 
 
 class SubmissionDetailView(StaffRequiredMixin, DetailView):
