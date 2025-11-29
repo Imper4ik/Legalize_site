@@ -42,7 +42,14 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='submission',
             name='slug',
-            field=models.SlugField(max_length=64, null=True, blank=True, unique=False, verbose_name='Слаг основания'),
+            field=models.SlugField(
+                max_length=64,
+                null=True,
+                blank=True,
+                unique=False,
+                db_index=False,
+                verbose_name='Слаг основания',
+            ),
         ),
         migrations.RunPython(populate_slugs, migrations.RunPython.noop),
         migrations.RunPython(ensure_defaults, migrations.RunPython.noop),
