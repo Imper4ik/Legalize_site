@@ -78,6 +78,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
 
     'clients.apps.ClientsConfig',
+    'submissions.apps.SubmissionsConfig',
 
     'allauth',
     'allauth.account',
