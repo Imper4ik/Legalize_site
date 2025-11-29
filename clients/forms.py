@@ -4,8 +4,8 @@ from django.utils.crypto import get_random_string
 from django.utils.text import slugify
 
 from clients.services.calculator import CURRENCY_EUR, CURRENCY_PLN
-from .constants import DOCUMENT_CHECKLIST, DocumentType
-from .models import Client, Document, DocumentRequirement, Payment
+from .constants import DocumentType
+from .models import Client, Document, DocumentRequirement, Payment, get_fallback_document_checklist
 
 
 def _label_for_document_type(code: str) -> str:
@@ -176,7 +176,11 @@ class DocumentChecklistForm(forms.Form):
                 label = requirement.custom_name or self._label_for_code(requirement.document_type)
                 choices.append((requirement.document_type, label))
         else:
-            choices.extend(DocumentType.choices)
+            fallback_docs = get_fallback_document_checklist(self.purpose)
+            if fallback_docs:
+                choices.extend(fallback_docs)
+            else:
+                choices.extend(DocumentType.choices)
 
         self.fields['required_documents'].choices = choices
 
@@ -199,9 +203,9 @@ class DocumentChecklistForm(forms.Form):
         if DocumentRequirement.objects.filter(application_purpose=self.purpose).exists():
             return []
 
-        for (purpose, _), docs in DOCUMENT_CHECKLIST.items():
-            if purpose == self.purpose:
-                return [code for code, _ in docs]
+        fallback_docs = get_fallback_document_checklist(self.purpose)
+        if fallback_docs:
+            return [code for code, _ in fallback_docs]
         return []
 
     def save(self) -> int:
