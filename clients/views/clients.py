@@ -246,6 +246,10 @@ class DocumentChecklistManageView(StaffRequiredMixin, FormView):
         context['current_purpose'] = self.get_purpose()
         context['purpose_choices'] = list(Submission.objects.all())
         context['add_form'] = DocumentRequirementAddForm(purpose=self.get_purpose())
+        context['submission_edit_forms'] = [
+            (submission, SubmissionForm(instance=submission, prefix=f"submission-{submission.id}"))
+            for submission in context['purpose_choices']
+        ]
         purpose_lookup = {submission.slug: submission.name for submission in context['purpose_choices']}
         purpose_labels = dict(Client.APPLICATION_PURPOSE_CHOICES)
         context['current_purpose_label'] = purpose_lookup.get(
