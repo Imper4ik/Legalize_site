@@ -9,6 +9,7 @@ from django.core.checks import Error, Warning, register
 
 EMAIL_ERROR_ID = "legalize_site.E001"
 EMAIL_WARNING_ID = "legalize_site.W001"
+EMAIL_CONSOLE_WARNING_ID = "legalize_site.W002"
 
 BACKENDS = {
     "django.core.mail.backends.smtp.EmailBackend": {
@@ -51,6 +52,37 @@ def email_configuration_check(app_configs=None, **kwargs):
     env_var = None
     mode = None
 
+    messages = []
+
+    if settings.EMAIL_BACKEND == "django.core.mail.backends.console.EmailBackend":
+        messages.append(
+            Warning(
+                "EMAIL_BACKEND is set to the console backend, so messages are "
+                "only printed to logs and never delivered.",
+                hint=(
+                    "Set SENDGRID_API_KEY, BREVO_API_KEY or SMTP credentials via "
+                    "environment variables to enable real email sending."
+                ),
+                id=EMAIL_CONSOLE_WARNING_ID,
+            )
+        )
+
+        default_from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "")
+        if default_from_email.endswith("yourdomain.tld"):
+            messages.append(
+                Warning(
+                    "DEFAULT_FROM_EMAIL still uses the placeholder domain "
+                    "'yourdomain.tld'.",
+                    hint=(
+                        "Set DEFAULT_FROM_EMAIL (or REPLY_TO_EMAIL) to a "
+                        "provider-verified address via environment variables."
+                    ),
+                    id=EMAIL_WARNING_ID,
+                )
+            )
+
+        return messages
+
     if settings.EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
         provider = _smtp_provider()
         env_var = "BREVO_SMTP_PASSWORD" if provider == "Brevo" else "SENDGRID_API_KEY"
@@ -65,8 +97,6 @@ def email_configuration_check(app_configs=None, **kwargs):
         provider = backend["provider"]
         env_var = backend["env_var"]
         mode = backend["mode"]
-
-    messages = []
 
     if mode == "api":
         api_key = getattr(settings, "ANYMAIL", {}).get(env_var) or os.getenv(env_var)
