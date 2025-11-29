@@ -36,23 +36,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunSQL(
-            sql="""
-            DO $$
-            DECLARE idx record;
-            BEGIN
-                FOR idx IN
-                    SELECT schemaname, indexname
-                    FROM pg_indexes
-                    WHERE schemaname = current_schema()
-                      AND indexname LIKE 'submissions_submission_slug%'
-                LOOP
-                    EXECUTE 'DROP INDEX IF EXISTS '
-                        || quote_ident(idx.schemaname)
-                        || '.'
-                        || quote_ident(idx.indexname);
-                END LOOP;
-            END$$;
-            """,
+            sql="DROP INDEX IF EXISTS submissions_submission_slug_dcff9617_like",
             reverse_sql=migrations.RunSQL.noop,
         ),
         migrations.AddField(
