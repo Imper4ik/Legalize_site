@@ -11,6 +11,7 @@ from clients.views.clients import (
     document_requirement_delete,
     calculator_view,
     client_print_view,
+    client_document_print_view,
     client_wsc_print_view,
     dashboard_redirect_view,
 )
@@ -46,6 +47,7 @@ __all__ = [
     'document_requirement_delete',
     'calculator_view',
     'client_print_view',
+    'client_document_print_view',
     'client_wsc_print_view',
     'dashboard_redirect_view',
     'add_document',

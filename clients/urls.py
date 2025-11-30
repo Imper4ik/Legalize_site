@@ -20,6 +20,11 @@ urlpatterns = [
     # URL для печати
     path('client/<int:pk>/print/', views.client_print_view, name='client_print'),
     path('client/<int:pk>/print/wsc/', views.client_wsc_print_view, name='client_print_wsc'),
+    path(
+        'client/<int:pk>/print/document/<str:doc_type>/',
+        views.client_document_print_view,
+        name='client_document_print',
+    ),
 
     # URL для обновления заметок и доступов
     path('client/<int:pk>/update-notes/', views.update_client_notes, name='update_client_notes'),
