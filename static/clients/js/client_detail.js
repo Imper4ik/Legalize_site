@@ -468,43 +468,31 @@
     const dropdowns = document.querySelectorAll('.hover-dropdown');
     dropdowns.forEach((dropdown) => {
       const toggle = dropdown.querySelector('.dropdown-toggle');
+      const menu = dropdown.querySelector('.dropdown-menu');
       if (!toggle) {
         return;
       }
 
       const dropdownInstance = () => bootstrap.Dropdown.getOrCreateInstance(toggle);
 
-      let hoverEnabled = false;
-      const enableHover = () => {
-        if (hoverEnabled) {
-          return;
-        }
-        hoverEnabled = true;
-
-        dropdown.addEventListener('mouseenter', () => {
-          dropdownInstance().show();
-        });
-
-        dropdown.addEventListener('mouseleave', () => {
-          dropdownInstance().hide();
-        });
+      let hideTimeout;
+      const showMenu = () => {
+        clearTimeout(hideTimeout);
+        dropdownInstance().show();
       };
 
-      toggle.addEventListener(
-        'click',
-        () => {
-          enableHover();
-        },
-        { once: true },
-      );
+      const scheduleHide = () => {
+        clearTimeout(hideTimeout);
+        hideTimeout = setTimeout(() => dropdownInstance().hide(), 120);
+      };
 
-      toggle.addEventListener(
-        'focus',
-        () => {
-          enableHover();
-        },
-        { once: true },
-      );
+      dropdown.addEventListener('mouseenter', showMenu);
+      dropdown.addEventListener('mouseleave', scheduleHide);
+
+      if (menu) {
+        menu.addEventListener('mouseenter', showMenu);
+        menu.addEventListener('mouseleave', scheduleHide);
+      }
     });
   }
 

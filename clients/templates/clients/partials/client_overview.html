@@ -4,7 +4,7 @@
   <div class="d-flex flex-wrap gap-2 justify-content-end">
       <a href="{% url 'clients:client_print_wsc' pk=client.pk %}" class="btn btn-outline-secondary">{% translate "Печать обложки" %}</a>
       <div class="btn-group hover-dropdown">
-        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
           {% translate "Документы" %}
         </button>
         <ul class="dropdown-menu dropdown-menu-end">
