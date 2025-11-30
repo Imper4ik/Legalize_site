@@ -48,6 +48,11 @@
                         {{ form.citizenship }}
                     </div>
                     <div class="col-md-6">
+                        <label for="{{ form.birth_date.id_for_label }}" class="form-label">{{ form.birth_date.label }}</label>
+                        {{ form.birth_date }}
+                        {% for error in form.birth_date.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="col-md-6">
                         <label for="{{ form.passport_num.id_for_label }}" class="form-label">{{ form.passport_num.label }}</label>
                         {{ form.passport_num }}
                     </div>
