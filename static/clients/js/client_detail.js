@@ -464,6 +464,29 @@
     });
   }
 
+  function initHoverDropdowns() {
+    const dropdowns = document.querySelectorAll('.hover-dropdown');
+    dropdowns.forEach((dropdown) => {
+      const toggle = dropdown.querySelector('.dropdown-toggle');
+      const menu = dropdown.querySelector('.dropdown-menu');
+      if (!toggle || !menu) {
+        return;
+      }
+
+      dropdown.addEventListener('mouseenter', () => {
+        toggle.classList.add('show');
+        toggle.setAttribute('aria-expanded', 'true');
+        menu.classList.add('show');
+      });
+
+      dropdown.addEventListener('mouseleave', () => {
+        toggle.classList.remove('show');
+        toggle.setAttribute('aria-expanded', 'false');
+        menu.classList.remove('show');
+      });
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     initPriceAutoFill();
     initAddPaymentForm();
@@ -472,5 +495,6 @@
     initChecklistRefresher();
     initDocumentDeletion();
     initBulkVerification();
+    initHoverDropdowns();
   });
 })();
