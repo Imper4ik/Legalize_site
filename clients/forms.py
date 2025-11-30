@@ -25,6 +25,12 @@ class ClientForm(forms.ModelForm):
         input_formats=['%d-%m-%Y'],
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'})
     )
+    birth_date = forms.DateField(
+        label="Дата рождения",
+        required=False,
+        input_formats=['%d-%m-%Y'],
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'})
+    )
     submission_date = forms.DateField(
         label="Дата подачи (Złożone)",
         required=False,
@@ -42,7 +48,7 @@ class ClientForm(forms.ModelForm):
         model = Client
         fields = [
             'first_name', 'last_name', 'email', 'phone', 'citizenship',
-            'passport_num', 'case_number', 'application_purpose', 'language',
+            'birth_date', 'passport_num', 'case_number', 'application_purpose', 'language',
             'status',
             'basis_of_stay', 'legal_basis_end_date', 'submission_date',
             'employer_phone',
@@ -54,6 +60,7 @@ class ClientForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
             'citizenship': forms.TextInput(attrs={'class': 'form-control'}),
+            'birth_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'}),
             'passport_num': forms.TextInput(attrs={'class': 'form-control'}),
             'case_number': forms.TextInput(attrs={'class': 'form-control'}),
             'application_purpose': forms.Select(attrs={'class': 'form-select'}),
