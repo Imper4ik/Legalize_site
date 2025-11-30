@@ -145,6 +145,38 @@
             align-items: center;
             justify-content: space-between;
         }
+
+        .attachment-inputs {
+            margin-top: 10px;
+            display: grid;
+            gap: 8px;
+            justify-items: start;
+        }
+
+        .attachment-line {
+            border: none;
+            border-bottom: 2px dotted black;
+            background: transparent;
+            width: auto;
+            min-width: 3ch;
+            padding: 6px 4px 4px;
+            font-size: 1em;
+            font-family: inherit;
+            display: inline-block;
+        }
+
+        .attachment-line:focus {
+            outline: none;
+        }
+
+        @media print {
+            .attachment-line {
+                -webkit-appearance: none;
+                appearance: none;
+                border-bottom: 2px dotted black;
+                color: black;
+            }
+        }
         
         .count-box {
             border: 2px solid black;
@@ -286,10 +318,16 @@
             <div class="count-box">{{ attachment_count }}</div>
         </div>
 
-        <div style="margin-top: 10px; line-height: 1.5;">
-            . . . . . .<br>
-            . . . . . .<br>
-            . . . . . .
+        <div class="attachment-inputs">
+            {% for attachment in attachment_names %}
+                <input
+                    type="text"
+                    name="attachments"
+                    value="{{ attachment }}"
+                    class="attachment-line"
+                    aria-label="Attachment {{ forloop.counter }}"
+                >
+            {% endfor %}
         </div>
 
         <div class="signature-line">
@@ -298,6 +336,50 @@
                 підпис особи, яка подає документи )
             </div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const attachmentContainer = document.querySelector('.attachment-inputs');
+                if (!attachmentContainer) return;
+
+                const MIN_WIDTH_CH = 3;
+                const BUFFER_CH = 3;
+
+                const adjustWidth = (input) => {
+                    const trimmedLength = input.value.trim().length;
+                    const width = Math.max(MIN_WIDTH_CH, trimmedLength + BUFFER_CH);
+                    input.style.width = `${width}ch`;
+                };
+
+                const createAttachmentInput = () => {
+                    const newInput = document.createElement('input');
+                    newInput.type = 'text';
+                    newInput.name = 'attachments';
+                    newInput.value = '';
+                    newInput.className = 'attachment-line';
+                    newInput.setAttribute('aria-label', 'Attachment');
+                    adjustWidth(newInput);
+                    return newInput;
+                };
+
+                attachmentContainer.addEventListener('input', (event) => {
+                    if (event.target.classList.contains('attachment-line')) {
+                        adjustWidth(event.target);
+                    }
+                });
+
+                attachmentContainer.addEventListener('keydown', (event) => {
+                    if (event.target.classList.contains('attachment-line') && event.key === 'Enter') {
+                        event.preventDefault();
+                        const newInput = createAttachmentInput();
+                        attachmentContainer.appendChild(newInput);
+                        newInput.focus();
+                    }
+                });
+
+                attachmentContainer.querySelectorAll('.attachment-line').forEach(adjustWidth);
+            });
+        </script>
 
     </div>
 
