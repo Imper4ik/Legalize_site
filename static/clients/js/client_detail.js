@@ -473,17 +473,39 @@
         return;
       }
 
-      dropdown.addEventListener('mouseenter', () => {
-        toggle.classList.add('show');
-        toggle.setAttribute('aria-expanded', 'true');
-        menu.classList.add('show');
-      });
+      const dropdownInstance = () => bootstrap.Dropdown.getOrCreateInstance(toggle);
 
-      dropdown.addEventListener('mouseleave', () => {
-        toggle.classList.remove('show');
-        toggle.setAttribute('aria-expanded', 'false');
-        menu.classList.remove('show');
-      });
+      let hoverEnabled = false;
+      const enableHover = () => {
+        if (hoverEnabled) {
+          return;
+        }
+        hoverEnabled = true;
+
+        dropdown.addEventListener('mouseenter', () => {
+          dropdownInstance().show();
+        });
+
+        dropdown.addEventListener('mouseleave', () => {
+          dropdownInstance().hide();
+        });
+      };
+
+      toggle.addEventListener(
+        'click',
+        () => {
+          enableHover();
+        },
+        { once: true },
+      );
+
+      toggle.addEventListener(
+        'focus',
+        () => {
+          enableHover();
+        },
+        { once: true },
+      );
     });
   }
 
