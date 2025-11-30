@@ -334,6 +334,50 @@
             </div>
         </div>
 
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const attachmentContainer = document.querySelector('.attachment-inputs');
+                if (!attachmentContainer) return;
+
+                const MIN_WIDTH_CH = 3;
+                const BUFFER_CH = 3;
+
+                const adjustWidth = (input) => {
+                    const trimmedLength = input.value.trim().length;
+                    const width = Math.max(MIN_WIDTH_CH, trimmedLength + BUFFER_CH);
+                    input.style.width = `${width}ch`;
+                };
+
+                const createAttachmentInput = () => {
+                    const newInput = document.createElement('input');
+                    newInput.type = 'text';
+                    newInput.name = 'attachments';
+                    newInput.value = '';
+                    newInput.className = 'attachment-line';
+                    newInput.setAttribute('aria-label', 'Attachment');
+                    adjustWidth(newInput);
+                    return newInput;
+                };
+
+                attachmentContainer.addEventListener('input', (event) => {
+                    if (event.target.classList.contains('attachment-line')) {
+                        adjustWidth(event.target);
+                    }
+                });
+
+                attachmentContainer.addEventListener('keydown', (event) => {
+                    if (event.target.classList.contains('attachment-line') && event.key === 'Enter') {
+                        event.preventDefault();
+                        const newInput = createAttachmentInput();
+                        attachmentContainer.appendChild(newInput);
+                        newInput.focus();
+                    }
+                });
+
+                attachmentContainer.querySelectorAll('.attachment-line').forEach(adjustWidth);
+            });
+        </script>
+
     </div>
 
 </body>
