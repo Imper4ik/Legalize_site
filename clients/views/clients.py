@@ -232,6 +232,11 @@ class ClientDocumentPrintView(ClientPrintBaseView):
         if context['doc_type'] == 'mazowiecki_application':
             client = context['client']
             application_date = client.submission_date or client.created_at.date()
+            attachment_names = self._get_attachment_names()
+            attachment_count = self.request.GET.get('attachment_count')
+            if not attachment_count:
+                filled_attachments = [name for name in attachment_names if name]
+                attachment_count = len(filled_attachments) if filled_attachments else ''
             context.update(
                 {
                     'current_date': timezone.localdate(),
@@ -243,7 +248,8 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                     'mos_id': getattr(client, 'mos_id', '') or '',
                     'inpol_id': getattr(client, 'inpol_id', '') or '',
                     'birth_date': getattr(client, 'birth_date', ''),
-                    'attachment_count': '',
+                    'attachment_count': attachment_count,
+                    'attachment_names': attachment_names,
                     'other_text': (client.basis_of_stay or '').strip(),
                     'check_pobyt_czasowy': client.application_purpose in {'study', 'work', 'family'},
                     'check_pobyt_staly': False,
@@ -256,6 +262,13 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                 }
             )
         return context
+
+    def _get_attachment_names(self) -> list[str]:
+        attachments = [name.strip() for name in self.request.GET.getlist('attachments') if name.strip()]
+        minimum_slots = 3
+        if len(attachments) < minimum_slots:
+            attachments.extend([''] * (minimum_slots - len(attachments)))
+        return attachments
 
 
 class DocumentChecklistManageView(StaffRequiredMixin, FormView):
