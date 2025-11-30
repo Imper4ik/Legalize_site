@@ -232,11 +232,10 @@ class ClientDocumentPrintView(ClientPrintBaseView):
         if context['doc_type'] == 'mazowiecki_application':
             client = context['client']
             application_date = client.submission_date or client.created_at.date()
-            other_text = (client.basis_of_stay or '').strip()
-            other_text_non_numeric = bool(other_text and not other_text.isdigit())
             context.update(
                 {
                     'current_date': timezone.localdate(),
+                    'date_current': timezone.localdate(),
                     'application_date': application_date,
                     'full_name': f"{client.first_name} {client.last_name}",
                     'citizenship': client.citizenship or '',
@@ -244,8 +243,8 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                     'mos_id': getattr(client, 'mos_id', '') or '',
                     'inpol_id': getattr(client, 'inpol_id', '') or '',
                     'birth_date': getattr(client, 'birth_date', ''),
-                    'attachment_count': client.documents.count(),
-                    'other_text': other_text,
+                    'attachment_count': '',
+                    'other_text': (client.basis_of_stay or '').strip(),
                     'check_pobyt_czasowy': client.application_purpose in {'study', 'work', 'family'},
                     'check_pobyt_staly': False,
                     'check_rezydent_ue': False,
@@ -253,7 +252,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                     'check_nadanie_obywatel': False,
                     'check_swiadczenia': False,
                     'check_potwierdzenie': False,
-                    'check_inne': other_text_non_numeric,
+                    'check_inne': False,
                 }
             )
         return context
