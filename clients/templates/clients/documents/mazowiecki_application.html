@@ -150,19 +150,16 @@
             margin-top: 10px;
             display: grid;
             gap: 8px;
-            justify-items: start;
         }
 
         .attachment-line {
             border: none;
             border-bottom: 2px dotted black;
             background: transparent;
-            width: auto;
-            min-width: 3ch;
+            width: 100%;
             padding: 6px 4px 4px;
             font-size: 1em;
             font-family: inherit;
-            display: inline-block;
         }
 
         .attachment-line:focus {
@@ -176,18 +173,8 @@
                 border-bottom: 2px dotted black;
                 color: black;
             }
-
-            .screen-only {
-                display: none !important;
-            }
         }
-
-        .screen-only {
-            font-size: 0.85em;
-            color: #555;
-            margin-top: 6px;
-        }
-
+        
         .count-box {
             border: 2px solid black;
             width: 80px;
@@ -328,7 +315,7 @@
             <div class="count-box">{{ attachment_count }}</div>
         </div>
 
-        <div class="attachment-inputs" data-max-lines="{{ attachment_max_lines }}">
+        <div class="attachment-inputs">
             {% for attachment in attachment_names %}
                 <input
                     type="text"
@@ -338,10 +325,6 @@
                     aria-label="Attachment {{ forloop.counter }}"
                 >
             {% endfor %}
-        </div>
-
-        <div class="screen-only attachment-limit-note" aria-live="polite" hidden>
-            Достигнут лимит строк для приложений. Удалите пустую строку, чтобы добавить новую.
         </div>
 
         <div class="signature-line">
@@ -358,8 +341,6 @@
 
                 const MIN_WIDTH_CH = 3;
                 const BUFFER_CH = 3;
-                const maxLines = Number(attachmentContainer.dataset.maxLines) || Infinity;
-                const limitNote = document.querySelector('.attachment-limit-note');
 
                 const adjustWidth = (input) => {
                     const trimmedLength = input.value.trim().length;
@@ -378,11 +359,6 @@
                     return newInput;
                 };
 
-                const showLimitWarning = (visible) => {
-                    if (!limitNote) return;
-                    limitNote.hidden = !visible;
-                };
-
                 attachmentContainer.addEventListener('input', (event) => {
                     if (event.target.classList.contains('attachment-line')) {
                         adjustWidth(event.target);
@@ -392,32 +368,9 @@
                 attachmentContainer.addEventListener('keydown', (event) => {
                     if (event.target.classList.contains('attachment-line') && event.key === 'Enter') {
                         event.preventDefault();
-                        const currentLines = attachmentContainer.querySelectorAll('.attachment-line').length;
-                        if (currentLines >= maxLines) {
-                            showLimitWarning(true);
-                            return;
-                        }
                         const newInput = createAttachmentInput();
                         attachmentContainer.appendChild(newInput);
                         newInput.focus();
-                        showLimitWarning(false);
-                    }
-
-                    if (event.target.classList.contains('attachment-line') &&
-                        (event.key === 'Backspace' || event.key === 'Delete')) {
-                        const input = event.target;
-                        const isEmpty = input.value.trim() === '';
-                        const lines = attachmentContainer.querySelectorAll('.attachment-line');
-                        if (isEmpty && lines.length > 1) {
-                            event.preventDefault();
-                            const index = Array.from(lines).indexOf(input);
-                            const focusIndex = Math.max(index - 1, 0);
-                            input.remove();
-                            const remaining = attachmentContainer.querySelectorAll('.attachment-line');
-                            const nextFocus = remaining[focusIndex] || remaining[0];
-                            nextFocus.focus();
-                            showLimitWarning(false);
-                        }
                     }
                 });
 
