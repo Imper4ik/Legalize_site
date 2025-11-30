@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Prośba o przyśpieszenie - {{ client.first_name }} {{ client.last_name }}</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Times New Roman", serif;
+      font-size: 14px;
+      color: #000;
+      background: #fff;
+    }
+
+    .print-actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .print-actions button,
+    .print-actions a {
+      padding: 10px 16px;
+      font-size: 14px;
+      border: 1px solid #333;
+      background: #f7f7f7;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px 48px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 24px;
+      margin-bottom: 24px;
+      line-height: 1.5;
+      white-space: pre-line;
+    }
+
+    .section {
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .section-heading {
+      text-align: center;
+    }
+
+    .editable {
+      padding: 2px 4px;
+    }
+
+    .editable:focus {
+      outline: 1px dashed #999;
+      background: #f2f2f2;
+    }
+
+    .signature {
+      margin-top: 48px;
+      line-height: 1.6;
+    }
+
+    @media print {
+      .print-actions {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="print-actions">
+    <button type="button" onclick="window.print()">Drukuj</button>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <div class="editable" contenteditable="true">
+        Warszawa, {% now "d.m.Y" %}
+      </div>
+      <div class="editable" contenteditable="true">
+        Ajzan Bartosik - Nisanbajewa<br>
+        Biuro EXPOWIZA<br>
+        ul. Marszałkowska 9/15<br>
+        00-626 Warszawa<br>
+        tel.: 667066113
+      </div>
+    </div>
+
+    <div class="section editable" contenteditable="true">
+      Pełnomocnik Pana {{ client.first_name }} {{ client.last_name }}
+      {% if client.case_number %}<br>Nr. Sprawy: {{ client.case_number }}{% endif %}
+    </div>
+
+    <div class="section editable" contenteditable="true">
+      MAZOWIECKI URZĄD WOJEWÓDZKI<br>
+      Wydział ds. Cudzoziemców<br>
+      ul. Marszałkowska 3/5, 00-624 Warszawa
+    </div>
+
+    <div class="section section-heading editable" contenteditable="true">
+      <strong>Prośba o przyśpieszenie podpisania decyzji dla kierowcy TIR</strong>
+    </div>
+
+    <div class="section editable" contenteditable="true">
+      Szanowni Państwo,
+    </div>
+
+    <div class="section editable" contenteditable="true">
+      W związku z toczącym się postępowaniem o udzielenie zezwolenia na pobyt czasowy dla obywatela
+      {% if client.citizenship %}{{ client.citizenship }}{% else %}...................................{% endif %},
+      Pana {{ client.first_name }} {{ client.last_name }},
+      na podstawie udzielonego mi upoważnienia uprzejmie proszę o podpisanie decyzji zgodnie z żądaniem strony.
+      {% if client.case_number %}Numer sprawy: {{ client.case_number }}.{% endif %}
+    </div>
+
+    <div class="section editable" contenteditable="true">
+      Termin podjęcia decyzji został wyznaczony do dnia 23.12.2024 r. Cudzoziemiec jest kierowcą ciągnika
+      siodłowego w ruchu międzynarodowym i z powodu opóźnienia w wydaniu decyzji nie ma możliwości wykonywania
+      swoich podstawowych obowiązków służbowych. W przypadku braków w dokumentach, które mogłyby spowodować
+      dalsze opóźnienia, proszę o bezpośredni kontakt telefoniczny pod numerem 667 066 113 lub o przesłanie
+      informacji na adres ul. Marszałkowska 9/15, 00-626 Warszawa (Expowiza) albo drogą e-mailową na info@expowiza.com.
+    </div>
+
+    <div class="signature editable" contenteditable="true">
+      Z poważaniem,<br>
+      Ajzan Bartosik-Nisanbajewa
+    </div>
+  </div>
+</body>
+</html>
