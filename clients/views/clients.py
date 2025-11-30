@@ -210,7 +210,7 @@ class ClientWSCPrintView(ClientPrintBaseView):
 class ClientDocumentPrintView(ClientPrintBaseView):
     """Печать отдельных документов для клиента."""
 
-    ATTACHMENT_DEFAULT_SLOTS = 1
+    ATTACHMENT_DEFAULT_SLOTS = 5
     ATTACHMENT_MAX_SLOTS = 15
 
     documents = {
@@ -253,7 +253,6 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                     'birth_date': getattr(client, 'birth_date', ''),
                     'attachment_count': attachment_count,
                     'attachment_names': attachment_names,
-                    'attachment_max_lines': self.ATTACHMENT_MAX_SLOTS,
                     'other_text': (client.basis_of_stay or '').strip(),
                     'check_pobyt_czasowy': client.application_purpose in {'study', 'work', 'family'},
                     'check_pobyt_staly': False,
@@ -269,21 +268,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
 
     def _get_attachment_names(self) -> list[str]:
         attachments = [name.strip() for name in self.request.GET.getlist('attachments') if name.strip()]
-
-        slots_param = (
-            self.request.GET.get('attachment_slots')
-            or self.request.GET.get('attachment_count')
-        )
-
-        try:
-            minimum_slots = int(slots_param) if slots_param else self.ATTACHMENT_DEFAULT_SLOTS
-        except ValueError:
-            minimum_slots = self.ATTACHMENT_DEFAULT_SLOTS
-
-        minimum_slots = max(minimum_slots, len(attachments))
-        minimum_slots = min(self.ATTACHMENT_MAX_SLOTS, minimum_slots)
-        attachments = attachments[: self.ATTACHMENT_MAX_SLOTS]
-
+        minimum_slots = 3
         if len(attachments) < minimum_slots:
             attachments.extend([''] * (minimum_slots - len(attachments)))
         return attachments
