@@ -13,6 +13,11 @@
               {% translate "Просьба об ускорении" %}
             </a>
           </li>
+          <li>
+            <a class="dropdown-item" href="{% url 'clients:client_document_print' pk=client.pk doc_type='mazowiecki_application' %}" target="_blank">
+              {% translate "Wniosek Mazowiecki Urząd Wojewódzki" %}
+            </a>
+          </li>
         </ul>
       </div>
       <a href="{% url 'clients:client_print' pk=client.pk %}" class="btn btn-secondary">{% translate "Печать" %}</a>
@@ -25,6 +30,9 @@
       <p><strong>{% translate "Номер дела" %}:</strong> <span class="fs-5 text-primary"><strong>{{ client.case_number|default:_("Не указан") }}</strong></span></p>
       <p><strong>Email:</strong> {{ client.email }}</p>
       <p><strong>{% translate "Телефон" %}:</strong> {{ client.phone }}</p>
+      {% if client.birth_date %}
+          <p><strong>{% translate "Дата рождения" %}:</strong> {{ client.birth_date|date:"d.m.Y" }}</p>
+      {% endif %}
       <p><strong>{% translate "Цель подачи" %}:</strong> {{ client.get_application_purpose_display }}</p>
       <p><strong>{% translate "Основание пребывания" %}:</strong> {{ client.basis_of_stay|default:_("Не указано") }}</p>
       {% if client.legal_basis_end_date %}
