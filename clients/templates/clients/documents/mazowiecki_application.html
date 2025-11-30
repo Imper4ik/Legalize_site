@@ -245,7 +245,10 @@
                 <input type="checkbox" {% if check_potwierdzenie %}checked{% endif %}> Potwierdzenie posiadania obywatelstwa polskiego
             </div>
             <div class="checkbox-item">
-                <input type="checkbox" {% if check_inne %}checked{% endif %}> INNE <span style="border-bottom: 1px dotted black; padding: 0 10px;">{{ other_text }}</span>
+                <input type="checkbox" {% if check_inne %}checked{% endif %}> INNE
+                {% if check_inne %}
+                    <span style="border-bottom: 1px dotted black; padding: 0 10px;">{{ other_text }}</span>
+                {% endif %}
             </div>
         </div>
 
