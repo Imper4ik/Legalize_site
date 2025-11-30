@@ -57,6 +57,7 @@ class Client(models.Model):
     first_name = models.CharField(max_length=100, verbose_name=_("Имя"))
     last_name = models.CharField(max_length=100, verbose_name=_("Фамилия"))
     citizenship = models.CharField(max_length=100, verbose_name=_("Гражданство"))
+    birth_date = models.DateField(null=True, blank=True, verbose_name=_("Дата рождения"))
     phone = models.CharField(max_length=20, verbose_name=_("Телефон"))
     email = models.EmailField(verbose_name="Email", unique=True)
     passport_num = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("Номер паспорта"))
