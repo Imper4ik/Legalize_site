@@ -28,7 +28,7 @@ class ClientAdmin(admin.ModelAdmin):
     fieldsets = (
         (
             'Основная информация',
-            {'fields': ('first_name', 'last_name', 'email', 'phone', 'citizenship', 'passport_num')},
+            {'fields': ('first_name', 'last_name', 'birth_date', 'email', 'phone', 'citizenship', 'passport_num')},
         ),
         ('Детали подачи', {
             'fields': ('application_purpose', 'basis_of_stay', 'language', 'legal_basis_end_date')
