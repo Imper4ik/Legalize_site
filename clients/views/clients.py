@@ -242,8 +242,8 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                     'mos_id': getattr(client, 'mos_id', '') or '',
                     'inpol_id': getattr(client, 'inpol_id', '') or '',
                     'birth_date': getattr(client, 'birth_date', ''),
-                    'attachment_count': '',
-                    'other_text': '',
+                    'attachment_count': client.documents.count(),
+                    'other_text': client.basis_of_stay or '',
                     'check_pobyt_czasowy': client.application_purpose in {'study', 'work', 'family'},
                     'check_pobyt_staly': False,
                     'check_rezydent_ue': False,
@@ -251,7 +251,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                     'check_nadanie_obywatel': False,
                     'check_swiadczenia': False,
                     'check_potwierdzenie': False,
-                    'check_inne': False,
+                    'check_inne': bool(client.basis_of_stay),
                 }
             )
         return context
