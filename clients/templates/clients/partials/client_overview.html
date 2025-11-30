@@ -13,6 +13,11 @@
               {% translate "Просьба об ускорении" %}
             </a>
           </li>
+          <li>
+            <a class="dropdown-item" href="{% url 'clients:client_document_print' pk=client.pk doc_type='mazowiecki_application' %}" target="_blank">
+              {% translate "Wniosek Mazowiecki Urząd Wojewódzki" %}
+            </a>
+          </li>
         </ul>
       </div>
       <a href="{% url 'clients:client_print' pk=client.pk %}" class="btn btn-secondary">{% translate "Печать" %}</a>
