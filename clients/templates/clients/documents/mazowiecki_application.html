@@ -145,6 +145,35 @@
             align-items: center;
             justify-content: space-between;
         }
+
+        .attachment-inputs {
+            margin-top: 10px;
+            display: grid;
+            gap: 8px;
+        }
+
+        .attachment-line {
+            border: none;
+            border-bottom: 2px dotted black;
+            background: transparent;
+            width: 100%;
+            padding: 6px 4px 4px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+
+        .attachment-line:focus {
+            outline: none;
+        }
+
+        @media print {
+            .attachment-line {
+                -webkit-appearance: none;
+                appearance: none;
+                border-bottom: 2px dotted black;
+                color: black;
+            }
+        }
         
         .count-box {
             border: 2px solid black;
@@ -286,10 +315,16 @@
             <div class="count-box">{{ attachment_count }}</div>
         </div>
 
-        <div style="margin-top: 10px; line-height: 1.5;">
-            . . . . . .<br>
-            . . . . . .<br>
-            . . . . . .
+        <div class="attachment-inputs">
+            {% for attachment in attachment_names %}
+                <input
+                    type="text"
+                    name="attachments"
+                    value="{{ attachment }}"
+                    class="attachment-line"
+                    aria-label="Attachment {{ forloop.counter }}"
+                >
+            {% endfor %}
         </div>
 
         <div class="signature-line">
