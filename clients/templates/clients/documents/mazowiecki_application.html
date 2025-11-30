@@ -26,6 +26,25 @@
         @media print {
             body { background: none; margin: 0; padding: 0; }
             .page { width: 100%; height: 100%; box-shadow: none; margin: 0; padding: 15mm; }
+            .print-actions { display: none; }
+        }
+
+        .print-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px 0;
+        }
+
+        .print-actions button,
+        .print-actions a {
+            padding: 8px 16px;
+            font-size: 14px;
+            border: 1px solid #333;
+            background: #f7f7f7;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
         }
 
         /* Helper classes */
@@ -173,6 +192,11 @@
     </style>
 </head>
 <body>
+    <div class="print-actions">
+        <button type="button" onclick="window.print()">Drukuj</button>
+        <a href="javascript:window.history.back()">Powrót</a>
+    </div>
+
     <div class="page">
         <div class="header-date">
             Warszawa, data/date/дата <span class="bold">{{ current_date|date:"d.m.Y" }}</span>
@@ -221,8 +245,7 @@
                 <input type="checkbox" {% if check_potwierdzenie %}checked{% endif %}> Potwierdzenie posiadania obywatelstwa polskiego
             </div>
             <div class="checkbox-item">
-                <input type="checkbox" {% if check_inne %}checked{% endif %}> INNE
-                <span style="border-bottom: 1px dotted black; padding: 0 10px;">{{ other_text|default_if_none:'' }}</span>
+                <input type="checkbox" {% if check_inne %}checked{% endif %}> INNE <span style="border-bottom: 1px dotted black; padding: 0 10px;">{{ other_text }}</span>
             </div>
         </div>
 
@@ -283,7 +306,9 @@
             <div style="font-weight: bold;">
                 Zaznacz/mark/ знак - załączniki (ilość)/Attachments (number)/ Додані документи ( кількість):
             </div>
-            <div class="count-box">{{ attachment_count|default_if_none:'' }}</div>
+            <div class="count-box">
+                {{ attachment_count }}
+            </div>
         </div>
 
         <div style="margin-top: 10px; line-height: 1.5;">

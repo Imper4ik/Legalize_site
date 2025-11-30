@@ -468,8 +468,7 @@
     const dropdowns = document.querySelectorAll('.hover-dropdown');
     dropdowns.forEach((dropdown) => {
       const toggle = dropdown.querySelector('.dropdown-toggle');
-      const menu = dropdown.querySelector('.dropdown-menu');
-      if (!toggle || !menu) {
+      if (!toggle) {
         return;
       }
 
