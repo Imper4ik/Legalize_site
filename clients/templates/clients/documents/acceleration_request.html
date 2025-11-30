@@ -4,13 +4,22 @@
   <meta charset="UTF-8">
   <title>Prośba o przyśpieszenie - {{ client.first_name }} {{ client.last_name }}</title>
   <style>
+    :root {
+      --ink: #1e1e1e;
+      --accent: #2f4f84;
+      --muted: #6b7280;
+      --border: #d1d5db;
+    }
+
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
       padding: 0;
       font-family: "Times New Roman", serif;
       font-size: 14px;
-      color: #000;
-      background: #fff;
+      color: var(--ink);
+      background: #f8fafc;
     }
 
     .print-actions {
@@ -18,6 +27,8 @@
       justify-content: center;
       gap: 12px;
       padding: 16px;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
     }
 
     .print-actions button,
@@ -25,35 +36,89 @@
       padding: 10px 16px;
       font-size: 14px;
       border: 1px solid #333;
-      background: #f7f7f7;
+      background: #f1f5f9;
       cursor: pointer;
       text-decoration: none;
       color: inherit;
+      transition: background 0.15s ease, transform 0.15s ease;
     }
 
-    .container {
-      max-width: 900px;
+    .print-actions button:hover,
+    .print-actions a:hover { background: #e2e8f0; }
+    .print-actions button:active,
+    .print-actions a:active { transform: translateY(1px); }
+
+    .page {
+      max-width: 960px;
       margin: 0 auto;
-      padding: 0 24px 48px;
+      padding: 32px 32px 64px;
+    }
+
+    .sheet {
+      background: #fff;
+      border: 1px solid var(--border);
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+      padding: 40px 44px;
+      line-height: 1.65;
     }
 
     .header {
       display: flex;
       justify-content: space-between;
-      margin-top: 24px;
-      margin-bottom: 24px;
-      line-height: 1.5;
-      white-space: pre-line;
+      gap: 24px;
+      margin-bottom: 28px;
     }
 
-    .section {
-      margin-bottom: 24px;
-      line-height: 1.6;
+    .header .from {
+      font-weight: 600;
+    }
+
+    .header .from .muted { color: var(--muted); }
+
+    .recipient {
+      margin-bottom: 28px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+    }
+
+    .title {
+      text-align: center;
+      margin: 10px 0 24px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .intro { margin-bottom: 16px; }
+
+    .highlight-box {
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      padding: 14px 16px;
+      margin-bottom: 18px;
+      background: #f8fafc;
+      font-weight: 600;
+    }
+
+    .details {
+      margin-bottom: 16px;
+    }
+
+    .details strong { color: var(--accent); }
+
+    .contact {
+      margin-top: 26px;
+      padding-top: 14px;
+      border-top: 1px dashed var(--border);
+      color: var(--muted);
+      font-size: 13px;
     }
 
     .signature {
-      margin-top: 48px;
-      line-height: 1.6;
+      margin-top: 36px;
+      font-weight: 600;
     }
   </style>
 </head>
@@ -63,58 +128,57 @@
     <a href="javascript:window.history.back()">Powrót</a>
   </div>
 
-  <div class="container">
-    <div class="header">
-      <div>
-        Warszawa, {% now "d.m.Y" %}
+  <div class="page">
+    <div class="sheet">
+      <div class="header">
+        <div class="date">Warszawa, {% now "d.m.Y" %}</div>
+        <div class="from">
+          Ajzan Bartosik - Nisanbajewa<br>
+          <span class="muted">Biuro EXPOWIZA</span><br>
+          ul. Marszałkowska 9/15<br>
+          00-626 Warszawa<br>
+          tel.: 667 066 113
+        </div>
       </div>
-      <div>
-        Ajzan Bartosik - Nisanbajewa<br>
-        Biuro EXPOWIZA<br>
-        ul. Marszałkowska 9/15<br>
-        00-626 Warszawa<br>
-        tel.: 667066113
+
+      <div class="recipient">
+        Pełnomocnik Pana {{ client.first_name }} {{ client.last_name }}{% if client.case_number %}<br>
+        Nr. Sprawy: {{ client.case_number }}{% endif %}
       </div>
-    </div>
 
-    <div class="section">
-      Pełnomocnik Pana {{ client.first_name }} {{ client.last_name }}
-      {% if client.case_number %}<br>Nr. Sprawy: {{ client.case_number }}{% endif %}
-    </div>
+      <div class="recipient">
+        MAZOWIECKI URZĄD WOJEWÓDZKI<br>
+        Wydział ds. Cudzoziemców<br>
+        ul. Marszałkowska 3/5, 00-624 Warszawa
+      </div>
 
-    <div class="section">
-      MAZOWIECKI URZĄD WOJEWÓDZKI<br>
-      Wydział ds. Cudzoziemców<br>
-      ul. Marszałkowska 3/5, 00-624 Warszawa
-    </div>
+      <div class="title">Prośba o przyśpieszenie podpisania decyzji dla kierowcy TIR</div>
 
-    <div class="section">
-      <strong>Prośba o przyśpieszenie podpisania decyzji dla kierowcy TIR</strong>
-    </div>
+      <div class="intro">Szanowni Państwo,</div>
 
-    <div class="section">
-      Szanowni Państwo,
-    </div>
+      <div class="highlight-box">
+        Uprzejmie proszę o niezwłoczne podpisanie decyzji zgodnie z żądaniem strony. Wniosek dotyczy
+        obywatela {% if client.citizenship %}{{ client.citizenship }}{% else %}...................................{% endif %}, Pana
+        {{ client.first_name }} {{ client.last_name }}.{% if client.case_number %} Numer sprawy: {{ client.case_number }}.{% endif %}
+      </div>
 
-    <div class="section">
-      W związku z toczącym się postępowaniem o udzielenie zezwolenia na pobyt czasowy dla obywatela
-      {% if client.citizenship %}{{ client.citizenship }}{% else %}...................................{% endif %},
-      Pana {{ client.first_name }} {{ client.last_name }},
-      na podstawie udzielonego mi upoważnienia uprzejmie proszę o podpisanie decyzji zgodnie z żądaniem strony.
-      {% if client.case_number %}Numer sprawy: {{ client.case_number }}.{% endif %}
-    </div>
+      <div class="details">
+        Termin podjęcia decyzji został wyznaczony do dnia 23.12.2024 r. Cudzoziemiec jest kierowcą ciągnika
+        siodłowego w ruchu międzynarodowym i z powodu opóźnienia w wydaniu decyzji nie ma możliwości wykonywania
+        swoich podstawowych obowiązków służbowych. W przypadku braków w dokumentach, które mogłyby spowodować
+        dalsze opóźnienia, proszę o kontakt telefoniczny pod numerem <strong>667 066 113</strong> lub o przesłanie
+        informacji na adres <strong>ul. Marszałkowska 9/15, 00-626 Warszawa (Expowiza)</strong> albo drogą e-mailową na
+        <strong>info@expowiza.com</strong>.
+      </div>
 
-    <div class="section">
-      Termin podjęcia decyzji został wyznaczony do dnia 23.12.2024 r. Cudzoziemiec jest kierowcą ciągnika
-      siodłowego w ruchu międzynarodowym i z powodu opóźnienia w wydaniu decyzji nie ma możliwości wykonywania
-      swoich podstawowych obowiązków służbowych. W przypadku braków w dokumentach, które mogłyby spowodować
-      dalsze opóźnienia, proszę o bezpośredni kontakt telefoniczny pod numerem 667 066 113 lub o przesłanie
-      informacji na adres ul. Marszałkowska 9/15, 00-626 Warszawa (Expowiza) albo drogą e-mailową na info@expowiza.com.
-    </div>
+      <div class="signature">
+        Z poważaniem,<br>
+        Ajzan Bartosik-Nisanbajewa
+      </div>
 
-    <div class="signature">
-      Z poważaniem,<br>
-      Ajzan Bartosik-Nisanbajewa
+      <div class="contact">
+        Dokument wygenerowany automatycznie dla klienta: {{ client.first_name }} {{ client.last_name }}.
+      </div>
     </div>
   </div>
 </body>
