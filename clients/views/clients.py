@@ -268,7 +268,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
 
     def _get_attachment_names(self) -> list[str]:
         attachments = [name.strip() for name in self.request.GET.getlist('attachments') if name.strip()]
-        minimum_slots = 3
+        minimum_slots = 1
         if len(attachments) < minimum_slots:
             attachments.extend([''] * (minimum_slots - len(attachments)))
         return attachments
