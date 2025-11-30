@@ -5,6 +5,7 @@ from django.db.models import Prefetch, Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import NoReverseMatch, reverse, reverse_lazy
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
 from django.conf import settings
@@ -213,6 +214,9 @@ class ClientDocumentPrintView(ClientPrintBaseView):
         'acceleration_request': {
             'template': 'clients/documents/acceleration_request.html',
         },
+        'mazowiecki_application': {
+            'template': 'clients/documents/mazowiecki_application.html',
+        },
     }
 
     def get_template_names(self):
@@ -225,6 +229,31 @@ class ClientDocumentPrintView(ClientPrintBaseView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['doc_type'] = self.kwargs.get('doc_type')
+        if context['doc_type'] == 'mazowiecki_application':
+            client = context['client']
+            application_date = client.submission_date or client.created_at.date()
+            context.update(
+                {
+                    'current_date': timezone.localdate(),
+                    'application_date': application_date,
+                    'full_name': f"{client.first_name} {client.last_name}",
+                    'citizenship': client.citizenship or '',
+                    'case_number': client.case_number or '',
+                    'mos_id': getattr(client, 'mos_id', '') or '',
+                    'inpol_id': getattr(client, 'inpol_id', '') or '',
+                    'birth_date': getattr(client, 'birth_date', ''),
+                    'attachment_count': '',
+                    'other_text': '',
+                    'check_pobyt_czasowy': client.application_purpose in {'study', 'work', 'family'},
+                    'check_pobyt_staly': False,
+                    'check_rezydent_ue': False,
+                    'check_uznanie_obywatel': False,
+                    'check_nadanie_obywatel': False,
+                    'check_swiadczenia': False,
+                    'check_potwierdzenie': False,
+                    'check_inne': False,
+                }
+            )
         return context
 
 
