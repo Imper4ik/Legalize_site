@@ -233,6 +233,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
             client = context['client']
             application_date = client.submission_date or client.created_at.date()
             other_text = (client.basis_of_stay or '').strip()
+            other_text_non_numeric = bool(other_text and not other_text.isdigit())
             context.update(
                 {
                     'current_date': timezone.localdate(),
@@ -252,7 +253,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                     'check_nadanie_obywatel': False,
                     'check_swiadczenia': False,
                     'check_potwierdzenie': False,
-                    'check_inne': bool(other_text and not other_text.isdigit()),
+                    'check_inne': other_text_non_numeric,
                 }
             )
         return context
