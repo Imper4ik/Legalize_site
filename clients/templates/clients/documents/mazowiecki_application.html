@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Wniosek Mazowiecki Urząd Wojewódzki - {{ full_name }}</title>
+    <style>
+        body {
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        @media print {
+            body { background: none; margin: 0; padding: 0; }
+            .page { width: 100%; height: 100%; box-shadow: none; margin: 0; padding: 15mm; }
+        }
+
+        /* Helper classes */
+        .bold { font-weight: bold; }
+        .flex { display: flex; justify-content: space-between; }
+        .row { margin-bottom: 10px; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .small-text { font-size: 0.8em; }
+        .upper { text-transform: uppercase; }
+
+        /* Sections */
+        .header-date {
+            margin-bottom: 20px;
+        }
+
+        .urzad-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .office-notes {
+            border: 2px solid black;
+            width: 50%;
+            height: 100px;
+            padding: 5px;
+            font-size: 0.8em;
+            position: relative;
+        }
+
+        .address-block {
+            width: 45%;
+            font-size: 1.1em;
+        }
+
+        .wsc-line {
+            font-weight: bold;
+            font-size: 1.2em;
+            margin: 20px 0;
+            border-bottom: 1px dotted #000;
+            padding-bottom: 5px;
+        }
+
+        /* Checkboxes Grid */
+        .checkbox-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .checkbox-item input {
+            margin-right: 10px;
+        }
+
+        /* Form Fields */
+        .field-group {
+            margin-bottom: 15px;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 0.75em;
+            color: #333;
+            margin-top: 2px;
+            font-style: italic;
+        }
+
+        .field-value {
+            border-bottom: 2px dotted black;
+            width: 100%;
+            display: block;
+            min-height: 20px;
+            font-weight: bold;
+            padding-left: 5px;
+        }
+
+        /* Double ID row */
+        .id-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .id-col { flex: 1; }
+
+        /* Footer */
+        .footer-section {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .proxy-info {
+            width: 40%;
+            font-size: 0.9em;
+        }
+
+        .stamps-area {
+            width: 50%;
+            text-align: right;
+        }
+        
+        .stamp-box {
+            display: inline-block;
+            margin-top: 10px;
+            text-align: center;
+            width: 200px;
+        }
+
+        .attachments-box {
+            margin-top: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .count-box {
+            border: 2px solid black;
+            width: 80px;
+            height: 40px;
+            display: inline-block;
+            vertical-align: middle;
+            line-height: 40px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+
+        .signature-line {
+            margin-top: 50px;
+            text-align: right;
+        }
+        .signature-dash {
+            display: inline-block;
+            width: 300px;
+            border-top: 2px dotted black;
+            padding-top: 5px;
+            text-align: center;
+            font-size: 0.8em;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="header-date">
+            Warszawa, data/date/дата <span class="bold">{{ current_date|date:"d.m.Y" }}</span>
+        </div>
+
+        <div class="urzad-box">
+            <div class="office-notes">
+                <div class="text-center bold small-text" style="margin-bottom: 10px;">NIE WYPEŁNIAĆ!</div>
+                <div>ADNOTACJE URZĘDOWE</div>
+                <div style="margin-top: 20px;">LOKALIZACJA</div>
+            </div>
+
+            <div class="address-block bold">
+                Mazowiecki Urząd Wojewódzki<br>
+                W Warszawie<br>
+                Ul. Marszałkowska 3/5<br>
+                00-624 Warszawa
+            </div>
+        </div>
+
+        <div class="wsc-line">
+            Dot. sprawy o sygnaturze &nbsp;&nbsp;&nbsp; WSC- {{ case_number }}
+        </div>
+
+        <div class="checkbox-container">
+            <div class="checkbox-item">
+                <input type="checkbox" {% if check_pobyt_czasowy %}checked{% endif %}> Pobyt czasowy
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" {% if check_pobyt_staly %}checked{% endif %}> Pobyt stały
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" {% if check_uznanie_obywatel %}checked{% endif %}> Uznanie za obywatela polskiego
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" {% if check_nadanie_obywatel %}checked{% endif %}> Nadanie obywatelstwa polskiego
+            </div>
+
+            <div class="checkbox-item">
+                <input type="checkbox" {% if check_rezydent_ue %}checked{% endif %}> Pobyt rezydenta długoterminowego UE
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" {% if check_swiadczenia %}checked{% endif %}> Świadczenia pieniężne
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" {% if check_potwierdzenie %}checked{% endif %}> Potwierdzenie posiadania obywatelstwa polskiego
+            </div>
+            <div class="checkbox-item">
+                <input type="checkbox" {% if check_inne %}checked{% endif %}> INNE
+                <span style="border-bottom: 1px dotted black; padding: 0 10px;">{{ other_text|default_if_none:'' }}</span>
+            </div>
+        </div>
+
+        <div class="id-row">
+            <div class="id-col">
+                <span class="field-value">{{ mos_id }}</span>
+                <span class="field-label">(ID wniosku w MOS / Request ID form MOS / ID заявки в MOS)</span>
+            </div>
+            <div class="id-col">
+                <span class="field-value">{{ inpol_id }}</span>
+                <span class="field-label">(ID wniosku w InPOL / Request ID form InPOL / ID заявки в InPOL)</span>
+            </div>
+        </div>
+
+        <div class="field-group">
+            <span class="field-value">{{ application_date|date:"d.m.Y" }}</span>
+            <span class="field-label">(data złożenia wniosku / date of application / дата подання заяви)</span>
+        </div>
+
+        <div class="field-group">
+            <span class="field-value">{{ full_name }}</span>
+            <span class="field-label">(Imię i nazwisko / name and surname / Ім'я та прізвище)</span>
+        </div>
+
+        <div class="field-group">
+            <span class="field-value">{{ birth_date|date:"d.m.Y" }}</span>
+            <span class="field-label">(data urodzenia / date of birth / дата народження)</span>
+        </div>
+
+        <div class="field-group">
+            <span class="field-value">{{ citizenship }}</span>
+            <span class="field-label">(obywatelstwo / citizenship / громадянство)</span>
+        </div>
+
+        <div class="footer-section">
+            <div class="proxy-info bold">
+                Ajżan Bartosik-Nisanbajewa<br>
+                UL. MARSZAŁKOWSKA 9/15,<br>
+                00-626 WARSZAWA, tel. 667066113<br>
+                Pełnomocnik
+            </div>
+            
+            <div class="stamps-area">
+                <div class="stamp-box">
+                    <br><br>
+                    ( pieczęć wpływu )
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: right; margin-top: 20px;">
+            <div class="stamp-box" style="border-top: 1px dotted black; width: 250px;">
+                (pieczątka i podpis pracownika)
+            </div>
+        </div>
+
+        <div class="attachments-box">
+            <div style="font-weight: bold;">
+                Zaznacz/mark/ знак - załączniki (ilość)/Attachments (number)/ Додані документи ( кількість):
+            </div>
+            <div class="count-box">{{ attachment_count|default_if_none:'' }}</div>
+        </div>
+
+        <div style="margin-top: 10px; line-height: 1.5;">
+            . . . . . .<br>
+            . . . . . .<br>
+            . . . . . .
+        </div>
+
+        <div class="signature-line">
+            <div class="signature-dash">
+                ( podpis osoby składającej dokumenty / signature /<br>
+                підпис особи, яка подає документи )
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
