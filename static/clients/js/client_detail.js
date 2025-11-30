@@ -475,23 +475,25 @@
       const dropdownInstance = () => bootstrap.Dropdown.getOrCreateInstance(toggle);
 
       let hoverEnabled = false;
-      const enableHoverOpen = () => {
+      const enableHover = () => {
         if (hoverEnabled) {
           return;
         }
         hoverEnabled = true;
 
         dropdown.addEventListener('mouseenter', () => {
-          if (!toggle.classList.contains('show')) {
-            dropdownInstance().show();
-          }
+          dropdownInstance().show();
+        });
+
+        dropdown.addEventListener('mouseleave', () => {
+          dropdownInstance().hide();
         });
       };
 
       toggle.addEventListener(
         'click',
         () => {
-          enableHoverOpen();
+          enableHover();
         },
         { once: true },
       );
@@ -499,7 +501,7 @@
       toggle.addEventListener(
         'focus',
         () => {
-          enableHoverOpen();
+          enableHover();
         },
         { once: true },
       );
