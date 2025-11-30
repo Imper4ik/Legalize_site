@@ -237,6 +237,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
             context.update(
                 {
                     'current_date': timezone.localdate(),
+                    'date_current': timezone.localdate(),
                     'application_date': application_date,
                     'full_name': f"{client.first_name} {client.last_name}",
                     'citizenship': client.citizenship or '',
