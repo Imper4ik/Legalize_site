@@ -4,167 +4,222 @@
     <meta charset="UTF-8">
     <title>Obłożka akt - {{ client.first_name }} {{ client.last_name }}</title>
     <style>
-        :root {
-            --ink: #0f172a;
-            --accent: #1d4ed8;
-            --muted: #475569;
-            --border: #e2e8f0;
-        }
-
-        * { box-sizing: border-box; }
-
+        /* Используем современный шрифт без засечек */
         body {
+            background-color: #f0f0f0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-size: 11pt;
             margin: 0;
-            padding: 0;
-            font-family: "Times New Roman", serif;
-            background: #f8fafc;
-            color: var(--ink);
+            padding: 20px;
+            color: #333;
         }
 
-        .print-actions {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            padding: 16px 0;
-            background: #fff;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .print-actions a,
-        .print-actions button {
-            padding: 10px 18px;
-            font-size: 14px;
-            border: 1px solid #334155;
-            background: #e2e8f0;
-            cursor: pointer;
-            text-decoration: none;
-            color: inherit;
-            transition: background 0.15s ease, transform 0.15s ease;
-        }
-
-        .print-actions a:hover,
-        .print-actions button:hover { background: #cbd5e1; }
-        .print-actions a:active,
-        .print-actions button:active { transform: translateY(1px); }
-
-        .sheet {
+        /* Основной контейнер А4 */
+        .page {
             width: 210mm;
             min-height: 297mm;
-            margin: 20px auto;
-            padding: 26mm 22mm;
-            background: #fff;
-            border: 1px solid #cbd5e1;
-            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
+            padding: 25mm;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            position: relative;
             display: flex;
             flex-direction: column;
-            gap: 18mm;
         }
 
-        .title-block {
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            font-weight: 700;
-            font-size: 18pt;
-            color: var(--accent);
+        @media print {
+            body { background: none; margin: 0; padding: 0; }
+            .page { width: 100%; height: 100%; box-shadow: none; margin: 0; padding: 25mm; }
         }
 
-        .divider {
-            width: 100%;
-            height: 1px;
-            background: linear-gradient(to right, transparent, #cbd5e1, transparent);
+        /* Цветовая палитра */
+        :root {
+            --primary-color: #2c3e50; /* Темный серо-синий */
+            --accent-bg: #f4f6f7;     /* Очень светлый серый для фона таблиц */
+        }
+        
+        .upper { text-transform: uppercase; }
+        .bold { font-weight: bold; }
+
+        /* --- ОСНОВНОЙ КОНТЕНТ --- */
+        .content-wrapper {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding-top: 20mm;
         }
 
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 14mm 10mm;
+        /* --- БЛОК ИМЕНИ И ФАМИЛИИ (НОВЫЙ СТИЛЬ) --- */
+        .client-header-block {
+            padding-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+        .folder-label {
+            font-size: 1em;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        /* Стиль для Фамилии (Верхняя строка, самая крупная) */
+        .surname-large {
+            font-size: 3.8em; /* Очень крупно */
+            font-weight: 900; /* Экстра жирный */
+            color: var(--primary-color);
+            line-height: 0.9; /* Плотный межстрочный интервал */
+            margin-bottom: 5px;
+        }
+        
+        /* Стиль для Имени (Под фамилией) */
+        .firstname-large {
+            font-size: 2.4em; /* Крупно, но меньше фамилии */
+            font-weight: 600;
+            color: var(--primary-color);
+            line-height: 1;
+            opacity: 0.95;
         }
 
-        .info-card {
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 10mm;
-            background: #f8fafc;
-            box-shadow: inset 0 0 0 1px #eef2ff;
-        }
-
-        .label {
-            display: block;
-            font-size: 11pt;
-            color: var(--muted);
-            letter-spacing: 0.4px;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-        }
-
-        .value {
-            font-size: 16pt;
-            font-weight: 700;
-            letter-spacing: 0.4px;
-        }
-
-        .note {
-            border: 1px dashed var(--border);
-            padding: 12px;
-            font-size: 12pt;
-            color: var(--muted);
-            min-height: 34mm;
-        }
-
-        .footer {
-            margin-top: auto;
+        /* --- БЛОК НОМЕРА ДЕЛА (Справа под именем) --- */
+        .case-number-right {
             text-align: right;
-            font-size: 12pt;
-            color: var(--muted);
+            margin-top: 30px; /* Отступ от блока имени */
+            margin-bottom: 50px;
+            border-top: 3px solid var(--primary-color);
+            padding-top: 10px;
+            display: inline-block;
+            align-self: flex-end; /* Выравнивание вправо */
+            min-width: 300px;
         }
+
+        .case-num-label-small {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .case-num-value-large {
+            font-size: 2.2em;
+            font-weight: 800;
+            color: var(--primary-color);
+        }
+
+        /* --- ТАБЛИЦА С ДАННЫМИ --- */
+        .status-section {
+            margin-top: 20px;
+        }
+        .status-header {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            padding-left: 10px;
+            border-left: 5px solid var(--primary-color);
+        }
+
+        .styled-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 1em;
+        }
+        .styled-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .styled-table .label-col {
+            width: 35%;
+            font-weight: 600;
+            color: #555;
+            background-color: var(--accent-bg);
+            border-right: 2px solid white;
+            vertical-align: top;
+        }
+        .styled-table .value-col {
+            width: 65%;
+            font-size: 1.1em;
+            color: #000;
+            font-weight: 500;
+        }
+
+        /* ПОДВАЛ */
+        .footer-note {
+            text-align: center;
+            font-size: 0.8em;
+            color: #999;
+            padding-top: 20px;
+            margin-top: auto;
+            border-top: 1px solid #eee;
+        }
+
     </style>
 </head>
 <body>
-    <div class="print-actions">
-        <button type="button" onclick="window.print()">Drukuj</button>
-        <a href="javascript:window.history.back()">Powrót</a>
+
+    <div class="page">
+        
+        <div class="content-wrapper">
+            
+            <div class="client-header-block">
+                <div class="folder-label upper">Teczka klienta / Папка клиента</div>
+                
+                <div class="surname-large upper">{{ client.last_name }}</div>
+                <div class="firstname-large">{{ client.first_name }}</div>
+            </div>
+
+            <div class="case-number-right">
+                 <span class="case-num-label-small upper">Sygnatura akt (Numer sprawy)</span>
+                 <span class="case-num-value-large">{{ client.case_number|default_if_none:"" }}</span>
+            </div>
+
+            <div class="status-section">
+                <div class="status-header upper">
+                    Status i kluczowe dane / Статус и ключевые данные
+                </div>
+                
+                <table class="styled-table">
+                    <tr>
+                        <td class="label-col">Data urodzenia / Дата рождения</td>
+                        <td class="value-col">{% if client.birth_date %}{{ client.birth_date|date:"d.m.Y" }}{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <td class="label-col">E-mail</td>
+                        <td class="value-col">{{ client.email }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label-col">Telefon / Телефон</td>
+                        <td class="value-col">{{ client.phone }}</td>
+                    </tr>
+                    <tr style="background: white;"><td colspan="2" style="padding: 5px; border: none;"></td></tr>
+                    <tr>
+                        <td class="label-col">Cel złożenia wniosku / Цель</td>
+                        <td class="value-col">{% if client.application_purpose %}{{ client.get_application_purpose_display }}{% endif %}</td>
+                    </tr>
+                    
+                    <tr>
+                        <td class="label-col">Podstawa pobytu i ważność / Основание и срок</td>
+                        <td class="value-col">
+                            <span class="bold">{{ client.basis_of_stay|default_if_none:"" }}</span>
+                            <br>
+                            <span style="font-size: 0.9em; color: #666;">(ważne do / действительно до: <span style="color: var(--primary-color); font-weight: bold;">{% if client.legal_basis_end_date %}{{ client.legal_basis_end_date|date:"d.m.Y" }}{% endif %}</span>)</span>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="label-col" style="background-color: #e8efff;">Data złożenia wniosku / Дата подачи</td>
+                        <td class="value-col bold" style="background-color: #f4f8ff;">{% if client.submission_date %}{{ client.submission_date|date:"d.m.Y" }}{% endif %}</td>
+                    </tr>
+                </table>
+            </div>
+
+        </div> <div class="footer-note">
+            System zarządzния делами | Документ для внутреннего использования
+        </div>
+
     </div>
 
-    <div class="sheet">
-        <div class="title-block">Obłożka akt sprawy</div>
-        <div class="divider"></div>
-
-        <div class="info-grid">
-            <div class="info-card">
-                <span class="label">Imię i nazwisko</span>
-                <div class="value">{{ client.first_name }} {{ client.last_name }}</div>
-            </div>
-            <div class="info-card">
-                <span class="label">Obywatelstwo</span>
-                <div class="value">{{ client.citizenship|default_if_none:"" }}</div>
-            </div>
-            <div class="info-card">
-                <span class="label">Numer sprawy</span>
-                <div class="value">{{ client.case_number|default_if_none:"" }}</div>
-            </div>
-            <div class="info-card">
-                <span class="label">Data złożenia</span>
-                <div class="value">{% if client.submission_date %}{{ client.submission_date|date:"d.m.Y" }}{% endif %}</div>
-            </div>
-            <div class="info-card">
-                <span class="label">Telefon</span>
-                <div class="value">{{ client.phone|default_if_none:"" }}</div>
-            </div>
-            <div class="info-card">
-                <span class="label">Email</span>
-                <div class="value">{{ client.email|default_if_none:"" }}</div>
-            </div>
-        </div>
-
-        <div class="note">
-            {% if client.application_purpose %}Cel: {{ client.get_application_purpose_display }}. {% endif %}
-            {% if client.basis_of_stay %}Podstawa pobytu: {{ client.basis_of_stay }}.{% endif %}
-        </div>
-
-        <div class="footer">
-            Wydrukowano: {% now "d.m.Y" %}
-        </div>
-    </div>
 </body>
 </html>
