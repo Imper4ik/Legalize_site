@@ -210,6 +210,9 @@ class ClientWSCPrintView(ClientPrintBaseView):
 class ClientDocumentPrintView(ClientPrintBaseView):
     """Печать отдельных документов для клиента."""
 
+    ATTACHMENT_DEFAULT_SLOTS = 5
+    ATTACHMENT_MAX_SLOTS = 15
+
     documents = {
         'acceleration_request': {
             'template': 'clients/documents/acceleration_request.html',
