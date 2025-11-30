@@ -468,22 +468,41 @@
     const dropdowns = document.querySelectorAll('.hover-dropdown');
     dropdowns.forEach((dropdown) => {
       const toggle = dropdown.querySelector('.dropdown-toggle');
-      const menu = dropdown.querySelector('.dropdown-menu');
-      if (!toggle || !menu) {
+      if (!toggle) {
         return;
       }
 
-      dropdown.addEventListener('mouseenter', () => {
-        toggle.classList.add('show');
-        toggle.setAttribute('aria-expanded', 'true');
-        menu.classList.add('show');
-      });
+      const dropdownInstance = () => bootstrap.Dropdown.getOrCreateInstance(toggle);
 
-      dropdown.addEventListener('mouseleave', () => {
-        toggle.classList.remove('show');
-        toggle.setAttribute('aria-expanded', 'false');
-        menu.classList.remove('show');
-      });
+      let hoverEnabled = false;
+      const enableHoverOpen = () => {
+        if (hoverEnabled) {
+          return;
+        }
+        hoverEnabled = true;
+
+        dropdown.addEventListener('mouseenter', () => {
+          if (!toggle.classList.contains('show')) {
+            dropdownInstance().show();
+          }
+        });
+      };
+
+      toggle.addEventListener(
+        'click',
+        () => {
+          enableHoverOpen();
+        },
+        { once: true },
+      );
+
+      toggle.addEventListener(
+        'focus',
+        () => {
+          enableHoverOpen();
+        },
+        { once: true },
+      );
     });
   }
 
