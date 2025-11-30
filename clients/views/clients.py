@@ -232,8 +232,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
         if context['doc_type'] == 'mazowiecki_application':
             client = context['client']
             application_date = client.submission_date or client.created_at.date()
-            raw_other_text = (client.basis_of_stay or '').strip()
-            other_text = raw_other_text if raw_other_text and not raw_other_text.isdigit() else ''
+            other_text = (client.basis_of_stay or '').strip()
             context.update(
                 {
                     'current_date': timezone.localdate(),
@@ -253,7 +252,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                     'check_nadanie_obywatel': False,
                     'check_swiadczenia': False,
                     'check_potwierdzenie': False,
-                    'check_inne': bool(other_text),
+                    'check_inne': bool(other_text and not other_text.isdigit()),
                 }
             )
         return context
