@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from django.contrib import messages
 from django.db.models import Prefetch, Q
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import NoReverseMatch, reverse, reverse_lazy
 from django.utils.translation import gettext as _
@@ -205,6 +206,28 @@ class ClientWSCPrintView(ClientPrintBaseView):
     template_name = 'clients/client_wsc_print.html'
 
 
+class ClientDocumentPrintView(ClientPrintBaseView):
+    """Печать отдельных документов для клиента."""
+
+    documents = {
+        'acceleration_request': {
+            'template': 'clients/documents/acceleration_request.html',
+        },
+    }
+
+    def get_template_names(self):
+        doc_type = self.kwargs.get('doc_type')
+        document = self.documents.get(doc_type)
+        if not document:
+            raise Http404("Документ не найден")
+        return [document['template']]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['doc_type'] = self.kwargs.get('doc_type')
+        return context
+
+
 class DocumentChecklistManageView(StaffRequiredMixin, FormView):
     template_name = 'clients/document_checklist_manage.html'
     form_class = DocumentChecklistForm
@@ -277,6 +300,7 @@ class DocumentChecklistManageView(StaffRequiredMixin, FormView):
 # Функции-обёртки сохраняют прежние точки входа, чтобы не переписывать URLConf
 client_print_view = ClientPrintView.as_view()
 client_wsc_print_view = ClientWSCPrintView.as_view()
+client_document_print_view = ClientDocumentPrintView.as_view()
 
 
 @staff_required_view
