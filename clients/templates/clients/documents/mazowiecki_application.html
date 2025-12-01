@@ -366,11 +366,28 @@
                 });
 
                 attachmentContainer.addEventListener('keydown', (event) => {
-                    if (event.target.classList.contains('attachment-line') && event.key === 'Enter') {
+                    const isAttachmentInput = event.target.classList.contains('attachment-line');
+                    if (!isAttachmentInput) return;
+
+                    if (event.key === 'Enter') {
                         event.preventDefault();
                         const newInput = createAttachmentInput();
                         attachmentContainer.appendChild(newInput);
                         newInput.focus();
+                        return;
+                    }
+
+                    if ((event.key === 'Delete' || event.key === 'Backspace') && event.target.value.trim() === '') {
+                        const inputs = Array.from(attachmentContainer.querySelectorAll('.attachment-line'));
+                        if (inputs.length <= 1) return;
+
+                        event.preventDefault();
+                        const currentIndex = inputs.indexOf(event.target);
+                        const fallbackInput = inputs[currentIndex - 1] || inputs[currentIndex + 1];
+                        event.target.remove();
+                        if (fallbackInput) {
+                            fallbackInput.focus();
+                        }
                     }
                 });
 
