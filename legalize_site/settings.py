@@ -232,7 +232,7 @@ if not EMAIL_BACKEND:
         EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
     elif BREVO_API_KEY:
         EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
-    elif EMAIL_HOST_PASSWORD or EMAIL_HOST:
+    elif EMAIL_HOST_PASSWORD:
         EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
     else:
         EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
@@ -241,6 +241,8 @@ if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
     if not EMAIL_HOST:
         EMAIL_HOST = BREVO_SMTP_HOST if BREVO_SMTP_PASSWORD else "smtp.sendgrid.net"
     EMAIL_HOST_USER = EMAIL_HOST_USER or (BREVO_SMTP_USER if "brevo" in EMAIL_HOST else "apikey")
+    # Use a safer SMTP backend that falls back to console output if delivery fails
+    EMAIL_BACKEND = "legalize_site.mail.SafeSMTPEmailBackend"
 
 ANYMAIL = {}
 if EMAIL_BACKEND == "anymail.backends.sendgrid.EmailBackend" and SENDGRID_API_KEY:

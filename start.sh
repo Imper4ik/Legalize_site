@@ -9,6 +9,13 @@ DEFAULT_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-"nindse@gmail.com"}
 DEFAULT_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME:-"admin"}
 SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD:-}
 
+# Позволяет хранить постоянный пароль в файле (например, в томе или Docker secret)
+# и передавать путь к нему через DJANGO_SUPERUSER_PASSWORD_FILE. Это исключает
+# генерацию нового пароля при каждом деплое, если переменная окружения не задана.
+if [ -z "$SUPERUSER_PASSWORD" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD_FILE" ] && [ -f "$DJANGO_SUPERUSER_PASSWORD_FILE" ]; then
+  SUPERUSER_PASSWORD=$(cat "$DJANGO_SUPERUSER_PASSWORD_FILE")
+fi
+
 if [ -z "$SUPERUSER_PASSWORD" ]; then
   SUPERUSER_PASSWORD=$(python - <<'PY'
 import secrets
