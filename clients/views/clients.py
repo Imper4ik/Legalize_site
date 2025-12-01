@@ -268,22 +268,10 @@ class ClientDocumentPrintView(ClientPrintBaseView):
 
     def _get_attachment_names(self) -> list[str]:
         attachments = [name.strip() for name in self.request.GET.getlist('attachments') if name.strip()]
-        attachment_count_param = self.request.GET.get('attachment_count')
-
-        if attachments:
-            return attachments
-
-        if attachment_count_param is not None:
-            try:
-                requested_slots = max(int(attachment_count_param), 0)
-            except (TypeError, ValueError):
-                requested_slots = 0
-
-            if requested_slots > 0:
-                return [''] * requested_slots
-            return ['']
-
-        return ['']
+        minimum_slots = 1
+        if len(attachments) < minimum_slots:
+            attachments.extend([''] * (minimum_slots - len(attachments)))
+        return attachments
 
 
 class DocumentChecklistManageView(StaffRequiredMixin, FormView):
