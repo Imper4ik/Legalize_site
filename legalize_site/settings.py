@@ -232,7 +232,7 @@ if not EMAIL_BACKEND:
         EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
     elif BREVO_API_KEY:
         EMAIL_BACKEND = "anymail.backends.brevo.EmailBackend"
-    elif EMAIL_HOST_PASSWORD or EMAIL_HOST:
+    elif EMAIL_HOST_PASSWORD:
         EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
     else:
         EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
