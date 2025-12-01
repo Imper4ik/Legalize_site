@@ -34,9 +34,13 @@ def _smtp_provider() -> str:
     """Return provider name inferred from EMAIL_HOST."""
 
     host = (settings.EMAIL_HOST or "").lower()
+    if not host:
+        return ""
     if "brevo" in host or "sendinblue" in host:
         return "Brevo"
-    return "SendGrid"
+    if "sendgrid" in host:
+        return "SendGrid"
+    return "custom"
 
 
 @register("legalize_site")
@@ -85,7 +89,12 @@ def email_configuration_check(app_configs=None, **kwargs):
 
     if settings.EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
         provider = _smtp_provider()
-        env_var = "BREVO_SMTP_PASSWORD" if provider == "Brevo" else "SENDGRID_API_KEY"
+        if provider == "Brevo":
+            env_var = "BREVO_SMTP_PASSWORD"
+        elif provider == "SendGrid":
+            env_var = "SENDGRID_API_KEY"
+        else:
+            env_var = "EMAIL_HOST_PASSWORD"
         mode = "smtp"
     else:
         backend = BACKENDS.get(settings.EMAIL_BACKEND)
@@ -98,24 +107,31 @@ def email_configuration_check(app_configs=None, **kwargs):
         env_var = backend["env_var"]
         mode = backend["mode"]
 
+    host_label = settings.EMAIL_HOST or "the SMTP host"
+    provider_label = provider or "Email"
+    if provider_label == "custom":
+        provider_label = "SMTP"
+
     if mode == "api":
         api_key = getattr(settings, "ANYMAIL", {}).get(env_var) or os.getenv(env_var)
         hint = (
-            f"Set the {env_var} environment variable so the anymail {provider} "
+            f"Set the {env_var} environment variable so the anymail {provider_label} "
             "backend can authenticate against the provider API."
         )
+        provider_label = f"{provider_label} API key"
     else:
         api_key = getattr(settings, "EMAIL_HOST_PASSWORD", None) or os.getenv(env_var)
         hint = (
             f"Set the {env_var} environment variable or provide a value for "
             f"settings.EMAIL_HOST_PASSWORD so Django can authenticate with "
-            f"{settings.EMAIL_HOST}."
+            f"{host_label}."
         )
+        provider_label = f"{provider_label} SMTP password" if provider_label != "Email" else "SMTP password"
 
     if not api_key:
         messages.append(
             Error(
-                f"{provider} API key is not configured.",
+                f"{provider_label} is not configured.",
                 hint=hint,
                 id=EMAIL_ERROR_ID,
             )
