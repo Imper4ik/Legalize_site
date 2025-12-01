@@ -87,7 +87,10 @@ def email_configuration_check(app_configs=None, **kwargs):
 
         return messages
 
-    if settings.EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
+    if settings.EMAIL_BACKEND in {
+        "django.core.mail.backends.smtp.EmailBackend",
+        "legalize_site.mail.SafeSMTPEmailBackend",
+    }:
         provider = _smtp_provider()
         if provider == "Brevo":
             env_var = "BREVO_SMTP_PASSWORD"

@@ -29,15 +29,18 @@ class EmailConfigurationCheckTests(SimpleTestCase):
         cases = [
             {"EMAIL_HOST": "smtp.sendgrid.net"},
             {"EMAIL_HOST": "smtp-relay.brevo.com"},
+            {"EMAIL_HOST": "smtp.custom", "EMAIL_BACKEND": "legalize_site.mail.SafeSMTPEmailBackend"},
         ]
 
         for overrides in cases:
-            with self.subTest(overrides=overrides), override_settings(
+            params = dict(
                 EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend",
                 EMAIL_HOST_PASSWORD="",
                 DEFAULT_FROM_EMAIL="notifications@example.com",
-                **overrides,
-            ):
+            )
+            params.update(overrides)
+
+            with self.subTest(overrides=overrides), override_settings(**params):
                 messages = run_checks(tags=["legalize_site"])
 
             self.assertEqual(len(messages), 1)
