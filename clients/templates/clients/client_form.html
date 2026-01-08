@@ -64,11 +64,31 @@
             <div class="card-header"><h5 class="mb-0">📁 {% translate "Детали дела" %}</h5></div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-6"><label class="form-label">{{ form.case_number.label }}</label>{{ form.case_number }}</div>
-                    <div class="col-md-6"><label class="form-label">{{ form.status.label }}</label>{{ form.status }}</div>
-                    <div class="col-md-6"><label class="form-label">{{ form.application_purpose.label }}</label>{{ form.application_purpose }}</div>
-                    <div class="col-md-6"><label class="form-label">{{ form.language.label }}</label>{{ form.language }}</div>
-                    <div class="col-12"><label class="form-label">{{ form.basis_of_stay.label }}</label>{{ form.basis_of_stay }}</div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.case_number.label }}</label>
+                        {{ form.case_number }}
+                        {% for error in form.case_number.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.status.label }}</label>
+                        {{ form.status }}
+                        {% for error in form.status.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.application_purpose.label }}</label>
+                        {{ form.application_purpose }}
+                        {% for error in form.application_purpose.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.language.label }}</label>
+                        {{ form.language }}
+                        {% for error in form.language.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">{{ form.basis_of_stay.label }}</label>
+                        {{ form.basis_of_stay }}
+                        {% for error in form.basis_of_stay.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -83,6 +103,7 @@
                             {{ form.legal_basis_end_date }}
                             <button class="btn btn-outline-secondary" type="button" id="toggle_legal_basis_end_date"><i class="bi bi-calendar3"></i></button>
                         </div>
+                        {% for error in form.legal_basis_end_date.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">{{ form.submission_date.label }}</label>
@@ -90,6 +111,7 @@
                             {{ form.submission_date }}
                             <button class="btn btn-outline-secondary" type="button" id="toggle_submission_date"><i class="bi bi-calendar3"></i></button>
                         </div>
+                        {% for error in form.submission_date.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">{{ form.fingerprints_date.label }}</label>
@@ -97,6 +119,7 @@
                             {{ form.fingerprints_date }}
                             <button class="btn btn-outline-secondary" type="button" id="toggle_fingerprints_date"><i class="bi bi-calendar3"></i></button>
                         </div>
+                        {% for error in form.fingerprints_date.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
                 </div>
             </div>
@@ -106,8 +129,16 @@
             <div class="card-header"><h5 class="mb-0">📝 {% translate "Дополнительно" %}</h5></div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-6"><label class="form-label">{{ form.employer_phone.label }}</label>{{ form.employer_phone }}</div>
-                    <div class="col-12"><label class="form-label">{{ form.notes.label }}</label>{{ form.notes }}</div>
+            <div class="col-md-6">
+              <label class="form-label">{{ form.employer_phone.label }}</label>
+              {{ form.employer_phone }}
+              {% for error in form.employer_phone.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-12">
+              <label class="form-label">{{ form.notes.label }}</label>
+              {{ form.notes }}
+              {% for error in form.notes.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+            </div>
                 </div>
             </div>
         </div>
@@ -219,9 +250,9 @@
             const button = document.getElementById(buttonId);
 
             if (input && button) {
-                input.placeholder = 'дд-мм-гггг';
+                input.placeholder = 'дд.мм.гггг';
                 const calendar = flatpickr(input, {
-                    dateFormat: "d-m-Y",
+                    dateFormat: "d.m.Y",
                     allowInput: true,
                     clickOpens: false
                 });
