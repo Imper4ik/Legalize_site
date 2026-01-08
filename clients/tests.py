@@ -248,6 +248,26 @@ class DocumentTypeConsistencyTests(TestCase):
         )
 
         self.assertEqual(doc.display_name, 'ZUS RCA')
+
+    def test_required_for_uses_default_label_when_custom_matches_translation(self):
+        if not self._can_compile_messages:
+            self.skipTest("msgfmt is not available to compile translations")
+
+        DocumentRequirement.objects.filter(application_purpose='work').delete()
+        with translation.override("ru"):
+            ru_label = str(DocumentType.PASSPORT.label)
+
+        DocumentRequirement.objects.create(
+            application_purpose='work',
+            document_type=DocumentType.PASSPORT,
+            custom_name=ru_label,
+            position=0,
+        )
+
+        self.assertEqual(
+            DocumentRequirement.required_for('work'),
+            [(DocumentType.PASSPORT.value, DocumentType.PASSPORT.label)],
+        )
 class DocumentRequirementTests(TestCase):
     def test_required_for_respects_database_overrides(self):
         DocumentRequirement.objects.filter(application_purpose='work').delete()
