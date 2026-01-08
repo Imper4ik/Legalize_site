@@ -154,12 +154,104 @@
     </div>
   {% endif %}
 
-  <div class="list-group">
-    {% for reminder in reminders %}
-      {% if reminder.id %}
-        {# Рендер отдельного элемента — используем твой существующий partial #}
-        {% include 'clients/partials/reminder_item.html' with reminder=reminder icon='fa-file-alt' %}
-      {% endif %}
+  <div class="accordion" id="document-reminders-accordion">
+    {% for group in grouped_reminders %}
+      <div class="accordion-item mb-2">
+        <h2 class="accordion-header" id="heading-{{ group.client.id }}">
+          <button class="accordion-button collapsed" type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#collapse-{{ group.client.id }}"
+                  aria-expanded="false"
+                  aria-controls="collapse-{{ group.client.id }}">
+            <div class="d-flex flex-wrap align-items-center gap-2 w-100">
+              <span class="fw-semibold">{{ group.client }}</span>
+              <span class="badge bg-info text-dark">
+                {% blocktrans with count=group.reminders|length %}Истекающих: {{ count }}{% endblocktrans %}
+              </span>
+              <span class="badge bg-secondary">
+                {% blocktrans with count=group.missing_documents|length %}Недостающих: {{ count }}{% endblocktrans %}
+              </span>
+            </div>
+          </button>
+        </h2>
+        <div id="collapse-{{ group.client.id }}"
+             class="accordion-collapse collapse"
+             aria-labelledby="heading-{{ group.client.id }}"
+             data-bs-parent="#document-reminders-accordion">
+          <div class="accordion-body">
+            <div class="d-flex flex-wrap gap-2 mb-3">
+              <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:client_detail' group.client.id %}">
+                {% translate "Открыть клиента" %}
+              </a>
+              <form action="{% url 'clients:send_document_reminder_email' group.client.id %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-primary">
+                  <i class="fas fa-envelope me-1"></i>{% translate "Отправить письмо" %}
+                </button>
+              </form>
+            </div>
+
+            <div class="mb-3">
+              <h6 class="text-uppercase text-muted mb-2">{% translate "Недостающие документы" %}</h6>
+              {% if group.missing_documents %}
+                <ul class="list-group list-group-flush">
+                  {% for doc in group.missing_documents %}
+                    <li class="list-group-item d-flex justify-content-between">
+                      <span>{{ doc.name }}</span>
+                      {% if doc.expiry_date %}
+                        <small class="text-muted">
+                          {% blocktrans with due=doc.expiry_date|date:"d.m.Y" %}Последнее истечение: {{ due }}{% endblocktrans %}
+                        </small>
+                      {% endif %}
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="text-muted mb-0">{% translate "Нет недостающих документов." %}</p>
+              {% endif %}
+            </div>
+
+            <div>
+              <h6 class="text-uppercase text-muted mb-2">{% translate "Истекающие документы" %}</h6>
+              {% if group.expiring_documents %}
+                <ul class="list-group list-group-flush">
+                  {% for item in group.expiring_documents %}
+                    <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                      <div>
+                        <div class="fw-semibold">
+                          {{ item.document.display_name|default:item.reminder.title }}
+                        </div>
+                        <small class="text-muted">
+                          {% blocktrans with due=item.reminder.due_date|date:"d.m.Y" %}К дата: {{ due }}{% endblocktrans %}
+                        </small>
+                      </div>
+                      <div class="d-flex flex-wrap gap-2">
+                        <form action="{% url 'clients:reminder_action' item.reminder.id %}" method="post" class="d-inline">
+                          {% csrf_token %}
+                          <input type="hidden" name="action" value="deactivate">
+                          <button type="submit" class="btn btn-sm btn-success">
+                            <i class="fas fa-check"></i> {% translate "Выполнено" %}
+                          </button>
+                        </form>
+                        <form action="{% url 'clients:reminder_action' item.reminder.id %}" method="post" class="d-inline">
+                          {% csrf_token %}
+                          <input type="hidden" name="action" value="delete">
+                          <button type="submit" class="btn btn-sm btn-outline-danger"
+                                  onclick="return confirm('{% translate "Вы уверены, что хотите безвозвратно удалить это напоминание?" %}');">
+                            <i class="fas fa-trash"></i> {% translate "Удалить" %}
+                          </button>
+                        </form>
+                      </div>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                <p class="text-muted mb-0">{% translate "Нет истекающих документов." %}</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
     {% empty %}
       <p class="text-muted mb-0">{% translate "Нет напоминаний по документам, соответствующих фильтрам." %}</p>
     {% endfor %}
