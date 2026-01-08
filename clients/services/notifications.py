@@ -69,9 +69,16 @@ def _get_staff_recipients() -> list[str]:
 
 
 def _get_pdf_font_path() -> Path | None:
+    configured_path = getattr(settings, "PDF_FONT_PATH", "")
+    if configured_path:
+        path = Path(configured_path)
+        if path.exists():
+            return path
     candidate_paths = [
         Path(settings.BASE_DIR) / "static" / "fonts" / "DejaVuSans.ttf",
         Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
+        Path("/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf"),
+        Path("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"),
     ]
     for path in candidate_paths:
         if path.exists():
