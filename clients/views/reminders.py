@@ -80,18 +80,13 @@ class DocumentReminderListView(ReminderListView):
                 {
                     'client': client,
                     'reminders': [],
-                    'expiring_documents': [],
+                    'documents': [],
                     'missing_documents': [],
                 },
             )
             group['reminders'].append(reminder)
             if reminder.document and reminder.document.expiry_date:
-                group['expiring_documents'].append(
-                    {
-                        'document': reminder.document,
-                        'reminder': reminder,
-                    }
-                )
+                group['documents'].append(reminder.document)
 
         for group in grouped.values():
             checklist = group['client'].get_document_checklist() or []
@@ -170,22 +165,11 @@ def send_document_reminder_email(request, client_id):
             .select_related('document')
         )
         documents = [reminder.document for reminder in reminders if reminder.document and reminder.document.expiry_date]
-        checklist = client.get_document_checklist() or []
-        has_missing = any(not item.get('is_uploaded') for item in checklist)
-
-        if documents:
-            sent = send_expiring_documents_email(client, documents)
-        elif has_missing:
-            sent = send_missing_documents_email(client)
-        else:
-            sent = 0
+        sent = send_expiring_documents_email(client, documents)
         if sent:
             messages.success(request, _("Отправили письмо клиенту по документам."))
         else:
-            messages.warning(
-                request,
-                _("Не удалось отправить письмо: нет email, истекающих или недостающих документов."),
-            )
+            messages.warning(request, _("Не удалось отправить письмо: нет email или документов с датой истечения."))
         return redirect('clients:document_reminder_list')
     messages.warning(request, _("Эту операцию можно выполнить только через кнопку отправки."))
     return redirect('clients:document_reminder_list')
