@@ -9,7 +9,7 @@ from legalize_site.env import load_env
 def main():
     """Run administrative tasks."""
     load_env()
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'legalize_site.settings')
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'legalize_site.settings.development')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
