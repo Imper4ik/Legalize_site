@@ -175,6 +175,9 @@ if WHITENOISE_AVAILABLE:
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
+# --- ШРИФТ ДЛЯ PDF-ОТЧЕТОВ ---
+PDF_FONT_PATH = os.getenv("PDF_FONT_PATH", "")
+
 # --- ДОПУСТИМЫЙ РАЗМЕР ЗАГРУЗОК ---
 MAX_UPLOAD_SIZE_MB = int(os.environ.get("MAX_UPLOAD_SIZE_MB", "20"))
 DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024
