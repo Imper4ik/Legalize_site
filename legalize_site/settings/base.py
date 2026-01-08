@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import importlib.util
 import os
 from urllib.parse import quote_plus
@@ -31,6 +33,16 @@ WHITENOISE_AVAILABLE = importlib.util.find_spec("whitenoise") is not None
 # --- БАЗОВЫЕ НАСТРОЙКИ ---
 SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-change-me")
 DEBUG = False
+
+
+def _derive_fernet_key(secret: str) -> str:
+    digest = hashlib.sha256(secret.encode("utf-8")).digest()
+    return base64.urlsafe_b64encode(digest).decode("utf-8")
+
+
+FERNET_KEYS = [key.strip() for key in os.environ.get("FERNET_KEYS", "").split(",") if key.strip()]
+if not FERNET_KEYS:
+    FERNET_KEYS = [_derive_fernet_key(SECRET_KEY)]
 
 # --- ПРИЛОЖЕНИЯ И MIDDLEWARE ---
 INSTALLED_APPS = [
@@ -238,6 +250,27 @@ ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]  # поля ре�
 LOGIN_URL = "account_login"
 LOGIN_REDIRECT_URL = reverse_lazy("clients:client_list")
 LOGOUT_REDIRECT_URL = reverse_lazy("account_login")
+
+LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "redact_pii": {
+            "()": "legalize_site.utils.logging.RedactPIIFilter",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "filters": ["redact_pii"],
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": LOG_LEVEL,
+    },
+}
 
 # Соц. вход через Google (по желанию)
 SOCIALACCOUNT_AUTO_SIGNUP = True
