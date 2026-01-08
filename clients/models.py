@@ -34,7 +34,11 @@ def translate_document_name(name: str, language: str | None = None) -> str:
         return gettext(name)
 
     with translation.override(lang):
-        return gettext(name)
+        translated = gettext(name)
+
+    if not translated or not str(translated).strip():
+        return str(name)
+    return translated
 
 
 class Client(models.Model):
@@ -238,7 +242,7 @@ class DocumentRequirement(models.Model):
         records = cls.objects.filter(application_purpose=purpose, is_required=True).order_by("position", "id")
         items: list[tuple[str, str]] = []
         for item in records:
-            if item.custom_name:
+            if item.custom_name and item.custom_name.strip():
                 items.append((item.document_type, item.custom_name))
                 continue
             if item.document_type in [choice.value for choice in DocumentType]:
