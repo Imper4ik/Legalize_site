@@ -17,6 +17,11 @@ def _label_for_document_type(code: str) -> str:
 
 
 class ClientForm(forms.ModelForm):
+    application_purpose = forms.ChoiceField(
+        label=_("Цель подачи"),
+        choices=[],
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
     # --- FIXED HERE ---
     # We explicitly define the date fields to make them not required
     # and to specify the correct date format from the calendar.
@@ -49,7 +54,19 @@ class ClientForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         submissions = list(Submission.objects.values_list('slug', 'name'))
         if submissions:
-            self.fields['application_purpose'].choices = submissions
+            choices = submissions
+        else:
+            choices = list(Client.APPLICATION_PURPOSE_CHOICES)
+
+        current_value = (
+            self.data.get(self.add_prefix('application_purpose'))
+            or self.initial.get('application_purpose')
+            or getattr(self.instance, 'application_purpose', None)
+        )
+        if current_value and current_value not in {value for value, _label in choices}:
+            choices.append((current_value, current_value))
+
+        self.fields['application_purpose'].choices = choices
 
     class Meta:
         model = Client
@@ -70,7 +87,6 @@ class ClientForm(forms.ModelForm):
             'birth_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд.мм.гггг'}),
             'passport_num': forms.TextInput(attrs={'class': 'form-control'}),
             'case_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'application_purpose': forms.Select(attrs={'class': 'form-select'}),
             'language': forms.Select(attrs={'class': 'form-select'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
             'basis_of_stay': forms.TextInput(attrs={'class': 'form-control'}),
