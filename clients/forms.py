@@ -23,26 +23,26 @@ class ClientForm(forms.ModelForm):
     legal_basis_end_date = forms.DateField(
         label="Дата окончания основания",
         required=False,
-        input_formats=['%d-%m-%Y'],
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'})
+        input_formats=['%d.%m.%Y', '%d-%m-%Y', '%Y-%m-%d'],
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд.мм.гггг'})
     )
     birth_date = forms.DateField(
         label="Дата рождения",
         required=False,
-        input_formats=['%d-%m-%Y'],
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'})
+        input_formats=['%d.%m.%Y', '%d-%m-%Y', '%Y-%m-%d'],
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд.мм.гггг'})
     )
     submission_date = forms.DateField(
         label="Дата подачи (Złożone)",
         required=False,
-        input_formats=['%d-%m-%Y'],
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'})
+        input_formats=['%d.%m.%Y', '%d-%m-%Y', '%Y-%m-%d'],
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд.мм.гггг'})
     )
     fingerprints_date = forms.DateField(
         label="Дата сдачи отпечатков",
         required=False,
-        input_formats=['%d-%m-%Y'],
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'})
+        input_formats=['%d.%m.%Y', '%d-%m-%Y', '%Y-%m-%d'],
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд.мм.гггг'})
     )
 
     def __init__(self, *args, **kwargs):
@@ -67,7 +67,7 @@ class ClientForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
             'citizenship': forms.TextInput(attrs={'class': 'form-control'}),
-            'birth_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'}),
+            'birth_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд.мм.гггг'}),
             'passport_num': forms.TextInput(attrs={'class': 'form-control'}),
             'case_number': forms.TextInput(attrs={'class': 'form-control'}),
             'application_purpose': forms.Select(attrs={'class': 'form-select'}),
