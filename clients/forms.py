@@ -49,16 +49,7 @@ class ClientForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         submissions = list(Submission.objects.values_list('slug', 'name'))
         if submissions:
-            choices = list(submissions)
-            current_value = self.initial.get('application_purpose')
-            if self.instance and self.instance.pk:
-                current_value = self.instance.application_purpose or current_value
-            if current_value and current_value not in {value for value, _ in choices}:
-                fallback_label = dict(Client.APPLICATION_PURPOSE_CHOICES).get(
-                    current_value, current_value
-                )
-                choices.append((current_value, fallback_label))
-            self.fields['application_purpose'].choices = choices
+            self.fields['application_purpose'].choices = submissions
 
     class Meta:
         model = Client
