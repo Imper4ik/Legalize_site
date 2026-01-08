@@ -71,7 +71,9 @@ class Client(models.Model):
     case_number = EncryptedTextField(blank=True, null=True, verbose_name=_("Номер дела"))
     case_number_hash = models.CharField(max_length=64, blank=True, null=True, db_index=True)
     application_purpose = models.CharField(
-        max_length=20, choices=APPLICATION_PURPOSE_CHOICES, default='study', verbose_name=_("Цель подачи")
+        max_length=64,
+        default='study',
+        verbose_name=_("Цель подачи"),
     )
     basis_of_stay = models.CharField(
         max_length=100, blank=True, null=True, verbose_name=_("Основание пребывания (виза, TRC и т.д.)")
