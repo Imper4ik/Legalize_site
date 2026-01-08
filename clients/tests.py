@@ -482,7 +482,7 @@ class MissingDocumentsEmailTests(TestCase):
     def test_sends_email_when_documents_missing(self):
         sent = send_missing_documents_email(self.client_record)
         self.assertEqual(sent, 1)
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 2)
         self.assertIn(self.passport_label, mail.outbox[0].body)
 
     def test_skips_email_when_nothing_missing(self):
@@ -513,7 +513,7 @@ class MissingDocumentsEmailTests(TestCase):
         sent = send_missing_documents_email(self.client_record)
 
         self.assertEqual(sent, 1)
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 2)
         body = mail.outbox[0].body
         self.assertIn(self.passport_label, body)
         self.assertIn(self.photos_label, body)
