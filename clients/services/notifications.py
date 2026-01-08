@@ -2,14 +2,17 @@
 from __future__ import annotations
 
 import logging
+from io import BytesIO
+from pathlib import Path
 from typing import Iterable
 
 from django.conf import settings
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage, send_mail
 from django.template.loader import select_template
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils.translation import override
+from PIL import Image, ImageDraw, ImageFont
 
 from clients.models import Client, Document
 
@@ -48,10 +51,116 @@ def _render_email_body(template_key: str, context: dict, language: str) -> str:
 
 def _send_email(subject: str, body: str, recipients: Iterable[str]) -> int:
     try:
-        return send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, list(recipients))
+        recipient_list = list(recipients)
+        sent_count = send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, recipient_list)
+        if sent_count:
+            _send_confirmation_email(subject, body, recipient_list)
+        return sent_count
     except Exception:  # pragma: no cover - defensive safeguard
         logger.exception("Failed to send notification email")
         return 0
+
+
+def _get_staff_recipients() -> list[str]:
+    reply_to = getattr(settings, "EMAIL_REPLY_TO", "")
+    default_from = getattr(settings, "DEFAULT_FROM_EMAIL", "")
+    recipients = [email for email in (reply_to, default_from) if email]
+    return list(dict.fromkeys(recipients))
+
+
+def _get_pdf_font_path() -> Path | None:
+    candidate_paths = [
+        Path(settings.BASE_DIR) / "static" / "fonts" / "DejaVuSans.ttf",
+        Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
+    ]
+    for path in candidate_paths:
+        if path.exists():
+            return path
+    return None
+
+
+def _wrap_text_lines(text: str, draw: ImageDraw.ImageDraw, font: ImageFont.FreeTypeFont, max_width: int) -> list[str]:
+    lines: list[str] = []
+    for paragraph in text.splitlines():
+        if not paragraph:
+            lines.append("")
+            continue
+        words = paragraph.split(" ")
+        current = ""
+        for word in words:
+            candidate = word if not current else f"{current} {word}"
+            if draw.textlength(candidate, font=font) <= max_width:
+                current = candidate
+            else:
+                if current:
+                    lines.append(current)
+                current = word
+        if current:
+            lines.append(current)
+    return lines
+
+
+def _render_email_pdf(text: str) -> bytes:
+    page_width, page_height = (1240, 1754)
+    margin = 80
+    font_path = _get_pdf_font_path()
+    font = ImageFont.truetype(str(font_path), 24) if font_path else ImageFont.load_default()
+    temp_image = Image.new("RGB", (1, 1), "white")
+    draw = ImageDraw.Draw(temp_image)
+    max_width = page_width - (margin * 2)
+    lines = _wrap_text_lines(text, draw, font, max_width)
+    line_height = font.getbbox("Hg")[3] - font.getbbox("Hg")[1] + 6
+    max_lines_per_page = max(1, (page_height - (margin * 2)) // line_height)
+
+    pages: list[Image.Image] = []
+    for start in range(0, len(lines), max_lines_per_page):
+        page = Image.new("RGB", (page_width, page_height), "white")
+        page_draw = ImageDraw.Draw(page)
+        y = margin
+        for line in lines[start:start + max_lines_per_page]:
+            page_draw.text((margin, y), line, font=font, fill="black")
+            y += line_height
+        pages.append(page)
+
+    buffer = BytesIO()
+    pages[0].save(buffer, format="PDF", save_all=True, append_images=pages[1:])
+    return buffer.getvalue()
+
+
+def _send_confirmation_email(subject: str, body: str, recipients: list[str]) -> None:
+    staff_recipients = _get_staff_recipients()
+    if not staff_recipients:
+        return
+
+    timestamp = timezone.localtime().strftime("%d.%m.%Y %H:%M")
+    recipient_list = ", ".join(recipients)
+    pdf_text = "\n".join(
+        [
+            _("Подтверждение отправки письма клиенту."),
+            _("Время отправки: %(timestamp)s") % {"timestamp": timestamp},
+            _("Кому: %(recipients)s") % {"recipients": recipient_list},
+            _("Тема: %(subject)s") % {"subject": subject},
+            "",
+            _("Текст письма:"),
+            body,
+        ]
+    )
+    pdf_bytes = _render_email_pdf(pdf_text)
+    confirmation_subject = _("Подтверждение отправки письма клиенту")
+    confirmation_body = _(
+        "Письмо клиенту было отправлено. Во вложении находится текст отправленного письма."
+    )
+    try:
+        message = EmailMessage(
+            confirmation_subject,
+            confirmation_body,
+            settings.DEFAULT_FROM_EMAIL,
+            staff_recipients,
+        )
+        message.attach("sent-email.pdf", pdf_bytes, "application/pdf")
+        message.send()
+    except Exception:  # pragma: no cover - defensive safeguard
+        logger.exception("Failed to send confirmation email")
 
 
 def send_required_documents_email(client: Client) -> int:
