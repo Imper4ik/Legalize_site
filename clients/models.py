@@ -9,6 +9,33 @@ from fernet_fields import EncryptedTextField
 from .constants import DOCUMENT_CHECKLIST, DocumentType
 
 
+def _normalize_document_label(value: str) -> str:
+    return " ".join(str(value).split()).casefold()
+
+
+def is_default_document_label(name: str, doc_type: str) -> bool:
+    if doc_type not in [choice.value for choice in DocumentType]:
+        return False
+    normalized = _normalize_document_label(name)
+    if not normalized:
+        return False
+
+    for language_code, _language_label in settings.LANGUAGES:
+        with translation.override(language_code):
+            candidate = _normalize_document_label(DocumentType(doc_type).label)
+        if candidate == normalized:
+            return True
+    return False
+
+
+def resolve_document_label(doc_type: str, custom_name: str | None = None, language: str | None = None) -> str:
+    if custom_name and custom_name.strip() and not is_default_document_label(custom_name, doc_type):
+        return custom_name
+    if doc_type in [choice.value for choice in DocumentType]:
+        return translate_document_name(DocumentType(doc_type).label, language)
+    return doc_type.replace('_', ' ').capitalize()
+
+
 def get_fallback_document_checklist(purpose: str, language: str | None = None):
     checklist_key = (purpose, language)
     if checklist_key in DOCUMENT_CHECKLIST:
@@ -204,11 +231,16 @@ class Document(models.Model):
             application_purpose=self.client.application_purpose,
             document_type=self.document_type,
         ).first()
-        if requirement and requirement.custom_name:
-            return requirement.custom_name
-        if self.document_type in [choice.value for choice in DocumentType]:
-            return translate_document_name(DocumentType(self.document_type).label, translation.get_language() or self.client.language)
-        return self.document_type.replace('_', ' ').capitalize()
+        if requirement:
+            return resolve_document_label(
+                requirement.document_type,
+                requirement.custom_name,
+                translation.get_language() or self.client.language,
+            )
+        return resolve_document_label(
+            self.document_type,
+            language=translation.get_language() or self.client.language,
+        )
 
     @property
     def is_standard_type(self) -> bool:
@@ -245,7 +277,13 @@ class DocumentRequirement(models.Model):
         items: list[tuple[str, str]] = []
         for item in records:
             if item.custom_name and item.custom_name.strip():
-                items.append((item.document_type, item.custom_name))
+                if item.document_type in [choice.value for choice in DocumentType] and is_default_document_label(
+                    item.custom_name,
+                    item.document_type,
+                ):
+                    items.append((item.document_type, DocumentType(item.document_type).label))
+                else:
+                    items.append((item.document_type, item.custom_name))
                 continue
             if item.document_type in [choice.value for choice in DocumentType]:
                 items.append((item.document_type, DocumentType(item.document_type).label))
