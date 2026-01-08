@@ -45,6 +45,7 @@ def is_default_document_label(name: str, doc_type: str) -> bool:
 
 def _select_custom_document_name(
     *,
+    doc_type: str,
     custom_name: str | None = None,
     custom_name_pl: str | None = None,
     custom_name_en: str | None = None,
@@ -61,6 +62,29 @@ def _select_custom_document_name(
         return localized_name
     if custom_name and custom_name.strip():
         return custom_name
+    if doc_type in DOCUMENT_TYPE_VALUES:
+        return translate_document_name(DocumentType(doc_type).label, language)
+    return doc_type.replace('_', ' ').capitalize()
+
+
+def resolve_document_label(
+    doc_type: str,
+    custom_name: str | None = None,
+    custom_name_pl: str | None = None,
+    custom_name_en: str | None = None,
+    custom_name_ru: str | None = None,
+    language: str | None = None,
+) -> str:
+    custom_label = _select_custom_document_name(
+        doc_type=doc_type,
+        custom_name=custom_name,
+        custom_name_pl=custom_name_pl,
+        custom_name_en=custom_name_en,
+        custom_name_ru=custom_name_ru,
+        language=language,
+    )
+    if custom_label:
+        return custom_label
     if doc_type in DOCUMENT_TYPE_VALUES:
         return translate_document_name(DocumentType(doc_type).label, language)
     return doc_type.replace('_', ' ').capitalize()
