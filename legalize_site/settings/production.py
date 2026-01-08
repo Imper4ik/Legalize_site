@@ -14,8 +14,6 @@ ALLOWED_HOSTS = [host for host in os.environ.get("ALLOWED_HOSTS", "").split(",")
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-if not ALLOWED_HOSTS:
-    ALLOWED_HOSTS.extend(["127.0.0.1", "localhost"])
 
 CSRF_TRUSTED_ORIGINS = [
     origin for origin in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",") if origin
