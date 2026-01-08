@@ -31,6 +31,7 @@ from clients.views.reminders import (
     PaymentReminderListView,
     reminder_action,
     run_update_reminders,
+    send_document_reminder_email,
 )
 
 __all__ = [
@@ -66,4 +67,5 @@ __all__ = [
     'PaymentReminderListView',
     'reminder_action',
     'run_update_reminders',
+    'send_document_reminder_email',
 ]
