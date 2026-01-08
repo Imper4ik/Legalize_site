@@ -11,4 +11,4 @@ whitenoise
 django-anymail[brevo,sendgrid]
 Pillow
 pytesseract
-
+django-fernet-fields
