@@ -1,4 +1,5 @@
 from django import forms
+from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 from django.utils.crypto import get_random_string
 from django.utils.text import slugify
@@ -6,7 +7,7 @@ from django.utils.text import slugify
 from clients.services.calculator import CURRENCY_EUR, CURRENCY_PLN
 from .constants import DocumentType
 from submissions.models import Submission
-from .models import Client, Document, DocumentRequirement, Payment, get_fallback_document_checklist
+from .models import Client, Document, DocumentRequirement, Payment, get_fallback_document_checklist, resolve_document_label
 
 
 def _label_for_document_type(code: str) -> str:
@@ -203,7 +204,11 @@ class DocumentChecklistForm(forms.Form):
 
         if existing_requirements:
             for requirement in existing_requirements:
-                label = requirement.custom_name or self._label_for_code(requirement.document_type)
+                label = resolve_document_label(
+                    requirement.document_type,
+                    requirement.custom_name,
+                    translation.get_language(),
+                )
                 choices.append((requirement.document_type, label))
         else:
             fallback_docs = get_fallback_document_checklist(self.purpose)

@@ -70,6 +70,7 @@ def _get_staff_recipients() -> list[str]:
 
 def _get_pdf_font_path() -> Path | None:
     candidate_paths = [
+        Path(settings.BASE_DIR) / "static" / "fonts" / "DejaVuSans.ttf",
         Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
     ]
     for path in candidate_paths:
