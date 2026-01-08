@@ -28,9 +28,44 @@ def is_default_document_label(name: str, doc_type: str) -> bool:
     return False
 
 
-def resolve_document_label(doc_type: str, custom_name: str | None = None, language: str | None = None) -> str:
-    if custom_name and custom_name.strip() and not is_default_document_label(custom_name, doc_type):
+def _select_custom_document_name(
+    *,
+    custom_name: str | None = None,
+    custom_name_pl: str | None = None,
+    custom_name_en: str | None = None,
+    custom_name_ru: str | None = None,
+    language: str | None = None,
+) -> str | None:
+    lang = (language or translation.get_language() or "").split("-")[0].lower()
+    localized_name = {
+        "pl": custom_name_pl,
+        "en": custom_name_en,
+        "ru": custom_name_ru,
+    }.get(lang)
+    if localized_name and localized_name.strip():
+        return localized_name
+    if custom_name and custom_name.strip():
         return custom_name
+    return None
+
+
+def resolve_document_label(
+    doc_type: str,
+    custom_name: str | None = None,
+    custom_name_pl: str | None = None,
+    custom_name_en: str | None = None,
+    custom_name_ru: str | None = None,
+    language: str | None = None,
+) -> str:
+    resolved_custom_name = _select_custom_document_name(
+        custom_name=custom_name,
+        custom_name_pl=custom_name_pl,
+        custom_name_en=custom_name_en,
+        custom_name_ru=custom_name_ru,
+        language=language,
+    )
+    if resolved_custom_name and not is_default_document_label(resolved_custom_name, doc_type):
+        return resolved_custom_name
     if doc_type in [choice.value for choice in DocumentType]:
         return translate_document_name(DocumentType(doc_type).label, language)
     return doc_type.replace('_', ' ').capitalize()
@@ -165,7 +200,8 @@ class Client(models.Model):
         """Возвращает чеклист документов для клиента."""
         # Клиентский портал больше не используется, поэтому ограничение
         # на доступ к чеклисту было снято. Сотрудники видят список всегда.
-        required_docs = DocumentRequirement.required_for(self.application_purpose)
+        current_language = translation.get_language() or self.language
+        required_docs = DocumentRequirement.required_for(self.application_purpose, current_language)
         has_custom_checklist = DocumentRequirement.objects.filter(
             application_purpose=self.application_purpose
         ).exists()
@@ -184,8 +220,6 @@ class Client(models.Model):
             docs_map[doc.document_type].append(doc)
 
         status_list = []
-        current_language = translation.get_language() or self.language
-
         for code, name in required_docs:
             translated_name = translate_document_name(name, current_language)
             documents = docs_map.get(code, [])
@@ -199,13 +233,14 @@ class Client(models.Model):
 
     def get_document_name_by_code(self, doc_code):
         """Возвращает читаемое имя документа по его коду."""
-        required_docs = DocumentRequirement.required_for(self.application_purpose)
+        current_language = translation.get_language() or self.language
+        required_docs = DocumentRequirement.required_for(self.application_purpose, current_language)
         if not required_docs:
             required_docs = get_fallback_document_checklist(self.application_purpose, self.language)
 
         for code, name in required_docs:
             if code == doc_code:
-                return translate_document_name(name, translation.get_language() or self.language)
+                return translate_document_name(name, current_language)
         return doc_code.replace('_', ' ').capitalize()
 
 
@@ -235,6 +270,9 @@ class Document(models.Model):
             return resolve_document_label(
                 requirement.document_type,
                 requirement.custom_name,
+                requirement.custom_name_pl,
+                requirement.custom_name_en,
+                requirement.custom_name_ru,
                 translation.get_language() or self.client.language,
             )
         return resolve_document_label(
@@ -259,6 +297,15 @@ class DocumentRequirement(models.Model):
         verbose_name=_("Код типа документа"),
     )
     custom_name = models.CharField(max_length=500, blank=True, null=True, verbose_name=_("Название документа"))
+    custom_name_pl = models.CharField(
+        max_length=500, blank=True, null=True, verbose_name=_("Название документа (PL)")
+    )
+    custom_name_en = models.CharField(
+        max_length=500, blank=True, null=True, verbose_name=_("Название документа (EN)")
+    )
+    custom_name_ru = models.CharField(
+        max_length=500, blank=True, null=True, verbose_name=_("Название документа (RU)")
+    )
     position = models.PositiveIntegerField(default=0, verbose_name=_("Порядок отображения"))
     is_required = models.BooleanField(default=True, verbose_name=_("Обязательный документ"))
 
@@ -272,23 +319,19 @@ class DocumentRequirement(models.Model):
         return f"{self.application_purpose}: {self.custom_name or self.document_type}"
 
     @classmethod
-    def required_for(cls, purpose: str) -> list[tuple[str, str]]:
+    def required_for(cls, purpose: str, language: str | None = None) -> list[tuple[str, str]]:
         records = cls.objects.filter(application_purpose=purpose, is_required=True).order_by("position", "id")
         items: list[tuple[str, str]] = []
         for item in records:
-            if item.custom_name and item.custom_name.strip():
-                if item.document_type in [choice.value for choice in DocumentType] and is_default_document_label(
-                    item.custom_name,
-                    item.document_type,
-                ):
-                    items.append((item.document_type, DocumentType(item.document_type).label))
-                else:
-                    items.append((item.document_type, item.custom_name))
-                continue
-            if item.document_type in [choice.value for choice in DocumentType]:
-                items.append((item.document_type, DocumentType(item.document_type).label))
-            else:
-                items.append((item.document_type, item.document_type.replace('_', ' ').capitalize()))
+            label = resolve_document_label(
+                item.document_type,
+                item.custom_name,
+                item.custom_name_pl,
+                item.custom_name_en,
+                item.custom_name_ru,
+                language,
+            )
+            items.append((item.document_type, label))
         return items
 
 
