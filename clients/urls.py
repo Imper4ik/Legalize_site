@@ -53,6 +53,11 @@ urlpatterns = [
     # Общие URL для действий с напоминаниями
     path('reminders/run-update/', views.run_update_reminders, name='run_update_reminders'),
     path('reminder/<int:reminder_id>/action/', views.reminder_action, name='reminder_action'),
+    path(
+        'reminders/documents/<int:client_id>/send-email/',
+        views.send_document_reminder_email,
+        name='send_document_reminder_email',
+    ),
 
     # URL для калькулятора
     path('calculator/', views.calculator_view, name='calculator'),
