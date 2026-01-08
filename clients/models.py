@@ -8,24 +8,39 @@ from django.conf import settings
 from fernet_fields import EncryptedTextField
 from .constants import DOCUMENT_CHECKLIST, DocumentType
 
+DOCUMENT_TYPE_VALUES = {choice.value for choice in DocumentType}
+DOCUMENT_LABEL_ALIASES: dict[str, list[str]] = {
+    # Дополнительные пользовательские варианты названий документов.
+    # Можно расширять при появлении новых эквивалентов.
+}
+
 
 def _normalize_document_label(value: str) -> str:
     return " ".join(str(value).split()).casefold()
 
 
+def _document_label_variants(doc_type: str) -> set[str]:
+    if doc_type not in DOCUMENT_TYPE_VALUES:
+        return set()
+    variants = set()
+    language_codes = {code for code, _language_label in settings.LANGUAGES}
+    language_codes.add("ru")
+    for language_code in language_codes:
+        with translation.override(language_code):
+            variants.add(_normalize_document_label(DocumentType(doc_type).label))
+    variants.add(_normalize_document_label(DocumentType(doc_type).label))
+    for alias in DOCUMENT_LABEL_ALIASES.get(doc_type, []):
+        variants.add(_normalize_document_label(alias))
+    return {variant for variant in variants if variant}
+
+
 def is_default_document_label(name: str, doc_type: str) -> bool:
-    if doc_type not in [choice.value for choice in DocumentType]:
+    if doc_type not in DOCUMENT_TYPE_VALUES:
         return False
     normalized = _normalize_document_label(name)
     if not normalized:
         return False
-
-    for language_code, _language_label in settings.LANGUAGES:
-        with translation.override(language_code):
-            candidate = _normalize_document_label(DocumentType(doc_type).label)
-        if candidate == normalized:
-            return True
-    return False
+    return normalized in _document_label_variants(doc_type)
 
 
 def _select_custom_document_name(
@@ -46,27 +61,7 @@ def _select_custom_document_name(
         return localized_name
     if custom_name and custom_name.strip():
         return custom_name
-    return None
-
-
-def resolve_document_label(
-    doc_type: str,
-    custom_name: str | None = None,
-    custom_name_pl: str | None = None,
-    custom_name_en: str | None = None,
-    custom_name_ru: str | None = None,
-    language: str | None = None,
-) -> str:
-    resolved_custom_name = _select_custom_document_name(
-        custom_name=custom_name,
-        custom_name_pl=custom_name_pl,
-        custom_name_en=custom_name_en,
-        custom_name_ru=custom_name_ru,
-        language=language,
-    )
-    if resolved_custom_name and not is_default_document_label(resolved_custom_name, doc_type):
-        return resolved_custom_name
-    if doc_type in [choice.value for choice in DocumentType]:
+    if doc_type in DOCUMENT_TYPE_VALUES:
         return translate_document_name(DocumentType(doc_type).label, language)
     return doc_type.replace('_', ' ').capitalize()
 
@@ -284,7 +279,7 @@ class Document(models.Model):
     def is_standard_type(self) -> bool:
         """Возвращает True, если документ относится к стандартным типам чеклиста."""
 
-        return self.document_type in [choice.value for choice in DocumentType]
+        return self.document_type in DOCUMENT_TYPE_VALUES
 
 
 class DocumentRequirement(models.Model):
@@ -323,15 +318,19 @@ class DocumentRequirement(models.Model):
         records = cls.objects.filter(application_purpose=purpose, is_required=True).order_by("position", "id")
         items: list[tuple[str, str]] = []
         for item in records:
-            label = resolve_document_label(
-                item.document_type,
-                item.custom_name,
-                item.custom_name_pl,
-                item.custom_name_en,
-                item.custom_name_ru,
-                language,
-            )
-            items.append((item.document_type, label))
+            if item.custom_name and item.custom_name.strip():
+                if item.document_type in DOCUMENT_TYPE_VALUES and is_default_document_label(
+                    item.custom_name,
+                    item.document_type,
+                ):
+                    items.append((item.document_type, DocumentType(item.document_type).label))
+                else:
+                    items.append((item.document_type, item.custom_name))
+                continue
+            if item.document_type in DOCUMENT_TYPE_VALUES:
+                items.append((item.document_type, DocumentType(item.document_type).label))
+            else:
+                items.append((item.document_type, item.document_type.replace('_', ' ').capitalize()))
         return items
 
 
