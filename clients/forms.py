@@ -142,9 +142,12 @@ class DocumentRequirementEditForm(forms.ModelForm):
 
     class Meta:
         model = DocumentRequirement
-        fields = ['custom_name', 'is_required']
+        fields = ['custom_name', 'custom_name_pl', 'custom_name_en', 'custom_name_ru', 'is_required']
         widgets = {
             'custom_name': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
+            'custom_name_pl': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
+            'custom_name_en': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
+            'custom_name_ru': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
             'is_required': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
@@ -207,6 +210,9 @@ class DocumentChecklistForm(forms.Form):
                 label = resolve_document_label(
                     requirement.document_type,
                     requirement.custom_name,
+                    requirement.custom_name_pl,
+                    requirement.custom_name_en,
+                    requirement.custom_name_ru,
                     translation.get_language(),
                 )
                 choices.append((requirement.document_type, label))
