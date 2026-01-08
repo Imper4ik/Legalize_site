@@ -12,6 +12,7 @@ DEBUG = env_flag("DEBUG", "False")
 
 ALLOWED_HOSTS = [host for host in os.environ.get("ALLOWED_HOSTS", "").split(",") if host]
 ALLOWED_HOSTS.append("legalize-site-production-740f.up.railway.app")
+ALLOWED_HOSTS.append(".up.railway.app")
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
