@@ -234,6 +234,18 @@
                 <label for="{{ edit_form.custom_name.id_for_label }}" class="form-label">{% translate "Название документа" %}</label>
                 {{ edit_form.custom_name }}
               </div>
+              <div class="mb-3">
+                <label for="{{ edit_form.custom_name_pl.id_for_label }}" class="form-label">{% translate "Название документа (PL)" %}</label>
+                {{ edit_form.custom_name_pl }}
+              </div>
+              <div class="mb-3">
+                <label for="{{ edit_form.custom_name_en.id_for_label }}" class="form-label">{% translate "Название документа (EN)" %}</label>
+                {{ edit_form.custom_name_en }}
+              </div>
+              <div class="mb-3">
+                <label for="{{ edit_form.custom_name_ru.id_for_label }}" class="form-label">{% translate "Название документа (RU)" %}</label>
+                {{ edit_form.custom_name_ru }}
+              </div>
               <div class="form-check">
                 {{ edit_form.is_required }}
                 <label class="form-check-label" for="{{ edit_form.is_required.id_for_label }}">{% translate "Обязательный документ" %}</label>
