@@ -1,8 +1,11 @@
+import hashlib
+
 from django.db import models
 from django.urls import reverse
 from django.utils import translation
 from django.utils.translation import gettext, gettext_lazy as _
 from django.conf import settings
+from fernet_fields import EncryptedTextField
 from .constants import DOCUMENT_CHECKLIST, DocumentType
 
 
@@ -31,7 +34,11 @@ def translate_document_name(name: str, language: str | None = None) -> str:
         return gettext(name)
 
     with translation.override(lang):
-        return gettext(name)
+        translated = gettext(name)
+
+    if not translated or not str(translated).strip():
+        return str(name)
+    return translated
 
 
 class Client(models.Model):
@@ -60,8 +67,9 @@ class Client(models.Model):
     birth_date = models.DateField(null=True, blank=True, verbose_name=_("Дата рождения"))
     phone = models.CharField(max_length=20, verbose_name=_("Телефон"))
     email = models.EmailField(verbose_name="Email", unique=True)
-    passport_num = models.CharField(max_length=50, null=True, blank=True, verbose_name=_("Номер паспорта"))
-    case_number = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("Номер дела"))
+    passport_num = EncryptedTextField(null=True, blank=True, verbose_name=_("Номер паспорта"))
+    case_number = EncryptedTextField(blank=True, null=True, verbose_name=_("Номер дела"))
+    case_number_hash = models.CharField(max_length=64, blank=True, null=True, db_index=True)
     application_purpose = models.CharField(
         max_length=20, choices=APPLICATION_PURPOSE_CHOICES, default='study', verbose_name=_("Цель подачи")
     )
@@ -83,6 +91,29 @@ class Client(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+    @staticmethod
+    def normalize_case_number(case_number: str) -> str:
+        return case_number.strip().upper().replace(" ", "")
+
+    @classmethod
+    def hash_case_number(cls, case_number: str) -> str:
+        normalized = cls.normalize_case_number(case_number)
+        return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+
+    def save(self, *args, **kwargs):
+        if self.case_number:
+            self.case_number_hash = self.hash_case_number(self.case_number)
+        else:
+            self.case_number_hash = None
+
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None and "case_number" in update_fields:
+            update_fields = set(update_fields)
+            update_fields.add("case_number_hash")
+            kwargs["update_fields"] = list(update_fields)
+
+        super().save(*args, **kwargs)
 
     def get_absolute_url(self):
         return reverse('clients:client_detail', kwargs={'pk': self.id})
@@ -211,7 +242,7 @@ class DocumentRequirement(models.Model):
         records = cls.objects.filter(application_purpose=purpose, is_required=True).order_by("position", "id")
         items: list[tuple[str, str]] = []
         for item in records:
-            if item.custom_name:
+            if item.custom_name and item.custom_name.strip():
                 items.append((item.document_type, item.custom_name))
                 continue
             if item.document_type in [choice.value for choice in DocumentType]:
