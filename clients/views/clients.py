@@ -133,6 +133,13 @@ class ClientUpdateView(StaffRequiredMixin, UpdateView):
 
         return response
 
+    def form_invalid(self, form):
+        messages.error(
+            self.request,
+            "Не удалось сохранить клиента. Проверьте выделенные поля и попробуйте снова.",
+        )
+        return super().form_invalid(form)
+
 
 class ClientDeleteView(StaffRequiredMixin, DeleteView):
     model = Client
