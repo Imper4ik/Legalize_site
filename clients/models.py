@@ -87,6 +87,20 @@ class Client(models.Model):
     def get_absolute_url(self):
         return reverse('clients:client_detail', kwargs={'pk': self.id})
 
+    def get_application_purpose_display(self):
+        from submissions.models import Submission
+
+        if self.application_purpose:
+            submission_name = Submission.objects.filter(
+                slug=self.application_purpose
+            ).values_list('name', flat=True).first()
+            if submission_name:
+                return submission_name
+
+        return dict(self.APPLICATION_PURPOSE_CHOICES).get(
+            self.application_purpose, self.application_purpose or ''
+        )
+
     def get_document_checklist(self):
         """Возвращает чеклист документов для клиента."""
         # Клиентский портал больше не используется, поэтому ограничение

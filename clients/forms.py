@@ -5,6 +5,7 @@ from django.utils.text import slugify
 
 from clients.services.calculator import CURRENCY_EUR, CURRENCY_PLN
 from .constants import DocumentType
+from submissions.models import Submission
 from .models import Client, Document, DocumentRequirement, Payment, get_fallback_document_checklist
 
 
@@ -43,6 +44,12 @@ class ClientForm(forms.ModelForm):
         input_formats=['%d-%m-%Y'],
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'})
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        submissions = list(Submission.objects.values_list('slug', 'name'))
+        if submissions:
+            self.fields['application_purpose'].choices = submissions
 
     class Meta:
         model = Client
