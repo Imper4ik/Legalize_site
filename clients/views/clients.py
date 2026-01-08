@@ -47,9 +47,10 @@ class ClientListView(StaffRequiredMixin, ListView):
         queryset = Client.objects.filter(Q(user__is_staff=False) | Q(user__isnull=True))
         query = self.request.GET.get('q', '')
         if query:
+            case_number_hash = Client.hash_case_number(query)
             return queryset.filter(
                 Q(first_name__icontains=query) | Q(last_name__icontains=query) |
-                Q(email__icontains=query) | Q(phone__icontains=query) | Q(case_number__icontains=query)
+                Q(email__icontains=query) | Q(phone__icontains=query) | Q(case_number_hash=case_number_hash)
             ).distinct().order_by('-created_at')
         return queryset.order_by('-created_at')
 
