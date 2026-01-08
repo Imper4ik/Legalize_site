@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections import OrderedDict
+
 from django.contrib import messages
 from django.core.management import call_command
 from django.shortcuts import get_object_or_404, redirect
@@ -69,7 +71,41 @@ class DocumentReminderListView(ReminderListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['total_reminders_count'] = context['reminders_count']
+        reminders = list(context['reminders'])
+        grouped = OrderedDict()
+        for reminder in reminders:
+            client = reminder.client
+            group = grouped.setdefault(
+                client.id,
+                {
+                    'client': client,
+                    'reminders': [],
+                    'documents': [],
+                    'missing_documents': [],
+                },
+            )
+            group['reminders'].append(reminder)
+            if reminder.document and reminder.document.expiry_date:
+                group['documents'].append(reminder.document)
+
+        for group in grouped.values():
+            checklist = group['client'].get_document_checklist() or []
+            group['missing_documents'] = [
+                {
+                    'name': item.get('name'),
+                    'expiry_date': getattr((item.get('documents') or [None])[0], 'expiry_date', None),
+                }
+                for item in checklist
+                if not item.get('is_uploaded')
+            ]
+
+        context.update(
+            {
+                'grouped_reminders': list(grouped.values()),
+                'reminders_count': len(grouped),
+                'total_reminders_count': len(reminders),
+            }
+        )
         return context
 
 
@@ -117,4 +153,23 @@ def reminder_action(request, reminder_id):
                 messages.success(request, _("Отправили письмо клиенту об истекающем документе."))
             else:
                 messages.warning(request, _("Не удалось отправить письмо: нет email или даты истечения."))
+    return redirect('clients:document_reminder_list')
+
+
+@staff_required_view
+def send_document_reminder_email(request, client_id):
+    if request.method == 'POST':
+        client = get_object_or_404(Client, pk=client_id)
+        reminders = (
+            Reminder.objects.filter(client=client, reminder_type='document', is_active=True)
+            .select_related('document')
+        )
+        documents = [reminder.document for reminder in reminders if reminder.document and reminder.document.expiry_date]
+        sent = send_expiring_documents_email(client, documents)
+        if sent:
+            messages.success(request, _("Отправили письмо клиенту по документам."))
+        else:
+            messages.warning(request, _("Не удалось отправить письмо: нет email или документов с датой истечения."))
+        return redirect('clients:document_reminder_list')
+    messages.warning(request, _("Эту операцию можно выполнить только через кнопку отправки."))
     return redirect('clients:document_reminder_list')
