@@ -10,7 +10,7 @@ services:
           name: legalize-site-postgres
           property: connectionString
       - key: DJANGO_SETTINGS_MODULE
-        value: legalize_site.settings
+        value: legalize_site.settings.production
       - key: PYTHON_VERSION
         value: 3.12.6
 
