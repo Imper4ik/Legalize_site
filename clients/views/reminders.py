@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from datetime import timedelta
 
 from django.contrib import messages
 from django.core.management import call_command
 from django.shortcuts import get_object_or_404, redirect
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic import ListView
@@ -74,6 +76,8 @@ class DocumentReminderListView(ReminderListView):
         context = super().get_context_data(**kwargs)
         reminders = list(context['reminders'])
         grouped = OrderedDict()
+        today = timezone.localdate()
+        soon_cutoff = today + timedelta(days=3)
         for reminder in reminders:
             client = reminder.client
             group = grouped.setdefault(
@@ -83,11 +87,22 @@ class DocumentReminderListView(ReminderListView):
                     'reminders': [],
                     'documents': [],
                     'missing_documents': [],
+                    'expired_count': 0,
+                    'soon_count': 0,
+                    'ok_count': 0,
+                    'status_class': 'success',
                 },
             )
             group['reminders'].append(reminder)
             if reminder.document and reminder.document.expiry_date:
                 group['documents'].append(reminder.document)
+            if reminder.due_date:
+                if reminder.due_date < today:
+                    group['expired_count'] += 1
+                elif reminder.due_date < soon_cutoff:
+                    group['soon_count'] += 1
+                else:
+                    group['ok_count'] += 1
 
         for group in grouped.values():
             checklist = group['client'].get_document_checklist() or []
@@ -99,6 +114,14 @@ class DocumentReminderListView(ReminderListView):
                 for item in checklist
                 if not item.get('is_uploaded')
             ]
+            if group['expired_count']:
+                group['status_class'] = 'danger'
+            elif group['soon_count']:
+                group['status_class'] = 'warning'
+            elif group['missing_documents']:
+                group['status_class'] = 'secondary'
+            else:
+                group['status_class'] = 'success'
 
         context.update(
             {

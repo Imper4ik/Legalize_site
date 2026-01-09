@@ -3,7 +3,7 @@
 {% load static i18n %}
 
 {% block title %}
-  {{ title|default:_("Напоминания") }}
+  {{ title|default:_("Напоминания по документам") }}
 {% endblock %}
 
 {% block page_header %}
@@ -11,7 +11,7 @@
   <div>
     <h1 class="h3 mb-1">
       <i class="fas fa-bell me-2 text-warning"></i>
-      {{ title|default:_("Напоминания") }}
+      {{ title|default:_("Напоминания по документам") }}
     </h1>
     <div class="text-muted">
       {% translate "Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и периодам" %}
@@ -94,6 +94,21 @@
       <span class="count-badge">{{ reminders_count }}</span>
     </h4>
   </div>
+  <div class="d-flex flex-wrap align-items-center gap-3 text-muted mb-3">
+    <span class="d-inline-flex align-items-center gap-1">
+      <i class="fas fa-check-circle text-success"></i>{% translate "Все хорошо" %}
+    </span>
+    <span class="d-inline-flex align-items-center gap-1">
+      <i class="fas fa-exclamation-triangle text-warning"></i>
+      {% translate "Скоро истекает (в течение 3 дней)" %}
+    </span>
+    <span class="d-inline-flex align-items-center gap-1">
+      <i class="fas fa-times-circle text-danger"></i>{% translate "Истекло" %}
+    </span>
+    <span class="d-inline-flex align-items-center gap-1">
+      <i class="fas fa-ban text-secondary"></i>{% translate "Не донесены документы" %}
+    </span>
+  </div>
 
   <div class="card filters-card card-body mb-4">
     <form method="get" action="#documents-section" class="row g-3 align-items-end">
@@ -154,7 +169,18 @@
                   aria-expanded="false"
                   aria-controls="collapse-{{ group.client.id }}">
             <div class="d-flex flex-wrap align-items-center gap-2 w-100">
-              <span class="fw-semibold">{{ group.client }}</span>
+              <span class="fw-semibold d-inline-flex align-items-center gap-2">
+                {% if group.status_class == 'danger' %}
+                  <i class="fas fa-times-circle text-danger"></i>
+                {% elif group.status_class == 'warning' %}
+                  <i class="fas fa-exclamation-triangle text-warning"></i>
+                {% elif group.status_class == 'secondary' %}
+                  <i class="fas fa-ban text-secondary"></i>
+                {% else %}
+                  <i class="fas fa-check-circle text-success"></i>
+                {% endif %}
+                {{ group.client }}
+              </span>
               <span class="badge bg-info text-dark">
                 {% blocktrans with count=group.reminders|length %}Истекающих: {{ count }}{% endblocktrans %}
               </span>

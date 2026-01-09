@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import timedelta
 from io import BytesIO
 from pathlib import Path
 from typing import Iterable
@@ -305,9 +306,33 @@ def send_expiring_documents_email(client: Client, documents: list[Document]) -> 
             }
         )
 
+    today = timezone.localdate()
+    soon_days = 3
+    soon_cutoff = today + timedelta(days=soon_days)
+    expired_documents = []
+    expiring_documents = []
+    for document in sorted(documents, key=lambda doc: doc.expiry_date or today):
+        if not document.expiry_date:
+            continue
+        if document.expiry_date < today:
+            expired_documents.append(document)
+        else:
+            expiring_documents.append(document)
+
+    expiring_soon_documents = [
+        document for document in expiring_documents if document.expiry_date and document.expiry_date <= soon_cutoff
+    ]
+    expiring_later_documents = [
+        document for document in expiring_documents if document.expiry_date and document.expiry_date > soon_cutoff
+    ]
+
     context = {
         "client": client,
-        "documents": sorted(documents, key=lambda doc: doc.expiry_date or timezone.localdate()),
+        "today": today,
+        "soon_days": soon_days,
+        "expired_documents": expired_documents,
+        "expiring_soon_documents": expiring_soon_documents,
+        "expiring_later_documents": expiring_later_documents,
         "missing_documents": missing_documents,
     }
     subject = _get_subject("expiring_documents", language)
