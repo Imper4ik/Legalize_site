@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.core.management import call_command
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext as _
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic import ListView
 
 from clients.models import Client, Reminder
@@ -153,6 +154,9 @@ def reminder_action(request, reminder_id):
                 messages.success(request, _("Отправили письмо клиенту об истекающем документе."))
             else:
                 messages.warning(request, _("Не удалось отправить письмо: нет email или даты истечения."))
+    next_url = request.POST.get('next')
+    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        return redirect(next_url)
     return redirect('clients:document_reminder_list')
 
 
