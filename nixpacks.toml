@@ -1,6 +1,6 @@
 [phases.setup]
 # Use the system Python provided by Railway's Nixpacks
-nixPkgs = ["python312", "pip", "gettext", "dejavu_fonts"]
+nixPkgs = ["python312", "pip", "gettext", "dejavu_fonts", "nix"]
 
 [phases.install]
 cmds = [
