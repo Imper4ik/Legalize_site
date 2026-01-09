@@ -1,27 +1,27 @@
 {{ client.first_name }} {{ client.last_name }},
 
-Ниже собрана информация по вашим документам:
-
-{% if expired_documents %}
-❌ Истекли:
-{% for document in expired_documents %}- {{ document.display_name }} (действителен до {{ document.expiry_date|date:"d.m.Y" }})
+{% if valid_documents %}
+✅ Всё хорошо:
+{% for document in valid_documents %}- {{ document.display_name }} (действителен до {{ document.expiry_date|date:"d.m.Y" }})
 {% endfor %}
 {% endif %}
 
 {% if expiring_soon_documents %}
-⚠️ Скоро истекают (в течение {{ soon_days }} дней):
+⚠️ Скоро истекает (до {{ cutoff|date:"d.m.Y" }}):
 {% for document in expiring_soon_documents %}- {{ document.display_name }} (действителен до {{ document.expiry_date|date:"d.m.Y" }})
 {% endfor %}
+Пожалуйста, подготовьте обновлённые версии и отправьте их нам в ответ на это письмо, чтобы избежать задержек.
 {% endif %}
 
-{% if expiring_later_documents %}
-✅ Истекают позже:
-{% for document in expiring_later_documents %}- {{ document.display_name }} (действителен до {{ document.expiry_date|date:"d.m.Y" }})
+{% if expired_documents %}
+❌ Истекло:
+{% for document in expired_documents %}- {{ document.display_name }} (истёк {{ document.expiry_date|date:"d.m.Y" }})
 {% endfor %}
+Пожалуйста, пришлите актуальные версии документов как можно скорее.
 {% endif %}
 
 {% if missing_documents %}
-📄 Не донесены документы:
+📄 Отсутствует (не донесён):
 {% for document in missing_documents %}- {{ document.name }}{% if document.expiry_date %} (действителен до {{ document.expiry_date|date:"d.m.Y" }}){% endif %}
 {% endfor %}
 {% endif %}

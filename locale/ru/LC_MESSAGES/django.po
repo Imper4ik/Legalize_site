@@ -585,11 +585,18 @@ msgstr "Удалить"
 msgid "Клиенты не найдены."
 msgstr "Клиенты не найдены."
 
-#: clients/templates/clients/document_reminder_list.html:6
-#: clients/templates/clients/document_reminder_list.html:14
-#: templates/account/signup.html:63 templates/base.html:187
+#: templates/account/signup.html:63
 msgid "Напоминания"
 msgstr "Напоминания"
+
+#: clients/templates/clients/document_reminder_list.html:6
+#: clients/templates/clients/document_reminder_list.html:14
+#: clients/templates/clients/document_reminder_list.html:93
+#: clients/views/reminders.py:68
+#: legalize_site/templates/base.html:210
+#: templates/base.html:63
+msgid "Напоминания по документам"
+msgstr "Напоминания по документам"
 
 #: clients/templates/clients/document_reminder_list.html:25
 #: clients/templates/clients/payment_reminder_list.html:20
