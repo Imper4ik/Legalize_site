@@ -74,6 +74,7 @@ def _get_pdf_font_path() -> Path | None:
         path = Path(configured_path)
         if path.exists():
             return path
+        logger.warning("PDF font path does not exist: %s", configured_path)
     nix_store = Path("/nix/store")
     nix_candidates: list[Path] = []
     if nix_store.exists():
@@ -93,6 +94,7 @@ def _get_pdf_font_path() -> Path | None:
     for path in candidate_paths:
         if path.exists():
             return path
+    logger.warning("PDF font not found in default locations; falling back to PIL default font.")
     return None
 
 
@@ -121,7 +123,11 @@ def _render_email_pdf(text: str) -> bytes:
     page_width, page_height = (1240, 1754)
     margin = 80
     font_path = _get_pdf_font_path()
-    font = ImageFont.truetype(str(font_path), 24) if font_path else ImageFont.load_default()
+    if font_path:
+        font = ImageFont.truetype(str(font_path), 24)
+    else:
+        logger.warning("Using PIL default font for PDF rendering.")
+        font = ImageFont.load_default()
     temp_image = Image.new("RGB", (1, 1), "white")
     draw = ImageDraw.Draw(temp_image)
     max_width = page_width - (margin * 2)
