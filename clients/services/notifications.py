@@ -74,11 +74,21 @@ def _get_pdf_font_path() -> Path | None:
         path = Path(configured_path)
         if path.exists():
             return path
+    nix_store = Path("/nix/store")
+    nix_candidates: list[Path] = []
+    if nix_store.exists():
+        nix_candidates.extend(
+            nix_store.glob("**/share/fonts/truetype/dejavu/DejaVuSans.ttf")
+        )
+        nix_candidates.extend(
+            nix_store.glob("**/share/fonts/truetype/noto/NotoSans-Regular.ttf")
+        )
     candidate_paths = [
         Path(settings.BASE_DIR) / "static" / "fonts" / "DejaVuSans.ttf",
         Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
         Path("/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf"),
         Path("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"),
+        *nix_candidates,
     ]
     for path in candidate_paths:
         if path.exists():
