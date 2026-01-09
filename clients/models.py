@@ -240,11 +240,10 @@ class Client(models.Model):
 
         status_list = []
         for code, name in required_docs:
-            translated_name = translate_document_name(name, current_language)
             documents = docs_map.get(code, [])
             status_list.append({
                 'code': code,
-                'name': translated_name,
+                'name': name,
                 'is_uploaded': bool(documents),
                 'documents': documents
             })
@@ -259,7 +258,7 @@ class Client(models.Model):
 
         for code, name in required_docs:
             if code == doc_code:
-                return translate_document_name(name, current_language)
+                return name
         return doc_code.replace('_', ' ').capitalize()
 
 
@@ -342,19 +341,15 @@ class DocumentRequirement(models.Model):
         records = cls.objects.filter(application_purpose=purpose, is_required=True).order_by("position", "id")
         items: list[tuple[str, str]] = []
         for item in records:
-            if item.custom_name and item.custom_name.strip():
-                if item.document_type in DOCUMENT_TYPE_VALUES and is_default_document_label(
-                    item.custom_name,
-                    item.document_type,
-                ):
-                    items.append((item.document_type, DocumentType(item.document_type).label))
-                else:
-                    items.append((item.document_type, item.custom_name))
-                continue
-            if item.document_type in DOCUMENT_TYPE_VALUES:
-                items.append((item.document_type, DocumentType(item.document_type).label))
-            else:
-                items.append((item.document_type, item.document_type.replace('_', ' ').capitalize()))
+            label = resolve_document_label(
+                item.document_type,
+                item.custom_name,
+                item.custom_name_pl,
+                item.custom_name_en,
+                item.custom_name_ru,
+                language,
+            )
+            items.append((item.document_type, label))
         return items
 
 
