@@ -231,5 +231,17 @@
     //     flatpickr('#doc_end_date',   { dateFormat: 'Y-m-d' });
     //   }
     // });
+    document.addEventListener('DOMContentLoaded', function () {
+      var hash = window.location.hash;
+      if (!hash || !hash.startsWith('#collapse-')) {
+        return;
+      }
+      var collapseElement = document.querySelector(hash);
+      if (!collapseElement || !window.bootstrap || !window.bootstrap.Collapse) {
+        return;
+      }
+      var collapse = new window.bootstrap.Collapse(collapseElement, { toggle: false });
+      collapse.show();
+    });
   </script>
 {% endblock %}
