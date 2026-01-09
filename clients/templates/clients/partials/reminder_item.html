@@ -63,6 +63,7 @@
             <form action="{% url 'clients:reminder_action' reminder.id %}" method="post" class="d-inline">
               {% csrf_token %}
               <input type="hidden" name="action" value="send_email">
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
               <button type="submit" class="btn btn-sm btn-primary">
                 <i class="fas fa-envelope"></i> {% translate "Отправить email" %}
               </button>
@@ -71,6 +72,7 @@
           <form action="{% url 'clients:reminder_action' reminder.id %}" method="post" class="d-inline">
               {% csrf_token %}
               <input type="hidden" name="action" value="deactivate">
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
               <button type="submit" class="btn btn-sm btn-success">
                   <i class="fas fa-check"></i> {% translate "Выполнено" %}
               </button>
@@ -78,6 +80,7 @@
           <form action="{% url 'clients:reminder_action' reminder.id %}" method="post" class="d-inline">
               {% csrf_token %}
               <input type="hidden" name="action" value="delete">
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
               <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{% translate "Вы уверены, что хотите безвозвратно удалить это напоминание?" %}');">
                   <i class="fas fa-trash"></i> {% translate "Удалить" %}
               </button>
