@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import timedelta
 from io import BytesIO
 from pathlib import Path
 from typing import Iterable
@@ -245,7 +246,7 @@ def send_missing_documents_email(client: Client) -> int:
         return 0
 
     language = _get_preferred_language(client)
-    checklist = client.get_document_checklist()
+    checklist = client.get_document_checklist() or []
     missing = []
     uploaded_with_expiry = []
 
@@ -290,7 +291,24 @@ def send_expiring_documents_email(client: Client, documents: list[Document]) -> 
         return 0
 
     language = _get_preferred_language(client)
-    checklist = client.get_document_checklist()
+    today = timezone.localdate()
+    cutoff = today + timedelta(days=7)
+    all_documents = (
+        client.documents.filter(expiry_date__isnull=False)
+        .order_by("expiry_date")
+    )
+    expired_documents = [
+        document for document in all_documents if document.expiry_date and document.expiry_date < today
+    ]
+    expiring_soon_documents = [
+        document
+        for document in all_documents
+        if document.expiry_date and today <= document.expiry_date <= cutoff
+    ]
+    valid_documents = [
+        document for document in all_documents if document.expiry_date and document.expiry_date > cutoff
+    ]
+    checklist = client.get_document_checklist() or []
     missing_documents = []
 
     for item in checklist:
@@ -307,8 +325,12 @@ def send_expiring_documents_email(client: Client, documents: list[Document]) -> 
 
     context = {
         "client": client,
-        "documents": sorted(documents, key=lambda doc: doc.expiry_date or timezone.localdate()),
+        "expired_documents": expired_documents,
+        "expiring_soon_documents": expiring_soon_documents,
+        "valid_documents": valid_documents,
         "missing_documents": missing_documents,
+        "today": today,
+        "cutoff": cutoff,
     }
     subject = _get_subject("expiring_documents", language)
     body = _render_email_body("expiring_documents", context, language)
