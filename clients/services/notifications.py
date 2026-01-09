@@ -68,6 +68,9 @@ def _get_staff_recipients() -> list[str]:
     return list(dict.fromkeys(recipients))
 
 
+PDF_FONT_TEST_TEXT = "Привет"
+
+
 def _get_pdf_font_path() -> Path | None:
     configured_path = getattr(settings, "PDF_FONT_PATH", "")
     if configured_path:
@@ -93,6 +96,13 @@ def _get_pdf_font_path() -> Path | None:
     ]
     for path in candidate_paths:
         if path.exists():
+            try:
+                font = ImageFont.truetype(str(path), 24)
+            except OSError:
+                continue
+            mask = font.getmask(PDF_FONT_TEST_TEXT)
+            if not mask or mask.getbbox() is None:
+                continue
             return path
     logger.warning("PDF font not found in default locations; falling back to PIL default font.")
     return None
