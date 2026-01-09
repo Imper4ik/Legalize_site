@@ -1,12 +1,27 @@
 {{ client.first_name }} {{ client.last_name }},
 
-A reminder that the following documents are about to expire:
-{% for document in documents %}- {{ document.display_name }} (valid until {{ document.expiry_date|date:"d.m.Y" }})
+{% if valid_documents %}
+✅ All good:
+{% for document in valid_documents %}- {{ document.display_name }} (valid until {{ document.expiry_date|date:"d.m.Y" }})
+{% endfor %}
+{% endif %}
+
+{% if expiring_soon_documents %}
+⚠️ Expiring soon (by {{ cutoff|date:"d.m.Y" }}):
+{% for document in expiring_soon_documents %}- {{ document.display_name }} (valid until {{ document.expiry_date|date:"d.m.Y" }})
 {% endfor %}
 Please prepare updated versions and send them in reply to this email to avoid delays.
+{% endif %}
+
+{% if expired_documents %}
+❌ Expired:
+{% for document in expired_documents %}- {{ document.display_name }} (expired on {{ document.expiry_date|date:"d.m.Y" }})
+{% endfor %}
+Please send updated documents as soon as possible.
+{% endif %}
 
 {% if missing_documents %}
-We are also still missing these documents:
+📄 Missing (not submitted):
 {% for document in missing_documents %}- {{ document.name }}{% if document.expiry_date %} (valid until {{ document.expiry_date|date:"d.m.Y" }}){% endif %}
 {% endfor %}
 Please send them together with the renewed documents.

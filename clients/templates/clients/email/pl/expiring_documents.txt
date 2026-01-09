@@ -1,12 +1,27 @@
 {{ client.first_name }} {{ client.last_name }},
 
-Przypominamy, że ważność poniższych dokumentów wkrótce się kończy:
-{% for document in documents %}- {{ document.display_name }} (ważny do {{ document.expiry_date|date:"d.m.Y" }})
+{% if valid_documents %}
+✅ Wszystko w porządku:
+{% for document in valid_documents %}- {{ document.display_name }} (ważny do {{ document.expiry_date|date:"d.m.Y" }})
+{% endfor %}
+{% endif %}
+
+{% if expiring_soon_documents %}
+⚠️ Wkrótce wygasa (do {{ cutoff|date:"d.m.Y" }}):
+{% for document in expiring_soon_documents %}- {{ document.display_name }} (ważny do {{ document.expiry_date|date:"d.m.Y" }})
 {% endfor %}
 Przygotuj proszę ich zaktualizowane wersje i odeślij w odpowiedzi na tę wiadomość, aby uniknąć opóźnień.
+{% endif %}
+
+{% if expired_documents %}
+❌ Wygasło:
+{% for document in expired_documents %}- {{ document.display_name }} (wygasł {{ document.expiry_date|date:"d.m.Y" }})
+{% endfor %}
+Prześlij proszę aktualne wersje dokumentów jak najszybciej.
+{% endif %}
 
 {% if missing_documents %}
-Brakuje nam także tych dokumentów:
+📄 Brakujące (nie dostarczono):
 {% for document in missing_documents %}- {{ document.name }}{% if document.expiry_date %} (ważny do {{ document.expiry_date|date:"d.m.Y" }}){% endif %}
 {% endfor %}
 Prześlij je razem z odnowionymi dokumentami.

@@ -28,7 +28,16 @@
           <i class="fas {{ icon|default:'fa-bell' }} me-2"></i>
           {{ reminder.title }}
         </h5>
-        <small>
+        <small class="d-flex align-items-center gap-2">
+          <span aria-hidden="true">
+            {% if due_date_ts < now_timestamp %}
+              <i class="fas fa-circle text-danger"></i>
+            {% elif due_date_ts < three_days_from_now_ts %}
+              <i class="fas fa-circle text-warning"></i>
+            {% else %}
+              <i class="fas fa-circle text-success"></i>
+            {% endif %}
+          </span>
           <strong>{% blocktrans with due=reminder.due_date|date:"d.m.Y" %}К дата: {{ due }}{% endblocktrans %}</strong>
           {% if due_date_ts < now_timestamp %}
             <span class="badge bg-danger ms-2">{% translate "Просрочено" %}</span>
