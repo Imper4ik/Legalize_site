@@ -102,27 +102,27 @@ msgstr "Новый"
 
 #: clients/models.py:22
 msgid "В ожидании"
-msgstr ""
+msgstr "В ожидании"
 
 #: clients/models.py:23
 msgid "Одобрен"
-msgstr ""
+msgstr "Одобрен"
 
 #: clients/models.py:24
 msgid "Отклонён"
-msgstr ""
+msgstr "Отклонён"
 
 #: clients/models.py:28
 msgid "Имя"
-msgstr ""
+msgstr "Имя"
 
 #: clients/models.py:29
 msgid "Фамилия"
-msgstr ""
+msgstr "Фамилия"
 
 #: clients/models.py:30
 msgid "Гражданство"
-msgstr ""
+msgstr "Гражданство"
 
 #: clients/models.py:31
 #: clients/templates/clients/partials/client_overview.html:15
@@ -132,7 +132,7 @@ msgstr "Телефон"
 #: clients/models.py:33
 #| msgid "Номер дела"
 msgid "Номер паспорта"
-msgstr "Номер дела"
+msgstr "Номер паспорта"
 
 #: clients/models.py:34 clients/templates/clients/clients_list.html:46
 #: clients/templates/clients/partials/client_overview.html:13
