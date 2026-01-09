@@ -154,10 +154,10 @@ def reminder_action(request, reminder_id):
                 messages.success(request, _("Отправили письмо клиенту об истекающем документе."))
             else:
                 messages.warning(request, _("Не удалось отправить письмо: нет email или даты истечения."))
-    next_url = request.POST.get('next')
-    if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
-        return redirect(next_url)
-    return redirect('clients:document_reminder_list')
+    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER")
+    if next_url and not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+        next_url = None
+    return redirect(next_url or 'clients:document_reminder_list')
 
 
 @staff_required_view
@@ -174,6 +174,9 @@ def send_document_reminder_email(request, client_id):
             messages.success(request, _("Отправили письмо клиенту по документам."))
         else:
             messages.warning(request, _("Не удалось отправить письмо: нет email или документов с датой истечения."))
-        return redirect('clients:document_reminder_list')
+        next_url = request.POST.get("next") or request.META.get("HTTP_REFERER")
+        if next_url and not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+            next_url = None
+        return redirect(next_url or 'clients:document_reminder_list')
     messages.warning(request, _("Эту операцию можно выполнить только через кнопку отправки."))
     return redirect('clients:document_reminder_list')
