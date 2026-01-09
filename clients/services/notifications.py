@@ -323,6 +323,26 @@ def send_expiring_documents_email(client: Client, documents: list[Document]) -> 
             }
         )
 
+    today = timezone.localdate()
+    soon_days = 3
+    soon_cutoff = today + timedelta(days=soon_days)
+    expired_documents = []
+    expiring_documents = []
+    for document in sorted(documents, key=lambda doc: doc.expiry_date or today):
+        if not document.expiry_date:
+            continue
+        if document.expiry_date < today:
+            expired_documents.append(document)
+        else:
+            expiring_documents.append(document)
+
+    expiring_soon_documents = [
+        document for document in expiring_documents if document.expiry_date and document.expiry_date <= soon_cutoff
+    ]
+    expiring_later_documents = [
+        document for document in expiring_documents if document.expiry_date and document.expiry_date > soon_cutoff
+    ]
+
     context = {
         "client": client,
         "expired_documents": expired_documents,
