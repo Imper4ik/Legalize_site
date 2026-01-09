@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
 set -o errexit
 
+# Ensure DejaVu fonts are available at runtime (not only during build).
+# Nixpacks should include them in the final image, but we double-check and
+# install them when possible to avoid missing glyphs in PDF rendering.
+if ! ls /nix/store/*dejavu_fonts* >/dev/null 2>&1; then
+  if command -v nix-env >/dev/null 2>&1; then
+    echo "dejavu_fonts not found in /nix/store; installing via nix-env..."
+    nix-env -iA nixpkgs.dejavu_fonts
+  else
+    echo "Warning: dejavu_fonts not found and nix-env is unavailable; fonts may be missing at runtime."
+  fi
+else
+  echo "dejavu_fonts present in /nix/store."
+fi
+
 # === Настройка суперюзера по умолчанию (email: nindse@gmail.com) ===
 # Пароль можно передать через переменную окружения DJANGO_SUPERUSER_PASSWORD.
 # Если она не указана, скрипт сгенерирует одноразовый пароль и выведет его
