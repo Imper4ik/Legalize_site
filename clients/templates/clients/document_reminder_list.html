@@ -175,7 +175,7 @@
               </a>
               <form action="{% url 'clients:send_document_reminder_email' group.client.id %}" method="post" class="d-inline">
                 {% csrf_token %}
-                <input type="hidden" name="next" value="{{ request.get_full_path }}#collapse-{{ group.client.id }}">
+                <input type="hidden" name="next" value="{{ request.get_full_path }}#heading-{{ group.client.id }}">
                 <button type="submit" class="btn btn-sm btn-primary">
                   <i class="fas fa-envelope me-1"></i>{% translate "Отправить письмо" %}
                 </button>
@@ -233,11 +233,20 @@
     // });
     document.addEventListener('DOMContentLoaded', function () {
       var hash = window.location.hash;
-      if (!hash || !hash.startsWith('#collapse-')) {
+      if (!hash || !hash.startsWith('#heading-')) {
         return;
       }
-      var collapseElement = document.querySelector(hash);
-      if (!collapseElement || !window.bootstrap || !window.bootstrap.Collapse) {
+      var headingElement = document.querySelector(hash);
+      if (!headingElement || !window.bootstrap || !window.bootstrap.Collapse) {
+        return;
+      }
+      var toggleButton = headingElement.querySelector('[data-bs-toggle="collapse"]');
+      if (!toggleButton) {
+        return;
+      }
+      var targetSelector = toggleButton.getAttribute('data-bs-target');
+      var collapseElement = targetSelector ? document.querySelector(targetSelector) : null;
+      if (!collapseElement) {
         return;
       }
       var collapse = new window.bootstrap.Collapse(collapseElement, { toggle: false });
