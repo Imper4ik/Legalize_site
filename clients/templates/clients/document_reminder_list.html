@@ -85,16 +85,6 @@
   }
 </style>
 
-{# Блок сообщений (если вдруг не поймались глобально) #}
-{% if messages %}
-  {% for message in messages %}
-    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
-      {{ message }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% translate 'Закрыть' %}"></button>
-    </div>
-  {% endfor %}
-{% endif %}
-
 {# Секция: Напоминания по документам #}
 <section id="documents-section" class="reminders-section">
   <div class="reminders-title">
