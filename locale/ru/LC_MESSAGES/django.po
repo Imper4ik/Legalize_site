@@ -162,7 +162,7 @@ msgstr "Статус"
 #: clients/models.py:43
 #| msgid "Напоминания"
 msgid "Дата создания"
-msgstr "Напоминания"
+msgstr "Дата создания"
 
 #: clients/models.py:44
 #: clients/templates/clients/partials/client_overview.html:19
@@ -194,12 +194,12 @@ msgstr ""
 #: clients/templates/clients/payment_reminder_list.html:29
 #| msgid "Клиенты"
 msgid "Клиент"
-msgstr "Клиенты"
+msgstr "Клиент"
 
 #: clients/models.py:115
 #| msgid "Список документов"
 msgid "Тип документа"
-msgstr "Список документов"
+msgstr "Тип документа"
 
 #: clients/models.py:116
 msgid "Файл"
@@ -756,7 +756,7 @@ msgstr "Вы уверены, что хотите безвозвратно уда
 #: clients/templates/clients/payment_reminder_list.html:5
 #: clients/templates/clients/payment_reminder_list.html:12 clients/views.py:530
 msgid "Напоминания по оплатам"
-msgstr "Напоминания по оплатам"
+msgstr "Напоминания по платежам"
 
 #: clients/templates/clients/payment_reminder_list.html:58
 msgid "Нет напоминаний по оплатам, соответствующих фильтрам."
