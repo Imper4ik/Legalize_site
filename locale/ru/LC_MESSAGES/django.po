@@ -116,15 +116,15 @@ msgstr "Оплата 440 zł + 17 zł доверенность"
 
 #: clients/models.py:11
 msgid "Учёба"
-msgstr ""
+msgstr "Учёба"
 
-#: clients/models.py:12 clients/models.py:143
+#: clients/models.py:12 clients/models.py:143 clients/models.py:397
 msgid "Работа"
-msgstr ""
+msgstr "Работа"
 
 #: clients/models.py:13
 msgid "Воссоединение семьи"
-msgstr ""
+msgstr "Воссоединение семьи"
 
 #: clients/models.py:16
 #| msgid "Русский"
