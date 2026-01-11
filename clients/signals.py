@@ -1,5 +1,6 @@
 # clients/signals.py
 from django.conf import settings
+from django.utils.translation import gettext as _
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
@@ -17,8 +18,13 @@ def sync_payment_reminder_on_save(sender, instance, **kwargs):
             defaults={
                 'client': instance.client,
                 'reminder_type': 'payment',
-                'title': f"Второй платёж: {instance.get_service_description_display()}",
-                'notes': f"Остаток: {instance.amount_due} zł. Счёт №{instance.id}",
+                'title': _("Второй платёж: %(service)s") % {
+                    "service": instance.get_service_description_display(),
+                },
+                'notes': _("Остаток: %(amount)s zł. Счёт №%(number)s") % {
+                    "amount": instance.amount_due,
+                    "number": instance.id,
+                },
                 'due_date': instance.due_date,
                 'is_active': True
             }
