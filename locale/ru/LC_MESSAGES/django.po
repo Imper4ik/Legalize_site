@@ -152,12 +152,12 @@ msgstr "Основание пребывания"
 #: clients/models.py:41
 #| msgid "Список документов"
 msgid "Язык документов"
-msgstr "Список документов"
+msgstr "Язык документов"
 
 #: clients/models.py:42 templates/clients/partials/modals.html:36
 #: templates/clients/partials/modals.html:84
 msgid "Статус"
-msgstr ""
+msgstr "Статус"
 
 #: clients/models.py:43
 #| msgid "Напоминания"
