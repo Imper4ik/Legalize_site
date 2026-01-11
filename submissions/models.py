@@ -13,6 +13,9 @@ class Submission(models.Model):
         COMPLETED = 'completed', _('Завершено')
 
     name = models.CharField(max_length=255, verbose_name=_('Название основания'))
+    name_pl = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('Название основания (PL)'))
+    name_en = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('Название основания (EN)'))
+    name_ru = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('Название основания (RU)'))
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
@@ -26,8 +29,19 @@ class Submission(models.Model):
         verbose_name_plural = _('Основания подачи')
         ordering = ['-created_at']
 
-    def __str__(self) -> str:  # pragma: no cover - human friendly
+    @property
+    def localized_name(self) -> str:
+        from django.utils import translation
+        lang = translation.get_language() or 'pl'
+        lang = lang.split('-')[0].lower()
+        
+        localized = getattr(self, f'name_{lang}', None)
+        if localized and localized.strip():
+            return localized
         return self.name
+
+    def __str__(self) -> str:  # pragma: no cover - human friendly
+        return self.localized_name
 
     def save(self, *args, **kwargs):
         if not self.slug:

@@ -205,11 +205,11 @@ class Client(models.Model):
         from submissions.models import Submission
 
         if self.application_purpose:
-            submission_name = Submission.objects.filter(
+            submission = Submission.objects.filter(
                 slug=self.application_purpose
-            ).values_list('name', flat=True).first()
-            if submission_name:
-                return submission_name
+            ).first()
+            if submission:
+                return submission.localized_name
 
         return dict(self.APPLICATION_PURPOSE_CHOICES).get(
             self.application_purpose, self.application_purpose or ''
