@@ -2,7 +2,7 @@
 {% load i18n %}
 
 <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel" aria-hidden="true"
-     data-price-url-template="{% url 'clients:get_price_for_service' '__service__' %}">
+  data-price-url-template="{% url 'clients:get_price_for_service' '__service__' %}">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -16,7 +16,7 @@
             <label for="id_service_description" class="form-label">{% translate "Услуга" %}</label>
             <select name="service_description" class="form-select" id="id_service_description" required>
               {% for choice_value, choice_label in payment_form.service_description.field.choices %}
-                <option value="{{ choice_value }}">{{ choice_label }}</option>
+              <option value="{{ choice_value }}">{{ choice_label }}</option>
               {% endfor %}
             </select>
           </div>
@@ -33,10 +33,27 @@
             <input type="date" name="due_date" class="form-control" id="id_due_date">
           </div>
           <div class="mb-3">
+            <label for="id_payment_date" class="form-label">{% translate "Дата фактической оплаты" %}</label>
+            <input type="date" name="payment_date" class="form-control" id="id_payment_date">
+          </div>
+          <div class="mb-3">
+            <label for="id_payment_method" class="form-label">{% translate "Способ оплаты" %}</label>
+            <select name="payment_method" class="form-select" id="id_payment_method">
+              <option value="">---------</option>
+              {% for choice_value, choice_label in payment_form.payment_method.field.choices %}
+              <option value="{{ choice_value }}">{{ choice_label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="id_transaction_id" class="form-label">{% translate "ID транзакции" %}</label>
+            <input type="text" name="transaction_id" class="form-control" id="id_transaction_id">
+          </div>
+          <div class="mb-3">
             <label for="id_status" class="form-label">{% translate "Статус" %}</label>
             <select name="status" class="form-select" id="id_status" required>
               {% for choice_value, choice_label in payment_form.status.field.choices %}
-                <option value="{{ choice_value }}">{{ choice_label }}</option>
+              <option value="{{ choice_value }}">{{ choice_label }}</option>
               {% endfor %}
             </select>
           </div>
@@ -64,13 +81,14 @@
             <label for="edit_id_service_description" class="form-label">{% translate "Услуга" %}</label>
             <select name="service_description" class="form-select" id="edit_id_service_description" required>
               {% for choice_value, choice_label in payment_form.service_description.field.choices %}
-                <option value="{{ choice_value }}">{{ choice_label }}</option>
+              <option value="{{ choice_value }}">{{ choice_label }}</option>
               {% endfor %}
             </select>
           </div>
           <div class="mb-3">
             <label for="edit_id_total_amount" class="form-label">{% translate "Общая сумма" %}</label>
-            <input type="number" step="0.01" name="total_amount" class="form-control" id="edit_id_total_amount" required>
+            <input type="number" step="0.01" name="total_amount" class="form-control" id="edit_id_total_amount"
+              required>
           </div>
           <div class="mb-3">
             <label for="edit_id_amount_paid" class="form-label">{% translate "Оплачено" %}</label>
@@ -84,7 +102,7 @@
             <label for="edit_id_status" class="form-label">{% translate "Статус" %}</label>
             <select name="status" class="form-select" id="edit_id_status" required>
               {% for choice_value, choice_label in payment_form.status.field.choices %}
-                <option value="{{ choice_value }}">{{ choice_label }}</option>
+              <option value="{{ choice_value }}">{{ choice_label }}</option>
               {% endfor %}
             </select>
           </div>
@@ -98,14 +116,9 @@
   </div>
 </div>
 
-<div
-  class="modal fade"
-  id="uploadDocumentModal"
-  tabindex="-1"
-  aria-labelledby="uploadDocumentModalLabel"
+<div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel"
   aria-hidden="true"
-  data-action-template="{% url 'clients:add_document' client_id=client.id doc_type='__doc_type__' %}"
->
+  data-action-template="{% url 'clients:add_document' client_id=client.id doc_type='__doc_type__' %}">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -117,11 +130,13 @@
         <div class="modal-body">
           <p class="mb-3 text-muted" id="uploadDocumentDescription"></p>
           <div class="mb-3">
-            <label for="{{ document_upload_form.file.id_for_label }}" class="form-label">{% translate "Выберите файл" %}</label>
+            <label for="{{ document_upload_form.file.id_for_label }}" class="form-label">{% translate "Выберите файл"
+              %}</label>
             {{ document_upload_form.file }}
           </div>
           <div class="mb-3">
-            <label for="{{ document_upload_form.expiry_date.id_for_label }}" class="form-label">{% translate "Действителен до (необязательно)" %}</label>
+            <label for="{{ document_upload_form.expiry_date.id_for_label }}" class="form-label">{% translate
+              "Действителен до (необязательно)" %}</label>
             {{ document_upload_form.expiry_date }}
           </div>
         </div>
