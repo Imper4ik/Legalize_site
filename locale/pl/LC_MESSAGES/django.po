@@ -118,6 +118,7 @@ msgstr "Rosyjski"
 msgid "Новый"
 msgstr "Nowy"
 
+
 #: clients/models.py:22
 msgid "В ожидании"
 msgstr "Oczekujący"
@@ -129,6 +130,22 @@ msgstr "Zatwierdzony"
 #: clients/models.py:24
 msgid "Отклонён"
 msgstr "Odrzucony"
+
+#: clients/models.py:11
+msgid "Учёба"
+msgstr "Studia"
+
+#: clients/models.py:12 clients/models.py:143
+msgid "Работа"
+msgstr "Praca"
+
+#: clients/models.py:13
+msgid "Воссоединение семьи"
+msgstr "Pobyt z rodziną"
+
+#: clients/models.py:163
+msgid "Дата рождения"
+msgstr "Data urodzenia"
 
 #: clients/templates/clients/document_checklist_manage.html:45
 msgid "Действия с документом"
