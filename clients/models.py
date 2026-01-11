@@ -254,7 +254,7 @@ class Client(models.Model):
         ).exists()
 
         if not required_docs and not has_custom_checklist:
-            required_docs = get_fallback_document_checklist(self.application_purpose, self.language)
+            required_docs = get_fallback_document_checklist(self.application_purpose, current_language)
         if not required_docs:
             return []
 
@@ -282,7 +282,7 @@ class Client(models.Model):
         current_language = translation.get_language() or self.language
         required_docs = DocumentRequirement.required_for(self.application_purpose, current_language)
         if not required_docs:
-            required_docs = get_fallback_document_checklist(self.application_purpose, self.language)
+            required_docs = get_fallback_document_checklist(self.application_purpose, current_language)
 
         for code, name in required_docs:
             if code == doc_code:

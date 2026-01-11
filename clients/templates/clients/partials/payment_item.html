@@ -12,7 +12,8 @@
         <span class="fs-5 me-3">
             <strong>{{ payment.amount_paid|floatformat:2 }} / {{ payment.total_amount|floatformat:2 }} PLN</strong>
         </span>
-        <span class="badge 
+        <span class="text-muted me-2">{% translate "Статус" %}:</span>
+        <span class="badge
             {% if payment.status == 'paid' %}bg-success
             {% elif payment.status == 'partial' %}bg-warning text-dark
             {% else %}bg-secondary{% endif %} me-3">
