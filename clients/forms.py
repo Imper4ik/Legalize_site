@@ -27,28 +27,28 @@ class ClientForm(forms.ModelForm):
     # We explicitly define the date fields to make them not required
     # and to specify the correct date format from the calendar.
     legal_basis_end_date = forms.DateField(
-        label="Дата окончания основания",
+        label=_("Дата окончания основания"),
         required=False,
         input_formats=['%d.%m.%Y', '%d-%m-%Y', '%Y-%m-%d'],
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд.мм.гггг'})
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('дд.мм.гггг')})
     )
     birth_date = forms.DateField(
-        label="Дата рождения",
+        label=_("Дата рождения"),
         required=False,
         input_formats=['%d.%m.%Y', '%d-%m-%Y', '%Y-%m-%d'],
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд.мм.гггг'})
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('дд.мм.гггг')})
     )
     submission_date = forms.DateField(
-        label="Дата подачи (Złożone)",
+        label=_("Дата подачи (Złożone)"),
         required=False,
         input_formats=['%d.%m.%Y', '%d-%m-%Y', '%Y-%m-%d'],
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд.мм.гггг'})
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('дд.мм.гггг')})
     )
     fingerprints_date = forms.DateField(
-        label="Дата сдачи отпечатков",
+        label=_("Дата сдачи отпечатков"),
         required=False,
         input_formats=['%d.%m.%Y', '%d-%m-%Y', '%Y-%m-%d'],
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд.мм.гггг'})
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('дд.мм.гггг')})
     )
 
     def __init__(self, *args, **kwargs):
@@ -85,7 +85,7 @@ class ClientForm(forms.ModelForm):
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'phone': forms.TextInput(attrs={'class': 'form-control'}),
             'citizenship': forms.TextInput(attrs={'class': 'form-control'}),
-            'birth_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд.мм.гггг'}),
+            'birth_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('дд.мм.гггг')}),
             'passport_num': forms.TextInput(attrs={'class': 'form-control'}),
             'case_number': forms.TextInput(attrs={'class': 'form-control'}),
             'language': forms.Select(attrs={'class': 'form-select'}),

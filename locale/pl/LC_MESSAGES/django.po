@@ -1664,3 +1664,18 @@ msgstr "Plik z dnia"
 #: clients/templates/clients/partials/document_checklist.html:26
 msgid "Действителен до:"
 msgstr "Ważny do:"
+
+#: clients/forms.py:23 clients/forms.py:29 clients/forms.py:35 clients/forms.py:41
+msgid "дд.мм.гггг"
+msgstr "dd.mm.rrrr"
+
+#: clients/signals.py:21
+#, python-format
+msgid "Второй платёж: %(service)s"
+msgstr "Druga płatność: %(service)s"
+
+#: clients/signals.py:24
+#, python-format
+msgid "Остаток: %(amount)s zł. Счёт №%(number)s"
+msgstr "Pozostało: %(amount)s zł. Nr rachunku %(number)s"
+
