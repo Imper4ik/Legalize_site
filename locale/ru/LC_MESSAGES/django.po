@@ -19,40 +19,36 @@ msgstr ""
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 #: clients/constants.py:8 clients/constants.py:20 clients/models.py:100
-msgid "Фотографии"
-msgstr ""
+msgid "4 zdjęcia (45x35 mm)"
+msgstr "4 фотографии (45x35 мм)"
 
 #: clients/constants.py:9 clients/constants.py:22 clients/models.py:101
-#| msgid "Подтвердите ваш E-mail"
-msgid "Подтверждение оплаты"
-msgstr "Подтвердите ваш E-mail"
+msgid "Potwierdzenie opłaty"
+msgstr "Подтверждение оплаты"
 
 #: clients/constants.py:10 clients/constants.py:21 clients/models.py:102
-msgid "Паспорт"
-msgstr ""
+msgid "Paszport"
+msgstr "Паспорт"
 
 #: clients/constants.py:11 clients/models.py:103
-msgid "Справка о зачислении"
-msgstr ""
+msgid "Zaświadczenie z uczelni o przyjęciu lub kontynuacji studiów"
+msgstr "Справка из вуза о приеме или продолжении учебы"
 
 #: clients/constants.py:12 clients/models.py:104
-#| msgid "Оплата за обучение"
-msgid "Справка об оплате обучения"
-msgstr "Оплата за обучение"
+msgid "Zaświadczenie z uczelni o wysokości opłat za naukę"
+msgstr "Справка из вуза о размере оплаты за обучение"
 
 #: clients/constants.py:13 clients/constants.py:25 clients/models.py:105
-msgid "Медицинская страховка"
-msgstr ""
+msgid "Polisa ubezpieczeniowa 30 000 EUR"
+msgstr "Страховой полис (30 000 евро)"
 
 #: clients/constants.py:14 clients/models.py:106
-#| msgid "Подтвердите ваш E-mail"
-msgid "Подтверждение адреса"
-msgstr "Подтвердите ваш E-mail"
+msgid "Dokumenty potwierdzające koszty zamieszkania (np. umowa najmu, rachunki)"
+msgstr "Документы, подтверждающие стоимость проживания (договор аренды, счета)"
 
 #: clients/constants.py:15 clients/models.py:107
-#| msgid "Подтвердите ваш E-mail"
-msgid "Подтверждение финансов"
-msgstr "Подтвердите ваш E-mail"
+msgid "Środki finansowe na utrzymanie w Polsce"
+msgstr "Финансовые средства на содержание"
 
 #: clients/constants.py:23 clients/models.py:108
 msgid "Załącznik nr 1"
@@ -60,15 +56,63 @@ msgstr "Приложение № 1"
 
 #: clients/constants.py:24 clients/models.py:109
 msgid "Informacja starosty"
-msgstr ""
+msgstr "Информация старосты"
 
 #: clients/constants.py:26 clients/models.py:110
-msgid "Трудовой договор"
-msgstr ""
+msgid "Oryginały umów o pracę / zlecenia"
+msgstr "Оригиналы трудовых договоров"
 
 #: clients/constants.py:27 clients/models.py:111
-msgid "PIT-37 / Zaświadczenie o niezaleganiu"
-msgstr ""
+msgid "PIT-37 cudzoziemca z potwierdzeniem złożenia"
+msgstr "PIT-37 иностранца с подтверждением подачи"
+
+#: clients/constants.py:28
+msgid "Zaświadczenie ZUS dot. braku zaległości pracodawcy"
+msgstr "Справка ZUS об отсутствии задолженности работодателя"
+
+#: clients/constants.py:29
+msgid "Zaświadczenie o niezaleganiu opłacania składek cudzoziemca"
+msgstr "Справка об отсутствии задолженности по взносам иностранца"
+
+#: clients/constants.py:30
+msgid "Oświadczenie o braku osób na utrzymaniu w Polsce"
+msgstr "Заявление об отсутствии иждивенцев в Польше"
+
+#: clients/constants.py:31
+msgid "ZUS RCA lub polisa ubezpieczeniowa"
+msgstr "ZUS RCA или страховой полис"
+
+#: clients/constants.py:32
+msgid "Zaświadczenie z ZUS o przebieгу ubezpieczenia cudzoziemca"
+msgstr "Справка из ZUS о ходе страхования иностранца"
+
+#: clients/constants.py:33
+msgid "CIT lub PIT pracodawcy"
+msgstr "CIT или PIT работодателя"
+
+#: clients/constants.py:34
+msgid "Zaświadczenie z ZUS o liczbie zgłoszonych pracowników i składkach"
+msgstr "Справка из ZUS о количестве работников и взносах"
+
+#: clients/constants.py:35
+msgid "Oświadczenie „x”"
+msgstr "Заявление „x”"
+
+#: clients/constants.py:36
+msgid "Oświadczenie o utrzymaniu"
+msgstr "Заявление о содержании"
+
+#: clients/constants.py:37
+msgid "Wezwanie"
+msgstr "Вызов (Wezwanie)"
+
+#: clients/constants.py:38
+msgid "Opłata 340 zł + 17 zł pełnomocnictwo"
+msgstr "Оплата 340 zł + 17 zł доверенность"
+
+#: clients/constants.py:39
+msgid "Opłata 440 zł + 17 zł pełnomocnictwo"
+msgstr "Оплата 440 zł + 17 zł доверенность"
 
 #: clients/models.py:11
 msgid "Учёба"
