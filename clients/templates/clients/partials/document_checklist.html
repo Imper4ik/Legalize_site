@@ -21,10 +21,12 @@
         {% for doc in item.documents %}
         <li class="list-group-item d-flex justify-content-between align-items-center">
           <div>
-            <a href="{{ doc.file.url }}" target="_blank">{% translate "Файл от" %} {{ doc.uploaded_at|date:"d.m.Y H:i"
-              }}</a>
-            {% if doc.expiry_date %}<br><small class="text-danger">{% translate "Действителен до:" %} {{
-              doc.expiry_date|date:"d.m.Y" }}</small>{% endif %}
+            <a href="{{ doc.file.url }}" target="_blank">
+              {% translate "Файл от" %} {{ doc.uploaded_at|date:"d.m.Y H:i" }}
+            </a>
+            {% if doc.expiry_date %}
+              <br><small class="text-danger">{% translate "Действителен до:" %} {{ doc.expiry_date|date:"d.m.Y" }}</small>
+            {% endif %}
             <span class="badge {% if doc.verified %}bg-success{% else %}bg-warning text-dark{% endif %} ms-2">
               {% if doc.verified %}{% translate "Проверен" %}{% else %}{% translate "Ожидает проверки" %}{% endif %}
             </span>
@@ -40,8 +42,9 @@
             <form action="{% url 'clients:document_delete' doc.pk %}" method="post"
               class="d-inline delete-document-form">
               {% csrf_token %}
-              <button type="button" class="btn btn-sm btn-outline-danger delete-document-button">{% translate "Удалить"
-                %}</button>
+              <button type="button" class="btn btn-sm btn-outline-danger delete-document-button">
+                {% translate "Удалить" %}
+              </button>
             </form>
           </div>
         </li>
