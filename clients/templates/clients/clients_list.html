@@ -85,7 +85,7 @@
                    aria-multiline="true"
                    tabindex="0"
                    data-notes-editor>
-                {{ client.notes|default:"None"|safe }}
+                {{ client.notes|default:""|safe }}
               </div>
               <button class="btn btn-outline-secondary btn-sm mt-2 w-100" type="submit">
                 {% translate "Сохранить" %}

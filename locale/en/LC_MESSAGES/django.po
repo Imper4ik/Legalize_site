@@ -1628,3 +1628,17 @@ msgstr "Documents expiring soon"
 
 #~ msgid "Мой профиль"
 #~ msgstr "My profile"
+
+#: clients/forms.py:23 clients/forms.py:29 clients/forms.py:35 clients/forms.py:41
+msgid "дд.мм.гггг"
+msgstr "dd.mm.yyyy"
+
+#: clients/signals.py:21
+#, python-format
+msgid "Второй платёж: %(service)s"
+msgstr "Second payment: %(service)s"
+
+#: clients/signals.py:24
+#, python-format
+msgid "Остаток: %(amount)s zł. Счёт №%(number)s"
+msgstr "Balance: %(amount)s zł. Invoice #%(number)s"
