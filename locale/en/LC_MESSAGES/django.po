@@ -1746,3 +1746,15 @@ msgstr "Don't have an account yet?"
 #: clients/templates/clients/login.html:46
 msgid "Зарегистрироваться"
 msgstr "Register"
+
+#: clients/templates/clients/client_printable.html:189
+msgid "Распечатать"
+msgstr "Print"
+
+#: clients/templates/clients/client_printable.html:190
+msgid "Вернуться к профилю"
+msgstr "Back to profile"
+
+#: clients/templates/clients/client_printable.html:251
+msgid "System zarządzania sprawami | Документ для внутреннего использования"
+msgstr "Case Management System | Document for internal use"

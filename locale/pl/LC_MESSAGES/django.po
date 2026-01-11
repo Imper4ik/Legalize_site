@@ -1724,3 +1724,15 @@ msgstr "Nie masz jeszcze konta?"
 #: clients/templates/clients/login.html:46
 msgid "Зарегистрироваться"
 msgstr "Zarejestruj się"
+
+#: clients/templates/clients/client_printable.html:189
+msgid "Распечатать"
+msgstr "Drukuj"
+
+#: clients/templates/clients/client_printable.html:190
+msgid "Вернуться к профилю"
+msgstr "Powrót do profilu"
+
+#: clients/templates/clients/client_printable.html:251
+msgid "System zarządzania sprawami | Документ для внутреннего использования"
+msgstr "System zarządzania sprawami | Dokument do użytku wewnętrznego"
