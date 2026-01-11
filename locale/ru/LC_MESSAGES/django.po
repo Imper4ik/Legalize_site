@@ -1664,3 +1664,7 @@ msgstr "Создать аккаунт и войти"
 
 #~ msgid "Ежемесячные расходы"
 #~ msgstr "Ежемесячные расходы"
+
+#: clients/models.py:status_fallback
+msgid "new"
+msgstr "Новый"

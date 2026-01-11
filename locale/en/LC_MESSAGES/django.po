@@ -1758,3 +1758,75 @@ msgstr "Back to profile"
 #: clients/templates/clients/client_printable.html:251
 msgid "System zarządzania sprawami | Документ для внутреннего использования"
 msgstr "Case Management System | Document for internal use"
+
+#: clients/models.py:163
+msgid "Дата рождения"
+msgstr "Date of birth"
+
+#: clients/models.py:160
+msgid "Имя"
+msgstr "First Name"
+
+#: clients/models.py:161
+msgid "Фамилия"
+msgstr "Last Name"
+
+#: clients/models.py:162
+msgid "Гражданство"
+msgstr "Citizenship"
+
+#: clients/models.py:164
+msgid "Телефон"
+msgstr "Phone"
+
+#: clients/models.py:166
+msgid "Номер паспорта"
+msgstr "Passport Number"
+
+#: clients/models.py:167
+msgid "Номер дела"
+msgstr "Case Number"
+
+#: clients/models.py:172
+msgid "Цель подачи"
+msgstr "Application Purpose"
+
+#: clients/models.py:175
+msgid "Основание пребывания (виза, TRC и т.д.)"
+msgstr "Basis of Stay"
+
+#: clients/models.py:177
+msgid "Язык документов"
+msgstr "Document Language"
+
+#: clients/models.py:178
+msgid "Статус"
+msgstr "Status"
+
+#: clients/models.py:181
+msgid "Дата подачи (Złożone)"
+msgstr "Submission Date"
+
+#: clients/models.py:183
+msgid "Дата сдачи отпечатков"
+msgstr "Fingerprints Date"
+
+#: clients/models.py:180
+msgid "Дата окончания основания"
+msgstr "Legal Basis End Date"
+
+#: clients/models.py:153
+msgid "Новый"
+msgstr "New"
+
+#: clients/models.py:154
+msgid "В ожидании"
+msgstr "Pending"
+
+#: clients/models.py:155
+msgid "Одобрен"
+msgstr "Approved"
+
+#: clients/models.py:156
+msgid "Отклонён"
+msgstr "Rejected"
