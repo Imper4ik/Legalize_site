@@ -1,6 +1,7 @@
 import hashlib
+from functools import lru_cache
 
-from django.db import models
+from django.db import connection, models
 from django.urls import reverse
 from django.utils import translation
 from django.utils.translation import gettext, gettext_lazy as _
@@ -13,6 +14,20 @@ DOCUMENT_LABEL_ALIASES: dict[str, list[str]] = {
     # Дополнительные пользовательские варианты названий документов.
     # Можно расширять при появлении новых эквивалентов.
 }
+
+
+@lru_cache(maxsize=1)
+def _submission_has_localized_fields() -> bool:
+    table_name = "submissions_submission"
+    try:
+        with connection.cursor() as cursor:
+            columns = {
+                column.name
+                for column in connection.introspection.get_table_description(cursor, table_name)
+            }
+    except Exception:
+        return False
+    return {"name_pl", "name_en", "name_ru"}.issubset(columns)
 
 
 def _normalize_document_label(value: str) -> str:
@@ -205,11 +220,18 @@ class Client(models.Model):
         from submissions.models import Submission
 
         if self.application_purpose:
-            submission = Submission.objects.filter(
-                slug=self.application_purpose
-            ).first()
-            if submission:
-                return submission.localized_name
+            if _submission_has_localized_fields():
+                submission = Submission.objects.filter(
+                    slug=self.application_purpose
+                ).first()
+                if submission:
+                    return submission.localized_name
+            else:
+                submission_name = Submission.objects.filter(
+                    slug=self.application_purpose
+                ).values_list("name", flat=True).first()
+                if submission_name:
+                    return submission_name
 
         return dict(self.APPLICATION_PURPOSE_CHOICES).get(
             self.application_purpose, self.application_purpose or ''
