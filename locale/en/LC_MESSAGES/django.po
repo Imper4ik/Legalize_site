@@ -1642,3 +1642,66 @@ msgstr "Second payment: %(service)s"
 #, python-format
 msgid "Остаток: %(amount)s zł. Счёт №%(number)s"
 msgstr "Balance: %(amount)s zł. Invoice #%(number)s"
+
+#: clients/templates/clients/partials/document_checklist.html:62
+#, python-format
+msgid "Для цели \"%(purpose)s\" на языке \"%(language)s\" чеклист не определен в настройках."
+msgstr "Checklist not defined for purpose \"%(purpose)s\" and language \"%(language)s\"."
+
+#: clients/templates/clients/partials/document_checklist.html:13
+msgid "Отсутствует"
+msgstr "Missing"
+
+#: clients/templates/clients/partials/document_checklist.html:29
+msgid "Проверен"
+msgstr "Verified"
+
+#: clients/templates/clients/partials/document_checklist.html:29
+msgid "Ожидает проверки"
+msgstr "Pending verification"
+
+#: clients/templates/clients/partials/document_checklist.html:37
+msgid "Снять отметку"
+msgstr "Unverify"
+
+#: clients/templates/clients/partials/document_checklist.html:37
+msgid "Проверить"
+msgstr "Verify"
+
+#: clients/templates/clients/partials/document_checklist.html:51
+msgid "Документы этого типа еще не загружены."
+msgstr "Documents of this type have not been uploaded yet."
+
+#: clients/templates/clients/partials/document_checklist.html:55
+msgid "Добавить еще один файл"
+msgstr "Add another file"
+
+#: clients/templates/clients/partials/document_checklist.html:11
+msgid "шт."
+msgstr "pcs"
+
+#: clients/templates/clients/partials/document_checklist.html:24
+msgid "Файл от"
+msgstr "File from"
+
+#: clients/templates/clients/partials/document_checklist.html:26
+msgid "Действителен до:"
+msgstr "Valid until:"
+
+#: clients/templates/clients/base.html:62
+msgid "Чеклисты"
+msgstr "Checklists"
+
+#: clients/forms.py:23 clients/forms.py:29 clients/forms.py:35 clients/forms.py:41
+msgid "дд.мм.гггг"
+msgstr "dd.mm.yyyy"
+
+#: clients/signals.py:21
+#, python-format
+msgid "Второй платёж: %(service)s"
+msgstr "Second payment: %(service)s"
+
+#: clients/signals.py:24
+#, python-format
+msgid "Остаток: %(amount)s zł. Счёт №%(number)s"
+msgstr "Balance: %(amount)s zł. Invoice #%(number)s"
