@@ -1705,3 +1705,44 @@ msgstr "Second payment: %(service)s"
 #, python-format
 msgid "Остаток: %(amount)s zł. Счёт №%(number)s"
 msgstr "Balance: %(amount)s zł. Invoice #%(number)s"
+
+#: clients/templates/clients/partials/reminder_item.html:41
+#, python-format
+msgid "К дата: %(due)s"
+msgstr "By date: %(due)s"
+
+#: clients/templates/clients/document_checklist_manage.html:68
+msgid "Отметьте документы, которые должны отображаться в чеклисте"
+msgstr "Check the documents that should appear in the checklist"
+
+#: clients/templates/clients/document_checklist_manage.html:70
+msgid "Плашка «Стандартный документ» означает базовый список для выбранной цели. Такие позиции берутся из типовых документов и появляются, пока для них нет отдельной настройки. Их можно включать или отключать чекбоксом, а чтобы отредактировать название или обязательность — добавьте собственный вариант через кнопку «Добавить документ»."
+msgstr "The \"Standard Document\" label indicates the base list for the selected purpose. These items are taken from standard documents and appear as long as there is no separate setting for them. You can enable or disable them with a checkbox, and to edit the name or requirement status — add your own variant via the \"Add Document\" button."
+
+#: clients/templates/clients/document_checklist_manage.html:35
+msgid "Удалить это основание и связанные документы?"
+msgstr "Delete this purpose and related documents?"
+
+#: clients/templates/clients/document_checklist_manage.html:91
+msgid "Удалить этот документ из чеклиста?"
+msgstr "Remove this document from the checklist?"
+
+#: clients/templates/clients/document_checklist_manage.html:149
+msgid "Документ сразу будет добавлен в текущий чеклист."
+msgstr "The document will be immediately added to the current checklist."
+
+#: clients/templates/clients/document_checklist_manage.html:30
+msgid "Переименовать"
+msgstr "Rename"
+
+#: clients/templates/clients/document_checklist_manage.html:51
+msgid "Создать основание подачи"
+msgstr "Create submission purpose"
+
+#: clients/templates/clients/login.html:46
+msgid "Ещё нет аккаунта?"
+msgstr "Don't have an account yet?"
+
+#: clients/templates/clients/login.html:46
+msgid "Зарегистрироваться"
+msgstr "Register"
