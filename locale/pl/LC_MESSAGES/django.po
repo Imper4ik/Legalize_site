@@ -1665,6 +1665,10 @@ msgstr "Plik z dnia"
 msgid "Действителен до:"
 msgstr "Ważny do:"
 
+#: clients/templates/clients/base.html:62
+msgid "Чеклисты"
+msgstr "Listy kontrolne"
+
 #: clients/forms.py:23 clients/forms.py:29 clients/forms.py:35 clients/forms.py:41
 msgid "дд.мм.гггг"
 msgstr "dd.mm.rrrr"
