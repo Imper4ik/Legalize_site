@@ -75,10 +75,16 @@ def _select_custom_document_name(
     }.get(lang)
     if localized_name and localized_name.strip():
         return localized_name
+
+    # If the document type is standard, we prefer to fall back to the
+    # standard translation (handled by the caller) rather than returning
+    # 'custom_name', which likely contains text in the creation language (e.g. Polish).
+    if doc_type in DOCUMENT_TYPE_VALUES:
+        return None
+
     if custom_name and custom_name.strip():
         return custom_name
-    if doc_type in DOCUMENT_TYPE_VALUES:
-        return translate_document_name(DocumentType(doc_type).label, language)
+
     return doc_type.replace('_', ' ').capitalize()
 
 
