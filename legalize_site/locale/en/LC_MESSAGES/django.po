@@ -47,7 +47,7 @@ msgstr ""
 #, fuzzy
 #| msgid "Оплаченная сумма"
 msgid "Тёмная тема"
-msgstr "Amount paid"
+msgstr "Dark theme"
 
 #: legalize_site/templates/account/login.html:4
 #: legalize_site/templates/base.html:248
