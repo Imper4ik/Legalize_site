@@ -238,8 +238,7 @@ msgid "Перевод"
 msgstr "Transfer"
 
 #: clients/models.py:144
-msgid "Учеба"
-msgstr ""
+
 
 #: clients/models.py:145
 msgid "Консультация"

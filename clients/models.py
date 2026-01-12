@@ -395,7 +395,7 @@ class Payment(models.Model):
     ]
     SERVICE_CHOICES = [
         ('work_service', _('Работа')),
-        ('study_service', _('Учеба')),
+        ('study_service', _('Учёба')),
         ('consultation', _('Консультация')),
     ]
 
