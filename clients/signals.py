@@ -95,6 +95,7 @@ def delete_document_file_on_delete(sender, instance, **kwargs):
         instance.file.delete(save=False)
 
 
+
 @receiver(pre_save, sender=Client)
 def sync_payment_service_check(sender, instance, **kwargs):
     """
@@ -105,10 +106,12 @@ def sync_payment_service_check(sender, instance, **kwargs):
         return
 
     try:
+        # Fetch the object directly from the database to compare
         old_instance = Client.objects.get(pk=instance.pk)
     except Client.DoesNotExist:
         return
 
+    # Check if application_purpose has changed
     if old_instance.application_purpose != instance.application_purpose:
         # Карта соответствия целей и услуг
         purpose_map = {
@@ -119,6 +122,6 @@ def sync_payment_service_check(sender, instance, **kwargs):
         
         new_service = purpose_map.get(instance.application_purpose)
         if new_service:
-            # Обновляем только ожидающие оплаты, чтобы не затронуть историю
-            instance.payments.filter(status='pending').update(service_description=new_service)
+            # Update pending payments safely
+            Payment.objects.filter(client=instance, status='pending').update(service_description=new_service)
 
