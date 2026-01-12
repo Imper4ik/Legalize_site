@@ -2,7 +2,7 @@
 from django.conf import settings
 from django.utils.translation import gettext as _
 from django.contrib.auth import get_user_model
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 from .models import Payment, Reminder, Client, Document
 
@@ -93,3 +93,32 @@ def delete_document_file_on_delete(sender, instance, **kwargs):
     """
     if instance.file:
         instance.file.delete(save=False)
+
+
+@receiver(pre_save, sender=Client)
+def sync_payment_service_check(sender, instance, **kwargs):
+    """
+    Отслеживает изменение цели подачи (application_purpose).
+    Если цель изменилась, обновляем service_description для всех PENDING платежей.
+    """
+    if not instance.pk:
+        return
+
+    try:
+        old_instance = Client.objects.get(pk=instance.pk)
+    except Client.DoesNotExist:
+        return
+
+    if old_instance.application_purpose != instance.application_purpose:
+        # Карта соответствия целей и услуг
+        purpose_map = {
+            'work': 'work_service',
+            'study': 'study_service',
+            'family': 'consultation',
+        }
+        
+        new_service = purpose_map.get(instance.application_purpose)
+        if new_service:
+            # Обновляем только ожидающие оплаты, чтобы не затронуть историю
+            instance.payments.filter(status='pending').update(service_description=new_service)
+
