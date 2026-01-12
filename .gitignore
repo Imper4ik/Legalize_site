@@ -42,3 +42,5 @@ staticfiles
 # Compiled translation catalogs are regenerated at runtime.
 *.mo
 
+
+generated_media_test/

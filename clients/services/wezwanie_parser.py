@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
+from clients.constants import DocumentType
 
 logger = logging.getLogger(__name__)
 
@@ -271,6 +272,9 @@ def parse_wezwanie(file_path: str | Path) -> WezwanieData:
         # First wezwanie or unknown - look for fingerprints date
         fingerprints_date = _find_first_date(text)
     
+    # Extract required documents
+    required_documents = _extract_required_documents(text)
+    
     return WezwanieData(
         text=text,
         case_number=case_number,
@@ -278,5 +282,34 @@ def parse_wezwanie(file_path: str | Path) -> WezwanieData:
         decision_date=decision_date,
         full_name=full_name,
         wezwanie_type=wezwanie_type,
-        required_documents=[],  # TODO: implement document extraction
+        required_documents=required_documents,
     )
+
+
+def _extract_required_documents(text: str) -> list[str]:
+    """Scan text for keywords indicating required documents."""
+    found_docs = set()
+    text_lower = text.lower()
+    
+    # Mapping of DocumentType to regex patterns
+    # Note: These should be robust enough to catch standard phrasing in Wezwanias
+    patterns = {
+        DocumentType.PHOTOS: [r"4\s*zdjęcia", r"fotografie"],
+        DocumentType.PAYMENT_CONFIRMATION: [r"opłata\s*skarbowa", r"dowód\s*wpłaty", r"340\s*z[łl]", r"440\s*z[łl]"],
+        DocumentType.PASSPORT: [r"kopia\s*paszportu", r"dokument\s*podróży"],
+        DocumentType.HEALTH_INSURANCE: [r"ubezpieczeni[ea]", r"polisa"],
+        DocumentType.ZALACZNIK_NR_1: [r"załącznik\s*nr\s*1"],
+        DocumentType.WORK_PERMISSION: [r"zezwolenie\s*na\s*pracę", r"oświadczenie\s*o\s*powierzeniu"],
+        DocumentType.ADDRESS_PROOF: [r"umowa\s*najmu", r"koszty\s*zamieszkania", r"akt\s*własności"],
+        DocumentType.FINANCIAL_PROOF: [r"środki\s*finansowe", r"posiadaniu\s*środków", r"wyciąg\s*z\s*konta"],
+        DocumentType.PIT_PROOF: [r"pit-37", r"zeznanie\s*podatkowe"],
+        DocumentType.ZUS_RCA_OR_INSURANCE: [r"zus\s*rca", r"zgłoszenie\s*do\s*zus"],
+    }
+
+    for doc_type, regex_list in patterns.items():
+        for pattern in regex_list:
+            if re.search(pattern, text_lower):
+                found_docs.add(doc_type.value)
+                break  # Found this document type, move to next
+    
+    return list(found_docs)

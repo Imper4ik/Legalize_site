@@ -147,11 +147,11 @@ def compress_uploaded_file(uploaded_file: InMemoryUploadedFile) -> InMemoryUploa
         # Create new InMemoryUploadedFile
         compressed_file = InMemoryUploadedFile(
             file=buffer,
-            field_name=uploaded_file.field_name,
+            field_name=getattr(uploaded_file, 'field_name', 'file'),
             name=new_name,
             content_type=f'image/{output_format.lower()}',
             size=len(buffer.getvalue()),
-            charset=uploaded_file.charset,
+            charset=getattr(uploaded_file, 'charset', None),
         )
         
         return compressed_file

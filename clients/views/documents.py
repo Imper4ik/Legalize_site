@@ -78,6 +78,16 @@ def add_document(request, client_id, doc_type):
                 if updated_fields:
                     client.save(update_fields=updated_fields)
 
+                if parsed.required_documents:
+                    doc_labels = []
+                    for doc_code in parsed.required_documents:
+                        try:
+                            doc_labels.append(str(DocumentType(doc_code).label))
+                        except ValueError:
+                            doc_labels.append(doc_code)
+                    if doc_labels:
+                        auto_updates.append(f"Обнаружен запрос документов: {', '.join(doc_labels)}")
+
                 emails_sent = send_missing_documents_email(client)
                 if emails_sent:
                     auto_updates.append("отправлено письмо с недостающими документами")
