@@ -6,7 +6,7 @@ class DocumentType(models.TextChoices):
     PHOTOS = 'photos', _('4 zdjęcia (45x35 mm)')
     PAYMENT_CONFIRMATION = 'payment_confirmation', _('Potwierdzenie opłaty')
     STUDY_APPLICATION_FEE = 'study_application_fee', _('Opłata 340 zł + 17 zł pełnomocnictwo')
-    WORK_PERMIT_FEE = 'work_permit_fee', _('Opłata 440 zł + 17 zł pełномocnictwo')
+    WORK_PERMIT_FEE = 'work_permit_fee', _('Opłata 440 zł + 17 zł pełnomocnictwo')
     PASSPORT = 'passport', _('Paszport')
     RESIDENCE_CARD = 'residence_card', _('Karta pobytu')
     ENROLLMENT_CERTIFICATE = 'enrollment_certificate', _('Zaświadczenie z uczelni o przyjęciu lub kontynuacji studiów')
