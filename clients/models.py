@@ -67,25 +67,35 @@ def _select_custom_document_name(
     custom_name_ru: str | None = None,
     language: str | None = None,
 ) -> str | None:
+    """Select document name based on language, prioritizing custom translations.
+    
+    Priority order:
+    1. custom_name_pl/en/ru for the current language (if provided)
+    2. custom_name (fallback for non-standard types)
+    3. None (caller will use Django translation for standard types)
+    """
     lang = (language or translation.get_language() or "").split("-")[0].lower()
+    
+    # Priority 1: Check language-specific custom name
     localized_name = {
         "pl": custom_name_pl,
         "en": custom_name_en,
         "ru": custom_name_ru,
     }.get(lang)
+    
     if localized_name and localized_name.strip():
         return localized_name
-
-    # If the document type is standard, we prefer to fall back to the
-    # standard translation (handled by the caller) rather than returning
-    # 'custom_name', which likely contains text in the creation language (e.g. Polish).
-    if doc_type in DOCUMENT_TYPE_VALUES:
-        return None
-
+    
+    # Priority 2: Use generic custom_name for non-standard types
+    # (Standard types will fall back to Django translations if no custom_name_* is set)
     if custom_name and custom_name.strip():
-        return custom_name
-
-    return doc_type.replace('_', ' ').capitalize()
+        # Only use custom_name if it's a non-standard type OR if no localized version exists
+        if doc_type not in DOCUMENT_TYPE_VALUES:
+            return custom_name
+    
+    # Priority 3: Return None for standard types without custom translation
+    # This triggers Django translation lookup in the caller
+    return None
 
 
 def resolve_document_label(
