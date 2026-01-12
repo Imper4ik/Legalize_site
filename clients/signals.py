@@ -125,3 +125,44 @@ def sync_payment_service_check(sender, instance, **kwargs):
             # Update pending payments safely
             Payment.objects.filter(client=instance, status='pending').update(service_description=new_service)
 
+
+@receiver(pre_save, sender=Document)
+def compress_document_image_on_upload(sender, instance, **kwargs):
+    """
+    Автоматически сжимает изображения при загрузке документа.
+    Конвертирует в WebP для экономии места (~70% экономии).
+    """
+    from clients.services.image_compression import compress_uploaded_file, should_compress
+    
+    # Only compress on new uploads or when file changed
+    if not instance.file:
+        return
+    
+    # Check if this is a new upload or file replacement
+    is_new_upload = not instance.pk
+    file_changed = False
+    
+    if not is_new_upload:
+        try:
+            old_instance = Document.objects.get(pk=instance.pk)
+            file_changed = old_instance.file != instance.file
+        except Document.DoesNotExist:
+            is_new_upload = True
+    
+    if not (is_new_upload or file_changed):
+        return
+    
+    # Check if file should be compressed
+    if not should_compress(instance.file.name):
+        return
+    
+    try:
+        compressed_file = compress_uploaded_file(instance.file)
+        if compressed_file:
+            instance.file = compressed_file
+    except Exception:
+        # If compression fails, keep original file
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed to compress document {instance.file.name}, keeping original")
+

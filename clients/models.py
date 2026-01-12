@@ -187,6 +187,7 @@ class Client(models.Model):
     submission_date = models.DateField(null=True, blank=True, verbose_name=_("Дата подачи (Złożone)"))
     employer_phone = models.CharField(max_length=20, blank=True, null=True, verbose_name=_("Телефон работодателя"))
     fingerprints_date = models.DateField(null=True, blank=True, verbose_name=_("Дата сдачи отпечатков"))
+    decision_date = models.DateField(null=True, blank=True, verbose_name=_("Дата официальной децизии"))
     notes = models.TextField(blank=True, null=True, verbose_name=_("Uwagi / Заметки"))
     has_checklist_access = models.BooleanField(default=False, verbose_name=_("Доступ к чеклисту предоставлен"))
 

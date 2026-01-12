@@ -276,6 +276,17 @@ class ClientDocumentPrintView(ClientPrintBaseView):
 
     def _get_attachment_names(self) -> list[str]:
         attachments = [name.strip() for name in self.request.GET.getlist('attachments') if name.strip()]
+        
+        # Auto-add decision follow-up reminder if deadline has passed
+        client = self.get_object()
+        today = timezone.localdate()
+        if client.decision_date and client.decision_date < today:
+            days_overdue = (today - client.decision_date).days
+            reminder_text = f"Prośba o przyspieszenie wydania decyzji (termin był {client.decision_date.strftime('%d.%m.%Y')}, {days_overdue} dni temu)"
+            # Add at the beginning if not already in list
+            if not any("przyspieszenie" in att.lower() for att in attachments):
+                attachments.insert(0, reminder_text)
+        
         minimum_slots = 1
         if len(attachments) < minimum_slots:
             attachments.extend([''] * (minimum_slots - len(attachments)))
