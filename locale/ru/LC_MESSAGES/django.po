@@ -48,7 +48,7 @@ msgstr "Документы, подтверждающие стоимость пр
 
 #: clients/constants.py:15 clients/models.py:107
 msgid "Środki finansowe na utrzymanie w Polsce"
-msgstr "Финансовые средства на содержание"
+msgstr "Финансовые средства на содержание в Польше"
 
 #: clients/constants.py:23 clients/models.py:108
 msgid "Załącznik nr 1"
@@ -108,7 +108,7 @@ msgstr "Вызов (Wezwanie)"
 
 #: clients/constants.py:38
 msgid "Opłata 340 zł + 17 zł pełnomocnictwo"
-msgstr "Оплата 340 zł + 17 zł доверенность"
+msgstr "Оплата 340 зл + 17 зл за доверенность"
 
 #: clients/constants.py:39
 msgid "Opłata 440 zł + 17 zł pełnomocnictwo"
@@ -325,9 +325,7 @@ msgstr ""
 msgid "Перевод"
 msgstr ""
 
-#: clients/models.py:144
-msgid "Учеба"
-msgstr ""
+
 
 #: clients/models.py:145
 #| msgid "Регистрация"
