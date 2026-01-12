@@ -282,7 +282,7 @@ class Client(models.Model):
             documents = docs_map.get(code, [])
             status_list.append({
                 'code': code,
-                'name': translate_document_name(str(name), current_language),
+                'name': str(name),
                 'is_uploaded': bool(documents),
                 'documents': documents
             })
