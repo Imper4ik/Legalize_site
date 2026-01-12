@@ -51,12 +51,29 @@ def add_document(request, client_id, doc_type):
                     client.case_number = parsed.case_number
                     updated_fields.append("case_number")
                     auto_updates.append(f"номер дела: {parsed.case_number}")
+                    
                 if parsed.fingerprints_date and parsed.fingerprints_date != client.fingerprints_date:
                     client.fingerprints_date = parsed.fingerprints_date
                     updated_fields.append("fingerprints_date")
                     auto_updates.append(
                         f"дата сдачи отпечатков: {parsed.fingerprints_date.strftime('%d.%m.%Y')}"
                     )
+                
+                if parsed.decision_date and parsed.decision_date != client.decision_date:
+                    client.decision_date = parsed.decision_date
+                    updated_fields.append("decision_date")
+                    auto_updates.append(
+                        f"дата децизии: {parsed.decision_date.strftime('%d.%m.%Y')}"
+                    )
+                
+                if parsed.full_name and (not client.first_name or not client.last_name):
+                    # Only update name if it's empty
+                    name_parts = parsed.full_name.split()
+                    if len(name_parts) >= 2:
+                        client.first_name = name_parts[0]
+                        client.last_name = " ".join(name_parts[1:])
+                        updated_fields.extend(["first_name", "last_name"])
+                        auto_updates.append(f"ФИО: {parsed.full_name}")
 
                 if updated_fields:
                     client.save(update_fields=updated_fields)
@@ -64,6 +81,7 @@ def add_document(request, client_id, doc_type):
                 emails_sent = send_missing_documents_email(client)
                 if emails_sent:
                     auto_updates.append("отправлено письмо с недостающими документами")
+
 
             success_message = f"Документ '{document_type_display}' успешно добавлен."
             if auto_updates:

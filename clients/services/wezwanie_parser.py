@@ -15,6 +15,10 @@ CASE_NUMBER_PATTERNS = (
     re.compile(r"numer\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     re.compile(r"nr\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     re.compile(r"sygn\.\s*akt[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
+    # Pattern for case number like WSC-II-S.6151.97770.2023
+    re.compile(r"\b(WSC[-\w.]+\d{4})\b", re.IGNORECASE),
+    # Pattern for simple numbers like 409366
+    re.compile(r"\b(\d{6,})\b"),
     re.compile(r"\b([A-Z]{1,3}\/?\d{1,4}/\d{2,4})\b"),
 )
 DATE_PATTERNS = (
@@ -31,6 +35,14 @@ class WezwanieData:
     text: str
     case_number: str | None = None
     fingerprints_date: date | None = None
+    decision_date: date | None = None
+    full_name: str | None = None
+    wezwanie_type: str | None = None  # "fingerprints" or "decision"
+    required_documents: list[str] = None
+
+    def __post_init__(self):
+        if self.required_documents is None:
+            self.required_documents = []
 
 
 def _parse_date(raw: str | None) -> date | None:
@@ -129,11 +141,106 @@ def _find_first_date(text: str) -> date | None:
     return None
 
 
+def _find_first_date(text: str) -> date | None:
+    for pattern in DATE_PATTERNS:
+        for match in pattern.finditer(text):
+            parsed = _parse_date(match.group(1))
+            if parsed:
+                return parsed
+    return None
+
+
+def _detect_wezwanie_type(text: str) -> str | None:
+    """Detect if this is a fingerprints invitation or decision notification."""
+    text_lower = text.lower()
+    
+    # Keywords for decision wezwanie (second type)
+    decision_keywords = ["decyzj", "wydanie decyzji", "termin wydania", "termin rozpatrz"]
+    if any(keyword in text_lower for keyword in decision_keywords):
+        return "decision"
+    
+    # Keywords for fingerprints wezwanie (first type)
+    fingerprint_keywords = ["odcisk", "odciski", "pobran", "fingerprint"]
+    if any(keyword in text_lower for keyword in fingerprint_keywords):
+        return "fingerprints"
+    
+    return None
+
+
+def _find_decision_date(text: str) -> date | None:
+    """Extract decision date from second wezwanie."""
+    # Patterns for decision date with keywords
+    decision_patterns = [
+        # Pattern: "powinna być podjęta do dnia DD.MM.YYYY"
+        re.compile(r"powinna być podjęta do dnia\s+([\d./-]+)", re.IGNORECASE),
+        # Pattern: "termin wydania decyzji: DD.MM.YYYY"
+        re.compile(r"termin wydania decyzji[:\s]+([\d./-]+)", re.IGNORECASE),
+        # Pattern: "decyzja ... do dnia DD.MM.YYYY"
+        re.compile(r"decyzj[aiy].*?do dnia\s+([\d./-]+)", re.IGNORECASE),
+        # General fallback
+        re.compile(r"(?:rozpatrzenie|termin).*?do[:\s]+([\d./-]+)", re.IGNORECASE),
+    ]
+    
+    for pattern in decision_patterns:
+        match = pattern.search(text)
+        if match:
+            parsed = _parse_date(match.group(1))
+            if parsed:
+                return parsed
+    
+    return None
+
+
+def _find_full_name(text: str) -> str | None:
+    """Extract full name from wezwanie (Polish names)."""
+    name_patterns = [
+        # Pattern: "Pan/i\nMikita BUTOUSKI" (multiline with potential whitespace)
+        re.compile(r"Pan/i\s+([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+\s+[A-ZĄĆĘŁŃÓŚŹŻ]+)", re.IGNORECASE | re.UNICODE),
+        # Pattern: "Imię i nazwisko: Jan Kowalski"
+        re.compile(r"(?:imię i nazwisko|imi[ęe] oraz nazwisko)[:\s]+([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+)+)", re.IGNORECASE | re.UNICODE),
+        # Pattern: "Name: Jan Kowalski"
+        re.compile(r"(?:name|full name)[:\s]+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)", re.IGNORECASE),
+    ]
+    
+    for pattern in name_patterns:
+        match = pattern.search(text)
+        if match:
+            name = match.group(1).strip()
+            # Validate: should have at least 2 words
+            if len(name.split()) >= 2:
+                return name
+    
+    return None
+
+
 def parse_wezwanie(file_path: str | Path) -> WezwanieData:
     """Parse the uploaded summons and return the extracted fields."""
 
     text = extract_text(file_path)
+    wezwanie_type = _detect_wezwanie_type(text)
     case_number = _find_case_number(text)
-    fingerprints_date = _find_first_date(text)
-
-    return WezwanieData(text=text, case_number=case_number, fingerprints_date=fingerprints_date)
+    full_name = _find_full_name(text)
+    
+    # Extract dates based on type
+    fingerprints_date = None
+    decision_date = None
+    
+    if wezwanie_type == "decision":
+        # Second wezwanie - look for decision date
+        decision_date = _find_decision_date(text)
+        if not decision_date:
+            # Fallback to first date found
+            decision_date = _find_first_date(text)
+    else:
+        # First wezwanie or unknown - look for fingerprints date
+        fingerprints_date = _find_first_date(text)
+    
+    return WezwanieData(
+        text=text,
+        case_number=case_number,
+        fingerprints_date=fingerprints_date,
+        decision_date=decision_date,
+        full_name=full_name,
+        wezwanie_type=wezwanie_type,
+        required_documents=[],  # TODO: implement document extraction
+    )
