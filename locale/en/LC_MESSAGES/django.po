@@ -779,7 +779,7 @@ msgstr ""
 #: templates/includes/theme_toggle.html:9
 #| msgid "Оплаченная сумма"
 msgid "Тёмная тема"
-msgstr "Amount paid"
+msgstr "Dark theme"
 
 #: templates/account/auth_base.html:693 templates/account/auth_base.html:695
 msgid "Переключить на светлую тему"
