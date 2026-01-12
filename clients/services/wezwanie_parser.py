@@ -59,18 +59,54 @@ def _parse_date(raw: str | None) -> date | None:
 
 
 def _extract_pdf_text(path: Path) -> str:
+    """Extract text from PDF, using native text extraction or OCR for scans."""
+    text_content = ""
+    
+    # 1. Try native text extraction first (fastest, best for digital PDFs)
+    # Note: Using pypdf would be better here, but avoiding extra dependency for now
+    # if simple read worked. Since we know simple read fails for scans, we skip straight
+    # to OCR if we can't get text easily or if we want to be thorough.
+    # However, standard PDF libraries (pypdf) are better than raw read.
+    # Given we added pdf2image, we likely want to focus on OCR for scans.
+    
     try:
-        data = path.read_bytes()
-    except Exception:  # pragma: no cover - defensive logging
-        logger.exception("Не удалось прочитать PDF %s", path)
-        return ""
+        from pdf2image import convert_from_path
+        import pytesseract
+        
+        # Convert PDF to images (first 2 pages usually enough for Wezwanie)
+        try:
+            images = convert_from_path(str(path), first_page=1, last_page=2)
+        except Exception as e:
+            logger.warning(f"pdf2image failed: {e}")
+            images = []
+            
+        ocr_text = []
+        for i, image in enumerate(images):
+            try:
+                # Polish language is crucial here
+                page_text = pytesseract.image_to_string(image, lang='pol+eng')
+                ocr_text.append(page_text)
+            except Exception as e:
+                logger.warning(f"OCR failed on page {i}: {e}")
+                
+        text_content = "\n".join(ocr_text)
+        
+    except ImportError:
+        logger.warning("pdf2image or pytesseract not available")
+    except Exception as e:
+        logger.exception(f"PDF OCR extraction failed: {e}")
 
-    # На случай, если файл содержит текстовые фрагменты в читабельном виде,
-    # пробуем извлечь их напрямую.
-    try:
-        return data.decode("utf-8", errors="ignore")
-    except Exception:  # pragma: no cover - defensive safeguard
-        return ""
+    # 2. Fallback: naive binary extraction (only works for some streams, mostly debug)
+    if not text_content or len(text_content.strip()) < 50:
+        try:
+            raw_text = path.read_bytes().decode("utf-8", errors="ignore")
+            # Only use if it looks like real text, not binary garbage
+            if "wezwanie" in raw_text.lower() or "duw" in raw_text.lower():
+                return raw_text
+        except Exception:
+            pass
+
+    return text_content
 
 
 def _extract_image_text(path: Path) -> str:

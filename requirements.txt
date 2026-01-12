@@ -12,3 +12,4 @@ django-anymail[brevo,sendgrid]
 Pillow
 pytesseract
 django-fernet-fields
+pdf2image
