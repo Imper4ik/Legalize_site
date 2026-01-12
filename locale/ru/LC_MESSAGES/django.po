@@ -145,7 +145,7 @@ msgid "zaświadczenie z ZUS o dotychczasowym przebiegu ubezpieczenia cudzoziemca
 msgstr "Справка из ZUS о ходе страхования иностранца и об отсутствии задолженности по взносам"
 
 msgid "zaświadczenie ZUS dot. braku zaległości pracodawcy lub inne dokumenty potwierdzające posiadanie przez pracodawcę środków finansowych lub źródeł dochodu niezbędnych do pokrycia zobowiązań wynikających z zatrudnienia cudzoziemca"
-msgstr "Справка из ZUS об отсутствии задолженности работодателя или другие документы"
+msgstr "Справка из ZUS об отсутствии задолженности работодателя или другие документы, подтверждающие наличие у работодателя финансовых средств или источников дохода, необходимых для покрытия обязательств, связанных с трудоустройством иностранца"
 
 msgid "CIT lub PIT pracodawcy"
 msgstr "CIT или PIT работодателя"
