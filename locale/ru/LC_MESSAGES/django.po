@@ -248,7 +248,7 @@ msgstr "Дата окончания основания"
 
 #: clients/models.py:45
 msgid "Дата подачи (Złożone)"
-msgstr ""
+msgstr "Дата подачи (Подано)"
 
 #: clients/models.py:46
 msgid "Телефон работодателя"
