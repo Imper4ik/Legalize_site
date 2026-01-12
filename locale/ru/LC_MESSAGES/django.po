@@ -108,11 +108,11 @@ msgstr "Вызов (Wezwanie)"
 
 #: clients/constants.py:38
 msgid "Opłata 340 zł + 17 zł pełnomocnictwo"
-msgstr "Оплата 340 зл + 17 зл за доверенность"
+msgstr "Оплата 340 zł + 17 zł за доверенность"
 
 #: clients/constants.py:39
 msgid "Opłata 440 zł + 17 zł pełnomocnictwo"
-msgstr "Оплата 440 zł + 17 zł доверенность"
+msgstr "Оплата 440 zł + 17 zł за доверенность"
 
 #: clients/models.py:11
 msgid "Учёба"
