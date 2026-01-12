@@ -19,7 +19,9 @@
               <option value="{{ choice_value }}" {% if client.application_purpose=='work' and
                 choice_value=='work_service' %}selected{% endif %} {% if client.application_purpose=='study' and
                 choice_value=='study_service' %}selected{% endif %} {% if client.application_purpose=='family' and
-                choice_value=='consultation' %}selected{% endif %}>{{ choice_label }}</option>
+                choice_value=='consultation' %}selected{% endif %}>
+                {{ choice_label }}
+              </option>
               {% endfor %}
             </select>
           </div>
