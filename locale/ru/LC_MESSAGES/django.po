@@ -271,17 +271,17 @@ msgstr "Тип документа"
 
 #: clients/models.py:116
 msgid "Файл"
-msgstr ""
+msgstr "Файл"
 
 #: clients/models.py:117
 #| msgid "Действия"
 msgid "Действителен до"
-msgstr "Действия"
+msgstr "Действителен до"
 
 #: clients/models.py:118
 #| msgid "Оплата за обучение"
 msgid "Дата загрузки"
-msgstr "Оплата за обучение"
+msgstr "Дата загрузки"
 
 #: clients/models.py:119
 #| msgid "Проверен"
@@ -299,31 +299,31 @@ msgstr "Документы"
 #: clients/models.py:132
 #| msgid "Сумма оплаты"
 msgid "Ожидает оплаты"
-msgstr "Сумма оплаты"
+msgstr "Ожидает оплаты"
 
 #: clients/models.py:133
 msgid "Частично оплачен"
-msgstr ""
+msgstr "Частично оплачен"
 
 #: clients/models.py:134
 msgid "Оплачен полностью"
-msgstr ""
+msgstr "Оплачен полностью"
 
 #: clients/models.py:135
 msgid "Возврат"
-msgstr ""
+msgstr "Возврат"
 
 #: clients/models.py:138
 msgid "Карта"
-msgstr ""
+msgstr "Карта"
 
 #: clients/models.py:139
 msgid "Наличные"
-msgstr ""
+msgstr "Наличные"
 
 #: clients/models.py:140
 msgid "Перевод"
-msgstr ""
+msgstr "Перевод"
 
 
 
