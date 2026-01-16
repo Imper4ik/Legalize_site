@@ -1,7 +1,8 @@
 ﻿{% extends "base.html" %}
 {% load i18n static %}
 
-{% block title %}{% blocktrans with client_name=client.first_name %}Р”РµС‚Р°Р»Рё РєР»РёРµРЅС‚Р°: {{ client_name }}{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with client_name=client.first_name %}Детали клиента: {{ client_name }}{% endblocktrans
+%}{% endblock %}
 
 {% block content %}
 <div id="client-overview" data-refresh-url="{% url 'clients:client_overview_partial' client.pk %}">
@@ -9,9 +10,9 @@
 </div>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <h4>{% translate "Р¤РёРЅР°РЅСЃС‹" %}</h4>
+  <h4>{% translate "Финансы" %}</h4>
   <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPaymentModal">+ {%
-    translate "Р”РѕР±Р°РІРёС‚СЊ СЃС‡С‘С‚" %}</button>
+    translate "Добавить счёт" %}</button>
 </div>
 <div id="payment-alerts" class="mb-2"></div>
 <div class="card mb-4">
@@ -21,7 +22,7 @@
       {% include 'clients/partials/payment_item.html' with payment=payment %}
     </li>
     {% empty %}
-    <li class="list-group-item text-muted" id="no-payments-message">{% translate "РЎС‡РµС‚Р° РЅР° РѕРїР»Р°С‚Сѓ РµС‰Рµ РЅРµ СЃРѕР·РґР°РЅС‹." %}
+    <li class="list-group-item text-muted" id="no-payments-message">{% translate "Счета на оплату еще не созданы." %}
     </li>
     {% endfor %}
   </ul>
@@ -30,11 +31,11 @@
 <hr>
 
 <div class="d-flex justify-content-between align-items-center">
-  <h2 class="mb-0">{% translate "Р§РµРєР»РёСЃС‚ РґРѕРєСѓРјРµРЅС‚РѕРІ" %}</h2>
+  <h2 class="mb-0">{% translate "Чеклист документов" %}</h2>
   <form id="verify-all-documents-form" action="{% url 'clients:verify_all_documents' client_id=client.pk %}"
     method="post" class="ms-3">
     {% csrf_token %}
-    <button type="submit" class="btn btn-outline-success btn-sm">{% translate "РџСЂРѕРІРµСЂРёС‚СЊ РІСЃРµ Р·Р°РіСЂСѓР¶РµРЅРЅС‹Рµ" %}</button>
+    <button type="submit" class="btn btn-outline-success btn-sm">{% translate "Проверить все загруженные" %}</button>
   </form>
 </div>
 
