@@ -571,7 +571,7 @@ class WezwanieUploadFlowTests(TestCase):
 
         mail.outbox = []
 
-    def test_uploading_wezwanie_updates_fields_and_sends_missing_docs_email(self):
+    def test_uploading_wezwanie_returns_pending_confirmation(self):
         login_successful = self.client.login(username="staff_wezwanie", password="pass")
         self.assertTrue(login_successful)
 
@@ -582,17 +582,62 @@ class WezwanieUploadFlowTests(TestCase):
             kwargs={"client_id": self.client_record.pk, "doc_type": "wezwanie"},
         )
 
-        response = self.client.post(url, {"file": upload}, follow=True)
+        response = self.client.post(
+            url,
+            {"file": upload, "parse_wezwanie": "1"},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
 
         self.assertEqual(response.status_code, 200)
+        payload = json.loads(response.content)
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["pending_confirmation"])
 
+        updated_client = Client.objects.get(pk=self.client_record.pk)
+        self.assertIsNone(updated_client.case_number)
+        self.assertIsNone(updated_client.fingerprints_date)
+
+        document = Document.objects.get(client=updated_client, document_type="wezwanie")
+        self.assertTrue(document.awaiting_confirmation)
+
+    def test_confirm_wezwanie_updates_client_and_sends_email(self):
+        login_successful = self.client.login(username="staff_wezwanie", password="pass")
+        self.assertTrue(login_successful)
+
+        content = b"Numer sprawy: ZZ/987/24\nw dniu 05-06-2024 pobrano odciski\n4 zdjecia"
+        upload = SimpleUploadedFile("wezwanie.txt", content)
+        upload_url = reverse(
+            "clients:add_document",
+            kwargs={"client_id": self.client_record.pk, "doc_type": "wezwanie"},
+        )
+
+        upload_response = self.client.post(
+            upload_url,
+            {"file": upload, "parse_wezwanie": "1"},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        payload = json.loads(upload_response.content)
+        document = Document.objects.get(pk=payload["doc_id"])
+
+        confirm_url = reverse("clients:confirm_wezwanie_parse", kwargs={"doc_id": document.pk})
+        response = self.client.post(
+            confirm_url,
+            {
+                "first_name": "Jan",
+                "last_name": "Test",
+                "case_number": "ZZ/987/24",
+                "fingerprints_date": "2024-06-05",
+            },
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 200)
         updated_client = Client.objects.get(pk=self.client_record.pk)
         self.assertEqual(updated_client.case_number, "ZZ/987/24")
         self.assertEqual(updated_client.fingerprints_date, date(2024, 6, 5))
 
-        self.assertTrue(
-            Document.objects.filter(client=updated_client, document_type="wezwanie").exists()
-        )
+        document.refresh_from_db()
+        self.assertFalse(document.awaiting_confirmation)
 
         self.assertGreaterEqual(len(mail.outbox), 1)
         self.assertIn(self.passport_label, mail.outbox[0].body)
