@@ -132,7 +132,10 @@ def _preprocess_for_ocr(img):
     # 1. Grayscale
     img = img.convert('L')
     
-    # 2. Rescale if small (assuming A4 width is approx 8.3 inches, 300 DPI -> ~2500px)
+    # 2. Autocontrast (Max contrast for better separation)
+    img = ImageOps.autocontrast(img)
+    
+    # 3. Rescale if small (assuming A4 width is approx 8.3 inches, 300 DPI -> ~2500px)
     target_width = 2500
     if img.width < 1500:
         ratio = target_width / img.width
@@ -204,8 +207,15 @@ def _find_case_number(text: str) -> str | None:
     for pattern in CASE_NUMBER_PATTERNS:
         match = pattern.search(text)
         if match:
-            normalized = re.sub(r"[^A-Za-z0-9./-]", "", match.group(1)).upper()
-            if normalized:
+            # Clean up the number: remove spaces, dots at the end, etc.
+            raw_val = match.group(1)
+            # Remove all whitespace to fix "WSC - II" issues
+            normalized = re.sub(r"\s+", "", raw_val)
+            # Remove trailing dots or junk
+            normalized = normalized.strip(".,-:/")
+            normalized = normalized.upper()
+            
+            if len(normalized) > 5:  # Basic sanity check
                 return normalized
     return None
 
@@ -306,18 +316,18 @@ def _find_decision_date(text: str) -> date | None:
 def _find_full_name(text: str) -> str | None:
     """Extract full name from wezwanie (Polish names)."""
     name_patterns = [
-        # Pattern: "Pan/Pani Anna Nowak" / "Pan Jan Kowalski" / "Pani Maria KOWALSKA"
+        # Pattern: "Pan/Pani Anna Nowak" (Strict Case for name parts to avoid 'ul.')
         re.compile(
             r"(?:Pan/Pani|Pan|Pani|Panna|Pan/i|Panli)\s+"
             r"([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+"
             r"(?:\s+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+|\s+[A-ZĄĆĘŁŃÓŚŹŻ]{2,}){1,3})",
-            re.IGNORECASE | re.UNICODE,
+            re.UNICODE,
         ),
         # Pattern: "Adresat: Jan Kowalski"
         re.compile(
-            r"(?:adresat|dla|do)\s*[:\-]?\s+"
+            r"(?:Adresat|Dla|Do)\s*[:\-]?\s+"
             r"([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+){1,3})",
-            re.IGNORECASE | re.UNICODE,
+            re.UNICODE,
         ),
         # Pattern: "Imię i nazwisko: Jan Kowalski"
         re.compile(r"(?:imię i nazwisko|imi[ęe] oraz nazwisko)[:\s]+([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+)+)", re.IGNORECASE | re.UNICODE),
