@@ -229,6 +229,7 @@
         showPaymentAlert('Не удалось обновить платёж. Попробуйте ещё раз.', 'danger');
       } finally {
         submitButton?.removeAttribute('disabled');
+        parseButton?.removeAttribute('disabled');
       }
     });
   }
@@ -257,7 +258,8 @@
       return;
     }
 
-    const submitButton = form.querySelector('[type="submit"]');
+    const submitButton = form.querySelector('#uploadDocumentSubmitButton');
+    const parseButton = form.querySelector('#wezwanieParseButton');
     const csrfToken = form.querySelector('[name="csrfmiddlewaretoken"]')?.value || '';
 
     function resetConfirmation() {
@@ -295,8 +297,14 @@
         description.textContent = docName ? `Вы загружаете документ: "${docName}"` : '';
       }
 
+      const isWezwanie = docType === 'wezwanie';
       if (parseInput) {
-        parseInput.value = docType === 'wezwanie' ? '1' : '0';
+        parseInput.value = isWezwanie ? '1' : '0';
+      }
+
+      if (parseButton && submitButton) {
+        parseButton.classList.toggle('d-none', !isWezwanie);
+        submitButton.classList.toggle('d-none', isWezwanie);
       }
 
       resetConfirmation();
@@ -313,6 +321,7 @@
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
       submitButton?.setAttribute('disabled', 'disabled');
+      parseButton?.setAttribute('disabled', 'disabled');
 
       try {
         const response = await fetch(form.action, {
@@ -370,6 +379,7 @@
         showDocumentAlert('Не удалось загрузить документ. Попробуйте ещё раз.', 'danger');
       } finally {
         submitButton?.removeAttribute('disabled');
+        parseButton?.removeAttribute('disabled');
       }
     });
 
