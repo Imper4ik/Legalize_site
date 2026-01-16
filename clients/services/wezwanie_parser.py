@@ -20,8 +20,8 @@ CASE_NUMBER_PATTERNS = (
     re.compile(r"sygnatura[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     re.compile(r"nr\s+akt[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     re.compile(r"znak\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
-    # Pattern for case number like WSC-II-S.6151.97770.2023
-    re.compile(r"\b(WSC[-\w.]+\d{4})\b", re.IGNORECASE),
+    # Pattern for case number like WSC-II-S.6151.97770.2023 (allow spaces/noise)
+    re.compile(r"\b(WSC[-\w.\s]+\d{4})\b", re.IGNORECASE),
     # Pattern for simple numbers like 409366
     re.compile(r"\b(\d{6,})\b"),
     re.compile(r"\b([A-Z]{1,3}\/?\d{1,4}/\d{2,4})\b"),
@@ -279,7 +279,7 @@ def _find_full_name(text: str) -> str | None:
     name_patterns = [
         # Pattern: "Pan/Pani Anna Nowak" / "Pan Jan Kowalski" / "Pani Maria KOWALSKA"
         re.compile(
-            r"(?:Pan/Pani|Pan|Pani|Panna|Pan/i)\s+"
+            r"(?:Pan/Pani|Pan|Pani|Panna|Pan/i|Panli)\s+"
             r"([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+"
             r"(?:\s+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+|\s+[A-ZĄĆĘŁŃÓŚŹŻ]{2,}){1,3})",
             re.IGNORECASE | re.UNICODE,
@@ -313,9 +313,17 @@ def parse_wezwanie(file_path: str | Path) -> WezwanieData:
     text = extract_text(file_path)
     if not text.strip():
         return WezwanieData(text="", error="no_text")
+    print(f"DEBUG: EXTRACTED TEXT START (1000 chars):\n{text[:1000]}\n...", flush=True)
+
     wezwanie_type = _detect_wezwanie_type(text)
+    print(f"DEBUG: Detected Type: {wezwanie_type}", flush=True)
+
     case_number = _find_case_number(text)
+    print(f"DEBUG: Case Number found: {case_number}", flush=True)
+
     full_name = _find_full_name(text)
+    print(f"DEBUG: Full Name found: {full_name}", flush=True)
+
     
     # Extract dates based on type
     fingerprints_date = None
