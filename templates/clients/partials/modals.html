@@ -123,7 +123,8 @@
 
 <div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel"
   aria-hidden="true"
-  data-action-template="{% url 'clients:add_document' client_id=client.id doc_type='__doc_type__' %}">
+  data-action-template="{% url 'clients:add_document' client_id=client.id doc_type='__doc_type__' %}"
+  data-confirm-url-template="{% url 'clients:confirm_wezwanie_parse' doc_id='__doc_id__' %}">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -132,6 +133,7 @@
       </div>
       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
+        <input type="hidden" name="parse_wezwanie" id="uploadDocumentParseWezwanie" value="0">
         <div class="modal-body">
           <p class="mb-3 text-muted" id="uploadDocumentDescription"></p>
           <div class="mb-3">
@@ -144,10 +146,31 @@
               "Действителен до (необязательно)" %}</label>
             {{ document_upload_form.expiry_date }}
           </div>
+          <div class="border rounded p-3 d-none" id="wezwanieConfirmationStep">
+            <h6 class="mb-2">{% translate "Подтверждение данных wezwanie" %}</h6>
+            <p class="text-muted mb-3">{% translate "Проверьте распознанные данные перед сохранением." %}</p>
+            <dl class="row mb-3">
+              <dt class="col-sm-4">{% translate "ФИО" %}</dt>
+              <dd class="col-sm-8" id="wezwanieParsedFullName">—</dd>
+              <dt class="col-sm-4">{% translate "Номер дела" %}</dt>
+              <dd class="col-sm-8" id="wezwanieParsedCaseNumber">—</dd>
+              <dt class="col-sm-4">{% translate "Дата отпечатков" %}</dt>
+              <dd class="col-sm-8" id="wezwanieParsedFingerprintsDate">—</dd>
+              <dt class="col-sm-4">{% translate "Дата децизии" %}</dt>
+              <dd class="col-sm-8" id="wezwanieParsedDecisionDate">—</dd>
+            </dl>
+          </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
-          <button type="submit" class="btn btn-primary">{% translate "Сохранить" %}</button>
+          <div class="d-flex gap-2 w-100 justify-content-end" id="uploadDocumentActions">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+            <button type="submit" class="btn btn-primary">{% translate "Сохранить" %}</button>
+          </div>
+          <div class="d-flex gap-2 w-100 justify-content-end d-none" id="wezwanieConfirmActions">
+            <button type="button" class="btn btn-outline-secondary" id="wezwanieCancelButton"
+              data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+            <button type="button" class="btn btn-primary" id="wezwanieConfirmButton">{% translate "Подтвердить" %}</button>
+          </div>
         </div>
       </form>
     </div>
