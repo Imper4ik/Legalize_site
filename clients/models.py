@@ -308,6 +308,7 @@ class Document(models.Model):
     expiry_date = models.DateField(null=True, blank=True, verbose_name=_("Действителен до"))
     uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Дата загрузки"))
     verified = models.BooleanField(default=False, verbose_name=_("Проверено"))
+    awaiting_confirmation = models.BooleanField(default=False, verbose_name=_("Ожидает подтверждения"))
 
     class Meta:
         verbose_name = _("Документ")
