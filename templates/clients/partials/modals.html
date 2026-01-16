@@ -6,40 +6,43 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="addPaymentModalLabel">{% translate "Р”РѕР±Р°РІРёС‚СЊ РЅРѕРІС‹Р№ СЃС‡С‘С‚" %}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Р—Р°РєСЂС‹С‚СЊ' %}"></button>
+        <h5 class="modal-title" id="addPaymentModalLabel">{% translate "Добавить новый счёт" %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
       </div>
       <form action="{% url 'clients:add_payment' client.id %}" method="post">
         {% csrf_token %}
         <div class="modal-body">
           <div class="mb-3">
-            <label for="id_service_description" class="form-label">{% translate "РЈСЃР»СѓРіР°" %}</label>
+            <label for="id_service_description" class="form-label">{% translate "Услуга" %}</label>
             <select name="service_description" class="form-select" id="id_service_description" required>
               {% for choice_value, choice_label in payment_form.service_description.field.choices %}
-              <option value="{{ choice_value }}" {% if client.application_purpose == "work" and choice_value == "work_service" %}selected{% elif client.application_purpose == "study" and choice_value == "study_service" %}selected{% elif client.application_purpose == "family" and choice_value == "consultation" %}selected{% endif %}>
+              <option value="{{ choice_value }}" {% if client.application_purpose=="work" and
+                choice_value=="work_service" %}selected{% elif client.application_purpose=="study" and
+                choice_value=="study_service" %}selected{% elif client.application_purpose=="family" and
+                choice_value=="consultation" %}selected{% endif %}>
                 {{ choice_label }}
               </option>
               {% endfor %}
             </select>
           </div>
           <div class="mb-3">
-            <label for="id_total_amount" class="form-label">{% translate "РћР±С‰Р°СЏ СЃСѓРјРјР°" %}</label>
+            <label for="id_total_amount" class="form-label">{% translate "Общая сумма" %}</label>
             <input type="number" step="0.01" name="total_amount" class="form-control" id="id_total_amount" required>
           </div>
           <div class="mb-3">
-            <label for="id_amount_paid" class="form-label">{% translate "РћРїР»Р°С‡РµРЅРѕ" %}</label>
+            <label for="id_amount_paid" class="form-label">{% translate "Оплачено" %}</label>
             <input type="number" step="0.01" name="amount_paid" class="form-control" id="id_amount_paid" required>
           </div>
           <div class="mb-3">
-            <label for="id_due_date" class="form-label">{% translate "Р”Р°С‚Р° РѕРїР»Р°С‚С‹ (РµСЃР»Рё РµСЃС‚СЊ)" %}</label>
+            <label for="id_due_date" class="form-label">{% translate "Дата оплаты (если есть)" %}</label>
             <input type="date" name="due_date" class="form-control" id="id_due_date">
           </div>
           <div class="mb-3">
-            <label for="id_payment_date" class="form-label">{% translate "Р”Р°С‚Р° С„Р°РєС‚РёС‡РµСЃРєРѕР№ РѕРїР»Р°С‚С‹" %}</label>
+            <label for="id_payment_date" class="form-label">{% translate "Дата фактической оплаты" %}</label>
             <input type="date" name="payment_date" class="form-control" id="id_payment_date">
           </div>
           <div class="mb-3">
-            <label for="id_payment_method" class="form-label">{% translate "РЎРїРѕСЃРѕР± РѕРїР»Р°С‚С‹" %}</label>
+            <label for="id_payment_method" class="form-label">{% translate "Способ оплаты" %}</label>
             <select name="payment_method" class="form-select" id="id_payment_method">
               <option value="">---------</option>
               {% for choice_value, choice_label in payment_form.payment_method.field.choices %}
@@ -48,11 +51,11 @@
             </select>
           </div>
           <div class="mb-3">
-            <label for="id_transaction_id" class="form-label">{% translate "ID С‚СЂР°РЅР·Р°РєС†РёРё" %}</label>
+            <label for="id_transaction_id" class="form-label">{% translate "ID транзакции" %}</label>
             <input type="text" name="transaction_id" class="form-control" id="id_transaction_id">
           </div>
           <div class="mb-3">
-            <label for="id_status" class="form-label">{% translate "РЎС‚Р°С‚СѓСЃ" %}</label>
+            <label for="id_status" class="form-label">{% translate "Статус" %}</label>
             <select name="status" class="form-select" id="id_status" required>
               {% for choice_value, choice_label in payment_form.status.field.choices %}
               <option value="{{ choice_value }}">{{ choice_label }}</option>
@@ -61,8 +64,8 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "РћС‚РјРµРЅР°" %}</button>
-          <button type="submit" class="btn btn-primary">{% translate "РЎРѕС…СЂР°РЅРёС‚СЊ СЃС‡С‘С‚" %}</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+          <button type="submit" class="btn btn-primary">{% translate "Сохранить счёт" %}</button>
         </div>
       </form>
     </div>
@@ -73,14 +76,14 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="editPaymentModalLabel">{% translate "Р РµРґР°РєС‚РёСЂРѕРІР°С‚СЊ СЃС‡С‘С‚" %}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Р—Р°РєСЂС‹С‚СЊ' %}"></button>
+        <h5 class="modal-title" id="editPaymentModalLabel">{% translate "Редактировать счёт" %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
       </div>
       <form id="editPaymentForm" method="post">
         {% csrf_token %}
         <div class="modal-body">
           <div class="mb-3">
-            <label for="edit_id_service_description" class="form-label">{% translate "РЈСЃР»СѓРіР°" %}</label>
+            <label for="edit_id_service_description" class="form-label">{% translate "Услуга" %}</label>
             <select name="service_description" class="form-select" id="edit_id_service_description" required>
               {% for choice_value, choice_label in payment_form.service_description.field.choices %}
               <option value="{{ choice_value }}">{{ choice_label }}</option>
@@ -88,20 +91,20 @@
             </select>
           </div>
           <div class="mb-3">
-            <label for="edit_id_total_amount" class="form-label">{% translate "РћР±С‰Р°СЏ СЃСѓРјРјР°" %}</label>
+            <label for="edit_id_total_amount" class="form-label">{% translate "Общая сумма" %}</label>
             <input type="number" step="0.01" name="total_amount" class="form-control" id="edit_id_total_amount"
               required>
           </div>
           <div class="mb-3">
-            <label for="edit_id_amount_paid" class="form-label">{% translate "РћРїР»Р°С‡РµРЅРѕ" %}</label>
+            <label for="edit_id_amount_paid" class="form-label">{% translate "Оплачено" %}</label>
             <input type="number" step="0.01" name="amount_paid" class="form-control" id="edit_id_amount_paid" required>
           </div>
           <div class="mb-3">
-            <label for="edit_id_due_date" class="form-label">{% translate "Р”Р°С‚Р° РѕРїР»Р°С‚С‹ (РµСЃР»Рё РµСЃС‚СЊ)" %}</label>
+            <label for="edit_id_due_date" class="form-label">{% translate "Дата оплаты (если есть)" %}</label>
             <input type="date" name="due_date" class="form-control" id="edit_id_due_date">
           </div>
           <div class="mb-3">
-            <label for="edit_id_status" class="form-label">{% translate "РЎС‚Р°С‚СѓСЃ" %}</label>
+            <label for="edit_id_status" class="form-label">{% translate "Статус" %}</label>
             <select name="status" class="form-select" id="edit_id_status" required>
               {% for choice_value, choice_label in payment_form.status.field.choices %}
               <option value="{{ choice_value }}">{{ choice_label }}</option>
@@ -110,8 +113,8 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "РћС‚РјРµРЅР°" %}</button>
-          <button type="submit" class="btn btn-primary">{% translate "РЎРѕС…СЂР°РЅРёС‚СЊ РёР·РјРµРЅРµРЅРёСЏ" %}</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+          <button type="submit" class="btn btn-primary">{% translate "Сохранить изменения" %}</button>
         </div>
       </form>
     </div>
@@ -124,8 +127,8 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="uploadDocumentModalLabel">{% translate "Р”РѕР±Р°РІРёС‚СЊ РґРѕРєСѓРјРµРЅС‚" %}</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Р—Р°РєСЂС‹С‚СЊ' %}"></button>
+        <h5 class="modal-title" id="uploadDocumentModalLabel">{% translate "Добавить документ" %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
       </div>
       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
@@ -133,62 +136,62 @@
         <div class="modal-body">
           <p class="mb-3 text-muted" id="uploadDocumentDescription"></p>
           <div class="mb-3">
-            <label for="{{ document_upload_form.file.id_for_label }}" class="form-label">{% translate "Р’С‹Р±РµСЂРёС‚Рµ С„Р°Р№Р»"
+            <label for="{{ document_upload_form.file.id_for_label }}" class="form-label">{% translate "Выберите файл"
               %}</label>
             {{ document_upload_form.file }}
           </div>
           <div class="mb-3">
             <label for="{{ document_upload_form.expiry_date.id_for_label }}" class="form-label">{% translate
-              "Р”РµР№СЃС‚РІРёС‚РµР»РµРЅ РґРѕ (РЅРµРѕР±СЏР·Р°С‚РµР»СЊРЅРѕ)" %}</label>
+              "Действителен до (необязательно)" %}</label>
             {{ document_upload_form.expiry_date }}
           </div>
           <div class="border rounded p-3 d-none" id="wezwanieConfirmationStep">
-            <h6 class="mb-2">{% translate "РџРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ РґР°РЅРЅС‹С… wezwanie" %}</h6>
-            <p class="text-muted mb-3 small">{% translate "РџСЂРѕРІРµСЂСЊС‚Рµ СЂР°СЃРїРѕР·РЅР°РЅРЅС‹Рµ РґР°РЅРЅС‹Рµ РїРµСЂРµРґ СЃРѕС…СЂР°РЅРµРЅРёРµРј. Р’СЃРµ РїРѕР»СЏ
-              РґРѕСЃС‚СѓРїРЅС‹ РґР»СЏ СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёСЏ." %}</p>
+            <h6 class="mb-2">{% translate "Подтверждение данных wezwanie" %}</h6>
+            <p class="text-muted mb-3 small">{% translate "Проверьте распознанные данные перед сохранением. Все поля
+              доступны для редактирования." %}</p>
 
             <div class="mb-2">
-              <label class="form-label small mb-1">{% translate "РРјСЏ" %}</label>
+              <label class="form-label small mb-1">{% translate "Имя" %}</label>
               <input type="text" class="form-control form-control-sm" id="wezwanieParsedFirstName">
             </div>
             <div class="mb-2">
-              <label class="form-label small mb-1">{% translate "Р¤Р°РјРёР»РёСЏ" %}</label>
+              <label class="form-label small mb-1">{% translate "Фамилия" %}</label>
               <input type="text" class="form-control form-control-sm" id="wezwanieParsedLastName">
             </div>
             <div class="mb-2">
-              <label class="form-label small mb-1">{% translate "РќРѕРјРµСЂ РґРµР»Р°" %}</label>
+              <label class="form-label small mb-1">{% translate "Номер дела" %}</label>
               <input type="text" class="form-control form-control-sm" id="wezwanieParsedCaseNumber">
             </div>
             <div class="mb-2">
-              <label class="form-label small mb-1">{% translate "Р”Р°С‚Р° РѕС‚РїРµС‡Р°С‚РєРѕРІ" %}</label>
+              <label class="form-label small mb-1">{% translate "Дата отпечатков" %}</label>
               <input type="date" class="form-control form-control-sm" id="wezwanieParsedFingerprintsDate">
             </div>
             <div class="mb-2">
-              <label class="form-label small mb-1">{% translate "Р’СЂРµРјСЏ РѕС‚РїРµС‡Р°С‚РєРѕРІ" %}</label>
+              <label class="form-label small mb-1">{% translate "Время отпечатков" %}</label>
               <input type="time" class="form-control form-control-sm" id="wezwanieParsedFingerprintsTime">
             </div>
             <div class="mb-2">
-              <label class="form-label small mb-1">{% translate "РњРµСЃС‚Рѕ РѕС‚РїРµС‡Р°С‚РєРѕРІ" %}</label>
+              <label class="form-label small mb-1">{% translate "Место отпечатков" %}</label>
               <input type="text" class="form-control form-control-sm" id="wezwanieParsedFingerprintsLocation">
             </div>
             <div class="mb-2">
-              <label class="form-label small mb-1">{% translate "Р”Р°С‚Р° РґРµС†РёР·РёРё" %}</label>
+              <label class="form-label small mb-1">{% translate "Дата децизии" %}</label>
               <input type="date" class="form-control form-control-sm" id="wezwanieParsedDecisionDate">
             </div>
           </div>
         </div>
         <div class="modal-footer">
           <div class="d-flex gap-2 w-100 justify-content-end" id="uploadDocumentActions">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "РћС‚РјРµРЅР°" %}</button>
-            <button type="submit" class="btn btn-primary" id="uploadDocumentSubmitButton">{% translate "РЎРѕС…СЂР°РЅРёС‚СЊ"
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+            <button type="submit" class="btn btn-primary" id="uploadDocumentSubmitButton">{% translate "Сохранить"
               %}</button>
-            <button type="submit" class="btn btn-primary d-none" id="wezwanieParseButton">{% translate "Р Р°СЃРїРѕР·РЅР°С‚СЊ
+            <button type="submit" class="btn btn-primary d-none" id="wezwanieParseButton">{% translate "Распознать
               wezwanie" %}</button>
           </div>
           <div class="d-flex gap-2 w-100 justify-content-end d-none" id="wezwanieConfirmActions">
             <button type="button" class="btn btn-outline-secondary" id="wezwanieCancelButton" data-bs-dismiss="modal">{%
-              translate "РћС‚РјРµРЅР°" %}</button>
-            <button type="button" class="btn btn-primary" id="wezwanieConfirmButton">{% translate "РџРѕРґС‚РІРµСЂРґРёС‚СЊ"
+              translate "Отмена" %}</button>
+            <button type="button" class="btn btn-primary" id="wezwanieConfirmButton">{% translate "Подтвердить"
               %}</button>
           </div>
         </div>
