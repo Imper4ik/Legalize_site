@@ -31,6 +31,11 @@ urlpatterns = [
 
     # URL для работы с документами
     path('client/<int:client_id>/documents/add/<str:doc_type>/', views.add_document, name='add_document'),
+    path(
+        'document/<int:doc_id>/confirm-wezwanie/',
+        views.confirm_wezwanie_parse,
+        name='confirm_wezwanie_parse',
+    ),
     path('document/<int:pk>/delete/', views.document_delete, name='document_delete'),
     path('document/<int:doc_id>/toggle-verification/', views.toggle_document_verification,
          name='toggle_document_verification'),

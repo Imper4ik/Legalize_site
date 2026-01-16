@@ -170,7 +170,7 @@ class AvatarFullFlowTest(TestCase):
 
     @patch('clients.views.documents.parse_wezwanie')
     def test_05_wezwanie_parsing_integration(self, mock_parse):
-        """Verify Wezwanie upload triggers parser and updates Client fields."""
+        """Verify Wezwanie upload triggers parser and confirmation updates Client fields."""
         print("\n[Avatar]: Testing Wezwanie parsing integration...")
         
         # Mock Parser Result
@@ -212,21 +212,50 @@ class AvatarFullFlowTest(TestCase):
             if not url.endswith('/'):
                 url += '/'
             
-            response = http_client.post(url, {'file': uploaded_file, 'document_type': DocumentType.WEZWANIE.value}, follow=True, secure=True)
+        response = http_client.post(
+            url,
+            {
+                'file': uploaded_file,
+                'document_type': DocumentType.WEZWANIE.value,
+                'parse_wezwanie': '1',
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            secure=True,
+        )
         
         self.assertEqual(response.status_code, 200)
 
-        # Ensure parser was called
+        payload = response.json()
+        document = Document.objects.get(pk=payload['doc_id'])
+        self.assertTrue(document.awaiting_confirmation)
+
+        # Ensure parser was called for preview
         mock_parse.assert_called_once()
-        
+
+        confirm_url = reverse('clients:confirm_wezwanie_parse', kwargs={'doc_id': document.pk})
+        confirm_response = http_client.post(
+            confirm_url,
+            {
+                'first_name': 'Jan',
+                'last_name': 'Kowalski',
+                'case_number': 'WSC-TEST-123',
+                'fingerprints_date': '2025-05-20',
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest',
+            secure=True,
+        )
+        self.assertEqual(confirm_response.status_code, 200)
+
         # Check if DB Client was updated
         db_client.refresh_from_db()
         self.assertEqual(db_client.case_number, "WSC-TEST-123")
         self.assertEqual(db_client.fingerprints_date, datetime.date(2025, 5, 20))
         self.assertEqual(db_client.first_name, "Jan") # Split from "Jan Kowalski"
         self.assertEqual(db_client.last_name, "Kowalski")
-        
-        mock_parse.assert_called_once()
+
+        document.refresh_from_db()
+        self.assertFalse(document.awaiting_confirmation)
+        self.assertEqual(mock_parse.call_count, 2)
         print("[OK] Wezwanie parsing successfully updated Client profile.")
 
     def test_06_unified_translations_db(self):
