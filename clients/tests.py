@@ -475,6 +475,41 @@ class WezwanieParserTests(TestCase):
 
         Path(temp_path).unlink(missing_ok=True)
 
+    def test_parses_full_name_with_pan_pani_label(self):
+        content = (
+            "WEZWANIE\n"
+            "Pan/Pani Maria KOWALSKA\n"
+            "Sygnatura akt: WSC-II-S.6151.97770.2023\n"
+            "w dniu 01.04.2024 pobrano odciski"
+        )
+        with tempfile.NamedTemporaryFile("w+", suffix=".txt", delete=False) as temp:
+            temp.write(content)
+            temp_path = temp.name
+
+        parsed = parse_wezwanie(temp_path)
+
+        self.assertEqual(parsed.full_name, "Maria KOWALSKA")
+        self.assertEqual(parsed.case_number, "WSC-II-S.6151.97770.2023")
+
+        Path(temp_path).unlink(missing_ok=True)
+
+    def test_parses_case_number_with_sprawa_nr_keyword(self):
+        content = (
+            "Sprawa nr: II SA/Wa 1234/24\n"
+            "Pani Anna Nowak\n"
+            "w dniu 03-06-2024 pobrano odciski"
+        )
+        with tempfile.NamedTemporaryFile("w+", suffix=".txt", delete=False) as temp:
+            temp.write(content)
+            temp_path = temp.name
+
+        parsed = parse_wezwanie(temp_path)
+
+        self.assertEqual(parsed.case_number, "IISA/WA1234/24")
+        self.assertEqual(parsed.full_name, "Anna Nowak")
+
+        Path(temp_path).unlink(missing_ok=True)
+
 
 class MissingDocumentsEmailTests(TestCase):
     def setUp(self):
