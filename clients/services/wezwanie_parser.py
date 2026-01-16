@@ -138,20 +138,60 @@ def _preprocess_for_ocr(img):
     """
     from PIL import ImageOps, ImageFilter
     
-    # 1. Grayscale
+
+def _preprocess_for_ocr(img):
+    """
+    Preprocess image for better OCR accuracy:
+    1. EXIF Transpose (fix phone orientation)
+    2. OSD (Detect & fix 90/180/270 degree rotation)
+    3. Grayscale + Autocontrast
+    4. Rescale + Sharpen
+    """
+    from PIL import Image, ImageOps, ImageFilter
+    import pytesseract
+    
+    # 0. Fix EXIF orientation (crucial for phone photos)
+    try:
+        img = ImageOps.exif_transpose(img)
+    except Exception:
+        pass
+
+    # 1. Grayscale (needed for OSD and OCR)
     img = img.convert('L')
     
-    # 2. Autocontrast (Max contrast for better separation)
+    # 2. OSD Rotation (Detect text orientation)
+    # Tesseract's "image_to_osd" returns meta info including 'Rotate: 90'
+    try:
+        # Pytesseract expects an image object
+        osd = pytesseract.image_to_osd(img)
+        # Parse logic is a bit brittle, using regex is safer or just simple string search
+        # OSD output looks like: "Page number: 0\nOrientation in degrees: 90\nRotate: 90\n..."
+        import re
+        rotate_match = re.search(r"Rotate: (\d+)", osd)
+        if rotate_match:
+            angle = int(rotate_match.group(1))
+            if angle != 0:
+                print(f"DEBUG: OSD detected rotation: {angle}. Fixing...", flush=True)
+                # Tesseract says "Rotate: 90" meaning it IS rotated. We need to rotate it BACK? 
+                # Actually image_to_osd 'Rotate' is the angle to rotate CW to make it upright.
+                # So we verify logic: if Rotate: 90, we rotate 90? Or -90?
+                # Usually standard behavior: rotate the image by that amount.
+                img = img.rotate(angle, expand=True)
+    except Exception as e:
+        # OSD can fail on images with no text or too much noise
+        pass
+
+    # 3. Autocontrast (Max contrast for better separation)
     img = ImageOps.autocontrast(img)
     
-    # 3. Rescale if small (assuming A4 width is approx 8.3 inches, 300 DPI -> ~2500px)
+    # 4. Rescale if small (assuming A4 width is approx 8.3 inches, 300 DPI -> ~2500px)
     target_width = 2500
     if img.width < 1500:
         ratio = target_width / img.width
         new_height = int(img.height * ratio)
         img = img.resize((target_width, new_height), resample=3)  # LANZCOS/BICUBIC
     
-    # 3. Sharpen (subtle enhancement)
+    # 5. Sharpen (subtle enhancement)
     img = img.filter(ImageFilter.SHARPEN)
     
     return img
