@@ -20,11 +20,13 @@ CASE_NUMBER_PATTERNS = (
     re.compile(r"sygnatura[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     re.compile(r"nr\s+akt[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     re.compile(r"znak\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
-    # Pattern for case number like WSC-II-S.6151.97770.2023 (allow spaces/noise)
-    re.compile(r"\b(WSC[-\w.\s]+\d{4})\b", re.IGNORECASE),
-    # Pattern for simple numbers like 409366
-    re.compile(r"\b(\d{6,})\b"),
-    re.compile(r"\b([A-Z]{1,3}\/?\d{1,4}/\d{2,4})\b"),
+    # Robust WSC pattern: allows typos like W5C, VVSC, spacing, dots, newlines
+    # Captures from start (WSC) until year (4 digits)
+    re.compile(r"\b((?:WSC|SOC|W5C|VVSC|W$C)[-\w.\s/]+\d{4})\b", re.IGNORECASE),
+    # Strict fallback: Signatures often look like AA/1234/2024
+    re.compile(r"\b([A-Z]{1,3}\s?/\s?\d{1,5}\s?/\s?\d{2,4})\b"),
+    # Disabled weak fallback (6 digits often matches random IDs or partial dates)
+    # re.compile(r"\b(\d{6,})\b"),
 )
 DATE_PATTERNS = (
     re.compile(r"(?:dniu|dnia|dn\.)?\s*(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
