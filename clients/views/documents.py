@@ -47,9 +47,20 @@ def add_document(request, client_id, doc_type):
             auto_updates: list[str] = []
             parse_requested = request.POST.get("parse_wezwanie") == "1"
             is_wezwanie = doc_type == DocumentType.WEZWANIE or doc_type == DocumentType.WEZWANIE.value
-
+    # Check if the document type is Wezwanie (using ID or string comparison depending on implementation)
+    # Ideally should use checking against DocumentType.WEZWANIE but we rely on form/hidden input often.
+    # Here we rely on helper logic or simple check.
+    
             if is_wezwanie and parse_requested:
-                parsed = parse_wezwanie(document.file.path)
+                print(f"DEBUG: Starting Wezwanie parsing for doc {document.id}...", flush=True)
+                try:
+                    parsed = parse_wezwanie(document.file.path)
+                    print(f"DEBUG: Parsing finished. Text len: {len(parsed.text)}", flush=True)
+                except Exception as e:
+                    print(f"DEBUG: Parsing CRASHED: {e}", flush=True)
+                    raise e
+                
+                document.awaiting_confirmation = True
                 has_text = bool(parsed.text.strip())
                 has_key_fields = any(
                     [
