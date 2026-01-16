@@ -1,42 +1,60 @@
 {% load i18n %}
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h1>{{ client.first_name }} {{ client.last_name }}</h1>
-  <div class="d-flex flex-wrap gap-2 justify-content-end">
-      <a href="{% url 'clients:client_print_wsc' pk=client.pk %}" class="btn btn-outline-secondary">{% translate "Печать обложки" %}</a>
-      <div class="btn-group hover-dropdown">
-        <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
-          {% translate "Документы" %}
-        </button>
-        <ul class="dropdown-menu dropdown-menu-end">
-          <li>
-            <a class="dropdown-item" href="{% url 'clients:client_document_print' pk=client.pk doc_type='acceleration_request' %}" target="_blank">
-              {% translate "Просьба об ускорении" %}
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item" href="{% url 'clients:client_document_print' pk=client.pk doc_type='mazowiecki_application' %}" target="_blank">
-              {% translate "Wniosek Mazowiecki Urząd Wojewódzki" %}
-            </a>
-          </li>
-        </ul>
-      </div>
-      <a href="{% url 'clients:client_edit' client.pk %}" class="btn btn-primary">{% translate "Редактировать данные" %}</a>
+  <div class="d-flex flex-wrap gap-2 justify-content-end align-items-center">
+    <a href="{% url 'clients:client_print_wsc' pk=client.pk %}" class="btn btn-outline-secondary">
+      {% translate "Печать обложки" %}
+    </a>
+
+    <div class="btn-group hover-dropdown">
+      <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown"
+        data-bs-auto-close="outside" aria-expanded="false">
+        {% translate "Документы" %}
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li>
+          <a class="dropdown-item"
+            href="{% url 'clients:client_document_print' pk=client.pk doc_type='acceleration_request' %}"
+            target="_blank">
+            {% translate "Просьба об ускорении" %}
+          </a>
+        </li>
+        <li>
+          <a class="dropdown-item"
+            href="{% url 'clients:client_document_print' pk=client.pk doc_type='mazowiecki_application' %}"
+            target="_blank">
+            {% translate "Wniosek Mazowiecki Urząd Wojewódzki" %}
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal"
+      data-doc-type="wezwanie" data-doc-name="{% translate 'Вызов (Wezwanie)' %}">
+      <i class="bi bi-file-earmark-arrow-up"></i> {% translate "Загрузить Wezwanie" %}
+    </button>
+
+    <a href="{% url 'clients:client_edit' client.pk %}" class="btn btn-primary">
+      {% translate "Редактировать данные" %}
+    </a>
   </div>
 </div>
 
 <div class="card mb-4 shadow-sm">
   <div class="card-body">
-      <p><strong>{% translate "Номер дела" %}:</strong> <span class="fs-5 text-primary"><strong>{{ client.case_number|default:_("Не указан") }}</strong></span></p>
-      <p><strong>Email:</strong> {{ client.email }}</p>
-      <p><strong>{% translate "Телефон" %}:</strong> {{ client.phone }}</p>
-      {% if client.birth_date %}
-          <p><strong>{% translate "Дата рождения" %}:</strong> {{ client.birth_date|date:"d.m.Y" }}</p>
-      {% endif %}
-      <p><strong>{% translate "Цель подачи" %}:</strong> {{ client.get_application_purpose_display }}</p>
-      <p><strong>{% translate "Основание пребывания" %}:</strong> {{ client.basis_of_stay|default:_("Не указано") }}</p>
-      {% if client.legal_basis_end_date %}
-          <p><strong>{% translate "Дата окончания основания" %}:</strong> <span class="fw-bold">{{ client.legal_basis_end_date|date:"d.m.Y" }}</span></p>
-      {% endif %}
+    <p><strong>{% translate "Номер дела" %}:</strong> <span class="fs-5 text-primary"><strong>{{
+          client.case_number|default:_("Не указан") }}</strong></span></p>
+    <p><strong>Email:</strong> {{ client.email }}</p>
+    <p><strong>{% translate "Телефон" %}:</strong> {{ client.phone }}</p>
+    {% if client.birth_date %}
+    <p><strong>{% translate "Дата рождения" %}:</strong> {{ client.birth_date|date:"d.m.Y" }}</p>
+    {% endif %}
+    <p><strong>{% translate "Цель подачи" %}:</strong> {{ client.get_application_purpose_display }}</p>
+    <p><strong>{% translate "Основание пребывания" %}:</strong> {{ client.basis_of_stay|default:_("Не указано") }}</p>
+    {% if client.legal_basis_end_date %}
+    <p><strong>{% translate "Дата окончания основания" %}:</strong> <span class="fw-bold">{{
+        client.legal_basis_end_date|date:"d.m.Y" }}</span></p>
+    {% endif %}
   </div>
 </div>
 
@@ -45,10 +63,12 @@
     <div>
       <p class="mb-1"><strong>{% translate "Статус" %}:</strong> {{ client.get_status_display }}</p>
       {% if client.submission_date %}
-        <p class="text-muted mb-1"><small>{% translate "Дата подачи" %}: {{ client.submission_date|date:"d.m.Y" }}</small></p>
+      <p class="text-muted mb-1"><small>{% translate "Дата подачи" %}: {{ client.submission_date|date:"d.m.Y" }}</small>
+      </p>
       {% endif %}
       {% if client.fingerprints_date %}
-        <p class="text-muted mb-0"><small>{% translate "Дата сдачи отпечатков" %}: {{ client.fingerprints_date|date:"d.m.Y" }}</small></p>
+      <p class="text-muted mb-0"><small>{% translate "Дата сдачи отпечатков" %}: {{
+          client.fingerprints_date|date:"d.m.Y" }}</small></p>
       {% endif %}
     </div>
   </div>

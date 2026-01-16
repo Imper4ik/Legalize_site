@@ -1,0 +1,13 @@
+Dear {{ client.first_name }},
+
+This is to inform you that a fingerprint appointment has been scheduled for you.
+
+Appointment Details:
+- Date: {{ fingerprints_date|date:"d.m.Y" }}
+{% if fingerprints_time %}- Time: {{ fingerprints_time|time:"H:i" }}{% endif %}
+{% if fingerprints_location %}- Location: {{ fingerprints_location }}{% endif %}
+
+Please remember to bring all required documents and your original passport.
+
+Best regards,
+Legalize Team

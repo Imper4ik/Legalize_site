@@ -1,0 +1,13 @@
+Dzień dobry, {{ client.first_name }}.
+
+Informujemy, że wyznaczono Panu/Pani termin złożenia odcisków palców.
+
+Szczegóły wizyty:
+- Data: {{ fingerprints_date|date:"d.m.Y" }}
+{% if fingerprints_time %}- Godzina: {{ fingerprints_time|time:"H:i" }}{% endif %}
+{% if fingerprints_location %}- Miejsce: {{ fingerprints_location }}{% endif %}
+
+Prosimy o zabranie ze sobą wszystkich wymaganych dokumentów oraz oryginału paszportu.
+
+Z poważaniem,
+Zespół Legalize
