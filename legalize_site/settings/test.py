@@ -1,33 +1,14 @@
-"""
-Настройки для тестовой среды.
-Используют SQLite для быстрого выполнения тестов.
-"""
+from .development import *
 
-from .base import *
-
-# Переопределяем DEBUG для тестов
-DEBUG = True
-
-# Используем SQLite для тестов (быстрее PostgreSQL)
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': ':memory:',  # In-memory база для ускорения тестов
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 
-# Упрощенное хеширование паролей для ускорения тестов
-PASSWORD_HASHERS = [
-    'django.contrib.auth.hashers.MD5PasswordHasher',
-]
+# Use in-memory email backend for tests
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
-# Отключаем email для тестов
-EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
-
-# Отключаем миграции для ускорения (опционально)
-# class DisableMigrations:
-#     def __contains__(self, item):
-#         return True
-#     def __getitem__(self, item):
-#         return None
-# MIGRATION_MODULES = DisableMigrations()
+# Static files configuration for tests
+STATIC_URL = "/static/"

@@ -272,9 +272,8 @@
                         <td class="value-col">
                             <span class="bold">{{ client.basis_of_stay|default:"" }}</span>
                             <br>
-                            <span style="font-size: 0.9em; color: #666;">(ważne do / действительно до: <span
-                                    style="color: var(--primary-color); font-weight: bold;">{{
-                                    client.legal_basis_end_date|date:"d.m.Y"|default:"" }}</span>)</span>
+                            style="color: var(--primary-color); font-weight: bold;">{{
+                            client.legal_basis_end_date|date:"d.m.Y"|default:"" }}</span>)</span>
                         </td>
                     </tr>
 
