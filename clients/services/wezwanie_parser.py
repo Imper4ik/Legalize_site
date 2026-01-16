@@ -120,9 +120,34 @@ def _extract_pdf_text(path: Path) -> str:
     return text_content
 
 
+def _preprocess_for_ocr(img):
+    """
+    Preprocess image for better OCR accuracy:
+    1. Convert to grayscale
+    2. Resize if too small (target ~300 DPI)
+    3. Apply sharpening
+    """
+    from PIL import ImageOps, ImageFilter
+    
+    # 1. Grayscale
+    img = img.convert('L')
+    
+    # 2. Rescale if small (assuming A4 width is approx 8.3 inches, 300 DPI -> ~2500px)
+    target_width = 2500
+    if img.width < 1500:
+        ratio = target_width / img.width
+        new_height = int(img.height * ratio)
+        img = img.resize((target_width, new_height), resample=3)  # LANZCOS/BICUBIC
+    
+    # 3. Sharpen (subtle enhancement)
+    img = img.filter(ImageFilter.SHARPEN)
+    
+    return img
+
+
 def _extract_image_text(path: Path) -> str:
     try:
-        from PIL import Image
+        from PIL import Image, ImageOps, ImageFilter
         import pytesseract
     except ImportError:  # pragma: no cover - optional dependency
         logger.warning("OCR dependencies (Pillow, pytesseract) are not installed; skipping OCR")
@@ -130,7 +155,10 @@ def _extract_image_text(path: Path) -> str:
 
     try:
         with Image.open(path) as img:
-            text_out = pytesseract.image_to_string(img, lang='pol+eng')
+            # Preprocess image to improve accuracy (fix "eaten" letters)
+            processed_img = _preprocess_for_ocr(img)
+            
+            text_out = pytesseract.image_to_string(processed_img, lang='pol+eng')
             print(f"DEBUG: EXTRACTED IMAGE TEXT (flush):\n{text_out}\n-----------------------", flush=True)
             return text_out
     except Exception as e:  # pragma: no cover - defensive logging
