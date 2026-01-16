@@ -128,10 +128,10 @@ def _extract_image_text(path: Path) -> str:
         logger.warning("OCR dependencies (Pillow, pytesseract) are not installed; skipping OCR")
         return ""
 
+    try:
         with Image.open(path) as img:
             text_out = pytesseract.image_to_string(img, lang='pol+eng')
             print(f"DEBUG: EXTRACTED IMAGE TEXT (flush):\n{text_out}\n-----------------------", flush=True)
-
             return text_out
     except Exception as e:  # pragma: no cover - defensive logging
         print(f"DEBUG: OCR CRASHED: {e}", flush=True)
