@@ -3,6 +3,8 @@ from __future__ import annotations
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils.dateparse import parse_date
 
 from clients.constants import DocumentType
 from clients.forms import DocumentUploadForm
@@ -43,7 +45,51 @@ def add_document(request, client_id, doc_type):
             document.save()
 
             auto_updates: list[str] = []
-            if doc_type == DocumentType.WEZWANIE or doc_type == DocumentType.WEZWANIE.value:
+            parse_requested = request.POST.get("parse_wezwanie") == "1"
+            is_wezwanie = doc_type == DocumentType.WEZWANIE or doc_type == DocumentType.WEZWANIE.value
+
+            if is_wezwanie and parse_requested:
+                parsed = parse_wezwanie(document.file.path)
+                document.awaiting_confirmation = True
+                document.save(update_fields=["awaiting_confirmation"])
+
+                first_name = ""
+                last_name = ""
+                if parsed.full_name:
+                    name_parts = parsed.full_name.split()
+                    if len(name_parts) >= 2:
+                        first_name = name_parts[0]
+                        last_name = " ".join(name_parts[1:])
+
+                return helper.success(
+                    message="Документ загружен. Подтвердите распознанные данные.",
+                    doc_id=document.id,
+                    pending_confirmation=True,
+                    confirm_url=reverse(
+                        "clients:confirm_wezwanie_parse",
+                        kwargs={"doc_id": document.id},
+                    ),
+                    parsed={
+                        "full_name": parsed.full_name or "",
+                        "first_name": first_name,
+                        "last_name": last_name,
+                        "case_number": parsed.case_number or "",
+                        "fingerprints_date": parsed.fingerprints_date.isoformat()
+                        if parsed.fingerprints_date
+                        else "",
+                        "fingerprints_date_display": parsed.fingerprints_date.strftime("%d.%m.%Y")
+                        if parsed.fingerprints_date
+                        else "",
+                        "decision_date": parsed.decision_date.isoformat()
+                        if parsed.decision_date
+                        else "",
+                        "decision_date_display": parsed.decision_date.strftime("%d.%m.%Y")
+                        if parsed.decision_date
+                        else "",
+                    },
+                )
+
+            if is_wezwanie:
                 parsed = parse_wezwanie(document.file.path)
 
                 updated_fields = []
@@ -115,6 +161,87 @@ def add_document(request, client_id, doc_type):
     return render(request, 'clients/add_document.html', {
         'form': form, 'client': client, 'document_type_display': document_type_display
     })
+
+
+@staff_required_view
+def confirm_wezwanie_parse(request, doc_id):
+    document = get_object_or_404(Document, pk=doc_id)
+    helper = ResponseHelper(request)
+
+    if request.method != "POST":
+        if helper.expects_json:
+            return helper.error(message="Недопустимый метод запроса.", status=405)
+        return redirect("clients:client_detail", pk=document.client.id)
+
+    if document.document_type not in (DocumentType.WEZWANIE, DocumentType.WEZWANIE.value):
+        if helper.expects_json:
+            return helper.error(message="Документ не является wezwanie.", status=400)
+        messages.error(request, "Документ не является wezwanie.")
+        return redirect("clients:client_detail", pk=document.client.id)
+
+    client = document.client
+    updated_fields: list[str] = []
+    auto_updates: list[str] = []
+
+    first_name = (request.POST.get("first_name") or "").strip()
+    last_name = (request.POST.get("last_name") or "").strip()
+    case_number = (request.POST.get("case_number") or "").strip()
+    fingerprints_date_raw = (request.POST.get("fingerprints_date") or "").strip()
+    decision_date_raw = (request.POST.get("decision_date") or "").strip()
+
+    if first_name and first_name != client.first_name:
+        client.first_name = first_name
+        updated_fields.append("first_name")
+    if last_name and last_name != client.last_name:
+        client.last_name = last_name
+        updated_fields.append("last_name")
+    if case_number and case_number != client.case_number:
+        client.case_number = case_number
+        updated_fields.append("case_number")
+        auto_updates.append(f"номер дела: {case_number}")
+
+    fingerprints_date = parse_date(fingerprints_date_raw) if fingerprints_date_raw else None
+    if fingerprints_date and fingerprints_date != client.fingerprints_date:
+        client.fingerprints_date = fingerprints_date
+        updated_fields.append("fingerprints_date")
+        auto_updates.append(f"дата сдачи отпечатков: {fingerprints_date.strftime('%d.%m.%Y')}")
+
+    decision_date = parse_date(decision_date_raw) if decision_date_raw else None
+    if decision_date and decision_date != client.decision_date:
+        client.decision_date = decision_date
+        updated_fields.append("decision_date")
+        auto_updates.append(f"дата децизии: {decision_date.strftime('%d.%m.%Y')}")
+
+    if updated_fields:
+        client.save(update_fields=updated_fields)
+
+    document.awaiting_confirmation = False
+    document.save(update_fields=["awaiting_confirmation"])
+
+    parsed = parse_wezwanie(document.file.path)
+    if parsed.required_documents:
+        doc_labels = []
+        for doc_code in parsed.required_documents:
+            try:
+                doc_labels.append(str(DocumentType(doc_code).label))
+            except ValueError:
+                doc_labels.append(doc_code)
+        if doc_labels:
+            auto_updates.append(f"Обнаружен запрос документов: {', '.join(doc_labels)}")
+
+    emails_sent = send_missing_documents_email(client)
+    if emails_sent:
+        auto_updates.append("отправлено письмо с недостающими документами")
+
+    success_message = "Данные wezwanie подтверждены."
+    if auto_updates:
+        success_message = f"{success_message} " + " ; ".join(auto_updates)
+
+    if helper.expects_json:
+        return helper.success(message=success_message)
+
+    messages.success(request, success_message)
+    return redirect("clients:client_detail", pk=client.id)
 
 
 @staff_required_view
