@@ -124,7 +124,7 @@
 <div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel"
   aria-hidden="true"
   data-action-template="{% url 'clients:add_document' client_id=client.id doc_type='__doc_type__' %}"
-  data-confirm-url-template="{% url 'clients:confirm_wezwanie_parse' doc_id='__doc_id__' %}">
+  data-confirm-url-template="{% url 'clients:confirm_wezwanie_parse' doc_id=0 %}">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
