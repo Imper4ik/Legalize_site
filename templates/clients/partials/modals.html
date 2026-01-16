@@ -164,7 +164,8 @@
         <div class="modal-footer">
           <div class="d-flex gap-2 w-100 justify-content-end" id="uploadDocumentActions">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
-            <button type="submit" class="btn btn-primary">{% translate "Сохранить" %}</button>
+            <button type="submit" class="btn btn-primary" id="uploadDocumentSubmitButton">{% translate "Сохранить" %}</button>
+            <button type="submit" class="btn btn-primary d-none" id="wezwanieParseButton">{% translate "Распознать wezwanie" %}</button>
           </div>
           <div class="d-flex gap-2 w-100 justify-content-end d-none" id="wezwanieConfirmActions">
             <button type="button" class="btn btn-outline-secondary" id="wezwanieCancelButton"
