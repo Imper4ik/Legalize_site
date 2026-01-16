@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 set -o errexit
 
+# EXPERIMENTAL: Attempt to install Tesseract at runtime
+# This usually fails due to lack of root permissions in the container
+echo "Attempting to install Tesseract via start.sh..."
+if apt-get update && apt-get install -y tesseract-ocr tesseract-ocr-eng tesseract-ocr-pol poppler-utils; then
+  echo "SUCCESS: Tesseract installed."
+else
+  echo "WARNING: Failed to install Tesseract (Permission Denied). Proceeding without it."
+fi
+
 # Ensure DejaVu fonts are available at runtime (not only during build).
 # Nixpacks should include them in the final image, but we double-check and
 # install them when possible to avoid missing glyphs in PDF rendering.
