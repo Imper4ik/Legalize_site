@@ -1,159 +1,19 @@
-from __future__ import annotations
-
 import json
 from typing import Any
 
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpRequest, HttpResponse, HttpResponseNotAllowed, JsonResponse
-from django.urls import reverse_lazy
-from django.shortcuts import get_object_or_404, redirect, render
+from django.http import HttpRequest, JsonResponse
+from django.shortcuts import get_object_or_404
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views import View
-from django.views.generic import DetailView, ListView
 
-from clients.views.base import StaffRequiredMixin, staff_required_view
 from clients.services.responses import ResponseHelper
+from clients.views.base import staff_required_view
 
-from .forms import DocumentForm, SubmissionForm
-from .models import Document, Submission
-
-
-class SubmissionListView(StaffRequiredMixin, ListView):
-    model = Submission
-    template_name = 'submissions/submission_list.html'
-    context_object_name = 'submissions'
-
-
-class SubmissionCreateView(StaffRequiredMixin, View):
-    template_name = 'submissions/submission_form.html'
-
-    def get(self, request: HttpRequest) -> HttpResponse:
-        form = SubmissionForm()
-        return render(request, self.template_name, {'form': form})
-
-    def post(self, request: HttpRequest) -> HttpResponse:
-        form = SubmissionForm(request.POST)
-        if form.is_valid():
-            submission = form.save()
-            messages.success(request, _('Основание подачи создано'))
-            return redirect('submissions:submission_detail', pk=submission.pk)
-        return render(request, self.template_name, {'form': form})
-
-
-@staff_required_view
-def submission_quick_create(request: HttpRequest) -> HttpResponse:
-    if request.method != 'POST':
-        return HttpResponseNotAllowed(['POST'])
-
-    form = SubmissionForm(request.POST)
-    if form.is_valid():
-        submission = form.save()
-        messages.success(request, _('Основание подачи создано'))
-        redirect_url = request.META.get('HTTP_REFERER') or reverse_lazy('clients:document_checklist_manage')
-        return redirect(redirect_url)
-
-    messages.error(request, _('Не удалось создать основание'), extra_tags='danger')
-    redirect_url = request.META.get('HTTP_REFERER') or reverse_lazy('clients:document_checklist_manage')
-    return redirect(redirect_url)
-
-
-@staff_required_view
-def submission_quick_update(request: HttpRequest, submission_id: int) -> HttpResponse:
-    submission = get_object_or_404(Submission, pk=submission_id)
-
-    if request.method != 'POST':
-        return HttpResponseNotAllowed(['POST'])
-
-    form = SubmissionForm(request.POST, instance=submission)
-    redirect_url = request.META.get('HTTP_REFERER') or reverse_lazy('clients:document_checklist_manage')
-
-    if form.is_valid():
-        form.save()
-        messages.success(request, _('Основание подачи обновлено'))
-        return redirect(redirect_url)
-
-    messages.error(request, _('Не удалось обновить основание'), extra_tags='danger')
-    return redirect(redirect_url)
-
-
-@staff_required_view
-def submission_quick_delete(request: HttpRequest, submission_id: int) -> HttpResponse:
-    if request.method != 'POST':
-        return HttpResponseNotAllowed(['POST'])
-
-    submission = get_object_or_404(Submission, pk=submission_id)
-    redirect_url = request.META.get('HTTP_REFERER') or reverse_lazy('clients:document_checklist_manage')
-    submission.delete()
-    messages.success(request, _('Основание подачи удалено'))
-    return redirect(redirect_url)
-
-
-class SubmissionDetailView(StaffRequiredMixin, DetailView):
-    model = Submission
-    template_name = 'submissions/submission_detail.html'
-    context_object_name = 'submission'
-
-    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
-        context = super().get_context_data(**kwargs)
-        context['documents'] = self.object.documents.all()
-        context['document_form'] = DocumentForm()
-        return context
-
-
-class DocumentCreateView(StaffRequiredMixin, View):
-    template_name = 'submissions/document_form.html'
-
-    def get_submission(self, submission_id: int) -> Submission:
-        return get_object_or_404(Submission, pk=submission_id)
-
-    def get(self, request: HttpRequest, submission_id: int) -> HttpResponse:
-        submission = self.get_submission(submission_id)
-        form = DocumentForm()
-        return render(request, self.template_name, {'form': form, 'submission': submission})
-
-    def post(self, request: HttpRequest, submission_id: int) -> HttpResponse:
-        submission = self.get_submission(submission_id)
-        form = DocumentForm(request.POST, request.FILES)
-        if form.is_valid():
-            document = form.save(commit=False)
-            document.submission = submission
-            document.save()
-            messages.success(request, _('Документ создан'))
-            return redirect('submissions:submission_detail', pk=submission.pk)
-        return render(request, self.template_name, {'form': form, 'submission': submission})
-
-
-class DocumentUpdateView(StaffRequiredMixin, View):
-    template_name = 'submissions/document_form.html'
-
-    def get_object(self, pk: int) -> Document:
-        return get_object_or_404(Document, pk=pk)
-
-    def get(self, request: HttpRequest, pk: int) -> HttpResponse:
-        document = self.get_object(pk)
-        form = DocumentForm(instance=document)
-        return render(request, self.template_name, {'form': form, 'submission': document.submission, 'document': document})
-
-    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
-        document = self.get_object(pk)
-        form = DocumentForm(request.POST, request.FILES, instance=document)
-        if form.is_valid():
-            form.save()
-            messages.success(request, _('Документ обновлён'))
-            return redirect('submissions:submission_detail', pk=document.submission.pk)
-        return render(request, self.template_name, {'form': form, 'submission': document.submission, 'document': document})
-
-
-class DocumentDeleteView(StaffRequiredMixin, View):
-    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
-        document = get_object_or_404(Document, pk=pk)
-        submission_pk = document.submission.pk
-        document.delete()
-        messages.success(request, _('Документ удалён'))
-        return redirect('submissions:submission_detail', pk=submission_pk)
+from ..forms import DocumentForm, SubmissionForm
+from ..models import Document, Submission
 
 
 @method_decorator(login_required, name='dispatch')
