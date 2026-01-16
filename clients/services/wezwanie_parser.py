@@ -21,21 +21,19 @@ CASE_NUMBER_PATTERNS = (
     re.compile(r"nr\s+akt[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     re.compile(r"znak\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     
-    # 1. Wide net for WSC: Grab "WSC" (with OPTIONAL SPACES) and anything following
-    # Matches "WSC", "W S C", "VVSC", "W.S.C" etc.
-    # Remove \b start to catch cases like "|WSC" or ".WSC"
-    re.compile(r"((?:W\s*S\s*C|S\s*O\s*C|W\s*5\s*C|V\s*V\s*S\s*C|W\s*\$\s*C|W\s*\.\s*S\s*\.\s*C)[-\w.\s/]{5,})", re.IGNORECASE),
+    # 1. Wide net for WSC (single line only)
+    # Matches "WSC", "W S C" etc. followed by chars, spaces, dots, slashes But NOT newlines
+    re.compile(r"((?:W[ \t]*S[ \t]*C|S[ \t]*O[ \t]*C|W[ \t]*5[ \t]*C|V[ \t]*V[ \t]*S[ \t]*C|W[ \t]*\$[ \t]*C|W[ \t]*\.[ \t]*S[ \t]*\.[ \t]*C)[-\w. /]{5,})", re.IGNORECASE),
     
-    # NEW: Structure match for WSC-II-S... format (ignoring prefix WSC if it's mangled)
-    # Looks for: "2-5 Chars - Roman/Digits - Char . Numbers"
-    # Example: "WSC-II-S.6151..." OR "Ws -11-5.6151..."
-    re.compile(r"([A-Z0-9\s]{2,5}[-\s]+[XIV1l\d]{1,5}[-\s]+[A-Z0-9][.\s]+\d{4}[.\s]+\d+)", re.IGNORECASE),
+    # 2. Structure match (single line only)
+    # "2-5 Chars - Roman/Digits ... "
+    re.compile(r"([A-Z0-9 ]{2,5}[- ]+[XIV1l\d]{1,5}[- ]+[A-Z0-9][. ]+\d{4}[. ]+\d+)", re.IGNORECASE),
     
-    # 2. Generic structure fallback: "Letters-Roman/Numbers..." (e.g. SO-V.612...)
-    re.compile(r"\b([A-Z]{2,4}[-\s][XIV]+\.[-\w./\s]+)\b", re.IGNORECASE),
+    # 3. Generic fallback
+    re.compile(r"\b([A-Z]{2,4}[- ][XIV]+\.[-\w./]+)\b", re.IGNORECASE),
     
-    # 3. Old Strict fallback: AA/1234/2024
-    re.compile(r"\b([A-Z]{1,3}\s?/\s?\d{1,5}\s?/\s?\d{2,4})\b"),
+    # 4. Old Strict fallback
+    re.compile(r"\b([A-Z]{1,3}[ \t]?/[ \t]?\d{1,5}[ \t]?/[ \t]?\d{2,4})\b"),
 )
 DATE_PATTERNS = (
     re.compile(r"(?:dniu|dnia|dn\.)?\s*(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
