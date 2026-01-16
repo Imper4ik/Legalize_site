@@ -98,7 +98,8 @@ def _extract_pdf_text(path: Path) -> str:
                 logger.warning(f"OCR failed on page {i}: {e}")
                 
         text_content = "\n".join(ocr_text)
-        print(f"DEBUG: EXTRACTED PDF TEXT:\n{text_content}\n-----------------------")
+        print(f"DEBUG: EXTRACTED PDF TEXT (flush):\n{text_content}\n-----------------------", flush=True)
+
 
         
     except ImportError:
@@ -129,7 +130,8 @@ def _extract_image_text(path: Path) -> str:
 
         with Image.open(path) as img:
             text_out = pytesseract.image_to_string(img, lang='pol+eng')
-            print(f"DEBUG: EXTRACTED IMAGE TEXT:\n{text_out}\n-----------------------")
+            print(f"DEBUG: EXTRACTED IMAGE TEXT (flush):\n{text_out}\n-----------------------", flush=True)
+
             return text_out
     except Exception:  # pragma: no cover - defensive logging
         logger.exception("Не удалось прочитать изображение %s через OCR", path)
