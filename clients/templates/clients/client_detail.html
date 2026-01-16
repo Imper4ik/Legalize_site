@@ -1,8 +1,7 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% load i18n static %}
 
-{% block title %}{% blocktrans with client_name=client.first_name %}Детали клиента: {{ client_name }}{% endblocktrans
-%}{% endblock %}
+{% block title %}{% blocktrans with client_name=client.first_name %}Детали клиента: {{ client_name }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
 <div id="client-overview" data-refresh-url="{% url 'clients:client_overview_partial' client.pk %}">
@@ -11,8 +10,7 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h4>{% translate "Финансы" %}</h4>
-  <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPaymentModal">+ {%
-    translate "Добавить счёт" %}</button>
+  <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPaymentModal">+ {% translate "Добавить счёт" %}</button>
 </div>
 <div id="payment-alerts" class="mb-2"></div>
 <div class="card mb-4">
@@ -22,8 +20,7 @@
       {% include 'clients/partials/payment_item.html' with payment=payment %}
     </li>
     {% empty %}
-    <li class="list-group-item text-muted" id="no-payments-message">{% translate "Счета на оплату еще не созданы." %}
-    </li>
+    <li class="list-group-item text-muted" id="no-payments-message">{% translate "Счета на оплату еще не созданы." %}</li>
     {% endfor %}
   </ul>
 </div>
