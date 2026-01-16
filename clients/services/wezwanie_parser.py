@@ -15,7 +15,11 @@ DATE_FORMATS = ("%d.%m.%Y", "%d-%m-%Y", "%d/%m/%Y", "%Y-%m-%d")
 CASE_NUMBER_PATTERNS = (
     re.compile(r"numer\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     re.compile(r"nr\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
-    re.compile(r"sygn\.\s*akt[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
+    re.compile(r"sprawa\s+nr[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
+    re.compile(r"(?:sygnatura|sygn\.)\s*akt[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
+    re.compile(r"sygnatura[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
+    re.compile(r"nr\s+akt[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
+    re.compile(r"znak\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     # Pattern for case number like WSC-II-S.6151.97770.2023
     re.compile(r"\b(WSC[-\w.]+\d{4})\b", re.IGNORECASE),
     # Pattern for simple numbers like 409366
@@ -267,8 +271,19 @@ def _find_decision_date(text: str) -> date | None:
 def _find_full_name(text: str) -> str | None:
     """Extract full name from wezwanie (Polish names)."""
     name_patterns = [
-        # Pattern: "Pan/i\nMikita BUTOUSKI" (multiline with potential whitespace)
-        re.compile(r"Pan/i\s+([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+\s+[A-ZĄĆĘŁŃÓŚŹŻ]+)", re.IGNORECASE | re.UNICODE),
+        # Pattern: "Pan/Pani Anna Nowak" / "Pan Jan Kowalski" / "Pani Maria KOWALSKA"
+        re.compile(
+            r"(?:Pan/Pani|Pan|Pani|Panna|Pan/i)\s+"
+            r"([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+"
+            r"(?:\s+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+|\s+[A-ZĄĆĘŁŃÓŚŹŻ]{2,}){1,3})",
+            re.IGNORECASE | re.UNICODE,
+        ),
+        # Pattern: "Adresat: Jan Kowalski"
+        re.compile(
+            r"(?:adresat|dla|do)\s*[:\-]?\s+"
+            r"([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+){1,3})",
+            re.IGNORECASE | re.UNICODE,
+        ),
         # Pattern: "Imię i nazwisko: Jan Kowalski"
         re.compile(r"(?:imię i nazwisko|imi[ęe] oraz nazwisko)[:\s]+([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+)+)", re.IGNORECASE | re.UNICODE),
         # Pattern: "Name: Jan Kowalski"
