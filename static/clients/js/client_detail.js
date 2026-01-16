@@ -340,7 +340,7 @@
             uploadActions.classList.add('d-none');
 
             if (confirmButton) {
-              const confirmUrl = data.confirm_url || (confirmTemplate || '').replace('/0/', `/${data.doc_id}/`);
+              const confirmUrl = data.confirm_url || (confirmTemplate || '').replace('__doc_id__', data.doc_id);
               confirmButton.dataset.confirmUrl = confirmUrl;
               confirmButton.dataset.firstName = parsed.first_name || '';
               confirmButton.dataset.lastName = parsed.last_name || '';
