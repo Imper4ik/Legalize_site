@@ -127,7 +127,9 @@ def _extract_image_text(path: Path) -> str:
 
     try:
         with Image.open(path) as img:
-            return pytesseract.image_to_string(img, lang='pol+eng')
+            text_out = pytesseract.image_to_string(img, lang='pol+eng')
+            logger.info("DEBUG: EXTRACTED IMAGE TEXT:\n%s\n-----------------------", text_out)
+            return text_out
     except Exception:  # pragma: no cover - defensive logging
         logger.exception("Не удалось прочитать изображение %s через OCR", path)
         return ""
