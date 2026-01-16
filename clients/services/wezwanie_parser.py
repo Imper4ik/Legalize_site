@@ -34,6 +34,7 @@ class WezwanieData:
     """Parsed data extracted from the uploaded summons."""
 
     text: str
+    error: str | None = None
     case_number: str | None = None
     fingerprints_date: date | None = None
     fingerprints_time: str | None = None
@@ -290,6 +291,8 @@ def parse_wezwanie(file_path: str | Path) -> WezwanieData:
     """Parse the uploaded summons and return the extracted fields."""
 
     text = extract_text(file_path)
+    if not text.strip():
+        return WezwanieData(text="", error="no_text")
     wezwanie_type = _detect_wezwanie_type(text)
     case_number = _find_case_number(text)
     full_name = _find_full_name(text)
