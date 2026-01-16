@@ -1,0 +1,191 @@
+{% load i18n %}
+
+<!-- Modal for adding payment -->
+<div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel" aria-hidden="true"
+    data-price-url-template="{% url 'clients:get_price_for_service' service_value='__service__' %}">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addPaymentModalLabel">{% translate "Добавить счёт на оплату" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'clients:add_payment' client_id=client.pk %}">
+                    {% csrf_token %}
+                    {# Form fields will be rendered manually for better control or using crispy forms if available #}
+                    {# For now, assuming standard form rendering is sufficient or we need to match JS expectations #}
+
+                    <div class="mb-3">
+                        <label for="id_service_description" class="form-label">{% translate "Услуга" %}</label>
+                        {# This should match the name in PaymentForm #}
+                        <select name="service_description" class="form-select" id="id_service_description" required>
+                            <option value="" selected disabled>{% translate "Выберите услугу" %}</option>
+                            {% for value, label in service_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_total_amount" class="form-label">{% translate "Сумма (PLN)" %}</label>
+                        <input type="number" name="total_amount" step="0.01" class="form-control" id="id_total_amount"
+                            required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_payment_date" class="form-label">{% translate "Дата создания" %}</label>
+                        <input type="date" name="payment_date" class="form-control" id="id_payment_date"
+                            value="{% now 'Y-m-d' %}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_payment_method" class="form-label">{% translate "Способ оплаты" %}</label>
+                        <select name="payment_method" class="form-select" id="id_payment_method">
+                            <option value="cash">{% translate "Наличные" %}</option>
+                            <option value="bank_transfer">{% translate "Банковский перевод" %}</option>
+                            <option value="card">{% translate "Карта" %}</option>
+                            <option value="blik">{% translate "BLIK" %}</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="id_transaction_id" class="form-label">{% translate "ID транзакции (если есть)"
+                            %}</label>
+                        <input type="text" name="transaction_id" class="form-control" id="id_transaction_id">
+                    </div>
+
+                    <div class="modal-footer px-0 pb-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена"
+                            %}</button>
+                        <button type="submit" class="btn btn-primary">{% translate "Сохранить" %}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for editing payment -->
+<div class="modal fade" id="editPaymentModal" tabindex="-1" aria-labelledby="editPaymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editPaymentModalLabel">{% translate "Редактировать счёт" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {# Content loaded dynamically via JS/AJAX usually, or simplistic form #}
+                <form method="post" id="editPaymentForm">
+                    {% csrf_token %}
+                    <div id="editPaymentFormContent">
+                        {# Fields will be populated or rendered here #}
+                        <p class="text-muted text-center">{% translate "Загрузка..." %}</p>
+                    </div>
+                    <div class="modal-footer px-0 pb-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена"
+                            %}</button>
+                        <button type="submit" class="btn btn-primary">{% translate "Сохранить" %}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Document Upload -->
+<div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel"
+    aria-hidden="true"
+    data-action-template="{% url 'clients:add_document' client_id=client.pk doc_type='__doc_type__' %}"
+    data-confirm-url-template="{% url 'clients:confirm_wezwanie_parse' doc_id=0 %}">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadDocumentModalLabel">{% translate "Загрузка документа" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="uploadDocumentDescription" class="mb-3 text-muted"></p>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="parse_wezwanie" id="uploadDocumentParseWezwanie" value="0">
+
+                    <!-- Normal Upload Step -->
+                    <div id="uploadDocumentStep">
+                        <div class="mb-3">
+                            <label for="id_file" class="form-label">{% translate "Файл" %}</label>
+                            <input type="file" name="file" class="form-control" id="id_file" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_expiry_date" class="form-label">{% translate "Дата истечения (если есть)"
+                                %}</label>
+                            <input type="date" name="expiry_date" class="form-control" id="id_expiry_date">
+                        </div>
+                    </div>
+
+                    <!-- Wezwanie Confirmation Step (Hidden by default) -->
+                    <div id="wezwanieConfirmationStep" class="d-none border-top pt-3 mt-3">
+                        <h6 class="text-primary mb-3">{% translate "Проверьте распознанные данные" %}</h6>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">{% translate "Имя" %}</label>
+                                <input type="text" class="form-control" id="wezwanieParsedFirstName">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">{% translate "Фамилия" %}</label>
+                                <input type="text" class="form-control" id="wezwanieParsedLastName">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label">{% translate "Номер дела" %}</label>
+                                <input type="text" class="form-control" id="wezwanieParsedCaseNumber">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">{% translate "Дата отпечатков" %}</label>
+                                <input type="date" class="form-control" id="wezwanieParsedFingerprintsDate">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{% translate "Время" %}</label>
+                                <input type="text" class="form-control" id="wezwanieParsedFingerprintsTime"
+                                    placeholder="HH:MM">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">{% translate "Место" %}</label>
+                                <input type="text" class="form-control" id="wezwanieParsedFingerprintsLocation">
+                            </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label">{% translate "Дата решения (decyzja)" %}</label>
+                                <input type="date" class="form-control" id="wezwanieParsedDecisionDate">
+                            </div>
+                        </div>
+                        <div class="alert alert-info mt-3 py-2">
+                            <small>{% translate "Эти данные обновят профиль клиента после подтверждения." %}</small>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer px-0 pb-0 mt-3">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Закрыть"
+                            %}</button>
+
+                        <!-- Actions for normal upload -->
+                        <div id="uploadDocumentActions">
+                            <button type="submit" class="btn btn-primary" id="uploadDocumentSubmitButton">{% translate
+                                "Загрузить" %}</button>
+                            <button type="submit" class="btn btn-success d-none" id="wezwanieParseButton">
+                                <i class="bi bi-magic"></i> {% translate "Загрузить и распознать" %}
+                            </button>
+                        </div>
+
+                        <!-- Actions for confirmation -->
+                        <div id="wezwanieConfirmActions" class="d-none">
+                            <button type="button" class="btn btn-primary" id="wezwanieConfirmButton">{% translate
+                                "Подтвердить данные" %}</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
