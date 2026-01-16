@@ -242,6 +242,41 @@
     const description = modal.querySelector('#uploadDocumentDescription');
     const form = modal.querySelector('form');
     const actionTemplate = modal.dataset.actionTemplate;
+    const confirmTemplate = modal.dataset.confirmUrlTemplate;
+    const parseInput = modal.querySelector('#uploadDocumentParseWezwanie');
+    const confirmStep = modal.querySelector('#wezwanieConfirmationStep');
+    const confirmActions = modal.querySelector('#wezwanieConfirmActions');
+    const uploadActions = modal.querySelector('#uploadDocumentActions');
+    const confirmButton = modal.querySelector('#wezwanieConfirmButton');
+    const parsedFullName = modal.querySelector('#wezwanieParsedFullName');
+    const parsedCaseNumber = modal.querySelector('#wezwanieParsedCaseNumber');
+    const parsedFingerprintsDate = modal.querySelector('#wezwanieParsedFingerprintsDate');
+    const parsedDecisionDate = modal.querySelector('#wezwanieParsedDecisionDate');
+
+    if (!form) {
+      return;
+    }
+
+    const submitButton = form.querySelector('[type="submit"]');
+    const csrfToken = form.querySelector('[name="csrfmiddlewaretoken"]')?.value || '';
+
+    function resetConfirmation() {
+      confirmStep?.classList.add('d-none');
+      confirmActions?.classList.add('d-none');
+      uploadActions?.classList.remove('d-none');
+      if (parsedFullName) parsedFullName.textContent = '—';
+      if (parsedCaseNumber) parsedCaseNumber.textContent = '—';
+      if (parsedFingerprintsDate) parsedFingerprintsDate.textContent = '—';
+      if (parsedDecisionDate) parsedDecisionDate.textContent = '—';
+      if (confirmButton) {
+        confirmButton.dataset.confirmUrl = '';
+        confirmButton.dataset.firstName = '';
+        confirmButton.dataset.lastName = '';
+        confirmButton.dataset.caseNumber = '';
+        confirmButton.dataset.fingerprintsDate = '';
+        confirmButton.dataset.decisionDate = '';
+      }
+    }
 
     modal.addEventListener('show.bs.modal', (event) => {
       const button = event.relatedTarget;
@@ -259,14 +294,126 @@
       if (description) {
         description.textContent = docName ? `Вы загружаете документ: "${docName}"` : '';
       }
+
+      if (parseInput) {
+        parseInput.value = docType === 'wezwanie' ? '1' : '0';
+      }
+
+      resetConfirmation();
     });
 
     modal.addEventListener('hidden.bs.modal', () => {
-      if (form) {
-        form.reset();
-      }
+      form.reset();
       if (description) {
         description.textContent = '';
+      }
+      resetConfirmation();
+    });
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      submitButton?.setAttribute('disabled', 'disabled');
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+          body: new FormData(form),
+          credentials: 'same-origin',
+        });
+
+        const data = await response.json();
+        if (data.status === 'success') {
+          if (data.pending_confirmation && confirmStep && confirmActions && uploadActions) {
+            const parsed = data.parsed || {};
+            if (parsedFullName) parsedFullName.textContent = parsed.full_name || '—';
+            if (parsedCaseNumber) parsedCaseNumber.textContent = parsed.case_number || '—';
+            if (parsedFingerprintsDate) {
+              parsedFingerprintsDate.textContent = parsed.fingerprints_date_display || '—';
+            }
+            if (parsedDecisionDate) {
+              parsedDecisionDate.textContent = parsed.decision_date_display || '—';
+            }
+
+            confirmStep.classList.remove('d-none');
+            confirmActions.classList.remove('d-none');
+            uploadActions.classList.add('d-none');
+
+            if (confirmButton) {
+              const confirmUrl = data.confirm_url || (confirmTemplate || '').replace('/0/', `/${data.doc_id}/`);
+              confirmButton.dataset.confirmUrl = confirmUrl;
+              confirmButton.dataset.firstName = parsed.first_name || '';
+              confirmButton.dataset.lastName = parsed.last_name || '';
+              confirmButton.dataset.caseNumber = parsed.case_number || '';
+              confirmButton.dataset.fingerprintsDate = parsed.fingerprints_date || '';
+              confirmButton.dataset.decisionDate = parsed.decision_date || '';
+            }
+            return;
+          }
+
+          bootstrap.Modal.getOrCreateInstance(modal).hide();
+          showDocumentAlert(data.message || 'Документ успешно добавлен.');
+          if (typeof refreshChecklist === 'function') {
+            await refreshChecklist();
+          } else {
+            window.location.reload();
+          }
+          return;
+        }
+
+        showDocumentAlert(getErrorMessage(data.errors || data.message), 'danger');
+      } catch (error) {
+        console.error('Ошибка при загрузке документа:', error);
+        showDocumentAlert('Не удалось загрузить документ. Попробуйте ещё раз.', 'danger');
+      } finally {
+        submitButton?.removeAttribute('disabled');
+      }
+    });
+
+    confirmButton?.addEventListener('click', async () => {
+      const confirmUrl = confirmButton.dataset.confirmUrl;
+      if (!confirmUrl) {
+        return;
+      }
+
+      confirmButton.setAttribute('disabled', 'disabled');
+
+      const payload = new FormData();
+      payload.append('first_name', confirmButton.dataset.firstName || '');
+      payload.append('last_name', confirmButton.dataset.lastName || '');
+      payload.append('case_number', confirmButton.dataset.caseNumber || '');
+      payload.append('fingerprints_date', confirmButton.dataset.fingerprintsDate || '');
+      payload.append('decision_date', confirmButton.dataset.decisionDate || '');
+
+      try {
+        const response = await fetch(confirmUrl, {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken,
+          },
+          body: payload,
+          credentials: 'same-origin',
+        });
+
+        const data = await response.json();
+        if (data.status === 'success') {
+          bootstrap.Modal.getOrCreateInstance(modal).hide();
+          showDocumentAlert(data.message || 'Данные wezwanie подтверждены.');
+          if (typeof refreshChecklist === 'function') {
+            await refreshChecklist();
+          } else {
+            window.location.reload();
+          }
+          return;
+        }
+
+        showDocumentAlert(getErrorMessage(data.errors || data.message), 'danger');
+      } catch (error) {
+        console.error('Не удалось подтвердить wezwanie:', error);
+        showDocumentAlert('Не удалось подтвердить данные wezwanie.', 'danger');
+      } finally {
+        confirmButton.removeAttribute('disabled');
       }
     });
   }
