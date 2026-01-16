@@ -21,9 +21,15 @@ CASE_NUMBER_PATTERNS = (
     re.compile(r"nr\s+akt[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     re.compile(r"znak\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     
-    # 1. Wide net for WSC: Grab "WSC" and anything that looks like a case number following it
-    # Doesn't require year at the end, just substantial content
-    re.compile(r"\b((?:WSC|SOC|W5C|VVSC|W\$C|W\.S\.C)[-\w.\s/]{5,})\b", re.IGNORECASE),
+    # 1. Wide net for WSC: Grab "WSC" (with OPTIONAL SPACES) and anything following
+    # Matches "WSC", "W S C", "VVSC", "W.S.C" etc.
+    # Remove \b start to catch cases like "|WSC" or ".WSC"
+    re.compile(r"((?:W\s*S\s*C|S\s*O\s*C|W\s*5\s*C|V\s*V\s*S\s*C|W\s*\$\s*C|W\s*\.\s*S\s*\.\s*C)[-\w.\s/]{5,})", re.IGNORECASE),
+    
+    # NEW: Structure match for WSC-II-S... format (ignoring prefix WSC if it's mangled)
+    # Looks for: "Any3Letters - RomanNum - Letter . Numbers"
+    # Example: "WSC-II-S.6151..." or "W5C-11-5.6151..."
+    re.compile(r"([A-Z0-9]{3}[-\s]+[XIV1l]{1,4}[-\s]+[A-Z0-9][.\s]+\d{4}[.\s]+\d+)", re.IGNORECASE),
     
     # 2. Generic structure fallback: "Letters-Roman/Numbers..." (e.g. SO-V.612...)
     re.compile(r"\b([A-Z]{2,4}[-\s][XIV]+\.[-\w./\s]+)\b", re.IGNORECASE),
@@ -209,19 +215,31 @@ def extract_text(path: str | Path) -> str:
 
 def _find_case_number(text: str) -> str | None:
     candidates: list[str] = []
+    candidate_log = []
+    
+    # 1. Try Specific Patterns (Prefix-based)
     for pattern in CASE_NUMBER_PATTERNS:
-        match = pattern.search(text)
-        if match:
-            # Clean up the number: remove spaces, dots at the end, etc.
+        # scan the whole text for matches
+        for match in pattern.finditer(text):
             raw_val = match.group(1)
-            # Remove all whitespace to fix "WSC - II" issues
+            candidate_log.append(f"Pattern match: '{raw_val}'")
+            
+            # Clean up: remove all whitespace, fix common OCR replacements
             normalized = re.sub(r"\s+", "", raw_val)
-            # Remove trailing dots or junk
+            normalized = normalized.replace("VV", "W").replace("5", "S").replace("$", "S")
             normalized = normalized.strip(".,-:/")
             normalized = normalized.upper()
             
-            if len(normalized) > 5:  # Basic sanity check
-                return normalized
+            # Reject if too short (e.g. just "WSC") or looks like a date "2023-10-10"
+            if len(normalized) < 5:
+                continue
+            if re.match(r"^\d{4}-\d{2}-\d{2}$", normalized):
+                continue
+                
+            print(f"DEBUG: Candidate accepted: {normalized} (from '{raw_val}')", flush=True)
+            return normalized
+
+    print(f"DEBUG: No Case Number found. Candidates extracted but rejected: {candidate_log}", flush=True)
     return None
 
 
