@@ -9,7 +9,7 @@ from django.utils.dateparse import parse_date
 from clients.constants import DocumentType
 from clients.forms import DocumentUploadForm
 from clients.models import Client, Document
-from clients.services.notifications import send_missing_documents_email
+from clients.services.notifications import send_missing_documents_email, send_appointment_notification_email
 from clients.services.responses import ResponseHelper, apply_no_store
 from clients.services.wezwanie_parser import parse_wezwanie
 from clients.views.base import staff_required_view
@@ -80,6 +80,8 @@ def add_document(request, client_id, doc_type):
                         "fingerprints_date_display": parsed.fingerprints_date.strftime("%d.%m.%Y")
                         if parsed.fingerprints_date
                         else "",
+                        "fingerprints_time": parsed.fingerprints_time or "",
+                        "fingerprints_location": parsed.fingerprints_location or "",
                         "decision_date": parsed.decision_date.isoformat()
                         if parsed.decision_date
                         else "",
@@ -105,6 +107,16 @@ def add_document(request, client_id, doc_type):
                         f"дата сдачи отпечатков: {parsed.fingerprints_date.strftime('%d.%m.%Y')}"
                     )
                 
+                if parsed.fingerprints_time and parsed.fingerprints_time != str(client.fingerprints_time):
+                    client.fingerprints_time = parsed.fingerprints_time
+                    updated_fields.append("fingerprints_time")
+                    auto_updates.append(f"время отпечатков: {parsed.fingerprints_time}")
+
+                if parsed.fingerprints_location and parsed.fingerprints_location != client.fingerprints_location:
+                    client.fingerprints_location = parsed.fingerprints_location
+                    updated_fields.append("fingerprints_location")
+                    auto_updates.append(f"место отпечатков: {parsed.fingerprints_location}")
+
                 if parsed.decision_date and parsed.decision_date != client.decision_date:
                     client.decision_date = parsed.decision_date
                     updated_fields.append("decision_date")
@@ -137,6 +149,11 @@ def add_document(request, client_id, doc_type):
                 emails_sent = send_missing_documents_email(client)
                 if emails_sent:
                     auto_updates.append("отправлено письмо с недостающими документами")
+
+                if parsed.wezwanie_type == "fingerprints" and parsed.fingerprints_date:
+                    apt_email_sent = send_appointment_notification_email(client)
+                    if apt_email_sent:
+                        auto_updates.append("отправлено уведомление о встрече")
 
 
             success_message = f"Документ '{document_type_display}' успешно добавлен."
@@ -187,6 +204,8 @@ def confirm_wezwanie_parse(request, doc_id):
     last_name = (request.POST.get("last_name") or "").strip()
     case_number = (request.POST.get("case_number") or "").strip()
     fingerprints_date_raw = (request.POST.get("fingerprints_date") or "").strip()
+    fingerprints_time = (request.POST.get("fingerprints_time") or "").strip()
+    fingerprints_location = (request.POST.get("fingerprints_location") or "").strip()
     decision_date_raw = (request.POST.get("decision_date") or "").strip()
 
     if first_name and first_name != client.first_name:
@@ -205,6 +224,16 @@ def confirm_wezwanie_parse(request, doc_id):
         client.fingerprints_date = fingerprints_date
         updated_fields.append("fingerprints_date")
         auto_updates.append(f"дата сдачи отпечатков: {fingerprints_date.strftime('%d.%m.%Y')}")
+
+    if fingerprints_time and fingerprints_time != str(client.fingerprints_time):
+        client.fingerprints_time = fingerprints_time
+        updated_fields.append("fingerprints_time")
+        auto_updates.append(f"время отпечатков: {fingerprints_time}")
+
+    if fingerprints_location and fingerprints_location != client.fingerprints_location:
+        client.fingerprints_location = fingerprints_location
+        updated_fields.append("fingerprints_location")
+        auto_updates.append(f"место отпечатков: {fingerprints_location}")
 
     decision_date = parse_date(decision_date_raw) if decision_date_raw else None
     if decision_date and decision_date != client.decision_date:
@@ -232,6 +261,11 @@ def confirm_wezwanie_parse(request, doc_id):
     emails_sent = send_missing_documents_email(client)
     if emails_sent:
         auto_updates.append("отправлено письмо с недостающими документами")
+
+    if client.fingerprints_date:
+        apt_email_sent = send_appointment_notification_email(client)
+        if apt_email_sent:
+            auto_updates.append("отправлено уведомление о встрече")
 
     success_message = "Данные wezwanie подтверждены."
     if auto_updates:

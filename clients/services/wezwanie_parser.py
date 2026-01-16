@@ -36,9 +36,11 @@ class WezwanieData:
     text: str
     case_number: str | None = None
     fingerprints_date: date | None = None
+    fingerprints_time: str | None = None
+    fingerprints_location: str | None = None
     decision_date: date | None = None
     full_name: str | None = None
-    wezwanie_type: str | None = None  # "fingerprints" or "decision"
+    wezwanie_type: str | None = None  # "fingerprints" or "decision" or "confirmation"
     required_documents: list[str] = None
 
     def __post_init__(self):
@@ -188,9 +190,14 @@ def _find_first_date(text: str) -> date | None:
 
 
 def _detect_wezwanie_type(text: str) -> str | None:
-    """Detect if this is a fingerprints invitation or decision notification."""
+    """Detect if this is a fingerprints invitation, decision notification, or fingerprint confirmation."""
     text_lower = text.lower()
     
+    # Keywords for confirmation (post-visit)
+    confirmation_keywords = ["potwierdzenie złożenia", "potwierdzenie przyjęcia", "odciski linii papilarnych zostały pobrane"]
+    if any(keyword in text_lower for keyword in confirmation_keywords):
+        return "confirmation"
+
     # Keywords for decision wezwanie (second type)
     decision_keywords = ["decyzj", "wydanie decyzji", "termin wydania", "termin rozpatrz"]
     if any(keyword in text_lower for keyword in decision_keywords):
@@ -201,6 +208,35 @@ def _detect_wezwanie_type(text: str) -> str | None:
     if any(keyword in text_lower for keyword in fingerprint_keywords):
         return "fingerprints"
     
+    return None
+
+
+def _find_fingerprints_time(text: str) -> str | None:
+    """Extract fingerprints appointment time."""
+    time_patterns = [
+        re.compile(r"godz\.\s*(\d{1,2}[:.]\d{2})", re.IGNORECASE),
+        re.compile(r"godzinie\s*(\d{1,2}[:.]\d{2})", re.IGNORECASE),
+        re.compile(r"at\s*(\d{1,2}[:.]\d{2})", re.IGNORECASE),
+    ]
+    for pattern in time_patterns:
+        match = pattern.search(text)
+        if match:
+            return match.group(1).replace('.', ':')
+    return None
+
+
+def _find_fingerprints_location(text: str) -> str | None:
+    """Extract fingerprints appointment location."""
+    location_patterns = [
+        re.compile(r"sala\s*(\d+)", re.IGNORECASE),
+        re.compile(r"pokój\s*(\d+)", re.IGNORECASE),
+        re.compile(r"miejsce[:\s]+(.*?)(?:\.|\n)", re.IGNORECASE),
+        re.compile(r"ul\.\s*([^,\n]+)", re.IGNORECASE),
+    ]
+    for pattern in location_patterns:
+        match = pattern.search(text)
+        if match:
+            return match.group(0).strip()
     return None
 
 
@@ -260,6 +296,8 @@ def parse_wezwanie(file_path: str | Path) -> WezwanieData:
     
     # Extract dates based on type
     fingerprints_date = None
+    fingerprints_time = None
+    fingerprints_location = None
     decision_date = None
     
     if wezwanie_type == "decision":
@@ -268,8 +306,13 @@ def parse_wezwanie(file_path: str | Path) -> WezwanieData:
         if not decision_date:
             # Fallback to first date found
             decision_date = _find_first_date(text)
+    elif wezwanie_type == "fingerprints":
+        # First wezwanie - look for fingerprints date, time, location
+        fingerprints_date = _find_first_date(text)
+        fingerprints_time = _find_fingerprints_time(text)
+        fingerprints_location = _find_fingerprints_location(text)
     else:
-        # First wezwanie or unknown - look for fingerprints date
+        # Unknown/Confirmation - look for fingerprints date
         fingerprints_date = _find_first_date(text)
     
     # Extract required documents
@@ -279,6 +322,8 @@ def parse_wezwanie(file_path: str | Path) -> WezwanieData:
         text=text,
         case_number=case_number,
         fingerprints_date=fingerprints_date,
+        fingerprints_time=fingerprints_time,
+        fingerprints_location=fingerprints_location,
         decision_date=decision_date,
         full_name=full_name,
         wezwanie_type=wezwanie_type,

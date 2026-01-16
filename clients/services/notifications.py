@@ -24,6 +24,7 @@ EMAIL_SUBJECTS: dict[str, str] = {
     "expired_documents": _("Истекшие документы после сдачи отпечатков"),
     "missing_documents": _("Список недостающих документов"),
     "expiring_documents": _("Документы скоро истекают"),
+    "appointment_notification": _("Уведомление о встрече"),
 }
 
 
@@ -354,4 +355,21 @@ def send_expiring_documents_email(client: Client, documents: list[Document]) -> 
     }
     subject = _get_subject("expiring_documents", language)
     body = _render_email_body("expiring_documents", context, language)
+    return _send_email(subject, body, [client.email])
+
+
+def send_appointment_notification_email(client: Client) -> int:
+    """Send a notification about a fingerprint appointment."""
+    if not client.email or not client.fingerprints_date:
+        return 0
+
+    language = _get_preferred_language(client)
+    context = {
+        "client": client,
+        "fingerprints_date": client.fingerprints_date,
+        "fingerprints_time": client.fingerprints_time,
+        "fingerprints_location": client.fingerprints_location,
+    }
+    subject = _get_subject("appointment_notification", language)
+    body = _render_email_body("appointment_notification", context, language)
     return _send_email(subject, body, [client.email])

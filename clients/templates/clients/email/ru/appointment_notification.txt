@@ -1,0 +1,13 @@
+Здравствуйте, {{ client.first_name }}.
+
+Сообщаем вам, что вам назначена встреча для сдачи отпечатков пальцев.
+
+Детали встречи:
+- Дата: {{ fingerprints_date|date:"d.m.Y" }}
+{% if fingerprints_time %}- Время: {{ fingerprints_time|time:"H:i" }}{% endif %}
+{% if fingerprints_location %}- Место: {{ fingerprints_location }}{% endif %}
+
+Пожалуйста, не забудьте взять с собой все необходимые документы и оригинал паспорта.
+
+С уважением,
+Команда Legalize

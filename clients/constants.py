@@ -30,6 +30,7 @@ class DocumentType(models.TextChoices):
     STATEMENT_X = 'statement_x', _('Oświadczenie „x”')
     MAINTENANCE_STATEMENT = 'maintenance_statement', _('Oświadczenie o utrzymaniu')
     WEZWANIE = 'wezwanie', _('Wezwanie')
+    FINGERPRINT_CONFIRMATION = 'fingerprint_confirmation', _('Potwierdzenie złożenia odcisków palców')
 
 
 def doc_entry(doc_type: DocumentType) -> tuple[str, str]:

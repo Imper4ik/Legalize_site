@@ -16,10 +16,10 @@
             <label for="id_service_description" class="form-label">{% translate "Услуга" %}</label>
             <select name="service_description" class="form-select" id="id_service_description" required>
               {% for choice_value, choice_label in payment_form.service_description.field.choices %}
-              <option value="{{ choice_value }}" {% if client.application_purpose == "work" and choice_value == "work_service" %}
-                selected{% elif client.application_purpose == "study" and choice_value == "study_service" %}
-                selected{% elif client.application_purpose == "family" and choice_value == "consultation" %}
-                selected{% endif %}>
+              <option value="{{ choice_value }}" {% if client.application_purpose=="work" and
+                choice_value=="work_service" %} selected{% elif client.application_purpose=="study" and
+                choice_value=="study_service" %} selected{% elif client.application_purpose=="family" and
+                choice_value=="consultation" %} selected{% endif %}>
                 {{ choice_label }}
               </option>
               {% endfor %}
@@ -122,8 +122,7 @@
 </div>
 
 <div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel"
-  aria-hidden="true"
-  data-action-template="{% url 'clients:add_document' client_id=client.id doc_type='__doc_type__' %}"
+  aria-hidden="true" data-action-template="{% url 'clients:add_document' client_id=client.id doc_type='__doc_type__' %}"
   data-confirm-url-template="{% url 'clients:confirm_wezwanie_parse' doc_id=0 %}">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -148,29 +147,52 @@
           </div>
           <div class="border rounded p-3 d-none" id="wezwanieConfirmationStep">
             <h6 class="mb-2">{% translate "Подтверждение данных wezwanie" %}</h6>
-            <p class="text-muted mb-3">{% translate "Проверьте распознанные данные перед сохранением." %}</p>
-            <dl class="row mb-3">
-              <dt class="col-sm-4">{% translate "ФИО" %}</dt>
-              <dd class="col-sm-8" id="wezwanieParsedFullName">—</dd>
-              <dt class="col-sm-4">{% translate "Номер дела" %}</dt>
-              <dd class="col-sm-8" id="wezwanieParsedCaseNumber">—</dd>
-              <dt class="col-sm-4">{% translate "Дата отпечатков" %}</dt>
-              <dd class="col-sm-8" id="wezwanieParsedFingerprintsDate">—</dd>
-              <dt class="col-sm-4">{% translate "Дата децизии" %}</dt>
-              <dd class="col-sm-8" id="wezwanieParsedDecisionDate">—</dd>
-            </dl>
+            <p class="text-muted mb-3 small">{% translate "Проверьте распознанные данные перед сохранением. Все поля
+              доступны для редактирования." %}</p>
+
+            <div class="mb-2">
+              <label class="form-label small mb-1">{% translate "Имя" %}</label>
+              <input type="text" class="form-control form-control-sm" id="wezwanieParsedFirstName">
+            </div>
+            <div class="mb-2">
+              <label class="form-label small mb-1">{% translate "Фамилия" %}</label>
+              <input type="text" class="form-control form-control-sm" id="wezwanieParsedLastName">
+            </div>
+            <div class="mb-2">
+              <label class="form-label small mb-1">{% translate "Номер дела" %}</label>
+              <input type="text" class="form-control form-control-sm" id="wezwanieParsedCaseNumber">
+            </div>
+            <div class="mb-2">
+              <label class="form-label small mb-1">{% translate "Дата отпечатков" %}</label>
+              <input type="date" class="form-control form-control-sm" id="wezwanieParsedFingerprintsDate">
+            </div>
+            <div class="mb-2">
+              <label class="form-label small mb-1">{% translate "Время отпечатков" %}</label>
+              <input type="time" class="form-control form-control-sm" id="wezwanieParsedFingerprintsTime">
+            </div>
+            <div class="mb-2">
+              <label class="form-label small mb-1">{% translate "Место отпечатков" %}</label>
+              <input type="text" class="form-control form-control-sm" id="wezwanieParsedFingerprintsLocation">
+            </div>
+            <div class="mb-2">
+              <label class="form-label small mb-1">{% translate "Дата децизии" %}</label>
+              <input type="date" class="form-control form-control-sm" id="wezwanieParsedDecisionDate">
+            </div>
           </div>
         </div>
         <div class="modal-footer">
           <div class="d-flex gap-2 w-100 justify-content-end" id="uploadDocumentActions">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
-            <button type="submit" class="btn btn-primary" id="uploadDocumentSubmitButton">{% translate "Сохранить" %}</button>
-            <button type="submit" class="btn btn-primary d-none" id="wezwanieParseButton">{% translate "Распознать wezwanie" %}</button>
+            <button type="submit" class="btn btn-primary" id="uploadDocumentSubmitButton">{% translate "Сохранить"
+              %}</button>
+            <button type="submit" class="btn btn-primary d-none" id="wezwanieParseButton">{% translate "Распознать
+              wezwanie" %}</button>
           </div>
           <div class="d-flex gap-2 w-100 justify-content-end d-none" id="wezwanieConfirmActions">
-            <button type="button" class="btn btn-outline-secondary" id="wezwanieCancelButton"
-              data-bs-dismiss="modal">{% translate "Отмена" %}</button>
-            <button type="button" class="btn btn-primary" id="wezwanieConfirmButton">{% translate "Подтвердить" %}</button>
+            <button type="button" class="btn btn-outline-secondary" id="wezwanieCancelButton" data-bs-dismiss="modal">{%
+              translate "Отмена" %}</button>
+            <button type="button" class="btn btn-primary" id="wezwanieConfirmButton">{% translate "Подтвердить"
+              %}</button>
           </div>
         </div>
       </form>

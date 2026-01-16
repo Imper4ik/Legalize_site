@@ -249,9 +249,12 @@
     const confirmActions = modal.querySelector('#wezwanieConfirmActions');
     const uploadActions = modal.querySelector('#uploadDocumentActions');
     const confirmButton = modal.querySelector('#wezwanieConfirmButton');
-    const parsedFullName = modal.querySelector('#wezwanieParsedFullName');
+    const parsedFirstName = modal.querySelector('#wezwanieParsedFirstName');
+    const parsedLastName = modal.querySelector('#wezwanieParsedLastName');
     const parsedCaseNumber = modal.querySelector('#wezwanieParsedCaseNumber');
     const parsedFingerprintsDate = modal.querySelector('#wezwanieParsedFingerprintsDate');
+    const parsedFingerprintsTime = modal.querySelector('#wezwanieParsedFingerprintsTime');
+    const parsedFingerprintsLocation = modal.querySelector('#wezwanieParsedFingerprintsLocation');
     const parsedDecisionDate = modal.querySelector('#wezwanieParsedDecisionDate');
 
     if (!form) {
@@ -266,17 +269,15 @@
       confirmStep?.classList.add('d-none');
       confirmActions?.classList.add('d-none');
       uploadActions?.classList.remove('d-none');
-      if (parsedFullName) parsedFullName.textContent = '—';
-      if (parsedCaseNumber) parsedCaseNumber.textContent = '—';
-      if (parsedFingerprintsDate) parsedFingerprintsDate.textContent = '—';
-      if (parsedDecisionDate) parsedDecisionDate.textContent = '—';
+      if (parsedFirstName) parsedFirstName.value = '';
+      if (parsedLastName) parsedLastName.value = '';
+      if (parsedCaseNumber) parsedCaseNumber.value = '';
+      if (parsedFingerprintsDate) parsedFingerprintsDate.value = '';
+      if (parsedFingerprintsTime) parsedFingerprintsTime.value = '';
+      if (parsedFingerprintsLocation) parsedFingerprintsLocation.value = '';
+      if (parsedDecisionDate) parsedDecisionDate.value = '';
       if (confirmButton) {
         confirmButton.dataset.confirmUrl = '';
-        confirmButton.dataset.firstName = '';
-        confirmButton.dataset.lastName = '';
-        confirmButton.dataset.caseNumber = '';
-        confirmButton.dataset.fingerprintsDate = '';
-        confirmButton.dataset.decisionDate = '';
       }
     }
 
@@ -335,14 +336,13 @@
         if (data.status === 'success') {
           if (data.pending_confirmation && confirmStep && confirmActions && uploadActions) {
             const parsed = data.parsed || {};
-            if (parsedFullName) parsedFullName.textContent = parsed.full_name || '—';
-            if (parsedCaseNumber) parsedCaseNumber.textContent = parsed.case_number || '—';
-            if (parsedFingerprintsDate) {
-              parsedFingerprintsDate.textContent = parsed.fingerprints_date_display || '—';
-            }
-            if (parsedDecisionDate) {
-              parsedDecisionDate.textContent = parsed.decision_date_display || '—';
-            }
+            if (parsedFirstName) parsedFirstName.value = parsed.first_name || '';
+            if (parsedLastName) parsedLastName.value = parsed.last_name || '';
+            if (parsedCaseNumber) parsedCaseNumber.value = parsed.case_number || '';
+            if (parsedFingerprintsDate) parsedFingerprintsDate.value = parsed.fingerprints_date || '';
+            if (parsedFingerprintsTime) parsedFingerprintsTime.value = parsed.fingerprints_time || '';
+            if (parsedFingerprintsLocation) parsedFingerprintsLocation.value = parsed.fingerprints_location || '';
+            if (parsedDecisionDate) parsedDecisionDate.value = parsed.decision_date || '';
 
             confirmStep.classList.remove('d-none');
             confirmActions.classList.remove('d-none');
@@ -354,11 +354,6 @@
                   .replace('__doc_id__', data.doc_id)
                   .replace('/0/', `/${data.doc_id}/`);
               confirmButton.dataset.confirmUrl = confirmUrl;
-              confirmButton.dataset.firstName = parsed.first_name || '';
-              confirmButton.dataset.lastName = parsed.last_name || '';
-              confirmButton.dataset.caseNumber = parsed.case_number || '';
-              confirmButton.dataset.fingerprintsDate = parsed.fingerprints_date || '';
-              confirmButton.dataset.decisionDate = parsed.decision_date || '';
             }
             return;
           }
@@ -392,11 +387,13 @@
       confirmButton.setAttribute('disabled', 'disabled');
 
       const payload = new FormData();
-      payload.append('first_name', confirmButton.dataset.firstName || '');
-      payload.append('last_name', confirmButton.dataset.lastName || '');
-      payload.append('case_number', confirmButton.dataset.caseNumber || '');
-      payload.append('fingerprints_date', confirmButton.dataset.fingerprintsDate || '');
-      payload.append('decision_date', confirmButton.dataset.decisionDate || '');
+      payload.append('first_name', parsedFirstName?.value || '');
+      payload.append('last_name', parsedLastName?.value || '');
+      payload.append('case_number', parsedCaseNumber?.value || '');
+      payload.append('fingerprints_date', parsedFingerprintsDate?.value || '');
+      payload.append('fingerprints_time', parsedFingerprintsTime?.value || '');
+      payload.append('fingerprints_location', parsedFingerprintsLocation?.value || '');
+      payload.append('decision_date', parsedDecisionDate?.value || '');
 
       try {
         const response = await fetch(confirmUrl, {
