@@ -133,7 +133,8 @@ def _extract_image_text(path: Path) -> str:
             print(f"DEBUG: EXTRACTED IMAGE TEXT (flush):\n{text_out}\n-----------------------", flush=True)
 
             return text_out
-    except Exception:  # pragma: no cover - defensive logging
+    except Exception as e:  # pragma: no cover - defensive logging
+        print(f"DEBUG: OCR CRASHED: {e}", flush=True)
         logger.exception("Не удалось прочитать изображение %s через OCR", path)
         return ""
 
