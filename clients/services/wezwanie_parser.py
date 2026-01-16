@@ -27,9 +27,9 @@ CASE_NUMBER_PATTERNS = (
     re.compile(r"((?:W\s*S\s*C|S\s*O\s*C|W\s*5\s*C|V\s*V\s*S\s*C|W\s*\$\s*C|W\s*\.\s*S\s*\.\s*C)[-\w.\s/]{5,})", re.IGNORECASE),
     
     # NEW: Structure match for WSC-II-S... format (ignoring prefix WSC if it's mangled)
-    # Looks for: "Any3Letters - RomanNum - Letter . Numbers"
-    # Example: "WSC-II-S.6151..." or "W5C-11-5.6151..."
-    re.compile(r"([A-Z0-9]{3}[-\s]+[XIV1l]{1,4}[-\s]+[A-Z0-9][.\s]+\d{4}[.\s]+\d+)", re.IGNORECASE),
+    # Looks for: "2-5 Chars - Roman/Digits - Char . Numbers"
+    # Example: "WSC-II-S.6151..." OR "Ws -11-5.6151..."
+    re.compile(r"([A-Z0-9\s]{2,5}[-\s]+[XIV1l\d]{1,5}[-\s]+[A-Z0-9][.\s]+\d{4}[.\s]+\d+)", re.IGNORECASE),
     
     # 2. Generic structure fallback: "Letters-Roman/Numbers..." (e.g. SO-V.612...)
     re.compile(r"\b([A-Z]{2,4}[-\s][XIV]+\.[-\w./\s]+)\b", re.IGNORECASE),
@@ -213,6 +213,40 @@ def extract_text(path: str | Path) -> str:
     return text
 
 
+
+def _try_normalize_wsc(text: str) -> str | None:
+    """Attempt to fix common OCR errors in WSC numbers (e.g. 11->II, Ws->WSC)."""
+    # Regex to pull apart the components: Prefix - Roman - Code . Numbers
+    # Matches things like "Ws -11-5.6151..."
+    pattern = re.compile(
+        r"^([A-Z0-9\s]{2,5})[-\s]+([XIV1l\d]{1,5})[-\s]+([A-Z0-9])([.\s]+\d{4}[.\s]+\d+)", 
+        re.IGNORECASE
+    )
+    match = pattern.search(text)
+    if not match:
+        return None
+        
+    prefix, roman, code, numbers = match.groups()
+    
+    # 1. Normalize Prefix
+    n_prefix = prefix.upper().replace(" ", "").replace("VV", "W").replace("5", "S").replace("$", "S")
+    if n_prefix == "WS": # Common OCR error for WSC
+        n_prefix = "WSC"
+    if n_prefix == "W5C":
+        n_prefix = "WSC"
+        
+    # 2. Normalize Roman (1->I)
+    n_roman = roman.upper().replace("1", "I").replace("L", "I")
+    
+    # 3. Normalize Code (5->S)
+    n_code = code.upper().replace("5", "S")
+    
+    # 4. Normalize Numbers (remove spaces)
+    n_numbers = numbers.replace(" ", "")
+    
+    return f"{n_prefix}-{n_roman}-{n_code}{n_numbers}"
+
+
 def _find_case_number(text: str) -> str | None:
     candidates: list[str] = []
     candidate_log = []
@@ -224,7 +258,13 @@ def _find_case_number(text: str) -> str | None:
             raw_val = match.group(1)
             candidate_log.append(f"Pattern match: '{raw_val}'")
             
-            # Clean up: remove all whitespace, fix common OCR replacements
+            # Try advanced WSC normalization first
+            advanced_norm = _try_normalize_wsc(raw_val)
+            if advanced_norm:
+                print(f"DEBUG: Advanced WSC Normalization: {raw_val} -> {advanced_norm}", flush=True)
+                return advanced_norm
+            
+            # Standard cleanup if advanced failed
             normalized = re.sub(r"\s+", "", raw_val)
             normalized = normalized.replace("VV", "W").replace("5", "S").replace("$", "S")
             normalized = normalized.strip(".,-:/")
