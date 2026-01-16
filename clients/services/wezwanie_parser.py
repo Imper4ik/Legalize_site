@@ -20,13 +20,16 @@ CASE_NUMBER_PATTERNS = (
     re.compile(r"sygnatura[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     re.compile(r"nr\s+akt[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     re.compile(r"znak\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
-    # Robust WSC pattern: allows typos like W5C, VVSC, spacing, dots, newlines
-    # Captures from start (WSC) until year (4 digits)
-    re.compile(r"\b((?:WSC|SOC|W5C|VVSC|W$C)[-\w.\s/]+\d{4})\b", re.IGNORECASE),
-    # Strict fallback: Signatures often look like AA/1234/2024
+    
+    # 1. Wide net for WSC: Grab "WSC" and anything that looks like a case number following it
+    # Doesn't require year at the end, just substantial content
+    re.compile(r"\b((?:WSC|SOC|W5C|VVSC|W\$C|W\.S\.C)[-\w.\s/]{5,})\b", re.IGNORECASE),
+    
+    # 2. Generic structure fallback: "Letters-Roman/Numbers..." (e.g. SO-V.612...)
+    re.compile(r"\b([A-Z]{2,4}[-\s][XIV]+\.[-\w./\s]+)\b", re.IGNORECASE),
+    
+    # 3. Old Strict fallback: AA/1234/2024
     re.compile(r"\b([A-Z]{1,3}\s?/\s?\d{1,5}\s?/\s?\d{2,4})\b"),
-    # Disabled weak fallback (6 digits often matches random IDs or partial dates)
-    # re.compile(r"\b(\d{6,})\b"),
 )
 DATE_PATTERNS = (
     re.compile(r"(?:dniu|dnia|dn\.)?\s*(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
