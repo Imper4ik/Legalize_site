@@ -50,6 +50,29 @@ def add_document(request, client_id, doc_type):
 
             if is_wezwanie and parse_requested:
                 parsed = parse_wezwanie(document.file.path)
+                has_text = bool(parsed.text.strip())
+                has_key_fields = any(
+                    [
+                        parsed.case_number,
+                        parsed.fingerprints_date,
+                        parsed.decision_date,
+                        parsed.full_name,
+                    ]
+                )
+                if not (has_text or has_key_fields):
+                    if helper.expects_json:
+                        return helper.error(
+                            message=(
+                                "Не удалось распознать wezwanie: нет текста. "
+                                "Проверьте, что OCR доступен и файл читаемый."
+                            )
+                        )
+                    messages.error(
+                        request,
+                        "Не удалось распознать wezwanie: нет текста. "
+                        "Проверьте, что OCR доступен и файл читаемый.",
+                    )
+                    return redirect("clients:client_detail", pk=client.id)
                 document.awaiting_confirmation = True
                 document.save(update_fields=["awaiting_confirmation"])
 
