@@ -132,16 +132,6 @@ def _extract_pdf_text(path: Path) -> str:
 def _preprocess_for_ocr(img):
     """
     Preprocess image for better OCR accuracy:
-    1. Convert to grayscale
-    2. Resize if too small (target ~300 DPI)
-    3. Apply sharpening
-    """
-    from PIL import ImageOps, ImageFilter
-    
-
-def _preprocess_for_ocr(img):
-    """
-    Preprocess image for better OCR accuracy:
     1. EXIF Transpose (fix phone orientation)
     2. OSD (Detect & fix 90/180/270 degree rotation)
     3. Grayscale + Autocontrast
@@ -318,15 +308,6 @@ def _find_case_number(text: str) -> str | None:
             return normalized
 
     print(f"DEBUG: No Case Number found. Candidates extracted but rejected: {candidate_log}", flush=True)
-    return None
-
-
-def _find_first_date(text: str) -> date | None:
-    for pattern in DATE_PATTERNS:
-        for match in pattern.finditer(text):
-            parsed = _parse_date(match.group(1))
-            if parsed:
-                return parsed
     return None
 
 
