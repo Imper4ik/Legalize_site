@@ -1,6 +1,7 @@
 import pytest
 from django.urls import reverse
-from clients.models import Client, DocumentType
+from clients.models import Client
+from clients.constants import DocumentType
 
 @pytest.mark.django_db
 def test_wezwanie_upload_button_present(admin_client):
