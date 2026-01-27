@@ -156,14 +156,16 @@ def _extract_pdf_text(path: Path) -> str:
 
 def _preprocess_for_ocr(img):
     """
-    Preprocess image for better OCR accuracy:
+    Preprocess image for better OCR accuracy using OpenCV (Adaptive Thresholding).
     1. EXIF Transpose (fix phone orientation)
-    2. OSD (Detect & fix 90/180/270 degree rotation)
-    3. Grayscale + Autocontrast
-    4. Rescale + Sharpen
+    2. Convert to OpenCV format
+    3. Grayscale
+    4. Adaptive Thresholding (removes shadows/lighting issues)
+    5. Denoise
+    6. Convert back to PIL
     """
     from PIL import Image, ImageOps, ImageFilter
-    import pytesseract
+    import numpy as np
     
     # 0. Fix EXIF orientation (crucial for phone photos)
     try:
@@ -171,45 +173,75 @@ def _preprocess_for_ocr(img):
     except Exception:
         pass
 
-    # 1. Grayscale (needed for OSD and OCR)
-    img = img.convert('L')
-    
-    # 2. OSD Rotation (Detect text orientation)
-    # Tesseract's "image_to_osd" returns meta info including 'Rotate: 90'
+    # 1. Basic PIL Pre-checks (Resize if too small before anything)
+    # Tesseract generally likes 300 DPI, which for A4 is ~2480 px width.
+    target_width = 2000
+    if img.width < 1000:
+        ratio = target_width / img.width
+        new_height = int(img.height * ratio)
+        img = img.resize((target_width, new_height), resample=3)  # LANZCOS
+
+    # 2. Try OSD Rotation using Tesseract (on raw image before thresholding)
+    # (Sometimes it's better to do this on the original gray image)
     try:
-        # Pytesseract expects an image object
-        osd = pytesseract.image_to_osd(img)
-        # Parse logic is a bit brittle, using regex is safer or just simple string search
-        # OSD output looks like: "Page number: 0\nOrientation in degrees: 90\nRotate: 90\n..."
+        import pytesseract
         import re
+        osd = pytesseract.image_to_osd(img)
         rotate_match = re.search(r"Rotate: (\d+)", osd)
         if rotate_match:
             angle = int(rotate_match.group(1))
             if angle != 0:
                 logger.debug("OSD detected rotation: %s. Fixing...", angle)
-                # Tesseract says "Rotate: 90" meaning it IS rotated. We need to rotate it BACK? 
-                # Actually image_to_osd 'Rotate' is the angle to rotate CW to make it upright.
-                # So we verify logic: if Rotate: 90, we rotate 90? Or -90?
-                # Usually standard behavior: rotate the image by that amount.
                 img = img.rotate(angle, expand=True)
-    except Exception as e:
-        # OSD can fail on images with no text or too much noise
+    except Exception:
         pass
 
-    # 3. Autocontrast (Max contrast for better separation)
-    img = ImageOps.autocontrast(img)
-    
-    # 4. Rescale if small (assuming A4 width is approx 8.3 inches, 300 DPI -> ~2500px)
-    target_width = 2500
-    if img.width < 1500:
-        ratio = target_width / img.width
-        new_height = int(img.height * ratio)
-        img = img.resize((target_width, new_height), resample=3)  # LANZCOS/BICUBIC
-    
-    # 5. Sharpen (subtle enhancement)
-    img = img.filter(ImageFilter.SHARPEN)
-    
-    return img
+    # 3. OpenCV Processing
+    try:
+        import cv2
+        # Convert PIL to CV2 (OpenCV uses BGR, PIL uses RGB)
+        # Note: We need grayscale mainly.
+        cv_img = np.array(img)
+        
+        # Check if we have alpha channel, drop it
+        if cv_img.shape[-1] == 4:
+            cv_img = cv2.cvtColor(cv_img, cv2.COLOR_RGBA2RGB)
+            
+        # Convert to Gray
+        if len(cv_img.shape) == 3:
+            gray = cv2.cvtColor(cv_img, cv2.COLOR_RGB2GRAY)
+        else:
+            gray = cv_img
+
+        # 3.1. Blur slightly to remove high-freq noise before threshold
+        # Gaussian Kernel 5x5
+        img_blur = cv2.GaussianBlur(gray, (5, 5), 0)
+
+        # 3.2. Adaptive Thresholding
+        # ADAPTIVE_THRESH_GAUSSIAN_C is usually better than MEAN_C
+        # Block Size: 31 (must be odd, large enough to cover letters+bg)
+        # C: 10 (constant subtracted from mean)
+        thresh = cv2.adaptiveThreshold(
+            img_blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 31, 10
+        )
+        
+        # 3.3. Denoise (Morphological Opening/Closing or Median)
+        # Often simple median blur cleans "salt and pepper" noise from thresholding
+        clean = cv2.medianBlur(thresh, 3)
+        
+        # Convert back to PIL
+        return Image.fromarray(clean)
+
+    except ImportError:
+        logger.warning("OpenCV not found, falling back to simple PIL preprocessing")
+        # Fallback to old simple PIL chain
+        img = img.convert('L')
+        img = ImageOps.autocontrast(img)
+        img = img.filter(ImageFilter.SHARPEN)
+        return img
+    except Exception as e:
+        logger.exception("OpenCV preprocessing failed: %s, falling back", e)
+        return img
 
 
 def _extract_image_text(path: Path) -> str:
