@@ -32,7 +32,6 @@ def get_logging_config(debug=False):
         'version': 1,
         'disable_existing_loggers': False,
         
-        # Форматы
         'formatters': {
             'verbose': {
                 'format': '[{levelname}] {asctime} {name} {module}.{funcName}: {message}',
@@ -41,13 +40,6 @@ def get_logging_config(debug=False):
             },
             'simple': {
                 'format': '[{levelname}] {message}',
-                'style': '{',
-            },
-            'json': {
-                '()': 'pythonjsonlogger.jsonlogger.JsonFormatter',
-                'format': '%(asctime)s %(name)s %(levelname)s %(message)s',
-            } if not debug else {
-                'format': '[{levelname}] {asctime} {name}: {message}',
                 'style': '{',
             },
         },
