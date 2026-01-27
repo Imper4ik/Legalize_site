@@ -36,4 +36,3 @@ def test_image_ocr_uses_polish_language(mock_open, mock_image_to_string):
     # This assertion is expected to FAIL before the fix
     print(f"DEBUG: kwargs={kwargs}")
     assert kwargs.get('lang') == 'pol+eng', f"Expected lang='pol+eng', but got {kwargs.get('lang')}"
-    assert False, "Forcing failure to see output"

@@ -132,6 +132,16 @@ def get_fallback_document_checklist(purpose: str, language: str | None = None):
     return []
 
 
+def get_available_document_types(purpose: str | None = None) -> set[str]:
+    """Return the union of standard and custom document type codes."""
+    types = set(DOCUMENT_TYPE_VALUES)
+    queryset = DocumentRequirement.objects.all()
+    if purpose:
+        queryset = queryset.filter(application_purpose=purpose)
+    types.update(queryset.values_list("document_type", flat=True))
+    return types
+
+
 def translate_document_name(name: str, language: str | None = None) -> str:
     """Translate a document name for the requested language.
 
@@ -262,12 +272,6 @@ class Client(models.Model):
         # на доступ к чеклисту было снято. Сотрудники видят список всегда.
         current_language = translation.get_language() or self.language
         required_docs = DocumentRequirement.required_for(self.application_purpose, current_language)
-        has_custom_checklist = DocumentRequirement.objects.filter(
-            application_purpose=self.application_purpose
-        ).exists()
-
-        if not required_docs and not has_custom_checklist:
-            required_docs = get_fallback_document_checklist(self.application_purpose, current_language)
         if not required_docs:
             return []
 
@@ -293,13 +297,17 @@ class Client(models.Model):
     def get_document_name_by_code(self, doc_code):
         """Возвращает читаемое имя документа по его коду."""
         current_language = translation.get_language() or self.language
-        required_docs = DocumentRequirement.required_for(self.application_purpose, current_language)
-        if not required_docs:
-            required_docs = get_fallback_document_checklist(self.application_purpose, current_language)
-
-        for code, name in required_docs:
-            if code == doc_code:
-                return name
+        catalog = DocumentRequirement.catalog_for(
+            self.application_purpose,
+            current_language,
+            include_optional=True,
+            include_fallback=True,
+        )
+        for item in catalog:
+            if item["code"] == doc_code:
+                return item["label"]
+        if doc_code in get_available_document_types(self.application_purpose):
+            return resolve_document_label(doc_code, language=current_language)
         return doc_code.replace('_', ' ').capitalize()
 
 
@@ -379,20 +387,60 @@ class DocumentRequirement(models.Model):
         return f"{self.application_purpose}: {self.custom_name or self.document_type}"
 
     @classmethod
-    def required_for(cls, purpose: str, language: str | None = None) -> list[tuple[str, str]]:
-        records = cls.objects.filter(application_purpose=purpose, is_required=True).order_by("position", "id")
-        items: list[tuple[str, str]] = []
-        for item in records:
+    def catalog_for(
+        cls,
+        purpose: str,
+        language: str | None = None,
+        *,
+        include_optional: bool = True,
+        include_fallback: bool = True,
+    ) -> list[dict[str, str | bool]]:
+        """Return document metadata for a purpose, merging DB and fallback lists."""
+        records = list(
+            cls.objects.filter(application_purpose=purpose).order_by("position", "id")
+        )
+        items: list[dict[str, str | bool]] = []
+        seen: set[str] = set()
+
+        for record in records:
             label = resolve_document_label(
-                item.document_type,
-                item.custom_name,
-                item.custom_name_pl,
-                item.custom_name_en,
-                item.custom_name_ru,
+                record.document_type,
+                record.custom_name,
+                record.custom_name_pl,
+                record.custom_name_en,
+                record.custom_name_ru,
                 language,
             )
-            items.append((item.document_type, label))
+            items.append(
+                {
+                    "code": record.document_type,
+                    "label": label,
+                    "is_required": record.is_required,
+                }
+            )
+            seen.add(record.document_type)
+
+        if include_fallback:
+            fallback = get_fallback_document_checklist(purpose, language)
+            for code, _label in fallback:
+                if code in seen:
+                    continue
+                items.append(
+                    {
+                        "code": code,
+                        "label": resolve_document_label(code, language=language),
+                        "is_required": True,
+                    }
+                )
+
+        if not include_optional:
+            items = [item for item in items if item["is_required"]]
         return items
+
+    @classmethod
+    def required_for(cls, purpose: str, language: str | None = None) -> list[tuple[str, str]]:
+        catalog = cls.catalog_for(purpose, language, include_optional=False, include_fallback=True)
+        return [(item["code"], item["label"]) for item in catalog]
 
 
 class Payment(models.Model):
