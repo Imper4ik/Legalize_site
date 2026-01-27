@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
 from clients.constants import DocumentType
@@ -55,11 +55,7 @@ class WezwanieData:
     decision_date: date | None = None
     full_name: str | None = None
     wezwanie_type: str | None = None  # "fingerprints" or "decision" or "confirmation"
-    required_documents: list[str] = None
-
-    def __post_init__(self):
-        if self.required_documents is None:
-            self.required_documents = []
+    required_documents: list[str] = field(default_factory=list)
 
 
 def _parse_date(raw: str | None) -> date | None:
@@ -86,35 +82,55 @@ def _extract_pdf_text(path: Path) -> str:
     # However, standard PDF libraries (pypdf) are better than raw read.
     # Given we added pdf2image, we likely want to focus on OCR for scans.
     
+    pdf_reader = None
     try:
-        from pdf2image import convert_from_path
-        import pytesseract
-        
-        # Convert PDF to images (first 2 pages usually enough for Wezwanie)
-        try:
-            images = convert_from_path(str(path), first_page=1, last_page=2)
-        except Exception as e:
-            logger.warning(f"pdf2image failed: {e}")
-            images = []
-            
-        ocr_text = []
-        for i, image in enumerate(images):
-            try:
-                # Polish language is crucial here
-                page_text = pytesseract.image_to_string(image, lang='pol+eng')
-                ocr_text.append(page_text)
-            except Exception as e:
-                logger.warning(f"OCR failed on page {i}: {e}")
-                
-        text_content = "\n".join(ocr_text)
-        print(f"DEBUG: EXTRACTED PDF TEXT (flush):\n{text_content}\n-----------------------", flush=True)
+        from pypdf import PdfReader
 
-
-        
+        pdf_reader = PdfReader
     except ImportError:
-        logger.warning("pdf2image or pytesseract not available")
-    except Exception as e:
-        logger.exception(f"PDF OCR extraction failed: {e}")
+        try:
+            from PyPDF2 import PdfReader
+
+            pdf_reader = PdfReader
+        except ImportError:
+            pdf_reader = None
+
+    if pdf_reader:
+        try:
+            reader = pdf_reader(str(path))
+            pages = reader.pages[:2]
+            extracted = [page.extract_text() or "" for page in pages]
+            text_content = "\n".join(extracted).strip()
+        except Exception as exc:
+            logger.warning("Native PDF extraction failed: %s", exc)
+
+    if not text_content or len(text_content.strip()) < 50:
+        try:
+            from pdf2image import convert_from_path
+            import pytesseract
+
+            # Convert PDF to images (first 2 pages usually enough for Wezwanie)
+            try:
+                images = convert_from_path(str(path), first_page=1, last_page=2)
+            except Exception as e:
+                logger.warning("pdf2image failed: %s", e)
+                images = []
+
+            ocr_text = []
+            for i, image in enumerate(images):
+                try:
+                    # Polish language is crucial here
+                    page_text = pytesseract.image_to_string(image, lang="pol+eng")
+                    ocr_text.append(page_text)
+                except Exception as e:
+                    logger.warning("OCR failed on page %s: %s", i, e)
+
+            text_content = "\n".join(ocr_text)
+            logger.debug("Extracted PDF OCR text length=%s", len(text_content))
+        except ImportError:
+            logger.warning("pdf2image or pytesseract not available")
+        except Exception as e:
+            logger.exception("PDF OCR extraction failed: %s", e)
 
     # 2. Fallback: naive binary extraction (only works for some streams, mostly debug)
     if not text_content or len(text_content.strip()) < 50:
@@ -161,7 +177,7 @@ def _preprocess_for_ocr(img):
         if rotate_match:
             angle = int(rotate_match.group(1))
             if angle != 0:
-                print(f"DEBUG: OSD detected rotation: {angle}. Fixing...", flush=True)
+                logger.debug("OSD detected rotation: %s. Fixing...", angle)
                 # Tesseract says "Rotate: 90" meaning it IS rotated. We need to rotate it BACK? 
                 # Actually image_to_osd 'Rotate' is the angle to rotate CW to make it upright.
                 # So we verify logic: if Rotate: 90, we rotate 90? Or -90?
@@ -189,7 +205,7 @@ def _preprocess_for_ocr(img):
 
 def _extract_image_text(path: Path) -> str:
     try:
-        from PIL import Image, ImageOps, ImageFilter
+        from PIL import Image
         import pytesseract
     except ImportError:  # pragma: no cover - optional dependency
         logger.warning("OCR dependencies (Pillow, pytesseract) are not installed; skipping OCR")
@@ -201,10 +217,9 @@ def _extract_image_text(path: Path) -> str:
             processed_img = _preprocess_for_ocr(img)
             
             text_out = pytesseract.image_to_string(processed_img, lang='pol+eng')
-            print(f"DEBUG: EXTRACTED IMAGE TEXT (flush):\n{text_out}\n-----------------------", flush=True)
+            logger.debug("Extracted image OCR text length=%s", len(text_out))
             return text_out
     except Exception as e:  # pragma: no cover - defensive logging
-        print(f"DEBUG: OCR CRASHED: {e}", flush=True)
         logger.exception("Не удалось прочитать изображение %s через OCR", path)
         return ""
 
@@ -276,7 +291,6 @@ def _try_normalize_wsc(text: str) -> str | None:
 
 
 def _find_case_number(text: str) -> str | None:
-    candidates: list[str] = []
     candidate_log = []
     
     # 1. Try Specific Patterns (Prefix-based)
@@ -289,7 +303,7 @@ def _find_case_number(text: str) -> str | None:
             # Try advanced WSC normalization first
             advanced_norm = _try_normalize_wsc(raw_val)
             if advanced_norm:
-                print(f"DEBUG: Advanced WSC Normalization: {raw_val} -> {advanced_norm}", flush=True)
+                logger.debug("Advanced WSC normalization: %s -> %s", raw_val, advanced_norm)
                 return advanced_norm
             
             # Standard cleanup if advanced failed
@@ -304,10 +318,10 @@ def _find_case_number(text: str) -> str | None:
             if re.match(r"^\d{4}-\d{2}-\d{2}$", normalized):
                 continue
                 
-            print(f"DEBUG: Candidate accepted: {normalized} (from '{raw_val}')", flush=True)
+            logger.debug("Case number candidate accepted: %s (from '%s')", normalized, raw_val)
             return normalized
 
-    print(f"DEBUG: No Case Number found. Candidates extracted but rejected: {candidate_log}", flush=True)
+    logger.debug("No case number found. Candidates extracted but rejected: %s", candidate_log)
     return None
 
 
@@ -375,6 +389,10 @@ def _find_decision_date(text: str) -> date | None:
     """Extract decision date from second wezwanie."""
     # Patterns for decision date with keywords
     decision_patterns = [
+        # Pattern: "zostanie podjęta do dnia DD.MM.YYYY"
+        re.compile(r"zostanie\s+podjęta\s+do\s+dnia\s+([\d./-]+)", re.IGNORECASE),
+        # Pattern: "podjęta do dnia DD.MM.YYYY"
+        re.compile(r"podjęta\s+do\s+dnia\s+([\d./-]+)", re.IGNORECASE),
         # Pattern: "powinna być podjęta do dnia DD.MM.YYYY"
         re.compile(r"powinna być podjęta do dnia\s+([\d./-]+)", re.IGNORECASE),
         # Pattern: "termin wydania decyzji: DD.MM.YYYY"
@@ -434,16 +452,16 @@ def parse_wezwanie(file_path: str | Path) -> WezwanieData:
     text = extract_text(file_path)
     if not text.strip():
         return WezwanieData(text="", error="no_text")
-    print(f"DEBUG: EXTRACTED TEXT START (1000 chars):\n{text[:1000]}\n...", flush=True)
+    logger.debug("Extracted wezwanie text length=%s", len(text))
 
     wezwanie_type = _detect_wezwanie_type(text)
-    print(f"DEBUG: Detected Type: {wezwanie_type}", flush=True)
+    logger.debug("Detected wezwanie type: %s", wezwanie_type)
 
     case_number = _find_case_number(text)
-    print(f"DEBUG: Case Number found: {case_number}", flush=True)
+    logger.debug("Case number: %s", case_number)
 
     full_name = _find_full_name(text)
-    print(f"DEBUG: Full Name found: {full_name}", flush=True)
+    logger.debug("Full name: %s", full_name)
 
     
     # Extract dates based on type
@@ -509,4 +527,4 @@ def _extract_required_documents(text: str) -> list[str]:
                 found_docs.add(doc_type.value)
                 break  # Found this document type, move to next
     
-    return list(found_docs)
+    return sorted(found_docs)
