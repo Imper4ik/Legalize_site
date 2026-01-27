@@ -14,8 +14,9 @@ logger = logging.getLogger(__name__)
 DATE_FORMATS = ("%d.%m.%Y", "%d-%m-%Y", "%d/%m/%Y", "%Y-%m-%d")
 CASE_NUMBER_PATTERNS = (
     # 0. NEW: Strict WSC Pattern (High Priority)
-    # Matches: WSC-II-S.6151.97770.2023
-    re.compile(r"\b(WSC[-\s]+[XIV]+[-\s]+[A-Z][.\s]+\d+[.\s]+\d+(?:[.\s]+\d+)?)\b", re.IGNORECASE),
+    # Matches: WSC-II-S.6151.97770.2023 
+    # Also allows I/1/l/L as Roman numeral part to catch OCR errors for 'II'
+    re.compile(r"\b(WSC[-\s]+(?:II|I|1|l|L|V|X)+[-\s]+[A-Z][.\s]+\d+[.\s]+\d+(?:[.\s]+\d+)?)\b", re.IGNORECASE),
     
     # 0.5. NEW: Very Permissive WSC/WSO Pattern (catches typos like '11' for 'II', '5' for 'S')
     # Matches: WSC 11 5 6151... or WSO...
@@ -318,8 +319,13 @@ def _try_normalize_wsc(text: str) -> str | None:
     if n_prefix == "W5C": n_prefix = "WSC"
     if n_prefix == "SOC": n_prefix = "WSC"
         
-    # 2. Normalize Roman (1->I)
+    # 2. Normalize Roman (1->I, 11->II, l->I)
     n_roman = roman.upper().replace("1", "I").replace("L", "I")
+    if n_roman == "II" or n_roman == "I":
+        # Heuristic: If it shows 'I' but typically 'II' is expected for residence permits... 
+        # But WSC-I exists (Citizenship?). WSC-II is Foreigners. 
+        # Safest is not to force 'II' unless we see '11'.
+        pass
     
     # 3. Normalize Code (5->S)
     n_code = code.upper().replace("5", "S")

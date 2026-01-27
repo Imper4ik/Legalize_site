@@ -344,6 +344,27 @@
             if (parsedFingerprintsLocation) parsedFingerprintsLocation.value = parsed.fingerprints_location || '';
             if (parsedDecisionDate) parsedDecisionDate.value = parsed.decision_date || '';
 
+            // Handle Raw Text Debugging
+            const rawTextarea = modal.querySelector('#wezwanieRawText');
+            const rawTextContainer = modal.querySelector('#wezwanieRawTextContainer');
+            const toggleRawBtn = modal.querySelector('#wezwanieToggleRawText');
+
+            if (rawTextarea) {
+              rawTextarea.value = parsed.raw_text || '';
+            }
+            if (rawTextContainer) {
+              rawTextContainer.classList.add('d-none');
+            }
+
+            // Re-bind toggle button
+            if (toggleRawBtn) {
+              toggleRawBtn.onclick = () => {
+                if (rawTextContainer) {
+                  rawTextContainer.classList.toggle('d-none');
+                }
+              };
+            }
+
             confirmStep.classList.remove('d-none');
             confirmActions.classList.remove('d-none');
             uploadActions.classList.add('d-none');
@@ -391,8 +412,6 @@
       payload.append('last_name', parsedLastName?.value || '');
       payload.append('case_number', parsedCaseNumber?.value || '');
       payload.append('fingerprints_date', parsedFingerprintsDate?.value || '');
-      payload.append('fingerprints_time', parsedFingerprintsTime?.value || '');
-      payload.append('fingerprints_location', parsedFingerprintsLocation?.value || '');
       payload.append('decision_date', parsedDecisionDate?.value || '');
 
       try {
