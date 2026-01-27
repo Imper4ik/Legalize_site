@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 
 DATE_FORMATS = ("%d.%m.%Y", "%d-%m-%Y", "%d/%m/%Y", "%Y-%m-%d")
 CASE_NUMBER_PATTERNS = (
+    # 0. NEW: Strict WSC Pattern (High Priority)
+    # Matches: WSC-II-S.6151.97770.2023
+    re.compile(r"\b(WSC[-\s]+[XIV]+[-\s]+[A-Z][.\s]+\d+[.\s]+\d+(?:[.\s]+\d+)?)\b", re.IGNORECASE),
+
     re.compile(r"numer\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     re.compile(r"nr\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     re.compile(r"sprawa\s+nr[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
@@ -23,11 +27,12 @@ CASE_NUMBER_PATTERNS = (
     
     # 1. Wide net for WSC (single line only)
     # Matches "WSC", "W S C" etc. followed by chars, spaces, dots, slashes But NOT newlines
-    re.compile(r"((?:W[ \t]*S[ \t]*C|S[ \t]*O[ \t]*C|W[ \t]*5[ \t]*C|V[ \t]*V[ \t]*S[ \t]*C|W[ \t]*\$[ \t]*C|W[ \t]*\.[ \t]*S[ \t]*\.[ \t]*C)[-\w. /]{5,})", re.IGNORECASE),
+    # Exclude if it contains ".pl" (URL)
+    re.compile(r"((?:W[ \t]*S[ \t]*C|S[ \t]*O[ \t]*C|W[ \t]*5[ \t]*C|V[ \t]*V[ \t]*S[ \t]*C|W[ \t]*\$[ \t]*C|W[ \t]*\.[ \t]*S[ \t]*\.[ \t]*C)(?!\.[\w]+\.pl)[-\w. /]{5,})", re.IGNORECASE),
     
     # 2. Structure match (single line only)
     # "2-5 Chars - Roman/Digits ... "
-    re.compile(r"([A-Z0-9 ]{2,5}[- ]+[XIV1l\d]{1,5}[- ]+[A-Z0-9][. ]+\d{4}[. ]+\d+)", re.IGNORECASE),
+    re.compile(r"([A-Z0-9 ]{2,5}[- ]+[XIV1l\d]{1,5}[- ]+[A-Z0-9][. ]+\d{4}[. ]+\d+(?:[. ]+\d+)?)", re.IGNORECASE),
     
     # 3. Generic fallback
     re.compile(r"\b([A-Z]{2,4}[- ][XIV]+\.[-\w./]+)\b", re.IGNORECASE),
@@ -257,7 +262,7 @@ def _try_normalize_wsc(text: str) -> str | None:
     # Regex to pull apart the components: Prefix - Roman - Code . Numbers
     # Matches things like "Ws -11-5.6151..."
     pattern = re.compile(
-        r"^([A-Z0-9\s]{2,5})[-\s]+([XIV1l\d]{1,5})[-\s]+([A-Z0-9])([.\s]+\d{4}[.\s]+\d+)", 
+        r"^([A-Z0-9\s]{2,5})[-\s]+([XIV1l\d]{1,5})[-\s]+([A-Z0-9])([.\s]+\d+(?:[.\s]+\d+)+)", 
         re.IGNORECASE
     )
     match = pattern.search(text)
@@ -268,10 +273,9 @@ def _try_normalize_wsc(text: str) -> str | None:
     
     # 1. Normalize Prefix
     n_prefix = prefix.upper().replace(" ", "").replace("VV", "W").replace("5", "S").replace("$", "S")
-    if n_prefix == "WS": # Common OCR error for WSC
-        n_prefix = "WSC"
-    if n_prefix == "W5C":
-        n_prefix = "WSC"
+    if n_prefix == "WS": n_prefix = "WSC"
+    if n_prefix == "W5C": n_prefix = "WSC"
+    if n_prefix == "SOC": n_prefix = "WSC"
         
     # 2. Normalize Roman (1->I)
     n_roman = roman.upper().replace("1", "I").replace("L", "I")
@@ -294,6 +298,11 @@ def _find_case_number(text: str) -> str | None:
         # scan the whole text for matches
         for match in pattern.finditer(text):
             raw_val = match.group(1)
+            
+            # Filter out URL artifacts manually if regex missed it
+            if "mazowieckie.pl" in raw_val.lower():
+                continue
+                
             candidate_log.append(f"Pattern match: '{raw_val}'")
             
             # Try advanced WSC normalization first
