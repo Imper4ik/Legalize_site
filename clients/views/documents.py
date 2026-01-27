@@ -108,7 +108,7 @@ def add_document(request, client_id, doc_type):
                         "full_name": parsed.full_name or "",
                         "first_name": first_name,
                         "last_name": last_name,
-                        "case_number": parsed.case_number or "",
+                        "case_number": parsed.case_number or (f"DEBUG RAW: {parsed.text[:100]}" if not parsed.case_number else ""),
                         "fingerprints_date": parsed.fingerprints_date.isoformat()
                         if parsed.fingerprints_date
                         else "",
@@ -123,6 +123,8 @@ def add_document(request, client_id, doc_type):
                         "decision_date_display": parsed.decision_date.strftime("%d.%m.%Y")
                         if parsed.decision_date
                         else "",
+                        # DEBUG FIELD
+                        "raw_text": parsed.text,
                     },
                 )
 
