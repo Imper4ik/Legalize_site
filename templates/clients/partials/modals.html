@@ -131,19 +131,16 @@
         <div class="modal-body">
           <p class="mb-3 text-muted" id="uploadDocumentDescription"></p>
           <div class="mb-3">
-            <label for="{{ document_upload_form.file.id_for_label }}" class="form-label">{% translate "Выберите файл"
-              %}</label>
+            <label for="{{ document_upload_form.file.id_for_label }}" class="form-label">{% translate "Выберите файл" %}</label>
             {{ document_upload_form.file }}
           </div>
           <div class="mb-3">
-            <label for="{{ document_upload_form.expiry_date.id_for_label }}" class="form-label">{% translate
-              "Действителен до (необязательно)" %}</label>
+            <label for="{{ document_upload_form.expiry_date.id_for_label }}" class="form-label">{% translate "Действителен до (необязательно)" %}</label>
             {{ document_upload_form.expiry_date }}
           </div>
           <div class="border rounded p-3 d-none" id="wezwanieConfirmationStep">
             <h6 class="mb-2">{% translate "Подтверждение данных wezwanie" %}</h6>
-            <p class="text-muted mb-3 small">{% translate "Проверьте распознанные данные перед сохранением. Все поля
-              доступны для редактирования." %}</p>
+            <p class="text-muted mb-3 small">{% translate "Проверьте распознанные данные перед сохранением. Все поля доступны для редактирования." %}</p>
             <div class="mb-2">
               <label class="form-label small mb-1">{% translate "Имя" %}</label>
               <input type="text" class="form-control form-control-sm" id="wezwanieParsedFirstName">
@@ -180,16 +177,12 @@
         <div class="modal-footer">
           <div class="d-flex gap-2 w-100 justify-content-end" id="uploadDocumentActions">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
-            <button type="submit" class="btn btn-primary" id="uploadDocumentSubmitButton">{% translate "Сохранить"
-              %}</button>
-            <button type="submit" class="btn btn-primary d-none" id="wezwanieParseButton">{% translate "Распознать
-              wezwanie" %}</button>
+            <button type="submit" class="btn btn-primary" id="uploadDocumentSubmitButton">{% translate "Сохранить" %}</button>
+            <button type="submit" class="btn btn-primary d-none" id="wezwanieParseButton">{% translate "Распознать wezwanie" %}</button>
           </div>
           <div class="d-flex gap-2 w-100 justify-content-end d-none" id="wezwanieConfirmActions">
-            <button type="button" class="btn btn-outline-secondary" id="wezwanieCancelButton" data-bs-dismiss="modal">{%
-              translate "Отмена" %}</button>
-            <button type="button" class="btn btn-primary" id="wezwanieConfirmButton">{% translate "Подтвердить"
-              %}</button>
+            <button type="button" class="btn btn-outline-secondary" id="wezwanieCancelButton" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+            <button type="button" class="btn btn-primary" id="wezwanieConfirmButton">{% translate "Подтвердить" %}</button>
           </div>
         </div>
       </form>
