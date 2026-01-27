@@ -108,7 +108,7 @@ def add_document(request, client_id, doc_type):
                         "full_name": parsed.full_name or "",
                         "first_name": first_name,
                         "last_name": last_name,
-                        "case_number": parsed.case_number or (f"DEBUG RAW: {parsed.text[:100]}" if not parsed.case_number else ""),
+                        "case_number": parsed.case_number or "",
                         "fingerprints_date": parsed.fingerprints_date.isoformat()
                         if parsed.fingerprints_date
                         else "",
