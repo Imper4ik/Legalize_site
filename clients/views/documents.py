@@ -115,8 +115,7 @@ def add_document(request, client_id, doc_type):
                         "fingerprints_date_display": parsed.fingerprints_date.strftime("%d.%m.%Y")
                         if parsed.fingerprints_date
                         else "",
-                        "fingerprints_time": parsed.fingerprints_time or "",
-                        "fingerprints_location": parsed.fingerprints_location or "",
+
                         "decision_date": parsed.decision_date.isoformat()
                         if parsed.decision_date
                         else "",
@@ -144,15 +143,7 @@ def add_document(request, client_id, doc_type):
                         f"дата сдачи отпечатков: {parsed.fingerprints_date.strftime('%d.%m.%Y')}"
                     )
                 
-                if parsed.fingerprints_time and parsed.fingerprints_time != str(client.fingerprints_time):
-                    client.fingerprints_time = parsed.fingerprints_time
-                    updated_fields.append("fingerprints_time")
-                    auto_updates.append(f"время отпечатков: {parsed.fingerprints_time}")
 
-                if parsed.fingerprints_location and parsed.fingerprints_location != client.fingerprints_location:
-                    client.fingerprints_location = parsed.fingerprints_location
-                    updated_fields.append("fingerprints_location")
-                    auto_updates.append(f"место отпечатков: {parsed.fingerprints_location}")
 
                 if parsed.decision_date and parsed.decision_date != client.decision_date:
                     client.decision_date = parsed.decision_date
@@ -262,15 +253,7 @@ def confirm_wezwanie_parse(request, doc_id):
         updated_fields.append("fingerprints_date")
         auto_updates.append(f"дата сдачи отпечатков: {fingerprints_date.strftime('%d.%m.%Y')}")
 
-    if fingerprints_time and fingerprints_time != str(client.fingerprints_time):
-        client.fingerprints_time = fingerprints_time
-        updated_fields.append("fingerprints_time")
-        auto_updates.append(f"время отпечатков: {fingerprints_time}")
 
-    if fingerprints_location and fingerprints_location != client.fingerprints_location:
-        client.fingerprints_location = fingerprints_location
-        updated_fields.append("fingerprints_location")
-        auto_updates.append(f"место отпечатков: {fingerprints_location}")
 
     decision_date = parse_date(decision_date_raw) if decision_date_raw else None
     if decision_date and decision_date != client.decision_date:
