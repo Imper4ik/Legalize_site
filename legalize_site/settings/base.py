@@ -255,25 +255,13 @@ LOGIN_REDIRECT_URL = reverse_lazy("clients:client_list")
 LOGOUT_REDIRECT_URL = reverse_lazy("account_login")
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "filters": {
-        "redact_pii": {
-            "()": "legalize_site.utils.logging.RedactPIIFilter",
-        },
-    },
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "filters": ["redact_pii"],
-        },
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": LOG_LEVEL,
-    },
-}
+
+# Импортируем конфигурацию логирования
+from legalize_site.logging_config import get_logging_config
+
+# Используем продвинутую конфигурацию
+LOGGING = get_logging_config(debug=DEBUG)
+
 
 # Соц. вход через Google (по желанию)
 SOCIALACCOUNT_AUTO_SIGNUP = True
