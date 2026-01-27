@@ -16,6 +16,10 @@ CASE_NUMBER_PATTERNS = (
     # 0. NEW: Strict WSC Pattern (High Priority)
     # Matches: WSC-II-S.6151.97770.2023
     re.compile(r"\b(WSC[-\s]+[XIV]+[-\s]+[A-Z][.\s]+\d+[.\s]+\d+(?:[.\s]+\d+)?)\b", re.IGNORECASE),
+    
+    # 0.5. NEW: Very Permissive WSC/WSO Pattern (catches typos like '11' for 'II', '5' for 'S')
+    # Matches: WSC 11 5 6151... or WSO...
+    re.compile(r"\b((?:WSC|WSO|W\$C|W5C)[-\s]+[XIV1l]+[-\s]+[A-Z5$][.\s]+\d+[.\s]+\d+(?:[.\s]+\d+)?)\b", re.IGNORECASE),
 
     re.compile(r"numer\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     re.compile(r"nr\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
@@ -427,7 +431,7 @@ def _find_full_name(text: str) -> str | None:
     name_patterns = [
         # Pattern: "Pan/Pani Anna Nowak" (Strict Case for name parts to avoid 'ul.')
         re.compile(
-            r"(?:Pan/Pani|Pan|Pani|Panna|Pan/i|Panli)\s+"
+            r"(?:Pan/Pani|Pan|Pani|Panna|Pan/i|Panli|Mr|Mrs)\.?\s+"
             r"([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+"
             r"(?:\s+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+|\s+[A-ZĄĆĘŁŃÓŚŹŻ]{2,}){1,3})",
             re.UNICODE,
