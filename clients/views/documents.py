@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
@@ -13,6 +15,8 @@ from clients.services.notifications import send_missing_documents_email, send_ap
 from clients.services.responses import ResponseHelper, apply_no_store
 from clients.services.wezwanie_parser import parse_wezwanie
 from clients.views.base import staff_required_view
+
+logger = logging.getLogger(__name__)
 
 
 @staff_required_view
@@ -52,15 +56,12 @@ def add_document(request, client_id, doc_type):
     # Here we rely on helper logic or simple check.
     
             if is_wezwanie and parse_requested:
-                print(f"DEBUG: Starting Wezwanie parsing for doc {document.id}...", flush=True)
                 try:
                     parsed = parse_wezwanie(document.file.path)
-                    print(f"DEBUG: Parsing finished. Text len: {len(parsed.text)}", flush=True)
                 except Exception as e:
-                    print(f"DEBUG: Parsing CRASHED: {e}", flush=True)
-                    raise e
-                
-                document.awaiting_confirmation = True
+                    logger.exception("Wezwanie parsing failed for document %s", document.id)
+                    raise
+
                 has_text = bool(parsed.text.strip())
                 has_key_fields = any(
                     [
