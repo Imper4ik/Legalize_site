@@ -229,8 +229,7 @@
                     </tr>
                     <tr>
                         <td class="label-col">Cel złożenia wniosku / Цель</td>
-                        <td class="value-col">{% if client.application_purpose %}{{
-                            client.get_application_purpose_display }}{% endif %}</td>
+                        <td class="value-col">{% if client.application_purpose %}{{ client.get_application_purpose_display }}{% endif %}</td>
                     </tr>
 
                     <tr>
@@ -238,18 +237,13 @@
                         <td class="value-col">
                             <span class="bold">{{ client.basis_of_stay|default_if_none:"" }}</span>
                             <br>
-                            <span style="font-size: 0.9em; color: #666;">(ważne do / действительно до: <span
-                                    style="color: var(--primary-color); font-weight: bold;">{% if
-                                    client.legal_basis_end_date %}{{ client.legal_basis_end_date|date:"d.m.Y" }}{% endif
-                                    %}</span>)</span>
+                            <span style="font-size: 0.9em; color: #666;">(ważne do / действительно до: <span style="color: var(--primary-color); font-weight: bold;">{% if client.legal_basis_end_date %}{{ client.legal_basis_end_date|date:"d.m.Y" }}{% endif %}</span>)</span>
                         </td>
                     </tr>
 
                     <tr>
-                        <td class="label-col" style="background-color: #e8efff;">Data złożenia wniosku / Дата подачи
-                        </td>
-                        <td class="value-col bold" style="background-color: #f4f8ff;">{% if client.submission_date %}{{
-                            client.submission_date|date:"d.m.Y" }}{% endif %}</td>
+                        <td class="label-col" style="background-color: #e8efff;">Data złożenia wniosku / Дата подачи</td>
+                        <td class="value-col bold" style="background-color: #f4f8ff;">{% if client.submission_date %}{{ client.submission_date|date:"d.m.Y" }}{% endif %}</td>
                     </tr>
                 </table>
             </div>
