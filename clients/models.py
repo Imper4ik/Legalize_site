@@ -216,8 +216,32 @@ class Client(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='client_profile',
                                 null=True, blank=True)
 
+    class Meta:
+        verbose_name = _("Клиент")
+        verbose_name_plural = _("Клиенты")
+        ordering = ['-created_at']
+        indexes = [
+            # Основные поля для поиска и фильтрации
+            models.Index(fields=['email'], name='client_email_idx'),
+            models.Index(fields=['case_number_hash'], name='client_case_idx'),
+            
+            # Поля для группировки и статистики
+            models.Index(fields=['application_purpose'], name='client_purpose_idx'),
+            models.Index(fields=['status'], name='client_status_idx'),
+            models.Index(fields=['citizenship'], name='client_citizenship_idx'),
+            
+            # Составные индексы для частых запросов
+            models.Index(fields=['status', '-created_at'], name='client_status_created_idx'),
+            models.Index(fields=['application_purpose', 'status'], name='client_purpose_status_idx'),
+            
+            # Поля для сортировки списков
+            models.Index(fields=['-created_at'], name='client_created_idx'),
+            models.Index(fields=['last_name', 'first_name'], name='client_name_idx'),
+        ]
+
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
 
     @staticmethod
     def normalize_case_number(case_number: str) -> str:
@@ -324,6 +348,21 @@ class Document(models.Model):
         verbose_name = _("Документ")
         verbose_name_plural = _("Документы")
         ordering = ['-uploaded_at']
+        indexes = [
+            # Основные поля для фильтрации и поиска
+            models.Index(fields=['client', 'document_type'], name='doc_client_type_idx'),
+            models.Index(fields=['client', '-uploaded_at'], name='doc_client_uploaded_idx'),
+            models.Index(fields=['document_type'], name='doc_type_idx'),
+            
+            # Для проверки и подтверждения
+            models.Index(fields=['verified'], name='doc_verified_idx'),
+            models.Index(fields=['awaiting_confirmation'], name='doc_await_confirm_idx'),
+            
+            # Для поиска истекающих документов
+            models.Index(fields=['expiry_date'], name='doc_expiry_idx'),
+            models.Index(fields=['client', 'expiry_date'], name='doc_client_expiry_idx'),
+        ]
+
 
     def __str__(self):
         return f"{self.display_name} для {self.client}"
@@ -474,6 +513,25 @@ class Payment(models.Model):
     transaction_id = models.CharField(max_length=255, blank=True, null=True, verbose_name=_("ID транзакции (если есть)"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Дата создания счёта"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Дата последнего обновления"))
+
+    class Meta:
+        verbose_name = _("Платёж")
+        verbose_name_plural = _("Платежи")
+        ordering = ['-created_at']
+        indexes = [
+            # Основные поля для фильтрации
+            models.Index(fields=['client', 'status'], name='payment_client_status_idx'),
+            models.Index(fields=['status'], name='payment_status_idx'),
+            models.Index(fields=['service_description'], name='payment_service_idx'),
+            
+            # Для отчетов и напоминаний
+            models.Index(fields=['due_date'], name='payment_due_date_idx'),
+            models.Index(fields=['payment_date'], name='payment_date_idx'),
+            
+            # Составные индексы
+            models.Index(fields=['client', '-created_at'], name='payment_client_created_idx'),
+            models.Index(fields=['status', 'due_date'], name='payment_status_due_idx'),
+        ]
 
     def __str__(self):
         return f"Счёт на {self.total_amount} для {self.client}"
