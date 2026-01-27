@@ -1,4 +1,4 @@
-{# templates/clients/partials/modals.html #}
+﻿{# templates/clients/partials/modals.html #}
 {% load i18n %}
 
 <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel" aria-hidden="true"
@@ -16,10 +16,7 @@
             <label for="id_service_description" class="form-label">{% translate "Услуга" %}</label>
             <select name="service_description" class="form-select" id="id_service_description" required>
               {% for choice_value, choice_label in payment_form.service_description.field.choices %}
-              <option value="{{ choice_value }}" {% if client.application_purpose=="work" and
-                choice_value=="work_service" %}selected{% elif client.application_purpose=="study" and
-                choice_value=="study_service" %}selected{% elif client.application_purpose=="family" and
-                choice_value=="consultation" %}selected{% endif %}>{{ choice_label }}</option>
+              <option value="{{ choice_value }}" {% if client.application_purpose == "work" and choice_value == "work_service" %}selected{% elif client.application_purpose == "study" and choice_value == "study_service" %}selected{% elif client.application_purpose == "family" and choice_value == "consultation" %}selected{% endif %}>{{ choice_label }}</option>
               {% endfor %}
             </select>
           </div>
