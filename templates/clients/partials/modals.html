@@ -16,10 +16,15 @@
             <label for="id_service_description" class="form-label">{% translate "Услуга" %}</label>
             <select name="service_description" class="form-select" id="id_service_description" required>
               {% for choice_value, choice_label in payment_form.service_description.field.choices %}
-              <option value="{{ choice_value }}" {% if client.application_purpose=="work" and
-                choice_value=="work_service" %}selected{% endif %} {% if client.application_purpose=="study" and
-                choice_value=="study_service" %}selected{% endif %} {% if client.application_purpose=="family" and
-                choice_value=="consultation" %}selected{% endif %}>{{ choice_label }}</option>
+              {% if client.application_purpose == "work" and choice_value == "work_service" %}
+              <option value="{{ choice_value }}" selected>{{ choice_label }}</option>
+              {% elif client.application_purpose == "study" and choice_value == "study_service" %}
+              <option value="{{ choice_value }}" selected>{{ choice_label }}</option>
+              {% elif client.application_purpose == "family" and choice_value == "consultation" %}
+              <option value="{{ choice_value }}" selected>{{ choice_label }}</option>
+              {% else %}
+              <option value="{{ choice_value }}">{{ choice_label }}</option>
+              {% endif %}
               {% endfor %}
             </select>
           </div>
