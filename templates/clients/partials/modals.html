@@ -140,13 +140,11 @@
           <p class="mb-3 text-muted" id="uploadDocumentDescription"
             data-template='{% translate "You are uploading document: \"{name}\"" %}'></p>
           <div class="mb-3">
-            <label for="{{ document_upload_form.file.id_for_label }}" class="form-label">{% translate "Выберите файл"
-              %}</label>
+            <label for="{{ document_upload_form.file.id_for_label }}" class="form-label">{% translate "Выберите файл" %}</label>
             {{ document_upload_form.file }}
           </div>
           <div class="mb-3">
-            <label for="{{ document_upload_form.expiry_date.id_for_label }}" class="form-label">{% translate
-              "Действителен до (необязательно)" %}</label>
+            <label for="{{ document_upload_form.expiry_date.id_for_label }}" class="form-label">{% translate "Действителен до (необязательно)" %}</label>
             {{ document_upload_form.expiry_date }}
           </div>
           <div class="border rounded p-3 d-none" id="wezwanieConfirmationStep">
