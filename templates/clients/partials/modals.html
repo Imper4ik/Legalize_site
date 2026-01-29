@@ -16,7 +16,10 @@
             <label for="id_service_description" class="form-label">{% translate "Услуга" %}</label>
             <select name="service_description" class="form-select" id="id_service_description" required>
               {% for choice_value, choice_label in payment_form.service_description.field.choices %}
-              <option value="{{ choice_value }}" {% if client.application_purpose == "work" and choice_value == "work_service" %}selected{% elif client.application_purpose == "study" and choice_value == "study_service" %}selected{% elif client.application_purpose == "family" and choice_value == "consultation" %}selected{% endif %}>{{ choice_label }}</option>
+              <option value="{{ choice_value }}" {% if client.application_purpose=="work" and
+                choice_value=="work_service" %}selected{% elif client.application_purpose=="study" and
+                choice_value=="study_service" %}selected{% elif client.application_purpose=="family" and
+                choice_value=="consultation" %}selected{% endif %}>{{ choice_label }}</option>
               {% endfor %}
             </select>
           </div>
@@ -129,7 +132,8 @@
         {% csrf_token %}
         <input type="hidden" name="parse_wezwanie" id="uploadDocumentParseWezwanie" value="0">
         <div class="modal-body">
-          <p class="mb-3 text-muted" id="uploadDocumentDescription"></p>
+          <p class="mb-3 text-muted" id="uploadDocumentDescription"
+            data-template="{% translate 'Вы загружаете документ: &quot;{name}&quot;' %}"></p>
           <div class="mb-3">
             <label for="{{ document_upload_form.file.id_for_label }}" class="form-label">{% translate "Выберите файл"
               %}</label>

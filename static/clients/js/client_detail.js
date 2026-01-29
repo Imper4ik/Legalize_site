@@ -295,7 +295,9 @@
       }
 
       if (description) {
-        description.textContent = docName ? `Вы загружаете документ: "${docName}"` : '';
+        // Use translation template from data attribute
+        const template = description.dataset.template || 'Вы загружаете документ: "{name}"';
+        description.textContent = docName ? template.replace('{name}', docName) : '';
       }
 
       const isWezwanie = docType === 'wezwanie';
