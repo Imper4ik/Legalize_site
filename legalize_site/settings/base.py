@@ -176,7 +176,7 @@ USE_TZ = True
 # --- СТАТИКА И МЕДИА (WHITENOISE) ---
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 if WHITENOISE_AVAILABLE:
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
@@ -285,7 +285,7 @@ STORAGES = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage" if WHITENOISE_AVAILABLE else "django.contrib.staticfiles.storage.StaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage" if WHITENOISE_AVAILABLE else "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
     "dbbackup": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -309,3 +309,43 @@ DBBACKUP_CONNECTORS = {
 
 # Backup trigger secret (для защиты endpoint)
 BACKUP_TRIGGER_SECRET = os.environ.get("BACKUP_TRIGGER_SECRET", "")
+
+# --- LOGGING CONFIGURATION (Added for debugging) ---
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.server': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
