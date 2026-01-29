@@ -8,7 +8,7 @@
     <div class="col-md-8 col-lg-6">
         <div class="card shadow-sm">
             <div class="card-header text-center">
-                <h4 class="mb-0">{% translate "Вход через аккаунт Google" %}</h4>
+                <h4 class="mb-0">{% trans "Вход через аккаунт Google" %}</h4>
             </div>
             <div class="card-body p-4 text-center">
 
@@ -19,7 +19,7 @@
                 </p>
 
                 <p class="text-muted">
-                    {% translate 'Нажмите "Продолжить", чтобы перейти к Google для аутентификации.' %}
+                    {% trans 'Нажмите "Продолжить", чтобы перейти к Google для аутентификации.' %}
                 </p>
 
                 {# Эта форма является ключевой. Она должна отправить POST-запрос, чтобы запустить перенаправление. #}
@@ -28,7 +28,7 @@
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary btn-lg mt-3">
                             <i class="fab fa-google me-2"></i>
-                            {% translate "Продолжить" %}
+                            {% trans "Продолжить" %}
                         </button>
                     </div>
                 </form>
