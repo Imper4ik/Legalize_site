@@ -10,26 +10,26 @@
       <div>
         <span class="auth-badge" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.4rem 0.9rem;border-radius:9999px;background:rgba(15,23,42,0.25);border:1px solid rgba(248,250,252,0.25);font-weight:600;">
           <span class="bi bi-speedometer2"></span>
-          {% translate "Панель администратора" %}
+          {% trans "Панель администратора" %}
         </span>
-        <h2 class="mt-4">{% translate "Контролируйте Legalize в режиме реального времени" %}</h2>
-        <p>{% translate "Управляйте клиентами, платежами и документооборотом из единого центра." %}</p>
+        <h2 class="mt-4">{% trans "Контролируйте Legalize в режиме реального времени" %}</h2>
+        <p>{% trans "Управляйте клиентами, платежами и документооборотом из единого центра." %}</p>
       </div>
       <ul>
-        <li><span class="bi bi-shield-lock"></span> {% translate "Двухуровневая защита и журнал действий" %}</li>
-        <li><span class="bi bi-graph-up"></span> {% translate "Дашборды с ключевыми показателями" %}</li>
-        <li><span class="bi bi-people"></span> {% translate "Гибкие роли для команды" %}</li>
+        <li><span class="bi bi-shield-lock"></span> {% trans "Двухуровневая защита и журнал действий" %}</li>
+        <li><span class="bi bi-graph-up"></span> {% trans "Дашборды с ключевыми показателями" %}</li>
+        <li><span class="bi bi-people"></span> {% trans "Гибкие роли для команды" %}</li>
       </ul>
     </div>
     <div class="admin-form-panel">
-      <h1>{% translate "Вход в админку" %}</h1>
-      <p class="description">{% translate "Используйте корпоративные учетные данные для входа." %}</p>
+      <h1>{% trans "Вход в админку" %}</h1>
+      <p class="description">{% trans "Используйте корпоративные учетные данные для входа." %}</p>
 
       {% if form.non_field_errors %}
         <div class="admin-alert">{{ form.non_field_errors|striptags }}</div>
       {% elif form.errors %}
         <div class="admin-alert">
-          {% translate "Проверьте логин и пароль и попробуйте снова." %}
+          {% trans "Проверьте логин и пароль и попробуйте снова." %}
         </div>
       {% endif %}
 
@@ -61,12 +61,12 @@
         {% endif %}
 
         <button type="submit" class="admin-button">
-          <span class="bi bi-box-arrow-in-right" style="margin-right:0.5rem;"></span>{% translate "Войти" %}
+          <span class="bi bi-box-arrow-in-right" style="margin-right:0.5rem;"></span>{% trans "Войти" %}
         </button>
       </form>
 
       <div class="admin-meta">
-        <a href="{% url 'account_reset_password' %}">{% translate "Забыли пароль?" %}</a>
+        <a href="{% url 'account_reset_password' %}">{% trans "Забыли пароль?" %}</a>
       </div>
     </div>
   </div>
