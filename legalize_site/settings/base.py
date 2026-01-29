@@ -54,8 +54,12 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     "django.contrib.sites",
+    # Local apps
+    "core.apps.CoreConfig",  # Audit logging and shared utilities
     "clients.apps.ClientsConfig",
     "submissions.apps.SubmissionsConfig",
+    # Third-party apps
+    "dbbackup",  # Database backups
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
@@ -86,6 +90,8 @@ MIDDLEWARE += [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    # Audit logging middleware (должен быть после Auth middleware)
+    "core.audit_middleware.AuditMiddleware",
 ]
 
 ROOT_URLCONF = "legalize_site.urls"
@@ -271,3 +277,35 @@ SOCIALACCOUNT_PROVIDERS = {
         "AUTH_PARAMS": {"access_type": "online"},
     }
 }
+
+# --- DATABASE BACKUP SETTINGS ---
+# Django Storages configuration (required by django-dbbackup 5.x)
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage" if WHITENOISE_AVAILABLE else "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+    "dbbackup": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {
+            "location": str(BASE_DIR / "backups"),
+        },
+    },
+}
+
+# Backup settings (using django-dbbackup 5.x format)
+DBBACKUP_COMPRESSION = "gzip"  # Compress backups
+DBBACKUP_CLEANUP_KEEP = 30  # Keep last 30 backups
+DBBACKUP_CLEANUP_KEEP_MEDIA = 30
+
+# PostgreSQL connector
+DBBACKUP_CONNECTORS = {
+    "default": {
+        "CONNECTOR": "dbbackup.db.postgresql.PgDumpConnector",
+    }
+}
+
+# Backup trigger secret (для защиты endpoint)
+BACKUP_TRIGGER_SECRET = os.environ.get("BACKUP_TRIGGER_SECRET", "")
