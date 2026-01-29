@@ -295,8 +295,9 @@
       }
 
       if (description) {
-        // Use translation template from data attribute
-        const template = description.dataset.template || 'Вы загружаете документ: "{name}"';
+        // Read translation template from hidden element (server-rendered, no Django tags)
+        const templateElement = document.getElementById('uploadDocumentDescriptionTemplate');
+        const template = templateElement ? templateElement.textContent : 'Вы загружаете документ: "{name}"';
         description.textContent = docName ? template.replace('{name}', docName) : '';
       }
 
