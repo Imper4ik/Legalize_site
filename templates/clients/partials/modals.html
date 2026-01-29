@@ -137,18 +137,20 @@
         {% csrf_token %}
         <input type="hidden" name="parse_wezwanie" id="uploadDocumentParseWezwanie" value="0">
         <div class="modal-body">
-          {# Use blocktrans for complex string with placeholder to avoid quoting issues #}
-          <p class="mb-3 text-muted" id="uploadDocumentDescription"
-            data-template='{% blocktrans with name="{name}" %}You are uploading document: "{{ name }}"{% endblocktrans %}'>
-          </p>
+          {# Server-side rendered translation template - no Django tags in data attributes #}
+          <p class="mb-3 text-muted" id="uploadDocumentDescription"></p>
+          {# Hidden element containing the translation template for JavaScript #}
+          <span id="uploadDocumentDescriptionTemplate" class="d-none">{% trans "Вы загружаете документ:" %}
+            "{name}"</span>
+
           <div class="mb-3">
             <label for="{{ document_upload_form.file.id_for_label }}" class="form-label">{% trans "Выберите файл"
               %}</label>
             {{ document_upload_form.file }}
           </div>
           <div class="mb-3">
-            <label for="{{ document_upload_form.expiry_date.id_for_label }}" class="form-label">{% trans
-              "Действителен до (необязательно)" %}</label>
+            <label for="{{ document_upload_form.expiry_date.id_for_label }}" class="form-label">{% trans "Действителен
+              до (необязательно)" %}</label>
             {{ document_upload_form.expiry_date }}
           </div>
           <div class="border rounded p-3 d-none" id="wezwanieConfirmationStep">
@@ -193,14 +195,13 @@
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Отмена" %}</button>
             <button type="submit" class="btn btn-primary" id="uploadDocumentSubmitButton">{% trans "Сохранить"
               %}</button>
-            <button type="submit" class="btn btn-primary d-none" id="wezwanieParseButton">{% trans "Распознать
-              wezwanie" %}</button>
+            <button type="submit" class="btn btn-primary d-none" id="wezwanieParseButton">{% trans "Распознать wezwanie"
+              %}</button>
           </div>
           <div class="d-flex gap-2 w-100 justify-content-end d-none" id="wezwanieConfirmActions">
             <button type="button" class="btn btn-outline-secondary" id="wezwanieCancelButton" data-bs-dismiss="modal">{%
-              translate "Отмена" %}</button>
-            <button type="button" class="btn btn-primary" id="wezwanieConfirmButton">{% trans "Подтвердить"
-              %}</button>
+              trans "Отмена" %}</button>
+            <button type="button" class="btn btn-primary" id="wezwanieConfirmButton">{% trans "Подтвердить" %}</button>
           </div>
         </div>
       </form>
