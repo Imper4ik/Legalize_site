@@ -1,0 +1,30 @@
+<!-- Enhanced Empty State Template -->
+<!-- Usage: Include this partial when showing empty lists/results -->
+
+<div class="empty">
+    <div class="empty-icon">
+        <!-- Icon will be passed via context or can be customized -->
+        <i class="{% if empty_icon %}{{ empty_icon }}{% else %}bi bi-inbox{% endif %}"></i>
+    </div>
+
+    <h4>{{ empty_title|default:"Нет данных" }}</h4>
+
+    <p class="text-muted">
+        {{ empty_message|default:"Здесь пока ничего нет. Добавьте первую запись, чтобы начать работу." }}
+    </p>
+
+    {% if empty_action_url %}
+    <a href="{{ empty_action_url }}" class="btn btn-gradient">
+        <i class="bi bi-plus-lg me-1"></i>
+        {{ empty_action_text|default:"Добавить" }}
+    </a>
+    {% endif %}
+</div>
+
+<!-- Example Usage:
+
+{% if not clients %}
+  {% include 'components/empty_state.html' with empty_icon="bi bi-people" empty_title="Нет клиентов" empty_message="Добавьте первого клиента, чтобы начать работу с системой." empty_action_url=client_add_url empty_action_text="Добавить клиента" %}
+{% endif %}
+
+-->

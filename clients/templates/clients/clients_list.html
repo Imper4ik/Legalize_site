@@ -2,8 +2,8 @@
 {% load i18n static %}
 
 {% block extra_head %}
-  {{ block.super }}
-  <link rel="stylesheet" href="{% static 'clients/css/clients_list.css' %}">
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'clients/css/clients_list.css' %}">
 {% endblock %}
 
 {% block title %}{% translate "Список клиентов" %}{% endblock %}
@@ -26,18 +26,16 @@
 
 <form method="get" class="mb-4">
   <div class="input-group">
-    <input type="text"
-           name="q"
-           class="form-control"
-           placeholder="{% translate 'Поиск по имени, почте или номеру дела...' %}"
-           value="{{ query }}">
+    <input type="text" name="q" class="form-control"
+      placeholder="{% translate 'Поиск по имени, почте или номеру дела...' %}" value="{{ query }}">
     <button class="btn btn-outline-secondary" type="submit">
       {% translate "Найти" %}
     </button>
   </div>
 </form>
 
-<div class="table-container">
+{% if clients %}
+<div class="table-responsive-mobile">
   <table class="table table-modern table-hover align-middle mb-0">
     <thead>
       <tr>
@@ -61,62 +59,56 @@
     </thead>
     <tbody>
       {% for client in clients %}
-        <tr>
-          <td>{{ client.email }}</td>
-          <td>{{ client.first_name }} {{ client.last_name }}</td>
-          <td><strong>{{ client.case_number|default:"—" }}</strong></td>
-          <td>
-            {{ client.basis_of_stay|default:"—" }}
-            {% if client.legal_basis_end_date %}
-              <br>
-              <small class="text-muted">
-                {% blocktrans with date=client.legal_basis_end_date|date:"d.m.Y" %}до {{ date }}{% endblocktrans %}
-              </small>
-            {% endif %}
-          </td>
-          <td>
-            <form action="{% url 'clients:update_client_notes' pk=client.pk %}" method="post" class="notes-form">
-              {% csrf_token %}
-              <input type="hidden" name="notes" class="hidden-notes-input">
-              <!-- “None” видно до фокуса; на фокусе очищаем; на blur возвращаем, если пусто -->
-              <div class="form-control notes-editor"
-                   contenteditable="true"
-                   role="textbox"
-                   aria-multiline="true"
-                   tabindex="0"
-                   data-notes-editor>
-                {{ client.notes|default:""|safe }}
-              </div>
-              <button class="btn btn-outline-secondary btn-sm mt-2 w-100" type="submit">
-                {% translate "Сохранить" %}
-              </button>
-            </form>
-          </td>
-          <td>
-            <div class="d-grid gap-2">
-              <a href="{% url 'clients:client_detail' pk=client.pk %}" class="btn btn-info btn-sm">
-                {% translate "Подробнее" %}
-              </a>
-              <a href="{% url 'clients:client_delete' pk=client.pk %}" class="btn btn-danger btn-sm">
-                {% translate "Удалить" %}
-              </a>
+      <tr>
+        <td data-label="Email">{{ client.email }}</td>
+        <td data-label="{% translate 'Полное имя' %}">{{ client.first_name }} {{ client.last_name }}</td>
+        <td data-label="{% translate 'Номер дела' %}"><strong>{{ client.case_number|default:"—" }}</strong></td>
+        <td data-label="{% translate 'Основание и дата окончания' %}">
+          {{ client.basis_of_stay|default:"—" }}
+          {% if client.legal_basis_end_date %}
+          <br>
+          <small class="text-muted">
+            {% blocktrans with date=client.legal_basis_end_date|date:"d.m.Y" %}до {{ date }}{% endblocktrans %}
+          </small>
+          {% endif %}
+        </td>
+        <td data-label="{% translate 'Заметки' %}">
+          <form action="{% url 'clients:update_client_notes' pk=client.pk %}" method="post" class="notes-form">
+            {% csrf_token %}
+            <input type="hidden" name="notes" class="hidden-notes-input">
+            <div class="form-control notes-editor" contenteditable="true" role="textbox" aria-multiline="true"
+              tabindex="0" data-notes-editor>
+              {{ client.notes|default:""|safe }}
             </div>
-          </td>
-        </tr>
-      {% empty %}
-        <tr>
-          <td colspan="6" class="text-center text-muted py-4">
-            {% translate "Клиенты не найдены." %}
-          </td>
-        </tr>
+            <button class="btn btn-outline-secondary btn-sm mt-2 w-100" type="submit">
+              {% translate "Сохранить" %}
+            </button>
+          </form>
+        </td>
+        <td data-label="{% translate 'Действия' %}">
+          <div class="d-grid gap-2">
+            <a href="{% url 'clients:client_detail' pk=client.pk %}" class="btn btn-info btn-sm">
+              {% translate "Подробнее" %}
+            </a>
+            <a href="{% url 'clients:client_delete' pk=client.pk %}" class="btn btn-danger btn-sm">
+              {% translate "Удалить" %}
+            </a>
+          </div>
+        </td>
+      </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
+{% else %}
+{% include 'components/empty_state.html' with empty_icon="bi bi-people" empty_title="Клиенты не найдены"
+empty_message="Попробуйте изменить параметры поиска или добавьте первого клиента." empty_action_url=client_add_url
+empty_action_text="Добавить клиента" %}
+{% endif %}
 
 {% endblock %}
 
 {% block extra_js %}
-  {{ block.super }}
-  <script src="{% static 'clients/js/clients_list.js' %}" defer></script>
+{{ block.super }}
+<script src="{% static 'clients/js/clients_list.js' %}" defer></script>
 {% endblock %}
