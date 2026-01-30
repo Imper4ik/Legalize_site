@@ -58,8 +58,8 @@ def calculate_calculator_result(data: dict, *, today: Optional[date] = None) -> 
     has_border = bool(data.get("has_border"))
 
     tuition_fee_pln = convert_to_pln(tuition_fee, tuition_currency)
-    monthly_tuition = tuition_fee_pln
-    tuition_total = _quantize_money(monthly_tuition * months_in_period)
+    monthly_tuition = _quantize_money(tuition_fee_pln / months_in_period)
+    tuition_total = _quantize_money(tuition_fee_pln)
 
     monthly_rent_and_bills = convert_to_pln(rent_and_bills, rent_currency)
     rent_per_person = _quantize_money(monthly_rent_and_bills / num_people)
