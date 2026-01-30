@@ -56,3 +56,16 @@ class CalculatorServiceTests(SimpleTestCase):
 
         self.assertEqual(result.total_months_real, 1)
         self.assertEqual(result.months_for_calc, 1)
+
+    def test_calculates_semester_fee_as_monthly_average(self):
+        data = {
+            **self.base_data,
+            "fee_type": "per_semester",
+            "tuition_fee": Decimal("5000.00"),
+            "months_in_period": 5,
+        }
+
+        result = calculate_calculator_result(data, today=date.today())
+
+        self.assertEqual(result.monthly_tuition_calculated, Decimal("1000.00"))
+        self.assertEqual(result.tuition_total, Decimal("5000.00"))
