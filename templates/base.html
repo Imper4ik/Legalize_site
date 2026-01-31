@@ -14,64 +14,80 @@
 
       try {
         var stored = localStorage.getItem("preferredTheme");
-        if (stored) theme = stored;
-      } catch (_) { }
-
-      if (theme !== "dark") {
-        var mq = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
-        if (mq && typeof mq.matches === "boolean" && mq.matches) theme = "dark";
-      }
-
-      theme = theme === "dark" ? "dark" : "light";
-      docEl.setAttribute("data-theme", theme);
-      docEl.setAttribute("data-bs-theme", theme);
-
-      var meta = document.querySelector('meta[name="color-scheme"]');
-      if (meta) meta.setAttribute("content", theme === "dark" ? "dark light" : "light dark");
-    })();
+        // Prevent flash of unstyled content
+        const theme = localStorage.getItem('theme') || 'auto';
+        document.documentElement.setAttribute('data-theme', theme);
   </script>
-  <title>{% block title %}{% trans "Legalize Site" %}{% endblock %}</title>
 
-  <!-- Vendor CSS -->
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Flatpickr -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+
+  <!-- Custom CSS -->
   <link rel="stylesheet" href="{% static 'css/theme.css' %}">
-  <meta name="csrf-token" content="{{ csrf_token }}">
+
+  <style>
+    /* Gradient Background */
+    body {
+      background: var(--bg-gradient);
+      min-height: 100vh;
+      font-family: 'Roboto', sans-serif;
+    }
+  </style>
 
   {% block extra_head %}{% endblock %}
+
+  <title>{% block title %}Legalize{% endblock %}</title>
 </head>
 
-<body class="{% block body_class %}{% endblock %}">
-  <!-- NAVBAR -->
-  <header class="mb-3">
-    <nav class="navbar navbar-expand-lg theme-navbar shadow-sm">
+<body>
+  <nav class="navbar navbar-expand-lg sticky-top">
+    <div class="container-fluid px-4">
       <div class="container">
         <a class="navbar-brand fw-semibold"
           href="{% if user.is_authenticated and user.is_staff %}{% url 'clients:client_list' %}{% else %}{% url 'account_login' %}{% endif %}">
-          <i class="fas fa-balance-scale me-2"></i>{% trans "Legalize" %}
+          <i class="fas fa-balance-scale me-2"></i>{% translate "Legalize" %}
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-          aria-controls="navbarNav" aria-expanded="false" aria-label="{% trans 'Переключить навигацию' %}">
+          aria-controls="navbarNav" aria-expanded="false" aria-label="{% translate 'Переключить навигацию' %}">
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
           {% if user.is_authenticated %}
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             {% if user.is_staff %}
-            <li class="nav-item"><a class="nav-link" href="{% url 'clients:client_list' %}">{% trans "Клиенты" %}</a>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'clients:client_list' %}">{% translate "Клиенты" %}</a>
             </li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'clients:client_add' %}">{% trans "Добавить клиента"
-                %}</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'clients:calculator' %}">{% trans "Калькулятор" %}</a>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'clients:client_add' %}">{% translate "Добавить клиента" %}</a>
             </li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'clients:document_checklist_manage' %}">{% trans
-                "Чеклисты" %}</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'clients:document_reminder_list' %}">{% trans
-                "Напоминания по документам" %}</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'clients:payment_reminder_list' %}">{% trans
-                "Напоминания по оплатам" %}</a></li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'clients:calculator' %}">{% translate "Калькулятор" %}</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'clients:document_checklist_manage' %}">{% translate "Чеклисты" %}</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'clients:document_reminder_list' %}">{% translate "Напоминания по
+                документам" %}</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'clients:payment_reminder_list' %}">{% translate "Напоминания по оплатам"
+                %}</a>
+            </li>
             {% endif %}
           </ul>
           {% endif %}
@@ -138,7 +154,7 @@
           </ul>
         </div>
       </div>
-    </nav>
+  </nav>
   </header>
 
   <!-- Flash messages (auto-dismiss) -->
@@ -186,12 +202,12 @@
   <!-- Helpers -->
   <script src="{% static 'js/csrf.js' %}" defer></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Auto-dismiss alerts
-      document.querySelectorAll('.alert.alert-dismissible').forEach((el) => {
-        setTimeout(() => bootstrap.Alert.getOrCreateInstance(el).close(), 3000);
-      });
-    });
+        document.addEventListener('DOMContentLoaded', () => {
+          // Auto-dismiss alerts
+          document.querySelectorAll('.alert.alert-dismissible').forEach((el) => {
+            setTimeout(() => bootstrap.Alert.getOrCreateInstance(el).close(), 3000);
+          });
+        });
   </script>
 
   <!-- Language switcher keeps the current page while changing the prefix -->
