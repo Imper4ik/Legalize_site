@@ -47,10 +47,14 @@
                             </div>
                             <div class="col-sm-4">
                                 <select class="form-select" name="fee_type" id="fee_type_selector">
-                                    <option value="per_month" data-months="1" {% if form_data.fee_type == "per_month" %}selected{% endif %}>
+                                    <option value="per_month" data-months="1" {% if form_data.fee_type == "per_month"
+                                        %}selected{% endif %}>
                                         {% translate "в месяц" %}</option>
-                                    <option value="per_semester" data-months="5" {% if form_data.fee_type == "per_semester" %}selected{% endif %}>{% translate "за семестр" %}</option>
-                                    <option value="per_year" data-months="12" {% if form_data.fee_type == "per_year" %}selected{% endif %}>
+                                    <option value="per_semester" data-months="5" {% if
+                                        form_data.fee_type == "per_semester" %}selected{% endif %}>{% translate "за
+                                        семестр" %}</option>
+                                    <option value="per_year" data-months="12" {% if form_data.fee_type == "per_year"
+                                        %}selected{% endif %}>
                                         {% translate "за год" %}</option>
                                 </select>
                             </div>
