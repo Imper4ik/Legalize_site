@@ -295,7 +295,10 @@
       }
 
       if (description) {
-        description.textContent = docName ? `Вы загружаете документ: "${docName}"` : '';
+        // Read translation template from hidden element (server-rendered, no Django tags)
+        const templateElement = document.getElementById('uploadDocumentDescriptionTemplate');
+        const template = templateElement ? templateElement.textContent : 'Вы загружаете документ: "{name}"';
+        description.textContent = docName ? template.replace('{name}', docName) : '';
       }
 
       const isWezwanie = docType === 'wezwanie';

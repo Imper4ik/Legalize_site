@@ -10,6 +10,11 @@ from clients import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),
+    # Backup trigger endpoint (не в i18n patterns)
+    path('api/backup/trigger/', include([
+        path('', lambda request: __import__('core.views.backup_trigger', fromlist=['trigger_backup']).trigger_backup(request)),
+        path('status/', lambda request: __import__('core.views.backup_trigger', fromlist=['backup_status']).backup_status(request)),
+    ])),
 ]
 
 urlpatterns += i18n_patterns(

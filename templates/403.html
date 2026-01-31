@@ -11,22 +11,22 @@
                 <div class="mb-4">
                     <span class="display-3">🚫</span>
                 </div>
-                <h1 class="h2 fw-bold mb-3">{% translate "У вас нет доступа к этой странице" %}</h1>
+                <h1 class="h2 fw-bold mb-3">{% trans "У вас нет доступа к этой странице" %}</h1>
                 <p class="text-muted mb-4">
-                    {% blocktranslate %}Вы вошли в систему, но ваш профиль не имеет прав для просмотра раздела сотрудников. Если вы считаете, что это ошибка, обратитесь к администратору сайта.{% endblocktranslate %}
+                    {% blocktrans %}Вы вошли в систему, но ваш профиль не имеет прав для просмотра раздела сотрудников. Если вы считаете, что это ошибка, обратитесь к администратору сайта.{% endblocktrans %}
                 </p>
                 <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
                     {% if user.is_authenticated %}
                         <a class="btn btn-primary btn-lg" href="{% url 'account_logout' %}">
-                            <i class="bi bi-box-arrow-right me-2"></i>{% translate "Выйти и войти под другим аккаунтом" %}
+                            <i class="bi bi-box-arrow-right me-2"></i>{% trans "Выйти и войти под другим аккаунтом" %}
                         </a>
                     {% else %}
                         <a class="btn btn-primary btn-lg" href="{% url 'account_login' %}">
-                            <i class="bi bi-box-arrow-in-right me-2"></i>{% translate "Войти" %}
+                            <i class="bi bi-box-arrow-in-right me-2"></i>{% trans "Войти" %}
                         </a>
                     {% endif %}
                     <a class="btn btn-outline-secondary btn-lg" href="mailto:{{ support_email }}">
-                        <i class="bi bi-envelope me-2"></i>{% translate "Связаться с поддержкой" %}
+                        <i class="bi bi-envelope me-2"></i>{% trans "Связаться с поддержкой" %}
                     </a>
                 </div>
             </div>
