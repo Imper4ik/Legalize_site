@@ -1,0 +1,95 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-31 15:15+0000\n"
+"PO-Revision-Date: 2026-01-31 15:15+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: static/clients/js/client_detail.js:48
+msgid "Не удалось получить цену услуги:"
+msgstr "Failed to get service price:"
+
+#: static/clients/js/client_detail.js:124
+#: static/clients/js/client_detail.js:136
+msgid "Не удалось сохранить платёж. Попробуйте ещё раз."
+msgstr "Failed to save payment. Please try again."
+
+#: static/clients/js/client_detail.js:167
+msgid "Платёж успешно добавлен."
+msgstr "Payment successfully added."
+
+#: static/clients/js/client_detail.js:173
+msgid "Ошибка при создании платежа"
+msgstr "Error creating payment"
+
+#: static/clients/js/client_detail.js:174
+msgid "Не удалось создать платёж. Попробуйте ещё раз."
+msgstr "Failed to create payment. Please try again."
+
+#: static/clients/js/client_detail.js:222
+msgid "Платёж успешно обновлён."
+msgstr "Payment successfully updated."
+
+#: static/clients/js/client_detail.js:228
+msgid "Ошибка при обновлении платежа"
+msgstr "Error updating payment"
+
+#: static/clients/js/client_detail.js:229
+msgid "Не удалось обновить платёж. Попробуйте ещё раз."
+msgstr "Failed to update payment. Please try again."
+
+#: static/clients/js/client_detail.js:386
+msgid "Документ успешно добавлен."
+msgstr "Document successfully added."
+
+#: static/clients/js/client_detail.js:397
+msgid "Ошибка при загрузке документа:"
+msgstr "Error uploading document:"
+
+#: static/clients/js/client_detail.js:398
+msgid "Не удалось загрузить документ. Попробуйте ещё раз."
+msgstr "Failed to upload document. Please try again."
+
+#: static/clients/js/client_detail.js:434
+msgid "Данные wezwanie подтверждены."
+msgstr "Wezwanie data confirmed."
+
+#: static/clients/js/client_detail.js:445
+msgid "Не удалось подтвердить wezwanie:"
+msgstr "Failed to confirm wezwanie:"
+
+#: static/clients/js/client_detail.js:446
+msgid "Не удалось подтвердить данные wezwanie."
+msgstr "Failed to confirm wezwanie data."
+
+#: static/clients/js/client_detail.js:516
+msgid "Ошибка при обновлении чеклиста клиента:"
+msgstr "Error updating client checklist:"
+
+#: static/clients/js/client_detail.js:598
+msgid "Не удалось удалить документ из чеклиста:"
+msgstr "Failed to delete document from checklist:"
+
+#: static/clients/js/client_detail.js:627
+msgid "Все загруженные документы отмечены как проверенные."
+msgstr "All uploaded documents marked as verified."
+
+#: static/clients/js/client_detail.js:638
+msgid "Не удалось отметить все документы как проверенные:"
+msgstr "Failed to mark all documents as verified:"
+
+#: static/clients/js/client_detail.js:639
+msgid "Не удалось обновить статус документов. Попробуйте ещё раз."
+msgstr "Failed to update document status. Please try again."
