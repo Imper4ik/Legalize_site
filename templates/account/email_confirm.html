@@ -1,18 +1,18 @@
 {% extends "account/auth_base.html" %}
 {% load i18n allauth %}
 
-{% block title %}{% translate "Подтверждение почты" %}{% endblock %}
+{% block title %}{% trans "Подтверждение почты" %}{% endblock %}
 
 {% block content %}
 <section class="auth-shell">
   <div class="auth-panel inverse">
     <span class="auth-badge">
       <i class="bi bi-envelope-heart"></i>
-      {% translate "Защита вашего аккаунта" %}
+      {% trans "Защита вашего аккаунта" %}
     </span>
-    <h1 class="auth-heading">{% translate "Остался один шаг" %}</h1>
+    <h1 class="auth-heading">{% trans "Остался один шаг" %}</h1>
     <p class="auth-muted">
-      {% translate "Подтверждённая почта помогает нам защищать ваши данные, восстанавливать доступ и уведомлять о важных событиях." %}
+      {% trans "Подтверждённая почта помогает нам защищать ваши данные, восстанавливать доступ и уведомлять о важных событиях." %}
     </p>
     <ul class="auth-features">
       <li class="auth-feature">
@@ -20,8 +20,8 @@
           <i class="bi bi-shield-check"></i>
         </div>
         <div>
-          <strong>{% translate "Безопасность" %}</strong>
-          <p class="auth-muted">{% translate "Мы проверяем, что именно вы управляете аккаунтом." %}</p>
+          <strong>{% trans "Безопасность" %}</strong>
+          <p class="auth-muted">{% trans "Мы проверяем, что именно вы управляете аккаунтом." %}</p>
         </div>
       </li>
       <li class="auth-feature">
@@ -29,8 +29,8 @@
           <i class="bi bi-bell-fill"></i>
         </div>
         <div>
-          <strong>{% translate "Своевременные уведомления" %}</strong>
-          <p class="auth-muted">{% translate "Получайте напоминания о дедлайнах и изменениях." %}</p>
+          <strong>{% trans "Своевременные уведомления" %}</strong>
+          <p class="auth-muted">{% trans "Получайте напоминания о дедлайнах и изменениях." %}</p>
         </div>
       </li>
       <li class="auth-feature">
@@ -38,16 +38,16 @@
           <i class="bi bi-people-fill"></i>
         </div>
         <div>
-          <strong>{% translate "Доступ для команды" %}</strong>
-          <p class="auth-muted">{% translate "Подтверждённая почта упрощает добавление коллег." %}</p>
+          <strong>{% trans "Доступ для команды" %}</strong>
+          <p class="auth-muted">{% trans "Подтверждённая почта упрощает добавление коллег." %}</p>
         </div>
       </li>
     </ul>
   </div>
   <div class="auth-panel auth-form">
     <header class="auth-form-header">
-      <h1>{% translate "Подтвердите email" %}</h1>
-      <p>{% translate "Убедитесь, что адрес принадлежит вам, чтобы продолжить работу." %}</p>
+      <h1>{% trans "Подтвердите email" %}</h1>
+      <p>{% trans "Убедитесь, что адрес принадлежит вам, чтобы продолжить работу." %}</p>
     </header>
 
     {% if confirmation %}
@@ -56,7 +56,7 @@
           <i class="bi bi-envelope-open-heart"></i>
         </div>
         <div>
-          <p class="auth-summary-label">{% translate "Адрес для подтверждения" %}</p>
+          <p class="auth-summary-label">{% trans "Адрес для подтверждения" %}</p>
           <p class="auth-summary-value">{{ confirmation.email_address.email }}</p>
         </div>
       </div>
@@ -64,22 +64,22 @@
       <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
         {% csrf_token %}
         <button class="auth-button" type="submit">
-          <i class="bi bi-check-circle-fill me-2"></i>{% translate "Подтвердить почту" %}
+          <i class="bi bi-check-circle-fill me-2"></i>{% trans "Подтвердить почту" %}
         </button>
       </form>
 
       <div class="auth-meta">
-        <p>{% translate "Если это не ваш адрес, просто проигнорируйте письмо и запросите новую ссылку из личного кабинета." %}</p>
+        <p>{% trans "Если это не ваш адрес, просто проигнорируйте письмо и запросите новую ссылку из личного кабинета." %}</p>
       </div>
     {% else %}
       <div class="auth-alert auth-alert-error">
         <i class="bi bi-exclamation-triangle-fill me-2"></i>
-        {% translate "Ссылка для подтверждения недействительна или уже была использована." %}
+        {% trans "Ссылка для подтверждения недействительна или уже была использована." %}
       </div>
       {% url 'account_email' as email_url %}
       <div class="auth-actions">
         <a class="auth-link" href="{{ email_url }}">
-          <i class="bi bi-arrow-repeat me-2"></i>{% translate "Запросить новую ссылку" %}
+          <i class="bi bi-arrow-repeat me-2"></i>{% trans "Запросить новую ссылку" %}
         </a>
       </div>
     {% endif %}

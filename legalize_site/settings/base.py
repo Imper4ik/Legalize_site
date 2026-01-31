@@ -54,8 +54,12 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     "django.contrib.sites",
+    # Local apps
+    "core.apps.CoreConfig",  # Audit logging and shared utilities
     "clients.apps.ClientsConfig",
     "submissions.apps.SubmissionsConfig",
+    # Third-party apps
+    "dbbackup",  # Database backups
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
@@ -86,6 +90,8 @@ MIDDLEWARE += [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    # Audit logging middleware (должен быть после Auth middleware)
+    "core.audit_middleware.AuditMiddleware",
 ]
 
 ROOT_URLCONF = "legalize_site.urls"
@@ -170,7 +176,7 @@ USE_TZ = True
 # --- СТАТИКА И МЕДИА (WHITENOISE) ---
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 if WHITENOISE_AVAILABLE:
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
@@ -255,25 +261,13 @@ LOGIN_REDIRECT_URL = reverse_lazy("clients:client_list")
 LOGOUT_REDIRECT_URL = reverse_lazy("account_login")
 
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "filters": {
-        "redact_pii": {
-            "()": "legalize_site.utils.logging.RedactPIIFilter",
-        },
-    },
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "filters": ["redact_pii"],
-        },
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": LOG_LEVEL,
-    },
-}
+
+# Импортируем конфигурацию логирования
+from legalize_site.logging_config import get_logging_config
+
+# Используем продвинутую конфигурацию
+LOGGING = get_logging_config(debug=DEBUG)
+
 
 # Соц. вход через Google (по желанию)
 SOCIALACCOUNT_AUTO_SIGNUP = True
@@ -282,4 +276,76 @@ SOCIALACCOUNT_PROVIDERS = {
         "SCOPE": ["profile", "email"],
         "AUTH_PARAMS": {"access_type": "online"},
     }
+}
+
+# --- DATABASE BACKUP SETTINGS ---
+# Django Storages configuration (required by django-dbbackup 5.x)
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage" if WHITENOISE_AVAILABLE else "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+    "dbbackup": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {
+            "location": str(BASE_DIR / "backups"),
+        },
+    },
+}
+
+# Backup settings (using django-dbbackup 5.x format)
+DBBACKUP_COMPRESSION = "gzip"  # Compress backups
+DBBACKUP_CLEANUP_KEEP = 30  # Keep last 30 backups
+DBBACKUP_CLEANUP_KEEP_MEDIA = 30
+
+# PostgreSQL connector
+DBBACKUP_CONNECTORS = {
+    "default": {
+        "CONNECTOR": "dbbackup.db.postgresql.PgDumpConnector",
+    }
+}
+
+# Backup trigger secret (для защиты endpoint)
+BACKUP_TRIGGER_SECRET = os.environ.get("BACKUP_TRIGGER_SECRET", "")
+
+# --- LOGGING CONFIGURATION (Added for debugging) ---
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.server': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
 }

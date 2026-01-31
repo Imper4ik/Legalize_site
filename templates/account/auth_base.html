@@ -675,7 +675,7 @@
             <form action="{% url 'set_language' %}" method="post" class="auth-language-form" data-language-switcher>
                 {% csrf_token %}
                 <input name="next" type="hidden" value="{{ request.get_full_path|default:'/' }}">
-                <label class="auth-language-label" for="auth-language-select">{% translate "Выбор языка интерфейса" %}</label>
+                <label class="auth-language-label" for="auth-language-select">{% trans "Выбор языка интерфейса" %}</label>
                 <select id="auth-language-select" name="language" class="auth-language-select">
                     {% get_current_language as LANGUAGE_CODE %}
                     {% get_available_languages as LANGUAGES %}
@@ -688,19 +688,19 @@
                 class="auth-theme-toggle theme-toggle"
                 type="button"
                 aria-pressed="false"
-                aria-label="{% translate 'Переключить тему' %}"
-                title="{% translate 'Переключить на тёмную тему' %}"
+                aria-label="{% trans 'Переключить тему' %}"
+                title="{% trans 'Переключить на тёмную тему' %}"
                 data-theme-toggle
-                data-theme-light-text="{% translate 'Светлая тема' %}"
-                data-theme-dark-text="{% translate 'Тёмная тема' %}"
-                data-theme-light-title="{% translate 'Переключить на тёмную тему' %}"
-                data-theme-dark-title="{% translate 'Переключить на светлую тему' %}"
-                data-theme-light-label="{% translate 'Переключить на тёмную тему' %}"
-                data-theme-dark-label="{% translate 'Переключить на светлую тему' %}"
+                data-theme-light-text="{% trans 'Светлая тема' %}"
+                data-theme-dark-text="{% trans 'Тёмная тема' %}"
+                data-theme-light-title="{% trans 'Переключить на тёмную тему' %}"
+                data-theme-dark-title="{% trans 'Переключить на светлую тему' %}"
+                data-theme-light-label="{% trans 'Переключить на тёмную тему' %}"
+                data-theme-dark-label="{% trans 'Переключить на светлую тему' %}"
             >
                 <span class="icon-sun">☀️</span>
                 <span class="icon-moon">🌙</span>
-                <span class="auth-theme-toggle-text" data-theme-toggle-text>{% translate "Светлая тема" %}</span>
+                <span class="auth-theme-toggle-text" data-theme-toggle-text>{% trans "Светлая тема" %}</span>
             </button>
         </div>
     </header>

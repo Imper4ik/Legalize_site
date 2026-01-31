@@ -15,5 +15,7 @@ opencv-python-headless==4.10.0.84
 python-dotenv==1.2.1
 dj-database-url==3.1.0
 packaging==25.0
+django-dbbackup==5.1.2  # Automated database backups
+django-storages==1.14.4  # Required by django-dbbackup 5.x
 
 # SERVER_CONFIG: Force cache rebuild to pick up Tesseract (NIXPACKS_APT_PKGS)

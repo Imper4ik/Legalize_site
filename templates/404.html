@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% translate "Страница не найдена" %}{% endblock %}
+{% block title %}{% trans "Страница не найдена" %}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center py-5">
@@ -11,16 +11,16 @@
                 <div class="mb-4">
                     <span class="display-3">🤔</span>
                 </div>
-                <h1 class="h2 fw-bold mb-3">{% translate "Страница не найдена" %}</h1>
+                <h1 class="h2 fw-bold mb-3">{% trans "Страница не найдена" %}</h1>
                 <p class="text-muted mb-4">
-                    {% blocktranslate %}К сожалению, запрашиваемая вами страница не существует или была перемещена. Возможно, вы перешли по устаревшей ссылке или допустили опечатку в адресе.{% endblocktranslate %}
+                    {% blocktrans %}К сожалению, запрашиваемая вами страница не существует или была перемещена. Возможно, вы перешли по устаревшей ссылке или допустили опечатку в адресе.{% endblocktrans %}
                 </p>
                 <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
                     <a class="btn btn-primary btn-lg" href="/">
-                        <i class="bi bi-house-door me-2"></i>{% translate "На главную" %}
+                        <i class="bi bi-house-door me-2"></i>{% trans "На главную" %}
                     </a>
                     <a class="btn btn-outline-secondary btn-lg" href="javascript:history.back()">
-                        <i class="bi bi-arrow-left me-2"></i>{% translate "Вернуться назад" %}
+                        <i class="bi bi-arrow-left me-2"></i>{% trans "Вернуться назад" %}
                     </a>
                 </div>
             </div>

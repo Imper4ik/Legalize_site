@@ -1,18 +1,18 @@
 {% extends "account/auth_base.html" %}
 {% load i18n %}
 
-{% block title %}{% translate "Подтвердите ваш E-mail" %}{% endblock %}
+{% block title %}{% trans "Подтвердите ваш E-mail" %}{% endblock %}
 
 {% block content %}
 <section class="auth-shell">
   <div class="auth-panel inverse">
     <span class="auth-badge">
       <i class="bi bi-envelope-heart"></i>
-      {% translate "Защита вашего аккаунта" %}
+      {% trans "Защита вашего аккаунта" %}
     </span>
-    <h1 class="auth-heading">{% translate "Остался один шаг" %}</h1>
+    <h1 class="auth-heading">{% trans "Остался один шаг" %}</h1>
     <p class="auth-muted">
-      {% translate "Подтверждённая почта помогает нам защищать ваши данные, восстанавливать доступ и уведомлять о важных событиях." %}
+      {% trans "Подтверждённая почта помогает нам защищать ваши данные, восстанавливать доступ и уведомлять о важных событиях." %}
     </p>
     <ul class="auth-features">
       <li class="auth-feature">
@@ -20,8 +20,8 @@
           <i class="bi bi-shield-check"></i>
         </div>
         <div>
-          <strong>{% translate "Безопасность" %}</strong>
-          <p class="auth-muted">{% translate "Мы проверяем, что именно вы управляете аккаунтом." %}</p>
+          <strong>{% trans "Безопасность" %}</strong>
+          <p class="auth-muted">{% trans "Мы проверяем, что именно вы управляете аккаунтом." %}</p>
         </div>
       </li>
       <li class="auth-feature">
@@ -29,8 +29,8 @@
           <i class="bi bi-bell-fill"></i>
         </div>
         <div>
-          <strong>{% translate "Своевременные уведомления" %}</strong>
-          <p class="auth-muted">{% translate "Получайте напоминания о дедлайнах и изменениях." %}</p>
+          <strong>{% trans "Своевременные уведомления" %}</strong>
+          <p class="auth-muted">{% trans "Получайте напоминания о дедлайнах и изменениях." %}</p>
         </div>
       </li>
       <li class="auth-feature">
@@ -38,8 +38,8 @@
           <i class="bi bi-people-fill"></i>
         </div>
         <div>
-          <strong>{% translate "Доступ для команды" %}</strong>
-          <p class="auth-muted">{% translate "Подтверждённая почта упрощает добавление коллег." %}</p>
+          <strong>{% trans "Доступ для команды" %}</strong>
+          <p class="auth-muted">{% trans "Подтверждённая почта упрощает добавление коллег." %}</p>
         </div>
       </li>
     </ul>
@@ -49,9 +49,9 @@
     <header class="auth-form-header">
       <span class="auth-badge">
         <i class="bi bi-send-fill"></i>
-        {% translate "Письмо уже в пути" %}
+        {% trans "Письмо уже в пути" %}
       </span>
-      <h1>{% translate "Подтвердите ваш E-mail" %}</h1>
+      <h1>{% trans "Подтвердите ваш E-mail" %}</h1>
       <p>{% blocktrans %}Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы завершить регистрацию.{% endblocktrans %}</p>
     </header>
 
@@ -60,8 +60,8 @@
         <i class="bi bi-envelope-paper-heart"></i>
       </div>
       <div>
-        <p class="auth-summary-label">{% translate "Что происходит дальше" %}</p>
-        <p class="auth-summary-value">{% translate "Ссылка действует 24 часа" %}</p>
+        <p class="auth-summary-label">{% trans "Что происходит дальше" %}</p>
+        <p class="auth-summary-value">{% trans "Ссылка действует 24 часа" %}</p>
       </div>
     </div>
 
@@ -71,8 +71,8 @@
           <i class="bi bi-inbox"></i>
         </div>
         <div>
-          <strong>{% translate "Проверьте входящие" %}</strong>
-          <p class="auth-muted">{% translate "Откройте письмо от Legalize и кликните по кнопке подтверждения." %}</p>
+          <strong>{% trans "Проверьте входящие" %}</strong>
+          <p class="auth-muted">{% trans "Откройте письмо от Legalize и кликните по кнопке подтверждения." %}</p>
         </div>
       </li>
       <li class="auth-feature">
@@ -80,7 +80,7 @@
           <i class="bi bi-slash-circle"></i>
         </div>
         <div>
-          <strong>{% translate "Не нашли письмо" %}</strong>
+          <strong>{% trans "Не нашли письмо" %}</strong>
           <p class="auth-muted">{% blocktrans %}Если вы не видите письмо во входящих, проверьте папку "Спам" или "Промоакции".{% endblocktrans %}</p>
         </div>
       </li>
@@ -89,8 +89,8 @@
           <i class="bi bi-arrow-repeat"></i>
         </div>
         <div>
-          <strong>{% translate "Нужно новое письмо" %}</strong>
-          <p class="auth-muted">{% translate "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк." %}</p>
+          <strong>{% trans "Нужно новое письмо" %}</strong>
+          <p class="auth-muted">{% trans "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк." %}</p>
         </div>
       </li>
     </ul>
@@ -98,12 +98,12 @@
     {% url 'account_email' as email_url %}
     <div class="auth-actions">
       <a class="auth-link" href="{{ email_url }}">
-        <i class="bi bi-arrow-repeat me-2"></i>{% translate "Запросить новую ссылку" %}
+        <i class="bi bi-arrow-repeat me-2"></i>{% trans "Запросить новую ссылку" %}
       </a>
     </div>
 
     <div class="auth-meta">
-      <p>{% translate "Свяжитесь с нашей поддержкой, если письмо так и не пришло." %}</p>
+      <p>{% trans "Свяжитесь с нашей поддержкой, если письмо так и не пришло." %}</p>
     </div>
   </div>
 </section>
