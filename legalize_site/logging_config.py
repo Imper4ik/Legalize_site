@@ -38,6 +38,17 @@ def get_logging_config(debug=False):
                 'style': '{',
                 'datefmt': '%Y-%m-%d %H:%M:%S',
             },
+            'detailed': {
+                'format': (
+                    '\n' + '='*70 + '\n'
+                    '[{levelname}] {asctime} - {name}\n'
+                    'Module: {module}.{funcName} (Line {lineno})\n'
+                    'Message: {message}\n'
+                    + '='*70
+                ),
+                'style': '{',
+                'datefmt': '%Y-%m-%d %H:%M:%S',
+            },
             'simple': {
                 'format': '[{levelname}] {message}',
                 'style': '{',
@@ -50,6 +61,11 @@ def get_logging_config(debug=False):
                 'level': log_level,
                 'class': 'logging.StreamHandler',
                 'formatter': 'verbose',
+            },
+            'console_errors': {
+                'level': 'ERROR',
+                'class': 'logging.StreamHandler',
+                'formatter': 'detailed',
             },
             'file_app': {
                 'level': 'INFO',
@@ -86,8 +102,8 @@ def get_logging_config(debug=False):
                 'propagate': False,
             },
             'django.request': {
-                'handlers': ['console', 'file_errors'],
-                'level': 'ERROR',
+                'handlers': ['console_errors', 'file_errors'],
+                'level': 'DEBUG',
                 'propagate': False,
             },
             'django.security': {
