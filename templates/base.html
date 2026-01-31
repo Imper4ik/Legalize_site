@@ -160,7 +160,7 @@
     {% for message in messages %}
     <div class="alert alert-{{ message.tags }} alert-dismissible fade show mt-3" role="alert">
       {{ message|safe }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% trans 'Закрыть' %}"></button>
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="{% translate 'Закрыть' %}"></button>
     </div>
     {% endfor %}
   </div>
@@ -172,13 +172,14 @@
     <!-- Optional: pretty header with title/actions -->
     <div class="section-header">
       <div>
-        <h1 class="h3 mb-1">{% block page_title %}{% trans "Заголовок страницы" %}{% endblock %}</h1>
-        <div class="text-muted">{% block page_subtitle %}{% trans "Короткое описание страницы" %}{% endblock %}</div>
+        <h1 class="h3 mb-1">{% block page_title %}{% translate "Заголовок страницы" %}{% endblock %}</h1>
+        <div class="text-muted">{% block page_subtitle %}{% translate "Короткое описание страницы" %}{% endblock %}
+        </div>
       </div>
       <div class="d-flex gap-2">
         {% block page_actions %}
-        <a href="#" class="btn btn-soft"><i class="bi bi-funnel me-1"></i>{% trans "Фильтр" %}</a>
-        <a href="#" class="btn btn-gradient"><i class="bi bi-plus-lg me-1"></i>{% trans "Добавить" %}</a>
+        <a href="#" class="btn btn-soft"><i class="bi bi-funnel me-1"></i>{% translate "Фильтр" %}</a>
+        <a href="#" class="btn btn-gradient"><i class="bi bi-plus-lg me-1"></i>{% translate "Добавить" %}</a>
         {% endblock %}
       </div>
     </div>
