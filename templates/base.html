@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-{% load static %}
 {% load i18n static %}
 <html lang="{{ LANGUAGE_CODE }}">
 
@@ -8,15 +7,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark">
   <script>
-    (function () {
-      var docEl = document.documentElement;
-      var theme = "light";
-
-      try {
-        var stored = localStorage.getItem("preferredTheme");
-        // Prevent flash of unstyled content
-        const theme = localStorage.getItem('theme') || 'auto';
-        document.documentElement.setAttribute('data-theme', theme);
+    // Prevent flash of unstyled content
+    const theme = localStorage.getItem('theme') || 'auto';
+    document.documentElement.setAttribute('data-theme', theme);
   </script>
 
   <!-- Google Fonts -->
@@ -202,12 +195,12 @@
   <!-- Helpers -->
   <script src="{% static 'js/csrf.js' %}" defer></script>
   <script>
-        document.addEventListener('DOMContentLoaded', () => {
-          // Auto-dismiss alerts
-          document.querySelectorAll('.alert.alert-dismissible').forEach((el) => {
-            setTimeout(() => bootstrap.Alert.getOrCreateInstance(el).close(), 3000);
-          });
-        });
+    document.addEventListener('DOMContentLoaded', () => {
+      // Auto-dismiss alerts
+      document.querySelectorAll('.alert.alert-dismissible').forEach((el) => {
+        setTimeout(() => bootstrap.Alert.getOrCreateInstance(el).close(), 3000);
+      });
+    });
   </script>
 
   <!-- Language switcher keeps the current page while changing the prefix -->
