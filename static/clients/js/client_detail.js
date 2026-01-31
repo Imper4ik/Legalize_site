@@ -121,7 +121,7 @@
 
   function getErrorMessage(errors) {
     if (!errors) {
-      return 'Не удалось сохранить платёж. Попробуйте ещё раз.';
+      return gettext('Не удалось сохранить платёж. Попробуйте ещё раз.');
     }
 
     if (typeof errors === 'string') {
@@ -133,7 +133,7 @@
       return firstField[0];
     }
 
-    return 'Не удалось сохранить платёж. Попробуйте ещё раз.';
+    return gettext('Не удалось сохранить платёж. Попробуйте ещё раз.');
   }
 
   function initAddPaymentForm() {
@@ -164,14 +164,14 @@
           prependPaymentItem(data.html, data.payment_id);
           bootstrap.Modal.getOrCreateInstance(modal).hide();
           form.reset();
-          showPaymentAlert('Платёж успешно добавлен.');
+          showPaymentAlert(gettext('Платёж успешно добавлен.'));
           return;
         }
 
         showPaymentAlert(getErrorMessage(data.errors || data.message), 'danger');
       } catch (error) {
         console.error('Ошибка при создании платежа', error);
-        showPaymentAlert('Не удалось создать платёж. Попробуйте ещё раз.', 'danger');
+        showPaymentAlert(gettext('Не удалось создать платёж. Попробуйте ещё раз.'), 'danger');
       } finally {
         submitButton?.removeAttribute('disabled');
       }
@@ -219,14 +219,14 @@
         if (data.status === 'success' && data.html && data.payment_id) {
           updatePaymentItem(data.html, data.payment_id);
           bootstrap.Modal.getOrCreateInstance(modal).hide();
-          showPaymentAlert('Платёж успешно обновлён.');
+          showPaymentAlert(gettext('Платёж успешно обновлён.'));
           return;
         }
 
         showPaymentAlert(getErrorMessage(data.errors || data.message), 'danger');
       } catch (error) {
         console.error('Ошибка при обновлении платежа', error);
-        showPaymentAlert('Не удалось обновить платёж. Попробуйте ещё раз.', 'danger');
+        showPaymentAlert(gettext('Не удалось обновить платёж. Попробуйте ещё раз.'), 'danger');
       } finally {
         submitButton?.removeAttribute('disabled');
         parseButton?.removeAttribute('disabled');

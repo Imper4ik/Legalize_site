@@ -5,11 +5,16 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.i18n import i18n_patterns
+from django.views.i18n import JavaScriptCatalog
+from django.views.generic import RedirectView
 from clients import views
 
 urlpatterns = [
+    # Redirect root URL to default language (Fixes 500 error on /)
+    path('', RedirectView.as_view(url='/ru/', permanent=False), name='root_redirect'),
     path('admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),
+    path('jsi18n/', JavaScriptCatalog.as_view(), name='javascript-catalog'),
     # Backup trigger endpoint (не в i18n patterns)
     path('api/backup/trigger/', include([
         path('', lambda request: __import__('core.views.backup_trigger', fromlist=['trigger_backup']).trigger_backup(request)),
