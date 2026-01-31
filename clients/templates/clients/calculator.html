@@ -39,22 +39,18 @@
                             </div>
                             <div class="col-sm-3">
                                 <select class="form-select" name="tuition_currency">
-                                    <option value="PLN" {% if form_data.tuition_currency == 'PLN' %}selected{% endif %}>
+                                    <option value="PLN" {% ifequal form_data.tuition_currency "PLN" %}selected{% endifequal %}>
                                         PLN</option>
-                                    <option value="EUR" {% if form_data.tuition_currency == 'EUR' %}selected{% endif %}>
+                                    <option value="EUR" {% ifequal form_data.tuition_currency "EUR" %}selected{% endifequal %}>
                                         EUR</option>
                                 </select>
                             </div>
                             <div class="col-sm-4">
                                 <select class="form-select" name="fee_type" id="fee_type_selector">
-                                    <option value="per_month" data-months="1" {% if form_data.fee_type == 'per_month'
-                                        %}selected{% endif %}>
+                                    <option value="per_month" data-months="1" {% ifequal form_data.fee_type "per_month" %}selected{% endifequal %}>
                                         {% translate "в месяц" %}</option>
-                                    <option value="per_semester" data-months="5" {% if
-                                        form_data.fee_type == 'per_semester' %}selected{% endif %}>{% translate "за
-                                        семестр" %}</option>
-                                    <option value="per_year" data-months="12" {% if form_data.fee_type == 'per_year'
-                                        %}selected{% endif %}>
+                                    <option value="per_semester" data-months="5" {% ifequal form_data.fee_type "per_semester" %}selected{% endifequal %}>{% translate "за семестр" %}</option>
+                                    <option value="per_year" data-months="12" {% ifequal form_data.fee_type "per_year" %}selected{% endifequal %}>
                                         {% translate "за год" %}</option>
                                 </select>
                             </div>
@@ -77,9 +73,9 @@
                             <input type="number" step="0.01" class="form-control" id="rent_and_bills"
                                 name="rent_and_bills" value="{{ form_data.rent_and_bills|default:0 }}" required>
                             <select class="form-select" name="rent_currency" style="max-width: 100px;">
-                                <option value="PLN" {% if form_data.rent_currency == 'PLN' %}selected{% endif %}>PLN
+                                <option value="PLN" {% ifequal form_data.rent_currency "PLN" %}selected{% endifequal %}>PLN
                                 </option>
-                                <option value="EUR" {% if form_data.rent_currency == 'EUR' %}selected{% endif %}>EUR
+                                <option value="EUR" {% ifequal form_data.rent_currency "EUR" %}selected{% endifequal %}>EUR
                                 </option>
                             </select>
                         </div>
