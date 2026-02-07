@@ -12,6 +12,11 @@ if [ ! -f /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf ] && [ ! -f /usr/share
   apt-get install -y fonts-dejavu-core fonts-noto-core
 fi
 
+if ! command -v pg_dump >/dev/null 2>&1; then
+  apt-get update
+  apt-get install -y postgresql-client
+fi
+
 pip install --upgrade pip
 pip install -r requirements.txt
 
