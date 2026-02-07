@@ -29,11 +29,14 @@ def db_backup(request: HttpRequest) -> JsonResponse:
     backup_path = backup_dir / backup_name
 
     try:
+        # pg_dump expects DATABASE_URL via environment variable or -d flag
+        env = os.environ.copy()
         result = subprocess.run(
-            ["pg_dump", database_url, "-f", str(backup_path)],
+            ["pg_dump", "-d", database_url, "-f", str(backup_path)],
             check=True,
             capture_output=True,
             text=True,
+            env=env,
         )
         return JsonResponse({"status": "backup done", "path": str(backup_path)})
     except subprocess.CalledProcessError as e:
