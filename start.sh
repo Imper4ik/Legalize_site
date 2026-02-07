@@ -10,6 +10,29 @@ else
   echo "WARNING: Failed to install Tesseract (Permission Denied). Proceeding without it."
 fi
 
+# Ensure PostgreSQL client is version 17 to match Railway's server version
+if command -v pg_dump > /dev/null 2>&1; then
+  PG_VERSION=$(pg_dump --version | awk '{print $3}' | cut -d'.' -f1)
+  echo "Current pg_dump version: $(pg_dump --version)"
+  if [ "$PG_VERSION" != "17" ]; then
+    echo "=== Upgrading PostgreSQL client to version 17 ==="
+    if apt-get install -y curl ca-certificates gnupg; then
+      install -d /usr/share/postgresql-common/pgdg
+      curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc
+      echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+      apt-get update
+      apt-get install -y postgresql-client-17
+      echo "=== PostgreSQL client upgraded to: $(pg_dump --version) ==="
+    else
+      echo "WARNING: Failed to upgrade PostgreSQL client (Permission Denied)"
+    fi
+  else
+    echo "PostgreSQL client is already version 17"
+  fi
+else
+  echo "WARNING: pg_dump command not found"
+fi
+
 # Ensure DejaVu fonts are available at runtime (not only during build).
 # Nixpacks should include them in the final image, but we double-check and
 # install them when possible to avoid missing glyphs in PDF rendering.
