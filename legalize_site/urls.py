@@ -6,10 +6,12 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.i18n import i18n_patterns
 from clients import views
+from .cron_views import db_backup
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),
+    path('cron/db-backup/', db_backup, name='db_backup'),
 ]
 
 urlpatterns += i18n_patterns(
