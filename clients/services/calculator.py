@@ -56,9 +56,13 @@ def calculate_calculator_result(data: dict, *, today: Optional[date] = None) -> 
     months_in_period = max(int(data["months_in_period"]), 1)
     num_people = max(int(data["num_people"]), 1)
     has_border = bool(data.get("has_border"))
+    fee_type = data.get("fee_type", "per_month")
 
     tuition_fee_pln = convert_to_pln(tuition_fee, tuition_currency)
-    monthly_tuition = tuition_fee_pln
+    if fee_type != "per_month":
+        monthly_tuition = _quantize_money(tuition_fee_pln / months_in_period)
+    else:
+        monthly_tuition = tuition_fee_pln
     tuition_total = _quantize_money(monthly_tuition * months_in_period)
 
     monthly_rent_and_bills = convert_to_pln(rent_and_bills, rent_currency)
