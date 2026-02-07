@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import os
 import subprocess
 from datetime import datetime, timezone
@@ -9,26 +10,32 @@ from django.http import HttpRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
+logger = logging.getLogger(__name__)
+
 
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def db_backup(request: HttpRequest) -> JsonResponse:
-    expected_token = os.environ.get("CRON_TOKEN")
-    supplied_token = request.headers.get("X-CRON-TOKEN")
-
-    if expected_token and supplied_token != expected_token:
-        return JsonResponse({"error": "forbidden"}, status=403)
-
-    database_url = os.environ.get("DATABASE_URL") or os.environ.get("RAILWAY_DATABASE_URL")
-    if not database_url:
-        return JsonResponse({"error": "DATABASE_URL is not configured"}, status=500)
-
-    backup_dir = Path(os.environ.get("DB_BACKUP_DIR", "/tmp"))
-    backup_dir.mkdir(parents=True, exist_ok=True)
-    backup_name = f"backup-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.sql"
-    backup_path = backup_dir / backup_name
-
     try:
+        expected_token = os.environ.get("CRON_TOKEN")
+        supplied_token = request.headers.get("X-CRON-TOKEN")
+
+        if expected_token and supplied_token != expected_token:
+            logger.warning("Invalid CRON_TOKEN supplied")
+            return JsonResponse({"error": "forbidden"}, status=403)
+
+        database_url = os.environ.get("DATABASE_URL") or os.environ.get("RAILWAY_DATABASE_URL")
+        if not database_url:
+            logger.error("DATABASE_URL is not configured")
+            return JsonResponse({"error": "DATABASE_URL is not configured"}, status=500)
+
+        backup_dir = Path(os.environ.get("DB_BACKUP_DIR", "/tmp"))
+        backup_dir.mkdir(parents=True, exist_ok=True)
+        backup_name = f"backup-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.sql"
+        backup_path = backup_dir / backup_name
+
+        logger.info(f"Starting database backup to {backup_path}")
+
         # pg_dump expects DATABASE_URL via environment variable or -d flag
         env = os.environ.copy()
         result = subprocess.run(
@@ -38,10 +45,20 @@ def db_backup(request: HttpRequest) -> JsonResponse:
             text=True,
             env=env,
         )
+        
+        logger.info(f"Database backup completed successfully: {backup_path}")
         return JsonResponse({"status": "backup done", "path": str(backup_path)})
+        
     except subprocess.CalledProcessError as e:
         error_msg = f"pg_dump failed: {e.stderr if e.stderr else str(e)}"
+        logger.error(f"pg_dump CalledProcessError: {error_msg}")
         return JsonResponse({
             "error": error_msg,
             "returncode": e.returncode,
+        }, status=500)
+    except Exception as e:
+        error_msg = f"Unexpected error during backup: {type(e).__name__}: {str(e)}"
+        logger.exception(error_msg)
+        return JsonResponse({
+            "error": error_msg,
         }, status=500)
