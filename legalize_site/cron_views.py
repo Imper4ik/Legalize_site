@@ -28,9 +28,17 @@ def db_backup(request: HttpRequest) -> JsonResponse:
     backup_name = f"backup-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.sql"
     backup_path = backup_dir / backup_name
 
-    subprocess.run(
-        ["pg_dump", database_url, "-f", str(backup_path)],
-        check=True,
-    )
-
-    return JsonResponse({"status": "backup done", "path": str(backup_path)})
+    try:
+        result = subprocess.run(
+            ["pg_dump", database_url, "-f", str(backup_path)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return JsonResponse({"status": "backup done", "path": str(backup_path)})
+    except subprocess.CalledProcessError as e:
+        error_msg = f"pg_dump failed: {e.stderr if e.stderr else str(e)}"
+        return JsonResponse({
+            "error": error_msg,
+            "returncode": e.returncode,
+        }, status=500)
