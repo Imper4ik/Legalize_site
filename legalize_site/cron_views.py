@@ -28,26 +28,9 @@ def db_backup(request: HttpRequest) -> JsonResponse:
     backup_name = f"backup-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.sql"
     backup_path = backup_dir / backup_name
 
-    try:
-        subprocess.run(
-            ["pg_dump", database_url, "-f", str(backup_path)],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    except FileNotFoundError:
-        return JsonResponse(
-            {"error": "pg_dump not found in container. Install PostgreSQL client tools."},
-            status=500,
-        )
-    except subprocess.CalledProcessError as exc:
-        return JsonResponse(
-            {
-                "error": "pg_dump failed",
-                "returncode": exc.returncode,
-                "details": (exc.stderr or exc.stdout or "").strip(),
-            },
-            status=500,
-        )
+    subprocess.run(
+        ["pg_dump", database_url, "-f", str(backup_path)],
+        check=True,
+    )
 
     return JsonResponse({"status": "backup done", "path": str(backup_path)})

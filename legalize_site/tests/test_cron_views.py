@@ -1,4 +1,3 @@
-import subprocess
 from unittest.mock import patch
 
 from django.test import SimpleTestCase, override_settings
@@ -20,45 +19,6 @@ class DbBackupCronViewTests(SimpleTestCase):
 
         self.assertEqual(response.status_code, 500)
         self.assertJSONEqual(response.content, {"error": "DATABASE_URL is not configured"})
-
-    @override_settings(ROOT_URLCONF="legalize_site.urls")
-    def test_returns_500_when_pg_dump_is_not_available(self):
-        with patch.dict(
-            "os.environ",
-            {
-                "CRON_TOKEN": "secret",
-                "DATABASE_URL": "postgresql://postgres:pass@localhost:5432/app",
-            },
-            clear=True,
-        ):
-            with patch("legalize_site.cron_views.subprocess.run", side_effect=FileNotFoundError()):
-                response = self.client.post("/cron/db-backup/", HTTP_X_CRON_TOKEN="secret")
-
-        self.assertEqual(response.status_code, 500)
-        self.assertJSONEqual(
-            response.content,
-            {"error": "pg_dump not found in container. Install PostgreSQL client tools."},
-        )
-
-    @override_settings(ROOT_URLCONF="legalize_site.urls")
-    def test_returns_500_when_pg_dump_fails(self):
-        with patch.dict(
-            "os.environ",
-            {
-                "CRON_TOKEN": "secret",
-                "DATABASE_URL": "postgresql://postgres:pass@localhost:5432/app",
-            },
-            clear=True,
-        ):
-            error = subprocess.CalledProcessError(returncode=2, cmd=["pg_dump"], stderr="auth failed\n")
-            with patch("legalize_site.cron_views.subprocess.run", side_effect=error):
-                response = self.client.post("/cron/db-backup/", HTTP_X_CRON_TOKEN="secret")
-
-        self.assertEqual(response.status_code, 500)
-        self.assertJSONEqual(
-            response.content,
-            {"error": "pg_dump failed", "returncode": 2, "details": "auth failed"},
-        )
 
     @override_settings(ROOT_URLCONF="legalize_site.urls")
     def test_runs_pg_dump_and_returns_path(self):
@@ -86,5 +46,3 @@ class DbBackupCronViewTests(SimpleTestCase):
         self.assertEqual(args[0][2], "-f")
         self.assertEqual(args[0][3], payload["path"])
         self.assertTrue(kwargs["check"])
-        self.assertTrue(kwargs["capture_output"])
-        self.assertTrue(kwargs["text"])
