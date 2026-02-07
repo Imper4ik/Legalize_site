@@ -3,16 +3,6 @@
 # Use the system Python provided by Railway's Nixpacks
 nixPkgs = ["python312", "pip", "gettext", "dejavu_fonts", "nix"]
 aptPkgs = ["tesseract-ocr", "tesseract-ocr-eng", "tesseract-ocr-pol", "poppler-utils"]
-cmds = [
-  # Install PostgreSQL 17 client from official PostgreSQL repository
-  "apt-get update",
-  "apt-get install -y curl ca-certificates",
-  "install -d /usr/share/postgresql-common/pgdg",
-  "curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc",
-  "sh -c 'echo \"deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main\" > /etc/apt/sources.list.d/pgdg.list'",
-  "apt-get update",
-  "apt-get install -y postgresql-client-17"
-]
 
 [phases.install]
 cmds = [
