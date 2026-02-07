@@ -1,26 +1,13 @@
 from __future__ import annotations
 
 import os
-import shutil
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
-from django.core.management import call_command
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-
-
-def _env_flag(name: str, default: str = "true") -> bool:
-    return os.environ.get(name, default).lower() in {"1", "true", "yes", "on"}
-
-
-def _run_dumpdata_fallback(backup_path: Path) -> Path:
-    json_path = backup_path.with_suffix(".json")
-    with json_path.open("w", encoding="utf-8") as output_file:
-        call_command("dumpdata", indent=2, stdout=output_file)
-    return json_path
 
 
 @csrf_exempt
@@ -41,41 +28,9 @@ def db_backup(request: HttpRequest) -> JsonResponse:
     backup_name = f"backup-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.sql"
     backup_path = backup_dir / backup_name
 
-    pg_dump_binary = os.environ.get("PG_DUMP_BINARY", "pg_dump")
-    if shutil.which(pg_dump_binary) is None:
-        if _env_flag("ALLOW_JSON_BACKUP_FALLBACK", "true"):
-            json_backup_path = _run_dumpdata_fallback(backup_path)
-            return JsonResponse(
-                {
-                    "status": "backup done",
-                    "format": "json",
-                    "note": "pg_dump missing; used Django dumpdata fallback",
-                    "path": str(json_backup_path),
-                }
-            )
-        return JsonResponse(
-            {
-                "error": "pg_dump not found in container. Install PostgreSQL client tools.",
-                "binary": pg_dump_binary,
-            },
-            status=500,
-        )
+    subprocess.run(
+        ["pg_dump", database_url, "-f", str(backup_path)],
+        check=True,
+    )
 
-    try:
-        subprocess.run(
-            [pg_dump_binary, database_url, "-f", str(backup_path)],
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-    except subprocess.CalledProcessError as exc:
-        return JsonResponse(
-            {
-                "error": "pg_dump failed",
-                "returncode": exc.returncode,
-                "details": (exc.stderr or exc.stdout or "").strip(),
-            },
-            status=500,
-        )
-
-    return JsonResponse({"status": "backup done", "format": "sql", "path": str(backup_path)})
+    return JsonResponse({"status": "backup done", "path": str(backup_path)})
