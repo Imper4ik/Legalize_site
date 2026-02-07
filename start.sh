@@ -4,7 +4,7 @@ set -o errexit
 # EXPERIMENTAL: Attempt to install Tesseract at runtime
 # This usually fails due to lack of root permissions in the container
 echo "Attempting to install Tesseract via start.sh..."
-if apt-get update && apt-get install -y tesseract-ocr tesseract-ocr-eng tesseract-ocr-pol poppler-utils; then
+if apt-get update && apt-get install -y tesseract-ocr tesseract-ocr-eng tesseract-ocr-pol poppler-utils postgresql-client; then
   echo "SUCCESS: Tesseract installed."
 else
   echo "WARNING: Failed to install Tesseract (Permission Denied). Proceeding without it."
