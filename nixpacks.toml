@@ -1,7 +1,7 @@
 [phases.setup]
 # Force cache invalidation
 # Use the system Python provided by Railway's Nixpacks
-nixPkgs = ["python312", "pip", "gettext", "dejavu_fonts", "nix"]
+nixPkgs = ["python312", "pip", "gettext", "dejavu_fonts", "nix", "postgresql"]
 aptPkgs = ["tesseract-ocr", "tesseract-ocr-eng", "tesseract-ocr-pol", "poppler-utils"]
 
 [phases.install]
