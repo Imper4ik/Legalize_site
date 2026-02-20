@@ -308,40 +308,11 @@ def send_expiring_documents_email(client: Client, documents: list[Document]) -> 
 
     language = _get_preferred_language(client)
     today = timezone.localdate()
-    cutoff = today + timedelta(days=7)
-    all_documents = (
-        client.documents.filter(expiry_date__isnull=False)
-        .order_by("expiry_date")
-    )
-    expired_documents = [
-        document for document in all_documents if document.expiry_date and document.expiry_date < today
-    ]
-    expiring_soon_documents = [
-        document
-        for document in all_documents
-        if document.expiry_date and today <= document.expiry_date <= cutoff
-    ]
-    valid_documents = [
-        document for document in all_documents if document.expiry_date and document.expiry_date > cutoff
-    ]
-    checklist = client.get_document_checklist() or []
-    missing_documents = []
-
-    for item in checklist:
-        if item.get("is_uploaded"):
-            continue
-
-        latest_document = (item.get("documents") or [None])[0]
-        missing_documents.append(
-            {
-                "name": item.get("name"),
-                "expiry_date": getattr(latest_document, "expiry_date", None),
-            }
-        )
-
-    today = timezone.localdate()
     soon_days = 3
     soon_cutoff = today + timedelta(days=soon_days)
+    cutoff = today + timedelta(days=7)
+
+    # Classify the supplied documents list
     expired_documents = []
     expiring_documents = []
     for document in sorted(documents, key=lambda doc: doc.expiry_date or today):
@@ -353,16 +324,35 @@ def send_expiring_documents_email(client: Client, documents: list[Document]) -> 
             expiring_documents.append(document)
 
     expiring_soon_documents = [
-        document for document in expiring_documents if document.expiry_date and document.expiry_date <= soon_cutoff
+        doc for doc in expiring_documents if doc.expiry_date and doc.expiry_date <= soon_cutoff
     ]
     expiring_later_documents = [
-        document for document in expiring_documents if document.expiry_date and document.expiry_date > soon_cutoff
+        doc for doc in expiring_documents if doc.expiry_date and doc.expiry_date > soon_cutoff
     ]
+
+    # All documents with expiry from the client (for valid/expired context)
+    all_client_docs = client.documents.filter(expiry_date__isnull=False).order_by("expiry_date")
+    valid_documents = [doc for doc in all_client_docs if doc.expiry_date and doc.expiry_date > cutoff]
+
+    # Missing documents from the checklist
+    checklist = client.get_document_checklist() or []
+    missing_documents = []
+    for item in checklist:
+        if item.get("is_uploaded"):
+            continue
+        latest_document = (item.get("documents") or [None])[0]
+        missing_documents.append(
+            {
+                "name": item.get("name"),
+                "expiry_date": getattr(latest_document, "expiry_date", None),
+            }
+        )
 
     context = {
         "client": client,
         "expired_documents": expired_documents,
         "expiring_soon_documents": expiring_soon_documents,
+        "expiring_later_documents": expiring_later_documents,
         "valid_documents": valid_documents,
         "missing_documents": missing_documents,
         "today": today,

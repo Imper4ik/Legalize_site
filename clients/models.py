@@ -1,5 +1,4 @@
 import hashlib
-from functools import lru_cache
 
 from django.db import connection, models
 from django.urls import reverse
@@ -16,8 +15,16 @@ DOCUMENT_LABEL_ALIASES: dict[str, list[str]] = {
 }
 
 
-@lru_cache(maxsize=1)
 def _submission_has_localized_fields() -> bool:
+    """Check once per process lifetime whether the Submission table has locale columns.
+
+    Uses Django's low-level cache with a 5-minute TTL so the result
+    stays accurate after migrations without requiring a process restart.
+    """
+    from django.core.cache import cache
+    cached = cache.get("_submission_has_localized_fields")
+    if cached is not None:
+        return cached
     table_name = "submissions_submission"
     try:
         with connection.cursor() as cursor:
@@ -26,8 +33,11 @@ def _submission_has_localized_fields() -> bool:
                 for column in connection.introspection.get_table_description(cursor, table_name)
             }
     except Exception:
+        cache.set("_submission_has_localized_fields", False, timeout=60)
         return False
-    return {"name_pl", "name_en", "name_ru"}.issubset(columns)
+    result = {"name_pl", "name_en", "name_ru"}.issubset(columns)
+    cache.set("_submission_has_localized_fields", result, timeout=300)
+    return result
 
 
 def _normalize_document_label(value: str) -> str:
@@ -43,7 +53,6 @@ def _document_label_variants(doc_type: str) -> set[str]:
     for language_code in language_codes:
         with translation.override(language_code):
             variants.add(_normalize_document_label(DocumentType(doc_type).label))
-    variants.add(_normalize_document_label(DocumentType(doc_type).label))
     for alias in DOCUMENT_LABEL_ALIASES.get(doc_type, []):
         variants.add(_normalize_document_label(alias))
     return {variant for variant in variants if variant}

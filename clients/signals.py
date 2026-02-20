@@ -1,9 +1,13 @@
 # clients/signals.py
+import logging
+
 from django.utils.translation import gettext as _
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
 from .models import Payment, Reminder, Client, Document
+
+logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=Payment)
@@ -139,8 +143,5 @@ def compress_document_image_on_upload(sender, instance, **kwargs):
         if compressed_file:
             instance.file = compressed_file
     except Exception:
-        # If compression fails, keep original file
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.warning(f"Failed to compress document {instance.file.name}, keeping original")
+        logger.warning("Failed to compress document %s, keeping original", instance.file.name)
 

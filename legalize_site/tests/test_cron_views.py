@@ -16,8 +16,8 @@ class DbBackupCronViewTests(SimpleTestCase):
     @override_settings(ROOT_URLCONF="legalize_site.urls")
     @patch("legalize_site.cron_views.shutil.which", return_value="/usr/bin/pg_dump")
     def test_returns_500_when_database_url_missing(self, mock_which):
-        with patch.dict("os.environ", {}, clear=True):
-            response = self.client.get("/cron/db-backup/")
+        with patch.dict("os.environ", {"CRON_TOKEN": "secret"}, clear=True):
+            response = self.client.get("/cron/db-backup/", HTTP_X_CRON_TOKEN="secret")
 
         self.assertEqual(response.status_code, 500)
         self.assertJSONEqual(response.content, {"error": "DATABASE_URL is not configured"})

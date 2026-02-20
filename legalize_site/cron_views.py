@@ -21,7 +21,7 @@ def db_backup(request: HttpRequest) -> JsonResponse:
         expected_token = os.environ.get("CRON_TOKEN")
         supplied_token = request.headers.get("X-CRON-TOKEN")
 
-        if expected_token and supplied_token != expected_token:
+        if not expected_token or supplied_token != expected_token:
             logger.warning("Invalid CRON_TOKEN supplied")
             return JsonResponse({"error": "forbidden"}, status=403)
 
