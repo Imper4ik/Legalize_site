@@ -1829,3 +1829,47 @@ msgstr "Approved"
 #: clients/models.py:156
 msgid "Отклонён"
 msgstr "Rejected"
+
+
+msgid "Печать обложки"
+msgstr "Print Cover"
+
+
+msgid "Загрузить Wezwanie"
+msgstr "Upload Wezwanie"
+
+
+msgid "Дата фактической оплаты"
+msgstr "Actual Payment Date"
+
+
+msgid "ID транзакции"
+msgstr "Transaction ID"
+
+
+msgid "Подтверждение данных wezwanie"
+msgstr "Wezwanie Data Confirmation"
+
+
+msgid "Проверьте распознанные данные перед сохранением. Все поля доступны для редактирования."
+msgstr "Verify the recognized data before saving. All fields are editable."
+
+
+msgid "Распознать wezwanie"
+msgstr "Recognize Wezwanie"
+
+
+msgid "Показать исходный текст (Debug)"
+msgstr "Show Source Text (Debug)"
+
+
+msgid "Исходный текст"
+msgstr "Source Text"
+
+
+msgid "Вызов (Wezwanie)"
+msgstr "Summons (Wezwanie)"
+
+
+msgid "Просьба об ускорении"
+msgstr "Acceleration Request"
