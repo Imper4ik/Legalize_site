@@ -48,8 +48,10 @@
 
         <div class="border-top pt-3 mt-3 text-center">
           <small class="text-muted">
-            {% blocktrans trimmed %}Уже есть аккаунт? <a class="ms-2" href="{% url 'account_login' %}">Войти</a>{%
-            endblocktrans %}
+            {% url 'account_login' as login_url %}
+            {% blocktrans trimmed with login_url=login_url %}
+            Уже есть аккаунт? <a class="ms-2" href="{{ login_url }}">Войти</a>
+            {% endblocktrans %}
           </small>
         </div>
 

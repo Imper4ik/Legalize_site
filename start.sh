@@ -81,16 +81,6 @@ export DJANGO_SUPERUSER_PASSWORD="$SUPERUSER_PASSWORD"
 
 python manage.py migrate --no-input
 
-# Ensure translation catalogs are compiled so UI strings and checklist items
-# render in the selected language. This is a no-op if msgfmt is unavailable
-# (e.g., in minimal containers) but prevents untranslated Polish labels when
-# it is present.
-if command -v msgfmt >/dev/null 2>&1; then
-  python manage.py compilemessages --ignore "venv" --ignore ".venv" || \
-    echo "Warning: compilemessages failed; using existing translations"
-else
-  echo "msgfmt not found; skipping compilemessages"
-fi
 
 # === Одноразовое создание суперюзера через env-переменные ===
 if [ "$DJANGO_SUPERUSER_EMAIL" ] && [ "$DJANGO_SUPERUSER_PASSWORD" ]; then
