@@ -109,12 +109,12 @@ class DocumentUploadForm(forms.ModelForm):
 class PaymentForm(forms.ModelForm):
     payment_date = forms.DateField(
         required=False,
-        input_formats=['%d-%m-%Y', '%Y-%m-%d'],
+        input_formats=['%d.%m.%Y', '%d-%m-%Y', '%Y-%m-%d'],
         widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
     )
     due_date = forms.DateField(
         required=False,
-        input_formats=['%d-%m-%Y', '%Y-%m-%d'],
+        input_formats=['%d.%m.%Y', '%d-%m-%Y', '%Y-%m-%d'],
         widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
     )
 
@@ -177,6 +177,8 @@ class DocumentRequirementAddForm(forms.Form):
         return name
 
     def save(self):
+        if not hasattr(self, 'cleaned_data'):
+            raise RuntimeError("Call is_valid() before save()")
         position = DocumentRequirement.objects.filter(application_purpose=self.purpose).count()
         return DocumentRequirement.objects.create(
             application_purpose=self.purpose,
@@ -281,6 +283,8 @@ class DocumentChecklistForm(forms.Form):
                 requirement.save(update_fields=['is_required'])
 
         return len(selected_codes)
+
+
 class CalculatorForm(forms.Form):
     total_end_date = forms.DateField(
         input_formats=['%d-%m-%Y'],

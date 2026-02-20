@@ -243,7 +243,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
         if context['doc_type'] == 'mazowiecki_application':
             client = context['client']
             application_date = client.submission_date or client.created_at.date()
-            attachment_names = self._get_attachment_names()
+            attachment_names = self._get_attachment_names(client)
             attachment_count = self.request.GET.get('attachment_count')
             if not attachment_count:
                 filled_attachments = [name for name in attachment_names if name]
@@ -274,19 +274,16 @@ class ClientDocumentPrintView(ClientPrintBaseView):
             )
         return context
 
-    def _get_attachment_names(self) -> list[str]:
+    def _get_attachment_names(self, client) -> list[str]:
         attachments = [name.strip() for name in self.request.GET.getlist('attachments') if name.strip()]
-        
-        # Auto-add decision follow-up reminder if deadline has passed
-        client = self.get_object()
+
         today = timezone.localdate()
         if client.decision_date and client.decision_date < today:
             days_overdue = (today - client.decision_date).days
             reminder_text = f"Prośba o przyspieszenie wydania decyzji (termin był {client.decision_date.strftime('%d.%m.%Y')}, {days_overdue} dni temu)"
-            # Add at the beginning if not already in list
             if not any("przyspieszenie" in att.lower() for att in attachments):
                 attachments.insert(0, reminder_text)
-        
+
         minimum_slots = 1
         if len(attachments) < minimum_slots:
             attachments.extend([''] * (minimum_slots - len(attachments)))
@@ -331,9 +328,10 @@ class DocumentChecklistManageView(StaffRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['current_purpose'] = self.get_purpose()
+        purpose = self.get_purpose()  # вызывается один раз
+        context['current_purpose'] = purpose
         context['purpose_choices'] = list(Submission.objects.all())
-        context['add_form'] = DocumentRequirementAddForm(purpose=self.get_purpose())
+        context['add_form'] = DocumentRequirementAddForm(purpose=purpose)
         context['submission_edit_forms'] = [
             (submission, SubmissionForm(instance=submission, prefix=f"submission-{submission.id}"))
             for submission in context['purpose_choices']
@@ -341,12 +339,12 @@ class DocumentChecklistManageView(StaffRequiredMixin, FormView):
         purpose_lookup = {submission.slug: submission.name for submission in context['purpose_choices']}
         purpose_labels = dict(Client.APPLICATION_PURPOSE_CHOICES)
         context['current_purpose_label'] = purpose_lookup.get(
-            context['current_purpose'],
-            purpose_labels.get(context['current_purpose'], context['current_purpose']),
+            purpose,
+            purpose_labels.get(purpose, purpose),
         )
         context['submission_form'] = SubmissionForm()
         requirements = DocumentRequirement.objects.filter(
-            application_purpose=self.get_purpose()
+            application_purpose=purpose
         ).order_by('position', 'id')
         context['editable_requirements'] = [
             (
