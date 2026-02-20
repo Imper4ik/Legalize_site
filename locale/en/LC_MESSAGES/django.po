@@ -1953,3 +1953,55 @@ msgstr "Document Name (RU)"
 
 msgid "Обязательный документ"
 msgstr "Required Document"
+
+
+msgid "Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и периодам"
+msgstr "Check and generate active reminders, filter by client and period"
+
+
+msgid "Все хорошо"
+msgstr "All good"
+
+
+msgid "Всё хорошо"
+msgstr "All good"
+
+
+msgid "Скоро истекает (в течение 3 дней)"
+msgstr "Expiring soon (within 3 days)"
+
+
+msgid "Истекло"
+msgstr "Expired"
+
+
+msgid "Не донесены документы"
+msgstr "Missing documents"
+
+
+msgid "Статусы"
+msgstr "Statuses"
+
+
+msgid "Скоро истекает"
+msgstr "Expiring soon"
+
+
+msgid "Открыть клиента"
+msgstr "Open client"
+
+
+msgid "Отправить письмо"
+msgstr "Send email"
+
+
+msgid "Недостающие документы"
+msgstr "Missing documents"
+
+
+msgid "Истекающие документы"
+msgstr "Expiring documents"
+
+
+msgid "Нет недостающих документов."
+msgstr "No missing documents."
