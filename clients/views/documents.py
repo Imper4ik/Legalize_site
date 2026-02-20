@@ -51,10 +51,7 @@ def add_document(request, client_id, doc_type):
             auto_updates: list[str] = []
             parse_requested = request.POST.get("parse_wezwanie") == "1"
             is_wezwanie = doc_type == DocumentType.WEZWANIE or doc_type == DocumentType.WEZWANIE.value
-    # Check if the document type is Wezwanie (using ID or string comparison depending on implementation)
-    # Ideally should use checking against DocumentType.WEZWANIE but we rely on form/hidden input often.
-    # Here we rely on helper logic or simple check.
-    
+
             if is_wezwanie and parse_requested:
                 try:
                     parsed = parse_wezwanie(document.file.path)
@@ -127,7 +124,7 @@ def add_document(request, client_id, doc_type):
                     },
                 )
 
-            if is_wezwanie:
+            if is_wezwanie and not parse_requested:
                 parsed = parse_wezwanie(document.file.path)
 
                 updated_fields = []
