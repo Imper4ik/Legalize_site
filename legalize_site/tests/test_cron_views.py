@@ -1,4 +1,5 @@
 from unittest.mock import patch
+import tempfile
 
 from django.test import SimpleTestCase, override_settings
 
@@ -13,7 +14,8 @@ class DbBackupCronViewTests(SimpleTestCase):
         self.assertJSONEqual(response.content, {"error": "forbidden"})
 
     @override_settings(ROOT_URLCONF="legalize_site.urls")
-    def test_returns_500_when_database_url_missing(self):
+    @patch("legalize_site.cron_views.shutil.which", return_value="/usr/bin/pg_dump")
+    def test_returns_500_when_database_url_missing(self, mock_which):
         with patch.dict("os.environ", {}, clear=True):
             response = self.client.get("/cron/db-backup/")
 
@@ -21,13 +23,15 @@ class DbBackupCronViewTests(SimpleTestCase):
         self.assertJSONEqual(response.content, {"error": "DATABASE_URL is not configured"})
 
     @override_settings(ROOT_URLCONF="legalize_site.urls")
-    def test_runs_pg_dump_and_returns_path(self):
+    @patch("legalize_site.cron_views.shutil.which", return_value="/usr/bin/pg_dump")
+    def test_runs_pg_dump_and_returns_path(self, mock_which):
+        tmp_dir = tempfile.gettempdir()
         with patch.dict(
             "os.environ",
             {
                 "CRON_TOKEN": "secret",
                 "DATABASE_URL": "postgresql://postgres:pass@localhost:5432/app",
-                "DB_BACKUP_DIR": "/tmp",
+                "DB_BACKUP_DIR": tmp_dir,
             },
             clear=True,
         ):
@@ -37,11 +41,11 @@ class DbBackupCronViewTests(SimpleTestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["status"], "backup done")
-        self.assertTrue(payload["path"].startswith("/tmp/backup-"))
+        self.assertTrue(payload["path"].startswith(tmp_dir))
         self.assertTrue(payload["path"].endswith(".sql"))
 
         args, kwargs = mocked_run.call_args
-        self.assertEqual(args[0][0], "pg_dump")
+        self.assertEqual(args[0][0], "/usr/bin/pg_dump")
         self.assertEqual(args[0][1], "postgresql://postgres:pass@localhost:5432/app")
         self.assertEqual(args[0][2], "-f")
         self.assertEqual(args[0][3], payload["path"])

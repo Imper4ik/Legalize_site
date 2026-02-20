@@ -261,7 +261,7 @@ def _extract_image_text(path: Path) -> str:
             text_out = pytesseract.image_to_string(processed_img, lang='pol+eng')
             logger.debug("Extracted image OCR text length=%s", len(text_out))
             return text_out
-    except Exception as e:  # pragma: no cover - defensive logging
+    except Exception:  # pragma: no cover - defensive logging
         logger.exception("Не удалось прочитать изображение %s через OCR", path)
         return ""
 
@@ -467,33 +467,34 @@ def _find_decision_date(text: str) -> date | None:
 def _find_full_name(text: str) -> str | None:
     """Extract full name from wezwanie (Polish names)."""
     name_patterns = [
-        # Pattern: "Pan/Pani Anna Nowak" (Strict Case for name parts to avoid 'ul.')
+        # Pattern: "Pan/Pani Anna Nowak" — stops at newline / non-name char
         re.compile(
-            r"(?:Pan/Pani|Pan|Pani|Panna|Pan/i|Panli|Mr|Mrs)\.?\s+"
+            r"(?:Pan/Pani|Pan|Pani|Panna|Pan/i|Panli|Mr|Mrs)\.?[ \t]+"
             r"([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+"
-            r"(?:\s+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+|\s+[A-ZĄĆĘŁŃÓŚŹŻ]{2,}){1,3})",
+            r"(?:[ \t]+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+|[ \t]+[A-ZĄĆĘŁŃÓŚŹŻ]{2,}){1,3})",
             re.UNICODE,
         ),
         # Pattern: "Adresat: Jan Kowalski"
         re.compile(
-            r"(?:Adresat|Dla|Do)\s*[:\-]?\s+"
-            r"([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+){1,3})",
+            r"(?:Adresat|Dla|Do)\s*[:\-]?[ \t]+"
+            r"([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+(?:[ \t]+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+){1,3})",
             re.UNICODE,
         ),
         # Pattern: "Imię i nazwisko: Jan Kowalski"
-        re.compile(r"(?:imię i nazwisko|imi[ęe] oraz nazwisko)[:\s]+([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+(?:\s+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+)+)", re.IGNORECASE | re.UNICODE),
+        re.compile(r"(?:imię i nazwisko|imi[ęe] oraz nazwisko)[:\s]+([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+(?:[ \t]+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+)+)", re.IGNORECASE | re.UNICODE),
         # Pattern: "Name: Jan Kowalski"
-        re.compile(r"(?:name|full name)[:\s]+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)", re.IGNORECASE),
+        re.compile(r"(?:name|full name)[:\s]+([A-Z][a-z]+(?:[ \t]+[A-Z][a-z]+)+)", re.IGNORECASE),
     ]
-    
+
     for pattern in name_patterns:
         match = pattern.search(text)
         if match:
-            name = match.group(1).strip()
+            # Strip and take only the first line to avoid capturing following lines
+            name = match.group(1).strip().splitlines()[0].strip()
             # Validate: should have at least 2 words
             if len(name.split()) >= 2:
                 return name
-    
+
     return None
 
 

@@ -58,7 +58,7 @@ def add_document(request, client_id, doc_type):
             if is_wezwanie and parse_requested:
                 try:
                     parsed = parse_wezwanie(document.file.path)
-                except Exception as e:
+                except Exception:
                     logger.exception("Wezwanie parsing failed for document %s", document.id)
                     raise
 

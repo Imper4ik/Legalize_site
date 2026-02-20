@@ -1,6 +1,5 @@
 import os
 import django
-from django.conf import settings
 
 # Configure Django settings
 import sys

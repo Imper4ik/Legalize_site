@@ -51,7 +51,7 @@ def db_backup(request: HttpRequest) -> JsonResponse:
 
         # Run pg_dump with the corrected DATABASE_URL
         result = subprocess.run(
-            [pg_dump_path, "-d", database_url, "-f", str(backup_path)],
+            [pg_dump_path, database_url, "-f", str(backup_path)],
             check=True,
             capture_output=True,
             text=True,
@@ -59,7 +59,7 @@ def db_backup(request: HttpRequest) -> JsonResponse:
         
         logger.info(f"Database backup completed successfully: {backup_path}")
         return JsonResponse({
-            "status": "backup done", 
+            "status": "backup done",
             "path": str(backup_path),
             "size_bytes": backup_path.stat().st_size if backup_path.exists() else 0,
         })

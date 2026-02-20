@@ -12,7 +12,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic import ListView
 
 from clients.models import Client, Reminder
-from clients.services.notifications import send_expiring_documents_email, send_missing_documents_email
+from clients.services.notifications import send_expiring_documents_email
 from clients.views.base import StaffRequiredMixin, staff_required_view
 
 

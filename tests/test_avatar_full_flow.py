@@ -2,7 +2,7 @@ import io
 import datetime
 from decimal import Decimal
 from PIL import Image
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from django.test import TestCase, override_settings
 from django.contrib.auth import get_user_model
@@ -119,12 +119,13 @@ class AvatarFullFlowTest(TestCase):
         today = datetime.date.today()
         payment.status = 'partial'
         payment.due_date = today
-        payment.save() # Triggers signal
-        
-        reminder = Reminder.objects.filter(payment=payment).first()
-        self.assertIsNotNone(reminder, "Reminder should be created for partial payment with due_date")
-        self.assertEqual(reminder.due_date, today)
-        self.assertIn("Второй платёж", reminder.title)
+        with translation.override('ru'):
+            payment.save() # Triggers signal
+            
+            reminder = Reminder.objects.filter(payment=payment).first()
+            self.assertIsNotNone(reminder, "Reminder should be created for partial payment with due_date")
+            self.assertEqual(reminder.due_date, today)
+            self.assertIn("Второй платёж", reminder.title)
         
         # 3. Delete Payment -> Should delete Reminder
         payment_id = payment.id

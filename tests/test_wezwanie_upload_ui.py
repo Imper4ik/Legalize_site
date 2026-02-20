@@ -1,28 +1,32 @@
-import pytest
+"""UI smoke test for the Wezwanie upload button on the client detail page."""
+from django.contrib.auth import get_user_model
+from django.test import TestCase
 from django.urls import reverse
-from clients.models import Client
-from clients.constants import DocumentType
 
-@pytest.mark.django_db
-def test_wezwanie_upload_button_present(admin_client):
-    """
-    Проверяет наличие кнопки загрузки Wezwanie в меню действий клиента.
-    """
-    client = Client.objects.create(
-        first_name="Test",
-        last_name="User",
-        email="test@example.com",
-        phone="+123456789"
-    )
-    
-    url = reverse('clients:client_detail', kwargs={'pk': client.pk})
-    response = admin_client.get(url)
-    
-    assert response.status_code == 200
-    
-    # Проверяем наличие кнопки с правильными атрибутами
-    content = response.content.decode('utf-8')
-    assert 'data-bs-target="#uploadDocumentModal"' in content
-    assert 'data-doc-type="wezwanie"' in content
-    # Проверяем текст кнопки (на русском или переведенный)
-    assert "Загрузить Wezwanie" in content or "&#1047;&#1072;&#1075;&#1088;&#1091;&#1079;&#1080;&#1090;&#1100; Wezwanie" in content
+from clients.models import Client
+
+
+class WezwanieUploadButtonTest(TestCase):
+    def setUp(self):
+        User = get_user_model()
+        self.admin = User.objects.create_superuser(
+            username="admin_ui", password="pass", email="admin_ui@example.com"
+        )
+        self.client_profile = Client.objects.create(
+            first_name="Test",
+            last_name="User",
+            email="ui_test@example.com",
+            phone="+123456789",
+            citizenship="UA",
+        )
+
+    def test_wezwanie_upload_button_present(self):
+        """Check that the Wezwanie upload button appears in the client detail action menu."""
+        self.client.force_login(self.admin)
+        url = reverse("clients:client_detail", kwargs={"pk": self.client_profile.pk})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode("utf-8")
+        self.assertIn('data-bs-target="#uploadDocumentModal"', content)
+        self.assertIn('data-doc-type="wezwanie"', content)

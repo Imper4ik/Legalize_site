@@ -5,12 +5,9 @@ import io
 import datetime
 from decimal import Decimal
 from PIL import Image
-from unittest.mock import patch
 
 from django.test import TestCase, Client as TestClient, override_settings
 from django.contrib.auth import get_user_model
-from django.urls import reverse
-from django.utils import translation
 
 from clients.models import Client, Payment, Document, DocumentRequirement, Reminder
 from clients.constants import DocumentType
@@ -76,7 +73,7 @@ class RealUserFlowTest(TestCase):
         
         reminder = Reminder.objects.filter(payment=payment).first()
         self.assertIsNotNone(reminder)
-        print(f"[OK] Payment partial and reminder created: {reminder.title}")
+        print("[OK] Payment partial and reminder created.")
 
     def test_05_image_compression_webp(self):
         print("\n[TEST 5] Testing image compression to WebP...")
