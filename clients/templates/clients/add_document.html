@@ -12,8 +12,11 @@
       </div>
       <div class="card-body">
         <h5 class="card-title">{% blocktrans %}Добавить документ: "{{ document_type_display }}"{% endblocktrans %}</h5>
-        <p class="card-text">{% blocktrans %}Для клиента: <strong>{{ client.first_name }} {{ client.last_name
-            }}</strong>{% endblocktrans %}</p>
+        <p class="card-text">
+          {% blocktrans %}
+          Для клиента: <strong>{{ client.first_name }} {{ client.last_name }}</strong>
+          {% endblocktrans %}
+        </p>
 
         <form method="post" enctype="multipart/form-data" class="mt-4">
           {% csrf_token %}

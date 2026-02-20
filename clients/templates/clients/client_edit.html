@@ -1,16 +1,18 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans %}Редактировать: {{ client.first_name }} {{ client.last_name }}{% endblocktrans %}{%
-endblock %}
+{% block title %}
+{% blocktrans %}Редактировать: {{ client.first_name }} {{ client.last_name }}{% endblocktrans %}
+{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-lg-10">
     <form method="post" class="card shadow-sm">
       <div class="card-header">
-        <h4 class="mb-0">{% blocktrans %}Редактировать: {{ client.first_name }} {{ client.last_name }}{% endblocktrans
-          %}</h4>
+        <h4 class="mb-0">
+          {% blocktrans %}Редактировать: {{ client.first_name }} {{ client.last_name }}{% endblocktrans %}
+        </h4>
       </div>
       <div class="card-body">
         {% csrf_token %}

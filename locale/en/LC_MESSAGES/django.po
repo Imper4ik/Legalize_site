@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Legalize Site 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-07 11:19+0100\n"
+"POT-Creation-Date: 2026-02-20 20:59+0100\n"
 "PO-Revision-Date: 2024-06-20 00:00+0000\n"
 "Last-Translator: Legalize Team <noreply@legalize.example>\n"
 "Language-Team: Legalize Team\n"
@@ -17,405 +17,590 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: clients/constants.py:8 clients/constants.py:20 clients/models.py:100
-msgid "Фотографии"
-msgstr "Photographs"
-
-#: clients/constants.py:9 clients/constants.py:22 clients/models.py:101
-msgid "Подтверждение оплаты"
-msgstr "Payment confirmation"
-
-#: clients/constants.py:10 clients/constants.py:21 clients/models.py:102
-msgid "Паспорт"
-msgstr "Passport"
-
-#: clients/constants.py:11 clients/models.py:103
-msgid "Справка о зачислении"
-msgstr "Certificate of enrollment"
-
-#: clients/constants.py:12 clients/models.py:104
-msgid "Справка об оплате обучения"
-msgstr "Proof of tuition fee payment"
-
-#: clients/constants.py:13 clients/constants.py:25 clients/models.py:105
-msgid "Медицинская страховка"
-msgstr "Health insurance"
-
-#: clients/constants.py:14 clients/models.py:106
-msgid "Подтверждение адреса"
-msgstr "Proof of address"
-
-#: clients/constants.py:15 clients/models.py:107
-msgid "Подтверждение финансов"
-msgstr "Proof of financial means"
-
-#: clients/constants.py:23 clients/models.py:108
-#: clients/constants.py:24 clients/models.py:109
-msgid "Informacja starosty"
-msgstr "Starosta's information"
-
-#: clients/constants.py:26 clients/models.py:110
-msgid "Трудовой договор"
-msgstr "Employment contract"
-
-#: clients/constants.py:27 clients/models.py:111
-msgid "PIT-37 / Zaświadczenie o niezaleganiu"
-msgstr "PIT-37 / Certificate of no arrears"
-
-#: clients/models.py:11
-msgid "Учёба"
-msgstr "Study"
-
-#: clients/models.py:12 clients/models.py:143
-msgid "Работа"
-msgstr "Work"
-
-#: clients/models.py:13
-msgid "Воссоединение семьи"
-msgstr "Family reunification"
-
-#: clients/models.py:16
-msgid "Польский"
-msgstr "Polish"
-
-#: clients/models.py:17
-msgid "Английский"
-msgstr "English"
-
-#: clients/models.py:18
-msgid "Русский"
-msgstr "Russian"
-
-#: clients/models.py:21
-msgid "Новый"
-msgstr "New"
-
-#: clients/models.py:22
-msgid "В ожидании"
-msgstr "Pending"
-
-#: clients/models.py:23
-msgid "Одобрен"
-msgstr "Approved"
-
-#: clients/models.py:24
-msgid "Отклонён"
-msgstr "Rejected"
-
-#: clients/models.py:28
-msgid "Имя"
-msgstr "First Name"
-
-#: clients/models.py:29
-msgid "Фамилия"
-msgstr "Last Name"
-
-#: clients/models.py:30
-msgid "Гражданство"
-msgstr "Citizenship"
-
-#: clients/models.py:31
-#: clients/templates/clients/partials/client_overview.html:15
-msgid "Телефон"
-msgstr "Phone"
-
-#: clients/models.py:33
-msgid "Номер паспорта"
-msgstr "Passport number"
-
-#: clients/models.py:34 clients/templates/clients/clients_list.html:46
-#: clients/templates/clients/partials/client_overview.html:13
-msgid "Номер дела"
-msgstr "Case number"
-
-#: clients/models.py:36
-#: clients/templates/clients/partials/client_overview.html:16
+#: .\clients\forms.py:22 .\clients\models.py:207 .\clients\models.py:370
+#: .\clients\templates\clients\document_checklist_manage.html:14
+#: .\clients\templates\clients\partials\client_overview.html:23
 msgid "Цель подачи"
 msgstr "Purpose of application"
 
-#: clients/models.py:39
-msgid "Основание пребывания (виза, TRC и т.д.)"
-msgstr "Basis of stay (visa, TRC, etc.)"
-
-#: clients/models.py:41
-msgid "Язык документов"
-msgstr "Document language"
-
-#: clients/models.py:42 templates/clients/partials/modals.html:36
-#: templates/clients/partials/modals.html:84
-msgid "Статус"
-msgstr "Status"
-
-#: clients/models.py:43
-msgid "Дата создания"
-msgstr "Creation date"
-
-#: clients/models.py:44
-#: clients/templates/clients/partials/client_overview.html:19
+#: .\clients\forms.py:30 .\clients\models.py:215
+#: .\clients\templates\clients\partials\client_overview.html:25
 msgid "Дата окончания основания"
 msgstr "Basis end date"
 
-#: clients/models.py:45
+#: .\clients\forms.py:33 .\clients\forms.py:39 .\clients\forms.py:45
+#: .\clients\forms.py:51 .\clients\forms.py:88
+msgid "дд.мм.гггг"
+msgstr "dd.mm.yyyy"
+
+#: .\clients\forms.py:36 .\clients\models.py:198
+#: .\clients\templates\clients\partials\client_overview.html:22
+msgid "Дата рождения"
+msgstr "Date of birth"
+
+#: .\clients\forms.py:42 .\clients\models.py:216
 msgid "Дата подачи (Złożone)"
 msgstr "Submission date (Złożone)"
 
-#: clients/models.py:46
-msgid "Телефон работодателя"
-msgstr "Employer's phone"
-
-#: clients/models.py:47
+#: .\clients\forms.py:48 .\clients\models.py:218
+#: .\clients\templates\clients\partials\client_overview.html:33
 msgid "Дата сдачи отпечатков"
 msgstr "Date of fingerprints submission"
 
-#: clients/models.py:48 clients/templates/clients/clients_list.html:50
+#: .\clients\forms.py:157 .\clients\models.py:376
+#: .\clients\templates\clients\document_checklist_manage.html:146
+#: .\clients\templates\clients\document_checklist_manage.html:234
+#: .\submissions\models.py:74
+msgid "Название документа"
+msgstr "Document Name"
+
+#: .\clients\forms.py:194
+#, fuzzy
+#| msgid "Не донесены документы"
+msgid "Необходимые документы"
+msgstr "Missing documents"
+
+#: .\clients\models.py:178 .\clients\models.py:469
+msgid "Учёба"
+msgstr "Study"
+
+#: .\clients\models.py:179 .\clients\models.py:468
+msgid "Работа"
+msgstr "Work"
+
+#: .\clients\models.py:180
+msgid "Воссоединение семьи"
+msgstr "Family reunification"
+
+#: .\clients\models.py:183
+msgid "Польский"
+msgstr "Polish"
+
+#: .\clients\models.py:184
+msgid "Английский"
+msgstr "English"
+
+#: .\clients\models.py:185 .\legalize_site\settings\base.py:160
+msgid "Русский"
+msgstr "Russian"
+
+#: .\clients\models.py:188
+msgid "Новый"
+msgstr "New"
+
+#: .\clients\models.py:189
+msgid "В ожидании"
+msgstr "Pending"
+
+#: .\clients\models.py:190
+msgid "Одобрен"
+msgstr "Approved"
+
+#: .\clients\models.py:191 .\submissions\models.py:66
+msgid "Отклонён"
+msgstr "Rejected"
+
+#: .\clients\models.py:195 .\clients\templates\clients\partials\modals.html:132
+#: .\templates\clients\partials\modals.html:148
+msgid "Имя"
+msgstr "First Name"
+
+#: .\clients\models.py:196 .\clients\templates\clients\partials\modals.html:136
+#: .\templates\clients\partials\modals.html:152
+msgid "Фамилия"
+msgstr "Last Name"
+
+#: .\clients\models.py:197
+msgid "Гражданство"
+msgstr "Citizenship"
+
+#: .\clients\models.py:199
+#: .\clients\templates\clients\partials\client_overview.html:21
+msgid "Телефон"
+msgstr "Phone"
+
+#: .\clients\models.py:201
+msgid "Номер паспорта"
+msgstr "Passport number"
+
+#: .\clients\models.py:202 .\clients\templates\clients\clients_list.html:46
+#: .\clients\templates\clients\partials\client_overview.html:19
+#: .\clients\templates\clients\partials\modals.html:140
+#: .\templates\clients\partials\modals.html:156
+msgid "Номер дела"
+msgstr "Case number"
+
+#: .\clients\models.py:210
+msgid "Основание пребывания (виза, TRC и т.д.)"
+msgstr "Basis of stay (visa, TRC, etc.)"
+
+#: .\clients\models.py:212
+msgid "Язык документов"
+msgstr "Document language"
+
+#: .\clients\models.py:213
+#: .\clients\templates\clients\document_checklist_manage.html:175
+#: .\clients\templates\clients\document_checklist_manage.html:204
+#: .\clients\templates\clients\partials\client_overview.html:31
+#: .\clients\templates\clients\partials\payment_item.html:15
+#: .\legalize_site\templates\clients\partials\modals.html:35
+#: .\legalize_site\templates\clients\partials\modals.html:83
+#: .\submissions\models.py:23 .\submissions\models.py:85
+#: .\submissions\templates\submissions\document_form.html:28
+#: .\submissions\templates\submissions\submission_detail.html:29
+#: .\submissions\templates\submissions\submission_detail.html:81
+#: .\submissions\templates\submissions\submission_form.html:22
+#: .\submissions\templates\submissions\submission_list.html:20
+#: .\templates\clients\partials\modals.html:53
+#: .\templates\clients\partials\modals.html:102
+msgid "Статус"
+msgstr "Status"
+
+#: .\clients\models.py:214 .\clients\templates\clients\partials\modals.html:36
+#: .\submissions\models.py:25 .\submissions\models.py:87
+#: .\submissions\templates\submissions\submission_list.html:21
+msgid "Дата создания"
+msgstr "Creation date"
+
+#: .\clients\models.py:217
+msgid "Телефон работодателя"
+msgstr "Employer's phone"
+
+#: .\clients\models.py:219
+#, fuzzy
+#| msgid "Дата сдачи отпечатков"
+msgid "Время сдачи отпечатков"
+msgstr "Date of fingerprints submission"
+
+#: .\clients\models.py:220
+#, fuzzy
+#| msgid "Дата сдачи отпечатков"
+msgid "Место сдачи отпечатков"
+msgstr "Date of fingerprints submission"
+
+#: .\clients\models.py:221
+#, fuzzy
+#| msgid "Дата фактической оплаты"
+msgid "Дата официальной децизии"
+msgstr "Actual Payment Date"
+
+#: .\clients\models.py:222 .\clients\templates\clients\clients_list.html:50
 msgid "Uwagi / Заметки"
 msgstr "Uwagi / Notes"
 
-#: clients/models.py:49
+#: .\clients\models.py:223
 msgid "Доступ к чеклисту предоставлен"
 msgstr "Access to checklist granted"
 
-#: clients/models.py:114 clients/models.py:148 clients/models.py:181
-#: clients/templates/clients/document_reminder_list.html:111
-#: clients/templates/clients/payment_reminder_list.html:29
+#: .\clients\models.py:324 .\clients\models.py:473 .\clients\models.py:506
+#: .\clients\templates\clients\document_reminder_list.html:116
+#: .\clients\templates\clients\payment_reminder_list.html:29
 msgid "Клиент"
 msgstr "Client"
 
-#: clients/models.py:115
+#: .\clients\models.py:325
 msgid "Тип документа"
 msgstr "Document type"
 
-#: clients/models.py:116
+#: .\clients\models.py:326 .\clients\templates\clients\partials\modals.html:116
+#: .\submissions\models.py:79
+#: .\submissions\templates\submissions\document_form.html:33
+#: .\submissions\templates\submissions\submission_detail.html:30
+#: .\submissions\templates\submissions\submission_detail.html:86
 msgid "Файл"
 msgstr "File"
 
-#: clients/models.py:117
+#: .\clients\models.py:327
 msgid "Действителен до"
 msgstr "Valid until"
 
-#: clients/models.py:118
+#: .\clients\models.py:328
 msgid "Дата загрузки"
 msgstr "Upload date"
 
-#: clients/models.py:119
+#: .\clients\models.py:329
 msgid "Проверено"
 msgstr "Verified"
 
-#: clients/models.py:122 clients/models.py:177
+#: .\clients\models.py:330
+#, fuzzy
+#| msgid "Ожидает проверки"
+msgid "Ожидает подтверждения"
+msgstr "Pending verification"
+
+#: .\clients\models.py:333 .\clients\models.py:502
 msgid "Документ"
 msgstr "Document"
 
-#: clients/models.py:123
+#: .\clients\models.py:334
+#: .\clients\templates\clients\partials\client_overview.html:7
+#: .\submissions\templates\submissions\submission_detail.html:21
 msgid "Документы"
 msgstr "Documents"
 
-#: clients/models.py:132
+#: .\clients\models.py:374
+#, fuzzy
+#| msgid "Тип документа"
+msgid "Код типа документа"
+msgstr "Document type"
+
+#: .\clients\models.py:378
+#: .\clients\templates\clients\document_checklist_manage.html:238
+msgid "Название документа (PL)"
+msgstr "Document Name (PL)"
+
+#: .\clients\models.py:381
+#: .\clients\templates\clients\document_checklist_manage.html:242
+msgid "Название документа (EN)"
+msgstr "Document Name (EN)"
+
+#: .\clients\models.py:384
+#: .\clients\templates\clients\document_checklist_manage.html:246
+msgid "Название документа (RU)"
+msgstr "Document Name (RU)"
+
+#: .\clients\models.py:386
+#, fuzzy
+#| msgid "Справка об оплате обучения"
+msgid "Порядок отображения"
+msgstr "Proof of tuition fee payment"
+
+#: .\clients\models.py:387
+#: .\clients\templates\clients\document_checklist_manage.html:251
+msgid "Обязательный документ"
+msgstr "Required Document"
+
+#: .\clients\models.py:392
+#, fuzzy
+#| msgid "Название документа"
+msgid "Требование к документу"
+msgstr "Document Name"
+
+#: .\clients\models.py:393
+#, fuzzy
+#| msgid "Напоминания по документам"
+msgid "Требования к документам"
+msgstr "Document reminders"
+
+#: .\clients\models.py:457
 msgid "Ожидает оплаты"
 msgstr "Pending payment"
 
-#: clients/models.py:133
+#: .\clients\models.py:458
 msgid "Частично оплачен"
 msgstr "Partially paid"
 
-#: clients/models.py:134
+#: .\clients\models.py:459
 msgid "Оплачен полностью"
 msgstr "Paid in full"
 
-#: clients/models.py:135
+#: .\clients\models.py:460
 msgid "Возврат"
 msgstr "Refunded"
 
-#: clients/models.py:138
+#: .\clients\models.py:463 .\clients\templates\clients\partials\modals.html:46
 msgid "Карта"
 msgstr "Card"
 
-#: clients/models.py:139
+#: .\clients\models.py:464 .\clients\templates\clients\partials\modals.html:44
 msgid "Наличные"
 msgstr "Cash"
 
-#: clients/models.py:140
+#: .\clients\models.py:465
 msgid "Перевод"
 msgstr "Transfer"
 
-#: clients/models.py:144
-
-
-#: clients/models.py:145
+#: .\clients\models.py:470
 msgid "Консультация"
 msgstr "Consultation"
 
-#: clients/models.py:149
+#: .\clients\models.py:474
 msgid "Описание услуги"
 msgstr "Service description"
 
-#: clients/models.py:150 templates/clients/partials/modals.html:24
-#: templates/clients/partials/modals.html:72
+#: .\clients\models.py:475
+#: .\legalize_site\templates\clients\partials\modals.html:23
+#: .\legalize_site\templates\clients\partials\modals.html:71
+#: .\templates\clients\partials\modals.html:24
+#: .\templates\clients\partials\modals.html:89
 msgid "Общая сумма"
 msgstr "Total amount"
 
-#: clients/models.py:151
+#: .\clients\models.py:476
 msgid "Оплаченная сумма"
 msgstr "Amount paid"
 
-#: clients/models.py:153
+#: .\clients\models.py:478
 msgid "Статус оплаты"
 msgstr "Payment status"
 
-#: clients/models.py:155
+#: .\clients\models.py:480 .\clients\templates\clients\partials\modals.html:42
+#: .\templates\clients\partials\modals.html:40
 msgid "Способ оплаты"
 msgstr "Payment method"
 
-#: clients/models.py:156
+#: .\clients\models.py:481
 msgid "Дата оплаты"
 msgstr "Payment date"
 
-#: clients/models.py:157
+#: .\clients\models.py:482
 msgid "Оплатить до"
 msgstr "Due date"
 
-#: clients/models.py:158
+#: .\clients\models.py:483
 msgid "ID транзакции (если есть)"
 msgstr "Transaction ID (if any)"
 
-#: clients/models.py:159
+#: .\clients\models.py:484
 msgid "Дата создания счёта"
 msgstr "Invoice creation date"
 
-#: clients/models.py:160
+#: .\clients\models.py:485
 msgid "Дата последнего обновления"
 msgstr "Last update date"
 
-#: clients/models.py:176
+#: .\clients\models.py:501
 msgid "Оплата"
 msgstr "Payment"
 
-#: clients/models.py:178
+#: .\clients\models.py:503
 msgid "Другое"
 msgstr "Other"
 
-#: clients/models.py:185
+#: .\clients\models.py:510
 msgid "Тип напоминания"
 msgstr "Reminder type"
 
-#: clients/models.py:186
+#: .\clients\models.py:511
 msgid "Заголовок напоминания"
 msgstr "Reminder title"
 
-#: clients/models.py:187
+#: .\clients\models.py:512
 msgid "Детали"
 msgstr "Details"
 
-#: clients/models.py:188
+#: .\clients\models.py:513
 msgid "Ключевая дата"
 msgstr "Key date"
 
-#: clients/models.py:189
+#: .\clients\models.py:514
 msgid "Активно"
 msgstr "Active"
 
-#: clients/templates/clients/calculator.html:4
-#: clients/templates/clients/calculator.html:7
+# Email subjects
+#: .\clients\services\notifications.py:23
+msgid "Список необходимых документов"
+msgstr "Required documents checklist"
+
+#: .\clients\services\notifications.py:24
+msgid "Истекшие документы после сдачи отпечатков"
+msgstr "Expired documents after fingerprints"
+
+#: .\clients\services\notifications.py:25
+msgid "Список недостающих документов"
+msgstr "Missing documents checklist"
+
+#: .\clients\services\notifications.py:26
+msgid "Документы скоро истекают"
+msgstr "Documents expiring soon"
+
+#: .\clients\services\notifications.py:27
+#, fuzzy
+#| msgid "Подтверждение адреса"
+msgid "Уведомление о встрече"
+msgstr "Proof of address"
+
+#: .\clients\services\notifications.py:174
+#, fuzzy
+#| msgid "Подтверждение оплаты"
+msgid "Подтверждение отправки письма клиенту."
+msgstr "Payment confirmation"
+
+#: .\clients\services\notifications.py:175
+#, python-format
+msgid "Время отправки: %(timestamp)s"
+msgstr ""
+
+#: .\clients\services\notifications.py:176
+#, python-format
+msgid "Кому: %(recipients)s"
+msgstr ""
+
+#: .\clients\services\notifications.py:177
+#, fuzzy, python-format
+#| msgid "К дата: %(due)s"
+msgid "Тема: %(subject)s"
+msgstr "Due date: %(due)s"
+
+#: .\clients\services\notifications.py:179
+#, fuzzy
+#| msgid "Не видите письмо?"
+msgid "Текст письма:"
+msgstr "Didn't find the email"
+
+#: .\clients\services\notifications.py:184
+#, fuzzy
+#| msgid "Подтверждение оплаты"
+msgid "Подтверждение отправки письма клиенту"
+msgstr "Payment confirmation"
+
+#: .\clients\services\notifications.py:186
+msgid ""
+"Письмо клиенту было отправлено. Во вложении находится текст отправленного "
+"письма."
+msgstr ""
+
+#: .\clients\services\responses.py:54 .\clients\views\base.py:26
+#: .\clients\views\clients.py:169 .\templates\403.html:4
+msgid "Доступ запрещен"
+msgstr "Access denied"
+
+#: .\clients\signals.py:24
+#, python-format
+msgid "Второй платёж: %(service)s"
+msgstr "Second payment: %(service)s"
+
+#: .\clients\signals.py:27
+#, python-format
+msgid "Остаток: %(amount)s zł. Счёт №%(number)s"
+msgstr "Balance: %(amount)s zł. Invoice #%(number)s"
+
+#: .\clients\templates\clients\add_document.html:4
+#, python-format
+msgid "Добавить %(document_type_display)s"
+msgstr ""
+
+#: .\clients\templates\clients\add_document.html:11
+#: .\clients\templates\clients\partials\modals.html:103
+#, fuzzy
+#| msgid "Название документа"
+msgid "Загрузка документа"
+msgstr "Document Name"
+
+#: .\clients\templates\clients\add_document.html:14
+#, fuzzy, python-format
+#| msgid "Добавить документ"
+msgid "Добавить документ: \"%(document_type_display)s\""
+msgstr "Add Document"
+
+#: .\clients\templates\clients\add_document.html:16
+#, python-format
+msgid ""
+"\n"
+"          Для клиента: <strong>%(client.first_name)s %(client.last_name)s</"
+"strong>\n"
+"          "
+msgstr ""
+
+#: .\clients\templates\clients\add_document.html:49
+#, fuzzy
+#| msgid "Загрузить новый файл"
+msgid "Загрузить и сохранить"
+msgstr "Upload new file"
+
+#: .\clients\templates\clients\calculator.html:4
+#: .\clients\templates\clients\calculator.html:7
 msgid "Калькулятор выписки из банка"
 msgstr "Bank Statement Calculator"
 
-#: clients/templates/clients/calculator.html:9
+#: .\clients\templates\clients\calculator.html:9
 msgid "Введите данные, чтобы рассчитать итоговую сумму на счету."
 msgstr "Enter the data to calculate the final amount on the account."
 
-#: clients/templates/clients/calculator.html:10
+#: .\clients\templates\clients\calculator.html:10
 #, python-format
 msgid "Актуальный курс: <strong>1 EUR = %(rate)s PLN</strong>"
 msgstr "Current rate: <strong>1 EUR = %(rate)s PLN</strong>"
 
-#: clients/templates/clients/calculator.html:21
+#: .\clients\templates\clients\calculator.html:21
 msgid "Когда заканчивается основание пребывания?"
 msgstr "When does the basis of stay end?"
 
-#: clients/templates/clients/calculator.html:23
+#: .\clients\templates\clients\calculator.html:23
 msgid "дд-мм-гггг"
 msgstr "dd-mm-yyyy"
 
-#: clients/templates/clients/calculator.html:30
+#: .\clients\templates\clients\calculator.html:30
 msgid "Оплата за обучение"
 msgstr "Tuition Fee"
 
-#: clients/templates/clients/calculator.html:33
+#: .\clients\templates\clients\calculator.html:33
 msgid "Сумма оплаты"
 msgstr "Payment amount"
 
-#: clients/templates/clients/calculator.html:43
+#: .\clients\templates\clients\calculator.html:43
 msgid "в месяц"
 msgstr "per month"
 
-#: clients/templates/clients/calculator.html:44
+#: .\clients\templates\clients\calculator.html:44
 msgid "за семестр"
 msgstr "per semester"
 
-#: clients/templates/clients/calculator.html:45
+#: .\clients\templates\clients\calculator.html:45
 msgid "за год"
 msgstr "per year"
 
-#: clients/templates/clients/calculator.html:51
+#: .\clients\templates\clients\calculator.html:51
 msgid "Кол-во месяцев в этом периоде (можно изменить)"
 msgstr "Number of months in this period (can be changed)"
 
-#: clients/templates/clients/calculator.html:57
+#: .\clients\templates\clients\calculator.html:57
 msgid "Аренда + счётчики в месяц (на всю квартиру)"
 msgstr "Rent + utilities per month (for the whole apartment)"
 
-#: clients/templates/clients/calculator.html:69
+#: .\clients\templates\clients\calculator.html:69
 msgid "Кол-во человек, проживающих вместе"
 msgstr "Number of people living together"
 
-#: clients/templates/clients/calculator.html:75
+#: .\clients\templates\clients\calculator.html:75
 msgid "Обратный билет"
 msgstr "Return ticket"
 
-#: clients/templates/clients/calculator.html:79
+#: .\clients\templates\clients\calculator.html:79
 msgid "Страна граничит с Польшей? (билет 500 zł, иначе 2500 zł)"
 msgstr "Does the country border Poland? (ticket 500 zł, otherwise 2500 zł)"
 
-#: clients/templates/clients/calculator.html:87
+#: .\clients\templates\clients\calculator.html:87
 msgid "Рассчитать итоговую сумму"
 msgstr "Calculate the final amount"
 
-#: clients/templates/clients/calculator.html:93
+#: .\clients\templates\clients\calculator.html:93
 msgid "Итоговая сумма на счету:"
 msgstr "Total amount on the account:"
 
-#: clients/templates/clients/calculator.html:99
+#: .\clients\templates\clients\calculator.html:99
 msgid "Детализация расчёта:"
 msgstr "Calculation details:"
 
-#: clients/templates/clients/calculator.html:103
+#: .\clients\templates\clients\calculator.html:103
 msgid "Жильё в месяц (на 1 чел.)"
 msgstr "Housing per month (per person)"
 
-#: clients/templates/clients/calculator.html:110
+#: .\clients\templates\clients\calculator.html:110
 msgid "Обучение в месяц"
 msgstr "Tuition per month"
 
-#: clients/templates/clients/calculator.html:117
+#: .\clients\templates\clients\calculator.html:117
 msgid "Прожиточный минимум"
 msgstr "Living wage"
 
-#: clients/templates/clients/calculator.html:120
+#: .\clients\templates\clients\calculator.html:120
 msgid "фиксированная сумма"
 msgstr "fixed amount"
 
-#: clients/templates/clients/calculator.html:124
+#: .\clients\templates\clients\calculator.html:124
 msgid "Итого ежемесячные расходы:"
 msgstr "Total monthly expenses:"
 
-#: clients/templates/clients/calculator.html:130
+#: .\clients\templates\clients\calculator.html:130
 msgid "Количество месяцев для расчёта"
 msgstr "Number of months for calculation"
 
-#: clients/templates/clients/calculator.html:131
+#: .\clients\templates\clients\calculator.html:131
 msgid "мес."
 msgstr "mo."
 
-#: clients/templates/clients/calculator.html:134
+#: .\clients\templates\clients\calculator.html:134
 #, python-format
 msgid ""
 "реальный срок %(real)s мес., но расчет ограничен максимумом в %(max)s мес."
@@ -423,231 +608,560 @@ msgstr ""
 "actual period is %(real)s mo., but the calculation is limited to a maximum "
 "of %(max)s mo."
 
-#: clients/templates/clients/calculator.html:136
+#: .\clients\templates\clients\calculator.html:136
 #, python-format
 msgid "полный срок пребывания: %(real)s мес."
 msgstr "full period of stay: %(real)s mo."
 
-#: clients/templates/clients/calculator.html:141
+#: .\clients\templates\clients\calculator.html:141
 msgid "Стоимость обратного билета"
 msgstr "Return ticket cost"
 
-#: clients/templates/clients/calculator.html:150
+#: .\clients\templates\clients\calculator.html:150
 msgid ""
 "Заполните все поля слева и нажмите \"Рассчитать\", чтобы увидеть результат."
 msgstr ""
 "Fill in all fields on the left and click \"Calculate\" to see the result."
 
-#: clients/templates/clients/calculator.html:187
+#: .\clients\templates\clients\calculator.html:187
 msgid "Цена билета: 500 zł"
 msgstr "Ticket price: 500 zł"
 
-#: clients/templates/clients/calculator.html:189
+#: .\clients\templates\clients\calculator.html:189
 msgid "Цена билета: 2500 zł"
 msgstr "Ticket price: 2500 zł"
 
-#: clients/templates/clients/client_detail.html:4
+#: .\clients\templates\clients\client_add.html:4
+#: .\legalize_site\templates\base.html:208 .\templates\base.html:60
+msgid "Добавить клиента"
+msgstr "Add client"
+
+#: .\clients\templates\clients\client_add.html:11
+#: .\clients\templates\clients\clients_list.html:19
+msgid "Добавить нового клиента"
+msgstr "Add New Client"
+
+#: .\clients\templates\clients\client_add.html:16
+#: .\clients\templates\clients\client_edit.html:20
+#: .\clients\templates\clients\client_form.html:23
+msgid "Основная информация"
+msgstr "Basic Information"
+
+#: .\clients\templates\clients\client_add.html:32
+#: .\clients\templates\clients\client_edit.html:36
+#: .\clients\templates\clients\client_form.html:64
+msgid "Детали дела"
+msgstr "Case Details"
+
+#: .\clients\templates\clients\client_add.html:83
+#: .\clients\templates\clients\client_edit.html:87
+#, fuzzy
+#| msgid "Uwagi / Заметки"
+msgid "Заметки / Uwagi"
+msgstr "Uwagi / Notes"
+
+#: .\clients\templates\clients\client_add.html:96
+#: .\clients\templates\clients\client_edit.html:100
+#, fuzzy
+#| msgid "Пожалуйста, заполните недостающие поля:"
+msgid "Пожалуйста, исправьте ошибки:"
+msgstr "Please fill in the missing fields:"
+
+#: .\clients\templates\clients\client_add.html:101
+#: .\clients\templates\clients\client_form.html:152
+#: .\clients\templates\clients\client_form.html:153
+#: .\clients\templates\clients\client_form.html:156
+#: .\clients\templates\clients\clients_list.html:91
+#: .\clients\templates\clients\document_checklist_manage.html:210
+#: .\clients\templates\clients\partials\modals.html:60
+#: .\clients\templates\clients\partials\modals.html:87
+#: .\submissions\templates\submissions\document_form.html:39
+#: .\submissions\templates\submissions\submission_form.html:28
+msgid "Сохранить"
+msgstr "Save"
+
+#: .\clients\templates\clients\client_add.html:102
+#: .\clients\templates\clients\client_edit.html:106
+#: .\clients\templates\clients\client_form.html:147
+#: .\clients\templates\clients\document_checklist_manage.html:152
+#: .\clients\templates\clients\document_checklist_manage.html:180
+#: .\clients\templates\clients\document_checklist_manage.html:209
+#: .\clients\templates\clients\document_checklist_manage.html:255
+#: .\legalize_site\templates\clients\partials\modals.html:44
+#: .\legalize_site\templates\clients\partials\modals.html:92
+#: .\legalize_site\templates\socialaccount\signup.html:49
+#: .\templates\clients\partials\modals.html:62
+#: .\templates\clients\partials\modals.html:111
+#: .\templates\clients\partials\modals.html:182
+#: .\templates\socialaccount\signup.html:49
+msgid "Отмена"
+msgstr "Cancel"
+
+#: .\clients\templates\clients\client_confirm_delete.html:4
+#, fuzzy
+#| msgid "Управление доступом клиента"
+msgid "Удаление клиента"
+msgstr "Client Access Management"
+
+#: .\clients\templates\clients\client_confirm_delete.html:11
+#: .\clients\templates\clients\document_confirm_delete.html:11
+#, fuzzy
+#| msgid "Подтверждение оплаты"
+msgid "Подтверждение удаления"
+msgstr "Payment confirmation"
+
+#: .\clients\templates\clients\client_confirm_delete.html:14
+#, fuzzy
+#| msgid "Вы уверены, что хотите безвозвратно удалить это напоминание?"
+msgid "Вы уверены, что хотите навсегда удалить клиента?"
+msgstr "Are you sure you want to permanently delete this reminder?"
+
+#: .\clients\templates\clients\client_confirm_delete.html:30
+msgid "Да, я уверен, удалить"
+msgstr ""
+
+#: .\clients\templates\clients\client_detail.html:4
 #, python-format
 msgid "Детали клиента: %(client_name)s"
 msgstr "Client details: %(client_name)s"
 
-#: clients/templates/clients/client_detail.html:12
+#: .\clients\templates\clients\client_detail.html:12
 msgid "Финансы"
 msgstr "Finances"
 
-#: clients/templates/clients/client_detail.html:13
+#: .\clients\templates\clients\client_detail.html:13
 msgid "Добавить счёт"
 msgstr "Add invoice"
 
-#: clients/templates/clients/client_detail.html:22
+#: .\clients\templates\clients\client_detail.html:23
 msgid "Счета на оплату еще не созданы."
 msgstr "Invoices have not been created yet."
 
-#: clients/templates/clients/client_detail.html:29
+#: .\clients\templates\clients\client_detail.html:31
 msgid "Чеклист документов"
 msgstr "Document Checklist"
 
-#: clients/templates/clients/client_form.html:23
-msgid "Основная информация"
-msgstr "Basic Information"
+#: .\clients\templates\clients\client_detail.html:35
+#, fuzzy
+#| msgid "Проверить и создать новые"
+msgid "Проверить все загруженные"
+msgstr "Check and create new ones"
 
-#: clients/templates/clients/client_form.html:59
-msgid "Детали дела"
-msgstr "Case Details"
+#: .\clients\templates\clients\client_edit.html:5
+#: .\clients\templates\clients\client_edit.html:14
+#, python-format
+msgid "Редактировать: %(client.first_name)s %(client.last_name)s"
+msgstr ""
 
-#: clients/templates/clients/client_form.html:72
+#: .\clients\templates\clients\client_edit.html:105
+#: .\clients\templates\clients\document_checklist_manage.html:256
+#: .\legalize_site\templates\clients\partials\modals.html:93
+#: .\templates\clients\partials\modals.html:112
+msgid "Сохранить изменения"
+msgstr "Save changes"
+
+#: .\clients\templates\clients\client_form.html:97
 msgid "Важные даты"
 msgstr "Important Dates"
 
-#: clients/templates/clients/client_form.html:101
+#: .\clients\templates\clients\client_form.html:129
 msgid "Дополнительно"
 msgstr "Additionally"
 
-#: clients/templates/clients/client_form.html:111
-#: templates/clients/partials/modals.html:45
-#: templates/clients/partials/modals.html:93
-#: templates/socialaccount/signup.html:49
-msgid "Отмена"
-msgstr "Cancel"
+#: .\clients\templates\clients\client_printable.html:224
+msgid "Распечатать"
+msgstr "Print"
 
-#: clients/templates/clients/client_form.html:116
-#: clients/templates/clients/client_form.html:117
-#: clients/templates/clients/client_form.html:120
-#: clients/templates/clients/clients_list.html:91
-msgid "Сохранить"
-msgstr "Save"
+#: .\clients\templates\clients\client_printable.html:225
+msgid "Вернуться к профилю"
+msgstr "Back to profile"
 
-#: clients/templates/clients/clients_list.html:9
-#: clients/templates/clients/clients_list.html:14
+#: .\clients\templates\clients\client_printable.html:291
+#: .\clients\templates\clients\client_wsc_print.html:254
+msgid "System zarządzania sprawami | Документ для внутреннего использования"
+msgstr "Case Management System | Document for internal use"
+
+#: .\clients\templates\clients\clients_list.html:9
+#: .\clients\templates\clients\clients_list.html:14
 msgid "Список клиентов"
 msgstr "Client List"
 
-#: clients/templates/clients/clients_list.html:15
+#: .\clients\templates\clients\clients_list.html:15
 msgid "Поиск, быстрые заметки и переход в карточку клиента"
 msgstr ""
 
-#: clients/templates/clients/clients_list.html:19
-msgid "Добавить нового клиента"
-msgstr "Add New Client"
-
-#: clients/templates/clients/clients_list.html:32
+#: .\clients\templates\clients\clients_list.html:32
 msgid "Поиск по имени, почте или номеру дела..."
 msgstr "Search by name, email, or case number..."
 
-#: clients/templates/clients/clients_list.html:35
+#: .\clients\templates\clients\clients_list.html:35
 msgid "Найти"
 msgstr "Find"
 
-#: clients/templates/clients/clients_list.html:45
+#: .\clients\templates\clients\clients_list.html:45
 msgid "Полное имя"
 msgstr "Full name"
 
-#: clients/templates/clients/clients_list.html:47
+#: .\clients\templates\clients\clients_list.html:47
 msgid "Основание и дата окончания"
 msgstr "Basis and end date"
 
-#: clients/templates/clients/clients_list.html:52
+#: .\clients\templates\clients\clients_list.html:52
 msgid "Жирный"
 msgstr ""
 
-#: clients/templates/clients/clients_list.html:59
+#: .\clients\templates\clients\clients_list.html:59
+#: .\clients\templates\clients\document_checklist_manage.html:24
+#: .\submissions\templates\submissions\submission_detail.html:32
+#: .\submissions\templates\submissions\submission_list.html:22
 msgid "Действия"
 msgstr "Actions"
 
-#: clients/templates/clients/clients_list.html:73
+#: .\clients\templates\clients\clients_list.html:73
 #, python-format
 msgid "до %(date)s"
 msgstr "until %(date)s"
 
-#: clients/templates/clients/clients_list.html:98
+#: .\clients\templates\clients\clients_list.html:98
 msgid "Подробнее"
 msgstr "Details"
 
-#: clients/templates/clients/clients_list.html:101
-#: clients/templates/clients/partials/reminder_item.html:71
+#: .\clients\templates\clients\clients_list.html:101
+#: .\clients\templates\clients\document_checklist_manage.html:38
+#: .\clients\templates\clients\partials\document_checklist.html:46
+#: .\clients\templates\clients\partials\reminder_item.html:95
+#: .\submissions\templates\submissions\submission_detail.html:52
 msgid "Удалить"
 msgstr "Delete"
 
-#: clients/templates/clients/clients_list.html:109
+#: .\clients\templates\clients\clients_list.html:109
 msgid "Клиенты не найдены."
 msgstr "No clients found."
 
-#: clients/templates/clients/document_reminder_list.html:6
-#: clients/templates/clients/document_reminder_list.html:14
-#: templates/account/signup.html:63 templates/base.html:187
-msgid "Напоминания"
-msgstr "Reminders"
+#: .\clients\templates\clients\document_checklist_manage.html:4
+#: .\clients\templates\clients\document_checklist_manage.html:5
+msgid "Настройка чеклистов"
+msgstr "Checklists Settings"
 
-#: clients/templates/clients/document_reminder_list.html:17
+#: .\clients\templates\clients\document_checklist_manage.html:6
+msgid "Управляйте списком обязательных документов для каждой цели подачи."
+msgstr "Manage the list of required documents for each application purpose."
+
+#: .\clients\templates\clients\document_checklist_manage.html:23
+msgid "Действия с основанием"
+msgstr "Purpose Actions"
+
+#: .\clients\templates\clients\document_checklist_manage.html:30
+msgid "Переименовать"
+msgstr "Rename"
+
+#: .\clients\templates\clients\document_checklist_manage.html:35
+msgid "Удалить это основание и связанные документы?"
+msgstr "Delete this purpose and related documents?"
+
+#: .\clients\templates\clients\document_checklist_manage.html:45
+msgid "Добавьте основание, чтобы настроить чеклист."
+msgstr "Add a purpose to configure the checklist."
+
+#: .\clients\templates\clients\document_checklist_manage.html:51
+#: .\clients\templates\clients\document_checklist_manage.html:164
+#: .\submissions\templates\submissions\submission_form.html:4
+#: .\submissions\templates\submissions\submission_form.html:12
+#: .\submissions\templates\submissions\submission_list.html:10
+msgid "Создать основание подачи"
+msgstr "Create submission purpose"
+
+#: .\clients\templates\clients\document_checklist_manage.html:54
+#: .\templates\clients\partials\modals.html:125
+msgid "Добавить документ"
+msgstr "Add Document"
+
+#: .\clients\templates\clients\document_checklist_manage.html:65
+msgid "Тип подачи"
+msgstr "Submission Type"
+
+#: .\clients\templates\clients\document_checklist_manage.html:68
+msgid "Отметьте документы, которые должны отображаться в чеклисте"
+msgstr "Check the documents that should appear in the checklist"
+
+#: .\clients\templates\clients\document_checklist_manage.html:70
 msgid ""
-"Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и периодам"
-msgstr "Review and generate up-to-date reminders, filter by client and timeframe"
+"Плашка «Стандартный документ» означает базовый список для выбранной цели. "
+"Такие позиции берутся из типовых документов и появляются, пока для них нет "
+"отдельной настройки. Их можно включать или отключать чекбоксом, а чтобы "
+"отредактировать название или обязательность — добавьте собственный вариант "
+"через кнопку «Добавить документ»."
+msgstr ""
+"The \"Standard Document\" label indicates the base list for the selected "
+"purpose. These items are taken from standard documents and appear as long as "
+"there is no separate setting for them. You can enable or disable them with a "
+"checkbox, and to edit the name or requirement status — add your own variant "
+"via the \"Add Document\" button."
 
-#: clients/templates/clients/document_reminder_list.html:25
-#: clients/templates/clients/payment_reminder_list.html:20
-msgid "Проверить и создать новые"
-msgstr "Check and create new ones"
+#: .\clients\templates\clients\document_checklist_manage.html:85
+msgid "Действия с документом"
+msgstr "Document Actions"
 
-#: clients/templates/clients/document_reminder_list.html:93
-#: templates/base.html:247 templates/clients/partials/modals.html:10
-#: templates/clients/partials/modals.html:58
+#: .\clients\templates\clients\document_checklist_manage.html:86
+#: .\clients\templates\clients\document_checklist_manage.html:227
+#: .\submissions\templates\submissions\document_form.html:14
+msgid "Редактировать документ"
+msgstr "Edit Document"
+
+#: .\clients\templates\clients\document_checklist_manage.html:89
+msgid "Удалить документ"
+msgstr "Delete Document"
+
+#: .\clients\templates\clients\document_checklist_manage.html:91
+msgid "Удалить этот документ из чеклиста?"
+msgstr "Remove this document from the checklist?"
+
+#: .\clients\templates\clients\document_checklist_manage.html:108
+msgid "Стандартный документ"
+msgstr "Standard Document"
+
+#: .\clients\templates\clients\document_checklist_manage.html:120
+msgid "Сохранить чеклист"
+msgstr "Save Checklist"
+
+#: .\clients\templates\clients\document_checklist_manage.html:123
+#: .\clients\templates\clients\document_checklist_manage.html:138
+msgid "Добавить новый документ"
+msgstr "Add New Document"
+
+#: .\clients\templates\clients\document_checklist_manage.html:139
+#: .\clients\templates\clients\document_checklist_manage.html:165
+#: .\clients\templates\clients\document_checklist_manage.html:194
+#: .\clients\templates\clients\document_checklist_manage.html:228
+#: .\legalize_site\templates\base.html:262
+#: .\legalize_site\templates\clients\partials\modals.html:9
+#: .\legalize_site\templates\clients\partials\modals.html:57
+#: .\templates\base.html:124 .\templates\clients\partials\modals.html:10
+#: .\templates\clients\partials\modals.html:75
+#: .\templates\clients\partials\modals.html:126
 msgid "Закрыть"
 msgstr "Close"
 
-#: clients/templates/clients/document_reminder_list.html:103
-#: clients/views.py:516
+#: .\clients\templates\clients\document_checklist_manage.html:149
+msgid "Документ сразу будет добавлен в текущий чеклист."
+msgstr "The document will be immediately added to the current checklist."
+
+#: .\clients\templates\clients\document_checklist_manage.html:153
+#: .\templates\base.html:142
+msgid "Добавить"
+msgstr "Add"
+
+#: .\clients\templates\clients\document_checklist_manage.html:171
+#: .\clients\templates\clients\document_checklist_manage.html:200
+#: .\submissions\templates\submissions\document_form.html:23
+#: .\submissions\templates\submissions\submission_detail.html:28
+#: .\submissions\templates\submissions\submission_detail.html:76
+#: .\submissions\templates\submissions\submission_form.html:17
+#: .\submissions\templates\submissions\submission_list.html:19
+msgid "Название"
+msgstr "Name"
+
+#: .\clients\templates\clients\document_checklist_manage.html:181
+msgid "Создать"
+msgstr "Create"
+
+#: .\clients\templates\clients\document_checklist_manage.html:193
+msgid "Редактировать основание подачи"
+msgstr "Edit Submission Purpose"
+
+#: .\clients\templates\clients\document_confirm_delete.html:4
+#, fuzzy
+#| msgid "Подтверждение адреса"
+msgid "Подтверждение удаления документа"
+msgstr "Proof of address"
+
+#: .\clients\templates\clients\document_confirm_delete.html:14
+#, fuzzy
+#| msgid "Вы уверены, что хотите безвозвратно удалить это напоминание?"
+msgid "Вы уверены, что хотите удалить этот документ?"
+msgstr "Are you sure you want to permanently delete this reminder?"
+
+#: .\clients\templates\clients\document_confirm_delete.html:16
+#, fuzzy
+#| msgid "Документ"
+msgid "Документ:"
+msgstr "Document"
+
+#: .\clients\templates\clients\document_confirm_delete.html:17
+#: .\clients\templates\clients\partials\reminder_item.html:54
+#: .\clients\templates\clients\partials\reminder_item.html:59
+msgid "Клиент:"
+msgstr "Client:"
+
+#: .\clients\templates\clients\document_confirm_delete.html:19
+msgid "Это действие нельзя будет отменить."
+msgstr ""
+
+#: .\clients\templates\clients\document_confirm_delete.html:23
+#, fuzzy
+#| msgid "Удалить"
+msgid "Да, удалить"
+msgstr "Delete"
+
+#: .\clients\templates\clients\document_reminder_list.html:6
+#: .\clients\templates\clients\document_reminder_list.html:14
+#: .\clients\templates\clients\document_reminder_list.html:93
+#: .\clients\views\reminders.py:70 .\legalize_site\templates\base.html:210
+#: .\templates\base.html:63
 msgid "Напоминания по документам"
 msgstr "Document reminders"
 
-#: clients/templates/clients/document_reminder_list.html:113
-#: clients/templates/clients/payment_reminder_list.html:31
+#: .\clients\templates\clients\document_reminder_list.html:17
+msgid ""
+"Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и периодам"
+msgstr ""
+"Review and generate up-to-date reminders, filter by client and timeframe"
+
+#: .\clients\templates\clients\document_reminder_list.html:25
+#: .\clients\templates\clients\payment_reminder_list.html:20
+msgid "Проверить и создать новые"
+msgstr "Check and create new ones"
+
+#: .\clients\templates\clients\document_reminder_list.html:99
+msgid "Все хорошо"
+msgstr "All good"
+
+#: .\clients\templates\clients\document_reminder_list.html:103
+msgid "Скоро истекает (в течение 3 дней)"
+msgstr "Expiring soon (within 3 days)"
+
+#: .\clients\templates\clients\document_reminder_list.html:106
+#: .\clients\templates\clients\document_reminder_list.html:174
+msgid "Истекло"
+msgstr "Expired"
+
+#: .\clients\templates\clients\document_reminder_list.html:109
+msgid "Не донесены документы"
+msgstr "Missing documents"
+
+#: .\clients\templates\clients\document_reminder_list.html:118
+#: .\clients\templates\clients\payment_reminder_list.html:31
 msgid "Все клиенты"
 msgstr "All clients"
 
-#: clients/templates/clients/document_reminder_list.html:121
-#: clients/templates/clients/payment_reminder_list.html:38
+#: .\clients\templates\clients\document_reminder_list.html:126
+#: .\clients\templates\clients\payment_reminder_list.html:38
 msgid "Дата от"
 msgstr "Date from"
 
-#: clients/templates/clients/document_reminder_list.html:130
-#: clients/templates/clients/payment_reminder_list.html:42
+#: .\clients\templates\clients\document_reminder_list.html:135
+#: .\clients\templates\clients\payment_reminder_list.html:42
 msgid "Дата до"
 msgstr "Date to"
 
-#: clients/templates/clients/document_reminder_list.html:140
-#: clients/templates/clients/payment_reminder_list.html:46
+#: .\clients\templates\clients\document_reminder_list.html:145
+#: .\clients\templates\clients\payment_reminder_list.html:46
 msgid "Фильтровать"
 msgstr "Filter"
 
-#: clients/templates/clients/document_reminder_list.html:143
-#: clients/templates/clients/payment_reminder_list.html:47
+#: .\clients\templates\clients\document_reminder_list.html:148
+#: .\clients\templates\clients\payment_reminder_list.html:47
 msgid "Сбросить"
 msgstr "Reset"
 
-#: clients/templates/clients/document_reminder_list.html:152
-#| msgid "Тип напоминания"
+#: .\clients\templates\clients\document_reminder_list.html:157
 msgid "Всего напоминаний"
 msgstr "Reminder type"
 
-#: clients/templates/clients/document_reminder_list.html:164
+#: .\clients\templates\clients\document_reminder_list.html:163
+msgid "Статусы"
+msgstr "Statuses"
+
+#: .\clients\templates\clients\document_reminder_list.html:166
+msgid "Всё хорошо"
+msgstr "All good"
+
+#: .\clients\templates\clients\document_reminder_list.html:170
+msgid "Скоро истекает"
+msgstr "Expiring soon"
+
+#: .\clients\templates\clients\document_reminder_list.html:201
+#, python-format
+msgid "Истекающих: %(count)s"
+msgstr ""
+
+#: .\clients\templates\clients\document_reminder_list.html:204
+#, python-format
+msgid "Недостающих: %(count)s"
+msgstr ""
+
+#: .\clients\templates\clients\document_reminder_list.html:216
+msgid "Открыть клиента"
+msgstr "Open client"
+
+#: .\clients\templates\clients\document_reminder_list.html:222
+msgid "Отправить письмо"
+msgstr "Send email"
+
+#: .\clients\templates\clients\document_reminder_list.html:228
+msgid "Недостающие документы"
+msgstr "Missing documents"
+
+#: .\clients\templates\clients\document_reminder_list.html:236
+#, fuzzy, python-format
+#| msgid "Воссоединение семьи"
+msgid "Последнее истечение: %(due)s"
+msgstr "Family reunification"
+
+#: .\clients\templates\clients\document_reminder_list.html:243
+msgid "Нет недостающих документов."
+msgstr "No missing documents."
+
+#: .\clients\templates\clients\document_reminder_list.html:248
+msgid "Истекающие документы"
+msgstr "Expiring documents"
+
+#: .\clients\templates\clients\document_reminder_list.html:259
 msgid "Нет напоминаний по документам, соответствующих фильтрам."
 msgstr ""
 
-#: clients/templates/clients/login.html:4 templates/account/login.html:4
-#: templates/base.html:233
+#: .\clients\templates\clients\login.html:4
+#: .\legalize_site\templates\account\login.html:4
+#: .\legalize_site\templates\base.html:249 .\templates\account\login.html:4
+#: .\templates\base.html:110
 msgid "Вход"
 msgstr "Login"
 
-#: clients/templates/clients/login.html:11 templates/account/login.html:51
+#: .\clients\templates\clients\login.html:11
+#: .\legalize_site\templates\account\login.html:51
+#: .\templates\account\login.html:51
 msgid "Вход в систему"
 msgstr "Log in to the system"
 
-#: clients/templates/clients/login.html:16
+#: .\clients\templates\clients\login.html:16
 msgid "Войти через Google"
 msgstr "Sign in with Google"
 
-#: clients/templates/clients/login.html:20
+#: .\clients\templates\clients\login.html:20
 msgid "ИЛИ"
 msgstr "OR"
 
-#: clients/templates/clients/login.html:26
+#: .\clients\templates\clients\login.html:26
+#: .\clients\templates\clients\register.html:31
 msgid "Адрес электронной почты"
 msgstr "Email address"
 
-#: clients/templates/clients/login.html:30
+#: .\clients\templates\clients\login.html:30
+#: .\clients\templates\clients\register.html:37
 msgid "Пароль"
 msgstr "Password"
 
-#: clients/templates/clients/login.html:36
+#: .\clients\templates\clients\login.html:36
 msgid "Неверный email или пароль. Попробуйте снова."
 msgstr "Incorrect email or password. Please try again."
 
-#: clients/templates/clients/login.html:40 templates/403.html:25
-#: templates/account/login.html:108 templates/admin/login.html:64
+#: .\clients\templates\clients\login.html:40
+#: .\legalize_site\templates\account\login.html:108 .\templates\403.html:25
+#: .\templates\account\login.html:108 .\templates\admin\login.html:64
 msgid "Войти"
 msgstr "Log in"
 
-#: clients/templates/clients/login.html:46
+#: .\clients\templates\clients\login.html:46
 #, python-format
 msgid ""
 "Ещё нет аккаунта? <a class=\"ms-2\" "
@@ -656,526 +1170,809 @@ msgstr ""
 "Don't have an account yet? <a class=\"ms-2\" href=\"%(register_url)s\">Sign "
 "up</a>"
 
-#: clients/templates/clients/partials/client_overview.html:5
-#| msgid "Печать"
-msgid "Печать WSC"
-msgstr "Print"
+#: .\clients\templates\clients\logout.html:4
+#: .\legalize_site\templates\base.html:242 .\templates\base.html:103
+msgid "Выход"
+msgstr "Logout"
 
-#: clients/templates/clients/partials/client_overview.html:6
-msgid "Печать"
-msgstr "Print"
+#: .\clients\templates\clients\logout.html:11
+#, fuzzy
+#| msgid "Вход в систему"
+msgid "Вы вышли из системы"
+msgstr "Log in to the system"
 
-#: clients/templates/clients/partials/client_overview.html:7
+#: .\clients\templates\clients\logout.html:12
+msgid "Надеемся скоро увидеть вас снова!"
+msgstr ""
+
+#: .\clients\templates\clients\logout.html:14
+#, fuzzy
+#| msgid "Войти"
+msgid "Войти снова"
+msgstr "Log in"
+
+#: .\clients\templates\clients\partials\client_overview.html:5
+msgid "Печать обложки"
+msgstr "Print Cover"
+
+#: .\clients\templates\clients\partials\client_overview.html:9
+msgid "Просьба об ускорении"
+msgstr "Acceleration Request"
+
+#: .\clients\templates\clients\partials\client_overview.html:10
+msgid "Wniosek Mazowiecki Urząd Wojewódzki"
+msgstr ""
+
+#: .\clients\templates\clients\partials\client_overview.html:13
+msgid "Вызов (Wezwanie)"
+msgstr "Summons (Wezwanie)"
+
+#: .\clients\templates\clients\partials\client_overview.html:13
+msgid "Загрузить Wezwanie"
+msgstr "Upload Wezwanie"
+
+#: .\clients\templates\clients\partials\client_overview.html:14
 msgid "Редактировать данные"
 msgstr "Edit data"
 
-#: clients/templates/clients/partials/client_overview.html:13
+#: .\clients\templates\clients\partials\client_overview.html:19
 msgid "Не указан"
 msgstr "Not specified"
 
-#: clients/templates/clients/partials/client_overview.html:17
+#: .\clients\templates\clients\partials\client_overview.html:24
 msgid "Основание пребывания"
 msgstr "Basis of stay"
 
-#: clients/templates/clients/partials/client_overview.html:17
+#: .\clients\templates\clients\partials\client_overview.html:24
 msgid "Не указано"
 msgstr "Not specified"
 
-#: clients/templates/clients/partials/payment_item.html:8
+#: .\clients\templates\clients\partials\client_overview.html:32
+#, fuzzy
+#| msgid "Тип подачи"
+msgid "Дата подачи"
+msgstr "Submission Type"
+
+#: .\clients\templates\clients\partials\document_checklist.html:11
+msgid "шт."
+msgstr "pcs"
+
+#: .\clients\templates\clients\partials\document_checklist.html:13
+msgid "Отсутствует"
+msgstr "Missing"
+
+#: .\clients\templates\clients\partials\document_checklist.html:25
+msgid "Файл от"
+msgstr "File from"
+
+#: .\clients\templates\clients\partials\document_checklist.html:28
+msgid "Действителен до:"
+msgstr "Valid until:"
+
+#: .\clients\templates\clients\partials\document_checklist.html:31
+msgid "Проверен"
+msgstr "Verified"
+
+#: .\clients\templates\clients\partials\document_checklist.html:31
+msgid "Ожидает проверки"
+msgstr "Pending verification"
+
+#: .\clients\templates\clients\partials\document_checklist.html:39
+msgid "Снять отметку"
+msgstr "Unverify"
+
+#: .\clients\templates\clients\partials\document_checklist.html:39
+msgid "Проверить"
+msgstr "Verify"
+
+#: .\clients\templates\clients\partials\document_checklist.html:54
+msgid "Документы этого типа еще не загружены."
+msgstr "Documents of this type have not been uploaded yet."
+
+#: .\clients\templates\clients\partials\document_checklist.html:58
+msgid "Добавить еще один файл"
+msgstr "Add another file"
+
+#: .\clients\templates\clients\partials\document_checklist.html:65
+#, fuzzy, python-format
+#| msgid ""
+#| "Для цели \"%(purpose)s\" на языке \"%(language)s\" чеклист не определен в "
+#| "настройках."
+msgid ""
+"\n"
+"  Для цели \"%(purpose)s\" на языке \"%(language)s\" чеклист не определен в "
+"настройках.\n"
+"  "
+msgstr ""
+"Checklist not defined for purpose \"%(purpose)s\" and language "
+"\"%(language)s\"."
+
+#: .\clients\templates\clients\partials\modals.html:9
+#, fuzzy
+#| msgid "Добавить счёт"
+msgid "Добавить счёт на оплату"
+msgstr "Add invoice"
+
+#: .\clients\templates\clients\partials\modals.html:19
+#: .\legalize_site\templates\clients\partials\modals.html:15
+#: .\legalize_site\templates\clients\partials\modals.html:63
+#: .\templates\clients\partials\modals.html:16
+#: .\templates\clients\partials\modals.html:81
+msgid "Услуга"
+msgstr "Service"
+
+#: .\clients\templates\clients\partials\modals.html:22
+#, fuzzy
+#| msgid "Описание услуги"
+msgid "Выберите услугу"
+msgstr "Service description"
+
+#: .\clients\templates\clients\partials\modals.html:30
+msgid "Сумма (PLN)"
+msgstr ""
+
+#: .\clients\templates\clients\partials\modals.html:45
+msgid "Банковский перевод"
+msgstr ""
+
+#: .\clients\templates\clients\partials\modals.html:47
+msgid "BLIK"
+msgstr ""
+
+#: .\clients\templates\clients\partials\modals.html:73
+#: .\legalize_site\templates\clients\partials\modals.html:56
+#: .\templates\clients\partials\modals.html:74
+msgid "Редактировать счёт"
+msgstr "Edit invoice"
+
+#: .\clients\templates\clients\partials\modals.html:82
+#, fuzzy
+#| msgid "Загрузить"
+msgid "Загрузка..."
+msgstr "Upload"
+
+#: .\clients\templates\clients\partials\modals.html:128
+#, fuzzy
+#| msgid "Проверить и создать новые"
+msgid "Проверьте распознанные данные"
+msgstr "Check and create new ones"
+
+#: .\clients\templates\clients\partials\modals.html:145
+#: .\templates\clients\partials\modals.html:160
+#, fuzzy
+#| msgid "Дата сдачи отпечатков"
+msgid "Дата отпечатков"
+msgstr "Date of fingerprints submission"
+
+#: .\clients\templates\clients\partials\modals.html:149
+msgid "Время"
+msgstr ""
+
+#: .\clients\templates\clients\partials\modals.html:154
+msgid "Место"
+msgstr ""
+
+#: .\clients\templates\clients\partials\modals.html:159
+#, fuzzy
+#| msgid "Дата рождения"
+msgid "Дата решения (decyzja)"
+msgstr "Date of birth"
+
+#: .\clients\templates\clients\partials\modals.html:164
+#, fuzzy
+#| msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
+msgid "Эти данные обновят профиль клиента после подтверждения."
+msgstr "Open the email from Legalize and click the confirmation button."
+
+#: .\clients\templates\clients\partials\modals.html:177
+#, fuzzy
+#| msgid "Загрузить новый файл"
+msgid "Загрузить и распознать"
+msgstr "Upload new file"
+
+#: .\clients\templates\clients\partials\payment_item.html:8
 msgid "Счёт от"
 msgstr "Invoice from"
 
-#: clients/templates/clients/partials/payment_item.html:27
+#: .\clients\templates\clients\partials\payment_item.html:28
+#: .\submissions\templates\submissions\submission_detail.html:49
 msgid "Редактировать"
 msgstr "Edit"
 
-#: clients/templates/clients/partials/payment_item.html:30
+#: .\clients\templates\clients\partials\payment_item.html:31
 msgid "ID платежа не найден"
 msgstr "Payment ID not found"
 
-#: clients/templates/clients/partials/reminder_item.html:32
+#: .\clients\templates\clients\partials\reminder_item.html:42
 #, python-format
 msgid "К дата: %(due)s"
 msgstr "Due date: %(due)s"
 
-#: clients/templates/clients/partials/reminder_item.html:34
+#: .\clients\templates\clients\partials\reminder_item.html:44
 msgid "Просрочено"
 msgstr "Overdue"
 
-#: clients/templates/clients/partials/reminder_item.html:36
+#: .\clients\templates\clients\partials\reminder_item.html:46
 msgid "Срочно"
 msgstr "Urgent"
 
-#: clients/templates/clients/partials/reminder_item.html:43
-#: clients/templates/clients/partials/reminder_item.html:48
-msgid "Клиент:"
-msgstr "Client:"
-
-#: clients/templates/clients/partials/reminder_item.html:48
+#: .\clients\templates\clients\partials\reminder_item.html:59
 msgid "(не указан)"
 msgstr "(not specified)"
 
-#: clients/templates/clients/partials/reminder_item.html:64
+#: .\clients\templates\clients\partials\reminder_item.html:78
+#, fuzzy
+#| msgid "Отправить письмо"
+msgid "Отправить email"
+msgstr "Send email"
+
+#: .\clients\templates\clients\partials\reminder_item.html:87
 msgid "Выполнено"
 msgstr "Completed"
 
-#: clients/templates/clients/partials/reminder_item.html:70
+#: .\clients\templates\clients\partials\reminder_item.html:94
 msgid "Вы уверены, что хотите безвозвратно удалить это напоминание?"
 msgstr "Are you sure you want to permanently delete this reminder?"
 
-#: clients/templates/clients/payment_reminder_list.html:5
-#: clients/templates/clients/payment_reminder_list.html:12 clients/views.py:530
+#: .\clients\templates\clients\payment_reminder_list.html:5
+#: .\clients\templates\clients\payment_reminder_list.html:12
+#: .\clients\views\reminders.py:139 .\templates\base.html:64
 msgid "Напоминания по оплатам"
 msgstr "Payment reminders"
 
-#: clients/templates/clients/payment_reminder_list.html:58
+#: .\clients\templates\clients\payment_reminder_list.html:58
 msgid "Нет напоминаний по оплатам, соответствующих фильтрам."
 msgstr "No payment reminders match the selected filters."
 
-#: clients/views.py:33 clients/views.py:156 templates/403.html:4
-msgid "Доступ запрещен"
-msgstr "Access denied"
+#: .\clients\templates\clients\register.html:4
+#: .\templates\account\signup.html:4
+msgid "Регистрация"
+msgstr "Sign up"
 
-#: templates/403.html:14
-msgid "У вас нет доступа к этой странице"
+#: .\clients\templates\clients\register.html:11
+#, fuzzy
+#| msgid "Создайте аккаунт"
+msgid "Создать аккаунт"
+msgstr "Create a new password"
+
+#: .\clients\templates\clients\register.html:29
+msgid "email"
 msgstr ""
 
-#: templates/403.html:16
+#: .\clients\templates\clients\register.html:36
+msgid "password"
+msgstr ""
+
+#: .\clients\templates\clients\register.html:42
+msgid "password confirmation"
+msgstr ""
+
+#: .\clients\templates\clients\register.html:43
+#, fuzzy
+#| msgid "Подтвердите вашу почту"
+msgid "Подтвердите пароль"
+msgstr "Confirm Your E-mail"
+
+#: .\clients\templates\clients\register.html:46
+#: .\templates\account\signup.html:88
+msgid "Зарегистрироваться"
+msgstr "Sign up"
+
+#: .\clients\templates\clients\register.html:52
+#, fuzzy, python-format
+#| msgid ""
+#| "Ещё нет аккаунта? <a class=\"ms-2\" "
+#| "href=\"%(register_url)s\">Зарегистрироваться</a>"
+msgid "Уже есть аккаунт? <a class=\"ms-2\" href=\"%(login_url)s\">Войти</a>"
+msgstr ""
+"Don't have an account yet? <a class=\"ms-2\" href=\"%(register_url)s\">Sign "
+"up</a>"
+
+#: .\clients\templates\clients\search.html:4
+#: .\clients\templates\clients\search.html:11
+#, fuzzy
+#| msgid "Список клиентов"
+msgid "Поиск клиентов"
+msgstr "Client List"
+
+#: .\clients\templates\clients\search.html:17
+#, fuzzy
+#| msgid "Поиск по имени, почте или номеру дела..."
+msgid "Введите имя, фамилию, email или номер дела..."
+msgstr "Search by name, email, or case number..."
+
+#: .\clients\templates\clients\search.html:18
+msgid "Искать"
+msgstr ""
+
+#: .\clients\templates\clients\search.html:23
+#, python-format
+msgid "Результаты поиска по запросу \"%(query)s\":"
+msgstr ""
+
+#: .\clients\templates\clients\search.html:37
+#, python-format
+msgid "Ничего не найдено по запросу \"%(query)s\"."
+msgstr ""
+
+#: .\clients\tests.py:58
+msgid "hello"
+msgstr ""
+
+#: .\clients\tests.py:59
+msgid "missing"
+msgstr ""
+
+#: .\clients\views\clients.py:188
+#, fuzzy
+#| msgid "Пожалуйста, заполните недостающие поля:"
+msgid "Ошибка. Пожалуйста, заполните все поля корректными значениями."
+msgstr "Please fill in the missing fields:"
+
+#: .\clients\views\clients.py:322
+#, fuzzy, python-format
+#| msgid "Чеклист документов"
+msgid "Чеклист обновлён. Выбрано документов: %(count)s"
+msgstr "Document Checklist"
+
+#: .\clients\views\clients.py:384
+#, fuzzy, python-format
+#| msgid "Документ сразу будет добавлен в текущий чеклист."
+msgid "Документ '%(name)s' добавлен в чеклист."
+msgstr "The document will be immediately added to the current checklist."
+
+#: .\clients\views\clients.py:390
+msgid "Не удалось добавить документ. Проверьте форму."
+msgstr ""
+
+#: .\clients\views\clients.py:406
+#, fuzzy
+#| msgid "Обязательный документ"
+msgid "обязательный"
+msgstr "Required Document"
+
+#: .\clients\views\clients.py:406
+#, fuzzy
+#| msgid "Обязательный документ"
+msgid "необязательный"
+msgstr "Required Document"
+
+#: .\clients\views\clients.py:409
+#, python-format
+msgid "Документ обновлён: %(name)s (%(status)s)."
+msgstr ""
+
+#: .\clients\views\clients.py:418
+msgid "Не удалось сохранить изменения. Проверьте форму."
+msgstr ""
+
+#: .\clients\views\clients.py:434
+#, python-format
+msgid "Документ удалён: %(name)s."
+msgstr ""
+
+#: .\clients\views\clients.py:438
+#, fuzzy
+#| msgid "Управление доступом клиента"
+msgid "Удаление доступно только через POST-запрос."
+msgstr "Client Access Management"
+
+#: .\clients\views\reminders.py:166
+#, fuzzy
+#| msgid "Напоминания платежей"
+msgid "Напоминание удалено."
+msgstr "Payment Reminders"
+
+#: .\clients\views\reminders.py:170
+#, fuzzy
+#| msgid "Напоминания по документам"
+msgid "Напоминание отмечено как выполненное."
+msgstr "Document reminders"
+
+#: .\clients\views\reminders.py:177
+#, fuzzy
+#| msgid "Список недостающих документов"
+msgid "Отправили письмо клиенту об истекающем документе."
+msgstr "Missing documents checklist"
+
+#: .\clients\views\reminders.py:179
+msgid "Не удалось отправить письмо: нет email или даты истечения."
+msgstr ""
+
+#: .\clients\views\reminders.py:197
+#, fuzzy
+#| msgid "Напоминания по документам"
+msgid "Отправили письмо клиенту по документам."
+msgstr "Document reminders"
+
+#: .\clients\views\reminders.py:199
 msgid ""
-"Вы вошли в систему, но ваш профиль не имеет прав для просмотра раздела "
-"сотрудников. Если вы считаете, что это ошибка, обратитесь к администратору "
-"сайта."
+"Не удалось отправить письмо: нет email или документов с датой истечения."
 msgstr ""
 
-#: templates/403.html:21
-msgid "Выйти и войти под другим аккаунтом"
+#: .\clients\views\reminders.py:204
+msgid "Эту операцию можно выполнить только через кнопку отправки."
 msgstr ""
 
-#: templates/403.html:29
-msgid "Связаться с поддержкой"
+# Document checklist translations
+#: .\legalize_site\constants.py:6
+msgid "4 zdjęcia (45x35 mm)"
+msgstr "4 photos (45x35 mm)"
+
+#: .\legalize_site\constants.py:7
+msgid "Potwierdzenie opłaty"
+msgstr "Payment confirmation"
+
+#: .\legalize_site\constants.py:8
+msgid "Opłata 340 zł + 17 zł pełnomocnictwo"
+msgstr "Fee 340 PLN + 17 PLN power of attorney"
+
+#: .\legalize_site\constants.py:9
+msgid "Opłata 440 zł + 17 zł pełnomocnictwo"
+msgstr "Fee 440 PLN + 17 PLN power of attorney"
+
+#: .\legalize_site\constants.py:10
+msgid "Paszport"
+msgstr "Passport"
+
+#: .\legalize_site\constants.py:11
+msgid "Karta pobytu"
+msgstr "Residence card"
+
+#: .\legalize_site\constants.py:12
+msgid "Zaświadczenie z uczelni o przyjęciu lub kontynuacji studiów"
+msgstr "University certificate of admission or continuation of studies"
+
+#: .\legalize_site\constants.py:13
+msgid "Zaświadczenie z uczelni o wysokości opłat za naukę"
+msgstr "University certificate of tuition fees"
+
+#: .\legalize_site\constants.py:14
+msgid "Dowód uiszczenia opłaty za naukę (czesne)"
+msgstr "Proof of tuition payment"
+
+#: .\legalize_site\constants.py:15
+msgid "Oceny / świadectwa"
+msgstr "Grades / certificates"
+
+#: .\legalize_site\constants.py:16
+msgid "Polisa ubezpieczeniowa 30 000 EUR"
+msgstr "Insurance policy 30,000 EUR"
+
+#: .\legalize_site\constants.py:17
+msgid ""
+"Dokumenty potwierdzające koszty zamieszkania (np. umowa najmu, rachunki)"
+msgstr "Documents confirming housing costs (e.g. lease agreement, bills)"
+
+#: .\legalize_site\constants.py:18
+msgid "Środki finansowe na utrzymanie w Polsce"
+msgstr "Financial means to live in Poland"
+
+#: .\legalize_site\constants.py:19
+msgid "Załącznik nr 1"
+msgstr "Attachment no. 1"
+
+#: .\legalize_site\constants.py:20
+msgid "Oryginały umów o pracę / zlecenia"
+msgstr "Original employment / contract agreements"
+
+#: .\legalize_site\constants.py:21
+msgid "Oświadczenie o powierzeniu pracy lub zezwolenie na pracę"
+msgstr "Statement of work entrustment or work permit"
+
+#: .\legalize_site\constants.py:22
+msgid "PIT-37 cudzoziemca z potwierdzeniem złożenia"
+msgstr "Foreign national's PIT-37 with filing confirmation"
+
+#: .\legalize_site\constants.py:23
+msgid "Zaświadczenie ZUS dot. braku zaległości pracodawcy"
+msgstr "ZUS certificate of employer's no arrears"
+
+#: .\legalize_site\constants.py:24
+msgid "Zaświadczenie o niezaleganiu opłacania składek cudzoziemca"
+msgstr "Certificate of no contribution arrears for the foreign national"
+
+#: .\legalize_site\constants.py:25
+msgid "Oświadczenie o braku osób na utrzymaniu w Polsce"
+msgstr "Statement on having no dependents in Poland"
+
+#: .\legalize_site\constants.py:26
+msgid "ZUS RCA lub polisa ubezpieczeniowa"
+msgstr "ZUS RCA or insurance policy"
+
+#: .\legalize_site\constants.py:27
+#, fuzzy
+#| msgid "Zaświadczenie z ZUS o przebieгу ubezpieczenia cudzoziemca"
+msgid "Zaświadczenie z ZUS o przebiegu ubezpieczenia cudzoziemca"
+msgstr "ZUS certificate of the foreign national's insurance history"
+
+#: .\legalize_site\constants.py:28
+msgid "CIT lub PIT pracodawcy"
+msgstr "Employer's CIT or PIT return"
+
+#: .\legalize_site\constants.py:29
+msgid "Zaświadczenie z ZUS o liczbie zgłoszonych pracowników i składkach"
+msgstr "ZUS certificate on number of registered employees and contributions"
+
+#: .\legalize_site\constants.py:30
+msgid "Oświadczenie „x”"
+msgstr "Statement \"x\""
+
+#: .\legalize_site\constants.py:31
+msgid "Oświadczenie o utrzymaniu"
+msgstr "Maintenance statement"
+
+#: .\legalize_site\constants.py:32
+msgid "Wezwanie"
+msgstr "Summons"
+
+#: .\legalize_site\constants.py:33
+msgid "Potwierdzenie złożenia odcisków palców"
 msgstr ""
 
-#: templates/account/auth_base.html:674 templates/base.html:207
-msgid "Выбор языка интерфейса"
-msgstr "Interface language selection"
+#: .\legalize_site\settings\base.py:161
+msgid "Polski"
+msgstr "Polish"
 
-#: templates/account/auth_base.html:687 templates/base.html:194
-#: templates/includes/theme_toggle.html:6
+#: .\legalize_site\settings\base.py:162
+msgid "English"
+msgstr "English"
+
+#: .\legalize_site\templates\account\auth_base.html:581
+#: .\legalize_site\templates\includes\theme_toggle.html:5
+#: .\templates\account\auth_base.html:691 .\templates\base.html:71
+#: .\templates\includes\theme_toggle.html:5
 msgid "Переключить тему"
 msgstr ""
 
-#: templates/account/auth_base.html:688 templates/account/auth_base.html:692
-#: templates/account/auth_base.html:694
-msgid "Переключить на тёмную тему"
-msgstr ""
-
-#: templates/account/auth_base.html:690 templates/account/auth_base.html:699
-#: templates/base.html:196 templates/includes/theme_toggle.html:8
-#: templates/includes/theme_toggle.html:14
+#: .\legalize_site\templates\account\auth_base.html:583
+#: .\legalize_site\templates\account\auth_base.html:588
+#: .\legalize_site\templates\includes\theme_toggle.html:8
+#: .\legalize_site\templates\includes\theme_toggle.html:17
+#: .\templates\account\auth_base.html:694
+#: .\templates\account\auth_base.html:703 .\templates\base.html:73
+#: .\templates\includes\theme_toggle.html:7
+#: .\templates\includes\theme_toggle.html:12
 msgid "Светлая тема"
 msgstr ""
 
-#: templates/account/auth_base.html:691 templates/base.html:197
-#: templates/includes/theme_toggle.html:9
-#| msgid "Оплаченная сумма"
+#: .\legalize_site\templates\account\auth_base.html:584
+#: .\legalize_site\templates\includes\theme_toggle.html:9
+#: .\templates\account\auth_base.html:695 .\templates\base.html:74
+#: .\templates\includes\theme_toggle.html:8
 msgid "Тёмная тема"
 msgstr "Dark theme"
 
-#: templates/account/auth_base.html:693 templates/account/auth_base.html:695
-msgid "Переключить на светлую тему"
-msgstr ""
-
-#: templates/account/email_confirm.html:4
-#| msgid "Подтверждение оплаты"
-msgid "Подтверждение почты"
-msgstr "Payment confirmation"
-
-#: templates/account/email_confirm.html:11
-#: templates/account/email_confirmation_required.html:11
-#: templates/account/verification_sent.html:11
-#| msgid "Создайте новый пароль"
-msgid "Защита вашего аккаунта"
-msgstr "Create a new password"
-
-#: templates/account/email_confirm.html:13
-#: templates/account/email_confirmation_required.html:13
-#: templates/account/verification_sent.html:13
-msgid "Остался один шаг"
-msgstr ""
-
-#: templates/account/email_confirm.html:15
-#: templates/account/email_confirmation_required.html:15
-#: templates/account/verification_sent.html:15
-msgid ""
-"Подтверждённая почта помогает нам защищать ваши данные, восстанавливать "
-"доступ и уведомлять о важных событиях."
-msgstr ""
-
-#: templates/account/email_confirm.html:23
-#: templates/account/email_confirmation_required.html:23
-#: templates/account/verification_sent.html:23
-#| msgid "Безопасный доступ"
-msgid "Безопасность"
-msgstr "Secure access"
-
-#: templates/account/email_confirm.html:24
-#: templates/account/email_confirmation_required.html:24
-#: templates/account/verification_sent.html:24
-msgid "Мы проверяем, что именно вы управляете аккаунтом."
-msgstr ""
-
-#: templates/account/email_confirm.html:32
-#: templates/account/email_confirmation_required.html:32
-#: templates/account/verification_sent.html:32
-#| msgid "Дата последнего обновления"
-msgid "Своевременные уведомления"
-msgstr "Last update date"
-
-#: templates/account/email_confirm.html:33
-#: templates/account/email_confirmation_required.html:33
-#: templates/account/verification_sent.html:33
-#| msgid "Автоматические уведомления о ключевых дедлайнах и событиях."
-msgid "Получайте напоминания о дедлайнах и изменениях."
-msgstr "Automatic updates about critical deadlines and events."
-
-#: templates/account/email_confirm.html:41
-#: templates/account/email_confirmation_required.html:41
-#: templates/account/verification_sent.html:41
-#| msgid "Доступ запрещен"
-msgid "Доступ для команды"
-msgstr "Access denied"
-
-#: templates/account/email_confirm.html:42
-#: templates/account/email_confirmation_required.html:42
-#: templates/account/verification_sent.html:42
-msgid "Подтверждённая почта упрощает добавление коллег."
-msgstr ""
-
-#: templates/account/email_confirm.html:49
-#| msgid "Подтвердите ваш E-mail"
-msgid "Подтвердите email"
-msgstr "Confirm Your E-mail"
-
-#: templates/account/email_confirm.html:50
-msgid "Убедитесь, что адрес принадлежит вам, чтобы продолжить работу."
-msgstr ""
-
-#: templates/account/email_confirm.html:59
-msgid "Адрес для подтверждения"
-msgstr ""
-
-#: templates/account/email_confirm.html:67
-#| msgid "Подтвердите ваш E-mail"
-msgid "Подтвердить почту"
-msgstr "Confirm Your E-mail"
-
-#: templates/account/email_confirm.html:72
-msgid ""
-"Если это не ваш адрес, просто проигнорируйте письмо и запросите новую ссылку "
-"из личного кабинета."
-msgstr ""
-
-#: templates/account/email_confirm.html:77
-msgid "Ссылка для подтверждения недействительна или уже была использована."
-msgstr ""
-
-#: templates/account/email_confirm.html:82
-#: templates/account/verification_sent.html:101
-msgid "Запросить новую ссылку"
-msgstr "Request a new link"
-
-#: templates/account/email_confirmation_required.html:4
-#| msgid "Подтвердите ваш E-mail"
-msgid "Подтвердите вашу почту"
-msgstr "Confirm Your E-mail"
-
-#: templates/account/email_confirmation_required.html:52
-#| msgid "Подтвердите ваш E-mail"
-msgid "Подтвердите ваш email"
-msgstr "Confirm Your E-mail"
-
-#: templates/account/email_confirmation_required.html:54
-msgid "Мы отправили письмо с подтверждением"
-msgstr ""
-
-#: templates/account/email_confirmation_required.html:55
-msgid ""
-"Перейдите по ссылке в письме, чтобы активировать ваш аккаунт и получить "
-"доступ ко всем функциям Legalize."
-msgstr ""
-
-#: templates/account/email_confirmation_required.html:63
-#| msgid "Не нашли письмо"
-msgid "Не видите письмо?"
-msgstr "Didn't find the email"
-
-#: templates/account/email_confirmation_required.html:64
-#| msgid ""
-#| "Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
-#| "\"Промоакции\"."
-msgid "Проверьте папку 'Спам' или 'Промоакции'."
-msgstr ""
-"If you can't see the email in your inbox, check the Spam or Promotions "
-"folder."
-
-#: templates/account/email_confirmation_required.html:74
-#| msgid "Ссылка действует 24 часа"
-msgid "Ссылка действует ограниченное время"
-msgstr "The link is valid for 24 hours"
-
-#: templates/account/email_confirmation_required.html:75
-msgid "Чтобы не потерять прогресс, подтвердите почту в течение 24 часов."
-msgstr ""
-
-#: templates/account/email_confirmation_required.html:83
-#| msgid "Нужно новое письмо"
-msgid "Используйте письмо"
-msgstr "Need a new email"
-
-#: templates/account/email_confirmation_required.html:84
-#| msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
-msgid "Откройте письмо от Legalize и нажмите на кнопку подтверждения."
-msgstr "Open the email from Legalize and click the confirmation button."
-
-#: templates/account/email_confirmation_required.html:92
-msgid "Отправить ссылку ещё раз"
-msgstr ""
-
-#: templates/account/email_confirmation_required.html:97
-msgid ""
-"Если письмо не пришло в течение нескольких минут, напишите в поддержку — мы "
-"поможем."
-msgstr ""
-
-#: templates/account/login.html:13
+#: .\legalize_site\templates\account\login.html:13
+#: .\templates\account\login.html:13
 msgid "Панель для специалистов"
 msgstr "Specialist dashboard"
 
-#: templates/account/login.html:15
+#: .\legalize_site\templates\account\login.html:15
+#: .\templates\account\login.html:15
 msgid "Добро пожаловать обратно"
 msgstr "Welcome back"
 
-#: templates/account/login.html:17
+#: .\legalize_site\templates\account\login.html:17
+#: .\templates\account\login.html:17
 msgid "Следите за клиентами, сроками и платежами из единого интерфейса."
 msgstr "Stay on top of clients, deadlines, and payments from one place."
 
-#: templates/account/login.html:25
+#: .\legalize_site\templates\account\login.html:25
+#: .\templates\account\login.html:25
 msgid "Живые напоминания"
 msgstr "Live reminders"
 
-#: templates/account/login.html:26
+#: .\legalize_site\templates\account\login.html:26
+#: .\templates\account\login.html:26
 msgid "Автоматические уведомления о ключевых дедлайнах и событиях."
 msgstr "Automatic updates about critical deadlines and events."
 
-#: templates/account/login.html:34
+#: .\legalize_site\templates\account\login.html:34
+#: .\templates\account\login.html:34
 msgid "Понятная аналитика"
 msgstr "Insightful analytics"
 
-#: templates/account/login.html:35
+#: .\legalize_site\templates\account\login.html:35
+#: .\templates\account\login.html:35
 msgid "Контролируйте показатели и платежи на одной панели."
 msgstr "Keep metrics and payments on a single dashboard."
 
-#: templates/account/login.html:43
+#: .\legalize_site\templates\account\login.html:43
+#: .\templates\account\login.html:43
 msgid "Безопасный доступ"
 msgstr "Secure access"
 
-#: templates/account/login.html:44
+#: .\legalize_site\templates\account\login.html:44
+#: .\templates\account\login.html:44
 msgid "Только авторизованные сотрудники получают доступ к данным."
 msgstr "Only authorized teammates can access your data."
 
-#: templates/account/login.html:52
+#: .\legalize_site\templates\account\login.html:52
+#: .\templates\account\login.html:52
 msgid "Используйте корпоративную почту и пароль."
 msgstr "Use your corporate email and password."
 
-#: templates/account/login.html:104 templates/admin/login.html:69
+#: .\legalize_site\templates\account\login.html:104
+#: .\templates\account\login.html:104 .\templates\admin\login.html:69
 msgid "Забыли пароль?"
 msgstr "Forgot password?"
 
-#: templates/account/login.html:113
+#: .\legalize_site\templates\account\login.html:113
+#: .\templates\account\login.html:113
 #, python-format
 msgid ""
 "Нет аккаунта? <a href=\"%(signup_url)s\">Зарегистрируйтесь за минуту</a>"
 msgstr ""
 "Don't have an account? <a href=\"%(signup_url)s\">Register in a minute</a>"
 
-#: templates/account/password_reset.html:4
-#| msgid "Воссоединение семьи"
-msgid "Восстановление пароля"
-msgstr "Family reunification"
+#: .\legalize_site\templates\account\password_reset.html:5
+#: .\legalize_site\templates\account\password_reset.html:12
+#: .\legalize_site\templates\account\password_reset_done.html:4
+msgid "Сброс пароля"
+msgstr "Password Reset"
 
-#: templates/account/password_reset.html:15
-msgid "Поможем восстановить доступ"
-msgstr ""
-
-#: templates/account/password_reset.html:16
+#: .\legalize_site\templates\account\password_reset.html:15
 msgid ""
-"Введите электронную почту, привязанную к аккаунту, и мы отправим вам "
-"инструкции."
+"Забыли пароль? Введите ваш email, и мы пришлем вам письмо с инструкциями по "
+"восстановлению."
 msgstr ""
+"Forgot your password? Enter your email, and we'll send you instructions to "
+"reset it."
 
-#: templates/account/password_reset.html:23
-msgid "example@mail.com"
-msgstr ""
+#: .\legalize_site\templates\account\password_reset.html:23
+#, fuzzy
+#| msgid "Сброс пароля"
+msgid "Сбросить пароль"
+msgstr "Password Reset"
 
-#: templates/account/password_reset.html:27
-msgid "Получить инструкции"
-msgstr ""
-
-#: templates/account/password_reset.html:33
-#: templates/account/password_reset_done.html:18
-#| msgid "Перейти ко входу сейчас"
-msgid "Вернуться ко входу"
-msgstr "Go to login now"
-
-#: templates/account/password_reset_done.html:4
-#: templates/account/password_reset_done.html:14
+#: .\legalize_site\templates\account\password_reset_done.html:12
+#: .\templates\account\password_reset_done.html:4
+#: .\templates\account\password_reset_done.html:14
 msgid "Письмо отправлено"
 msgstr "Email sent"
 
-#: templates/account/password_reset_done.html:15
+#: .\legalize_site\templates\account\password_reset_done.html:13
 msgid ""
-"Проверьте вашу электронную почту. Если письма нет, загляните в папку «Спам» "
-"или запросите инструкцию повторно через несколько минут."
+"Мы отправили вам письмо с инструкциями. Если вы его не получили, проверьте "
+"папку \"Спам\"."
 msgstr ""
+"We've sent you an email with instructions. If you didn't receive it, please "
+"check your spam folder."
 
-#: templates/account/password_reset_from_key.html:4
-#| msgid "Создайте новый пароль"
-msgid "Создание нового пароля"
-msgstr "Create a new password"
+#: .\legalize_site\templates\account\password_reset_from_key.html:5
+#, fuzzy
+#| msgid "Забыли пароль?"
+msgid "Новый пароль"
+msgstr "Forgot password?"
 
-#: templates/account/password_reset_from_key.html:15
+#: .\legalize_site\templates\account\password_reset_from_key.html:12
+#: .\templates\account\password_reset_from_key.html:15
 msgid "Создайте новый пароль"
 msgstr "Create a new password"
 
-#: templates/account/password_reset_from_key.html:16
-msgid "Придумайте надежную комбинацию, которую будете помнить только вы."
-msgstr ""
+#: .\legalize_site\templates\account\password_reset_from_key.html:16
+msgid "Ссылка недействительна."
+msgstr "The link is invalid."
 
-#: templates/account/password_reset_from_key.html:20
-msgid "Ссылка недействительна или устарела. Запросите новую инструкцию."
-msgstr ""
-
-#: templates/account/password_reset_from_key.html:36
+#: .\legalize_site\templates\account\password_reset_from_key.html:31
+#: .\templates\account\password_reset_from_key.html:36
 msgid "Сохранить новый пароль"
 msgstr "Save new password"
 
-#: templates/account/password_reset_from_key_done.html:4
+#: .\legalize_site\templates\account\password_reset_from_key_done.html:4
+#: .\templates\account\password_reset_from_key_done.html:4
 msgid "Пароль изменен"
 msgstr "Password changed"
 
-#: templates/account/password_reset_from_key_done.html:18
+#: .\legalize_site\templates\account\password_reset_from_key_done.html:16
+#: .\templates\account\password_reset_from_key_done.html:18
 msgid "Пароль успешно изменен"
 msgstr "Password successfully changed"
 
-#: templates/account/password_reset_from_key_done.html:19
-#| msgid "Теперь вы можете войти в систему с вашим новым паролем."
-msgid "Теперь вы можете войти в систему, используя новую комбинацию."
+#: .\legalize_site\templates\account\password_reset_from_key_done.html:17
+#, fuzzy
+#| msgid "Теперь вы можете войти в систему, используя новую комбинацию."
+msgid "Теперь вы можете войти в систему с вашим новым паролем."
 msgstr "You can now log in with your new password."
 
-#: templates/account/password_reset_from_key_done.html:20
-#| msgid ""
-#| "Вы будете автоматически перенаправлены на страницу входа через 3 "
-#| "секунды..."
-msgid "Мы автоматически перенаправим вас на страницу входа через 3 секунды."
+#: .\legalize_site\templates\account\password_reset_from_key_done.html:18
+#, fuzzy
+#| msgid "Мы автоматически перенаправим вас на страницу входа через 3 секунды."
+msgid ""
+"Вы будете автоматически перенаправлены на страницу входа через 3 секунды..."
 msgstr "You will be automatically redirected to the login page in 3 seconds..."
 
-#: templates/account/password_reset_from_key_done.html:21
+#: .\legalize_site\templates\account\password_reset_from_key_done.html:19
+#: .\templates\account\password_reset_from_key_done.html:21
 msgid "Перейти ко входу сейчас"
 msgstr "Go to login now"
 
-#: templates/account/signup.html:4
-msgid "Регистрация"
+#: .\legalize_site\templates\account\signup.html:6
+#: .\legalize_site\templates\socialaccount\signup.html:5
+#: .\templates\socialaccount\signup.html:5
+msgid "Signup"
 msgstr "Sign up"
 
-#: templates/account/signup.html:16
-msgid "Новый аккаунт за 3 шага"
-msgstr ""
-
-#: templates/account/signup.html:18
-msgid "Добро пожаловать в Legalize Platform"
-msgstr ""
-
-#: templates/account/signup.html:19
-msgid ""
-"Зарегистрируйтесь, чтобы следить за документами, платежами и клиентами в "
-"одном месте."
-msgstr ""
-
-#: templates/account/signup.html:27
-msgid ""
-"Оставайтесь на шаг впереди с автоматическими напоминаниями и аналитикой."
-msgstr ""
-
-#: templates/account/signup.html:32
-msgid "Умные уведомления о дедлайнах"
-msgstr ""
-
-#: templates/account/signup.html:36
-msgid "Защищенный доступ и контроль ролей"
-msgstr ""
-
-#: templates/account/signup.html:40
-#| msgid "Список документов пока не доступен"
-msgid "Хранение документов в облаке"
-msgstr "The document list is not yet available"
-
-#: templates/account/signup.html:48
-#| msgid "Новый пароль"
-msgid "Новый аккаунт"
-msgstr "New password"
-
-#: templates/account/signup.html:52
-#| msgid "Создайте новый пароль"
-msgid "Создайте аккаунт"
-msgstr "Create a new password"
-
-#: templates/account/signup.html:53
-msgid "Это бесплатно и займет не больше минуты."
-msgstr ""
-
-#: templates/account/signup.html:64
-msgid "Своевременные уведомления о платежах и сроках документов."
-msgstr ""
-
-#: templates/account/signup.html:74
-msgid "Рост вместе с вами"
-msgstr ""
-
-#: templates/account/signup.html:75
-msgid "Добавляйте новые направления и пользователей по мере роста."
-msgstr ""
-
-#: templates/account/signup.html:82
-msgid "Присоединяйтесь к Legalize"
-msgstr ""
-
-#: templates/account/signup.html:83
-msgid "Заполните форму, чтобы создать рабочую учетную запись."
-msgstr ""
-
-#: templates/account/signup.html:118
-#| msgid "Регистрация"
-msgid "Зарегистрироваться"
-msgstr "Sign up"
-
-#: templates/account/signup.html:124
-msgid "Уже есть аккаунт?"
-msgstr ""
-
-#: templates/account/signup.html:125
-msgid "Войдите"
-msgstr ""
-
-#: templates/account/verification_sent.html:4
-#: templates/account/verification_sent.html:54
+#: .\legalize_site\templates\account\verification_sent.html:4
+#: .\legalize_site\templates\account\verification_sent.html:54
+#: .\templates\account\verification_sent.html:4
+#: .\templates\account\verification_sent.html:54
 msgid "Подтвердите ваш E-mail"
 msgstr "Confirm Your E-mail"
 
-#: templates/account/verification_sent.html:52
+#: .\legalize_site\templates\account\verification_sent.html:11
+#: .\templates\account\email_confirm.html:11
+#: .\templates\account\email_confirmation_required.html:11
+#: .\templates\account\verification_sent.html:11
+msgid "Защита вашего аккаунта"
+msgstr "Create a new password"
+
+#: .\legalize_site\templates\account\verification_sent.html:13
+#: .\templates\account\email_confirm.html:13
+#: .\templates\account\email_confirmation_required.html:13
+#: .\templates\account\verification_sent.html:13
+msgid "Остался один шаг"
+msgstr ""
+
+#: .\legalize_site\templates\account\verification_sent.html:15
+#: .\templates\account\email_confirm.html:15
+#: .\templates\account\email_confirmation_required.html:15
+#: .\templates\account\verification_sent.html:15
+msgid ""
+"Подтверждённая почта помогает нам защищать ваши данные, восстанавливать "
+"доступ и уведомлять о важных событиях."
+msgstr ""
+
+#: .\legalize_site\templates\account\verification_sent.html:23
+#: .\templates\account\email_confirm.html:23
+#: .\templates\account\email_confirmation_required.html:23
+#: .\templates\account\verification_sent.html:23
+msgid "Безопасность"
+msgstr "Secure access"
+
+#: .\legalize_site\templates\account\verification_sent.html:24
+#: .\templates\account\email_confirm.html:24
+#: .\templates\account\email_confirmation_required.html:24
+#: .\templates\account\verification_sent.html:24
+msgid "Мы проверяем, что именно вы управляете аккаунтом."
+msgstr ""
+
+#: .\legalize_site\templates\account\verification_sent.html:32
+#: .\templates\account\email_confirm.html:32
+#: .\templates\account\email_confirmation_required.html:32
+#: .\templates\account\verification_sent.html:32
+msgid "Своевременные уведомления"
+msgstr "Last update date"
+
+#: .\legalize_site\templates\account\verification_sent.html:33
+#: .\templates\account\email_confirm.html:33
+#: .\templates\account\email_confirmation_required.html:33
+#: .\templates\account\verification_sent.html:33
+msgid "Получайте напоминания о дедлайнах и изменениях."
+msgstr "Automatic updates about critical deadlines and events."
+
+#: .\legalize_site\templates\account\verification_sent.html:41
+#: .\templates\account\email_confirm.html:41
+#: .\templates\account\email_confirmation_required.html:41
+#: .\templates\account\verification_sent.html:41
+msgid "Доступ для команды"
+msgstr "Access denied"
+
+#: .\legalize_site\templates\account\verification_sent.html:42
+#: .\templates\account\email_confirm.html:42
+#: .\templates\account\email_confirmation_required.html:42
+#: .\templates\account\verification_sent.html:42
+msgid "Подтверждённая почта упрощает добавление коллег."
+msgstr ""
+
+#: .\legalize_site\templates\account\verification_sent.html:52
+#: .\templates\account\verification_sent.html:52
 msgid "Письмо уже в пути"
 msgstr "Email on the way"
 
-#: templates/account/verification_sent.html:55
+#: .\legalize_site\templates\account\verification_sent.html:55
+#: .\templates\account\verification_sent.html:55
 msgid ""
 "Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
 "завершить регистрацию."
@@ -1183,27 +1980,33 @@ msgstr ""
 "We've sent you a verification email. Follow the link inside to complete your "
 "registration."
 
-#: templates/account/verification_sent.html:63
+#: .\legalize_site\templates\account\verification_sent.html:63
+#: .\templates\account\verification_sent.html:63
 msgid "Что происходит дальше"
 msgstr "What happens next"
 
-#: templates/account/verification_sent.html:64
+#: .\legalize_site\templates\account\verification_sent.html:64
+#: .\templates\account\verification_sent.html:64
 msgid "Ссылка действует 24 часа"
 msgstr "The link is valid for 24 hours"
 
-#: templates/account/verification_sent.html:74
+#: .\legalize_site\templates\account\verification_sent.html:74
+#: .\templates\account\verification_sent.html:74
 msgid "Проверьте входящие"
 msgstr "Check your inbox"
 
-#: templates/account/verification_sent.html:75
+#: .\legalize_site\templates\account\verification_sent.html:75
+#: .\templates\account\verification_sent.html:75
 msgid "Откройте письмо от Legalize и кликните по кнопке подтверждения."
 msgstr "Open the email from Legalize and click the confirmation button."
 
-#: templates/account/verification_sent.html:83
+#: .\legalize_site\templates\account\verification_sent.html:83
+#: .\templates\account\verification_sent.html:83
 msgid "Не нашли письмо"
 msgstr "Didn't find the email"
 
-#: templates/account/verification_sent.html:84
+#: .\legalize_site\templates\account\verification_sent.html:84
+#: .\templates\account\verification_sent.html:84
 msgid ""
 "Если вы не видите письмо во входящих, проверьте папку \"Спам\" или "
 "\"Промоакции\"."
@@ -1211,166 +2014,117 @@ msgstr ""
 "If you can't see the email in your inbox, check the Spam or Promotions "
 "folder."
 
-#: templates/account/verification_sent.html:92
+#: .\legalize_site\templates\account\verification_sent.html:92
+#: .\templates\account\verification_sent.html:92
 msgid "Нужно новое письмо"
 msgstr "Need a new email"
 
-#: templates/account/verification_sent.html:93
+#: .\legalize_site\templates\account\verification_sent.html:93
+#: .\templates\account\verification_sent.html:93
 msgid "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
 msgstr "Request another link in your account if the previous one expired."
 
-#: templates/account/verification_sent.html:106
+#: .\legalize_site\templates\account\verification_sent.html:101
+#: .\templates\account\email_confirm.html:82
+#: .\templates\account\verification_sent.html:101
+msgid "Запросить новую ссылку"
+msgstr "Request a new link"
+
+#: .\legalize_site\templates\account\verification_sent.html:106
+#: .\templates\account\verification_sent.html:106
 msgid "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
 msgstr "Contact our support team if the email never arrives."
 
-#: templates/admin/base_site.html:4
-msgid "Администрирование Legalize"
-msgstr ""
-
-#: templates/admin/base_site.html:303
-msgid "Центр управления Legalize"
-msgstr ""
-
-#: templates/admin/login.html:13
-msgid "Панель администратора"
-msgstr ""
-
-#: templates/admin/login.html:15
-msgid "Контролируйте Legalize в режиме реального времени"
-msgstr ""
-
-#: templates/admin/login.html:16
-msgid "Управляйте клиентами, платежами и документооборотом из единого центра."
-msgstr ""
-
-#: templates/admin/login.html:19
-msgid "Двухуровневая защита и журнал действий"
-msgstr ""
-
-#: templates/admin/login.html:20
-msgid "Дашборды с ключевыми показателями"
-msgstr ""
-
-#: templates/admin/login.html:21
-msgid "Гибкие роли для команды"
-msgstr ""
-
-#: templates/admin/login.html:25
-#| msgid "Вход в систему"
-msgid "Вход в админку"
-msgstr "Log in to the system"
-
-#: templates/admin/login.html:26
-msgid "Используйте корпоративные учетные данные для входа."
-msgstr ""
-
-#: templates/admin/login.html:32
-msgid "Проверьте логин и пароль и попробуйте снова."
-msgstr ""
-
-#: templates/admin/login.html:38
-#, python-format
-msgid ""
-"Вы уже вошли как %(user)s. У вас может не быть прав доступа к этой странице."
-msgstr ""
-
-#: templates/base.html:9
+#: .\legalize_site\templates\base.html:8
+#: .\legalize_site\templates\base.html:199 .\templates\base.html:32
 msgid "Legalize Site"
 msgstr "Legalize Site"
 
-#: templates/base.html:176
-msgid "Legalize"
-msgstr "Legalize"
-
-#: templates/base.html:178
+#: .\legalize_site\templates\base.html:201 .\templates\base.html:52
 msgid "Переключить навигацию"
 msgstr "Toggle navigation"
 
-#: templates/base.html:184
+#: .\legalize_site\templates\base.html:207 .\templates\base.html:59
 msgid "Клиенты"
 msgstr "Clients"
 
-#: templates/base.html:185
-msgid "Добавить клиента"
-msgstr "Add client"
-
-#: templates/base.html:186
+#: .\legalize_site\templates\base.html:209 .\templates\base.html:61
 msgid "Калькулятор"
 msgstr "Calculator"
 
-#: templates/base.html:188
+#: .\legalize_site\templates\base.html:211
 msgid "Напоминания платежей"
 msgstr "Payment Reminders"
 
-#: templates/base.html:226
-msgid "Выход"
-msgstr "Logout"
+#: .\legalize_site\templates\base.html:222
+#: .\templates\account\auth_base.html:678 .\templates\base.html:84
+msgid "Выбор языка интерфейса"
+msgstr "Interface language selection"
 
-#: templates/base.html:259
-msgid "Заголовок страницы"
-msgstr "Page title"
-
-#: templates/base.html:260
-msgid "Короткое описание страницы"
-msgstr "Short page description"
-
-#: templates/base.html:264
-msgid "Фильтр"
-msgstr "Filter"
-
-#: templates/base.html:265
-msgid "Добавить"
-msgstr "Add"
-
-#: templates/clients/partials/modals.html:9
+#: .\legalize_site\templates\clients\partials\modals.html:8
+#: .\templates\clients\partials\modals.html:9
 msgid "Добавить новый счёт"
 msgstr "Add new invoice"
 
-#: templates/clients/partials/modals.html:16
-#: templates/clients/partials/modals.html:64
-msgid "Услуга"
-msgstr "Service"
-
-#: templates/clients/partials/modals.html:28
-#: templates/clients/partials/modals.html:76
-#: templates/clients/partials/payment_item.html:31
+#: .\legalize_site\templates\clients\partials\modals.html:27
+#: .\legalize_site\templates\clients\partials\modals.html:75
+#: .\legalize_site\templates\clients\partials\payment_item.html:31
+#: .\templates\clients\partials\modals.html:28
+#: .\templates\clients\partials\modals.html:94
+#: .\templates\clients\partials\payment_item.html:32
 msgid "Оплачено"
 msgstr "Paid"
 
-#: templates/clients/partials/modals.html:32
-#: templates/clients/partials/modals.html:80
+#: .\legalize_site\templates\clients\partials\modals.html:31
+#: .\legalize_site\templates\clients\partials\modals.html:79
+#: .\templates\clients\partials\modals.html:32
+#: .\templates\clients\partials\modals.html:98
 msgid "Дата оплаты (если есть)"
 msgstr "Payment date (if any)"
 
-#: templates/clients/partials/modals.html:46
+#: .\legalize_site\templates\clients\partials\modals.html:45
+#: .\templates\clients\partials\modals.html:63
 msgid "Сохранить счёт"
 msgstr "Save invoice"
 
-#: templates/clients/partials/modals.html:57
-msgid "Редактировать счёт"
-msgstr "Edit invoice"
-
-#: templates/clients/partials/modals.html:94
-msgid "Сохранить изменения"
-msgstr "Save changes"
-
-#: templates/clients/partials/payment_item.html:18
+#: .\legalize_site\templates\clients\partials\payment_item.html:18
+#: .\templates\clients\partials\payment_item.html:16
 msgid "Удалить платёж"
 msgstr "Delete payment"
 
-#: templates/clients/partials/payment_item.html:32
+#: .\legalize_site\templates\clients\partials\payment_item.html:32
+#: .\templates\clients\partials\payment_item.html:33
 msgid "Всего"
 msgstr "Total"
 
-#: templates/socialaccount/login.html:4
+#: .\legalize_site\templates\includes\theme_toggle.html:6
+#: .\legalize_site\templates\includes\theme_toggle.html:10
+#: .\legalize_site\templates\includes\theme_toggle.html:12
+#: .\templates\account\auth_base.html:692
+#: .\templates\account\auth_base.html:696
+#: .\templates\account\auth_base.html:698
+msgid "Переключить на тёмную тему"
+msgstr ""
+
+#: .\legalize_site\templates\includes\theme_toggle.html:11
+#: .\legalize_site\templates\includes\theme_toggle.html:13
+#: .\templates\account\auth_base.html:697
+#: .\templates\account\auth_base.html:699
+msgid "Переключить на светлую тему"
+msgstr ""
+
+#: .\legalize_site\templates\socialaccount\login.html:4
+#: .\templates\socialaccount\login.html:4
 msgid "Social Network Login"
 msgstr "Social Network Login"
 
-#: templates/socialaccount/login.html:11
+#: .\legalize_site\templates\socialaccount\login.html:11
+#: .\templates\socialaccount\login.html:11
 msgid "Вход через аккаунт Google"
 msgstr "Sign in with Google account"
 
-#: templates/socialaccount/login.html:16
+#: .\legalize_site\templates\socialaccount\login.html:16
+#: .\templates\socialaccount\login.html:16
 #, python-format
 msgid ""
 "\n"
@@ -1383,133 +2137,626 @@ msgstr ""
 "%(provider)s account.\n"
 "                    "
 
-#: templates/socialaccount/login.html:22
+#: .\legalize_site\templates\socialaccount\login.html:22
+#: .\templates\socialaccount\login.html:22
 msgid "Нажмите \"Продолжить\", чтобы перейти к Google для аутентификации."
 msgstr "Click \"Continue\" to go to Google for authentication."
 
-#: templates/socialaccount/login.html:31
+#: .\legalize_site\templates\socialaccount\login.html:31
+#: .\templates\socialaccount\login.html:31
 msgid "Продолжить"
 msgstr "Continue"
 
-#: templates/socialaccount/signup.html:5
-msgid "Signup"
-msgstr "Sign up"
-
-#: templates/socialaccount/signup.html:12
+#: .\legalize_site\templates\socialaccount\signup.html:12
+#: .\templates\socialaccount\signup.html:12
 msgid "Завершение регистрации"
 msgstr "Complete registration"
 
-#: templates/socialaccount/signup.html:17
+#: .\legalize_site\templates\socialaccount\signup.html:17
+#: .\templates\socialaccount\signup.html:17
 #, python-format
 msgid "Вы вошли через %(provider)s как:"
 msgstr "You signed in via %(provider)s as:"
 
-#: templates/socialaccount/signup.html:19
+#: .\legalize_site\templates\socialaccount\signup.html:19
+#: .\templates\socialaccount\signup.html:19
 msgid "Нажмите кнопку ниже, чтобы создать аккаунт."
 msgstr "Click the button below to create an account."
 
-#: templates/socialaccount/signup.html:28
+#: .\legalize_site\templates\socialaccount\signup.html:28
+#: .\templates\socialaccount\signup.html:28
 msgid "Пожалуйста, заполните недостающие поля:"
 msgstr "Please fill in the missing fields:"
 
-#: templates/socialaccount/signup.html:47
+#: .\legalize_site\templates\socialaccount\signup.html:47
+#: .\templates\socialaccount\signup.html:47
 msgid "Создать аккаунт и войти"
 msgstr "Create account and sign in"
 
-# Document checklist translations
-msgid "4 zdjęcia (45x35 mm)"
-msgstr "4 photos (45x35 mm)"
+#: .\submissions\forms.py:17
+#, fuzzy
+#| msgid "Название документа"
+msgid "Название не может быть пустым"
+msgstr "Document Name"
 
-msgid "Potwierdzenie opłaty"
+#: .\submissions\forms.py:29
+#, fuzzy
+#| msgid "Название документа"
+msgid "Название документа обязательно"
+msgstr "Document Name"
+
+#: .\submissions\forms.py:38
+msgid "Файл обязателен для выбранного статуса"
+msgstr ""
+
+#: .\submissions\models.py:9
+#, fuzzy
+#| msgid "Напоминания"
+msgid "Слаг основания"
+msgstr "Reminders"
+
+#: .\submissions\models.py:11
+msgid "Черновик"
+msgstr ""
+
+#: .\submissions\models.py:12
+#, fuzzy
+#| msgid "Работа"
+msgid "В работе"
+msgstr "Work"
+
+#: .\submissions\models.py:13
+msgid "Завершено"
+msgstr ""
+
+#: .\submissions\models.py:15
+#, fuzzy
+#| msgid "Основание пребывания"
+msgid "Название основания"
+msgstr "Basis of stay"
+
+#: .\submissions\models.py:16
+#, fuzzy
+#| msgid "Название документа (PL)"
+msgid "Название основания (PL)"
+msgstr "Document Name (PL)"
+
+#: .\submissions\models.py:17
+#, fuzzy
+#| msgid "Название документа (EN)"
+msgid "Название основания (EN)"
+msgstr "Document Name (EN)"
+
+#: .\submissions\models.py:18
+#, fuzzy
+#| msgid "Название документа (RU)"
+msgid "Название основания (RU)"
+msgstr "Document Name (RU)"
+
+#: .\submissions\models.py:28 .\submissions\models.py:72
+#: .\submissions\templates\submissions\submission_detail.html:10
+#, fuzzy
+#| msgid "Создать основание подачи"
+msgid "Основание подачи"
+msgstr "Create submission purpose"
+
+#: .\submissions\models.py:29
+#: .\submissions\templates\submissions\submission_list.html:4
+#: .\submissions\templates\submissions\submission_list.html:9
+#, fuzzy
+#| msgid "Основная информация"
+msgid "Основания подачи"
+msgstr "Basic Information"
+
+#: .\submissions\models.py:63
+#: .\submissions\templates\submissions\submission_detail.html:44
+#, fuzzy
+#| msgid "Загружено"
+msgid "Не загружен"
+msgstr "Uploaded"
+
+#: .\submissions\models.py:64
+#, fuzzy
+#| msgid "Загружено"
+msgid "Загружен"
+msgstr "Uploaded"
+
+#: .\submissions\models.py:65
+#, fuzzy
+#| msgid "Подтвердите email"
+msgid "Подтверждён"
+msgstr "Confirm Your E-mail"
+
+#: .\submissions\models.py:90
+#, fuzzy
+#| msgid "Дата окончания основания"
+msgid "Документ основания"
+msgstr "Basis end date"
+
+#: .\submissions\models.py:91
+#, fuzzy
+#| msgid "Действия с основанием"
+msgid "Документы оснований"
+msgstr "Purpose Actions"
+
+#: .\submissions\templates\submissions\document_form.html:4
+#: .\submissions\templates\submissions\document_form.html:16
+#: .\submissions\templates\submissions\submission_detail.html:16
+#: .\submissions\templates\submissions\submission_detail.html:92
+#, fuzzy
+#| msgid "Добавить документ"
+msgid "Создать документ"
+msgstr "Add Document"
+
+#: .\submissions\templates\submissions\document_form.html:38
+msgid "К основанию"
+msgstr ""
+
+#: .\submissions\templates\submissions\submission_detail.html:15
+msgid "К списку"
+msgstr ""
+
+#: .\submissions\templates\submissions\submission_detail.html:31
+#, fuzzy
+#| msgid "Создать"
+msgid "Создан"
+msgstr "Create"
+
+#: .\submissions\templates\submissions\submission_detail.html:42
+#: .\submissions\templates\submissions\submission_list.html:32
+#, fuzzy
+#| msgid "Закрыть"
+msgid "Открыть"
+msgstr "Close"
+
+#: .\submissions\templates\submissions\submission_detail.html:52
+#, fuzzy
+#| msgid "Удалить документ"
+msgid "Удалить документ?"
+msgstr "Delete Document"
+
+#: .\submissions\templates\submissions\submission_detail.html:62
+#, fuzzy
+#| msgid "Документы этого типа еще не загружены."
+msgid "Документы ещё не добавлены."
+msgstr "Documents of this type have not been uploaded yet."
+
+#: .\submissions\templates\submissions\submission_detail.html:69
+#, fuzzy
+#| msgid "Название документа"
+msgid "Быстрое создание документа"
+msgstr "Document Name"
+
+#: .\submissions\templates\submissions\submission_form.html:27
+msgid "Назад"
+msgstr ""
+
+#: .\submissions\templates\submissions\submission_list.html:41
+#, fuzzy
+#| msgid "Создать основание подачи"
+msgid "Пока нет оснований подачи."
+msgstr "Create submission purpose"
+
+#: .\submissions\views\api.py:33
+#, fuzzy
+#| msgid "Основание пребывания"
+msgid "Основание создано"
+msgstr "Basis of stay"
+
+#: .\submissions\views\api.py:36 .\submissions\views\api.py:115
+#: .\submissions\views\api.py:176
+msgid "Ошибка валидации"
+msgstr ""
+
+#: .\submissions\views\api.py:66
+#, fuzzy
+#| msgid "Основание пребывания"
+msgid "Основание удалено"
+msgstr "Basis of stay"
+
+#: .\submissions\views\api.py:112 .\submissions\views\documents.py:30
+#, fuzzy
+#| msgid "Документы"
+msgid "Документ создан"
+msgstr "Documents"
+
+#: .\submissions\views\api.py:140 .\submissions\views\documents.py:61
+#, fuzzy
+#| msgid "Документы"
+msgid "Документ удалён"
+msgstr "Documents"
+
+#: .\submissions\views\api.py:166 .\submissions\views\documents.py:51
+#, fuzzy
+#| msgid "Документы"
+msgid "Документ обновлён"
+msgstr "Documents"
+
+#: .\submissions\views\submissions.py:33 .\submissions\views\submissions.py:46
+#, fuzzy
+#| msgid "Основание и дата окончания"
+msgid "Основание подачи создано"
+msgstr "Basis and end date"
+
+#: .\submissions\views\submissions.py:52
+#, fuzzy
+#| msgid "Редактировать основание подачи"
+msgid "Не удалось создать основание"
+msgstr "Edit Submission Purpose"
+
+#: .\submissions\views\submissions.py:74
+#, fuzzy
+#| msgid "Основание и дата окончания"
+msgid "Основание подачи обновлено"
+msgstr "Basis and end date"
+
+#: .\submissions\views\submissions.py:77
+#, fuzzy
+#| msgid "Действия с основанием"
+msgid "Не удалось обновить основание"
+msgstr "Purpose Actions"
+
+#: .\submissions\views\submissions.py:91
+#, fuzzy
+#| msgid "Основание и дата окончания"
+msgid "Основание подачи удалено"
+msgstr "Basis and end date"
+
+#: .\templates\403.html:14
+msgid "У вас нет доступа к этой странице"
+msgstr ""
+
+#: .\templates\403.html:16
+msgid ""
+"Вы вошли в систему, но ваш профиль не имеет прав для просмотра раздела "
+"сотрудников. Если вы считаете, что это ошибка, обратитесь к администратору "
+"сайта."
+msgstr ""
+
+#: .\templates\403.html:21
+msgid "Выйти и войти под другим аккаунтом"
+msgstr ""
+
+#: .\templates\403.html:29
+msgid "Связаться с поддержкой"
+msgstr ""
+
+#: .\templates\404.html:4 .\templates\404.html:14
+#, fuzzy
+#| msgid "ID платежа не найден"
+msgid "Страница не найдена"
+msgstr "Payment ID not found"
+
+#: .\templates\404.html:16
+msgid ""
+"К сожалению, запрашиваемая вами страница не существует или была перемещена. "
+"Возможно, вы перешли по устаревшей ссылке или допустили опечатку в адресе."
+msgstr ""
+
+#: .\templates\404.html:20
+msgid "На главную"
+msgstr ""
+
+#: .\templates\404.html:23
+#, fuzzy
+#| msgid "Вернуться ко входу"
+msgid "Вернуться назад"
+msgstr "Go to login now"
+
+#: .\templates\account\email_confirm.html:4
+msgid "Подтверждение почты"
 msgstr "Payment confirmation"
 
-msgid "Opłata 340 zł + 17 zł pełnomocnictwo"
-msgstr "Fee 340 PLN + 17 PLN power of attorney"
+#: .\templates\account\email_confirm.html:49
+msgid "Подтвердите email"
+msgstr "Confirm Your E-mail"
 
-msgid "Opłata 440 zł + 17 zł pełnomocnictwo"
-msgstr "Fee 440 PLN + 17 PLN power of attorney"
+#: .\templates\account\email_confirm.html:50
+msgid "Убедитесь, что адрес принадлежит вам, чтобы продолжить работу."
+msgstr ""
 
-msgid "Paszport"
-msgstr "Passport"
+#: .\templates\account\email_confirm.html:59
+msgid "Адрес для подтверждения"
+msgstr ""
 
-msgid "Karta pobytu"
-msgstr "Residence card"
+#: .\templates\account\email_confirm.html:67
+msgid "Подтвердить почту"
+msgstr "Confirm Your E-mail"
 
-msgid "Zaświadczenie z uczelni o przyjęciu lub kontynuacji studiów"
-msgstr "University certificate of admission or continuation of studies"
+#: .\templates\account\email_confirm.html:72
+msgid ""
+"Если это не ваш адрес, просто проигнорируйте письмо и запросите новую ссылку "
+"из личного кабинета."
+msgstr ""
 
-msgid "Zaświadczenie z uczelni o wysokości opłat za naukę"
-msgstr "University certificate of tuition fees"
+#: .\templates\account\email_confirm.html:77
+msgid "Ссылка для подтверждения недействительна или уже была использована."
+msgstr ""
 
-msgid "Dowód uiszczenia opłaty za naukę (czesne)"
-msgstr "Proof of tuition payment"
+#: .\templates\account\email_confirmation_required.html:4
+msgid "Подтвердите вашу почту"
+msgstr "Confirm Your E-mail"
 
-msgid "Oceny / świadectwa"
-msgstr "Grades / certificates"
+#: .\templates\account\email_confirmation_required.html:52
+msgid "Подтвердите ваш email"
+msgstr "Confirm Your E-mail"
 
-msgid "Polisa ubezpieczeniowa 30 000 EUR"
-msgstr "Insurance policy 30,000 EUR"
+#: .\templates\account\email_confirmation_required.html:54
+msgid "Мы отправили письмо с подтверждением"
+msgstr ""
 
-msgid "Dokumenty potwierdzające koszty zamieszkania (np. umowa najmu, rachunki)"
-msgstr "Documents confirming housing costs (e.g. lease agreement, bills)"
+#: .\templates\account\email_confirmation_required.html:55
+msgid ""
+"Перейдите по ссылке в письме, чтобы активировать ваш аккаунт и получить "
+"доступ ко всем функциям Legalize."
+msgstr ""
 
-msgid "Środki finansowe na utrzymanie w Polsce"
-msgstr "Financial means to live in Poland"
+#: .\templates\account\email_confirmation_required.html:63
+msgid "Не видите письмо?"
+msgstr "Didn't find the email"
 
-msgid "Załącznik nr 1"
-msgstr "Attachment no. 1"
+#: .\templates\account\email_confirmation_required.html:64
+msgid "Проверьте папку 'Спам' или 'Промоакции'."
+msgstr ""
+"If you can't see the email in your inbox, check the Spam or Promotions "
+"folder."
 
-msgid "Oryginały umów o pracę / zlecenia"
-msgstr "Original employment / contract agreements"
+#: .\templates\account\email_confirmation_required.html:74
+msgid "Ссылка действует ограниченное время"
+msgstr "The link is valid for 24 hours"
 
-msgid "Oświadczenie o powierzeniu pracy lub zezwolenie na pracę"
-msgstr "Statement of work entrustment or work permit"
+#: .\templates\account\email_confirmation_required.html:75
+msgid "Чтобы не потерять прогресс, подтвердите почту в течение 24 часов."
+msgstr ""
 
-msgid "PIT-37 cudzoziemca z potwierdzeniem złożenia"
-msgstr "Foreign national's PIT-37 with filing confirmation"
+#: .\templates\account\email_confirmation_required.html:83
+msgid "Используйте письмо"
+msgstr "Need a new email"
 
-msgid "Zaświadczenie ZUS dot. braku zaległości pracodawcy"
-msgstr "ZUS certificate of employer's no arrears"
+#: .\templates\account\email_confirmation_required.html:84
+msgid "Откройте письмо от Legalize и нажмите на кнопку подтверждения."
+msgstr "Open the email from Legalize and click the confirmation button."
 
-msgid "Zaświadczenie o niezaleganiu opłacania składek cudzoziemca"
-msgstr "Certificate of no contribution arrears for the foreign national"
+#: .\templates\account\email_confirmation_required.html:92
+msgid "Отправить ссылку ещё раз"
+msgstr ""
 
-msgid "Oświadczenie o braku osób na utrzymaniu w Polsce"
-msgstr "Statement on having no dependents in Poland"
+#: .\templates\account\email_confirmation_required.html:97
+msgid ""
+"Если письмо не пришло в течение нескольких минут, напишите в поддержку — мы "
+"поможем."
+msgstr ""
 
-msgid "ZUS RCA lub polisa ubezpieczeniowa"
-msgstr "ZUS RCA or insurance policy"
+#: .\templates\account\password_reset.html:4
+msgid "Восстановление пароля"
+msgstr "Family reunification"
 
-msgid "Zaświadczenie z ZUS o przebieгу ubezpieczenia cudzoziemca"
-msgstr "ZUS certificate of the foreign national's insurance history"
+#: .\templates\account\password_reset.html:15
+msgid "Поможем восстановить доступ"
+msgstr ""
 
-msgid "CIT lub PIT pracodawcy"
-msgstr "Employer's CIT or PIT return"
+#: .\templates\account\password_reset.html:16
+msgid ""
+"Введите электронную почту, привязанную к аккаунту, и мы отправим вам "
+"инструкции."
+msgstr ""
 
-msgid "Zaświadczenie z ZUS o liczbie zgłoszonych pracowników i składkach"
-msgstr "ZUS certificate on number of registered employees and contributions"
+#: .\templates\account\password_reset.html:23
+msgid "example@mail.com"
+msgstr ""
 
-msgid "Oświadczenie „x”"
-msgstr "Statement \"x\""
+#: .\templates\account\password_reset.html:27
+msgid "Получить инструкции"
+msgstr ""
 
-msgid "Oświadczenie o utrzymaniu"
-msgstr "Maintenance statement"
+#: .\templates\account\password_reset.html:33
+#: .\templates\account\password_reset_done.html:18
+msgid "Вернуться ко входу"
+msgstr "Go to login now"
 
-msgid "Wezwanie"
-msgstr "Summons"
+#: .\templates\account\password_reset_done.html:15
+msgid ""
+"Проверьте вашу электронную почту. Если письма нет, загляните в папку «Спам» "
+"или запросите инструкцию повторно через несколько минут."
+msgstr ""
 
-# Email subjects
-msgid "Список необходимых документов"
-msgstr "Required documents checklist"
+#: .\templates\account\password_reset_from_key.html:4
+msgid "Создание нового пароля"
+msgstr "Create a new password"
 
-msgid "Истекшие документы после сдачи отпечатков"
-msgstr "Expired documents after fingerprints"
+#: .\templates\account\password_reset_from_key.html:16
+msgid "Придумайте надежную комбинацию, которую будете помнить только вы."
+msgstr ""
 
-msgid "Список недостающих документов"
-msgstr "Missing documents checklist"
+#: .\templates\account\password_reset_from_key.html:20
+msgid "Ссылка недействительна или устарела. Запросите новую инструкцию."
+msgstr ""
 
-msgid "Документы скоро истекают"
-msgstr "Documents expiring soon"
+#: .\templates\account\password_reset_from_key_done.html:19
+msgid "Теперь вы можете войти в систему, используя новую комбинацию."
+msgstr "You can now log in with your new password."
+
+#: .\templates\account\password_reset_from_key_done.html:20
+msgid "Мы автоматически перенаправим вас на страницу входа через 3 секунды."
+msgstr "You will be automatically redirected to the login page in 3 seconds..."
+
+#: .\templates\account\signup.html:16
+msgid "Новый аккаунт за 3 шага"
+msgstr ""
+
+#: .\templates\account\signup.html:18
+msgid "Добро пожаловать в Legalize Platform"
+msgstr ""
+
+#: .\templates\account\signup.html:19
+msgid ""
+"Зарегистрируйтесь, чтобы следить за документами, платежами и клиентами в "
+"одном месте."
+msgstr ""
+
+#: .\templates\account\signup.html:27
+msgid ""
+"Оставайтесь на шаг впереди с автоматическими напоминаниями и аналитикой."
+msgstr ""
+
+#: .\templates\account\signup.html:32
+msgid "Умные уведомления о дедлайнах"
+msgstr ""
+
+#: .\templates\account\signup.html:36
+msgid "Защищенный доступ и контроль ролей"
+msgstr ""
+
+#: .\templates\account\signup.html:40
+msgid "Хранение документов в облаке"
+msgstr "The document list is not yet available"
+
+#: .\templates\account\signup.html:48
+msgid "Новый аккаунт"
+msgstr "New password"
+
+#: .\templates\account\signup.html:52
+msgid "Создайте аккаунт"
+msgstr "Create a new password"
+
+#: .\templates\account\signup.html:53
+msgid "Это бесплатно и займет не больше минуты."
+msgstr ""
+
+#: .\templates\account\signup.html:94
+msgid "Уже есть аккаунт?"
+msgstr ""
+
+#: .\templates\account\signup.html:95
+msgid "Войдите"
+msgstr ""
+
+#: .\templates\admin\base_site.html:4
+msgid "Администрирование Legalize"
+msgstr ""
+
+#: .\templates\admin\base_site.html:303
+msgid "Центр управления Legalize"
+msgstr ""
+
+#: .\templates\admin\login.html:13
+msgid "Панель администратора"
+msgstr ""
+
+#: .\templates\admin\login.html:15
+msgid "Контролируйте Legalize в режиме реального времени"
+msgstr ""
+
+#: .\templates\admin\login.html:16
+msgid "Управляйте клиентами, платежами и документооборотом из единого центра."
+msgstr ""
+
+#: .\templates\admin\login.html:19
+msgid "Двухуровневая защита и журнал действий"
+msgstr ""
+
+#: .\templates\admin\login.html:20
+msgid "Дашборды с ключевыми показателями"
+msgstr ""
+
+#: .\templates\admin\login.html:21
+msgid "Гибкие роли для команды"
+msgstr ""
+
+#: .\templates\admin\login.html:25
+msgid "Вход в админку"
+msgstr "Log in to the system"
+
+#: .\templates\admin\login.html:26
+msgid "Используйте корпоративные учетные данные для входа."
+msgstr ""
+
+#: .\templates\admin\login.html:32
+msgid "Проверьте логин и пароль и попробуйте снова."
+msgstr ""
+
+#: .\templates\admin\login.html:38
+#, python-format
+msgid ""
+"Вы уже вошли как %(user)s. У вас может не быть прав доступа к этой странице."
+msgstr ""
+
+#: .\templates\base.html:50
+msgid "Legalize"
+msgstr "Legalize"
+
+#: .\templates\base.html:62
+msgid "Чеклисты"
+msgstr "Checklists"
+
+#: .\templates\base.html:136
+msgid "Заголовок страницы"
+msgstr "Page title"
+
+#: .\templates\base.html:137
+msgid "Короткое описание страницы"
+msgstr "Short page description"
+
+#: .\templates\base.html:141
+msgid "Фильтр"
+msgstr "Filter"
+
+#: .\templates\clients\partials\modals.html:36
+msgid "Дата фактической оплаты"
+msgstr "Actual Payment Date"
+
+#: .\templates\clients\partials\modals.html:49
+msgid "ID транзакции"
+msgstr "Transaction ID"
+
+#: .\templates\clients\partials\modals.html:144
+msgid "Подтверждение данных wezwanie"
+msgstr "Wezwanie Data Confirmation"
+
+#: .\templates\clients\partials\modals.html:165
+#, fuzzy
+#| msgid "Дата загрузки"
+msgid "Дата децизии"
+msgstr "Upload date"
+
+#: .\templates\clients\partials\modals.html:170
+msgid "Показать исходный текст (Debug)"
+msgstr "Show Source Text (Debug)"
+
+#: .\templates\clients\partials\modals.html:174
+msgid "Исходный текст"
+msgstr "Source Text"
+
+#~ msgid "Фотографии"
+#~ msgstr "Photographs"
+
+#~ msgid "Паспорт"
+#~ msgstr "Passport"
+
+#~ msgid "Справка о зачислении"
+#~ msgstr "Certificate of enrollment"
+
+#~ msgid "Медицинская страховка"
+#~ msgstr "Health insurance"
+
+#~ msgid "Подтверждение финансов"
+#~ msgstr "Proof of financial means"
+
+#~ msgid "Informacja starosty"
+#~ msgstr "Starosta's information"
+
+#~ msgid "Трудовой договор"
+#~ msgstr "Employment contract"
+
+#~ msgid "PIT-37 / Zaświadczenie o niezaleganiu"
+#~ msgstr "PIT-37 / Certificate of no arrears"
+
+#~| msgid "Печать"
+#~ msgid "Печать WSC"
+#~ msgstr "Print"
+
+#~ msgid "Печать"
+#~ msgstr "Print"
 
 #~ msgid "Сопровождение (Работа)"
 #~ msgstr "Support (Work)"
@@ -1526,9 +2773,6 @@ msgstr "Documents expiring soon"
 #~ msgid "Задаток"
 #~ msgstr "Deposit"
 
-#~ msgid "Управление доступом клиента"
-#~ msgstr "Client Access Management"
-
 #~ msgid "Доступы"
 #~ msgstr "Access"
 
@@ -1539,18 +2783,9 @@ msgstr "Documents expiring soon"
 #~ "If enabled, the client will see a list of required documents on their "
 #~ "page."
 
-#~ msgid "Polski"
-#~ msgstr "Polish"
-
-#~ msgid "English"
-#~ msgstr "English"
-
 #, python-format
 #~ msgid "Файл от %(date)s"
 #~ msgstr "File from %(date)s"
-
-#~ msgid "Ожидает проверки"
-#~ msgstr "Pending verification"
 
 #~ msgid "Ваш профиль"
 #~ msgstr "Your profile"
@@ -1574,23 +2809,11 @@ msgstr "Documents expiring soon"
 #~ msgid "Ниже представлен ваш персональный список документов для загрузки."
 #~ msgstr "Below is your personal list of documents to upload."
 
-#~ msgid "Загружено"
-#~ msgstr "Uploaded"
-
 #~ msgid "Требуется"
 #~ msgstr "Required"
 
-#~ msgid "Проверен"
-#~ msgstr "Verified"
-
 #~ msgid "Вы еще не загрузили файлы этого типа."
 #~ msgstr "You have not uploaded files of this type yet."
-
-#~ msgid "Загрузить новый файл"
-#~ msgstr "Upload new file"
-
-#~ msgid "Загрузить"
-#~ msgstr "Upload"
 
 #~ msgid ""
 #~ "Ваш персональный чеклист появится здесь после подтверждения от нашего "
@@ -1605,403 +2828,16 @@ msgstr "Documents expiring soon"
 #~ msgid "Доступ к чеклисту документов не предоставлен."
 #~ msgstr "Access to the document checklist has not been granted."
 
-#~ msgid "Сброс пароля"
-#~ msgstr "Password Reset"
-
-#~ msgid ""
-#~ "Забыли пароль? Введите ваш email, и мы пришлем вам письмо с инструкциями "
-#~ "по восстановлению."
-#~ msgstr ""
-#~ "Forgot your password? Enter your email, and we'll send you instructions "
-#~ "to reset it."
-
-#~ msgid ""
-#~ "Мы отправили вам письмо с инструкциями. Если вы его не получили, "
-#~ "проверьте папку \"Спам\"."
-#~ msgstr ""
-#~ "We've sent you an email with instructions. If you didn't receive it, "
-#~ "please check your spam folder."
-
-#~ msgid "Ссылка недействительна."
-#~ msgstr "The link is invalid."
-
 #~ msgid "Мой профиль"
 #~ msgstr "My profile"
 
-#: clients/forms.py:23 clients/forms.py:29 clients/forms.py:35 clients/forms.py:41
-msgid "дд.мм.гггг"
-msgstr "dd.mm.yyyy"
-
-#: clients/signals.py:21
-#, python-format
-msgid "Второй платёж: %(service)s"
-msgstr "Second payment: %(service)s"
-
-#: clients/signals.py:24
-#, python-format
-msgid "Остаток: %(amount)s zł. Счёт №%(number)s"
-msgstr "Balance: %(amount)s zł. Invoice #%(number)s"
-
-#: clients/templates/clients/partials/document_checklist.html:62
-#, python-format
-msgid "Для цели \"%(purpose)s\" на языке \"%(language)s\" чеклист не определен в настройках."
-msgstr "Checklist not defined for purpose \"%(purpose)s\" and language \"%(language)s\"."
-
-#: clients/templates/clients/partials/document_checklist.html:13
-msgid "Отсутствует"
-msgstr "Missing"
-
-#: clients/templates/clients/partials/document_checklist.html:29
-msgid "Проверен"
-msgstr "Verified"
-
-#: clients/templates/clients/partials/document_checklist.html:29
-msgid "Ожидает проверки"
-msgstr "Pending verification"
-
-#: clients/templates/clients/partials/document_checklist.html:37
-msgid "Снять отметку"
-msgstr "Unverify"
-
-#: clients/templates/clients/partials/document_checklist.html:37
-msgid "Проверить"
-msgstr "Verify"
-
-#: clients/templates/clients/partials/document_checklist.html:51
-msgid "Документы этого типа еще не загружены."
-msgstr "Documents of this type have not been uploaded yet."
-
-#: clients/templates/clients/partials/document_checklist.html:55
-msgid "Добавить еще один файл"
-msgstr "Add another file"
-
-#: clients/templates/clients/partials/document_checklist.html:11
-msgid "шт."
-msgstr "pcs"
-
-#: clients/templates/clients/partials/document_checklist.html:24
-msgid "Файл от"
-msgstr "File from"
-
-#: clients/templates/clients/partials/document_checklist.html:26
-msgid "Действителен до:"
-msgstr "Valid until:"
-
-#: clients/templates/clients/base.html:62
-msgid "Чеклисты"
-msgstr "Checklists"
-
-#: clients/forms.py:23 clients/forms.py:29 clients/forms.py:35 clients/forms.py:41
-msgid "дд.мм.гггг"
-msgstr "dd.mm.yyyy"
-
-#: clients/signals.py:21
-#, python-format
-msgid "Второй платёж: %(service)s"
-msgstr "Second payment: %(service)s"
-
-#: clients/signals.py:24
-#, python-format
-msgid "Остаток: %(amount)s zł. Счёт №%(number)s"
-msgstr "Balance: %(amount)s zł. Invoice #%(number)s"
-
-#: clients/templates/clients/partials/reminder_item.html:41
-#, python-format
-msgid "К дата: %(due)s"
-msgstr "By date: %(due)s"
-
-#: clients/templates/clients/document_checklist_manage.html:68
-msgid "Отметьте документы, которые должны отображаться в чеклисте"
-msgstr "Check the documents that should appear in the checklist"
-
-#: clients/templates/clients/document_checklist_manage.html:70
-msgid "Плашка «Стандартный документ» означает базовый список для выбранной цели. Такие позиции берутся из типовых документов и появляются, пока для них нет отдельной настройки. Их можно включать или отключать чекбоксом, а чтобы отредактировать название или обязательность — добавьте собственный вариант через кнопку «Добавить документ»."
-msgstr "The \"Standard Document\" label indicates the base list for the selected purpose. These items are taken from standard documents and appear as long as there is no separate setting for them. You can enable or disable them with a checkbox, and to edit the name or requirement status — add your own variant via the \"Add Document\" button."
-
-#: clients/templates/clients/document_checklist_manage.html:35
-msgid "Удалить это основание и связанные документы?"
-msgstr "Delete this purpose and related documents?"
-
-#: clients/templates/clients/document_checklist_manage.html:91
-msgid "Удалить этот документ из чеклиста?"
-msgstr "Remove this document from the checklist?"
-
-#: clients/templates/clients/document_checklist_manage.html:149
-msgid "Документ сразу будет добавлен в текущий чеклист."
-msgstr "The document will be immediately added to the current checklist."
-
-#: clients/templates/clients/document_checklist_manage.html:30
-msgid "Переименовать"
-msgstr "Rename"
-
-#: clients/templates/clients/document_checklist_manage.html:51
-msgid "Создать основание подачи"
-msgstr "Create submission purpose"
-
-#: clients/templates/clients/login.html:46
-msgid "Ещё нет аккаунта?"
-msgstr "Don't have an account yet?"
-
-#: clients/templates/clients/login.html:46
-msgid "Зарегистрироваться"
-msgstr "Register"
-
-#: clients/templates/clients/client_printable.html:189
-msgid "Распечатать"
-msgstr "Print"
-
-#: clients/templates/clients/client_printable.html:190
-msgid "Вернуться к профилю"
-msgstr "Back to profile"
-
-#: clients/templates/clients/client_printable.html:251
-msgid "System zarządzania sprawami | Документ для внутреннего использования"
-msgstr "Case Management System | Document for internal use"
-
-#: clients/models.py:163
-msgid "Дата рождения"
-msgstr "Date of birth"
-
-#: clients/models.py:160
-msgid "Имя"
-msgstr "First Name"
-
-#: clients/models.py:161
-msgid "Фамилия"
-msgstr "Last Name"
-
-#: clients/models.py:162
-msgid "Гражданство"
-msgstr "Citizenship"
-
-#: clients/models.py:164
-msgid "Телефон"
-msgstr "Phone"
-
-#: clients/models.py:166
-msgid "Номер паспорта"
-msgstr "Passport Number"
-
-#: clients/models.py:167
-msgid "Номер дела"
-msgstr "Case Number"
-
-#: clients/models.py:172
-msgid "Цель подачи"
-msgstr "Application Purpose"
-
-#: clients/models.py:175
-msgid "Основание пребывания (виза, TRC и т.д.)"
-msgstr "Basis of Stay"
-
-#: clients/models.py:177
-msgid "Язык документов"
-msgstr "Document Language"
-
-#: clients/models.py:178
-msgid "Статус"
-msgstr "Status"
-
-#: clients/models.py:181
-msgid "Дата подачи (Złożone)"
-msgstr "Submission Date"
-
-#: clients/models.py:183
-msgid "Дата сдачи отпечатков"
-msgstr "Fingerprints Date"
-
-#: clients/models.py:180
-msgid "Дата окончания основания"
-msgstr "Legal Basis End Date"
-
-#: clients/models.py:153
-msgid "Новый"
-msgstr "New"
-
-#: clients/models.py:154
-msgid "В ожидании"
-msgstr "Pending"
-
-#: clients/models.py:155
-msgid "Одобрен"
-msgstr "Approved"
-
-#: clients/models.py:156
-msgid "Отклонён"
-msgstr "Rejected"
-
-
-msgid "Печать обложки"
-msgstr "Print Cover"
-
-
-msgid "Загрузить Wezwanie"
-msgstr "Upload Wezwanie"
-
-
-msgid "Дата фактической оплаты"
-msgstr "Actual Payment Date"
-
-
-msgid "ID транзакции"
-msgstr "Transaction ID"
-
-
-msgid "Подтверждение данных wezwanie"
-msgstr "Wezwanie Data Confirmation"
-
-
-msgid "Проверьте распознанные данные перед сохранением. Все поля доступны для редактирования."
-msgstr "Verify the recognized data before saving. All fields are editable."
-
-
-msgid "Распознать wezwanie"
-msgstr "Recognize Wezwanie"
-
-
-msgid "Показать исходный текст (Debug)"
-msgstr "Show Source Text (Debug)"
-
-
-msgid "Исходный текст"
-msgstr "Source Text"
-
-
-msgid "Вызов (Wezwanie)"
-msgstr "Summons (Wezwanie)"
-
-
-msgid "Просьба об ускорении"
-msgstr "Acceleration Request"
-
-
-msgid "Настройка чеклистов"
-msgstr "Checklists Settings"
-
-
-msgid "Управляйте списком обязательных документов для каждой цели подачи."
-msgstr "Manage the list of required documents for each application purpose."
-
-
-msgid "Действия с основанием"
-msgstr "Purpose Actions"
-
-
-msgid "Добавьте основание, чтобы настроить чеклист."
-msgstr "Add a purpose to configure the checklist."
-
-
-msgid "Добавить документ"
-msgstr "Add Document"
-
-
-msgid "Тип подачи"
-msgstr "Submission Type"
-
-
-msgid "Действия с документом"
-msgstr "Document Actions"
-
-
-msgid "Редактировать документ"
-msgstr "Edit Document"
-
-
-msgid "Удалить документ"
-msgstr "Delete Document"
-
-
-msgid "Стандартный документ"
-msgstr "Standard Document"
-
-
-msgid "Сохранить чеклист"
-msgstr "Save Checklist"
-
-
-msgid "Добавить новый документ"
-msgstr "Add New Document"
-
-
-msgid "Название документа"
-msgstr "Document Name"
-
-
-msgid "Название"
-msgstr "Name"
-
-
-msgid "Создать"
-msgstr "Create"
-
-
-msgid "Редактировать основание подачи"
-msgstr "Edit Submission Purpose"
-
-
-msgid "Название документа (PL)"
-msgstr "Document Name (PL)"
-
-
-msgid "Название документа (EN)"
-msgstr "Document Name (EN)"
-
-
-msgid "Название документа (RU)"
-msgstr "Document Name (RU)"
-
-
-msgid "Обязательный документ"
-msgstr "Required Document"
-
-
-msgid "Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и периодам"
-msgstr "Check and generate active reminders, filter by client and period"
-
-
-msgid "Все хорошо"
-msgstr "All good"
-
-
-msgid "Всё хорошо"
-msgstr "All good"
-
-
-msgid "Скоро истекает (в течение 3 дней)"
-msgstr "Expiring soon (within 3 days)"
-
-
-msgid "Истекло"
-msgstr "Expired"
-
-
-msgid "Не донесены документы"
-msgstr "Missing documents"
-
-
-msgid "Статусы"
-msgstr "Statuses"
-
-
-msgid "Скоро истекает"
-msgstr "Expiring soon"
-
-
-msgid "Открыть клиента"
-msgstr "Open client"
-
-
-msgid "Отправить письмо"
-msgstr "Send email"
-
-
-msgid "Недостающие документы"
-msgstr "Missing documents"
-
-
-msgid "Истекающие документы"
-msgstr "Expiring documents"
-
-
-msgid "Нет недостающих документов."
-msgstr "No missing documents."
+#~ msgid "Ещё нет аккаунта?"
+#~ msgstr "Don't have an account yet?"
+
+#~ msgid ""
+#~ "Проверьте распознанные данные перед сохранением. Все поля доступны для "
+#~ "редактирования."
+#~ msgstr "Verify the recognized data before saving. All fields are editable."
+
+#~ msgid "Распознать wezwanie"
+#~ msgstr "Recognize Wezwanie"
