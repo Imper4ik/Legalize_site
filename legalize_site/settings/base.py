@@ -162,7 +162,7 @@ LANGUAGES = [
     ("en", _("English")),
 ]
 LOCALE_PATHS = [os.path.join(BASE_DIR, "locale")]
-LANGUAGE_CODE = "ru"
+LANGUAGE_CODE = "pl"
 TIME_ZONE = "Europe/Warsaw"
 USE_I18N = True
 USE_TZ = True

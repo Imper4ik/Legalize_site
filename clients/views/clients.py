@@ -24,10 +24,10 @@ from clients.constants import DOCUMENT_CHECKLIST
 from submissions.forms import SubmissionForm
 from submissions.models import Submission
 from clients.services.calculator import (
-    EUR_TO_PLN_RATE,
     LIVING_ALLOWANCE,
     MAX_MONTHS_LIVING,
     calculate_calculator_result,
+    get_eur_to_pln_rate,
 )
 from clients.services.notifications import (
     send_expired_documents_email,
@@ -189,7 +189,7 @@ def calculator_view(request):
 
     context = {
         'living_allowance': LIVING_ALLOWANCE,
-        'eur_to_pln_rate': float(EUR_TO_PLN_RATE),
+        'eur_to_pln_rate': float(get_eur_to_pln_rate()),
         'max_months_living': MAX_MONTHS_LIVING,
         'form': form,
         'form_data': form_data,

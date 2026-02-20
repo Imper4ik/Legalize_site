@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.test import SimpleTestCase
 
@@ -24,7 +25,8 @@ class CalculatorServiceTests(SimpleTestCase):
             "has_border": False,
         }
 
-    def test_converts_eur_values_to_pln(self):
+    @patch("clients.services.calculator.get_eur_to_pln_rate", return_value=Decimal("4.3"))
+    def test_converts_eur_values_to_pln(self, mock_get_rate):
         data = {
             **self.base_data,
             "tuition_currency": "EUR",
