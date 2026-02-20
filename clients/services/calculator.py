@@ -4,16 +4,21 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
+import logging
 from typing import Optional
 
+import requests
+from django.core.cache import cache
 from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 
 LIVING_ALLOWANCE = Decimal("1010")
 TICKET_BORDER = Decimal("500")
 TICKET_NO_BORDER = Decimal("2500")
 MAX_MONTHS_LIVING = 15
-EUR_TO_PLN_RATE = Decimal("4.3")
+DEFAULT_EUR_TO_PLN_RATE = Decimal("4.3")
 CURRENCY_PLN = "PLN"
 CURRENCY_EUR = "EUR"
 
@@ -35,14 +40,41 @@ class CalculatorResult:
     final_total_required: Decimal
 
 
+def get_eur_to_pln_rate() -> Decimal:
+    """Fetch current EUR to PLN exchange rate from NBP API with caching."""
+    cache_key = "eur_to_pln_rate"
+    cached_rate = cache.get(cache_key)
+    
+    if cached_rate is not None:
+        return cached_rate
+
+    try:
+        # NBP API does not require an API key
+        response = requests.get("http://api.nbp.pl/api/exchangerates/rates/a/eur/?format=json", timeout=5)
+        response.raise_for_status()
+        data = response.json()
+        rate = Decimal(str(data["rates"][0]["mid"]))
+        
+        # Cache for 12 hours
+        cache.set(cache_key, rate, timeout=12 * 60 * 60)
+        return rate
+    except requests.RequestException as e:
+        logger.warning(f"Failed to fetch EUR/PLN rate from NBP API: {e}. Using default.")
+        return DEFAULT_EUR_TO_PLN_RATE
+    except (KeyError, IndexError, ValueError) as e:
+        logger.warning(f"Failed to parse EUR/PLN rate from NBP API: {e}. Using default.")
+        return DEFAULT_EUR_TO_PLN_RATE
+
+
 def _quantize_money(value: Decimal) -> Decimal:
     return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 def convert_to_pln(amount: Decimal, currency: str) -> Decimal:
-    """Convert given amount to PLN using a static EUR to PLN rate."""
+    """Convert given amount to PLN using the current EUR to PLN rate."""
     if currency == CURRENCY_EUR:
-        return _quantize_money(amount * EUR_TO_PLN_RATE)
+        current_rate = get_eur_to_pln_rate()
+        return _quantize_money(amount * current_rate)
     return _quantize_money(amount)
 
 
@@ -112,7 +144,7 @@ __all__ = [
     "convert_to_pln",
     "LIVING_ALLOWANCE",
     "MAX_MONTHS_LIVING",
-    "EUR_TO_PLN_RATE",
+    "get_eur_to_pln_rate",
     "TICKET_BORDER",
     "TICKET_NO_BORDER",
     "CURRENCY_PLN",
