@@ -1,26 +1,28 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Подтверждение удаления документа{% endblock %}
+{% block title %}{% trans "Подтверждение удаления документа" %}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-md-8">
     <div class="card border-danger shadow-sm">
       <div class="card-header bg-danger text-white">
-        <h4 class="mb-0">Подтверждение удаления</h4>
+        <h4 class="mb-0">{% trans "Подтверждение удаления" %}</h4>
       </div>
       <div class="card-body">
-        <h5 class="card-title">Вы уверены, что хотите удалить этот документ?</h5>
+        <h5 class="card-title">{% trans "Вы уверены, что хотите удалить этот документ?" %}</h5>
         <p class="card-text">
-          Документ: <strong>"{{ document.display_name }}"</strong><br>
-          Клиент: <strong>{{ document.client.first_name }} {{ document.client.last_name }}</strong>
+          {% trans "Документ:" %} <strong>"{{ document.display_name }}"</strong><br>
+          {% trans "Клиент:" %} <strong>{{ document.client.first_name }} {{ document.client.last_name }}</strong>
         </p>
-        <p class="text-danger mt-3">Это действие нельзя будет отменить.</p>
+        <p class="text-danger mt-3">{% trans "Это действие нельзя будет отменить." %}</p>
 
         <form method="post" class="mt-4">
           {% csrf_token %}
-          <button type="submit" class="btn btn-danger">Да, удалить</button>
-          <a href="{% url 'clients:client_detail' document.client.id %}" class="btn btn-secondary">Отмена</a>
+          <button type="submit" class="btn btn-danger">{% trans "Да, удалить" %}</button>
+          <a href="{% url 'clients:client_detail' document.client.id %}" class="btn btn-secondary">{% trans "Отмена"
+            %}</a>
         </form>
       </div>
     </div>

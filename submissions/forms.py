@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from django import forms
+from django.utils.translation import gettext_lazy as _
 
 from .models import Document, Submission
 
@@ -13,7 +14,7 @@ class SubmissionForm(forms.ModelForm):
     def clean_name(self):
         name = self.cleaned_data['name'].strip()
         if not name:
-            raise forms.ValidationError('Название не может быть пустым')
+            raise forms.ValidationError(_('Название не может быть пустым'))
         return name
 
 
@@ -25,7 +26,7 @@ class DocumentForm(forms.ModelForm):
     def clean_title(self):
         title = self.cleaned_data['title'].strip()
         if not title:
-            raise forms.ValidationError('Название документа обязательно')
+            raise forms.ValidationError(_('Название документа обязательно'))
         return title
 
     def clean(self):
@@ -34,5 +35,5 @@ class DocumentForm(forms.ModelForm):
         file_path = cleaned.get('file_path')
 
         if status and status != Document.Status.NOT_UPLOADED and not file_path:
-            self.add_error('file_path', 'Файл обязателен для выбранного статуса')
+            self.add_error('file_path', _('Файл обязателен для выбранного статуса'))
         return cleaned
