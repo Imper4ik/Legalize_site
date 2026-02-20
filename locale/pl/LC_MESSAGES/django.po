@@ -1832,3 +1832,55 @@ msgstr "Nazwa dokumentu (EN)"
 
 msgid "Название документа (RU)"
 msgstr "Nazwa dokumentu (RU)"
+
+
+msgid "Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и периодам"
+msgstr "Sprawdź i wygeneruj aktualne przypomnienia, filtruj po kliencie i okresach"
+
+
+msgid "Все хорошо"
+msgstr "Wszystko dobrze"
+
+
+msgid "Всё хорошо"
+msgstr "Wszystko dobrze"
+
+
+msgid "Скоро истекает (в течение 3 дней)"
+msgstr "Wkrótce wygasa (w ciągu 3 dni)"
+
+
+msgid "Истекло"
+msgstr "Wygasło"
+
+
+msgid "Не донесены документы"
+msgstr "Brakujące dokumenty"
+
+
+msgid "Статусы"
+msgstr "Statusy"
+
+
+msgid "Скоро истекает"
+msgstr "Wkrótce wygasa"
+
+
+msgid "Открыть клиента"
+msgstr "Otwórz klienta"
+
+
+msgid "Отправить письмо"
+msgstr "Wyślij e-mail"
+
+
+msgid "Недостающие документы"
+msgstr "Brakujące dokumenty"
+
+
+msgid "Истекающие документы"
+msgstr "Wygasające dokumenty"
+
+
+msgid "Нет недостающих документов."
+msgstr "Brak brakujących dokumentów."
