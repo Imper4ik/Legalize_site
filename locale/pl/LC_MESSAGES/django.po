@@ -1752,3 +1752,47 @@ msgstr "Powrót do profilu"
 #: clients/templates/clients/client_printable.html:251
 msgid "System zarządzania sprawami | Документ для внутреннего использования"
 msgstr "System zarządzania sprawami | Dokument do użytku wewnętrznego"
+
+
+msgid "Печать обложки"
+msgstr "Drukuj okładkę"
+
+
+msgid "Загрузить Wezwanie"
+msgstr "Załaduj Wezwanie"
+
+
+msgid "Дата фактической оплаты"
+msgstr "Data faktycznej płatności"
+
+
+msgid "ID транзакции"
+msgstr "ID transakcji"
+
+
+msgid "Подтверждение данных wezwanie"
+msgstr "Potwierdzenie danych wezwania"
+
+
+msgid "Проверьте распознанные данные перед сохранением. Все поля доступны для редактирования."
+msgstr "Sprawdź rozpoznane dane przed zapisem. Wszystkie pola można edytować."
+
+
+msgid "Распознать wezwanie"
+msgstr "Rozpoznaj wezwanie"
+
+
+msgid "Показать исходный текст (Debug)"
+msgstr "Pokaż tekst źródłowy (Debug)"
+
+
+msgid "Исходный текст"
+msgstr "Tekst źródłowy"
+
+
+msgid "Вызов (Wezwanie)"
+msgstr "Wezwanie"
+
+
+msgid "Просьба об ускорении"
+msgstr "Prośba o przyspieszenie"
