@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
 from django.http import HttpRequest, HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, render
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 from django.views.generic import ListView, DetailView
 from typing import Any
@@ -43,12 +44,16 @@ def submission_quick_create(request: HttpRequest) -> HttpResponse:
     if form.is_valid():
         submission = form.save()
         messages.success(request, _('Основание подачи создано'))
-        redirect_url = request.META.get('HTTP_REFERER') or reverse_lazy('clients:document_checklist_manage')
-        return redirect(redirect_url)
+        redirect_url = request.META.get('HTTP_REFERER')
+        if redirect_url and not url_has_allowed_host_and_scheme(redirect_url, allowed_hosts={request.get_host()}):
+            redirect_url = None
+        return redirect(redirect_url or reverse_lazy('clients:document_checklist_manage'))
 
     messages.error(request, _('Не удалось создать основание'), extra_tags='danger')
-    redirect_url = request.META.get('HTTP_REFERER') or reverse_lazy('clients:document_checklist_manage')
-    return redirect(redirect_url)
+    redirect_url = request.META.get('HTTP_REFERER')
+    if redirect_url and not url_has_allowed_host_and_scheme(redirect_url, allowed_hosts={request.get_host()}):
+        redirect_url = None
+    return redirect(redirect_url or reverse_lazy('clients:document_checklist_manage'))
 
 
 @staff_required_view
@@ -59,15 +64,18 @@ def submission_quick_update(request: HttpRequest, submission_id: int) -> HttpRes
         return HttpResponseNotAllowed(['POST'])
 
     form = SubmissionForm(request.POST, instance=submission)
-    redirect_url = request.META.get('HTTP_REFERER') or reverse_lazy('clients:document_checklist_manage')
+    redirect_url = request.META.get('HTTP_REFERER')
+    if redirect_url and not url_has_allowed_host_and_scheme(redirect_url, allowed_hosts={request.get_host()}):
+        redirect_url = None
+    safe_redirect_url = redirect_url or reverse_lazy('clients:document_checklist_manage')
 
     if form.is_valid():
         form.save()
         messages.success(request, _('Основание подачи обновлено'))
-        return redirect(redirect_url)
+        return redirect(safe_redirect_url)
 
     messages.error(request, _('Не удалось обновить основание'), extra_tags='danger')
-    return redirect(redirect_url)
+    return redirect(safe_redirect_url)
 
 
 @staff_required_view
@@ -76,10 +84,12 @@ def submission_quick_delete(request: HttpRequest, submission_id: int) -> HttpRes
         return HttpResponseNotAllowed(['POST'])
 
     submission = get_object_or_404(Submission, pk=submission_id)
-    redirect_url = request.META.get('HTTP_REFERER') or reverse_lazy('clients:document_checklist_manage')
+    redirect_url = request.META.get('HTTP_REFERER')
+    if redirect_url and not url_has_allowed_host_and_scheme(redirect_url, allowed_hosts={request.get_host()}):
+        redirect_url = None
     submission.delete()
     messages.success(request, _('Основание подачи удалено'))
-    return redirect(redirect_url)
+    return redirect(redirect_url or reverse_lazy('clients:document_checklist_manage'))
 
 
 class SubmissionDetailView(StaffRequiredMixin, DetailView):
