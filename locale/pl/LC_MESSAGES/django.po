@@ -1796,3 +1796,39 @@ msgstr "Wezwanie"
 
 msgid "Просьба об ускорении"
 msgstr "Prośba o przyspieszenie"
+
+
+msgid "Действия с основанием"
+msgstr "Działania z podstawą"
+
+
+msgid "Добавьте основание, чтобы настроить чеклист."
+msgstr "Dodaj podstawę, aby skonfigurować listę kontrolną."
+
+
+msgid "Тип подачи"
+msgstr "Typ podania"
+
+
+msgid "Название"
+msgstr "Nazwa"
+
+
+msgid "Создать"
+msgstr "Utwórz"
+
+
+msgid "Редактировать основание подачи"
+msgstr "Edytuj podstawę złożenia"
+
+
+msgid "Название документа (PL)"
+msgstr "Nazwa dokumentu (PL)"
+
+
+msgid "Название документа (EN)"
+msgstr "Nazwa dokumentu (EN)"
+
+
+msgid "Название документа (RU)"
+msgstr "Nazwa dokumentu (RU)"

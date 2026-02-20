@@ -1873,3 +1873,83 @@ msgstr "Summons (Wezwanie)"
 
 msgid "Просьба об ускорении"
 msgstr "Acceleration Request"
+
+
+msgid "Настройка чеклистов"
+msgstr "Checklists Settings"
+
+
+msgid "Управляйте списком обязательных документов для каждой цели подачи."
+msgstr "Manage the list of required documents for each application purpose."
+
+
+msgid "Действия с основанием"
+msgstr "Purpose Actions"
+
+
+msgid "Добавьте основание, чтобы настроить чеклист."
+msgstr "Add a purpose to configure the checklist."
+
+
+msgid "Добавить документ"
+msgstr "Add Document"
+
+
+msgid "Тип подачи"
+msgstr "Submission Type"
+
+
+msgid "Действия с документом"
+msgstr "Document Actions"
+
+
+msgid "Редактировать документ"
+msgstr "Edit Document"
+
+
+msgid "Удалить документ"
+msgstr "Delete Document"
+
+
+msgid "Стандартный документ"
+msgstr "Standard Document"
+
+
+msgid "Сохранить чеклист"
+msgstr "Save Checklist"
+
+
+msgid "Добавить новый документ"
+msgstr "Add New Document"
+
+
+msgid "Название документа"
+msgstr "Document Name"
+
+
+msgid "Название"
+msgstr "Name"
+
+
+msgid "Создать"
+msgstr "Create"
+
+
+msgid "Редактировать основание подачи"
+msgstr "Edit Submission Purpose"
+
+
+msgid "Название документа (PL)"
+msgstr "Document Name (PL)"
+
+
+msgid "Название документа (EN)"
+msgstr "Document Name (EN)"
+
+
+msgid "Название документа (RU)"
+msgstr "Document Name (RU)"
+
+
+msgid "Обязательный документ"
+msgstr "Required Document"
