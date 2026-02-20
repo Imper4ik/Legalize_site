@@ -7,11 +7,10 @@ from pathlib import Path
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
 from django.core import mail
 from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
+from django.test import RequestFactory, SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import translation
 
@@ -19,10 +18,10 @@ import shutil
 
 from allauth.account.models import EmailAddress
 
-from .forms import DocumentChecklistForm
+from .forms import DocumentChecklistForm, DocumentRequirementAddForm, DocumentRequirementEditForm
 from .models import Client, Document, DocumentRequirement, translate_document_name
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
-from clients.services.notifications import send_expiring_documents_email, send_missing_documents_email
+from clients.services.notifications import send_missing_documents_email
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper
 from clients.services.wezwanie_parser import parse_wezwanie
 
@@ -279,9 +278,10 @@ class DocumentRequirementFormTests(TestCase):
         )
 
         required = DocumentRequirement.required_for('work')
-        self.assertGreaterEqual(len(required), 2)
-        self.assertEqual(required[0], (DocumentType.PHOTOS.value, DocumentType.PHOTOS.label))
-        self.assertEqual(required[1], (DocumentType.PASSPORT.value, DocumentType.PASSPORT.label))
+        required_codes = [code for code, _label in required]
+        self.assertGreaterEqual(len(required_codes), 2)
+        self.assertEqual(required_codes[0], DocumentType.PHOTOS.value)
+        self.assertEqual(required_codes[1], DocumentType.PASSPORT.value)
 
     def test_client_checklist_falls_back_when_no_records(self):
         DocumentRequirement.objects.filter(application_purpose='work').delete()
@@ -377,14 +377,9 @@ class DocumentChecklistFormTests(TestCase):
 
         self.assertEqual(saved_count, 2)
         required = DocumentRequirement.required_for('study')
-        self.assertIn((DocumentType.PASSPORT.value, DocumentType.PASSPORT.label), required)
-        self.assertIn(
-            (
-                DocumentType.ENROLLMENT_CERTIFICATE.value,
-                DocumentType.ENROLLMENT_CERTIFICATE.label,
-            ),
-            required,
-        )
+        required_codes = [code for code, _label in required]
+        self.assertIn(DocumentType.PASSPORT.value, required_codes)
+        self.assertIn(DocumentType.ENROLLMENT_CERTIFICATE.value, required_codes)
 
     def test_checklist_form_keeps_all_unchecked_when_custom_exists(self):
         DocumentRequirement.objects.filter(application_purpose='study').delete()

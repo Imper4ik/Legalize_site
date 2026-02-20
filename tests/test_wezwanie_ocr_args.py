@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch, MagicMock
 from pathlib import Path
 from clients.services.wezwanie_parser import extract_text

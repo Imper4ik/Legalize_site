@@ -247,28 +247,43 @@ def send_missing_documents_email(client: Client) -> int:
         return 0
 
     language = _get_preferred_language(client)
-    checklist = client.get_document_checklist() or []
+    # Only check documents explicitly registered in the database.
+    # If there are no DB records for the purpose, fall back to the global checklist.
+    from clients.models import DocumentRequirement
+    has_db_records = DocumentRequirement.objects.filter(
+        application_purpose=client.application_purpose
+    ).exists()
+    catalog = DocumentRequirement.catalog_for(
+        client.application_purpose,
+        language,
+        include_optional=False,
+        include_fallback=not has_db_records,
+    )
+    uploaded_codes = set(
+        client.documents.values_list("document_type", flat=True)
+    )
     missing = []
     uploaded_with_expiry = []
 
-    for item in checklist:
-        if item.get("is_uploaded"):
-            latest_document = (item.get("documents") or [None])[0]
-            expiry_date = getattr(latest_document, "expiry_date", None)
+    for item in catalog:
+        code = item["code"]
+        if code in uploaded_codes:
+            # Document is uploaded — check for expiry info
+            doc = client.documents.filter(document_type=code).order_by("-uploaded_at").first()
+            expiry_date = getattr(doc, "expiry_date", None)
             if expiry_date:
                 uploaded_with_expiry.append(
                     {
-                        "name": item.get("name"),
+                        "name": item.get("label"),
                         "expiry_date": expiry_date,
                     }
                 )
             continue
 
-        latest_document = (item.get("documents") or [None])[0]
         missing.append(
             {
-                "name": item.get("name"),
-                "expiry_date": getattr(latest_document, "expiry_date", None),
+                "name": item.get("label"),
+                "expiry_date": None,
             }
         )
 

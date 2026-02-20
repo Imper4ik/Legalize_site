@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.db.models import Prefetch, Q
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import NoReverseMatch, reverse, reverse_lazy
+from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.generic import CreateView, DeleteView, DetailView, FormView, ListView, UpdateView
@@ -20,7 +20,7 @@ from clients.forms import (
     PaymentForm,
 )
 from clients.models import Client, Document, DocumentRequirement, Payment
-from clients.constants import DocumentType, DOCUMENT_CHECKLIST
+from clients.constants import DOCUMENT_CHECKLIST
 from submissions.forms import SubmissionForm
 from submissions.models import Submission
 from clients.services.calculator import (

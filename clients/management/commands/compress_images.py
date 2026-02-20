@@ -1,6 +1,5 @@
 """Django management command to compress existing document images."""
 from django.core.management.base import BaseCommand
-from django.db.models import Q
 from pathlib import Path
 
 from clients.models import Document
@@ -94,7 +93,7 @@ class Command(BaseCommand):
                             doc.file.name = str(new_path.relative_to(Path(doc.file.storage.location)))
                             doc.save(update_fields=['file'])
                 else:
-                    self.stdout.write(self.style.ERROR(f"  Failed to compress"))
+                    self.stdout.write(self.style.ERROR("  Failed to compress"))
                     error_count += 1
             except Exception as e:
                 self.stdout.write(self.style.ERROR(f"  Error: {e}"))
