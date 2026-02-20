@@ -14,13 +14,13 @@ logger = logging.getLogger(__name__)
 DATE_FORMATS = ("%d.%m.%Y", "%d-%m-%Y", "%d/%m/%Y", "%Y-%m-%d")
 CASE_NUMBER_PATTERNS = (
     # 0. NEW: Strict WSC Pattern (High Priority)
-    # Matches: WSC-II-S.6151.97770.2023 
+    # Matches: WSC-II-S.6151.97770.2023
     # Also allows I/1/l/L as Roman numeral part to catch OCR errors for 'II'
-    re.compile(r"\b(WSC[-\s]+(?:II|I|1|l|L|V|X)+[-\s]+[A-Z][.\s]+\d+[.\s]+\d+(?:[.\s]+\d+)?)\b", re.IGNORECASE),
-    
+    re.compile(r"\b(WSC[-\s]+(?:II|I|1|l|L|V|X)+[-\s]+[A-Z][.\s]+\d+[.\s]+\d+(?:[.]\d+)?)\b", re.IGNORECASE),
+
     # 0.5. NEW: Very Permissive WSC/WSO Pattern (catches typos like '11' for 'II', '5' for 'S')
     # Matches: WSC 11 5 6151... or WSO...
-    re.compile(r"\b((?:WSC|WSO|W\$C|W5C)[-\s]+[XIV1l]+[-\s]+[A-Z5$][.\s]+\d+[.\s]+\d+(?:[.\s]+\d+)?)\b", re.IGNORECASE),
+    re.compile(r"\b((?:WSC|WSO|W\$C|W5C)[-\s]+[XIV1l]+[-\s]+[A-Z5$][.\s]+\d+[.\s]+\d+(?:[.]\d+)?)\b", re.IGNORECASE),
 
     re.compile(r"numer\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     re.compile(r"nr\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
@@ -467,31 +467,34 @@ def _find_decision_date(text: str) -> date | None:
 def _find_full_name(text: str) -> str | None:
     """Extract full name from wezwanie (Polish names)."""
     name_patterns = [
-        # Pattern: "Pan/Pani Anna Nowak" — stops at newline / non-name char
+        # Pattern 1: "Pan/Pani Anna Nowak" or "Pan/i\nMikita BUTOUSKI"
+        # \s+ allows matching across a newline between the salutation and name.
+        # Subsequent parts still use [ \t]+ to stay on same line.
         re.compile(
-            r"(?:Pan/Pani|Pan|Pani|Panna|Pan/i|Panli|Mr|Mrs)\.?[ \t]+"
-            r"([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+"
-            r"(?:[ \t]+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+|[ \t]+[A-ZĄĆĘŁŃÓŚŹŻ]{2,}){1,3})",
+            r"(?:Pan/Pani|Pan|Pani|Panna|Pan/i|Panli|Mr|Mrs)\.?\s+"
+            r"([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż-]+"
+            r"(?:[ \t]+[A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż-]+"
+            r"|[ \t]+[A-ZĄĆĘŁŃÓŚŹŻ]{2,}){1,3})",
             re.UNICODE,
         ),
-        # Pattern: "Adresat: Jan Kowalski"
+        # Pattern 2: "Adresat: Jan Kowalski"
         re.compile(
             r"(?:Adresat|Dla|Do)\s*[:\-]?[ \t]+"
             r"([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+(?:[ \t]+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+){1,3})",
             re.UNICODE,
         ),
-        # Pattern: "Imię i nazwisko: Jan Kowalski"
+        # Pattern 3: "Imię i nazwisko: Jan Kowalski"
         re.compile(r"(?:imię i nazwisko|imi[ęe] oraz nazwisko)[:\s]+([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+(?:[ \t]+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+)+)", re.IGNORECASE | re.UNICODE),
-        # Pattern: "Name: Jan Kowalski"
+        # Pattern 4: "Name: Jan Kowalski"
         re.compile(r"(?:name|full name)[:\s]+([A-Z][a-z]+(?:[ \t]+[A-Z][a-z]+)+)", re.IGNORECASE),
     ]
 
     for pattern in name_patterns:
         match = pattern.search(text)
         if match:
-            # Strip and take only the first line to avoid capturing following lines
+            # Take only the first line to avoid spilling into next OCR lines
             name = match.group(1).strip().splitlines()[0].strip()
-            # Validate: should have at least 2 words
+            # Validate: at least 2 words
             if len(name.split()) >= 2:
                 return name
 
