@@ -16,16 +16,13 @@
         <h5 class="mb-3">{% trans "Основная информация" %}</h5>
         <div class="p-3 rounded mb-4" style="background-color: #e7f3ff;">
           <div class="row">
-            <div class="col-md-6 mb-3"><label class="form-label">{{ form.first_name.label }}</label>{{ form.first_name
-              }}</div>
+            <div class="col-md-6 mb-3"><label class="form-label">{{ form.first_name.label }}</label>{{ form.first_name }}</div>
             <div class="col-md-6 mb-3"><label class="form-label">{{ form.last_name.label }}</label>{{ form.last_name }}
             </div>
             <div class="col-md-6 mb-3"><label class="form-label">{{ form.email.label }}</label>{{ form.email }}</div>
             <div class="col-md-6 mb-3"><label class="form-label">{{ form.phone.label }}</label>{{ form.phone }}</div>
-            <div class="col-md-6 mb-3"><label class="form-label">{{ form.citizenship.label }}</label>{{ form.citizenship
-              }}</div>
-            <div class="col-md-6 mb-3"><label class="form-label">{{ form.passport_num.label }}</label>{{
-              form.passport_num }}</div>
+            <div class="col-md-6 mb-3"><label class="form-label">{{ form.citizenship.label }}</label>{{ form.citizenship }}</div>
+            <div class="col-md-6 mb-3"><label class="form-label">{{ form.passport_num.label }}</label>{{ form.passport_num }}</div>
           </div>
         </div>
 
@@ -33,18 +30,15 @@
         <div class="p-3 rounded mb-4" style="background-color: #e7f3ff;">
           <div class="row">
             {% if form.case_number %}
-            <div class="col-md-6 mb-3"><label class="form-label">{{ form.case_number.label }}</label>{{ form.case_number
-              }}</div>
+            <div class="col-md-6 mb-3"><label class="form-label">{{ form.case_number.label }}</label>{{ form.case_number }}</div>
             {% endif %}
             {% if form.status %}
             <div class="col-md-6 mb-3"><label class="form-label">{{ form.status.label }}</label>{{ form.status }}</div>
             {% endif %}
-            <div class="col-md-6 mb-3"><label class="form-label">{{ form.application_purpose.label }}</label>{{
-              form.application_purpose }}</div>
+            <div class="col-md-6 mb-3"><label class="form-label">{{ form.application_purpose.label }}</label>{{ form.application_purpose }}</div>
             <div class="col-md-6 mb-3"><label class="form-label">{{ form.language.label }}</label>{{ form.language }}
             </div>
-            <div class="col-md-6 mb-3"><label class="form-label">{{ form.basis_of_stay.label }}</label>{{
-              form.basis_of_stay }}</div>
+            <div class="col-md-6 mb-3"><label class="form-label">{{ form.basis_of_stay.label }}</label>{{ form.basis_of_stay }}</div>
             <div class="col-md-6 mb-3">
               <label class="form-label">{{ form.legal_basis_end_date.label }}</label>
               <div class="input-group" id="legal_basis_end_date_picker">
@@ -54,8 +48,7 @@
               </div>
             </div>
             {% if form.employer_phone %}
-            <div class="col-md-6 mb-3"><label class="form-label">{{ form.employer_phone.label }}</label>{{
-              form.employer_phone }}</div>
+            <div class="col-md-6 mb-3"><label class="form-label">{{ form.employer_phone.label }}</label>{{ form.employer_phone }}</div>
             {% endif %}
             {% if form.submission_date %}
             <div class="col-md-6 mb-3">
@@ -86,8 +79,7 @@
             <button type="button" class="btn btn-light btn-sm format-button" data-format="bold"
               title="Жирный"><b>B</b></button>
           </div>
-          <div class="form-control notes-editor-main" id="notes-editor" contenteditable="true" style="height: 120px;">{{
-            form.notes.value|safe|default:'' }}</div>
+          <div class="form-control notes-editor-main" id="notes-editor" contenteditable="true" style="height: 120px;">{{ form.notes.value|safe|default:'' }}</div>
           <input type="hidden" name="notes" id="id_notes_hidden" value="{{ form.notes.value|default:'' }}">
         </div>
 
