@@ -20,16 +20,14 @@
 
                 <p class="text-danger fw-bold mt-3">
                     <i class="fas fa-exclamation-triangle me-2"></i>
-                    {% trans "Это действие необратимо! Все связанные с клиентом документы, платежи и напоминания также
-                    будут удалены." %}
+                    {% trans "Это действие необратимо! Все связанные с клиентом документы, платежи и напоминания также будут удалены." %}
                 </p>
 
                 <form method="post">
                     {% csrf_token %}
                     <div class="d-grid gap-2 mt-4">
                         <button type="submit" class="btn btn-danger btn-lg">{% trans "Да, я уверен, удалить" %}</button>
-                        <a href="{% url 'clients:client_detail' client.pk %}" class="btn btn-secondary">{% trans
-                            "Отмена" %}</a>
+                        <a href="{% url 'clients:client_detail' client.pk %}" class="btn btn-secondary">{% trans "Отмена" %}</a>
                     </div>
                 </form>
             </div>
