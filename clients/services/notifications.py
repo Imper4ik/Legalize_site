@@ -206,14 +206,21 @@ def send_required_documents_email(client: Client) -> int:
         return 0
 
     language = _get_preferred_language(client)
-def _get_required_documents_context(client: Client) -> dict | None:
-    checklist = client.get_document_checklist() or []
-    if not checklist:
+def _get_required_documents_context(client: Client, language: str | None = None) -> dict | None:
+    if language is None:
+        language = _get_preferred_language(client)
+    from clients.models import DocumentRequirement
+    catalog = DocumentRequirement.catalog_for(
+        client.application_purpose,
+        language,
+        include_optional=False,
+        include_fallback=True,
+    )
+    if not catalog:
         return None
-
     return {
         "client": client,
-        "documents": [item.get("name") for item in checklist],
+        "documents": [item.get("label") for item in catalog],
     }
 
 
@@ -273,8 +280,9 @@ def send_missing_documents_email(client: Client) -> int:
         return 0
 
     language = _get_preferred_language(client)
-def _get_missing_documents_context(client: Client) -> dict | None:
-    language = _get_preferred_language(client)
+def _get_missing_documents_context(client: Client, language: str | None = None) -> dict | None:
+    if language is None:
+        language = _get_preferred_language(client)
     from clients.models import DocumentRequirement
     has_db_records = DocumentRequirement.objects.filter(
         application_purpose=client.application_purpose
@@ -294,7 +302,6 @@ def _get_missing_documents_context(client: Client) -> dict | None:
     for item in catalog:
         code = item["code"]
         if code in uploaded_codes:
-            # Document is uploaded — check for expiry info
             doc = client.documents.filter(document_type=code).order_by("-uploaded_at").first()
             expiry_date = getattr(doc, "expiry_date", None)
             if expiry_date:

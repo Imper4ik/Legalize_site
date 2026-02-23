@@ -39,13 +39,12 @@ def email_preview_api(request, pk):
 
     context = None
     if template_type == 'missing_documents':
-        context = _get_missing_documents_context(client)
+        context = _get_missing_documents_context(client, language)
     elif template_type == 'expiring_documents':
-        # Need documents for expiring, grab all with expiry date for preview
         documents = list(client.documents.filter(expiry_date__isnull=False))
         context = _get_expiring_documents_context(client, documents)
     elif template_type == 'required_documents':
-        context = _get_required_documents_context(client)
+        context = _get_required_documents_context(client, language)
     elif template_type == 'appointment_notification':
         context = _get_appointment_context(client)
     elif template_type == 'expired_documents':
