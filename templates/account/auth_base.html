@@ -1,6 +1,7 @@
 {% load i18n static %}
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -43,8 +44,8 @@
         :root[data-theme="dark"] {
             color-scheme: dark;
             --auth-bg: radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.35), transparent 60%),
-                        radial-gradient(circle at 100% 10%, rgba(147, 51, 234, 0.35), transparent 50%),
-                        linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.95));
+                radial-gradient(circle at 100% 10%, rgba(147, 51, 234, 0.35), transparent 50%),
+                linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.95));
             --auth-card: rgba(15, 23, 42, 0.85);
             --auth-card-inverse: linear-gradient(140deg, rgba(37, 99, 235, 0.92), rgba(147, 51, 234, 0.9));
             --auth-text: #e2e8f0;
@@ -666,38 +667,44 @@
             }
         })();
     </script>
+    <script>
+        // (Theme JS here)
+    </script>
+    <!-- Favicon -->
+    <link rel="icon" type="image/jpeg" href="{% static 'img/favicon.jpg' %}">
     {% block extra_head %}{% endblock %}
 </head>
+
 <body>
     <header class="auth-toolbar" role="banner">
-        <a class="auth-brand" href="{% url 'account_login' %}">Legalize</a>
+        <a class="auth-brand" href="{% url 'account_login' %}">
+            <img src="{% static 'img/favicon.jpg' %}" alt="Logo" width="24" height="24"
+                class="d-inline-block align-text-top me-1 rounded-circle object-fit-cover">
+            Legalize
+        </a>
         <div class="auth-toolbar-controls">
             <form action="{% url 'set_language' %}" method="post" class="auth-language-form" data-language-switcher>
                 {% csrf_token %}
                 <input name="next" type="hidden" value="{{ request.get_full_path|default:'/' }}">
-                <label class="auth-language-label" for="auth-language-select">{% translate "Выбор языка интерфейса" %}</label>
+                <label class="auth-language-label" for="auth-language-select">{% translate "Выбор языка интерфейса"
+                    %}</label>
                 <select id="auth-language-select" name="language" class="auth-language-select">
                     {% get_current_language as LANGUAGE_CODE %}
                     {% get_available_languages as LANGUAGES %}
                     {% for lang_code, lang_name in LANGUAGES %}
-                        <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>{{ lang_code|upper }}</option>
+                    <option value="{{ lang_code }}" {% if lang_code==LANGUAGE_CODE %}selected{% endif %}>{{
+                        lang_code|upper }}</option>
                     {% endfor %}
                 </select>
             </form>
-            <button
-                class="auth-theme-toggle theme-toggle"
-                type="button"
-                aria-pressed="false"
-                aria-label="{% translate 'Переключить тему' %}"
-                title="{% translate 'Переключить на тёмную тему' %}"
-                data-theme-toggle
-                data-theme-light-text="{% translate 'Светлая тема' %}"
+            <button class="auth-theme-toggle theme-toggle" type="button" aria-pressed="false"
+                aria-label="{% translate 'Переключить тему' %}" title="{% translate 'Переключить на тёмную тему' %}"
+                data-theme-toggle data-theme-light-text="{% translate 'Светлая тема' %}"
                 data-theme-dark-text="{% translate 'Тёмная тема' %}"
                 data-theme-light-title="{% translate 'Переключить на тёмную тему' %}"
                 data-theme-dark-title="{% translate 'Переключить на светлую тему' %}"
                 data-theme-light-label="{% translate 'Переключить на тёмную тему' %}"
-                data-theme-dark-label="{% translate 'Переключить на светлую тему' %}"
-            >
+                data-theme-dark-label="{% translate 'Переключить на светлую тему' %}">
                 <span class="icon-sun">☀️</span>
                 <span class="icon-moon">🌙</span>
                 <span class="auth-theme-toggle-text" data-theme-toggle-text>{% translate "Светлая тема" %}</span>
@@ -710,4 +717,5 @@
     <script src="{% static 'js/language-switcher.js' %}" defer></script>
     <script src="{% static 'js/theme-toggle.js' %}"></script>
 </body>
+
 </html>
