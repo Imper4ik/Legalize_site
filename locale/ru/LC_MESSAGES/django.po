@@ -79,11 +79,11 @@ msgstr "Воссоединение семьи"
 
 #: .\clients\models.py:183 .\clients\templates\clients\partials\modals.html:216
 msgid "Польский"
-msgstr "Русский"
+msgstr "Польский"
 
 #: .\clients\models.py:184 .\clients\templates\clients\partials\modals.html:215
 msgid "Английский"
-msgstr ""
+msgstr "Английский"
 
 #: .\clients\models.py:185 .\clients\templates\clients\partials\modals.html:214
 #: .\legalize_site\settings\base.py:160
@@ -441,7 +441,7 @@ msgstr "К дата: %(due)s"
 #, fuzzy
 #| msgid "Не видите письмо?"
 msgid "Текст письма:"
-msgstr "Не нашли письмо"
+msgstr "Текст письма:"
 
 #: .\clients\services\notifications.py:184
 #, fuzzy
