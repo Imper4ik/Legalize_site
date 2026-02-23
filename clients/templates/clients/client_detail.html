@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load i18n static %}
 
+<!-- prettier-ignore -->
 {% block title %}{% blocktrans with client_name=client.first_name %}Детали клиента: {{ client_name }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
@@ -10,7 +11,8 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h4>{% translate "Финансы" %}</h4>
-  <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPaymentModal">+ {% translate "Добавить счёт" %}</button>
+  <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPaymentModal">+ {%
+    translate "Добавить счёт" %}</button>
 </div>
 <div id="payment-alerts" class="mb-2"></div>
 <div class="card mb-4">
@@ -20,7 +22,8 @@
       {% include 'clients/partials/payment_item.html' with payment=payment %}
     </li>
     {% empty %}
-    <li class="list-group-item text-muted" id="no-payments-message">{% translate "Счета на оплату еще не созданы." %}</li>
+    <li class="list-group-item text-muted" id="no-payments-message">{% translate "Счета на оплату еще не созданы." %}
+    </li>
     {% endfor %}
   </ul>
 </div>
@@ -29,11 +32,17 @@
 
 <div class="d-flex justify-content-between align-items-center">
   <h2 class="mb-0">{% translate "Чеклист документов" %}</h2>
-  <form id="verify-all-documents-form" action="{% url 'clients:verify_all_documents' client_id=client.pk %}"
-    method="post" class="ms-3">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-outline-success btn-sm">{% translate "Проверить все загруженные" %}</button>
-  </form>
+  <div class="d-flex align-items-center ms-3 gap-2">
+    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
+      data-bs-target="#sendEmailModal">
+      <i class="bi bi-envelope"></i> {% translate "Отправить email" %}
+    </button>
+    <form id="verify-all-documents-form" action="{% url 'clients:verify_all_documents' client_id=client.pk %}"
+      method="post" class="m-0">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-outline-success btn-sm">{% translate "Проверить все загруженные" %}</button>
+    </form>
+  </div>
 </div>
 
 <div id="document-alerts" class="mb-2"></div>

@@ -26,8 +26,10 @@ urlpatterns = [
         name='client_document_print',
     ),
 
-    # URL для обновления заметок и доступов
+    # URL для обновления заметок, доступов и писем
     path('client/<int:pk>/update-notes/', views.update_client_notes, name='update_client_notes'),
+    path('client/<int:pk>/email/preview/', views.email_preview_api, name='email_preview_api'),
+    path('client/<int:pk>/email/send/', views.send_custom_email, name='send_custom_email'),
 
     # URL для работы с документами
     path('client/<int:client_id>/documents/add/<str:doc_type>/', views.add_document, name='add_document'),

@@ -186,12 +186,14 @@ def _send_confirmation_email(subject: str, body: str, recipients: list[str]) -> 
         "Письмо клиенту было отправлено. Во вложении находится текст отправленного письма."
     )
     try:
-        message = EmailMessage(
+        from django.core.mail import EmailMultiAlternatives
+        message = EmailMultiAlternatives(
             confirmation_subject,
             confirmation_body,
             settings.DEFAULT_FROM_EMAIL,
             staff_recipients,
         )
+        message.attach_alternative(f"<p>{confirmation_body}</p>", "text/html")
         message.attach("sent-email.pdf", pdf_bytes, "application/pdf")
         message.send()
     except Exception:  # pragma: no cover - defensive safeguard
@@ -204,14 +206,27 @@ def send_required_documents_email(client: Client) -> int:
         return 0
 
     language = _get_preferred_language(client)
+def _get_required_documents_context(client: Client) -> dict | None:
     checklist = client.get_document_checklist() or []
     if not checklist:
-        return 0
+        return None
 
-    context = {
+    return {
         "client": client,
         "documents": [item.get("name") for item in checklist],
     }
+
+
+def send_required_documents_email(client: Client) -> int:
+    """Send the required document checklist to the client upon account creation."""
+    if not client.email:
+        return 0
+
+    context = _get_required_documents_context(client)
+    if not context:
+        return 0
+
+    language = _get_preferred_language(client)
     subject = _get_subject("required_documents", language)
     body = _render_email_body("required_documents", context, language)
     return _send_email(subject, body, [client.email])
@@ -223,17 +238,28 @@ def send_expired_documents_email(client: Client) -> int:
         return 0
 
     language = _get_preferred_language(client)
+def _get_expired_documents_context(client: Client) -> dict | None:
     today = timezone.localdate()
     expired_documents = client.documents.filter(expiry_date__isnull=False, expiry_date__lte=today).order_by(
         "expiry_date"
     )
 
-    context = {
+    return {
         "client": client,
         "fingerprints_date": client.fingerprints_date,
         "expired_documents": expired_documents,
         "today": today,
     }
+
+
+def send_expired_documents_email(client: Client) -> int:
+    """Send a summary of expired documents after fingerprints are submitted."""
+    if not client.email:
+        return 0
+
+    language = _get_preferred_language(client)
+    context = _get_expired_documents_context(client)
+    
     with override(language):
         subject = _get_subject("expired_documents", language)
     body = _render_email_body("expired_documents", context, language)
@@ -247,8 +273,8 @@ def send_missing_documents_email(client: Client) -> int:
         return 0
 
     language = _get_preferred_language(client)
-    # Only check documents explicitly registered in the database.
-    # If there are no DB records for the purpose, fall back to the global checklist.
+def _get_missing_documents_context(client: Client) -> dict | None:
+    language = _get_preferred_language(client)
     from clients.models import DocumentRequirement
     has_db_records = DocumentRequirement.objects.filter(
         application_purpose=client.application_purpose
@@ -288,13 +314,26 @@ def send_missing_documents_email(client: Client) -> int:
         )
 
     if not missing:
-        return 0
+        return None
 
-    context = {
+    return {
         "client": client,
         "documents": missing,
         "uploaded_with_expiry": uploaded_with_expiry,
     }
+
+
+def send_missing_documents_email(client: Client) -> int:
+    """Send a reminder listing documents that are still missing for the client."""
+
+    if not client.email:
+        return 0
+
+    language = _get_preferred_language(client)
+    context = _get_missing_documents_context(client)
+    if not context:
+        return 0
+
     subject = _get_subject("missing_documents", language)
     body = _render_email_body("missing_documents", context, language)
     return _send_email(subject, body, [client.email])
@@ -307,6 +346,10 @@ def send_expiring_documents_email(client: Client, documents: list[Document]) -> 
         return 0
 
     language = _get_preferred_language(client)
+def _get_expiring_documents_context(client: Client, documents: list[Document]) -> dict | None:
+    if not documents:
+        return None
+
     today = timezone.localdate()
     soon_days = 3
     soon_cutoff = today + timedelta(days=soon_days)
@@ -348,7 +391,7 @@ def send_expiring_documents_email(client: Client, documents: list[Document]) -> 
             }
         )
 
-    context = {
+    return {
         "client": client,
         "expired_documents": expired_documents,
         "expiring_soon_documents": expiring_soon_documents,
@@ -358,6 +401,19 @@ def send_expiring_documents_email(client: Client, documents: list[Document]) -> 
         "today": today,
         "cutoff": cutoff,
     }
+
+
+def send_expiring_documents_email(client: Client, documents: list[Document]) -> int:
+    """Send a notice about documents expiring soon (within the next week)."""
+
+    if not client.email or not documents:
+        return 0
+
+    language = _get_preferred_language(client)
+    context = _get_expiring_documents_context(client, documents)
+    if not context:
+        return 0
+
     subject = _get_subject("expiring_documents", language)
     body = _render_email_body("expiring_documents", context, language)
     return _send_email(subject, body, [client.email])
@@ -369,12 +425,28 @@ def send_appointment_notification_email(client: Client) -> int:
         return 0
 
     language = _get_preferred_language(client)
-    context = {
+def _get_appointment_context(client: Client) -> dict | None:
+    if not client.fingerprints_date:
+        return None
+
+    return {
         "client": client,
         "fingerprints_date": client.fingerprints_date,
         "fingerprints_time": client.fingerprints_time,
         "fingerprints_location": client.fingerprints_location,
     }
+
+
+def send_appointment_notification_email(client: Client) -> int:
+    """Send a notification about a fingerprint appointment."""
+    if not client.email or not client.fingerprints_date:
+        return 0
+
+    language = _get_preferred_language(client)
+    context = _get_appointment_context(client)
+    if not context:
+        return 0
+
     subject = _get_subject("appointment_notification", language)
     body = _render_email_body("appointment_notification", context, language)
     return _send_email(subject, body, [client.email])

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Legalize Site 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-20 20:57+0100\n"
+"POT-Creation-Date: 2026-02-23 23:45+0100\n"
 "PO-Revision-Date: 2024-06-20 00:00+0000\n"
 "Last-Translator: Legalize Team <noreply@legalize.example>\n"
 "Language-Team: Legalize Team\n"
@@ -392,6 +392,7 @@ msgstr ""
 
 # Email subjects
 #: .\clients\services\notifications.py:23
+#: .\clients\templates\clients\partials\modals.html:215
 msgid "Список необходимых документов"
 msgstr "Список необходимых документов"
 
@@ -721,28 +722,31 @@ msgstr "Вы уверены, что хотите безвозвратно уда
 msgid "Да, я уверен, удалить"
 msgstr ""
 
-#: .\clients\templates\clients\client_detail.html:4
+#: .\clients\templates\clients\client_detail.html:5
 #, python-format
 msgid "Детали клиента: %(client_name)s"
 msgstr "Детали клиента: %(client_name)s"
 
-#: .\clients\templates\clients\client_detail.html:12
+#: .\clients\templates\clients\client_detail.html:13
 msgid "Финансы"
 msgstr "Финансы"
 
-#: .\clients\templates\clients\client_detail.html:13
-msgid "Добавить счёт"
-msgstr "Добавить счёт"
-
-#: .\clients\templates\clients\client_detail.html:23
+#: .\clients\templates\clients\client_detail.html:25
 msgid "Счета на оплату еще не созданы."
 msgstr "Счета на оплату еще не созданы."
 
-#: .\clients\templates\clients\client_detail.html:31
+#: .\clients\templates\clients\client_detail.html:34
 msgid "Чеклист документов"
 msgstr "Чеклист документов"
 
-#: .\clients\templates\clients\client_detail.html:35
+#: .\clients\templates\clients\client_detail.html:38
+#: .\clients\templates\clients\partials\reminder_item.html:78
+#, fuzzy
+#| msgid "Отправить письмо"
+msgid "Отправить email"
+msgstr "Отправить письмо"
+
+#: .\clients\templates\clients\client_detail.html:43
 #, fuzzy
 #| msgid "Проверить и создать новые"
 msgid "Проверить все загруженные"
@@ -1104,6 +1108,7 @@ msgid "Отправить письмо"
 msgstr "Отправить письмо"
 
 #: .\clients\templates\clients\document_reminder_list.html:228
+#: .\clients\templates\clients\partials\modals.html:211
 msgid "Недостающие документы"
 msgstr "Недостающие документы"
 
@@ -1118,6 +1123,7 @@ msgid "Нет недостающих документов."
 msgstr "Нет недостающих документов."
 
 #: .\clients\templates\clients\document_reminder_list.html:248
+#: .\clients\templates\clients\partials\modals.html:212
 msgid "Истекающие документы"
 msgstr "Истекающие документы"
 
@@ -1378,6 +1384,44 @@ msgstr "Откройте письмо от Legalize и кликните по к�
 msgid "Загрузить и распознать"
 msgstr "Загрузить новый файл"
 
+#: .\clients\templates\clients\partials\modals.html:199
+#, fuzzy
+#| msgid "Отправить письмо"
+msgid "Отправить email клиенту"
+msgstr "Отправить письмо"
+
+#: .\clients\templates\clients\partials\modals.html:208
+#, fuzzy
+#| msgid "Не нашли письмо"
+msgid "Шаблон письма"
+msgstr "Не нашли письмо"
+
+#: .\clients\templates\clients\partials\modals.html:210
+msgid "Свой текст (без шаблона)"
+msgstr ""
+
+#: .\clients\templates\clients\partials\modals.html:220
+msgid "Язык"
+msgstr ""
+
+#: .\clients\templates\clients\partials\modals.html:233
+#, fuzzy
+#| msgid "Не видите письмо?"
+msgid "Тема письма"
+msgstr "Не нашли письмо"
+
+#: .\clients\templates\clients\partials\modals.html:238
+#, fuzzy
+#| msgid "Не видите письмо?"
+msgid "Текст письма"
+msgstr "Не нашли письмо"
+
+#: .\clients\templates\clients\partials\modals.html:248
+#, fuzzy
+#| msgid "Отправить письмо"
+msgid "Отправить"
+msgstr "Отправить письмо"
+
 #: .\clients\templates\clients\partials\payment_item.html:8
 msgid "Счёт от"
 msgstr ""
@@ -1407,12 +1451,6 @@ msgstr ""
 #: .\clients\templates\clients\partials\reminder_item.html:59
 msgid "(не указан)"
 msgstr "(не указан)"
-
-#: .\clients\templates\clients\partials\reminder_item.html:78
-#, fuzzy
-#| msgid "Отправить письмо"
-msgid "Отправить email"
-msgstr "Отправить письмо"
 
 #: .\clients\templates\clients\partials\reminder_item.html:87
 msgid "Выполнено"
@@ -2734,6 +2772,9 @@ msgstr "Показать исходный текст (Debug)"
 #: .\templates\clients\partials\modals.html:174
 msgid "Исходный текст"
 msgstr "Исходный текст"
+
+#~ msgid "Добавить счёт"
+#~ msgstr "Добавить счёт"
 
 #~ msgid "Informacja starosty"
 #~ msgstr "Информация старосты"
