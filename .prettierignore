@@ -1,0 +1,4 @@
+# Prettier не трогает Django template-файлы
+**/*.html
+templates/**
+**/templates/**
