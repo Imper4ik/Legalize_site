@@ -1,0 +1,14 @@
+{{ client.first_name }} {{ client.last_name }},
+
+Мы проверили документы, отправленные Вами. Для завершения дела нам ещё не хватает следующих документов:
+{% for document in documents %}- {{ document.name }}{% if document.expiry_date %} (действителен до {{ document.expiry_date|date:"d.m.Y" }}){% endif %}
+{% endfor %}
+{% if uploaded_with_expiry %}
+У нас уже есть следующие документы с датами окончания действия:
+{% for document in uploaded_with_expiry %}- {{ document.name }}{% if document.expiry_date %} (действителен до {{ document.expiry_date|date:"d.m.Y" }}){% endif %}
+{% endfor %}
+{% endif %}
+Пожалуйста, подготовьте эти документы и пришлите их в ответ на это письмо. Если часть из них уже была передана, напишите нам, и мы обновим информацию.
+
+С уважением,
+Команда Legalize
