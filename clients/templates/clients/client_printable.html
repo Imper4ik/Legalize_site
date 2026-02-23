@@ -272,16 +272,14 @@
                         <td class="value-col">
                             <span class="bold">{{ client.basis_of_stay|default:"" }}</span>
                             <br>
-                            style="color: var(--primary-color); font-weight: bold;">{{
-                            client.legal_basis_end_date|date:"d.m.Y"|default:"" }}</span>)</span>
+                            style="color: var(--primary-color); font-weight: bold;">{{ client.legal_basis_end_date|date:"d.m.Y"|default:"" }}</span>)</span>
                         </td>
                     </tr>
 
                     <tr>
                         <td class="label-col" style="background-color: #e8efff;">Data złożenia wniosku / Дата подачи
                         </td>
-                        <td class="value-col bold" style="background-color: #f4f8ff;">{{
-                            client.submission_date|date:"d.m.Y"|default:"" }}</td>
+                        <td class="value-col bold" style="background-color: #f4f8ff;">{{ client.submission_date|date:"d.m.Y"|default:"" }}</td>
                     </tr>
                 </table>
             </div>
