@@ -49,14 +49,12 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="id_transaction_id" class="form-label">{% translate "ID транзакции (если есть)"
-                            %}</label>
+                        <label for="id_transaction_id" class="form-label">{% translate "ID транзакции (если есть)" %}</label>
                         <input type="text" name="transaction_id" class="form-control" id="id_transaction_id">
                     </div>
 
                     <div class="modal-footer px-0 pb-0">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена"
-                            %}</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
                         <button type="submit" class="btn btn-primary">{% translate "Сохранить" %}</button>
                     </div>
                 </form>
@@ -82,8 +80,7 @@
                         <p class="text-muted text-center">{% translate "Загрузка..." %}</p>
                     </div>
                     <div class="modal-footer px-0 pb-0">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена"
-                            %}</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
                         <button type="submit" class="btn btn-primary">{% translate "Сохранить" %}</button>
                     </div>
                 </form>
@@ -117,8 +114,7 @@
                             <input type="file" name="file" class="form-control" id="id_file" required>
                         </div>
                         <div class="mb-3">
-                            <label for="id_expiry_date" class="form-label">{% translate "Дата истечения (если есть)"
-                                %}</label>
+                            <label for="id_expiry_date" class="form-label">{% translate "Дата истечения (если есть)" %}</label>
                             <input type="date" name="expiry_date" class="form-control" id="id_expiry_date">
                         </div>
                     </div>
@@ -166,13 +162,11 @@
                     </div>
 
                     <div class="modal-footer px-0 pb-0 mt-3">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Закрыть"
-                            %}</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Закрыть" %}</button>
 
                         <!-- Actions for normal upload -->
                         <div id="uploadDocumentActions">
-                            <button type="submit" class="btn btn-primary" id="uploadDocumentSubmitButton">{% translate
-                                "Загрузить" %}</button>
+                            <button type="submit" class="btn btn-primary" id="uploadDocumentSubmitButton">{% translate "Загрузить" %}</button>
                             <button type="submit" class="btn btn-success d-none" id="wezwanieParseButton">
                                 <i class="bi bi-magic"></i> {% translate "Загрузить и распознать" %}
                             </button>
@@ -180,8 +174,7 @@
 
                         <!-- Actions for confirmation -->
                         <div id="wezwanieConfirmActions" class="d-none">
-                            <button type="button" class="btn btn-primary" id="wezwanieConfirmButton">{% translate
-                                "Подтвердить данные" %}</button>
+                            <button type="button" class="btn btn-primary" id="wezwanieConfirmButton">{% translate "Подтвердить данные" %}</button>
                         </div>
                     </div>
                 </form>
@@ -210,8 +203,7 @@
                                 <option value="custom" selected>{% translate "Свой текст (без шаблона)" %}</option>
                                 <option value="missing_documents">{% translate "Недостающие документы" %}</option>
                                 <option value="expiring_documents">{% translate "Истекающие документы" %}</option>
-                                <option value="appointment_notification">{% translate "Уведомление о встрече (wezwanie)"
-                                    %}</option>
+                                <option value="appointment_notification">{% translate "Уведомление о встрече (wezwanie)" %}</option>
                                 <option value="required_documents">{% translate "Список необходимых документов" %}
                                 </option>
                             </select>
@@ -219,12 +211,9 @@
                         <div class="col-md-6">
                             <label for="emailLanguage" class="form-label">{% translate "Язык" %}</label>
                             <select id="emailLanguage" class="form-select">
-                                <option value="ru" {% if client.language=='ru' %}selected{% endif %}>{% translate
-                                    "Русский" %}</option>
-                                <option value="en" {% if client.language=='en' %}selected{% endif %}>{% translate
-                                    "Английский" %}</option>
-                                <option value="pl" {% if client.language=='pl' %}selected{% endif %}>{% translate
-                                    "Польский" %}</option>
+                                <option value="ru" {% if client.language=='ru' %}selected{% endif %}>{% translate "Русский" %}</option>
+                                <option value="en" {% if client.language=='en' %}selected{% endif %}>{% translate "Английский" %}</option>
+                                <option value="pl" {% if client.language=='pl' %}selected{% endif %}>{% translate "Польский" %}</option>
                             </select>
                         </div>
                     </div>
@@ -237,13 +226,11 @@
                     <div class="mb-3">
                         <label for="emailBody" class="form-label">{% translate "Текст письма" %}</label>
                         <textarea name="body" class="form-control" id="emailBody" rows="10" required></textarea>
-                        <div class="form-text">{% translate "Текст можно редактировать вручную. Письмо будет отправлено
-                            именно в таком виде." %}</div>
+                        <div class="form-text">{% translate "Текст можно редактировать вручную. Письмо будет отправлено именно в таком виде." %}</div>
                     </div>
 
                     <div class="modal-footer px-0 pb-0">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена"
-                            %}</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
                         <button type="submit" class="btn btn-primary" id="sendEmailButton">
                             <i class="bi bi-send"></i> {% translate "Отправить" %}
                         </button>
