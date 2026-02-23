@@ -48,13 +48,13 @@ def main():
         errors = check_file(path)
         if errors:
             found_errors = True
-            print(f"\n❌  {path}: template tag split across lines:")
+            print(f"\n[FAIL]  {path}: template tag split across lines:")
             for lineno, line in errors:
                 print(f"    Line {lineno}: {line[:120]}")
 
     if found_errors:
         print(
-            "\n⛔  Commit blocked: Django template tags must NOT be split across lines."
+            "\n[BLOCKED]  Commit blocked: Django template tags must NOT be split across lines."
             "\n    Fix: move the closing %} or }} to the same line as the opening {% or {{."
         )
         sys.exit(1)
