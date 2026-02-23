@@ -219,11 +219,11 @@
                         <div class="col-md-6">
                             <label for="emailLanguage" class="form-label">{% translate "Язык" %}</label>
                             <select id="emailLanguage" class="form-select">
-                                <option value="ru" {% if client.language == 'ru' %}selected{% endif %}>{% translate
+                                <option value="ru" {% if client.language=='ru' %}selected{% endif %}>{% translate
                                     "Русский" %}</option>
-                                <option value="en" {% if client.language == 'en' %}selected{% endif %}>{% translate
+                                <option value="en" {% if client.language=='en' %}selected{% endif %}>{% translate
                                     "Английский" %}</option>
-                                <option value="pl" {% if client.language == 'pl' %}selected{% endif %}>{% translate
+                                <option value="pl" {% if client.language=='pl' %}selected{% endif %}>{% translate
                                     "Польский" %}</option>
                             </select>
                         </div>
