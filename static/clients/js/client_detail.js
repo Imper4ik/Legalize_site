@@ -672,6 +672,76 @@
     });
   }
 
+  function initSendEmailModal() {
+    const modal = document.getElementById('sendEmailModal');
+    if (!modal) return;
+
+    const previewUrlTemplate = modal.dataset.previewUrl;
+    const templateTypeSelect = modal.querySelector('#emailTemplateType');
+    const languageSelect = modal.querySelector('#emailLanguage');
+    const subjectInput = modal.querySelector('#emailSubject');
+    const bodyInput = modal.querySelector('#emailBody');
+    const sendButton = modal.querySelector('#sendEmailButton');
+    const form = modal.querySelector('#sendEmailForm');
+
+    if (!previewUrlTemplate || !templateTypeSelect || !languageSelect || !subjectInput || !bodyInput) return;
+
+    async function fetchPreview() {
+      const templateType = templateTypeSelect.value;
+      const language = languageSelect.value;
+
+      if (templateType === 'custom') {
+        subjectInput.value = '';
+        bodyInput.value = '';
+        return;
+      }
+
+      subjectInput.value = 'Загрузка...';
+      bodyInput.value = 'Загрузка шаблона...';
+      sendButton.setAttribute('disabled', 'disabled');
+
+      try {
+        const url = new URL(previewUrlTemplate, window.location.origin);
+        url.searchParams.append('template_type', templateType);
+        url.searchParams.append('language', language);
+
+        const response = await fetch(url, {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          subjectInput.value = data.subject || '';
+          bodyInput.value = data.body || '';
+        } else {
+          console.error("Ошибка загрузки шаблона", response.status);
+          subjectInput.value = '';
+          bodyInput.value = 'Ошибка загрузки шаблона.';
+        }
+      } catch (error) {
+        console.error("Ошибка сети при загрузке шаблона", error);
+        subjectInput.value = '';
+        bodyInput.value = 'Ошибка загрузки шаблона.';
+      } finally {
+        sendButton.removeAttribute('disabled');
+      }
+    }
+
+    templateTypeSelect.addEventListener('change', fetchPreview);
+    languageSelect.addEventListener('change', fetchPreview);
+
+    modal.addEventListener('show.bs.modal', () => {
+      if (templateTypeSelect.value !== 'custom' && !subjectInput.value) {
+        fetchPreview();
+      }
+    });
+
+    form.addEventListener('submit', () => {
+      sendButton.setAttribute('disabled', 'disabled');
+      sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Отправка...';
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     initPriceAutoFill();
     initAddPaymentForm();
@@ -681,5 +751,6 @@
     initDocumentDeletion();
     initBulkVerification();
     initHoverDropdowns();
+    initSendEmailModal();
   });
 })();

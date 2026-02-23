@@ -189,3 +189,67 @@
         </div>
     </div>
 </div>
+
+<!-- Modal for Sending Email -->
+<div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailModalLabel" aria-hidden="true"
+    data-preview-url="{% url 'clients:email_preview_api' client.pk %}">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sendEmailModalLabel">{% translate "Отправить email клиенту" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'clients:send_custom_email' client.pk %}" id="sendEmailForm">
+                    {% csrf_token %}
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="emailTemplateType" class="form-label">{% translate "Шаблон письма" %}</label>
+                            <select id="emailTemplateType" class="form-select">
+                                <option value="custom" selected>{% translate "Свой текст (без шаблона)" %}</option>
+                                <option value="missing_documents">{% translate "Недостающие документы" %}</option>
+                                <option value="expiring_documents">{% translate "Истекающие документы" %}</option>
+                                <option value="appointment_notification">{% translate "Уведомление о встрече (wezwanie)"
+                                    %}</option>
+                                <option value="required_documents">{% translate "Список необходимых документов" %}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="emailLanguage" class="form-label">{% translate "Язык" %}</label>
+                            <select id="emailLanguage" class="form-select">
+                                <option value="ru" {% if client.language=='ru' %}selected{% endif %}>{% translate
+                                    "Русский" %}</option>
+                                <option value="en" {% if client.language=='en' %}selected{% endif %}>{% translate
+                                    "Английский" %}</option>
+                                <option value="pl" {% if client.language=='pl' %}selected{% endif %}>{% translate
+                                    "Польский" %}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="emailSubject" class="form-label">{% translate "Тема письма" %}</label>
+                        <input type="text" name="subject" class="form-control" id="emailSubject" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="emailBody" class="form-label">{% translate "Текст письма" %}</label>
+                        <textarea name="body" class="form-control" id="emailBody" rows="10" required></textarea>
+                        <div class="form-text">{% translate "Текст можно редактировать вручную. Письмо будет отправлено
+                            именно в таком виде." %}</div>
+                    </div>
+
+                    <div class="modal-footer px-0 pb-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена"
+                            %}</button>
+                        <button type="submit" class="btn btn-primary" id="sendEmailButton">
+                            <i class="bi bi-send"></i> {% translate "Отправить" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

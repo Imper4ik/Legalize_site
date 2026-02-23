@@ -26,6 +26,10 @@ from clients.views.documents import (
     verify_all_documents,
     update_client_notes,
 )
+from clients.views.emails import (
+    email_preview_api,
+    send_custom_email,
+)
 from clients.views.payments import add_payment, delete_payment, edit_payment, get_price_for_service
 from clients.views.reminders import (
     DocumentReminderListView,

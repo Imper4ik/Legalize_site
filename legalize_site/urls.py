@@ -6,9 +6,11 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls.i18n import i18n_patterns
 from clients import views
+from clients.views.admin_views import update_translations_view
 from .cron_views import db_backup
 
 urlpatterns = [
+    path('admin/update-translations/', update_translations_view, name='update_translations'),
     path('admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),
     path('cron/db-backup/', db_backup, name='db_backup'),

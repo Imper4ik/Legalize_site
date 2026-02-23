@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Legalize Site 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-02-20 20:59+0100\n"
+"POT-Creation-Date: 2026-02-23 23:45+0100\n"
 "PO-Revision-Date: 2024-06-20 00:00+0000\n"
 "Last-Translator: Legalize Team <noreply@legalize.example>\n"
 "Language-Team: Legalize Team\n"
@@ -390,6 +390,7 @@ msgstr "Aktywne"
 
 # Email subjects
 #: .\clients\services\notifications.py:23
+#: .\clients\templates\clients\partials\modals.html:215
 msgid "Список необходимых документов"
 msgstr "Lista wymaganych dokumentów"
 
@@ -722,28 +723,31 @@ msgstr "Czy na pewno chcesz trwale usunąć to przypomnienie?"
 msgid "Да, я уверен, удалить"
 msgstr ""
 
-#: .\clients\templates\clients\client_detail.html:4
+#: .\clients\templates\clients\client_detail.html:5
 #, python-format
 msgid "Детали клиента: %(client_name)s"
 msgstr "Dane klienta: %(client_name)s"
 
-#: .\clients\templates\clients\client_detail.html:12
+#: .\clients\templates\clients\client_detail.html:13
 msgid "Финансы"
 msgstr "Finanse"
 
-#: .\clients\templates\clients\client_detail.html:13
-msgid "Добавить счёт"
-msgstr "Dodaj rachunek"
-
-#: .\clients\templates\clients\client_detail.html:23
+#: .\clients\templates\clients\client_detail.html:25
 msgid "Счета на оплату еще не созданы."
 msgstr "Rachunki do zapłaty nie zostały jeszcze utworzone."
 
-#: .\clients\templates\clients\client_detail.html:31
+#: .\clients\templates\clients\client_detail.html:34
 msgid "Чеклист документов"
 msgstr "Lista kontrolna dokumentów"
 
-#: .\clients\templates\clients\client_detail.html:35
+#: .\clients\templates\clients\client_detail.html:38
+#: .\clients\templates\clients\partials\reminder_item.html:78
+#, fuzzy
+#| msgid "Отправить письмо"
+msgid "Отправить email"
+msgstr "Wyślij e-mail"
+
+#: .\clients\templates\clients\client_detail.html:43
 #, fuzzy
 #| msgid "Проверить и создать новые"
 msgid "Проверить все загруженные"
@@ -1103,6 +1107,7 @@ msgid "Отправить письмо"
 msgstr "Wyślij e-mail"
 
 #: .\clients\templates\clients\document_reminder_list.html:228
+#: .\clients\templates\clients\partials\modals.html:211
 msgid "Недостающие документы"
 msgstr "Brakujące dokumenty"
 
@@ -1117,6 +1122,7 @@ msgid "Нет недостающих документов."
 msgstr "Brak brakujących dokumentów."
 
 #: .\clients\templates\clients\document_reminder_list.html:248
+#: .\clients\templates\clients\partials\modals.html:212
 msgid "Истекающие документы"
 msgstr "Wygasające dokumenty"
 
@@ -1374,6 +1380,44 @@ msgstr "Otwórz wiadomość od Legalize i kliknij przycisk potwierdzenia."
 msgid "Загрузить и распознать"
 msgstr "Prześlij nowy plik"
 
+#: .\clients\templates\clients\partials\modals.html:199
+#, fuzzy
+#| msgid "Отправить письмо"
+msgid "Отправить email клиенту"
+msgstr "Wyślij e-mail"
+
+#: .\clients\templates\clients\partials\modals.html:208
+#, fuzzy
+#| msgid "Не нашли письмо"
+msgid "Шаблон письма"
+msgstr "Nie ma wiadomości?"
+
+#: .\clients\templates\clients\partials\modals.html:210
+msgid "Свой текст (без шаблона)"
+msgstr "Własny tekst (bez szablonu)"
+
+#: .\clients\templates\clients\partials\modals.html:220
+msgid "Язык"
+msgstr "Język"
+
+#: .\clients\templates\clients\partials\modals.html:233
+#, fuzzy
+#| msgid "Не видите письмо?"
+msgid "Тема письма"
+msgstr "Nie ma wiadomości?"
+
+#: .\clients\templates\clients\partials\modals.html:238
+#, fuzzy
+#| msgid "Не видите письмо?"
+msgid "Текст письма"
+msgstr "Nie ma wiadomości?"
+
+#: .\clients\templates\clients\partials\modals.html:248
+#, fuzzy
+#| msgid "Отправить письмо"
+msgid "Отправить"
+msgstr "Wyślij e-mail"
+
 #: .\clients\templates\clients\partials\payment_item.html:8
 msgid "Счёт от"
 msgstr "Rachunek z"
@@ -1403,12 +1447,6 @@ msgstr "Pilne"
 #: .\clients\templates\clients\partials\reminder_item.html:59
 msgid "(не указан)"
 msgstr "(brak danych)"
-
-#: .\clients\templates\clients\partials\reminder_item.html:78
-#, fuzzy
-#| msgid "Отправить письмо"
-msgid "Отправить email"
-msgstr "Wyślij e-mail"
 
 #: .\clients\templates\clients\partials\reminder_item.html:87
 msgid "Выполнено"
@@ -2732,6 +2770,9 @@ msgstr "Pokaż tekst źródłowy (Debug)"
 msgid "Исходный текст"
 msgstr "Tekst źródłowy"
 
+#~ msgid "Добавить счёт"
+#~ msgstr "Dodaj rachunek"
+
 #~ msgid "Фотографии"
 #~ msgstr "Zdjęcia"
 
@@ -2857,3 +2898,11 @@ msgstr "Tekst źródłowy"
 
 #~ msgid "Распознать wezwanie"
 #~ msgstr "Rozpoznaj wezwanie"
+
+
+msgid "Уведомление о встрече (wezwanie)"
+msgstr "Powiadomienie o spotkaniu (wezwanie)"
+
+
+msgid "Текст можно редактировать вручную. Письмо будет отправлено именно в таком виде."
+msgstr "Tekst można edytować ręcznie. Email zostanie wysłany dokładnie w takiej postaci."
