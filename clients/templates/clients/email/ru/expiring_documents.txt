@@ -1,0 +1,31 @@
+{{ client.first_name }} {{ client.last_name }},
+
+{% if valid_documents %}
+✅ Всё в порядке:
+{% for document in valid_documents %}- {{ document.display_name }} (действителен до {{ document.expiry_date|date:"d.m.Y" }})
+{% endfor %}
+{% endif %}
+
+{% if expiring_soon_documents %}
+⚠️ Истекает в ближайшее время (до {{ cutoff|date:"d.m.Y" }}):
+{% for document in expiring_soon_documents %}- {{ document.display_name }} (действителен до {{ document.expiry_date|date:"d.m.Y" }})
+{% endfor %}
+Просим подготовить обновлённые версии и прислать их в ответ на это письмо, чтобы избежать задержек.
+{% endif %}
+
+{% if expired_documents %}
+❌ Истёкшие:
+{% for document in expired_documents %}- {{ document.display_name }} (истёк {{ document.expiry_date|date:"d.m.Y" }})
+{% endfor %}
+Пожалуйста, пришлите актуальные версии документов как можно скорее.
+{% endif %}
+
+{% if missing_documents %}
+📄 Отсутствующие (не предоставлены):
+{% for document in missing_documents %}- {{ document.name }}{% if document.expiry_date %} (действителен до {{ document.expiry_date|date:"d.m.Y" }}){% endif %}
+{% endfor %}
+Пришлите их вместе с обновлёнными документами.
+{% endif %}
+
+С уважением,
+Команда Legalize

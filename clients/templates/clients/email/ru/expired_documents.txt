@@ -1,0 +1,14 @@
+{{ client.first_name }} {{ client.last_name }},
+
+Благодарим Вас за сдачу отпечатков пальцев{% if fingerprints_date %} {{ fingerprints_date|date:"d.m.Y" }}{% endif %}.
+
+По нашим данным, следующие документы истекли или истекают в ближайшее время:
+{% if expired_documents %}
+{% for document in expired_documents %}- {{ document.get_document_type_display }} (действителен до {{ document.expiry_date|date:"d.m.Y" }})
+{% endfor %}
+{% else %}- На данный момент истекших документов нет.
+{% endif %}
+Если у Вас уже есть обновлённые версии, пришлите новые копии, чтобы мы могли продолжить ведение Вашего дела.
+
+С уважением,
+Команда Legalize
