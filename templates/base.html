@@ -2,6 +2,7 @@
 {% load static %}
 {% load i18n static %}
 <html lang="{{ LANGUAGE_CODE }}">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +15,7 @@
       try {
         var stored = localStorage.getItem("preferredTheme");
         if (stored) theme = stored;
-      } catch (_) {}
+      } catch (_) { }
 
       if (theme !== "dark") {
         var mq = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)");
@@ -39,80 +40,99 @@
   <link rel="stylesheet" href="{% static 'css/theme.css' %}">
   <meta name="csrf-token" content="{{ csrf_token }}">
 
+  <!-- Favicon -->
+  <link rel="icon" type="image/jpeg" href="{% static 'img/favicon.jpg' %}">
+
   {% block extra_head %}{% endblock %}
 </head>
+
 <body class="{% block body_class %}{% endblock %}">
   <!-- NAVBAR -->
   <header class="mb-3">
     <nav class="navbar navbar-expand-lg theme-navbar shadow-sm">
-        <div class="container">
-          <a class="navbar-brand fw-semibold" href="{% if user.is_authenticated and user.is_staff %}{% url 'clients:client_list' %}{% else %}{% url 'account_login' %}{% endif %}">
-            <i class="fas fa-balance-scale me-2"></i>{% translate "Legalize" %}
-          </a>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="{% translate 'Переключить навигацию' %}">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarNav">
-            {% if user.is_authenticated %}
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-              {% if user.is_staff %}
-              <li class="nav-item"><a class="nav-link" href="{% url 'clients:client_list' %}">{% translate "Клиенты" %}</a></li>
-              <li class="nav-item"><a class="nav-link" href="{% url 'clients:client_add' %}">{% translate "Добавить клиента" %}</a></li>
-              <li class="nav-item"><a class="nav-link" href="{% url 'clients:calculator' %}">{% translate "Калькулятор" %}</a></li>
-              <li class="nav-item"><a class="nav-link" href="{% url 'clients:document_checklist_manage' %}">{% translate "Чеклисты" %}</a></li>
-              <li class="nav-item"><a class="nav-link" href="{% url 'clients:document_reminder_list' %}">{% translate "Напоминания по документам" %}</a></li>
-              <li class="nav-item"><a class="nav-link" href="{% url 'clients:payment_reminder_list' %}">{% translate "Напоминания по оплатам" %}</a></li>
-              {% endif %}
-            </ul>
+      <div class="container">
+        <a class="navbar-brand fw-semibold d-flex align-items-center"
+          href="{% if user.is_authenticated and user.is_staff %}{% url 'clients:client_list' %}{% else %}{% url 'account_login' %}{% endif %}">
+          <img src="{% static 'img/favicon.jpg' %}" alt="Logo" width="30" height="30"
+            class="d-inline-block align-text-top me-2 rounded-circle object-fit-cover">
+          {% translate "Legalize" %}
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+          aria-controls="navbarNav" aria-expanded="false" aria-label="{% translate 'Переключить навигацию' %}">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          {% if user.is_authenticated %}
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            {% if user.is_staff %}
+            <li class="nav-item"><a class="nav-link" href="{% url 'clients:client_list' %}">{% translate "Клиенты"
+                %}</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'clients:client_add' %}">{% translate "Добавить
+                клиента" %}</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'clients:calculator' %}">{% translate "Калькулятор"
+                %}</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'clients:document_checklist_manage' %}">{% translate
+                "Чеклисты" %}</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'clients:document_reminder_list' %}">{% translate
+                "Напоминания по документам" %}</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'clients:payment_reminder_list' %}">{% translate
+                "Напоминания по оплатам" %}</a></li>
             {% endif %}
+          </ul>
+          {% endif %}
 
-            <ul class="navbar-nav ms-auto align-items-center">
-              <li class="nav-item me-3">
-                <button class="btn btn-sm theme-toggle" type="button" aria-pressed="false" aria-label="{% translate 'Переключить тему' %}"
-                        data-theme-toggle
-                        data-theme-light-text="{% translate 'Светлая тема' %}"
-                        data-theme-dark-text="{% translate 'Тёмная тема' %}">
-                  <i class="bi bi-sun-fill theme-icon-sun"></i>
-                  <i class="bi bi-moon-stars-fill theme-icon-moon"></i>
-                  <span class="theme-toggle-text d-none d-md-inline" data-theme-toggle-text></span>
-                </button>
-              </li>
-              <li class="nav-item">
-                <form action="{% url 'set_language' %}" method="post" class="d-flex align-items-center" data-language-switcher>
-                  {% csrf_token %}
-                  <input name="next" type="hidden" value="{{ request.get_full_path|default:'/' }}">
-                  <select name="language" class="form-select form-select-sm" aria-label="{% translate 'Выбор языка интерфейса' %}">
-                    {% get_current_language as LANGUAGE_CODE %}
-                    {% get_available_languages as LANGUAGES %}
-                    {% for lang_code, lang_name in LANGUAGES %}
-                      <option value="{{ lang_code }}" {% if lang_code == LANGUAGE_CODE %}selected{% endif %}>{{ lang_code|upper }}</option>
-                    {% endfor %}
-                  </select>
-                </form>
-              </li>
-              {% if user.is_authenticated %}
-              <li class="nav-item dropdown ms-2">
-                <a class="nav-link dropdown-toggle" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  <i class="fas fa-user-circle me-1"></i>{{ user.first_name|default:user.username }}
-                </a>
-                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
-                  <li>
-                    <form id="logout-form" method="post" action="{% url 'account_logout' %}">
-                      {% csrf_token %}
-                      <button type="submit" class="dropdown-item">
-                        <i class="fas fa-sign-out-alt me-2"></i>{% translate "Выход" %}
-                      </button>
-                    </form>
-                  </li>
-                </ul>
-              </li>
-              {% else %}
-              <li class="nav-item ms-2"><a class="nav-link" href="{% url 'account_login' %}">{% translate "Вход" %}</a></li>
-              {% endif %}
-            </ul>
-          </div>
+          <ul class="navbar-nav ms-auto align-items-center">
+            <li class="nav-item me-3">
+              <button class="btn btn-sm theme-toggle" type="button" aria-pressed="false"
+                aria-label="{% translate 'Переключить тему' %}" data-theme-toggle
+                data-theme-light-text="{% translate 'Светлая тема' %}"
+                data-theme-dark-text="{% translate 'Тёмная тема' %}">
+                <i class="bi bi-sun-fill theme-icon-sun"></i>
+                <i class="bi bi-moon-stars-fill theme-icon-moon"></i>
+                <span class="theme-toggle-text d-none d-md-inline" data-theme-toggle-text></span>
+              </button>
+            </li>
+            <li class="nav-item">
+              <form action="{% url 'set_language' %}" method="post" class="d-flex align-items-center"
+                data-language-switcher>
+                {% csrf_token %}
+                <input name="next" type="hidden" value="{{ request.get_full_path|default:'/' }}">
+                <select name="language" class="form-select form-select-sm"
+                  aria-label="{% translate 'Выбор языка интерфейса' %}">
+                  {% get_current_language as LANGUAGE_CODE %}
+                  {% get_available_languages as LANGUAGES %}
+                  {% for lang_code, lang_name in LANGUAGES %}
+                  <option value="{{ lang_code }}" {% if lang_code==LANGUAGE_CODE %}selected{% endif %}>{{
+                    lang_code|upper }}</option>
+                  {% endfor %}
+                </select>
+              </form>
+            </li>
+            {% if user.is_authenticated %}
+            <li class="nav-item dropdown ms-2">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarUserDropdown" role="button"
+                data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-user-circle me-1"></i>{{ user.first_name|default:user.username }}
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
+                <li>
+                  <form id="logout-form" method="post" action="{% url 'account_logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="dropdown-item">
+                      <i class="fas fa-sign-out-alt me-2"></i>{% translate "Выход" %}
+                    </button>
+                  </form>
+                </li>
+              </ul>
+            </li>
+            {% else %}
+            <li class="nav-item ms-2"><a class="nav-link" href="{% url 'account_login' %}">{% translate "Вход" %}</a>
+            </li>
+            {% endif %}
+          </ul>
         </div>
-      </nav>
+      </div>
+    </nav>
   </header>
 
   <!-- Flash messages (auto-dismiss) -->
@@ -134,7 +154,8 @@
     <div class="section-header">
       <div>
         <h1 class="h3 mb-1">{% block page_title %}{% translate "Заголовок страницы" %}{% endblock %}</h1>
-        <div class="text-muted">{% block page_subtitle %}{% translate "Короткое описание страницы" %}{% endblock %}</div>
+        <div class="text-muted">{% block page_subtitle %}{% translate "Короткое описание страницы" %}{% endblock %}
+        </div>
       </div>
       <div class="d-flex gap-2">
         {% block page_actions %}
@@ -173,4 +194,5 @@
 
   {% block extra_js %}{% endblock %}
 </body>
+
 </html>
