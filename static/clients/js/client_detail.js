@@ -737,8 +737,10 @@
     });
 
     form.addEventListener('submit', () => {
-      sendButton.setAttribute('disabled', 'disabled');
-      sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Отправка...';
+      setTimeout(() => {
+        sendButton.setAttribute('disabled', 'disabled');
+        sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Отправка...';
+      }, 0);
     });
   }
 
