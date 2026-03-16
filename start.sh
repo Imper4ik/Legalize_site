@@ -95,8 +95,8 @@ email = os.environ["DJANGO_SUPERUSER_EMAIL"]
 password = os.environ["DJANGO_SUPERUSER_PASSWORD"]
 username = os.environ.get("DJANGO_SUPERUSER_USERNAME", "admin")
 
-if not User.objects.filter(email=email).exists():
-    print(f"Creating superuser {email!r}")
+if not User.objects.filter(email=email).exists() and not User.objects.filter(username=username).exists():
+    print(f"Creating superuser {username!r} ({email!r})")
     # Для стандартного User: username + email + password
     User.objects.create_superuser(
         username=username,
@@ -104,7 +104,7 @@ if not User.objects.filter(email=email).exists():
         password=password,
     )
 else:
-    print(f"Superuser {email!r} already exists, skipping")
+    print(f"Superuser {username!r} or email {email!r} already exists, skipping")
 EOF
 fi
 # === конец блока создания суперюзера ===
