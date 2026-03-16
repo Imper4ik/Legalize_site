@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.core.management import call_command
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy as _lazy
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic import ListView
 
@@ -67,7 +67,7 @@ class ReminderListView(StaffRequiredMixin, ListView):
 class DocumentReminderListView(ReminderListView):
     reminder_type = 'document'
     template_name = 'clients/document_reminder_list.html'
-    title = _('Напоминания по документам')
+    title = _lazy('Напоминания по документам')
     client_param = 'doc_client'
     start_date_param = 'doc_start_date'
     end_date_param = 'doc_end_date'
@@ -136,7 +136,7 @@ class DocumentReminderListView(ReminderListView):
 class PaymentReminderListView(ReminderListView):
     reminder_type = 'payment'
     template_name = 'clients/payment_reminder_list.html'
-    title = _('Напоминания по оплатам')
+    title = _lazy('Напоминания по оплатам')
 
 
 @staff_required_view
@@ -144,15 +144,15 @@ def run_update_reminders(request):
     if request.method == 'POST':
         try:
             call_command('update_reminders')
-            messages.success(request, "Проверка завершена. Новые напоминания, если были найдены, успешно созданы!")
+            messages.success(request, _("Проверка завершена. Новые напоминания, если были найдены, успешно созданы!"))
         except Exception as e:
-            messages.error(request, f"Произошла ошибка при создании напоминаний: {e}")
+            messages.error(request, _("Произошла ошибка при создании напоминаний: %(err)s") % {"err": e})
         next_page = request.POST.get('next', 'documents')
         if next_page == 'payments':
             return redirect('clients:payment_reminder_list')
         else:
             return redirect('clients:document_reminder_list')
-    messages.warning(request, "Эту операцию можно выполнить только через специальную кнопку.")
+    messages.warning(request, _("Эту операцию можно выполнить только через специальную кнопку."))
     return redirect('clients:document_reminder_list')
 
 

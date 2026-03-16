@@ -92,11 +92,11 @@ class ClientCreateView(StaffRequiredMixin, CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Добавить нового клиента'
+        context['title'] = _('Добавить нового клиента')
         return context
 
     def form_valid(self, form):
-        messages.success(self.request, "Клиент успешно создан!")
+        messages.success(self.request, _("Клиент успешно создан!"))
         response = super().form_valid(form)
         send_required_documents_email(self.object)
         return response
@@ -104,7 +104,7 @@ class ClientCreateView(StaffRequiredMixin, CreateView):
     def form_invalid(self, form):
         messages.error(
             self.request,
-            "Не удалось сохранить клиента. Проверьте выделенные поля и попробуйте снова.",
+            _("Не удалось сохранить клиента. Проверьте выделенные поля и попробуйте снова."),
         )
         return super().form_invalid(form)
 
@@ -119,12 +119,12 @@ class ClientUpdateView(StaffRequiredMixin, UpdateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['title'] = 'Редактировать данные клиента'
+        context['title'] = _('Редактировать данные клиента')
         return context
 
     def form_valid(self, form):
         previous_fingerprints_date = self.object.fingerprints_date
-        messages.success(self.request, "Данные клиента успешно обновлены!")
+        messages.success(self.request, _("Данные клиента успешно обновлены!"))
         response = super().form_valid(form)
 
         new_fingerprints_date = form.cleaned_data.get("fingerprints_date")
@@ -136,7 +136,7 @@ class ClientUpdateView(StaffRequiredMixin, UpdateView):
     def form_invalid(self, form):
         messages.error(
             self.request,
-            "Не удалось сохранить клиента. Проверьте выделенные поля и попробуйте снова.",
+            _("Не удалось сохранить клиента. Проверьте выделенные поля и попробуйте снова."),
         )
         return super().form_invalid(form)
 
@@ -148,7 +148,7 @@ class ClientDeleteView(StaffRequiredMixin, DeleteView):
 
     def form_valid(self, form):
         client_name = self.get_object()
-        messages.success(self.request, f"Клиент {client_name} был успешно удалён.")
+        messages.success(self.request, _("Клиент %(name)s был успешно удалён.") % {"name": client_name})
         return super().form_valid(form)
 
 
@@ -336,7 +336,7 @@ class DocumentChecklistManageView(StaffRequiredMixin, FormView):
             (submission, SubmissionForm(instance=submission, prefix=f"submission-{submission.id}"))
             for submission in context['purpose_choices']
         ]
-        purpose_lookup = {submission.slug: submission.name for submission in context['purpose_choices']}
+        purpose_lookup = {submission.slug: submission.localized_name for submission in context['purpose_choices']}
         purpose_labels = dict(Client.APPLICATION_PURPOSE_CHOICES)
         context['current_purpose_label'] = purpose_lookup.get(
             purpose,

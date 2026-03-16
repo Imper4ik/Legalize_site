@@ -219,7 +219,7 @@ class DocumentTypeConsistencyTests(TestCase):
         with translation.override("ru"):
             self.assertEqual(
                 translate_document_name(DocumentType.PHOTOS.label),
-                "Фотографии (4 шт., 45x35 мм)",
+                "4 фотографии (45x35 мм)",
             )
 
         with translation.override("en"):

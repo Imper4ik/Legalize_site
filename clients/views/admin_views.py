@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.management import call_command
 from django.shortcuts import redirect
+from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
 
@@ -43,10 +44,10 @@ def update_translations_view(request):
             ignore=['venv', 'env', '.venv', 'frontend', 'frontend/node_modules/*']
         )
 
-        messages.success(request, "Переводы успешно обновлены и скомпилированы!")
+        messages.success(request, _("Переводы успешно обновлены и скомпилированы!"))
     except Exception as e:
         logger.exception("Error updating translations")
-        messages.error(request, f"Ошибка при обновлении переводов: {e}")
+        messages.error(request, _("Ошибка при обновлении переводов: %(err)s") % {"err": e})
 
     # Перенаправляем обратно на ту же страницу, с которой был сделан запрос
     redirect_url = request.META.get('HTTP_REFERER', '/admin/')

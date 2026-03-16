@@ -162,12 +162,12 @@ def translate_document_name(name: str, language: str | None = None) -> str:
 
     lang = language or translation.get_language()
     if not lang:
-        return gettext(name)
+        return str(name)
 
     with translation.override(lang):
-        translated = gettext(name)
+        translated = str(name)
 
-    if not translated or not str(translated).strip():
+    if not translated or not translated.strip():
         return str(name)
     return translated
 

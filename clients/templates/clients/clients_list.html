@@ -47,7 +47,7 @@
         <th>{% translate "Основание и дата окончания" %}</th>
         <th style="width: 30%;">
           <div class="d-flex justify-content-between align-items-center">
-            <span>{% translate "Uwagi / Заметки" %}</span>
+            <span>{% translate "Заметки" %}</span>
             <div class="editor-toolbar d-flex align-items-center">
               <button type="button" class="btn btn-light btn-sm" data-notes-bold title="{% translate 'Жирный' %}">
                 <b>B</b>
@@ -85,7 +85,7 @@
                    aria-multiline="true"
                    tabindex="0"
                    data-notes-editor>
-                {{ client.notes|default:""|safe }}
+                {{ client.notes|default_if_none:""|safe }}
               </div>
               <button class="btn btn-outline-secondary btn-sm mt-2 w-100" type="submit">
                 {% translate "Сохранить" %}

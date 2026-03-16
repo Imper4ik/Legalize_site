@@ -16,6 +16,11 @@ urlpatterns = [
     path('cron/db-backup/', db_backup, name='db_backup'),
 ]
 
+if 'rosetta' in settings.INSTALLED_APPS:
+    urlpatterns += [
+        path('rosetta/', include('rosetta.urls'))
+    ]
+
 urlpatterns += i18n_patterns(
     path('accounts/', include('allauth.urls')),
     path('staff/', include('clients.urls', namespace='clients')),

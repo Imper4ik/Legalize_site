@@ -3,6 +3,7 @@ from __future__ import annotations
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
+from django.utils.translation import gettext as _
 
 from clients.forms import PaymentForm
 from clients.models import Client, Payment
@@ -24,11 +25,11 @@ def add_payment(request, client_id):
             if helper.expects_json:
                 html = render_to_string('clients/partials/payment_item.html', {'payment': payment})
                 return helper.success(html=html, payment_id=payment.id)
-            messages.success(request, "Платёж успешно добавлен.")
+            messages.success(request, _("Платёж успешно добавлен."))
             return redirect('clients:client_detail', pk=client.id)
         if helper.expects_json:
             return helper.error(
-                message='Проверьте правильность заполнения формы.',
+                message=_('Проверьте правильность заполнения формы.'),
                 errors=form.errors,
             )
 
@@ -46,11 +47,11 @@ def edit_payment(request, payment_id):
             if helper.expects_json:
                 html = render_to_string('clients/partials/payment_item.html', {'payment': payment})
                 return helper.success(html=html, payment_id=payment.id)
-            messages.success(request, "Платёж успешно обновлён.")
+            messages.success(request, _("Платёж успешно обновлён."))
             return redirect('clients:client_detail', pk=payment.client.id)
         if helper.expects_json:
             return helper.error(
-                message='Проверьте правильность заполнения формы.',
+                message=_('Проверьте правильность заполнения формы.'),
                 errors=form.errors,
             )
 
@@ -66,7 +67,7 @@ def delete_payment(request, payment_id):
         payment.delete()
         if helper.expects_json:
             return helper.success()
-        messages.success(request, "Платёж успешно удалён.")
+        messages.success(request, _("Платёж успешно удалён."))
     return redirect('clients:client_detail', pk=client_id)
 
 

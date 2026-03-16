@@ -43,7 +43,7 @@
               <label class="form-label">{{ form.legal_basis_end_date.label }}</label>
               <div class="input-group" id="legal_basis_end_date_picker">
                 {{ form.legal_basis_end_date }}
-                <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle><i
+                <a class="btn btn-outline-secondary" title="{% trans 'Выбрать дату' %}" data-toggle><i
                     class="bi bi-calendar3"></i></a>
               </div>
             </div>
@@ -55,7 +55,7 @@
               <label class="form-label">{{ form.submission_date.label }}</label>
               <div class="input-group" id="submission_date_picker">
                 {{ form.submission_date }}
-                <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle><i
+                <a class="btn btn-outline-secondary" title="{% trans 'Выбрать дату' %}" data-toggle><i
                     class="bi bi-calendar3"></i></a>
               </div>
             </div>
@@ -65,7 +65,7 @@
               <label class="form-label">{{ form.fingerprints_date.label }}</label>
               <div class="input-group" id="fingerprints_date_picker">
                 {{ form.fingerprints_date }}
-                <a class="btn btn-outline-secondary" title="Выбрать дату" data-toggle><i
+                <a class="btn btn-outline-secondary" title="{% trans 'Выбрать дату' %}" data-toggle><i
                     class="bi bi-calendar3"></i></a>
               </div>
             </div>
@@ -73,11 +73,11 @@
           </div>
         </div>
 
-        <h5 class="mb-3">{% trans "Заметки / Uwagi" %}</h5>
+        <h5 class="mb-3">{% trans "Заметки" %}</h5>
         <div class="p-3 rounded" style="background-color: #e7f3ff;">
           <div class="editor-toolbar border rounded-top p-2 bg-light">
             <button type="button" class="btn btn-light btn-sm format-button" data-format="bold"
-              title="Жирный"><b>B</b></button>
+              title="{% translate 'Жирный' %}"><b>B</b></button>
           </div>
           <div class="form-control notes-editor-main" id="notes-editor" contenteditable="true" style="height: 120px;">{{ form.notes.value|safe|default:'' }}</div>
           <input type="hidden" name="notes" id="id_notes_hidden" value="{{ form.notes.value|default:'' }}">

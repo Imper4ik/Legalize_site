@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     "django.contrib.sites",
+    "rosetta",
     "clients.apps.ClientsConfig",
     "submissions.apps.SubmissionsConfig",
     "allauth",

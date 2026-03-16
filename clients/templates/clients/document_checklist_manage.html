@@ -4,55 +4,54 @@
 {% block title %}{% translate "Настройка чеклистов" %}{% endblock %}
 {% block page_title %}{% translate "Настройка чеклистов" %}{% endblock %}
 {% block page_subtitle %}{% translate "Управляйте списком обязательных документов для каждой цели подачи." %}{% endblock %}
-{% block page_actions %}{% endblock %}
+{% block page_actions %}
+<div class="d-flex gap-2">
+  <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#addSubmissionModal">
+    <i class="bi bi-plus-circle me-1"></i>{% translate "Создать основание подачи" %}
+  </button>
+  <button class="btn btn-gradient" type="button" data-bs-toggle="modal" data-bs-target="#addDocumentRequirementModal">
+    <i class="bi bi-plus-lg me-1"></i>{% translate "Добавить документ" %}
+  </button>
+</div>
+{% endblock %}
 
 {% block content %}
 <div class="card shadow-sm">
   <div class="card-header bg-body">
-    <div class="d-flex flex-column flex-md-row gap-2 align-items-md-center justify-content-between">
-      <div class="d-flex align-items-center gap-2 flex-wrap">
-        <span class="text-muted small fw-semibold">{% translate "Цель подачи" %}:</span>
-        <div class="nav nav-pills gap-2 flex-wrap">
-          {% for submission in purpose_choices %}
-            <div class="btn-group btn-group-sm">
-              <a class="btn text-nowrap {% if submission.slug == current_purpose %}btn-primary{% else %}btn-outline-primary text-primary{% endif %}"
-                 href="?purpose={{ submission.slug }}">
-                {{ submission.name }}
-              </a>
-              <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
-                      data-bs-toggle="dropdown" aria-expanded="false" aria-label="{% translate 'Действия с основанием' %}">
-                <span class="visually-hidden">{% translate "Действия" %}</span>
-              </button>
-              <ul class="dropdown-menu">
-                <li>
-                  <button class="dropdown-item" type="button" data-bs-toggle="modal"
-                          data-bs-target="#editSubmissionModal{{ submission.id }}">
-                    <i class="bi bi-pencil me-2"></i>{% translate "Переименовать" %}
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="text-muted small fw-semibold">{% translate "Цель подачи" %}:</span>
+      <div class="nav nav-pills gap-2 flex-wrap">
+        {% for submission in purpose_choices %}
+          <div class="btn-group btn-group-sm">
+            <a class="btn text-nowrap {% if submission.slug == current_purpose %}btn-primary{% else %}btn-outline-primary text-primary{% endif %}"
+               href="?purpose={{ submission.slug }}">
+              {{ submission.localized_name }}
+            </a>
+            <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
+                    data-bs-toggle="dropdown" aria-expanded="false" aria-label="{% translate 'Действия с основанием' %}">
+              <span class="visually-hidden">{% translate "Действия" %}</span>
+            </button>
+            <ul class="dropdown-menu">
+              <li>
+                <button class="dropdown-item" type="button" data-bs-toggle="modal"
+                        data-bs-target="#editSubmissionModal{{ submission.id }}">
+                  <i class="bi bi-pencil me-2"></i>{% translate "Переименовать" %}
+                </button>
+              </li>
+              <li>
+                <form action="{% url 'submissions:submission_quick_delete' submission.id %}" method="post"
+                      onsubmit="return confirm('{% translate 'Удалить это основание и связанные документы?' %}');">
+                  {% csrf_token %}
+                  <button class="dropdown-item text-danger" type="submit">
+                    <i class="bi bi-trash me-2"></i>{% translate "Удалить" %}
                   </button>
-                </li>
-                <li>
-                  <form action="{% url 'submissions:submission_quick_delete' submission.id %}" method="post"
-                        onsubmit="return confirm('{% translate 'Удалить это основание и связанные документы?' %}');">
-                    {% csrf_token %}
-                    <button class="dropdown-item text-danger" type="submit">
-                      <i class="bi bi-trash me-2"></i>{% translate "Удалить" %}
-                    </button>
-                  </form>
-                </li>
-              </ul>
-            </div>
-          {% empty %}
-            <span class="text-muted small">{% translate "Добавьте основание, чтобы настроить чеклист." %}</span>
-          {% endfor %}
-        </div>
-      </div>
-      <div class="d-flex gap-2">
-        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#addSubmissionModal">
-          <i class="bi bi-plus-circle me-1"></i>{% translate "Создать основание подачи" %}
-        </button>
-        <button class="btn btn-sm btn-gradient" type="button" data-bs-toggle="modal" data-bs-target="#addDocumentRequirementModal">
-          <i class="bi bi-plus-lg me-1"></i>{% translate "Добавить документ" %}
-        </button>
+                </form>
+              </li>
+            </ul>
+          </div>
+        {% empty %}
+          <span class="text-muted small">{% translate "Добавьте основание, чтобы настроить чеклист." %}</span>
+        {% endfor %}
       </div>
     </div>
   </div>
@@ -77,8 +76,8 @@
                 {% with requirement=requirement_pair.0 edit_form=requirement_pair.1 %}
                   <div class="col">
                     <div class="border rounded px-3 py-2 h-100">
-                      <div class="d-flex align-items-start gap-2 justify-content-between">
-                        <div class="form-check flex-grow-1">
+                      <div class="d-flex align-items-center gap-2 justify-content-between h-100">
+                        <div class="form-check flex-grow-1 mb-0">
                           {{ checkbox.tag }}
                           <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
                         </div>
@@ -99,12 +98,12 @@
               {% else %}
                 <div class="col">
                   <div class="border rounded px-3 py-2 h-100">
-                    <div class="d-flex align-items-start gap-2 justify-content-between">
-                      <div class="form-check flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 justify-content-between h-100">
+                      <div class="form-check flex-grow-1 mb-0">
                         {{ checkbox.tag }}
                         <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
                       </div>
-                      <div class="text-muted small align-self-center">
+                      <div class="text-muted small text-nowrap">
                         {% translate "Стандартный документ" %}
                       </div>
                     </div>
