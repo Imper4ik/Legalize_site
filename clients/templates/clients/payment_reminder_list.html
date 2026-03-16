@@ -4,11 +4,34 @@
 
 {% block title %}{{ title|default:_("Напоминания по оплатам") }}{% endblock %}
 
+{% block page_header %}
+<div class="section-header">
+  <div>
+    <h1 class="h3 mb-1">
+      <i class="bi bi-cash-coin me-2 text-success"></i>
+      {{ title|default:_("Напоминания по оплатам") }}
+    </h1>
+    <div class="text-muted">
+      {% translate "Отслеживание оплат, фильтры по клиенту и периоду" %}
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <form action="{% url 'clients:run_update_reminders' %}" method="post" class="d-inline">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="payments">
+      <button type="submit" class="btn btn-gradient">
+        <i class="bi bi-arrow-repeat me-2"></i>{% translate "Проверить и создать новые" %}
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="mb-0">
-      <i class="fas fa-dollar-sign text-success"></i>
+      <i class="bi bi-cash-coin text-success"></i>
       {{ title|default:_("Напоминания по оплатам") }} ({{ reminders_count }})
     </h2>
     <div>
@@ -17,7 +40,7 @@
         {# ADDED: Hidden field to specify the redirect target #}
         <input type="hidden" name="next" value="payments">
         <button type="submit" class="btn btn-primary">
-          <i class="fas fa-sync-alt"></i> {% translate "Проверить и создать новые" %}
+          <i class="bi bi-arrow-repeat"></i> {% translate "Проверить и создать новые" %}
         </button>
       </form>
     </div>
@@ -52,11 +75,11 @@
   <div class="list-group">
     {% for reminder in reminders %}
       {% if reminder.id %}
-        {% include 'clients/partials/reminder_item.html' with reminder=reminder icon='fa-dollar-sign' %}
+        {% include 'clients/partials/reminder_item.html' with reminder=reminder icon='bi-cash-coin' %}
       {% endif %}
     {% empty %}
       <p class="text-muted">{% translate "Нет напоминаний по оплатам, соответствующих фильтрам." %}</p>
     {% endfor %}
   </div>
 </div>
-{% endblock %}
+{% endblock %}

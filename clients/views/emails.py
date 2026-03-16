@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.core.mail import EmailMultiAlternatives
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
-from django.utils.translation import override
+from django.utils.translation import override, gettext as _
 from django.conf import settings
 from django.views.decorators.http import require_POST, require_GET
 
@@ -55,7 +55,7 @@ def email_preview_api(request, pk):
         subject = _get_subject(template_type, language)
         return JsonResponse({
             "subject": subject, 
-            "body": f"Недостаточно данных у клиента для этого шаблона (например, нет даты отпечатков или списка документов)."
+            "body": _("Недостаточно данных у клиента для этого шаблона (например, нет даты отпечатков или списка документов).")
         })
 
     subject = _get_subject(template_type, language)
@@ -70,14 +70,14 @@ def send_custom_email(request, pk):
     client = get_object_or_404(Client, pk=pk)
     
     if not client.email:
-        messages.error(request, "У клиента не указан email.")
+        messages.error(request, _("У клиента не указан email."))
         return redirect('clients:client_detail', pk=client.pk)
 
     subject = request.POST.get('subject', '').strip()
     body = request.POST.get('body', '').strip()
 
     if not subject or not body:
-        messages.error(request, "Тема и текст письма обязательны.")
+        messages.error(request, _("Тема и текст письма обязательны."))
         return redirect('clients:client_detail', pk=client.pk)
 
     try:
@@ -90,11 +90,11 @@ def send_custom_email(request, pk):
         )
         if sent_count:
             _send_confirmation_email(subject, body, [client.email])
-            messages.success(request, f"Письмо '{subject}' успешно отправлено.")
+            messages.success(request, _("Письмо '%(subject)s' успешно отправлено.") % {"subject": subject})
         else:
-            messages.error(request, "Не удалось отправить письмо (send_mail вернул 0).")
+            messages.error(request, _("Не удалось отправить письмо (send_mail вернул 0)."))
     except Exception as e:
         logger.exception("Failed to send custom email manually")
-        messages.error(request, f"Ошибка при отправке письма: {e}")
+        messages.error(request, _("Ошибка при отправке письма: %(err)s") % {"err": e})
 
     return redirect('clients:client_detail', pk=client.pk)

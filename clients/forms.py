@@ -53,7 +53,9 @@ class ClientForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        submissions = list(Submission.objects.values_list('slug', 'name'))
+        
+        # Use localized_name so application purpose is translated
+        submissions = [(sub.slug, sub.localized_name) for sub in Submission.objects.all()]
         if submissions:
             choices = submissions
         else:
@@ -206,9 +208,17 @@ class DocumentChecklistForm(forms.Form):
         )
 
         choices = []
+        
+        INTERNAL_DOCS = {
+            DocumentType.WEZWANIE,
+            DocumentType.FINGERPRINT_CONFIRMATION,
+            DocumentType.PAYMENT_CONFIRMATION,
+        }
 
         if existing_requirements:
             for requirement in existing_requirements:
+                if requirement.document_type in INTERNAL_DOCS:
+                    continue
                 label = resolve_document_label(
                     requirement.document_type,
                     requirement.custom_name,
@@ -221,9 +231,9 @@ class DocumentChecklistForm(forms.Form):
         else:
             fallback_docs = get_fallback_document_checklist(self.purpose)
             if fallback_docs:
-                choices.extend(fallback_docs)
+                choices.extend([doc for doc in fallback_docs if doc[0] not in INTERNAL_DOCS])
             else:
-                choices.extend(DocumentType.choices)
+                choices.extend([choice for choice in DocumentType.choices if choice[0] not in INTERNAL_DOCS])
 
         self.fields['required_documents'].choices = choices
 
@@ -235,8 +245,14 @@ class DocumentChecklistForm(forms.Form):
         return _label_for_document_type(code)
 
     def _initial_documents(self):
+        INTERNAL_DOCS = {
+            DocumentType.WEZWANIE,
+            DocumentType.FINGERPRINT_CONFIRMATION,
+            DocumentType.PAYMENT_CONFIRMATION,
+        }
         existing = (
             DocumentRequirement.objects.filter(application_purpose=self.purpose, is_required=True)
+            .exclude(document_type__in=INTERNAL_DOCS)
             .order_by('position', 'id')
             .values_list('document_type', flat=True)
         )
@@ -248,7 +264,7 @@ class DocumentChecklistForm(forms.Form):
 
         fallback_docs = get_fallback_document_checklist(self.purpose)
         if fallback_docs:
-            return [code for code, _ in fallback_docs]
+            return [code for code, _ in fallback_docs if code not in INTERNAL_DOCS]
         return []
 
     def save(self) -> int:
@@ -288,7 +304,7 @@ class DocumentChecklistForm(forms.Form):
 class CalculatorForm(forms.Form):
     total_end_date = forms.DateField(
         input_formats=['%d-%m-%Y'],
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'дд-мм-гггг'}),
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('дд-мм-гггг')}),
     )
     tuition_fee = forms.DecimalField(min_value=0, decimal_places=2, max_digits=10)
     tuition_currency = forms.ChoiceField(choices=((CURRENCY_PLN, 'PLN'), (CURRENCY_EUR, 'EUR')))

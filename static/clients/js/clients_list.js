@@ -1,5 +1,5 @@
 (function () {
-  const PLACEHOLDER_TEXT = 'None';
+  const PLACEHOLDER_TEXT = '—';
 
   function findAncestor(node, predicate) {
     let current = node;

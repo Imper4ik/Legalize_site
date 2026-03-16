@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.dateparse import parse_date
+from django.utils.translation import gettext as _
 
 from clients.constants import DocumentType
 from clients.forms import DocumentUploadForm
@@ -28,8 +29,8 @@ def update_client_notes(request, pk):
         client.notes = request.POST.get('notes', '')
         client.save()
         if helper.expects_json:
-            return helper.success(message='Заметка сохранена')
-        messages.success(request, "Заметка сохранена.")
+            return helper.success(message=_('Заметка сохранена'))
+        messages.success(request, _("Заметка сохранена."))
         return redirect('clients:client_detail', pk=pk)
     return redirect('clients:client_list')
 
@@ -71,15 +72,15 @@ def add_document(request, client_id, doc_type):
                 if not (has_text or has_key_fields):
                     if helper.expects_json:
                         return helper.error(
-                            message=(
+                            message=_(
                                 "Не удалось распознать wezwanie: нет текста. "
                                 "Проверьте, что OCR доступен и файл читаемый."
                             )
                         )
                     messages.error(
                         request,
-                        "Не удалось распознать wezwanie: нет текста. "
-                        "Проверьте, что OCR доступен и файл читаемый.",
+                        _("Не удалось распознать wezwanie: нет текста. "
+                          "Проверьте, что OCR доступен и файл читаемый."),
                     )
                     return redirect("clients:client_detail", pk=client.id)
                 document.awaiting_confirmation = True
@@ -94,7 +95,7 @@ def add_document(request, client_id, doc_type):
                         last_name = " ".join(name_parts[1:])
 
                 return helper.success(
-                    message="Документ загружен. Подтвердите распознанные данные.",
+                    message=_("Документ загружен. Подтвердите распознанные данные."),
                     doc_id=document.id,
                     pending_confirmation=True,
                     confirm_url=reverse(
@@ -131,13 +132,13 @@ def add_document(request, client_id, doc_type):
                 if parsed.case_number and parsed.case_number != client.case_number:
                     client.case_number = parsed.case_number
                     updated_fields.append("case_number")
-                    auto_updates.append(f"номер дела: {parsed.case_number}")
+                    auto_updates.append(_("номер дела: %(val)s") % {"val": parsed.case_number})
                     
                 if parsed.fingerprints_date and parsed.fingerprints_date != client.fingerprints_date:
                     client.fingerprints_date = parsed.fingerprints_date
                     updated_fields.append("fingerprints_date")
                     auto_updates.append(
-                        f"дата сдачи отпечатков: {parsed.fingerprints_date.strftime('%d.%m.%Y')}"
+                        _("дата сдачи отпечатков: %(val)s") % {"val": parsed.fingerprints_date.strftime('%d.%m.%Y')}
                     )
                 
 
@@ -146,7 +147,7 @@ def add_document(request, client_id, doc_type):
                     client.decision_date = parsed.decision_date
                     updated_fields.append("decision_date")
                     auto_updates.append(
-                        f"дата децизии: {parsed.decision_date.strftime('%d.%m.%Y')}"
+                        _("дата децизии: %(val)s") % {"val": parsed.decision_date.strftime('%d.%m.%Y')}
                     )
                 
                 if parsed.full_name and (not client.first_name or not client.last_name):
@@ -156,7 +157,7 @@ def add_document(request, client_id, doc_type):
                         client.first_name = name_parts[0]
                         client.last_name = " ".join(name_parts[1:])
                         updated_fields.extend(["first_name", "last_name"])
-                        auto_updates.append(f"ФИО: {parsed.full_name}")
+                        auto_updates.append(_("ФИО: %(val)s") % {"val": parsed.full_name})
 
                 if updated_fields:
                     client.save(update_fields=updated_fields)
@@ -169,19 +170,19 @@ def add_document(request, client_id, doc_type):
                         except ValueError:
                             doc_labels.append(doc_code)
                     if doc_labels:
-                        auto_updates.append(f"Обнаружен запрос документов: {', '.join(doc_labels)}")
+                        auto_updates.append(_("Обнаружен запрос документов: %(val)s") % {"val": ', '.join(doc_labels)})
 
                 emails_sent = send_missing_documents_email(client)
                 if emails_sent:
-                    auto_updates.append("отправлено письмо с недостающими документами")
+                    auto_updates.append(_("отправлено письмо с недостающими документами"))
 
                 if parsed.wezwanie_type == "fingerprints" and parsed.fingerprints_date:
                     apt_email_sent = send_appointment_notification_email(client)
                     if apt_email_sent:
-                        auto_updates.append("отправлено уведомление о встрече")
+                        auto_updates.append(_("отправлено уведомление о встрече"))
 
 
-            success_message = f"Документ '{document_type_display}' успешно добавлен."
+            success_message = _("Документ '%(name)s' успешно добавлен.") % {"name": document_type_display}
             if auto_updates:
                 success_message = success_message + " " + " ; ".join(auto_updates)
 
@@ -195,7 +196,7 @@ def add_document(request, client_id, doc_type):
             return redirect('clients:client_detail', pk=client.id)
         if helper.expects_json:
             return helper.error(
-                message='Проверьте правильность заполнения формы.',
+                message=_('Проверьте правильность заполнения формы.'),
                 errors=form.errors,
             )
 
@@ -212,13 +213,13 @@ def confirm_wezwanie_parse(request, doc_id):
 
     if request.method != "POST":
         if helper.expects_json:
-            return helper.error(message="Недопустимый метод запроса.", status=405)
+            return helper.error(message=_("Недопустимый метод запроса."), status=405)
         return redirect("clients:client_detail", pk=document.client.id)
 
     if document.document_type not in (DocumentType.WEZWANIE, DocumentType.WEZWANIE.value):
         if helper.expects_json:
-            return helper.error(message="Документ не является wezwanie.", status=400)
-        messages.error(request, "Документ не является wezwanie.")
+            return helper.error(message=_("Документ не является wezwanie."), status=400)
+        messages.error(request, _("Документ не является wezwanie."))
         return redirect("clients:client_detail", pk=document.client.id)
 
     client = document.client
@@ -242,13 +243,13 @@ def confirm_wezwanie_parse(request, doc_id):
     if case_number and case_number != client.case_number:
         client.case_number = case_number
         updated_fields.append("case_number")
-        auto_updates.append(f"номер дела: {case_number}")
+        auto_updates.append(_("номер дела: %(val)s") % {"val": case_number})
 
     fingerprints_date = parse_date(fingerprints_date_raw) if fingerprints_date_raw else None
     if fingerprints_date and fingerprints_date != client.fingerprints_date:
         client.fingerprints_date = fingerprints_date
         updated_fields.append("fingerprints_date")
-        auto_updates.append(f"дата сдачи отпечатков: {fingerprints_date.strftime('%d.%m.%Y')}")
+        auto_updates.append(_("дата сдачи отпечатков: %(val)s") % {"val": fingerprints_date.strftime('%d.%m.%Y')})
 
 
 
@@ -256,7 +257,7 @@ def confirm_wezwanie_parse(request, doc_id):
     if decision_date and decision_date != client.decision_date:
         client.decision_date = decision_date
         updated_fields.append("decision_date")
-        auto_updates.append(f"дата децизии: {decision_date.strftime('%d.%m.%Y')}")
+        auto_updates.append(_("дата децизии: %(val)s") % {"val": decision_date.strftime('%d.%m.%Y')})
 
     if updated_fields:
         client.save(update_fields=updated_fields)
@@ -273,18 +274,18 @@ def confirm_wezwanie_parse(request, doc_id):
             except ValueError:
                 doc_labels.append(doc_code)
         if doc_labels:
-            auto_updates.append(f"Обнаружен запрос документов: {', '.join(doc_labels)}")
+            auto_updates.append(_("Обнаружен запрос документов: %(val)s") % {"val": ', '.join(doc_labels)})
 
     emails_sent = send_missing_documents_email(client)
     if emails_sent:
-        auto_updates.append("отправлено письмо с недостающими документами")
+        auto_updates.append(_("отправлено письмо с недостающими документами"))
 
     if client.fingerprints_date:
         apt_email_sent = send_appointment_notification_email(client)
         if apt_email_sent:
-            auto_updates.append("отправлено уведомление о встрече")
+            auto_updates.append(_("отправлено уведомление о встрече"))
 
-    success_message = "Данные wezwanie подтверждены."
+    success_message = _("Данные wezwanie подтверждены.")
     if auto_updates:
         success_message = f"{success_message} " + " ; ".join(auto_updates)
 
@@ -306,11 +307,11 @@ def document_delete(request, pk):
         document.delete()  # Сигнал позаботится об удалении файла
 
         if helper.expects_json:
-            return helper.success(message=f"Документ '{doc_type_display}' удалён.")
+            return helper.success(message=_("Документ '%(name)s' удалён.") % {"name": doc_type_display})
 
-        messages.success(request, f"Документ '{doc_type_display}' успешно удалён.")
+        messages.success(request, _("Документ '%(name)s' успешно удалён.") % {"name": doc_type_display})
     else:
-        messages.warning(request, "Удаление возможно только через кнопку.")
+        messages.warning(request, _("Удаление возможно только через кнопку."))
 
     return redirect('clients:client_detail', pk=client_id)
 
@@ -334,13 +335,13 @@ def toggle_document_verification(request, doc_id):
         if helper.expects_json:
             return helper.success(
                 verified=document.verified,
-                button_text="Снять отметку" if document.verified else "Проверить",
+                button_text=_("Снять отметку") if document.verified else _("Проверить"),
                 emails_sent=bool(emails_sent),
             )
 
-        status = "проверен" if document.verified else "не проверен"
-        message_suffix = " Письмо с недостающими документами отправлено." if emails_sent else ""
-        messages.success(request, f"Статус документа изменен на '{status}'.{message_suffix}")
+        status = _("проверен") if document.verified else _("не проверен")
+        message_suffix = _(" Письмо с недостающими документами отправлено.") if emails_sent else ""
+        messages.success(request, _("Статус документа изменен на '%(status)s'.") % {"status": status} + str(message_suffix))
     return redirect('clients:client_detail', pk=document.client.id)
 
 
@@ -367,12 +368,12 @@ def verify_all_documents(request, client_id):
         )
 
     if updated_count:
-        message = f"Отмечено {updated_count} документов как проверенные."
+        message = _("Отмечено %(count)s документов как проверенные.") % {"count": updated_count}
         if emails_sent:
-            message += " Письмо с недостающими документами отправлено."
+            message += " " + _("Письмо с недостающими документами отправлено.")
         messages.success(request, message)
     else:
-        messages.info(request, "Все загруженные документы уже проверены.")
+        messages.info(request, _("Все загруженные документы уже проверены."))
 
     return redirect('clients:client_detail', pk=client.id)
 
