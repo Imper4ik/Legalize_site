@@ -1313,26 +1313,21 @@ msgid ""
 msgstr ""
 
 #: .\clients\templates\clients\partials\email_history.html:6
-#, fuzzy
-#| msgid "Отправить email"
 msgid "История email"
-msgstr "Отправить email"
+msgstr "История email"
 
 #: .\clients\templates\clients\partials\email_history.html:16
-#, fuzzy
-#| msgid "Дата от"
 msgid "Дата"
-msgstr "Дата от"
+msgstr "Дата"
 
 #: .\clients\templates\clients\partials\email_history.html:19
 msgid "Тип"
-msgstr ""
+msgstr "Тип"
 
 #: .\clients\templates\clients\partials\email_history.html:44
-#, fuzzy
-#| msgid "Письмо отправлено"
 msgid "Письма ещё не отправлялись."
-msgstr "Письмо отправлено"
+msgstr "Письма ещё не отправлялись."
+
 
 #: .\clients\templates\clients\partials\modals.html:9
 #: .\templates\clients\partials\modals.html:9
