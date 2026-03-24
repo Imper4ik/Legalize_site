@@ -18,7 +18,7 @@ class DocumentType(models.TextChoices):
     FINANCIAL_PROOF = 'financial_proof', _('Środki finansowe na utrzymanie w Polsce')
     ZALACZNIK_NR_1 = 'załącznik_nr_1', _('Załącznik nr 1')
     EMPLOYMENT_CONTRACT = 'employment_contract', _('Oryginały umów o pracę / zlecenia')
-    WORK_PERMISSION = 'work_permission', _('Oświadczenie o powierzeniu pracy lub zezwolenie na pracę')
+    WORK_PERMISSION = 'work_permission', _('Oświadczenie o powierzeniu pracy lub zezwolenie na pracę (lub Polski dyplom + suplement)')
     PIT_PROOF = 'pit_proof', _('PIT-37 cudzoziemca z potwierdzeniem złożenia')
     TAX_CLEARANCE_EMPLOYER = 'tax_clearance_employer', _('Zaświadczenie ZUS dot. braku zaległości pracodawcy')
     TAX_CLEARANCE_FOREIGNER = 'tax_clearance_foreigner', _('Zaświadczenie o niezaleganiu opłacania składek cudzoziemca')

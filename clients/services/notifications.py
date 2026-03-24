@@ -51,16 +51,47 @@ def _render_email_body(template_key: str, context: dict, language: str) -> str:
         return template.render(context)
 
 
-def _send_email(subject: str, body: str, recipients: Iterable[str]) -> int:
+def _send_email(
+    subject: str,
+    body: str,
+    recipients: Iterable[str],
+    *,
+    client: Client | None = None,
+    template_type: str = "",
+) -> int:
     try:
         recipient_list = list(recipients)
         sent_count = send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, recipient_list)
         if sent_count:
             _send_confirmation_email(subject, body, recipient_list)
+            _log_email(subject, body, recipient_list, client=client, template_type=template_type)
         return sent_count
     except Exception:  # pragma: no cover - defensive safeguard
         logger.exception("Failed to send notification email")
         return 0
+
+
+def _log_email(
+    subject: str,
+    body: str,
+    recipients: list[str],
+    *,
+    client: Client | None = None,
+    template_type: str = "",
+    sent_by=None,
+) -> None:
+    from clients.models import EmailLog
+    try:
+        EmailLog.objects.create(
+            client=client,
+            subject=subject,
+            body=body,
+            recipients=", ".join(recipients),
+            template_type=template_type,
+            sent_by=sent_by,
+        )
+    except Exception:
+        logger.exception("Failed to log sent email")
 
 
 def _get_staff_recipients() -> list[str]:
@@ -236,7 +267,7 @@ def send_required_documents_email(client: Client) -> int:
     language = _get_preferred_language(client)
     subject = _get_subject("required_documents", language)
     body = _render_email_body("required_documents", context, language)
-    return _send_email(subject, body, [client.email])
+    return _send_email(subject, body, [client.email], client=client, template_type="required_documents")
 
 
 def send_expired_documents_email(client: Client) -> int:
@@ -270,7 +301,7 @@ def send_expired_documents_email(client: Client) -> int:
     with override(language):
         subject = _get_subject("expired_documents", language)
     body = _render_email_body("expired_documents", context, language)
-    return _send_email(subject, body, [client.email])
+    return _send_email(subject, body, [client.email], client=client, template_type="expired_documents")
 
 
 def send_missing_documents_email(client: Client) -> int:
@@ -343,7 +374,7 @@ def send_missing_documents_email(client: Client) -> int:
 
     subject = _get_subject("missing_documents", language)
     body = _render_email_body("missing_documents", context, language)
-    return _send_email(subject, body, [client.email])
+    return _send_email(subject, body, [client.email], client=client, template_type="missing_documents")
 
 
 def send_expiring_documents_email(client: Client, documents: list[Document]) -> int:
@@ -423,7 +454,7 @@ def send_expiring_documents_email(client: Client, documents: list[Document]) -> 
 
     subject = _get_subject("expiring_documents", language)
     body = _render_email_body("expiring_documents", context, language)
-    return _send_email(subject, body, [client.email])
+    return _send_email(subject, body, [client.email], client=client, template_type="expiring_documents")
 
 
 def send_appointment_notification_email(client: Client) -> int:
@@ -456,4 +487,4 @@ def send_appointment_notification_email(client: Client) -> int:
 
     subject = _get_subject("appointment_notification", language)
     body = _render_email_body("appointment_notification", context, language)
-    return _send_email(subject, body, [client.email])
+    return _send_email(subject, body, [client.email], client=client, template_type="appointment_notification")

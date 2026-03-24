@@ -29,6 +29,10 @@
 
 <hr>
 
+{% include 'clients/partials/email_history.html' with email_logs=email_logs %}
+
+<hr>
+
 <div class="d-flex justify-content-between align-items-center">
   <h2 class="mb-0">{% translate "Чеклист документов" %}</h2>
   <div class="d-flex align-items-center ms-3 gap-2">

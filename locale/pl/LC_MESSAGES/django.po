@@ -1865,8 +1865,8 @@ msgid "Oryginały umów o pracę / zlecenia"
 msgstr "Oryginały umów o pracę / zlecenia"
 
 #: .\legalize_site\constants.py:21
-msgid "Oświadczenie o powierzeniu pracy lub zezwolenie na pracę"
-msgstr "Oświadczenie o powierzeniu pracy lub zezwolenie na pracę"
+msgid "Oświadczenie o powierzeniu pracy lub zezwolenie na pracę (lub Polski dyplom + suplement)"
+msgstr "Oświadczenie o powierzeniu pracy lub zezwolenie na pracę (lub Polski dyplom + suplement)"
 
 #: .\legalize_site\constants.py:22
 msgid "PIT-37 cudzoziemca z potwierdzeniem złożenia"

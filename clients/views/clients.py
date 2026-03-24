@@ -71,6 +71,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
                 Prefetch('payments', queryset=Payment.objects.order_by('-created_at')),
                 Prefetch('documents', queryset=Document.objects.order_by('-uploaded_at')),
                 'reminders',
+                'email_logs',
             )
         )
 
@@ -81,6 +82,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         context['document_upload_form'] = DocumentUploadForm()
         if hasattr(client, 'get_document_checklist'):
             context['document_status_list'] = client.get_document_checklist()
+        context['email_logs'] = client.email_logs.all()[:50]
         return context
 
 
@@ -96,7 +98,7 @@ class ClientCreateView(StaffRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        messages.success(self.request, _("Клиент успешно создан!"))
+        messages.success(self.request, _("Hasło zostało zmienione"))
         response = super().form_valid(form)
         send_required_documents_email(self.object)
         return response

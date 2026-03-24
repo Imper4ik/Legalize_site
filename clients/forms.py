@@ -153,6 +153,17 @@ class DocumentRequirementEditForm(forms.ModelForm):
             'is_required': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        # Auto-propagate custom_name to empty language fields
+        if instance.custom_name:
+            for lang_field in ('custom_name_pl', 'custom_name_en', 'custom_name_ru'):
+                if not getattr(instance, lang_field):
+                    setattr(instance, lang_field, instance.custom_name)
+        if commit:
+            instance.save()
+        return instance
+
 
 class DocumentRequirementAddForm(forms.Form):
     name = forms.CharField(

@@ -17,6 +17,7 @@ from clients.services.notifications import (
     _render_email_body,
     _render_email_pdf,
     _send_confirmation_email,
+    _log_email,
     _get_missing_documents_context,
     _get_expiring_documents_context,
     _get_required_documents_context,
@@ -90,6 +91,10 @@ def send_custom_email(request, pk):
         )
         if sent_count:
             _send_confirmation_email(subject, body, [client.email])
+            _log_email(
+                subject, body, [client.email],
+                client=client, template_type='custom', sent_by=request.user,
+            )
             messages.success(request, _("Письмо '%(subject)s' успешно отправлено.") % {"subject": subject})
         else:
             messages.error(request, _("Не удалось отправить письмо (send_mail вернул 0)."))

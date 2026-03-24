@@ -1525,8 +1525,8 @@ msgid "Ошибка при обновлении переводов: %(err)s"
 msgstr "Ошибка при обновлении переводов: %(err)s"
 
 #: .\clients\views\clients.py:99
-msgid "Клиент успешно создан!"
-msgstr "Password successfully changed"
+msgid "Hasło zostało zmienione"
+msgstr "Password has been changed"
 
 #: .\clients\views\clients.py:107 .\clients\views\clients.py:139
 msgid ""
@@ -1859,8 +1859,8 @@ msgid "Oryginały umów o pracę / zlecenia"
 msgstr "Original employment / contract agreements"
 
 #: .\legalize_site\constants.py:21
-msgid "Oświadczenie o powierzeniu pracy lub zezwolenie na pracę"
-msgstr "Statement of work entrustment or work permit"
+msgid "Oświadczenie o powierzeniu pracy lub zezwolenie na pracę (lub Polski dyplom + suplement)"
+msgstr "Statement of work entrustment or work permit (or Polish diploma + supplement)"
 
 #: .\legalize_site\constants.py:22
 msgid "PIT-37 cudzoziemca z potwierdzeniem złożenia"

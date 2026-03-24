@@ -1,0 +1,45 @@
+{% load i18n %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h4>
+    <i class="bi bi-envelope-open"></i>
+    {% translate "История email" %}
+  </h4>
+</div>
+
+{% if email_logs %}
+<div class="card mb-4">
+  <div class="table-responsive">
+    <table class="table table-sm table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>{% translate "Дата" %}</th>
+          <th>{% translate "Тема" %}</th>
+          <th>{% translate "Получатели" %}</th>
+          <th>{% translate "Тип" %}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in email_logs %}
+        <tr data-bs-toggle="collapse" data-bs-target="#email-body-{{ log.id }}" role="button"
+            style="cursor: pointer;">
+          <td class="text-nowrap">{{ log.sent_at|date:"d.m.Y H:i" }}</td>
+          <td>{{ log.subject|truncatechars:60 }}</td>
+          <td>{{ log.recipients|truncatechars:40 }}</td>
+          <td>
+            <span class="badge bg-secondary">{{ log.template_type|default:"—" }}</span>
+          </td>
+        </tr>
+        <tr class="collapse" id="email-body-{{ log.id }}">
+          <td colspan="4">
+            <pre class="mb-0 p-2 bg-light rounded" style="white-space: pre-wrap; font-size: 0.85em;">{{ log.body }}</pre>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<p class="text-muted">{% translate "Письма ещё не отправлялись." %}</p>
+{% endif %}
