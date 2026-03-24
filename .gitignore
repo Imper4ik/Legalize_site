@@ -44,3 +44,12 @@ staticfiles
 
 
 generated_media_test/
+
+# Unnecessary project files
+CODE_REVIEW.md
+
+# Nested databases (root *.sqlite3 already covered)
+legalize_site/db.sqlite3
+
+# Uploaded media files (user data)
+legalize_site/media/
