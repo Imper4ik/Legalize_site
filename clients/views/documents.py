@@ -341,7 +341,7 @@ def toggle_document_verification(request, doc_id):
 
         status = _("проверен") if document.verified else _("не проверен")
         message_suffix = _(" Письмо с недостающими документами отправлено.") if emails_sent else ""
-        messages.success(request, _("Статус документа изменен на '%(status)s'.") % {"status": status} + str(message_suffix))
+        messages.success(request, _("Статус изменен: %(status)s.") % {"status": status} + str(message_suffix))
     return redirect('clients:client_detail', pk=document.client.id)
 
 
