@@ -1,5 +1,6 @@
 Django==6.0.1
-django-allauth==65.3.1
+django-allauth[socialaccount]==65.3.1
+PyJWT==2.10.1
 psycopg2-binary==2.9.10
 python-decouple==3.8
 typing-extensions==4.12.2
