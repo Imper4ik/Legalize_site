@@ -12,4 +12,11 @@ __all__ = [
     'STUDY_DOCS',
     'WORK_DOCS',
     'DOCUMENT_CHECKLIST',
+    'INTERNAL_DOCS',
 ]
+
+INTERNAL_DOCS = {
+    DocumentType.WEZWANIE,
+    DocumentType.FINGERPRINT_CONFIRMATION,
+    DocumentType.PAYMENT_CONFIRMATION,
+}

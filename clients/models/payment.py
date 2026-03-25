@@ -34,6 +34,10 @@ class Payment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Создано"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Обновлено"))
 
+    @property
+    def amount_due(self):
+        return self.total_amount - self.amount_paid
+
     def __str__(self):
         return f"Счёт {self.pk} - {self.client} ({self.total_amount} PLN)"
 

@@ -5,7 +5,7 @@ from django.utils.crypto import get_random_string
 from django.utils.text import slugify
 
 from clients.services.calculator import CURRENCY_EUR, CURRENCY_PLN
-from .constants import DocumentType
+from .constants import DocumentType, INTERNAL_DOCS
 from submissions.models import Submission
 from .models import Client, Document, DocumentRequirement, Payment, get_fallback_document_checklist, resolve_document_label
 
@@ -220,12 +220,6 @@ class DocumentChecklistForm(forms.Form):
 
         choices = []
         
-        INTERNAL_DOCS = {
-            DocumentType.WEZWANIE,
-            DocumentType.FINGERPRINT_CONFIRMATION,
-            DocumentType.PAYMENT_CONFIRMATION,
-        }
-
         if existing_requirements:
             for requirement in existing_requirements:
                 if requirement.document_type in INTERNAL_DOCS:
@@ -256,11 +250,6 @@ class DocumentChecklistForm(forms.Form):
         return _label_for_document_type(code)
 
     def _initial_documents(self):
-        INTERNAL_DOCS = {
-            DocumentType.WEZWANIE,
-            DocumentType.FINGERPRINT_CONFIRMATION,
-            DocumentType.PAYMENT_CONFIRMATION,
-        }
         existing = (
             DocumentRequirement.objects.filter(application_purpose=self.purpose, is_required=True)
             .exclude(document_type__in=INTERNAL_DOCS)
