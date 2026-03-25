@@ -392,28 +392,20 @@ msgid "Получатели"
 msgstr ""
 
 #: .\clients\models.py:535
-#, fuzzy
-#| msgid "Тип документа"
 msgid "Тип шаблона"
-msgstr "Typ dokumentu"
+msgstr "Typ szablonu"
 
 #: .\clients\models.py:537
-#, fuzzy
-#| msgid "Дата отпечатков"
 msgid "Дата отправки"
-msgstr "Data odcisków palców"
+msgstr "Data wysłania"
 
 #: .\clients\models.py:540
-#, fuzzy
-#| msgid "Отправить"
 msgid "Отправитель"
-msgstr "Wyślij"
+msgstr "Nadawca"
 
 #: .\clients\models.py:545 .\clients\models.py:546
-#, fuzzy
-#| msgid "Отправить email"
 msgid "Журнал email"
-msgstr "Wyślij e-mail"
+msgstr "Dziennik e-mail"
 
 # Email subjects
 #: .\clients\services\notifications.py:23
@@ -1320,26 +1312,20 @@ msgstr ""
 "została zdefiniowana w ustawieniach."
 
 #: .\clients\templates\clients\partials\email_history.html:6
-#, fuzzy
-#| msgid "Отправить email"
 msgid "История email"
-msgstr "Wyślij e-mail"
+msgstr "Historia e-mail"
 
 #: .\clients\templates\clients\partials\email_history.html:16
-#, fuzzy
-#| msgid "Дата от"
 msgid "Дата"
-msgstr "Data od"
+msgstr "Data"
 
 #: .\clients\templates\clients\partials\email_history.html:19
 msgid "Тип"
 msgstr ""
 
 #: .\clients\templates\clients\partials\email_history.html:44
-#, fuzzy
-#| msgid "Письмо отправлено"
 msgid "Письма ещё не отправлялись."
-msgstr "E-mail wysłany"
+msgstr "Wiadomości e-mail nie zostały jeszcze wysłane."
 
 #: .\clients\templates\clients\partials\modals.html:9
 #: .\templates\clients\partials\modals.html:9
