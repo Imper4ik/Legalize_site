@@ -170,15 +170,15 @@ msgstr "Employer phone"
 
 #: .\clients\models.py:219
 msgid "Время сдачи отпечатков"
-msgstr "Date of fingerprints submission"
+msgstr "Fingerprint submission time"
 
 #: .\clients\models.py:220
 msgid "Место сдачи отпечатков"
-msgstr "Date of fingerprints submission"
+msgstr "Fingerprint submission location"
 
 #: .\clients\models.py:221
 msgid "Дата официальной децизии"
-msgstr "Actual Payment Date"
+msgstr "Official decision date"
 
 #: .\clients\models.py:222
 msgid "Uwagi / Заметки"
@@ -255,7 +255,7 @@ msgstr "Document Name (RU)"
 
 #: .\clients\models.py:386
 msgid "Порядок отображения"
-msgstr "Proof of tuition fee payment"
+msgstr "Display order"
 
 #: .\clients\models.py:387
 #: .\clients\templates\clients\document_checklist_manage.html:250
@@ -264,11 +264,11 @@ msgstr "Required Document"
 
 #: .\clients\models.py:392
 msgid "Требование к документу"
-msgstr "Document Name"
+msgstr "Document requirement"
 
 #: .\clients\models.py:393
 msgid "Требования к документам"
-msgstr "Document reminders"
+msgstr "Document requirements"
 
 #: .\clients\models.py:457
 msgid "Ожидает оплаты"
@@ -378,7 +378,7 @@ msgstr "Active"
 #: .\clients\models.py:530
 #: .\clients\templates\clients\partials\email_history.html:17
 msgid "Тема"
-msgstr ""
+msgstr "Subject"
 
 #: .\clients\models.py:531 .\clients\templates\clients\partials\modals.html:238
 #: .\templates\clients\partials\modals.html:227
@@ -388,31 +388,27 @@ msgstr "Email body"
 #: .\clients\models.py:532
 #: .\clients\templates\clients\partials\email_history.html:18
 msgid "Получатели"
-msgstr ""
+msgstr "Recipients"
 
 #: .\clients\models.py:535
-#, fuzzy
-#| msgid "Тип документа"
+#
 msgid "Тип шаблона"
-msgstr "Document type"
+msgstr "Template type"
 
 #: .\clients\models.py:537
-#, fuzzy
-#| msgid "Дата отпечатков"
+#
 msgid "Дата отправки"
-msgstr "Fingerprints date"
+msgstr "Date sent"
 
 #: .\clients\models.py:540
-#, fuzzy
-#| msgid "Отправить"
+#
 msgid "Отправитель"
-msgstr "Send"
+msgstr "Sender"
 
 #: .\clients\models.py:545 .\clients\models.py:546
-#, fuzzy
-#| msgid "Отправить email"
+#
 msgid "Журнал email"
-msgstr "Send email"
+msgstr "Email log"
 
 # Email subjects
 #: .\clients\services\notifications.py:23
@@ -791,8 +787,8 @@ msgid "Отправить email"
 msgstr "Send email"
 
 #: .\clients\templates\clients\client_detail.html:46
-msgid "Проверить все загруженные"
-msgstr "Check and create new ones"
+msgid "Проверить и создать новые"
+msgstr "Verify checklist"
 
 #: .\clients\templates\clients\client_edit.html:5
 #: .\clients\templates\clients\client_edit.html:14
@@ -1051,7 +1047,7 @@ msgstr ""
 #: .\clients\templates\clients\payment_reminder_list.html:23
 #: .\clients\templates\clients\payment_reminder_list.html:43
 msgid "Проверить и создать новые"
-msgstr "Check and create new ones"
+msgstr "Verify checklist"
 
 #: .\clients\templates\clients\document_reminder_list.html:99
 msgid "Все хорошо"
@@ -1316,14 +1312,12 @@ msgstr ""
 "\"%(language)s\"."
 
 #: .\clients\templates\clients\partials\email_history.html:6
-#, fuzzy
-#| msgid "Отправить email"
+#
 msgid "История email"
 msgstr "Send email"
 
 #: .\clients\templates\clients\partials\email_history.html:16
-#, fuzzy
-#| msgid "Дата от"
+#
 msgid "Дата"
 msgstr "Date from"
 
@@ -1332,8 +1326,7 @@ msgid "Тип"
 msgstr ""
 
 #: .\clients\templates\clients\partials\email_history.html:44
-#, fuzzy
-#| msgid "Письмо отправлено"
+#
 msgid "Письма ещё не отправлялись."
 msgstr "Email sent"
 

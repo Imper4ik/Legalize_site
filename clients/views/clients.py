@@ -83,6 +83,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         if hasattr(client, 'get_document_checklist'):
             context['document_status_list'] = client.get_document_checklist()
         context['email_logs'] = client.email_logs.all()[:50]
+        context['service_choices'] = Payment.SERVICE_CHOICES
         return context
 
 

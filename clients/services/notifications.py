@@ -11,7 +11,7 @@ from django.conf import settings
 from django.core.mail import EmailMessage, send_mail
 from django.template.loader import select_template
 from django.utils import timezone
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy
 from django.utils.translation import override
 from PIL import Image, ImageDraw, ImageFont
 
@@ -19,12 +19,12 @@ from clients.models import Client, Document
 
 logger = logging.getLogger(__name__)
 
-EMAIL_SUBJECTS: dict[str, str] = {
-    "required_documents": _("Список необходимых документов"),
-    "expired_documents": _("Истекшие документы после сдачи отпечатков"),
-    "missing_documents": _("Список недостающих документов"),
-    "expiring_documents": _("Документы скоро истекают"),
-    "appointment_notification": _("Уведомление о встрече"),
+EMAIL_SUBJECTS = {
+    "required_documents": gettext_lazy("Список необходимых документов"),
+    "expired_documents": gettext_lazy("Истекшие документы после сдачи отпечатков"),
+    "missing_documents": gettext_lazy("Список недостающих документов"),
+    "expiring_documents": gettext_lazy("Документы скоро истекают"),
+    "appointment_notification": gettext_lazy("Уведомление о встрече"),
 }
 
 
@@ -231,12 +231,6 @@ def _send_confirmation_email(subject: str, body: str, recipients: list[str]) -> 
         logger.exception("Failed to send confirmation email")
 
 
-def send_required_documents_email(client: Client) -> int:
-    """Send the required document checklist to the client upon account creation."""
-    if not client.email:
-        return 0
-
-    language = _get_preferred_language(client)
 def _get_required_documents_context(client: Client, language: str | None = None) -> dict | None:
     if language is None:
         language = _get_preferred_language(client)
@@ -270,12 +264,6 @@ def send_required_documents_email(client: Client) -> int:
     return _send_email(subject, body, [client.email], client=client, template_type="required_documents")
 
 
-def send_expired_documents_email(client: Client) -> int:
-    """Send a summary of expired documents after fingerprints are submitted."""
-    if not client.email:
-        return 0
-
-    language = _get_preferred_language(client)
 def _get_expired_documents_context(client: Client) -> dict | None:
     today = timezone.localdate()
     expired_documents = client.documents.filter(expiry_date__isnull=False, expiry_date__lte=today).order_by(
@@ -304,13 +292,6 @@ def send_expired_documents_email(client: Client) -> int:
     return _send_email(subject, body, [client.email], client=client, template_type="expired_documents")
 
 
-def send_missing_documents_email(client: Client) -> int:
-    """Send a reminder listing documents that are still missing for the client."""
-
-    if not client.email:
-        return 0
-
-    language = _get_preferred_language(client)
 def _get_missing_documents_context(client: Client, language: str | None = None) -> dict | None:
     if language is None:
         language = _get_preferred_language(client)
@@ -377,13 +358,6 @@ def send_missing_documents_email(client: Client) -> int:
     return _send_email(subject, body, [client.email], client=client, template_type="missing_documents")
 
 
-def send_expiring_documents_email(client: Client, documents: list[Document]) -> int:
-    """Send a notice about documents expiring soon (within the next week)."""
-
-    if not client.email or not documents:
-        return 0
-
-    language = _get_preferred_language(client)
 def _get_expiring_documents_context(client: Client, documents: list[Document]) -> dict | None:
     if not documents:
         return None
@@ -457,12 +431,6 @@ def send_expiring_documents_email(client: Client, documents: list[Document]) -> 
     return _send_email(subject, body, [client.email], client=client, template_type="expiring_documents")
 
 
-def send_appointment_notification_email(client: Client) -> int:
-    """Send a notification about a fingerprint appointment."""
-    if not client.email or not client.fingerprints_date:
-        return 0
-
-    language = _get_preferred_language(client)
 def _get_appointment_context(client: Client) -> dict | None:
     if not client.fingerprints_date:
         return None
