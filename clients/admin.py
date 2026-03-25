@@ -2,7 +2,14 @@
 
 from django.contrib import admin
 
-from .models import Client, Document, Payment
+from .models import Client, Document, Payment, ServicePrice
+
+@admin.register(ServicePrice)
+class ServicePriceAdmin(admin.ModelAdmin):
+    list_display = ('get_service_code_display', 'service_code', 'price')
+    list_editable = ('price',)
+    search_fields = ('service_code',)
+
 
 
 class PaymentInline(admin.TabularInline):

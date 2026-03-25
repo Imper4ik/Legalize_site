@@ -1,0 +1,39 @@
+name: i18n Translation Check
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  check-translations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install system dependencies
+        run: sudo apt-get update && sudo apt-get install -y gettext pkg-config default-libmysqlclient-dev
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compile messages (Verification)
+        run: python manage.py compilemessages
+
+      - name: Check for fuzzy translations
+        run: |
+          if grep -q "#, fuzzy" locale/*/LC_MESSAGES/django.po; then
+            echo "::error::Found fuzzy translations in .po files. Please resolve them."
+            grep -n -C 2 "#, fuzzy" locale/*/LC_MESSAGES/django.po
+            exit 1
+          fi
+          echo "No fuzzy translations found!"
