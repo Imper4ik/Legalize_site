@@ -1,55 +1,19 @@
-[English](#english) | [Polski](#polski) | [Русский](#русский)
+# docs
 
----
+## Назначение
+Каталог `docs/` содержит операционную и техническую документацию проекта: деплой, бэкапы, безопасность и бизнес-процессы.
 
-# English <a name="english"></a>
+## Состав
+- `deployment.md` — инструкции по развертыванию.
+- `backups.md` — сценарии резервного копирования БД.
+- `field_encryption.md` — подход к шифрованию чувствительных полей.
+- `submissions_api.md` — описание API модуля `submissions`.
+- `superuser_password.md` — практики управления доступом суперпользователя.
+- `wezwanie_workflow.md` / `wezwanie_summary_ru.md` — поток обработки официальных писем (Wezwanie).
 
-# Project Documentation
-
-This folder contains detailed guides and technical documentation for the system.
-
-## Files
-
-*   **[backups.md](backups.md)**: Strategies and scripts for database backups (Postgres).
-*   **[deployment.md](deployment.md)**: Instructions for deploying the application (Railway, Docker).
-*   **[field_encryption.md](field_encryption.md)**: Details on how encryption works (related to `fernet_fields`).
-*   **[submissions_api.md](submissions_api.md)**: Documentation for the API of the `submissions` app.
-*   **[superuser_password.md](superuser_password.md)**: How to manage admin passwords (security best practices).
-*   **[wezwanie_workflow.md](wezwanie_workflow.md)**: Description of the business process for handling official letters ("Wezwanie").
-*   **[wezwanie_summary_ru.md](wezwanie_summary_ru.md)**: Summary of the Wezwanie workflow (in Russian).
-
----
-
-# Polski <a name="polski"></a>
-
-# Dokumentacja Projektu
-
-Ten folder zawiera szczegółowe przewodniki i dokumentację techniczną systemu.
-
-## Pliki
-
-*   **[backups.md](backups.md)**: Strategie i skrypty kopii zapasowych bazy danych (Postgres).
-*   **[deployment.md](deployment.md)**: Instrukcje wdrażania aplikacji (Railway, Docker).
-*   **[field_encryption.md](field_encryption.md)**: Szczegóły działania szyfrowania (związane z `fernet_fields`).
-*   **[submissions_api.md](submissions_api.md)**: Dokumentacja API aplikacji `submissions`.
-*   **[superuser_password.md](superuser_password.md)**: Jak zarządzać hasłami administratora (najlepsze praktyki bezpieczeństwa).
-*   **[wezwanie_workflow.md](wezwanie_workflow.md)**: Opis procesu biznesowego obsługi pism urzędowych ("Wezwanie").
-*   **[wezwanie_summary_ru.md](wezwanie_summary_ru.md)**: Podsumowanie workflow Wezwania (po rosyjsku).
-
----
-
-# Русский <a name="русский"></a>
-
-# Документация Проекта
-
-Эта папка содержит подробные гайды и техническую документацию системы.
-
-## Файлы
-
-*   **[backups.md](backups.md)**: Стратегии и скрипты резервного копирования базы данных (Postgres).
-*   **[deployment.md](deployment.md)**: Инструкции по развертыванию приложения (Railway, Docker).
-*   **[field_encryption.md](field_encryption.md)**: Детали работы шифрования (связано с `fernet_fields`).
-*   **[submissions_api.md](submissions_api.md)**: Документация к API приложения `submissions`.
-*   **[superuser_password.md](superuser_password.md)**: Как управлять паролями администратора (протоколы безопасности).
-*   **[wezwanie_workflow.md](wezwanie_workflow.md)**: Описание бизнес-процесса обработки официальных писем ("Wezwanie").
-*   **[wezwanie_summary_ru.md](wezwanie_summary_ru.md)**: Краткое содержание workflow Wezwanie (на русском).
+## Когда обновлять
+Обновляйте документы при любом изменении:
+1. процессов деплоя;
+2. переменных окружения;
+3. контрактов API;
+4. регламентов безопасности или бизнес-процессов.
