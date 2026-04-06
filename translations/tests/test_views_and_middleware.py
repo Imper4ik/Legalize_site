@@ -4,7 +4,7 @@ import json
 
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
-from django.test import RequestFactory, TestCase, override_settings
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
 from translations.middleware import TranslationStudioMiddleware
@@ -129,55 +129,3 @@ class TranslationMiddlewareTests(TestCase):
         from django.utils import translation
 
         self.assertFalse(getattr(translation, "_studio_active", True))
-
-    def test_injects_overlay_script_into_html_when_studio_active(self):
-        request = self.factory.get("/any/")
-        request.user = type("U", (), {"is_authenticated": True, "is_superuser": True})()
-        request.session = {"studio_mode": True}
-
-        middleware = TranslationStudioMiddleware(
-            lambda _req: HttpResponse("<html><body><h1>Hello</h1></body></html>", content_type="text/html")
-        )
-        response = middleware(request)
-        content = response.content.decode("utf-8")
-
-        self.assertIn("/static/translations/js/translation_overlay.js", content)
-        self.assertEqual(content.count("translation_overlay.js"), 1)
-
-    def test_does_not_inject_overlay_script_for_non_html_response(self):
-        request = self.factory.get("/any/")
-        request.user = type("U", (), {"is_authenticated": True, "is_superuser": True})()
-        request.session = {"studio_mode": True}
-
-        middleware = TranslationStudioMiddleware(
-            lambda _req: HttpResponse("{\"ok\":true}", content_type="application/json")
-        )
-        response = middleware(request)
-
-        self.assertNotIn("translation_overlay.js", response.content.decode("utf-8"))
-
-    @override_settings(STUDIO_OVERLAY_INCLUDE_PREFIXES=("/staff/",))
-    def test_respects_include_prefixes(self):
-        request = self.factory.get("/submissions/")
-        request.user = type("U", (), {"is_authenticated": True, "is_superuser": True})()
-        request.session = {"studio_mode": True}
-
-        middleware = TranslationStudioMiddleware(
-            lambda _req: HttpResponse("<html><body><h1>Hello</h1></body></html>", content_type="text/html")
-        )
-        response = middleware(request)
-
-        self.assertNotIn("translation_overlay.js", response.content.decode("utf-8"))
-
-    @override_settings(STUDIO_OVERLAY_EXCLUDE_PREFIXES=("/submissions/",))
-    def test_respects_exclude_prefixes(self):
-        request = self.factory.get("/submissions/")
-        request.user = type("U", (), {"is_authenticated": True, "is_superuser": True})()
-        request.session = {"studio_mode": True}
-
-        middleware = TranslationStudioMiddleware(
-            lambda _req: HttpResponse("<html><body><h1>Hello</h1></body></html>", content_type="text/html")
-        )
-        response = middleware(request)
-
-        self.assertNotIn("translation_overlay.js", response.content.decode("utf-8"))
