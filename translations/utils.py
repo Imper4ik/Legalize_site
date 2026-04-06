@@ -143,8 +143,11 @@ def save_translation_entry(msgid, ru=None, en=None, pl=None):
             except Exception as e:
                 logger.exception('Failed to save PO file %s after append: %s', path, e)
             
-    # Optional: trigger compilemessages? 
-    # Usually better to do it once at the end of multiple edits, 
-    # but for in-context, live feedback is nice.
-    from django.core.management import call_command
-    call_command('compilemessages')
+    # Rebuild MO catalogs after update so changes appear immediately.
+    # This helper already falls back to a pure-Python compiler when gettext
+    # binaries are unavailable (common on some hosted environments).
+    try:
+        from legalize_site.utils.i18n import compile_message_catalogs
+        compile_message_catalogs()
+    except Exception as exc:  # pragma: no cover - defensive safeguard
+        logger.exception("Failed to compile translation catalogs after save: %s", exc)
