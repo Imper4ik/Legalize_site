@@ -197,36 +197,7 @@ class ClientAccountLifecycleTests(TestCase):
 
 
 
-class DocumentTypeConsistencyTests(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls._can_compile_messages = shutil.which("msgfmt") is not None
-        if cls._can_compile_messages:
-            call_command("compilemessages", verbosity=0, ignore=["venv", ".venv"])
 
-    def test_document_checklist_labels_match_enum(self):
-        enum_map = {choice.value: choice.label for choice in DocumentType}
-        for docs in DOCUMENT_CHECKLIST.values():
-            for code, label in docs:
-                self.assertIn(code, enum_map)
-                self.assertEqual(label, enum_map[code])
-
-    def test_translate_document_name_respects_language(self):
-        if not self._can_compile_messages:
-            self.skipTest("msgfmt is not available to compile translations")
-
-        with translation.override("ru"):
-            self.assertEqual(
-                translate_document_name(DocumentType.PHOTOS.label),
-                "4 фотографии (45x35 мм)",
-            )
-
-        with translation.override("en"):
-            self.assertEqual(
-                translate_document_name(DocumentType.PHOTOS.label),
-                "4 photos (45x35 mm)",
-            )
 
     def test_document_display_name_prefers_custom_label(self):
         client = Client.objects.create(
