@@ -12,7 +12,7 @@ cmds = [
 
 [phases.build]
 cmds = [
-  "pytest --maxfail=1 -q",
+  "DJANGO_SETTINGS_MODULE=legalize_site.settings.test pytest --maxfail=1 -q",
   "python manage.py compilemessages",
   "python manage.py collectstatic --no-input"
 ]

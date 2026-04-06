@@ -1,9 +1,10 @@
-from .development import *
+from .base import *
 
+# Force in-memory SQLite for tests to ignore Railway's DATABASE_URL during build phase
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": ":memory:",
     }
 }
 
