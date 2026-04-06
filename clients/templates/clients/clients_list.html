@@ -15,6 +15,9 @@
     <div class="text-muted">{% translate "Поиск, быстрые заметки и переход в карточку клиента" %}</div>
   </div>
   <div class="d-flex gap-2">
+    <a href="{% url 'clients:mass_email' %}" class="btn btn-outline-primary">
+      <i class="bi bi-envelope me-1"></i>{% translate "Массовая рассылка" %}
+    </a>
     <a href="{% url 'clients:client_add' %}" class="btn btn-gradient">
       <i class="bi bi-plus-lg me-1"></i>{% translate "Добавить нового клиента" %}
     </a>
@@ -26,10 +29,18 @@
 
 <form method="get" class="mb-4">
   <div class="input-group">
+    <select name="company" class="form-select" style="max-width: 250px;">
+      <option value="">{% translate "Все компании" %}</option>
+      {% for company in companies %}
+        <option value="{{ company.id }}" {% if selected_company == company.id|stringformat:"s" %}selected{% endif %}>
+          {{ company.name }}
+        </option>
+      {% endfor %}
+    </select>
     <input type="text"
            name="q"
            class="form-control"
-           placeholder="{% translate 'Поиск по имени, почте или номеру дела...' %}"
+           placeholder="{% translate 'Поиск по имени, почте, телефону или номеру дела...' %}"
            value="{{ query }}">
     <button class="btn btn-outline-secondary" type="submit">
       {% translate "Найти" %}

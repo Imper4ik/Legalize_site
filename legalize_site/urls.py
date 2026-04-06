@@ -9,7 +9,10 @@ from clients import views
 from clients.views.admin_views import update_translations_view
 from .cron_views import db_backup
 
+from legalize_site.views import healthcheck
+
 urlpatterns = [
+    path('healthz/', healthcheck, name='healthcheck'),
     path('admin/update-translations/', update_translations_view, name='update_translations'),
     path('admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),
@@ -18,7 +21,8 @@ urlpatterns = [
 
 if 'rosetta' in settings.INSTALLED_APPS:
     urlpatterns += [
-        path('rosetta/', include('rosetta.urls'))
+        path('rosetta/', include('rosetta.urls')),
+        path('studio/', include('translations.urls', namespace='translations')),
     ]
 
 urlpatterns += i18n_patterns(

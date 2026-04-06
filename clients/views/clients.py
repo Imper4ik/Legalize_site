@@ -45,6 +45,11 @@ class ClientListView(StaffRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = Client.objects.filter(Q(user__is_staff=False) | Q(user__isnull=True))
+        
+        company_id = self.request.GET.get('company')
+        if company_id:
+            queryset = queryset.filter(company_id=company_id)
+            
         query = self.request.GET.get('q', '')
         if query:
             case_number_hash = Client.hash_case_number(query)
@@ -55,8 +60,11 @@ class ClientListView(StaffRequiredMixin, ListView):
         return queryset.order_by('-created_at')
 
     def get_context_data(self, **kwargs):
+        from clients.models import Company
         context = super().get_context_data(**kwargs)
         context['query'] = self.request.GET.get('q', '')
+        context['selected_company'] = self.request.GET.get('company', '')
+        context['companies'] = Company.objects.all()
         return context
 
 
@@ -99,7 +107,7 @@ class ClientCreateView(StaffRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
-        messages.success(self.request, _("Hasło zostało zmienione"))
+        messages.success(self.request, _("Клиент успешно добавлен!"))
         response = super().form_valid(form)
         send_required_documents_email(self.object)
         return response

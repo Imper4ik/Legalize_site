@@ -44,6 +44,11 @@
                         {% for error in form.phone.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
                     <div class="col-md-6">
+                        <label for="{{ form.company.id_for_label }}" class="form-label">{{ form.company.label }}</label>
+                        {{ form.company }}
+                        {% for error in form.company.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="col-md-6">
                         <label for="{{ form.citizenship.id_for_label }}" class="form-label">{{ form.citizenship.label }}</label>
                         {{ form.citizenship }}
                     </div>

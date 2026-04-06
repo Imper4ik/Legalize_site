@@ -56,6 +56,10 @@ class Client(models.Model):
     notes = models.TextField(blank=True, null=True, verbose_name=_("Uwagi / Заметки"))
     has_checklist_access = models.BooleanField(default=False, verbose_name=_("Доступ к чеклисту предоставлен"))
 
+    company = models.ForeignKey(
+        'Company', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='clients', verbose_name=_("Компания / Работодатель")
+    )
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='client_profile',
                                 null=True, blank=True)
 

@@ -29,6 +29,7 @@ from clients.views.documents import (
 from clients.views.emails import (
     email_preview_api,
     send_custom_email,
+    mass_email_view,
 )
 from clients.views.payments import add_payment, delete_payment, edit_payment, get_price_for_service
 from clients.views.reminders import (
@@ -38,6 +39,7 @@ from clients.views.reminders import (
     run_update_reminders,
     send_document_reminder_email,
 )
+from clients.views.metrics import MetricsDashboardView
 
 __all__ = [
     'StaffRequiredMixin',
@@ -74,4 +76,6 @@ __all__ = [
     'reminder_action',
     'run_update_reminders',
     'send_document_reminder_email',
+    'MetricsDashboardView',
+    'mass_email_view',
 ]

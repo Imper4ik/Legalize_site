@@ -18,8 +18,8 @@ import shutil
 
 from allauth.account.models import EmailAddress
 
-from .forms import DocumentChecklistForm, DocumentRequirementAddForm, DocumentRequirementEditForm
-from .models import Client, Document, DocumentRequirement, translate_document_name
+from clients.forms import DocumentChecklistForm, DocumentRequirementAddForm, DocumentRequirementEditForm
+from clients.models import Client, Document, DocumentRequirement, translate_document_name
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.services.notifications import send_missing_documents_email
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper

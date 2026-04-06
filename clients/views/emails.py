@@ -103,3 +103,58 @@ def send_custom_email(request, pk):
         messages.error(request, _("Ошибка при отправке письма: %(err)s") % {"err": e})
 
     return redirect('clients:client_detail', pk=client.pk)
+
+
+@staff_required_view
+def mass_email_view(request):
+    from clients.forms import MassEmailForm
+    
+    if request.method == 'POST':
+        form = MassEmailForm(request.POST)
+        if form.is_valid():
+            subject = form.cleaned_data['subject']
+            message = form.cleaned_data['message']
+            company = form.cleaned_data.get('company')
+            status = form.cleaned_data.get('status')
+            
+            queryset = Client.objects.exclude(email='')
+            if company:
+                queryset = queryset.filter(company=company)
+            if status:
+                queryset = queryset.filter(status=status)
+                
+            clients_to_email = list(queryset)
+            if not clients_to_email:
+                messages.warning(request, _("Не найдено получателей по заданным фильтрам (с указанным email)."))
+                return redirect('clients:mass_email')
+            
+            from django.core.mail import send_mail
+            success_count = 0
+            for client in clients_to_email:
+                try:
+                    sent = send_mail(
+                        subject, 
+                        message, 
+                        settings.DEFAULT_FROM_EMAIL, 
+                        [client.email]
+                    )
+                    if sent:
+                        success_count += 1
+                        _log_email(
+                            subject, message, [client.email],
+                            client=client, template_type='mass_email', sent_by=request.user,
+                        )
+                except Exception as e:
+                    logger.exception(f"Failed to send mass email to {client.email}")
+            
+            _send_confirmation_email(f"[{_('Массовая рассылка')}] {subject}", message, [c.email for c in clients_to_email])
+            messages.success(request, _("Массовая рассылка '%(subject)s' успешно отправлена (Отправлено писем: %(count)s).") % {"subject": subject, "count": success_count})
+            return redirect('clients:client_list')
+    else:
+        form = MassEmailForm()
+        
+    return django_render(request, 'clients/mass_email.html', {'form': form, 'title': _('Массовая рассылка')})
+
+def django_render(request, template, context):
+    from django.shortcuts import render
+    return render(request, template, context)

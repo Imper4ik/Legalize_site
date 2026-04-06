@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Метрики и Воронка" %} - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="mb-3">{% trans "Бизнес-метрики (Воронка)" %}</h2>
+        <p class="text-muted">{% trans "Период:" %} {{ start_date|date:"d.m.Y" }} - {{ end_date|date:"d.m.Y" }}</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-2 col-sm-6 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <h5 class="card-title text-primary">{{ funnel.clients_created }}</h5>
+                <p class="card-text small">{% trans "Заведено клиентов" %}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-6 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <h5 class="card-title text-info">{{ funnel.clients_with_docs }}</h5>
+                <p class="card-text small">{% trans "Загрузили документы" %}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-6 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <h5 class="card-title text-warning">{{ funnel.clients_with_payments }}</h5>
+                <p class="card-text small">{% trans "Созданы платежи" %}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-6 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <h5 class="card-title text-success">{{ funnel.clients_paid }}</h5>
+                <p class="card-text small">{% trans "Совершили оплату" %}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-6 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <h5 class="card-title text-secondary">{{ funnel.cases_closed }}</h5>
+                <p class="card-text small">{% trans "Кейсы закрыты" %}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2 col-sm-6 mb-3">
+        <div class="card text-center border-danger h-100">
+            <div class="card-body text-danger">
+                <h5 class="card-title">{{ overdue_sla }}</h5>
+                <p class="card-text small">{% trans "Просроченные SLA" %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

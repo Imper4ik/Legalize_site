@@ -2,15 +2,18 @@ from unittest.mock import patch, MagicMock
 from pathlib import Path
 from clients.services.wezwanie_parser import extract_text
 
+@patch('clients.services.wezwanie_parser._preprocess_for_ocr', side_effect=lambda img: img)
 @patch('pytesseract.image_to_string')
 @patch('PIL.Image.open')
-def test_image_ocr_uses_polish_language(mock_open, mock_image_to_string):
+def test_image_ocr_uses_polish_language(mock_open, mock_image_to_string, mock_preprocess):
     """
     Verify that when extracting text from an image (not PDF),
     pytesseract is called with lang='pol+eng'.
     """
     # Setup mocks
     mock_image_obj = MagicMock()
+    mock_image_obj.width = 1200
+    mock_image_obj.height = 1200
     mock_open.return_value.__enter__.return_value = mock_image_obj
     mock_image_to_string.return_value = "Mocked OCR text"
 
@@ -32,6 +35,4 @@ def test_image_ocr_uses_polish_language(mock_open, mock_image_to_string):
     args, kwargs = mock_image_to_string.call_args
     assert args[0] == mock_image_obj
     
-    # This assertion is expected to FAIL before the fix
-    print(f"DEBUG: kwargs={kwargs}")
     assert kwargs.get('lang') == 'pol+eng', f"Expected lang='pol+eng', but got {kwargs.get('lang')}"

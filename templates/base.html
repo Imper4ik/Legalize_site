@@ -71,8 +71,8 @@
             <li class="nav-item"><a class="nav-link text-nowrap" href="{% url 'clients:document_checklist_manage' %}">{% translate "Чеклисты" %}</a></li>
             <li class="nav-item"><a class="nav-link text-nowrap" href="{% url 'clients:document_reminder_list' %}">{% translate "Напоминания по документам" %}</a></li>
             <li class="nav-item"><a class="nav-link text-nowrap" href="{% url 'clients:payment_reminder_list' %}">{% translate "Напоминания по оплатам" %}</a></li>
-            {% endif %}
           </ul>
+          {% endif %}
           {% endif %}
 
           <ul class="navbar-nav ms-auto align-items-center">
@@ -108,6 +108,19 @@
                 <i class="fas fa-user-circle me-1"></i>{{ user.first_name|default:user.username }}
               </a>
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
+                {% if user.is_staff %}
+                <li>
+                  <a class="dropdown-item" href="{% url 'clients:metrics_dashboard' %}">
+                    <i class="bi bi-speedometer2 me-2"></i>{% translate "Метрики" %}
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item fw-bold" href="{% url 'translations:dashboard' %}" style="color: #6366f1;">
+                    <i class="bi bi-translate me-2"></i>Translation Studio
+                  </a>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                {% endif %}
                 <li>
                   <form id="logout-form" method="post" action="{% url 'account_logout' %}">
                     {% csrf_token %}
@@ -184,6 +197,12 @@
 
   <!-- Your theme toggle script -->
   <script src="{% static 'js/theme-toggle.js' %}" defer></script>
+
+  {% if user.is_authenticated and user.is_superuser and request.session.studio_mode %}
+    <script src="{% static 'translations/js/translation_overlay.js' %}" defer></script>
+  {% elif user.is_authenticated and user.is_superuser and 'studio' in request.GET %}
+    <script src="{% static 'translations/js/translation_overlay.js' %}" defer></script>
+  {% endif %}
 
   {% block extra_js %}{% endblock %}
 </body>

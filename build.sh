@@ -15,6 +15,9 @@ fi
 pip install --upgrade pip
 pip install -r requirements.txt
 
+# Запуск тестов перед сборкой статики
+pytest --maxfail=1 -q || exit 1
+
 # Skip translating files shipped in the virtualenv to avoid permission errors
 python manage.py compilemessages --ignore "venv" --ignore ".venv"
 python manage.py collectstatic --no-input

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Массовая рассылка" %}{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0 text-gray-800">{% translate "Массовая рассылка клиентам" %}</h1>
+        <p class="text-muted mt-1 mb-0">{% translate "Отправка email сообщений по фильтрам выбранных компаний и/или статусов" %}</p>
+    </div>
+    <a href="{% url 'clients:client_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> {% translate "Назад" %}
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <form method="post" action="{% url 'clients:mass_email' %}">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2 mb-3">{% translate "Кому отправить (Фильтры)" %}</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.company.label_tag }}
+                                {{ form.company }}
+                                {% if form.company.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.company.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">{% translate "Выберите компанию, чтобы отправить письма только ее клиентам." %}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.status.label_tag }}
+                                {{ form.status }}
+                                {% if form.status.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.status.errors }}</div>
+                                {% endif %}
+                                <div class="form-text">{% translate "Например, 'Новый' или 'Действующий' (В ожидании)." %}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5 class="border-bottom pb-2 mb-3">{% translate "Письмо" %}</h5>
+                        <div class="mb-3">
+                            {{ form.subject.label_tag }}
+                            {{ form.subject }}
+                            {% if form.subject.errors %}
+                                <div class="invalid-feedback d-block">{{ form.subject.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            {{ form.message.label_tag }}
+                            {{ form.message }}
+                            {% if form.message.errors %}
+                                <div class="invalid-feedback d-block">{{ form.message.errors }}</div>
+                            {% endif %}
+                            <div class="form-text">
+                                {% translate "Письмо будет отправлено обычным текстом." %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg" onclick="return confirm('Вы уверены, что хотите разослать это сообщение?');">
+                            <i class="bi bi-send-fill me-2"></i>{% translate "Отправить письма" %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -29,12 +29,12 @@ def update_translations_view(request):
             all=True
         )
 
-        # 2. fix_po.py
+        # 2. fix_po_dupes.py
         # We need to run the python script we created to clean up duplicates
         # so msgmerge/compilemessages doesn't crash
-        fix_po_path = os.path.join(settings.BASE_DIR, 'fix_po.py')
+        fix_po_path = os.path.join(settings.BASE_DIR, 'fix_po_dupes.py')
         if os.path.exists(fix_po_path):
-            logger.info("Running fix_po.py...")
+            logger.info("Running fix_po_dupes.py...")
             subprocess.run(['python', fix_po_path], check=True, cwd=settings.BASE_DIR)
 
         # 3. compilemessages

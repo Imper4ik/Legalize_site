@@ -9,7 +9,9 @@ app_name = 'clients'
 
 urlpatterns = [
     # CRUD для Клиентов (используя CBV)
+    path('metrics/', views.MetricsDashboardView.as_view(), name='metrics_dashboard'),
     path('', views.ClientListView.as_view(), name='client_list'),
+    path('mass-email/', views.mass_email_view, name='mass_email'),
     path('client/<int:pk>/', views.ClientDetailView.as_view(), name='client_detail'),
     path('client/add/', views.ClientCreateView.as_view(), name='client_add'),
     path('client/<int:pk>/edit/', views.ClientUpdateView.as_view(), name='client_edit'),

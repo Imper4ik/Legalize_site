@@ -42,14 +42,24 @@ staticfiles
 # Compiled translation catalogs are regenerated at runtime.
 *.mo
 
-
+# Test & Debug artifacts
+.coverage
+/recordings/
+/.pytest_cache/
+/.ruff_cache/
 generated_media_test/
+tmp_*.js
+tmp_*.json
+tmp_*.html
 
 # Unnecessary project files
 CODE_REVIEW.md
 
-# Nested databases (root *.sqlite3 already covered)
-legalize_site/db.sqlite3
-
-# Uploaded media files (user data)
-legalize_site/media/
+# Application data
+db.sqlite3
+media/
+staticfiles/
+static_root/
+logs/
+*.log
+tmp/

@@ -7,8 +7,7 @@ from django.utils.text import slugify
 from clients.services.calculator import CURRENCY_EUR, CURRENCY_PLN
 from .constants import DocumentType, INTERNAL_DOCS
 from submissions.models import Submission
-from .models import Client, Document, DocumentRequirement, Payment, get_fallback_document_checklist, resolve_document_label
-
+from .models import Client, Document, DocumentRequirement, Payment, get_fallback_document_checklist, resolve_document_label, Company
 
 def _label_for_document_type(code: str) -> str:
     try:
@@ -76,7 +75,7 @@ class ClientForm(forms.ModelForm):
         fields = [
             'first_name', 'last_name', 'email', 'phone', 'citizenship',
             'birth_date', 'passport_num', 'case_number', 'application_purpose', 'language',
-            'status',
+            'company', 'status',
             'basis_of_stay', 'legal_basis_end_date', 'submission_date',
             'employer_phone',
             'fingerprints_date', 'notes'
@@ -92,10 +91,34 @@ class ClientForm(forms.ModelForm):
             'case_number': forms.TextInput(attrs={'class': 'form-control'}),
             'language': forms.Select(attrs={'class': 'form-select'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
+            'company': forms.Select(attrs={'class': 'form-select'}),
             'basis_of_stay': forms.TextInput(attrs={'class': 'form-control'}),
             'employer_phone': forms.TextInput(attrs={'class': 'form-control'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+
+class MassEmailForm(forms.Form):
+    subject = forms.CharField(
+        label=_("Тема письма"),
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _("Например: Важное обновление")})
+    )
+    message = forms.CharField(
+        label=_("Текст письма"),
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 6})
+    )
+    company = forms.ModelChoiceField(
+        queryset=Company.objects.all(),
+        label=_("Фильтр по Компании"),
+        required=False,
+        empty_label=_("Все компании"),
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    status = forms.ChoiceField(
+        label=_("Фильтр по Статусу"),
+        required=False,
+        choices=[('', _("Все статусы"))] + Client.STATUS_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
 
 
 class DocumentUploadForm(forms.ModelForm):

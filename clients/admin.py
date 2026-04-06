@@ -2,7 +2,14 @@
 
 from django.contrib import admin
 
-from .models import Client, Document, Payment, ServicePrice
+from .models import Client, Document, Payment, ServicePrice, Company
+
+
+@admin.register(Company)
+class CompanyAdmin(admin.ModelAdmin):
+    list_display = ('name', 'created_at')
+    search_fields = ('name',)
+
 
 @admin.register(ServicePrice)
 class ServicePriceAdmin(admin.ModelAdmin):
@@ -35,6 +42,7 @@ class ClientAdmin(admin.ModelAdmin):
     list_display = (
         'first_name',
         'last_name',
+        'company',
         'case_number',
         'application_purpose',
         'status',
@@ -42,12 +50,12 @@ class ClientAdmin(admin.ModelAdmin):
         'email',
         'created_at'
     )
-    list_filter = ('status', 'application_purpose', 'language')
-    search_fields = ('first_name', 'last_name', 'email', 'phone', 'notes')
+    list_filter = ('company', 'status', 'application_purpose', 'language')
+    search_fields = ('first_name', 'last_name', 'email', 'phone', 'notes', 'company__name')
     fieldsets = (
         (
             'Основная информация',
-            {'fields': ('first_name', 'last_name', 'birth_date', 'email', 'phone', 'citizenship', 'passport_num')},
+            {'fields': ('first_name', 'last_name', 'company', 'birth_date', 'email', 'phone', 'citizenship', 'passport_num')},
         ),
         ('Детали подачи', {
             'fields': ('application_purpose', 'basis_of_stay', 'language', 'legal_basis_end_date')

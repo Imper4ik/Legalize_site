@@ -1,0 +1,304 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --accent: #6366f1;
+        --accent-hover: #4f46e5;
+    }
+
+    body.dark-mode {
+        --glass-bg: rgba(0, 0, 0, 0.2);
+        --glass-border: rgba(255, 255, 255, 0.05);
+    }
+
+    .studio-container {
+        padding: 2rem;
+        font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    .studio-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .studio-header h1 {
+        font-size: 1.875rem;
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .toolbar {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid var(--glass-border);
+        text-decoration: none;
+    }
+
+    .btn-primary {
+        background: var(--accent);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: var(--accent-hover);
+        transform: translateY(-1px);
+    }
+
+    .search-box {
+        margin-bottom: 2rem;
+        position: relative;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        color: inherit;
+        font-size: 1rem;
+        backdrop-filter: blur(10px);
+    }
+
+    .translation-grid {
+        display: grid;
+        grid-template-columns: 250px 1fr 1fr 1fr;
+        gap: 1px;
+        background: var(--glass-border);
+        border: 1px solid var(--glass-border);
+        border-radius: 0.75rem;
+        overflow: hidden;
+    }
+
+    .grid-header {
+        background: var(--glass-bg);
+        padding: 1rem;
+        font-weight: 700;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #94a3b8;
+    }
+
+    .grid-row {
+        display: contents;
+    }
+
+    .grid-cell {
+        background: var(--glass-bg);
+        padding: 1rem;
+        border-bottom: 1px solid var(--glass-border);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .msgid-cell {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 0.75rem;
+        color: #64748b;
+        word-break: break-all;
+    }
+
+    .translation-input {
+        width: 100%;
+        min-height: 80px;
+        background: transparent;
+        border: 1px solid transparent;
+        color: inherit;
+        font-size: 0.875rem;
+        padding: 0.5rem;
+        border-radius: 0.375rem;
+        resize: vertical;
+        transition: all 0.2s;
+    }
+
+    .translation-input:focus {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: var(--accent);
+        outline: none;
+    }
+
+    .save-btn {
+        margin-top: 0.5rem;
+        align-self: flex-end;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        border-radius: 0.25rem;
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--accent);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        cursor: pointer;
+        opacity: 0;
+        transition: all 0.2s;
+    }
+
+    .grid-row:hover .save-btn {
+        opacity: 1;
+    }
+
+    .status-badge {
+        font-size: 0.7rem;
+        padding: 0.1rem 0.4rem;
+        border-radius: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .status-saved { color: #10b981; }
+    .status-unsaved { color: #f59e0b; }
+
+    /* Glassmorphism effects */
+    .glass {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="studio-container">
+    <div class="studio-header">
+        <h1>{% trans "Translation Studio" %}</h1>
+        <div class="toolbar">
+            <a href="{% url 'translations:toggle_studio' %}" class="btn glass">
+                {% if request.session.studio_mode %}
+                    🟢 {% trans "Studio Mode: ON" %}
+                {% else %}
+                    ⚪ {% trans "Studio Mode: OFF" %}
+                {% endif %}
+            </a>
+            <button onclick="saveAll()" class="btn btn-primary">{% trans "Save All Changes" %}</button>
+        </div>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="studio-search" placeholder="{% trans "Search by Key or Text..." %}" onkeyup="filterTranslations()">
+    </div>
+
+    <div class="translation-grid" id="translation-grid">
+        <div class="grid-header">{% trans "Translation Key (msgid)" %}</div>
+        <div class="grid-header">RU</div>
+        <div class="grid-header">EN</div>
+        <div class="grid-header">PL</div>
+
+        {% for entry in translations %}
+        <div class="grid-row" data-msgid="{{ entry.msgid }}">
+            <div class="grid-cell msgid-cell">
+                {{ entry.msgid }}
+                {% if entry.occurrences %}
+                    <div style="font-size: 0.6rem; opacity: 0.5; margin-top: 0.5rem">
+                        {{ entry.occurrences.0.0 }}:{{ entry.occurrences.0.1 }}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="grid-cell">
+                <textarea class="translation-input" data-lang="ru" onchange="markDirty(this)">{{ entry.ru }}</textarea>
+            </div>
+            
+            <div class="grid-cell">
+                <textarea class="translation-input" data-lang="en" onchange="markDirty(this)">{{ entry.en }}</textarea>
+            </div>
+            
+            <div class="grid-cell">
+                <textarea class="translation-input" data-lang="pl" onchange="markDirty(this)">{{ entry.pl }}</textarea>
+                <button class="save-btn" onclick="saveRow(this)">{% trans "Save Row" %}</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const query = urlParams.get('query');
+        if (query) {
+            document.getElementById('studio-search').value = query;
+            filterTranslations();
+        }
+    });
+
+    function markDirty(el) {
+        el.style.borderLeft = '3px solid #f59e0b';
+        el.closest('.grid-row').dataset.dirty = 'true';
+    }
+
+    function filterTranslations() {
+        const query = document.getElementById('studio-search').value.toLowerCase();
+        const rows = document.querySelectorAll('.grid-row');
+        
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(query) ? 'contents' : 'none';
+        });
+    }
+
+    async function saveRow(btn) {
+        const row = btn.closest('.grid-row');
+        const msgid = row.dataset.msgid;
+        const data = { msgid: msgid };
+        
+        row.querySelectorAll('textarea').forEach(ta => {
+            data[ta.dataset.lang] = ta.value;
+        });
+
+        try {
+            const response = await fetch('{% url "translations:update_api" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (response.ok) {
+                row.dataset.dirty = 'false';
+                row.querySelectorAll('textarea').forEach(ta => {
+                    ta.style.borderLeft = '1px solid transparent';
+                });
+                btn.innerText = '✅ Saved';
+                setTimeout(() => btn.innerText = 'Save Row', 2000);
+            } else {
+                alert('Error saving translation');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error saving translation');
+        }
+    }
+
+    function saveAll() {
+        const dirtyRows = document.querySelectorAll('.grid-row[data-dirty="true"]');
+        if (dirtyRows.length === 0) {
+            alert('No changes to save');
+            return;
+        }
+        
+        dirtyRows.forEach(row => {
+            const btn = row.querySelector('.save-btn');
+            saveRow(btn);
+        });
+    }
+</script>
+{% endblock %}
