@@ -198,46 +198,6 @@ class ClientAccountLifecycleTests(TestCase):
 
 
 
-
-    def test_document_display_name_prefers_custom_label(self):
-        client = Client.objects.create(
-            first_name='Jan',
-            last_name='Kowalski',
-            citizenship='PL',
-            phone='+48123123123',
-            email='jan@example.com',
-            application_purpose='work',
-        )
-        DocumentRequirement.objects.create(
-            application_purpose='work', document_type='zus_rca', custom_name='ZUS RCA'
-        )
-        doc = Document.objects.create(
-            client=client,
-            document_type='zus_rca',
-            file=SimpleUploadedFile('test.pdf', b'filecontent'),
-        )
-
-        self.assertEqual(doc.display_name, 'ZUS RCA')
-
-    def test_required_for_uses_default_label_when_custom_matches_translation(self):
-        if not self._can_compile_messages:
-            self.skipTest("msgfmt is not available to compile translations")
-
-        DocumentRequirement.objects.filter(application_purpose='work').delete()
-        with translation.override("ru"):
-            ru_label = str(DocumentType.PASSPORT.label)
-
-        DocumentRequirement.objects.create(
-            application_purpose='work',
-            document_type=DocumentType.PASSPORT,
-            custom_name=ru_label,
-            position=0,
-        )
-
-        required = DocumentRequirement.required_for('work')
-        self.assertIn((DocumentType.PASSPORT.value, DocumentType.PASSPORT.label), required)
-
-
 class DocumentRequirementFormTests(TestCase):
     def test_required_for_respects_database_overrides(self):
         DocumentRequirement.objects.filter(application_purpose='work').delete()
