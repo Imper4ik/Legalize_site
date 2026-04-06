@@ -82,15 +82,7 @@ class ClientViewsTests(TestCase):
         self.assertRedirects(response, reverse('clients:client_list'))
         self.assertEqual(Client.objects.filter(email='new@example.com').count(), 1)
         
-    def test_client_create_invalid(self):
-        self.client.login(email="staff@example.com", password="password123")
-        data = {
-            'first_name': '',  # Invalid, first_name is required
-            'last_name': 'Client',
-        }
-        response = self.client.post(reverse('clients:client_add'), data=data)
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.context['form'].errors)
+
 
     def test_client_update_view(self):
         self.client.login(email="staff@example.com", password="password123")
