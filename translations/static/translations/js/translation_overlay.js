@@ -215,10 +215,13 @@
         try { if (activeElement && activeElement.classList) activeElement.classList.add('studio-highlight'); } catch(_) {}
         
         const normalizeText = (s) => (s || "").replace(/\s+/g, ' ').trim();
-        
-        // 1. Initial ID from data-msgid or text content
+
+        // 1. Initial ID from data-msgid or text content.
+        // IMPORTANT: keep the original key untouched for API round-trips.
+        // Normalization is only used for fuzzy lookup in scanMap.
         let rawId = el.dataset.msgid || el.innerText || "";
-        let msgid = normalizeText(rawId);
+        let msgid = rawId;
+        const normalizedId = normalizeText(rawId);
         
         // 2. Try to resolve via scanMap (contains all languages -> msgid)
         if (scanMap) {
@@ -226,6 +229,8 @@
             // Check direct msgid first, then contents
             if (scanMap[msgid]) {
                 msgid = scanMap[msgid];
+            } else if (scanMap[normalizedId]) {
+                msgid = scanMap[normalizedId];
             } else if (scanMap[normContent]) {
                 msgid = scanMap[normContent];
             }
@@ -262,6 +267,21 @@
         try { if (activeElement && activeElement.classList) activeElement.classList.remove('studio-highlight'); } catch(_) {}
     };
 
+    function resolveCurrentLanguage() {
+        const fromHtml = (document.documentElement.lang || '').split('-')[0];
+        if (fromHtml) return fromHtml;
+
+        try {
+            const cookieLang = (getCookie('django_language') || '').split('-')[0];
+            if (cookieLang) return cookieLang;
+        } catch (_) {}
+
+        const pathLang = (window.location.pathname || '').split('/').filter(Boolean)[0];
+        if (['ru', 'en', 'pl'].includes(pathLang)) return pathLang;
+
+        return 'pl';
+    }
+
     document.getElementById('studio-save').onclick = async () => {
         const msgid = msgidEl.innerText;
         const data = {
@@ -286,33 +306,39 @@
                 body: JSON.stringify(data)
             });
 
-            if (response.ok) {
+            let result = null;
+            try {
+                result = await response.json();
+            } catch (_) {
+                result = null;
+            }
+
+            if (response.ok && result && result.status === 'ok') {
                 if (activeElement) {
-                    var currentLang = (document.documentElement.lang || '').split('-')[0];
-                    if (!currentLang) {
-                        try {
-                            var cookieLang = getCookie('django_language');
-                            currentLang = (cookieLang || '').split('-')[0];
-                        } catch (_) {
-                            currentLang = '';
-                        }
-                    }
-                    if (!currentLang) currentLang = 'pl';
+                    var currentLang = resolveCurrentLanguage();
+                    const translatedText = (currentLang === 'ru') ? ruInput.value : (currentLang === 'en' ? enInput.value : plInput.value);
                     // Update all elements that carry this msgid (editable spans and clickable containers)
                     const selector = `[data-msgid="${CSS.escape(msgid)}"]`;
                     const sameKeyElements = document.querySelectorAll(selector);
                     sameKeyElements.forEach(el => {
                         try {
-                            if (currentLang === 'ru') el.innerText = ruInput.value;
-                            else if (currentLang === 'en') el.innerText = enInput.value;
-                            else if (currentLang === 'pl') el.innerText = plInput.value;
+                            el.innerText = translatedText;
                         } catch (_) {}
                     });
+                    // Keep the currently selected node in sync even if selector misses
+                    // because of provisional or transformed data-msgid values.
+                    try { activeElement.innerText = translatedText; } catch (_) {}
+                }
+                if (scanMap) {
+                    scanMap[msgid] = msgid;
+                    if (ruInput.value) scanMap[normalizeText(ruInput.value)] = msgid;
+                    if (enInput.value) scanMap[normalizeText(enInput.value)] = msgid;
+                    if (plInput.value) scanMap[normalizeText(plInput.value)] = msgid;
                 }
                 modal.style.display = 'none';
                 try { if (activeElement && activeElement.classList) activeElement.classList.remove('studio-highlight'); } catch(_) {}
             } else {
-                alert('Error saving translation');
+                alert((result && result.message) ? `Error saving translation: ${result.message}` : 'Error saving translation');
             }
         } catch (e) {
             console.error(e);
@@ -614,5 +640,3 @@
     observer.observe(document.body, { childList: true, subtree: true });
 
 })();
-
-
