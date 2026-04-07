@@ -1,4 +1,9 @@
 (function() {
+    if (window.__studioOverlayInitialized === true) {
+        return;
+    }
+    window.__studioOverlayInitialized = true;
+
     // Only initialize if we see editable elements or markers
     let activeElement = null;
 
@@ -38,7 +43,9 @@
         </div>
     `;
 
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    if (!document.getElementById('studio-modal')) {
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
 
     const modal = document.getElementById('studio-modal');
     const msgidEl = document.getElementById('studio-msgid');
@@ -312,6 +319,7 @@
             } catch (_) {
                 result = null;
             }
+            console.debug('studio save response', { status: response.status, result: result });
 
             if (response.ok && result && result.status === 'ok') {
                 if (activeElement) {
