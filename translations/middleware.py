@@ -1,4 +1,6 @@
 import re
+from django.conf import settings
+from django.urls import reverse
 from django.utils import translation
 
 # TAG_PATTERN is for matching [[i18n:Key]]Text[[/i18n]] in final HTML
@@ -30,3 +32,57 @@ class TranslationStudioMiddleware:
         # superusers when Studio Mode is active, so end users won't see markers.
         #
         return response
+
+    @staticmethod
+    def _inject_overlay_script(response):
+        if getattr(response, "streaming", False):
+            return
+
+        content_type = response.get("Content-Type", "")
+        if "text/html" not in content_type.lower():
+            return
+
+        try:
+            content = response.content.decode("utf-8")
+        except Exception:
+            return
+
+        script_src = "/static/translations/js/translation_overlay.js"
+        if script_src in content:
+            return
+
+        dashboard_url = reverse("translations:dashboard")
+        update_url = reverse("translations:update_api")
+        get_url = reverse("translations:get_api")
+        scan_url = reverse("translations:scan_api")
+        config_script = (
+            "<script>"
+            f"window.__studioOverlayConfig={{dashboardUrl:{dashboard_url!r},updateUrl:{update_url!r},getUrl:{get_url!r},scanUrl:{scan_url!r}}};"
+            "</script>"
+        )
+        script_tag = f'{config_script}<script src="{script_src}" defer></script>'
+        lower_content = content.lower()
+        body_close_idx = lower_content.rfind("</body>")
+        if body_close_idx == -1:
+            return
+
+        updated = content[:body_close_idx] + script_tag + content[body_close_idx:]
+        response.content = updated.encode("utf-8")
+
+    @staticmethod
+    def _path_allowed(path: str) -> bool:
+        include_prefixes = getattr(settings, "STUDIO_OVERLAY_INCLUDE_PREFIXES", ())
+        exclude_prefixes = getattr(
+            settings,
+            "STUDIO_OVERLAY_EXCLUDE_PREFIXES",
+            ("/static/", "/media/"),
+        )
+
+        if include_prefixes:
+            if not any(path.startswith(prefix) for prefix in include_prefixes):
+                return False
+
+        if exclude_prefixes and any(path.startswith(prefix) for prefix in exclude_prefixes):
+            return False
+
+        return True

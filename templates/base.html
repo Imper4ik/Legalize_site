@@ -198,18 +198,6 @@
   <!-- Your theme toggle script -->
   <script src="{% static 'js/theme-toggle.js' %}" defer></script>
 
-  {% if user.is_authenticated and user.is_superuser %}
-    <script>
-      window.__studioOverlayConfig = {
-        dashboardUrl: "{% url 'translations:dashboard' %}",
-        updateUrl: "{% url 'translations:update_api' %}",
-        getUrl: "{% url 'translations:get_api' %}",
-        scanUrl: "{% url 'translations:scan_api' %}"
-      };
-    </script>
-    <script src="{% static 'translations/js/translation_overlay.js' %}" defer></script>
-  {% endif %}
-
   {% block extra_js %}{% endblock %}
 </body>
 
