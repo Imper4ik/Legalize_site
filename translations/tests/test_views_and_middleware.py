@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
@@ -76,6 +77,29 @@ class TranslationViewsTests(TestCase):
         self.assertEqual(response_2.status_code, 302)
         self.assertFalse(self.client.session.get("studio_mode"))
 
+    def test_staff_page_does_not_load_overlay_without_studio_mode(self):
+        self.client.login(username="super", password="pass")
+
+        response = self.client.get(reverse("clients:client_list"))
+
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        self.assertNotIn("/static/translations/js/translation_overlay.js", html)
+        self.assertNotIn("window.__studioOverlayConfig", html)
+
+    def test_staff_page_loads_overlay_with_studio_mode(self):
+        self.client.login(username="super", password="pass")
+        session = self.client.session
+        session["studio_mode"] = True
+        session.save()
+
+        response = self.client.get(reverse("clients:client_list"))
+
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode("utf-8")
+        self.assertIn("/static/translations/js/translation_overlay.js", html)
+        self.assertIn("window.__studioOverlayConfig", html)
+
     def test_non_superuser_is_denied(self):
         self.client.login(username="staff", password="pass")
 
@@ -129,3 +153,44 @@ class TranslationMiddlewareTests(TestCase):
         from django.utils import translation
 
         self.assertFalse(getattr(translation, "_studio_active", True))
+
+    def test_injects_overlay_script_for_superuser_in_studio_mode(self):
+        request = self.factory.get("/pl/staff/")
+        request.user = type("U", (), {"is_authenticated": True, "is_superuser": True})()
+        request.session = {"studio_mode": True}
+
+        response = HttpResponse("<html><body><h1>ok</h1></body></html>", content_type="text/html")
+        middleware = TranslationStudioMiddleware(lambda _req: response)
+
+        result = middleware(request)
+        html = result.content.decode("utf-8")
+
+        self.assertIn("/static/translations/js/translation_overlay.js", html)
+        self.assertIn("window.__studioOverlayConfig", html)
+
+
+class TranslationOverlayScriptTests(TestCase):
+    def test_overlay_script_reads_runtime_url_config(self):
+        script_path = (
+            Path(__file__).resolve().parents[1]
+            / "static"
+            / "translations"
+            / "js"
+            / "translation_overlay.js"
+        )
+        content = script_path.read_text(encoding="utf-8")
+
+        self.assertIn("window.__studioOverlayConfig", content)
+        self.assertIn("const urls = {", content)
+        self.assertIn("dashboard: studioConfig.dashboardUrl", content)
+        self.assertIn("update: studioConfig.updateUrl", content)
+        self.assertIn("get: studioConfig.getUrl", content)
+        self.assertIn("scan: studioConfig.scanUrl", content)
+        self.assertIn("STUDIO_TARGET_SELECTOR", content)
+        self.assertIn("studio-form-control", content)
+        self.assertIn("studioTargetAttribute", content)
+        self.assertIn("studio-clickable-container", content)
+        self.assertIn("const childTarget = el.querySelector('.studio-editable, .studio-form-control');", content)
+        self.assertIn("let activeLookupKeys = new Set();", content)
+        self.assertIn("function syncStudioTargetIds(root = document.body)", content)
+        self.assertIn("function updateLiveTranslations(msgid, translatedText)", content)

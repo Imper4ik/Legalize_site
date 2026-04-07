@@ -3,9 +3,186 @@
         return;
     }
     window.__studioOverlayInitialized = true;
+    const studioConfig = window.__studioOverlayConfig || {};
+    const urls = {
+        dashboard: studioConfig.dashboardUrl || '/studio/dashboard/',
+        update: studioConfig.updateUrl || '/studio/update/',
+        get: studioConfig.getUrl || '/studio/get-api/',
+        scan: studioConfig.scanUrl || '/studio/scan-api/'
+    };
+    const STUDIO_TARGET_SELECTOR = '.studio-editable, .studio-clickable-container, .studio-form-control';
+    const normalizeText = (s) => (s || "").replace(/\s+/g, ' ').trim();
 
     // Only initialize if we see editable elements or markers
     let activeElement = null;
+    let activeLookupKeys = new Set();
+
+    function getStudioDisplayText(el) {
+        if (!el) return "";
+        if (el.classList && el.classList.contains('studio-clickable-container')) {
+            const childTarget = el.querySelector('.studio-editable, .studio-form-control');
+            if (childTarget) return getStudioDisplayText(childTarget);
+        }
+        if (el.dataset && el.dataset.studioSourceText) return el.dataset.studioSourceText;
+        if (typeof el.innerText === 'string' && el.innerText.trim()) return el.innerText;
+        if (typeof el.value === 'string' && el.value.trim()) return el.value;
+        if (typeof el.getAttribute === 'function') {
+            return (
+                el.getAttribute('placeholder') ||
+                el.getAttribute('aria-label') ||
+                el.getAttribute('title') ||
+                ""
+            );
+        }
+        return "";
+    }
+
+    function applyTranslatedText(el, text) {
+        if (!el) return;
+
+        if (el.classList && el.classList.contains('studio-clickable-container')) {
+            const childTarget = el.querySelector('.studio-editable, .studio-form-control');
+            if (childTarget) {
+                applyTranslatedText(childTarget, text);
+                if (el.dataset) el.dataset.studioSourceText = text;
+                return;
+            }
+        }
+
+        const targetAttribute = el.dataset && el.dataset.studioTargetAttribute;
+        if (targetAttribute) {
+            try { el.setAttribute(targetAttribute, text); } catch (_) {}
+            if (targetAttribute === 'value' && 'value' in el) {
+                try { el.value = text; } catch (_) {}
+            }
+            if (el.dataset) el.dataset.studioSourceText = text;
+            return;
+        }
+
+        try {
+            if (typeof el.innerText === 'string') {
+                el.innerText = text;
+                return;
+            }
+        } catch (_) {}
+
+        if ('value' in el) {
+            try { el.value = text; } catch (_) {}
+        }
+        if (el.dataset) el.dataset.studioSourceText = text;
+    }
+
+    function canonicalMsgidForElement(el) {
+        if (!el) return "";
+
+        const rawId = (el.dataset && el.dataset.msgid) ? el.dataset.msgid : "";
+        const displayText = getStudioDisplayText(el);
+        const candidates = [
+            rawId,
+            normalizeText(rawId),
+            displayText,
+            normalizeText(displayText),
+        ].filter(Boolean);
+
+        for (const candidate of candidates) {
+            if (scanMap && scanMap[candidate]) return scanMap[candidate];
+        }
+
+        return rawId || displayText || "";
+    }
+
+    function syncStudioTargetIds(root = document.body) {
+        if (!root || !scanMap) return;
+
+        const targets = root.querySelectorAll(STUDIO_TARGET_SELECTOR);
+        targets.forEach(el => {
+            const resolved = canonicalMsgidForElement(el);
+            if (resolved && el.dataset) {
+                el.dataset.msgid = resolved;
+            }
+        });
+    }
+
+    function updateLiveTranslations(msgid, translatedText) {
+        const normalizedMsgid = normalizeText(msgid);
+        const targets = Array.from(document.querySelectorAll(STUDIO_TARGET_SELECTOR));
+
+        targets.forEach(el => {
+            const canonical = canonicalMsgidForElement(el);
+            const currentId = normalizeText((el.dataset && el.dataset.msgid) ? el.dataset.msgid : "");
+            const displayText = normalizeText(getStudioDisplayText(el));
+
+            const shouldUpdate =
+                canonical === msgid ||
+                currentId === normalizedMsgid ||
+                activeLookupKeys.has(currentId) ||
+                activeLookupKeys.has(displayText);
+
+            if (!shouldUpdate) return;
+
+            if (el.dataset) el.dataset.msgid = msgid;
+            applyTranslatedText(el, translatedText);
+        });
+    }
+
+    function chooseBestStudioTarget(candidates, clientX, clientY) {
+        if (!candidates || !candidates.length) return null;
+
+        for (const c of candidates) {
+            try {
+                const r = c.getBoundingClientRect();
+                if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) return c;
+            } catch (_) {}
+        }
+
+        let best = null;
+        let bestDist = Infinity;
+        for (const c of candidates) {
+            try {
+                const r = c.getBoundingClientRect();
+                const cx = (r.left + r.right) / 2;
+                const cy = (r.top + r.bottom) / 2;
+                const dx = cx - clientX;
+                const dy = cy - clientY;
+                const d = dx * dx + dy * dy;
+                if (d < bestDist) {
+                    bestDist = d;
+                    best = c;
+                }
+            } catch (_) {}
+        }
+
+        return best || candidates[0] || null;
+    }
+
+    function findStudioTarget(node, clientX, clientY) {
+        if (!node) return null;
+        let el = (node.nodeType === 3) ? node.parentElement : node;
+        if (!el) return null;
+
+        try {
+            const direct = el.closest && el.closest(STUDIO_TARGET_SELECTOR);
+            if (direct) return direct;
+        } catch (_) {}
+
+        try {
+            const desc = Array.from(el.querySelectorAll && el.querySelectorAll(STUDIO_TARGET_SELECTOR) || []);
+            const found = chooseBestStudioTarget(desc, clientX, clientY);
+            if (found) return found;
+        } catch (_) {}
+
+        let ancestor = el.parentElement;
+        while (ancestor && ancestor !== document.documentElement) {
+            try {
+                const inside = Array.from(ancestor.querySelectorAll(STUDIO_TARGET_SELECTOR) || []);
+                const found = chooseBestStudioTarget(inside, clientX, clientY);
+                if (found) return found;
+            } catch (_) {}
+            ancestor = ancestor.parentElement;
+        }
+
+        return null;
+    }
 
     // Create the modal HTML with updated UI
     const modalHtml = `
@@ -68,7 +245,7 @@
             try {
                 let node = document.elementFromPoint(x, y);
                 if (node) {
-                    const direct = node.closest && node.closest('.studio-editable');
+                    const direct = node.closest && node.closest(STUDIO_TARGET_SELECTOR);
                     if (direct) {
                         try { e.preventDefault(); e.stopPropagation(); } catch(_) {}
                         lastStudioOpenAt = Date.now();
@@ -78,8 +255,8 @@
                     }
                 }
 
-                // Fallback: search for the nearest .studio-editable on the page
-                const candidates = Array.from(document.querySelectorAll('.studio-editable'));
+                // Fallback: search for the nearest studio target on the page
+                const candidates = Array.from(document.querySelectorAll(STUDIO_TARGET_SELECTOR));
                 if (candidates.length) {
                     // Prefer candidate that contains the point
                     for (const c of candidates) {
@@ -127,61 +304,6 @@
                 try { e.stopPropagation(); } catch(_) {}
                 return;
             }
-            // Find the most relevant .studio-editable near the click.
-            function findStudioTarget(node, clientX, clientY) {
-                if (!node) return null;
-                let el = (node.nodeType === 3) ? node.parentElement : node;
-                if (!el) return null;
-
-                // 1) If the clicked node or an ancestor is itself a studio-editable, prefer it.
-                try {
-                    const direct = el.closest && el.closest('.studio-editable');
-                    if (direct) return direct;
-                } catch (_) {}
-
-                // Helper: choose best candidate from a NodeList of elements using click coords
-                function chooseBest(candidates) {
-                    if (!candidates || !candidates.length) return null;
-                    // Prefer any element whose bounding rect contains the click point
-                    for (const c of candidates) {
-                        try {
-                            const r = c.getBoundingClientRect();
-                            if (clientX >= r.left && clientX <= r.right && clientY >= r.top && clientY <= r.bottom) return c;
-                        } catch (_) {}
-                    }
-                    // Otherwise pick the element whose center is nearest to the click
-                    let best = null; let bestDist = Infinity;
-                    for (const c of candidates) {
-                        try {
-                            const r = c.getBoundingClientRect();
-                            const cx = (r.left + r.right) / 2; const cy = (r.top + r.bottom) / 2;
-                            const dx = cx - clientX; const dy = cy - clientY; const d = dx*dx + dy*dy;
-                            if (d < bestDist) { bestDist = d; best = c; }
-                        } catch (_) {}
-                    }
-                    return best || candidates[0] || null;
-                }
-
-                // 2) Look for descendants of the clicked element first
-                try {
-                    const desc = Array.from(el.querySelectorAll && el.querySelectorAll('.studio-editable') || []);
-                    const found = chooseBest(desc);
-                    if (found) return found;
-                } catch (_) {}
-
-                // 3) Walk up ancestors and look for candidates in their subtrees
-                let ancestor = el.parentElement;
-                while (ancestor && ancestor !== document.documentElement) {
-                    try {
-                        const inside = Array.from(ancestor.querySelectorAll('.studio-editable') || []);
-                        const found = chooseBest(inside);
-                        if (found) return found;
-                    } catch (_) {}
-                    ancestor = ancestor.parentElement;
-                }
-
-                return null;
-            }
 
             const target = findStudioTarget(e.target, e.clientX, e.clientY);
             if (target) {
@@ -208,6 +330,7 @@
             // We've just loaded the mapping from server — run a scan pass
             // to wrap any matching elements that are already present in DOM.
             try { scanAndWrap(); } catch(_) {}
+            try { syncStudioTargetIds(); } catch(_) {}
         } catch (e) {
             console.error('Studio scan map load failed', e);
             scanMap = {};
@@ -220,19 +343,21 @@
         try { if (activeElement && activeElement.classList) activeElement.classList.remove('studio-highlight'); } catch(_) {}
         activeElement = el;
         try { if (activeElement && activeElement.classList) activeElement.classList.add('studio-highlight'); } catch(_) {}
-        
-        const normalizeText = (s) => (s || "").replace(/\s+/g, ' ').trim();
 
         // 1. Initial ID from data-msgid or text content.
         // IMPORTANT: keep the original key untouched for API round-trips.
         // Normalization is only used for fuzzy lookup in scanMap.
-        let rawId = el.dataset.msgid || el.innerText || "";
+        let rawId = el.dataset.msgid || getStudioDisplayText(el) || "";
         let msgid = rawId;
         const normalizedId = normalizeText(rawId);
+        const displayText = getStudioDisplayText(el);
+        const normContent = normalizeText(displayText);
+        activeLookupKeys = new Set(
+            [rawId, normalizedId, displayText, normContent].map(normalizeText).filter(Boolean)
+        );
         
         // 2. Try to resolve via scanMap (contains all languages -> msgid)
         if (scanMap) {
-            const normContent = normalizeText(el.innerText);
             // Check direct msgid first, then contents
             if (scanMap[msgid]) {
                 msgid = scanMap[msgid];
@@ -242,6 +367,7 @@
                 msgid = scanMap[normContent];
             }
         }
+        activeLookupKeys.add(normalizeText(msgid));
         
         msgidEl.innerText = msgid;
         jumpLink.href = `${urls.dashboard}?query=${encodeURIComponent(msgid)}`;
@@ -325,17 +451,8 @@
                 if (activeElement) {
                     var currentLang = resolveCurrentLanguage();
                     const translatedText = (currentLang === 'ru') ? ruInput.value : (currentLang === 'en' ? enInput.value : plInput.value);
-                    // Update all elements that carry this msgid (editable spans and clickable containers)
-                    const selector = `[data-msgid="${CSS.escape(msgid)}"]`;
-                    const sameKeyElements = document.querySelectorAll(selector);
-                    sameKeyElements.forEach(el => {
-                        try {
-                            el.innerText = translatedText;
-                        } catch (_) {}
-                    });
-                    // Keep the currently selected node in sync even if selector misses
-                    // because of provisional or transformed data-msgid values.
-                    try { activeElement.innerText = translatedText; } catch (_) {}
+                    updateLiveTranslations(msgid, translatedText);
+                    applyTranslatedText(activeElement, translatedText);
                 }
                 if (scanMap) {
                     scanMap[msgid] = msgid;
@@ -343,6 +460,7 @@
                     if (enInput.value) scanMap[normalizeText(enInput.value)] = msgid;
                     if (plInput.value) scanMap[normalizeText(plInput.value)] = msgid;
                 }
+                try { syncStudioTargetIds(); } catch(_) {}
                 modal.style.display = 'none';
                 try { if (activeElement && activeElement.classList) activeElement.classList.remove('studio-highlight'); } catch(_) {}
             } else {
@@ -419,7 +537,13 @@
         .studio-clickable-container {
             cursor: pointer;
         }
+        .studio-form-control {
+            cursor: pointer;
+        }
         .studio-clickable-container:hover {
+            outline: 1px dashed #6366f1;
+        }
+        .studio-form-control:hover {
             outline: 1px dashed #6366f1;
         }
         textarea:focus {
@@ -578,13 +702,87 @@
         const interactives = root.querySelectorAll('a, button, [role="button"], label, .nav-link, .btn');
         interactives.forEach(el => {
             if (el.closest('#studio-modal')) return;
-            const text = (el.innerText || "").trim();
-            if (text && scanMap && scanMap[text]) {
-                // If it contains a single studio-editable child, mark the whole button as editable too
-                // for easier clicking near edges/icons.
+            const childTarget = el.querySelector('.studio-editable, .studio-form-control');
+            const text = normalizeText(el.innerText || "");
+            if (childTarget || (text && scanMap && scanMap[text])) {
+                // Make the whole control clickable so users don't need to hit
+                // the exact wrapped text node inside buttons or links.
                 el.classList.add('studio-clickable-container');
-                if (!el.dataset.msgid) el.dataset.msgid = scanMap[text];
+                if (!childTarget && !el.dataset.msgid && text && scanMap && scanMap[text]) {
+                    el.dataset.msgid = scanMap[text];
+                }
             }
+        });
+
+        const formControls = root.querySelectorAll('input, textarea, select, option');
+        formControls.forEach(el => {
+            if (el.closest('#studio-modal')) return;
+
+            let msgid = (el.dataset.msgid || "").trim();
+            let sourceText = "";
+            let targetAttribute = "";
+
+            const candidates = [];
+            const placeholder = (el.getAttribute('placeholder') || '').trim();
+            if (placeholder) candidates.push({ text: placeholder, attribute: 'placeholder' });
+
+            const ariaLabel = (el.getAttribute('aria-label') || '').trim();
+            if (ariaLabel) candidates.push({ text: ariaLabel, attribute: 'aria-label' });
+
+            const title = (el.getAttribute('title') || '').trim();
+            if (title) candidates.push({ text: title, attribute: 'title' });
+
+            const isValueDrivenControl =
+                el.tagName === 'OPTION' ||
+                (el.tagName === 'INPUT' && /^(submit|button|reset)$/i.test(el.type || ''));
+            const valueText = isValueDrivenControl ? (el.value || '').trim() : '';
+            if (valueText) candidates.push({ text: valueText, attribute: 'value' });
+
+            for (const candidate of candidates) {
+                const normalized = normalizeText(candidate.text);
+                if (!normalized) continue;
+
+                sourceText = candidate.text;
+                targetAttribute = candidate.attribute;
+
+                if (scanMap && scanMap[normalized]) {
+                    msgid = scanMap[normalized];
+                    break;
+                }
+
+                if (!msgid) {
+                    msgid = candidate.text;
+                    break;
+                }
+            }
+
+            if (!msgid && el.id) {
+                try {
+                    const label = document.querySelector(`label[for="${CSS.escape(el.id)}"]`);
+                    if (label) {
+                        const labelTarget =
+                            (label.matches && label.matches(STUDIO_TARGET_SELECTOR))
+                                ? label
+                                : label.querySelector(STUDIO_TARGET_SELECTOR);
+                        const labelText = normalizeText(label.innerText || '');
+
+                        if (labelTarget && labelTarget.dataset && labelTarget.dataset.msgid) {
+                            msgid = labelTarget.dataset.msgid;
+                            sourceText = getStudioDisplayText(labelTarget);
+                        } else if (labelText) {
+                            msgid = (scanMap && scanMap[labelText]) ? scanMap[labelText] : (label.innerText || labelText);
+                            sourceText = label.innerText || labelText;
+                        }
+                    }
+                } catch (_) {}
+            }
+
+            if (!msgid) return;
+
+            el.classList.add('studio-form-control');
+            el.dataset.msgid = msgid;
+            if (sourceText) el.dataset.studioSourceText = sourceText;
+            if (targetAttribute) el.dataset.studioTargetAttribute = targetAttribute;
         });
 
         // 5) Cleanup: Ensure no nested editables or duplicated visual labels

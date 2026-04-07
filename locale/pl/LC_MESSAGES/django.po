@@ -1663,7 +1663,6 @@ msgstr "Czy na pewno chcesz trwale usunąć tego klienta?"
 #: .\clients\templates\clients\payment_reminder_list.html:12
 #: .\clients\templates\clients\payment_reminder_list.html:35
 #: .\templates\base.html:73
-#, fuzzy
 #| msgid "Напоминания по документам"
 msgid "Напоминания по оплатам"
 msgstr "Przypomnienia o dokumentach"
@@ -2600,14 +2599,13 @@ msgid "Переключить навигацию"
 msgstr ""
 
 #: .\legalize_site\templates\base.html:207 .\templates\base.html:68
-#, fuzzy
 #| msgid "Клиент"
 msgid "Клиенты"
-msgstr "Klient"
+msgstr "Klienty"
 
 #: .\legalize_site\templates\base.html:209 .\templates\base.html:70
 msgid "Калькулятор"
-msgstr ""
+msgstr "Kalkulator"
 
 #: .\legalize_site\templates\base.html:211
 #, fuzzy
@@ -3273,7 +3271,7 @@ msgstr ""
 
 #: .\templates\base.html:71
 msgid "Чеклисты"
-msgstr ""
+msgstr "Czeklist"
 
 #: .\templates\base.html:74
 msgid "Метрики"
