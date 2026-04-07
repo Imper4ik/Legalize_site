@@ -31,6 +31,9 @@ class TranslationStudioMiddleware:
         # replace text nodes with editable spans. The overlay only runs for
         # superusers when Studio Mode is active, so end users won't see markers.
         #
+        if studio_active and self._path_allowed(request.path):
+            self._inject_overlay_script(response)
+
         return response
 
     @staticmethod
