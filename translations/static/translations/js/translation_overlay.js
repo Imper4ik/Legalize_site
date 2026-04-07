@@ -3,13 +3,6 @@
         return;
     }
     window.__studioOverlayInitialized = true;
-    const studioConfig = window.__studioOverlayConfig || {};
-    const urls = {
-        dashboard: studioConfig.dashboardUrl || '/studio/dashboard/',
-        update: studioConfig.updateUrl || '/studio/update/',
-        get: studioConfig.getUrl || '/studio/get-api/',
-        scan: studioConfig.scanUrl || '/studio/scan-api/'
-    };
 
     // Only initialize if we see editable elements or markers
     let activeElement = null;
