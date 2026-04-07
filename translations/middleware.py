@@ -1,5 +1,6 @@
 import re
 from django.conf import settings
+from django.urls import reverse
 from django.utils import translation
 
 # TAG_PATTERN is for matching [[i18n:Key]]Text[[/i18n]] in final HTML
@@ -56,7 +57,16 @@ class TranslationStudioMiddleware:
         if script_src in content:
             return
 
-        script_tag = '<script src="/static/translations/js/translation_overlay.js" defer></script>'
+        dashboard_url = reverse("translations:dashboard")
+        update_url = reverse("translations:update_api")
+        get_url = reverse("translations:get_api")
+        scan_url = reverse("translations:scan_api")
+        config_script = (
+            "<script>"
+            f"window.__studioOverlayConfig={{dashboardUrl:{dashboard_url!r},updateUrl:{update_url!r},getUrl:{get_url!r},scanUrl:{scan_url!r}}};"
+            "</script>"
+        )
+        script_tag = f'{config_script}<script src="{script_src}" defer></script>'
         lower_content = content.lower()
         body_close_idx = lower_content.rfind("</body>")
         if body_close_idx == -1:

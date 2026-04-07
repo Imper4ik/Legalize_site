@@ -201,7 +201,7 @@
     // our gettext wrapper).
     (async function loadScanMap(){
         try {
-            const res = await fetch('/studio/scan-api/');
+            const res = await fetch(urls.scan);
             const json = await res.json();
             if (json && json.status === 'ok') scanMap = json.data || {};
             else scanMap = {};
@@ -244,7 +244,7 @@
         }
         
         msgidEl.innerText = msgid;
-        jumpLink.href = `/studio/dashboard/?query=${encodeURIComponent(msgid)}`;
+        jumpLink.href = `${urls.dashboard}?query=${encodeURIComponent(msgid)}`;
         
         // Show loading state
         ruInput.value = "Loading...";
@@ -254,7 +254,7 @@
 
         // Fetch current translations from server
         try {
-            const response = await fetch(`/studio/get-api/?msgid=${encodeURIComponent(msgid)}`);
+            const response = await fetch(`${urls.get}?msgid=${encodeURIComponent(msgid)}`);
             const result = await response.json();
             if (result.status === 'ok') {
                 ruInput.value = result.data.ru || "";
@@ -304,7 +304,7 @@
         btn.disabled = true;
 
         try {
-            const response = await fetch('/studio/update/', {
+            const response = await fetch(urls.update, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -346,7 +346,10 @@
                 modal.style.display = 'none';
                 try { if (activeElement && activeElement.classList) activeElement.classList.remove('studio-highlight'); } catch(_) {}
             } else {
-                alert((result && result.message) ? `Error saving translation: ${result.message}` : 'Error saving translation');
+                const message = (result && result.message)
+                    ? `Error saving translation: ${result.message}`
+                    : `Error saving translation (HTTP ${response.status})`;
+                alert(message);
             }
         } catch (e) {
             console.error(e);
