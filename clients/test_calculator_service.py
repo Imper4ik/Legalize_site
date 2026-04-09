@@ -1,13 +1,17 @@
 from datetime import date, timedelta
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
+import requests
 from django.test import SimpleTestCase
 
 from clients.services.calculator import (
+    DEFAULT_EUR_TO_PLN_RATE,
     MAX_MONTHS_LIVING,
+    NBP_EUR_RATE_URL,
     CalculatorResult,
     calculate_calculator_result,
+    get_eur_to_pln_rate,
 )
 
 
@@ -71,3 +75,25 @@ class CalculatorServiceTests(SimpleTestCase):
 
         self.assertEqual(result.monthly_tuition_calculated, Decimal("300.00"))
         self.assertEqual(result.tuition_total, Decimal("1500.00"))
+
+    @patch("clients.services.calculator.cache.get", return_value=None)
+    @patch("clients.services.calculator.cache.set")
+    @patch("clients.services.calculator.requests.get")
+    def test_fetches_exchange_rate_over_https_and_caches_it(self, mocked_get, mocked_cache_set, _mocked_cache_get):
+        response = Mock()
+        response.json.return_value = {"rates": [{"mid": 4.21}]}
+        response.raise_for_status.return_value = None
+        mocked_get.return_value = response
+
+        rate = get_eur_to_pln_rate()
+
+        self.assertEqual(rate, Decimal("4.21"))
+        mocked_get.assert_called_once_with(NBP_EUR_RATE_URL, timeout=5)
+        mocked_cache_set.assert_called_once_with("eur_to_pln_rate", Decimal("4.21"), timeout=12 * 60 * 60)
+
+    @patch("clients.services.calculator.cache.get", return_value=None)
+    @patch("clients.services.calculator.requests.get", side_effect=requests.RequestException("network down"))
+    def test_uses_default_rate_when_fetch_fails(self, _mocked_get, _mocked_cache_get):
+        rate = get_eur_to_pln_rate()
+
+        self.assertEqual(rate, DEFAULT_EUR_TO_PLN_RATE)

@@ -21,6 +21,7 @@ MAX_MONTHS_LIVING = 15
 DEFAULT_EUR_TO_PLN_RATE = Decimal("4.3")
 CURRENCY_PLN = "PLN"
 CURRENCY_EUR = "EUR"
+NBP_EUR_RATE_URL = "https://api.nbp.pl/api/exchangerates/rates/a/eur/?format=json"
 
 
 @dataclass
@@ -50,7 +51,7 @@ def get_eur_to_pln_rate() -> Decimal:
 
     try:
         # NBP API does not require an API key
-        response = requests.get("http://api.nbp.pl/api/exchangerates/rates/a/eur/?format=json", timeout=5)
+        response = requests.get(NBP_EUR_RATE_URL, timeout=5)
         response.raise_for_status()
         data = response.json()
         rate = Decimal(str(data["rates"][0]["mid"]))
@@ -149,4 +150,5 @@ __all__ = [
     "TICKET_NO_BORDER",
     "CURRENCY_PLN",
     "CURRENCY_EUR",
+    "NBP_EUR_RATE_URL",
 ]
