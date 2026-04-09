@@ -114,13 +114,20 @@ class Client(models.Model):
             self.application_purpose, self.application_purpose or ''
         )
 
+    def get_submitted_document_summary(self):
+        from clients.services.wniosek import build_submitted_document_summary
+
+        return build_submitted_document_summary(self)
+
+    def get_submitted_document_codes(self) -> set[str]:
+        summary = self.get_submitted_document_summary()
+        return set(summary.get("codes", {}).keys())
+
     def get_document_checklist(self):
-        from .document import DocumentRequirement
+        from .document import DocumentRequirement, resolve_document_label
+
         current_language = translation.get_language() or self.language
         required_docs = DocumentRequirement.required_for(self.application_purpose, current_language)
-        if not required_docs:
-            return []
-
         uploaded_docs = self.documents.all().order_by('-uploaded_at')
 
         docs_map = {}
@@ -129,15 +136,57 @@ class Client(models.Model):
                 docs_map[doc.document_type] = []
             docs_map[doc.document_type].append(doc)
 
+        submitted_summary = self.get_submitted_document_summary()
+        submitted_by_code = submitted_summary.get("codes", {})
+        custom_submissions = submitted_summary.get("custom", [])
+
         status_list = []
+        seen_codes = set()
         for code, name in required_docs:
             documents = docs_map.get(code, [])
+            submitted_records = submitted_by_code.get(code, [])
             status_list.append({
                 'code': code,
                 'name': str(name),
                 'is_uploaded': bool(documents),
-                'documents': documents
+                'is_submitted': bool(submitted_records),
+                'is_complete': bool(documents) or bool(submitted_records),
+                'documents': documents,
+                'submitted_records': submitted_records,
+                'is_custom_submission': False,
             })
+            seen_codes.add(code)
+
+        for code, submitted_records in submitted_by_code.items():
+            if code in seen_codes:
+                continue
+            documents = docs_map.get(code, [])
+            status_list.append(
+                {
+                    'code': code,
+                    'name': str(resolve_document_label(code, language=current_language)),
+                    'is_uploaded': bool(documents),
+                    'is_submitted': bool(submitted_records),
+                    'is_complete': bool(documents) or bool(submitted_records),
+                    'documents': documents,
+                    'submitted_records': submitted_records,
+                    'is_custom_submission': False,
+                }
+            )
+
+        for index, custom_item in enumerate(custom_submissions):
+            status_list.append(
+                {
+                    'code': f"submitted-custom-{index}",
+                    'name': str(custom_item["name"]),
+                    'is_uploaded': False,
+                    'is_submitted': True,
+                    'is_complete': True,
+                    'documents': [],
+                    'submitted_records': custom_item.get("records", []),
+                    'is_custom_submission': True,
+                }
+            )
         return status_list
 
     def get_document_name_by_code(self, doc_code):

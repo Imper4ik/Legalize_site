@@ -27,6 +27,11 @@ urlpatterns = [
         views.client_document_print_view,
         name='client_document_print',
     ),
+    path(
+        'client/<int:pk>/print/document/<str:doc_type>/confirm/',
+        views.client_document_print_confirm_view,
+        name='client_document_print_confirm',
+    ),
 
     # URL для обновления заметок, доступов и писем
     path('client/<int:pk>/update-notes/', views.update_client_notes, name='update_client_notes'),
@@ -41,6 +46,11 @@ urlpatterns = [
         name='confirm_wezwanie_parse',
     ),
     path('document/<int:pk>/delete/', views.document_delete, name='document_delete'),
+    path(
+        'wniosek-attachment/<int:attachment_id>/delete/',
+        views.wniosek_attachment_delete,
+        name='wniosek_attachment_delete',
+    ),
     path('document/<int:doc_id>/toggle-verification/', views.toggle_document_verification,
          name='toggle_document_verification'),
     path('client/<int:client_id>/documents/verify-all/', views.verify_all_documents, name='verify_all_documents'),

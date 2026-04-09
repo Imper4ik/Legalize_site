@@ -9,8 +9,15 @@
       {{ item.name }}
       {% if item.is_uploaded %}
       <span class="badge bg-success ms-3">{{ item.documents|length }} {% translate "шт." %}</span>
-      {% else %}
+      {% endif %}
+      {% if item.is_submitted %}
+      <span class="badge bg-info text-dark ms-3">{% translate "Сдано" %}</span>
+      {% endif %}
+      {% if not item.is_complete %}
       <span class="badge bg-danger ms-3">{% translate "Отсутствует" %}</span>
+      {% endif %}
+      {% if item.is_custom_submission %}
+      <span class="badge bg-secondary ms-3">{% translate "Свой" %}</span>
       {% endif %}
     </button>
   </h2>
@@ -25,7 +32,7 @@
               {% translate "Файл от" %} {{ doc.uploaded_at|date:"d.m.Y H:i" }}
             </a>
             {% if doc.expiry_date %}
-              <br><small class="text-danger">{% translate "Действителен до:" %} {{ doc.expiry_date|date:"d.m.Y" }}</small>
+            <br><small class="text-danger">{% translate "Действителен до:" %} {{ doc.expiry_date|date:"d.m.Y" }}</small>
             {% endif %}
             <span class="badge {% if doc.verified %}bg-success{% else %}bg-warning text-dark{% endif %} ms-2">
               {% if doc.verified %}{% translate "Проверен" %}{% else %}{% translate "Ожидает проверки" %}{% endif %}
@@ -51,12 +58,49 @@
         {% endfor %}
       </ul>
       {% else %}
-      <p class="text-muted">{% translate "Документы этого типа еще не загружены." %}</p>
+      <p class="text-muted">
+        {% if item.is_submitted %}
+        {% translate "По этому пункту нет загруженного файла, но документ уже отмечен как сданный." %}
+        {% else %}
+        {% translate "Документы этого типа еще не загружены." %}
+        {% endif %}
+      </p>
       {% endif %}
+      {% if item.submitted_records %}
+      <div class="border rounded p-3 mb-3">
+        <div class="fw-semibold mb-2">{% translate "Отмечено по wniosek" %}</div>
+        <ul class="list-group list-group-flush">
+          {% for submission in item.submitted_records %}
+          <li class="list-group-item px-0 d-flex justify-content-between align-items-start gap-3">
+            <div>
+              {{ submission.submitted_at|date:"d.m.Y H:i" }}
+              {% if submission.confirmed_by %}
+              · {{ submission.confirmed_by }}
+              {% endif %}
+              {% if submission.entered_name and submission.entered_name != item.name %}
+              <br><small class="text-muted">{{ submission.entered_name }}</small>
+              {% endif %}
+            </div>
+            <form action="{% url 'clients:wniosek_attachment_delete' submission.attachment_id %}" method="post"
+              class="d-inline delete-document-form">
+              {% csrf_token %}
+              <button type="button" class="btn btn-sm btn-outline-danger delete-document-button">
+                {% translate "Удалить" %}
+              </button>
+            </form>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      {% if item.is_custom_submission %}
+      <p class="small text-muted mb-0">{% translate "Кастомная строка из wniosek уже сохранена в истории подачи." %}</p>
+      {% else %}
       <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal"
         data-doc-type="{{ item.code }}" data-doc-name="{{ item.name }}">
         + {% translate "Добавить еще один файл" %}
       </button>
+      {% endif %}
     </div>
   </div>
 </div>

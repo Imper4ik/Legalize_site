@@ -112,7 +112,7 @@ class DocumentReminderListView(ReminderListView):
                     'expiry_date': getattr((item.get('documents') or [None])[0], 'expiry_date', None),
                 }
                 for item in checklist
-                if not item.get('is_uploaded')
+                if not item.get('is_complete')
             ]
             if group['expired_count']:
                 group['status_class'] = 'danger'

@@ -16,6 +16,7 @@ from django.utils.translation import override
 from PIL import Image, ImageDraw, ImageFont
 
 from clients.models import Client, Document
+from clients.services.wniosek import get_submitted_document_codes
 
 logger = logging.getLogger(__name__)
 
@@ -305,15 +306,14 @@ def _get_missing_documents_context(client: Client, language: str | None = None) 
         include_optional=False,
         include_fallback=not has_db_records,
     )
-    uploaded_codes = set(
-        client.documents.values_list("document_type", flat=True)
-    )
+    uploaded_codes = set(client.documents.values_list("document_type", flat=True))
+    submitted_codes = get_submitted_document_codes(client)
     missing = []
     uploaded_with_expiry = []
 
     for item in catalog:
         code = item["code"]
-        if code in uploaded_codes:
+        if code in uploaded_codes or code in submitted_codes:
             doc = client.documents.filter(document_type=code).order_by("-uploaded_at").first()
             expiry_date = getattr(doc, "expiry_date", None)
             if expiry_date:
@@ -393,7 +393,7 @@ def _get_expiring_documents_context(client: Client, documents: list[Document]) -
     checklist = client.get_document_checklist() or []
     missing_documents = []
     for item in checklist:
-        if item.get("is_uploaded"):
+        if item.get("is_complete"):
             continue
         latest_document = (item.get("documents") or [None])[0]
         missing_documents.append(

@@ -9,6 +9,7 @@ from .payment import Payment
 from .reminder import Reminder
 from .email import EmailLog
 from .pricing import ServicePrice
+from .wniosek import WniosekAttachment, WniosekSubmission
 
 __all__ = [
     'Client',
@@ -19,9 +20,10 @@ __all__ = [
     'Reminder',
     'EmailLog',
     'ServicePrice',
+    'WniosekSubmission',
+    'WniosekAttachment',
     'get_fallback_document_checklist',
     'resolve_document_label',
     'get_available_document_types',
     'translate_document_name',
 ]
-

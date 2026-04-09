@@ -11,7 +11,7 @@ from django.utils.translation import gettext as _
 
 from clients.constants import DocumentType
 from clients.forms import DocumentUploadForm
-from clients.models import Client, Document
+from clients.models import Client, Document, WniosekAttachment
 from clients.services.notifications import send_missing_documents_email, send_appointment_notification_email
 from clients.services.responses import ResponseHelper, apply_no_store
 from clients.services.wezwanie_parser import parse_wezwanie
@@ -314,6 +314,38 @@ def document_delete(request, pk):
         messages.warning(request, _("Удаление возможно только через кнопку."))
 
     return redirect('clients:client_detail', pk=client_id)
+
+
+@staff_required_view
+def wniosek_attachment_delete(request, attachment_id):
+    attachment = get_object_or_404(
+        WniosekAttachment.objects.select_related("submission", "submission__client"),
+        pk=attachment_id,
+    )
+    submission = attachment.submission
+    client_id = submission.client_id
+    helper = ResponseHelper(request)
+
+    if request.method == "POST":
+        attachment_name = attachment.entered_name
+        attachment.delete()
+
+        remaining_count = submission.attachments.count()
+        if remaining_count == 0:
+            submission.delete()
+        elif submission.attachment_count != remaining_count:
+            submission.attachment_count = remaining_count
+            submission.save(update_fields=["attachment_count"])
+
+        message = _("Отметка '%(name)s' удалена.") % {"name": attachment_name}
+        if helper.expects_json:
+            return helper.success(message=message)
+
+        messages.success(request, message)
+    else:
+        messages.warning(request, _("Удаление возможно только через кнопку."))
+
+    return redirect("clients:client_detail", pk=client_id)
 
 
 @staff_required_view
