@@ -15,14 +15,14 @@ class TranslationViewsTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
         self.superuser = user_model.objects.create_superuser(
-            username="super", email="super@example.com", password="pass"
+            email="super@example.com", password="pass"
         )
         self.staff = user_model.objects.create_user(
-            username="staff", email="staff@example.com", password="pass", is_staff=True
+            email="staff@example.com", password="pass", is_staff=True
         )
 
     def test_superuser_can_get_stub_for_unknown_msgid(self):
-        self.client.login(username="super", password="pass")
+        self.client.login(email="super@example.com", password="pass")
         url = reverse("translations:get_api")
 
         response = self.client.get(url, {"msgid": "Missing key"})
@@ -34,14 +34,14 @@ class TranslationViewsTests(TestCase):
         self.assertEqual(payload["data"]["msgid"], "Missing key")
 
     def test_missing_msgid_returns_400(self):
-        self.client.login(username="super", password="pass")
+        self.client.login(email="super@example.com", password="pass")
 
         response = self.client.get(reverse("translations:get_api"))
 
         self.assertEqual(response.status_code, 400)
 
     def test_update_translation_api_saves_payload(self):
-        self.client.login(username="super", password="pass")
+        self.client.login(email="super@example.com", password="pass")
         url = reverse("translations:update_api")
 
 
@@ -53,9 +53,9 @@ class TranslationViewsTests(TestCase):
                 data=json.dumps(
                     {
                         "msgid": "hello",
-                        "ru": "привет",
+                        "ru": "\u043f\u0440\u0438\u0432\u0435\u0442",
                         "en": "hello",
-                        "pl": "cześć",
+                        "pl": "cze\u015b\u0107",
                     }
                 ),
                 content_type="application/json",
@@ -63,10 +63,10 @@ class TranslationViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "ok")
-        save_mock.assert_called_once_with("hello", ru="привет", en="hello", pl="cześć")
+        save_mock.assert_called_once_with("hello", ru="\u043f\u0440\u0438\u0432\u0435\u0442", en="hello", pl="cze\u015b\u0107")
 
     def test_toggle_studio_mode_flips_session_flag(self):
-        self.client.login(username="super", password="pass")
+        self.client.login(email="super@example.com", password="pass")
         url = reverse("translations:toggle_studio")
 
         response_1 = self.client.get(url, HTTP_REFERER="/staff/")
@@ -78,7 +78,7 @@ class TranslationViewsTests(TestCase):
         self.assertFalse(self.client.session.get("studio_mode"))
 
     def test_staff_page_does_not_load_overlay_without_studio_mode(self):
-        self.client.login(username="super", password="pass")
+        self.client.login(email="super@example.com", password="pass")
 
         response = self.client.get(reverse("clients:client_list"))
 
@@ -88,7 +88,7 @@ class TranslationViewsTests(TestCase):
         self.assertNotIn("window.__studioOverlayConfig", html)
 
     def test_staff_page_loads_overlay_with_studio_mode(self):
-        self.client.login(username="super", password="pass")
+        self.client.login(email="super@example.com", password="pass")
         session = self.client.session
         session["studio_mode"] = True
         session.save()
@@ -101,19 +101,19 @@ class TranslationViewsTests(TestCase):
         self.assertIn("window.__studioOverlayConfig", html)
 
     def test_non_superuser_is_denied(self):
-        self.client.login(username="staff", password="pass")
+        self.client.login(email="staff@example.com", password="pass")
 
         response = self.client.get(reverse("translations:dashboard"))
 
         self.assertEqual(response.status_code, 302)
 
     def test_scan_api_returns_mapping_for_all_languages(self):
-        self.client.login(username="super", password="pass")
+        self.client.login(email="super@example.com", password="pass")
 
         from unittest.mock import patch
 
         fake_rows = [
-            {"msgid": "Hello", "ru": "Привет", "en": "Hello", "pl": "Cześć"}
+            {"msgid": "Hello", "ru": "\u041f\u0440\u0438\u0432\u0435\u0442", "en": "Hello", "pl": "Cze\u015b\u0107"}
         ]
         with patch("translations.views.load_all_translations", return_value=fake_rows):
             response = self.client.get(reverse("translations:scan_api"))
@@ -121,8 +121,8 @@ class TranslationViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()["data"]
         self.assertEqual(data["Hello"], "Hello")
-        self.assertEqual(data["Привет"], "Hello")
-        self.assertEqual(data["Cześć"], "Hello")
+        self.assertEqual(data["\u041f\u0440\u0438\u0432\u0435\u0442"], "Hello")
+        self.assertEqual(data["Cze\u015b\u0107"], "Hello")
 
 
 class TranslationMiddlewareTests(TestCase):
@@ -194,3 +194,4 @@ class TranslationOverlayScriptTests(TestCase):
         self.assertIn("let activeLookupKeys = new Set();", content)
         self.assertIn("function syncStudioTargetIds(root = document.body)", content)
         self.assertIn("function updateLiveTranslations(msgid, translatedText)", content)
+

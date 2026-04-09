@@ -1,5 +1,6 @@
 import json
 import tempfile
+import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from gettext import GNUTranslations
@@ -30,7 +31,11 @@ class PurePythonMsgfmtTests(SimpleTestCase):
     def test_compiled_mo_file_is_valid_utf8(self):
         from legalize_site.utils.i18n import _write_mo_file
 
-        with tempfile.TemporaryDirectory() as tmp:
+        tmp_root = Path(__file__).resolve().parents[2] / "tmp"
+        tmp_root.mkdir(exist_ok=True)
+        tmp = tmp_root / f"msgfmt-{uuid.uuid4().hex}"
+        try:
+            tmp.mkdir(parents=True)
             locale_dir = Path(tmp) / "ru" / "LC_MESSAGES"
             locale_dir.mkdir(parents=True)
             po_path = locale_dir / "django.po"
@@ -43,7 +48,7 @@ class PurePythonMsgfmtTests(SimpleTestCase):
                         '"Language: ru\\n"',
                         '',
                         'msgid "hello"',
-                        'msgstr "привет"',
+                        'msgstr "\u043f\u0440\u0438\u0432\u0435\u0442"',
                     ]
                 ),
                 encoding="utf-8",
@@ -55,19 +60,21 @@ class PurePythonMsgfmtTests(SimpleTestCase):
             with mo_path.open("rb") as fp:
                 translations = GNUTranslations(fp)
 
-            self.assertEqual(translations.gettext("hello"), "привет")
+            self.assertEqual(translations.gettext("hello"), "\u043f\u0440\u0438\u0432\u0435\u0442")
             self.assertEqual(translations.gettext("missing"), "missing")
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
 
 
 class CalculatorViewTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
         self.staff_user = user_model.objects.create_user(
-            username='staff', password='pass', is_staff=True
+            email='staff@example.com', password='pass', is_staff=True
         )
 
     def test_months_in_period_multiplies_tuition_total(self):
-        login_successful = self.client.login(username='staff', password='pass')
+        login_successful = self.client.login(email='staff@example.com', password='pass')
         self.assertTrue(login_successful)
 
         future_date = (datetime.now() + timedelta(days=30)).strftime('%d-%m-%Y')
@@ -97,7 +104,7 @@ class ClientPrintingViewTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
         self.staff_user = user_model.objects.create_user(
-            username='staff', password='pass', is_staff=True
+            email='staff@example.com', password='pass', is_staff=True
         )
 
         self.client_record = Client.objects.create(
@@ -111,7 +118,7 @@ class ClientPrintingViewTests(TestCase):
         )
 
     def test_wsc_print_view_renders_client_details(self):
-        login_successful = self.client.login(username='staff', password='pass')
+        login_successful = self.client.login(email='staff@example.com', password='pass')
         self.assertTrue(login_successful)
 
         with translation.override('pl'):
@@ -125,7 +132,7 @@ class ClientPrintingViewTests(TestCase):
         self.assertContains(response, '15.01.2024')
 
     def test_wsc_print_view_leaves_missing_fields_blank(self):
-        login_successful = self.client.login(username='staff', password='pass')
+        login_successful = self.client.login(email='staff@example.com', password='pass')
         self.assertTrue(login_successful)
 
         empty_client = Client.objects.create(
@@ -151,7 +158,7 @@ class ClientAccountLifecycleTests(TestCase):
 
     def test_deleting_client_removes_linked_user_account(self):
         user = self.user_model.objects.create_user(
-            username='client-user', email='client@example.com', password='secret123'
+            email='client@example.com', password='secret123'
         )
         EmailAddress.objects.create(
             user=user,
@@ -176,7 +183,6 @@ class ClientAccountLifecycleTests(TestCase):
 
     def test_staff_accounts_are_preserved_when_client_deleted(self):
         staff_user = self.user_model.objects.create_user(
-            username='staff-owned',
             email='staff-owned@example.com',
             password='secret123',
             is_staff=True,
@@ -256,13 +262,16 @@ class DocumentRequirementFormTests(TestCase):
 
     def test_add_form_allows_custom_document(self):
         DocumentRequirement.objects.filter(application_purpose='work').delete()
-        form = DocumentRequirementAddForm(data={'name': 'Дополнительная справка'}, purpose='work')
+        form = DocumentRequirementAddForm(
+            data={'name': '\u0414\u043e\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u0441\u043f\u0440\u0430\u0432\u043a\u0430'},
+            purpose='work',
+        )
 
         self.assertTrue(form.is_valid())
         requirement = form.save()
 
-        self.assertEqual(requirement.document_type, 'дополнительная_справка')
-        self.assertEqual(requirement.custom_name, 'Дополнительная справка')
+        self.assertEqual(requirement.document_type, '\u0434\u043e\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f_\u0441\u043f\u0440\u0430\u0432\u043a\u0430')
+        self.assertEqual(requirement.custom_name, '\u0414\u043e\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u0441\u043f\u0440\u0430\u0432\u043a\u0430')
         self.assertTrue(requirement.is_required)
 
     def test_add_form_generates_unique_slug_when_exists(self):
@@ -281,11 +290,11 @@ class DocumentRequirementFormTests(TestCase):
     def test_edit_form_updates_required_flag(self):
         DocumentRequirement.objects.filter(application_purpose='work', document_type=DocumentType.PASSPORT).delete()
         requirement = DocumentRequirement.objects.create(
-            application_purpose='work', document_type=DocumentType.PASSPORT, custom_name='Паспорт', position=0
+            application_purpose='work', document_type=DocumentType.PASSPORT, custom_name='\u041f\u0430\u0441\u043f\u043e\u0440\u0442', position=0
         )
 
         form = DocumentRequirementEditForm(
-            data={'custom_name': 'Паспорт клиента', 'is_required': False},
+            data={'custom_name': '\u041f\u0430\u0441\u043f\u043e\u0440\u0442 \u043a\u043b\u0438\u0435\u043d\u0442\u0430', 'is_required': False},
             instance=requirement,
         )
 
@@ -293,7 +302,7 @@ class DocumentRequirementFormTests(TestCase):
         updated = form.save()
 
         self.assertFalse(updated.is_required)
-        self.assertEqual(updated.custom_name, 'Паспорт клиента')
+        self.assertEqual(updated.custom_name, '\u041f\u0430\u0441\u043f\u043e\u0440\u0442 \u043a\u043b\u0438\u0435\u043d\u0442\u0430')
 
 
 class DocumentChecklistFormTests(TestCase):
@@ -470,7 +479,7 @@ class WezwanieUploadFlowTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
         self.staff_user = user_model.objects.create_user(
-            username="staff_wezwanie", password="pass", is_staff=True
+            email="staff_wezwanie@example.com", password="pass", is_staff=True
         )
 
         DocumentRequirement.objects.filter(application_purpose="work").delete()
@@ -498,7 +507,7 @@ class WezwanieUploadFlowTests(TestCase):
         mail.outbox = []
 
     def test_uploading_wezwanie_returns_pending_confirmation(self):
-        login_successful = self.client.login(username="staff_wezwanie", password="pass")
+        login_successful = self.client.login(email="staff_wezwanie@example.com", password="pass")
         self.assertTrue(login_successful)
 
         content = b"Numer sprawy: ZZ/987/24\nw dniu 05-06-2024 pobrano odciski"
@@ -527,7 +536,7 @@ class WezwanieUploadFlowTests(TestCase):
         self.assertTrue(document.awaiting_confirmation)
 
     def test_confirm_wezwanie_updates_client_and_sends_email(self):
-        login_successful = self.client.login(username="staff_wezwanie", password="pass")
+        login_successful = self.client.login(email="staff_wezwanie@example.com", password="pass")
         self.assertTrue(login_successful)
 
         content = b"Numer sprawy: ZZ/987/24\nw dniu 05-06-2024 pobrano odciski\n4 zdjecia"
@@ -574,7 +583,7 @@ class BulkDocumentVerificationTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
         self.staff_user = user_model.objects.create_user(
-            username='checker', password='pass', is_staff=True
+            email='checker@example.com', password='pass', is_staff=True
         )
 
         self.client_record = Client.objects.create(
@@ -600,7 +609,7 @@ class BulkDocumentVerificationTests(TestCase):
         )
 
     def test_marks_all_documents_verified_and_sends_email_once(self):
-        self.client.login(username='checker', password='pass')
+        self.client.login(email='checker@example.com', password='pass')
 
         url = reverse('clients:verify_all_documents', kwargs={'client_id': self.client_record.pk})
         with patch('clients.views.documents.send_missing_documents_email') as mock_send:
@@ -622,7 +631,7 @@ class BulkDocumentVerificationTests(TestCase):
 
     def test_skips_email_when_nothing_to_verify(self):
         Document.objects.filter(pk=self.unverified_doc.pk).update(verified=True)
-        self.client.login(username='checker', password='pass')
+        self.client.login(email='checker@example.com', password='pass')
 
         url = reverse('clients:verify_all_documents', kwargs={'client_id': self.client_record.pk})
         with patch('clients.views.documents.send_missing_documents_email') as mock_send:
@@ -681,7 +690,7 @@ class ClientViewsTestCase(TestCase):
     def setUp(self):
         self.user_model = get_user_model()
         self.staff_user = self.user_model.objects.create_user(
-            username='staff', password='pass', is_staff=True
+            email='staff@example.com', password='pass', is_staff=True
         )
         self.client_record = Client.objects.create(
             first_name='Ivan',
@@ -692,7 +701,7 @@ class ClientViewsTestCase(TestCase):
         )
 
     def test_client_detail_renders_and_contains_service_choices(self):
-        self.client.login(username='staff', password='pass')
+        self.client.login(email='staff@example.com', password='pass')
         url = reverse('clients:client_detail', kwargs={'pk': self.client_record.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
@@ -701,7 +710,7 @@ class ClientViewsTestCase(TestCase):
         self.assertTrue(any(choice[0] == 'study_service' for choice in choices))
 
     def test_add_payment_creates_payment(self):
-        self.client.login(username='staff', password='pass')
+        self.client.login(email='staff@example.com', password='pass')
         url = reverse('clients:add_payment', kwargs={'client_id': self.client_record.pk})
         
         response_invalid = self.client.post(url, {}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
@@ -724,3 +733,4 @@ class ClientViewsTestCase(TestCase):
         payment = self.client_record.payments.first()
         self.assertIsNotNone(payment)
         self.assertEqual(payment.total_amount, Decimal('1500.00'))
+

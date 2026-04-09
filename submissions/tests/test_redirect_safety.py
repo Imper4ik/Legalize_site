@@ -10,8 +10,8 @@ from submissions.models import Submission
 class SubmissionRedirectSafetyTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
-        self.staff = user_model.objects.create_user(username="staff_redirect", password="pass", is_staff=True)
-        self.client.login(username="staff_redirect", password="pass")
+        self.staff = user_model.objects.create_user(email="staff_redirect@example.com", password="pass", is_staff=True)
+        self.client.login(email="staff_redirect@example.com", password="pass")
 
     def test_quick_create_ignores_external_referer(self):
         response = self.client.post(

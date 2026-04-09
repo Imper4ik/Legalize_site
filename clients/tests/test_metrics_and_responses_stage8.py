@@ -62,8 +62,8 @@ class ResponseHelpersStage8Tests(TestCase):
 class MetricsDashboardStage8Tests(TestCase):
     def setUp(self):
         user_model = get_user_model()
-        self.staff = user_model.objects.create_user(username="metrics_staff", password="pass", is_staff=True)
-        self.client.login(username="metrics_staff", password="pass")
+        self.staff = user_model.objects.create_user(email="metrics_staff@example.com", password="pass", is_staff=True)
+        self.client.login(email="metrics_staff@example.com", password="pass")
 
         today = timezone.localdate()
 

@@ -13,11 +13,11 @@ class WniosekFlowStage10Tests(TestCase):
     def setUp(self):
         user_model = get_user_model()
         self.staff = user_model.objects.create_user(
-            username="staff_wniosek",
+            email="staff_wniosek@example.com",
             password="pass",
             is_staff=True,
         )
-        self.client.login(username="staff_wniosek", password="pass")
+        self.client.login(email="staff_wniosek@example.com", password="pass")
         self.client_obj = Client.objects.create(
             first_name="Maria",
             last_name="Kowalska",
