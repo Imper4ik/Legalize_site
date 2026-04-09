@@ -100,7 +100,9 @@
         <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
       {% endif %}
 
-
+      <div class="auth-actions">
+        <a class="auth-link subtle" href="{% url 'account_reset_password' %}">{% trans "Забыли пароль?" %}</a>
+      </div>
 
       <button class="auth-button" type="submit">
         <i class="bi bi-box-arrow-in-right me-2"></i>{% trans "Войти" %}

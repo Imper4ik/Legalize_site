@@ -52,7 +52,6 @@ fi
 # Если она не указана, скрипт сгенерирует одноразовый пароль и выведет его
 # в лог запуска, чтобы аккаунт точно создался на стенде.
 DEFAULT_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-"nindse@gmail.com"}
-DEFAULT_SUPERUSER_USERNAME=${DJANGO_SUPERUSER_USERNAME:-"admin"}
 SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD:-}
 
 # Позволяет хранить постоянный пароль в файле (например, в томе или Docker secret)
@@ -75,10 +74,10 @@ PY
 fi
 
 export DJANGO_SUPERUSER_EMAIL="$DEFAULT_SUPERUSER_EMAIL"
-export DJANGO_SUPERUSER_USERNAME="$DEFAULT_SUPERUSER_USERNAME"
 export DJANGO_SUPERUSER_PASSWORD="$SUPERUSER_PASSWORD"
 # === конец настройки суперюзера ===
 
+python manage.py bootstrap_user_model_migration
 python manage.py migrate --no-input
 
 
@@ -93,20 +92,21 @@ User = get_user_model()
 
 email = os.environ["DJANGO_SUPERUSER_EMAIL"]
 password = os.environ["DJANGO_SUPERUSER_PASSWORD"]
-username = os.environ.get("DJANGO_SUPERUSER_USERNAME", "admin")
 
-if not User.objects.filter(email=email).exists() and not User.objects.filter(username=username).exists():
-    print(f"Creating superuser {username!r} ({email!r})")
-    try:
-        User.objects.create_superuser(
-            username=username,
-            email=email,
-            password=password,
-        )
-    except Exception as e:
-        print(f"Could not create superuser (possibly created by another worker): {e}")
+user, created = User.objects.get_or_create(
+    email=email,
+    defaults={"is_staff": True, "is_superuser": True, "is_active": True},
+)
+user.is_staff = True
+user.is_superuser = True
+user.is_active = True
+user.set_password(password)
+user.save()
+
+if created:
+    print(f"Created superuser for {email!r}")
 else:
-    print(f"Superuser {username!r} or email {email!r} already exists, skipping")
+    print(f"Updated superuser for {email!r}")
 EOF
 fi
 # === конец блока создания суперюзера ===

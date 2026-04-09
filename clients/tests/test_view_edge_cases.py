@@ -16,7 +16,7 @@ class StaffRequiredViewTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
         user_model = get_user_model()
-        self.user = user_model.objects.create_user(username="u", password="pass", is_staff=False)
+        self.user = user_model.objects.create_user(email="u@example.com", password="pass", is_staff=False)
 
     def test_non_staff_ajax_gets_json_forbidden(self):
         @staff_required_view
@@ -36,8 +36,8 @@ class StaffRequiredViewTests(TestCase):
 class ClientViewEdgeCaseTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
-        self.staff = user_model.objects.create_user(username="staff", password="pass", is_staff=True)
-        self.client.login(username="staff", password="pass")
+        self.staff = user_model.objects.create_user(email="staff@example.com", password="pass", is_staff=True)
+        self.client.login(email="staff@example.com", password="pass")
 
         self.client_obj = Client.objects.create(
             first_name="Jan",

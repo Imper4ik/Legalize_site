@@ -12,8 +12,8 @@ from clients.models import Client
 class EmailViewsStage9Tests(TestCase):
     def setUp(self):
         user_model = get_user_model()
-        self.staff = user_model.objects.create_user(username="staff_email", password="pass", is_staff=True)
-        self.client.login(username="staff_email", password="pass")
+        self.staff = user_model.objects.create_user(email="staff_email@example.com", password="pass", is_staff=True)
+        self.client.login(email="staff_email@example.com", password="pass")
 
         self.client_obj = Client.objects.create(
             first_name="Email",

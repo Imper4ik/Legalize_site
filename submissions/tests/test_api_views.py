@@ -13,9 +13,9 @@ class SubmissionApiViewsTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
         self.staff = user_model.objects.create_user(
-            username="staff", password="pass", is_staff=True
+            email="staff@example.com", password="pass", is_staff=True
         )
-        self.client.login(username="staff", password="pass")
+        self.client.login(email="staff@example.com", password="pass")
 
     def test_submission_api_get_returns_items(self):
         Submission.objects.create(name="Work permit")

@@ -22,7 +22,7 @@ from clients.services.wezwanie_parser import (
 class NotificationServiceStage5Tests(TestCase):
     def setUp(self):
         user_model = get_user_model()
-        self.user = user_model.objects.create_user(username="u", password="pass")
+        self.user = user_model.objects.create_user(email="u@example.com", password="pass")
         self.client_obj = Client.objects.create(
             first_name="Ira",
             last_name="Kowalska",

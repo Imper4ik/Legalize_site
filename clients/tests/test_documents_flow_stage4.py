@@ -16,8 +16,8 @@ from clients.services.wezwanie_parser import WezwanieData
 class DocumentFlowsStage4Tests(TestCase):
     def setUp(self):
         user_model = get_user_model()
-        self.staff = user_model.objects.create_user(username="staff", password="pass", is_staff=True)
-        self.client.login(username="staff", password="pass")
+        self.staff = user_model.objects.create_user(email="staff@example.com", password="pass", is_staff=True)
+        self.client.login(email="staff@example.com", password="pass")
         self.client_obj = Client.objects.create(
             first_name="Anna",
             last_name="Nowak",

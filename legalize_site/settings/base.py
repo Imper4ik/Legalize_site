@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     "django.contrib.sites",
+    "users.apps.UsersConfig",
     "rosetta",
     "clients.apps.ClientsConfig",
     "submissions.apps.SubmissionsConfig",
@@ -64,6 +65,8 @@ INSTALLED_APPS = [
     "anymail",
     "translations",
 ]
+
+AUTH_USER_MODEL = "users.User"
 
 # --- ROSETTA ---
 ROSETTA_SHOW_AT_ADMIN_PANEL = True
@@ -258,10 +261,10 @@ AUTHENTICATION_BACKENDS = [
 SITE_ID = 1
 
 ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 
-# Новые ключи (вместо устаревших ACCOUNT_AUTHENTICATION_METHOD / ACCOUNT_EMAIL_REQUIRED / ACCOUNT_USERNAME_REQUIRED)
+# Новые ключи (вместо устаревших ACCOUNT_AUTHENTICATION_METHOD / ACCOUNT_USERNAME_REQUIRED)
 ACCOUNT_LOGIN_METHODS = {"email"}  # логин только по email
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]  # поля регистрации
 
