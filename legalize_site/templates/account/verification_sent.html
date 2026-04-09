@@ -95,7 +95,7 @@
       </li>
     </ul>
 
-    {% url 'account_email' as email_url %}
+    {% url 'account_resend_verification' as email_url %}
     <div class="auth-actions">
       <a class="auth-link" href="{{ email_url }}">
         <i class="bi bi-arrow-repeat me-2"></i>{% translate "Запросить новую ссылку" %}

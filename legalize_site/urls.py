@@ -7,6 +7,7 @@ from django.urls import path, include
 from django.conf.urls.i18n import i18n_patterns
 from clients import views
 from clients.views.admin_views import update_translations_view
+from users.views import ResendVerificationEmailView
 from .cron_views import db_backup
 
 from legalize_site.views import healthcheck
@@ -26,6 +27,11 @@ if 'rosetta' in settings.INSTALLED_APPS:
     ]
 
 urlpatterns += i18n_patterns(
+    path(
+        "accounts/confirm-email/resend/",
+        ResendVerificationEmailView.as_view(),
+        name="account_resend_verification",
+    ),
     path('accounts/', include('allauth.urls')),
     path('staff/', include('clients.urls', namespace='clients')),
     path('submissions/', include('submissions.urls', namespace='submissions')),

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -o errexit
 
-# EXPERIMENTAL: Attempt to install Tesseract at runtime
-# This usually fails due to lack of root permissions in the container
+# EXPERIMENTAL: Attempt to install Tesseract at runtime.
+# This usually fails due to lack of root permissions in the container.
 echo "Attempting to install Tesseract via start.sh..."
 if apt-get update && apt-get install -y tesseract-ocr tesseract-ocr-eng tesseract-ocr-pol poppler-utils postgresql-client; then
   echo "SUCCESS: Tesseract installed."
@@ -10,7 +10,7 @@ else
   echo "WARNING: Failed to install Tesseract (Permission Denied). Proceeding without it."
 fi
 
-# Ensure PostgreSQL client is version 17 to match Railway's server version
+# Ensure PostgreSQL client is version 17 to match Railway's server version.
 if command -v pg_dump > /dev/null 2>&1; then
   PG_VERSION=$(pg_dump --version | awk '{print $3}' | cut -d'.' -f1)
   echo "Current pg_dump version: $(pg_dump --version)"
@@ -47,42 +47,25 @@ else
   echo "dejavu_fonts present in /nix/store."
 fi
 
-# === Настройка суперюзера по умолчанию (email: nindse@gmail.com) ===
-# Пароль можно передать через переменную окружения DJANGO_SUPERUSER_PASSWORD.
-# Если она не указана, скрипт сгенерирует одноразовый пароль и выведет его
-# в лог запуска, чтобы аккаунт точно создался на стенде.
+# Default superuser bootstrap.
+# Password must be provided via DJANGO_SUPERUSER_PASSWORD or
+# DJANGO_SUPERUSER_PASSWORD_FILE. We never generate or print credentials.
 DEFAULT_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-"nindse@gmail.com"}
 SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD:-}
 
-# Позволяет хранить постоянный пароль в файле (например, в томе или Docker secret)
-# и передавать путь к нему через DJANGO_SUPERUSER_PASSWORD_FILE. Это исключает
-# генерацию нового пароля при каждом деплое, если переменная окружения не задана.
 if [ -z "$SUPERUSER_PASSWORD" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD_FILE" ] && [ -f "$DJANGO_SUPERUSER_PASSWORD_FILE" ]; then
   SUPERUSER_PASSWORD=$(cat "$DJANGO_SUPERUSER_PASSWORD_FILE")
 fi
 
-if [ -z "$SUPERUSER_PASSWORD" ]; then
-  SUPERUSER_PASSWORD=$(python - <<'PY'
-import secrets
-import string
-
-alphabet = string.ascii_letters + string.digits
-print("".join(secrets.choice(alphabet) for _ in range(16)))
-PY
-  )
-  echo "DJANGO_SUPERUSER_PASSWORD was not set; generated password: $SUPERUSER_PASSWORD"
-fi
-
 export DJANGO_SUPERUSER_EMAIL="$DEFAULT_SUPERUSER_EMAIL"
-export DJANGO_SUPERUSER_PASSWORD="$SUPERUSER_PASSWORD"
-# === конец настройки суперюзера ===
+if [ -n "$SUPERUSER_PASSWORD" ]; then
+  export DJANGO_SUPERUSER_PASSWORD="$SUPERUSER_PASSWORD"
+fi
 
 python manage.py bootstrap_user_model_migration
 python manage.py migrate --no-input
 
-
-# === Одноразовое создание суперюзера через env-переменные ===
-if [ "$DJANGO_SUPERUSER_EMAIL" ] && [ "$DJANGO_SUPERUSER_PASSWORD" ]; then
+if [ "$DJANGO_SUPERUSER_EMAIL" ]; then
   echo "Checking/creating superuser..."
   python manage.py shell << 'EOF'
 from django.contrib.auth import get_user_model
@@ -91,25 +74,43 @@ import os
 User = get_user_model()
 
 email = os.environ["DJANGO_SUPERUSER_EMAIL"]
-password = os.environ["DJANGO_SUPERUSER_PASSWORD"]
+password = os.environ.get("DJANGO_SUPERUSER_PASSWORD", "").strip()
 
-user, created = User.objects.get_or_create(
-    email=email,
-    defaults={"is_staff": True, "is_superuser": True, "is_active": True},
-)
-user.is_staff = True
-user.is_superuser = True
-user.is_active = True
-user.set_password(password)
-user.save()
+user = User.objects.filter(email=email).first()
 
-if created:
-    print(f"Created superuser for {email!r}")
+if user is None:
+    if not password:
+        print(
+            f"Skipping superuser creation for {email!r}: "
+            "DJANGO_SUPERUSER_PASSWORD is not configured."
+        )
+    else:
+        user = User.objects.create_superuser(email=email, password=password)
+        if not user.is_active:
+            user.is_active = True
+            user.save(update_fields=["is_active"])
+        print(f"Created superuser for {email!r}")
 else:
-    print(f"Updated superuser for {email!r}")
+    changed_fields = []
+    if not user.is_staff:
+        user.is_staff = True
+        changed_fields.append("is_staff")
+    if not user.is_superuser:
+        user.is_superuser = True
+        changed_fields.append("is_superuser")
+    if not user.is_active:
+        user.is_active = True
+        changed_fields.append("is_active")
+    if password:
+        user.set_password(password)
+        changed_fields.append("password")
+    if changed_fields:
+        user.save()
+        print(f"Updated superuser for {email!r}: {', '.join(changed_fields)}")
+    else:
+        print(f"Superuser for {email!r} is already up to date")
 EOF
 fi
-# === конец блока создания суперюзера ===
 
 : "${PORT:=8000}"
 exec gunicorn legalize_site.wsgi:application --bind 0.0.0.0:"${PORT}"

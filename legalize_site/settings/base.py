@@ -207,6 +207,10 @@ BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 BREVO_SMTP_PASSWORD = os.getenv("BREVO_SMTP_PASSWORD")
 BREVO_SMTP_USER = os.getenv("BREVO_SMTP_USER", "apikey")
 BREVO_SMTP_HOST = os.getenv("BREVO_SMTP_HOST", "smtp-relay.brevo.com")
+EMAIL_FALLBACK_TO_CONSOLE = env_flag(
+    "EMAIL_FALLBACK_TO_CONSOLE",
+    "True" if os.environ.get("DJANGO_SETTINGS_MODULE", "").endswith(".development") else "False",
+)
 
 # Позволяет переопределить бэкенд явно через переменную окружения.
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
@@ -237,7 +241,8 @@ if EMAIL_BACKEND == "django.core.mail.backends.smtp.EmailBackend":
     if not EMAIL_HOST:
         EMAIL_HOST = BREVO_SMTP_HOST if BREVO_SMTP_PASSWORD else "smtp.sendgrid.net"
     EMAIL_HOST_USER = EMAIL_HOST_USER or (BREVO_SMTP_USER if "brevo" in EMAIL_HOST else "apikey")
-    # Use a safer SMTP backend that falls back to console output if delivery fails
+    # Wrap SMTP so development can opt into console fallback without hiding
+    # production delivery failures.
     EMAIL_BACKEND = "legalize_site.mail.SafeSMTPEmailBackend"
 
 ANYMAIL = {}
