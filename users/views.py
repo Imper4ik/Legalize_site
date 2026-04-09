@@ -1,9 +1,5 @@
 from __future__ import annotations
 
-from allauth.account.internal.flows.email_verification import (
-    send_verification_email_to_address,
-)
-from allauth.account.internal.flows.manage_email import sync_user_email_address
 from allauth.account.models import EmailAddress
 from django.contrib.auth import get_user_model
 from django.urls import reverse_lazy
@@ -36,9 +32,17 @@ class ResendVerificationEmailView(FormView):
         if email_address is None:
             user = get_user_model().objects.filter(email__iexact=email).first()
             if user is not None:
-                email_address = sync_user_email_address(user)
+                email_address, _ = EmailAddress.objects.get_or_create(
+                    user=user,
+                    email=user.email,
+                    defaults={"primary": False, "verified": False},
+                )
 
         if email_address is not None and not email_address.verified:
+            from allauth.account.internal.flows.email_verification import (
+                send_verification_email_to_address,
+            )
+
             send_verification_email_to_address(self.request, email_address, signup=True)
 
         return super().form_valid(form)
