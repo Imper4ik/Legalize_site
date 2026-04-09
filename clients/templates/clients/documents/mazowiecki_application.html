@@ -23,9 +23,38 @@
             position: relative;
         }
 
+        .print-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px;
+        }
+
+        .print-actions button,
+        .print-actions a {
+            padding: 10px 16px;
+            font-size: 14px;
+            border: 1px solid #333;
+            background: #fff;
+            color: #111;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .print-hint {
+            max-width: 960px;
+            margin: 0 auto 16px;
+            padding: 12px 16px;
+            background: #fff;
+            border-left: 4px solid #111;
+            box-shadow: 0 0 10px rgba(0,0,0,0.08);
+        }
+
         @media print {
             body { background: none; margin: 0; padding: 0; }
             .page { width: 100%; height: 100%; box-shadow: none; margin: 0; padding: 15mm; }
+            .print-actions,
+            .print-hint { display: none; }
         }
 
         /* Helper classes */
@@ -202,6 +231,16 @@
     </style>
 </head>
 <body>
+    <form id="wniosekConfirmForm" method="post" action="{{ confirm_url }}">
+        {% csrf_token %}
+        <div class="print-actions">
+            <button type="submit">Confirm and print</button>
+            <a href="javascript:window.history.back()">Back</a>
+        </div>
+        <div class="print-hint">
+            Attachments entered here can stay custom. After confirmation the system will match known checklist items
+            automatically and mark them as submitted for this client.
+        </div>
 
     <div class="page">
         <div class="header-date">
@@ -392,10 +431,15 @@
                 });
 
                 attachmentContainer.querySelectorAll('.attachment-line').forEach(adjustWidth);
+
+                if ({{ auto_print|yesno:"true,false" }}) {
+                    window.print();
+                }
             });
         </script>
 
     </div>
+    </form>
 
 </body>
 </html>

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from urllib.parse import urlencode
+
 from django.contrib import messages
 from django.db.models import Prefetch, Q
 from django.http import Http404
@@ -19,8 +21,9 @@ from clients.forms import (
     DocumentUploadForm,
     PaymentForm,
 )
-from clients.models import Client, Document, DocumentRequirement, Payment
+from clients.models import Client, Document, DocumentRequirement, Payment, WniosekSubmission
 from clients.constants import DOCUMENT_CHECKLIST
+from clients.services.wniosek import record_wniosek_submission
 from submissions.forms import SubmissionForm
 from submissions.models import Submission
 from clients.services.calculator import (
@@ -78,6 +81,10 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
             .prefetch_related(
                 Prefetch('payments', queryset=Payment.objects.order_by('-created_at')),
                 Prefetch('documents', queryset=Document.objects.order_by('-uploaded_at')),
+                Prefetch(
+                    'wniosek_submissions',
+                    queryset=WniosekSubmission.objects.prefetch_related('attachments').order_by('-confirmed_at'),
+                ),
                 'reminders',
                 'email_logs',
             )
@@ -272,6 +279,12 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                     'birth_date': getattr(client, 'birth_date', ''),
                     'attachment_count': attachment_count,
                     'attachment_names': attachment_names,
+                    'confirm_url': reverse_lazy(
+                        'clients:client_document_print_confirm',
+                        kwargs={'pk': client.pk, 'doc_type': context['doc_type']},
+                    ),
+                    'auto_print': self.request.GET.get('auto_print') == '1',
+                    'last_submission_id': self.request.GET.get('submission_id') or '',
                     'other_text': (client.basis_of_stay or '').strip(),
                     'check_pobyt_czasowy': client.application_purpose in {'study', 'work', 'family'},
                     'check_pobyt_staly': False,
@@ -375,6 +388,40 @@ class DocumentChecklistManageView(StaffRequiredMixin, FormView):
 client_print_view = ClientPrintView.as_view()
 client_wsc_print_view = ClientWSCPrintView.as_view()
 client_document_print_view = ClientDocumentPrintView.as_view()
+
+
+@staff_required_view
+def client_document_print_confirm_view(request, pk, doc_type):
+    if request.method != 'POST':
+        return redirect('clients:client_document_print', pk=pk, doc_type=doc_type)
+
+    if doc_type != WniosekSubmission.DocumentKind.MAZOWIECKI_APPLICATION:
+        raise Http404("Confirmation is only available for this document type")
+
+    client = get_object_or_404(Client, pk=pk)
+    submission = record_wniosek_submission(
+        client=client,
+        document_kind=doc_type,
+        attachment_names=request.POST.getlist('attachments'),
+        confirmed_by=request.user if request.user.is_authenticated else None,
+        language=client.language,
+    )
+
+    confirmed_attachments = list(
+        submission.attachments.order_by('position').values_list('entered_name', flat=True)
+    )
+    params: list[tuple[str, str]] = [('auto_print', '1'), ('submission_id', str(submission.pk))]
+    for attachment_name in confirmed_attachments:
+        params.append(('attachments', attachment_name))
+    if confirmed_attachments:
+        params.append(('attachment_count', str(len(confirmed_attachments))))
+
+    messages.success(
+        request,
+        _("Wniosek confirmed. Submitted attachments were saved to the client checklist."),
+    )
+    redirect_url = reverse_lazy('clients:client_document_print', kwargs={'pk': client.pk, 'doc_type': doc_type})
+    return redirect(f"{redirect_url}?{urlencode(params)}")
 
 
 @staff_required_view
