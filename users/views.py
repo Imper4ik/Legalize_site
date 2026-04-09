@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from allauth.account.adapter import get_adapter
 from allauth.account.models import EmailAddress
 from django.contrib.auth import get_user_model
 from django.urls import reverse_lazy
@@ -38,11 +39,15 @@ class ResendVerificationEmailView(FormView):
                     defaults={"primary": False, "verified": False},
                 )
 
-        if email_address is not None and not email_address.verified:
-            from allauth.account.internal.flows.email_verification import (
-                send_verification_email_to_address,
+        if (
+            email_address is not None
+            and not email_address.verified
+            and get_adapter().should_send_confirmation_mail(
+                self.request,
+                email_address,
+                signup=True,
             )
-
-            send_verification_email_to_address(self.request, email_address, signup=True)
+        ):
+            email_address.send_confirmation(self.request, signup=True)
 
         return super().form_valid(form)
