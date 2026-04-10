@@ -107,6 +107,17 @@ class TranslationViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
 
+    def test_studio_menu_item_is_visible_only_for_superusers(self):
+        self.client.login(email="staff@example.com", password="pass")
+        staff_response = self.client.get(reverse("clients:client_list"))
+        self.assertEqual(staff_response.status_code, 200)
+        self.assertNotIn("Translation Studio", staff_response.content.decode("utf-8"))
+
+        self.client.login(email="super@example.com", password="pass")
+        superuser_response = self.client.get(reverse("clients:client_list"))
+        self.assertEqual(superuser_response.status_code, 200)
+        self.assertIn("Translation Studio", superuser_response.content.decode("utf-8"))
+
     def test_scan_api_returns_mapping_for_all_languages(self):
         self.client.login(email="super@example.com", password="pass")
 
@@ -192,6 +203,8 @@ class TranslationOverlayScriptTests(TestCase):
         self.assertIn("studio-clickable-container", content)
         self.assertIn("const childTarget = el.querySelector('.studio-editable, .studio-form-control');", content)
         self.assertIn("let activeLookupKeys = new Set();", content)
+        self.assertIn("event.metaKey", content)
+        self.assertIn("STUDIO_SHORTCUT_HINT", content)
+        self.assertIn("studio-mode-indicator", content)
         self.assertIn("function syncStudioTargetIds(root = document.body)", content)
         self.assertIn("function updateLiveTranslations(msgid, translatedText)", content)
-
