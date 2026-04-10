@@ -10,8 +10,13 @@
         get: studioConfig.getUrl || '/studio/get-api/',
         scan: studioConfig.scanUrl || '/studio/scan-api/'
     };
+    const STUDIO_SHORTCUT_HINT = '⌘/Ctrl+Shift+Click or Alt+Shift+Click';
     const STUDIO_TARGET_SELECTOR = '.studio-editable, .studio-clickable-container, .studio-form-control';
     const normalizeText = (s) => (s || "").replace(/\s+/g, ' ').trim();
+    const isStudioModifierClick = (event) => {
+        if (!event) return false;
+        return Boolean(event.shiftKey && (event.ctrlKey || event.metaKey || event.altKey));
+    };
 
     // Only initialize if we see editable elements or markers
     let activeElement = null;
@@ -239,7 +244,7 @@
     // (some browsers trigger new-tab navigation on modifier+click). We handle
     // mousedown in capture phase and open the studio there to avoid navigation.
     document.addEventListener('mousedown', function(e) {
-        if ((e.ctrlKey && e.shiftKey) || (e.altKey && e.shiftKey)) {
+        if (isStudioModifierClick(e)) {
             const x = e.clientX, y = e.clientY;
             // Quick nearest-element search using elementFromPoint first
             try {
@@ -295,9 +300,9 @@
         }
     }, true);
 
-    // Handle Ctrl+Shift or Alt+Shift + Click (Alt+Shift added for convenience)
+    // Handle Cmd/Ctrl+Shift or Alt+Shift + Click.
     document.addEventListener('click', function(e) {
-        if ((e.ctrlKey && e.shiftKey) || (e.altKey && e.shiftKey)) {
+        if (isStudioModifierClick(e)) {
             // If we just opened the studio on mousedown, ignore the subsequent click
             if (Date.now() - lastStudioOpenAt < 500) {
                 try { e.preventDefault(); } catch(_) {}
@@ -496,9 +501,26 @@
     // Modern Lavender/Blue Highlight Styling
     const style = document.createElement('style');
     style.innerHTML = `
+        #studio-mode-indicator {
+            position: fixed;
+            right: 14px;
+            bottom: 14px;
+            z-index: 9999998;
+            background: rgba(79, 70, 229, 0.96);
+            color: #fff;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            padding: 8px 12px;
+            box-shadow: 0 8px 24px rgba(30, 41, 59, 0.25);
+            backdrop-filter: blur(4px);
+        }
         .studio-editable {
             transition: all 0.3s ease;
             position: relative;
+            text-decoration: underline dotted rgba(99, 102, 241, 0.45);
+            text-underline-offset: 2px;
         }
         .studio-editable:hover {
             background-color: rgba(99, 102, 241, 0.08);
@@ -553,6 +575,13 @@
         }
     `;
     document.head.appendChild(style);
+
+    if (!document.getElementById('studio-mode-indicator')) {
+        const badge = document.createElement('div');
+        badge.id = 'studio-mode-indicator';
+        badge.innerText = `Studio mode ON · ${STUDIO_SHORTCUT_HINT}`;
+        document.body.appendChild(badge);
+    }
 
     // Deep Fix: Convert [[i18n:...]] to Spans on the fly if middleware missed them
     // or if they are loaded dynamically via partials

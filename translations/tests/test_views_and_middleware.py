@@ -69,13 +69,19 @@ class TranslationViewsTests(TestCase):
         self.client.login(email="super@example.com", password="pass")
         url = reverse("translations:toggle_studio")
 
-        response_1 = self.client.get(url, HTTP_REFERER="/staff/")
+        from unittest.mock import patch
+
+        with patch("translations.views.logger.info") as info_mock:
+            response_1 = self.client.get(url, HTTP_REFERER="/staff/")
         self.assertEqual(response_1.status_code, 302)
         self.assertTrue(self.client.session.get("studio_mode"))
+        self.assertIn("ENABLED", info_mock.call_args_list[0].args)
 
-        response_2 = self.client.get(url, HTTP_REFERER="/staff/")
+        with patch("translations.views.logger.info") as info_mock:
+            response_2 = self.client.get(url, HTTP_REFERER="/staff/")
         self.assertEqual(response_2.status_code, 302)
         self.assertFalse(self.client.session.get("studio_mode"))
+        self.assertIn("DISABLED", info_mock.call_args_list[0].args)
 
     def test_staff_page_does_not_load_overlay_without_studio_mode(self):
         self.client.login(email="super@example.com", password="pass")
@@ -106,6 +112,17 @@ class TranslationViewsTests(TestCase):
         response = self.client.get(reverse("translations:dashboard"))
 
         self.assertEqual(response.status_code, 302)
+
+    def test_studio_menu_item_is_visible_only_for_superusers(self):
+        self.client.login(email="staff@example.com", password="pass")
+        staff_response = self.client.get(reverse("clients:client_list"))
+        self.assertEqual(staff_response.status_code, 200)
+        self.assertNotIn("Translation Studio", staff_response.content.decode("utf-8"))
+
+        self.client.login(email="super@example.com", password="pass")
+        superuser_response = self.client.get(reverse("clients:client_list"))
+        self.assertEqual(superuser_response.status_code, 200)
+        self.assertIn("Translation Studio", superuser_response.content.decode("utf-8"))
 
     def test_scan_api_returns_mapping_for_all_languages(self):
         self.client.login(email="super@example.com", password="pass")
@@ -192,6 +209,8 @@ class TranslationOverlayScriptTests(TestCase):
         self.assertIn("studio-clickable-container", content)
         self.assertIn("const childTarget = el.querySelector('.studio-editable, .studio-form-control');", content)
         self.assertIn("let activeLookupKeys = new Set();", content)
+        self.assertIn("event.metaKey", content)
+        self.assertIn("STUDIO_SHORTCUT_HINT", content)
+        self.assertIn("studio-mode-indicator", content)
         self.assertIn("function syncStudioTargetIds(root = document.body)", content)
         self.assertIn("function updateLiveTranslations(msgid, translatedText)", content)
-
