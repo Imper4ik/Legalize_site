@@ -69,13 +69,19 @@ class TranslationViewsTests(TestCase):
         self.client.login(email="super@example.com", password="pass")
         url = reverse("translations:toggle_studio")
 
-        response_1 = self.client.get(url, HTTP_REFERER="/staff/")
+        from unittest.mock import patch
+
+        with patch("translations.views.logger.info") as info_mock:
+            response_1 = self.client.get(url, HTTP_REFERER="/staff/")
         self.assertEqual(response_1.status_code, 302)
         self.assertTrue(self.client.session.get("studio_mode"))
+        self.assertIn("ENABLED", info_mock.call_args_list[0].args)
 
-        response_2 = self.client.get(url, HTTP_REFERER="/staff/")
+        with patch("translations.views.logger.info") as info_mock:
+            response_2 = self.client.get(url, HTTP_REFERER="/staff/")
         self.assertEqual(response_2.status_code, 302)
         self.assertFalse(self.client.session.get("studio_mode"))
+        self.assertIn("DISABLED", info_mock.call_args_list[0].args)
 
     def test_staff_page_does_not_load_overlay_without_studio_mode(self):
         self.client.login(email="super@example.com", password="pass")
