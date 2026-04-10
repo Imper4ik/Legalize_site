@@ -53,7 +53,14 @@ def update_translation_api(request):
 def toggle_studio_mode(request):
     """Turn on/off the in-context editing spans."""
     current = request.session.get('studio_mode', False)
-    request.session['studio_mode'] = not current
+    next_state = not current
+    request.session['studio_mode'] = next_state
+    logger.info(
+        "Translation Studio mode %s by user=%s referer=%s",
+        "ENABLED" if next_state else "DISABLED",
+        getattr(request.user, "email", getattr(request.user, "pk", None)),
+        request.META.get("HTTP_REFERER"),
+    )
     return redirect(request.META.get('HTTP_REFERER', '/'))
 
 @user_passes_test(is_superuser)
@@ -113,4 +120,3 @@ def scan_translations_api(request):
                 mapping[normalize(val)] = msgid
 
     return JsonResponse({'status': 'ok', 'data': mapping})
-
