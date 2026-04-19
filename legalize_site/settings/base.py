@@ -6,6 +6,7 @@ import base64
 import hashlib
 import importlib.util
 import os
+import sys
 from urllib.parse import quote_plus
 
 import dj_database_url
@@ -54,9 +55,12 @@ def _derive_fernet_key(secret: str) -> str:
 
 FERNET_KEYS = [key.strip() for key in os.environ.get("FERNET_KEYS", "").split(",") if key.strip()]
 FERNET_KEYS_CONFIGURED = bool(FERNET_KEYS)
-if IS_PRODUCTION and (not SECRET_KEY or SECRET_KEY == DEFAULT_SECRET_KEY_FALLBACK):
+
+IS_BUILD_PHASE = len(sys.argv) > 1 and sys.argv[1] in ("collectstatic", "compilemessages", "makemessages")
+
+if IS_PRODUCTION and not IS_BUILD_PHASE and (not SECRET_KEY or SECRET_KEY == DEFAULT_SECRET_KEY_FALLBACK):
     raise ImproperlyConfigured("SECRET_KEY must be set explicitly in production.")
-if IS_PRODUCTION and not FERNET_KEYS_CONFIGURED:
+if IS_PRODUCTION and not IS_BUILD_PHASE and not FERNET_KEYS_CONFIGURED:
     raise ImproperlyConfigured("FERNET_KEYS must be set explicitly in production.")
 if not FERNET_KEYS:
     FERNET_KEYS = [_derive_fernet_key(SECRET_KEY)]
