@@ -2,7 +2,7 @@ import logging
 
 from django.test import SimpleTestCase
 
-from legalize_site.utils.logging import RedactPIIFilter
+from legalize_site.utils.logging import RedactPIIFilter, redact_text
 
 
 class RedactPIIFilterTests(SimpleTestCase):
@@ -38,3 +38,12 @@ class RedactPIIFilterTests(SimpleTestCase):
         RedactPIIFilter().filter(record)
 
         self.assertEqual(record.msg, message)
+
+    def test_redact_text_masks_email_phone_and_bearer_token_patterns(self):
+        redacted = redact_text(
+            "email=test@example.com phone=+48123123123 Authorization=Bearer abcdefghijklmnop"
+        )
+
+        self.assertIn("email=[REDACTED]", redacted)
+        self.assertIn("phone=[REDACTED]", redacted)
+        self.assertIn("Authorization=[REDACTED]", redacted)

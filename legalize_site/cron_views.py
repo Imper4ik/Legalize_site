@@ -1,69 +1,80 @@
 from __future__ import annotations
 
+import ipaddress
 import logging
 import os
-import shutil
 import subprocess
-from datetime import datetime, timezone
-from pathlib import Path
 
 from django.http import HttpRequest, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_POST
+
+from .backups import BackupError, create_db_backup
 
 logger = logging.getLogger(__name__)
 
 
-@csrf_exempt
-@require_http_methods(["GET", "POST"])
+def _get_request_ip(request: HttpRequest) -> str:
+    forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR", "")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return (request.META.get("REMOTE_ADDR") or "").strip()
+
+
+def _request_ip_allowed(request: HttpRequest) -> bool:
+    allowed_values = [item.strip() for item in os.environ.get("CRON_ALLOWED_IPS", "").split(",") if item.strip()]
+    if not allowed_values:
+        return True
+
+    request_ip = _get_request_ip(request)
+    try:
+        client_ip = ipaddress.ip_address(request_ip)
+    except ValueError:
+        return False
+
+    for allowed_value in allowed_values:
+        try:
+            if client_ip in ipaddress.ip_network(allowed_value, strict=False):
+                return True
+        except ValueError:
+            if request_ip == allowed_value:
+                return True
+    return False
+
+
+@require_POST
 def db_backup(request: HttpRequest) -> JsonResponse:
     try:
         expected_token = os.environ.get("CRON_TOKEN")
         supplied_token = request.headers.get("X-CRON-TOKEN")
+        request_ip = _get_request_ip(request)
 
         if not expected_token or supplied_token != expected_token:
-            logger.warning("Invalid CRON_TOKEN supplied")
+            logger.warning("Invalid CRON_TOKEN supplied from ip=%s", request_ip)
+            return JsonResponse({"error": "forbidden"}, status=403)
+        if not _request_ip_allowed(request):
+            logger.warning("Rejected database backup request from ip=%s", request_ip)
             return JsonResponse({"error": "forbidden"}, status=403)
 
-        # Check if pg_dump is available
-        pg_dump_path = shutil.which("pg_dump")
-        if not pg_dump_path:
-            error_msg = "pg_dump command not found in system PATH"
-            logger.error(error_msg)
-            return JsonResponse({"error": error_msg}, status=500)
-
-        database_url = os.environ.get("DATABASE_URL") or os.environ.get("RAILWAY_DATABASE_URL")
-        if not database_url:
-            logger.error("DATABASE_URL is not configured")
-            return JsonResponse({"error": "DATABASE_URL is not configured"}, status=500)
-
-        # Fix DATABASE_URL scheme: pg_dump requires 'postgresql://' not 'postgres://'
-        if database_url.startswith("postgres://"):
-            database_url = database_url.replace("postgres://", "postgresql://", 1)
-            logger.info("Normalized DATABASE_URL scheme to postgresql://")
-
-        backup_dir = Path(os.environ.get("DB_BACKUP_DIR", "/tmp"))
-        backup_dir.mkdir(parents=True, exist_ok=True)
-        backup_name = f"backup-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}.sql"
-        backup_path = backup_dir / backup_name
-
-        logger.info(f"Starting database backup to {backup_path} using {pg_dump_path}")
-
-        # Run pg_dump with the corrected DATABASE_URL
-        result = subprocess.run(
-            [pg_dump_path, database_url, "-f", str(backup_path)],
-            check=True,
-            capture_output=True,
-            text=True,
+        backup_result = create_db_backup()
+        logger.info(
+            "Database backup created: backup_id=%s ip=%s size_bytes=%s encrypted=%s sha256=%s",
+            backup_result.backup_id,
+            request_ip,
+            backup_result.size_bytes,
+            backup_result.encrypted,
+            backup_result.sha256,
         )
-        
-        logger.info(f"Database backup completed successfully: {backup_path}")
         return JsonResponse({
-            "status": "backup done",
-            "path": str(backup_path),
-            "size_bytes": backup_path.stat().st_size if backup_path.exists() else 0,
+            "status": "backup created",
+            "backup_id": backup_result.backup_id,
+            "size_bytes": backup_result.size_bytes,
+            "sha256": backup_result.sha256,
+            "encrypted": backup_result.encrypted,
         })
-        
+
+    except BackupError as exc:
+        logger.error("Database backup failed: %s", exc)
+        return JsonResponse({"error": str(exc)}, status=500)
     except subprocess.CalledProcessError as e:
         error_msg = f"pg_dump failed: {e.stderr if e.stderr else str(e)}"
         logger.error(f"pg_dump CalledProcessError: {error_msg}")

@@ -1,15 +1,18 @@
 from __future__ import annotations
 
 import logging
+import threading
+
 from django.contrib import messages
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMultiAlternatives, send_mail
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import override, gettext as _
 from django.conf import settings
+from django.utils import timezone
 from django.views.decorators.http import require_POST, require_GET
 
-from clients.models import Client, Document
+from clients.models import Client, Document, EmailCampaign
 from clients.services.notifications import (
     _get_preferred_language,
     _get_subject,
@@ -82,7 +85,6 @@ def send_custom_email(request, pk):
         return redirect('clients:client_detail', pk=client.pk)
 
     try:
-        from django.core.mail import send_mail
         sent_count = send_mail(
             subject, 
             body, 
@@ -105,6 +107,76 @@ def send_custom_email(request, pk):
     return redirect('clients:client_detail', pk=client.pk)
 
 
+def _send_mass_email_worker(campaign_id: int, recipient_emails: list[str], subject: str, message: str):
+    """Background worker that sends emails one by one and updates the campaign model."""
+    try:
+        campaign = EmailCampaign.objects.get(pk=campaign_id)
+    except EmailCampaign.DoesNotExist:
+        logger.error("EmailCampaign %s not found in worker thread", campaign_id)
+        return
+
+    campaign.status = EmailCampaign.STATUS_RUNNING
+    campaign.save(update_fields=["status"])
+
+    sent = 0
+    failed = 0
+    errors: list[str] = []
+
+    for email_addr in recipient_emails:
+        try:
+            result = send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [email_addr],
+            )
+            if result:
+                sent += 1
+                try:
+                    client = Client.objects.filter(email=email_addr).first()
+                    _log_email(
+                        subject, message, [email_addr],
+                        client=client, template_type='mass_email',
+                        sent_by=None,  # user context is not available in thread
+                    )
+                except Exception:
+                    pass  # logging failure should not stop the campaign
+            else:
+                failed += 1
+                errors.append(f"{email_addr}: send_mail returned 0")
+        except Exception as exc:
+            failed += 1
+            errors.append(f"{email_addr}: {exc}")
+            logger.exception("Mass email failed for %s", email_addr)
+
+        # Update progress periodically
+        campaign.sent_count = sent
+        campaign.failed_count = failed
+        campaign.save(update_fields=["sent_count", "failed_count"])
+
+    # Send confirmation to admin
+    try:
+        _send_confirmation_email(
+            f"[Массовая рассылка] {subject}",
+            message,
+            recipient_emails,
+        )
+    except Exception:
+        logger.exception("Failed to send mass email confirmation")
+
+    campaign.sent_count = sent
+    campaign.failed_count = failed
+    campaign.error_details = "\n".join(errors) if errors else ""
+    campaign.status = EmailCampaign.STATUS_COMPLETED if not failed else EmailCampaign.STATUS_FAILED
+    campaign.completed_at = timezone.now()
+    campaign.save()
+
+    logger.info(
+        "Mass email campaign %s completed: sent=%d failed=%d total=%d",
+        campaign_id, sent, failed, len(recipient_emails),
+    )
+
+
 @staff_required_view
 def mass_email_view(request):
     from clients.forms import MassEmailForm
@@ -113,7 +185,7 @@ def mass_email_view(request):
         form = MassEmailForm(request.POST)
         if form.is_valid():
             subject = form.cleaned_data['subject']
-            message = form.cleaned_data['message']
+            message_text = form.cleaned_data['message']
             company = form.cleaned_data.get('company')
             status = form.cleaned_data.get('status')
             
@@ -123,38 +195,58 @@ def mass_email_view(request):
             if status:
                 queryset = queryset.filter(status=status)
                 
-            clients_to_email = list(queryset)
-            if not clients_to_email:
+            recipient_emails = list(queryset.values_list('email', flat=True))
+            if not recipient_emails:
                 messages.warning(request, _("Не найдено получателей по заданным фильтрам (с указанным email)."))
                 return redirect('clients:mass_email')
-            
-            from django.core.mail import send_mail
-            success_count = 0
-            for client in clients_to_email:
-                try:
-                    sent = send_mail(
-                        subject, 
-                        message, 
-                        settings.DEFAULT_FROM_EMAIL, 
-                        [client.email]
-                    )
-                    if sent:
-                        success_count += 1
-                        _log_email(
-                            subject, message, [client.email],
-                            client=client, template_type='mass_email', sent_by=request.user,
-                        )
-                except Exception as e:
-                    logger.exception(f"Failed to send mass email to {client.email}")
-            
-            _send_confirmation_email(f"[{_('Массовая рассылка')}] {subject}", message, [c.email for c in clients_to_email])
-            messages.success(request, _("Массовая рассылка '%(subject)s' успешно отправлена (Отправлено писем: %(count)s).") % {"subject": subject, "count": success_count})
+
+            # Create campaign record for tracking
+            campaign = EmailCampaign.objects.create(
+                subject=subject,
+                message=message_text,
+                total_recipients=len(recipient_emails),
+                created_by=request.user,
+            )
+
+            # Launch background thread for sending
+            thread = threading.Thread(
+                target=_send_mass_email_worker,
+                args=(campaign.id, recipient_emails, subject, message_text),
+                daemon=True,
+            )
+            thread.start()
+
+            messages.success(
+                request,
+                _("Массовая рассылка '%(subject)s' запущена (%(count)s получателей). "
+                  "Статус можно отслеживать.") % {"subject": subject, "count": len(recipient_emails)},
+            )
             return redirect('clients:client_list')
     else:
         form = MassEmailForm()
         
     return django_render(request, 'clients/mass_email.html', {'form': form, 'title': _('Массовая рассылка')})
 
+
+@staff_required_view
+@require_GET
+def campaign_status_api(request, campaign_id):
+    """Return the current status of a mass email campaign as JSON."""
+    campaign = get_object_or_404(EmailCampaign, pk=campaign_id)
+    return JsonResponse({
+        "id": campaign.id,
+        "subject": campaign.subject,
+        "status": campaign.status,
+        "status_display": campaign.get_status_display(),
+        "total_recipients": campaign.total_recipients,
+        "sent_count": campaign.sent_count,
+        "failed_count": campaign.failed_count,
+        "created_at": campaign.created_at.isoformat() if campaign.created_at else None,
+        "completed_at": campaign.completed_at.isoformat() if campaign.completed_at else None,
+    })
+
+
 def django_render(request, template, context):
     from django.shortcuts import render
     return render(request, template, context)
+

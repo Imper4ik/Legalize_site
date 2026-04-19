@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Центр задач" %}{% endblock %}
+{% block page_title %}{% translate "Центр задач" %}{% endblock %}
+{% block page_subtitle %}{% translate "Открытые и просроченные задачи сотрудников по клиентским делам." %}{% endblock %}
+
+{% block page_actions %}
+  <a href="{% url 'clients:client_list' %}" class="btn btn-soft">{% translate "К клиентам" %}</a>
+{% endblock %}
+
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex gap-2">
+      <a href="{% url 'clients:task_list' %}" class="btn {% if not assignee_filter %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+        {% translate "Все открытые" %}
+      </a>
+      <a href="{% url 'clients:task_list' %}?assignee=me" class="btn {% if assignee_filter == 'me' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
+        {% translate "Мои задачи" %}
+      </a>
+    </div>
+    <span class="badge {% if overdue_count %}bg-danger{% else %}bg-success{% endif %}">
+      {% translate "Просрочено" %}: {{ overdue_count }}
+    </span>
+  </div>
+
+  <div class="card shadow-sm">
+    {% if tasks %}
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>{% translate "Задача" %}</th>
+              <th>{% translate "Клиент" %}</th>
+              <th>{% translate "Ответственный" %}</th>
+              <th>{% translate "Приоритет" %}</th>
+              <th>{% translate "Срок" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for task in tasks %}
+              <tr>
+                <td>
+                  <div class="fw-semibold">{{ task.title }}</div>
+                  {% if task.description %}
+                    <div class="small text-muted">{{ task.description|truncatechars:120 }}</div>
+                  {% endif %}
+                </td>
+                <td><a href="{% url 'clients:client_detail' task.client.pk %}">{{ task.client }}</a></td>
+                <td>{{ task.assignee_display }}</td>
+                <td><span class="badge {{ task.priority_badge_class }}">{{ task.get_priority_display }}</span></td>
+                <td>
+                  {% if task.due_date %}
+                    <span class="{% if task.due_date < today %}text-danger fw-semibold{% endif %}">{{ task.due_date|date:"d.m.Y" }}</span>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="card-body text-muted">{% translate "Открытых задач сейчас нет." %}</div>
+    {% endif %}
+  </div>
+{% endblock %}

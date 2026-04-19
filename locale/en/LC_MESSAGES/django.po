@@ -3323,6 +3323,136 @@ msgstr ""
 msgid "Dodaj nowego klienta"
 msgstr "Test Save Comprehensive"
 
+msgid "Admin Dashboard"
+msgstr "Admin Dashboard"
+
+msgid "Admin Dashboard — System Health"
+msgstr "Admin Dashboard — System Health"
+
+msgid "Email Backend"
+msgstr "Email Backend"
+
+msgid "OCR Engine"
+msgstr "OCR Engine"
+
+msgid "Storage Usage"
+msgstr "Storage Usage"
+
+msgid "PII Encryption"
+msgstr "PII Encryption"
+
+msgid "Active"
+msgstr "Active"
+
+msgid "Missing Keys"
+msgstr "Missing Keys"
+
+msgid "Clients by Stage"
+msgstr "Clients by Stage"
+
+msgid "Action Items"
+msgstr "Action Items"
+
+msgid "Docs Awaiting"
+msgstr "Docs Awaiting"
+
+msgid "Overdue Tasks"
+msgstr "Overdue Tasks"
+
+msgid "OCR Mismatches"
+msgstr "OCR Mismatches"
+
+msgid "Email Campaigns (Last 5)"
+msgstr "Email Campaigns (Last 5)"
+
+msgid "Done"
+msgstr "Done"
+
+msgid "Failed"
+msgstr "Failed"
+
+msgid "No recent campaigns."
+msgstr "No recent campaigns."
+
+msgid "Case Export"
+msgstr "Case Export"
+
+msgid "Case Summary"
+msgstr "Case Summary"
+
+msgid "Print to PDF"
+msgstr "Print to PDF"
+
+msgid "Client Information"
+msgstr "Client Information"
+
+msgid "Full Name"
+msgstr "Full Name"
+
+msgid "Application & Stage"
+msgstr "Application & Stage"
+
+msgid "Versions"
+msgstr "Versions"
+
+msgid "Document Versions"
+msgstr "Document Versions"
+
+msgid "Current File"
+msgstr "Current File"
+
+msgid "Version History"
+msgstr "Version History"
+
+msgid "History"
+msgstr "History"
+
+msgid "File"
+msgstr "File"
+
+msgid "User"
+msgstr "User"
+
+msgid "Action"
+msgstr "Action"
+
+msgid "Restore"
+msgstr "Restore"
+
+msgid ""
+"Are you sure you want to restore this version? The current file will be "
+"archived."
+msgstr ""
+"Are you sure you want to restore this version? The current file will be "
+"archived."
+
+msgid "File missing"
+msgstr "File missing"
+
+msgid "No previous versions found for this document."
+msgstr "No previous versions found for this document."
+
+msgid "System Health"
+msgstr "System Health"
+
+msgid "Экспорт"
+msgstr "Export"
+
+msgid "PDF Сводка"
+msgstr "PDF Summary"
+
+msgid "ZIP Архив (все документы)"
+msgstr "ZIP Archive (all docs)"
+
+msgid "Имя в документе не совпадает с профилем"
+msgstr "Document name does not match profile"
+
+msgid "Автоматическая архивация при загрузке нового файла"
+msgstr "Automatic archive on new file upload"
+
+msgid "Generated:"
+msgstr "Generated:"
+
 #~ msgid "Оплатить до"
 #~ msgstr "Due date"
 

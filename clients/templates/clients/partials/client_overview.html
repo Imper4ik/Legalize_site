@@ -10,6 +10,13 @@
 <li><a class="dropdown-item" href="{% url 'clients:client_document_print' pk=client.pk doc_type='mazowiecki_application' %}" target="_blank">{% translate "Wniosek Mazowiecki Urząd Wojewódzki" %}</a></li>
 </ul>
 </div>
+<div class="btn-group hover-dropdown">
+<button type="button" class="btn btn-info dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"><i class="bi bi-box-arrow-up-right me-1"></i>{% translate "Экспорт" %}</button>
+<ul class="dropdown-menu dropdown-menu-end">
+<li><a class="dropdown-item" href="{% url 'clients:client_export_pdf' pk=client.pk %}" target="_blank"><i class="bi bi-file-pdf me-2 text-danger"></i>{% translate "PDF Сводка" %}</a></li>
+<li><a class="dropdown-item" href="{% url 'clients:client_export_zip' pk=client.pk %}"><i class="bi bi-file-zip me-2 text-primary"></i>{% translate "ZIP Архив (все документы)" %}</a></li>
+</ul>
+</div>
 <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal" data-doc-type="wezwanie" data-doc-name="{% translate 'Вызов (Wezwanie)' %}"><i class="bi bi-file-earmark-arrow-up"></i> {% translate "Загрузить Wezwanie" %}</button>
 <a href="{% url 'clients:client_edit' client.pk %}" class="btn btn-primary">{% translate "Редактировать данные" %}</a>
 </div>
@@ -29,6 +36,9 @@
 <div class="card-body d-flex justify-content-between align-items-start gap-3 flex-column flex-md-row">
 <div>
 <p class="mb-1"><strong>{% translate "Статус" %}:</strong> {{ client.get_status_display }}</p>
+<p class="mb-1"><strong>{% translate "Workflow" %}:</strong> {{ workflow_summary.stage_label }}</p>
+<p class="mb-1"><strong>{% translate "Открытые задачи" %}:</strong> {{ workflow_summary.open_tasks_count }}</p>
+<p class="mb-0"><strong>{% translate "Health alerts" %}:</strong> {{ workflow_summary.alerts_count }}</p>
 {% if client.submission_date %}<p class="text-muted mb-1"><small>{% translate "Дата подачи" %}: {{ client.submission_date|date:"d.m.Y" }}</small></p>{% endif %}
 {% if client.fingerprints_date %}<p class="text-muted mb-0"><small>{% translate "Дата сдачи отпечатков" %}: {{ client.fingerprints_date|date:"d.m.Y" }}</small></p>{% endif %}
 </div>

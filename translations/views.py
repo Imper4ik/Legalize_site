@@ -3,7 +3,6 @@ import logging
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import user_passes_test
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from .utils import load_all_translations, save_translation_entry
 
 logger = logging.getLogger(__name__)
@@ -20,7 +19,6 @@ def studio_dashboard(request):
         'languages': ['ru', 'en', 'pl']
     })
 
-@csrf_exempt
 @user_passes_test(is_superuser)
 def update_translation_api(request):
     """API to save a single translation msgid across all languages."""

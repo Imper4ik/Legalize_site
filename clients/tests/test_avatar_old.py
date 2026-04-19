@@ -4,6 +4,7 @@ import uuid
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from gettext import GNUTranslations
+from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
@@ -14,6 +15,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import translation
+from reportlab.pdfgen import canvas
 
 import shutil
 
@@ -24,7 +26,15 @@ from clients.models import Client, Document, DocumentRequirement, translate_docu
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.services.notifications import send_missing_documents_email
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper
-from clients.services.wezwanie_parser import parse_wezwanie
+from clients.services.wezwanie_parser import WezwanieData, parse_wezwanie
+
+
+def _build_pdf_upload(name: str, text: str = "wezwanie test") -> SimpleUploadedFile:
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer)
+    pdf.drawString(72, 720, text)
+    pdf.save()
+    return SimpleUploadedFile(name, buffer.getvalue(), content_type="application/pdf")
 
 
 class PurePythonMsgfmtTests(SimpleTestCase):
@@ -510,18 +520,25 @@ class WezwanieUploadFlowTests(TestCase):
         login_successful = self.client.login(email="staff_wezwanie@example.com", password="pass")
         self.assertTrue(login_successful)
 
-        content = b"Numer sprawy: ZZ/987/24\nw dniu 05-06-2024 pobrano odciski"
-        upload = SimpleUploadedFile("wezwanie.txt", content)
+        upload = _build_pdf_upload("wezwanie.pdf")
         url = reverse(
             "clients:add_document",
             kwargs={"client_id": self.client_record.pk, "doc_type": "wezwanie"},
         )
 
-        response = self.client.post(
-            url,
-            {"file": upload, "parse_wezwanie": "1"},
-            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
-        )
+        with patch("clients.views.documents.parse_wezwanie") as parse_mock:
+            parse_mock.return_value = WezwanieData(
+                text="Numer sprawy: ZZ/987/24",
+                case_number="ZZ/987/24",
+                fingerprints_date=date(2024, 6, 5),
+                full_name="Jan Test",
+                wezwanie_type="fingerprints",
+            )
+            response = self.client.post(
+                url,
+                {"file": upload, "parse_wezwanie": "1"},
+                HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+            )
 
         self.assertEqual(response.status_code, 200)
         payload = json.loads(response.content)
@@ -539,32 +556,49 @@ class WezwanieUploadFlowTests(TestCase):
         login_successful = self.client.login(email="staff_wezwanie@example.com", password="pass")
         self.assertTrue(login_successful)
 
-        content = b"Numer sprawy: ZZ/987/24\nw dniu 05-06-2024 pobrano odciski\n4 zdjecia"
-        upload = SimpleUploadedFile("wezwanie.txt", content)
+        upload = _build_pdf_upload("wezwanie.pdf")
         upload_url = reverse(
             "clients:add_document",
             kwargs={"client_id": self.client_record.pk, "doc_type": "wezwanie"},
         )
 
-        upload_response = self.client.post(
-            upload_url,
-            {"file": upload, "parse_wezwanie": "1"},
-            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
-        )
+        with patch("clients.views.documents.parse_wezwanie") as parse_mock:
+            parse_mock.return_value = WezwanieData(
+                text="Numer sprawy: ZZ/987/24",
+                case_number="ZZ/987/24",
+                fingerprints_date=date(2024, 6, 5),
+                full_name="Jan Test",
+                wezwanie_type="fingerprints",
+                required_documents=[DocumentType.PHOTOS.value],
+            )
+            upload_response = self.client.post(
+                upload_url,
+                {"file": upload, "parse_wezwanie": "1"},
+                HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+            )
         payload = json.loads(upload_response.content)
         document = Document.objects.get(pk=payload["doc_id"])
 
         confirm_url = reverse("clients:confirm_wezwanie_parse", kwargs={"doc_id": document.pk})
-        response = self.client.post(
-            confirm_url,
-            {
-                "first_name": "Jan",
-                "last_name": "Test",
-                "case_number": "ZZ/987/24",
-                "fingerprints_date": "2024-06-05",
-            },
-            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
-        )
+        with patch("clients.views.documents.parse_wezwanie") as parse_mock:
+            parse_mock.return_value = WezwanieData(
+                text="Numer sprawy: ZZ/987/24",
+                case_number="ZZ/987/24",
+                fingerprints_date=date(2024, 6, 5),
+                full_name="Jan Test",
+                wezwanie_type="fingerprints",
+                required_documents=[DocumentType.PHOTOS.value],
+            )
+            response = self.client.post(
+                confirm_url,
+                {
+                    "first_name": "Jan",
+                    "last_name": "Test",
+                    "case_number": "ZZ/987/24",
+                    "fingerprints_date": "2024-06-05",
+                },
+                HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+            )
 
         self.assertEqual(response.status_code, 200)
         updated_client = Client.objects.get(pk=self.client_record.pk)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import logging
 import shutil
 import struct
@@ -11,6 +12,13 @@ from django.core.management import call_command
 from django.core.management.base import CommandError
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_po_literal(value: str) -> str:
+    parsed = ast.literal_eval(value)
+    if not isinstance(parsed, str):
+        raise ValueError(f"Expected a string literal in .po file, got {type(parsed).__name__}")
+    return parsed
 
 
 def _iter_po_files(locale_dirs: Iterable[Path]) -> Iterable[Path]:
@@ -55,7 +63,7 @@ def _write_mo_file(po_path: Path, mo_path: Path) -> None:
             if line.startswith("msgctxt"):
                 if message_id is not None:
                     _add_message()
-                message_ctxt = eval(line[7:].strip())
+                message_ctxt = _parse_po_literal(line[7:].strip())
                 message_id = None
                 message_strs = []
                 fuzzy = False
@@ -65,28 +73,28 @@ def _write_mo_file(po_path: Path, mo_path: Path) -> None:
                 if message_id is not None:
                     _add_message()
                 message_ctxt = None if message_ctxt is None else message_ctxt
-                message_id = eval(line[5:].strip())
+                message_id = _parse_po_literal(line[5:].strip())
                 message_strs = []
                 fuzzy = False
                 continue
 
             if line.startswith("msgid_plural"):
-                message_strs.append(eval(line[12:].strip()))
+                message_strs.append(_parse_po_literal(line[12:].strip()))
                 continue
 
             if line.startswith("msgstr"):
                 if line.startswith("msgstr["):
                     index = int(line[7: line.index("]")])
-                    text = eval(line[line.index("]") + 1:].strip())
+                    text = _parse_po_literal(line[line.index("]") + 1:].strip())
                     while len(message_strs) <= index:
                         message_strs.append("")
                     message_strs[index] = text
                 else:
-                    message_strs = [eval(line[6:].strip())]
+                    message_strs = [_parse_po_literal(line[6:].strip())]
                 continue
 
             if line.startswith('"'):
-                text = eval(line)
+                text = _parse_po_literal(line)
                 if message_strs:
                     message_strs[-1] += text
                 elif message_id is not None:

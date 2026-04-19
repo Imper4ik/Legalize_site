@@ -97,6 +97,13 @@ def get_available_document_types(purpose: str | None = None) -> set[str]:
     return types
 
 class Document(models.Model):
+    OCR_STATUS_CHOICES = [
+        ("skipped", _("Пропущено")),
+        ("success", _("Успешно")),
+        ("failed", _("Ошибка")),
+        ("pending", _("Ожидает")),
+    ]
+
     client = models.ForeignKey('clients.Client', on_delete=models.CASCADE, related_name='documents', verbose_name=_("Клиент"))
     document_type = models.CharField(max_length=255, verbose_name=_("Тип документа"))
     file = models.FileField(upload_to='documents/', verbose_name=_("Файл"))
@@ -104,6 +111,16 @@ class Document(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Дата загрузки"))
     verified = models.BooleanField(default=False, verbose_name=_("Проверено"))
     awaiting_confirmation = models.BooleanField(default=False, verbose_name=_("Ожидает подтверждения"))
+    ocr_status = models.CharField(
+        max_length=20,
+        choices=OCR_STATUS_CHOICES,
+        default="skipped",
+        verbose_name=_("Статус OCR"),
+    )
+    ocr_name_mismatch = models.BooleanField(
+        default=False,
+        verbose_name=_("Несовпадение имени OCR"),
+    )
 
     class Meta:
         verbose_name = _("Документ")
@@ -136,6 +153,20 @@ class Document(models.Model):
     @property
     def is_standard_type(self) -> bool:
         return self.document_type in DOCUMENT_TYPE_VALUES
+
+    @property
+    def version_count(self) -> int:
+        return self.versions.count()
+
+    @property
+    def ocr_status_badge(self) -> str:
+        badge_map = {
+            "skipped": "",
+            "success": "bg-success",
+            "failed": "bg-danger",
+            "pending": "bg-warning text-dark",
+        }
+        return badge_map.get(self.ocr_status, "")
 
 
 class DocumentRequirement(models.Model):

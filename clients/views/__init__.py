@@ -22,6 +22,7 @@ from clients.views.documents import (
     client_overview_partial,
     client_status_api,
     confirm_wezwanie_parse,
+    document_download,
     document_delete,
     wniosek_attachment_delete,
     toggle_document_verification,
@@ -32,8 +33,10 @@ from clients.views.emails import (
     email_preview_api,
     send_custom_email,
     mass_email_view,
+    campaign_status_api,
 )
 from clients.views.payments import add_payment, delete_payment, edit_payment, get_price_for_service
+from clients.views.tasks import TaskListView, add_task, complete_task
 from clients.views.reminders import (
     DocumentReminderListView,
     PaymentReminderListView,
@@ -42,6 +45,13 @@ from clients.views.reminders import (
     send_document_reminder_email,
 )
 from clients.views.metrics import MetricsDashboardView
+from clients.views.admin_dashboard import AdminDashboardView
+from clients.views.export import (
+    client_export_pdf_view,
+    client_export_zip,
+    document_versions_view,
+    document_version_restore,
+)
 
 __all__ = [
     'StaffRequiredMixin',
@@ -66,6 +76,7 @@ __all__ = [
     'client_overview_partial',
     'client_status_api',
     'confirm_wezwanie_parse',
+    'document_download',
     'document_delete',
     'wniosek_attachment_delete',
     'toggle_document_verification',
@@ -75,6 +86,9 @@ __all__ = [
     'delete_payment',
     'edit_payment',
     'get_price_for_service',
+    'TaskListView',
+    'add_task',
+    'complete_task',
     'DocumentReminderListView',
     'PaymentReminderListView',
     'reminder_action',
@@ -82,4 +96,10 @@ __all__ = [
     'send_document_reminder_email',
     'MetricsDashboardView',
     'mass_email_view',
+    'campaign_status_api',
+    'AdminDashboardView',
+    'client_export_pdf_view',
+    'client_export_zip',
+    'document_versions_view',
+    'document_version_restore',
 ]

@@ -10,14 +10,27 @@ app_name = 'clients'
 urlpatterns = [
     # CRUD для Клиентов (используя CBV)
     path('metrics/', views.MetricsDashboardView.as_view(), name='metrics_dashboard'),
+    path('tasks/', views.TaskListView.as_view(), name='task_list'),
     path('', views.ClientListView.as_view(), name='client_list'),
     path('mass-email/', views.mass_email_view, name='mass_email'),
+    path('api/campaign/<int:campaign_id>/status/', views.campaign_status_api, name='campaign_status_api'),
     path('client/<int:pk>/', views.ClientDetailView.as_view(), name='client_detail'),
     path('client/add/', views.ClientCreateView.as_view(), name='client_add'),
     path('client/<int:pk>/edit/', views.ClientUpdateView.as_view(), name='client_edit'),
     path('client/<int:pk>/delete/', views.ClientDeleteView.as_view(), name='client_delete'),
     path('api/client-status/<int:pk>/', views.client_status_api, name='client_status_api'),
     path('api/get-price/<str:service_value>/', views.get_price_for_service, name='get_price_for_service'),
+
+    # URL для экспорта
+    path('client/<int:pk>/export/pdf/', views.client_export_pdf_view, name='client_export_pdf'),
+    path('client/<int:pk>/export/zip/', views.client_export_zip, name='client_export_zip'),
+    
+    # URL для версий документов
+    path('document/<int:doc_id>/versions/', views.document_versions_view, name='document_versions'),
+    path('document-version/<int:version_id>/restore/', views.document_version_restore, name='document_version_restore'),
+
+    # Admin Dashboard
+    path('admin-dashboard/', views.AdminDashboardView.as_view(), name='admin_dashboard'),
 
     # URL для печати
     path('client/<int:pk>/print/', views.client_print_view, name='client_print'),
@@ -45,6 +58,7 @@ urlpatterns = [
         views.confirm_wezwanie_parse,
         name='confirm_wezwanie_parse',
     ),
+    path('document/<int:doc_id>/download/', views.document_download, name='document_download'),
     path('document/<int:pk>/delete/', views.document_delete, name='document_delete'),
     path(
         'wniosek-attachment/<int:attachment_id>/delete/',
@@ -61,6 +75,8 @@ urlpatterns = [
     path('client/<int:client_id>/payments/add/', views.add_payment, name='add_payment'),
     path('payment/<int:payment_id>/edit/', views.edit_payment, name='edit_payment'),
     path('payment/<int:payment_id>/delete/', views.delete_payment, name='delete_payment'),
+    path('client/<int:client_id>/tasks/add/', views.add_task, name='add_task'),
+    path('task/<int:task_id>/complete/', views.complete_task, name='complete_task'),
 
     # --- ИСПРАВЛЕННЫЕ URL ДЛЯ НАПОМИНАНИЙ ---
     # Страница для напоминаний по документам (бывшая общая страница)

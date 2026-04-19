@@ -3322,6 +3322,136 @@ msgstr ""
 msgid "Dodaj nowego klienta"
 msgstr "Dodaj nowego klienta"
 
+msgid "Admin Dashboard"
+msgstr "Панель администратора"
+
+msgid "Admin Dashboard — System Health"
+msgstr "Панель администратора — Здоровье системы"
+
+msgid "Email Backend"
+msgstr "Email сервис"
+
+msgid "OCR Engine"
+msgstr "Распознавание (OCR)"
+
+msgid "Storage Usage"
+msgstr "Использование диска"
+
+msgid "PII Encryption"
+msgstr "Шифрование PII"
+
+msgid "Active"
+msgstr "Активно"
+
+msgid "Missing Keys"
+msgstr "Нет ключей"
+
+msgid "Clients by Stage"
+msgstr "Клиенты по этапам"
+
+msgid "Action Items"
+msgstr "Требует внимания"
+
+msgid "Docs Awaiting"
+msgstr "Документы на проверке"
+
+msgid "Overdue Tasks"
+msgstr "Просроченные задачи"
+
+msgid "OCR Mismatches"
+msgstr "Ошибки OCR"
+
+msgid "Email Campaigns (Last 5)"
+msgstr "Email рассылки (последние 5)"
+
+msgid "Done"
+msgstr "Готово"
+
+msgid "Failed"
+msgstr "Ошибка"
+
+msgid "No recent campaigns."
+msgstr "Нет недавних рассылок."
+
+msgid "Case Export"
+msgstr "Экспорт дела"
+
+msgid "Case Summary"
+msgstr "Сводка по делу"
+
+msgid "Print to PDF"
+msgstr "Печать в PDF"
+
+msgid "Client Information"
+msgstr "Информация о клиенте"
+
+msgid "Full Name"
+msgstr "ФИО"
+
+msgid "Application & Stage"
+msgstr "Заявка и Этап"
+
+msgid "Versions"
+msgstr "Версии"
+
+msgid "Document Versions"
+msgstr "Версии документа"
+
+msgid "Current File"
+msgstr "Текущий файл"
+
+msgid "Version History"
+msgstr "История версий"
+
+msgid "History"
+msgstr "История"
+
+msgid "File"
+msgstr "Файл"
+
+msgid "User"
+msgstr "Пользователь"
+
+msgid "Action"
+msgstr "Действие"
+
+msgid "Restore"
+msgstr "Восстановить"
+
+msgid ""
+"Are you sure you want to restore this version? The current file will be "
+"archived."
+msgstr ""
+"Вы уверены, что хотите восстановить эту версию? Текущий файл будет "
+"заархивирован."
+
+msgid "File missing"
+msgstr "Файл отсутствует"
+
+msgid "No previous versions found for this document."
+msgstr "Предыдущие версии для этого документа не найдены."
+
+msgid "System Health"
+msgstr "Здоровье системы"
+
+msgid "Экспорт"
+msgstr "Экспорт"
+
+msgid "PDF Сводка"
+msgstr "PDF Сводка"
+
+msgid "ZIP Архив (все документы)"
+msgstr "ZIP Архив (все документы)"
+
+msgid "Имя в документе не совпадает с профилем"
+msgstr "Имя в документе не совпадает с профилем"
+
+msgid "Автоматическая архивация при загрузке нового файла"
+msgstr "Автоматическая архивация при загрузке нового файла"
+
+msgid "Generated:"
+msgstr "Сгенерировано:"
+
 #~ msgid "Оплатить до"
 #~ msgstr "Оплатить до"
 
