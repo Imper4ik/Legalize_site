@@ -28,7 +28,7 @@
         {% for doc in item.documents %}
         <li class="list-group-item d-flex justify-content-between align-items-center">
           <div>
-            <a href="{{ doc.file.url }}" target="_blank">
+            <a href="{% url 'clients:document_download' doc.id %}" target="_blank" rel="noopener">
               {% translate "Файл от" %} {{ doc.uploaded_at|date:"d.m.Y H:i" }}
             </a>
             {% if doc.expiry_date %}
@@ -37,6 +37,16 @@
             <span class="badge {% if doc.verified %}bg-success{% else %}bg-warning text-dark{% endif %} ms-2">
               {% if doc.verified %}{% translate "Проверен" %}{% else %}{% translate "Ожидает проверки" %}{% endif %}
             </span>
+            {% if doc.ocr_name_mismatch %}
+            <span class="badge bg-danger ms-2" title="{% translate 'Имя в документе не совпадает с профилем' %}">
+              <i class="bi bi-exclamation-triangle"></i> OCR Mismatch
+            </span>
+            {% endif %}
+            {% if doc.version_count > 0 %}
+            <a href="{% url 'clients:document_versions' doc.pk %}" class="badge bg-info text-decoration-none ms-2">
+              v{{ doc.version_count|add:"1" }} ({% translate "History" %})
+            </a>
+            {% endif %}
           </div>
           <div class="btn-group">
             <form action="{% url 'clients:toggle_document_verification' doc.id %}" method="post"
@@ -46,6 +56,9 @@
                 {% if doc.verified %}{% translate "Снять отметку" %}{% else %}{% translate "Проверить" %}{% endif %}
               </button>
             </form>
+            <a href="{% url 'clients:document_versions' doc.pk %}" class="btn btn-sm btn-outline-info" title="{% translate 'Versions' %}">
+              <i class="fas fa-history"></i>
+            </a>
             <form action="{% url 'clients:document_delete' doc.pk %}" method="post"
               class="d-inline delete-document-form">
               {% csrf_token %}

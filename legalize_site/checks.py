@@ -10,6 +10,10 @@ from django.core.checks import Error, Warning, register
 EMAIL_ERROR_ID = "legalize_site.E001"
 EMAIL_WARNING_ID = "legalize_site.W001"
 EMAIL_CONSOLE_WARNING_ID = "legalize_site.W002"
+SECRET_KEY_ERROR_ID = "legalize_site.E002"
+FERNET_KEYS_ERROR_ID = "legalize_site.E003"
+SECRET_KEY_WARNING_ID = "legalize_site.W003"
+FERNET_KEYS_WARNING_ID = "legalize_site.W004"
 
 BACKENDS = {
     "django.core.mail.backends.smtp.EmailBackend": {
@@ -151,6 +155,68 @@ def email_configuration_check(app_configs=None, **kwargs):
                     "provider-verified address via environment variables."
                 ),
                 id=EMAIL_WARNING_ID,
+            )
+        )
+
+    return messages
+
+
+@register("legalize_site")
+def encryption_configuration_check(app_configs=None, **kwargs):
+    """Validate secret and encryption key configuration.
+
+    In production, missing keys are hard errors (the app also refuses to start).
+    In development/test, warnings surface the fact that PII encryption relies on
+    a key derived from SECRET_KEY or that SECRET_KEY uses the insecure default.
+    """
+
+    messages = []
+    placeholder_secret = "django-insecure-change-me"
+    secret_key = getattr(settings, "SECRET_KEY", "")
+    is_production = getattr(settings, "IS_PRODUCTION", False)
+    fernet_configured = getattr(settings, "FERNET_KEYS_CONFIGURED", False)
+
+    if is_production and (not secret_key or secret_key == placeholder_secret):
+        messages.append(
+            Error(
+                "SECRET_KEY must be configured explicitly in production.",
+                hint="Set a strong SECRET_KEY environment variable for the production deployment.",
+                id=SECRET_KEY_ERROR_ID,
+            )
+        )
+    elif not is_production and secret_key == placeholder_secret:
+        messages.append(
+            Warning(
+                "SECRET_KEY is using the insecure default fallback value.",
+                hint=(
+                    "Set SECRET_KEY to a unique value for safer local development.  "
+                    "In production this will be an error."
+                ),
+                id=SECRET_KEY_WARNING_ID,
+            )
+        )
+
+    if is_production and not fernet_configured:
+        messages.append(
+            Error(
+                "FERNET_KEYS must be configured explicitly in production.",
+                hint=(
+                    "Set FERNET_KEYS to one or more Fernet keys and do not rely on keys "
+                    "derived from SECRET_KEY."
+                ),
+                id=FERNET_KEYS_ERROR_ID,
+            )
+        )
+    elif not is_production and not fernet_configured:
+        messages.append(
+            Warning(
+                "FERNET_KEYS environment variable is not set; "
+                "encryption keys are derived from SECRET_KEY.",
+                hint=(
+                    "Set FERNET_KEYS to explicit Fernet keys for safer "
+                    "PII encryption.  In production this will be an error."
+                ),
+                id=FERNET_KEYS_WARNING_ID,
             )
         )
 

@@ -80,6 +80,11 @@
                         {% for error in form.status.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
                     <div class="col-md-6">
+                        <label class="form-label">{{ form.workflow_stage.label }}</label>
+                        {{ form.workflow_stage }}
+                        {% for error in form.workflow_stage.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="col-md-6">
                         <label class="form-label">{{ form.application_purpose.label }}</label>
                         {{ form.application_purpose }}
                         {% for error in form.application_purpose.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}

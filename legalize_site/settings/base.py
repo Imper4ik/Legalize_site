@@ -9,10 +9,12 @@ import os
 from urllib.parse import quote_plus
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
 from ..env import BASE_DIR, load_env
+from ..utils.logging import REDACTION_TOKEN, redact_text
 
 
 def env_flag(name: str, default: str = "False") -> bool:
@@ -29,9 +31,19 @@ def env_flag(name: str, default: str = "False") -> bool:
 load_env()
 
 WHITENOISE_AVAILABLE = importlib.util.find_spec("whitenoise") is not None
+DEFAULT_SECRET_KEY_FALLBACK = "django-insecure-change-me"
+
+
+def running_in_production() -> bool:
+    settings_module = os.environ.get("DJANGO_SETTINGS_MODULE", "")
+    app_env = os.environ.get("APP_ENV", "")
+    return settings_module.endswith(".production") or app_env.lower() == "production"
+
+
+IS_PRODUCTION = running_in_production()
 
 # --- БАЗОВЫЕ НАСТРОЙКИ ---
-SECRET_KEY = os.environ.get("SECRET_KEY", "django-insecure-change-me")
+SECRET_KEY = os.environ.get("SECRET_KEY", DEFAULT_SECRET_KEY_FALLBACK)
 DEBUG = False
 
 
@@ -41,8 +53,88 @@ def _derive_fernet_key(secret: str) -> str:
 
 
 FERNET_KEYS = [key.strip() for key in os.environ.get("FERNET_KEYS", "").split(",") if key.strip()]
+FERNET_KEYS_CONFIGURED = bool(FERNET_KEYS)
+if IS_PRODUCTION and (not SECRET_KEY or SECRET_KEY == DEFAULT_SECRET_KEY_FALLBACK):
+    raise ImproperlyConfigured("SECRET_KEY must be set explicitly in production.")
+if IS_PRODUCTION and not FERNET_KEYS_CONFIGURED:
+    raise ImproperlyConfigured("FERNET_KEYS must be set explicitly in production.")
 if not FERNET_KEYS:
     FERNET_KEYS = [_derive_fernet_key(SECRET_KEY)]
+
+
+def _is_sensitive_key(key: str | None) -> bool:
+    if not key:
+        return False
+    normalized = key.lower()
+    sensitive_fragments = (
+        "email",
+        "phone",
+        "passport",
+        "case_number",
+        "case-number",
+        "raw_text",
+        "ocr",
+        "fingerprint",
+        "decision_date",
+        "full_name",
+        "first_name",
+        "last_name",
+        "authorization",
+        "token",
+        "secret",
+        "password",
+        "api_key",
+        "api-key",
+    )
+    return any(fragment in normalized for fragment in sensitive_fragments)
+
+
+def _sanitize_sentry_value(value, *, key_hint: str | None = None):
+    if value is None:
+        return None
+    if _is_sensitive_key(key_hint):
+        return REDACTION_TOKEN
+    if isinstance(value, dict):
+        return {
+            key: _sanitize_sentry_value(item, key_hint=str(key))
+            for key, item in value.items()
+        }
+    if isinstance(value, list):
+        return [_sanitize_sentry_value(item, key_hint=key_hint) for item in value]
+    if isinstance(value, tuple):
+        return tuple(_sanitize_sentry_value(item, key_hint=key_hint) for item in value)
+    if isinstance(value, str):
+        return redact_text(value)
+    return value
+
+
+def _sentry_before_send(event, hint):
+    event = dict(event)
+    if "request" in event:
+        request_data = dict(event["request"])
+        request_data.pop("cookies", None)
+        if request_data.get("method", "").upper() == "POST":
+            request_data["data"] = REDACTION_TOKEN
+        else:
+            request_data["data"] = _sanitize_sentry_value(request_data.get("data"))
+        request_data["headers"] = _sanitize_sentry_value(request_data.get("headers"))
+        request_data["query_string"] = _sanitize_sentry_value(request_data.get("query_string"))
+        request_data["env"] = _sanitize_sentry_value(request_data.get("env"))
+        request_data["url"] = _sanitize_sentry_value(request_data.get("url"))
+        event["request"] = request_data
+    if "user" in event:
+        event["user"] = _sanitize_sentry_value(event["user"])
+    if "extra" in event:
+        event["extra"] = _sanitize_sentry_value(event["extra"])
+    if "contexts" in event:
+        event["contexts"] = _sanitize_sentry_value(event["contexts"])
+    if "breadcrumbs" in event:
+        event["breadcrumbs"] = _sanitize_sentry_value(event["breadcrumbs"])
+    return event
+
+
+def _sentry_before_breadcrumb(crumb, hint):
+    return _sanitize_sentry_value(crumb)
 
 # --- ПРИЛОЖЕНИЯ И MIDDLEWARE ---
 INSTALLED_APPS = [
@@ -321,5 +413,8 @@ if SENTRY_DSN:
         dsn=SENTRY_DSN,
         integrations=[DjangoIntegration()],
         traces_sample_rate=1.0,
-        send_default_pii=True
+        send_default_pii=False,
+        max_request_body_size="never",
+        before_send=_sentry_before_send,
+        before_breadcrumb=_sentry_before_breadcrumb,
     )

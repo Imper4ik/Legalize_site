@@ -7,6 +7,9 @@ from legalize_site.checks import (
     EMAIL_CONSOLE_WARNING_ID,
     EMAIL_ERROR_ID,
     EMAIL_WARNING_ID,
+    FERNET_KEYS_ERROR_ID,
+    SECRET_KEY_ERROR_ID,
+    encryption_configuration_check,
     email_configuration_check,
 )
 
@@ -66,3 +69,29 @@ class EmailConfigurationCheckTests(SimpleTestCase):
     def test_smtp_with_password_has_no_messages(self):
         messages = email_configuration_check()
         self.assertEqual(messages, [])
+
+    @override_settings(
+        IS_PRODUCTION=True,
+        SECRET_KEY="django-insecure-change-me",
+        FERNET_KEYS=["configured-key"],
+        FERNET_KEYS_CONFIGURED=True,
+    )
+    def test_production_requires_non_placeholder_secret_key(self):
+        messages = encryption_configuration_check()
+
+        self.assertEqual(len(messages), 1)
+        self.assertIsInstance(messages[0], Error)
+        self.assertEqual(messages[0].id, SECRET_KEY_ERROR_ID)
+
+    @override_settings(
+        IS_PRODUCTION=True,
+        SECRET_KEY="super-secret",
+        FERNET_KEYS=["derived-fallback"],
+        FERNET_KEYS_CONFIGURED=False,
+    )
+    def test_production_requires_explicit_fernet_keys(self):
+        messages = encryption_configuration_check()
+
+        self.assertEqual(len(messages), 1)
+        self.assertIsInstance(messages[0], Error)
+        self.assertEqual(messages[0].id, FERNET_KEYS_ERROR_ID)

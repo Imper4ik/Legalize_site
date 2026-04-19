@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from io import BytesIO
 from datetime import date
 from unittest.mock import patch
 
@@ -7,10 +8,19 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
+from reportlab.pdfgen import canvas
 
 from clients.constants import DocumentType
 from clients.models import Client, Document
 from clients.services.wezwanie_parser import WezwanieData
+
+
+def build_pdf_upload(name: str, text: str = "wezwanie test") -> SimpleUploadedFile:
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer)
+    pdf.drawString(72, 720, text)
+    pdf.save()
+    return SimpleUploadedFile(name, buffer.getvalue(), content_type="application/pdf")
 
 
 class DocumentFlowsStage4Tests(TestCase):
@@ -35,7 +45,7 @@ class DocumentFlowsStage4Tests(TestCase):
             full_name="Anna Nowak",
         )
 
-        uploaded = SimpleUploadedFile("wezwanie.pdf", b"fake pdf", content_type="application/pdf")
+        uploaded = build_pdf_upload("wezwanie.pdf")
         response = self.client.post(
             reverse(
                 "clients:add_document",
@@ -52,6 +62,42 @@ class DocumentFlowsStage4Tests(TestCase):
 
         document = Document.objects.get(client=self.client_obj)
         self.assertTrue(document.awaiting_confirmation)
+
+    @patch("clients.views.documents.parse_wezwanie", side_effect=RuntimeError("ocr failed"))
+    def test_add_document_with_parse_failure_keeps_document_and_flags_manual_review(self, _parse_mock):
+        uploaded = build_pdf_upload("wezwanie.pdf")
+
+        response = self.client.post(
+            reverse(
+                "clients:add_document",
+                kwargs={"client_id": self.client_obj.pk, "doc_type": DocumentType.WEZWANIE.value},
+            ),
+            data={"file": uploaded, "parse_wezwanie": "1", "expiry_date": ""},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["manual_review_required"])
+        self.assertFalse(payload.get("pending_confirmation", False))
+        self.assertEqual(Document.objects.filter(client=self.client_obj).count(), 1)
+
+    def test_add_document_rejects_disallowed_file_type(self):
+        uploaded = SimpleUploadedFile("wezwanie.svg", b"<svg></svg>", content_type="image/svg+xml")
+
+        response = self.client.post(
+            reverse(
+                "clients:add_document",
+                kwargs={"client_id": self.client_obj.pk, "doc_type": DocumentType.WEZWANIE.value},
+            ),
+            data={"file": uploaded, "parse_wezwanie": "1", "expiry_date": ""},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["status"], "error")
+        self.assertEqual(Document.objects.filter(client=self.client_obj).count(), 0)
 
     def test_confirm_wezwanie_parse_get_ajax_returns_405(self):
         document = Document.objects.create(

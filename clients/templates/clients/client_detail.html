@@ -6,7 +6,16 @@
 
 {% block content %}
 <div id="client-overview" data-refresh-url="{% url 'clients:client_overview_partial' client.pk %}">
-  {% include 'clients/partials/client_overview.html' with client=client %}
+  {% include 'clients/partials/client_overview.html' with client=client workflow_summary=workflow_summary %}
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    {% include 'clients/partials/workflow_panel.html' with workflow_summary=workflow_summary workflow_alerts=workflow_alerts %}
+  </div>
+  <div class="col-lg-6">
+    {% include 'clients/partials/client_tasks.html' with client=client task_form=task_form open_tasks=open_tasks %}
+  </div>
 </div>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -30,6 +39,10 @@
 <hr>
 
 {% include 'clients/partials/email_history.html' with email_logs=email_logs %}
+
+<hr>
+
+{% include 'clients/partials/activity_timeline.html' with recent_activities=recent_activities %}
 
 <hr>
 

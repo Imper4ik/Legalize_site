@@ -5,7 +5,7 @@ from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
-from django.test import RequestFactory, TestCase
+from django.test import Client as DjangoClient, RequestFactory, TestCase
 from django.urls import reverse
 
 from translations.middleware import TranslationStudioMiddleware
@@ -64,6 +64,18 @@ class TranslationViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "ok")
         save_mock.assert_called_once_with("hello", ru="\u043f\u0440\u0438\u0432\u0435\u0442", en="hello", pl="cze\u015b\u0107")
+
+    def test_update_translation_api_requires_csrf_token(self):
+        csrf_client = DjangoClient(enforce_csrf_checks=True)
+        csrf_client.force_login(self.superuser)
+
+        response = csrf_client.post(
+            reverse("translations:update_api"),
+            data=json.dumps({"msgid": "hello", "ru": "privet", "en": "hello", "pl": "czesc"}),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 403)
 
     def test_toggle_studio_mode_flips_session_flag(self):
         self.client.login(email="super@example.com", password="pass")

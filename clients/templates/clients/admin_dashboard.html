@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load i18n static %}
+
+{% block title %}{% translate "Admin Dashboard — System Health" %}{% endblock %}
+
+{% block page_header %}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 fw-semibold text-gray-800 mb-0">{% translate "Admin Dashboard" %}</h1>
+        <div class="text-muted small">
+            {% translate "Generated:" %} {{ generated_at|date:"d.m.Y H:i:s" }}
+        </div>
+    </div>
+
+    <!-- System Health Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-{{ email_status.css }}">
+                <div class="card-body">
+                    <div class="text-xs fw-bold text-uppercase mb-1 text-muted">{% translate "Email Backend" %}</div>
+                    <div class="h5 mb-0 fw-bold text-gray-800">
+                        <span class="badge bg-{{ email_status.css }}">{{ email_status.label }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-{{ ocr_status.css }}">
+                <div class="card-body">
+                    <div class="text-xs fw-bold text-uppercase mb-1 text-muted">{% translate "OCR Engine" %}</div>
+                    <div class="h5 mb-0 fw-bold text-gray-800">
+                        <span class="badge bg-{{ ocr_status.css }}">{{ ocr_status.label }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-info">
+                <div class="card-body">
+                    <div class="text-xs fw-bold text-uppercase mb-1 text-muted">{% translate "Storage Usage" %}</div>
+                    <div class="h5 mb-0 fw-bold text-gray-800">{{ storage.total_display }}</div>
+                    <div class="small text-muted mt-1">{{ storage.file_count }} {% translate "files" %}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-{% if fernet_configured %}success{% else %}danger{% endif %}">
+                <div class="card-body">
+                    <div class="text-xs fw-bold text-uppercase mb-1 text-muted">{% translate "PII Encryption" %}</div>
+                    <div class="h5 mb-0 fw-bold text-gray-800">
+                        {% if fernet_configured %}
+                        <span class="badge bg-success">{% translate "Active" %}</span>
+                        {% else %}
+                        <span class="badge bg-danger">{% translate "Missing Keys" %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Clients & Workflow -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                    <h5 class="fw-semibold mb-0">{% translate "Clients by Stage" %} (Total: {{ total_clients }})</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for stage in clients_by_stage %}
+                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                            {{ stage.display }}
+                            <span class="badge bg-primary rounded-pill">{{ stage.count }}</span>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item px-0 text-muted">{% translate "No clients found." %}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Operations Summary -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                    <h5 class="fw-semibold mb-0">{% translate "Action Items" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-4">
+                        <div class="col-4">
+                            <div class="h3 mb-0 {% if docs_awaiting_confirmation > 0 %}text-warning{% endif %}">{{ docs_awaiting_confirmation }}</div>
+                            <div class="small text-muted">{% translate "Docs Awaiting" %}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="h3 mb-0 {% if overdue_tasks > 0 %}text-danger{% endif %}">{{ overdue_tasks }}</div>
+                            <div class="small text-muted">{% translate "Overdue Tasks" %}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="h3 mb-0 {% if docs_name_mismatch > 0 %}text-danger{% endif %}">{{ docs_name_mismatch }}</div>
+                            <div class="small text-muted">{% translate "OCR Mismatches" %}</div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+
+                    <h6 class="fw-bold text-muted mb-3 mt-4">{% translate "Email Campaigns (Last 5)" %}</h6>
+                    {% if recent_campaigns %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-borderless align-middle">
+                            <tbody>
+                                {% for campaign in recent_campaigns %}
+                                <tr>
+                                    <td><div class="text-truncate" style="max-width: 200px;">{{ campaign.subject }}</div></td>
+                                    <td>{{ campaign.sent_count }}/{{ campaign.total_recipients }}</td>
+                                    <td class="text-end">
+                                        {% if campaign.status == 'completed' %}
+                                            <span class="badge bg-success">{% translate "Done" %}</span>
+                                        {% elif campaign.status == 'failed' %}
+                                            <span class="badge bg-danger">{% translate "Failed" %}</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">{{ campaign.get_status_display }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted small">{% translate "No recent campaigns." %}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

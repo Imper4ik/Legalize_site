@@ -5,7 +5,8 @@ from django.utils.translation import gettext as _
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save, post_delete, pre_save
 from django.dispatch import receiver
-from .models import Payment, Reminder, Client, Document
+from .models import EmailLog, Payment, Reminder, Client, Document
+from clients.services.activity import log_client_activity
 
 logger = logging.getLogger(__name__)
 
@@ -144,4 +145,22 @@ def compress_document_image_on_upload(sender, instance, **kwargs):
             instance.file = compressed_file
     except Exception:
         logger.warning("Failed to compress document %s, keeping original", instance.file.name)
+
+
+@receiver(post_save, sender=EmailLog)
+def create_activity_for_email_log(sender, instance, created, **kwargs):
+    if not created or not instance.client_id:
+        return
+
+    log_client_activity(
+        client=instance.client,
+        actor=instance.sent_by,
+        event_type="email_sent",
+        summary=f"Отправлено письмо: {instance.subject}",
+        metadata={
+            "email_log_id": instance.pk,
+            "template_type": instance.template_type,
+            "recipients_count": len([item for item in (instance.recipients or "").split(",") if item.strip()]),
+        },
+    )
 

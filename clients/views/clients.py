@@ -20,8 +20,9 @@ from clients.forms import (
     DocumentRequirementEditForm,
     DocumentUploadForm,
     PaymentForm,
+    StaffTaskForm,
 )
-from clients.models import Client, Document, DocumentRequirement, Payment, WniosekSubmission
+from clients.models import Client, ClientActivity, Document, DocumentRequirement, Payment, StaffTask, WniosekSubmission
 from clients.constants import DOCUMENT_CHECKLIST
 from clients.services.wniosek import record_wniosek_submission
 from submissions.forms import SubmissionForm
@@ -36,6 +37,7 @@ from clients.services.notifications import (
     send_expired_documents_email,
     send_required_documents_email,
 )
+from clients.services.activity import changed_field_labels, log_client_activity, log_client_view
 from clients.views.base import StaffRequiredMixin, staff_required_view
 from clients.services.responses import apply_no_store
 
@@ -82,6 +84,18 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
                 Prefetch('payments', queryset=Payment.objects.order_by('-created_at')),
                 Prefetch('documents', queryset=Document.objects.order_by('-uploaded_at')),
                 Prefetch(
+                    'staff_tasks',
+                    queryset=StaffTask.objects.select_related('assignee', 'created_by').order_by(
+                        'status', 'due_date', '-created_at'
+                    ),
+                ),
+                Prefetch(
+                    'activities',
+                    queryset=ClientActivity.objects.select_related('actor', 'document', 'payment', 'task').order_by(
+                        '-created_at'
+                    ),
+                ),
+                Prefetch(
                     'wniosek_submissions',
                     queryset=WniosekSubmission.objects.prefetch_related('attachments').order_by('-confirmed_at'),
                 ),
@@ -95,11 +109,22 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         client = self.object
         context['payment_form'] = PaymentForm()
         context['document_upload_form'] = DocumentUploadForm()
-        if hasattr(client, 'get_document_checklist'):
-            context['document_status_list'] = client.get_document_checklist()
+        document_status_list = client.get_document_checklist() if hasattr(client, 'get_document_checklist') else []
+        context['document_status_list'] = document_status_list
         context['email_logs'] = client.email_logs.all()[:50]
         context['service_choices'] = Payment.SERVICE_CHOICES
+        context['task_form'] = StaffTaskForm(initial={'assignee': self.request.user.pk})
+        context['open_tasks'] = [task for task in client.staff_tasks.all() if task.status in {'open', 'in_progress'}][:10]
+        context['recent_activities'] = client.activities.all()[:25]
+        context['workflow_summary'] = client.get_workflow_summary(document_status_list=document_status_list)
+        context['workflow_alerts'] = context['workflow_summary']['alerts']
         return context
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        log_client_view(client=self.object, actor=request.user, request=request)
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
 
 
 class ClientCreateView(StaffRequiredMixin, CreateView):
@@ -117,6 +142,13 @@ class ClientCreateView(StaffRequiredMixin, CreateView):
         messages.success(self.request, _("Клиент успешно добавлен!"))
         response = super().form_valid(form)
         send_required_documents_email(self.object)
+        log_client_activity(
+            client=self.object,
+            actor=self.request.user,
+            event_type="client_created",
+            summary="Клиент создан",
+            metadata={"workflow_stage": self.object.workflow_stage},
+        )
         return response
 
     def form_invalid(self, form):
@@ -142,12 +174,42 @@ class ClientUpdateView(StaffRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         previous_fingerprints_date = self.object.fingerprints_date
+        tracked_fields = [
+            "passport_num",
+            "case_number",
+            "status",
+            "workflow_stage",
+            "application_purpose",
+            "fingerprints_date",
+            "decision_date",
+            "notes",
+        ]
+        previous_values = {field: getattr(self.object, field) for field in tracked_fields}
         messages.success(self.request, _("Данные клиента успешно обновлены!"))
         response = super().form_valid(form)
 
         new_fingerprints_date = form.cleaned_data.get("fingerprints_date")
         if new_fingerprints_date and new_fingerprints_date != previous_fingerprints_date:
             send_expired_documents_email(self.object)
+        changed_fields = [field for field, old_value in previous_values.items() if getattr(self.object, field) != old_value]
+        if changed_fields:
+            log_client_activity(
+                client=self.object,
+                actor=self.request.user,
+                event_type="client_updated",
+                summary="Обновлены данные клиента",
+                details=", ".join(changed_field_labels(self.object, changed_fields)),
+                metadata={"changed_fields": changed_fields},
+            )
+        if "workflow_stage" in changed_fields:
+            log_client_activity(
+                client=self.object,
+                actor=self.request.user,
+                event_type="workflow_changed",
+                summary="Этап workflow изменён",
+                details=self.object.get_workflow_stage_display(),
+                metadata={"workflow_stage": self.object.workflow_stage},
+            )
 
         return response
 

@@ -1,13 +1,24 @@
 from django import forms
+from django.contrib.auth import get_user_model
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 from django.utils.crypto import get_random_string
 from django.utils.text import slugify
 
 from clients.services.calculator import CURRENCY_EUR, CURRENCY_PLN
+from clients.validators import FILE_INPUT_ACCEPT, validate_uploaded_document
 from .constants import DocumentType, INTERNAL_DOCS
 from submissions.models import Submission
-from .models import Client, Document, DocumentRequirement, Payment, get_fallback_document_checklist, resolve_document_label, Company
+from .models import (
+    Client,
+    Company,
+    Document,
+    DocumentRequirement,
+    Payment,
+    StaffTask,
+    get_fallback_document_checklist,
+    resolve_document_label,
+)
 
 def _label_for_document_type(code: str) -> str:
     try:
@@ -75,7 +86,7 @@ class ClientForm(forms.ModelForm):
         fields = [
             'first_name', 'last_name', 'email', 'phone', 'citizenship',
             'birth_date', 'passport_num', 'case_number', 'application_purpose', 'language',
-            'company', 'status',
+            'company', 'status', 'workflow_stage',
             'basis_of_stay', 'legal_basis_end_date', 'submission_date',
             'employer_phone',
             'fingerprints_date', 'notes'
@@ -91,6 +102,7 @@ class ClientForm(forms.ModelForm):
             'case_number': forms.TextInput(attrs={'class': 'form-control'}),
             'language': forms.Select(attrs={'class': 'form-select'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
+            'workflow_stage': forms.Select(attrs={'class': 'form-select'}),
             'company': forms.Select(attrs={'class': 'form-select'}),
             'basis_of_stay': forms.TextInput(attrs={'class': 'form-control'}),
             'employer_phone': forms.TextInput(attrs={'class': 'form-control'}),
@@ -122,11 +134,14 @@ class MassEmailForm(forms.Form):
 
 
 class DocumentUploadForm(forms.ModelForm):
+    def clean_file(self):
+        return validate_uploaded_document(self.cleaned_data.get("file"))
+
     class Meta:
         model = Document
         fields = ['file', 'expiry_date']
         widgets = {
-            'file': forms.FileInput(attrs={'class': 'form-control'}),
+            'file': forms.FileInput(attrs={'class': 'form-control', 'accept': FILE_INPUT_ACCEPT}),
             'expiry_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
         }
 
@@ -141,6 +156,22 @@ class PaymentForm(forms.ModelForm):
         required=False,
         input_formats=['%d.%m.%Y', '%d-%m-%Y', '%Y-%m-%d'],
         widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'})
+    )
+    amount_paid = forms.DecimalField(
+        required=False,
+        initial=0,
+        localize=True,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
+    )
+    total_amount = forms.DecimalField(
+        localize=True,
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
+    )
+    status = forms.ChoiceField(
+        required=False,
+        choices=Payment.PAYMENT_STATUS_CHOICES,
+        initial='pending',
+        widget=forms.Select(attrs={'class': 'form-select'})
     )
 
     class Meta:
@@ -157,6 +188,31 @@ class PaymentForm(forms.ModelForm):
             'amount_paid': forms.NumberInput(attrs={'class': 'form-control'}),
             'transaction_id': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+
+class StaffTaskForm(forms.ModelForm):
+    due_date = forms.DateField(
+        required=False,
+        input_formats=['%d.%m.%Y', '%d-%m-%Y', '%Y-%m-%d'],
+        widget=forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+    )
+
+    class Meta:
+        model = StaffTask
+        fields = ['title', 'description', 'priority', 'status', 'assignee', 'due_date']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'priority': forms.Select(attrs={'class': 'form-select'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+            'assignee': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        user_model = get_user_model()
+        self.fields['assignee'].queryset = user_model.objects.filter(is_staff=True, is_active=True).order_by('email')
+        self.fields['assignee'].required = False
 
 
 class DocumentRequirementEditForm(forms.ModelForm):

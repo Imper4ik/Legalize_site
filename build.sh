@@ -2,14 +2,14 @@
 # exit on error
 set -o errexit
 
-if ! command -v msgfmt >/dev/null 2>&1; then
-  apt-get update
-  apt-get install -y gettext
+fonts_missing=false
+if [ ! -f /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf ] && [ ! -f /usr/share/fonts/truetype/noto/NotoSans-Regular.ttf ]; then
+  fonts_missing=true
 fi
 
-if [ ! -f /usr/share/fonts/truetype/dejavu/DejaVuSans.ttf ] && [ ! -f /usr/share/fonts/truetype/noto/NotoSans-Regular.ttf ]; then
+if ! command -v msgfmt >/dev/null 2>&1 || ! command -v tesseract >/dev/null 2>&1 || ! command -v pdftoppm >/dev/null 2>&1 || ! command -v pg_dump >/dev/null 2>&1 || [ "$fonts_missing" = true ]; then
   apt-get update
-  apt-get install -y fonts-dejavu-core fonts-noto-core
+  apt-get install -y gettext fonts-dejavu-core fonts-noto-core tesseract-ocr tesseract-ocr-eng tesseract-ocr-pol poppler-utils postgresql-client
 fi
 
 pip install --upgrade pip
