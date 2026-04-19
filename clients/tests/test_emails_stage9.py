@@ -37,7 +37,7 @@ class EmailViewsStage9Tests(TestCase):
 
     @patch("clients.views.emails._log_email")
     @patch("clients.views.emails._send_confirmation_email")
-    @patch("django.core.mail.send_mail", return_value=1)
+    @patch("clients.views.emails.send_mail", return_value=1)
     def test_send_custom_email_success_path(self, send_mail_mock, confirm_mock, log_mock):
         response = self.client.post(
             reverse("clients:send_custom_email", kwargs={"pk": self.client_obj.pk}),
@@ -49,7 +49,7 @@ class EmailViewsStage9Tests(TestCase):
         confirm_mock.assert_called_once()
         log_mock.assert_called_once()
 
-    @patch("django.core.mail.send_mail", return_value=1)
+    @patch("clients.views.emails.send_mail", return_value=1)
     def test_send_custom_email_requires_subject_and_body(self, send_mail_mock):
         response = self.client.post(
             reverse("clients:send_custom_email", kwargs={"pk": self.client_obj.pk}),
@@ -59,10 +59,14 @@ class EmailViewsStage9Tests(TestCase):
         self.assertEqual(response.status_code, 302)
         send_mail_mock.assert_not_called()
 
-    @patch("django.core.mail.send_mail", return_value=1)
+    @patch("clients.views.emails.send_mail", return_value=1)
     @patch("clients.views.emails._send_confirmation_email")
     @patch("clients.views.emails._log_email")
-    def test_mass_email_view_sends_to_matching_clients(self, log_mock, confirm_mock, send_mail_mock):
+    @patch("clients.views.emails.threading.Thread.start", autospec=True)
+    def test_mass_email_view_sends_to_matching_clients(self, mock_thread_start, log_mock, confirm_mock, send_mail_mock):
+        def fake_start(thread_instance):
+            thread_instance._target(*thread_instance._args, **thread_instance._kwargs)
+        mock_thread_start.side_effect = fake_start
         other = Client.objects.create(
             first_name="Mass",
             last_name="Target",
@@ -82,7 +86,7 @@ class EmailViewsStage9Tests(TestCase):
         confirm_mock.assert_called_once()
         self.assertGreaterEqual(log_mock.call_count, 1)
 
-    @patch("django.core.mail.send_mail", return_value=1)
+    @patch("clients.views.emails.send_mail", return_value=1)
     def test_send_custom_email_handles_client_without_email(self, send_mail_mock):
         self.client_obj.email = ""
         self.client_obj.save(update_fields=["email"])
