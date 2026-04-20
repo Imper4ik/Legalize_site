@@ -148,6 +148,31 @@ class DocumentFlowsStage4Tests(TestCase):
         version = DocumentVersion.objects.get(document=original)
         self.assertEqual(version.uploaded_by, self.staff)
 
+    def test_replacing_document_succeeds_even_if_previous_file_is_missing(self):
+        original = Document.objects.create(
+            client=self.client_obj,
+            document_type=DocumentType.PASSPORT.value,
+            file=SimpleUploadedFile("passport-missing.pdf", b"old-data", content_type="application/pdf"),
+        )
+        original.file.storage.delete(original.file.name)
+
+        response = self.client.post(
+            reverse(
+                "clients:add_document",
+                kwargs={"client_id": self.client_obj.pk, "doc_type": DocumentType.PASSPORT.value},
+            ),
+            data={
+                "file": build_pdf_upload("passport-replacement.pdf", text="replacement after missing file"),
+                "expiry_date": "",
+            },
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        original.refresh_from_db()
+        self.assertTrue(original.file.name.endswith("passport-replacement.pdf"))
+        self.assertEqual(DocumentVersion.objects.filter(document=original).count(), 0)
+
     def test_add_document_without_parse_requested_queues_background_ocr(self):
         uploaded = build_pdf_upload("wezwanie-background.pdf")
 

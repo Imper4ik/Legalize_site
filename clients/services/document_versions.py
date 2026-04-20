@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from django.core.files.base import ContentFile
@@ -8,6 +9,8 @@ from django.db.models import Max
 from django.utils.translation import gettext as _
 
 from clients.models import Document, DocumentVersion
+
+logger = logging.getLogger(__name__)
 
 
 def archive_document_version(
@@ -20,6 +23,19 @@ def archive_document_version(
 
     if not document.file:
         return None
+    if not document.file.name:
+        return None
+
+    try:
+        file_size = document.file.size
+    except (FileNotFoundError, OSError):
+        logger.warning(
+            "Skipping document version archive because the source file is missing: "
+            "document_id=%s file=%s",
+            document.pk,
+            document.file.name,
+        )
+        return None
 
     current_max = document.versions.aggregate(max_v=Max("version_number"))["max_v"] or 0
     return DocumentVersion.objects.create(
@@ -29,7 +45,7 @@ def archive_document_version(
         uploaded_by=uploaded_by,
         comment=comment,
         file_name=Path(document.file.name).name,
-        file_size=document.file.size,
+        file_size=file_size,
     )
 
 
