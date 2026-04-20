@@ -42,6 +42,11 @@ def running_in_production() -> bool:
 
 
 IS_PRODUCTION = running_in_production()
+ENABLE_TRANSLATION_TOOLING = env_flag(
+    "ENABLE_TRANSLATION_TOOLING",
+    "False" if IS_PRODUCTION else "True",
+)
+AUTO_COMPILE_TRANSLATIONS_ON_STARTUP = env_flag("AUTO_COMPILE_TRANSLATIONS_ON_STARTUP", "False")
 
 # --- БАЗОВЫЕ НАСТРОЙКИ ---
 SECRET_KEY = os.environ.get("SECRET_KEY", DEFAULT_SECRET_KEY_FALLBACK)
@@ -151,7 +156,6 @@ INSTALLED_APPS = [
     "django.contrib.humanize",
     "django.contrib.sites",
     "users.apps.UsersConfig",
-    "rosetta",
     "clients.apps.ClientsConfig",
     "submissions.apps.SubmissionsConfig",
     "allauth",
@@ -159,13 +163,19 @@ INSTALLED_APPS = [
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
     "anymail",
-    "translations",
 ]
+if ENABLE_TRANSLATION_TOOLING:
+    INSTALLED_APPS.extend(
+        [
+            "rosetta",
+            "translations",
+        ]
+    )
 
 AUTH_USER_MODEL = "users.User"
 
 # --- ROSETTA ---
-ROSETTA_SHOW_AT_ADMIN_PANEL = True
+ROSETTA_SHOW_AT_ADMIN_PANEL = ENABLE_TRANSLATION_TOOLING
 ROSETTA_EXCLUDED_APPLICATIONS = (
     "django.contrib.admin",
     "django.contrib.auth",
@@ -198,9 +208,13 @@ MIDDLEWARE += [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "translations.middleware.TranslationStudioMiddleware",
     "allauth.account.middleware.AccountMiddleware",
 ]
+if ENABLE_TRANSLATION_TOOLING:
+    MIDDLEWARE.insert(
+        MIDDLEWARE.index("allauth.account.middleware.AccountMiddleware"),
+        "translations.middleware.TranslationStudioMiddleware",
+    )
 
 ROOT_URLCONF = "legalize_site.urls"
 WSGI_APPLICATION = "legalize_site.wsgi.application"
@@ -218,6 +232,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "legalize_site.context_processors.feature_flags",
             ],
             "libraries": {
                 "form_filters": "clients.templatetags.form_filters",

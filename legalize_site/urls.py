@@ -20,7 +20,7 @@ urlpatterns = [
     path('cron/db-backup/', db_backup, name='db_backup'),
 ]
 
-if 'rosetta' in settings.INSTALLED_APPS:
+if getattr(settings, "ENABLE_TRANSLATION_TOOLING", False) and 'rosetta' in settings.INSTALLED_APPS:
     urlpatterns += [
         path('rosetta/', include('rosetta.urls')),
         path('studio/', include('translations.urls', namespace='translations')),
