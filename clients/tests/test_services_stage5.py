@@ -184,6 +184,17 @@ class WezwanieParserStage5Tests(TestCase):
             image_open.return_value.__enter__.return_value = Image.new("RGB", (200, 100), "white")
             with patch("pytesseract.image_to_string", return_value="WSC-II-S.123.2026"):
                 with patch("builtins.__import__", side_effect=fake_import):
-                    text = wezwanie_parser._extract_image_text("fake.webp")
+                    with patch("clients.services.wezwanie_parser.shutil.which", return_value="/usr/bin/tesseract"):
+                        text = wezwanie_parser._extract_image_text("fake.webp")
 
         self.assertEqual(text, "WSC-II-S.123.2026")
+
+    def test_extract_image_text_returns_empty_when_tesseract_binary_is_missing(self):
+        with patch("clients.services.wezwanie_parser.shutil.which", return_value=None):
+            with patch("PIL.Image.open") as image_open:
+                image_open.return_value.__enter__.return_value = Image.new("RGB", (200, 100), "white")
+                with patch("pytesseract.image_to_string") as image_to_string:
+                    text = wezwanie_parser._extract_image_text("fake.webp")
+
+        self.assertEqual(text, "")
+        image_to_string.assert_not_called()

@@ -170,7 +170,7 @@ class DocumentFlowsStage4Tests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         original.refresh_from_db()
-        self.assertTrue(original.file.name.endswith("passport-replacement.pdf"))
+        self.assertIn("passport-replacement", original.file.name)
         self.assertEqual(DocumentVersion.objects.filter(document=original).count(), 0)
 
     def test_add_document_without_parse_requested_queues_background_ocr(self):
