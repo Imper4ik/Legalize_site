@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import re
+import shutil
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
@@ -68,6 +69,10 @@ class WezwanieData:
     required_documents: list[str] = field(default_factory=list)
 
 
+def _tesseract_binary_available() -> bool:
+    return shutil.which("tesseract") is not None
+
+
 def _parse_date(raw: str | None) -> date | None:
     if not raw:
         return None
@@ -119,6 +124,10 @@ def _extract_pdf_text(path: Path) -> str:
             from pdf2image import convert_from_path
             import pytesseract
 
+            if not _tesseract_binary_available():
+                logger.warning("Tesseract binary is not available; skipping PDF OCR for %s", path)
+                return text_content
+
             # Convert PDF to images (first 2 pages usually enough for Wezwanie)
             try:
                 images = convert_from_path(str(path), first_page=1, last_page=2)
@@ -132,6 +141,9 @@ def _extract_pdf_text(path: Path) -> str:
                     # Polish language is crucial here
                     page_text = pytesseract.image_to_string(image, lang="pol+eng")
                     ocr_text.append(page_text)
+                except pytesseract.TesseractNotFoundError:
+                    logger.warning("Tesseract binary is not available; skipping PDF OCR for %s", path)
+                    break
                 except Exception as e:
                     logger.warning("OCR failed on page %s: %s", i, e)
 
@@ -192,13 +204,14 @@ def _preprocess_for_ocr(img):
     try:
         import pytesseract
         import re
-        osd = pytesseract.image_to_osd(img)
-        rotate_match = re.search(r"Rotate: (\d+)", osd)
-        if rotate_match:
-            angle = int(rotate_match.group(1))
-            if angle != 0:
-                logger.debug("OSD detected rotation: %s. Fixing...", angle)
-                img = img.rotate(angle, expand=True)
+        if _tesseract_binary_available():
+            osd = pytesseract.image_to_osd(img)
+            rotate_match = re.search(r"Rotate: (\d+)", osd)
+            if rotate_match:
+                angle = int(rotate_match.group(1))
+                if angle != 0:
+                    logger.debug("OSD detected rotation: %s. Fixing...", angle)
+                    img = img.rotate(angle, expand=True)
     except Exception:
         pass
 
@@ -257,6 +270,10 @@ def _extract_image_text(path: Path) -> str:
         logger.warning("OCR dependencies (Pillow, pytesseract) are not installed; skipping OCR")
         return ""
 
+    if not _tesseract_binary_available():
+        logger.warning("Tesseract binary is not available; skipping image OCR for %s", path)
+        return ""
+
     try:
         with Image.open(path) as img:
             # Preprocess image to improve accuracy (fix "eaten" letters)
@@ -265,6 +282,9 @@ def _extract_image_text(path: Path) -> str:
             text_out = pytesseract.image_to_string(processed_img, lang='pol+eng')
             logger.debug("Extracted image OCR text length=%s", len(text_out))
             return text_out
+    except pytesseract.TesseractNotFoundError:
+        logger.warning("Tesseract binary is not available; skipping image OCR for %s", path)
+        return ""
     except Exception:  # pragma: no cover - defensive logging
         logger.exception("Не удалось прочитать изображение %s через OCR", path)
         return ""
