@@ -166,7 +166,12 @@ def _preprocess_for_ocr(img):
     6. Convert back to PIL
     """
     from PIL import Image, ImageOps, ImageFilter
-    import numpy as np
+
+    def _pil_fallback(prepared_img):
+        prepared_img = prepared_img.convert("L")
+        prepared_img = ImageOps.autocontrast(prepared_img)
+        prepared_img = prepared_img.filter(ImageFilter.SHARPEN)
+        return prepared_img
     
     # 0. Fix EXIF orientation (crucial for phone photos)
     try:
@@ -200,6 +205,13 @@ def _preprocess_for_ocr(img):
     # 3. OpenCV Processing
     try:
         import cv2
+        import numpy as np
+
+    except ImportError:
+        logger.warning("OpenCV or numpy not found, falling back to simple PIL preprocessing")
+        return _pil_fallback(img)
+
+    try:
         # Convert PIL to CV2 (OpenCV uses BGR, PIL uses RGB)
         # Note: We need grayscale mainly.
         cv_img = np.array(img)
@@ -232,17 +244,9 @@ def _preprocess_for_ocr(img):
         
         # Convert back to PIL
         return Image.fromarray(clean)
-
-    except ImportError:
-        logger.warning("OpenCV not found, falling back to simple PIL preprocessing")
-        # Fallback to old simple PIL chain
-        img = img.convert('L')
-        img = ImageOps.autocontrast(img)
-        img = img.filter(ImageFilter.SHARPEN)
-        return img
     except Exception as e:
         logger.exception("OpenCV preprocessing failed: %s, falling back", e)
-        return img
+        return _pil_fallback(img)
 
 
 def _extract_image_text(path: Path) -> str:

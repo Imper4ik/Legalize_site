@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import builtins
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -7,14 +8,17 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
+from PIL import Image
 
 from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentRequirement
 from clients.services import notifications
+from clients.services import wezwanie_parser
 from clients.services.wezwanie_parser import (
     _detect_wezwanie_type,
     _extract_required_documents,
     _parse_date,
+    _preprocess_for_ocr,
     parse_wezwanie,
 )
 
@@ -151,3 +155,35 @@ class WezwanieParserStage5Tests(TestCase):
         self.assertEqual(parsed.wezwanie_type, "fingerprints")
         self.assertTrue(parsed.case_number)
         self.assertIsNotNone(parsed.fingerprints_date)
+
+    def test_preprocess_for_ocr_falls_back_when_numpy_is_missing(self):
+        real_import = builtins.__import__
+
+        def fake_import(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == "numpy":
+                raise ImportError("numpy missing")
+            return real_import(name, globals, locals, fromlist, level)
+
+        image = Image.new("RGB", (200, 100), "white")
+
+        with patch("builtins.__import__", side_effect=fake_import):
+            processed = _preprocess_for_ocr(image)
+
+        self.assertEqual(processed.mode, "L")
+        self.assertGreaterEqual(processed.size[0], 1000)
+
+    def test_extract_image_text_returns_text_when_numpy_is_missing(self):
+        real_import = builtins.__import__
+
+        def fake_import(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == "numpy":
+                raise ImportError("numpy missing")
+            return real_import(name, globals, locals, fromlist, level)
+
+        with patch("PIL.Image.open") as image_open:
+            image_open.return_value.__enter__.return_value = Image.new("RGB", (200, 100), "white")
+            with patch("pytesseract.image_to_string", return_value="WSC-II-S.123.2026"):
+                with patch("builtins.__import__", side_effect=fake_import):
+                    text = wezwanie_parser._extract_image_text("fake.webp")
+
+        self.assertEqual(text, "WSC-II-S.123.2026")
