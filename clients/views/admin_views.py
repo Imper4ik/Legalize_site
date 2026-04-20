@@ -7,18 +7,27 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.core.management import call_command
 from django.shortcuts import redirect
 from django.utils.translation import gettext as _
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_protect
+from django.utils.http import url_has_allowed_host_and_scheme
 
 logger = logging.getLogger(__name__)
 
 @staff_member_required
+@require_POST
+@csrf_protect
 def update_translations_view(request):
     """
-    A view accessible only by staff/admin.
+    A view accessible only by superusers.
     It programmatically runs:
       1. makemessages
       2. python fix_po.py (to remove duplicates)
       3. compilemessages
     """
+    if not request.user.is_superuser:
+        messages.error(request, _("Только суперпользователи могут обновлять переводы."))
+        return redirect('/admin/')
+
     try:
         # 1. makemessages
         logger.info("Running makemessages...")
@@ -49,6 +58,12 @@ def update_translations_view(request):
         logger.exception("Error updating translations")
         messages.error(request, _("Ошибка при обновлении переводов: %(err)s") % {"err": e})
 
-    # Перенаправляем обратно на ту же страницу, с которой был сделан запрос
-    redirect_url = request.META.get('HTTP_REFERER', '/admin/')
+    redirect_url = request.META.get('HTTP_REFERER')
+    if not url_has_allowed_host_and_scheme(
+        url=redirect_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure()
+    ):
+        redirect_url = '/admin/'
+
     return redirect(redirect_url)

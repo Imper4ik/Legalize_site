@@ -4,6 +4,8 @@ from django.db import models
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
+from clients.validators import validate_uploaded_document
+
 
 class Submission(models.Model):
     slug = models.SlugField(max_length=64, unique=True, verbose_name=_('Слаг основания'))
@@ -77,6 +79,7 @@ class Document(models.Model):
         blank=True,
         null=True,
         verbose_name=_('Файл'),
+        validators=[validate_uploaded_document],
     )
     status = models.CharField(
         max_length=20,

@@ -10,12 +10,18 @@ from django.utils.translation import gettext as _
 from legalize_site.utils.http import request_is_ajax
 
 
-NO_STORE_HEADER = "no-store"
+NO_STORE_HEADER = "no-store, no-cache, must-revalidate"
 
 
 def apply_no_store(response: HttpResponse) -> HttpResponse:
-    """Add a ``Cache-Control: no-store`` header to the response."""
+    """Add strict cache-prevention headers to the response.
+
+    Sets ``Cache-Control: no-store, no-cache, must-revalidate`` and
+    ``Pragma: no-cache`` (HTTP/1.0 fallback) to ensure sensitive
+    documents and data are never cached by browsers or proxies.
+    """
     response["Cache-Control"] = NO_STORE_HEADER
+    response["Pragma"] = "no-cache"
     return response
 
 
