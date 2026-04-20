@@ -348,11 +348,11 @@ if EMAIL_BACKEND == "anymail.backends.brevo.EmailBackend" and BREVO_API_KEY:
     ANYMAIL["BREVO_API_KEY"] = BREVO_API_KEY
 
 # Обязательно укажи доменный адрес, подтверждённый в SendGrid (Domain Auth или Single Sender)
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "nindse@gmail.com")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@legalize.pl")
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # Куда уйдёт ответ на письмо
-EMAIL_REPLY_TO = os.getenv("REPLY_TO_EMAIL", DEFAULT_FROM_EMAIL)
+EMAIL_REPLY_TO = os.getenv("REPLY_TO_EMAIL", "support@legalize.pl")
 
 # --- DJANGO-ALLAUTH ---
 AUTHENTICATION_BACKENDS = [

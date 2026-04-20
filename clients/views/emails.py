@@ -4,6 +4,7 @@ import logging
 import threading
 
 from django.contrib import messages
+from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives, send_mail
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -77,6 +78,15 @@ def send_custom_email(request, pk):
         messages.error(request, _("У клиента не указан email."))
         return redirect('clients:client_detail', pk=client.pk)
 
+    # 1. Rate Limiting Check
+    rate_limit = getattr(settings, 'EMAIL_RATE_LIMIT_PER_HOUR', 50)
+    cache_key = f"email_rate_limit_{request.user.id}"
+    sent_this_hour = cache.get(cache_key, 0)
+    
+    if sent_this_hour >= rate_limit:
+        messages.error(request, _("Превышен лимит отправки писем (%(limit)s в час). Попробуйте позже.") % {"limit": rate_limit})
+        return redirect('clients:client_detail', pk=client.pk)
+
     subject = request.POST.get('subject', '').strip()
     body = request.POST.get('body', '').strip()
 
@@ -92,6 +102,8 @@ def send_custom_email(request, pk):
             [client.email]
         )
         if sent_count:
+            cache.set(cache_key, sent_this_hour + 1, timeout=3600)
+            
             _send_confirmation_email(subject, body, [client.email])
             _log_email(
                 subject, body, [client.email],

@@ -4,6 +4,7 @@ from django.utils import translation
 from django.utils.translation import gettext, gettext_lazy as _
 from django.conf import settings
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
+from clients.validators import validate_uploaded_document
 
 DOCUMENT_TYPE_VALUES = {choice.value for choice in DocumentType}
 DOCUMENT_LABEL_ALIASES: dict[str, list[str]] = {}
@@ -106,7 +107,7 @@ class Document(models.Model):
 
     client = models.ForeignKey('clients.Client', on_delete=models.CASCADE, related_name='documents', verbose_name=_("Клиент"))
     document_type = models.CharField(max_length=255, verbose_name=_("Тип документа"))
-    file = models.FileField(upload_to='documents/', verbose_name=_("Файл"))
+    file = models.FileField(upload_to='documents/', verbose_name=_("Файл"), validators=[validate_uploaded_document])
     expiry_date = models.DateField(null=True, blank=True, verbose_name=_("Действителен до"))
     uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Дата загрузки"))
     verified = models.BooleanField(default=False, verbose_name=_("Проверено"))
