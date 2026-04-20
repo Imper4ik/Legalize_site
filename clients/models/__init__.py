@@ -6,6 +6,7 @@ from .document import (
     resolve_document_label, get_available_document_types,
     translate_document_name
 )
+from .document_processing import DocumentProcessingJob
 from .document_version import DocumentVersion
 from .payment import Payment
 from .reminder import Reminder
@@ -20,6 +21,7 @@ __all__ = [
     'ClientActivity',
     'Company',
     'Document',
+    'DocumentProcessingJob',
     'DocumentRequirement',
     'DocumentVersion',
     'Payment',

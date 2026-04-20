@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import shutil
-import tempfile
 from datetime import timedelta
+from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -12,9 +12,11 @@ from django.utils import timezone
 
 from clients.constants import DocumentType
 from clients.models import Client, ClientActivity, Document, EmailLog, StaffTask
+from clients.services.responses import NO_STORE_HEADER
 
 
-TEST_MEDIA_ROOT = tempfile.mkdtemp()
+TEST_MEDIA_ROOT = Path(__file__).resolve().parents[2] / "generated_media_test" / "workflow_audit"
+TEST_MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
 
 
 @override_settings(MEDIA_ROOT=TEST_MEDIA_ROOT)
@@ -57,6 +59,7 @@ class WorkflowAuditStage11Tests(TestCase):
         response = self.client.get(reverse("clients:document_download", kwargs={"doc_id": document.pk}))
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Cache-Control"], NO_STORE_HEADER)
         self.assertTrue(
             ClientActivity.objects.filter(
                 client=self.client_obj,

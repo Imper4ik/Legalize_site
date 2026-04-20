@@ -3,6 +3,7 @@ from __future__ import annotations
 import ipaddress
 import logging
 import os
+import secrets
 import subprocess
 
 from django.http import HttpRequest, JsonResponse
@@ -48,7 +49,11 @@ def db_backup(request: HttpRequest) -> JsonResponse:
         supplied_token = request.headers.get("X-CRON-TOKEN")
         request_ip = _get_request_ip(request)
 
-        if not expected_token or supplied_token != expected_token:
+        if (
+            not expected_token
+            or not supplied_token
+            or not secrets.compare_digest(supplied_token, expected_token)
+        ):
             logger.warning("Invalid CRON_TOKEN supplied from ip=%s", request_ip)
             return JsonResponse({"error": "forbidden"}, status=403)
         if not _request_ip_allowed(request):
@@ -74,17 +79,15 @@ def db_backup(request: HttpRequest) -> JsonResponse:
 
     except BackupError as exc:
         logger.error("Database backup failed: %s", exc)
-        return JsonResponse({"error": str(exc)}, status=500)
+        return JsonResponse({"error": "backup failed"}, status=500)
     except subprocess.CalledProcessError as e:
-        error_msg = f"pg_dump failed: {e.stderr if e.stderr else str(e)}"
-        logger.error(f"pg_dump CalledProcessError: {error_msg}")
+        logger.error("pg_dump CalledProcessError: %s", e.stderr if e.stderr else str(e))
         return JsonResponse({
-            "error": error_msg,
+            "error": "backup failed",
             "returncode": e.returncode,
         }, status=500)
     except Exception as e:
-        error_msg = f"Unexpected error during backup: {type(e).__name__}: {str(e)}"
-        logger.exception(error_msg)
+        logger.exception("Unexpected error during backup: %s: %s", type(e).__name__, str(e))
         return JsonResponse({
-            "error": error_msg,
+            "error": "backup failed",
         }, status=500)

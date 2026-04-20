@@ -11,7 +11,9 @@ from django.views.generic import DetailView
 
 from clients.models import Client, Document, DocumentVersion
 from clients.services.activity import log_client_activity
+from clients.services.document_versions import restore_document_version
 from clients.services.export import generate_client_zip
+from clients.services.responses import apply_no_store
 from clients.views.base import StaffRequiredMixin, staff_required_view
 
 logger = logging.getLogger(__name__)
@@ -56,7 +58,7 @@ def client_export_zip(request, pk):
 
     response = HttpResponse(buffer.getvalue(), content_type="application/zip")
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
-    return response
+    return apply_no_store(response)
 
 
 @staff_required_view
@@ -79,7 +81,6 @@ def document_version_restore(request, version_id):
     """Restore a previous document version, archiving the current file."""
 
     from django.contrib import messages
-    from django.core.files.base import ContentFile
     from django.shortcuts import redirect
     from django.utils.translation import gettext as _
 
@@ -89,31 +90,14 @@ def document_version_restore(request, version_id):
     version = get_object_or_404(DocumentVersion.objects.select_related("document"), pk=version_id)
     document = version.document
 
-    # Archive current file as a new version
-    if document.file:
-        current_max = document.versions.aggregate(
-            max_v=__import__("django.db.models", fromlist=["Max"]).Max("version_number")
-        )["max_v"] or 0
-
-        DocumentVersion.objects.create(
-            document=document,
-            file=document.file,
-            version_number=current_max + 1,
-            uploaded_by=request.user,
-            comment=_("Автоматическая архивация перед откатом к v%(num)s") % {"num": version.version_number},
-            file_name=document.file.name.split("/")[-1] if document.file else "",
-            file_size=document.file.size if document.file else 0,
-        )
-
-    # Restore the selected version's file
     try:
-        restored_content = version.file.read()
-        ext = version.file.name.split(".")[-1] if "." in version.file.name else "bin"
-        new_name = f"documents/restored_{document.pk}.{ext}"
-        document.file.save(new_name, ContentFile(restored_content), save=True)
+        document = restore_document_version(
+            version,
+            uploaded_by=request.user if request.user.is_authenticated else None,
+        )
     except Exception:
         logger.exception("Failed to restore version %s", version.pk)
-        messages.error(request, _("Не удалось откатить версию."))
+        messages.error(request, _("Failed to restore this document version."))
         return redirect("clients:document_versions", doc_id=document.pk)
 
     log_client_activity(
