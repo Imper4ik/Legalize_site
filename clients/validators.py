@@ -39,6 +39,9 @@ ALLOWED_DOCUMENTS = {
 
 def _validate_uploaded_filename(uploaded_file) -> None:
     raw_name = str(getattr(uploaded_file, "name", "") or "")
+    if "/" in raw_name or "\\" in raw_name:
+        raise ValidationError(_("Имя файла не должно содержать пути или вложенные каталоги."))
+
     normalized_name = Path(raw_name).name
 
     if not normalized_name:

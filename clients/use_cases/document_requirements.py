@@ -80,6 +80,7 @@ def delete_document_requirement_record(
     requirement_id = requirement.pk
     requirement_name = requirement.custom_name or requirement.document_type.replace("_", " ").capitalize()
     requirement.delete()
+    requirement.pk = requirement_id
     return DocumentRequirementScenarioResult(
         purpose=purpose,
         deleted_requirement_id=requirement_id,
