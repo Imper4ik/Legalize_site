@@ -91,7 +91,7 @@ def update_payment_for_client(
 
 def delete_payment_for_client(*, payment: Payment, actor) -> PaymentScenarioResult:
     client = payment.client
-    payment_id = payment.id
+    payment_id = payment.pk
 
     log_client_activity(
         client=client,
@@ -101,6 +101,7 @@ def delete_payment_for_client(*, payment: Payment, actor) -> PaymentScenarioResu
         metadata={"payment_id": payment_id, "status": payment.status},
     )
     payment.delete()
+    payment.pk = payment_id
 
     return PaymentScenarioResult(
         client=client,
