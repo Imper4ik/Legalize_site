@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 {% load i18n static %}
+{% load role_tags %}
 <html lang="{{ LANGUAGE_CODE }}" data-theme="light">
 <head>
     <meta charset="UTF-8" />
@@ -235,6 +236,42 @@
                                 {{ user.first_name|default:user.email }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
+                                {% if user.is_staff %}
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'clients:admin_panel' %}">
+                                        <i class="bi bi-grid-1x2 me-2"></i>Админ панель
+                                    </a>
+                                </li>
+                                {% if user|has_any_role:"Admin,Manager,Staff,ReadOnly" %}
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'clients:metrics_dashboard' %}">
+                                        <i class="bi bi-speedometer2 me-2"></i>{% translate "Метрики" %}
+                                    </a>
+                                </li>
+                                {% endif %}
+                                {% if user|has_any_role:"Admin,Manager" %}
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'clients:app_settings' %}">
+                                        <i class="bi bi-sliders me-2"></i>Template Settings
+                                    </a>
+                                </li>
+                                {% endif %}
+                                {% if user.is_superuser and translation_tooling_enabled %}
+                                <li>
+                                    <a class="dropdown-item fw-bold" href="{% url 'translations:dashboard' %}" style="color: #6366f1;">
+                                        <i class="bi bi-translate me-2"></i>Translation Studio
+                                    </a>
+                                </li>
+                                {% endif %}
+                                {% if user.is_superuser %}
+                                <li>
+                                    <a class="dropdown-item fw-bold text-danger" href="{% url 'clients:admin_dashboard' %}">
+                                        <i class="bi bi-shield-lock me-2"></i>{% translate "System Health" %}
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                {% endif %}
+                                {% endif %}
                                 <li>
                                     <form id="logout-form" method="post" action="{% url 'account_logout' %}">
                                         {% csrf_token %}
