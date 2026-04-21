@@ -11,9 +11,22 @@
                 <div class="mb-4">
                     <span class="display-3">🚫</span>
                 </div>
-                <h1 class="h2 fw-bold mb-3">{% translate "У вас нет доступа к этой странице" %}</h1>
+                <h1 class="h2 fw-bold mb-3">
+                    {% if error_title %}
+                        {{ error_title }}
+                    {% else %}
+                        {% translate "У вас нет доступа к этой странице" %}
+                    {% endif %}
+                </h1>
                 <p class="text-muted mb-4">
-                    {% blocktranslate %}Вы вошли в систему, но ваш профиль не имеет прав для просмотра раздела сотрудников. Если вы считаете, что это ошибка, обратитесь к администратору сайта.{% endblocktranslate %}
+                    {% if error_message %}
+                        {{ error_message }}
+                    {% else %}
+                        {% blocktranslate %}
+                        Вы вошли в систему, но ваш профиль не имеет прав для просмотра этого раздела сотрудников.
+                        Если вы считаете, что это ошибка, обратитесь к администратору сайта.
+                        {% endblocktranslate %}
+                    {% endif %}
                 </p>
                 <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">
                     {% if user.is_authenticated %}
@@ -25,7 +38,7 @@
                             <i class="bi bi-box-arrow-in-right me-2"></i>{% translate "Войти" %}
                         </a>
                     {% endif %}
-                    <a class="btn btn-outline-secondary btn-lg" href="mailto:{{ support_email }}">
+                    <a class="btn btn-outline-secondary btn-lg" href="mailto:{{ support_email|default:'support@example.com' }}">
                         <i class="bi bi-envelope me-2"></i>{% translate "Связаться с поддержкой" %}
                     </a>
                 </div>

@@ -7,41 +7,47 @@ from django.contrib import messages
 from django.core.management import call_command
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
-from django.utils.translation import gettext as _, gettext_lazy as _lazy
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.translation import gettext as _, gettext_lazy as _lazy
 from django.views.generic import ListView
 
 from clients.models import Client, Reminder
 from clients.services.notifications import send_expiring_documents_email
+from clients.use_cases.reminders import (
+    deactivate_reminder,
+    delete_reminder,
+    send_document_reminder_for_client,
+    send_document_reminder_for_reminder,
+)
 from clients.views.base import StaffRequiredMixin, staff_required_view
 
 
 class ReminderListView(StaffRequiredMixin, ListView):
     model = Reminder
-    context_object_name = 'reminders'
+    context_object_name = "reminders"
     reminder_type = None
-    template_name = ''
-    title = ''
-    client_param = 'client'
-    start_date_param = 'start_date'
-    end_date_param = 'end_date'
+    template_name = ""
+    title = ""
+    client_param = "client"
+    start_date_param = "start_date"
+    end_date_param = "end_date"
 
     def get_queryset(self):
         queryset = (
             Reminder.objects.filter(is_active=True, reminder_type=self.reminder_type)
-            .select_related('client')
-            .order_by('due_date')
+            .select_related("client")
+            .order_by("due_date")
         )
 
-        start_date = self.request.GET.get(self.start_date_param, '')
+        start_date = self.request.GET.get(self.start_date_param, "")
         if start_date:
             queryset = queryset.filter(due_date__gte=start_date)
 
-        end_date = self.request.GET.get(self.end_date_param, '')
+        end_date = self.request.GET.get(self.end_date_param, "")
         if end_date:
             queryset = queryset.filter(due_date__lte=end_date)
 
-        client_value = self.request.GET.get(self.client_param, '')
+        client_value = self.request.GET.get(self.client_param, "")
         self.client_filter_id = None
         if client_value.isdigit():
             self.client_filter_id = int(client_value)
@@ -51,30 +57,30 @@ class ReminderListView(StaffRequiredMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        reminders = context['reminders']
+        reminders = context["reminders"]
         context.update(
             {
-                'title': self.title,
-                'all_clients': Client.objects.filter(user__is_staff=False).order_by('last_name', 'first_name'),
-                'filter_values': self.request.GET,
-                'client_filter_id': getattr(self, 'client_filter_id', None),
-                'reminders_count': reminders.count() if hasattr(reminders, 'count') else len(reminders),
+                "title": self.title,
+                "all_clients": Client.objects.filter(user__is_staff=False).order_by("last_name", "first_name"),
+                "filter_values": self.request.GET,
+                "client_filter_id": getattr(self, "client_filter_id", None),
+                "reminders_count": reminders.count() if hasattr(reminders, "count") else len(reminders),
             }
         )
         return context
 
 
 class DocumentReminderListView(ReminderListView):
-    reminder_type = 'document'
-    template_name = 'clients/document_reminder_list.html'
-    title = _lazy('Напоминания по документам')
-    client_param = 'doc_client'
-    start_date_param = 'doc_start_date'
-    end_date_param = 'doc_end_date'
+    reminder_type = "document"
+    template_name = "clients/document_reminder_list.html"
+    title = _lazy("Напоминания по документам")
+    client_param = "doc_client"
+    start_date_param = "doc_start_date"
+    end_date_param = "doc_end_date"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        reminders = list(context['reminders'])
+        reminders = list(context["reminders"])
         grouped = OrderedDict()
         today = timezone.localdate()
         soon_cutoff = today + timedelta(days=3)
@@ -83,123 +89,124 @@ class DocumentReminderListView(ReminderListView):
             group = grouped.setdefault(
                 client.id,
                 {
-                    'client': client,
-                    'reminders': [],
-                    'documents': [],
-                    'missing_documents': [],
-                    'expired_count': 0,
-                    'soon_count': 0,
-                    'ok_count': 0,
-                    'status_class': 'success',
+                    "client": client,
+                    "reminders": [],
+                    "documents": [],
+                    "missing_documents": [],
+                    "expired_count": 0,
+                    "soon_count": 0,
+                    "ok_count": 0,
+                    "status_class": "success",
                 },
             )
-            group['reminders'].append(reminder)
+            group["reminders"].append(reminder)
             if reminder.document and reminder.document.expiry_date:
-                group['documents'].append(reminder.document)
+                group["documents"].append(reminder.document)
             if reminder.due_date:
                 if reminder.due_date < today:
-                    group['expired_count'] += 1
+                    group["expired_count"] += 1
                 elif reminder.due_date < soon_cutoff:
-                    group['soon_count'] += 1
+                    group["soon_count"] += 1
                 else:
-                    group['ok_count'] += 1
+                    group["ok_count"] += 1
 
         for group in grouped.values():
-            checklist = group['client'].get_document_checklist() or []
-            group['missing_documents'] = [
+            checklist = group["client"].get_document_checklist() or []
+            group["missing_documents"] = [
                 {
-                    'name': item.get('name'),
-                    'expiry_date': getattr((item.get('documents') or [None])[0], 'expiry_date', None),
+                    "name": item.get("name"),
+                    "expiry_date": getattr((item.get("documents") or [None])[0], "expiry_date", None),
                 }
                 for item in checklist
-                if not item.get('is_complete')
+                if not item.get("is_complete")
             ]
-            if group['expired_count']:
-                group['status_class'] = 'danger'
-            elif group['soon_count']:
-                group['status_class'] = 'warning'
-            elif group['missing_documents']:
-                group['status_class'] = 'secondary'
+            if group["expired_count"]:
+                group["status_class"] = "danger"
+            elif group["soon_count"]:
+                group["status_class"] = "warning"
+            elif group["missing_documents"]:
+                group["status_class"] = "secondary"
             else:
-                group['status_class'] = 'success'
+                group["status_class"] = "success"
 
         context.update(
             {
-                'grouped_reminders': list(grouped.values()),
-                'reminders_count': len(grouped),
-                'total_reminders_count': len(reminders),
+                "grouped_reminders": list(grouped.values()),
+                "reminders_count": len(grouped),
+                "total_reminders_count": len(reminders),
             }
         )
         return context
 
 
 class PaymentReminderListView(ReminderListView):
-    reminder_type = 'payment'
-    template_name = 'clients/payment_reminder_list.html'
-    title = _lazy('Напоминания по оплатам')
+    reminder_type = "payment"
+    template_name = "clients/payment_reminder_list.html"
+    title = _lazy("Напоминания по оплатам")
 
 
 @staff_required_view
 def run_update_reminders(request):
-    if request.method == 'POST':
+    if request.method == "POST":
         try:
-            call_command('update_reminders')
+            call_command("update_reminders")
             messages.success(request, _("Проверка завершена. Новые напоминания, если были найдены, успешно созданы!"))
         except Exception as e:
             messages.error(request, _("Произошла ошибка при создании напоминаний: %(err)s") % {"err": e})
-        next_page = request.POST.get('next', 'documents')
-        if next_page == 'payments':
-            return redirect('clients:payment_reminder_list')
-        else:
-            return redirect('clients:document_reminder_list')
+        next_page = request.POST.get("next", "documents")
+        if next_page == "payments":
+            return redirect("clients:payment_reminder_list")
+        return redirect("clients:document_reminder_list")
+
     messages.warning(request, _("Эту операцию можно выполнить только через специальную кнопку."))
-    return redirect('clients:document_reminder_list')
+    return redirect("clients:document_reminder_list")
 
 
 @staff_required_view
 def reminder_action(request, reminder_id):
     reminder = get_object_or_404(Reminder, pk=reminder_id)
-    if request.method == 'POST':
-        action = request.POST.get('action')
-        if action == 'delete':
-            reminder.delete()
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "delete":
+            delete_reminder(reminder=reminder, actor=request.user)
             messages.success(request, _("Напоминание удалено."))
-        elif action == 'deactivate':
-            reminder.is_active = False
-            reminder.save()
+        elif action == "deactivate":
+            deactivate_reminder(reminder=reminder, actor=request.user)
             messages.success(request, _("Напоминание отмечено как выполненное."))
-        elif action == 'send_email' and reminder.reminder_type == 'document':
-            documents = []
-            if reminder.document and reminder.document.expiry_date:
-                documents.append(reminder.document)
-            sent = send_expiring_documents_email(reminder.client, documents)
-            if sent:
+        elif action == "send_email" and reminder.reminder_type == "document":
+            result = send_document_reminder_for_reminder(
+                reminder=reminder,
+                actor=request.user,
+                send_email=send_expiring_documents_email,
+            )
+            if result.email_sent:
                 messages.success(request, _("Отправили письмо клиенту об истекающем документе."))
             else:
                 messages.warning(request, _("Не удалось отправить письмо: нет email или даты истечения."))
+
     next_url = request.POST.get("next") or request.META.get("HTTP_REFERER")
     if next_url and not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
         next_url = None
-    return redirect(next_url or 'clients:document_reminder_list')
+    return redirect(next_url or "clients:document_reminder_list")
 
 
 @staff_required_view
 def send_document_reminder_email(request, client_id):
-    if request.method == 'POST':
+    if request.method == "POST":
         client = get_object_or_404(Client, pk=client_id)
-        reminders = (
-            Reminder.objects.filter(client=client, reminder_type='document', is_active=True)
-            .select_related('document')
+        result = send_document_reminder_for_client(
+            client=client,
+            actor=request.user,
+            send_email=send_expiring_documents_email,
         )
-        documents = [reminder.document for reminder in reminders if reminder.document and reminder.document.expiry_date]
-        sent = send_expiring_documents_email(client, documents)
-        if sent:
+        if result.email_sent:
             messages.success(request, _("Отправили письмо клиенту по документам."))
         else:
             messages.warning(request, _("Не удалось отправить письмо: нет email или документов с датой истечения."))
         next_url = request.POST.get("next") or request.META.get("HTTP_REFERER")
         if next_url and not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
             next_url = None
-        return redirect(next_url or 'clients:document_reminder_list')
+        return redirect(next_url or "clients:document_reminder_list")
+
     messages.warning(request, _("Эту операцию можно выполнить только через кнопку отправки."))
-    return redirect('clients:document_reminder_list')
+    return redirect("clients:document_reminder_list")

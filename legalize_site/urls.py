@@ -8,7 +8,7 @@ from django.conf.urls.i18n import i18n_patterns
 from clients import views
 from clients.views.admin_views import update_translations_view
 from users.views import ResendVerificationEmailView
-from .cron_views import db_backup
+from .cron_views import db_backup, process_email_campaigns_cron
 
 from legalize_site.views import healthcheck
 
@@ -18,6 +18,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),
     path('cron/db-backup/', db_backup, name='db_backup'),
+    path('cron/process-email-campaigns/', process_email_campaigns_cron, name='process_email_campaigns_cron'),
 ]
 
 if getattr(settings, "ENABLE_TRANSLATION_TOOLING", False) and 'rosetta' in settings.INSTALLED_APPS:

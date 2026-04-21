@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n static %}
 
-{% block title %}{% translate "Admin Dashboard — System Health" %}{% endblock %}
+{% block title %}{% translate "Admin Dashboard - System Health" %}{% endblock %}
 
 {% block page_header %}{% endblock %}
 
@@ -14,7 +14,6 @@
         </div>
     </div>
 
-    <!-- System Health Row -->
     <div class="row g-4 mb-4">
         <div class="col-xl-3 col-md-6">
             <div class="card border-0 shadow-sm h-100 border-start border-4 border-{{ email_status.css }}">
@@ -46,14 +45,14 @@
             </div>
         </div>
         <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100 border-start border-4 border-{% if fernet_configured %}success{% else %}danger{% endif %}">
+            <div class="card border-0 shadow-sm h-100 border-start border-4 border-{% if runtime_missing_count %}warning{% else %}success{% endif %}">
                 <div class="card-body">
-                    <div class="text-xs fw-bold text-uppercase mb-1 text-muted">{% translate "PII Encryption" %}</div>
+                    <div class="text-xs fw-bold text-uppercase mb-1 text-muted">{% translate "Runtime Dependencies" %}</div>
                     <div class="h5 mb-0 fw-bold text-gray-800">
-                        {% if fernet_configured %}
-                        <span class="badge bg-success">{% translate "Active" %}</span>
+                        {% if runtime_missing_count %}
+                        <span class="badge bg-warning text-dark">{{ runtime_missing_count }} {% translate "missing" %}</span>
                         {% else %}
-                        <span class="badge bg-danger">{% translate "Missing Keys" %}</span>
+                        <span class="badge bg-success">{% translate "All available" %}</span>
                         {% endif %}
                     </div>
                 </div>
@@ -62,11 +61,10 @@
     </div>
 
     <div class="row g-4">
-        <!-- Clients & Workflow -->
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-transparent border-0 pt-4 pb-0">
-                    <h5 class="fw-semibold mb-0">{% translate "Clients by Stage" %} (Total: {{ total_clients }})</h5>
+                    <h5 class="fw-semibold mb-0">{% translate "Clients by Stage" %} ({{ total_clients }})</h5>
                 </div>
                 <div class="card-body">
                     <ul class="list-group list-group-flush">
@@ -83,14 +81,42 @@
             </div>
         </div>
 
-        <!-- Operations Summary -->
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-transparent border-0 pt-4 pb-0">
-                    <h5 class="fw-semibold mb-0">{% translate "Action Items" %}</h5>
+                    <h5 class="fw-semibold mb-0">{% translate "Operational Queues" %}</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row text-center mb-4">
+                    <div class="row text-center g-3">
+                        <div class="col-4">
+                            <div class="h3 mb-0 {% if pending_document_jobs > 0 %}text-warning{% endif %}">{{ pending_document_jobs }}</div>
+                            <div class="small text-muted">{% translate "Pending OCR" %}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="h3 mb-0 {% if processing_document_jobs > 0 %}text-info{% endif %}">{{ processing_document_jobs }}</div>
+                            <div class="small text-muted">{% translate "Running OCR" %}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="h3 mb-0 {% if failed_document_jobs > 0 %}text-danger{% endif %}">{{ failed_document_jobs }}</div>
+                            <div class="small text-muted">{% translate "Failed OCR" %}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="h3 mb-0 {% if pending_campaigns > 0 %}text-warning{% endif %}">{{ pending_campaigns }}</div>
+                            <div class="small text-muted">{% translate "Queued Emails" %}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="h3 mb-0 {% if running_campaigns > 0 %}text-info{% endif %}">{{ running_campaigns }}</div>
+                            <div class="small text-muted">{% translate "Running Emails" %}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="h3 mb-0 {% if failed_campaigns > 0 %}text-danger{% endif %}">{{ failed_campaigns }}</div>
+                            <div class="small text-muted">{% translate "Failed Emails" %}</div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="row text-center g-3">
                         <div class="col-4">
                             <div class="h3 mb-0 {% if docs_awaiting_confirmation > 0 %}text-warning{% endif %}">{{ docs_awaiting_confirmation }}</div>
                             <div class="small text-muted">{% translate "Docs Awaiting" %}</div>
@@ -104,25 +130,71 @@
                             <div class="small text-muted">{% translate "OCR Mismatches" %}</div>
                         </div>
                     </div>
-                    
-                    <hr>
+                </div>
+            </div>
+        </div>
 
-                    <h6 class="fw-bold text-muted mb-3 mt-4">{% translate "Email Campaigns (Last 5)" %}</h6>
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                    <h5 class="fw-semibold mb-0">{% translate "Runtime Checks" %}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>{% translate "Dependency" %}</th>
+                                    <th>{% translate "Type" %}</th>
+                                    <th>{% translate "Required For" %}</th>
+                                    <th class="text-end">{% translate "Status" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dependency in runtime_dependencies %}
+                                <tr>
+                                    <td><code>{{ dependency.label }}</code></td>
+                                    <td>{{ dependency.kind }}</td>
+                                    <td>{{ dependency.required_for }}</td>
+                                    <td class="text-end">
+                                        {% if dependency.available %}
+                                        <span class="badge bg-success">{% translate "Available" %}</span>
+                                        {% else %}
+                                        <span class="badge bg-warning text-dark">{% translate "Missing" %}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                    <h5 class="fw-semibold mb-0">{% translate "Recent Email Campaigns" %}</h5>
+                </div>
+                <div class="card-body">
                     {% if recent_campaigns %}
                     <div class="table-responsive">
-                        <table class="table table-sm table-borderless align-middle">
+                        <table class="table table-sm table-borderless align-middle mb-0">
                             <tbody>
                                 {% for campaign in recent_campaigns %}
                                 <tr>
-                                    <td><div class="text-truncate" style="max-width: 200px;">{{ campaign.subject }}</div></td>
+                                    <td><div class="text-truncate" style="max-width: 220px;">{{ campaign.subject }}</div></td>
                                     <td>{{ campaign.sent_count }}/{{ campaign.total_recipients }}</td>
                                     <td class="text-end">
                                         {% if campaign.status == 'completed' %}
-                                            <span class="badge bg-success">{% translate "Done" %}</span>
+                                        <span class="badge bg-success">{% translate "Done" %}</span>
                                         {% elif campaign.status == 'failed' %}
-                                            <span class="badge bg-danger">{% translate "Failed" %}</span>
+                                        <span class="badge bg-danger">{% translate "Failed" %}</span>
+                                        {% elif campaign.status == 'running' %}
+                                        <span class="badge bg-info text-dark">{% translate "Running" %}</span>
                                         {% else %}
-                                            <span class="badge bg-warning text-dark">{{ campaign.get_status_display }}</span>
+                                        <span class="badge bg-warning text-dark">{% translate "Queued" %}</span>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -131,7 +203,7 @@
                         </table>
                     </div>
                     {% else %}
-                    <p class="text-muted small">{% translate "No recent campaigns." %}</p>
+                    <p class="text-muted small mb-0">{% translate "No recent campaigns." %}</p>
                     {% endif %}
                 </div>
             </div>

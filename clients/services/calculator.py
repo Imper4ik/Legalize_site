@@ -1,13 +1,15 @@
 """Domain logic for the bank statement calculator."""
 from __future__ import annotations
 
+import json
+import logging
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
-import logging
 from typing import Optional
+from urllib.error import HTTPError, URLError
+from urllib.request import urlopen
 
-import requests
 from django.core.cache import cache
 from django.utils import timezone
 
@@ -45,25 +47,22 @@ def get_eur_to_pln_rate() -> Decimal:
     """Fetch current EUR to PLN exchange rate from NBP API with caching."""
     cache_key = "eur_to_pln_rate"
     cached_rate = cache.get(cache_key)
-    
+
     if cached_rate is not None:
         return cached_rate
 
     try:
-        # NBP API does not require an API key
-        response = requests.get(NBP_EUR_RATE_URL, timeout=5)
-        response.raise_for_status()
-        data = response.json()
+        with urlopen(NBP_EUR_RATE_URL, timeout=5) as response:
+            data = json.load(response)
         rate = Decimal(str(data["rates"][0]["mid"]))
-        
-        # Cache for 12 hours
+
         cache.set(cache_key, rate, timeout=12 * 60 * 60)
         return rate
-    except requests.RequestException as e:
-        logger.warning(f"Failed to fetch EUR/PLN rate from NBP API: {e}. Using default.")
+    except (HTTPError, URLError, OSError) as exc:
+        logger.warning("Failed to fetch EUR/PLN rate from NBP API: %s. Using default.", exc)
         return DEFAULT_EUR_TO_PLN_RATE
-    except (KeyError, IndexError, ValueError) as e:
-        logger.warning(f"Failed to parse EUR/PLN rate from NBP API: {e}. Using default.")
+    except (KeyError, IndexError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        logger.warning("Failed to parse EUR/PLN rate from NBP API: %s. Using default.", exc)
         return DEFAULT_EUR_TO_PLN_RATE
 
 

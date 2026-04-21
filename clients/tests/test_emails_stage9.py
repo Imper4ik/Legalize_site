@@ -3,10 +3,12 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
-from clients.models import Client
+from clients.models import Client, Company, EmailCampaign
+from clients.services.responses import NO_STORE_HEADER
 
 
 class EmailViewsStage9Tests(TestCase):
@@ -30,6 +32,7 @@ class EmailViewsStage9Tests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Cache-Control"], NO_STORE_HEADER)
         payload = response.json()
         self.assertIn("subject", payload)
         self.assertIn("body", payload)
@@ -59,32 +62,79 @@ class EmailViewsStage9Tests(TestCase):
         self.assertEqual(response.status_code, 302)
         send_mail_mock.assert_not_called()
 
-    @patch("clients.views.emails.send_mail", return_value=1)
-    @patch("clients.views.emails._send_confirmation_email")
     @patch("clients.views.emails._log_email")
-    @patch("clients.views.emails.threading.Thread.start", autospec=True)
-    def test_mass_email_view_sends_to_matching_clients(self, mock_thread_start, log_mock, confirm_mock, send_mail_mock):
-        def fake_start(thread_instance):
-            thread_instance._target(*thread_instance._args, **thread_instance._kwargs)
-        mock_thread_start.side_effect = fake_start
-        other = Client.objects.create(
+    @patch("clients.views.emails._send_confirmation_email")
+    @patch("clients.views.emails.send_mail", return_value=1)
+    def test_mass_email_view_queues_campaign_for_worker(self, send_mail_mock, confirm_mock, log_mock):
+        company = Company.objects.create(name="Mass Co")
+        Client.objects.create(
             first_name="Mass",
             last_name="Target",
             citizenship="PL",
             phone="+48999111222",
             email="mass-target@example.com",
-            status="new",
+            company=company,
         )
 
         response = self.client.post(
             reverse("clients:mass_email"),
-            data={"subject": "News", "message": "Body", "status": "new"},
+            data={"subject": "News", "message": "Body", "company": company.pk},
         )
 
         self.assertEqual(response.status_code, 302)
-        self.assertGreaterEqual(send_mail_mock.call_count, 1)
+        campaign = EmailCampaign.objects.get()
+        self.assertEqual(campaign.status, EmailCampaign.STATUS_PENDING)
+        self.assertEqual(campaign.total_recipients, 1)
+        self.assertEqual(campaign.recipient_emails, ["mass-target@example.com"])
+        self.assertEqual(campaign.filters_snapshot["company_id"], company.pk)
+        self.assertEqual(campaign.created_by, self.staff)
+        send_mail_mock.assert_not_called()
+        confirm_mock.assert_not_called()
+        log_mock.assert_not_called()
+
+    @patch("clients.services.email_campaigns._log_email")
+    @patch("clients.services.email_campaigns._send_confirmation_email")
+    @patch("clients.services.email_campaigns.send_mail", return_value=1)
+    def test_process_email_campaigns_command_sends_pending_campaign(self, send_mail_mock, confirm_mock, log_mock):
+        campaign = EmailCampaign.objects.create(
+            subject="News",
+            message="Body",
+            total_recipients=1,
+            recipient_emails=["email-user@example.com"],
+            created_by=self.staff,
+        )
+
+        call_command("process_email_campaigns", campaign_id=campaign.pk)
+
+        campaign.refresh_from_db()
+        self.assertEqual(campaign.status, EmailCampaign.STATUS_COMPLETED)
+        self.assertEqual(campaign.sent_count, 1)
+        self.assertEqual(campaign.failed_count, 0)
+        self.assertIsNotNone(campaign.started_at)
+        self.assertIsNotNone(campaign.completed_at)
+        send_mail_mock.assert_called_once()
         confirm_mock.assert_called_once()
-        self.assertGreaterEqual(log_mock.call_count, 1)
+        log_mock.assert_called_once()
+        self.assertEqual(log_mock.call_args.kwargs["sent_by"], self.staff)
+
+    def test_campaign_status_api_returns_no_store_payload(self):
+        campaign = EmailCampaign.objects.create(
+            subject="Queued",
+            message="Body",
+            total_recipients=1,
+            recipient_emails=["email-user@example.com"],
+            filters_snapshot={"status": "new"},
+            created_by=self.staff,
+        )
+
+        response = self.client.get(reverse("clients:campaign_status_api", kwargs={"campaign_id": campaign.pk}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Cache-Control"], NO_STORE_HEADER)
+        payload = response.json()
+        self.assertEqual(payload["status"], EmailCampaign.STATUS_PENDING)
+        self.assertEqual(payload["filters_snapshot"]["status"], "new")
+        self.assertEqual(payload["created_by"], self.staff.email)
 
     @patch("clients.views.emails.send_mail", return_value=1)
     def test_send_custom_email_handles_client_without_email(self, send_mail_mock):

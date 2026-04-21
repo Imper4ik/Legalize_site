@@ -1,34 +1,57 @@
-{# clients/templates/clients/partials/payment_item.html #}
 {% load i18n %}
 
-<div class="d-flex justify-content-between align-items-center">
-    <div>
-        <h6 class="mb-1">{{ payment.get_service_description_display }}</h6>
-        <small class="text-muted">
+<div class="d-flex justify-content-between align-items-start gap-3">
+    <div class="flex-grow-1">
+        <div class="d-flex align-items-center flex-wrap gap-2">
+            <h6 class="mb-0 fw-bold">{{ payment.get_service_description_display|default:payment.service_description }}</h6>
+            <span class="badge {% if payment.status == 'paid' %}bg-success{% elif payment.status == 'partial' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                {{ payment.get_status_display }}
+            </span>
+        </div>
+        <small class="text-muted d-block mt-1">
             {% translate "Счёт от" %} {{ payment.created_at|date:"d.m.Y" }}
         </small>
-    </div>
-    <div class="d-flex align-items-center">
-        <span class="fs-5 me-3">
-            <strong>{{ payment.amount_paid|floatformat:2 }} / {{ payment.total_amount|floatformat:2 }} PLN</strong>
-        </span>
-        <span class="text-muted me-2">{% translate "Статус" %}:</span>
-        <span class="badge
-            {% if payment.status == 'paid' %}bg-success
-            {% elif payment.status == 'partial' %}bg-warning text-dark
-            {% else %}bg-secondary{% endif %} me-3">
-            {{ payment.get_status_display }}
-        </span>
-
-        {% if payment.id %}
-            <button type="button" class="btn btn-outline-secondary btn-sm"
-                    data-bs-toggle="modal"
-                    data-bs-target="#editPaymentModal"
-                    data-form-action="{% url 'clients:edit_payment' payment.id %}">
-                <i class="fas fa-pencil-alt"></i> {% translate "Редактировать" %}
-            </button>
-        {% else %}
-            <span class="text-muted">{% translate "ID платежа не найден" %}</span>
+        <div class="small text-muted mt-1">
+            {% translate "Оплачено" %}: {{ payment.amount_paid|floatformat:2 }} / {{ payment.total_amount|floatformat:2 }} PLN
+        </div>
+        {% if payment.due_date or payment.transaction_id %}
+        <div class="small text-muted mt-1">
+            {% if payment.due_date %}
+            {% translate "Срок оплаты" %}: {{ payment.due_date|date:"d.m.Y" }}
+            {% endif %}
+            {% if payment.due_date and payment.transaction_id %}
+            <span class="mx-1">•</span>
+            {% endif %}
+            {% if payment.transaction_id %}
+            {% translate "Транзакция" %}: {{ payment.transaction_id }}
+            {% endif %}
+        </div>
         {% endif %}
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <button
+            type="button"
+            class="btn btn-outline-secondary btn-sm"
+            data-bs-toggle="modal"
+            data-bs-target="#editPaymentModal"
+            data-form-action="{% url 'clients:edit_payment' payment.id %}"
+            data-service="{{ payment.service_description }}"
+            data-total-amount="{{ payment.total_amount|stringformat:'.2f' }}"
+            data-amount-paid="{{ payment.amount_paid|stringformat:'.2f' }}"
+            data-status="{{ payment.status }}"
+            data-payment-method="{{ payment.payment_method }}"
+            data-payment-date="{% if payment.payment_date %}{{ payment.payment_date|date:'Y-m-d' }}{% endif %}"
+            data-due-date="{% if payment.due_date %}{{ payment.due_date|date:'Y-m-d' }}{% endif %}"
+            data-transaction-id="{{ payment.transaction_id|default:'' }}"
+        >
+            <i class="bi bi-pencil-square"></i>
+            {% translate "Редактировать" %}
+        </button>
+        <form action="{% url 'clients:delete_payment' payment.id %}" method="post" class="d-inline delete-payment-form">
+            {% csrf_token %}
+            <button type="button" class="btn btn-outline-danger btn-sm delete-payment-button" title="{% translate 'Удалить платёж' %}">
+                <i class="bi bi-trash"></i>
+            </button>
+        </form>
     </div>
 </div>

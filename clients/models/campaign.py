@@ -31,8 +31,11 @@ class EmailCampaign(models.Model):
     total_recipients = models.PositiveIntegerField(default=0, verbose_name=_("Всего получателей"))
     sent_count = models.PositiveIntegerField(default=0, verbose_name=_("Отправлено"))
     failed_count = models.PositiveIntegerField(default=0, verbose_name=_("Ошибок"))
+    recipient_emails = models.JSONField(default=list, blank=True, verbose_name=_("Получатели"))
+    filters_snapshot = models.JSONField(default=dict, blank=True, verbose_name=_("Фильтры"))
     error_details = models.TextField(blank=True, default="", verbose_name=_("Детали ошибок"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Создано"))
+    started_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Запущено"))
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Завершено"))
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

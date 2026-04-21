@@ -7,6 +7,8 @@ import os
 from django.conf import settings
 from django.core.checks import Error, Warning, register
 
+from legalize_site.runtime import collect_runtime_dependency_statuses
+
 EMAIL_ERROR_ID = "legalize_site.E001"
 EMAIL_WARNING_ID = "legalize_site.W001"
 EMAIL_CONSOLE_WARNING_ID = "legalize_site.W002"
@@ -14,6 +16,7 @@ SECRET_KEY_ERROR_ID = "legalize_site.E002"
 FERNET_KEYS_ERROR_ID = "legalize_site.E003"
 SECRET_KEY_WARNING_ID = "legalize_site.W003"
 FERNET_KEYS_WARNING_ID = "legalize_site.W004"
+RUNTIME_DEPENDENCY_WARNING_ID = "legalize_site.W005"
 
 BACKENDS = {
     "django.core.mail.backends.smtp.EmailBackend": {
@@ -49,12 +52,7 @@ def _smtp_provider() -> str:
 
 @register("legalize_site")
 def email_configuration_check(app_configs=None, **kwargs):
-    """Validate the production email settings.
-
-    Missing API keys cause runtime failures or silent console backends in
-    production. Surfacing the misconfiguration early keeps password reset and
-    activation emails working when deployments happen.
-    """
+    """Validate the production email settings."""
 
     provider = None
     env_var = None
@@ -65,11 +63,9 @@ def email_configuration_check(app_configs=None, **kwargs):
     if settings.EMAIL_BACKEND == "django.core.mail.backends.console.EmailBackend":
         messages.append(
             Warning(
-                "EMAIL_BACKEND is set to the console backend, so messages are "
-                "only printed to logs and never delivered.",
+                "EMAIL_BACKEND is set to the console backend, so messages are only printed to logs and never delivered.",
                 hint=(
-                    "Set SENDGRID_API_KEY, BREVO_API_KEY or SMTP credentials via "
-                    "environment variables to enable real email sending."
+                    "Set SENDGRID_API_KEY, BREVO_API_KEY or SMTP credentials via environment variables to enable real email sending."
                 ),
                 id=EMAIL_CONSOLE_WARNING_ID,
             )
@@ -79,11 +75,9 @@ def email_configuration_check(app_configs=None, **kwargs):
         if default_from_email.endswith("yourdomain.tld"):
             messages.append(
                 Warning(
-                    "DEFAULT_FROM_EMAIL still uses the placeholder domain "
-                    "'yourdomain.tld'.",
+                    "DEFAULT_FROM_EMAIL still uses the placeholder domain 'yourdomain.tld'.",
                     hint=(
-                        "Set DEFAULT_FROM_EMAIL (or REPLY_TO_EMAIL) to a "
-                        "provider-verified address via environment variables."
+                        "Set DEFAULT_FROM_EMAIL (or REPLY_TO_EMAIL) to a provider-verified address via environment variables."
                     ),
                     id=EMAIL_WARNING_ID,
                 )
@@ -106,9 +100,6 @@ def email_configuration_check(app_configs=None, **kwargs):
     else:
         backend = BACKENDS.get(settings.EMAIL_BACKEND)
         if not backend:
-            # Project does not use a supported email backend right now (e.g. when
-            # running tests with the console backend). Skip validation to avoid
-            # false positives.
             return []
         provider = backend["provider"]
         env_var = backend["env_var"]
@@ -122,16 +113,13 @@ def email_configuration_check(app_configs=None, **kwargs):
     if mode == "api":
         api_key = getattr(settings, "ANYMAIL", {}).get(env_var) or os.getenv(env_var)
         hint = (
-            f"Set the {env_var} environment variable so the anymail {provider_label} "
-            "backend can authenticate against the provider API."
+            f"Set the {env_var} environment variable so the anymail {provider_label} backend can authenticate against the provider API."
         )
         provider_label = f"{provider_label} API key"
     else:
         api_key = getattr(settings, "EMAIL_HOST_PASSWORD", None) or os.getenv(env_var)
         hint = (
-            f"Set the {env_var} environment variable or provide a value for "
-            f"settings.EMAIL_HOST_PASSWORD so Django can authenticate with "
-            f"{host_label}."
+            f"Set the {env_var} environment variable or provide a value for settings.EMAIL_HOST_PASSWORD so Django can authenticate with {host_label}."
         )
         provider_label = f"{provider_label} SMTP password" if provider_label != "Email" else "SMTP password"
 
@@ -148,11 +136,9 @@ def email_configuration_check(app_configs=None, **kwargs):
     if default_from_email.endswith("yourdomain.tld"):
         messages.append(
             Warning(
-                "DEFAULT_FROM_EMAIL still uses the placeholder domain "
-                "'yourdomain.tld'.",
+                "DEFAULT_FROM_EMAIL still uses the placeholder domain 'yourdomain.tld'.",
                 hint=(
-                    "Set DEFAULT_FROM_EMAIL (or REPLY_TO_EMAIL) to a "
-                    "provider-verified address via environment variables."
+                    "Set DEFAULT_FROM_EMAIL (or REPLY_TO_EMAIL) to a provider-verified address via environment variables."
                 ),
                 id=EMAIL_WARNING_ID,
             )
@@ -163,12 +149,7 @@ def email_configuration_check(app_configs=None, **kwargs):
 
 @register("legalize_site")
 def encryption_configuration_check(app_configs=None, **kwargs):
-    """Validate secret and encryption key configuration.
-
-    In production, missing keys are hard errors (the app also refuses to start).
-    In development/test, warnings surface the fact that PII encryption relies on
-    a key derived from SECRET_KEY or that SECRET_KEY uses the insecure default.
-    """
+    """Validate secret and encryption key configuration."""
 
     messages = []
     placeholder_secret = "django-insecure-change-me"
@@ -189,8 +170,7 @@ def encryption_configuration_check(app_configs=None, **kwargs):
             Warning(
                 "SECRET_KEY is using the insecure default fallback value.",
                 hint=(
-                    "Set SECRET_KEY to a unique value for safer local development.  "
-                    "In production this will be an error."
+                    "Set SECRET_KEY to a unique value for safer local development. In production this will be an error."
                 ),
                 id=SECRET_KEY_WARNING_ID,
             )
@@ -201,8 +181,7 @@ def encryption_configuration_check(app_configs=None, **kwargs):
             Error(
                 "FERNET_KEYS must be configured explicitly in production.",
                 hint=(
-                    "Set FERNET_KEYS to one or more Fernet keys and do not rely on keys "
-                    "derived from SECRET_KEY."
+                    "Set FERNET_KEYS to one or more Fernet keys and do not rely on keys derived from SECRET_KEY."
                 ),
                 id=FERNET_KEYS_ERROR_ID,
             )
@@ -210,14 +189,30 @@ def encryption_configuration_check(app_configs=None, **kwargs):
     elif not is_production and not fernet_configured:
         messages.append(
             Warning(
-                "FERNET_KEYS environment variable is not set; "
-                "encryption keys are derived from SECRET_KEY.",
+                "FERNET_KEYS environment variable is not set; encryption keys are derived from SECRET_KEY.",
                 hint=(
-                    "Set FERNET_KEYS to explicit Fernet keys for safer "
-                    "PII encryption.  In production this will be an error."
+                    "Set FERNET_KEYS to explicit Fernet keys for safer PII encryption. In production this will be an error."
                 ),
                 id=FERNET_KEYS_WARNING_ID,
             )
         )
 
+    return messages
+
+
+@register("legalize_site")
+def runtime_dependency_check(app_configs=None, **kwargs):
+    """Surface missing OCR/backup/runtime tooling as Django warnings."""
+
+    messages = []
+    for dependency in collect_runtime_dependency_statuses():
+        if dependency["available"]:
+            continue
+        messages.append(
+            Warning(
+                f"{dependency['label']} is unavailable; {dependency['required_for']} will be degraded.",
+                hint=dependency["hint"],
+                id=RUNTIME_DEPENDENCY_WARNING_ID,
+            )
+        )
     return messages

@@ -2,10 +2,14 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
-from django.utils.crypto import get_random_string
-from django.utils.text import slugify
 
 from clients.services.calculator import CURRENCY_EUR, CURRENCY_PLN
+from clients.use_cases.document_requirements import (
+    build_document_requirement_code,
+    create_document_requirement_for_purpose,
+    sync_document_checklist_for_purpose,
+    update_document_requirement_record,
+)
 from clients.validators import FILE_INPUT_ACCEPT, validate_uploaded_document
 from .constants import DocumentType, INTERNAL_DOCS
 from submissions.models import Submission
@@ -233,15 +237,12 @@ class DocumentRequirementEditForm(forms.ModelForm):
         }
 
     def save(self, commit=True):
-        instance = super().save(commit=False)
-        # Auto-propagate custom_name to empty language fields
-        if instance.custom_name:
-            for lang_field in ('custom_name_pl', 'custom_name_en', 'custom_name_ru'):
-                if not getattr(instance, lang_field):
-                    setattr(instance, lang_field, instance.custom_name)
-        if commit:
-            instance.save()
-        return instance
+        instance = self.instance
+        result = update_document_requirement_record(
+            requirement=instance,
+            cleaned_data=self.cleaned_data,
+        )
+        return result.requirement
 
 
 class DocumentRequirementAddForm(forms.Form):
@@ -257,28 +258,21 @@ class DocumentRequirementAddForm(forms.Form):
 
     def clean_name(self):
         name = (self.cleaned_data.get('name') or '').strip()
-        slug = slugify(name, allow_unicode=True).replace('-', '_')
-        if not slug:
-            slug = f"custom_doc_{get_random_string(5)}"
-
-        candidate = slug
-        while DocumentRequirement.objects.filter(application_purpose=self.purpose, document_type=candidate).exists():
-            candidate = f"{slug}_{get_random_string(4)}"
-
-        self.cleaned_data['slug'] = candidate
+        self.cleaned_data['slug'] = build_document_requirement_code(
+            purpose=self.purpose,
+            name=name,
+        )
         return name
 
     def save(self):
         if not hasattr(self, 'cleaned_data'):
             raise RuntimeError("Call is_valid() before save()")
-        position = DocumentRequirement.objects.filter(application_purpose=self.purpose).count()
-        return DocumentRequirement.objects.create(
-            application_purpose=self.purpose,
-            document_type=self.cleaned_data['slug'],
-            custom_name=self.cleaned_data['name'],
-            is_required=True,
-            position=position,
+        result = create_document_requirement_for_purpose(
+            purpose=self.purpose,
+            name=self.cleaned_data['name'],
+            slug=self.cleaned_data['slug'],
         )
+        return result.requirement
 
 
 class DocumentChecklistForm(forms.Form):
@@ -347,37 +341,11 @@ class DocumentChecklistForm(forms.Form):
         return []
 
     def save(self) -> int:
-        if self.purpose is None:
-            return 0
-
-        selected_codes = list(self.cleaned_data.get('required_documents', []))
-        selected_positions = {code: pos for pos, code in enumerate(selected_codes)}
-
-        existing = {
-            requirement.document_type: requirement
-            for requirement in DocumentRequirement.objects.filter(application_purpose=self.purpose)
-        }
-
-        for code in selected_codes:
-            if code in existing:
-                requirement = existing[code]
-                requirement.is_required = True
-                requirement.position = selected_positions.get(code, requirement.position)
-                requirement.save(update_fields=['is_required', 'position'])
-            else:
-                DocumentRequirement.objects.create(
-                    application_purpose=self.purpose,
-                    document_type=code,
-                    is_required=True,
-                    position=selected_positions.get(code, 0),
-                )
-
-        for requirement in existing.values():
-            if requirement.document_type not in selected_positions and requirement.is_required:
-                requirement.is_required = False
-                requirement.save(update_fields=['is_required'])
-
-        return len(selected_codes)
+        result = sync_document_checklist_for_purpose(
+            purpose=self.purpose,
+            selected_codes=self.cleaned_data.get('required_documents', []),
+        )
+        return result.updated_count
 
 
 class CalculatorForm(forms.Form):
