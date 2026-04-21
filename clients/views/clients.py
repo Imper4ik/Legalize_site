@@ -14,6 +14,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, FormView, L
 
 from clients.constants import DOCUMENT_CHECKLIST
 from clients.forms import (
+    AppSettingsForm,
     CalculatorForm,
     ClientForm,
     DocumentChecklistForm,
@@ -23,7 +24,7 @@ from clients.forms import (
     PaymentForm,
     StaffTaskForm,
 )
-from clients.models import Client, ClientActivity, Document, DocumentRequirement, Payment, StaffTask, WniosekSubmission
+from clients.models import AppSettings, Client, ClientActivity, Document, DocumentRequirement, Payment, StaffTask, WniosekSubmission
 from clients.services.calculator import (
     LIVING_ALLOWANCE,
     MAX_MONTHS_LIVING,
@@ -273,6 +274,18 @@ class ClientWSCPrintView(ClientPrintBaseView):
 class ClientDocumentPrintView(ClientPrintBaseView):
     ATTACHMENT_DEFAULT_SLOTS = 5
     ATTACHMENT_MAX_SLOTS = 15
+    DEFAULT_OFFICE_LINES = [
+        "Mazowiecki Urząd Wojewódzki",
+        "W Warszawie",
+        "Ul. Marszałkowska 3/5",
+        "00-624 Warszawa",
+    ]
+    DEFAULT_PROXY_LINES = [
+        "Ajżan Bartosik-Nisanbajewa",
+        "UL. MARSZAŁKOWSKA 9/15,",
+        "00-626 WARSZAWA, tel. 667066113",
+        "Pełnomocnik",
+    ]
 
     documents = {
         "acceleration_request": {
@@ -314,6 +327,8 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                     "birth_date": getattr(client, "birth_date", ""),
                     "attachment_count": attachment_count,
                     "attachment_names": attachment_names,
+                    "office_lines": self._get_multiline_param("office_line", self.DEFAULT_OFFICE_LINES),
+                    "proxy_lines": self._get_multiline_param("proxy_line", self.DEFAULT_PROXY_LINES),
                     "confirm_url": reverse_lazy(
                         "clients:client_document_print_confirm",
                         kwargs={"pk": client.pk, "doc_type": context["doc_type"]},
@@ -350,6 +365,21 @@ class ClientDocumentPrintView(ClientPrintBaseView):
         if len(attachments) < minimum_slots:
             attachments.extend([""] * (minimum_slots - len(attachments)))
         return attachments
+
+    def _get_multiline_param(self, param_name: str, default_lines: list[str]) -> list[str]:
+        values = self.request.GET.getlist(param_name)
+        if not values:
+            settings_attr = {
+                "office_line": "mazowiecki_office_template",
+                "proxy_line": "mazowiecki_proxy_template",
+            }.get(param_name)
+            if settings_attr:
+                app_settings = AppSettings.get_solo()
+                template_value = getattr(app_settings, settings_attr, "") or ""
+                if template_value.strip():
+                    return template_value.splitlines()
+            return list(default_lines)
+        return [value.strip() for value in values]
 
 
 class DocumentChecklistManageView(StaffRequiredMixin, FormView):
@@ -421,6 +451,20 @@ class DocumentChecklistManageView(StaffRequiredMixin, FormView):
         return context
 
 
+class AppSettingsUpdateView(StaffRequiredMixin, UpdateView):
+    model = AppSettings
+    form_class = AppSettingsForm
+    template_name = "clients/app_settings_form.html"
+    success_url = reverse_lazy("clients:app_settings")
+
+    def get_object(self, queryset=None):
+        return AppSettings.get_solo()
+
+    def form_valid(self, form):
+        messages.success(self.request, _("Настройки шаблона wniosek сохранены."))
+        return super().form_valid(form)
+
+
 client_print_view = ClientPrintView.as_view()
 client_wsc_print_view = ClientWSCPrintView.as_view()
 client_document_print_view = ClientDocumentPrintView.as_view()
@@ -451,6 +495,10 @@ def client_document_print_confirm_view(request, pk, doc_type):
         params.append(("attachments", attachment_name))
     if confirmed_attachments:
         params.append(("attachment_count", str(len(confirmed_attachments))))
+    for office_line in request.POST.getlist("office_line"):
+        params.append(("office_line", office_line))
+    for proxy_line in request.POST.getlist("proxy_line"):
+        params.append(("proxy_line", proxy_line))
 
     messages.success(
         request,

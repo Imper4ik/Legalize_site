@@ -2,13 +2,32 @@
 
 from django.contrib import admin
 
-from .models import Client, ClientActivity, Company, Document, Payment, ServicePrice, StaffTask
+from .models import AppSettings, Client, ClientActivity, Company, Document, Payment, ServicePrice, StaffTask
 
 
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
     list_display = ("name", "created_at")
     search_fields = ("name",)
+
+
+@admin.register(AppSettings)
+class AppSettingsAdmin(admin.ModelAdmin):
+    fieldsets = (
+        (
+            "Mazowiecki Wniosek",
+            {
+                "fields": ("mazowiecki_office_template", "mazowiecki_proxy_template"),
+                "description": "Эти значения используются по умолчанию для всей текущей базы данных.",
+            },
+        ),
+    )
+
+    def has_add_permission(self, request):
+        return not AppSettings.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(ServicePrice)

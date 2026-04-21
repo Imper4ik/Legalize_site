@@ -1,4 +1,5 @@
 from .client import Client
+from .app_settings import AppSettings
 from .company import Company
 from .activity import ClientActivity
 from .document import (
@@ -18,6 +19,7 @@ from .wniosek import WniosekAttachment, WniosekSubmission
 
 __all__ = [
     'Client',
+    'AppSettings',
     'ClientActivity',
     'Company',
     'Document',
