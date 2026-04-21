@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 {% load static %}
 {% load i18n static %}
+{% load role_tags %}
 <html lang="{{ LANGUAGE_CODE }}">
 
 <head>
@@ -110,15 +111,24 @@
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
                 {% if user.is_staff %}
                 <li>
+                  <a class="dropdown-item" href="{% url 'clients:admin_panel' %}">
+                    <i class="bi bi-grid-1x2 me-2"></i>Админ панель
+                  </a>
+                </li>
+                {% if user|has_any_role:"Admin,Manager,Staff,ReadOnly" %}
+                <li>
                   <a class="dropdown-item" href="{% url 'clients:metrics_dashboard' %}">
                     <i class="bi bi-speedometer2 me-2"></i>{% translate "Метрики" %}
                   </a>
                 </li>
+                {% endif %}
+                {% if user|has_any_role:"Admin,Manager" %}
                 <li>
                   <a class="dropdown-item" href="{% url 'clients:app_settings' %}">
                     <i class="bi bi-sliders me-2"></i>Template Settings
                   </a>
                 </li>
+                {% endif %}
                 {% if user.is_superuser and translation_tooling_enabled %}
                 <li>
                   <a class="dropdown-item fw-bold" href="{% url 'translations:dashboard' %}" style="color: #6366f1;">

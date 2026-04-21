@@ -9,7 +9,14 @@ from .models import Document, Submission
 class SubmissionForm(forms.ModelForm):
     class Meta:
         model = Submission
-        fields = ['name', 'status']
+        fields = ['name', 'name_pl', 'name_en', 'name_ru', 'status']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'name_pl': forms.TextInput(attrs={'class': 'form-control'}),
+            'name_en': forms.TextInput(attrs={'class': 'form-control'}),
+            'name_ru': forms.TextInput(attrs={'class': 'form-control'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
+        }
 
     def clean_name(self):
         name = self.cleaned_data['name'].strip()

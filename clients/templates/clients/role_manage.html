@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Роли и доступ{% endblock %}
+{% block page_title %}Роли и доступ{% endblock %}
+{% block page_subtitle %}Явное управление рабочими ролями поверх Django groups.{% endblock %}
+
+{% block page_actions %}
+<div class="d-flex gap-2">
+  <a href="{% url 'clients:admin_panel' %}" class="btn btn-outline-secondary">Админ панель</a>
+  <form method="post" class="d-inline">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary">Синхронизировать роли</button>
+  </form>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  {% for role in roles %}
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+            <div>
+              <h5 class="card-title mb-1">{{ role.name }}</h5>
+              <p class="text-muted mb-0">{{ role.description }}</p>
+            </div>
+            <span class="badge text-bg-secondary">{{ role.permissions_count }} perms</span>
+          </div>
+
+          <div class="small text-muted mb-3">Пользователей: {{ role.members_count }}</div>
+
+          {% if role.members %}
+            <div class="small fw-semibold mb-2">Участники</div>
+            <div class="d-flex flex-wrap gap-2">
+              {% for member in role.members %}
+                <span class="badge rounded-pill text-bg-light border">{{ member.email }}</span>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-muted small">Пока никто не назначен.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

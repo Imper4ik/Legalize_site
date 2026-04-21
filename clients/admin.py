@@ -15,6 +15,18 @@ class CompanyAdmin(admin.ModelAdmin):
 class AppSettingsAdmin(admin.ModelAdmin):
     fieldsets = (
         (
+            "Общие настройки базы",
+            {
+                "fields": (
+                    "organization_name",
+                    "contact_email",
+                    "contact_phone",
+                    "office_address",
+                    "default_proxy_name",
+                ),
+            },
+        ),
+        (
             "Mazowiecki Wniosek",
             {
                 "fields": ("mazowiecki_office_template", "mazowiecki_proxy_template"),

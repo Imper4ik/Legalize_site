@@ -14,31 +14,68 @@
       <div class="col-12">
         <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
           <div>
-            <h5 class="mb-1">Wniosek Mazowiecki</h5>
-            <p class="text-muted mb-0">Эти поля будут автоматически подставляться всем клиентам этой базы.</p>
+            <h5 class="mb-1">Настройки базы</h5>
+            <p class="text-muted mb-0">Общие данные инстанса и значения по умолчанию для документов.</p>
           </div>
-          <a href="{% url 'clients:client_list' %}" class="btn btn-outline-secondary">К клиентам</a>
+          <a href="{% url 'clients:admin_panel' %}" class="btn btn-outline-secondary">Админ панель</a>
         </div>
       </div>
 
-      <div class="col-12 col-lg-6">
-        <label for="{{ form.mazowiecki_office_template.id_for_label }}" class="form-label fw-semibold">
-          Адрес urzędu
-        </label>
-        {{ form.mazowiecki_office_template }}
-        <div class="form-text">Каждая новая строка станет отдельной строкой в бланке.</div>
+      <div class="col-12">
+        <div class="border rounded p-3 h-100">
+          <h6 class="fw-semibold mb-3">Общие данные</h6>
+          <div class="row g-3">
+            <div class="col-12 col-lg-6">
+              <label for="{{ form.organization_name.id_for_label }}" class="form-label fw-semibold">Название организации</label>
+              {{ form.organization_name }}
+            </div>
+            <div class="col-12 col-lg-3">
+              <label for="{{ form.contact_email.id_for_label }}" class="form-label fw-semibold">Контактный email</label>
+              {{ form.contact_email }}
+            </div>
+            <div class="col-12 col-lg-3">
+              <label for="{{ form.contact_phone.id_for_label }}" class="form-label fw-semibold">Контактный телефон</label>
+              {{ form.contact_phone }}
+            </div>
+            <div class="col-12 col-lg-6">
+              <label for="{{ form.office_address.id_for_label }}" class="form-label fw-semibold">Адрес офиса</label>
+              {{ form.office_address }}
+              <div class="form-text">Каждая новая строка хранится отдельно, чтобы потом использовать в шаблонах.</div>
+            </div>
+            <div class="col-12 col-lg-6">
+              <label for="{{ form.default_proxy_name.id_for_label }}" class="form-label fw-semibold">Pełnomocnik по умолчанию</label>
+              {{ form.default_proxy_name }}
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="col-12 col-lg-6">
-        <label for="{{ form.mazowiecki_proxy_template.id_for_label }}" class="form-label fw-semibold">
-          Pełnomocnik
-        </label>
-        {{ form.mazowiecki_proxy_template }}
-        <div class="form-text">Можно оставить пустые строки или вообще очистить блок.</div>
+      <div class="col-12">
+        <div class="border rounded p-3 h-100">
+          <h6 class="fw-semibold mb-3">Wniosek Mazowiecki</h6>
+          <p class="text-muted mb-3">Эти поля будут автоматически подставляться всем клиентам этой базы.</p>
+          <div class="row g-3">
+            <div class="col-12 col-lg-6">
+              <label for="{{ form.mazowiecki_office_template.id_for_label }}" class="form-label fw-semibold">
+                Адрес urzedu
+              </label>
+              {{ form.mazowiecki_office_template }}
+              <div class="form-text">Каждая новая строка станет отдельной строкой в бланке.</div>
+            </div>
+
+            <div class="col-12 col-lg-6">
+              <label for="{{ form.mazowiecki_proxy_template.id_for_label }}" class="form-label fw-semibold">
+                Pelnomocnik
+              </label>
+              {{ form.mazowiecki_proxy_template }}
+              <div class="form-text">Можно оставить пустые строки или вообще очистить блок.</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="col-12 d-flex justify-content-end gap-2">
-        <a href="{% url 'clients:client_list' %}" class="btn btn-outline-secondary">Отмена</a>
+        <a href="{% url 'clients:admin_panel' %}" class="btn btn-outline-secondary">Отмена</a>
         <button type="submit" class="btn btn-primary">Сохранить</button>
       </div>
     </form>

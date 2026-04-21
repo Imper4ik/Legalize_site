@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Шаблоны документов{% endblock %}
+{% block page_title %}Шаблоны документов{% endblock %}
+{% block page_subtitle %}Единая точка управления печатными шаблонами и значениями по умолчанию.{% endblock %}
+
+{% block page_actions %}
+<div class="d-flex gap-2">
+  <a href="{% url 'clients:admin_panel' %}" class="btn btn-outline-secondary">Админ панель</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-12 col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">Глобальные настройки шаблонов</h5>
+        <p class="text-muted">Общие значения базы: контакты, адрес офиса, pełnomocnik и значения для Mazowiecki.</p>
+        <a href="{% url 'clients:app_settings' %}" class="btn btn-primary">Открыть настройки базы</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">Wniosek Mazowiecki</h5>
+        <p class="text-muted">Печать и шаблонные значения для Mazowiecki Urząd Wojewódzki.</p>
+        <a href="{% url 'clients:app_settings' %}" class="btn btn-primary">Настроить шаблон</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">Просьба об ускорении</h5>
+        <p class="text-muted">Следующий кандидат на вынесение общих шаблонных блоков из HTML в настройки базы.</p>
+        <a href="{% url 'clients:client_list' %}" class="btn btn-outline-secondary">Открывать из карточки клиента</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">Реестр шаблонов</h5>
+        <p class="text-muted">Сейчас в системе уже есть печатные шаблоны `mazowiecki_application` и `acceleration_request`.</p>
+        <ul class="mb-0 text-muted">
+          <li>`clients/documents/mazowiecki_application.html`</li>
+          <li>`clients/documents/acceleration_request.html`</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

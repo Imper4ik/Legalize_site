@@ -31,6 +31,7 @@ urlpatterns = [
 
     # Admin Dashboard
     path('admin-dashboard/', views.AdminDashboardView.as_view(), name='admin_dashboard'),
+    path('admin-panel/', views.AdminPanelView.as_view(), name='admin_panel'),
 
     # URL для печати
     path('client/<int:pk>/print/', views.client_print_view, name='client_print'),
@@ -101,4 +102,9 @@ urlpatterns = [
     path('checklists/requirements/<int:pk>/delete/', views.document_requirement_delete, name='document_requirement_delete'),
     path('checklists/manage/', views.DocumentChecklistManageView.as_view(), name='document_checklist_manage'),
     path('settings/templates/', views.AppSettingsUpdateView.as_view(), name='app_settings'),
+    path('settings/document-templates/', views.DocumentTemplateHubView.as_view(), name='document_template_hub'),
+    path('settings/prices/', views.service_price_manage_view, name='service_price_manage'),
+    path('settings/submissions/', views.submission_manage_view, name='submission_manage'),
+    path('settings/staff/', views.staff_manage_view, name='staff_manage'),
+    path('settings/roles/', views.role_manage_view, name='role_manage'),
 ]

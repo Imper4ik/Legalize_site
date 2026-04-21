@@ -4,12 +4,15 @@ import json
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.http import HttpResponse
 
-from clients.models import Client, ClientActivity, Document, Payment, Reminder
+from clients.models import AppSettings, Client, ClientActivity, Document, Payment, Reminder, ServicePrice
+from clients.services.roles import ensure_predefined_roles
 from clients.views.base import staff_required_view
+from submissions.models import Submission
 
 
 class StaffRequiredViewTests(TestCase):
@@ -37,6 +40,8 @@ class ClientViewEdgeCaseTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
         self.staff = user_model.objects.create_user(email="staff@example.com", password="pass", is_staff=True)
+        ensure_predefined_roles()
+        self.staff.groups.add(Group.objects.get(name="Admin"))
         self.client.login(email="staff@example.com", password="pass")
 
         self.client_obj = Client.objects.create(
@@ -54,6 +59,164 @@ class ClientViewEdgeCaseTests(TestCase):
         payload = response.json()
         self.assertEqual(payload["status"], "success")
         self.assertIn("price", payload)
+
+    def test_admin_panel_renders_for_staff(self):
+        response = self.client.get(reverse("clients:admin_panel"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Админ панель")
+        self.assertContains(response, "Цены и услуги")
+
+    def test_service_price_manage_post_saves_prices(self):
+        response = self.client.post(
+            reverse("clients:service_price_manage"),
+            data={
+                "work_service-service_code": "work_service",
+                "work_service-price": "456.00",
+                "study_service-service_code": "study_service",
+                "study_service-price": "321.00",
+                "consultation-service_code": "consultation",
+                "consultation-price": "123.45",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(ServicePrice.objects.filter(service_code="consultation", price="123.45").exists())
+        self.assertTrue(ServicePrice.objects.filter(service_code="work_service", price="456.00").exists())
+
+    def test_submission_manage_create_creates_submission(self):
+        response = self.client.post(
+            reverse("clients:submission_manage"),
+            data={
+                "action": "create",
+                "create-name": "Nowa podstawa",
+                "create-name_pl": "Nowa podstawa PL",
+                "create-name_en": "New basis",
+                "create-name_ru": "Новая основа",
+                "create-status": "draft",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Submission.objects.filter(name="Nowa podstawa", status="draft").exists())
+
+    def test_submission_manage_update_updates_submission(self):
+        submission = Submission.objects.create(name="Old basis", status="draft")
+
+        response = self.client.post(
+            reverse("clients:submission_manage"),
+            data={
+                "action": "update",
+                "submission_id": str(submission.id),
+                f"submission-{submission.id}-name": "Updated basis",
+                f"submission-{submission.id}-name_pl": "Updated PL",
+                f"submission-{submission.id}-name_en": "Updated EN",
+                f"submission-{submission.id}-name_ru": "Updated RU",
+                f"submission-{submission.id}-status": "completed",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        submission.refresh_from_db()
+        self.assertEqual(submission.name, "Updated basis")
+        self.assertEqual(submission.status, "completed")
+
+    def test_app_settings_page_saves_general_base_settings(self):
+        response = self.client.post(
+            reverse("clients:app_settings"),
+            data={
+                "organization_name": "Legalize Warsaw",
+                "contact_email": "office@example.com",
+                "contact_phone": "+48123456789",
+                "office_address": "UL. TESTOWA 1\n00-001 WARSZAWA",
+                "default_proxy_name": "Jan Kowalski",
+                "mazowiecki_office_template": "",
+                "mazowiecki_proxy_template": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        settings_obj = AppSettings.get_solo()
+        self.assertEqual(settings_obj.organization_name, "Legalize Warsaw")
+        self.assertEqual(settings_obj.contact_email, "office@example.com")
+        self.assertEqual(settings_obj.default_proxy_name, "Jan Kowalski")
+
+    def test_document_template_hub_renders(self):
+        response = self.client.get(reverse("clients:document_template_hub"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Шаблоны документов")
+
+    def test_staff_manage_create_creates_staff_user(self):
+        response = self.client.post(
+            reverse("clients:staff_manage"),
+            data={
+                "action": "create",
+                "create-email": "newstaff@example.com",
+                "create-first_name": "Anna",
+                "create-last_name": "Nowak",
+                "create-password1": "strong-pass-123",
+                "create-password2": "strong-pass-123",
+                "create-is_staff": "on",
+                "create-is_active": "on",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        User = get_user_model()
+        self.assertTrue(User.objects.filter(email="newstaff@example.com", is_staff=True).exists())
+
+    def test_staff_manage_renders(self):
+        response = self.client.get(reverse("clients:staff_manage"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Сотрудники")
+
+    def test_role_manage_renders_and_syncs_roles(self):
+        response = self.client.get(reverse("clients:role_manage"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Роли и доступ")
+        self.assertContains(response, "Admin")
+
+        post_response = self.client.post(reverse("clients:role_manage"))
+        self.assertEqual(post_response.status_code, 302)
+
+    def test_staff_role_cannot_open_manager_only_sections(self):
+        user_model = get_user_model()
+        limited_staff = user_model.objects.create_user(
+            email="limited@example.com",
+            password="pass",
+            is_staff=True,
+        )
+        limited_staff.groups.add(Group.objects.get(name="Staff"))
+        self.client.login(email="limited@example.com", password="pass")
+
+        self.assertEqual(self.client.get(reverse("clients:app_settings")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("clients:service_price_manage")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("clients:submission_manage")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("clients:document_template_hub")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("clients:staff_manage")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("clients:role_manage")).status_code, 403)
+
+    def test_staff_role_admin_panel_hides_restricted_cards(self):
+        user_model = get_user_model()
+        limited_staff = user_model.objects.create_user(
+            email="staff-panel@example.com",
+            password="pass",
+            is_staff=True,
+        )
+        limited_staff.groups.add(Group.objects.get(name="Staff"))
+        self.client.login(email="staff-panel@example.com", password="pass")
+
+        response = self.client.get(reverse("clients:admin_panel"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, reverse("clients:document_template_hub"))
+        self.assertNotContains(response, reverse("clients:submission_manage"))
+        self.assertNotContains(response, reverse("clients:service_price_manage"))
+        self.assertNotContains(response, reverse("clients:staff_manage"))
+        self.assertContains(response, reverse("clients:metrics_dashboard"))
 
     def test_add_payment_ajax_invalid_payload_returns_error(self):
         response = self.client.post(

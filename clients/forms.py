@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 
@@ -20,6 +21,7 @@ from .models import (
     Document,
     DocumentRequirement,
     Payment,
+    ServicePrice,
     StaffTask,
     get_fallback_document_checklist,
     resolve_document_label,
@@ -29,8 +31,35 @@ from .models import (
 class AppSettingsForm(forms.ModelForm):
     class Meta:
         model = AppSettings
-        fields = ["mazowiecki_office_template", "mazowiecki_proxy_template"]
+        fields = [
+            "organization_name",
+            "contact_email",
+            "contact_phone",
+            "office_address",
+            "default_proxy_name",
+            "mazowiecki_office_template",
+            "mazowiecki_proxy_template",
+        ]
         widgets = {
+            "organization_name": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Legalize / Expowiza / название вашей организации"}
+            ),
+            "contact_email": forms.EmailInput(
+                attrs={"class": "form-control", "placeholder": "office@example.com"}
+            ),
+            "contact_phone": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "+48 000 000 000"}
+            ),
+            "office_address": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 4,
+                    "placeholder": "UL. PRZYKLADOWA 1/2\n00-000 WARSZAWA",
+                }
+            ),
+            "default_proxy_name": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Imie Nazwisko"}
+            ),
             "mazowiecki_office_template": forms.Textarea(
                 attrs={
                     "class": "form-control",
@@ -45,6 +74,78 @@ class AppSettingsForm(forms.ModelForm):
                     "placeholder": "Imie Nazwisko\nUL. ADRES 1/2,\n00-000 MIASTO, tel. 000000000\nPelnomocnik",
                 }
             ),
+        }
+
+
+class ServicePriceForm(forms.ModelForm):
+    class Meta:
+        model = ServicePrice
+        fields = ["service_code", "price"]
+        widgets = {
+            "service_code": forms.Select(attrs={"class": "form-select"}),
+            "price": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "min": "0"}),
+        }
+
+
+class StaffUserCreateForm(forms.ModelForm):
+    password1 = forms.CharField(
+        label="Password",
+        widget=forms.PasswordInput(attrs={"class": "form-control"}),
+    )
+    password2 = forms.CharField(
+        label="Repeat password",
+        widget=forms.PasswordInput(attrs={"class": "form-control"}),
+    )
+    groups = forms.ModelMultipleChoiceField(
+        queryset=Group.objects.all().order_by("name"),
+        required=False,
+        widget=forms.SelectMultiple(attrs={"class": "form-select", "size": 6}),
+    )
+
+    class Meta:
+        model = get_user_model()
+        fields = ["email", "first_name", "last_name", "is_staff", "is_superuser", "is_active", "groups"]
+        widgets = {
+            "email": forms.EmailInput(attrs={"class": "form-control"}),
+            "first_name": forms.TextInput(attrs={"class": "form-control"}),
+            "last_name": forms.TextInput(attrs={"class": "form-control"}),
+            "is_staff": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "is_superuser": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("password1") != cleaned.get("password2"):
+            self.add_error("password2", "Passwords do not match.")
+        return cleaned
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data["password1"])
+        if commit:
+            user.save()
+            self.save_m2m()
+        return user
+
+
+class StaffUserUpdateForm(forms.ModelForm):
+    groups = forms.ModelMultipleChoiceField(
+        queryset=Group.objects.all().order_by("name"),
+        required=False,
+        widget=forms.SelectMultiple(attrs={"class": "form-select", "size": 6}),
+    )
+
+    class Meta:
+        model = get_user_model()
+        fields = ["email", "first_name", "last_name", "is_staff", "is_superuser", "is_active", "groups"]
+        widgets = {
+            "email": forms.EmailInput(attrs={"class": "form-control"}),
+            "first_name": forms.TextInput(attrs={"class": "form-control"}),
+            "last_name": forms.TextInput(attrs={"class": "form-control"}),
+            "is_staff": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "is_superuser": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
 def _label_for_document_type(code: str) -> str:

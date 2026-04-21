@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Сотрудники{% endblock %}
+{% block page_title %}Сотрудники{% endblock %}
+{% block page_subtitle %}Управление staff-аккаунтами и ролями без Django admin.{% endblock %}
+
+{% block page_actions %}
+<div class="d-flex gap-2">
+  <a href="{% url 'clients:admin_panel' %}" class="btn btn-outline-secondary">Админ панель</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h5 class="mb-3">Создать сотрудника</h5>
+    <form method="post" class="row g-3">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create">
+      <div class="col-12 col-lg-4">
+        <label for="{{ create_form.email.id_for_label }}" class="form-label">Email</label>
+        {{ create_form.email }}
+      </div>
+      <div class="col-12 col-lg-2">
+        <label for="{{ create_form.first_name.id_for_label }}" class="form-label">Имя</label>
+        {{ create_form.first_name }}
+      </div>
+      <div class="col-12 col-lg-2">
+        <label for="{{ create_form.last_name.id_for_label }}" class="form-label">Фамилия</label>
+        {{ create_form.last_name }}
+      </div>
+      <div class="col-12 col-lg-2">
+        <label for="{{ create_form.password1.id_for_label }}" class="form-label">Пароль</label>
+        {{ create_form.password1 }}
+      </div>
+      <div class="col-12 col-lg-2">
+        <label for="{{ create_form.password2.id_for_label }}" class="form-label">Повтор</label>
+        {{ create_form.password2 }}
+      </div>
+      <div class="col-12 col-lg-4">
+        <label for="{{ create_form.groups.id_for_label }}" class="form-label">Роли / группы</label>
+        {{ create_form.groups }}
+      </div>
+      <div class="col-12 col-lg-8">
+        <div class="d-flex gap-4 pt-4">
+          <div class="form-check">{{ create_form.is_staff }} <label class="form-check-label" for="{{ create_form.is_staff.id_for_label }}">Staff</label></div>
+          <div class="form-check">{{ create_form.is_superuser }} <label class="form-check-label" for="{{ create_form.is_superuser.id_for_label }}">Superuser</label></div>
+          <div class="form-check">{{ create_form.is_active }} <label class="form-check-label" for="{{ create_form.is_active.id_for_label }}">Active</label></div>
+        </div>
+      </div>
+      <div class="col-12 d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary">Создать сотрудника</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h5 class="mb-3">Текущие сотрудники</h5>
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Имя</th>
+            <th>Фамилия</th>
+            <th>Роли</th>
+            <th>Флаги</th>
+            <th class="text-end">Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for staff_user, form in staff_rows %}
+            <tr>
+              <td>
+                <input type="email" name="{{ form.email.html_name }}" value="{{ form.email.value|default:'' }}" form="update-user-{{ staff_user.id }}" class="form-control">
+              </td>
+              <td>
+                <input type="text" name="{{ form.first_name.html_name }}" value="{{ form.first_name.value|default:'' }}" form="update-user-{{ staff_user.id }}" class="form-control">
+              </td>
+              <td>
+                <input type="text" name="{{ form.last_name.html_name }}" value="{{ form.last_name.value|default:'' }}" form="update-user-{{ staff_user.id }}" class="form-control">
+              </td>
+              <td style="min-width: 220px;">
+                <select name="{{ form.groups.html_name }}" form="update-user-{{ staff_user.id }}" class="form-select" multiple size="5">
+                  {% for group in form.fields.groups.queryset %}
+                    <option value="{{ group.pk }}" {% if group in staff_user.groups.all %}selected{% endif %}>{{ group.name }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td style="min-width: 210px;">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="{{ form.is_staff.html_name }}" value="on" form="update-user-{{ staff_user.id }}" {% if staff_user.is_staff %}checked{% endif %}>
+                  <label class="form-check-label">Staff</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="{{ form.is_superuser.html_name }}" value="on" form="update-user-{{ staff_user.id }}" {% if staff_user.is_superuser %}checked{% endif %}>
+                  <label class="form-check-label">Superuser</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="{{ form.is_active.html_name }}" value="on" form="update-user-{{ staff_user.id }}" {% if staff_user.is_active %}checked{% endif %}>
+                  <label class="form-check-label">Active</label>
+                </div>
+              </td>
+              <td class="text-end">
+                <form method="post" id="update-user-{{ staff_user.id }}" class="d-none">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="update">
+                  <input type="hidden" name="user_id" value="{{ staff_user.id }}">
+                </form>
+                <button type="submit" form="update-user-{{ staff_user.id }}" class="btn btn-sm btn-outline-primary">Сохранить</button>
+                <form method="post" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="toggle_active">
+                  <input type="hidden" name="user_id" value="{{ staff_user.id }}">
+                  <button type="submit" class="btn btn-sm btn-outline-secondary">
+                    {% if staff_user.is_active %}Деактивировать{% else %}Активировать{% endif %}
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="text-center text-muted py-4">Пока нет staff-аккаунтов.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
