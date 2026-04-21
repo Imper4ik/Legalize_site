@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from clients.constants import DocumentType
-from clients.models import Client, ClientActivity, Document, EmailLog, StaffTask
+from clients.models import Client, ClientActivity, Document, DocumentVersion, EmailLog, StaffTask
 from clients.services.responses import NO_STORE_HEADER
 
 
@@ -110,3 +110,48 @@ class WorkflowAuditStage11Tests(TestCase):
         self.assertTrue(
             ClientActivity.objects.filter(client=self.client_obj, event_type="email_sent").exists()
         )
+
+    def test_client_export_zip_creates_export_audit_event(self):
+        Document.objects.create(
+            client=self.client_obj,
+            document_type=DocumentType.PASSPORT.value,
+            file=SimpleUploadedFile("passport.pdf", b"pdf-data", content_type="application/pdf"),
+        )
+
+        response = self.client.get(reverse("clients:client_export_zip", kwargs={"pk": self.client_obj.pk}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Cache-Control"], NO_STORE_HEADER)
+        activity = ClientActivity.objects.filter(
+            client=self.client_obj,
+            event_type="client_exported",
+        ).first()
+        self.assertIsNotNone(activity)
+        self.assertEqual(activity.metadata["export_type"], "zip")
+
+    def test_document_version_restore_creates_specific_audit_event(self):
+        document = Document.objects.create(
+            client=self.client_obj,
+            document_type=DocumentType.PASSPORT.value,
+            file=SimpleUploadedFile("passport-current.pdf", b"current", content_type="application/pdf"),
+        )
+        version = DocumentVersion.objects.create(
+            document=document,
+            file=SimpleUploadedFile("passport-old.pdf", b"old", content_type="application/pdf"),
+            version_number=1,
+            file_name="passport-old.pdf",
+            file_size=3,
+            uploaded_by=self.staff,
+        )
+
+        response = self.client.post(reverse("clients:document_version_restore", kwargs={"version_id": version.pk}))
+
+        self.assertEqual(response.status_code, 302)
+        activity = ClientActivity.objects.filter(
+            client=self.client_obj,
+            event_type="document_version_restored",
+            document=document,
+        ).first()
+        self.assertIsNotNone(activity)
+        self.assertEqual(activity.metadata["restored_version_id"], version.pk)
+        self.assertEqual(activity.metadata["restored_version_number"], 1)

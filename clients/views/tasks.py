@@ -7,7 +7,7 @@ from django.views.generic import ListView
 
 from clients.forms import StaffTaskForm
 from clients.models import Client, StaffTask
-from clients.services.activity import log_client_activity
+from clients.use_cases.tasks import complete_task_for_client, create_task_for_client
 from clients.views.base import StaffRequiredMixin, staff_required_view
 
 
@@ -46,25 +46,10 @@ def add_task(request, client_id):
 
     form = StaffTaskForm(request.POST)
     if form.is_valid():
-        task = form.save(commit=False)
-        task.client = client
-        task.created_by = request.user
-        if task.assignee_id is None:
-            task.assignee = request.user
-        task.save()
-        log_client_activity(
+        create_task_for_client(
             client=client,
             actor=request.user,
-            event_type="task_created",
-            summary=f"Создана задача: {task.title}",
-            details=task.description,
-            metadata={
-                "priority": task.priority,
-                "status": task.status,
-                "assignee_id": task.assignee_id,
-                "due_date": task.due_date.isoformat() if task.due_date else "",
-            },
-            task=task,
+            cleaned_data=form.cleaned_data,
         )
         messages.success(request, "Задача создана.")
     else:
@@ -76,16 +61,9 @@ def add_task(request, client_id):
 def complete_task(request, task_id):
     task = get_object_or_404(StaffTask.objects.select_related("client"), pk=task_id)
 
-    if request.method == "POST" and task.status != "done":
-        task.mark_done()
-        log_client_activity(
-            client=task.client,
-            actor=request.user,
-            event_type="task_completed",
-            summary=f"Задача завершена: {task.title}",
-            metadata={"task_id": task.pk},
-            task=task,
-        )
-        messages.success(request, "Задача отмечена как выполненная.")
+    if request.method == "POST":
+        result = complete_task_for_client(task=task, actor=request.user)
+        if result.completed:
+            messages.success(request, "Задача отмечена как выполненная.")
 
     return redirect("clients:client_detail", pk=task.client.pk)

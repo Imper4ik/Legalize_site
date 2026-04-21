@@ -219,6 +219,7 @@ if ENABLE_TRANSLATION_TOOLING:
 ROOT_URLCONF = "legalize_site.urls"
 WSGI_APPLICATION = "legalize_site.wsgi.application"
 ASGI_APPLICATION = "legalize_site.asgi.application"
+CSRF_FAILURE_VIEW = "legalize_site.views.csrf_failure"
 
 # --- ШАБЛОНЫ ---
 TEMPLATES = [
@@ -311,6 +312,8 @@ PDF_FONT_PATH = os.getenv("PDF_FONT_PATH", "")
 MAX_UPLOAD_SIZE_MB = int(os.environ.get("MAX_UPLOAD_SIZE_MB", "20"))
 DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE
+MAX_IMAGE_PIXELS = int(os.environ.get("MAX_IMAGE_PIXELS", "25000000"))
+MAX_UPLOAD_FILENAME_LENGTH = int(os.environ.get("MAX_UPLOAD_FILENAME_LENGTH", "180"))
 
 # --- ПОЧТА (SendGrid или Brevo через API или SMTP) ---
 SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")

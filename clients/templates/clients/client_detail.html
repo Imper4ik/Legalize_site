@@ -24,7 +24,8 @@
 </div>
 <div id="payment-alerts" class="mb-2"></div>
 <div class="card mb-4">
-  <ul class="list-group list-group-flush" id="payment-list-container">
+  <ul class="list-group list-group-flush" id="payment-list-container"
+    data-empty-text="{% translate 'Счета на оплату ещё не созданы.' %}">
     {% for payment in client.payments.all %}
     <li class="list-group-item" data-payment-id="{{ payment.id }}">
       {% include 'clients/partials/payment_item.html' with payment=payment %}

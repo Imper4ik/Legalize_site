@@ -59,13 +59,21 @@ def _send_email(
     *,
     client: Client | None = None,
     template_type: str = "",
+    sent_by=None,
 ) -> int:
     try:
         recipient_list = list(recipients)
         sent_count = send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, recipient_list)
         if sent_count:
             _send_confirmation_email(subject, body, recipient_list)
-            _log_email(subject, body, recipient_list, client=client, template_type=template_type)
+            _log_email(
+                subject,
+                body,
+                recipient_list,
+                client=client,
+                template_type=template_type,
+                sent_by=sent_by,
+            )
         return sent_count
     except Exception:  # pragma: no cover - defensive safeguard
         logger.exception("Failed to send notification email")
@@ -254,7 +262,7 @@ def _get_required_documents_context(client: Client, language: str | None = None)
     }
 
 
-def send_required_documents_email(client: Client) -> int:
+def send_required_documents_email(client: Client, *, sent_by=None) -> int:
     """Send the required document checklist to the client upon account creation."""
     if not client.email:
         return 0
@@ -266,7 +274,14 @@ def send_required_documents_email(client: Client) -> int:
     language = _get_preferred_language(client)
     subject = _get_subject("required_documents", language)
     body = _render_email_body("required_documents", context, language)
-    return _send_email(subject, body, [client.email], client=client, template_type="required_documents")
+    return _send_email(
+        subject,
+        body,
+        [client.email],
+        client=client,
+        template_type="required_documents",
+        sent_by=sent_by,
+    )
 
 
 def _get_expired_documents_context(client: Client) -> dict | None:
@@ -283,7 +298,7 @@ def _get_expired_documents_context(client: Client) -> dict | None:
     }
 
 
-def send_expired_documents_email(client: Client) -> int:
+def send_expired_documents_email(client: Client, *, sent_by=None) -> int:
     """Send a summary of expired documents after fingerprints are submitted."""
     if not client.email:
         return 0
@@ -294,7 +309,14 @@ def send_expired_documents_email(client: Client) -> int:
     with override(language):
         subject = _get_subject("expired_documents", language)
     body = _render_email_body("expired_documents", context, language)
-    return _send_email(subject, body, [client.email], client=client, template_type="expired_documents")
+    return _send_email(
+        subject,
+        body,
+        [client.email],
+        client=client,
+        template_type="expired_documents",
+        sent_by=sent_by,
+    )
 
 
 def _get_missing_documents_context(client: Client, language: str | None = None) -> dict | None:
@@ -346,7 +368,7 @@ def _get_missing_documents_context(client: Client, language: str | None = None) 
     }
 
 
-def send_missing_documents_email(client: Client) -> int:
+def send_missing_documents_email(client: Client, *, sent_by=None) -> int:
     """Send a reminder listing documents that are still missing for the client."""
 
     if not client.email:
@@ -359,7 +381,14 @@ def send_missing_documents_email(client: Client) -> int:
 
     subject = _get_subject("missing_documents", language)
     body = _render_email_body("missing_documents", context, language)
-    return _send_email(subject, body, [client.email], client=client, template_type="missing_documents")
+    return _send_email(
+        subject,
+        body,
+        [client.email],
+        client=client,
+        template_type="missing_documents",
+        sent_by=sent_by,
+    )
 
 
 def _get_expiring_documents_context(client: Client, documents: list[Document]) -> dict | None:
@@ -419,7 +448,7 @@ def _get_expiring_documents_context(client: Client, documents: list[Document]) -
     }
 
 
-def send_expiring_documents_email(client: Client, documents: list[Document]) -> int:
+def send_expiring_documents_email(client: Client, documents: list[Document], *, sent_by=None) -> int:
     """Send a notice about documents expiring soon (within the next week)."""
 
     if not client.email or not documents:
@@ -432,7 +461,14 @@ def send_expiring_documents_email(client: Client, documents: list[Document]) -> 
 
     subject = _get_subject("expiring_documents", language)
     body = _render_email_body("expiring_documents", context, language)
-    return _send_email(subject, body, [client.email], client=client, template_type="expiring_documents")
+    return _send_email(
+        subject,
+        body,
+        [client.email],
+        client=client,
+        template_type="expiring_documents",
+        sent_by=sent_by,
+    )
 
 
 def _get_appointment_context(client: Client) -> dict | None:
@@ -447,7 +483,7 @@ def _get_appointment_context(client: Client) -> dict | None:
     }
 
 
-def send_appointment_notification_email(client: Client) -> int:
+def send_appointment_notification_email(client: Client, *, sent_by=None) -> int:
     """Send a notification about a fingerprint appointment."""
     if not client.email or not client.fingerprints_date:
         return 0
@@ -459,4 +495,11 @@ def send_appointment_notification_email(client: Client) -> int:
 
     subject = _get_subject("appointment_notification", language)
     body = _render_email_body("appointment_notification", context, language)
-    return _send_email(subject, body, [client.email], client=client, template_type="appointment_notification")
+    return _send_email(
+        subject,
+        body,
+        [client.email],
+        client=client,
+        template_type="appointment_notification",
+        sent_by=sent_by,
+    )

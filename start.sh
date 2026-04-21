@@ -1,27 +1,43 @@
 #!/usr/bin/env bash
 set -o errexit
+set -o pipefail
 
-# Default superuser bootstrap.
-# Password must be provided via DJANGO_SUPERUSER_PASSWORD or
-# DJANGO_SUPERUSER_PASSWORD_FILE. We never generate or print credentials.
-DEFAULT_SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-"nindse@gmail.com"}
+BOOTSTRAP_SUPERUSER_MODE=${DJANGO_BOOTSTRAP_SUPERUSER:-auto}
+RESET_SUPERUSER_PASSWORD=${DJANGO_RESET_SUPERUSER_PASSWORD:-0}
+SUPERUSER_EMAIL=${DJANGO_SUPERUSER_EMAIL:-}
 SUPERUSER_PASSWORD=${DJANGO_SUPERUSER_PASSWORD:-}
 
-if [ -z "$SUPERUSER_PASSWORD" ] && [ -n "$DJANGO_SUPERUSER_PASSWORD_FILE" ] && [ -f "$DJANGO_SUPERUSER_PASSWORD_FILE" ]; then
+if [ -z "$SUPERUSER_PASSWORD" ] && [ -n "${DJANGO_SUPERUSER_PASSWORD_FILE:-}" ] && [ -f "$DJANGO_SUPERUSER_PASSWORD_FILE" ]; then
   SUPERUSER_PASSWORD=$(cat "$DJANGO_SUPERUSER_PASSWORD_FILE")
 fi
 
-export DJANGO_SUPERUSER_EMAIL="$DEFAULT_SUPERUSER_EMAIL"
-if [ -n "$SUPERUSER_PASSWORD" ]; then
-  export DJANGO_SUPERUSER_PASSWORD="$SUPERUSER_PASSWORD"
-fi
+should_bootstrap_superuser=false
+case "${BOOTSTRAP_SUPERUSER_MODE}" in
+  1|true|TRUE|yes|YES|on|ON)
+    should_bootstrap_superuser=true
+    ;;
+  auto|AUTO)
+    if [ -n "$SUPERUSER_EMAIL" ]; then
+      should_bootstrap_superuser=true
+    fi
+    ;;
+esac
 
 python manage.py bootstrap_user_model_migration
 python manage.py migrate --no-input
 
-if [ "$DJANGO_SUPERUSER_EMAIL" ]; then
-  echo "Checking/creating superuser..."
-  python manage.py shell << 'EOF'
+if [ "$should_bootstrap_superuser" = true ]; then
+  if [ -z "$SUPERUSER_EMAIL" ]; then
+    echo "Skipping superuser bootstrap: DJANGO_SUPERUSER_EMAIL is not configured."
+  else
+    export DJANGO_SUPERUSER_EMAIL="$SUPERUSER_EMAIL"
+    if [ -n "$SUPERUSER_PASSWORD" ]; then
+      export DJANGO_SUPERUSER_PASSWORD="$SUPERUSER_PASSWORD"
+    fi
+    export DJANGO_RESET_SUPERUSER_PASSWORD="$RESET_SUPERUSER_PASSWORD"
+
+    echo "Checking/creating superuser..."
+    python manage.py shell << 'EOF'
 from django.contrib.auth import get_user_model
 import os
 
@@ -29,6 +45,7 @@ User = get_user_model()
 
 email = os.environ["DJANGO_SUPERUSER_EMAIL"]
 password = os.environ.get("DJANGO_SUPERUSER_PASSWORD", "").strip()
+reset_password = os.environ.get("DJANGO_RESET_SUPERUSER_PASSWORD", "").lower() in {"1", "true", "yes", "on"}
 
 user = User.objects.filter(email=email).first()
 
@@ -55,7 +72,7 @@ else:
     if not user.is_active:
         user.is_active = True
         changed_fields.append("is_active")
-    if password:
+    if password and reset_password:
         user.set_password(password)
         changed_fields.append("password")
     if changed_fields:
@@ -64,6 +81,9 @@ else:
     else:
         print(f"Superuser for {email!r} is already up to date")
 EOF
+  fi
+else
+  echo "Superuser bootstrap skipped."
 fi
 
 : "${PORT:=8000}"

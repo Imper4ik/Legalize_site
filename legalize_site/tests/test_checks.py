@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from unittest.mock import patch
+
 from django.core.checks import Error, Warning
 from django.test import SimpleTestCase, override_settings
 
@@ -8,9 +10,11 @@ from legalize_site.checks import (
     EMAIL_ERROR_ID,
     EMAIL_WARNING_ID,
     FERNET_KEYS_ERROR_ID,
+    RUNTIME_DEPENDENCY_WARNING_ID,
     SECRET_KEY_ERROR_ID,
     encryption_configuration_check,
     email_configuration_check,
+    runtime_dependency_check,
 )
 
 
@@ -95,3 +99,33 @@ class EmailConfigurationCheckTests(SimpleTestCase):
         self.assertEqual(len(messages), 1)
         self.assertIsInstance(messages[0], Error)
         self.assertEqual(messages[0].id, FERNET_KEYS_ERROR_ID)
+
+
+class RuntimeDependencyCheckTests(SimpleTestCase):
+    @patch("legalize_site.checks.collect_runtime_dependency_statuses")
+    def test_runtime_dependency_check_warns_about_missing_dependencies(self, collect_mock):
+        collect_mock.return_value = [
+            {
+                "label": "pdf2image",
+                "required_for": "OCR on PDF scans",
+                "hint": "Install pdf2image.",
+                "available": False,
+            },
+            {
+                "label": "tesseract",
+                "required_for": "OCR text extraction",
+                "hint": "Install tesseract.",
+                "available": True,
+            },
+        ]
+
+        messages = runtime_dependency_check()
+
+        self.assertEqual(len(messages), 1)
+        self.assertIsInstance(messages[0], Warning)
+        self.assertEqual(messages[0].id, RUNTIME_DEPENDENCY_WARNING_ID)
+        self.assertIn("pdf2image", messages[0].msg)
+
+    @patch("legalize_site.checks.collect_runtime_dependency_statuses", return_value=[])
+    def test_runtime_dependency_check_returns_no_messages_when_all_available(self, _collect_mock):
+        self.assertEqual(runtime_dependency_check(), [])
