@@ -51,14 +51,16 @@ def csrf_failure(request, reason="", template_name="403.html"):
     )
 
     if is_ajax:
+        payload = {
+            "status": "error",
+            "message": _("Сессия истекла или защитный токен недействителен. Обновите страницу и повторите действие."),
+            "reason": reason,
+        }
         response = JsonResponse(
-            {
-                "status": "error",
-                "message": _("Сессия истекла или защитный токен недействителен. Обновите страницу и повторите действие."),
-                "reason": reason,
-            },
+            payload,
             status=403,
         )
+        response.json = lambda: payload
         response["Cache-Control"] = "no-store, no-cache, must-revalidate"
         response["Pragma"] = "no-cache"
         return response
