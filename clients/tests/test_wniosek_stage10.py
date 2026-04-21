@@ -131,6 +131,23 @@ class WniosekFlowStage10Tests(TestCase):
         self.assertContains(response, 'value="Anna Nowak"')
         self.assertContains(response, 'value="Pelnomocnik"')
 
+    def test_mazowiecki_print_allows_saved_blank_global_templates(self):
+        app_settings = AppSettings.get_solo()
+        app_settings.mazowiecki_office_template = ""
+        app_settings.mazowiecki_proxy_template = ""
+        app_settings.save()
+
+        response = self.client.get(
+            reverse(
+                "clients:client_document_print",
+                kwargs={"pk": self.client_obj.pk, "doc_type": "mazowiecki_application"},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'value="Mazowiecki Urząd Wojewódzki"')
+        self.assertNotContains(response, 'value="Pełnomocnik"')
+
     def test_checklist_marks_wniosek_submissions_and_keeps_custom_rows(self):
         passport_label = str(self.client_obj.get_document_name_by_code(DocumentType.PASSPORT.value))
         self.client.post(

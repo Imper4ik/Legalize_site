@@ -374,9 +374,9 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                 "proxy_line": "mazowiecki_proxy_template",
             }.get(param_name)
             if settings_attr:
-                app_settings = AppSettings.get_solo()
-                template_value = getattr(app_settings, settings_attr, "") or ""
-                if template_value.strip():
+                app_settings = AppSettings.objects.filter(pk=1).first()
+                if app_settings is not None:
+                    template_value = getattr(app_settings, settings_attr, "") or ""
                     return template_value.splitlines()
             return list(default_lines)
         return [value.strip() for value in values]
