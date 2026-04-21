@@ -61,6 +61,7 @@ def delete_client_document(*, document: Document, actor) -> DocumentScenarioResu
         metadata={"document_id": document_id, "document_type": document.document_type},
     )
     document.delete()
+    document.pk = document_id
 
     return DocumentScenarioResult(
         client=client,
@@ -78,11 +79,13 @@ def delete_wniosek_attachment(*, attachment: WniosekAttachment, actor) -> Wniose
     submission_id = submission.pk
 
     attachment.delete()
+    attachment.pk = attachment_id
 
     remaining_count = submission.attachments.count()
     submission_deleted = remaining_count == 0
     if submission_deleted:
         submission.delete()
+        submission.pk = submission_id
     elif submission.attachment_count != remaining_count:
         submission.attachment_count = remaining_count
         submission.save(update_fields=["attachment_count"])

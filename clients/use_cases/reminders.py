@@ -41,6 +41,7 @@ def delete_reminder(*, reminder: Reminder, actor) -> ReminderScenarioResult:
         metadata=_reminder_metadata(reminder),
     )
     reminder.delete()
+    reminder.pk = reminder_id
     return ReminderScenarioResult(client=client, deleted_reminder_id=reminder_id)
 
 
