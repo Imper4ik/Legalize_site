@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Template Settings{% endblock %}
+{% block page_title %}Template Settings{% endblock %}
+{% block page_subtitle %}Настройте значения по умолчанию для текущей базы данных.{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="post" class="row g-4">
+      {% csrf_token %}
+
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+          <div>
+            <h5 class="mb-1">Wniosek Mazowiecki</h5>
+            <p class="text-muted mb-0">Эти поля будут автоматически подставляться всем клиентам этой базы.</p>
+          </div>
+          <a href="{% url 'clients:client_list' %}" class="btn btn-outline-secondary">К клиентам</a>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-6">
+        <label for="{{ form.mazowiecki_office_template.id_for_label }}" class="form-label fw-semibold">
+          Адрес urzędu
+        </label>
+        {{ form.mazowiecki_office_template }}
+        <div class="form-text">Каждая новая строка станет отдельной строкой в бланке.</div>
+      </div>
+
+      <div class="col-12 col-lg-6">
+        <label for="{{ form.mazowiecki_proxy_template.id_for_label }}" class="form-label fw-semibold">
+          Pełnomocnik
+        </label>
+        {{ form.mazowiecki_proxy_template }}
+        <div class="form-text">Можно оставить пустые строки или вообще очистить блок.</div>
+      </div>
+
+      <div class="col-12 d-flex justify-content-end gap-2">
+        <a href="{% url 'clients:client_list' %}" class="btn btn-outline-secondary">Отмена</a>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

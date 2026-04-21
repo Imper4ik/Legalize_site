@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from clients.constants import DocumentType
-from clients.models import Client, WniosekAttachment, WniosekSubmission
+from clients.models import AppSettings, Client, WniosekAttachment, WniosekSubmission
 from clients.services.notifications import _get_missing_documents_context
 
 
@@ -93,6 +93,43 @@ class WniosekFlowStage10Tests(TestCase):
         self.assertEqual(response.status_code, 302)
         attachment = WniosekAttachment.objects.get(submission__client=self.client_obj)
         self.assertEqual(attachment.document_type, DocumentType.EMPLOYER_TAX_RETURN.value)
+
+    def test_confirm_mazowiecki_preserves_custom_office_and_proxy_lines(self):
+        response = self.client.post(
+            reverse(
+                "clients:client_document_print_confirm",
+                kwargs={"pk": self.client_obj.pk, "doc_type": "mazowiecki_application"},
+            ),
+            data={
+                "attachments": ["cit 8"],
+                "office_line": ["Inny urząd", "", "Testowa 1", ""],
+                "proxy_line": ["Jan Kowalski", "", "", ""],
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("office_line=Inny+urz%C4%85d", response.url)
+        self.assertIn("office_line=", response.url)
+        self.assertIn("proxy_line=Jan+Kowalski", response.url)
+
+    def test_mazowiecki_print_uses_global_templates_by_default(self):
+        app_settings = AppSettings.get_solo()
+        app_settings.mazowiecki_office_template = "Urzad testowy\nW Warszawie alternatywnie"
+        app_settings.mazowiecki_proxy_template = "Anna Nowak\nPelnomocnik"
+        app_settings.save()
+
+        response = self.client.get(
+            reverse(
+                "clients:client_document_print",
+                kwargs={"pk": self.client_obj.pk, "doc_type": "mazowiecki_application"},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'value="Urzad testowy"')
+        self.assertContains(response, 'value="W Warszawie alternatywnie"')
+        self.assertContains(response, 'value="Anna Nowak"')
+        self.assertContains(response, 'value="Pelnomocnik"')
 
     def test_checklist_marks_wniosek_submissions_and_keeps_custom_rows(self):
         passport_label = str(self.client_obj.get_document_name_by_code(DocumentType.PASSPORT.value))

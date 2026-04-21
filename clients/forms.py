@@ -14,6 +14,7 @@ from clients.validators import FILE_INPUT_ACCEPT, validate_uploaded_document
 from .constants import DocumentType, INTERNAL_DOCS
 from submissions.models import Submission
 from .models import (
+    AppSettings,
     Client,
     Company,
     Document,
@@ -23,6 +24,28 @@ from .models import (
     get_fallback_document_checklist,
     resolve_document_label,
 )
+
+
+class AppSettingsForm(forms.ModelForm):
+    class Meta:
+        model = AppSettings
+        fields = ["mazowiecki_office_template", "mazowiecki_proxy_template"]
+        widgets = {
+            "mazowiecki_office_template": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 6,
+                    "placeholder": "Mazowiecki Urzad Wojewodzki\nW Warszawie\nUl. Marszalkowska 3/5\n00-624 Warszawa",
+                }
+            ),
+            "mazowiecki_proxy_template": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 6,
+                    "placeholder": "Imie Nazwisko\nUL. ADRES 1/2,\n00-000 MIASTO, tel. 000000000\nPelnomocnik",
+                }
+            ),
+        }
 
 def _label_for_document_type(code: str) -> str:
     try:

@@ -100,4 +100,5 @@ urlpatterns = [
     path('checklists/requirements/<int:pk>/edit/', views.document_requirement_edit, name='document_requirement_edit'),
     path('checklists/requirements/<int:pk>/delete/', views.document_requirement_delete, name='document_requirement_delete'),
     path('checklists/manage/', views.DocumentChecklistManageView.as_view(), name='document_checklist_manage'),
+    path('settings/templates/', views.AppSettingsUpdateView.as_view(), name='app_settings'),
 ]

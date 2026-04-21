@@ -55,6 +55,13 @@
             .page { width: 100%; height: 100%; box-shadow: none; margin: 0; padding: 15mm; }
             .print-actions,
             .print-hint { display: none; }
+            .line-input {
+                border-bottom: none;
+                padding: 0;
+            }
+            .line-input.is-empty {
+                display: none;
+            }
         }
 
         /* Helper classes */
@@ -90,6 +97,26 @@
         .address-block {
             width: 45%;
             font-size: 1.1em;
+        }
+
+        .line-inputs {
+            display: grid;
+            gap: 6px;
+        }
+
+        .line-input {
+            width: 100%;
+            border: none;
+            border-bottom: 1px dotted black;
+            background: transparent;
+            padding: 4px 2px;
+            font: inherit;
+            font-weight: inherit;
+            text-transform: inherit;
+        }
+
+        .line-input:focus {
+            outline: none;
         }
 
         .wsc-line {
@@ -255,10 +282,11 @@
             </div>
 
             <div class="address-block bold">
-                Mazowiecki Urząd Wojewódzki<br>
-                W Warszawie<br>
-                Ul. Marszałkowska 3/5<br>
-                00-624 Warszawa
+                <div class="line-inputs">
+                    {% for line in office_lines %}
+                        <input type="text" name="office_line" value="{{ line }}" class="line-input" aria-label="Office line {{ forloop.counter }}">
+                    {% endfor %}
+                </div>
             </div>
         </div>
 
@@ -327,10 +355,11 @@
 
         <div class="footer-section">
             <div class="proxy-info bold">
-                Ajżan Bartosik-Nisanbajewa<br>
-                UL. MARSZAŁKOWSKA 9/15,<br>
-                00-626 WARSZAWA, tel. 667066113<br>
-                Pełnomocnik
+                <div class="line-inputs">
+                    {% for line in proxy_lines %}
+                        <input type="text" name="proxy_line" value="{{ line }}" class="line-input" aria-label="Proxy line {{ forloop.counter }}">
+                    {% endfor %}
+                </div>
             </div>
             
             <div class="stamps-area">
@@ -376,10 +405,15 @@
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 const attachmentContainer = document.querySelector('.attachment-inputs');
+                const lineInputs = Array.from(document.querySelectorAll('.line-input'));
                 if (!attachmentContainer) return;
 
                 const MIN_WIDTH_CH = 3;
                 const BUFFER_CH = 3;
+
+                const syncLineInputState = (input) => {
+                    input.classList.toggle('is-empty', input.value.trim() === '');
+                };
 
                 const adjustWidth = (input) => {
                     const trimmedLength = input.value.trim().length;
@@ -431,6 +465,10 @@
                 });
 
                 attachmentContainer.querySelectorAll('.attachment-line').forEach(adjustWidth);
+                lineInputs.forEach((input) => {
+                    syncLineInputState(input);
+                    input.addEventListener('input', () => syncLineInputState(input));
+                });
 
                 if ({{ auto_print|yesno:"true,false" }}) {
                     window.print();
