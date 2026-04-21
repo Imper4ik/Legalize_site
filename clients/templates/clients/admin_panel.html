@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load role_tags %}
+
+{% block title %}Админ панель{% endblock %}
+{% block page_title %}Админ панель{% endblock %}
+{% block page_subtitle %}Управление рабочими настройками базы без Django admin.{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-4">
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-2">Клиенты</div>
+        <div class="display-6 fw-semibold">{{ active_clients }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-2">Основания подачи</div>
+        <div class="display-6 fw-semibold">{{ total_submissions }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-2">Открытые задачи</div>
+        <div class="display-6 fw-semibold">{{ open_tasks }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-2">Ожидают оплаты</div>
+        <div class="display-6 fw-semibold">{{ pending_payments }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  {% if user|has_any_role:"Admin,Manager" %}
+  <div class="col-12 col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">Шаблоны</h5>
+        <p class="text-muted">Глобальные значения для печатных документов текущей базы.</p>
+        <a href="{% url 'clients:document_template_hub' %}" class="btn btn-primary">Открыть</a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if user|has_any_role:"Admin,Manager" %}
+  <div class="col-12 col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">Чеклисты</h5>
+        <p class="text-muted">Обязательные документы и структура checklist по типу подачи.</p>
+        <a href="{% url 'clients:document_checklist_manage' %}" class="btn btn-primary">Открыть</a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if user|has_any_role:"Admin,Manager" %}
+  <div class="col-12 col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">Основания подачи</h5>
+        <p class="text-muted">Список submission types, статусы и локализованные названия в рабочем интерфейсе.</p>
+        <a href="{% url 'clients:submission_manage' %}" class="btn btn-primary">Открыть</a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if user|has_any_role:"Admin,Manager" %}
+  <div class="col-12 col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">Цены и услуги</h5>
+        <p class="text-muted mb-2">Рабочий прайс без Django admin.</p>
+        <div class="small text-muted mb-3">Записей: {{ total_service_prices }}. Сумма прайса: {{ total_price_sum }} PLN</div>
+        <a href="{% url 'clients:service_price_manage' %}" class="btn btn-primary">Открыть</a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if user|has_any_role:"Admin" %}
+  <div class="col-12 col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">Сотрудники</h5>
+        <p class="text-muted">Управление staff-аккаунтами, доступом и рабочими ролями.</p>
+        <a href="{% url 'clients:staff_manage' %}" class="btn btn-primary">Открыть</a>
+        <a href="{% url 'clients:role_manage' %}" class="btn btn-outline-secondary ms-2">Роли</a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="col-12 col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">Система</h5>
+        <p class="text-muted">Техническое состояние, runtime checks и health dashboard.</p>
+        <a href="{% url 'clients:admin_dashboard' %}" class="btn btn-outline-secondary">System Health</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h5 class="card-title">Метрики</h5>
+        <p class="text-muted">Быстрый переход к аналитике и воронке.</p>
+        <a href="{% url 'clients:metrics_dashboard' %}" class="btn btn-outline-secondary">Метрики</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

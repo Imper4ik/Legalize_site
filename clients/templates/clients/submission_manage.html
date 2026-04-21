@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Основания подачи{% endblock %}
+{% block page_title %}Основания подачи{% endblock %}
+{% block page_subtitle %}Управление типами подачи и их локализованными названиями.{% endblock %}
+
+{% block page_actions %}
+<div class="d-flex gap-2">
+  <a href="{% url 'clients:admin_panel' %}" class="btn btn-outline-secondary">Админ панель</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <h5 class="mb-3">Создать основание подачи</h5>
+    <form method="post" class="row g-3">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create">
+      <div class="col-12 col-lg-4">
+        <label for="{{ create_form.name.id_for_label }}" class="form-label">Название</label>
+        {{ create_form.name }}
+      </div>
+      <div class="col-12 col-lg-2">
+        <label for="{{ create_form.status.id_for_label }}" class="form-label">Статус</label>
+        {{ create_form.status }}
+      </div>
+      <div class="col-12 col-lg-2">
+        <label for="{{ create_form.name_pl.id_for_label }}" class="form-label">PL</label>
+        {{ create_form.name_pl }}
+      </div>
+      <div class="col-12 col-lg-2">
+        <label for="{{ create_form.name_en.id_for_label }}" class="form-label">EN</label>
+        {{ create_form.name_en }}
+      </div>
+      <div class="col-12 col-lg-2">
+        <label for="{{ create_form.name_ru.id_for_label }}" class="form-label">RU</label>
+        {{ create_form.name_ru }}
+      </div>
+      <div class="col-12 d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary">Создать</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h5 class="mb-3">Текущие основания</h5>
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Slug</th>
+            <th>Название</th>
+            <th>PL</th>
+            <th>EN</th>
+            <th>RU</th>
+            <th>Статус</th>
+            <th class="text-end">Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for submission, form in submission_rows %}
+            <tr>
+              <td>
+                <div class="fw-semibold">{{ submission.slug }}</div>
+                <div class="small text-muted">{{ submission.created_at|date:"d.m.Y H:i" }}</div>
+              </td>
+              <td>
+                <input type="text" name="{{ form.name.html_name }}" value="{{ form.name.value|default:'' }}" form="update-submission-{{ submission.id }}" class="form-control">
+              </td>
+              <td>
+                <input type="text" name="{{ form.name_pl.html_name }}" value="{{ form.name_pl.value|default:'' }}" form="update-submission-{{ submission.id }}" class="form-control">
+              </td>
+              <td>
+                <input type="text" name="{{ form.name_en.html_name }}" value="{{ form.name_en.value|default:'' }}" form="update-submission-{{ submission.id }}" class="form-control">
+              </td>
+              <td>
+                <input type="text" name="{{ form.name_ru.html_name }}" value="{{ form.name_ru.value|default:'' }}" form="update-submission-{{ submission.id }}" class="form-control">
+              </td>
+              <td style="min-width: 180px;">
+                <select name="{{ form.status.html_name }}" form="update-submission-{{ submission.id }}" class="form-select">
+                  {% for value, label in form.fields.status.choices %}
+                    <option value="{{ value }}" {% if form.status.value == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td class="text-end">
+                <form method="post" id="update-submission-{{ submission.id }}" class="d-none">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="update">
+                  <input type="hidden" name="submission_id" value="{{ submission.id }}">
+                </form>
+                <button type="submit" form="update-submission-{{ submission.id }}" class="btn btn-sm btn-outline-primary">Сохранить</button>
+                <form method="post" class="d-inline" onsubmit="return confirm('Удалить это основание подачи?');">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="submission_id" value="{{ submission.id }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="7" class="text-center text-muted py-4">Пока нет оснований подачи.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
