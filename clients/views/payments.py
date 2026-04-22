@@ -7,6 +7,7 @@ from django.utils.translation import gettext as _
 
 from clients.forms import PaymentForm
 from clients.models import Client, Payment
+from clients.services.access import accessible_clients_queryset, accessible_payments_queryset
 from clients.services.pricing import get_service_price
 from clients.services.responses import ResponseHelper
 from clients.use_cases.payments import (
@@ -19,7 +20,7 @@ from clients.views.base import staff_required_view
 
 @staff_required_view
 def add_payment(request, client_id):
-    client = get_object_or_404(Client, pk=client_id)
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
     helper = ResponseHelper(request)
     if request.method == "POST":
         form = PaymentForm(request.POST)
@@ -50,7 +51,7 @@ def add_payment(request, client_id):
 
 @staff_required_view
 def edit_payment(request, payment_id):
-    payment = get_object_or_404(Payment, pk=payment_id)
+    payment = get_object_or_404(accessible_payments_queryset(request.user, Payment.objects.all()), pk=payment_id)
     helper = ResponseHelper(request)
     if request.method == "POST":
         form = PaymentForm(request.POST, instance=payment)
@@ -81,7 +82,7 @@ def edit_payment(request, payment_id):
 
 @staff_required_view
 def delete_payment(request, payment_id):
-    payment = get_object_or_404(Payment, pk=payment_id)
+    payment = get_object_or_404(accessible_payments_queryset(request.user, Payment.objects.all()), pk=payment_id)
     client_id = payment.client.id
     helper = ResponseHelper(request)
     if request.method == "POST":

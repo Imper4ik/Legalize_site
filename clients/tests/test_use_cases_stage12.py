@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 from decimal import Decimal
 from unittest.mock import Mock
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
@@ -142,9 +143,30 @@ class UseCasesStage12Tests(TestCase):
 
         self.assertEqual(result.deleted_payment_id, payment.pk)
         self.assertFalse(Payment.objects.filter(pk=payment.pk).exists())
+        self.assertTrue(Payment.all_objects.filter(pk=payment.pk, archived_at__isnull=False).exists())
         activity = ClientActivity.objects.get(client=self.client_obj, event_type="payment_deleted")
         self.assertEqual(activity.metadata["payment_id"], payment.pk)
-        self.assertIsNone(activity.payment)
+        self.assertEqual(activity.payment_id, payment.pk)
+
+    def test_create_payment_use_case_rolls_back_when_audit_fails(self):
+        with patch("clients.use_cases.payments.log_client_activity", side_effect=RuntimeError("boom")):
+            with self.assertRaises(RuntimeError):
+                create_payment_for_client(
+                    client=self.client_obj,
+                    actor=self.staff,
+                    cleaned_data={
+                        "service_description": "consultation",
+                        "total_amount": Decimal("250.00"),
+                        "amount_paid": Decimal("50.00"),
+                        "status": "partial",
+                        "payment_method": "card",
+                        "payment_date": None,
+                        "due_date": timezone.localdate() + timedelta(days=5),
+                        "transaction_id": "txn-rollback",
+                    },
+                )
+
+        self.assertFalse(Payment.objects.filter(transaction_id="txn-rollback").exists())
 
     def test_deactivate_reminder_use_case_marks_inactive_and_logs_activity(self):
         reminder = Reminder.objects.create(

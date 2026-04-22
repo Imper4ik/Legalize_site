@@ -7,7 +7,7 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
-from clients.models import Client, Company, EmailCampaign
+from clients.models import Client, Company, EmailCampaign, EmailLog
 from clients.services.responses import NO_STORE_HEADER
 
 
@@ -51,6 +51,18 @@ class EmailViewsStage9Tests(TestCase):
         send_mail_mock.assert_called_once()
         confirm_mock.assert_called_once()
         log_mock.assert_called_once()
+
+    @patch("clients.views.emails.send_mail", return_value=1)
+    def test_send_custom_email_is_idempotent_for_same_payload(self, send_mail_mock):
+        url = reverse("clients:send_custom_email", kwargs={"pk": self.client_obj.pk})
+
+        first = self.client.post(url, data={"subject": "Hello", "body": "Test body"})
+        second = self.client.post(url, data={"subject": "Hello", "body": "Test body"})
+
+        self.assertEqual(first.status_code, 302)
+        self.assertEqual(second.status_code, 302)
+        self.assertEqual(send_mail_mock.call_count, 1)
+        self.assertEqual(EmailLog.objects.filter(template_type="custom").count(), 1)
 
     @patch("clients.views.emails.send_mail", return_value=1)
     def test_send_custom_email_requires_subject_and_body(self, send_mail_mock):
@@ -116,6 +128,24 @@ class EmailViewsStage9Tests(TestCase):
         confirm_mock.assert_called_once()
         log_mock.assert_called_once()
         self.assertEqual(log_mock.call_args.kwargs["sent_by"], self.staff)
+
+    @patch("clients.services.email_campaigns.send_mail", return_value=1)
+    def test_process_campaign_is_idempotent_per_recipient(self, send_mail_mock):
+        campaign = EmailCampaign.objects.create(
+            subject="News",
+            message="Body",
+            total_recipients=1,
+            recipient_emails=["email-user@example.com"],
+            created_by=self.staff,
+        )
+
+        call_command("process_email_campaigns", campaign_id=campaign.pk)
+        self.assertEqual(send_mail_mock.call_count, 1)
+
+        # Direct retry after completion should not process again.
+        call_command("process_email_campaigns", campaign_id=campaign.pk)
+        self.assertEqual(send_mail_mock.call_count, 1)
+        self.assertEqual(EmailLog.objects.filter(template_type="mass_email").count(), 1)
 
     def test_campaign_status_api_returns_no_store_payload(self):
         campaign = EmailCampaign.objects.create(

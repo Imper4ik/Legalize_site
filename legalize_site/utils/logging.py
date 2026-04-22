@@ -4,10 +4,33 @@ from __future__ import annotations
 
 import logging
 import re
+from contextvars import ContextVar
 from typing import Iterable
 
 
 REDACTION_TOKEN = "[REDACTED]"
+_request_id_var: ContextVar[str] = ContextVar("request_id", default="-")
+_correlation_id_var: ContextVar[str] = ContextVar("correlation_id", default="-")
+
+
+def set_log_context(*, request_id: str | None = None, correlation_id: str | None = None) -> None:
+    if request_id is not None:
+        _request_id_var.set(request_id)
+    if correlation_id is not None:
+        _correlation_id_var.set(correlation_id)
+
+
+def clear_log_context() -> None:
+    _request_id_var.set("-")
+    _correlation_id_var.set("-")
+
+
+def get_request_id() -> str:
+    return _request_id_var.get()
+
+
+def get_correlation_id() -> str:
+    return _correlation_id_var.get()
 
 
 def redact_text(message: str) -> str:
@@ -72,4 +95,13 @@ class RedactPIIFilter(logging.Filter):
         if redacted != message:
             record.msg = redacted
             record.args = ()
+        return True
+
+
+class RequestContextFilter(logging.Filter):
+    """Inject request-scoped IDs into log records."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        record.request_id = get_request_id()
+        record.correlation_id = get_correlation_id()
         return True

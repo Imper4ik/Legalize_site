@@ -5,10 +5,14 @@ from __future__ import annotations
 import os
 from urllib.parse import urlparse
 
+from django.core.exceptions import ImproperlyConfigured
+
 from .base import env_flag
 from .base import *  # noqa: F403
 
 DEBUG = env_flag("DEBUG", "False")
+if DEBUG:
+    raise ImproperlyConfigured("DEBUG must remain False in production.")
 
 ALLOWED_HOSTS = [host for host in os.environ.get("ALLOWED_HOSTS", "").split(",") if host]
 ALLOWED_HOSTS.append("legalize-site-production-740f.up.railway.app")
@@ -41,6 +45,11 @@ if RAILWAY_PUBLIC_DOMAIN:
 ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS))
 CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(CSRF_TRUSTED_ORIGINS))
 
+if not ALLOWED_HOSTS:
+    raise ImproperlyConfigured("ALLOWED_HOSTS must be configured in production.")
+if not CSRF_TRUSTED_ORIGINS:
+    raise ImproperlyConfigured("CSRF_TRUSTED_ORIGINS must be configured in production.")
+
 # За прокси (Render) — чтобы Django корректно видел HTTPS
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
@@ -60,10 +69,15 @@ X_FRAME_OPTIONS = os.environ.get("X_FRAME_OPTIONS", "DENY")
 SECURE_SSL_REDIRECT = env_flag("SECURE_SSL_REDIRECT", "True")
 if SECURE_SSL_REDIRECT:
     SECURE_HSTS_SECONDS = int(os.environ.get("SECURE_HSTS_SECONDS", "3600"))
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = env_flag("SECURE_HSTS_INCLUDE_SUBDOMAINS", "True")
     SECURE_HSTS_PRELOAD = os.environ.get("SECURE_HSTS_PRELOAD", "True").lower() in (
         "1",
         "true",
         "yes",
         "on",
     )
+
+if SESSION_COOKIE_SAMESITE.lower() == "none" and not SESSION_COOKIE_SECURE:
+    raise ImproperlyConfigured("SESSION_COOKIE_SAMESITE=None requires SESSION_COOKIE_SECURE=True in production.")
+if CSRF_COOKIE_SAMESITE.lower() == "none" and not CSRF_COOKIE_SECURE:
+    raise ImproperlyConfigured("CSRF_COOKIE_SAMESITE=None requires CSRF_COOKIE_SECURE=True in production.")

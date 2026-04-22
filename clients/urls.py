@@ -18,6 +18,7 @@ urlpatterns = [
     path('client/add/', views.ClientCreateView.as_view(), name='client_add'),
     path('client/<int:pk>/edit/', views.ClientUpdateView.as_view(), name='client_edit'),
     path('client/<int:pk>/delete/', views.ClientDeleteView.as_view(), name='client_delete'),
+    path('client/<int:pk>/restore/', views.restore_client_view, name='client_restore'),
     path('api/client-status/<int:pk>/', views.client_status_api, name='client_status_api'),
     path('api/get-price/<str:service_value>/', views.get_price_for_service, name='get_price_for_service'),
 
@@ -27,6 +28,7 @@ urlpatterns = [
     
     # URL для версий документов
     path('document/<int:doc_id>/versions/', views.document_versions_view, name='document_versions'),
+    path('document-version/<int:version_id>/download/', views.document_version_download, name='document_version_download'),
     path('document-version/<int:version_id>/restore/', views.document_version_restore, name='document_version_restore'),
 
     # Admin Dashboard
@@ -61,6 +63,7 @@ urlpatterns = [
     ),
     path('document/<int:doc_id>/download/', views.document_download, name='document_download'),
     path('document/<int:pk>/delete/', views.document_delete, name='document_delete'),
+    path('document/<int:pk>/restore/', views.restore_document_view, name='document_restore'),
     path(
         'wniosek-attachment/<int:attachment_id>/delete/',
         views.wniosek_attachment_delete,
@@ -76,6 +79,7 @@ urlpatterns = [
     path('client/<int:client_id>/payments/add/', views.add_payment, name='add_payment'),
     path('payment/<int:payment_id>/edit/', views.edit_payment, name='edit_payment'),
     path('payment/<int:payment_id>/delete/', views.delete_payment, name='delete_payment'),
+    path('payment/<int:pk>/restore/', views.restore_payment_view, name='payment_restore'),
     path('client/<int:client_id>/tasks/add/', views.add_task, name='add_task'),
     path('task/<int:task_id>/complete/', views.complete_task, name='complete_task'),
 

@@ -24,6 +24,8 @@ def user_has_any_role(user: AbstractBaseUser, *role_names: str) -> bool:
         return False
     if getattr(user, "is_superuser", False):
         return True
+    if not getattr(user, "is_staff", False):
+        return False
     if not role_names:
         return getattr(user, "is_staff", False)
     return user.groups.filter(name__in=role_names).exists()

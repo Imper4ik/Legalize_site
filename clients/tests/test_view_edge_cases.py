@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.http import HttpResponse
 
 from clients.models import AppSettings, Client, ClientActivity, Document, Payment, Reminder, ServicePrice
+from clients.services.access import user_has_internal_role
 from clients.services.roles import ensure_predefined_roles
 from clients.views.base import staff_required_view
 from submissions.models import Submission
@@ -34,6 +35,47 @@ class StaffRequiredViewTests(TestCase):
         self.assertEqual(response.status_code, 403)
         payload = json.loads(response.content.decode("utf-8"))
         self.assertEqual(payload["status"], "error")
+
+
+class RolePolicyTests(TestCase):
+    def setUp(self):
+        ensure_predefined_roles()
+        user_model = get_user_model()
+        self.regular = user_model.objects.create_user(
+            email="regular@example.com",
+            password="pass",
+            is_staff=False,
+        )
+        self.group_only = user_model.objects.create_user(
+            email="group@example.com",
+            password="pass",
+            is_staff=False,
+        )
+        self.staff_only = user_model.objects.create_user(
+            email="staff-only@example.com",
+            password="pass",
+            is_staff=True,
+        )
+        self.staff_with_role = user_model.objects.create_user(
+            email="staff-role@example.com",
+            password="pass",
+            is_staff=True,
+        )
+        admin_group = Group.objects.get(name="Admin")
+        self.group_only.groups.add(admin_group)
+        self.staff_with_role.groups.add(admin_group)
+
+    def test_regular_user_is_denied(self):
+        self.assertFalse(user_has_internal_role(self.regular, "Admin"))
+
+    def test_group_membership_without_staff_flag_is_denied(self):
+        self.assertFalse(user_has_internal_role(self.group_only, "Admin"))
+
+    def test_staff_without_required_group_is_denied(self):
+        self.assertFalse(user_has_internal_role(self.staff_only, "Admin"))
+
+    def test_staff_with_required_group_is_allowed(self):
+        self.assertTrue(user_has_internal_role(self.staff_with_role, "Admin"))
 
 
 class ClientViewEdgeCaseTests(TestCase):
@@ -355,3 +397,87 @@ class ClientViewEdgeCaseTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Payment.objects.filter(pk=payment.pk).exists())
+
+
+class ObjectAccessPolicyTests(TestCase):
+    def setUp(self):
+        ensure_predefined_roles()
+        user_model = get_user_model()
+        self.staff_a = user_model.objects.create_user(
+            email="staff-a@example.com",
+            password="pass",
+            is_staff=True,
+        )
+        self.staff_b = user_model.objects.create_user(
+            email="staff-b@example.com",
+            password="pass",
+            is_staff=True,
+        )
+        staff_group = Group.objects.get(name="Staff")
+        self.staff_a.groups.add(staff_group)
+        self.staff_b.groups.add(staff_group)
+
+        self.client_owned = Client.objects.create(
+            first_name="Owned",
+            last_name="Client",
+            citizenship="PL",
+            phone="+48111111111",
+            email="owned@example.com",
+            assigned_staff=self.staff_a,
+        )
+        self.client_foreign = Client.objects.create(
+            first_name="Foreign",
+            last_name="Client",
+            citizenship="PL",
+            phone="+48222222222",
+            email="foreign@example.com",
+            assigned_staff=self.staff_b,
+        )
+        self.foreign_payment = Payment.objects.create(
+            client=self.client_foreign,
+            service_description="consultation",
+            total_amount="100.00",
+            amount_paid="0.00",
+        )
+        self.foreign_document = Document.objects.create(
+            client=self.client_foreign,
+            document_type="passport",
+            file="documents/foreign.pdf",
+        )
+
+    def test_staff_cannot_open_foreign_client_detail(self):
+        self.client.login(email="staff-a@example.com", password="pass")
+
+        response = self.client.get(
+            reverse("clients:client_detail", kwargs={"pk": self.client_foreign.pk})
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_staff_cannot_download_foreign_document(self):
+        self.client.login(email="staff-a@example.com", password="pass")
+
+        response = self.client.get(
+            reverse("clients:document_download", kwargs={"doc_id": self.foreign_document.pk})
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_staff_cannot_edit_foreign_payment(self):
+        self.client.login(email="staff-a@example.com", password="pass")
+
+        response = self.client.post(
+            reverse("clients:edit_payment", kwargs={"payment_id": self.foreign_payment.pk}),
+            data={"service_description": "consultation", "total_amount": "150.00"},
+        )
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_assigned_staff_can_open_owned_client(self):
+        self.client.login(email="staff-a@example.com", password="pass")
+
+        response = self.client.get(
+            reverse("clients:client_detail", kwargs={"pk": self.client_owned.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)

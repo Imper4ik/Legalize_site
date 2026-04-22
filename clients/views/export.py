@@ -11,6 +11,7 @@ from django.utils.translation import gettext as _
 from django.views.generic import DetailView
 
 from clients.models import Client, Document, DocumentVersion
+from clients.services.access import accessible_clients_queryset, accessible_documents_queryset
 from clients.services.export import generate_client_zip
 from clients.services.responses import apply_no_store
 from clients.use_cases.exports import (
@@ -18,6 +19,7 @@ from clients.use_cases.exports import (
     restore_document_version_for_client,
 )
 from clients.views.base import StaffRequiredMixin, staff_required_view
+from legalize_site.utils.files import build_protected_file_response
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +29,9 @@ class ClientExportPDFView(StaffRequiredMixin, DetailView):
 
     model = Client
     template_name = "clients/client_export_pdf.html"
+
+    def get_queryset(self):
+        return accessible_clients_queryset(self.request.user, Client.objects.all())
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
@@ -57,7 +62,7 @@ class ClientExportPDFView(StaffRequiredMixin, DetailView):
 def client_export_zip(request, pk):
     """Stream a ZIP archive of the full client case as a download."""
 
-    client = get_object_or_404(Client, pk=pk)
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
     buffer = generate_client_zip(client)
 
     safe_name = f"{client.first_name}_{client.last_name}".replace(" ", "_")[:50]
@@ -83,7 +88,7 @@ def client_export_zip(request, pk):
 def document_versions_view(request, doc_id):
     """List all versions of a specific document."""
 
-    document = get_object_or_404(Document, pk=doc_id)
+    document = get_object_or_404(accessible_documents_queryset(request.user, Document.objects.all()), pk=doc_id)
     versions = document.versions.all().order_by("-version_number")
     response = render(
         request,
@@ -98,6 +103,29 @@ def document_versions_view(request, doc_id):
 
 
 @staff_required_view
+def document_version_download(request, version_id):
+    version = get_object_or_404(
+        DocumentVersion.objects.select_related("document", "document__client").filter(
+            document__in=accessible_documents_queryset(request.user, Document.objects.all())
+        ),
+        pk=version_id,
+    )
+    record_client_export(
+        client=version.document.client,
+        actor=request.user,
+        export_type="document_version_download",
+        summary="Скачана версия документа",
+        metadata={
+            "document_id": version.document_id,
+            "document_version_id": version.pk,
+            "version_number": version.version_number,
+        },
+    )
+    filename = version.file_name or version.file.name.rsplit("/", 1)[-1]
+    return build_protected_file_response(version.file, filename=filename, as_attachment=True)
+
+
+@staff_required_view
 def document_version_restore(request, version_id):
     """Restore a previous document version, archiving the current file."""
 
@@ -106,7 +134,12 @@ def document_version_restore(request, version_id):
     if request.method != "POST":
         return HttpResponse(status=405)
 
-    version = get_object_or_404(DocumentVersion.objects.select_related("document"), pk=version_id)
+    version = get_object_or_404(
+        DocumentVersion.objects.select_related("document").filter(
+            document__in=accessible_documents_queryset(request.user, Document.objects.all())
+        ),
+        pk=version_id,
+    )
     document = version.document
 
     try:

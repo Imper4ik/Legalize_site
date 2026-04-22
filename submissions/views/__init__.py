@@ -10,6 +10,7 @@ from .documents import (
     DocumentCreateView,
     DocumentUpdateView,
     DocumentDeleteView,
+    DocumentDownloadView,
 )
 from .api import (
     submission_api,

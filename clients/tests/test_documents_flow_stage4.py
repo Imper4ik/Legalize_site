@@ -264,7 +264,7 @@ class DocumentFlowsStage4Tests(TestCase):
 
         self.assertEqual(document.ocr_status, "failed")
         self.assertFalse(document.awaiting_confirmation)
-        self.assertEqual(job.status, DocumentProcessingJob.STATUS_FAILED)
+        self.assertEqual(job.status, DocumentProcessingJob.STATUS_PENDING)
         self.assertEqual(job.attempts, 1)
 
     def test_confirm_wezwanie_parse_get_ajax_returns_405(self):

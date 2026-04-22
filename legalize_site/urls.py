@@ -7,6 +7,7 @@ from django.urls import path, include
 from django.conf.urls.i18n import i18n_patterns
 from clients import views
 from clients.views.admin_views import update_translations_view
+from users.security_views import SignupDisabledView
 from users.views import ResendVerificationEmailView
 from .cron_views import db_backup, process_email_campaigns_cron
 
@@ -28,6 +29,8 @@ if getattr(settings, "ENABLE_TRANSLATION_TOOLING", False) and 'rosetta' in setti
     ]
 
 urlpatterns += i18n_patterns(
+    path("accounts/signup/", SignupDisabledView.as_view(), name="account_signup"),
+    path("accounts/social/signup/", SignupDisabledView.as_view(), name="socialaccount_signup"),
     path(
         "accounts/confirm-email/resend/",
         ResendVerificationEmailView.as_view(),

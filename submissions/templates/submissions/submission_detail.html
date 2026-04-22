@@ -39,7 +39,7 @@
               <td><span class="badge bg-secondary">{{ document.get_status_display }}</span></td>
               <td>
                 {% if document.file_path %}
-                  <a href="{{ document.file_path.url }}" target="_blank">{% translate "Открыть" %}</a>
+                  <a href="{% url 'submissions:document_download' document.pk %}">{% translate "Открыть" %}</a>
                 {% else %}
                   <span class="text-muted">{% translate "Не загружен" %}</span>
                 {% endif %}

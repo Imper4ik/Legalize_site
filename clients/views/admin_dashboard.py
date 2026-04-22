@@ -130,6 +130,10 @@ class AdminDashboardView(StaffRequiredMixin, TemplateView):
         context["failed_document_jobs"] = DocumentProcessingJob.objects.filter(
             status=DocumentProcessingJob.STATUS_FAILED
         ).count()
+        context["retryable_document_jobs"] = DocumentProcessingJob.objects.filter(
+            status=DocumentProcessingJob.STATUS_PENDING,
+            attempts__gt=0,
+        ).count()
 
         context["open_tasks"] = StaffTask.objects.filter(status__in=["open", "in_progress"]).count()
         context["overdue_tasks"] = StaffTask.objects.filter(

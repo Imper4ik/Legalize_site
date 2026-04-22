@@ -1,13 +1,28 @@
 from __future__ import annotations
 
+from pathlib import Path
+import shutil
+
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
+from django.test import override_settings
 from django.urls import reverse
 
 from submissions.models import Document, Submission
 
 
+TEST_MEDIA_ROOT = Path(__file__).resolve().parents[2] / "generated_media_test" / "submissions_web"
+TEST_MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
+
+
+@override_settings(MEDIA_ROOT=TEST_MEDIA_ROOT)
 class SubmissionWebViewsTests(TestCase):
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(TEST_MEDIA_ROOT, ignore_errors=True)
+
     def setUp(self):
         user_model = get_user_model()
         self.staff = user_model.objects.create_user(email="staff@example.com", password="pass", is_staff=True)
@@ -64,6 +79,7 @@ class SubmissionWebViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Submission.objects.filter(pk=submission.pk).exists())
+        self.assertTrue(Submission.all_objects.filter(pk=submission.pk, archived_at__isnull=False).exists())
 
     def test_document_create_post_invalid_uploaded_without_file(self):
         self.client.login(email="staff@example.com", password="pass")
@@ -83,3 +99,18 @@ class SubmissionWebViewsTests(TestCase):
         response = self.client.get(reverse("submissions:submission_create"))
 
         self.assertEqual(response.status_code, 403)
+
+    def test_document_download_uses_protected_endpoint(self):
+        self.client.login(email="staff@example.com", password="pass")
+        submission = Submission.objects.create(name="With file")
+        document = Document.objects.create(
+            submission=submission,
+            title="Passport",
+            status=Document.Status.UPLOADED,
+            file_path=SimpleUploadedFile("passport.pdf", b"pdf-data", content_type="application/pdf"),
+        )
+
+        response = self.client.get(reverse("submissions:document_download", kwargs={"pk": document.pk}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("attachment;", response["Content-Disposition"])

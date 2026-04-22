@@ -83,6 +83,26 @@ class UseCasesStage14Tests(TestCase):
         )
         workflow_activity = ClientActivity.objects.get(client=self.client_obj, event_type="workflow_changed")
         self.assertEqual(workflow_activity.metadata["workflow_stage"], "document_collection")
+        deadline_activity = ClientActivity.objects.get(client=self.client_obj, event_type="deadline_changed")
+        self.assertEqual(deadline_activity.metadata["field"], "fingerprints_date")
+
+    def test_finalize_client_update_logs_status_change_as_separate_audit_event(self):
+        previous_values = snapshot_client_update_state(self.client_obj)
+        self.client_obj.status = "approved"
+        self.client_obj.save(update_fields=["status"])
+
+        result = finalize_client_update(
+            client=self.client_obj,
+            actor=self.staff,
+            previous_values=previous_values,
+            previous_fingerprints_date=self.client_obj.fingerprints_date,
+            new_fingerprints_date=self.client_obj.fingerprints_date,
+        )
+
+        self.assertIn("status", result.changed_fields)
+        status_activity = ClientActivity.objects.get(client=self.client_obj, event_type="client_status_changed")
+        self.assertEqual(status_activity.metadata["old_status"], "new")
+        self.assertEqual(status_activity.metadata["new_status"], "approved")
 
     def test_finalize_client_update_skips_logging_when_nothing_changed(self):
         previous_values = snapshot_client_update_state(self.client_obj)

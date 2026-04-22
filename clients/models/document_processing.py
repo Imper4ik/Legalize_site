@@ -56,7 +56,10 @@ class DocumentProcessingJob(models.Model):
         verbose_name=_("Source file name"),
     )
     attempts = models.PositiveIntegerField(default=0, verbose_name=_("Attempts"))
+    max_attempts = models.PositiveIntegerField(default=3, verbose_name=_("Max attempts"))
     error_message = models.TextField(blank=True, default="", verbose_name=_("Error message"))
+    next_attempt_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Next attempt at"))
+    lease_expires_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Lease expires at"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created at"))
     started_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Started at"))
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Completed at"))

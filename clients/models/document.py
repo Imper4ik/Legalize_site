@@ -1,32 +1,14 @@
 import hashlib
-from django.db import connection, models
+from django.db import models
 from django.utils import translation
 from django.utils.translation import gettext, gettext_lazy as _
 from django.conf import settings
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.validators import validate_uploaded_document
+from legalize_site.soft_delete import SoftDeleteModel
 
 DOCUMENT_TYPE_VALUES = {choice.value for choice in DocumentType}
 DOCUMENT_LABEL_ALIASES: dict[str, list[str]] = {}
-
-def _submission_has_localized_fields() -> bool:
-    from django.core.cache import cache
-    cached = cache.get("_submission_has_localized_fields")
-    if cached is not None:
-        return cached
-    table_name = "submissions_submission"
-    try:
-        with connection.cursor() as cursor:
-            columns = {
-                column.name
-                for column in connection.introspection.get_table_description(cursor, table_name)
-            }
-    except Exception:
-        cache.set("_submission_has_localized_fields", False, timeout=60)
-        return False
-    result = {"name_pl", "name_en", "name_ru"}.issubset(columns)
-    cache.set("_submission_has_localized_fields", result, timeout=300)
-    return result
 
 def _normalize_document_label(value: str) -> str:
     return " ".join(str(value).split()).casefold()
@@ -97,7 +79,7 @@ def get_available_document_types(purpose: str | None = None) -> set[str]:
     types.update(queryset.values_list("document_type", flat=True))
     return types
 
-class Document(models.Model):
+class Document(SoftDeleteModel):
     OCR_STATUS_CHOICES = [
         ("skipped", _("Пропущено")),
         ("success", _("Успешно")),

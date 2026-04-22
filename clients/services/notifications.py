@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import logging
+import hashlib
 from datetime import timedelta
 from io import BytesIO
 from pathlib import Path
 from typing import Iterable
 
 from django.conf import settings
+from django.db import IntegrityError, transaction
 from django.core.mail import EmailMessage, send_mail
 from django.template.loader import select_template
 from django.utils import timezone
@@ -27,6 +29,11 @@ EMAIL_SUBJECTS = {
     "expiring_documents": gettext_lazy("Документы скоро истекают"),
     "appointment_notification": gettext_lazy("Уведомление о встрече"),
 }
+
+
+def build_email_idempotency_key(*parts: object) -> str:
+    normalized = "|".join(str(part).strip() for part in parts if part is not None)
+    return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
 
 def _get_preferred_language(client: Client) -> str:
@@ -60,9 +67,18 @@ def _send_email(
     client: Client | None = None,
     template_type: str = "",
     sent_by=None,
+    idempotency_key: str = "",
 ) -> int:
     try:
         recipient_list = list(recipients)
+        if idempotency_key:
+            from clients.models import EmailLog
+
+            if EmailLog.objects.filter(
+                idempotency_key=idempotency_key,
+                delivery_status=EmailLog.DELIVERY_STATUS_SENT,
+            ).exists():
+                return 0
         sent_count = send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, recipient_list)
         if sent_count:
             _send_confirmation_email(subject, body, recipient_list)
@@ -73,10 +89,23 @@ def _send_email(
                 client=client,
                 template_type=template_type,
                 sent_by=sent_by,
+                idempotency_key=idempotency_key,
+                delivery_status="sent",
             )
         return sent_count
     except Exception:  # pragma: no cover - defensive safeguard
         logger.exception("Failed to send notification email")
+        _log_email(
+            subject,
+            body,
+            list(recipients),
+            client=client,
+            template_type=template_type,
+            sent_by=sent_by,
+            idempotency_key=idempotency_key,
+            delivery_status="failed",
+            error_message="send failed",
+        )
         return 0
 
 
@@ -88,17 +117,35 @@ def _log_email(
     client: Client | None = None,
     template_type: str = "",
     sent_by=None,
+    idempotency_key: str = "",
+    delivery_status: str = "sent",
+    error_message: str = "",
 ) -> None:
     from clients.models import EmailLog
     try:
-        EmailLog.objects.create(
-            client=client,
-            subject=subject,
-            body=body,
-            recipients=", ".join(recipients),
-            template_type=template_type,
-            sent_by=sent_by,
-        )
+        payload = {
+            "client": client,
+            "subject": subject,
+            "body": body,
+            "recipients": ", ".join(recipients),
+            "template_type": template_type,
+            "sent_by": sent_by,
+            "delivery_status": delivery_status,
+            "error_message": error_message,
+        }
+        if idempotency_key:
+            with transaction.atomic():
+                EmailLog.objects.update_or_create(
+                    idempotency_key=idempotency_key,
+                    defaults=payload,
+                )
+        else:
+            EmailLog.objects.create(
+                **payload,
+                idempotency_key="",
+            )
+    except IntegrityError:
+        logger.info("Skipped duplicate email log for idempotency_key=%s", idempotency_key)
     except Exception:
         logger.exception("Failed to log sent email")
 
@@ -281,6 +328,7 @@ def send_required_documents_email(client: Client, *, sent_by=None) -> int:
         client=client,
         template_type="required_documents",
         sent_by=sent_by,
+        idempotency_key=build_email_idempotency_key("required_documents", client.pk, client.email),
     )
 
 
@@ -316,6 +364,13 @@ def send_expired_documents_email(client: Client, *, sent_by=None) -> int:
         client=client,
         template_type="expired_documents",
         sent_by=sent_by,
+        idempotency_key=build_email_idempotency_key(
+            "expired_documents",
+            client.pk,
+            client.email,
+            client.fingerprints_date,
+            timezone.localdate(),
+        ),
     )
 
 
@@ -388,6 +443,12 @@ def send_missing_documents_email(client: Client, *, sent_by=None) -> int:
         client=client,
         template_type="missing_documents",
         sent_by=sent_by,
+        idempotency_key=build_email_idempotency_key(
+            "missing_documents",
+            client.pk,
+            client.email,
+            sorted(item["name"] for item in context["documents"]),
+        ),
     )
 
 
@@ -468,6 +529,12 @@ def send_expiring_documents_email(client: Client, documents: list[Document], *, 
         client=client,
         template_type="expiring_documents",
         sent_by=sent_by,
+        idempotency_key=build_email_idempotency_key(
+            "expiring_documents",
+            client.pk,
+            client.email,
+            sorted(f"{doc.pk}:{doc.expiry_date}" for doc in documents if doc.expiry_date),
+        ),
     )
 
 
@@ -502,4 +569,12 @@ def send_appointment_notification_email(client: Client, *, sent_by=None) -> int:
         client=client,
         template_type="appointment_notification",
         sent_by=sent_by,
+        idempotency_key=build_email_idempotency_key(
+            "appointment_notification",
+            client.pk,
+            client.email,
+            client.fingerprints_date,
+            client.fingerprints_time,
+            client.fingerprints_location,
+        ),
     )

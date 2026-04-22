@@ -5,9 +5,10 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 
 from clients.validators import validate_uploaded_document
+from legalize_site.soft_delete import SoftDeleteModel
 
 
-class Submission(models.Model):
+class Submission(SoftDeleteModel):
     slug = models.SlugField(max_length=64, unique=True, verbose_name=_('Слаг основания'))
     class Status(models.TextChoices):
         DRAFT = 'draft', _('Черновик')
@@ -51,7 +52,7 @@ class Submission(models.Model):
             candidate = base_slug
             counter = 1
 
-            while Submission.objects.filter(slug=candidate).exclude(pk=self.pk).exists():
+            while Submission.all_objects.filter(slug=candidate).exclude(pk=self.pk).exists():
                 counter += 1
                 candidate = f"{base_slug}-{counter}"
 
@@ -60,7 +61,7 @@ class Submission(models.Model):
         super().save(*args, **kwargs)
 
 
-class Document(models.Model):
+class Document(SoftDeleteModel):
     class Status(models.TextChoices):
         NOT_UPLOADED = 'not_uploaded', _('Не загружен')
         UPLOADED = 'uploaded', _('Загружен')

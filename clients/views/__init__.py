@@ -53,9 +53,15 @@ from clients.views.reminders import (
 )
 from clients.views.metrics import MetricsDashboardView
 from clients.views.admin_dashboard import AdminDashboardView
+from clients.views.archive import (
+    restore_client_view,
+    restore_document_view,
+    restore_payment_view,
+)
 from clients.views.export import (
     client_export_pdf_view,
     client_export_zip,
+    document_version_download,
     document_versions_view,
     document_version_restore,
 )
@@ -112,8 +118,12 @@ __all__ = [
     'mass_email_view',
     'campaign_status_api',
     'AdminDashboardView',
+    'restore_client_view',
+    'restore_document_view',
+    'restore_payment_view',
     'client_export_pdf_view',
     'client_export_zip',
+    'document_version_download',
     'document_versions_view',
     'document_version_restore',
 ]

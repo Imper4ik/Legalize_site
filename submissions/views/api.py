@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.translation import gettext_lazy as _
 from django.views import View
@@ -80,7 +81,7 @@ class SubmissionDetailApiView(LoginRequiredMixin, View):
             'submission_id': document.submission_id,
             'title': document.title,
             'status': document.status,
-            'file_path': document.file_path.url if document.file_path else None,
+            'file_path': reverse('submissions:document_download', kwargs={'pk': document.pk}) if document.file_path else None,
             'created_at': document.created_at,
         }
 
@@ -120,7 +121,7 @@ class DocumentApiView(LoginRequiredMixin, View):
             'submission_id': document.submission_id,
             'title': document.title,
             'status': document.status,
-            'file_path': document.file_path.url if document.file_path else None,
+            'file_path': reverse('submissions:document_download', kwargs={'pk': document.pk}) if document.file_path else None,
             'created_at': document.created_at,
         }
 
@@ -169,7 +170,7 @@ class DocumentDetailApiView(LoginRequiredMixin, View):
                     'submission_id': document.submission_id,
                     'title': document.title,
                     'status': document.status,
-                    'file_path': document.file_path.url if document.file_path else None,
+                    'file_path': reverse('submissions:document_download', kwargs={'pk': document.pk}) if document.file_path else None,
                     'created_at': document.created_at,
                 },
             )

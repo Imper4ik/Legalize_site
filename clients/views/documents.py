@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from django.contrib import messages
-from django.http import FileResponse, Http404
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -25,12 +25,14 @@ from clients.use_cases.documents import (
     update_client_notes_for_client,
     verify_all_client_documents,
 )
+from clients.services.access import accessible_clients_queryset, accessible_documents_queryset
 from clients.views.base import staff_required_view
+from legalize_site.utils.files import build_protected_file_response
 
 
 @staff_required_view
 def update_client_notes(request, pk):
-    client = get_object_or_404(Client, pk=pk)
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
     helper = ResponseHelper(request)
 
     if request.method == "POST":
@@ -48,7 +50,7 @@ def update_client_notes(request, pk):
 
 @staff_required_view
 def add_document(request, client_id, doc_type):
-    client = get_object_or_404(Client, pk=client_id)
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
     document_type_display = client.get_document_name_by_code(doc_type)
     helper = ResponseHelper(request)
 
@@ -106,7 +108,7 @@ def add_document(request, client_id, doc_type):
 
 @staff_required_view
 def confirm_wezwanie_parse(request, doc_id):
-    document = get_object_or_404(Document, pk=doc_id)
+    document = get_object_or_404(accessible_documents_queryset(request.user, Document.objects.all()), pk=doc_id)
     helper = ResponseHelper(request)
 
     if request.method != "POST":
@@ -144,7 +146,7 @@ def confirm_wezwanie_parse(request, doc_id):
 
 @staff_required_view
 def document_delete(request, pk):
-    document = get_object_or_404(Document, pk=pk)
+    document = get_object_or_404(accessible_documents_queryset(request.user, Document.objects.all()), pk=pk)
     client_id = document.client.id
     helper = ResponseHelper(request)
 
@@ -163,7 +165,9 @@ def document_delete(request, pk):
 @staff_required_view
 def wniosek_attachment_delete(request, attachment_id):
     attachment = get_object_or_404(
-        WniosekAttachment.objects.select_related("submission", "submission__client"),
+        WniosekAttachment.objects.select_related("submission", "submission__client").filter(
+            submission__client__in=accessible_clients_queryset(request.user, Client.objects.all())
+        ),
         pk=attachment_id,
     )
     submission = attachment.submission
@@ -187,7 +191,7 @@ def wniosek_attachment_delete(request, attachment_id):
 def toggle_document_verification(request, doc_id):
     """Toggle verification status for a client document."""
 
-    document = get_object_or_404(Document, pk=doc_id)
+    document = get_object_or_404(accessible_documents_queryset(request.user, Document.objects.all()), pk=doc_id)
     helper = ResponseHelper(request)
     if request.method == "POST":
         result = toggle_client_document_verification(
@@ -216,7 +220,7 @@ def toggle_document_verification(request, doc_id):
 def verify_all_documents(request, client_id):
     """Mark all uploaded documents for the client as verified."""
 
-    client = get_object_or_404(Client, pk=client_id)
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
     helper = ResponseHelper(request)
 
     if request.method != "POST":
@@ -247,23 +251,20 @@ def verify_all_documents(request, client_id):
 
 @staff_required_view
 def document_download(request, doc_id):
-    document = get_object_or_404(Document.objects.select_related("client"), pk=doc_id)
-    try:
-        file_handle = document.file.open("rb")
-    except FileNotFoundError as exc:
-        raise Http404("Document file not found") from exc
-
+    document = get_object_or_404(
+        accessible_documents_queryset(request.user, Document.objects.select_related("client")),
+        pk=doc_id,
+    )
     record_document_download(document=document, actor=request.user)
     filename = document.file.name.rsplit("/", 1)[-1]
-    response = FileResponse(file_handle, as_attachment=False, filename=filename)
-    return apply_no_store(response)
+    return build_protected_file_response(document.file, filename=filename, as_attachment=True)
 
 
 @staff_required_view
 def client_status_api(request, pk):
     """Return the latest client checklist as JSON for AJAX refreshes."""
 
-    client = get_object_or_404(Client, pk=pk)
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
     checklist_html = render_to_string(
         "clients/partials/document_checklist.html",
         {
@@ -279,7 +280,7 @@ def client_status_api(request, pk):
 def client_overview_partial(request, pk):
     """Return the rendered client overview partial for AJAX refreshes."""
 
-    client = get_object_or_404(Client, pk=pk)
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
     document_status_list = client.get_document_checklist()
     overview_html = render_to_string(
         "clients/partials/client_overview.html",
@@ -295,7 +296,7 @@ def client_overview_partial(request, pk):
 
 @staff_required_view
 def client_checklist_partial(request, pk):
-    client = get_object_or_404(Client, pk=pk)
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
     document_status_list = client.get_document_checklist()
     response = render(
         request,
