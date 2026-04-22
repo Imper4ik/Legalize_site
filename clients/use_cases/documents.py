@@ -3,6 +3,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from django.db import transaction
+
 from clients.models import Client, Document, WniosekAttachment
 from clients.services.activity import log_client_activity
 from clients.services.notifications import send_missing_documents_email
@@ -37,14 +39,15 @@ class WniosekAttachmentScenarioResult:
 
 
 def update_client_notes_for_client(*, client: Client, actor, notes: str) -> ClientNoteScenarioResult:
-    client.notes = notes
-    client.save(update_fields=["notes"])
-    log_client_activity(
-        client=client,
-        actor=actor,
-        event_type="note_updated",
-        summary="Обновлена заметка по клиенту",
-    )
+    with transaction.atomic():
+        client.notes = notes
+        client.save(update_fields=["notes"])
+        log_client_activity(
+            client=client,
+            actor=actor,
+            event_type="note_updated",
+            summary="Обновлена заметка по клиенту",
+        )
     return ClientNoteScenarioResult(client=client, notes=client.notes or "")
 
 
@@ -53,18 +56,20 @@ def delete_client_document(*, document: Document, actor) -> DocumentScenarioResu
     document_id = document.pk
     document_display_name = document.display_name
 
-    log_client_activity(
-        client=client,
-        actor=actor,
-        event_type="document_deleted",
-        summary=f"Удалён документ: {document_display_name}",
-        metadata={"document_id": document_id, "document_type": document.document_type},
-    )
-    document.delete()
-    document.pk = document_id
+    with transaction.atomic():
+        log_client_activity(
+            client=client,
+            actor=actor,
+            event_type="document_deleted",
+            summary=f"Удалён документ: {document_display_name}",
+            metadata={"document_id": document_id, "document_type": document.document_type},
+            document=document,
+        )
+        document.archive()
 
     return DocumentScenarioResult(
         client=client,
+        document=document,
         deleted_document_id=document_id,
         document_display_name=document_display_name,
     )
@@ -78,32 +83,30 @@ def delete_wniosek_attachment(*, attachment: WniosekAttachment, actor) -> Wniose
     document_type = attachment.document_type
     submission_id = submission.pk
 
-    attachment.delete()
-    attachment.pk = attachment_id
+    with transaction.atomic():
+        attachment.delete()
+        remaining_count = submission.attachments.count()
+        submission_deleted = remaining_count == 0
+        if submission_deleted:
+            submission.delete()
+        elif submission.attachment_count != remaining_count:
+            submission.attachment_count = remaining_count
+            submission.save(update_fields=["attachment_count"])
 
-    remaining_count = submission.attachments.count()
-    submission_deleted = remaining_count == 0
-    if submission_deleted:
-        submission.delete()
-        submission.pk = submission_id
-    elif submission.attachment_count != remaining_count:
-        submission.attachment_count = remaining_count
-        submission.save(update_fields=["attachment_count"])
-
-    log_client_activity(
-        client=client,
-        actor=actor,
-        event_type="wniosek_attachment_deleted",
-        summary=f"Удалена отметка wniosek: {attachment_name}",
-        metadata={
-            "attachment_id": attachment_id,
-            "attachment_name": attachment_name,
-            "document_type": document_type,
-            "submission_id": submission_id,
-            "remaining_count": remaining_count,
-            "submission_deleted": submission_deleted,
-        },
-    )
+        log_client_activity(
+            client=client,
+            actor=actor,
+            event_type="wniosek_attachment_deleted",
+            summary=f"Удалена отметка wniosek: {attachment_name}",
+            metadata={
+                "attachment_id": attachment_id,
+                "attachment_name": attachment_name,
+                "document_type": document_type,
+                "submission_id": submission_id,
+                "remaining_count": remaining_count,
+                "submission_deleted": submission_deleted,
+            },
+        )
 
     return WniosekAttachmentScenarioResult(
         client=client,
@@ -121,18 +124,19 @@ def toggle_client_document_verification(
     send_missing_email: MissingDocumentsSender = send_missing_documents_email,
 ) -> DocumentScenarioResult:
     was_verified = document.verified
-    document.verified = not document.verified
-    document.save(update_fields=["verified"])
+    with transaction.atomic():
+        document.verified = not document.verified
+        document.save(update_fields=["verified"])
 
-    log_client_activity(
-        client=document.client,
-        actor=actor,
-        event_type="document_verified",
-        summary=f"Статус документа изменён: {document.display_name}",
-        details="verified" if document.verified else "verification removed",
-        metadata={"document_id": document.id, "verified": document.verified},
-        document=document,
-    )
+        log_client_activity(
+            client=document.client,
+            actor=actor,
+            event_type="document_verified",
+            summary=f"Статус документа изменён: {document.display_name}",
+            details="verified" if document.verified else "verification removed",
+            metadata={"document_id": document.id, "verified": document.verified},
+            document=document,
+        )
 
     emails_sent = False
     if document.verified and not was_verified:
@@ -153,15 +157,16 @@ def verify_all_client_documents(
     actor,
     send_missing_email: MissingDocumentsSender = send_missing_documents_email,
 ) -> DocumentScenarioResult:
-    updated_count = client.documents.filter(verified=False).update(verified=True)
-    if updated_count:
-        log_client_activity(
-            client=client,
-            actor=actor,
-            event_type="document_verified",
-            summary="Все документы клиента отмечены как проверенные",
-            metadata={"verified_count": updated_count},
-        )
+    with transaction.atomic():
+        updated_count = client.documents.filter(verified=False).update(verified=True)
+        if updated_count:
+            log_client_activity(
+                client=client,
+                actor=actor,
+                event_type="document_verified",
+                summary="Все документы клиента отмечены как проверенные",
+                metadata={"verified_count": updated_count},
+            )
 
     emails_sent = False
     if updated_count:

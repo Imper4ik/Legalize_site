@@ -29,6 +29,7 @@ def healthcheck(request):
     if show_details:
         payload["queues"] = {
             "pending_document_jobs": DocumentProcessingJob.objects.filter(status="pending").count(),
+            "retryable_document_jobs": DocumentProcessingJob.objects.filter(status="pending", attempts__gt=0).count(),
             "failed_document_jobs": DocumentProcessingJob.objects.filter(status="failed").count(),
             "pending_email_campaigns": EmailCampaign.objects.filter(status=EmailCampaign.STATUS_PENDING).count(),
             "running_email_campaigns": EmailCampaign.objects.filter(status=EmailCampaign.STATUS_RUNNING).count(),

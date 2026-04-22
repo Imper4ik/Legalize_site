@@ -4,7 +4,7 @@ import logging
 
 from django.core.management.base import BaseCommand
 
-from clients.services.document_workflow import process_pending_document_jobs
+from clients.services.document_workflow import process_pending_document_jobs, reclaim_stale_document_jobs
 from clients.services.notifications import (
     send_appointment_notification_email,
     send_missing_documents_email,
@@ -28,6 +28,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         limit = options["limit"]
         logger.info("Starting queued OCR job processing (limit=%s)", limit)
+        reclaimed = reclaim_stale_document_jobs()
+        if reclaimed:
+            logger.warning("Reclaimed %s stale OCR job(s) before processing", reclaimed)
         results = process_pending_document_jobs(
             limit=limit,
             parser=parse_wezwanie,
@@ -57,14 +60,15 @@ class Command(BaseCommand):
             )
 
         logger.info(
-            "Processed %s OCR job(s): completed=%s failed=%s skipped=%s",
+            "Processed %s OCR job(s): completed=%s failed=%s skipped=%s reclaimed=%s",
             len(results),
             completed,
             failed,
             skipped,
+            reclaimed,
         )
         self.stdout.write(
             self.style.SUCCESS(
-                f"Processed {len(results)} job(s): completed={completed}, failed={failed}, skipped={skipped}"
+                f"Processed {len(results)} job(s): completed={completed}, failed={failed}, skipped={skipped}, reclaimed={reclaimed}"
             )
         )

@@ -14,6 +14,7 @@ urlpatterns = [
 
     path('<int:submission_id>/documents/create/', views.DocumentCreateView.as_view(), name='document_create'),
     path('documents/<int:pk>/edit/', views.DocumentUpdateView.as_view(), name='document_edit'),
+    path('documents/<int:pk>/download/', views.DocumentDownloadView.as_view(), name='document_download'),
     path('documents/<int:pk>/delete/', views.DocumentDeleteView.as_view(), name='document_delete'),
 
     path('api/submissions/', views.submission_api, name='api_submission_list'),

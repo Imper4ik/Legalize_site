@@ -11,6 +11,7 @@ from django.views.decorators.http import require_GET, require_POST
 from django.utils.translation import gettext as _
 
 from clients.models import Client, EmailCampaign
+from clients.services.access import accessible_campaigns_queryset, accessible_clients_queryset
 from clients.services.email_campaigns import queue_mass_email_campaign
 from clients.services.notifications import (
     _get_appointment_context,
@@ -22,6 +23,7 @@ from clients.services.notifications import (
     _log_email,
     _render_email_body,
     _send_confirmation_email,
+    build_email_idempotency_key,
 )
 from clients.services.responses import json_no_store
 from clients.views.base import staff_required_view
@@ -32,7 +34,7 @@ logger = logging.getLogger(__name__)
 @staff_required_view
 @require_GET
 def email_preview_api(request, pk):
-    client = get_object_or_404(Client, pk=pk)
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
 
     template_type = request.GET.get("template_type")
     language = request.GET.get("language") or _get_preferred_language(client)
@@ -75,7 +77,7 @@ def email_preview_api(request, pk):
 @staff_required_view
 @require_POST
 def send_custom_email(request, pk):
-    client = get_object_or_404(Client, pk=pk)
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
 
     if not client.email:
         messages.error(request, _("У клиента не указан email."))
@@ -101,6 +103,23 @@ def send_custom_email(request, pk):
         return redirect("clients:client_detail", pk=client.pk)
 
     try:
+        idempotency_key = build_email_idempotency_key(
+            "custom_email",
+            request.user.pk,
+            client.pk,
+            client.email,
+            subject,
+            body,
+        )
+        from clients.models import EmailLog
+
+        if EmailLog.objects.filter(
+            idempotency_key=idempotency_key,
+            delivery_status=EmailLog.DELIVERY_STATUS_SENT,
+        ).exists():
+            messages.info(request, _("Такое письмо уже было отправлено. Повторная отправка пропущена."))
+            return redirect("clients:client_detail", pk=client.pk)
+
         sent_count = send_mail(
             subject,
             body,
@@ -118,6 +137,8 @@ def send_custom_email(request, pk):
                 client=client,
                 template_type="custom",
                 sent_by=request.user,
+                idempotency_key=idempotency_key,
+                delivery_status="sent",
             )
             messages.success(request, _("Письмо '%(subject)s' успешно отправлено.") % {"subject": subject})
         else:
@@ -141,7 +162,10 @@ def mass_email_view(request):
             company = form.cleaned_data.get("company")
             status = form.cleaned_data.get("status")
 
-            queryset = Client.objects.exclude(email__isnull=True).exclude(email__exact="")
+            queryset = accessible_clients_queryset(
+                request.user,
+                Client.objects.exclude(email__isnull=True).exclude(email__exact=""),
+            )
             if company:
                 queryset = queryset.filter(company=company)
             if status:
@@ -193,7 +217,10 @@ def mass_email_view(request):
 @staff_required_view
 @require_GET
 def campaign_status_api(request, campaign_id):
-    campaign = get_object_or_404(EmailCampaign, pk=campaign_id)
+    campaign = get_object_or_404(
+        accessible_campaigns_queryset(request.user, EmailCampaign.objects.all()),
+        pk=campaign_id,
+    )
     return json_no_store(
         {
             "id": campaign.id,

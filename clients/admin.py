@@ -1,8 +1,23 @@
-# clients/admin.py
-
 from django.contrib import admin
 
 from .models import AppSettings, Client, ClientActivity, Company, Document, Payment, ServicePrice, StaffTask
+
+
+@admin.action(description="Archive selected records")
+def archive_selected(modeladmin, request, queryset):
+    for obj in queryset:
+        if hasattr(obj, "archive"):
+            obj.archive()
+
+
+@admin.action(description="Restore selected archived records")
+def restore_selected(modeladmin, request, queryset):
+    base_queryset = getattr(modeladmin.model, "all_objects", None)
+    if base_queryset is None:
+        return
+    for obj in base_queryset.filter(pk__in=queryset.values_list("pk", flat=True)):
+        if hasattr(obj, "restore"):
+            obj.restore()
 
 
 @admin.register(Company)
@@ -52,7 +67,7 @@ class ServicePriceAdmin(admin.ModelAdmin):
 class PaymentInline(admin.TabularInline):
     model = Payment
     extra = 1
-    readonly_fields = ("created_at", "updated_at")
+    readonly_fields = ("created_at", "updated_at", "archived_at")
     fields = (
         "service_description",
         "total_amount",
@@ -61,6 +76,7 @@ class PaymentInline(admin.TabularInline):
         "payment_date",
         "payment_method",
         "transaction_id",
+        "archived_at",
         "created_at",
         "updated_at",
     )
@@ -68,9 +84,13 @@ class PaymentInline(admin.TabularInline):
 
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
-    list_display = ("client", "service_description", "total_amount", "status", "due_date", "created_at")
-    list_filter = ("status", "service_description", "due_date")
+    list_display = ("client", "service_description", "total_amount", "status", "due_date", "archived_at", "created_at")
+    list_filter = ("status", "service_description", "due_date", "archived_at")
     search_fields = ("client__first_name", "client__last_name", "transaction_id")
+    actions = [archive_selected, restore_selected]
+
+    def get_queryset(self, request):
+        return Payment.all_objects.select_related("client")
 
 
 @admin.register(Client)
@@ -86,9 +106,10 @@ class ClientAdmin(admin.ModelAdmin):
         "workflow_stage",
         "phone",
         "email",
+        "archived_at",
         "created_at",
     )
-    list_filter = ("company", "status", "workflow_stage", "application_purpose", "language")
+    list_filter = ("company", "status", "workflow_stage", "application_purpose", "language", "archived_at")
     search_fields = ("first_name", "last_name", "email", "phone", "notes", "company__name")
     fieldsets = (
         (
@@ -99,15 +120,25 @@ class ClientAdmin(admin.ModelAdmin):
             "Детали подачи",
             {"fields": ("application_purpose", "basis_of_stay", "language", "legal_basis_end_date", "workflow_stage")},
         ),
-        ("Статус и заметки", {"fields": ("status", "notes")}),
+        ("Статус и заметки", {"fields": ("status", "notes", "archived_at")}),
     )
+    readonly_fields = ("archived_at",)
+    actions = [archive_selected, restore_selected]
+
+    def get_queryset(self, request):
+        return Client.all_objects.select_related("company")
 
 
 @admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):
-    list_display = ("client", "document_type", "uploaded_at")
-    list_filter = ("document_type",)
+    list_display = ("client", "document_type", "uploaded_at", "archived_at")
+    list_filter = ("document_type", "archived_at")
     search_fields = ("client__first_name", "client__last_name")
+    readonly_fields = ("archived_at",)
+    actions = [archive_selected, restore_selected]
+
+    def get_queryset(self, request):
+        return Document.all_objects.select_related("client")
 
 
 @admin.register(StaffTask)

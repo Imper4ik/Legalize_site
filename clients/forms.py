@@ -5,6 +5,7 @@ from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 
 from clients.services.calculator import CURRENCY_EUR, CURRENCY_PLN
+from clients.services.workflow import validate_client_workflow_transition
 from clients.use_cases.document_requirements import (
     build_document_requirement_code,
     create_document_requirement_for_purpose,
@@ -208,13 +209,17 @@ class ClientForm(forms.ModelForm):
             choices.append((current_value, current_value))
 
         self.fields['application_purpose'].choices = choices
+        self.fields['assigned_staff'].queryset = get_user_model().objects.filter(
+            is_staff=True,
+            is_active=True,
+        ).order_by('email')
 
     class Meta:
         model = Client
         fields = [
             'first_name', 'last_name', 'email', 'phone', 'citizenship',
             'birth_date', 'passport_num', 'case_number', 'application_purpose', 'language',
-            'company', 'status', 'workflow_stage',
+            'company', 'assigned_staff', 'status', 'workflow_stage',
             'basis_of_stay', 'legal_basis_end_date', 'submission_date',
             'employer_phone',
             'fingerprints_date', 'notes'
@@ -232,10 +237,31 @@ class ClientForm(forms.ModelForm):
             'status': forms.Select(attrs={'class': 'form-select'}),
             'workflow_stage': forms.Select(attrs={'class': 'form-select'}),
             'company': forms.Select(attrs={'class': 'form-select'}),
+            'assigned_staff': forms.Select(attrs={'class': 'form-select'}),
             'basis_of_stay': forms.TextInput(attrs={'class': 'form-control'}),
             'employer_phone': forms.TextInput(attrs={'class': 'form-control'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        next_stage = cleaned_data.get("workflow_stage")
+        previous_stage = getattr(self.instance, "workflow_stage", None)
+
+        temp_client = self.instance
+        for field_name, value in cleaned_data.items():
+            if hasattr(temp_client, field_name):
+                setattr(temp_client, field_name, value)
+
+        transition_result = validate_client_workflow_transition(
+            client=temp_client,
+            previous_stage=previous_stage,
+            next_stage=next_stage,
+        )
+        if not transition_result.allowed:
+            self.add_error("workflow_stage", transition_result.message)
+
+        return cleaned_data
 
 class MassEmailForm(forms.Form):
     subject = forms.CharField(

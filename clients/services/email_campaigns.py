@@ -9,7 +9,7 @@ from django.core.mail import send_mail
 from django.utils import timezone
 
 from clients.models import Client, EmailCampaign
-from clients.services.notifications import _log_email, _send_confirmation_email
+from clients.services.notifications import _log_email, _send_confirmation_email, build_email_idempotency_key
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +129,7 @@ def process_campaign(campaign_id: int) -> CampaignProcessingResult | None:
                     client=clients_by_email.get(email_addr),
                     template_type="mass_email",
                     sent_by=campaign.created_by,
+                    idempotency_key=build_email_idempotency_key("mass_email", campaign.pk, email_addr),
                 )
             else:
                 failed += 1

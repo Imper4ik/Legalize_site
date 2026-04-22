@@ -155,3 +155,31 @@ class WorkflowAuditStage11Tests(TestCase):
         self.assertIsNotNone(activity)
         self.assertEqual(activity.metadata["restored_version_id"], version.pk)
         self.assertEqual(activity.metadata["restored_version_number"], 1)
+
+    def test_document_version_download_uses_authorized_endpoint_and_logs_event(self):
+        document = Document.objects.create(
+            client=self.client_obj,
+            document_type=DocumentType.PASSPORT.value,
+            file=SimpleUploadedFile("passport-current.pdf", b"current", content_type="application/pdf"),
+        )
+        version = DocumentVersion.objects.create(
+            document=document,
+            file=SimpleUploadedFile("passport-old.pdf", b"old", content_type="application/pdf"),
+            version_number=1,
+            file_name="passport-old.pdf",
+            file_size=3,
+            uploaded_by=self.staff,
+        )
+
+        response = self.client.get(
+            reverse("clients:document_version_download", kwargs={"version_id": version.pk})
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Cache-Control"], NO_STORE_HEADER)
+        activity = ClientActivity.objects.filter(
+            client=self.client_obj,
+            event_type="client_exported",
+            metadata__document_version_id=version.pk,
+        ).first()
+        self.assertIsNotNone(activity)

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import logging
+from datetime import timedelta
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 
-from django.db import transaction
+from django.db import models, transaction
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_time
 from django.utils.translation import gettext as _
@@ -20,6 +21,8 @@ from clients.services.notifications import (
 from clients.services.wezwanie_parser import WezwanieData, parse_wezwanie
 
 logger = logging.getLogger(__name__)
+DEFAULT_JOB_LEASE_SECONDS = 600
+DEFAULT_JOB_MAX_ATTEMPTS = 3
 
 MANUAL_WEZWANIE_REVIEW_MESSAGE = _(
     "Document uploaded, but automatic wezwanie parsing failed. Manual review is required."
@@ -178,7 +181,10 @@ def enqueue_document_processing_job(*, document: Document, actor=None) -> Docume
         "created_by": actor if getattr(actor, "is_authenticated", False) else None,
         "status": DocumentProcessingJob.STATUS_PENDING,
         "source_file_name": document.file.name,
+        "max_attempts": DEFAULT_JOB_MAX_ATTEMPTS,
         "error_message": "",
+        "next_attempt_at": timezone.now(),
+        "lease_expires_at": None,
         "started_at": None,
         "completed_at": None,
     }
@@ -205,10 +211,16 @@ def process_pending_document_jobs(
     send_appointment_email: NotificationSender | None = None,
 ) -> list[DocumentProcessingRunResult]:
     """Process queued OCR jobs in FIFO order."""
+    reclaim_stale_document_jobs()
+
+    now = timezone.now()
 
     queryset = DocumentProcessingJob.objects.filter(
         job_type=DocumentProcessingJob.JOB_TYPE_WEZWANIE_OCR,
         status=DocumentProcessingJob.STATUS_PENDING,
+        attempts__lt=models.F("max_attempts"),
+    ).filter(
+        models.Q(next_attempt_at__isnull=True) | models.Q(next_attempt_at__lte=now)
     ).order_by("created_at")
 
     if limit is not None:
@@ -257,9 +269,19 @@ def process_document_processing_job(
         job.status = DocumentProcessingJob.STATUS_PROCESSING
         job.attempts += 1
         job.started_at = timezone.now()
+        job.lease_expires_at = job.started_at + timedelta(seconds=DEFAULT_JOB_LEASE_SECONDS)
         job.error_message = ""
         job.completed_at = None
-        job.save(update_fields=["status", "attempts", "started_at", "error_message", "completed_at"])
+        job.save(
+            update_fields=[
+                "status",
+                "attempts",
+                "started_at",
+                "lease_expires_at",
+                "error_message",
+                "completed_at",
+            ]
+        )
         document_path = job.document.file.path
 
     try:
@@ -412,17 +434,36 @@ def _finalize_failed_document_job(
         document.awaiting_confirmation = False
         document.save(update_fields=["ocr_status", "ocr_name_mismatch", "awaiting_confirmation"])
 
-        job.status = DocumentProcessingJob.STATUS_FAILED
+        should_retry = job.attempts < job.max_attempts
+        job.status = (
+            DocumentProcessingJob.STATUS_PENDING
+            if should_retry
+            else DocumentProcessingJob.STATUS_FAILED
+        )
         job.error_message = error_message
-        job.completed_at = timezone.now()
-        job.save(update_fields=["status", "error_message", "completed_at"])
+        job.completed_at = timezone.now() if not should_retry else None
+        job.lease_expires_at = None
+        job.next_attempt_at = (
+            timezone.now() + timedelta(minutes=2 ** max(job.attempts - 1, 0))
+            if should_retry
+            else None
+        )
+        job.save(
+            update_fields=[
+                "status",
+                "error_message",
+                "completed_at",
+                "lease_expires_at",
+                "next_attempt_at",
+            ]
+        )
 
     return DocumentProcessingRunResult(
         job=job,
-        status=DocumentProcessingJob.STATUS_FAILED,
+        status=job.status,
         processed=True,
-        message=MANUAL_WEZWANIE_REVIEW_MESSAGE,
-        manual_review_required=True,
+        message=MANUAL_WEZWANIE_REVIEW_MESSAGE if job.status == DocumentProcessingJob.STATUS_FAILED else _("OCR job requeued for retry."),
+        manual_review_required=job.status == DocumentProcessingJob.STATUS_FAILED,
     )
 
 
@@ -478,7 +519,9 @@ def _finalize_successful_document_job(
         job.status = DocumentProcessingJob.STATUS_COMPLETED
         job.error_message = ""
         job.completed_at = timezone.now()
-        job.save(update_fields=["status", "error_message", "completed_at"])
+        job.lease_expires_at = None
+        job.next_attempt_at = None
+        job.save(update_fields=["status", "error_message", "completed_at", "lease_expires_at", "next_attempt_at"])
 
     auto_updates.extend(
         _send_background_notifications(
@@ -508,6 +551,30 @@ def _job_matches_processing_state(
         and job.source_file_name == source_file_name
         and document.file.name == source_file_name
     )
+
+
+def reclaim_stale_document_jobs(*, now=None) -> int:
+    now = now or timezone.now()
+    stale_jobs = DocumentProcessingJob.objects.filter(
+        job_type=DocumentProcessingJob.JOB_TYPE_WEZWANIE_OCR,
+        status=DocumentProcessingJob.STATUS_PROCESSING,
+        lease_expires_at__isnull=False,
+        lease_expires_at__lt=now,
+    )
+    updated = 0
+    for job in stale_jobs.iterator():
+        job.status = (
+            DocumentProcessingJob.STATUS_PENDING
+            if job.attempts < job.max_attempts
+            else DocumentProcessingJob.STATUS_FAILED
+        )
+        job.error_message = _("Job lease expired before completion.")
+        job.completed_at = timezone.now() if job.status == DocumentProcessingJob.STATUS_FAILED else None
+        job.next_attempt_at = now if job.status == DocumentProcessingJob.STATUS_PENDING else None
+        job.lease_expires_at = None
+        job.save(update_fields=["status", "error_message", "completed_at", "next_attempt_at", "lease_expires_at"])
+        updated += 1
+    return updated
 
 
 def _send_background_notifications(

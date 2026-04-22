@@ -7,6 +7,7 @@ from django.views.generic import ListView
 
 from clients.forms import StaffTaskForm
 from clients.models import Client, StaffTask
+from clients.services.access import accessible_clients_queryset, accessible_tasks_queryset
 from clients.use_cases.tasks import complete_task_for_client, create_task_for_client
 from clients.views.base import StaffRequiredMixin, staff_required_view
 
@@ -19,7 +20,10 @@ class TaskListView(StaffRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = (
-            StaffTask.objects.select_related("client", "assignee", "created_by")
+            accessible_tasks_queryset(
+                self.request.user,
+                StaffTask.objects.select_related("client", "assignee", "created_by")
+            )
             .exclude(status__in=["done", "cancelled"])
             .order_by("due_date", "-created_at")
         )
@@ -39,7 +43,7 @@ class TaskListView(StaffRequiredMixin, ListView):
 
 @staff_required_view
 def add_task(request, client_id):
-    client = get_object_or_404(Client, pk=client_id)
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
 
     if request.method != "POST":
         return redirect("clients:client_detail", pk=client.pk)
@@ -59,7 +63,10 @@ def add_task(request, client_id):
 
 @staff_required_view
 def complete_task(request, task_id):
-    task = get_object_or_404(StaffTask.objects.select_related("client"), pk=task_id)
+    task = get_object_or_404(
+        accessible_tasks_queryset(request.user, StaffTask.objects.select_related("client")),
+        pk=task_id,
+    )
 
     if request.method == "POST":
         result = complete_task_for_client(task=task, actor=request.user)

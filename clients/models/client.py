@@ -2,16 +2,17 @@ import hashlib
 from datetime import timedelta
 
 from django.conf import settings
-from django.db import connection, models
+from django.db import models
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.translation import gettext, gettext_lazy as _
 from fernet_fields import EncryptedTextField
 
 from clients.constants import DocumentType
+from legalize_site.soft_delete import SoftDeleteModel
 
 
-class Client(models.Model):
+class Client(SoftDeleteModel):
     APPLICATION_PURPOSE_CHOICES = [
         ("study", _("Учёба")),
         ("work", _("Работа")),
@@ -116,6 +117,14 @@ class Client(models.Model):
         related_name="clients",
         verbose_name=_("Компания / Работодатель"),
     )
+    assigned_staff = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="managed_clients",
+        verbose_name=_("Assigned staff"),
+    )
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -126,6 +135,18 @@ class Client(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+    def on_archive(self):
+        if not self.user_id:
+            return
+        user = type(self.user).objects.filter(pk=self.user_id).first() if hasattr(type(self), "user") else None
+        if user is None:
+            from django.contrib.auth import get_user_model
+
+            user = get_user_model().objects.filter(pk=self.user_id).first()
+        if user and not user.is_staff and user.is_active:
+            user.is_active = False
+            user.save(update_fields=["is_active"])
 
     @staticmethod
     def normalize_case_number(case_number: str) -> str:
@@ -155,19 +176,11 @@ class Client(models.Model):
 
     def get_application_purpose_display(self):
         from submissions.models import Submission
-        from .document import _submission_has_localized_fields
 
         if self.application_purpose:
-            if _submission_has_localized_fields():
-                submission = Submission.objects.filter(slug=self.application_purpose).first()
-                if submission:
-                    return submission.localized_name
-            else:
-                submission_name = Submission.objects.filter(slug=self.application_purpose).values_list(
-                    "name", flat=True
-                ).first()
-                if submission_name:
-                    return submission_name
+            submission = Submission.objects.filter(slug=self.application_purpose).first()
+            if submission:
+                return submission.localized_name
 
         return dict(self.APPLICATION_PURPOSE_CHOICES).get(self.application_purpose, self.application_purpose or "")
 

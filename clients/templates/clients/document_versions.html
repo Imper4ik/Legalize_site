@@ -64,7 +64,7 @@
                             <td>
                                 {% if version.file %}
                                 <div class="btn-group">
-                                    <a href="{{ version.file.url }}" class="btn btn-outline-secondary btn-sm" target="_blank" title="{% translate 'Download' %}">
+                                    <a href="{% url 'clients:document_version_download' version.pk %}" class="btn btn-outline-secondary btn-sm" title="{% translate 'Download' %}">
                                         <i class="fas fa-download"></i>
                                     </a>
                                     <form method="post" action="{% url 'clients:document_version_restore' version.pk %}" class="d-inline" onsubmit="return confirm('{% translate "Are you sure you want to restore this version? The current file will be archived." %}');">

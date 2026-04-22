@@ -4,6 +4,7 @@ import shutil
 from datetime import timedelta
 from pathlib import Path
 from unittest.mock import Mock
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -83,9 +84,11 @@ class UseCasesStage13Tests(TestCase):
 
         self.assertEqual(result.deleted_document_id, document.pk)
         self.assertFalse(Document.objects.filter(pk=document.pk).exists())
+        self.assertTrue(Document.all_objects.filter(pk=document.pk, archived_at__isnull=False).exists())
         activity = ClientActivity.objects.get(client=self.client_obj, event_type="document_deleted")
         self.assertEqual(activity.metadata["document_id"], document.pk)
         self.assertEqual(activity.metadata["document_type"], DocumentType.PASSPORT.value)
+        self.assertEqual(activity.document_id, document.pk)
 
     def test_toggle_client_document_verification_sends_email_only_when_switching_to_verified(self):
         document = Document.objects.create(
@@ -179,7 +182,7 @@ class UseCasesStage13Tests(TestCase):
         self.assertFalse(WniosekAttachment.objects.filter(pk=removable.pk).exists())
         self.assertTrue(WniosekAttachment.objects.filter(pk=retained.pk).exists())
         activity = ClientActivity.objects.get(client=self.client_obj, event_type="wniosek_attachment_deleted")
-        self.assertEqual(activity.metadata["attachment_id"], removable.pk)
+        self.assertEqual(activity.metadata["attachment_id"], result.deleted_attachment_id)
         self.assertEqual(activity.metadata["remaining_count"], 1)
 
     def test_delete_last_wniosek_attachment_removes_submission(self):
@@ -316,3 +319,23 @@ class UseCasesStage13Tests(TestCase):
             ClientActivity.objects.filter(client=self.client_obj, event_type="task_completed", task=task_result.task).count(),
             1,
         )
+
+    def test_create_task_for_client_rolls_back_when_audit_fails(self):
+        with patch("clients.use_cases.tasks.log_client_activity", side_effect=RuntimeError("boom")):
+            with self.assertRaises(RuntimeError):
+                create_task_for_client(
+                    client=self.client_obj,
+                    actor=self.staff,
+                    cleaned_data={
+                        "title": "Rollback task",
+                        "description": "should not persist",
+                        "due_date": None,
+                        "priority": "medium",
+                        "status": "open",
+                        "assignee": self.staff,
+                        "document": None,
+                        "payment": None,
+                    },
+                )
+
+        self.assertFalse(self.client_obj.staff_tasks.filter(title="Rollback task").exists())

@@ -32,6 +32,7 @@ def env_flag(name: str, default: str = "False") -> bool:
 load_env()
 
 WHITENOISE_AVAILABLE = importlib.util.find_spec("whitenoise") is not None
+STORAGES_AVAILABLE = importlib.util.find_spec("storages") is not None
 DEFAULT_SECRET_KEY_FALLBACK = "django-insecure-change-me"
 
 
@@ -201,9 +202,11 @@ MIDDLEWARE = [
 if WHITENOISE_AVAILABLE:
     MIDDLEWARE.append("whitenoise.middleware.WhiteNoiseMiddleware")
 MIDDLEWARE += [
+    "legalize_site.observability.RequestIDMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "legalize_site.security.RateLimitMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -304,6 +307,41 @@ if WHITENOISE_AVAILABLE:
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+USE_S3_MEDIA_STORAGE = env_flag("USE_S3_MEDIA_STORAGE", "False")
+PRIVATE_MEDIA_LOCATION = os.environ.get("PRIVATE_MEDIA_LOCATION", "private")
+if USE_S3_MEDIA_STORAGE and not STORAGES_AVAILABLE:
+    raise ImproperlyConfigured("USE_S3_MEDIA_STORAGE requires django-storages to be installed.")
+if USE_S3_MEDIA_STORAGE:
+    AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME", "")
+    AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "")
+    AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL", "")
+    AWS_S3_CUSTOM_DOMAIN = os.environ.get("AWS_S3_CUSTOM_DOMAIN", "")
+    AWS_S3_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "")
+    AWS_S3_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
+    AWS_QUERYSTRING_AUTH = True
+    AWS_DEFAULT_ACL = None
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_LOCATION = PRIVATE_MEDIA_LOCATION
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "bucket_name": AWS_STORAGE_BUCKET_NAME,
+                "region_name": AWS_S3_REGION_NAME or None,
+                "endpoint_url": AWS_S3_ENDPOINT_URL or None,
+                "custom_domain": AWS_S3_CUSTOM_DOMAIN or None,
+                "default_acl": None,
+                "querystring_auth": True,
+                "file_overwrite": False,
+                "location": PRIVATE_MEDIA_LOCATION,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            if WHITENOISE_AVAILABLE
+            else "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
 
 # --- ШРИФТ ДЛЯ PDF-ОТЧЕТОВ ---
 PDF_FONT_PATH = os.getenv("PDF_FONT_PATH", "")
@@ -385,12 +423,16 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_ADAPTER = "users.adapters.InternalAccountAdapter"
+SOCIALACCOUNT_ADAPTER = "users.adapters.InternalSocialAccountAdapter"
 
 # Новые ключи (вместо устаревших ACCOUNT_AUTHENTICATION_METHOD / ACCOUNT_USERNAME_REQUIRED)
 ACCOUNT_LOGIN_METHODS = {"email"}  # логин только по email
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]  # поля регистрации
 
 # Редиректы
+ACCOUNT_ALLOW_SIGNUPS = False
+
 LOGIN_URL = "account_login"
 LOGIN_REDIRECT_URL = reverse_lazy("clients:client_list")
 LOGOUT_REDIRECT_URL = reverse_lazy("account_login")
@@ -403,11 +445,20 @@ LOGGING = {
         "redact_pii": {
             "()": "legalize_site.utils.logging.RedactPIIFilter",
         },
+        "request_context": {
+            "()": "legalize_site.utils.logging.RequestContextFilter",
+        },
     },
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "filters": ["redact_pii"],
+            "filters": ["request_context", "redact_pii"],
+            "formatter": "structured",
+        },
+    },
+    "formatters": {
+        "structured": {
+            "format": "%(asctime)s %(levelname)s %(name)s request_id=%(request_id)s correlation_id=%(correlation_id)s %(message)s",
         },
     },
     "root": {
@@ -417,12 +468,49 @@ LOGGING = {
 }
 
 # Соц. вход через Google (по желанию)
-SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_AUTO_SIGNUP = False
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
         "SCOPE": ["profile", "email"],
         "AUTH_PARAMS": {"access_type": "online"},
     }
+}
+
+RATE_LIMITS = {
+    "account_login": {
+        "limit": int(os.environ.get("RATE_LIMIT_LOGIN", "5")),
+        "window_seconds": int(os.environ.get("RATE_LIMIT_LOGIN_WINDOW", "300")),
+        "by_user": False,
+        "by_ip": True,
+        "message": _("Too many login attempts. Try again later."),
+    },
+    "account_resend_verification": {
+        "limit": int(os.environ.get("RATE_LIMIT_RESEND_VERIFICATION", "3")),
+        "window_seconds": int(os.environ.get("RATE_LIMIT_RESEND_VERIFICATION_WINDOW", "600")),
+        "by_user": False,
+        "by_ip": True,
+        "message": _("Too many verification email requests. Try again later."),
+    },
+    "clients:add_document": {
+        "limit": int(os.environ.get("RATE_LIMIT_DOCUMENT_UPLOAD", "20")),
+        "window_seconds": int(os.environ.get("RATE_LIMIT_DOCUMENT_UPLOAD_WINDOW", "3600")),
+        "message": _("Too many document uploads. Try again later."),
+    },
+    "clients:mass_email": {
+        "limit": int(os.environ.get("RATE_LIMIT_MASS_EMAIL", "3")),
+        "window_seconds": int(os.environ.get("RATE_LIMIT_MASS_EMAIL_WINDOW", "3600")),
+        "message": _("Too many bulk email actions. Try again later."),
+    },
+    "clients:run_update_reminders": {
+        "limit": int(os.environ.get("RATE_LIMIT_REMINDER_RUN", "5")),
+        "window_seconds": int(os.environ.get("RATE_LIMIT_REMINDER_RUN_WINDOW", "3600")),
+        "message": _("Too many reminder refresh requests. Try again later."),
+    },
+    "clients:send_custom_email": {
+        "limit": int(os.environ.get("RATE_LIMIT_SEND_CUSTOM_EMAIL", "20")),
+        "window_seconds": int(os.environ.get("RATE_LIMIT_SEND_CUSTOM_EMAIL_WINDOW", "3600")),
+        "message": _("Too many email sends. Try again later."),
+    },
 }
 
 # --- SENTRY ---

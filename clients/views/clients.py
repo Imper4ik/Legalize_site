@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.db import transaction
 from django.db.models import Prefetch, Q, Sum
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -57,6 +58,7 @@ from clients.use_cases.client_records import (
 from clients.use_cases.document_requirements import delete_document_requirement_record
 from clients.views.base import RoleRequiredMixin, role_required_view, StaffRequiredMixin, staff_required_view
 from clients.services.activity import log_client_view
+from clients.services.access import accessible_clients_queryset
 from submissions.forms import SubmissionForm
 from submissions.models import Submission
 
@@ -68,7 +70,10 @@ class ClientListView(StaffRequiredMixin, ListView):
     paginate_by = 15
 
     def get_queryset(self):
-        queryset = Client.objects.filter(Q(user__is_staff=False) | Q(user__isnull=True))
+        queryset = accessible_clients_queryset(
+            self.request.user,
+            Client.objects.filter(Q(user__is_staff=False) | Q(user__isnull=True)),
+        )
 
         company_id = self.request.GET.get("company")
         if company_id:
@@ -101,7 +106,9 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
     template_name = "clients/client_detail.html"
 
     def get_queryset(self):
-        return (
+        return accessible_clients_queryset(
+            self.request.user,
+            (
             Client.objects.select_related("user")
             .prefetch_related(
                 Prefetch("payments", queryset=Payment.objects.order_by("-created_at")),
@@ -127,6 +134,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
                 "reminders",
                 "email_logs",
             )
+            ),
         )
 
     def get_context_data(self, **kwargs):
@@ -165,14 +173,17 @@ class ClientCreateView(StaffRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form):
+        if not form.instance.assigned_staff_id:
+            form.instance.assigned_staff = self.request.user
         messages.success(self.request, _("Клиент успешно добавлен!"))
-        response = super().form_valid(form)
-        finalize_client_creation(
-            client=self.object,
-            actor=self.request.user,
-            send_required_email=send_required_documents_email,
-        )
-        return response
+        with transaction.atomic():
+            self.object = form.save()
+            finalize_client_creation(
+                client=self.object,
+                actor=self.request.user,
+                send_required_email=send_required_documents_email,
+            )
+        return redirect(self.get_success_url())
 
     def form_invalid(self, form):
         messages.error(
@@ -187,6 +198,9 @@ class ClientUpdateView(StaffRequiredMixin, UpdateView):
     form_class = ClientForm
     template_name = "clients/client_form.html"
 
+    def get_queryset(self):
+        return accessible_clients_queryset(self.request.user, Client.objects.all())
+
     def get_success_url(self):
         return reverse_lazy("clients:client_detail", kwargs={"pk": self.object.pk})
 
@@ -199,17 +213,17 @@ class ClientUpdateView(StaffRequiredMixin, UpdateView):
         previous_fingerprints_date = self.object.fingerprints_date
         previous_values = snapshot_client_update_state(self.object)
         messages.success(self.request, _("Данные клиента успешно обновлены!"))
-        response = super().form_valid(form)
-
-        finalize_client_update(
-            client=self.object,
-            actor=self.request.user,
-            previous_values=previous_values,
-            previous_fingerprints_date=previous_fingerprints_date,
-            new_fingerprints_date=form.cleaned_data.get("fingerprints_date"),
-            send_expired_email=send_expired_documents_email,
-        )
-        return response
+        with transaction.atomic():
+            self.object = form.save()
+            finalize_client_update(
+                client=self.object,
+                actor=self.request.user,
+                previous_values=previous_values,
+                previous_fingerprints_date=previous_fingerprints_date,
+                new_fingerprints_date=form.cleaned_data.get("fingerprints_date"),
+                send_expired_email=send_expired_documents_email,
+            )
+        return redirect(self.get_success_url())
 
     def form_invalid(self, form):
         messages.error(
@@ -223,6 +237,9 @@ class ClientDeleteView(StaffRequiredMixin, DeleteView):
     model = Client
     template_name = "clients/client_confirm_delete.html"
     success_url = reverse_lazy("clients:client_list")
+
+    def get_queryset(self):
+        return accessible_clients_queryset(self.request.user, Client.objects.all())
 
     def form_valid(self, form):
         client_name = self.get_object()
@@ -273,6 +290,9 @@ def calculator_view(request):
 class ClientPrintBaseView(StaffRequiredMixin, DetailView):
     model = Client
     context_object_name = "client"
+
+    def get_queryset(self):
+        return accessible_clients_queryset(self.request.user, Client.objects.all())
 
 
 class ClientPrintView(ClientPrintBaseView):
@@ -696,7 +716,7 @@ def client_document_print_confirm_view(request, pk, doc_type):
     if doc_type != WniosekSubmission.DocumentKind.MAZOWIECKI_APPLICATION:
         raise Http404("Confirmation is only available for this document type")
 
-    client = get_object_or_404(Client, pk=pk)
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
     submission = record_wniosek_submission(
         client=client,
         document_kind=doc_type,

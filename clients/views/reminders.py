@@ -12,6 +12,7 @@ from django.utils.translation import gettext as _, gettext_lazy as _lazy
 from django.views.generic import ListView
 
 from clients.models import Client, Reminder
+from clients.services.access import accessible_clients_queryset, accessible_reminders_queryset
 from clients.services.notifications import send_expiring_documents_email
 from clients.use_cases.reminders import (
     deactivate_reminder,
@@ -34,7 +35,10 @@ class ReminderListView(StaffRequiredMixin, ListView):
 
     def get_queryset(self):
         queryset = (
-            Reminder.objects.filter(is_active=True, reminder_type=self.reminder_type)
+            accessible_reminders_queryset(
+                self.request.user,
+                Reminder.objects.filter(is_active=True, reminder_type=self.reminder_type)
+            )
             .select_related("client")
             .order_by("due_date")
         )
@@ -61,7 +65,10 @@ class ReminderListView(StaffRequiredMixin, ListView):
         context.update(
             {
                 "title": self.title,
-                "all_clients": Client.objects.filter(user__is_staff=False).order_by("last_name", "first_name"),
+                "all_clients": accessible_clients_queryset(
+                    self.request.user,
+                    Client.objects.filter(user__is_staff=False).order_by("last_name", "first_name"),
+                ),
                 "filter_values": self.request.GET,
                 "client_filter_id": getattr(self, "client_filter_id", None),
                 "reminders_count": reminders.count() if hasattr(reminders, "count") else len(reminders),
@@ -164,7 +171,7 @@ def run_update_reminders(request):
 
 @staff_required_view
 def reminder_action(request, reminder_id):
-    reminder = get_object_or_404(Reminder, pk=reminder_id)
+    reminder = get_object_or_404(accessible_reminders_queryset(request.user, Reminder.objects.all()), pk=reminder_id)
     if request.method == "POST":
         action = request.POST.get("action")
         if action == "delete":
@@ -193,7 +200,7 @@ def reminder_action(request, reminder_id):
 @staff_required_view
 def send_document_reminder_email(request, client_id):
     if request.method == "POST":
-        client = get_object_or_404(Client, pk=client_id)
+        client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
         result = send_document_reminder_for_client(
             client=client,
             actor=request.user,
