@@ -20,7 +20,8 @@ from clients.use_cases.reminders import (
     send_document_reminder_for_client,
     send_document_reminder_for_reminder,
 )
-from clients.views.base import StaffRequiredMixin, staff_required_view
+from clients.services.roles import REPORT_MUTATION_ROLES
+from clients.views.base import StaffRequiredMixin, role_required_view
 
 
 class ReminderListView(StaffRequiredMixin, ListView):
@@ -152,7 +153,7 @@ class PaymentReminderListView(ReminderListView):
     title = _lazy("Напоминания по оплатам")
 
 
-@staff_required_view
+@role_required_view(*REPORT_MUTATION_ROLES)
 def run_update_reminders(request):
     if request.method == "POST":
         try:
@@ -169,7 +170,7 @@ def run_update_reminders(request):
     return redirect("clients:document_reminder_list")
 
 
-@staff_required_view
+@role_required_view(*REPORT_MUTATION_ROLES)
 def reminder_action(request, reminder_id):
     reminder = get_object_or_404(accessible_reminders_queryset(request.user, Reminder.objects.all()), pk=reminder_id)
     if request.method == "POST":
@@ -197,7 +198,7 @@ def reminder_action(request, reminder_id):
     return redirect(next_url or "clients:document_reminder_list")
 
 
-@staff_required_view
+@role_required_view(*REPORT_MUTATION_ROLES)
 def send_document_reminder_email(request, client_id):
     if request.method == "POST":
         client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
