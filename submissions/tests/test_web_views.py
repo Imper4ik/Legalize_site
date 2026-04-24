@@ -4,11 +4,13 @@ from pathlib import Path
 import shutil
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.test import override_settings
 from django.urls import reverse
 
+from clients.services.roles import ensure_predefined_roles
 from submissions.models import Document, Submission
 
 
@@ -24,8 +26,10 @@ class SubmissionWebViewsTests(TestCase):
         shutil.rmtree(TEST_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
+        ensure_predefined_roles()
         user_model = get_user_model()
         self.staff = user_model.objects.create_user(email="staff@example.com", password="pass", is_staff=True)
+        self.staff.groups.add(Group.objects.get(name="Staff"))
         self.non_staff = user_model.objects.create_user(email="user@example.com", password="pass", is_staff=False)
 
     def test_submission_create_view_get_for_staff(self):

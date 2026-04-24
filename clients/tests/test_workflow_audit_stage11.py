@@ -5,6 +5,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -13,6 +14,7 @@ from django.utils import timezone
 from clients.constants import DocumentType
 from clients.models import Client, ClientActivity, Document, DocumentVersion, EmailLog, StaffTask
 from clients.services.responses import NO_STORE_HEADER
+from clients.services.roles import ensure_predefined_roles
 
 
 TEST_MEDIA_ROOT = Path(__file__).resolve().parents[2] / "generated_media_test" / "workflow_audit"
@@ -27,8 +29,10 @@ class WorkflowAuditStage11Tests(TestCase):
         shutil.rmtree(TEST_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
+        ensure_predefined_roles()
         user_model = get_user_model()
         self.staff = user_model.objects.create_user(email="staff-stage11@example.com", password="pass", is_staff=True)
+        self.staff.groups.add(Group.objects.get(name="Admin"))
         self.client.force_login(self.staff)
         self.client_obj = Client.objects.create(
             first_name="Iryna",

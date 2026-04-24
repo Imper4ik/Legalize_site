@@ -34,6 +34,7 @@ def _assign_staff_role(user, role_name: str = "Staff") -> None:
 
 class DocumentJobsStage18Tests(TestCase):
     def setUp(self):
+        ensure_predefined_roles()
         user_model = get_user_model()
         self.staff = user_model.objects.create_user(email="staff-stage18@example.com", password="pass", is_staff=True)
         _assign_staff_role(self.staff)

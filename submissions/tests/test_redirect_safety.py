@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.urls import reverse
 
+from clients.services.roles import ensure_predefined_roles
 from submissions.models import Submission
 
 
 class SubmissionRedirectSafetyTests(TestCase):
     def setUp(self):
+        ensure_predefined_roles()
         user_model = get_user_model()
         self.staff = user_model.objects.create_user(email="staff_redirect@example.com", password="pass", is_staff=True)
+        self.staff.groups.add(Group.objects.get(name="Staff"))
         self.client.login(email="staff_redirect@example.com", password="pass")
 
     def test_quick_create_ignores_external_referer(self):
