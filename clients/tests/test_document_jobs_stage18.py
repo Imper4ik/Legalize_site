@@ -27,12 +27,17 @@ def build_pdf_upload(name: str, text: str = "wezwanie test") -> SimpleUploadedFi
     return SimpleUploadedFile(name, buffer.getvalue(), content_type="application/pdf")
 
 
+def _assign_staff_role(user, role_name: str = "Staff") -> None:
+    ensure_predefined_roles()
+    user.groups.add(Group.objects.get(name=role_name))
+
+
 class DocumentJobsStage18Tests(TestCase):
     def setUp(self):
         ensure_predefined_roles()
         user_model = get_user_model()
         self.staff = user_model.objects.create_user(email="staff-stage18@example.com", password="pass", is_staff=True)
-        self.staff.groups.add(Group.objects.get(name="Staff"))
+        _assign_staff_role(self.staff)
         self.client.force_login(self.staff)
         self.client_obj = Client.objects.create(
             first_name="Nadia",
