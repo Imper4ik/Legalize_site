@@ -79,9 +79,13 @@ def _validate_pdf_file(uploaded_file) -> None:
     start_position = uploaded_file.tell()
     try:
         uploaded_file.seek(0)
-        header = uploaded_file.read(5)
-        if header != b"%PDF-":
+        payload = uploaded_file.read()
+        if not payload.startswith(b"%PDF-"):
             raise ValidationError(_("Загрузите корректный PDF-файл."))
+        if b"%%EOF" not in payload:
+            raise ValidationError(_("PDF-файл повреждён или не читается."))
+        if b"/Encrypt" in payload:
+            raise ValidationError(_("PDF-файлы, защищённые паролем, не поддерживаются."))
 
         pdf_reader = _get_pdf_reader()
         if pdf_reader is None:

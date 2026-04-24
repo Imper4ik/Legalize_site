@@ -14,9 +14,19 @@ PREDEFINED_ROLES: dict[str, str] = {
     "Translator": "Access to Translation Studio only",
 }
 
+
 ADMIN_PANEL_ALLOWED_ROLES = ("Admin", "Manager", "Staff", "ReadOnly")
 SETTINGS_ALLOWED_ROLES = ("Admin", "Manager")
 PEOPLE_ALLOWED_ROLES = ("Admin",)
+
+CLIENT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
+DOCUMENT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
+TASK_MUTATION_ROLES = ("Admin", "Manager", "Staff")
+PAYMENT_MUTATION_ROLES = ("Admin", "Manager")
+EMAIL_MUTATION_ROLES = ("Admin", "Manager")
+EXPORT_MUTATION_ROLES = ("Admin", "Manager")
+REPORT_MUTATION_ROLES = ("Admin", "Manager")
+TRANSLATION_ALLOWED_ROLES = ("Admin", "Translator")
 
 
 def user_has_any_role(user: AbstractBaseUser, *role_names: str) -> bool:

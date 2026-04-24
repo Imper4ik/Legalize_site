@@ -41,3 +41,19 @@ Instrukcja włączania i przywracania kopii zapasowych na Railway znajduje się 
 ## Бэкапы
 
 Инструкция по включению и восстановлению бэкапов на Railway находится в документе: [docs/backups.md](backups.md).
+
+
+## Railway media storage safety
+
+For production, **do not** rely on ephemeral container filesystem for client documents.
+
+Use one of:
+
+1. S3-compatible storage (AWS S3 / Cloudflare R2 / Backblaze B2) with `USE_S3_MEDIA_STORAGE=true`;
+2. Railway Volume mounted to media/backup directories.
+
+Security requirements:
+
+- Media files must not be publicly exposed by direct bucket listing.
+- Document downloads should go through protected Django views with access checks.
+- If production runs with local media and no explicit acknowledgement (`ALLOW_PRODUCTION_LOCAL_MEDIA=true`), project system checks emit a warning.
