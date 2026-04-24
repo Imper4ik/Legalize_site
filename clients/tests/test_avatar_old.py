@@ -166,7 +166,7 @@ class ClientAccountLifecycleTests(TestCase):
     def setUp(self):
         self.user_model = get_user_model()
 
-    def test_deleting_client_removes_linked_user_account(self):
+    def test_deleting_client_deactivates_linked_user_account(self):
         user = self.user_model.objects.create_user(
             email='client@example.com', password='secret123'
         )
@@ -188,8 +188,10 @@ class ClientAccountLifecycleTests(TestCase):
 
         client.delete()
 
-        self.assertFalse(self.user_model.objects.filter(pk=user.pk).exists())
-        self.assertFalse(EmailAddress.objects.filter(email='client@example.com').exists())
+        user.refresh_from_db()
+        self.assertFalse(user.is_active)
+        self.assertTrue(self.user_model.objects.filter(pk=user.pk).exists())
+        self.assertTrue(EmailAddress.objects.filter(email='client@example.com').exists())
 
     def test_staff_accounts_are_preserved_when_client_deleted(self):
         staff_user = self.user_model.objects.create_user(
@@ -767,4 +769,3 @@ class ClientViewsTestCase(TestCase):
         payment = self.client_record.payments.first()
         self.assertIsNotNone(payment)
         self.assertEqual(payment.total_amount, Decimal('1500.00'))
-
