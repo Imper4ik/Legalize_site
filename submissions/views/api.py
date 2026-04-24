@@ -11,7 +11,8 @@ from django.utils.translation import gettext_lazy as _
 from django.views import View
 
 from clients.services.responses import ResponseHelper
-from clients.views.base import staff_required_view
+from clients.services.roles import DOCUMENT_MUTATION_ROLES
+from clients.views.base import role_required_view
 
 from ..forms import DocumentForm, SubmissionForm
 from ..models import Document, Submission
@@ -177,7 +178,7 @@ class DocumentDetailApiView(LoginRequiredMixin, View):
         return helper.error(message=_('Ошибка валидации'), errors=form.errors, status=400)
 
 
-submission_api = staff_required_view(SubmissionApiView.as_view())
-submission_detail_api = staff_required_view(SubmissionDetailApiView.as_view())
-document_api = staff_required_view(DocumentApiView.as_view())
-document_detail_api = staff_required_view(DocumentDetailApiView.as_view())
+submission_api = role_required_view(*DOCUMENT_MUTATION_ROLES)(SubmissionApiView.as_view())
+submission_detail_api = role_required_view(*DOCUMENT_MUTATION_ROLES)(SubmissionDetailApiView.as_view())
+document_api = role_required_view(*DOCUMENT_MUTATION_ROLES)(DocumentApiView.as_view())
+document_detail_api = role_required_view(*DOCUMENT_MUTATION_ROLES)(DocumentDetailApiView.as_view())
