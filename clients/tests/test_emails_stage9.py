@@ -3,18 +3,22 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
 from clients.models import Client, Company, EmailCampaign, EmailLog
 from clients.services.responses import NO_STORE_HEADER
+from clients.services.roles import ensure_predefined_roles
 
 
 class EmailViewsStage9Tests(TestCase):
     def setUp(self):
+        ensure_predefined_roles()
         user_model = get_user_model()
         self.staff = user_model.objects.create_user(email="staff_email@example.com", password="pass", is_staff=True)
+        self.staff.groups.add(Group.objects.get(name="Manager"))
         self.client.login(email="staff_email@example.com", password="pass")
 
         self.client_obj = Client.objects.create(
