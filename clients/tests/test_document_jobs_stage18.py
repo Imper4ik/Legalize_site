@@ -5,6 +5,7 @@ from io import BytesIO
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.test import TestCase
@@ -14,6 +15,7 @@ from reportlab.pdfgen import canvas
 from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentProcessingJob
 from clients.services.document_workflow import reclaim_stale_document_jobs
+from clients.services.roles import ensure_predefined_roles
 from clients.services.wezwanie_parser import WezwanieData
 
 
@@ -27,8 +29,10 @@ def build_pdf_upload(name: str, text: str = "wezwanie test") -> SimpleUploadedFi
 
 class DocumentJobsStage18Tests(TestCase):
     def setUp(self):
+        ensure_predefined_roles()
         user_model = get_user_model()
         self.staff = user_model.objects.create_user(email="staff-stage18@example.com", password="pass", is_staff=True)
+        self.staff.groups.add(Group.objects.get(name="Staff"))
         self.client.force_login(self.staff)
         self.client_obj = Client.objects.create(
             first_name="Nadia",
