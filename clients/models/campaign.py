@@ -4,6 +4,8 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from fernet_fields import EncryptedTextField
+
 
 class EmailCampaign(models.Model):
     """Tracks the progress and outcome of a mass email sending job."""
@@ -21,7 +23,7 @@ class EmailCampaign(models.Model):
     ]
 
     subject = models.CharField(max_length=500, verbose_name=_("Тема"))
-    message = models.TextField(verbose_name=_("Текст письма"))
+    message = EncryptedTextField(verbose_name=_("Текст письма"))
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
@@ -33,7 +35,7 @@ class EmailCampaign(models.Model):
     failed_count = models.PositiveIntegerField(default=0, verbose_name=_("Ошибок"))
     recipient_emails = models.JSONField(default=list, blank=True, verbose_name=_("Получатели"))
     filters_snapshot = models.JSONField(default=dict, blank=True, verbose_name=_("Фильтры"))
-    error_details = models.TextField(blank=True, default="", verbose_name=_("Детали ошибок"))
+    error_details = EncryptedTextField(blank=True, default="", verbose_name=_("Детали ошибок"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Создано"))
     started_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Запущено"))
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Завершено"))
