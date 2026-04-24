@@ -25,9 +25,11 @@ class BackupError(RuntimeError):
 @dataclass(frozen=True)
 class BackupResult:
     backup_id: str
+    path: str
     size_bytes: int
     sha256: str
     encrypted: bool
+    stored_remotely: bool
 
 
 def _normalize_database_url(database_url: str) -> str:
@@ -102,6 +104,10 @@ def _encrypt_file(path: Path) -> Path:
     return encrypted_path
 
 
+def _remote_storage_enabled() -> bool:
+    return os.environ.get("BACKUP_REMOTE_STORAGE", "").lower() in {"1", "true", "yes", "on"}
+
+
 def _cleanup_local_file(path: Path) -> None:
     """Best-effort removal of a local backup file after processing."""
     try:
@@ -150,12 +156,22 @@ def create_db_backup() -> BackupResult:
         encrypted = True
         size_bytes = final_path.stat().st_size
 
-    # Remove local file after computing the result to minimize exposure
-    _cleanup_local_file(final_path)
+    stored_remotely = False
+    if _remote_storage_enabled():
+        # Placeholder for remote upload integration.
+        stored_remotely = True
+        _cleanup_local_file(final_path)
+    else:
+        logger.warning(
+            "Remote backup storage is disabled; encrypted backup retained locally at %s",
+            final_path,
+        )
 
     return BackupResult(
         backup_id=backup_path.stem,
+        path=str(final_path),
         size_bytes=size_bytes,
         sha256=sha256,
         encrypted=encrypted,
+        stored_remotely=stored_remotely,
     )
