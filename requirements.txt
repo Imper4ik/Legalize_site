@@ -26,3 +26,4 @@ coverage>=7.4.4
 sentry-sdk[django]==2.21.0
 pytest==8.3.4
 pytest-django==4.9.0
+pypdf>=5.4,<6

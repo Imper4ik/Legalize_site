@@ -3,6 +3,8 @@ from django.db import models
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
+from fernet_fields import EncryptedTextField
+
 
 class EmailLog(models.Model):
     """Журнал отправленных писем клиентам."""
@@ -25,8 +27,8 @@ class EmailLog(models.Model):
         blank=True,
     )
     subject = models.CharField(max_length=500, verbose_name=_("Тема"))
-    body = models.TextField(verbose_name=_("Текст письма"))
-    recipients = models.CharField(max_length=500, verbose_name=_("Получатели"))
+    body = EncryptedTextField(verbose_name=_("Текст письма"))
+    recipients = EncryptedTextField(verbose_name=_("Получатели"))
     template_type = models.CharField(
         max_length=50,
         blank=True,
@@ -47,7 +49,7 @@ class EmailLog(models.Model):
         db_index=True,
         verbose_name=_("Ключ идемпотентности"),
     )
-    error_message = models.TextField(blank=True, default="", verbose_name=_("Ошибка доставки"))
+    error_message = EncryptedTextField(blank=True, default="", verbose_name=_("Ошибка доставки"))
     sent_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
