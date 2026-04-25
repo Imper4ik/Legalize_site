@@ -4,13 +4,13 @@ from io import BytesIO
 from datetime import date
 from unittest.mock import patch
 
-from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from reportlab.pdfgen import canvas
 
+from clients.tests.factories import create_staff_user
 from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentProcessingJob, DocumentVersion
 from clients.services.wezwanie_parser import WezwanieData
@@ -26,8 +26,7 @@ def build_pdf_upload(name: str, text: str = "wezwanie test") -> SimpleUploadedFi
 
 class DocumentFlowsStage4Tests(TestCase):
     def setUp(self):
-        user_model = get_user_model()
-        self.staff = user_model.objects.create_user(email="staff@example.com", password="pass", is_staff=True)
+        self.staff = create_staff_user(email="staff@example.com")
         self.client.login(email="staff@example.com", password="pass")
         self.client_obj = Client.objects.create(
             first_name="Anna",
