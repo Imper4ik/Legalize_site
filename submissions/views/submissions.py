@@ -44,7 +44,7 @@ def submission_quick_create(request: HttpRequest) -> HttpResponse:
 
     form = SubmissionForm(request.POST)
     if form.is_valid():
-        submission = form.save()
+        form.save()
         messages.success(request, _('Основание подачи создано'))
         redirect_url = request.META.get('HTTP_REFERER')
         if redirect_url and not url_has_allowed_host_and_scheme(redirect_url, allowed_hosts={request.get_host()}):

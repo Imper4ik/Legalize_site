@@ -11,7 +11,6 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core import mail
-from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, SimpleTestCase, TestCase
 from django.urls import reverse
@@ -24,6 +23,7 @@ from allauth.account.models import EmailAddress
 
 from clients.forms import DocumentChecklistForm, DocumentRequirementAddForm, DocumentRequirementEditForm
 from clients.models import Client, Document, DocumentRequirement, translate_document_name
+from clients.tests.factories import create_manager_user, create_staff_user
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.services.notifications import send_missing_documents_email
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper
@@ -173,6 +173,7 @@ class ClientPrintingViewTests(TestCase):
 
 class ClientAccountLifecycleTests(TestCase):
     def setUp(self):
+        from django.contrib.auth import get_user_model
         self.user_model = get_user_model()
 
     def test_deleting_client_deactivates_linked_user_account(self):

@@ -101,7 +101,7 @@ class EmailViewsStage9Tests(TestCase):
         campaign = EmailCampaign.objects.get()
         self.assertEqual(campaign.status, EmailCampaign.STATUS_PENDING)
         self.assertEqual(campaign.total_recipients, 1)
-        self.assertEqual(campaign.recipient_emails, ["mass-target@example.com"])
+        self.assertEqual(campaign.recipient_emails_list, ["mass-target@example.com"])
         self.assertEqual(campaign.filters_snapshot["company_id"], company.pk)
         self.assertEqual(campaign.created_by, self.staff)
         send_mail_mock.assert_not_called()
