@@ -12,6 +12,7 @@ from django.test import TestCase
 from django.urls import reverse
 from reportlab.pdfgen import canvas
 
+from clients.tests.factories import create_staff_user
 from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentProcessingJob, DocumentVersion
 from clients.services.roles import ensure_predefined_roles

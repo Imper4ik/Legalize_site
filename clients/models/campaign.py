@@ -1,5 +1,7 @@
 """Email campaign tracking model for asynchronous mass email delivery."""
 
+import json
+
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -33,7 +35,7 @@ class EmailCampaign(models.Model):
     total_recipients = models.PositiveIntegerField(default=0, verbose_name=_("Всего получателей"))
     sent_count = models.PositiveIntegerField(default=0, verbose_name=_("Отправлено"))
     failed_count = models.PositiveIntegerField(default=0, verbose_name=_("Ошибок"))
-    recipient_emails = models.JSONField(default=list, blank=True, verbose_name=_("Получатели"))
+    recipient_emails = EncryptedTextField(default="[]", blank=True, verbose_name=_("Получатели"))
     filters_snapshot = models.JSONField(default=dict, blank=True, verbose_name=_("Фильтры"))
     error_details = EncryptedTextField(blank=True, default="", verbose_name=_("Детали ошибок"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Создано"))
@@ -54,3 +56,28 @@ class EmailCampaign(models.Model):
 
     def __str__(self):
         return f"[{self.get_status_display()}] {self.subject} ({self.sent_count}/{self.total_recipients})"
+
+    @property
+    def recipient_emails_list(self) -> list[str]:
+        raw_value = self.recipient_emails
+        if isinstance(raw_value, list):
+            return [str(item) for item in raw_value]
+        if not raw_value:
+            return []
+        if isinstance(raw_value, str):
+            try:
+                decoded = json.loads(raw_value)
+                if isinstance(decoded, list):
+                    return [str(item) for item in decoded]
+            except json.JSONDecodeError:
+                legacy_items = [part.strip() for part in raw_value.split(",") if part.strip()]
+                return legacy_items
+        return []
+
+    def set_recipient_emails(self, recipients: list[str]) -> None:
+        self.recipient_emails = json.dumps([str(item) for item in recipients])
+
+    def save(self, *args, **kwargs):
+        if isinstance(self.recipient_emails, list):
+            self.set_recipient_emails([str(item) for item in self.recipient_emails])
+        super().save(*args, **kwargs)

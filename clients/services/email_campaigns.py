@@ -49,14 +49,16 @@ def queue_mass_email_campaign(
     if not normalized_recipients:
         raise ValueError("Mass email campaign requires at least one recipient")
 
-    return EmailCampaign.objects.create(
+    campaign = EmailCampaign(
         subject=subject,
         message=message,
         total_recipients=len(normalized_recipients),
-        recipient_emails=normalized_recipients,
         filters_snapshot=filters_snapshot or {},
         created_by=created_by,
     )
+    campaign.set_recipient_emails(normalized_recipients)
+    campaign.save()
+    return campaign
 
 
 def _claim_pending_campaign(campaign_id: int) -> EmailCampaign | None:
@@ -83,7 +85,7 @@ def process_campaign(campaign_id: int) -> CampaignProcessingResult | None:
     if campaign is None:
         return None
 
-    recipients = normalize_recipient_emails(campaign.recipient_emails or [])
+    recipients = normalize_recipient_emails(campaign.recipient_emails_list)
     if not recipients:
         campaign.status = EmailCampaign.STATUS_FAILED
         campaign.error_details = "Campaign has no recipients."
