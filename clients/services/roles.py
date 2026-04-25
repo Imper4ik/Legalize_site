@@ -25,6 +25,9 @@ EMAIL_MUTATION_ROLES = ("Admin", "Manager")
 EXPORT_MUTATION_ROLES = ("Admin", "Manager")
 REPORT_MUTATION_ROLES = ("Admin", "Manager")
 TRANSLATION_ALLOWED_ROLES = ("Admin", "Translator")
+CLIENT_EDIT_ROLES = CLIENT_MUTATION_ROLES
+CLIENT_DELETE_ROLES = ("Admin", "Manager")
+CHECKLIST_MANAGE_ROLES = DOCUMENT_MUTATION_ROLES
 
 
 def user_has_any_role(user: AbstractBaseUser, *role_names: str) -> bool:
