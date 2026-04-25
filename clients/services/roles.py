@@ -3,8 +3,6 @@ from __future__ import annotations
 from django.contrib.auth.models import AbstractBaseUser, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 
-from clients.models import Client, Document, Payment, StaffTask
-
 
 PREDEFINED_ROLES: dict[str, str] = {
     "Admin": "All permissions (Superuser equivalent)",
@@ -42,6 +40,9 @@ def user_has_any_role(user: AbstractBaseUser, *role_names: str) -> bool:
 
 
 def ensure_predefined_roles() -> list[Group]:
+    # Import lazily to avoid import-order issues during Django app initialization.
+    from clients.models import Client, Document, Payment, StaffTask
+
     groups: dict[str, Group] = {}
     for role_name in PREDEFINED_ROLES:
         group, _created = Group.objects.get_or_create(name=role_name)
