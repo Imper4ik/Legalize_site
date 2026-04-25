@@ -79,28 +79,12 @@ def _validate_pdf_file(uploaded_file) -> None:
     start_position = uploaded_file.tell()
     try:
         uploaded_file.seek(0)
-        header = uploaded_file.read(8)
-        if not header:
-            raise ValidationError(_("Файл пустой."))
-        if not header.startswith(b"%PDF-"):
+        payload = uploaded_file.read()
+        if not payload.startswith(b"%PDF-"):
             raise ValidationError(_("Загрузите корректный PDF-файл."))
-        uploaded_file.seek(0, 2)
-        file_size = uploaded_file.tell()
-        if file_size == 0:
-            raise ValidationError(_("Файл пустой."))
-        tail_window = min(file_size, 4096)
-        uploaded_file.seek(-tail_window, 2)
-        tail = uploaded_file.read(tail_window)
-        if b"%%EOF" not in tail:
+        if b"%%EOF" not in payload:
             raise ValidationError(_("PDF-файл повреждён или не читается."))
-
-        uploaded_file.seek(0)
-        encrypted_marker = False
-        for chunk in iter(lambda: uploaded_file.read(4096), b""):
-            if b"/Encrypt" in chunk:
-                encrypted_marker = True
-                break
-        if encrypted_marker:
+        if b"/Encrypt" in payload:
             raise ValidationError(_("PDF-файлы, защищённые паролем, не поддерживаются."))
 
         pdf_reader = _get_pdf_reader()

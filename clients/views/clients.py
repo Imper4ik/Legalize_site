@@ -165,7 +165,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
 
 
 class ClientCreateView(RoleRequiredMixin, CreateView):
-    allowed_roles = list(CLIENT_EDIT_ROLES)
+    allowed_roles = ["Admin", "Manager", "Staff"]
     model = Client
     form_class = ClientForm
     template_name = "clients/client_form.html"
@@ -198,7 +198,7 @@ class ClientCreateView(RoleRequiredMixin, CreateView):
 
 
 class ClientUpdateView(RoleRequiredMixin, UpdateView):
-    allowed_roles = list(CLIENT_EDIT_ROLES)
+    allowed_roles = ["Admin", "Manager", "Staff"]
     model = Client
     form_class = ClientForm
     template_name = "clients/client_form.html"
@@ -239,7 +239,7 @@ class ClientUpdateView(RoleRequiredMixin, UpdateView):
 
 
 class ClientDeleteView(RoleRequiredMixin, DeleteView):
-    allowed_roles = list(CLIENT_DELETE_ROLES)
+    allowed_roles = ["Admin", "Manager", "Staff"]
     model = Client
     template_name = "clients/client_confirm_delete.html"
     success_url = reverse_lazy("clients:client_list")
