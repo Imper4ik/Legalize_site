@@ -471,7 +471,7 @@ class ObjectAccessPolicyTests(TestCase):
             data={"service_description": "consultation", "total_amount": "150.00"},
         )
 
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 403)
 
     def test_assigned_staff_can_open_owned_client(self):
         self.client.login(email="staff-a@example.com", password="pass")
