@@ -1,22 +1,17 @@
 from __future__ import annotations
 
-from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
 from clients.constants import DocumentType
 from clients.models import AppSettings, Client, WniosekAttachment, WniosekSubmission
 from clients.services.notifications import _get_missing_documents_context
+from clients.tests.factories import create_manager_user
 
 
 class WniosekFlowStage10Tests(TestCase):
     def setUp(self):
-        user_model = get_user_model()
-        self.staff = user_model.objects.create_user(
-            email="staff_wniosek@example.com",
-            password="pass",
-            is_staff=True,
-        )
+        self.staff = create_manager_user(email="staff_wniosek@example.com")
         self.client.login(email="staff_wniosek@example.com", password="pass")
         self.client_obj = Client.objects.create(
             first_name="Maria",

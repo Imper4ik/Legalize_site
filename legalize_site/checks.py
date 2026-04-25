@@ -17,6 +17,8 @@ FERNET_KEYS_ERROR_ID = "legalize_site.E003"
 SECRET_KEY_WARNING_ID = "legalize_site.W003"
 FERNET_KEYS_WARNING_ID = "legalize_site.W004"
 RUNTIME_DEPENDENCY_WARNING_ID = "legalize_site.W005"
+MEDIA_STORAGE_WARNING_ID = "legalize_site.W006"
+BACKUP_STORAGE_WARNING_ID = "legalize_site.W007"
 
 BACKENDS = {
     "django.core.mail.backends.smtp.EmailBackend": {
@@ -215,4 +217,35 @@ def runtime_dependency_check(app_configs=None, **kwargs):
                 id=RUNTIME_DEPENDENCY_WARNING_ID,
             )
         )
+    return messages
+
+
+@register("legalize_site")
+def production_storage_safety_check(app_configs=None, **kwargs):
+    messages = []
+    is_production = getattr(settings, "IS_PRODUCTION", False)
+    if not is_production:
+        return messages
+
+    use_s3 = getattr(settings, "USE_S3_MEDIA_STORAGE", False)
+    allow_local = os.environ.get("ALLOW_PRODUCTION_LOCAL_MEDIA", "").lower() in {"1", "true", "yes", "on"}
+    if not use_s3 and not allow_local:
+        messages.append(
+            Warning(
+                "Production uses local media storage without explicit acknowledgement.",
+                hint="Use S3/R2/B2 or Railway Volume. Set ALLOW_PRODUCTION_LOCAL_MEDIA=true only if local volume is configured.",
+                id=MEDIA_STORAGE_WARNING_ID,
+            )
+        )
+
+    backup_remote = os.environ.get("BACKUP_REMOTE_STORAGE", "").lower() in {"1", "true", "yes", "on"}
+    if not backup_remote:
+        messages.append(
+            Warning(
+                "Remote backup storage is not enabled in production.",
+                hint="Enable BACKUP_REMOTE_STORAGE and configure remote object storage, or ensure persistent volume retention.",
+                id=BACKUP_STORAGE_WARNING_ID,
+            )
+        )
+
     return messages

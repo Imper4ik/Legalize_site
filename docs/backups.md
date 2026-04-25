@@ -95,3 +95,18 @@
 4.  Дождитесь завершения восстановления и проверьте работу приложения.
 
 > Важно: восстановление заменяет текущее состояние базы данных выбранным снимком.
+
+
+## Secure retention behavior
+
+- Backups are always created via `pg_dump` and hashed (SHA-256).
+- If `FERNET_KEYS` are configured, backup artifacts are encrypted (`.sql.enc`).
+- If `BACKUP_REMOTE_STORAGE=true`, local file is deleted after processing (remote uploader hook point).
+- If remote storage is not enabled, encrypted backup is retained locally in `DB_BACKUP_DIR` (or `tmp/db_backups`) and pruned by retention.
+- Never log `DATABASE_URL` in command output/logs.
+
+Recommended env:
+
+- `BACKUP_REMOTE_STORAGE=true` when S3/R2/B2 uploader is configured.
+- `MAX_BACKUP_AGE_HOURS=24` (or your policy).
+- `DB_BACKUP_DIR=/data/backups` for persistent Railway Volume when remote upload is not yet enabled.

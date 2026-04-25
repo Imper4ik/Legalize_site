@@ -2,19 +2,18 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
 
 from clients.models import Client, Company, EmailCampaign, EmailLog
 from clients.services.responses import NO_STORE_HEADER
+from clients.tests.factories import create_manager_user
 
 
 class EmailViewsStage9Tests(TestCase):
     def setUp(self):
-        user_model = get_user_model()
-        self.staff = user_model.objects.create_user(email="staff_email@example.com", password="pass", is_staff=True)
+        self.staff = create_manager_user(email="staff_email@example.com")
         self.client.login(email="staff_email@example.com", password="pass")
 
         self.client_obj = Client.objects.create(
@@ -97,7 +96,7 @@ class EmailViewsStage9Tests(TestCase):
         campaign = EmailCampaign.objects.get()
         self.assertEqual(campaign.status, EmailCampaign.STATUS_PENDING)
         self.assertEqual(campaign.total_recipients, 1)
-        self.assertEqual(campaign.recipient_emails, ["mass-target@example.com"])
+        self.assertEqual(campaign.recipient_emails_list, ["mass-target@example.com"])
         self.assertEqual(campaign.filters_snapshot["company_id"], company.pk)
         self.assertEqual(campaign.created_by, self.staff)
         send_mail_mock.assert_not_called()
