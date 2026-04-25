@@ -3,8 +3,6 @@ from __future__ import annotations
 from django.contrib.auth.models import AbstractBaseUser, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 
-from clients.models import Client, Document, Payment, StaffTask
-
 
 PREDEFINED_ROLES: dict[str, str] = {
     "Admin": "All permissions (Superuser equivalent)",
@@ -14,9 +12,46 @@ PREDEFINED_ROLES: dict[str, str] = {
     "Translator": "Access to Translation Studio only",
 }
 
+
 ADMIN_PANEL_ALLOWED_ROLES = ("Admin", "Manager", "Staff", "ReadOnly")
 SETTINGS_ALLOWED_ROLES = ("Admin", "Manager")
 PEOPLE_ALLOWED_ROLES = ("Admin",)
+
+CLIENT_EDIT_ROLES = ("Admin", "Manager", "Staff")
+CLIENT_DELETE_ROLES = ("Admin", "Manager")
+CLIENT_MUTATION_ROLES = CLIENT_EDIT_ROLES
+DOCUMENT_EDIT_ROLES = ("Admin", "Manager", "Staff")
+DOCUMENT_DELETE_ROLES = ("Admin", "Manager")
+DOCUMENT_MUTATION_ROLES = DOCUMENT_EDIT_ROLES
+TASK_MUTATION_ROLES = ("Admin", "Manager", "Staff")
+PAYMENT_MUTATION_ROLES = ("Admin", "Manager")
+EMAIL_MUTATION_ROLES = ("Admin", "Manager")
+EXPORT_MUTATION_ROLES = ("Admin", "Manager")
+REPORT_MUTATION_ROLES = ("Admin", "Manager")
+CHECKLIST_MANAGE_ROLES = ("Admin", "Manager")
+TRANSLATION_ALLOWED_ROLES = ("Admin", "Translator")
+
+__all__ = [
+    "PREDEFINED_ROLES",
+    "ADMIN_PANEL_ALLOWED_ROLES",
+    "SETTINGS_ALLOWED_ROLES",
+    "PEOPLE_ALLOWED_ROLES",
+    "CLIENT_EDIT_ROLES",
+    "CLIENT_DELETE_ROLES",
+    "CLIENT_MUTATION_ROLES",
+    "DOCUMENT_EDIT_ROLES",
+    "DOCUMENT_DELETE_ROLES",
+    "DOCUMENT_MUTATION_ROLES",
+    "TASK_MUTATION_ROLES",
+    "PAYMENT_MUTATION_ROLES",
+    "EMAIL_MUTATION_ROLES",
+    "EXPORT_MUTATION_ROLES",
+    "REPORT_MUTATION_ROLES",
+    "CHECKLIST_MANAGE_ROLES",
+    "TRANSLATION_ALLOWED_ROLES",
+    "user_has_any_role",
+    "ensure_predefined_roles",
+]
 
 
 def user_has_any_role(user: AbstractBaseUser, *role_names: str) -> bool:
@@ -32,6 +67,9 @@ def user_has_any_role(user: AbstractBaseUser, *role_names: str) -> bool:
 
 
 def ensure_predefined_roles() -> list[Group]:
+    # Import lazily to avoid import-order issues during Django app initialization.
+    from clients.models import Client, Document, Payment, StaffTask
+
     groups: dict[str, Group] = {}
     for role_name in PREDEFINED_ROLES:
         group, _created = Group.objects.get_or_create(name=role_name)

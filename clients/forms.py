@@ -105,14 +105,13 @@ class StaffUserCreateForm(forms.ModelForm):
 
     class Meta:
         model = get_user_model()
-        fields = ["email", "first_name", "last_name", "is_staff", "is_superuser", "is_active", "groups"]
+        fields = ["email", "first_name", "last_name", "is_staff", "is_active", "groups"]
         widgets = {
             "email": forms.EmailInput(attrs={"class": "form-control"}),
             "first_name": forms.TextInput(attrs={"class": "form-control"}),
             "last_name": forms.TextInput(attrs={"class": "form-control"}),
             "is_staff": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-            "is_superuser": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+                        "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
     def clean(self):
@@ -120,6 +119,9 @@ class StaffUserCreateForm(forms.ModelForm):
         if cleaned.get("password1") != cleaned.get("password2"):
             self.add_error("password2", "Passwords do not match.")
         return cleaned
+
+    def clean_is_superuser(self):
+        return False
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -139,14 +141,13 @@ class StaffUserUpdateForm(forms.ModelForm):
 
     class Meta:
         model = get_user_model()
-        fields = ["email", "first_name", "last_name", "is_staff", "is_superuser", "is_active", "groups"]
+        fields = ["email", "first_name", "last_name", "is_staff", "is_active", "groups"]
         widgets = {
             "email": forms.EmailInput(attrs={"class": "form-control"}),
             "first_name": forms.TextInput(attrs={"class": "form-control"}),
             "last_name": forms.TextInput(attrs={"class": "form-control"}),
             "is_staff": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-            "is_superuser": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+                        "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
 def _label_for_document_type(code: str) -> str:
