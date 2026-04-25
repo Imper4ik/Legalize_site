@@ -359,6 +359,8 @@ BREVO_API_KEY = os.getenv("BREVO_API_KEY")
 BREVO_SMTP_PASSWORD = os.getenv("BREVO_SMTP_PASSWORD")
 BREVO_SMTP_USER = os.getenv("BREVO_SMTP_USER", "apikey")
 BREVO_SMTP_HOST = os.getenv("BREVO_SMTP_HOST", "smtp-relay.brevo.com")
+EMAIL_LOG_BODY_RETENTION_DAYS = int(os.environ.get("EMAIL_LOG_BODY_RETENTION_DAYS", "180"))
+
 EMAIL_FALLBACK_TO_CONSOLE = env_flag(
     "EMAIL_FALLBACK_TO_CONSOLE",
     "True" if os.environ.get("DJANGO_SETTINGS_MODULE", "").endswith(".development") else "False",

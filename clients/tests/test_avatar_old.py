@@ -8,9 +8,7 @@ from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
-from django.contrib.auth import get_user_model
 from django.core import mail
-from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, SimpleTestCase, TestCase
 from django.urls import reverse
@@ -23,6 +21,7 @@ from allauth.account.models import EmailAddress
 
 from clients.forms import DocumentChecklistForm, DocumentRequirementAddForm, DocumentRequirementEditForm
 from clients.models import Client, Document, DocumentRequirement, translate_document_name
+from clients.tests.factories import create_manager_user, create_staff_user
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.services.notifications import send_missing_documents_email
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper
@@ -35,7 +34,6 @@ def _build_pdf_upload(name: str, text: str = "wezwanie test") -> SimpleUploadedF
     pdf.drawString(72, 720, text)
     pdf.save()
     return SimpleUploadedFile(name, buffer.getvalue(), content_type="application/pdf")
-
 
 class PurePythonMsgfmtTests(SimpleTestCase):
     def test_compiled_mo_file_is_valid_utf8(self):
@@ -78,10 +76,7 @@ class PurePythonMsgfmtTests(SimpleTestCase):
 
 class CalculatorViewTests(TestCase):
     def setUp(self):
-        user_model = get_user_model()
-        self.staff_user = user_model.objects.create_user(
-            email='staff@example.com', password='pass', is_staff=True
-        )
+        self.staff_user = create_staff_user(email='staff@example.com')
 
     def test_months_in_period_multiplies_tuition_total(self):
         login_successful = self.client.login(email='staff@example.com', password='pass')
@@ -112,10 +107,7 @@ class CalculatorViewTests(TestCase):
 
 class ClientPrintingViewTests(TestCase):
     def setUp(self):
-        user_model = get_user_model()
-        self.staff_user = user_model.objects.create_user(
-            email='staff@example.com', password='pass', is_staff=True
-        )
+        self.staff_user = create_staff_user(email='staff@example.com')
 
         self.client_record = Client.objects.create(
             first_name='Jan',
@@ -164,9 +156,10 @@ class ClientPrintingViewTests(TestCase):
 
 class ClientAccountLifecycleTests(TestCase):
     def setUp(self):
+        from django.contrib.auth import get_user_model
         self.user_model = get_user_model()
 
-    def test_deleting_client_removes_linked_user_account(self):
+    def test_deleting_client_deactivates_linked_user_account(self):
         user = self.user_model.objects.create_user(
             email='client@example.com', password='secret123'
         )
@@ -188,8 +181,10 @@ class ClientAccountLifecycleTests(TestCase):
 
         client.delete()
 
-        self.assertFalse(self.user_model.objects.filter(pk=user.pk).exists())
-        self.assertFalse(EmailAddress.objects.filter(email='client@example.com').exists())
+        user.refresh_from_db()
+        self.assertFalse(user.is_active)
+        self.assertTrue(self.user_model.objects.filter(pk=user.pk).exists())
+        self.assertTrue(EmailAddress.objects.filter(email='client@example.com').exists())
 
     def test_staff_accounts_are_preserved_when_client_deleted(self):
         staff_user = self.user_model.objects.create_user(
@@ -487,10 +482,7 @@ class MissingDocumentsEmailTests(TestCase):
 
 class WezwanieUploadFlowTests(TestCase):
     def setUp(self):
-        user_model = get_user_model()
-        self.staff_user = user_model.objects.create_user(
-            email="staff_wezwanie@example.com", password="pass", is_staff=True
-        )
+        self.staff_user = create_staff_user(email="staff_wezwanie@example.com")
 
         DocumentRequirement.objects.filter(application_purpose="work").delete()
         DocumentRequirement.objects.create(
@@ -615,10 +607,7 @@ class WezwanieUploadFlowTests(TestCase):
 
 class BulkDocumentVerificationTests(TestCase):
     def setUp(self):
-        user_model = get_user_model()
-        self.staff_user = user_model.objects.create_user(
-            email='checker@example.com', password='pass', is_staff=True
-        )
+        self.staff_user = create_staff_user(email='checker@example.com')
 
         self.client_record = Client.objects.create(
             first_name='Alex',
@@ -722,10 +711,7 @@ class ResponseHelperTests(TestCase):
 
 class ClientViewsTestCase(TestCase):
     def setUp(self):
-        self.user_model = get_user_model()
-        self.staff_user = self.user_model.objects.create_user(
-            email='staff@example.com', password='pass', is_staff=True
-        )
+        self.staff_user = create_manager_user(email='staff@example.com')
         self.client_record = Client.objects.create(
             first_name='Ivan',
             last_name='Ivanov',
@@ -767,4 +753,3 @@ class ClientViewsTestCase(TestCase):
         payment = self.client_record.payments.first()
         self.assertIsNotNone(payment)
         self.assertEqual(payment.total_amount, Decimal('1500.00'))
-

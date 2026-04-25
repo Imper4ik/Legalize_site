@@ -9,7 +9,8 @@ from django.views import View
 from django.views.generic import ListView, DetailView
 from typing import Any
 
-from clients.views.base import StaffRequiredMixin, staff_required_view
+from clients.services.roles import DOCUMENT_MUTATION_ROLES
+from clients.views.base import RoleRequiredMixin, role_required_view, StaffRequiredMixin
 from ..models import Submission
 from ..forms import SubmissionForm, DocumentForm
 
@@ -19,7 +20,8 @@ class SubmissionListView(StaffRequiredMixin, ListView):
     context_object_name = 'submissions'
 
 
-class SubmissionCreateView(StaffRequiredMixin, View):
+class SubmissionCreateView(RoleRequiredMixin, View):
+    allowed_roles = list(DOCUMENT_MUTATION_ROLES)
     template_name = 'submissions/submission_form.html'
 
     def get(self, request: HttpRequest) -> HttpResponse:
@@ -35,14 +37,14 @@ class SubmissionCreateView(StaffRequiredMixin, View):
         return render(request, self.template_name, {'form': form})
 
 
-@staff_required_view
+@role_required_view(*DOCUMENT_MUTATION_ROLES)
 def submission_quick_create(request: HttpRequest) -> HttpResponse:
     if request.method != 'POST':
         return HttpResponseNotAllowed(['POST'])
 
     form = SubmissionForm(request.POST)
     if form.is_valid():
-        submission = form.save()
+        form.save()
         messages.success(request, _('Основание подачи создано'))
         redirect_url = request.META.get('HTTP_REFERER')
         if redirect_url and not url_has_allowed_host_and_scheme(redirect_url, allowed_hosts={request.get_host()}):
@@ -56,7 +58,7 @@ def submission_quick_create(request: HttpRequest) -> HttpResponse:
     return redirect(redirect_url or reverse_lazy('clients:document_checklist_manage'))
 
 
-@staff_required_view
+@role_required_view(*DOCUMENT_MUTATION_ROLES)
 def submission_quick_update(request: HttpRequest, submission_id: int) -> HttpResponse:
     submission = get_object_or_404(Submission, pk=submission_id)
 
@@ -78,7 +80,7 @@ def submission_quick_update(request: HttpRequest, submission_id: int) -> HttpRes
     return redirect(safe_redirect_url)
 
 
-@staff_required_view
+@role_required_view(*DOCUMENT_MUTATION_ROLES)
 def submission_quick_delete(request: HttpRequest, submission_id: int) -> HttpResponse:
     if request.method != 'POST':
         return HttpResponseNotAllowed(['POST'])

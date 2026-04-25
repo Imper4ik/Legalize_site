@@ -44,6 +44,9 @@ from clients.services.notifications import (
 from clients.services.responses import apply_no_store
 from clients.services.roles import (
     ADMIN_PANEL_ALLOWED_ROLES,
+    CHECKLIST_MANAGE_ROLES,
+    CLIENT_DELETE_ROLES,
+    CLIENT_EDIT_ROLES,
     PEOPLE_ALLOWED_ROLES,
     PREDEFINED_ROLES,
     SETTINGS_ALLOWED_ROLES,
@@ -56,7 +59,7 @@ from clients.use_cases.client_records import (
     snapshot_client_update_state,
 )
 from clients.use_cases.document_requirements import delete_document_requirement_record
-from clients.views.base import RoleRequiredMixin, role_required_view, StaffRequiredMixin, staff_required_view
+from clients.views.base import RoleRequiredMixin, role_required_view, StaffRequiredMixin
 from clients.services.activity import log_client_view
 from clients.services.access import accessible_clients_queryset
 from submissions.forms import SubmissionForm
@@ -161,7 +164,8 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         return self.render_to_response(context)
 
 
-class ClientCreateView(StaffRequiredMixin, CreateView):
+class ClientCreateView(RoleRequiredMixin, CreateView):
+    allowed_roles = list(CLIENT_EDIT_ROLES)
     model = Client
     form_class = ClientForm
     template_name = "clients/client_form.html"
@@ -193,7 +197,8 @@ class ClientCreateView(StaffRequiredMixin, CreateView):
         return super().form_invalid(form)
 
 
-class ClientUpdateView(StaffRequiredMixin, UpdateView):
+class ClientUpdateView(RoleRequiredMixin, UpdateView):
+    allowed_roles = list(CLIENT_EDIT_ROLES)
     model = Client
     form_class = ClientForm
     template_name = "clients/client_form.html"
@@ -233,7 +238,8 @@ class ClientUpdateView(StaffRequiredMixin, UpdateView):
         return super().form_invalid(form)
 
 
-class ClientDeleteView(StaffRequiredMixin, DeleteView):
+class ClientDeleteView(RoleRequiredMixin, DeleteView):
+    allowed_roles = list(CLIENT_DELETE_ROLES)
     model = Client
     template_name = "clients/client_confirm_delete.html"
     success_url = reverse_lazy("clients:client_list")
@@ -414,13 +420,14 @@ class ClientDocumentPrintView(ClientPrintBaseView):
         return [value.strip() for value in values]
 
 
-class DocumentChecklistManageView(StaffRequiredMixin, FormView):
+class DocumentChecklistManageView(RoleRequiredMixin, FormView):
+    allowed_roles = list(CHECKLIST_MANAGE_ROLES)
     template_name = "clients/document_checklist_manage.html"
     form_class = DocumentChecklistForm
 
     @staticmethod
     def _default_required_codes(purpose: str) -> list[str]:
-        for (purpose_code, _), docs in DOCUMENT_CHECKLIST.items():
+        for (purpose_code, purpose_label), docs in DOCUMENT_CHECKLIST.items():
             if purpose_code == purpose:
                 return [code for code, _ in docs]
         return []
@@ -682,7 +689,6 @@ def role_manage_view(request):
         return redirect("clients:role_manage")
 
     ensure_predefined_roles()
-    user_model = get_user_model()
     roles = []
     for role_name, description in PREDEFINED_ROLES.items():
         group = Group.objects.get(name=role_name)
@@ -708,7 +714,7 @@ client_wsc_print_view = ClientWSCPrintView.as_view()
 client_document_print_view = ClientDocumentPrintView.as_view()
 
 
-@staff_required_view
+@role_required_view(*CHECKLIST_MANAGE_ROLES)
 def client_document_print_confirm_view(request, pk, doc_type):
     if request.method != "POST":
         return redirect("clients:client_document_print", pk=pk, doc_type=doc_type)
@@ -746,7 +752,7 @@ def client_document_print_confirm_view(request, pk, doc_type):
     return redirect(f"{redirect_url}?{urlencode(params)}")
 
 
-@staff_required_view
+@role_required_view(*CHECKLIST_MANAGE_ROLES)
 def document_requirement_add(request):
     purpose = request.POST.get("purpose") or request.GET.get("purpose")
     allowed = list(Submission.objects.values_list("slug", flat=True))
@@ -773,7 +779,7 @@ def document_requirement_add(request):
     return redirect(reverse_lazy("clients:document_checklist_manage") + f"?purpose={purpose}")
 
 
-@staff_required_view
+@role_required_view(*CHECKLIST_MANAGE_ROLES)
 def document_requirement_edit(request, pk):
     requirement = get_object_or_404(DocumentRequirement, pk=pk)
     form = DocumentRequirementEditForm(
@@ -803,7 +809,7 @@ def document_requirement_edit(request, pk):
     return redirect(reverse_lazy("clients:document_checklist_manage") + f"?purpose={requirement.application_purpose}")
 
 
-@staff_required_view
+@role_required_view(*CHECKLIST_MANAGE_ROLES)
 def document_requirement_delete(request, pk):
     requirement = get_object_or_404(DocumentRequirement, pk=pk)
 

@@ -5,6 +5,8 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.management import call_command
+from django.http import HttpResponseForbidden
+from django.http import Http404
 from django.shortcuts import redirect
 from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
@@ -24,9 +26,11 @@ def update_translations_view(request):
       2. python fix_po.py (to remove duplicates)
       3. compilemessages
     """
+    if not getattr(settings, "ENABLE_TRANSLATION_TOOLING", False):
+        raise Http404("Not found")
+
     if not request.user.is_superuser:
-        messages.error(request, _("Только суперпользователи могут обновлять переводы."))
-        return redirect('/admin/')
+        return HttpResponseForbidden(_("Только суперпользователи могут обновлять переводы."))
 
     try:
         # 1. makemessages

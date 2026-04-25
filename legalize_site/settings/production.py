@@ -14,6 +14,8 @@ DEBUG = env_flag("DEBUG", "False")
 if DEBUG:
     raise ImproperlyConfigured("DEBUG must remain False in production.")
 
+ENABLE_TRANSLATION_TOOLING = env_flag("ENABLE_TRANSLATION_TOOLING", "False")
+
 ALLOWED_HOSTS = [host for host in os.environ.get("ALLOWED_HOSTS", "").split(",") if host]
 ALLOWED_HOSTS.append("legalize-site-production-740f.up.railway.app")
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")

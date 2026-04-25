@@ -9,7 +9,8 @@ from clients.forms import StaffTaskForm
 from clients.models import Client, StaffTask
 from clients.services.access import accessible_clients_queryset, accessible_tasks_queryset
 from clients.use_cases.tasks import complete_task_for_client, create_task_for_client
-from clients.views.base import StaffRequiredMixin, staff_required_view
+from clients.services.roles import TASK_MUTATION_ROLES
+from clients.views.base import StaffRequiredMixin, role_required_view
 
 
 class TaskListView(StaffRequiredMixin, ListView):
@@ -41,7 +42,7 @@ class TaskListView(StaffRequiredMixin, ListView):
         return context
 
 
-@staff_required_view
+@role_required_view(*TASK_MUTATION_ROLES)
 def add_task(request, client_id):
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
 
@@ -61,7 +62,7 @@ def add_task(request, client_id):
     return redirect("clients:client_detail", pk=client.pk)
 
 
-@staff_required_view
+@role_required_view(*TASK_MUTATION_ROLES)
 def complete_task(request, task_id):
     task = get_object_or_404(
         accessible_tasks_queryset(request.user, StaffTask.objects.select_related("client")),
