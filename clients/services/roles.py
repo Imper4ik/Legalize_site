@@ -19,18 +19,13 @@ ADMIN_PANEL_ALLOWED_ROLES = ("Admin", "Manager", "Staff", "ReadOnly")
 SETTINGS_ALLOWED_ROLES = ("Admin", "Manager")
 PEOPLE_ALLOWED_ROLES = ("Admin",)
 
-CLIENT_EDIT_ROLES = ("Admin", "Manager", "Staff")
-CLIENT_DELETE_ROLES = ("Admin", "Manager")
-CLIENT_MUTATION_ROLES = CLIENT_EDIT_ROLES
-DOCUMENT_EDIT_ROLES = ("Admin", "Manager", "Staff")
-DOCUMENT_DELETE_ROLES = ("Admin", "Manager")
-DOCUMENT_MUTATION_ROLES = DOCUMENT_EDIT_ROLES
+CLIENT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
+DOCUMENT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
 TASK_MUTATION_ROLES = ("Admin", "Manager", "Staff")
 PAYMENT_MUTATION_ROLES = ("Admin", "Manager")
 EMAIL_MUTATION_ROLES = ("Admin", "Manager")
 EXPORT_MUTATION_ROLES = ("Admin", "Manager")
 REPORT_MUTATION_ROLES = ("Admin", "Manager")
-CHECKLIST_MANAGE_ROLES = ("Admin", "Manager")
 TRANSLATION_ALLOWED_ROLES = ("Admin", "Translator")
 
 
