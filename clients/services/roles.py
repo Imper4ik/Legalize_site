@@ -17,41 +17,14 @@ ADMIN_PANEL_ALLOWED_ROLES = ("Admin", "Manager", "Staff", "ReadOnly")
 SETTINGS_ALLOWED_ROLES = ("Admin", "Manager")
 PEOPLE_ALLOWED_ROLES = ("Admin",)
 
-CLIENT_EDIT_ROLES = ("Admin", "Manager", "Staff")
-CLIENT_DELETE_ROLES = ("Admin", "Manager")
-CLIENT_MUTATION_ROLES = CLIENT_EDIT_ROLES
-DOCUMENT_EDIT_ROLES = ("Admin", "Manager", "Staff")
-DOCUMENT_DELETE_ROLES = ("Admin", "Manager")
-DOCUMENT_MUTATION_ROLES = DOCUMENT_EDIT_ROLES
+CLIENT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
+DOCUMENT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
 TASK_MUTATION_ROLES = ("Admin", "Manager", "Staff")
 PAYMENT_MUTATION_ROLES = ("Admin", "Manager")
 EMAIL_MUTATION_ROLES = ("Admin", "Manager")
 EXPORT_MUTATION_ROLES = ("Admin", "Manager")
 REPORT_MUTATION_ROLES = ("Admin", "Manager")
-CHECKLIST_MANAGE_ROLES = ("Admin", "Manager")
 TRANSLATION_ALLOWED_ROLES = ("Admin", "Translator")
-
-__all__ = [
-    "PREDEFINED_ROLES",
-    "ADMIN_PANEL_ALLOWED_ROLES",
-    "SETTINGS_ALLOWED_ROLES",
-    "PEOPLE_ALLOWED_ROLES",
-    "CLIENT_EDIT_ROLES",
-    "CLIENT_DELETE_ROLES",
-    "CLIENT_MUTATION_ROLES",
-    "DOCUMENT_EDIT_ROLES",
-    "DOCUMENT_DELETE_ROLES",
-    "DOCUMENT_MUTATION_ROLES",
-    "TASK_MUTATION_ROLES",
-    "PAYMENT_MUTATION_ROLES",
-    "EMAIL_MUTATION_ROLES",
-    "EXPORT_MUTATION_ROLES",
-    "REPORT_MUTATION_ROLES",
-    "CHECKLIST_MANAGE_ROLES",
-    "TRANSLATION_ALLOWED_ROLES",
-    "user_has_any_role",
-    "ensure_predefined_roles",
-]
 
 
 def user_has_any_role(user: AbstractBaseUser, *role_names: str) -> bool:

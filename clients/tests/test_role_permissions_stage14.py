@@ -4,12 +4,10 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
-from clients.models import Client, Document, Payment
-from clients.constants import DocumentType
+from clients.models import Client, Payment
 from clients.services.roles import ensure_predefined_roles
 
 
@@ -37,74 +35,12 @@ class RolePermissionMatrixTests(TestCase):
             assigned_staff=self.staff,
         )
         self.payment = Payment.objects.create(client=self.client_obj, total_amount=10, amount_paid=0, service_description="consultation", payment_method="cash")
-        self.document = Document.objects.create(
-            client=self.client_obj,
-            document_type=DocumentType.PASSPORT.value,
-            file=SimpleUploadedFile("passport.pdf", b"pdf", content_type="application/pdf"),
-        )
 
     def test_readonly_cannot_mutate_client_data(self):
         self.client.force_login(self.read_only)
         self.assertEqual(self.client.get(reverse("clients:client_add")).status_code, 403)
         self.assertEqual(self.client.get(reverse("clients:client_edit", kwargs={"pk": self.client_obj.pk})).status_code, 403)
         self.assertEqual(self.client.get(reverse("clients:client_delete", kwargs={"pk": self.client_obj.pk})).status_code, 403)
-
-    def test_staff_cannot_delete_client_but_manager_and_admin_can(self):
-        self.client.force_login(self.staff)
-        self.assertEqual(self.client.post(reverse("clients:client_delete", kwargs={"pk": self.client_obj.pk})).status_code, 403)
-
-        self.client.force_login(self.manager)
-        manager_client = Client.objects.create(
-            first_name="Delete",
-            last_name="ByManager",
-            citizenship="PL",
-            phone="+48000000001",
-            email="delete-manager@example.com",
-        )
-        self.assertEqual(self.client.post(reverse("clients:client_delete", kwargs={"pk": manager_client.pk})).status_code, 302)
-
-        self.client.force_login(self.admin)
-        admin_client = Client.objects.create(
-            first_name="Delete",
-            last_name="ByAdmin",
-            citizenship="PL",
-            phone="+48000000002",
-            email="delete-admin@example.com",
-        )
-        self.assertEqual(self.client.post(reverse("clients:client_delete", kwargs={"pk": admin_client.pk})).status_code, 302)
-
-    def test_staff_cannot_delete_document_but_manager_and_admin_can(self):
-        self.client.force_login(self.staff)
-        self.assertEqual(self.client.post(reverse("clients:document_delete", kwargs={"pk": self.document.pk})).status_code, 403)
-
-        manager_doc = Document.objects.create(
-            client=self.client_obj,
-            document_type=DocumentType.PHOTOS.value,
-            file=SimpleUploadedFile("photo.pdf", b"pdf", content_type="application/pdf"),
-        )
-        self.client.force_login(self.manager)
-        self.assertEqual(self.client.post(reverse("clients:document_delete", kwargs={"pk": manager_doc.pk})).status_code, 302)
-
-        admin_doc = Document.objects.create(
-            client=self.client_obj,
-            document_type=DocumentType.WEZWANIE.value,
-            file=SimpleUploadedFile("zus.pdf", b"pdf", content_type="application/pdf"),
-        )
-        self.client.force_login(self.admin)
-        self.assertEqual(self.client.post(reverse("clients:document_delete", kwargs={"pk": admin_doc.pk})).status_code, 302)
-
-    def test_staff_manager_admin_document_requirement_permissions(self):
-        self.client.force_login(self.staff)
-        self.assertEqual(self.client.post(reverse("clients:document_requirement_add"), data={"purpose": "work"}).status_code, 403)
-        self.assertEqual(self.client.get(reverse("clients:document_checklist_manage")).status_code, 403)
-
-        self.client.force_login(self.manager)
-        self.assertEqual(self.client.get(reverse("clients:document_checklist_manage")).status_code, 200)
-        self.assertEqual(self.client.post(reverse("clients:document_requirement_add"), data={"purpose": "work"}).status_code, 302)
-
-        self.client.force_login(self.admin)
-        self.assertEqual(self.client.get(reverse("clients:document_checklist_manage")).status_code, 200)
-        self.assertEqual(self.client.post(reverse("clients:document_requirement_add"), data={"purpose": "work"}).status_code, 302)
 
     def test_readonly_cannot_mutate_documents_exports_emails_payments(self):
         self.client.force_login(self.read_only)
