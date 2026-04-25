@@ -32,9 +32,6 @@ jobs:
       - name: Migration drift check
         run: python manage.py makemigrations --check --dry-run
 
-      - name: Compile messages
-        run: python manage.py compilemessages --ignore "venv" --ignore ".venv"
-
       - name: Pytest
         run: pytest --maxfail=1 -q
 
@@ -46,6 +43,9 @@ jobs:
 
       - name: pip-audit
         run: pip-audit
+
+      - name: Compile messages
+        run: python manage.py compilemessages --ignore "venv" --ignore ".venv"
 
       - name: Ensure no pycache artifacts committed
         run: |
