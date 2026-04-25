@@ -63,3 +63,4 @@ static_root/
 logs/
 *.log
 tmp/
+htmlcov/

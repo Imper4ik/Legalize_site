@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from django.contrib import messages
-from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -26,11 +25,12 @@ from clients.use_cases.documents import (
     verify_all_client_documents,
 )
 from clients.services.access import accessible_clients_queryset, accessible_documents_queryset
-from clients.views.base import staff_required_view
+from clients.services.roles import DOCUMENT_DELETE_ROLES, DOCUMENT_EDIT_ROLES
+from clients.views.base import role_required_view, staff_required_view
 from legalize_site.utils.files import build_protected_file_response
 
 
-@staff_required_view
+@role_required_view(*DOCUMENT_EDIT_ROLES)
 def update_client_notes(request, pk):
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
     helper = ResponseHelper(request)
@@ -48,7 +48,7 @@ def update_client_notes(request, pk):
     return redirect("clients:client_list")
 
 
-@staff_required_view
+@role_required_view(*DOCUMENT_EDIT_ROLES)
 def add_document(request, client_id, doc_type):
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
     document_type_display = client.get_document_name_by_code(doc_type)
@@ -106,7 +106,7 @@ def add_document(request, client_id, doc_type):
     )
 
 
-@staff_required_view
+@role_required_view(*DOCUMENT_EDIT_ROLES)
 def confirm_wezwanie_parse(request, doc_id):
     document = get_object_or_404(accessible_documents_queryset(request.user, Document.objects.all()), pk=doc_id)
     helper = ResponseHelper(request)
@@ -144,7 +144,7 @@ def confirm_wezwanie_parse(request, doc_id):
     return redirect("clients:client_detail", pk=document.client.id)
 
 
-@staff_required_view
+@role_required_view(*DOCUMENT_DELETE_ROLES)
 def document_delete(request, pk):
     document = get_object_or_404(accessible_documents_queryset(request.user, Document.objects.all()), pk=pk)
     client_id = document.client.id
@@ -162,7 +162,7 @@ def document_delete(request, pk):
     return redirect("clients:client_detail", pk=client_id)
 
 
-@staff_required_view
+@role_required_view(*DOCUMENT_DELETE_ROLES)
 def wniosek_attachment_delete(request, attachment_id):
     attachment = get_object_or_404(
         WniosekAttachment.objects.select_related("submission", "submission__client").filter(
@@ -187,7 +187,7 @@ def wniosek_attachment_delete(request, attachment_id):
     return redirect("clients:client_detail", pk=client_id)
 
 
-@staff_required_view
+@role_required_view(*DOCUMENT_EDIT_ROLES)
 def toggle_document_verification(request, doc_id):
     """Toggle verification status for a client document."""
 
@@ -216,7 +216,7 @@ def toggle_document_verification(request, doc_id):
     return redirect("clients:client_detail", pk=document.client.id)
 
 
-@staff_required_view
+@role_required_view(*DOCUMENT_EDIT_ROLES)
 def verify_all_documents(request, client_id):
     """Mark all uploaded documents for the client as verified."""
 

@@ -18,13 +18,15 @@ from clients.use_cases.exports import (
     record_client_export,
     restore_document_version_for_client,
 )
-from clients.views.base import StaffRequiredMixin, staff_required_view
+from clients.services.roles import EXPORT_MUTATION_ROLES
+from clients.views.base import RoleRequiredMixin, role_required_view
 from legalize_site.utils.files import build_protected_file_response
 
 logger = logging.getLogger(__name__)
 
 
-class ClientExportPDFView(StaffRequiredMixin, DetailView):
+class ClientExportPDFView(RoleRequiredMixin, DetailView):
+    allowed_roles = list(EXPORT_MUTATION_ROLES)
     """Render a print-optimised HTML page summarising the entire client case."""
 
     model = Client
@@ -58,7 +60,7 @@ class ClientExportPDFView(StaffRequiredMixin, DetailView):
         return context
 
 
-@staff_required_view
+@role_required_view(*EXPORT_MUTATION_ROLES)
 def client_export_zip(request, pk):
     """Stream a ZIP archive of the full client case as a download."""
 
@@ -84,7 +86,7 @@ def client_export_zip(request, pk):
     return apply_no_store(response)
 
 
-@staff_required_view
+@role_required_view(*EXPORT_MUTATION_ROLES)
 def document_versions_view(request, doc_id):
     """List all versions of a specific document."""
 
@@ -102,7 +104,7 @@ def document_versions_view(request, doc_id):
     return apply_no_store(response)
 
 
-@staff_required_view
+@role_required_view(*EXPORT_MUTATION_ROLES)
 def document_version_download(request, version_id):
     version = get_object_or_404(
         DocumentVersion.objects.select_related("document", "document__client").filter(
@@ -125,7 +127,7 @@ def document_version_download(request, version_id):
     return build_protected_file_response(version.file, filename=filename, as_attachment=True)
 
 
-@staff_required_view
+@role_required_view(*EXPORT_MUTATION_ROLES)
 def document_version_restore(request, version_id):
     """Restore a previous document version, archiving the current file."""
 
