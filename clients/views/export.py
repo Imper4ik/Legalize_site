@@ -19,7 +19,7 @@ from clients.use_cases.exports import (
     restore_document_version_for_client,
 )
 from clients.services.roles import EXPORT_MUTATION_ROLES
-from clients.views.base import RoleRequiredMixin, role_required_view
+from clients.views.base import RoleRequiredMixin, role_required_view, StaffRequiredMixin
 from legalize_site.utils.files import build_protected_file_response
 
 logger = logging.getLogger(__name__)
