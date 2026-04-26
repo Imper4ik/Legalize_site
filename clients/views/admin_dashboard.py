@@ -19,7 +19,8 @@ from clients.models import (
     Reminder,
     StaffTask,
 )
-from clients.views.base import StaffRequiredMixin
+from clients.services.roles import REPORT_MUTATION_ROLES
+from clients.views.base import RoleRequiredMixin
 from legalize_site.runtime import collect_runtime_dependency_statuses
 
 logger = logging.getLogger(__name__)
@@ -85,10 +86,11 @@ def _get_storage_usage() -> dict:
     return {"total_bytes": total_size, "total_display": display, "file_count": file_count}
 
 
-class AdminDashboardView(StaffRequiredMixin, TemplateView):
+class AdminDashboardView(RoleRequiredMixin, TemplateView):
     """Global health and status dashboard for administrators."""
 
     template_name = "clients/admin_dashboard.html"
+    allowed_roles = list(REPORT_MUTATION_ROLES)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
