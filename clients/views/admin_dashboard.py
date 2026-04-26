@@ -19,7 +19,7 @@ from clients.models import (
     Reminder,
     StaffTask,
 )
-from clients.services.roles import ADMIN_PANEL_ALLOWED_ROLES
+from clients.services.roles import SETTINGS_ALLOWED_ROLES
 from clients.views.base import RoleOrFeatureRequiredMixin
 from legalize_site.runtime import collect_runtime_dependency_statuses
 
@@ -90,8 +90,7 @@ class AdminDashboardView(RoleOrFeatureRequiredMixin, TemplateView):
     """Global health and status dashboard for administrators."""
 
     template_name = "clients/admin_dashboard.html"
-    allowed_roles = list(ADMIN_PANEL_ALLOWED_ROLES)
-    required_permission_name = "can_run_ocr_review"
+    allowed_roles = list(SETTINGS_ALLOWED_ROLES)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
