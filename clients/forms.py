@@ -133,7 +133,7 @@ class StaffUserCreateForm(forms.ModelForm):
             "first_name": forms.TextInput(attrs={"class": "form-control"}),
             "last_name": forms.TextInput(attrs={"class": "form-control"}),
             "is_staff": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-                        "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
     def clean(self):
@@ -141,9 +141,6 @@ class StaffUserCreateForm(forms.ModelForm):
         if cleaned.get("password1") != cleaned.get("password2"):
             self.add_error("password2", "Passwords do not match.")
         return cleaned
-
-    def clean_is_superuser(self):
-        return False
 
     def save(self, commit=True):
         user = super().save(commit=False)
@@ -169,7 +166,7 @@ class StaffUserUpdateForm(forms.ModelForm):
             "first_name": forms.TextInput(attrs={"class": "form-control"}),
             "last_name": forms.TextInput(attrs={"class": "form-control"}),
             "is_staff": forms.CheckboxInput(attrs={"class": "form-check-input"}),
-                        "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
     def __init__(self, *args, **kwargs):

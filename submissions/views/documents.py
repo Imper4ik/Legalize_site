@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext_lazy as _
 from django.views import View
 
-from clients.services.roles import DOCUMENT_MUTATION_ROLES
+from clients.services.roles import SUBMISSION_DELETE_ROLES, SUBMISSION_EDIT_ROLES
 from clients.views.base import RoleRequiredMixin, StaffRequiredMixin
 from legalize_site.utils.files import build_protected_file_response
 
@@ -13,7 +13,7 @@ from ..models import Document, Submission
 
 
 class DocumentCreateView(RoleRequiredMixin, View):
-    allowed_roles = list(DOCUMENT_MUTATION_ROLES)
+    allowed_roles = list(SUBMISSION_EDIT_ROLES)
     template_name = "submissions/document_form.html"
 
     def get_submission(self, submission_id: int) -> Submission:
@@ -37,7 +37,7 @@ class DocumentCreateView(RoleRequiredMixin, View):
 
 
 class DocumentUpdateView(RoleRequiredMixin, View):
-    allowed_roles = list(DOCUMENT_MUTATION_ROLES)
+    allowed_roles = list(SUBMISSION_EDIT_ROLES)
     template_name = "submissions/document_form.html"
 
     def get_object(self, pk: int) -> Document:
@@ -67,7 +67,7 @@ class DocumentUpdateView(RoleRequiredMixin, View):
 
 
 class DocumentDeleteView(RoleRequiredMixin, View):
-    allowed_roles = list(DOCUMENT_MUTATION_ROLES)
+    allowed_roles = list(SUBMISSION_DELETE_ROLES)
     def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         document = get_object_or_404(Document, pk=pk)
         submission_pk = document.submission.pk

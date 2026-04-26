@@ -9,7 +9,7 @@ from django.views import View
 from django.views.generic import ListView, DetailView
 from typing import Any
 
-from clients.services.roles import DOCUMENT_MUTATION_ROLES
+from clients.services.roles import SUBMISSION_DELETE_ROLES, SUBMISSION_EDIT_ROLES
 from clients.views.base import RoleRequiredMixin, role_required_view, StaffRequiredMixin
 from ..models import Submission
 from ..forms import SubmissionForm, DocumentForm
@@ -21,7 +21,7 @@ class SubmissionListView(StaffRequiredMixin, ListView):
 
 
 class SubmissionCreateView(RoleRequiredMixin, View):
-    allowed_roles = list(DOCUMENT_MUTATION_ROLES)
+    allowed_roles = list(SUBMISSION_EDIT_ROLES)
     template_name = 'submissions/submission_form.html'
 
     def get(self, request: HttpRequest) -> HttpResponse:
@@ -37,7 +37,7 @@ class SubmissionCreateView(RoleRequiredMixin, View):
         return render(request, self.template_name, {'form': form})
 
 
-@role_required_view(*DOCUMENT_MUTATION_ROLES)
+@role_required_view(*SUBMISSION_EDIT_ROLES)
 def submission_quick_create(request: HttpRequest) -> HttpResponse:
     if request.method != 'POST':
         return HttpResponseNotAllowed(['POST'])
@@ -58,7 +58,7 @@ def submission_quick_create(request: HttpRequest) -> HttpResponse:
     return redirect(redirect_url or reverse_lazy('clients:document_checklist_manage'))
 
 
-@role_required_view(*DOCUMENT_MUTATION_ROLES)
+@role_required_view(*SUBMISSION_EDIT_ROLES)
 def submission_quick_update(request: HttpRequest, submission_id: int) -> HttpResponse:
     submission = get_object_or_404(Submission, pk=submission_id)
 
@@ -80,7 +80,7 @@ def submission_quick_update(request: HttpRequest, submission_id: int) -> HttpRes
     return redirect(safe_redirect_url)
 
 
-@role_required_view(*DOCUMENT_MUTATION_ROLES)
+@role_required_view(*SUBMISSION_DELETE_ROLES)
 def submission_quick_delete(request: HttpRequest, submission_id: int) -> HttpResponse:
     if request.method != 'POST':
         return HttpResponseNotAllowed(['POST'])
