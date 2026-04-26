@@ -10,10 +10,10 @@ cmds = [
   "pip install -r requirements.txt"
 ]
 
+# Tests run in GitHub Actions; production build skips pytest.
 [phases.build]
 cmds = [
   "python manage.py compilemessages --ignore venv --ignore .venv",
-  "DJANGO_SETTINGS_MODULE=legalize_site.settings.test pytest --maxfail=1 -q",
   "python manage.py collectstatic --no-input"
 ]
 

@@ -22,11 +22,11 @@ urlpatterns = [
     path('cron/process-email-campaigns/', process_email_campaigns_cron, name='process_email_campaigns_cron'),
 ]
 
-if getattr(settings, "ENABLE_TRANSLATION_TOOLING", False) and 'rosetta' in settings.INSTALLED_APPS:
-    urlpatterns += [
-        path('rosetta/', include('rosetta.urls')),
-        path('studio/', include('translations.urls', namespace='translations')),
-    ]
+if getattr(settings, "ENABLE_TRANSLATION_TOOLING", False):
+    if 'rosetta' in settings.INSTALLED_APPS:
+        urlpatterns.append(path('rosetta/', include('rosetta.urls')))
+    if 'translations' in settings.INSTALLED_APPS:
+        urlpatterns.append(path('studio/', include('translations.urls', namespace='translations')))
 
 urlpatterns += i18n_patterns(
     path("accounts/signup/", SignupDisabledView.as_view(), name="account_signup"),
