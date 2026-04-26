@@ -652,6 +652,8 @@ def staff_manage_view(request):
             staff_user = get_object_or_404(user_model, pk=user_id, is_staff=True)
             form = StaffUserUpdateForm(request.POST, instance=staff_user, prefix=f"user-{staff_user.id}")
             if form.is_valid():
+                # TODO(audit): add an organization-level audit/event log for employee permission changes
+                # (actor=request.user, target=staff_user, changed_fields only, no PII) once such model exists.
                 form.save()
                 messages.success(request, _("Сотрудник обновлён."))
                 return redirect("clients:staff_manage")

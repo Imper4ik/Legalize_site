@@ -19,6 +19,8 @@ PEOPLE_ALLOWED_ROLES = ("Admin",)
 
 CLIENT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
 DOCUMENT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
+SUBMISSION_EDIT_ROLES = ("Admin", "Manager", "Staff")
+SUBMISSION_DELETE_ROLES = ("Admin", "Manager")
 DOCUMENT_EDIT_ROLES = ("Admin", "Manager", "Staff")
 DOCUMENT_DELETE_ROLES = ("Admin", "Manager")
 TASK_MUTATION_ROLES = ("Admin", "Manager", "Staff")
