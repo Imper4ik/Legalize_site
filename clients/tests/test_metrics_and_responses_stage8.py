@@ -4,12 +4,14 @@ import json
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.http import HttpRequest, HttpResponse
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from clients.models import Client, Document, Payment
+from clients.services.roles import ensure_predefined_roles
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper, apply_no_store
 from clients.constants import DocumentType
 
@@ -61,8 +63,12 @@ class ResponseHelpersStage8Tests(TestCase):
 
 class MetricsDashboardStage8Tests(TestCase):
     def setUp(self):
+        ensure_predefined_roles()
         user_model = get_user_model()
         self.staff = user_model.objects.create_user(email="metrics_staff@example.com", password="pass", is_staff=True)
+        self.staff.groups.add(Group.objects.get(name="Staff"))
+        self.staff.employee_permission.can_view_reports = True
+        self.staff.employee_permission.save(update_fields=["can_view_reports", "updated_at"])
         self.client.login(email="metrics_staff@example.com", password="pass")
 
         today = timezone.localdate()
