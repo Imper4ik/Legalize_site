@@ -20,7 +20,13 @@ class WniosekFlowStage10Tests(TestCase):
             password="pass",
             is_staff=True,
         )
+        self.manager = user_model.objects.create_user(
+            email="manager_wniosek@example.com",
+            password="pass",
+            is_staff=True,
+        )
         self.staff.groups.add(Group.objects.get(name="Staff"))
+        self.manager.groups.add(Group.objects.get(name="Manager"))
         self.client.login(email="staff_wniosek@example.com", password="pass")
         self.client_obj = Client.objects.create(
             first_name="Maria",
@@ -242,6 +248,7 @@ class WniosekFlowStage10Tests(TestCase):
             submission=submission,
             document_type="",
         )
+        self.client.force_login(self.manager)
 
         response = self.client.post(
             reverse(
@@ -276,6 +283,7 @@ class WniosekFlowStage10Tests(TestCase):
 
         attachment = WniosekAttachment.objects.get(submission__client=self.client_obj)
         submission_id = attachment.submission_id
+        self.client.force_login(self.manager)
 
         response = self.client.post(
             reverse(

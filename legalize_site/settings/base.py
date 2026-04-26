@@ -45,7 +45,7 @@ def running_in_production() -> bool:
 IS_PRODUCTION = running_in_production()
 ENABLE_TRANSLATION_TOOLING = env_flag(
     "ENABLE_TRANSLATION_TOOLING",
-    "True",
+    "False",
 )
 AUTO_COMPILE_TRANSLATIONS_ON_STARTUP = env_flag("AUTO_COMPILE_TRANSLATIONS_ON_STARTUP", "False")
 

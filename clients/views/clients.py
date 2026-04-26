@@ -47,6 +47,7 @@ from clients.services.roles import (
     CHECKLIST_MANAGE_ROLES,
     CLIENT_DELETE_ROLES,
     CLIENT_EDIT_ROLES,
+    DOCUMENT_EDIT_ROLES,
     PEOPLE_ALLOWED_ROLES,
     PREDEFINED_ROLES,
     SETTINGS_ALLOWED_ROLES,
@@ -239,7 +240,7 @@ class ClientUpdateView(RoleRequiredMixin, UpdateView):
 
 
 class ClientDeleteView(RoleRequiredMixin, DeleteView):
-    allowed_roles = ["Admin", "Manager", "Staff"]
+    allowed_roles = list(CLIENT_DELETE_ROLES)
     model = Client
     template_name = "clients/client_confirm_delete.html"
     success_url = reverse_lazy("clients:client_list")
@@ -714,7 +715,7 @@ client_wsc_print_view = ClientWSCPrintView.as_view()
 client_document_print_view = ClientDocumentPrintView.as_view()
 
 
-@role_required_view(*CHECKLIST_MANAGE_ROLES)
+@role_required_view(*DOCUMENT_EDIT_ROLES)
 def client_document_print_confirm_view(request, pk, doc_type):
     if request.method != "POST":
         return redirect("clients:client_document_print", pk=pk, doc_type=doc_type)
