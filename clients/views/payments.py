@@ -16,10 +16,10 @@ from clients.use_cases.payments import (
     update_payment_for_client,
 )
 from clients.services.roles import PAYMENT_MUTATION_ROLES
-from clients.views.base import role_required_view
+from clients.views.base import role_or_feature_required_view
 
 
-@role_required_view(*PAYMENT_MUTATION_ROLES)
+@role_or_feature_required_view("can_manage_payments", *PAYMENT_MUTATION_ROLES)
 def add_payment(request, client_id):
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
     helper = ResponseHelper(request)
@@ -50,7 +50,7 @@ def add_payment(request, client_id):
     return redirect("clients:client_detail", pk=client.id)
 
 
-@role_required_view(*PAYMENT_MUTATION_ROLES)
+@role_or_feature_required_view("can_manage_payments", *PAYMENT_MUTATION_ROLES)
 def edit_payment(request, payment_id):
     payment = get_object_or_404(accessible_payments_queryset(request.user, Payment.objects.all()), pk=payment_id)
     helper = ResponseHelper(request)
@@ -81,7 +81,7 @@ def edit_payment(request, payment_id):
     return redirect("clients:client_detail", pk=payment.client.id)
 
 
-@role_required_view(*PAYMENT_MUTATION_ROLES)
+@role_or_feature_required_view("can_manage_payments", *PAYMENT_MUTATION_ROLES)
 def delete_payment(request, payment_id):
     payment = get_object_or_404(accessible_payments_queryset(request.user, Payment.objects.all()), pk=payment_id)
     client_id = payment.client.id
@@ -94,7 +94,7 @@ def delete_payment(request, payment_id):
     return redirect("clients:client_detail", pk=client_id)
 
 
-@role_required_view(*PAYMENT_MUTATION_ROLES)
+@role_or_feature_required_view("can_manage_payments", *PAYMENT_MUTATION_ROLES)
 def get_price_for_service(request, service_value):
     price = get_service_price(service_value)
     helper = ResponseHelper(request)
