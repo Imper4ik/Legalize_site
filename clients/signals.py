@@ -15,7 +15,8 @@ logger = logging.getLogger(__name__)
 def ensure_employee_permissions_for_staff(sender, instance, created, **kwargs):
     if not getattr(instance, "is_staff", False):
         return
-    EmployeePermission.objects.get_or_create(user=instance)
+    if created:
+        EmployeePermission.objects.get_or_create(user=instance)
 
 
 

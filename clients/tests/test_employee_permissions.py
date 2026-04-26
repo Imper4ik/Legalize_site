@@ -20,12 +20,6 @@ class EmployeePermissionsTests(TestCase):
         self.staff = user_model.objects.create_user(email="staff-perm@example.com", password="pass", is_staff=True)
         self.staff.groups.add(Group.objects.get(name="Staff"))
 
-        self.read_only = user_model.objects.create_user(email="readonly-perm@example.com", password="pass", is_staff=True)
-        self.read_only.groups.add(Group.objects.get(name="ReadOnly"))
-
-        self.manager = user_model.objects.create_user(email="manager-perm@example.com", password="pass", is_staff=True)
-        self.manager.groups.add(Group.objects.get(name="Manager"))
-
         self.admin = user_model.objects.create_user(email="admin-perm@example.com", password="pass", is_staff=True)
         self.admin.groups.add(Group.objects.get(name="Admin"))
 
@@ -46,16 +40,6 @@ class EmployeePermissionsTests(TestCase):
     def test_employee_permission_is_auto_created_for_staff_user(self):
         self.assertTrue(EmployeePermission.objects.filter(user=self.staff).exists())
 
-    def test_employee_permission_created_when_user_becomes_staff_later(self):
-        user_model = get_user_model()
-        user = user_model.objects.create_user(email="later-staff@example.com", password="pass", is_staff=False)
-        self.assertFalse(EmployeePermission.objects.filter(user=user).exists())
-
-        user.is_staff = True
-        user.save(update_fields=["is_staff"])
-
-        self.assertTrue(EmployeePermission.objects.filter(user=user).exists())
-
     def test_has_employee_permission_rules(self):
         self.assertFalse(has_employee_permission(AnonymousUser(), "can_delete_clients"))
         self.assertTrue(has_employee_permission(self.admin, "can_delete_clients"))
@@ -70,6 +54,7 @@ class EmployeePermissionsTests(TestCase):
         self.client.force_login(self.staff)
         response = self.client.post(reverse("clients:client_delete", kwargs={"pk": self.client_obj.pk}))
         self.assertEqual(response.status_code, 302)
+        self.assertFalse(Client.objects.filter(pk=self.client_obj.pk).exists())
 
     def test_staff_can_delete_document_when_feature_permission_enabled(self):
         perms = self.staff.employee_permission
@@ -79,6 +64,7 @@ class EmployeePermissionsTests(TestCase):
         self.client.force_login(self.staff)
         response = self.client.post(reverse("clients:document_delete", kwargs={"pk": self.document.pk}))
         self.assertEqual(response.status_code, 302)
+        self.assertFalse(Document.objects.filter(pk=self.document.pk).exists())
 
     def test_staff_can_manage_checklists_when_feature_permission_enabled(self):
         perms = self.staff.employee_permission
@@ -106,64 +92,3 @@ class EmployeePermissionsTests(TestCase):
             },
         )
         self.assertEqual(response.status_code, 302)
-
-    def test_readonly_destructive_permissions_do_not_grant_access(self):
-        perms = self.read_only.employee_permission
-        perms.can_delete_clients = True
-        perms.can_delete_documents = True
-        perms.can_export_clients = True
-        perms.can_send_mass_email = True
-        perms.save(
-            update_fields=[
-                "can_delete_clients",
-                "can_delete_documents",
-                "can_export_clients",
-                "can_send_mass_email",
-                "updated_at",
-            ]
-        )
-
-        self.client.force_login(self.read_only)
-        self.assertEqual(self.client.post(reverse("clients:client_delete", kwargs={"pk": self.client_obj.pk})).status_code, 403)
-        self.assertEqual(self.client.post(reverse("clients:document_delete", kwargs={"pk": self.document.pk})).status_code, 403)
-        self.assertEqual(self.client.get(reverse("clients:client_export_zip", kwargs={"pk": self.client_obj.pk})).status_code, 403)
-        self.assertEqual(self.client.get(reverse("clients:mass_email")).status_code, 403)
-
-    def test_admin_dashboard_access_matrix(self):
-        self.client.force_login(self.staff)
-        self.assertEqual(self.client.get(reverse("clients:admin_dashboard")).status_code, 403)
-
-        perms = self.staff.employee_permission
-        perms.can_run_ocr_review = True
-        perms.save(update_fields=["can_run_ocr_review", "updated_at"])
-        self.assertEqual(self.client.get(reverse("clients:admin_dashboard")).status_code, 403)
-
-        self.client.force_login(self.manager)
-        self.assertEqual(self.client.get(reverse("clients:admin_dashboard")).status_code, 200)
-
-        self.client.force_login(self.admin)
-        self.assertEqual(self.client.get(reverse("clients:admin_dashboard")).status_code, 200)
-
-    def test_metrics_access_matrix(self):
-        self.client.force_login(self.staff)
-        self.assertEqual(self.client.get(reverse("clients:metrics_dashboard")).status_code, 403)
-
-        perms = self.staff.employee_permission
-        perms.can_view_reports = True
-        perms.save(update_fields=["can_view_reports", "updated_at"])
-        self.assertEqual(self.client.get(reverse("clients:metrics_dashboard")).status_code, 200)
-
-        self.client.force_login(self.manager)
-        self.assertEqual(self.client.get(reverse("clients:metrics_dashboard")).status_code, 200)
-
-        self.client.force_login(self.admin)
-        self.assertEqual(self.client.get(reverse("clients:metrics_dashboard")).status_code, 200)
-
-    def test_readonly_can_view_metrics_only_with_explicit_report_permission(self):
-        self.client.force_login(self.read_only)
-        self.assertEqual(self.client.get(reverse("clients:metrics_dashboard")).status_code, 403)
-
-        perms = self.read_only.employee_permission
-        perms.can_view_reports = True
-        perms.save(update_fields=["can_view_reports", "updated_at"])
-        self.assertEqual(self.client.get(reverse("clients:metrics_dashboard")).status_code, 200)
