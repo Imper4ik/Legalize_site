@@ -195,8 +195,6 @@ class StaffUserUpdateForm(forms.ModelForm):
                 updated_fields.append(field_name)
         if updated_fields:
             permission_object.save(update_fields=[*updated_fields, "updated_at"])
-            # TODO: Wire employee permission updates into a dedicated global audit log
-            # once the project has a non-client-scoped audit model.
         return user
 
 def _label_for_document_type(code: str) -> str:

@@ -94,6 +94,10 @@
                   <input class="form-check-input" type="checkbox" name="{{ form.is_staff.html_name }}" value="on" form="update-user-{{ staff_user.id }}" {% if staff_user.is_staff %}checked{% endif %}>
                   <label class="form-check-label">Staff</label>
                 </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="{{ form.is_superuser.html_name }}" value="on" form="update-user-{{ staff_user.id }}" {% if staff_user.is_superuser %}checked{% endif %}>
+                  <label class="form-check-label">Superuser</label>
+                </div>
                 <div class="form-check mb-2">
                   <input class="form-check-input" type="checkbox" name="{{ form.is_active.html_name }}" value="on" form="update-user-{{ staff_user.id }}" {% if staff_user.is_active %}checked{% endif %}>
                   <label class="form-check-label">Active</label>
