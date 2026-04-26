@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views import View
 
 from clients.services.responses import ResponseHelper
-from clients.services.roles import DOCUMENT_MUTATION_ROLES
+from clients.services.roles import SUBMISSION_DELETE_ROLES, SUBMISSION_EDIT_ROLES, user_has_any_role
 from clients.views.base import role_required_view
 
 from ..forms import DocumentForm, SubmissionForm
@@ -63,6 +63,8 @@ class SubmissionDetailApiView(LoginRequiredMixin, View):
 
     def delete(self, request: HttpRequest, pk: int) -> JsonResponse:
         helper = ResponseHelper(request)
+        if not user_has_any_role(request.user, *SUBMISSION_DELETE_ROLES):
+            return helper.forbidden()
         submission = get_object_or_404(Submission, pk=pk)
         submission.delete()
         return helper.success(message=_('Основание удалено'))
@@ -137,6 +139,8 @@ class DocumentDetailApiView(LoginRequiredMixin, View):
 
     def delete(self, request: HttpRequest, pk: int) -> JsonResponse:
         helper = ResponseHelper(request)
+        if not user_has_any_role(request.user, *SUBMISSION_DELETE_ROLES):
+            return helper.forbidden()
         document = get_object_or_404(Document, pk=pk)
         document.delete()
         return helper.success(message=_('Документ удалён'))
@@ -178,7 +182,7 @@ class DocumentDetailApiView(LoginRequiredMixin, View):
         return helper.error(message=_('Ошибка валидации'), errors=form.errors, status=400)
 
 
-submission_api = role_required_view(*DOCUMENT_MUTATION_ROLES)(SubmissionApiView.as_view())
-submission_detail_api = role_required_view(*DOCUMENT_MUTATION_ROLES)(SubmissionDetailApiView.as_view())
-document_api = role_required_view(*DOCUMENT_MUTATION_ROLES)(DocumentApiView.as_view())
-document_detail_api = role_required_view(*DOCUMENT_MUTATION_ROLES)(DocumentDetailApiView.as_view())
+submission_api = role_required_view(*SUBMISSION_EDIT_ROLES)(SubmissionApiView.as_view())
+submission_detail_api = role_required_view(*SUBMISSION_EDIT_ROLES)(SubmissionDetailApiView.as_view())
+document_api = role_required_view(*SUBMISSION_EDIT_ROLES)(DocumentApiView.as_view())
+document_detail_api = role_required_view(*SUBMISSION_EDIT_ROLES)(DocumentDetailApiView.as_view())

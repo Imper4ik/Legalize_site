@@ -30,6 +30,10 @@ class SubmissionWebViewsTests(TestCase):
         user_model = get_user_model()
         self.staff = user_model.objects.create_user(email="staff@example.com", password="pass", is_staff=True)
         self.staff.groups.add(Group.objects.get(name="Staff"))
+        self.manager = user_model.objects.create_user(email="manager@example.com", password="pass", is_staff=True)
+        self.manager.groups.add(Group.objects.get(name="Manager"))
+        self.admin = user_model.objects.create_user(email="admin@example.com", password="pass", is_staff=True)
+        self.admin.groups.add(Group.objects.get(name="Admin"))
         self.non_staff = user_model.objects.create_user(email="user@example.com", password="pass", is_staff=False)
 
     def test_submission_create_view_get_for_staff(self):
@@ -72,9 +76,34 @@ class SubmissionWebViewsTests(TestCase):
         self.assertEqual(submission.name, "New name")
         self.assertEqual(submission.status, Submission.Status.IN_PROGRESS)
 
-    def test_submission_quick_delete_removes_record(self):
+    def test_staff_cannot_delete_submission_quick_delete(self):
         self.client.login(email="staff@example.com", password="pass")
         submission = Submission.objects.create(name="Delete this")
+
+        response = self.client.post(
+            reverse("submissions:submission_quick_delete", kwargs={"submission_id": submission.pk}),
+            data={},
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Submission.objects.filter(pk=submission.pk).exists())
+
+    def test_manager_can_delete_submission_quick_delete(self):
+        self.client.login(email="manager@example.com", password="pass")
+        submission = Submission.objects.create(name="Delete this manager")
+
+        response = self.client.post(
+            reverse("submissions:submission_quick_delete", kwargs={"submission_id": submission.pk}),
+            data={},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Submission.objects.filter(pk=submission.pk).exists())
+        self.assertTrue(Submission.all_objects.filter(pk=submission.pk, archived_at__isnull=False).exists())
+
+    def test_admin_can_delete_submission_quick_delete(self):
+        self.client.login(email="admin@example.com", password="pass")
+        submission = Submission.objects.create(name="Delete this admin")
 
         response = self.client.post(
             reverse("submissions:submission_quick_delete", kwargs={"submission_id": submission.pk}),
@@ -118,3 +147,45 @@ class SubmissionWebViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("attachment;", response["Content-Disposition"])
+
+    def test_staff_cannot_delete_submission_document(self):
+        self.client.login(email="staff@example.com", password="pass")
+        submission = Submission.objects.create(name="Sub for staff delete")
+        document = Document.objects.create(
+            submission=submission,
+            title="Passport",
+            status=Document.Status.NOT_UPLOADED,
+        )
+
+        response = self.client.post(reverse("submissions:document_delete", kwargs={"pk": document.pk}))
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Document.objects.filter(pk=document.pk).exists())
+
+    def test_manager_can_delete_submission_document(self):
+        self.client.login(email="manager@example.com", password="pass")
+        submission = Submission.objects.create(name="Sub for manager delete")
+        document = Document.objects.create(
+            submission=submission,
+            title="Passport",
+            status=Document.Status.NOT_UPLOADED,
+        )
+
+        response = self.client.post(reverse("submissions:document_delete", kwargs={"pk": document.pk}))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Document.objects.filter(pk=document.pk).exists())
+
+    def test_admin_can_delete_submission_document(self):
+        self.client.login(email="admin@example.com", password="pass")
+        submission = Submission.objects.create(name="Sub for admin delete")
+        document = Document.objects.create(
+            submission=submission,
+            title="Passport",
+            status=Document.Status.NOT_UPLOADED,
+        )
+
+        response = self.client.post(reverse("submissions:document_delete", kwargs={"pk": document.pk}))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Document.objects.filter(pk=document.pk).exists())

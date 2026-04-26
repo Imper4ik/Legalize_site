@@ -57,6 +57,18 @@ class EmployeePermissionsTests(TestCase):
 
         self.assertTrue(EmployeePermission.objects.filter(user=user).exists())
 
+    def test_de_staffed_user_cannot_use_feature_permissions(self):
+        perms = self.staff.employee_permission
+        perms.can_delete_clients = True
+        perms.save(update_fields=["can_delete_clients", "updated_at"])
+        self.assertTrue(has_employee_permission(self.staff, "can_delete_clients"))
+
+        self.staff.is_staff = False
+        self.staff.save(update_fields=["is_staff"])
+        self.staff.refresh_from_db()
+
+        self.assertFalse(has_employee_permission(self.staff, "can_delete_clients"))
+
     def test_has_employee_permission_rules(self):
         self.assertFalse(has_employee_permission(AnonymousUser(), "can_delete_clients"))
         self.assertTrue(has_employee_permission(self.admin, "can_delete_clients"))
