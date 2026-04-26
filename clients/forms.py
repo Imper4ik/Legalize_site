@@ -142,9 +142,6 @@ class StaffUserCreateForm(forms.ModelForm):
             self.add_error("password2", "Passwords do not match.")
         return cleaned
 
-    def clean_is_superuser(self):
-        return False
-
     def save(self, commit=True):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password1"])
