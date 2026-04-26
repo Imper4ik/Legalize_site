@@ -24,7 +24,6 @@ class Command(BaseCommand):
         campaign_count = EmailCampaign.objects.filter(created_at__lt=cutoff).exclude(message="").update(
             message="",
             recipient_emails="[]",
-            recipient_emails=[],
             error_details="",
         )
 
