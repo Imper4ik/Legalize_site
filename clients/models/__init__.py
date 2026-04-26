@@ -15,6 +15,7 @@ from .email import EmailLog
 from .campaign import EmailCampaign
 from .pricing import ServicePrice
 from .task import StaffTask
+from .permissions import EmployeePermission
 from .wniosek import WniosekAttachment, WniosekSubmission
 
 __all__ = [
@@ -32,6 +33,7 @@ __all__ = [
     'EmailCampaign',
     'ServicePrice',
     'StaffTask',
+    'EmployeePermission',
     'WniosekSubmission',
     'WniosekAttachment',
     'get_fallback_document_checklist',

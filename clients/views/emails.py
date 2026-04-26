@@ -27,7 +27,7 @@ from clients.services.notifications import (
 )
 from clients.services.responses import json_no_store
 from clients.services.roles import EMAIL_MUTATION_ROLES
-from clients.views.base import role_required_view
+from clients.views.base import role_or_feature_required_view, role_required_view
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ def email_preview_api(request, pk):
     return json_no_store({"subject": subject, "body": body})
 
 
-@role_required_view(*EMAIL_MUTATION_ROLES)
+@role_or_feature_required_view("can_send_custom_email", *EMAIL_MUTATION_ROLES)
 @require_POST
 def send_custom_email(request, pk):
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
@@ -151,7 +151,7 @@ def send_custom_email(request, pk):
     return redirect("clients:client_detail", pk=client.pk)
 
 
-@role_required_view(*EMAIL_MUTATION_ROLES)
+@role_or_feature_required_view("can_send_mass_email", *EMAIL_MUTATION_ROLES)
 def mass_email_view(request):
     from clients.forms import MassEmailForm
 
@@ -215,7 +215,7 @@ def mass_email_view(request):
     return render(request, "clients/mass_email.html", {"form": form, "title": _("Массовая рассылка")})
 
 
-@role_required_view(*EMAIL_MUTATION_ROLES)
+@role_or_feature_required_view("can_send_mass_email", *EMAIL_MUTATION_ROLES)
 @require_GET
 def campaign_status_api(request, campaign_id):
     campaign = get_object_or_404(
