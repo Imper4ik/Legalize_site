@@ -26,7 +26,7 @@ from clients.use_cases.documents import (
 )
 from clients.services.access import accessible_clients_queryset, accessible_documents_queryset
 from clients.services.roles import DOCUMENT_DELETE_ROLES, DOCUMENT_EDIT_ROLES
-from clients.views.base import role_required_view, staff_required_view
+from clients.views.base import role_or_feature_required_view, role_required_view, staff_required_view
 from legalize_site.utils.files import build_protected_file_response
 
 
@@ -144,7 +144,7 @@ def confirm_wezwanie_parse(request, doc_id):
     return redirect("clients:client_detail", pk=document.client.id)
 
 
-@role_required_view(*DOCUMENT_DELETE_ROLES)
+@role_or_feature_required_view("can_delete_documents", *DOCUMENT_DELETE_ROLES)
 def document_delete(request, pk):
     document = get_object_or_404(accessible_documents_queryset(request.user, Document.objects.all()), pk=pk)
     client_id = document.client.id
@@ -162,7 +162,7 @@ def document_delete(request, pk):
     return redirect("clients:client_detail", pk=client_id)
 
 
-@role_required_view(*DOCUMENT_DELETE_ROLES)
+@role_or_feature_required_view("can_delete_documents", *DOCUMENT_DELETE_ROLES)
 def wniosek_attachment_delete(request, attachment_id):
     attachment = get_object_or_404(
         WniosekAttachment.objects.select_related("submission", "submission__client").filter(

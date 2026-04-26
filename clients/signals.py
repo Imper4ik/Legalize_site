@@ -6,9 +6,17 @@ from django.dispatch import receiver
 from django.utils.translation import gettext as _
 
 from clients.services.activity import log_client_activity
-from .models import Client, Document, EmailLog, Payment, Reminder
+from .models import Client, Document, EmailLog, EmployeePermission, Payment, Reminder
 
 logger = logging.getLogger(__name__)
+
+
+@receiver(post_save, sender=get_user_model())
+def ensure_employee_permissions_for_staff(sender, instance, created, **kwargs):
+    if not getattr(instance, "is_staff", False):
+        return
+    EmployeePermission.objects.get_or_create(user=instance)
+
 
 
 @receiver(post_save, sender=Payment)

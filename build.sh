@@ -18,5 +18,5 @@ pip install -r requirements.txt
 # Skip translating files shipped in the virtualenv to avoid permission errors
 python manage.py compilemessages --ignore "venv" --ignore ".venv"
 
-# Tests run in GitHub Actions; production build skips pytest for faster deploys.
+# pytest is intentionally omitted from production build; tests run in GitHub Actions only.
 python manage.py collectstatic --no-input

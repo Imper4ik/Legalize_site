@@ -60,7 +60,7 @@ from clients.use_cases.client_records import (
     snapshot_client_update_state,
 )
 from clients.use_cases.document_requirements import delete_document_requirement_record
-from clients.views.base import RoleRequiredMixin, role_required_view, StaffRequiredMixin
+from clients.views.base import RoleOrFeatureRequiredMixin, RoleRequiredMixin, role_or_feature_required_view, role_required_view, StaffRequiredMixin
 from clients.services.activity import log_client_view
 from clients.services.access import accessible_clients_queryset
 from submissions.forms import SubmissionForm
@@ -239,8 +239,9 @@ class ClientUpdateView(RoleRequiredMixin, UpdateView):
         return super().form_invalid(form)
 
 
-class ClientDeleteView(RoleRequiredMixin, DeleteView):
+class ClientDeleteView(RoleOrFeatureRequiredMixin, DeleteView):
     allowed_roles = list(CLIENT_DELETE_ROLES)
+    required_permission_name = "can_delete_clients"
     model = Client
     template_name = "clients/client_confirm_delete.html"
     success_url = reverse_lazy("clients:client_list")
@@ -421,8 +422,9 @@ class ClientDocumentPrintView(ClientPrintBaseView):
         return [value.strip() for value in values]
 
 
-class DocumentChecklistManageView(RoleRequiredMixin, FormView):
+class DocumentChecklistManageView(RoleOrFeatureRequiredMixin, FormView):
     allowed_roles = list(CHECKLIST_MANAGE_ROLES)
+    required_permission_name = "can_manage_checklists"
     template_name = "clients/document_checklist_manage.html"
     form_class = DocumentChecklistForm
 
@@ -753,7 +755,7 @@ def client_document_print_confirm_view(request, pk, doc_type):
     return redirect(f"{redirect_url}?{urlencode(params)}")
 
 
-@role_required_view(*CHECKLIST_MANAGE_ROLES)
+@role_or_feature_required_view("can_manage_checklists", *CHECKLIST_MANAGE_ROLES)
 def document_requirement_add(request):
     purpose = request.POST.get("purpose") or request.GET.get("purpose")
     allowed = list(Submission.objects.values_list("slug", flat=True))
@@ -780,7 +782,7 @@ def document_requirement_add(request):
     return redirect(reverse_lazy("clients:document_checklist_manage") + f"?purpose={purpose}")
 
 
-@role_required_view(*CHECKLIST_MANAGE_ROLES)
+@role_or_feature_required_view("can_manage_checklists", *CHECKLIST_MANAGE_ROLES)
 def document_requirement_edit(request, pk):
     requirement = get_object_or_404(DocumentRequirement, pk=pk)
     form = DocumentRequirementEditForm(
@@ -810,7 +812,7 @@ def document_requirement_edit(request, pk):
     return redirect(reverse_lazy("clients:document_checklist_manage") + f"?purpose={requirement.application_purpose}")
 
 
-@role_required_view(*CHECKLIST_MANAGE_ROLES)
+@role_or_feature_required_view("can_manage_checklists", *CHECKLIST_MANAGE_ROLES)
 def document_requirement_delete(request, pk):
     requirement = get_object_or_404(DocumentRequirement, pk=pk)
 

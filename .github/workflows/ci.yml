@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DJANGO_SETTINGS_MODULE: legalize_site.settings.test
+      PYTHONDONTWRITEBYTECODE: "1"
     steps:
       - uses: actions/checkout@v4
 
@@ -49,8 +50,8 @@ jobs:
 
       - name: Ensure no pycache artifacts committed
         run: |
-          if find . -path "*/__pycache__/*" -o -name "*.pyc" | grep -q .; then
+          if git ls-files | grep -E '(__pycache__/|\.pyc$)'; then
             echo "Found committed __pycache__/pyc artifacts"
-            find . -path "*/__pycache__/*" -o -name "*.pyc"
+            git ls-files | grep -E '(__pycache__/|\.pyc$)'
             exit 1
           fi
