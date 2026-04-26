@@ -24,9 +24,31 @@ from .models import (
     Payment,
     ServicePrice,
     StaffTask,
+    EmployeePermission,
     get_fallback_document_checklist,
     resolve_document_label,
 )
+
+
+EMPLOYEE_PERMISSION_FIELD_LABELS = (
+    ("can_manage_payments", _("Управление платежами")),
+    ("can_send_custom_email", _("Отправка custom email")),
+    ("can_send_mass_email", _("Массовые рассылки")),
+    ("can_export_clients", _("Экспорт клиентов")),
+    ("can_delete_clients", _("Удаление клиентов")),
+    ("can_delete_documents", _("Удаление документов")),
+    ("can_manage_checklists", _("Управление чеклистами")),
+    ("can_view_reports", _("Просмотр отчётов")),
+    ("can_manage_staff_tasks", _("Управление задачами")),
+    ("can_run_ocr_review", _("Доступ к OCR review")),
+)
+
+
+def _build_permission_fields():
+    return {
+        name: forms.BooleanField(required=False, label=label)
+        for name, label in EMPLOYEE_PERMISSION_FIELD_LABELS
+    }
 
 
 class AppSettingsForm(forms.ModelForm):
@@ -149,6 +171,31 @@ class StaffUserUpdateForm(forms.ModelForm):
             "is_staff": forms.CheckboxInput(attrs={"class": "form-check-input"}),
                         "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in _build_permission_fields().items():
+            field.widget.attrs.setdefault("class", "form-check-input")
+            self.fields[field_name] = field
+
+        permission_object = getattr(self.instance, "employee_permission", None)
+        for field_name, _label in EMPLOYEE_PERMISSION_FIELD_LABELS:
+            self.fields[field_name].initial = bool(
+                getattr(permission_object, field_name, False) if permission_object else False
+            )
+
+    def save(self, commit=True):
+        user = super().save(commit=commit)
+        permission_object, _ = EmployeePermission.objects.get_or_create(user=user)
+        updated_fields: list[str] = []
+        for field_name, _label in EMPLOYEE_PERMISSION_FIELD_LABELS:
+            value = bool(self.cleaned_data.get(field_name, False))
+            if getattr(permission_object, field_name) != value:
+                setattr(permission_object, field_name, value)
+                updated_fields.append(field_name)
+        if updated_fields:
+            permission_object.save(update_fields=[*updated_fields, "updated_at"])
+        return user
 
 def _label_for_document_type(code: str) -> str:
     try:

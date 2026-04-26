@@ -90,7 +90,7 @@
                   {% endfor %}
                 </select>
               </td>
-              <td style="min-width: 210px;">
+              <td style="min-width: 320px;">
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" name="{{ form.is_staff.html_name }}" value="on" form="update-user-{{ staff_user.id }}" {% if staff_user.is_staff %}checked{% endif %}>
                   <label class="form-check-label">Staff</label>
@@ -99,10 +99,19 @@
                   <input class="form-check-input" type="checkbox" name="{{ form.is_superuser.html_name }}" value="on" form="update-user-{{ staff_user.id }}" {% if staff_user.is_superuser %}checked{% endif %}>
                   <label class="form-check-label">Superuser</label>
                 </div>
-                <div class="form-check">
+                <div class="form-check mb-2">
                   <input class="form-check-input" type="checkbox" name="{{ form.is_active.html_name }}" value="on" form="update-user-{{ staff_user.id }}" {% if staff_user.is_active %}checked{% endif %}>
                   <label class="form-check-label">Active</label>
                 </div>
+                <div class="small text-muted mb-1">Функции сотрудника:</div>
+                {% for field in form %}
+                  {% if field.name|slice:":4" == "can_" %}
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" name="{{ field.html_name }}" value="on" form="update-user-{{ staff_user.id }}" {% if field.value %}checked{% endif %}>
+                      <label class="form-check-label">{{ field.label }}</label>
+                    </div>
+                  {% endif %}
+                {% endfor %}
               </td>
               <td class="text-end">
                 <form method="post" id="update-user-{{ staff_user.id }}" class="d-none">

@@ -4,11 +4,14 @@ from django.utils import timezone
 from datetime import timedelta
 
 from clients.models import Client, Document, Payment
-from clients.views.base import StaffRequiredMixin
+from clients.services.roles import ADMIN_PANEL_ALLOWED_ROLES
+from clients.views.base import RoleOrFeatureRequiredMixin
 from django.views.generic import TemplateView
 
-class MetricsDashboardView(StaffRequiredMixin, TemplateView):
+class MetricsDashboardView(RoleOrFeatureRequiredMixin, TemplateView):
     template_name = 'clients/metrics_dashboard.html'
+    allowed_roles = list(ADMIN_PANEL_ALLOWED_ROLES)
+    required_permission_name = "can_view_reports"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -10,11 +10,13 @@ from clients.models import Client, StaffTask
 from clients.services.access import accessible_clients_queryset, accessible_tasks_queryset
 from clients.use_cases.tasks import complete_task_for_client, create_task_for_client
 from clients.services.roles import TASK_MUTATION_ROLES
-from clients.views.base import StaffRequiredMixin, role_required_view
+from clients.views.base import RoleOrFeatureRequiredMixin, role_or_feature_required_view
 
 
-class TaskListView(StaffRequiredMixin, ListView):
+class TaskListView(RoleOrFeatureRequiredMixin, ListView):
     model = StaffTask
+    allowed_roles = list(TASK_MUTATION_ROLES)
+    required_permission_name = "can_manage_staff_tasks"
     template_name = "clients/tasks_list.html"
     context_object_name = "tasks"
     paginate_by = 50
@@ -42,7 +44,7 @@ class TaskListView(StaffRequiredMixin, ListView):
         return context
 
 
-@role_required_view(*TASK_MUTATION_ROLES)
+@role_or_feature_required_view("can_manage_staff_tasks", *TASK_MUTATION_ROLES)
 def add_task(request, client_id):
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
 
@@ -62,7 +64,7 @@ def add_task(request, client_id):
     return redirect("clients:client_detail", pk=client.pk)
 
 
-@role_required_view(*TASK_MUTATION_ROLES)
+@role_or_feature_required_view("can_manage_staff_tasks", *TASK_MUTATION_ROLES)
 def complete_task(request, task_id):
     task = get_object_or_404(
         accessible_tasks_queryset(request.user, StaffTask.objects.select_related("client")),
