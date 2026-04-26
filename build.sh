@@ -18,6 +18,5 @@ pip install -r requirements.txt
 # Skip translating files shipped in the virtualenv to avoid permission errors
 python manage.py compilemessages --ignore "venv" --ignore ".venv"
 
-# Запуск тестов перед сборкой статики
-DJANGO_SETTINGS_MODULE=legalize_site.settings.test pytest --maxfail=1 -q || exit 1
+# Tests run in GitHub Actions; production build skips pytest for faster deploys.
 python manage.py collectstatic --no-input
