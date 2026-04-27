@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from django.contrib import messages
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
-from django.urls import reverse
 from django.utils.translation import gettext as _
 
-from clients.constants import DocumentType
+from clients.constants import is_wezwanie_document_type
 from clients.forms import DocumentUploadForm
 from clients.models import Client, Document, WniosekAttachment
 from clients.services.document_workflow import confirm_wezwanie_document, upload_client_document
@@ -136,7 +136,7 @@ def confirm_wezwanie_parse(request, doc_id):
             return helper.error(message=_("Недопустимый метод запроса."), status=405)
         return redirect("clients:client_detail", pk=document.client.id)
 
-    if document.document_type not in (DocumentType.WEZWANIE, DocumentType.WEZWANIE.value):
+    if not is_wezwanie_document_type(document.document_type):
         if helper.expects_json:
             return helper.error(message=_("Документ не является wezwanie."), status=400)
         messages.error(request, _("Документ не является wezwanie."))

@@ -490,16 +490,29 @@
         description.textContent = docName ? `Вы загружаете документ: "${docName}"` : '';
       }
 
-      const isWezwanie = docType && docType.toLowerCase() === 'wezwanie';
+      const WEZWANIE_DOCUMENT_TYPES = [
+        'wezwanie',
+        'fingerprint_confirmation',
+        'formal_deficiencies',
+        'formal_deficiencies_wezwanie',
+        'braki_formalne',
+        'braki_formalne_wezwanie',
+      ];
+
+      function isWezwanieDocumentType(code) {
+        return code && WEZWANIE_DOCUMENT_TYPES.includes(code.toLowerCase());
+      }
+
+      const isWezwanie = isWezwanieDocumentType(docType);
       if (parseButton && submitButton) {
         if (isWezwanie) {
           parseButton.classList.remove('d-none');
           submitButton.classList.remove('d-none');
-          submitButton.textContent = 'Просто загрузить';
+          submitButton.innerHTML = 'Просто загрузить';
         } else {
           parseButton.classList.add('d-none');
           submitButton.classList.remove('d-none');
-          submitButton.textContent = 'Загрузить';
+          submitButton.innerHTML = 'Загрузить';
         }
       }
 
@@ -524,8 +537,21 @@
 
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      submitButton?.setAttribute('disabled', 'disabled');
-      parseButton?.setAttribute('disabled', 'disabled');
+      
+      const isParsing = parseInput && parseInput.value === '1';
+      const originalSubmitText = submitButton?.innerHTML;
+      const originalParseText = parseButton?.innerHTML;
+
+      if (submitButton) {
+        submitButton.setAttribute('disabled', 'disabled');
+      }
+      if (parseButton) {
+        parseButton.setAttribute('disabled', 'disabled');
+        if (isParsing) {
+          parseButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Распознаём документ...';
+        }
+      }
+      
       pauseChecklistRefresh();
 
       try {
@@ -535,6 +561,7 @@
         });
 
         if (response.ok && data.status === 'success') {
+          // ... (existing success logic)
           if (data.pending_confirmation && confirmStep && confirmActions && uploadActions) {
             const parsed = data.parsed || {};
             if (parsedFirstName) parsedFirstName.value = parsed.first_name || '';
@@ -591,16 +618,31 @@
           return;
         }
 
+        console.error('Document upload error:', { status: response.status, data });
         showDocumentAlert(
           getErrorMessage(data.errors || data.message, 'Не удалось загрузить документ. Попробуйте ещё раз.'),
           'danger',
         );
       } catch (error) {
         logAjaxError('upload document', error, { url: form.action });
-        showDocumentAlert('Не удалось загрузить документ. Попробуйте ещё раз.', 'danger');
+        console.error('AJAX Catch - upload document:', error);
+        
+        let errMsg = error.message || 'Не удалось загрузить документ. Попробуйте ещё раз.';
+        if (error.responseStatus === 413) {
+          errMsg = 'Файл слишком большой.';
+        } else if (error.responseText && error.responseText.includes('CSRF')) {
+          errMsg = 'Сессия истекла. Пожалуйста, обновите страницу.';
+        }
+        showDocumentAlert(errMsg, 'danger');
       } finally {
-        submitButton?.removeAttribute('disabled');
-        parseButton?.removeAttribute('disabled');
+        if (submitButton) {
+          submitButton.removeAttribute('disabled');
+          if (originalSubmitText) submitButton.innerHTML = originalSubmitText;
+        }
+        if (parseButton) {
+          parseButton.removeAttribute('disabled');
+          if (originalParseText) parseButton.innerHTML = originalParseText;
+        }
       }
     });
 

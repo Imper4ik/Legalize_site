@@ -20,3 +20,19 @@ INTERNAL_DOCS = {
     DocumentType.FINGERPRINT_CONFIRMATION,
     DocumentType.PAYMENT_CONFIRMATION,
 }
+
+WEZWANIE_DOCUMENT_TYPES = {
+    DocumentType.WEZWANIE.value,
+    DocumentType.FINGERPRINT_CONFIRMATION.value,
+    "formal_deficiencies",
+    "formal_deficiencies_wezwanie",
+    "braki_formalne",
+    "braki_formalne_wezwanie",
+}
+
+
+def is_wezwanie_document_type(doc_type: str | None) -> bool:
+    """Check if the document type is a summons-like type that requires OCR."""
+    if not doc_type:
+        return False
+    return str(doc_type).lower() in WEZWANIE_DOCUMENT_TYPES

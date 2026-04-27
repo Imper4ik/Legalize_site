@@ -5,7 +5,6 @@ from datetime import timedelta
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 
-from django.conf import settings
 from django.db import models, transaction
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_time
@@ -14,7 +13,6 @@ from django.utils.translation import gettext as _
 from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentProcessingJob
 from clients.services.activity import changed_field_labels, log_client_activity
-from clients.services.document_versions import archive_document_version, replace_document_file
 from clients.services.notifications import (
     send_appointment_notification_email,
     send_missing_documents_email,
@@ -89,38 +87,56 @@ def upload_client_document(
     )
 
     document_type_display = client.get_document_name_by_code(doc_type)
-    is_wezwanie = doc_type in (DocumentType.WEZWANIE, DocumentType.WEZWANIE.value)
+    from clients.constants import is_wezwanie_document_type
+    is_wezwanie = is_wezwanie_document_type(doc_type)
+
     if not is_wezwanie:
         return DocumentUploadResult(
             document=document,
             message=_("Document '%(name)s' uploaded successfully.") % {"name": document_type_display},
         )
 
-    # Route all wezwanie parsing (whether confirmable or not) to the background job queue.
-    job = enqueue_document_processing_job(
+    if parse_requested:
+        # Immediate OCR parsing for synchronous response
+        try:
+            parsed = parser(document.file.path)
+            if _has_meaningful_parsed_data(parsed):
+                document.parsed_data = _build_wezwanie_payload(parsed)
+                document.awaiting_confirmation = True
+                document.ocr_status = "success"
+                document.ocr_name_mismatch = _has_name_mismatch(parsed.full_name, client)
+                document.save(update_fields=["parsed_data", "ocr_status", "awaiting_confirmation", "ocr_name_mismatch"])
+                
+                return DocumentUploadResult(
+                    document=document,
+                    message=_("Document uploaded and recognized."),
+                    pending_confirmation=True,
+                    parsed_payload=document.parsed_data,
+                )
+            else:
+                document.ocr_status = "failed"
+                document.save(update_fields=["ocr_status"])
+                return DocumentUploadResult(
+                    document=document,
+                    message=_("Document uploaded, but no data could be recognized."),
+                    manual_review_required=True,
+                )
+        except Exception as exc:
+            logger.exception("Immediate OCR parsing failed for document %s", document.id)
+            document.ocr_status = "failed"
+            document.save(update_fields=["ocr_status"])
+            return DocumentUploadResult(
+                document=document,
+                message=_("Document uploaded, but OCR processing failed: %(error)s") % {"error": str(exc)},
+                manual_review_required=True,
+            )
+
+    # Route to background job queue if immediate parsing was not requested
+    enqueue_document_processing_job(
         document=document,
         actor=actor,
-        requires_confirmation=parse_requested,
+        requires_confirmation=False,
     )
-
-    if not getattr(settings, "ASYNC_OCR_PROCESSING", True):
-        # Process immediately if sync mode is requested (e.g. dev or testing)
-        process_document_processing_job(
-            job_id=job.id,
-            parser=parser,
-            send_missing_email=send_missing_email,
-            send_appointment_email=send_appointment_email,
-        )
-        # Re-fetch document to get updated state (awaiting_confirmation etc)
-        document.refresh_from_db()
-
-    if parse_requested:
-        return DocumentUploadResult(
-            document=document,
-            message=_("Document uploaded. OCR processing complete."),
-            pending_confirmation=document.awaiting_confirmation,
-            parsed_payload=document.parsed_data if document.awaiting_confirmation else None,
-        )
 
     return DocumentUploadResult(
         document=document,
