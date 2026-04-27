@@ -434,9 +434,23 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_ADAPTER = "users.adapters.InternalAccountAdapter"
 SOCIALACCOUNT_ADAPTER = "users.adapters.InternalSocialAccountAdapter"
 
+# Deprecated settings that allauth 65.x still validates at system-check time.
+# They must be set explicitly to match the new-style keys below, otherwise
+# allauth falls back to username-based defaults and raises CRITICALs.
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+
 # Новые ключи (вместо устаревших ACCOUNT_AUTHENTICATION_METHOD / ACCOUNT_USERNAME_REQUIRED)
 ACCOUNT_LOGIN_METHODS = {"email"}  # логин только по email
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]  # поля регистрации
+
+# Silence allauth deprecation warnings for the old-style settings we keep above.
+SILENCED_SYSTEM_CHECKS = [
+    "account.W001",  # ACCOUNT_AUTHENTICATION_METHOD deprecated
+    "account.W002",  # ACCOUNT_EMAIL_REQUIRED deprecated
+    "account.W003",  # ACCOUNT_USERNAME_REQUIRED deprecated
+]
 
 # Редиректы
 ACCOUNT_ALLOW_SIGNUPS = False
