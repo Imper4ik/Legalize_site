@@ -447,9 +447,10 @@ def _finalize_successful_document_job(
 
         client = Client.objects.select_for_update().get(pk=document.client_id)
         actor = job.created_by
+        parsed_payload = _build_wezwanie_payload(parsed)
 
         if job.requires_confirmation:
-            document.parsed_data = _build_wezwanie_payload(parsed)
+            document.parsed_data = parsed_payload
             document.ocr_status = "success"
             document.awaiting_confirmation = True
             document.ocr_name_mismatch = _has_name_mismatch(parsed.full_name, client)
@@ -471,10 +472,11 @@ def _finalize_successful_document_job(
                     document=document,
                 )
 
+            document.parsed_data = parsed_payload
             document.ocr_status = "success"
             document.awaiting_confirmation = False
             document.ocr_name_mismatch = _has_name_mismatch(parsed.full_name, client)
-            document.save(update_fields=["ocr_status", "awaiting_confirmation", "ocr_name_mismatch"])
+            document.save(update_fields=["parsed_data", "ocr_status", "awaiting_confirmation", "ocr_name_mismatch"])
 
         job.status = DocumentProcessingJob.STATUS_COMPLETED
         job.error_message = ""
@@ -583,6 +585,11 @@ def _has_meaningful_parsed_data(parsed: WezwanieData) -> bool:
         [
             parsed.case_number,
             parsed.fingerprints_date,
+            parsed.fingerprints_time,
+            parsed.fingerprints_location,
+            parsed.ticket_number,
+            parsed.list_name,
+            parsed.application_status_code,
             parsed.decision_date,
             parsed.full_name,
         ]

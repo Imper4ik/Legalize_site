@@ -1,4 +1,6 @@
 (function () {
+  const CHECKLIST_REFRESH_INTERVAL_MS = 30000;
+
   let refreshChecklist = null;
   let pauseChecklistRefreshUntil = 0;
 
@@ -445,6 +447,9 @@
     const parsedFingerprintsDate = modal.querySelector('#wezwanieParsedFingerprintsDate');
     const parsedFingerprintsTime = modal.querySelector('#wezwanieParsedFingerprintsTime');
     const parsedFingerprintsLocation = modal.querySelector('#wezwanieParsedFingerprintsLocation');
+    const parsedTicketNumber = modal.querySelector('#wezwanieParsedTicketNumber');
+    const parsedListName = modal.querySelector('#wezwanieParsedListName');
+    const parsedStatusCode = modal.querySelector('#wezwanieParsedStatusCode');
     const parsedDecisionDate = modal.querySelector('#wezwanieParsedDecisionDate');
 
     if (!form) {
@@ -454,20 +459,24 @@
     const submitButton = form.querySelector('#uploadDocumentSubmitButton');
     const parseButton = form.querySelector('#wezwanieParseButton');
 
+    function fillWezwanieParsedFields(parsed = {}) {
+      if (parsedFirstName) parsedFirstName.value = parsed.first_name || '';
+      if (parsedLastName) parsedLastName.value = parsed.last_name || '';
+      if (parsedCaseNumber) parsedCaseNumber.value = parsed.case_number || '';
+      if (parsedFingerprintsDate) parsedFingerprintsDate.value = parsed.fingerprints_date || '';
+      if (parsedFingerprintsTime) parsedFingerprintsTime.value = parsed.fingerprints_time || '';
+      if (parsedFingerprintsLocation) parsedFingerprintsLocation.value = parsed.fingerprints_location || '';
+      if (parsedTicketNumber) parsedTicketNumber.value = parsed.ticket_number || '';
+      if (parsedListName) parsedListName.value = parsed.list_name || '';
+      if (parsedStatusCode) parsedStatusCode.value = parsed.application_status_code || '';
+      if (parsedDecisionDate) parsedDecisionDate.value = parsed.decision_date || '';
+    }
+
     function resetConfirmation() {
       confirmStep?.classList.add('d-none');
       confirmActions?.classList.add('d-none');
       uploadActions?.classList.remove('d-none');
-      if (parsedFirstName) parsedFirstName.value = '';
-      if (parsedLastName) parsedLastName.value = '';
-      if (parsedCaseNumber) parsedCaseNumber.value = '';
-      if (parsedFingerprintsDate) parsedFingerprintsDate.value = '';
-      if (parsedFingerprintsTime) parsedFingerprintsTime.value = '';
-      if (parsedFingerprintsLocation) parsedFingerprintsLocation.value = '';
-      if (modal.querySelector('#wezwanieParsedTicketNumber')) modal.querySelector('#wezwanieParsedTicketNumber').value = '';
-      if (modal.querySelector('#wezwanieParsedListName')) modal.querySelector('#wezwanieParsedListName').value = '';
-      if (modal.querySelector('#wezwanieParsedStatusCode')) modal.querySelector('#wezwanieParsedStatusCode').value = '';
-      if (parsedDecisionDate) parsedDecisionDate.value = '';
+      fillWezwanieParsedFields();
       if (confirmButton) {
         confirmButton.dataset.confirmUrl = '';
       }
@@ -564,16 +573,7 @@
           // ... (existing success logic)
           if (data.pending_confirmation && confirmStep && confirmActions && uploadActions) {
             const parsed = data.parsed || {};
-            if (parsedFirstName) parsedFirstName.value = parsed.first_name || '';
-            if (parsedLastName) parsedLastName.value = parsed.last_name || '';
-            if (parsedCaseNumber) parsedCaseNumber.value = parsed.case_number || '';
-            if (parsedFingerprintsDate) parsedFingerprintsDate.value = parsed.fingerprints_date || '';
-            if (parsedFingerprintsTime) parsedFingerprintsTime.value = parsed.fingerprints_time || '';
-            if (parsedFingerprintsLocation) parsedFingerprintsLocation.value = parsed.fingerprints_location || '';
-            if (modal.querySelector('#wezwanieParsedTicketNumber')) modal.querySelector('#wezwanieParsedTicketNumber').value = parsed.ticket_number || '';
-            if (modal.querySelector('#wezwanieParsedListName')) modal.querySelector('#wezwanieParsedListName').value = parsed.list_name || '';
-            if (modal.querySelector('#wezwanieParsedStatusCode')) modal.querySelector('#wezwanieParsedStatusCode').value = parsed.application_status_code || '';
-            if (parsedDecisionDate) parsedDecisionDate.value = parsed.decision_date || '';
+            fillWezwanieParsedFields(parsed);
 
             const rawTextarea = modal.querySelector('#wezwanieRawText');
             const rawTextContainer = modal.querySelector('#wezwanieRawTextContainer');
@@ -716,17 +716,8 @@
         const { response, data } = await fetchJson(url);
         if (response.ok && data.parsed_data) {
           const parsed = data.parsed_data;
-          
-          if (parsedFirstName) parsedFirstName.value = parsed.first_name || '';
-          if (parsedLastName) parsedLastName.value = parsed.last_name || '';
-          if (parsedCaseNumber) parsedCaseNumber.value = parsed.case_number || '';
-          if (parsedFingerprintsDate) parsedFingerprintsDate.value = parsed.fingerprints_date || '';
-          if (parsedFingerprintsTime) parsedFingerprintsTime.value = parsed.fingerprints_time || '';
-          if (parsedFingerprintsLocation) parsedFingerprintsLocation.value = parsed.fingerprints_location || '';
-          if (modal.querySelector('#wezwanieParsedTicketNumber')) modal.querySelector('#wezwanieParsedTicketNumber').value = parsed.ticket_number || '';
-          if (modal.querySelector('#wezwanieParsedListName')) modal.querySelector('#wezwanieParsedListName').value = parsed.list_name || '';
-          if (modal.querySelector('#wezwanieParsedStatusCode')) modal.querySelector('#wezwanieParsedStatusCode').value = parsed.application_status_code || '';
-          if (parsedDecisionDate) parsedDecisionDate.value = parsed.decision_date || '';
+
+          fillWezwanieParsedFields(parsed);
 
           const rawTextarea = modal.querySelector('#wezwanieRawText');
           const rawTextContainer = modal.querySelector('#wezwanieRawTextContainer');
@@ -792,6 +783,7 @@
 
     let controller = null;
     let isFetching = false;
+    let checklistTransitionInProgress = false;
 
     function restoreExpandedPanels(ids) {
       ids.forEach((id) => {
@@ -812,12 +804,16 @@
     async function refresh({ force = false } = {}) {
       const hasOpenModal = Boolean(document.querySelector('.modal.show'));
       const isUserInteracting = accordion.contains(document.activeElement);
+      const isTransitioning = checklistTransitionInProgress || accordion.querySelector('.collapsing');
+
+      // Do not refresh checklist while Bootstrap accordion is transitioning; replacing DOM during collapse animations causes visible UI jank.
       if (
         !force
         && (isFetching
           || document.visibilityState !== 'visible'
           || hasOpenModal
           || isUserInteracting
+          || isTransitioning
           || Date.now() < pauseChecklistRefreshUntil)
       ) {
         return;
@@ -858,7 +854,7 @@
 
     function startInterval() {
       if (intervalId === null) {
-        intervalId = window.setInterval(refresh, 8000);
+        intervalId = window.setInterval(refresh, CHECKLIST_REFRESH_INTERVAL_MS);
       }
     }
 
@@ -880,15 +876,29 @@
     });
 
     document.addEventListener('visibilitychange', refresh);
-    accordion.addEventListener('focusin', () => pauseChecklistRefresh(1500));
-    accordion.addEventListener('pointerdown', () => pauseChecklistRefresh(1500));
+    accordion.addEventListener('show.bs.collapse', () => {
+      checklistTransitionInProgress = true;
+      pauseChecklistRefresh(10000);
+    });
+    accordion.addEventListener('shown.bs.collapse', () => {
+      checklistTransitionInProgress = false;
+      pauseChecklistRefresh(10000);
+    });
+    accordion.addEventListener('hide.bs.collapse', () => {
+      checklistTransitionInProgress = true;
+      pauseChecklistRefresh(5000);
+    });
+    accordion.addEventListener('hidden.bs.collapse', () => {
+      checklistTransitionInProgress = false;
+    });
+    accordion.addEventListener('focusin', () => pauseChecklistRefresh(10000));
+    accordion.addEventListener('pointerdown', () => pauseChecklistRefresh(10000));
     window.addEventListener('beforeunload', () => {
       stopInterval();
       document.removeEventListener('show.bs.modal', stopInterval);
     });
 
     startInterval();
-    refresh();
   }
 
   function initDocumentDeletion() {

@@ -4,6 +4,8 @@ from clients.services.wezwanie_parser import _find_ticket_number, _find_list_nam
 @pytest.mark.parametrize("text, expected", [
     ("bilet X29", "X29"),
     ("bilet: X29", "X29"),
+    ("bilet nr X29", "X29"),
+    ("bilet numer x29", "X29"),
     ("Bilet X29.", "X29"),
     ("some text bilet X29 more text", "X29"),
     ("bilet X29A1", "X29A1"),
@@ -15,6 +17,8 @@ def test_find_ticket_number_improved(text, expected):
 @pytest.mark.parametrize("text, expected", [
     ("numer listy Lista X1", "Lista X1"),
     ("Lista X1", "Lista X1"),
+    ("Lista: X1", "Lista X1"),
+    ("lista nr x1", "Lista X1"),
     ("Lista X1.", "Lista X1"),
     ("Lista A123", "Lista A123"),
     ("no list here", None),
