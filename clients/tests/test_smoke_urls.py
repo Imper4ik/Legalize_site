@@ -1,0 +1,91 @@
+"""Smoke tests: hit every named URL in the clients app and verify no 500s."""
+from __future__ import annotations
+
+import pytest
+from django.test import Client as DjangoClient
+from django.urls import reverse
+
+from clients.models import Client, Document, Payment
+from clients.tests.factories import create_staff_user
+
+
+# URLs that only need a logged-in staff user (no object PKs).
+SIMPLE_URLS = [
+    "clients:client_list",
+    "clients:client_add",
+    "clients:admin_panel",
+    "clients:metrics_dashboard",
+    "clients:task_list",
+    "clients:mass_email",
+]
+
+
+@pytest.fixture
+def _staff_client(db):
+    user = create_staff_user()
+    client = DjangoClient()
+    client.force_login(user)
+    return client, user
+
+
+@pytest.fixture
+def _client_record(db):
+    return Client.objects.create(
+        first_name="Smoke",
+        last_name="Test",
+        email="smoke@example.com",
+        phone="+48000000000",
+        citizenship="Poland",
+        application_purpose="work",
+    )
+
+
+@pytest.mark.parametrize("url_name", SIMPLE_URLS)
+def test_simple_urls_no_500(url_name, _staff_client):
+    http_client, _ = _staff_client
+    url = reverse(url_name)
+    response = http_client.get(url)
+    assert response.status_code != 500, f"{url_name} returned 500"
+
+
+def test_client_detail_no_500(_staff_client, _client_record):
+    http_client, _ = _staff_client
+    url = reverse("clients:client_detail", kwargs={"pk": _client_record.pk})
+    response = http_client.get(url)
+    assert response.status_code != 500
+
+
+def test_client_edit_no_500(_staff_client, _client_record):
+    http_client, _ = _staff_client
+    url = reverse("clients:client_edit", kwargs={"pk": _client_record.pk})
+    response = http_client.get(url)
+    assert response.status_code != 500
+
+
+def test_client_print_no_500(_staff_client, _client_record):
+    http_client, _ = _staff_client
+    url = reverse("clients:client_print", kwargs={"pk": _client_record.pk})
+    response = http_client.get(url)
+    assert response.status_code != 500
+
+
+def test_checklist_partial_no_500(_staff_client, _client_record):
+    http_client, _ = _staff_client
+    url = reverse("clients:client_checklist_partial", kwargs={"pk": _client_record.pk})
+    response = http_client.get(url)
+    assert response.status_code != 500
+
+
+def test_overview_partial_no_500(_staff_client, _client_record):
+    http_client, _ = _staff_client
+    url = reverse("clients:client_overview_partial", kwargs={"pk": _client_record.pk})
+    response = http_client.get(url)
+    assert response.status_code != 500
+
+
+def test_unauthenticated_redirects_to_login(db):
+    """An anonymous user should be redirected, never get a 500."""
+    http_client = DjangoClient()
+    url = reverse("clients:client_list")
+    response = http_client.get(url)
+    assert response.status_code in (301, 302, 403), "Anonymous should not see 200 or 500"

@@ -13,9 +13,10 @@ class SubmissionRedirectSafetyTests(TestCase):
     def setUp(self):
         ensure_predefined_roles()
         user_model = get_user_model()
-        self.staff = user_model.objects.create_user(email="staff_redirect@example.com", password="pass", is_staff=True)
-        self.staff.groups.add(Group.objects.get(name="Staff"))
-        self.client.login(email="staff_redirect@example.com", password="pass")
+        self.manager = user_model.objects.create_user(email="manager_redirect@example.com", password="pass", is_staff=True)
+        self.manager.groups.add(Group.objects.get(name="Manager"))
+        self.client.login(email="manager_redirect@example.com", password="pass")
+
 
     def test_quick_create_ignores_external_referer(self):
         response = self.client.post(
