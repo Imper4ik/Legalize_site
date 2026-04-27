@@ -23,6 +23,7 @@ case "${BOOTSTRAP_SUPERUSER_MODE}" in
     ;;
 esac
 
+mkdir -p "${MEDIA_ROOT:-/app/media}"
 python manage.py bootstrap_user_model_migration
 python manage.py migrate --no-input
 
