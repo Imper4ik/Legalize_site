@@ -291,6 +291,30 @@ def _read_plain_text(path: Path) -> str:
         return ""
 
 
+def _normalize_ocr_text(text: str) -> str:
+    """Clean up common OCR and PDF text extraction artifacts."""
+    if not text:
+        return ""
+    
+    # 1. Replace weird unicode separators (often seen in bad PDF streams)
+    text = text.replace('\ufffe', '-')
+    
+    # 2. Soft hyphens (\u00ad) and invisible BOMs
+    text = text.replace('\u00ad', '').replace('\ufeff', '')
+    
+    # 3. Non-breaking spaces and tabs to regular spaces
+    text = text.replace('\u00a0', ' ').replace('\t', ' ')
+    
+    # 4. Normalize various dash types to standard hyphen
+    for dash in ['\u2013', '\u2014', '\u2012', '\u2212']:
+        text = text.replace(dash, '-')
+        
+    # 5. Clean up multiple spaces
+    text = re.sub(r' +', ' ', text)
+    
+    return text.strip()
+
+
 def extract_text(path: str | Path) -> str:
     """Extract raw text from the uploaded summons file.
 
@@ -432,7 +456,12 @@ def _detect_wezwanie_type(text: str) -> str | None:
         return "decision"
     
     # Keywords for fingerprints wezwanie (first type)
-    fingerprint_keywords = ["odcisk", "odciski", "pobran", "fingerprint"]
+    fingerprint_keywords = [
+        "odcisk", "odciski", "pobran", "fingerprint",
+        "uzupełnienia braków formalnych",
+        "złożenia odcisków linii papilarnych",
+        "dzień i godzinę", "dzień i godzina", "termin wizyty"
+    ]
     if any(keyword in text_lower for keyword in fingerprint_keywords):
         return "fingerprints"
     
@@ -445,13 +474,51 @@ def _find_fingerprints_time(text: str) -> str | None:
         re.compile(r"godz\.\s*(\d{1,2}[:.]\d{2})", re.IGNORECASE),
         re.compile(r"godzinie\s*(\d{1,2}[:.]\d{2})", re.IGNORECASE),
         re.compile(r"at\s*(\d{1,2}[:.]\d{2})", re.IGNORECASE),
-        re.compile(r"\d{1,2}[./-]\d{1,2}[./-]\d{2,4}[,\s]+(\d{1,2}[:.]\d{2})", re.IGNORECASE), # 4.05.2026, 10:30
+        # 4.05.2026, 10:30 or 4.05.2026r. godz. 10:30
+        re.compile(r"\d{1,2}[./-]\d{1,2}[./-]\d{2,4}(?:r\.)?[,\s]+(?:godz\.\s*)?(\d{1,2}[:.]\d{2})", re.IGNORECASE),
     ]
     for pattern in time_patterns:
         match = pattern.search(text)
         if match:
             return match.group(1).replace('.', ':')
     return None
+
+
+def _find_fingerprints_datetime(text: str) -> tuple[date | None, str | None]:
+    """Look for appointment date and time specifically."""
+    # 1. Very specific combined pattern (High reliability)
+    # Covers: "dzień i godzinę: 4.05.2026, 10:30" or similar
+    combined_patterns = [
+        re.compile(
+            r"(?:dzień i godzinę|dzien i godzine|termin|wyznaczony na|wizyty)[:\s,]+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})(?:r\.)?[,\s]+(?:godz\.\s*)?(\d{1,2}[:.]\d{2})",
+            re.IGNORECASE
+        ),
+        # Proximity check: Date and Time within ~80 characters
+        re.compile(
+            r"(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})(?:r\.)?.{0,80}?(?:godz\.|godzinie|at)[:\s]+(\d{1,2}[:.]\d{2})",
+            re.IGNORECASE | re.DOTALL
+        ),
+    ]
+    
+    for pattern in combined_patterns:
+        for match in pattern.finditer(text):
+            # Heuristic: Skip if it looks like the letter creation date (usually top-right: Warszawa, dnia ...)
+            start_pos = match.start()
+            context_before = text[max(0, start_pos - 40):start_pos].lower()
+            if "warszawa" in context_before and "dnia" in context_before and start_pos < 300:
+                logger.debug("Skipping date-time match likely to be letter creation date at pos %s", start_pos)
+                continue
+
+            d = _parse_date(match.group(1))
+            t = match.group(2).replace('.', ':')
+            if d:
+                return d, t
+                
+    # 2. Fallback to separate but still prioritizing proximity if possible
+    # (We only do this if the specific combined patterns failed)
+    d = _find_first_date(text)
+    t = _find_fingerprints_time(text)
+    return d, t
 
 
 def _find_fingerprints_location(text: str) -> str | None:
@@ -489,7 +556,7 @@ def _find_fingerprints_location(text: str) -> str | None:
 
 def _find_ticket_number(text: str) -> str | None:
     """Extract ticket number (Bilet)."""
-    match = re.search(r"(?:bilet|ticket)\s*([A-Z0-9]+)", text, re.IGNORECASE)
+    match = re.search(r"(?:bilet|ticket)[:\s]*([A-Z0-9]+)", text, re.IGNORECASE)
     if match:
         return match.group(1).strip()
     return None
@@ -498,7 +565,7 @@ def _find_ticket_number(text: str) -> str | None:
 def _find_list_name(text: str) -> str | None:
     """Extract list name (Lista)."""
     # Look for "Lista" followed by something like "X1"
-    match = re.search(r"(?:lista|list)\s+([A-Z][0-9A-Z]*)", text, re.IGNORECASE)
+    match = re.search(r"(?:lista|list)[:\s]*([A-Z][0-9A-Z]*)", text, re.IGNORECASE)
     if match:
         return match.group(0).strip()
     return None
@@ -592,7 +659,9 @@ def _find_full_name(text: str) -> str | None:
 def parse_wezwanie(file_path: str | Path) -> WezwanieData:
     """Parse the uploaded summons and return the extracted fields."""
 
-    text = extract_text(file_path)
+    raw_text = extract_text(file_path)
+    text = _normalize_ocr_text(raw_text)
+    
     if not text.strip():
         return WezwanieData(text="", error="no_text")
     logger.debug("Extracted wezwanie text length=%s", len(text))
@@ -624,8 +693,7 @@ def parse_wezwanie(file_path: str | Path) -> WezwanieData:
             decision_date = _find_first_date(text)
     elif wezwanie_type == "fingerprints":
         # First wezwanie - look for fingerprints date, time, location
-        fingerprints_date = _find_first_date(text)
-        fingerprints_time = _find_fingerprints_time(text)
+        fingerprints_date, fingerprints_time = _find_fingerprints_datetime(text)
         fingerprints_location = _find_fingerprints_location(text)
         ticket_number = _find_ticket_number(text)
         list_name = _find_list_name(text)
@@ -664,7 +732,7 @@ def _extract_required_documents(text: str) -> list[str]:
     patterns = {
         DocumentType.PHOTOS: [r"4\s*zdjęcia", r"fotografie"],
         DocumentType.PAYMENT_CONFIRMATION: [r"opłata\s*skarbowa", r"dowód\s*wpłaty", r"340\s*z[łl]", r"440\s*z[łl]"],
-        DocumentType.PASSPORT: [r"kopia\s*paszportu", r"dokument\s*podróży"],
+        DocumentType.PASSPORT: [r"paszport", r"kopia\s*paszportu", r"dokument\s*podróży"],
         DocumentType.HEALTH_INSURANCE: [r"ubezpieczeni[ea]", r"polisa"],
         DocumentType.ZALACZNIK_NR_1: [r"załącznik\s*nr\s*1"],
         DocumentType.WORK_PERMISSION: [r"zezwolenie\s*na\s*pracę", r"oświadczenie\s*o\s*powierzeniu"],
