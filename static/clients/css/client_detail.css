@@ -1,0 +1,39 @@
+.client-detail-page .page-surface {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.client-detail-page #documentAccordion {
+  contain: layout style;
+  overflow-anchor: none;
+}
+
+.client-detail-page #documentAccordion .accordion-item {
+  contain: layout style;
+}
+
+.client-detail-page #documentAccordion .accordion-collapse {
+  contain: layout paint style;
+}
+
+.client-detail-page #documentAccordion .collapsing {
+  transition-duration: 180ms;
+  transition-timing-function: ease-out;
+  will-change: height;
+}
+
+.client-detail-page #documentAccordion .list-group-item {
+  contain: layout paint style;
+}
+
+.client-detail-page #documentAccordion .accordion-collapse.checklist-prewarm {
+  display: block;
+  height: 0 !important;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.client-detail-page #documentAccordion.is-checklist-transitioning .accordion-body * {
+  transition-duration: 0s !important;
+}
