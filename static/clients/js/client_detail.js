@@ -434,6 +434,7 @@
     const actionTemplate = modal.dataset.actionTemplate;
     const confirmTemplate = modal.dataset.confirmUrlTemplate;
     const parseInput = modal.querySelector('#uploadDocumentParseWezwanie');
+    const parsedDataUrlTemplate = modal.dataset.parsedDataUrlTemplate;
     const confirmStep = modal.querySelector('#wezwanieConfirmationStep');
     const confirmActions = modal.querySelector('#wezwanieConfirmActions');
     const uploadActions = modal.querySelector('#uploadDocumentActions');
@@ -489,7 +490,7 @@
         description.textContent = docName ? `Вы загружаете документ: "${docName}"` : '';
       }
 
-      const isWezwanie = docType === 'wezwanie';
+      const isWezwanie = docType && docType.toLowerCase() === 'wezwanie';
       if (parseButton && submitButton) {
         if (isWezwanie) {
           parseButton.classList.remove('d-none');
@@ -669,7 +670,8 @@
       reviewBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
 
       try {
-        const { response, data } = await fetchJson(`/clients/document/${docId}/parsed-data/`);
+        const url = parsedDataUrlTemplate ? parsedDataUrlTemplate.replace('0', docId) : `/staff/document/${docId}/parsed-data/`;
+        const { response, data } = await fetchJson(url);
         if (response.ok && data.parsed_data) {
           const parsed = data.parsed_data;
           
