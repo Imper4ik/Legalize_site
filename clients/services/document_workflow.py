@@ -97,6 +97,7 @@ def upload_client_document(
         )
 
     if parse_requested:
+        # TODO: Move confirmable OCR parsing to background job.
         # Immediate OCR parsing for synchronous response
         try:
             parsed = parser(document.file.path)

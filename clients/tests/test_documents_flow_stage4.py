@@ -12,9 +12,8 @@ from django.test import TestCase
 from django.urls import reverse
 from reportlab.pdfgen import canvas
 
-from clients.tests.factories import create_staff_user
 from clients.constants import DocumentType
-from clients.models import Client, Document, DocumentProcessingJob, DocumentVersion
+from clients.models import Client, Document, DocumentProcessingJob
 from clients.services.roles import ensure_predefined_roles
 from clients.services.wezwanie_parser import WezwanieData
 
@@ -47,7 +46,7 @@ class DocumentFlowsStage4Tests(TestCase):
             email="anna-stage4@example.com",
         )
 
-    @patch("clients.management.commands.process_document_jobs.parse_wezwanie")
+    @patch("clients.views.documents.parse_wezwanie")
     def test_add_document_with_parse_requested_returns_pending_confirmation(self, parse_mock):
         parse_mock.return_value = WezwanieData(
             text="wezwanie text",
@@ -69,16 +68,15 @@ class DocumentFlowsStage4Tests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["status"], "success")
-        self.assertNotIn("pending_confirmation", payload)
+        self.assertTrue(payload["pending_confirmation"])
+        self.assertEqual(payload["parsed"]["case_number"], "WSC-II-S.1234.2025")
 
         document = Document.objects.get(client=self.client_obj)
-        self.assertFalse(document.awaiting_confirmation)
-        self.assertEqual(document.ocr_status, "pending")
-        
-        job = DocumentProcessingJob.objects.get(document=document)
-        self.assertTrue(job.requires_confirmation)
+        self.assertTrue(document.awaiting_confirmation)
+        self.assertEqual(document.ocr_status, "success")
+        self.assertEqual(document.parsed_data["case_number"], "WSC-II-S.1234.2025")
 
-    @patch("clients.management.commands.process_document_jobs.parse_wezwanie", side_effect=RuntimeError("ocr failed"))
+    @patch("clients.views.documents.parse_wezwanie", side_effect=RuntimeError("ocr failed"))
     def test_add_document_with_parse_failure_keeps_document_and_flags_manual_review(self, _parse_mock):
         uploaded = build_pdf_upload("wezwanie.pdf")
 
@@ -94,18 +92,15 @@ class DocumentFlowsStage4Tests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["status"], "success")
-        self.assertFalse(payload["manual_review_required"])
+        self.assertTrue(payload["manual_review_required"])
         self.assertFalse(payload.get("pending_confirmation", False))
         self.assertEqual(Document.objects.filter(client=self.client_obj).count(), 1)
-        
-        # Simulate background processing
-        call_command("process_document_jobs")
-        
+
         document = Document.objects.get(client=self.client_obj)
         self.assertEqual(document.ocr_status, "failed")
         self.assertFalse(document.awaiting_confirmation)
 
-    @patch("clients.management.commands.process_document_jobs.parse_wezwanie")
+    @patch("clients.views.documents.parse_wezwanie")
     def test_add_document_with_empty_parse_result_marks_ocr_failed(self, parse_mock):
         parse_mock.return_value = WezwanieData(text="", error="no_text")
         uploaded = build_pdf_upload("wezwanie.pdf")
@@ -122,10 +117,7 @@ class DocumentFlowsStage4Tests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["status"], "success")
-        self.assertFalse(payload.get("manual_review_required", False))
-        
-        # Simulate background processing
-        call_command("process_document_jobs")
+        self.assertTrue(payload.get("manual_review_required", False))
 
         document = Document.objects.get(client=self.client_obj, document_type=DocumentType.WEZWANIE.value)
         self.assertEqual(document.ocr_status, "failed")
@@ -148,7 +140,7 @@ class DocumentFlowsStage4Tests(TestCase):
         self.assertEqual(Document.objects.filter(client=self.client_obj).count(), 0)
 
     def test_uploading_multiple_documents_preserves_both(self):
-        original = Document.objects.create(
+        Document.objects.create(
             client=self.client_obj,
             document_type=DocumentType.PASSPORT.value,
             file=SimpleUploadedFile("passport-old.pdf", b"old-data", content_type="application/pdf"),

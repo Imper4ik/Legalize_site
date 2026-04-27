@@ -13,7 +13,7 @@ from django.views.generic import DetailView
 from clients.models import AppSettings, Client, WniosekSubmission
 from clients.services.roles import DOCUMENT_EDIT_ROLES
 from clients.services.wniosek import record_wniosek_submission
-from clients.views.base import RoleRequiredMixin, StaffRequiredMixin, role_required_view
+from clients.views.base import StaffRequiredMixin, role_required_view
 from clients.services.access import accessible_clients_queryset
 
 

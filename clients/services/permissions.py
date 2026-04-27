@@ -6,7 +6,6 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from django.utils.translation import gettext as _
 
-from clients.models import EmployeePermission
 from clients.services.access import is_internal_staff_user
 from clients.services.responses import ResponseHelper
 from clients.services.roles import user_has_any_role

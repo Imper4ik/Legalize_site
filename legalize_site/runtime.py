@@ -27,6 +27,20 @@ def collect_runtime_dependency_statuses() -> list[dict[str, Any]]:
             "required_for": "OCR text extraction",
             "hint": "Install the `pytesseract` package from requirements.txt.",
         },
+        {
+            "key": "cv2",
+            "label": "opencv-python-headless",
+            "kind": "python",
+            "required_for": "OpenCV OCR preprocessing",
+            "hint": "Install `opencv-python-headless` from requirements.txt.",
+        },
+        {
+            "key": "numpy",
+            "label": "numpy",
+            "kind": "python",
+            "required_for": "OpenCV OCR preprocessing",
+            "hint": "Install `numpy` from requirements.txt.",
+        },
     ]
 
     binary_checks = [

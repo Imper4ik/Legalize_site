@@ -5,7 +5,7 @@ import pytest
 from django.test import Client as DjangoClient
 from django.urls import reverse
 
-from clients.models import Client, Document, Payment
+from clients.models import Client
 from clients.tests.factories import create_staff_user
 
 

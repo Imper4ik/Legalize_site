@@ -1,12 +1,11 @@
-from django.shortcuts import render
-from django.db.models import Count, Q
-from django.utils import timezone
 from datetime import timedelta
 
-from clients.models import Client, Document, Payment
+from django.utils import timezone
+from django.views.generic import TemplateView
+
+from clients.models import Client
 from clients.services.roles import SETTINGS_ALLOWED_ROLES
 from clients.views.base import RoleOrFeatureRequiredMixin
-from django.views.generic import TemplateView
 
 class MetricsDashboardView(RoleOrFeatureRequiredMixin, TemplateView):
     template_name = 'clients/metrics_dashboard.html'
