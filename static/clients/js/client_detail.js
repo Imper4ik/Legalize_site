@@ -1135,6 +1135,37 @@
     });
   }
 
+  function initEmailHistoryToggle() {
+    document.addEventListener('click', (event) => {
+      const toggleBtn = event.target.closest('.email-history-toggle');
+      if (!toggleBtn) return;
+
+      const container = toggleBtn.closest('.card');
+      if (!container) return;
+
+      const extraRows = container.querySelectorAll('.email-log-extra');
+      const isHidden = extraRows[0]?.classList.contains('d-none');
+
+      const showMoreLabel = toggleBtn.dataset.labelShowMore || 'Показать ещё';
+      const showLessLabel = toggleBtn.dataset.labelShowLess || 'Свернуть';
+      const hiddenCount = toggleBtn.dataset.hiddenCount || '0';
+
+      extraRows.forEach((row) => {
+        if (isHidden) {
+          row.classList.remove('d-none');
+        } else {
+          row.classList.add('d-none');
+        }
+      });
+
+      if (isHidden) {
+        toggleBtn.textContent = showLessLabel;
+      } else {
+        toggleBtn.textContent = `${showMoreLabel} ${hiddenCount}`;
+      }
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     initPriceAutoFill();
     initAddPaymentForm();
@@ -1147,5 +1178,6 @@
     initBulkVerification();
     initHoverDropdowns();
     initSendEmailModal();
+    initEmailHistoryToggle();
   });
 })();

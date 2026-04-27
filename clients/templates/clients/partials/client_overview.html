@@ -41,6 +41,8 @@
 <p class="mb-0"><strong>{% translate "Health alerts" %}:</strong> {{ workflow_summary.alerts_count }}</p>
 {% if client.submission_date %}<p class="text-muted mb-1"><small>{% translate "Дата подачи" %}: {{ client.submission_date|date:"d.m.Y" }}</small></p>{% endif %}
 {% if client.fingerprints_date %}<p class="text-muted mb-0"><small>{% translate "Дата сдачи отпечатков" %}: {{ client.fingerprints_date|date:"d.m.Y" }}</small></p>{% endif %}
+{% if client.fingerprints_ticket %}<p class="text-muted mb-0"><small>{% translate "Номер билета" %}: {{ client.fingerprints_ticket }}</small></p>{% endif %}
+{% if client.fingerprints_list %}<p class="text-muted mb-0"><small>{% translate "Lista" %}: {{ client.fingerprints_list }}</small></p>{% endif %}
 </div>
 </div>
 </div>
