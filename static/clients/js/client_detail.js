@@ -463,6 +463,9 @@
       if (parsedFingerprintsDate) parsedFingerprintsDate.value = '';
       if (parsedFingerprintsTime) parsedFingerprintsTime.value = '';
       if (parsedFingerprintsLocation) parsedFingerprintsLocation.value = '';
+      if (modal.querySelector('#wezwanieParsedTicketNumber')) modal.querySelector('#wezwanieParsedTicketNumber').value = '';
+      if (modal.querySelector('#wezwanieParsedListName')) modal.querySelector('#wezwanieParsedListName').value = '';
+      if (modal.querySelector('#wezwanieParsedStatusCode')) modal.querySelector('#wezwanieParsedStatusCode').value = '';
       if (parsedDecisionDate) parsedDecisionDate.value = '';
       if (confirmButton) {
         confirmButton.dataset.confirmUrl = '';
@@ -528,6 +531,9 @@
             if (parsedFingerprintsDate) parsedFingerprintsDate.value = parsed.fingerprints_date || '';
             if (parsedFingerprintsTime) parsedFingerprintsTime.value = parsed.fingerprints_time || '';
             if (parsedFingerprintsLocation) parsedFingerprintsLocation.value = parsed.fingerprints_location || '';
+            if (modal.querySelector('#wezwanieParsedTicketNumber')) modal.querySelector('#wezwanieParsedTicketNumber').value = parsed.ticket_number || '';
+            if (modal.querySelector('#wezwanieParsedListName')) modal.querySelector('#wezwanieParsedListName').value = parsed.list_name || '';
+            if (modal.querySelector('#wezwanieParsedStatusCode')) modal.querySelector('#wezwanieParsedStatusCode').value = parsed.application_status_code || '';
             if (parsedDecisionDate) parsedDecisionDate.value = parsed.decision_date || '';
 
             const rawTextarea = modal.querySelector('#wezwanieRawText');
@@ -600,6 +606,11 @@
       payload.append('last_name', parsedLastName?.value || '');
       payload.append('case_number', parsedCaseNumber?.value || '');
       payload.append('fingerprints_date', parsedFingerprintsDate?.value || '');
+      payload.append('fingerprints_time', parsedFingerprintsTime?.value || '');
+      payload.append('fingerprints_location', parsedFingerprintsLocation?.value || '');
+      payload.append('ticket_number', modal.querySelector('#wezwanieParsedTicketNumber')?.value || '');
+      payload.append('list_name', modal.querySelector('#wezwanieParsedListName')?.value || '');
+      payload.append('application_status_code', modal.querySelector('#wezwanieParsedStatusCode')?.value || '');
       payload.append('decision_date', parsedDecisionDate?.value || '');
 
       try {
@@ -657,6 +668,9 @@
           if (parsedFingerprintsDate) parsedFingerprintsDate.value = parsed.fingerprints_date || '';
           if (parsedFingerprintsTime) parsedFingerprintsTime.value = parsed.fingerprints_time || '';
           if (parsedFingerprintsLocation) parsedFingerprintsLocation.value = parsed.fingerprints_location || '';
+          if (modal.querySelector('#wezwanieParsedTicketNumber')) modal.querySelector('#wezwanieParsedTicketNumber').value = parsed.ticket_number || '';
+          if (modal.querySelector('#wezwanieParsedListName')) modal.querySelector('#wezwanieParsedListName').value = parsed.list_name || '';
+          if (modal.querySelector('#wezwanieParsedStatusCode')) modal.querySelector('#wezwanieParsedStatusCode').value = parsed.application_status_code || '';
           if (parsedDecisionDate) parsedDecisionDate.value = parsed.decision_date || '';
 
           const rawTextarea = modal.querySelector('#wezwanieRawText');
