@@ -218,8 +218,9 @@ class Client(SoftDeleteModel):
         summary = self.get_submitted_document_summary()
         return set(summary.get("codes", {}).keys())
 
-    def get_document_checklist(self):
+    def get_document_checklist(self, check_file_existence: bool = False):
         from .document import DocumentRequirement, resolve_document_label
+        from clients.services.document_helpers import document_file_exists
 
         current_language = translation.get_language() or self.language
         required_docs = DocumentRequirement.required_for(self.application_purpose, current_language)
@@ -227,6 +228,8 @@ class Client(SoftDeleteModel):
 
         docs_map = {}
         for doc in uploaded_docs:
+            if check_file_existence:
+                doc.file_exists = document_file_exists(doc)
             docs_map.setdefault(doc.document_type, []).append(doc)
 
         submitted_summary = self.get_submitted_document_summary()

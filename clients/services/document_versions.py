@@ -19,7 +19,7 @@ def archive_document_version(
     uploaded_by=None,
     comment: str = "",
 ) -> DocumentVersion | None:
-    """Persist the current file as a historical document version."""
+    """Persist the current file as a historical document version by making a physical copy."""
 
     if not document.file:
         return None
@@ -27,7 +27,9 @@ def archive_document_version(
         return None
 
     try:
-        file_size = document.file.size
+        document.file.open("rb")
+        content = document.file.read()
+        file_size = len(content)
     except (FileNotFoundError, OSError):
         logger.warning(
             "Skipping document version archive because the source file is missing: "
@@ -36,17 +38,37 @@ def archive_document_version(
             document.file.name,
         )
         return None
+    finally:
+        try:
+            document.file.close()
+        except Exception:
+            pass
 
     current_max = document.versions.aggregate(max_v=Max("version_number"))["max_v"] or 0
-    return DocumentVersion.objects.create(
+    version_number = current_max + 1
+    
+    file_name = Path(document.file.name).name
+    ext = Path(file_name).suffix or ".bin"
+    # Ensure a unique path for the version file
+    new_path = f"document_versions/{document.pk}_v{version_number}{ext}"
+    
+    version = DocumentVersion(
         document=document,
-        file=document.file,
-        version_number=current_max + 1,
+        version_number=version_number,
         uploaded_by=uploaded_by,
         comment=comment,
-        file_name=Path(document.file.name).name,
+        file_name=file_name,
         file_size=file_size,
     )
+    # Physically save the content to a new file path
+    version.file.save(new_path, ContentFile(content), save=False)
+    version.save()
+    
+    logger.info(
+        "Archived document version: doc_id=%s, version=%s, path=%s",
+        document.pk, version_number, version.file.name
+    )
+    return version
 
 
 def replace_document_file(

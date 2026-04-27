@@ -9,6 +9,9 @@ import zipfile
 
 from django.utils import timezone
 
+from clients.services.document_helpers import document_file_exists
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -121,6 +124,8 @@ def generate_client_zip(client) -> io.BytesIO:
     safe_name = _safe_filename(f"{client.first_name}_{client.last_name}")
     prefix = f"case_{safe_name}_{client.pk}"
 
+    missing_files_info = []
+
     with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
         # 1. Summary text file
         summary = generate_client_summary_text(client)
@@ -130,6 +135,9 @@ def generate_client_zip(client) -> io.BytesIO:
         documents = client.documents.all().order_by("document_type", "-uploaded_at")
         for doc in documents:
             if not doc.file:
+                continue
+            if not document_file_exists(doc):
+                missing_files_info.append(f"Document: ID={doc.pk}, Type={doc.document_type}, Name={doc.display_name}")
                 continue
             try:
                 doc_name = _safe_filename(doc.display_name)
@@ -158,6 +166,9 @@ def generate_client_zip(client) -> io.BytesIO:
         for version in versions:
             if not version.file:
                 continue
+            if not version.file.storage.exists(version.file.name):
+                missing_files_info.append(f"Version: ID={version.pk}, DocID={version.document_id}, Version={version.version_number}")
+                continue
             try:
                 doc_name = _safe_filename(
                     version.document.display_name if version.document else f"doc_{version.document_id}"
@@ -167,6 +178,22 @@ def generate_client_zip(client) -> io.BytesIO:
                 zf.writestr(archive_name, version.file.read())
             except Exception:
                 logger.exception("Failed to add version %s to ZIP", version.pk)
+
+        # 4. Missing files report
+        if missing_files_info:
+            missing_report = [
+                "MISSING FILES REPORT",
+                "====================",
+                f"The following {len(missing_files_info)} files were registered in the database but were missing from storage during export.",
+                "They might have been lost if they were stored on ephemeral storage (like a local container on Railway) and the app was redeployed.",
+                "",
+                *missing_files_info,
+                "",
+                f"Report generated: {timezone.now().strftime('%d.%m.%Y %H:%M')}"
+            ]
+            zf.writestr(f"{prefix}/MISSING_FILES.txt", "\n".join(missing_report))
+            logger.warning("ZIP export for client %s finished with %s missing files", client.pk, len(missing_files_info))
+
 
     buffer.seek(0)
     return buffer
