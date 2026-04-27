@@ -63,10 +63,14 @@ class WezwanieData:
     fingerprints_date: date | None = None
     fingerprints_time: str | None = None
     fingerprints_location: str | None = None
+    ticket_number: str | None = None
+    list_name: str | None = None
+    application_status_code: str | None = None  # "P" (Work), "S" (Study), "K" (Family/Other)
     decision_date: date | None = None
     full_name: str | None = None
     wezwanie_type: str | None = None  # "fingerprints" or "decision" or "confirmation"
     required_documents: list[str] = field(default_factory=list)
+
 
 
 def _tesseract_binary_available() -> bool:
@@ -393,6 +397,18 @@ def _find_case_number(text: str) -> str | None:
 
 
 def _find_first_date(text: str) -> date | None:
+    # Prioritize date after "termin", "dzień", "dnia" but specifically for appointment
+    appt_date_patterns = [
+        re.compile(r"(?:dzień|godzinę|termin|wizyty)[:\s,]+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
+        re.compile(r"dnia\s+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
+    ]
+    for pattern in appt_date_patterns:
+        match = pattern.search(text)
+        if match:
+            parsed = _parse_date(match.group(1))
+            if parsed:
+                return parsed
+
     for pattern in DATE_PATTERNS:
         for match in pattern.finditer(text):
             parsed = _parse_date(match.group(1))
@@ -429,6 +445,7 @@ def _find_fingerprints_time(text: str) -> str | None:
         re.compile(r"godz\.\s*(\d{1,2}[:.]\d{2})", re.IGNORECASE),
         re.compile(r"godzinie\s*(\d{1,2}[:.]\d{2})", re.IGNORECASE),
         re.compile(r"at\s*(\d{1,2}[:.]\d{2})", re.IGNORECASE),
+        re.compile(r"\d{1,2}[./-]\d{1,2}[./-]\d{2,4}[,\s]+(\d{1,2}[:.]\d{2})", re.IGNORECASE), # 4.05.2026, 10:30
     ]
     for pattern in time_patterns:
         match = pattern.search(text)
@@ -438,10 +455,28 @@ def _find_fingerprints_time(text: str) -> str | None:
 
 
 def _find_fingerprints_location(text: str) -> str | None:
-    """Extract fingerprints appointment location."""
+    """Extract fingerprints appointment location with room/booth details."""
+    # Try to find Marszałkowska address
+    address_match = re.search(r"Marszałkowska\s+3/5", text, re.IGNORECASE)
+    address = "Marszałkowska 3/5, Warszawa" if address_match else None
+
+    # Try to find pokój/sala and stanowisko
+    room_match = re.search(r"(?:pok|sala|pokój)\.?\s*([\d\s,/]+)", text, re.IGNORECASE)
+    booth_match = re.search(r"(?:stanowisko|stan\.)\s*([\d\s,/]+)", text, re.IGNORECASE)
+    
+    parts = []
+    if address:
+        parts.append(address)
+    if room_match:
+        parts.append(f"pok. {room_match.group(1).strip()}")
+    if booth_match:
+        parts.append(f"stan. {booth_match.group(1).strip()}")
+        
+    if parts:
+        return ", ".join(parts)
+        
+    # Fallback to general patterns
     location_patterns = [
-        re.compile(r"sala\s*(\d+)", re.IGNORECASE),
-        re.compile(r"pokój\s*(\d+)", re.IGNORECASE),
         re.compile(r"miejsce[:\s]+(.*?)(?:\.|\n)", re.IGNORECASE),
         re.compile(r"ul\.\s*([^,\n]+)", re.IGNORECASE),
     ]
@@ -449,6 +484,43 @@ def _find_fingerprints_location(text: str) -> str | None:
         match = pattern.search(text)
         if match:
             return match.group(0).strip()
+    return None
+
+
+def _find_ticket_number(text: str) -> str | None:
+    """Extract ticket number (Bilet)."""
+    match = re.search(r"(?:bilet|ticket)\s*([A-Z0-9]+)", text, re.IGNORECASE)
+    if match:
+        return match.group(1).strip()
+    return None
+
+
+def _find_list_name(text: str) -> str | None:
+    """Extract list name (Lista)."""
+    # Look for "Lista" followed by something like "X1"
+    match = re.search(r"(?:lista|list)\s+([A-Z][0-9A-Z]*)", text, re.IGNORECASE)
+    if match:
+        return match.group(0).strip()
+    return None
+
+
+def _extract_status_code(text: str, case_number: str | None) -> str | None:
+    """Extract status code P (Work) or S (Study) or K (Family)."""
+    # 1. From case number: WSC-II-P...
+    if case_number:
+        match = re.search(r"WSC-II-([PSK])", case_number, re.IGNORECASE)
+        if match:
+            return match.group(1).upper()
+            
+    # 2. From text keywords
+    text_lower = text.lower()
+    if "prac" in text_lower or "work" in text_lower:
+        return "P"
+    if "studi" in text_lower or "nauk" in text_lower or "study" in text_lower:
+        return "S"
+    if "rodzin" in text_lower or "family" in text_lower or "małżeń" in text_lower:
+        return "K"
+        
     return None
 
 
@@ -483,14 +555,12 @@ def _find_decision_date(text: str) -> date | None:
 def _find_full_name(text: str) -> str | None:
     """Extract full name from wezwanie (Polish names)."""
     name_patterns = [
-        # Pattern 1: "Pan/Pani Anna Nowak" or "Pan/i\nMikita BUTOUSKI"
-        # \s+ allows matching across a newline between the salutation and name.
-        # Subsequent parts still use [ \t]+ to stay on same line.
+        # Pattern 1: Salutation-based (Most reliable)
+        # Matches: "Pan/i Darya AFANASENKA", "Pana/i Darya AFANASENKA", "Pan/Pani Jan Kowalski"
         re.compile(
-            r"(?:Pan/Pani|Pan|Pani|Panna|Pan/i|Panli|Mr|Mrs)\.?\s+"
+            r"(?:Pan/Pani|Pana/i|Pan/i|Pan|Pani|Panna|Panli|Mr|Mrs)\.?\s+"
             r"([A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż-]+"
-            r"(?:[ \t]+[A-ZĄĆĘŁŃÓŚŹŻ][a-zA-Ząćęłńóśźż-]+"
-            r"|[ \t]+[A-ZĄĆĘŁŃÓŚŹŻ]{2,}){1,3})",
+            r"(?:[ \t]+[A-ZĄĆĘŁŃÓŚŹŻa-zA-Ząćęłńóśźż-]{2,}){1,3})",
             re.UNICODE,
         ),
         # Pattern 2: "Adresat: Jan Kowalski"
@@ -499,10 +569,12 @@ def _find_full_name(text: str) -> str | None:
             r"([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+(?:[ \t]+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż-]+){1,3})",
             re.UNICODE,
         ),
-        # Pattern 3: "Imię i nazwisko: Jan Kowalski"
-        re.compile(r"(?:imię i nazwisko|imi[ęe] oraz nazwisko)[:\s]+([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+(?:[ \t]+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+)+)", re.IGNORECASE | re.UNICODE),
-        # Pattern 4: "Name: Jan Kowalski"
-        re.compile(r"(?:name|full name)[:\s]+([A-Z][a-z]+(?:[ \t]+[A-Z][a-z]+)+)", re.IGNORECASE),
+        # Pattern 3: "Imię i nazwisko: Jan Kowalski" (Strict with colon/newline)
+        re.compile(
+            r"(?:imię i nazwisko|imi[ęe] oraz nazwisko)[:\s\n]+"
+            r"([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+(?:[ \t]+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+)+)", 
+            re.IGNORECASE | re.UNICODE
+        ),
     ]
 
     for pattern in name_patterns:
@@ -539,6 +611,9 @@ def parse_wezwanie(file_path: str | Path) -> WezwanieData:
     fingerprints_date = None
     fingerprints_time = None
     fingerprints_location = None
+    ticket_number = None
+    list_name = None
+    application_status_code = None
     decision_date = None
     
     if wezwanie_type == "decision":
@@ -552,6 +627,9 @@ def parse_wezwanie(file_path: str | Path) -> WezwanieData:
         fingerprints_date = _find_first_date(text)
         fingerprints_time = _find_fingerprints_time(text)
         fingerprints_location = _find_fingerprints_location(text)
+        ticket_number = _find_ticket_number(text)
+        list_name = _find_list_name(text)
+        application_status_code = _extract_status_code(text, case_number)
     else:
         # Unknown/Confirmation - look for fingerprints date
         fingerprints_date = _find_first_date(text)
@@ -565,11 +643,15 @@ def parse_wezwanie(file_path: str | Path) -> WezwanieData:
         fingerprints_date=fingerprints_date,
         fingerprints_time=fingerprints_time,
         fingerprints_location=fingerprints_location,
+        ticket_number=ticket_number,
+        list_name=list_name,
+        application_status_code=application_status_code,
         decision_date=decision_date,
         full_name=full_name,
         wezwanie_type=wezwanie_type,
         required_documents=required_documents,
     )
+
 
 
 def _extract_required_documents(text: str) -> list[str]:
