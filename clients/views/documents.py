@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import logging
+
+
+
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -28,6 +32,11 @@ from clients.services.access import accessible_clients_queryset, accessible_docu
 from clients.services.roles import DOCUMENT_DELETE_ROLES, DOCUMENT_EDIT_ROLES
 from clients.views.base import role_or_feature_required_view, role_required_view, staff_required_view
 from legalize_site.utils.files import build_protected_file_response
+from clients.services.document_helpers import document_file_exists
+
+logger = logging.getLogger(__name__)
+
+
 
 
 @role_required_view(*DOCUMENT_EDIT_ROLES)
@@ -271,13 +280,42 @@ def verify_all_documents(request, client_id):
 
 @staff_required_view
 def document_download(request, doc_id):
-    document = get_object_or_404(
-        accessible_documents_queryset(request.user, Document.objects.select_related("client")),
-        pk=doc_id,
+    logger.info("Download requested: doc_id=%s, user_id=%s", doc_id, request.user.pk)
+    try:
+        document = get_object_or_404(
+            accessible_documents_queryset(request.user, Document.objects.select_related("client")),
+            pk=doc_id,
+        )
+        logger.info("Document found and access granted: doc_id=%s", doc_id)
+    except Exception:
+        logger.warning("Document not found or access denied: doc_id=%s, user_id=%s", doc_id, request.user.pk)
+        raise
+
+    logger.info(
+        "Document storage info: file_field_name=%s, storage_class=%s",
+        document.file.name,
+        document.file.storage.__class__.__name__,
     )
+
+    if not document_file_exists(document):
+        logger.warning(
+            "Physical file missing in storage: document_id=%s, file_name=%s, storage_class=%s",
+            document.pk,
+            document.file.name,
+            document.file.storage.__class__.__name__,
+        )
+        messages.error(
+            request,
+            _("Файл отсутствует в хранилище. Возможно, он был потерян после redeploy или загружен до настройки постоянного хранилища. Загрузите файл заново."),
+        )
+        return redirect("clients:client_detail", pk=document.client.id)
+
     record_document_download(document=document, actor=request.user)
     filename = document.file.name.rsplit("/", 1)[-1]
     return build_protected_file_response(document.file, filename=filename, as_attachment=False)
+
+
+
 
 
 @staff_required_view
@@ -288,7 +326,7 @@ def client_status_api(request, pk):
     checklist_html = render_to_string(
         "clients/partials/document_checklist.html",
         {
-            "document_status_list": client.get_document_checklist(),
+            "document_status_list": client.get_document_checklist(check_file_existence=True),
             "client": client,
         },
     )
@@ -301,7 +339,7 @@ def client_overview_partial(request, pk):
     """Return the rendered client overview partial for AJAX refreshes."""
 
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
-    document_status_list = client.get_document_checklist()
+    document_status_list = client.get_document_checklist(check_file_existence=True)
     overview_html = render_to_string(
         "clients/partials/client_overview.html",
         {
@@ -317,7 +355,7 @@ def client_overview_partial(request, pk):
 @staff_required_view
 def client_checklist_partial(request, pk):
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
-    document_status_list = client.get_document_checklist()
+    document_status_list = client.get_document_checklist(check_file_existence=True)
     response = render(
         request,
         "clients/partials/document_checklist.html",

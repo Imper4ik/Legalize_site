@@ -53,17 +53,27 @@ Instrukcja włączania i przywracania kopii zapasowych na Railway znajduje się 
 Инструкция по включению и восстановлению бэкапов на Railway находится в документе: [docs/backups.md](backups.md).
 
 
-## Railway media storage safety
+## Persistent media storage on Railway
 
-For production, **do not** rely on ephemeral container filesystem for client documents.
+Local media inside the container is **not durable** and uploaded client documents will disappear after every redeploy.
 
-Use one of:
+### Recommended setup: S3-compatible storage
+We recommend using S3-compatible storage (AWS S3, Cloudflare R2, Backblaze B2).
 
-1. S3-compatible storage (AWS S3 / Cloudflare R2 / Backblaze B2) with `USE_S3_MEDIA_STORAGE=true`;
-2. Railway Volume mounted to media/backup directories.
+**Required Environment Variables:**
+- `USE_S3_MEDIA_STORAGE=True`
+- `AWS_STORAGE_BUCKET_NAME=...`
+- `AWS_ACCESS_KEY_ID=...`
+- `AWS_SECRET_ACCESS_KEY=...`
+- `AWS_S3_ENDPOINT_URL=...` (if not using standard AWS regions)
+- `PRIVATE_MEDIA_LOCATION=private`
 
-Security requirements:
+### Alternative: Railway Volumes
+Alternatively, use a Railway Volume mounted to the `MEDIA_ROOT` (default `media/`) and backup directories.
 
-- Media files must not be publicly exposed by direct bucket listing.
-- Document downloads should go through protected Django views with access checks.
+### Security and Diagnostics
+- Document downloads are routed through protected Django views with access checks.
+- If a physical file is missing from storage (e.g., due to ephemeral storage loss), the system will log a WARNING and show a friendly error message to the staff user instead of a 404 page.
+- ZIP exports will include a `MISSING_FILES.txt` report if any documents are missing.
 - If production runs with local media and no explicit acknowledgement (`ALLOW_PRODUCTION_LOCAL_MEDIA=true`), project system checks emit a warning.
+

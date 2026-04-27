@@ -111,7 +111,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         client = self.object
-        document_status_list = client.get_document_checklist() if hasattr(client, "get_document_checklist") else []
+        document_status_list = client.get_document_checklist(check_file_existence=True) if hasattr(client, "get_document_checklist") else []
 
         context["payment_form"] = PaymentForm()
         context["document_upload_form"] = DocumentUploadForm()
