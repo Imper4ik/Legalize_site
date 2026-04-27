@@ -62,6 +62,7 @@ from clients.views.reminders import (
 )
 from clients.views.metrics import MetricsDashboardView
 from clients.views.admin_dashboard import AdminDashboardView
+from clients.views.schedule_views import fingerprints_schedule_view
 from clients.views.archive import (
     restore_client_view,
     restore_document_view,
@@ -136,4 +137,5 @@ __all__ = [
     'document_version_download',
     'document_versions_view',
     'document_version_restore',
+    'fingerprints_schedule_view',
 ]
