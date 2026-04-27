@@ -9,7 +9,6 @@ from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from clients.constants import DOCUMENT_CHECKLIST
 from clients.forms import (
     ClientForm,
     DocumentUploadForm,
@@ -24,7 +23,6 @@ from clients.services.notifications import (
 from clients.services.responses import apply_no_store
 from clients.services.roles import (
     CLIENT_DELETE_ROLES,
-    CLIENT_EDIT_ROLES,
 )
 from clients.use_cases.client_records import (
     finalize_client_creation,
@@ -118,7 +116,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         context["payment_form"] = PaymentForm()
         context["document_upload_form"] = DocumentUploadForm()
         context["document_status_list"] = document_status_list
-        context["email_logs"] = client.email_logs.select_related("sent_by").all()[:50]
+        context["email_logs"] = client.email_logs.select_related("sent_by").order_by("-sent_at")[:50]
         context["service_choices"] = Payment.SERVICE_CHOICES
         context["task_form"] = StaffTaskForm(initial={"assignee": self.request.user.pk})
         context["open_tasks"] = client.staff_tasks.filter(

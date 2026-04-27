@@ -22,7 +22,8 @@
       <tbody>
         {% for log in email_logs %}
         <tr data-bs-toggle="collapse" data-bs-target="#email-body-{{ log.id }}" role="button"
-            style="cursor: pointer;">
+            style="cursor: pointer;"
+            class="email-log-row {% if forloop.counter > 3 %}d-none email-log-extra{% endif %}">
           <td class="text-nowrap">{{ log.sent_at|date:"d.m.Y H:i" }}</td>
           <td>{{ log.subject|truncatechars:60 }}</td>
           <td>{{ log.recipients|truncatechars:40 }}</td>
@@ -30,7 +31,7 @@
             <span class="badge bg-secondary">{{ log.template_type|default:"—" }}</span>
           </td>
         </tr>
-        <tr class="collapse" id="email-body-{{ log.id }}">
+        <tr class="collapse email-log-row-body {% if forloop.counter > 3 %}email-log-extra{% endif %}" id="email-body-{{ log.id }}">
           <td colspan="4" class="p-3">
             <pre class="mb-0 p-3 border rounded text-body" style="white-space: pre-wrap; font-size: 0.9em; background-color: rgba(128, 128, 128, 0.1);">{{ log.body }}</pre>
           </td>
@@ -39,6 +40,16 @@
       </tbody>
     </table>
   </div>
+  {% if email_logs|length > 3 %}
+  <div class="card-footer text-center bg-light">
+    <button type="button" class="btn btn-sm btn-link text-decoration-none email-history-toggle"
+            data-hidden-count="{{ email_logs|length|add:'-3' }}"
+            data-label-show-more="{% translate 'Показать ещё' %}"
+            data-label-show-less="{% translate 'Свернуть' %}">
+      {% translate "Показать ещё" %} {{ email_logs|length|add:"-3" }}
+    </button>
+  </div>
+  {% endif %}
 </div>
 {% else %}
 <p class="text-muted">{% translate "Письма ещё не отправлялись." %}</p>

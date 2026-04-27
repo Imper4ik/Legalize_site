@@ -556,7 +556,7 @@ def _find_fingerprints_location(text: str) -> str | None:
 
 def _find_ticket_number(text: str) -> str | None:
     """Extract ticket number (Bilet)."""
-    match = re.search(r"(?:bilet|ticket)[:\s]*([A-Z0-9]+)", text, re.IGNORECASE)
+    match = re.search(r"\bbilet\s*:?\s*([A-Z]\d+[A-Z0-9]*)\b", text, re.IGNORECASE)
     if match:
         return match.group(1).strip()
     return None
@@ -565,7 +565,7 @@ def _find_ticket_number(text: str) -> str | None:
 def _find_list_name(text: str) -> str | None:
     """Extract list name (Lista)."""
     # Look for "Lista" followed by something like "X1"
-    match = re.search(r"(?:lista|list)[:\s]*([A-Z][0-9A-Z]*)", text, re.IGNORECASE)
+    match = re.search(r"\bLista\s+([A-Z]\d+[A-Z0-9]*)\b", text, re.IGNORECASE)
     if match:
         return match.group(0).strip()
     return None
