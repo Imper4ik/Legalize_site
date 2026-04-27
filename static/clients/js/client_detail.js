@@ -490,13 +490,16 @@
       }
 
       const isWezwanie = docType === 'wezwanie';
-      if (parseInput) {
-        parseInput.value = isWezwanie ? '1' : '0';
-      }
-
       if (parseButton && submitButton) {
-        parseButton.classList.toggle('d-none', !isWezwanie);
-        submitButton.classList.toggle('d-none', isWezwanie);
+        if (isWezwanie) {
+          parseButton.classList.remove('d-none');
+          submitButton.classList.remove('d-none');
+          submitButton.textContent = 'Просто загрузить';
+        } else {
+          parseButton.classList.add('d-none');
+          submitButton.classList.remove('d-none');
+          submitButton.textContent = 'Загрузить';
+        }
       }
 
       resetConfirmation();
@@ -508,6 +511,14 @@
         description.textContent = '';
       }
       resetConfirmation();
+    });
+
+    submitButton?.addEventListener('click', () => {
+      if (parseInput) parseInput.value = '0';
+    });
+
+    parseButton?.addEventListener('click', () => {
+      if (parseInput) parseInput.value = '1';
     });
 
     form.addEventListener('submit', async (event) => {
