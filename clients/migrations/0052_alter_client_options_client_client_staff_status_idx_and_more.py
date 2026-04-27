@@ -4,6 +4,30 @@ from django.conf import settings
 from django.db import migrations, models
 
 
+def create_indexes_if_not_exist(apps, schema_editor):
+    """Create indexes only if they don't already exist (idempotent)."""
+    if schema_editor.connection.vendor != "postgresql":
+        return
+
+    indexes = [
+        'CREATE INDEX IF NOT EXISTS "client_staff_status_idx" ON "clients_client" ("assigned_staff_id", "status")',
+        'CREATE INDEX IF NOT EXISTS "client_workflow_status_idx" ON "clients_client" ("workflow_stage", "status")',
+        'CREATE INDEX IF NOT EXISTS "client_created_at_idx" ON "clients_client" ("created_at")',
+        'CREATE INDEX IF NOT EXISTS "doc_client_type_idx" ON "clients_document" ("client_id", "document_type")',
+        'CREATE INDEX IF NOT EXISTS "doc_ocr_confirm_idx" ON "clients_document" ("ocr_status", "awaiting_confirmation")',
+        'CREATE INDEX IF NOT EXISTS "docjob_ready_idx" ON "clients_documentprocessingjob" ("job_type", "status", "next_attempt_at")',
+        'CREATE INDEX IF NOT EXISTS "docjob_lease_idx" ON "clients_documentprocessingjob" ("status", "lease_expires_at")',
+        'CREATE INDEX IF NOT EXISTS "docreq_purpose_pos_idx" ON "clients_documentrequirement" ("application_purpose", "position")',
+        'CREATE INDEX IF NOT EXISTS "payment_client_status_idx" ON "clients_payment" ("client_id", "status")',
+        'CREATE INDEX IF NOT EXISTS "payment_status_due_idx" ON "clients_payment" ("status", "due_date")',
+        'CREATE INDEX IF NOT EXISTS "reminder_active_due_idx" ON "clients_reminder" ("is_active", "due_date")',
+        'CREATE INDEX IF NOT EXISTS "reminder_client_active_idx" ON "clients_reminder" ("client_id", "is_active")',
+    ]
+    with schema_editor.connection.cursor() as cursor:
+        for sql in indexes:
+            cursor.execute(sql)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -16,52 +40,65 @@ class Migration(migrations.Migration):
             name='client',
             options={},
         ),
-        migrations.AddIndex(
-            model_name='client',
-            index=models.Index(fields=['assigned_staff', 'status'], name='client_staff_status_idx'),
+        # Use RunPython instead of AddIndex to handle pre-existing indexes
+        # on production databases that had a partial migration applied.
+        migrations.RunPython(
+            create_indexes_if_not_exist,
+            migrations.RunPython.noop,
         ),
-        migrations.AddIndex(
-            model_name='client',
-            index=models.Index(fields=['workflow_stage', 'status'], name='client_workflow_status_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='client',
-            index=models.Index(fields=['created_at'], name='client_created_at_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='document',
-            index=models.Index(fields=['client', 'document_type'], name='doc_client_type_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='document',
-            index=models.Index(fields=['ocr_status', 'awaiting_confirmation'], name='doc_ocr_confirm_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='documentprocessingjob',
-            index=models.Index(fields=['job_type', 'status', 'next_attempt_at'], name='docjob_ready_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='documentprocessingjob',
-            index=models.Index(fields=['status', 'lease_expires_at'], name='docjob_lease_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='documentrequirement',
-            index=models.Index(fields=['application_purpose', 'position'], name='docreq_purpose_pos_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='payment',
-            index=models.Index(fields=['client', 'status'], name='payment_client_status_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='payment',
-            index=models.Index(fields=['status', 'due_date'], name='payment_status_due_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='reminder',
-            index=models.Index(fields=['is_active', 'due_date'], name='reminder_active_due_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='reminder',
-            index=models.Index(fields=['client', 'is_active'], name='reminder_client_active_idx'),
+        # Keep state-only AddIndex so Django knows the indexes exist in its
+        # internal state, but skip the actual SQL (handled above).
+        migrations.SeparateDatabaseAndState(
+            state_operations=[
+                migrations.AddIndex(
+                    model_name='client',
+                    index=models.Index(fields=['assigned_staff', 'status'], name='client_staff_status_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='client',
+                    index=models.Index(fields=['workflow_stage', 'status'], name='client_workflow_status_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='client',
+                    index=models.Index(fields=['created_at'], name='client_created_at_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='document',
+                    index=models.Index(fields=['client', 'document_type'], name='doc_client_type_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='document',
+                    index=models.Index(fields=['ocr_status', 'awaiting_confirmation'], name='doc_ocr_confirm_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='documentprocessingjob',
+                    index=models.Index(fields=['job_type', 'status', 'next_attempt_at'], name='docjob_ready_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='documentprocessingjob',
+                    index=models.Index(fields=['status', 'lease_expires_at'], name='docjob_lease_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='documentrequirement',
+                    index=models.Index(fields=['application_purpose', 'position'], name='docreq_purpose_pos_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='payment',
+                    index=models.Index(fields=['client', 'status'], name='payment_client_status_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='payment',
+                    index=models.Index(fields=['status', 'due_date'], name='payment_status_due_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='reminder',
+                    index=models.Index(fields=['is_active', 'due_date'], name='reminder_active_due_idx'),
+                ),
+                migrations.AddIndex(
+                    model_name='reminder',
+                    index=models.Index(fields=['client', 'is_active'], name='reminder_client_active_idx'),
+                ),
+            ],
+            database_operations=[],
         ),
     ]
