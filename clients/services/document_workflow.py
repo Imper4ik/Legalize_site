@@ -5,6 +5,7 @@ from datetime import timedelta
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 
+from django.conf import settings
 from django.db import models, transaction
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_time
@@ -96,17 +97,29 @@ def upload_client_document(
         )
 
     # Route all wezwanie parsing (whether confirmable or not) to the background job queue.
-    enqueue_document_processing_job(
+    job = enqueue_document_processing_job(
         document=document,
         actor=actor,
         requires_confirmation=parse_requested,
     )
 
+    if not getattr(settings, "ASYNC_OCR_PROCESSING", True):
+        # Process immediately if sync mode is requested (e.g. dev or testing)
+        process_document_processing_job(
+            job_id=job.id,
+            parser=parser,
+            send_missing_email=send_missing_email,
+            send_appointment_email=send_appointment_email,
+        )
+        # Re-fetch document to get updated state (awaiting_confirmation etc)
+        document.refresh_from_db()
+
     if parse_requested:
         return DocumentUploadResult(
             document=document,
-            message=_("Document uploaded. OCR is running in the background."),
-            # UI handles this state by refreshing list and showing "Pending OCR"
+            message=_("Document uploaded. OCR processing complete."),
+            pending_confirmation=document.awaiting_confirmation,
+            parsed_payload=document.parsed_data if document.awaiting_confirmation else None,
         )
 
     return DocumentUploadResult(

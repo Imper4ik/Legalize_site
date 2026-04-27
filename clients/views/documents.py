@@ -95,6 +95,8 @@ def add_document(request, client_id, doc_type):
                     "message": _("Загружено документов: %(count)s") % {"count": success_count} if success_count > 1 else last_result.message,
                     "doc_id": last_result.document.id,
                     "manual_review_required": last_result.manual_review_required,
+                    "pending_confirmation": last_result.pending_confirmation,
+                    "parsed": last_result.parsed_payload,
                 }
                 return helper.success(**payload)
 
