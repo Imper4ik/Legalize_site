@@ -590,6 +590,9 @@ def _build_wezwanie_payload(parsed: WezwanieData) -> dict[str, str]:
         else "",
         "fingerprints_time": parsed.fingerprints_time or "",
         "fingerprints_location": parsed.fingerprints_location or "",
+        "ticket_number": parsed.ticket_number or "",
+        "list_name": parsed.list_name or "",
+        "application_status_code": parsed.application_status_code or "",
         "decision_date": parsed.decision_date.isoformat() if parsed.decision_date else "",
         "decision_date_display": parsed.decision_date.strftime("%d.%m.%Y")
         if parsed.decision_date
@@ -655,6 +658,25 @@ def _apply_parsed_client_updates(client: Client, parsed: WezwanieData) -> tuple[
             updated_fields.extend(["first_name", "last_name"])
             auto_updates.append(_("full name: %(val)s") % {"val": parsed.full_name})
 
+    if parsed.ticket_number and parsed.ticket_number != client.fingerprints_ticket:
+        client.fingerprints_ticket = parsed.ticket_number
+        updated_fields.append("fingerprints_ticket")
+        auto_updates.append(_("ticket number: %(val)s") % {"val": parsed.ticket_number})
+
+    if parsed.list_name and parsed.list_name != client.fingerprints_list:
+        client.fingerprints_list = parsed.list_name
+        updated_fields.append("fingerprints_list")
+        auto_updates.append(_("list: %(val)s") % {"val": parsed.list_name})
+
+    # Map P/S/K to application purpose if not set
+    if parsed.application_status_code:
+        purpose_map = {"P": "work", "S": "study", "K": "family"}
+        mapped_purpose = purpose_map.get(parsed.application_status_code)
+        if mapped_purpose and client.application_purpose != mapped_purpose:
+            client.application_purpose = mapped_purpose
+            updated_fields.append("application_purpose")
+            auto_updates.append(_("application purpose set to: %(val)s") % {"val": mapped_purpose})
+
     return updated_fields, auto_updates
 
 
@@ -702,6 +724,24 @@ def _apply_confirmation_updates(
     if fingerprints_location and fingerprints_location != (client.fingerprints_location or ""):
         client.fingerprints_location = fingerprints_location
         updated_fields.append("fingerprints_location")
+
+    ticket_number = (confirmation_data.get("ticket_number") or "").strip()
+    if ticket_number and ticket_number != client.fingerprints_ticket:
+        client.fingerprints_ticket = ticket_number
+        updated_fields.append("fingerprints_ticket")
+
+    list_name = (confirmation_data.get("list_name") or "").strip()
+    if list_name and list_name != client.fingerprints_list:
+        client.fingerprints_list = list_name
+        updated_fields.append("fingerprints_list")
+
+    status_code = (confirmation_data.get("application_status_code") or "").strip()
+    if status_code:
+        purpose_map = {"P": "work", "S": "study", "K": "family"}
+        mapped_purpose = purpose_map.get(status_code)
+        if mapped_purpose and client.application_purpose != mapped_purpose:
+            client.application_purpose = mapped_purpose
+            updated_fields.append("application_purpose")
 
     decision_date = parse_date(decision_date_raw) if decision_date_raw else None
     if decision_date and decision_date != client.decision_date:

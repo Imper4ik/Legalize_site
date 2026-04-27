@@ -101,7 +101,25 @@ class Client(SoftDeleteModel):
         null=True,
         verbose_name=_("Место сдачи отпечатков"),
     )
+    fingerprints_ticket = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        verbose_name=_("Номер билета (Bilet)"),
+    )
+    fingerprints_list = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        verbose_name=_("Название списка (Lista)"),
+    )
+    fingerprints_info = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name=_("Дополнительная информация (кабинет, окно и т.д.)"),
+    )
     decision_date = models.DateField(
+
         null=True,
         blank=True,
         verbose_name=_("Дата официальной децизии"),
