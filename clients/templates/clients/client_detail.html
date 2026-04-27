@@ -4,6 +4,13 @@
 <!-- prettier-ignore -->
 {% block title %}{% blocktrans with client_name=client.first_name %}Детали клиента: {{ client_name }}{% endblocktrans %}{% endblock %}
 
+{% block body_class %}client-detail-page{% endblock %}
+
+{% block extra_head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'clients/css/client_detail.css' %}">
+{% endblock %}
+
 {% block content %}
 <div id="client-overview" data-refresh-url="{% url 'clients:client_overview_partial' client.pk %}">
   {% include 'clients/partials/client_overview.html' with client=client workflow_summary=workflow_summary %}
