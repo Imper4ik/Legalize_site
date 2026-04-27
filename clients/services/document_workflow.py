@@ -95,21 +95,26 @@ def upload_client_document(
             message=_("Document '%(name)s' uploaded successfully.") % {"name": document_type_display},
         )
 
+    # Route all wezwanie parsing (whether confirmable or not) to the background job queue.
+    enqueue_document_processing_job(
+        document=document,
+        actor=actor,
+        requires_confirmation=parse_requested,
+    )
+
     if parse_requested:
-        return _handle_confirmable_wezwanie_upload(
+        return DocumentUploadResult(
             document=document,
-            client=client,
-            document_type_display=document_type_display,
-            parser=parser,
+            message=_("Document uploaded. OCR is running in the background."),
+            # UI handles this state by refreshing list and showing "Pending OCR"
         )
 
-    return _handle_background_wezwanie_upload(
+    return DocumentUploadResult(
         document=document,
-        client=client,
-        actor=actor,
-        document_type_display=document_type_display,
-        send_missing_email=send_missing_email,
-        send_appointment_email=send_appointment_email,
+        message=_(
+            "Document '%(name)s' uploaded successfully. OCR processing will continue in the background."
+        )
+        % {"name": document_type_display},
     )
 
 
@@ -174,7 +179,7 @@ def confirm_wezwanie_document(
     )
 
 
-def enqueue_document_processing_job(*, document: Document, actor=None) -> DocumentProcessingJob:
+def enqueue_document_processing_job(*, document: Document, actor=None, requires_confirmation: bool = False) -> DocumentProcessingJob:
     """Queue background OCR work for the current document file."""
 
     job_defaults = {
@@ -187,6 +192,7 @@ def enqueue_document_processing_job(*, document: Document, actor=None) -> Docume
         "lease_expires_at": None,
         "started_at": None,
         "completed_at": None,
+        "requires_confirmation": requires_confirmation,
     }
 
     with transaction.atomic():
@@ -317,95 +323,13 @@ def _save_client_document(
     uploaded_document: Document,
     actor,
 ) -> Document:
-    existing_doc = Document.objects.filter(client=client, document_type=doc_type).first()
-    if not existing_doc:
-        uploaded_document.client = client
-        uploaded_document.document_type = doc_type
-        uploaded_document.save()
-        return uploaded_document
-
-    with transaction.atomic():
-        archive_document_version(
-            existing_doc,
-            uploaded_by=actor if getattr(actor, "is_authenticated", False) else None,
-            comment=_("Automatic archive before replacing the document file"),
-        )
-        return replace_document_file(
-            existing_doc,
-            uploaded_file=uploaded_document.file,
-            expiry_date=uploaded_document.expiry_date,
-        )
+    uploaded_document.client = client
+    uploaded_document.document_type = doc_type
+    uploaded_document.save()
+    return uploaded_document
 
 
-def _handle_confirmable_wezwanie_upload(
-    *,
-    document: Document,
-    client: Client,
-    document_type_display: str,
-    parser: Parser,
-) -> DocumentUploadResult:
-    try:
-        parsed = parser(document.file.path)
-    except Exception:
-        logger.exception("Wezwanie parsing failed for document %s", document.id)
-        document.ocr_status = "failed"
-        document.ocr_name_mismatch = False
-        document.awaiting_confirmation = False
-        document.save(update_fields=["ocr_status", "ocr_name_mismatch", "awaiting_confirmation"])
-        return DocumentUploadResult(
-            document=document,
-            message=_compose_upload_message(
-                document_type_display=document_type_display,
-                manual_review_required=True,
-            ),
-            manual_review_required=True,
-        )
 
-    if not _has_meaningful_parsed_data(parsed):
-        document.ocr_status = "failed"
-        document.ocr_name_mismatch = False
-        document.awaiting_confirmation = False
-        document.save(update_fields=["ocr_status", "ocr_name_mismatch", "awaiting_confirmation"])
-        return DocumentUploadResult(
-            document=document,
-            message=_compose_upload_message(
-                document_type_display=document_type_display,
-                manual_review_required=True,
-            ),
-            manual_review_required=True,
-        )
-
-    document.ocr_status = "success"
-    document.ocr_name_mismatch = _has_name_mismatch(parsed.full_name, client)
-    document.awaiting_confirmation = True
-    document.save(update_fields=["awaiting_confirmation", "ocr_status", "ocr_name_mismatch"])
-
-    return DocumentUploadResult(
-        document=document,
-        message=_("Document uploaded. Please confirm the parsed data."),
-        pending_confirmation=True,
-        parsed_payload=_build_wezwanie_payload(parsed),
-    )
-
-
-def _handle_background_wezwanie_upload(
-    *,
-    document: Document,
-    client: Client,
-    actor,
-    document_type_display: str,
-    send_missing_email: NotificationSender,
-    send_appointment_email: NotificationSender,
-) -> DocumentUploadResult:
-    del client, send_missing_email, send_appointment_email
-    enqueue_document_processing_job(document=document, actor=actor)
-    return DocumentUploadResult(
-        document=document,
-        message=_(
-            "Document '%(name)s' uploaded successfully. OCR processing will continue in the background."
-        )
-        % {"name": document_type_display},
-    )
 
 
 def _finalize_failed_document_job(
@@ -495,26 +419,33 @@ def _finalize_successful_document_job(
         client = Client.objects.select_for_update().get(pk=document.client_id)
         actor = job.created_by
 
-        updated_fields, parsed_updates = _apply_parsed_client_updates(client, parsed)
-        auto_updates.extend(parsed_updates)
-        _append_required_documents_update(parsed, auto_updates)
+        if job.requires_confirmation:
+            document.parsed_data = _build_wezwanie_payload(parsed)
+            document.ocr_status = "success"
+            document.awaiting_confirmation = True
+            document.ocr_name_mismatch = _has_name_mismatch(parsed.full_name, client)
+            document.save(update_fields=["parsed_data", "ocr_status", "awaiting_confirmation", "ocr_name_mismatch"])
+        else:
+            updated_fields, parsed_updates = _apply_parsed_client_updates(client, parsed)
+            auto_updates.extend(parsed_updates)
+            _append_required_documents_update(parsed, auto_updates)
 
-        if updated_fields:
-            client.save(update_fields=updated_fields)
-            log_client_activity(
-                client=client,
-                actor=actor,
-                event_type="client_updated",
-                summary="Client data updated from background wezwanie OCR",
-                details=", ".join(changed_field_labels(client, updated_fields)),
-                metadata={"changed_fields": updated_fields, "source": "document_processing_job"},
-                document=document,
-            )
+            if updated_fields:
+                client.save(update_fields=updated_fields)
+                log_client_activity(
+                    client=client,
+                    actor=actor,
+                    event_type="client_updated",
+                    summary="Client data updated from background wezwanie OCR",
+                    details=", ".join(changed_field_labels(client, updated_fields)),
+                    metadata={"changed_fields": updated_fields, "source": "document_processing_job"},
+                    document=document,
+                )
 
-        document.ocr_status = "success"
-        document.awaiting_confirmation = False
-        document.ocr_name_mismatch = _has_name_mismatch(parsed.full_name, client)
-        document.save(update_fields=["ocr_status", "awaiting_confirmation", "ocr_name_mismatch"])
+            document.ocr_status = "success"
+            document.awaiting_confirmation = False
+            document.ocr_name_mismatch = _has_name_mismatch(parsed.full_name, client)
+            document.save(update_fields=["ocr_status", "awaiting_confirmation", "ocr_name_mismatch"])
 
         job.status = DocumentProcessingJob.STATUS_COMPLETED
         job.error_message = ""

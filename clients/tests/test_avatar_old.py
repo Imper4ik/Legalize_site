@@ -221,7 +221,8 @@ class ClientAccountLifecycleTests(TestCase):
 
         client.delete()
 
-        self.assertTrue(self.user_model.objects.filter(pk=staff_user.pk).exists())
+        staff_user.refresh_from_db()
+        self.assertTrue(staff_user.is_active)
 
 
 
@@ -556,14 +557,19 @@ class WezwanieUploadFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = json.loads(response.content)
         self.assertEqual(payload["status"], "success")
-        self.assertTrue(payload["pending_confirmation"])
+        self.assertNotIn("pending_confirmation", payload)
 
         updated_client = Client.objects.get(pk=self.client_record.pk)
         self.assertIsNone(updated_client.case_number)
         self.assertIsNone(updated_client.fingerprints_date)
 
         document = Document.objects.get(client=updated_client, document_type="wezwanie")
-        self.assertTrue(document.awaiting_confirmation)
+        self.assertFalse(document.awaiting_confirmation)
+        self.assertEqual(document.ocr_status, "pending")
+        
+        from clients.models.document_processing import DocumentProcessingJob
+        job = DocumentProcessingJob.objects.get(document=document)
+        self.assertTrue(job.requires_confirmation)
 
     def test_confirm_wezwanie_updates_client_and_sends_email(self):
         login_successful = self.client.login(email="staff_wezwanie@example.com", password="pass")
@@ -591,6 +597,19 @@ class WezwanieUploadFlowTests(TestCase):
             )
         payload = json.loads(upload_response.content)
         document = Document.objects.get(pk=payload["doc_id"])
+        
+        # Simulate background worker completing the job
+        from clients.models.document_processing import DocumentProcessingJob
+        job = DocumentProcessingJob.objects.get(document=document)
+        document.parsed_data = {
+            "first_name": "Jan", "last_name": "Test", 
+            "case_number": "ZZ/987/24", "fingerprints_date": "2024-06-05"
+        }
+        document.ocr_status = "success"
+        document.awaiting_confirmation = True
+        document.save()
+        job.status = DocumentProcessingJob.STATUS_COMPLETED
+        job.save()
 
         confirm_url = reverse("clients:confirm_wezwanie_parse", kwargs={"doc_id": document.pk})
         with patch("clients.views.documents.parse_wezwanie") as parse_mock:

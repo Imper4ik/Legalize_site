@@ -40,5 +40,6 @@ class ClientsConfig(AppConfig):
 
     def ready(self):
         # Этот импорт для регистрации сигналов
-        import clients.signals
+        import clients.signals  # noqa: F401
+
         _compile_translations()

@@ -62,6 +62,7 @@ urlpatterns = [
         name='confirm_wezwanie_parse',
     ),
     path('document/<int:doc_id>/download/', views.document_download, name='document_download'),
+    path('document/<int:doc_id>/parsed-data/', views.get_document_parsed_data, name='get_document_parsed_data'),
     path('document/<int:pk>/delete/', views.document_delete, name='document_delete'),
     path('document/<int:pk>/restore/', views.restore_document_view, name='document_restore'),
     path(

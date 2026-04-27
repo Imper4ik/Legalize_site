@@ -1,6 +1,8 @@
 import logging
 
 from django.db import connection
+from django.conf import settings
+from django.core.cache import cache
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils.translation import gettext as _
@@ -38,6 +40,55 @@ def healthcheck(request):
         payload["runtime"] = runtime_dependency_summary()
 
     return JsonResponse(payload, status=200 if db_status == "ok" else 503)
+
+
+def readiness(request):
+    components = {}
+    overall_ok = True
+
+    try:
+        connection.ensure_connection()
+        components["database"] = {"status": "ok"}
+    except Exception as exc:
+        overall_ok = False
+        logger.exception("Readiness database check failed")
+        components["database"] = {"status": "error", "error": exc.__class__.__name__}
+
+    cache_required = bool(getattr(settings, "REDIS_URL", ""))
+    try:
+        cache_key = "readiness:cache"
+        cache.set(cache_key, "ok", timeout=30)
+        cache_ok = cache.get(cache_key) == "ok"
+        components["cache"] = {
+            "status": "ok" if cache_ok else "error",
+            "required": cache_required,
+            "backend": settings.CACHES["default"]["BACKEND"],
+        }
+        if cache_required and not cache_ok:
+            overall_ok = False
+    except Exception as exc:
+        logger.exception("Readiness cache check failed")
+        components["cache"] = {
+            "status": "error",
+            "required": cache_required,
+            "backend": settings.CACHES["default"]["BACKEND"],
+            "error": exc.__class__.__name__,
+        }
+        if cache_required:
+            overall_ok = False
+
+    runtime = runtime_dependency_summary()
+    components["runtime"] = {
+        "status": runtime["status"],
+        "missing_count": runtime["missing_count"],
+        "missing_keys": runtime["missing_keys"],
+    }
+
+    payload = {
+        "status": "ok" if overall_ok else "error",
+        "components": components,
+    }
+    return JsonResponse(payload, status=200 if overall_ok else 503)
 
 
 def csrf_failure(request, reason="", template_name="403.html"):

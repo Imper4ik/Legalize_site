@@ -8,7 +8,8 @@ logger = logging.getLogger(__name__)
 
 def normalize_text(s):
     """Normalize whitespace and newlines for comparison."""
-    if not s: return ""
+    if not s:
+        return ""
     return re.sub(r'\s+', ' ', str(s)).strip()
 
 def get_po_files():
@@ -68,14 +69,16 @@ def save_translation_entry(msgid, ru=None, en=None, pl=None):
     potential_canonical = None
 
     try:
-        for l, p in po_files.items():
+        for language, path in po_files.items():
             try:
-                po = polib.pofile(p)
-            except Exception:
+                po = polib.pofile(path)
+            except Exception as exc:
+                logger.debug('Skipping unreadable PO file %s: %s', path, exc)
                 continue
             
             for entry in po:
-                if not entry.msgid: continue
+                if not entry.msgid:
+                    continue
                 
                 n_id = normalize_text(entry.msgid)
                 n_str = normalize_text(entry.msgstr)
@@ -83,19 +86,19 @@ def save_translation_entry(msgid, ru=None, en=None, pl=None):
                 # 1. Exact msgid match (Strongest)
                 if entry.msgid == msgid:
                     canonical = entry.msgid
-                    logger.info('Found exact msgid match in %s: %s', l, canonical)
+                    logger.info('Found exact msgid match in %s: %s', language, canonical)
                     potential_canonical = canonical
                     break
                 
                 # 2. Normalized msgid match (Secondary)
                 if not potential_canonical and n_id == normalized_input:
                     potential_canonical = entry.msgid
-                    logger.info('Found normalized msgid match in %s: %s', l, potential_canonical)
+                    logger.info('Found normalized msgid match in %s: %s', language, potential_canonical)
                 
                 # 3. msgstr match (Resolution from UI text to technical key)
                 if not potential_canonical and n_str == normalized_input:
                     potential_canonical = entry.msgid
-                    logger.info('Found msgstr match (resolved UI text to key) in %s: %s', l, potential_canonical)
+                    logger.info('Found msgstr match (resolved UI text to key) in %s: %s', language, potential_canonical)
             
             if potential_canonical and potential_canonical == msgid: # Already found best possible
                 break

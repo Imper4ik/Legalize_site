@@ -47,7 +47,7 @@ class DocumentFlowsStage4Tests(TestCase):
             email="anna-stage4@example.com",
         )
 
-    @patch("clients.views.documents.parse_wezwanie")
+    @patch("clients.management.commands.process_document_jobs.parse_wezwanie")
     def test_add_document_with_parse_requested_returns_pending_confirmation(self, parse_mock):
         parse_mock.return_value = WezwanieData(
             text="wezwanie text",
@@ -69,12 +69,16 @@ class DocumentFlowsStage4Tests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["status"], "success")
-        self.assertTrue(payload["pending_confirmation"])
+        self.assertNotIn("pending_confirmation", payload)
 
         document = Document.objects.get(client=self.client_obj)
-        self.assertTrue(document.awaiting_confirmation)
+        self.assertFalse(document.awaiting_confirmation)
+        self.assertEqual(document.ocr_status, "pending")
+        
+        job = DocumentProcessingJob.objects.get(document=document)
+        self.assertTrue(job.requires_confirmation)
 
-    @patch("clients.views.documents.parse_wezwanie", side_effect=RuntimeError("ocr failed"))
+    @patch("clients.management.commands.process_document_jobs.parse_wezwanie", side_effect=RuntimeError("ocr failed"))
     def test_add_document_with_parse_failure_keeps_document_and_flags_manual_review(self, _parse_mock):
         uploaded = build_pdf_upload("wezwanie.pdf")
 
@@ -90,11 +94,18 @@ class DocumentFlowsStage4Tests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["status"], "success")
-        self.assertTrue(payload["manual_review_required"])
+        self.assertFalse(payload["manual_review_required"])
         self.assertFalse(payload.get("pending_confirmation", False))
         self.assertEqual(Document.objects.filter(client=self.client_obj).count(), 1)
+        
+        # Simulate background processing
+        call_command("process_document_jobs")
+        
+        document = Document.objects.get(client=self.client_obj)
+        self.assertEqual(document.ocr_status, "failed")
+        self.assertFalse(document.awaiting_confirmation)
 
-    @patch("clients.views.documents.parse_wezwanie")
+    @patch("clients.management.commands.process_document_jobs.parse_wezwanie")
     def test_add_document_with_empty_parse_result_marks_ocr_failed(self, parse_mock):
         parse_mock.return_value = WezwanieData(text="", error="no_text")
         uploaded = build_pdf_upload("wezwanie.pdf")
@@ -111,8 +122,10 @@ class DocumentFlowsStage4Tests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["status"], "success")
-        self.assertTrue(payload["manual_review_required"])
-        self.assertFalse(payload.get("pending_confirmation", False))
+        self.assertFalse(payload.get("manual_review_required", False))
+        
+        # Simulate background processing
+        call_command("process_document_jobs")
 
         document = Document.objects.get(client=self.client_obj, document_type=DocumentType.WEZWANIE.value)
         self.assertEqual(document.ocr_status, "failed")
@@ -134,7 +147,7 @@ class DocumentFlowsStage4Tests(TestCase):
         self.assertEqual(response.json()["status"], "error")
         self.assertEqual(Document.objects.filter(client=self.client_obj).count(), 0)
 
-    def test_replacing_document_archives_previous_version_with_request_user(self):
+    def test_uploading_multiple_documents_preserves_both(self):
         original = Document.objects.create(
             client=self.client_obj,
             document_type=DocumentType.PASSPORT.value,
@@ -154,11 +167,11 @@ class DocumentFlowsStage4Tests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        original.refresh_from_db()
-        version = DocumentVersion.objects.get(document=original)
-        self.assertEqual(version.uploaded_by, self.staff)
+        
+        docs = Document.objects.filter(client=self.client_obj, document_type=DocumentType.PASSPORT.value)
+        self.assertEqual(docs.count(), 2)
 
-    def test_replacing_document_succeeds_even_if_previous_file_is_missing(self):
+    def test_uploading_document_succeeds_even_if_previous_file_is_missing(self):
         original = Document.objects.create(
             client=self.client_obj,
             document_type=DocumentType.PASSPORT.value,
@@ -179,9 +192,8 @@ class DocumentFlowsStage4Tests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        original.refresh_from_db()
-        self.assertIn("passport-replacement", original.file.name)
-        self.assertEqual(DocumentVersion.objects.filter(document=original).count(), 0)
+        docs = Document.objects.filter(client=self.client_obj, document_type=DocumentType.PASSPORT.value)
+        self.assertEqual(docs.count(), 2)
 
     def test_add_document_without_parse_requested_queues_background_ocr(self):
         uploaded = build_pdf_upload("wezwanie-background.pdf")

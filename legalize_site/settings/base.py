@@ -29,11 +29,20 @@ def env_flag(name: str, default: str = "False") -> bool:
     return os.environ.get(name, default).lower() in ("1", "true", "yes", "on")
 
 
+def env_float(name: str, default: str) -> float:
+    """Return an environment variable value as a float."""
+
+    try:
+        return float(os.environ.get(name, default))
+    except ValueError as exc:
+        raise ImproperlyConfigured(f"{name} must be a valid float.") from exc
+
+
 load_env()
 
 WHITENOISE_AVAILABLE = importlib.util.find_spec("whitenoise") is not None
 STORAGES_AVAILABLE = importlib.util.find_spec("storages") is not None
-DEFAULT_SECRET_KEY_FALLBACK = "django-insecure-change-me"
+DEFAULT_SECRET_KEY_FALLBACK = "django-insecure-change-me"  # nosec B105
 
 
 def running_in_production() -> bool:
@@ -422,9 +431,6 @@ SITE_ID = 1
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_AUTHENTICATION_METHOD = "email"
 ACCOUNT_ADAPTER = "users.adapters.InternalAccountAdapter"
 SOCIALACCOUNT_ADAPTER = "users.adapters.InternalSocialAccountAdapter"
 
@@ -517,6 +523,13 @@ RATE_LIMITS = {
 
 # --- SENTRY ---
 SENTRY_DSN = os.environ.get("SENTRY_DSN")
+SENTRY_TRACES_SAMPLE_RATE = env_float(
+    "SENTRY_TRACES_SAMPLE_RATE",
+    "0.1" if IS_PRODUCTION else "1.0",
+)
+if not 0 <= SENTRY_TRACES_SAMPLE_RATE <= 1:
+    raise ImproperlyConfigured("SENTRY_TRACES_SAMPLE_RATE must be between 0 and 1.")
+
 if SENTRY_DSN:
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration
@@ -524,7 +537,7 @@ if SENTRY_DSN:
     sentry_sdk.init(
         dsn=SENTRY_DSN,
         integrations=[DjangoIntegration()],
-        traces_sample_rate=1.0,
+        traces_sample_rate=SENTRY_TRACES_SAMPLE_RATE,
         send_default_pii=False,
         max_request_body_size="never",
         before_send=_sentry_before_send,

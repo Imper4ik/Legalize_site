@@ -8,7 +8,7 @@ from contextvars import ContextVar
 from typing import Iterable
 
 
-REDACTION_TOKEN = "[REDACTED]"
+REDACTION_TOKEN = "[REDACTED]"  # nosec B105
 _request_id_var: ContextVar[str] = ContextVar("request_id", default="-")
 _correlation_id_var: ContextVar[str] = ContextVar("correlation_id", default="-")
 

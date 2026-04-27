@@ -6,10 +6,8 @@ import io
 import logging
 import os
 import zipfile
-from datetime import date
 
-from django.template.loader import render_to_string
-from django.utils import timezone, translation
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +20,6 @@ def _safe_filename(name: str) -> str:
 
 def generate_client_summary_text(client) -> str:
     """Generate a plain-text summary of the client case."""
-
-    from clients.models import DocumentRequirement
 
     lines = []
     lines.append(f"{'=' * 60}")
@@ -59,7 +55,7 @@ def generate_client_summary_text(client) -> str:
         if doc.ocr_status != "skipped":
             lines.append(f"       OCR:      {doc.get_ocr_status_display()}")
         if doc.ocr_name_mismatch:
-            lines.append(f"       ⚠ Name mismatch detected by OCR")
+            lines.append("       ⚠ Name mismatch detected by OCR")
     lines.append("")
 
     # Payments

@@ -630,6 +630,84 @@
         confirmButton.removeAttribute('disabled');
       }
     });
+
+    // Handle "Review OCR Data" button clicks
+    document.addEventListener('click', async (event) => {
+      const reviewBtn = event.target.closest('.review-ocr-data-btn');
+      if (!reviewBtn) return;
+      
+      const docId = reviewBtn.dataset.docId;
+      if (!docId) return;
+
+      const docType = reviewBtn.dataset.docType;
+
+      // Show a loading state if needed
+      reviewBtn.setAttribute('disabled', 'disabled');
+      const originalText = reviewBtn.innerHTML;
+      reviewBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+
+      try {
+        const { response, data } = await fetchJson(`/clients/document/${docId}/parsed-data/`);
+        if (response.ok && data.parsed_data) {
+          const parsed = data.parsed_data;
+          
+          if (parsedFirstName) parsedFirstName.value = parsed.first_name || '';
+          if (parsedLastName) parsedLastName.value = parsed.last_name || '';
+          if (parsedCaseNumber) parsedCaseNumber.value = parsed.case_number || '';
+          if (parsedFingerprintsDate) parsedFingerprintsDate.value = parsed.fingerprints_date || '';
+          if (parsedFingerprintsTime) parsedFingerprintsTime.value = parsed.fingerprints_time || '';
+          if (parsedFingerprintsLocation) parsedFingerprintsLocation.value = parsed.fingerprints_location || '';
+          if (parsedDecisionDate) parsedDecisionDate.value = parsed.decision_date || '';
+
+          const rawTextarea = modal.querySelector('#wezwanieRawText');
+          const rawTextContainer = modal.querySelector('#wezwanieRawTextContainer');
+          const toggleRawBtn = modal.querySelector('#wezwanieToggleRawText');
+
+          if (rawTextarea) {
+            rawTextarea.value = parsed.raw_text || '';
+          }
+          if (rawTextContainer) {
+            rawTextContainer.classList.add('d-none');
+          }
+
+          if (toggleRawBtn) {
+            toggleRawBtn.onclick = () => {
+              if (rawTextContainer) {
+                rawTextContainer.classList.toggle('d-none');
+              }
+            };
+          }
+
+          const uploadStep = modal.querySelector('#uploadDocumentStep');
+          if (uploadStep) uploadStep.classList.add('d-none');
+          
+          confirmStep.classList.remove('d-none');
+          confirmActions.classList.remove('d-none');
+          uploadActions.classList.add('d-none');
+
+          if (confirmButton) {
+            const confirmUrl = (confirmTemplate || '')
+                .replace('__doc_id__', docId)
+                .replace('/0/', `/${docId}/`);
+            confirmButton.dataset.confirmUrl = confirmUrl;
+          }
+
+          if (description) {
+            description.textContent = 'Проверьте данные, извлеченные из документа:';
+          }
+
+          bootstrap.Modal.getOrCreateInstance(modal).show();
+        } else {
+          showDocumentAlert('Не удалось загрузить данные OCR.', 'danger');
+        }
+      } catch (error) {
+        logAjaxError('review OCR data', error);
+        showDocumentAlert('Не удалось загрузить данные OCR.', 'danger');
+      } finally {
+        reviewBtn.removeAttribute('disabled');
+        reviewBtn.innerHTML = originalText;
+      }
+    });
   }
 
   function initChecklistRefresher() {

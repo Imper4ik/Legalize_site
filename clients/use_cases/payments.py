@@ -30,13 +30,13 @@ class PaymentScenarioResult:
 
 def _set_payment_fields(payment: Payment, cleaned_data: Mapping[str, object]) -> tuple[str, ...]:
     changed_fields: list[str] = []
-    for field in PAYMENT_MUTABLE_FIELDS:
-        if field not in cleaned_data:
+    for field_name in PAYMENT_MUTABLE_FIELDS:
+        if field_name not in cleaned_data:
             continue
-        new_value = cleaned_data[field]
-        if getattr(payment, field) != new_value:
-            setattr(payment, field, new_value)
-            changed_fields.append(field)
+        new_value = cleaned_data[field_name]
+        if getattr(payment, field_name) != new_value:
+            setattr(payment, field_name, new_value)
+            changed_fields.append(field_name)
     return tuple(changed_fields)
 
 

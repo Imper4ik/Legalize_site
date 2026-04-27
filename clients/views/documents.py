@@ -55,43 +55,60 @@ def add_document(request, client_id, doc_type):
     helper = ResponseHelper(request)
 
     if request.method == "POST":
-        form = DocumentUploadForm(request.POST, request.FILES)
-        if form.is_valid():
-            result = upload_client_document(
-                client=client,
-                doc_type=doc_type,
-                uploaded_document=form.save(commit=False),
-                actor=request.user,
-                parse_requested=request.POST.get("parse_wezwanie") == "1",
-                parser=parse_wezwanie,
-                send_missing_email=send_missing_documents_email,
-                send_appointment_email=send_appointment_notification_email,
-            )
+        files = request.FILES.getlist('file')
+        if not files:
+            form = DocumentUploadForm(request.POST, request.FILES)
+            if helper.expects_json:
+                return helper.error(
+                    message=_("Проверьте правильность заполнения формы."),
+                    errors=form.errors,
+                )
+            return redirect("clients:client_detail", pk=client.id)
+
+        last_result = None
+        success_count = 0
+        errors = {}
+
+        for f in files:
+            file_dict = {'file': f}
+            form = DocumentUploadForm(request.POST, file_dict)
+            if form.is_valid():
+                result = upload_client_document(
+                    client=client,
+                    doc_type=doc_type,
+                    uploaded_document=form.save(commit=False),
+                    actor=request.user,
+                    parse_requested=request.POST.get("parse_wezwanie") == "1",
+                    parser=parse_wezwanie,
+                    send_missing_email=send_missing_documents_email,
+                    send_appointment_email=send_appointment_notification_email,
+                )
+                last_result = result
+                success_count += 1
+            else:
+                errors = form.errors
+                break
+
+        if success_count > 0 and success_count == len(files):
             if helper.expects_json:
                 payload = {
-                    "message": result.message,
-                    "doc_id": result.document.id,
-                    "manual_review_required": result.manual_review_required,
+                    "message": _("Загружено документов: %(count)s") % {"count": success_count} if success_count > 1 else last_result.message,
+                    "doc_id": last_result.document.id,
+                    "manual_review_required": last_result.manual_review_required,
                 }
-                if result.pending_confirmation:
-                    payload["pending_confirmation"] = True
-                    payload["confirm_url"] = reverse(
-                        "clients:confirm_wezwanie_parse",
-                        kwargs={"doc_id": result.document.id},
-                    )
-                    payload["parsed"] = result.parsed_payload or {}
                 return helper.success(**payload)
 
-            if result.manual_review_required:
-                messages.warning(request, result.message)
+            if last_result.manual_review_required:
+                messages.warning(request, last_result.message)
             else:
-                messages.success(request, result.message)
+                msg = _("Загружено документов: %(count)s") % {"count": success_count} if success_count > 1 else last_result.message
+                messages.success(request, msg)
             return redirect("clients:client_detail", pk=client.id)
 
         if helper.expects_json:
             return helper.error(
                 message=_("Проверьте правильность заполнения формы."),
-                errors=form.errors,
+                errors=errors,
             )
 
     form = DocumentUploadForm()
@@ -257,7 +274,7 @@ def document_download(request, doc_id):
     )
     record_document_download(document=document, actor=request.user)
     filename = document.file.name.rsplit("/", 1)[-1]
-    return build_protected_file_response(document.file, filename=filename, as_attachment=True)
+    return build_protected_file_response(document.file, filename=filename, as_attachment=False)
 
 
 @staff_required_view
@@ -307,3 +324,16 @@ def client_checklist_partial(request, pk):
         },
     )
     return apply_no_store(response)
+
+
+@staff_required_view
+def get_document_parsed_data(request, doc_id):
+    document = get_object_or_404(
+        Document.objects.select_related("client"),
+        pk=doc_id,
+        client__in=accessible_clients_queryset(request.user, Client.objects.all()),
+    )
+    if not document.awaiting_confirmation:
+        return JsonResponse({"error": _("Document is not awaiting confirmation.")}, status=400)
+    
+    return JsonResponse({"parsed_data": document.parsed_data or {}})
