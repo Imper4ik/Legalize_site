@@ -4,6 +4,7 @@
 
 from django.urls import path
 from . import views
+from .views.schedule_views import fingerprints_schedule_view
 
 app_name = 'clients'
 
@@ -11,7 +12,7 @@ urlpatterns = [
     # CRUD для Клиентов (используя CBV)
     path('metrics/', views.MetricsDashboardView.as_view(), name='metrics_dashboard'),
     path('tasks/', views.TaskListView.as_view(), name='task_list'),
-    path('fingerprints-schedule/', views.fingerprints_schedule_view, name='fingerprints_schedule'),
+    path('fingerprints-schedule/', fingerprints_schedule_view, name='fingerprints_schedule'),
     path('', views.ClientListView.as_view(), name='client_list'),
     path('mass-email/', views.mass_email_view, name='mass_email'),
     path('api/campaign/<int:campaign_id>/status/', views.campaign_status_api, name='campaign_status_api'),
