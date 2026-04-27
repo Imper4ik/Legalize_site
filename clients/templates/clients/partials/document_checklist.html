@@ -42,6 +42,16 @@
               <i class="bi bi-exclamation-triangle"></i> OCR Mismatch
             </span>
             {% endif %}
+            {% if doc.ocr_status != 'skipped' %}
+            <span class="badge {{ doc.ocr_status_badge }} ms-2" title="{% translate 'OCR Status' %}">
+              OCR: {{ doc.get_ocr_status_display }}
+            </span>
+            {% endif %}
+            {% if doc.awaiting_confirmation %}
+            <button type="button" class="btn btn-sm btn-outline-success review-ocr-data-btn ms-2" data-doc-id="{{ doc.id }}" data-doc-type="{{ doc.document_type }}">
+              {% translate "Review OCR Data" %}
+            </button>
+            {% endif %}
             {% if doc.version_count > 0 %}
             <a href="{% url 'clients:document_versions' doc.pk %}" class="badge bg-info text-decoration-none ms-2">
               v{{ doc.version_count|add:"1" }} ({% translate "History" %})

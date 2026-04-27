@@ -35,6 +35,7 @@ from clients.views.documents import (
     toggle_document_verification,
     verify_all_documents,
     update_client_notes,
+    get_document_parsed_data,
 )
 from clients.views.emails import (
     email_preview_api,
@@ -102,6 +103,7 @@ __all__ = [
     'toggle_document_verification',
     'verify_all_documents',
     'update_client_notes',
+    'get_document_parsed_data',
     'add_payment',
     'delete_payment',
     'edit_payment',

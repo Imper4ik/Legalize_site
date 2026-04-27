@@ -10,7 +10,7 @@ from typing import Iterable
 
 from django.conf import settings
 from django.db import IntegrityError, transaction
-from django.core.mail import EmailMessage, send_mail
+from django.core.mail import send_mail
 from django.template.loader import select_template
 from django.utils import timezone
 from django.utils.translation import gettext as _, gettext_lazy

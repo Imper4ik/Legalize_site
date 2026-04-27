@@ -1,15 +1,13 @@
 """Domain logic for the bank statement calculator."""
 from __future__ import annotations
 
-import json
 import logging
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Optional
-from urllib.error import HTTPError, URLError
-from urllib.request import urlopen
 
+import requests
 from django.core.cache import cache
 from django.utils import timezone
 
@@ -52,16 +50,17 @@ def get_eur_to_pln_rate() -> Decimal:
         return cached_rate
 
     try:
-        with urlopen(NBP_EUR_RATE_URL, timeout=5) as response:
-            data = json.load(response)
+        response = requests.get(NBP_EUR_RATE_URL, timeout=5)
+        response.raise_for_status()
+        data = response.json()
         rate = Decimal(str(data["rates"][0]["mid"]))
 
         cache.set(cache_key, rate, timeout=12 * 60 * 60)
         return rate
-    except (HTTPError, URLError, OSError) as exc:
+    except requests.RequestException as exc:
         logger.warning("Failed to fetch EUR/PLN rate from NBP API: %s. Using default.", exc)
         return DEFAULT_EUR_TO_PLN_RATE
-    except (KeyError, IndexError, TypeError, ValueError, json.JSONDecodeError) as exc:
+    except (KeyError, IndexError, TypeError, ValueError) as exc:
         logger.warning("Failed to parse EUR/PLN rate from NBP API: %s. Using default.", exc)
         return DEFAULT_EUR_TO_PLN_RATE
 

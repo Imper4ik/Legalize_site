@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from django.contrib.auth import get_user_model
 from django.db.models import Q, QuerySet
 
 from clients.models import Client, Document, EmailCampaign, Payment, Reminder, StaffTask

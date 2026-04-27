@@ -4,7 +4,7 @@ import hashlib
 import logging
 import os
 import shutil
-import subprocess
+import subprocess  # nosec B404
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -134,7 +134,8 @@ def create_db_backup() -> BackupResult:
     backup_name = f"backup-{timestamp}.sql"
     backup_path = backup_dir / backup_name
 
-    subprocess.run(
+    # pg_dump is resolved with shutil.which and run without a shell.
+    subprocess.run(  # nosec B603
         [pg_dump_path, _normalize_database_url(database_url), "-f", str(backup_path)],
         check=True,
         capture_output=True,

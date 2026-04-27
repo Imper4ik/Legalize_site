@@ -24,3 +24,7 @@ class Reminder(models.Model):
 
     class Meta:
         ordering = ['due_date']
+        indexes = [
+            models.Index(fields=["is_active", "due_date"], name="reminder_active_due_idx"),
+            models.Index(fields=["client", "is_active"], name="reminder_client_active_idx"),
+        ]

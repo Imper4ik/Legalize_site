@@ -56,5 +56,9 @@ class Payment(SoftDeleteModel):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["client", "status"], name="payment_client_status_idx"),
+            models.Index(fields=["status", "due_date"], name="payment_status_due_idx"),
+        ]
         verbose_name = _("Платёж")
         verbose_name_plural = _("Платежи")

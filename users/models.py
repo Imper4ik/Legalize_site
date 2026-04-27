@@ -84,7 +84,7 @@ class User(AbstractUser):
         normalized_email = email.strip().casefold()
         local_part = normalized_email.partition("@")[0]
         slug = slugify(local_part) or "user"
-        digest = hashlib.sha1(normalized_email.encode("utf-8")).hexdigest()[:12]
+        digest = hashlib.sha1(normalized_email.encode("utf-8"), usedforsecurity=False).hexdigest()[:12]
         max_slug_length = 150 - len(digest) - 1
         return f"{slug[:max_slug_length]}-{digest}"
 

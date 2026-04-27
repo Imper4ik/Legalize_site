@@ -1,7 +1,6 @@
-import hashlib
 from django.db import models
 from django.utils import translation
-from django.utils.translation import gettext, gettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.validators import validate_uploaded_document
@@ -45,13 +44,14 @@ def _select_custom_document_name(*, doc_type: str, custom_name: str | None = Non
     return None
 
 def translate_document_name(name: str, language: str | None = None) -> str:
+    source = str(getattr(name, "_args", [name])[0])
     lang = language or translation.get_language()
     if not lang:
-        return str(name)
+        return source
     with translation.override(lang):
         translated = str(name)
     if not translated or not translated.strip():
-        return str(name)
+        return source
     return translated
 
 def resolve_document_label(doc_type: str, custom_name: str | None = None, custom_name_pl: str | None = None, custom_name_en: str | None = None, custom_name_ru: str | None = None, language: str | None = None) -> str:
@@ -94,6 +94,7 @@ class Document(SoftDeleteModel):
     uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Дата загрузки"))
     verified = models.BooleanField(default=False, verbose_name=_("Проверено"))
     awaiting_confirmation = models.BooleanField(default=False, verbose_name=_("Ожидает подтверждения"))
+
     ocr_status = models.CharField(
         max_length=20,
         choices=OCR_STATUS_CHOICES,
@@ -104,11 +105,20 @@ class Document(SoftDeleteModel):
         default=False,
         verbose_name=_("Несовпадение имени OCR"),
     )
+    parsed_data = models.JSONField(
+        null=True,
+        blank=True,
+        verbose_name=_("Распознанные данные"),
+    )
 
     class Meta:
         verbose_name = _("Документ")
         verbose_name_plural = _("Документы")
         ordering = ['-uploaded_at']
+        indexes = [
+            models.Index(fields=["client", "document_type"], name="doc_client_type_idx"),
+            models.Index(fields=["ocr_status", "awaiting_confirmation"], name="doc_ocr_confirm_idx"),
+        ]
 
     def __str__(self):
         return f"{self.display_name} для {self.client}"
@@ -165,6 +175,9 @@ class DocumentRequirement(models.Model):
     class Meta:
         unique_together = ("application_purpose", "document_type")
         ordering = ["position", "id"]
+        indexes = [
+            models.Index(fields=["application_purpose", "position"], name="docreq_purpose_pos_idx"),
+        ]
         verbose_name = _("Требование к документу")
         verbose_name_plural = _("Требования к документам")
 

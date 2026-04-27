@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from django.utils import timezone, translation
-from django.utils.translation import gettext, gettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from fernet_fields import EncryptedTextField
 
 from clients.constants import DocumentType
@@ -132,6 +132,13 @@ class Client(SoftDeleteModel):
         null=True,
         blank=True,
     )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["assigned_staff", "status"], name="client_staff_status_idx"),
+            models.Index(fields=["workflow_stage", "status"], name="client_workflow_status_idx"),
+            models.Index(fields=["created_at"], name="client_created_at_idx"),
+        ]
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"

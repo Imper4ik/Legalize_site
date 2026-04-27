@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import builtins
+import importlib.util
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -171,6 +172,21 @@ class WezwanieParserStage5Tests(TestCase):
 
         self.assertEqual(processed.mode, "L")
         self.assertGreaterEqual(processed.size[0], 1000)
+
+    def test_preprocess_for_ocr_uses_opencv_path_when_available(self):
+        if importlib.util.find_spec("cv2") is None or importlib.util.find_spec("numpy") is None:
+            self.skipTest("OpenCV preprocessing dependencies are not installed")
+
+        image = Image.new("RGB", (1200, 800), "white")
+
+        with patch.object(wezwanie_parser.logger, "warning") as warning_mock:
+            with patch.object(wezwanie_parser.logger, "exception") as exception_mock:
+                processed = _preprocess_for_ocr(image)
+
+        self.assertEqual(processed.mode, "L")
+        self.assertEqual(processed.size, image.size)
+        warning_mock.assert_not_called()
+        exception_mock.assert_not_called()
 
     def test_extract_image_text_returns_text_when_numpy_is_missing(self):
         real_import = builtins.__import__

@@ -8,7 +8,8 @@ from .utils import load_all_translations, save_translation_entry
 logger = logging.getLogger(__name__)
 
 # Admin-only views
-is_superuser = lambda u: u.is_authenticated and u.is_superuser
+def is_superuser(user):
+    return user.is_authenticated and user.is_superuser
 
 @user_passes_test(is_superuser)
 def studio_dashboard(request):
@@ -102,8 +103,10 @@ def scan_translations_api(request):
     translations = load_all_translations()
     mapping = {}
     import re
+
     def normalize(s):
-        if not s: return ""
+        if not s:
+            return ""
         return re.sub(r'\s+', ' ', str(s)).strip()
 
     for entry in translations:

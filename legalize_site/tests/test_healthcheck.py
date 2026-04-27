@@ -57,3 +57,14 @@ class HealthcheckViewTests(TestCase):
         self.assertEqual(payload["queues"]["pending_document_jobs"], 1)
         self.assertEqual(payload["queues"]["pending_email_campaigns"], 1)
         self.assertEqual(payload["queues"]["running_email_campaigns"], 1)
+
+    def test_readiness_returns_component_statuses(self):
+        response = self.client.get(reverse("readiness"))
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "ok")
+        self.assertIn("database", payload["components"])
+        self.assertIn("cache", payload["components"])
+        self.assertIn("runtime", payload["components"])
+        self.assertEqual(payload["components"]["database"]["status"], "ok")

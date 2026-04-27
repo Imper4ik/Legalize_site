@@ -4,7 +4,7 @@ import ipaddress
 import logging
 import os
 import secrets
-import subprocess
+import subprocess  # nosec B404
 
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.http import require_POST

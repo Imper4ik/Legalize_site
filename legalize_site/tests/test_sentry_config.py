@@ -1,10 +1,10 @@
+from importlib import reload
+from unittest.mock import patch
+
+from django.core.exceptions import ImproperlyConfigured
 from django.test import SimpleTestCase
 
 from legalize_site.settings.base import _sentry_before_send
-from django.core.exceptions import ImproperlyConfigured
-from importlib import reload
-from unittest.mock import patch
-import legalize_site.settings.production as production_settings
 
 
 class SentryConfigTests(SimpleTestCase):
@@ -43,4 +43,6 @@ class SentryConfigTests(SimpleTestCase):
             clear=False,
         ):
             with self.assertRaises(ImproperlyConfigured):
+                import legalize_site.settings.production as production_settings
+
                 reload(production_settings)

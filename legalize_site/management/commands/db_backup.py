@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import subprocess
+import subprocess  # nosec B404
 
 from django.core.management.base import BaseCommand, CommandError
 
@@ -23,7 +23,6 @@ class Command(BaseCommand):
             self.style.SUCCESS(
                 "Backup created: "
                 f"id={backup_result.backup_id} "
-                f"path={backup_result.path} "
                 f"size_bytes={backup_result.size_bytes} "
                 f"sha256={backup_result.sha256}"
             )

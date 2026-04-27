@@ -64,10 +64,15 @@ class DocumentProcessingJob(models.Model):
     started_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Started at"))
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Completed at"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Updated at"))
+    requires_confirmation = models.BooleanField(default=False, verbose_name=_("Requires confirmation"))
 
     class Meta:
         ordering = ["created_at"]
         unique_together = ("document", "job_type")
+        indexes = [
+            models.Index(fields=["job_type", "status", "next_attempt_at"], name="docjob_ready_idx"),
+            models.Index(fields=["status", "lease_expires_at"], name="docjob_lease_idx"),
+        ]
         verbose_name = _("Document processing job")
         verbose_name_plural = _("Document processing jobs")
 

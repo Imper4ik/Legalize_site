@@ -1,6 +1,7 @@
 import logging
-import subprocess
-import os
+import runpy
+from pathlib import Path
+
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -45,10 +46,10 @@ def update_translations_view(request):
         # 2. fix_po_dupes.py
         # We need to run the python script we created to clean up duplicates
         # so msgmerge/compilemessages doesn't crash
-        fix_po_path = os.path.join(settings.BASE_DIR, 'fix_po_dupes.py')
-        if os.path.exists(fix_po_path):
+        fix_po_path = Path(settings.BASE_DIR) / 'fix_po_dupes.py'
+        if fix_po_path.exists():
             logger.info("Running fix_po_dupes.py...")
-            subprocess.run(['python', fix_po_path], check=True, cwd=settings.BASE_DIR)
+            runpy.run_path(str(fix_po_path), run_name="__main__")
 
         # 3. compilemessages
         logger.info("Running compilemessages...")

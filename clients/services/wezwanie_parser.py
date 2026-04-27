@@ -89,26 +89,15 @@ def _parse_date(raw: str | None) -> date | None:
 def _extract_pdf_text(path: Path) -> str:
     """Extract text from PDF, using native text extraction or OCR for scans."""
     text_content = ""
-    
+
     # 1. Try native text extraction first (fastest, best for digital PDFs)
-    # Note: Using pypdf would be better here, but avoiding extra dependency for now
-    # if simple read worked. Since we know simple read fails for scans, we skip straight
-    # to OCR if we can't get text easily or if we want to be thorough.
-    # However, standard PDF libraries (pypdf) are better than raw read.
-    # Given we added pdf2image, we likely want to focus on OCR for scans.
-    
     pdf_reader = None
     try:
         from pypdf import PdfReader
 
         pdf_reader = PdfReader
     except ImportError:
-        try:
-            from PyPDF2 import PdfReader
-
-            pdf_reader = PdfReader
-        except ImportError:
-            pdf_reader = None
+        pdf_reader = None
 
     if pdf_reader:
         try:
@@ -161,8 +150,8 @@ def _extract_pdf_text(path: Path) -> str:
             # Only use if it looks like real text, not binary garbage
             if "wezwanie" in raw_text.lower() or "duw" in raw_text.lower():
                 return raw_text
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("Fallback binary PDF text extraction failed for %s: %s", path, exc)
 
     return text_content
 
@@ -188,8 +177,8 @@ def _preprocess_for_ocr(img):
     # 0. Fix EXIF orientation (crucial for phone photos)
     try:
         img = ImageOps.exif_transpose(img)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Could not apply EXIF transpose before OCR preprocessing: %s", exc)
 
     # 1. Basic PIL Pre-checks (Resize if too small before anything)
     # Tesseract generally likes 300 DPI, which for A4 is ~2480 px width.
@@ -203,7 +192,7 @@ def _preprocess_for_ocr(img):
     # (Sometimes it's better to do this on the original gray image)
     try:
         import pytesseract
-        import re
+
         if _tesseract_binary_available():
             osd = pytesseract.image_to_osd(img)
             rotate_match = re.search(r"Rotate: (\d+)", osd)
@@ -212,8 +201,8 @@ def _preprocess_for_ocr(img):
                 if angle != 0:
                     logger.debug("OSD detected rotation: %s. Fixing...", angle)
                     img = img.rotate(angle, expand=True)
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("Tesseract OSD rotation detection skipped: %s", exc)
 
     # 3. OpenCV Processing
     try:
@@ -339,9 +328,12 @@ def _try_normalize_wsc(text: str) -> str | None:
     
     # 1. Normalize Prefix
     n_prefix = prefix.upper().replace(" ", "").replace("VV", "W").replace("5", "S").replace("$", "S")
-    if n_prefix == "WS": n_prefix = "WSC"
-    if n_prefix == "W5C": n_prefix = "WSC"
-    if n_prefix == "SOC": n_prefix = "WSC"
+    if n_prefix == "WS":
+        n_prefix = "WSC"
+    if n_prefix == "W5C":
+        n_prefix = "WSC"
+    if n_prefix == "SOC":
+        n_prefix = "WSC"
         
     # 2. Normalize Roman (1->I, 11->II, l->I)
     n_roman = roman.upper().replace("1", "I").replace("L", "I")

@@ -61,13 +61,11 @@ def _validate_uploaded_filename(uploaded_file) -> None:
 
 
 def _get_pdf_reader():
-    for module_name in ("pypdf", "PyPDF2"):
-        try:
-            module = import_module(module_name)
-            return getattr(module, "PdfReader", None)
-        except ImportError:
-            continue
-    return None
+    try:
+        module = import_module("pypdf")
+        return getattr(module, "PdfReader", None)
+    except ImportError:
+        return None
 
 
 def _reset_position(uploaded_file, position: int) -> None:

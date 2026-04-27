@@ -11,10 +11,11 @@ from users.security_views import SignupDisabledView
 from users.views import ResendVerificationEmailView
 from .cron_views import db_backup, process_email_campaigns_cron
 
-from legalize_site.views import healthcheck
+from legalize_site.views import healthcheck, readiness
 
 urlpatterns = [
     path('healthz/', healthcheck, name='healthcheck'),
+    path('readyz/', readiness, name='readiness'),
     path('admin/update-translations/', update_translations_view, name='update_translations'),
     path('admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),
