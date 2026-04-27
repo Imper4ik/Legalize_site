@@ -120,6 +120,7 @@ def add_document(request, client_id, doc_type):
         {
             "form": form,
             "client": client,
+            "doc_type": doc_type,
             "document_type_display": document_type_display,
         },
     )
