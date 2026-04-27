@@ -17,52 +17,65 @@ if DEBUG:
 ENABLE_TRANSLATION_TOOLING = env_flag("ENABLE_TRANSLATION_TOOLING", "False")
 
 # --- HOSTS AND SECURITY ---
-ALLOWED_HOSTS = [host for host in os.environ.get("ALLOWED_HOSTS", "").split(",") if host]
-CSRF_TRUSTED_ORIGINS = [
-    origin for origin in os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",") if origin
-]
+def _env_list(name: str) -> list[str]:
+    return [item.strip() for item in os.environ.get(name, "").split(",") if item.strip()]
+
+
+def _hostname_from_value(value: str | None) -> str | None:
+    if not value:
+        return None
+    parsed = urlparse(value if "://" in value else f"//{value}")
+    return parsed.hostname
+
+
+def _origin_from_value(value: str | None, *, default_scheme: str = "https") -> str | None:
+    if not value:
+        return None
+    parsed = urlparse(value if "://" in value else f"{default_scheme}://{value}")
+    if not parsed.hostname:
+        return None
+    netloc = parsed.hostname
+    if parsed.port:
+        netloc = f"{netloc}:{parsed.port}"
+    return f"{parsed.scheme or default_scheme}://{netloc}"
+
+
+ALLOWED_HOSTS = _env_list("ALLOWED_HOSTS")
+CSRF_TRUSTED_ORIGINS = _env_list("CSRF_TRUSTED_ORIGINS")
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
-if RENDER_EXTERNAL_HOSTNAME:
-    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
-    CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
+render_hostname = _hostname_from_value(RENDER_EXTERNAL_HOSTNAME)
+if render_hostname:
+    ALLOWED_HOSTS.append(render_hostname)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{render_hostname}")
 
 RAILWAY_STATIC_URL = os.environ.get("RAILWAY_STATIC_URL")
-if RAILWAY_STATIC_URL:
-    parsed = urlparse(RAILWAY_STATIC_URL)
-    if parsed.hostname:
-        ALLOWED_HOSTS.append(parsed.hostname)
-        scheme = parsed.scheme or "https"
-        CSRF_TRUSTED_ORIGINS.append(f"{scheme}://{parsed.hostname}")
+railway_static_hostname = _hostname_from_value(RAILWAY_STATIC_URL)
+railway_static_origin = _origin_from_value(RAILWAY_STATIC_URL)
+if railway_static_hostname:
+    ALLOWED_HOSTS.append(railway_static_hostname)
+if railway_static_origin:
+    CSRF_TRUSTED_ORIGINS.append(railway_static_origin)
 
 RAILWAY_PUBLIC_DOMAIN = os.environ.get("RAILWAY_PUBLIC_DOMAIN")
-if RAILWAY_PUBLIC_DOMAIN:
-    hostname = RAILWAY_PUBLIC_DOMAIN.replace("https://", "").replace("http://", "")
-    if hostname:
-        ALLOWED_HOSTS.append(hostname)
-        CSRF_TRUSTED_ORIGINS.append(f"https://{hostname}")
-
-# Default fallback only if nothing else is configured
-if not ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append("legalize-site-production-740f.up.railway.app")
-if not CSRF_TRUSTED_ORIGINS:
-    CSRF_TRUSTED_ORIGINS.append("https://legalize-site-production-740f.up.railway.app")
+railway_public_hostname = _hostname_from_value(RAILWAY_PUBLIC_DOMAIN)
+if railway_public_hostname:
+    ALLOWED_HOSTS.append(railway_public_hostname)
+    CSRF_TRUSTED_ORIGINS.append(f"https://{railway_public_hostname}")
 
 ALLOWED_HOSTS = list(dict.fromkeys(ALLOWED_HOSTS))
 CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(CSRF_TRUSTED_ORIGINS))
 
-if not os.environ.get("ALLOWED_HOSTS") and not RENDER_EXTERNAL_HOSTNAME and not RAILWAY_STATIC_URL and not RAILWAY_PUBLIC_DOMAIN:
-    # If we are using the hardcoded default, we shouldn't throw ImproperlyConfigured in this specific test scenario
-    # But for real production we want them set. The tests patch os.environ and expect failure if all are empty.
-    pass
-
-# Validation: if after all logic we STILL have nothing, then fail.
-# However, the tests clear os.environ and expect ImproperlyConfigured.
-if not [h for h in ALLOWED_HOSTS if "railway.app" not in h or h == os.environ.get("RAILWAY_PUBLIC_DOMAIN")]:
-     # This logic is tricky because of the hardcoded default.
-     # Let's simplify: if the USER didn't provide anything via env, and we have no Railway env, then fail.
-     if not any([os.environ.get("ALLOWED_HOSTS"), os.environ.get("RAILWAY_PUBLIC_DOMAIN"), os.environ.get("RENDER_EXTERNAL_HOSTNAME")]):
-         raise ImproperlyConfigured("ALLOWED_HOSTS must be configured in production via environment variables.")
+if not ALLOWED_HOSTS:
+    raise ImproperlyConfigured(
+        "ALLOWED_HOSTS must be configured in production via ALLOWED_HOSTS, "
+        "RAILWAY_PUBLIC_DOMAIN, RAILWAY_STATIC_URL, or RENDER_EXTERNAL_HOSTNAME."
+    )
+if not CSRF_TRUSTED_ORIGINS:
+    raise ImproperlyConfigured(
+        "CSRF_TRUSTED_ORIGINS must be configured in production via CSRF_TRUSTED_ORIGINS, "
+        "RAILWAY_PUBLIC_DOMAIN, RAILWAY_STATIC_URL, or RENDER_EXTERNAL_HOSTNAME."
+    )
 
 # --- CACHE ---
 REDIS_URL = os.environ.get("REDIS_URL")

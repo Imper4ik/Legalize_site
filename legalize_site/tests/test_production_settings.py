@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import os
-from importlib import import_module, reload
+import sys
+from importlib import import_module
 from unittest.mock import patch
 
 from django.core.exceptions import ImproperlyConfigured
@@ -27,8 +28,13 @@ BASE_PRODUCTION_ENV = {
 def load_production_settings(extra_env: dict[str, str] | None = None):
     env = {**BASE_PRODUCTION_ENV, **(extra_env or {})}
     with patch.dict(os.environ, env, clear=True):
-        module = import_module("legalize_site.settings.production")
-        return reload(module)
+        return import_production_settings_fresh()
+
+
+def import_production_settings_fresh():
+    sys.modules.pop("legalize_site.settings.production", None)
+    sys.modules.pop("legalize_site.settings.base", None)
+    return import_module("legalize_site.settings.production")
 
 
 class ProductionSettingsTests(SimpleTestCase):
@@ -46,6 +52,33 @@ class ProductionSettingsTests(SimpleTestCase):
             settings_module.CACHES["default"]["LOCATION"],
             "redis://redis.internal:6379/0",
         )
+
+    def test_database_media_storage_configures_default_storage_backend(self):
+        settings_module = load_production_settings(
+            {
+                "USE_DATABASE_MEDIA_STORAGE": "true",
+                "USE_S3_MEDIA_STORAGE": "false",
+            }
+        )
+
+        self.assertTrue(settings_module.USE_DATABASE_MEDIA_STORAGE)
+        self.assertEqual(
+            settings_module.STORAGES["default"]["BACKEND"],
+            "database_media.storage.DatabaseMediaStorage",
+        )
+
+    def test_database_media_storage_and_s3_are_mutually_exclusive(self):
+        with patch.dict(
+            os.environ,
+            {
+                **BASE_PRODUCTION_ENV,
+                "USE_DATABASE_MEDIA_STORAGE": "true",
+                "USE_S3_MEDIA_STORAGE": "true",
+            },
+            clear=True,
+        ):
+            with self.assertRaises(ImproperlyConfigured):
+                import_production_settings_fresh()
 
     def test_railway_domain_derives_hosts_without_hardcoded_default(self):
         settings_module = load_production_settings(
@@ -96,5 +129,35 @@ class ProductionSettingsTests(SimpleTestCase):
             clear=True,
         ):
             with self.assertRaises(ImproperlyConfigured):
-                module = import_module("legalize_site.settings.production")
-                reload(module)
+                import_production_settings_fresh()
+
+    def test_production_requires_csrf_origins_when_only_allowed_hosts_is_set(self):
+        with patch.dict(
+            os.environ,
+            {
+                **BASE_PRODUCTION_ENV,
+                "ALLOWED_HOSTS": "crm.example.com",
+                "CSRF_TRUSTED_ORIGINS": "",
+                "RAILWAY_PUBLIC_DOMAIN": "",
+                "RAILWAY_STATIC_URL": "",
+                "RENDER_EXTERNAL_HOSTNAME": "",
+            },
+            clear=True,
+        ):
+            with self.assertRaises(ImproperlyConfigured):
+                import_production_settings_fresh()
+
+    def test_railway_static_url_derives_host_and_origin(self):
+        settings_module = load_production_settings(
+            {
+                "ALLOWED_HOSTS": "",
+                "CSRF_TRUSTED_ORIGINS": "",
+                "RAILWAY_STATIC_URL": "https://legalize-static.example.up.railway.app",
+            }
+        )
+
+        self.assertIn("legalize-static.example.up.railway.app", settings_module.ALLOWED_HOSTS)
+        self.assertIn(
+            "https://legalize-static.example.up.railway.app",
+            settings_module.CSRF_TRUSTED_ORIGINS,
+        )

@@ -166,6 +166,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     "django.contrib.sites",
+    "database_media.apps.DatabaseMediaConfig",
     "users.apps.UsersConfig",
     "clients.apps.ClientsConfig",
     "submissions.apps.SubmissionsConfig",
@@ -316,12 +317,29 @@ if WHITENOISE_AVAILABLE:
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_ROOT = os.environ.get("MEDIA_ROOT", str(BASE_DIR / "media"))
+DATABASE_MEDIA_TEMP_ROOT = os.environ.get("DATABASE_MEDIA_TEMP_ROOT", str(BASE_DIR / "tmp" / "database_media"))
+USE_DATABASE_MEDIA_STORAGE = env_flag("USE_DATABASE_MEDIA_STORAGE", "False")
+DATABASE_MEDIA_FALLBACK_TO_FILE_SYSTEM = env_flag("DATABASE_MEDIA_FALLBACK_TO_FILE_SYSTEM", "True")
+DATABASE_MEDIA_AUTO_IMPORT_LEGACY_FILES = env_flag("DATABASE_MEDIA_AUTO_IMPORT_LEGACY_FILES", "True")
 USE_S3_MEDIA_STORAGE = env_flag("USE_S3_MEDIA_STORAGE", "False")
 PRIVATE_MEDIA_LOCATION = os.environ.get("PRIVATE_MEDIA_LOCATION", "private")
+if USE_DATABASE_MEDIA_STORAGE and USE_S3_MEDIA_STORAGE:
+    raise ImproperlyConfigured("USE_DATABASE_MEDIA_STORAGE and USE_S3_MEDIA_STORAGE cannot both be enabled.")
 if USE_S3_MEDIA_STORAGE and not STORAGES_AVAILABLE:
     raise ImproperlyConfigured("USE_S3_MEDIA_STORAGE requires django-storages to be installed.")
-if USE_S3_MEDIA_STORAGE:
+if USE_DATABASE_MEDIA_STORAGE:
+    STORAGES = {
+        "default": {
+            "BACKEND": "database_media.storage.DatabaseMediaStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+            if WHITENOISE_AVAILABLE
+            else "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+elif USE_S3_MEDIA_STORAGE:
     AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME", "")
     AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "")
     AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL", "")

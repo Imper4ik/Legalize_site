@@ -137,5 +137,7 @@ __all__ = [
     'document_version_download',
     'document_versions_view',
     'document_version_restore',
+    'email_preview_api',
     'fingerprints_schedule_view',
+    'send_custom_email',
 ]

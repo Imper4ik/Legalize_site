@@ -1,11 +1,10 @@
 import pytest
 import logging
-import io
 import zipfile
 from django.urls import reverse
 from django.core.files.base import ContentFile
 from django.contrib.messages import get_messages
-from clients.models import Document, Client
+from clients.models import Document
 
 @pytest.fixture
 def sample_document(sample_client):

@@ -10,10 +10,14 @@ from legalize_site.checks import (
     EMAIL_ERROR_ID,
     EMAIL_WARNING_ID,
     FERNET_KEYS_ERROR_ID,
+    MEDIA_STORAGE_ERROR_ID,
+    RATE_LIMIT_CACHE_WARNING_ID,
     RUNTIME_DEPENDENCY_WARNING_ID,
     SECRET_KEY_ERROR_ID,
     encryption_configuration_check,
     email_configuration_check,
+    production_storage_safety_check,
+    rate_limit_cache_check,
     runtime_dependency_check,
 )
 
@@ -129,5 +133,58 @@ class RuntimeDependencyCheckTests(SimpleTestCase):
     @patch("legalize_site.checks.collect_runtime_dependency_statuses", return_value=[])
     def test_runtime_dependency_check_returns_no_messages_when_all_available(self, _collect_mock):
         self.assertEqual(runtime_dependency_check(), [])
+
+
+class RateLimitCacheCheckTests(SimpleTestCase):
+    @override_settings(IS_PRODUCTION=True, REDIS_URL="")
+    def test_production_warns_when_redis_url_is_missing(self):
+        messages = rate_limit_cache_check()
+
+        self.assertEqual(len(messages), 1)
+        self.assertIsInstance(messages[0], Warning)
+        self.assertEqual(messages[0].id, RATE_LIMIT_CACHE_WARNING_ID)
+        self.assertEqual(
+            messages[0].msg,
+            "REDIS_URL is not configured; rate limiting uses local cache and is not worker-safe.",
+        )
+
+    @override_settings(IS_PRODUCTION=True, REDIS_URL="redis://redis.internal:6379/0")
+    def test_production_redis_url_silences_rate_limit_warning(self):
+        self.assertEqual(rate_limit_cache_check(), [])
+
+    @override_settings(IS_PRODUCTION=False, REDIS_URL="")
+    def test_non_production_does_not_warn_when_redis_url_is_missing(self):
+        self.assertEqual(rate_limit_cache_check(), [])
+
+
+class ProductionStorageSafetyCheckTests(SimpleTestCase):
+    @override_settings(IS_PRODUCTION=True, USE_S3_MEDIA_STORAGE=False)
+    @patch.dict("os.environ", {"ALLOW_PRODUCTION_LOCAL_MEDIA": ""}, clear=False)
+    def test_production_errors_without_persistent_media_storage(self):
+        messages = production_storage_safety_check()
+
+        self.assertEqual(len(messages), 2)
+        media_message = next(message for message in messages if message.id == MEDIA_STORAGE_ERROR_ID)
+        self.assertIsInstance(media_message, Error)
+        self.assertEqual(media_message.msg, "Production media storage is not persistent.")
+
+    @override_settings(IS_PRODUCTION=True, USE_S3_MEDIA_STORAGE=True)
+    @patch.dict("os.environ", {"BACKUP_REMOTE_STORAGE": "true"}, clear=False)
+    def test_s3_media_storage_silences_media_storage_error(self):
+        self.assertEqual(production_storage_safety_check(), [])
+
+    @override_settings(IS_PRODUCTION=True, USE_S3_MEDIA_STORAGE=False, USE_DATABASE_MEDIA_STORAGE=True)
+    @patch.dict("os.environ", {"BACKUP_REMOTE_STORAGE": "true"}, clear=False)
+    def test_database_media_storage_silences_media_storage_error(self):
+        self.assertEqual(production_storage_safety_check(), [])
+
+    @override_settings(IS_PRODUCTION=True, USE_S3_MEDIA_STORAGE=False)
+    @patch.dict(
+        "os.environ",
+        {"ALLOW_PRODUCTION_LOCAL_MEDIA": "true", "BACKUP_REMOTE_STORAGE": "true"},
+        clear=False,
+    )
+    def test_explicit_local_media_acknowledgement_silences_media_storage_error(self):
+        self.assertEqual(production_storage_safety_check(), [])
 
 

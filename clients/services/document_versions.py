@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from contextlib import suppress
+
 import logging
 from pathlib import Path
 
@@ -39,10 +41,8 @@ def archive_document_version(
         )
         return None
     finally:
-        try:
+        with suppress(Exception):
             document.file.close()
-        except Exception:
-            pass
 
     current_max = document.versions.aggregate(max_v=Max("version_number"))["max_v"] or 0
     version_number = current_max + 1

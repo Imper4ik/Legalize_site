@@ -12,13 +12,15 @@ from legalize_site.runtime import collect_runtime_dependency_statuses
 EMAIL_ERROR_ID = "legalize_site.E001"
 EMAIL_WARNING_ID = "legalize_site.W001"
 EMAIL_CONSOLE_WARNING_ID = "legalize_site.W002"
-SECRET_KEY_ERROR_ID = "legalize_site.E002"
+SECRET_KEY_ERROR_ID = "legalize_site.E002"  # nosec B105
 FERNET_KEYS_ERROR_ID = "legalize_site.E003"
-SECRET_KEY_WARNING_ID = "legalize_site.W003"
+SECRET_KEY_WARNING_ID = "legalize_site.W003"  # nosec B105
 FERNET_KEYS_WARNING_ID = "legalize_site.W004"
 RUNTIME_DEPENDENCY_WARNING_ID = "legalize_site.W005"
+MEDIA_STORAGE_ERROR_ID = "legalize_site.E004"
 MEDIA_STORAGE_WARNING_ID = "legalize_site.W006"
 BACKUP_STORAGE_WARNING_ID = "legalize_site.W007"
+RATE_LIMIT_CACHE_WARNING_ID = "legalize_site.W008"
 
 BACKENDS = {
     "django.core.mail.backends.smtp.EmailBackend": {
@@ -154,7 +156,7 @@ def encryption_configuration_check(app_configs=None, **kwargs):
     """Validate secret and encryption key configuration."""
 
     messages = []
-    placeholder_secret = "django-insecure-change-me"
+    placeholder_secret = "django-insecure-change-me"  # nosec B105
     secret_key = getattr(settings, "SECRET_KEY", "")
     is_production = getattr(settings, "IS_PRODUCTION", False)
     fernet_configured = getattr(settings, "FERNET_KEYS_CONFIGURED", False)
@@ -221,6 +223,26 @@ def runtime_dependency_check(app_configs=None, **kwargs):
 
 
 @register("legalize_site")
+def rate_limit_cache_check(app_configs=None, **kwargs):
+    messages = []
+    if not getattr(settings, "IS_PRODUCTION", False):
+        return messages
+
+    redis_url = getattr(settings, "REDIS_URL", "")
+    if redis_url:
+        return messages
+
+    messages.append(
+        Warning(
+            "REDIS_URL is not configured; rate limiting uses local cache and is not worker-safe.",
+            hint="Set REDIS_URL so Django cache uses RedisCache across all production workers.",
+            id=RATE_LIMIT_CACHE_WARNING_ID,
+        )
+    )
+    return messages
+
+
+@register("legalize_site")
 def production_storage_safety_check(app_configs=None, **kwargs):
     messages = []
     is_production = getattr(settings, "IS_PRODUCTION", False)
@@ -228,13 +250,18 @@ def production_storage_safety_check(app_configs=None, **kwargs):
         return messages
 
     use_s3 = getattr(settings, "USE_S3_MEDIA_STORAGE", False)
+    use_database_media = getattr(settings, "USE_DATABASE_MEDIA_STORAGE", False)
     allow_local = os.environ.get("ALLOW_PRODUCTION_LOCAL_MEDIA", "").lower() in {"1", "true", "yes", "on"}
-    if not use_s3 and not allow_local:
+    if not use_s3 and not use_database_media and not allow_local:
         messages.append(
-            Warning(
-                "Production uses local media storage without explicit acknowledgement.",
-                hint="Use S3/R2/B2 or Railway Volume. Set ALLOW_PRODUCTION_LOCAL_MEDIA=true only if local volume is configured.",
-                id=MEDIA_STORAGE_WARNING_ID,
+            Error(
+                "Production media storage is not persistent.",
+                hint=(
+                    "Use S3/R2/B2 with USE_S3_MEDIA_STORAGE=True, PostgreSQL media storage "
+                    "with USE_DATABASE_MEDIA_STORAGE=True, or mount a Railway Volume to MEDIA_ROOT "
+                    "and set ALLOW_PRODUCTION_LOCAL_MEDIA=true."
+                ),
+                id=MEDIA_STORAGE_ERROR_ID,
             )
         )
 

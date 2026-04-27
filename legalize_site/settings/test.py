@@ -2,16 +2,16 @@ import os
 
 os.environ.setdefault("ENABLE_TRANSLATION_TOOLING", "True")
 
-from .base import *
+from .base import *  # noqa: F403
 
 ENABLE_TRANSLATION_TOOLING = True
 
-if "translations" not in INSTALLED_APPS:
-    INSTALLED_APPS.append("translations")
+if "translations" not in INSTALLED_APPS:  # noqa: F405
+    INSTALLED_APPS.append("translations")  # noqa: F405
 
-if "translations.middleware.TranslationStudioMiddleware" not in MIDDLEWARE:
-    insert_at = MIDDLEWARE.index("allauth.account.middleware.AccountMiddleware")
-    MIDDLEWARE.insert(insert_at, "translations.middleware.TranslationStudioMiddleware")
+if "translations.middleware.TranslationStudioMiddleware" not in MIDDLEWARE:  # noqa: F405
+    insert_at = MIDDLEWARE.index("allauth.account.middleware.AccountMiddleware")  # noqa: F405
+    MIDDLEWARE.insert(insert_at, "translations.middleware.TranslationStudioMiddleware")  # noqa: F405
 
 # Force in-memory SQLite for tests to ignore Railway's DATABASE_URL during build phase
 DATABASES = {
