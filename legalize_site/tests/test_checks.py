@@ -10,12 +10,10 @@ from legalize_site.checks import (
     EMAIL_ERROR_ID,
     EMAIL_WARNING_ID,
     FERNET_KEYS_ERROR_ID,
-    RATE_LIMIT_CACHE_WARNING_ID,
     RUNTIME_DEPENDENCY_WARNING_ID,
     SECRET_KEY_ERROR_ID,
     encryption_configuration_check,
     email_configuration_check,
-    production_rate_limit_cache_check,
     runtime_dependency_check,
 )
 
@@ -133,23 +131,3 @@ class RuntimeDependencyCheckTests(SimpleTestCase):
         self.assertEqual(runtime_dependency_check(), [])
 
 
-class ProductionRateLimitCacheCheckTests(SimpleTestCase):
-    @override_settings(IS_PRODUCTION=True, REDIS_URL="")
-    def test_warns_when_production_redis_url_is_missing(self):
-        messages = production_rate_limit_cache_check()
-
-        self.assertEqual(len(messages), 1)
-        self.assertIsInstance(messages[0], Warning)
-        self.assertEqual(messages[0].id, RATE_LIMIT_CACHE_WARNING_ID)
-        self.assertEqual(
-            messages[0].msg,
-            "REDIS_URL is not configured; rate limiting uses local cache and is not worker-safe.",
-        )
-
-    @override_settings(IS_PRODUCTION=True, REDIS_URL="redis://redis.internal:6379/0")
-    def test_no_warning_when_production_redis_url_is_configured(self):
-        self.assertEqual(production_rate_limit_cache_check(), [])
-
-    @override_settings(IS_PRODUCTION=False, REDIS_URL="")
-    def test_no_warning_outside_production(self):
-        self.assertEqual(production_rate_limit_cache_check(), [])

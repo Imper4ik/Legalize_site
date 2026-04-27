@@ -37,9 +37,10 @@ class UploadedDocumentValidatorTests(SimpleTestCase):
     def test_pdf_validation_keeps_header_fallback_when_pypdf_is_missing(self):
         uploaded = SimpleUploadedFile(
             "document.pdf",
-            b"%PDF- minimal",
+            b"%PDF- minimal\n%%EOF",
             content_type="application/pdf",
         )
+
 
         with patch("clients.validators.import_module", side_effect=ImportError):
             self.assertIs(validate_uploaded_document(uploaded), uploaded)

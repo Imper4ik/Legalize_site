@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import hashlib
+import threading
 from datetime import timedelta
 from io import BytesIO
 from pathlib import Path
@@ -69,19 +70,50 @@ def _send_email(
     sent_by=None,
     idempotency_key: str = "",
 ) -> int:
-    try:
-        recipient_list = list(recipients)
-        if idempotency_key:
-            from clients.models import EmailLog
+    recipient_list = list(recipients)
 
-            if EmailLog.objects.filter(
-                idempotency_key=idempotency_key,
-                delivery_status=EmailLog.DELIVERY_STATUS_SENT,
-            ).exists():
-                return 0
-        sent_count = send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, recipient_list)
-        if sent_count:
-            _send_confirmation_email(subject, body, recipient_list)
+    # Idempotency check is synchronous — prevents duplicate sends.
+    if idempotency_key:
+        from clients.models import EmailLog
+
+        if EmailLog.objects.filter(
+            idempotency_key=idempotency_key,
+            delivery_status=EmailLog.DELIVERY_STATUS_SENT,
+        ).exists():
+            return 0
+
+    # Log the email as "queued" immediately so the caller has a record.
+    _log_email(
+        subject,
+        body,
+        recipient_list,
+        client=client,
+        template_type=template_type,
+        sent_by=sent_by,
+        idempotency_key=idempotency_key,
+        delivery_status="queued",
+    )
+
+    def _do_send():
+        """Run the actual SMTP I/O in a background thread."""
+        from django.db import connection
+
+        try:
+            sent_count = send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, recipient_list)
+            if sent_count:
+                _send_confirmation_email(subject, body, recipient_list)
+                _log_email(
+                    subject,
+                    body,
+                    recipient_list,
+                    client=client,
+                    template_type=template_type,
+                    sent_by=sent_by,
+                    idempotency_key=idempotency_key,
+                    delivery_status="sent",
+                )
+        except Exception:
+            logger.exception("Failed to send notification email")
             _log_email(
                 subject,
                 body,
@@ -90,23 +122,23 @@ def _send_email(
                 template_type=template_type,
                 sent_by=sent_by,
                 idempotency_key=idempotency_key,
-                delivery_status="sent",
+                delivery_status="failed",
+                error_message="send failed",
             )
-        return sent_count
-    except Exception:  # pragma: no cover - defensive safeguard
-        logger.exception("Failed to send notification email")
-        _log_email(
-            subject,
-            body,
-            list(recipients),
-            client=client,
-            template_type=template_type,
-            sent_by=sent_by,
-            idempotency_key=idempotency_key,
-            delivery_status="failed",
-            error_message="send failed",
-        )
-        return 0
+        finally:
+            connection.close()
+
+    # Tests use the in-memory email backend which is synchronous; honour that.
+    force_sync = getattr(settings, "FORCE_SYNC_EMAIL", False)
+    if force_sync or getattr(settings, "EMAIL_BACKEND", "").endswith("locmem.EmailBackend"):
+        _do_send()
+    else:
+        thread = threading.Thread(target=_do_send, daemon=True)
+        thread.start()
+
+    # Return 1 optimistically — the actual delivery happens in the thread.
+    return 1
+
 
 
 def _log_email(

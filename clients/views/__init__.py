@@ -1,27 +1,35 @@
 from clients.views.base import StaffRequiredMixin, staff_required_view
-from clients.views.clients import (
+from clients.views.client_crud import (
     ClientCreateView,
     ClientDeleteView,
     ClientDetailView,
     ClientListView,
-    AppSettingsUpdateView,
-    AdminPanelView,
     ClientUpdateView,
-    DocumentChecklistManageView,
-    document_requirement_add,
-    document_requirement_edit,
-    document_requirement_delete,
     calculator_view,
-    service_price_manage_view,
-    staff_manage_view,
-    submission_manage_view,
-    DocumentTemplateHubView,
-    role_manage_view,
+    dashboard_redirect_view,
+)
+from clients.views.print_views import (
     client_print_view,
     client_document_print_view,
     client_document_print_confirm_view,
     client_wsc_print_view,
-    dashboard_redirect_view,
+)
+from clients.views.admin_settings import (
+    AdminPanelView,
+    AppSettingsUpdateView,
+    DocumentTemplateHubView,
+    service_price_manage_view,
+    submission_manage_view,
+)
+from clients.views.staff_views import (
+    staff_manage_view,
+    role_manage_view,
+)
+from clients.views.checklist_views import (
+    DocumentChecklistManageView,
+    document_requirement_add,
+    document_requirement_edit,
+    document_requirement_delete,
 )
 from clients.views.documents import (
     add_document,
