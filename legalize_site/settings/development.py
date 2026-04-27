@@ -9,6 +9,7 @@ from .base import *  # noqa: F403
 
 DEBUG = env_flag("DEBUG", "True")
 ENABLE_TRANSLATION_TOOLING = env_flag("ENABLE_TRANSLATION_TOOLING", "True")
+ASYNC_OCR_PROCESSING = False
 
 ALLOWED_HOSTS = [host for host in os.environ.get("ALLOWED_HOSTS", "").split(",") if host]
 ALLOWED_HOSTS.extend(["127.0.0.1", "localhost"])
