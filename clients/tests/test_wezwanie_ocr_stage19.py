@@ -12,6 +12,7 @@ from reportlab.pdfgen import canvas
 
 from clients.constants import DocumentType, WEZWANIE_DOCUMENT_TYPES
 from clients.models import Client, Document, DocumentProcessingJob
+from clients.services.document_workflow import enqueue_document_processing_job, process_document_processing_job
 from clients.services.wezwanie_parser import WezwanieData, parse_wezwanie
 from clients.services.roles import ensure_predefined_roles
 
@@ -73,10 +74,50 @@ class WezwanieOCRStage19Tests(TestCase):
         self.assertTrue(payload["pending_confirmation"])
         self.assertEqual(payload["parsed"]["case_number"], "WSC-II-P.6151.138285.2025")
         self.assertEqual(payload["parsed"]["fingerprints_date_display"], "04.05.2026")
+        self.assertEqual(payload["parsed"]["ticket_number"], "X29")
+        self.assertEqual(payload["parsed"]["list_name"], "Lista X1")
 
         doc = Document.objects.get(client=self.client_obj, document_type="formal_deficiencies")
         self.assertEqual(doc.ocr_status, "success")
         self.assertTrue(doc.awaiting_confirmation)
+        self.assertEqual(doc.parsed_data["ticket_number"], "X29")
+        self.assertEqual(doc.parsed_data["list_name"], "Lista X1")
+
+    def test_background_ocr_saves_ticket_and_list_in_document_parsed_data(self):
+        document = Document.objects.create(
+            client=self.client_obj,
+            document_type="wezwanie",
+            file=build_pdf_upload("queued_wezwanie.pdf"),
+        )
+        job = enqueue_document_processing_job(document=document, actor=self.staff)
+
+        parsed = WezwanieData(
+            text="bilet X29 Lista X1",
+            full_name="Darya AFANASENKA",
+            case_number="WSC-II-P.6151.138285.2025",
+            fingerprints_date=date(2026, 5, 4),
+            fingerprints_time="10:30",
+            wezwanie_type="fingerprints",
+            fingerprints_location="MarszaЕ‚kowska 3/5, pok. 14,16, stan. 10,11",
+            ticket_number="X29",
+            list_name="Lista X1",
+            application_status_code="P",
+        )
+
+        result = process_document_processing_job(
+            job_id=job.pk,
+            parser=lambda _path: parsed,
+            send_missing_email=lambda _client: 0,
+            send_appointment_email=lambda _client: 0,
+        )
+
+        self.assertEqual(result.status, DocumentProcessingJob.STATUS_COMPLETED)
+        document.refresh_from_db()
+        self.client_obj.refresh_from_db()
+        self.assertEqual(document.parsed_data["ticket_number"], "X29")
+        self.assertEqual(document.parsed_data["list_name"], "Lista X1")
+        self.assertEqual(self.client_obj.fingerprints_ticket, "X29")
+        self.assertEqual(self.client_obj.fingerprints_list, "Lista X1")
 
     @patch("clients.views.documents.parse_wezwanie")
     def test_upload_background_ocr_queues_job(self, parse_mock):
