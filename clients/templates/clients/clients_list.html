@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n static %}
+{% load i18n static sanitize_tags %}
 
 {% block extra_head %}
   {{ block.super }}
@@ -96,7 +96,7 @@
                    aria-multiline="true"
                    tabindex="0"
                    data-notes-editor>
-                {{ client.notes|default_if_none:""|safe }}
+                {{ client.notes|default_if_none:""|sanitize_html }}
               </div>
               <button class="btn btn-outline-secondary btn-sm mt-2 w-100" type="submit">
                 {% translate "Сохранить" %}

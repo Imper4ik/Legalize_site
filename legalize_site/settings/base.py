@@ -62,6 +62,7 @@ ASYNC_OCR_PROCESSING = env_flag("ASYNC_OCR_PROCESSING", "True")
 # --- БАЗОВЫЕ НАСТРОЙКИ ---
 SECRET_KEY = os.environ.get("SECRET_KEY", DEFAULT_SECRET_KEY_FALLBACK)
 DEBUG = False
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 def _derive_fernet_key(secret: str) -> str:
@@ -291,6 +292,15 @@ DATABASES = {
 if not DATABASES["default"].get("ENGINE"):
     DATABASES["default"] = dj_database_url.parse(DEFAULT_DATABASE_URL)
 
+# Persistent connections: avoid per-request connect/disconnect overhead in
+# production with gunicorn workers.  CONN_HEALTH_CHECKS lets Django silently
+# reconnect when a pooled connection goes stale.
+DATABASES["default"]["CONN_MAX_AGE"] = int(os.environ.get("CONN_MAX_AGE", "600"))
+DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
+
+# Limit staff sessions to 8 hours (one work day) by default.
+SESSION_COOKIE_AGE = int(os.environ.get("SESSION_COOKIE_AGE", "28800"))
+
 # --- ВАЛИДАТОРЫ ПАРОЛЕЙ ---
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -314,7 +324,7 @@ USE_TZ = True
 # --- СТАТИКА И МЕДИА (WHITENOISE) ---
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 if WHITENOISE_AVAILABLE:
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    STORAGES = {"staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"}}
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.environ.get("MEDIA_ROOT", str(BASE_DIR / "media"))
