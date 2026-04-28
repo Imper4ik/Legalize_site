@@ -1,4 +1,8 @@
+import logging
+import bleach
 from django import forms
+
+logger = logging.getLogger(__name__)
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.utils import translation
@@ -192,6 +196,11 @@ class StaffUserUpdateForm(forms.ModelForm):
                 updated_fields.append(field_name)
         if updated_fields:
             permission_object.save(update_fields=[*updated_fields, "updated_at"])
+            logger.warning(
+                "Role permissions updated for user_id=%s. Updated fields: %s",
+                user.id,
+                updated_fields,
+            )
         return user
 
 def _label_for_document_type(code: str) -> str:
@@ -287,6 +296,13 @@ class ClientForm(forms.ModelForm):
             'employer_phone': forms.TextInput(attrs={'class': 'form-control'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
+
+    def clean_notes(self):
+        notes = self.cleaned_data.get('notes')
+        if not notes:
+            return notes
+        allowed_tags = ["b", "strong", "i", "em", "br", "ul", "ol", "li", "p"]
+        return bleach.clean(notes, tags=allowed_tags, attributes={}, strip=True)
 
     def clean(self):
         cleaned_data = super().clean()

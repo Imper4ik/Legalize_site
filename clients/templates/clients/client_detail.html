@@ -86,5 +86,10 @@
 
 {% block extra_js %}
 {{ block.super }}
-<script src="{% static 'clients/js/client_detail.js' %}" defer></script>
+<script src="{% static 'clients/js/client/ajax.js' %}" defer></script>
+<script src="{% static 'clients/js/client/payments.js' %}" defer></script>
+<script src="{% static 'clients/js/client/documents.js' %}" defer></script>
+<script src="{% static 'clients/js/client/checklist.js' %}" defer></script>
+<script src="{% static 'clients/js/client/email_modal.js' %}" defer></script>
+<script src="{% static 'clients/js/client/init.js' %}" defer></script>
 {% endblock %}

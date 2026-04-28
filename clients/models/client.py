@@ -224,10 +224,17 @@ class Client(SoftDeleteModel):
 
         current_language = translation.get_language() or self.language
         required_docs = DocumentRequirement.required_for(self.application_purpose, current_language)
-        uploaded_docs = self.documents.all().order_by("-uploaded_at")
+        uploaded_docs = self.documents.all().annotate(
+            preloaded_version_count=models.Count('versions')
+        ).order_by("-uploaded_at")
+
+        reqs = DocumentRequirement.objects.filter(application_purpose=self.application_purpose)
+        req_map = {r.document_type: r for r in reqs}
 
         docs_map = {}
         for doc in uploaded_docs:
+            doc._preloaded_version_count = getattr(doc, 'preloaded_version_count', 0)
+            doc._preloaded_requirement = req_map.get(doc.document_type)
             if check_file_existence:
                 doc.file_exists = document_file_exists(doc)
             docs_map.setdefault(doc.document_type, []).append(doc)

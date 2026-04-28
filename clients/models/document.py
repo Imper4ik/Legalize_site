@@ -125,10 +125,13 @@ class Document(SoftDeleteModel):
 
     @property
     def display_name(self) -> str:
-        requirement = DocumentRequirement.objects.filter(
-            application_purpose=self.client.application_purpose,
-            document_type=self.document_type,
-        ).first()
+        if hasattr(self, "_preloaded_requirement"):
+            requirement = self._preloaded_requirement
+        else:
+            requirement = DocumentRequirement.objects.filter(
+                application_purpose=self.client.application_purpose,
+                document_type=self.document_type,
+            ).first()
         if requirement:
             return resolve_document_label(
                 requirement.document_type,
@@ -149,6 +152,8 @@ class Document(SoftDeleteModel):
 
     @property
     def version_count(self) -> int:
+        if hasattr(self, "_preloaded_version_count"):
+            return self._preloaded_version_count
         return self.versions.count()
 
     @property

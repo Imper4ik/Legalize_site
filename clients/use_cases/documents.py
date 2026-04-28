@@ -38,9 +38,13 @@ class WniosekAttachmentScenarioResult:
     submission_deleted: bool
 
 
+import bleach
+
 def update_client_notes_for_client(*, client: Client, actor, notes: str) -> ClientNoteScenarioResult:
+    allowed_tags = ["b", "strong", "i", "em", "br", "ul", "ol", "li", "p"]
+    cleaned_notes = bleach.clean(notes, tags=allowed_tags, attributes={}, strip=True)
     with transaction.atomic():
-        client.notes = notes
+        client.notes = cleaned_notes
         client.save(update_fields=["notes"])
         log_client_activity(
             client=client,
