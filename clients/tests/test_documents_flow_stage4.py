@@ -47,14 +47,7 @@ class DocumentFlowsStage4Tests(TestCase):
         )
 
     @patch("clients.views.documents.parse_wezwanie")
-    def test_add_document_with_parse_requested_returns_pending_confirmation(self, parse_mock):
-        parse_mock.return_value = WezwanieData(
-            text="wezwanie text",
-            case_number="WSC-II-S.1234.2025",
-            fingerprints_date=date(2030, 1, 10),
-            full_name="Anna Nowak",
-        )
-
+    def test_add_document_with_parse_requested_queues_confirmation_job(self, parse_mock):
         uploaded = build_pdf_upload("wezwanie.pdf")
         response = self.client.post(
             reverse(
@@ -68,16 +61,21 @@ class DocumentFlowsStage4Tests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["status"], "success")
-        self.assertTrue(payload["pending_confirmation"])
-        self.assertEqual(payload["parsed"]["case_number"], "WSC-II-S.1234.2025")
+        self.assertFalse(payload["pending_confirmation"])
+        self.assertTrue(payload["ocr_processing_queued"])
+        self.assertIsNone(payload["parsed"])
+        parse_mock.assert_not_called()
 
         document = Document.objects.get(client=self.client_obj)
-        self.assertTrue(document.awaiting_confirmation)
-        self.assertEqual(document.ocr_status, "success")
-        self.assertEqual(document.parsed_data["case_number"], "WSC-II-S.1234.2025")
+        job = DocumentProcessingJob.objects.get(document=document)
+        self.assertFalse(document.awaiting_confirmation)
+        self.assertEqual(document.ocr_status, "pending")
+        self.assertIsNone(document.parsed_data)
+        self.assertTrue(job.requires_confirmation)
+        self.assertEqual(job.status, DocumentProcessingJob.STATUS_PENDING)
 
-    @patch("clients.views.documents.parse_wezwanie", side_effect=RuntimeError("ocr failed"))
-    def test_add_document_with_parse_failure_keeps_document_and_flags_manual_review(self, _parse_mock):
+    @patch("clients.management.commands.process_document_jobs.parse_wezwanie", side_effect=RuntimeError("ocr failed"))
+    def test_confirmable_ocr_failure_is_handled_by_worker(self, _parse_mock):
         uploaded = build_pdf_upload("wezwanie.pdf")
 
         response = self.client.post(
@@ -92,16 +90,25 @@ class DocumentFlowsStage4Tests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["status"], "success")
-        self.assertTrue(payload["manual_review_required"])
+        self.assertFalse(payload["manual_review_required"])
         self.assertFalse(payload.get("pending_confirmation", False))
+        self.assertTrue(payload["ocr_processing_queued"])
         self.assertEqual(Document.objects.filter(client=self.client_obj).count(), 1)
 
         document = Document.objects.get(client=self.client_obj)
+        job = DocumentProcessingJob.objects.get(document=document)
+
+        call_command("process_document_jobs")
+
+        document.refresh_from_db()
+        job.refresh_from_db()
         self.assertEqual(document.ocr_status, "failed")
         self.assertFalse(document.awaiting_confirmation)
+        self.assertEqual(job.status, DocumentProcessingJob.STATUS_PENDING)
+        self.assertEqual(job.attempts, 1)
 
-    @patch("clients.views.documents.parse_wezwanie")
-    def test_add_document_with_empty_parse_result_marks_ocr_failed(self, parse_mock):
+    @patch("clients.management.commands.process_document_jobs.parse_wezwanie")
+    def test_confirmable_ocr_empty_parse_result_marks_ocr_failed(self, parse_mock):
         parse_mock.return_value = WezwanieData(text="", error="no_text")
         uploaded = build_pdf_upload("wezwanie.pdf")
 
@@ -117,11 +124,20 @@ class DocumentFlowsStage4Tests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["status"], "success")
-        self.assertTrue(payload.get("manual_review_required", False))
+        self.assertFalse(payload.get("manual_review_required", False))
+        self.assertTrue(payload["ocr_processing_queued"])
 
         document = Document.objects.get(client=self.client_obj, document_type=DocumentType.WEZWANIE.value)
+        job = DocumentProcessingJob.objects.get(document=document)
+
+        call_command("process_document_jobs")
+
+        document.refresh_from_db()
+        job.refresh_from_db()
         self.assertEqual(document.ocr_status, "failed")
         self.assertFalse(document.awaiting_confirmation)
+        self.assertEqual(job.status, DocumentProcessingJob.STATUS_PENDING)
+        self.assertEqual(job.attempts, 1)
 
     def test_add_document_rejects_disallowed_file_type(self):
         uploaded = SimpleUploadedFile("wezwanie.svg", b"<svg></svg>", content_type="image/svg+xml")

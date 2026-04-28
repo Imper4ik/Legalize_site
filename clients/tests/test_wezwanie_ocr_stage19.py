@@ -5,6 +5,7 @@ from unittest.mock import patch
 from io import BytesIO
 
 from django.contrib.auth import get_user_model
+from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
@@ -44,8 +45,15 @@ class WezwanieOCRStage19Tests(TestCase):
         self.assertIn("formal_deficiencies", WEZWANIE_DOCUMENT_TYPES)
         self.assertIn("braki_formalne", WEZWANIE_DOCUMENT_TYPES)
 
-    @patch("clients.views.documents.parse_wezwanie")
-    def test_upload_immediate_ocr_success(self, parse_mock):
+    @patch("clients.management.commands.process_document_jobs.send_appointment_notification_email", return_value=0)
+    @patch("clients.management.commands.process_document_jobs.send_missing_documents_email", return_value=0)
+    @patch("clients.management.commands.process_document_jobs.parse_wezwanie")
+    def test_upload_confirmable_ocr_queues_job_then_worker_saves_ticket_data(
+        self,
+        parse_mock,
+        _send_missing,
+        _send_appointment,
+    ):
         parse_mock.return_value = WezwanieData(
             text="sample text",
             full_name="Darya AFANASENKA",
@@ -71,17 +79,30 @@ class WezwanieOCRStage19Tests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["status"], "success")
-        self.assertTrue(payload["pending_confirmation"])
-        self.assertEqual(payload["parsed"]["case_number"], "WSC-II-P.6151.138285.2025")
-        self.assertEqual(payload["parsed"]["fingerprints_date_display"], "04.05.2026")
-        self.assertEqual(payload["parsed"]["ticket_number"], "X29")
-        self.assertEqual(payload["parsed"]["list_name"], "Lista X1")
+        self.assertFalse(payload["pending_confirmation"])
+        self.assertTrue(payload["ocr_processing_queued"])
+        self.assertIsNone(payload["parsed"])
 
         doc = Document.objects.get(client=self.client_obj, document_type="formal_deficiencies")
+        job = DocumentProcessingJob.objects.get(document=doc)
+        self.assertEqual(doc.ocr_status, "pending")
+        self.assertFalse(doc.awaiting_confirmation)
+        self.assertTrue(job.requires_confirmation)
+
+        call_command("process_document_jobs")
+
+        doc.refresh_from_db()
+        self.client_obj.refresh_from_db()
         self.assertEqual(doc.ocr_status, "success")
         self.assertTrue(doc.awaiting_confirmation)
+        self.assertEqual(doc.parsed_data["case_number"], "WSC-II-P.6151.138285.2025")
+        self.assertEqual(doc.parsed_data["fingerprints_date_display"], "04.05.2026")
         self.assertEqual(doc.parsed_data["ticket_number"], "X29")
         self.assertEqual(doc.parsed_data["list_name"], "Lista X1")
+        self.assertIsNone(self.client_obj.fingerprints_ticket)
+        self.assertIsNone(self.client_obj.fingerprints_list)
+        _send_missing.assert_not_called()
+        _send_appointment.assert_not_called()
 
     def test_background_ocr_saves_ticket_and_list_in_document_parsed_data(self):
         document = Document.objects.create(
@@ -119,8 +140,7 @@ class WezwanieOCRStage19Tests(TestCase):
         self.assertEqual(self.client_obj.fingerprints_ticket, "X29")
         self.assertEqual(self.client_obj.fingerprints_list, "Lista X1")
 
-    @patch("clients.views.documents.parse_wezwanie")
-    def test_upload_background_ocr_queues_job(self, parse_mock):
+    def test_upload_background_ocr_queues_job(self):
         uploaded = build_pdf_upload("bg_wezwanie.pdf")
         response = self.client.post(
             reverse("clients:add_document", kwargs={"client_id": self.client_obj.pk, "doc_type": "wezwanie"}),

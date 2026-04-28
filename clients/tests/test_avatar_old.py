@@ -22,7 +22,7 @@ import shutil
 from allauth.account.models import EmailAddress
 
 from clients.forms import DocumentChecklistForm, DocumentRequirementAddForm, DocumentRequirementEditForm
-from clients.models import Client, Document, DocumentRequirement, translate_document_name
+from clients.models import Client, Document, DocumentProcessingJob, DocumentRequirement, translate_document_name
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.services.notifications import send_missing_documents_email
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper
@@ -529,7 +529,7 @@ class WezwanieUploadFlowTests(TestCase):
 
         mail.outbox = []
 
-    def test_uploading_wezwanie_returns_pending_confirmation(self):
+    def test_uploading_wezwanie_queues_confirmable_ocr(self):
         login_successful = self.client.login(email="staff_wezwanie@example.com", password="pass")
         self.assertTrue(login_successful)
 
@@ -556,17 +556,21 @@ class WezwanieUploadFlowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = json.loads(response.content)
         self.assertEqual(payload["status"], "success")
-        self.assertTrue(payload["pending_confirmation"])
-        self.assertEqual(payload["parsed"]["case_number"], "ZZ/987/24")
+        self.assertFalse(payload["pending_confirmation"])
+        self.assertTrue(payload["ocr_processing_queued"])
+        self.assertIsNone(payload["parsed"])
+        parse_mock.assert_not_called()
 
         updated_client = Client.objects.get(pk=self.client_record.pk)
         self.assertIsNone(updated_client.case_number)
         self.assertIsNone(updated_client.fingerprints_date)
 
         document = Document.objects.get(client=updated_client, document_type="wezwanie")
-        self.assertTrue(document.awaiting_confirmation)
-        self.assertEqual(document.ocr_status, "success")
-        self.assertEqual(document.parsed_data["case_number"], "ZZ/987/24")
+        job = DocumentProcessingJob.objects.get(document=document)
+        self.assertFalse(document.awaiting_confirmation)
+        self.assertEqual(document.ocr_status, "pending")
+        self.assertIsNone(document.parsed_data)
+        self.assertTrue(job.requires_confirmation)
 
     def test_confirm_wezwanie_updates_client_and_sends_email(self):
         login_successful = self.client.login(email="staff_wezwanie@example.com", password="pass")
@@ -594,6 +598,16 @@ class WezwanieUploadFlowTests(TestCase):
             )
         payload = json.loads(upload_response.content)
         document = Document.objects.get(pk=payload["doc_id"])
+        parse_mock.assert_not_called()
+        document.awaiting_confirmation = True
+        document.ocr_status = "success"
+        document.parsed_data = {
+            "first_name": "Jan",
+            "last_name": "Test",
+            "case_number": "ZZ/987/24",
+            "fingerprints_date": "2024-06-05",
+        }
+        document.save(update_fields=["awaiting_confirmation", "ocr_status", "parsed_data"])
 
         confirm_url = reverse("clients:confirm_wezwanie_parse", kwargs={"doc_id": document.pk})
         with patch("clients.views.documents.parse_wezwanie") as parse_mock:

@@ -2,15 +2,16 @@
 
 ## Current Flow
 
-Wezwanie uploads are saved as `Document` records. For the background path, the upload flow creates a `DocumentProcessingJob`, and the `process_document_jobs` management command consumes pending jobs:
+Wezwanie uploads are saved as `Document` records. Uploads that request OCR now create a `DocumentProcessingJob`, and the `process_document_jobs` management command consumes pending jobs:
 
 ```text
 upload -> DocumentProcessingJob -> process_document_jobs
 ```
 
-The worker command runs `parse_wezwanie`, updates OCR status on the document, applies parsed client fields when data is reliable, and records retry/failure state on the job.
+When staff choose OCR with later review, the job is marked `requires_confirmation=True`.
+The worker runs `parse_wezwanie`, stores the parsed payload in `document.parsed_data`, sets `document.awaiting_confirmation=True`, and the checklist shows the "Review OCR Data" action. Client fields and notification emails are applied only after staff confirm the recognized values.
 
-The confirmable upload path still parses synchronously when `parse_requested=True` so the UI can immediately show a confirmation payload to staff.
+For non-confirmation background OCR, the worker applies reliable parsed client fields directly and records retry/failure state on the job.
 
 ## Production Recommendation
 
@@ -24,4 +25,4 @@ Choose `N` based on the expected upload volume and available CPU. A small recurr
 
 ## Follow-Up
 
-Move confirmable OCR parsing to the background job flow once the UI can show an intermediate "processing" state and later reopen the confirmation form when parsing is complete.
+Consider a dedicated always-on worker if OCR volume grows beyond what periodic batches can process comfortably.

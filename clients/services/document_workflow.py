@@ -37,6 +37,7 @@ class DocumentUploadResult:
     message: str
     manual_review_required: bool = False
     pending_confirmation: bool = False
+    ocr_processing_queued: bool = False
     parsed_payload: dict[str, str] | None = None
 
 
@@ -97,40 +98,18 @@ def upload_client_document(
         )
 
     if parse_requested:
-        # TODO: Move confirmable OCR parsing to background job.
-        # Immediate OCR parsing for synchronous response
-        try:
-            parsed = parser(document.file.path)
-            if _has_meaningful_parsed_data(parsed):
-                document.parsed_data = _build_wezwanie_payload(parsed)
-                document.awaiting_confirmation = True
-                document.ocr_status = "success"
-                document.ocr_name_mismatch = _has_name_mismatch(parsed.full_name, client)
-                document.save(update_fields=["parsed_data", "ocr_status", "awaiting_confirmation", "ocr_name_mismatch"])
-                
-                return DocumentUploadResult(
-                    document=document,
-                    message=_("Document uploaded and recognized."),
-                    pending_confirmation=True,
-                    parsed_payload=document.parsed_data,
-                )
-            else:
-                document.ocr_status = "failed"
-                document.save(update_fields=["ocr_status"])
-                return DocumentUploadResult(
-                    document=document,
-                    message=_("Document uploaded, but no data could be recognized."),
-                    manual_review_required=True,
-                )
-        except Exception as exc:
-            logger.exception("Immediate OCR parsing failed for document %s", document.id)
-            document.ocr_status = "failed"
-            document.save(update_fields=["ocr_status"])
-            return DocumentUploadResult(
-                document=document,
-                message=_("Document uploaded, but OCR processing failed: %(error)s") % {"error": str(exc)},
-                manual_review_required=True,
-            )
+        enqueue_document_processing_job(
+            document=document,
+            actor=actor,
+            requires_confirmation=True,
+        )
+        return DocumentUploadResult(
+            document=document,
+            message=_(
+                "Document uploaded. OCR processing was queued; review recognized data after processing completes."
+            ),
+            ocr_processing_queued=True,
+        )
 
     # Route to background job queue if immediate parsing was not requested
     enqueue_document_processing_job(
@@ -479,6 +458,7 @@ def _finalize_successful_document_job(
             document.ocr_name_mismatch = _has_name_mismatch(parsed.full_name, client)
             document.save(update_fields=["parsed_data", "ocr_status", "awaiting_confirmation", "ocr_name_mismatch"])
 
+        requires_confirmation = job.requires_confirmation
         job.status = DocumentProcessingJob.STATUS_COMPLETED
         job.error_message = ""
         job.completed_at = timezone.now()
@@ -486,20 +466,25 @@ def _finalize_successful_document_job(
         job.next_attempt_at = None
         job.save(update_fields=["status", "error_message", "completed_at", "lease_expires_at", "next_attempt_at"])
 
-    auto_updates.extend(
-        _send_background_notifications(
-            client=client,
-            parsed=parsed,
-            send_missing_email=send_missing_email,
-            send_appointment_email=send_appointment_email,
+    if not requires_confirmation:
+        auto_updates.extend(
+            _send_background_notifications(
+                client=client,
+                parsed=parsed,
+                send_missing_email=send_missing_email,
+                send_appointment_email=send_appointment_email,
+            )
         )
-    )
 
     return DocumentProcessingRunResult(
         job=job,
         status=DocumentProcessingJob.STATUS_COMPLETED,
         processed=True,
-        message=_("Queued OCR job completed successfully."),
+        message=_(
+            "Queued OCR job completed and awaits confirmation."
+            if requires_confirmation
+            else "Queued OCR job completed successfully."
+        ),
         auto_updates=auto_updates,
     )
 
