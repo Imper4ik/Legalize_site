@@ -60,7 +60,11 @@ def toggle_studio_mode(request):
         getattr(request.user, "email", getattr(request.user, "pk", None)),
         request.META.get("HTTP_REFERER"),
     )
-    return redirect(request.META.get('HTTP_REFERER', '/'))
+    from django.utils.http import url_has_allowed_host_and_scheme
+    referer = request.META.get('HTTP_REFERER')
+    if referer and not url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}):
+        referer = None
+    return redirect(referer or '/')
 
 @user_passes_test(is_superuser)
 def get_translation_api(request):

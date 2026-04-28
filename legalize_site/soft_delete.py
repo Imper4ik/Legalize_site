@@ -12,7 +12,11 @@ class SoftDeleteQuerySet(models.QuerySet):
         return self.filter(archived_at__isnull=False)
 
     def delete(self):
-        return super().update(archived_at=timezone.now())
+        count = 0
+        for obj in self:
+            obj.archive(save=True)
+            count += 1
+        return count, {self.model._meta.label: count}
 
     def hard_delete(self):
         return super().delete()

@@ -8,8 +8,11 @@ import subprocess  # nosec B404
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Protocol
 
 from django.conf import settings
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +119,33 @@ def _cleanup_local_file(path: Path) -> None:
         logger.warning("Could not remove local backup %s: %s", path, exc)
 
 
+class BackupStorageBackend(Protocol):
+    def upload(self, local_path: Path) -> bool:
+        ...
+
+class LocalBackupStorage:
+    def upload(self, local_path: Path) -> bool:
+        logger.info("Backup retained locally at %s", local_path)
+        return False
+
+class S3BackupStorage:
+    def upload(self, local_path: Path) -> bool:
+        try:
+            with local_path.open("rb") as f:
+                remote_path = f"db_backups/{local_path.name}"
+                default_storage.save(remote_path, ContentFile(f.read()))
+            logger.info("Successfully uploaded backup to remote storage: %s", remote_path)
+            return True
+        except Exception as exc:
+            logger.error("Failed to upload backup to remote storage: %s", exc)
+            return False
+
+def _get_storage_backend() -> BackupStorageBackend:
+    if _remote_storage_enabled():
+        return S3BackupStorage()
+    return LocalBackupStorage()
+
+
 def create_db_backup() -> BackupResult:
     pg_dump_path = shutil.which("pg_dump")
     if not pg_dump_path:
@@ -157,16 +187,11 @@ def create_db_backup() -> BackupResult:
         encrypted = True
         size_bytes = final_path.stat().st_size
 
-    stored_remotely = False
-    if _remote_storage_enabled():
-        # Placeholder for remote upload integration.
-        stored_remotely = True
+    storage_backend = _get_storage_backend()
+    stored_remotely = storage_backend.upload(final_path)
+
+    if stored_remotely:
         _cleanup_local_file(final_path)
-    else:
-        logger.warning(
-            "Remote backup storage is disabled; encrypted backup retained locally at %s",
-            final_path,
-        )
 
     return BackupResult(
         backup_id=backup_path.stem,

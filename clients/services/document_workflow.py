@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import logging
+import os
+import tempfile
 from datetime import timedelta
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
@@ -158,7 +160,16 @@ def confirm_wezwanie_document(
 
     manual_review_required = False
     try:
-        parsed = parser(document.file.path)
+        with document.file.open("rb") as src:
+            ext = os.path.splitext(document.file.name)[1]
+            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+                for chunk in src.chunks():
+                    tmp.write(chunk)
+                tmp_path = tmp.name
+        try:
+            parsed = parser(tmp_path)
+        finally:
+            os.remove(tmp_path)
     except Exception:
         logger.exception("Wezwanie parsing failed during confirmation for document %s", document.id)
         manual_review_required = True
@@ -297,10 +308,19 @@ def process_document_processing_job(
                 "completed_at",
             ]
         )
-        document_path = job.document.file.path
+        document_file = job.document.file
 
     try:
-        parsed = parser(document_path)
+        with document_file.open("rb") as src:
+            ext = os.path.splitext(document_file.name)[1]
+            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+                for chunk in src.chunks():
+                    tmp.write(chunk)
+                tmp_path = tmp.name
+        try:
+            parsed = parser(tmp_path)
+        finally:
+            os.remove(tmp_path)
     except Exception as exc:
         logger.exception("Automatic wezwanie parsing failed for queued job %s", job_id)
         return _finalize_failed_document_job(
