@@ -7,6 +7,7 @@ import secrets
 import subprocess  # nosec B404
 
 from django.http import HttpRequest, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from clients.services.email_campaigns import process_pending_email_campaigns
@@ -45,14 +46,24 @@ def _request_ip_allowed(request: HttpRequest) -> bool:
 
 
 def _authorize_cron_request(request: HttpRequest, *, action_name: str) -> JsonResponse | None:
-    expected_token = os.environ.get("CRON_TOKEN")
+    expected_tokens = [
+        token
+        for token in {
+            os.environ.get("CRON_TOKEN"),
+            os.environ.get("BACKUP_TRIGGER_SECRET"),
+        }
+        if token
+    ]
     supplied_token = request.headers.get("X-CRON-TOKEN")
+    authorization = request.headers.get("Authorization", "")
+    if not supplied_token and authorization.startswith("Bearer "):
+        supplied_token = authorization.removeprefix("Bearer ").strip()
     request_ip = _get_request_ip(request)
 
     if (
-        not expected_token
+        not expected_tokens
         or not supplied_token
-        or not secrets.compare_digest(supplied_token, expected_token)
+        or not any(secrets.compare_digest(supplied_token, expected_token) for expected_token in expected_tokens)
     ):
         logger.warning("Invalid CRON_TOKEN for %s from ip=%s", action_name, request_ip)
         return JsonResponse({"error": "forbidden"}, status=403)
@@ -64,6 +75,7 @@ def _authorize_cron_request(request: HttpRequest, *, action_name: str) -> JsonRe
     return None
 
 
+@csrf_exempt
 @require_POST
 def db_backup(request: HttpRequest) -> JsonResponse:
     try:
@@ -108,6 +120,7 @@ def db_backup(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"error": "backup failed"}, status=500)
 
 
+@csrf_exempt
 @require_POST
 def process_email_campaigns_cron(request: HttpRequest) -> JsonResponse:
     try:
