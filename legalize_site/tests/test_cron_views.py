@@ -3,10 +3,12 @@ from __future__ import annotations
 import os
 from unittest.mock import patch
 
+from django.test import Client as DjangoClient
 from django.test import TestCase
 from django.urls import reverse
 
 from clients.models import EmailCampaign
+from legalize_site.backups import BackupResult
 
 
 class CronViewsTests(TestCase):
@@ -53,3 +55,58 @@ class CronViewsTests(TestCase):
         send_mail_mock.assert_called_once()
         confirm_mock.assert_called_once()
         log_mock.assert_called_once()
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    def test_db_backup_cron_is_csrf_exempt_but_still_requires_token(self):
+        csrf_client = DjangoClient(enforce_csrf_checks=True)
+
+        response = csrf_client.post(reverse("db_backup"))
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json(), {"error": "forbidden"})
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    @patch("legalize_site.cron_views.create_db_backup")
+    def test_db_backup_cron_accepts_header_token_with_csrf_checks(self, create_backup_mock):
+        create_backup_mock.return_value = BackupResult(
+            backup_id="backup-20260428-020000",
+            path="/tmp/backup.sql.enc",
+            size_bytes=123,
+            sha256="abc123",
+            encrypted=True,
+            stored_remotely=True,
+        )
+        csrf_client = DjangoClient(enforce_csrf_checks=True)
+
+        response = csrf_client.post(
+            reverse("db_backup"),
+            HTTP_X_CRON_TOKEN="secret",
+            REMOTE_ADDR="127.0.0.1",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "backup created")
+        create_backup_mock.assert_called_once()
+
+    @patch.dict(os.environ, {"BACKUP_TRIGGER_SECRET": "legacy-secret"}, clear=True)
+    @patch("legalize_site.cron_views.create_db_backup")
+    def test_db_backup_cron_accepts_legacy_backup_trigger_secret(self, create_backup_mock):
+        create_backup_mock.return_value = BackupResult(
+            backup_id="backup-20260428-020000",
+            path="/tmp/backup.sql.enc",
+            size_bytes=123,
+            sha256="abc123",
+            encrypted=True,
+            stored_remotely=True,
+        )
+        csrf_client = DjangoClient(enforce_csrf_checks=True)
+
+        response = csrf_client.post(
+            reverse("db_backup"),
+            HTTP_AUTHORIZATION="Bearer legacy-secret",
+            REMOTE_ADDR="127.0.0.1",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "backup created")
+        create_backup_mock.assert_called_once()
