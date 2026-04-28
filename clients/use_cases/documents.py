@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+import bleach
 from django.db import transaction
 
 from clients.models import Client, Document, WniosekAttachment
@@ -38,7 +39,6 @@ class WniosekAttachmentScenarioResult:
     submission_deleted: bool
 
 
-import bleach
 
 def update_client_notes_for_client(*, client: Client, actor, notes: str) -> ClientNoteScenarioResult:
     allowed_tags = ["b", "strong", "i", "em", "br", "ul", "ol", "li", "p"]
