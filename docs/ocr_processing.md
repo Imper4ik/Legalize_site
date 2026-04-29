@@ -2,7 +2,9 @@
 
 ## Current Flow
 
-Wezwanie uploads are saved as `Document` records. Uploads that request OCR now create a `DocumentProcessingJob`, and the `process_document_jobs` management command consumes pending jobs:
+Wezwanie uploads are saved as `Document` records. By default, the staff action "upload and recognize" processes OCR inline so the UI can immediately show recognized data for confirmation. Set `ASYNC_OCR_PROCESSING=True` to move OCR to the queue.
+
+When async OCR is enabled, uploads that request OCR create a `DocumentProcessingJob`, and the `process_document_jobs` management command consumes pending jobs:
 
 ```text
 upload -> DocumentProcessingJob -> process_document_jobs
@@ -15,7 +17,7 @@ For non-confirmation background OCR, the worker applies reliable parsed client f
 
 ## Production Recommendation
 
-Run queued OCR outside the request/response path. On Railway, configure a Cron service or Worker to execute:
+For higher upload volume, enable `ASYNC_OCR_PROCESSING=True` and run queued OCR outside the request/response path. On Railway, configure a Cron service or Worker to execute:
 
 ```bash
 python manage.py process_document_jobs --limit N

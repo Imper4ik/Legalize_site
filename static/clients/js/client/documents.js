@@ -13,6 +13,7 @@ function initDocumentUploadModal() {
   const confirmStep = modal.querySelector('#wezwanieConfirmationStep');
   const confirmActions = modal.querySelector('#wezwanieConfirmActions');
   const uploadActions = modal.querySelector('#uploadDocumentActions');
+  const uploadStep = modal.querySelector('#uploadDocumentStep');
   const confirmButton = modal.querySelector('#wezwanieConfirmButton');
   const parsedFirstName = modal.querySelector('#wezwanieParsedFirstName');
   const parsedLastName = modal.querySelector('#wezwanieParsedLastName');
@@ -46,9 +47,13 @@ function initDocumentUploadModal() {
   }
 
   function resetConfirmation() {
+    uploadStep?.classList.remove('d-none');
     confirmStep?.classList.add('d-none');
     confirmActions?.classList.add('d-none');
     uploadActions?.classList.remove('d-none');
+    if (parseInput) {
+      parseInput.value = '0';
+    }
     fillWezwanieParsedFields();
     if (confirmButton) {
       confirmButton.dataset.confirmUrl = '';
@@ -311,7 +316,6 @@ function initDocumentUploadModal() {
           };
         }
 
-        const uploadStep = modal.querySelector('#uploadDocumentStep');
         if (uploadStep) uploadStep.classList.add('d-none');
         
         confirmStep.classList.remove('d-none');

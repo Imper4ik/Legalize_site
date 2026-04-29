@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from reportlab.pdfgen import canvas
 
@@ -32,6 +32,7 @@ def _assign_staff_role(user, role_name: str = "Staff") -> None:
     user.groups.add(Group.objects.get(name=role_name))
 
 
+@override_settings(ASYNC_OCR_PROCESSING=True)
 class DocumentJobsStage18Tests(TestCase):
     def setUp(self):
         ensure_predefined_roles()

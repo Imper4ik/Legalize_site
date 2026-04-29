@@ -7,7 +7,7 @@ from io import BytesIO
 from django.contrib.auth import get_user_model
 from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from reportlab.pdfgen import canvas
 
@@ -24,6 +24,8 @@ def build_pdf_upload(name: str, text: str = "wezwanie test") -> SimpleUploadedFi
     pdf.save()
     return SimpleUploadedFile(name, buffer.getvalue(), content_type="application/pdf")
 
+
+@override_settings(ASYNC_OCR_PROCESSING=True)
 class WezwanieOCRStage19Tests(TestCase):
     def setUp(self):
         ensure_predefined_roles()

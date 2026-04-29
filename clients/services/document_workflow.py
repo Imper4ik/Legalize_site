@@ -7,6 +7,7 @@ from datetime import timedelta
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 
+from django.conf import settings
 from django.db import models, transaction
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_time
@@ -100,11 +101,20 @@ def upload_client_document(
         )
 
     if parse_requested:
-        enqueue_document_processing_job(
+        job = enqueue_document_processing_job(
             document=document,
             actor=actor,
             requires_confirmation=True,
         )
+        if not getattr(settings, "ASYNC_OCR_PROCESSING", False):
+            return _process_upload_job_inline(
+                job_id=job.pk,
+                document=document,
+                document_type_display=document_type_display,
+                parser=parser,
+                send_missing_email=send_missing_email,
+                send_appointment_email=send_appointment_email,
+            )
         return DocumentUploadResult(
             document=document,
             message=_(
@@ -114,11 +124,21 @@ def upload_client_document(
         )
 
     # Route to background job queue if immediate parsing was not requested
-    enqueue_document_processing_job(
+    job = enqueue_document_processing_job(
         document=document,
         actor=actor,
         requires_confirmation=False,
     )
+
+    if not getattr(settings, "ASYNC_OCR_PROCESSING", False):
+        return _process_upload_job_inline(
+            job_id=job.pk,
+            document=document,
+            document_type_display=document_type_display,
+            parser=parser,
+            send_missing_email=send_missing_email,
+            send_appointment_email=send_appointment_email,
+        )
 
     return DocumentUploadResult(
         document=document,
@@ -358,7 +378,41 @@ def _save_client_document(
     return uploaded_document
 
 
+def _process_upload_job_inline(
+    *,
+    job_id: int,
+    document: Document,
+    document_type_display: str,
+    parser: Parser,
+    send_missing_email: NotificationSender,
+    send_appointment_email: NotificationSender,
+) -> DocumentUploadResult:
+    result = process_document_processing_job(
+        job_id=job_id,
+        parser=parser,
+        send_missing_email=send_missing_email,
+        send_appointment_email=send_appointment_email,
+    )
+    document.refresh_from_db()
 
+    if document.awaiting_confirmation:
+        return DocumentUploadResult(
+            document=document,
+            message=_("Document uploaded. Review recognized data before applying it."),
+            pending_confirmation=True,
+            parsed_payload=document.parsed_data or {},
+        )
+
+    manual_review_required = result.manual_review_required or document.ocr_status == "failed"
+    return DocumentUploadResult(
+        document=document,
+        message=_compose_upload_message(
+            document_type_display=document_type_display,
+            auto_updates=result.auto_updates,
+            manual_review_required=manual_review_required,
+        ),
+        manual_review_required=manual_review_required,
+    )
 
 
 def _finalize_failed_document_job(

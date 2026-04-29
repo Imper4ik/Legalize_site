@@ -12,7 +12,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import RequestFactory, SimpleTestCase, TestCase
+from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from django.utils import translation
 from reportlab.pdfgen import canvas
@@ -497,6 +497,7 @@ class MissingDocumentsEmailTests(TestCase):
         self.assertIn(date.today().strftime("%d.%m.%Y"), body)
 
 
+@override_settings(ASYNC_OCR_PROCESSING=True)
 class WezwanieUploadFlowTests(TestCase):
     def setUp(self):
         user_model = get_user_model()

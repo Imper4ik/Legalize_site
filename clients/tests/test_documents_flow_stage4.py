@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from reportlab.pdfgen import canvas
 
@@ -31,6 +31,7 @@ def _assign_staff_role(user, role_name: str = "Staff") -> None:
     user.groups.add(Group.objects.get(name=role_name))
 
 
+@override_settings(ASYNC_OCR_PROCESSING=True)
 class DocumentFlowsStage4Tests(TestCase):
     def setUp(self):
         ensure_predefined_roles()
@@ -73,6 +74,41 @@ class DocumentFlowsStage4Tests(TestCase):
         self.assertIsNone(document.parsed_data)
         self.assertTrue(job.requires_confirmation)
         self.assertEqual(job.status, DocumentProcessingJob.STATUS_PENDING)
+
+    @override_settings(ASYNC_OCR_PROCESSING=False)
+    @patch("clients.views.documents.parse_wezwanie")
+    def test_add_document_with_inline_parse_returns_confirmation_payload(self, parse_mock):
+        parse_mock.return_value = WezwanieData(
+            text="parsed",
+            case_number="WSC-II-S.123.2026",
+            fingerprints_date=date(2030, 1, 5),
+            full_name="Anna Nowak",
+            wezwanie_type="fingerprints",
+        )
+        uploaded = build_pdf_upload("wezwanie-inline.pdf")
+
+        response = self.client.post(
+            reverse(
+                "clients:add_document",
+                kwargs={"client_id": self.client_obj.pk, "doc_type": DocumentType.WEZWANIE.value},
+            ),
+            data={"file": uploaded, "parse_wezwanie": "1", "expiry_date": ""},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["pending_confirmation"])
+        self.assertFalse(payload["ocr_processing_queued"])
+        self.assertEqual(payload["parsed"]["case_number"], "WSC-II-S.123.2026")
+        parse_mock.assert_called_once()
+
+        document = Document.objects.get(client=self.client_obj, document_type=DocumentType.WEZWANIE.value)
+        job = DocumentProcessingJob.objects.get(document=document)
+        self.assertTrue(document.awaiting_confirmation)
+        self.assertEqual(document.ocr_status, "success")
+        self.assertEqual(job.status, DocumentProcessingJob.STATUS_COMPLETED)
 
     @patch("clients.management.commands.process_document_jobs.parse_wezwanie", side_effect=RuntimeError("ocr failed"))
     def test_confirmable_ocr_failure_is_handled_by_worker(self, _parse_mock):
