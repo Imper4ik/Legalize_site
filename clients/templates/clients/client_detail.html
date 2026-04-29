@@ -25,55 +25,61 @@
   </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h4>{% translate "Финансы" %}</h4>
-  <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPaymentModal">+ {% translate "Добавить счёт" %}</button>
-</div>
-<div id="payment-alerts" class="mb-2"></div>
-<div class="card mb-4">
-  <ul class="list-group list-group-flush" id="payment-list-container"
-    data-empty-text="{% translate 'Счета на оплату ещё не созданы.' %}">
-    {% for payment in client.payments.all %}
-    <li class="list-group-item" data-payment-id="{{ payment.id }}">
-      {% include 'clients/partials/payment_item.html' with payment=payment %}
-    </li>
-    {% empty %}
-    <li class="list-group-item text-muted" id="no-payments-message">{% translate "Счета на оплату еще не созданы." %}
-    </li>
-    {% endfor %}
-  </ul>
-</div>
-
-<hr>
-
-{% include 'clients/partials/email_history.html' with email_logs=email_logs %}
-
-<hr>
-
-{% include 'clients/partials/activity_timeline.html' with recent_activities=recent_activities %}
-
-<hr>
-
-<div class="d-flex justify-content-between align-items-center">
-  <h2 class="mb-0">{% translate "Чеклист документов" %}</h2>
-  <div class="d-flex align-items-center ms-3 gap-2">
-    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
-      data-bs-target="#sendEmailModal">
-      <i class="bi bi-envelope"></i> {% translate "Отправить email" %}
+<section class="client-section">
+  <div class="client-section-header">
+    <h3>{% translate "Финансы" %}</h3>
+    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
+      <i class="bi bi-plus-lg me-1"></i>{% translate "Добавить счёт" %}
     </button>
-    <form id="verify-all-documents-form" action="{% url 'clients:verify_all_documents' client_id=client.pk %}"
-      method="post" class="m-0">
-      {% csrf_token %}
-      <button type="submit" class="btn btn-outline-success btn-sm">{% translate "Проверить все загруженные" %}</button>
-    </form>
   </div>
-</div>
+  <div id="payment-alerts" class="mb-2"></div>
+  <div class="card">
+    <ul class="list-group list-group-flush" id="payment-list-container"
+      data-empty-text="{% translate 'Счета на оплату ещё не созданы.' %}">
+      {% for payment in client.payments.all %}
+      <li class="list-group-item" data-payment-id="{{ payment.id }}">
+        {% include 'clients/partials/payment_item.html' with payment=payment %}
+      </li>
+      {% empty %}
+      <li class="list-group-item text-muted" id="no-payments-message">{% translate "Счета на оплату еще не созданы." %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
 
-<div id="document-alerts" class="mb-2"></div>
+<section class="client-section">
+  {% include 'clients/partials/email_history.html' with email_logs=email_logs %}
+</section>
 
-<div class="accordion" id="documentAccordion" data-refresh-url="{% url 'clients:client_checklist_partial' client.pk %}">
-  {% include 'clients/partials/document_checklist.html' with document_status_list=document_status_list client=client %}
-</div>
+<section class="client-section">
+  {% include 'clients/partials/activity_timeline.html' with recent_activities=recent_activities %}
+</section>
+
+<section class="client-section client-checklist-section">
+  <div class="client-section-header">
+    <h3>{% translate "Чеклист документов" %}</h3>
+    <div class="client-section-actions">
+      <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
+        data-bs-target="#sendEmailModal">
+        <i class="bi bi-envelope"></i> {% translate "Email" %}
+      </button>
+      <form id="verify-all-documents-form" action="{% url 'clients:verify_all_documents' client_id=client.pk %}"
+        method="post" class="m-0">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-success btn-sm">
+          <i class="bi bi-check2-all me-1"></i>{% translate "Проверить все" %}
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div id="document-alerts" class="mb-2"></div>
+
+  <div class="accordion" id="documentAccordion" data-refresh-url="{% url 'clients:client_checklist_partial' client.pk %}">
+    {% include 'clients/partials/document_checklist.html' with document_status_list=document_status_list client=client %}
+  </div>
+</section>
 {% endblock %}
 
 

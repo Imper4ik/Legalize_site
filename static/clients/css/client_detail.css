@@ -3,6 +3,43 @@
   backdrop-filter: none;
 }
 
+.client-detail-page .card {
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+.client-section {
+  border-top: 1px solid var(--border);
+  padding: 1.25rem 0;
+}
+
+.client-section:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.client-section-header {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 0.9rem;
+}
+
+.client-section-header h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.client-section-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
 .client-detail-page #documentAccordion {
   contain: layout style;
   overflow-anchor: none;
@@ -26,14 +63,75 @@
   contain: layout paint style;
 }
 
-.client-detail-page #documentAccordion .accordion-collapse.checklist-prewarm {
-  display: block;
-  height: 0 !important;
-  overflow: hidden;
-  pointer-events: none;
-  visibility: hidden;
+.client-detail-page #documentAccordion .accordion-button {
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3rem;
+  padding: 0.85rem 1rem;
+}
+
+.client-detail-page #documentAccordion .accordion-button::after {
+  flex-shrink: 0;
+}
+
+.client-detail-page .checklist-title {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.client-detail-page .checklist-badges {
+  align-items: center;
+  display: inline-flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.client-detail-page .checklist-document-row {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.client-detail-page .document-row-actions {
+  flex: 0 0 auto;
+}
+
+.client-detail-page .document-row-actions .btn {
+  align-items: center;
+  display: inline-flex;
+  min-height: 2rem;
+  justify-content: center;
 }
 
 .client-detail-page #documentAccordion.is-checklist-transitioning .accordion-body * {
   transition-duration: 0s !important;
+}
+
+@media (min-width: 768px) {
+  .client-detail-page #documentAccordion .accordion-collapse,
+  .client-detail-page #documentAccordion .collapsing {
+    transition: none !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .client-section-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .client-section-actions {
+    justify-content: flex-start;
+  }
+
+  .client-detail-page .checklist-document-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .client-detail-page .document-row-actions {
+    align-self: flex-start;
+  }
 }

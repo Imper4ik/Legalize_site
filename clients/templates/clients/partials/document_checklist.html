@@ -6,19 +6,21 @@
   <h2 class="accordion-header" id="heading{{ item.code }}">
     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
       data-bs-target="#collapse{{ item.code }}">
-      {{ item.name }}
+      <span class="checklist-title">{{ item.name }}</span>
+      <span class="checklist-badges">
       {% if item.is_uploaded %}
-      <span class="badge bg-success ms-3">{{ item.documents|length }} {% translate "шт." %}</span>
+      <span class="badge bg-success">{{ item.documents|length }} {% translate "шт." %}</span>
       {% endif %}
       {% if item.is_submitted %}
-      <span class="badge bg-info text-dark ms-3">{% translate "Сдано" %}</span>
+      <span class="badge bg-info text-dark">{% translate "Сдано" %}</span>
       {% endif %}
       {% if not item.is_complete %}
-      <span class="badge bg-danger ms-3">{% translate "Отсутствует" %}</span>
+      <span class="badge bg-danger">{% translate "Отсутствует" %}</span>
       {% endif %}
       {% if item.is_custom_submission %}
-      <span class="badge bg-secondary ms-3">{% translate "Свой" %}</span>
+      <span class="badge bg-secondary">{% translate "Свой" %}</span>
       {% endif %}
+      </span>
     </button>
   </h2>
   <div id="collapse{{ item.code }}" class="accordion-collapse collapse" data-bs-parent="#documentAccordion">
@@ -26,7 +28,7 @@
       {% if item.is_uploaded %}
       <ul class="list-group list-group-flush mb-3">
         {% for doc in item.documents %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
+        <li class="list-group-item checklist-document-row">
           <div>
             {% if doc.file_exists == False %}
             <span class="text-danger fw-bold">
@@ -64,12 +66,16 @@
             </a>
             {% endif %}
           </div>
-          <div class="btn-group">
+          <div class="btn-group document-row-actions">
             <form action="{% url 'clients:toggle_document_verification' doc.id %}" method="post"
               class="d-inline toggle-verification-form">
               {% csrf_token %}
-              <button type="submit" class="btn btn-sm btn-outline-primary">
-                {% if doc.verified %}{% translate "Снять отметку" %}{% else %}{% translate "Проверить" %}{% endif %}
+              <button type="submit" class="btn btn-sm btn-outline-primary"
+                title="{% if doc.verified %}{% translate 'Снять отметку' %}{% else %}{% translate 'Проверить' %}{% endif %}">
+                <i class="bi bi-check2-square"></i>
+                <span class="d-none d-xl-inline ms-1">
+                  {% if doc.verified %}{% translate "Снять" %}{% else %}{% translate "Проверить" %}{% endif %}
+                </span>
               </button>
             </form>
             <a href="{% url 'clients:document_versions' doc.pk %}" class="btn btn-sm btn-outline-info" title="{% translate 'Versions' %}">
@@ -78,8 +84,9 @@
             <form action="{% url 'clients:document_delete' doc.pk %}" method="post"
               class="d-inline delete-document-form">
               {% csrf_token %}
-              <button type="button" class="btn btn-sm btn-outline-danger delete-document-button">
-                {% translate "Удалить" %}
+              <button type="button" class="btn btn-sm btn-outline-danger delete-document-button"
+                title="{% translate 'Удалить' %}" aria-label="{% translate 'Удалить' %}">
+                <i class="bi bi-trash"></i>
               </button>
             </form>
           </div>
@@ -100,7 +107,7 @@
         <div class="fw-semibold mb-2">{% translate "Отмечено по wniosek" %}</div>
         <ul class="list-group list-group-flush">
           {% for submission in item.submitted_records %}
-          <li class="list-group-item px-0 d-flex justify-content-between align-items-start gap-3">
+          <li class="list-group-item px-0 checklist-document-row">
             <div>
               {{ submission.submitted_at|date:"d.m.Y H:i" }}
               {% if submission.confirmed_by %}
@@ -113,8 +120,9 @@
             <form action="{% url 'clients:wniosek_attachment_delete' submission.attachment_id %}" method="post"
               class="d-inline delete-document-form">
               {% csrf_token %}
-              <button type="button" class="btn btn-sm btn-outline-danger delete-document-button">
-                {% translate "Удалить" %}
+              <button type="button" class="btn btn-sm btn-outline-danger delete-document-button"
+                title="{% translate 'Удалить' %}" aria-label="{% translate 'Удалить' %}">
+                <i class="bi bi-trash"></i>
               </button>
             </form>
           </li>

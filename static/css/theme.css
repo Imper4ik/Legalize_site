@@ -11,8 +11,8 @@
   --muted: #6b7280;
   --surface: #ffffff;
   --border: rgba(15, 23, 42, 0.08);
-  --shadow-1: 0 10px 30px rgba(2, 6, 23, 0.10);
-  --shadow-2: 0 24px 60px rgba(15, 23, 42, 0.12);
+  --shadow-1: 0 4px 14px rgba(2, 6, 23, 0.08);
+  --shadow-2: 0 12px 34px rgba(15, 23, 42, 0.10);
 
   /* Gradients */
   --grad-primary: linear-gradient(135deg, var(--brand-1), var(--brand-2));
@@ -42,8 +42,8 @@
   --muted: #94a3b8;
   --surface: #121a2b;
   --border: rgba(148,163,184,0.28);
-  --shadow-1: 0 10px 30px rgba(2, 6, 23, 0.55);
-  --shadow-2: 0 32px 70px rgba(2, 6, 23, 0.65);
+  --shadow-1: 0 6px 18px rgba(2, 6, 23, 0.45);
+  --shadow-2: 0 18px 42px rgba(2, 6, 23, 0.55);
   --glass-bg: rgba(13, 20, 36, 0.78);
   --glass-border: rgba(148,163,184,0.22);
   --page-base: linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(17, 24, 39, 0.98));
@@ -79,6 +79,19 @@ a { color: #0d6efd; }
 .theme-navbar { background: var(--nav-bg)!important; border-bottom: 1px solid var(--border); }
 .theme-navbar .navbar-brand, .theme-navbar .nav-link, .theme-navbar .navbar-text { color: var(--nav-fg)!important; }
 .theme-navbar .nav-link:hover, .theme-navbar .nav-link.active { color: #60a5fa!important; }
+.theme-navbar .dropdown-menu {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: var(--shadow-1);
+}
+.theme-navbar .dropdown-item {
+  color: var(--fg);
+}
+.theme-navbar .dropdown-item:hover,
+.theme-navbar .dropdown-item:focus {
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--fg);
+}
 
 /* Glass surface wrapper for pages */
 .page-surface {
@@ -86,19 +99,19 @@ a { color: #0d6efd; }
   padding: clamp(1.25rem, 3.5vw, 2rem);
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  border-radius: 24px;
+  border-radius: 16px;
   backdrop-filter: blur(var(--glass-blur));
   box-shadow: var(--shadow-2);
 }
 
 /* Utility: section header (title + actions) */
-.section-header{display:flex;gap:1rem;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.section-header{display:flex;gap:1rem;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap}
 .chips{display:flex;gap:.5rem;flex-wrap:wrap}
 .chip{padding:.35rem .6rem;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.35)}
 :root[data-theme="dark"] .chip{background:rgba(255,255,255,.06)}
 
 /* Cards */
-.card{background:var(--surface); border-color: var(--border); box-shadow: var(--shadow-1)}
+.card{background:var(--surface); border-color: var(--border); border-radius:10px; box-shadow: var(--shadow-1)}
 
 /* Gradient buttons like on login */
 .btn-gradient{background:var(--grad-primary); color:#fff; border:none}

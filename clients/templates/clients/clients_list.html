@@ -14,12 +14,12 @@
     <h1 class="h3 mb-1">{% translate "Список клиентов" %}</h1>
     <div class="text-muted">{% translate "Поиск, быстрые заметки и переход в карточку клиента" %}</div>
   </div>
-  <div class="d-flex gap-2">
+  <div class="d-flex flex-wrap gap-2 justify-content-end">
     <a href="{% url 'clients:mass_email' %}" class="btn btn-outline-primary">
       <i class="bi bi-envelope me-1"></i>{% translate "Массовая рассылка" %}
     </a>
     <a href="{% url 'clients:client_add' %}" class="btn btn-gradient">
-      <i class="bi bi-plus-lg me-1"></i>{% translate "Добавить нового клиента" %}
+      <i class="bi bi-plus-lg me-1"></i>{% translate "Новый клиент" %}
     </a>
   </div>
 </div>
@@ -27,9 +27,10 @@
 
 {% block content %}
 
-<form method="get" class="mb-4">
-  <div class="input-group">
-    <select name="company" class="form-select" style="max-width: 250px;">
+<form method="get" class="client-list-filters mb-3">
+  <div class="row g-2 align-items-center">
+    <div class="col-12 col-md-3">
+    <select name="company" class="form-select">
       <option value="">{% translate "Все компании" %}</option>
       {% for company in companies %}
         <option value="{{ company.id }}" {% if selected_company == company.id|stringformat:"s" %}selected{% endif %}>
@@ -37,14 +38,19 @@
         </option>
       {% endfor %}
     </select>
+    </div>
+    <div class="col-12 col-md">
     <input type="text"
            name="q"
            class="form-control"
            placeholder="{% translate 'Поиск по имени, почте, телефону или номеру дела...' %}"
            value="{{ query }}">
-    <button class="btn btn-outline-secondary" type="submit">
-      {% translate "Найти" %}
+    </div>
+    <div class="col-12 col-md-auto">
+    <button class="btn btn-soft w-100" type="submit">
+      <i class="bi bi-search me-1"></i>{% translate "Найти" %}
     </button>
+    </div>
   </div>
 </form>
 
@@ -52,11 +58,10 @@
   <table class="table table-modern table-hover align-middle mb-0">
     <thead>
       <tr>
-        <th>Email</th>
-        <th>{% translate "Полное имя" %}</th>
+        <th>{% translate "Клиент" %}</th>
         <th>{% translate "Номер дела" %}</th>
         <th>{% translate "Основание и дата окончания" %}</th>
-        <th style="width: 30%;">
+        <th class="client-notes-column">
           <div class="d-flex justify-content-between align-items-center">
             <span>{% translate "Заметки" %}</span>
             <div class="editor-toolbar d-flex align-items-center">
@@ -67,14 +72,16 @@
             </div>
           </div>
         </th>
-        <th>{% translate "Действия" %}</th>
+        <th class="text-end">{% translate "Действия" %}</th>
       </tr>
     </thead>
     <tbody>
       {% for client in clients %}
         <tr>
-          <td>{{ client.email }}</td>
-          <td>{{ client.first_name }} {{ client.last_name }}</td>
+          <td class="client-identity-cell">
+            <div class="fw-semibold">{{ client.first_name }} {{ client.last_name }}</div>
+            <div class="small text-muted">{{ client.email }}</div>
+          </td>
           <td><strong>{{ client.case_number|default:"—" }}</strong></td>
           <td>
             {{ client.basis_of_stay|default:"—" }}
@@ -98,25 +105,30 @@
                    data-notes-editor>
                 {{ client.notes|default_if_none:""|sanitize_html }}
               </div>
-              <button class="btn btn-outline-secondary btn-sm mt-2 w-100" type="submit">
-                {% translate "Сохранить" %}
+              <button class="btn btn-outline-secondary btn-sm mt-2 notes-save-button" type="submit"
+                title="{% translate 'Сохранить заметку' %}" aria-label="{% translate 'Сохранить заметку' %}">
+                <i class="bi bi-save me-1"></i>{% translate "Сохранить" %}
               </button>
             </form>
           </td>
-          <td>
-            <div class="d-grid gap-2">
-              <a href="{% url 'clients:client_detail' pk=client.pk %}" class="btn btn-info btn-sm">
-                {% translate "Подробнее" %}
+          <td class="text-end">
+            <div class="btn-group client-row-actions" role="group">
+              <a href="{% url 'clients:client_detail' pk=client.pk %}" class="btn btn-outline-primary btn-sm"
+                title="{% translate 'Подробнее' %}" aria-label="{% translate 'Подробнее' %}">
+                <i class="bi bi-eye"></i>
+                <span class="visually-hidden">{% translate "Подробнее" %}</span>
               </a>
-              <a href="{% url 'clients:client_delete' pk=client.pk %}" class="btn btn-danger btn-sm">
-                {% translate "Удалить" %}
+              <a href="{% url 'clients:client_delete' pk=client.pk %}" class="btn btn-outline-danger btn-sm"
+                title="{% translate 'Удалить' %}" aria-label="{% translate 'Удалить' %}">
+                <i class="bi bi-trash"></i>
+                <span class="visually-hidden">{% translate "Удалить" %}</span>
               </a>
             </div>
           </td>
         </tr>
       {% empty %}
         <tr>
-          <td colspan="6" class="text-center text-muted py-4">
+          <td colspan="5" class="text-center text-muted py-4">
             {% translate "Клиенты не найдены." %}
           </td>
         </tr>

@@ -19,38 +19,6 @@ function initChecklistRefresher() {
   let controller = null;
   let isFetching = false;
   let checklistTransitionInProgress = false;
-  let lastPrewarmedPanel = null;
-  let lastPrewarmedAt = 0;
-
-  function getChecklistPanelFromTrigger(trigger) {
-    const targetSelector = trigger?.getAttribute('data-bs-target');
-    if (!targetSelector || !targetSelector.startsWith('#')) {
-      return null;
-    }
-    return accordion.querySelector(targetSelector);
-  }
-
-  function prewarmChecklistPanel(trigger) {
-    const panel = getChecklistPanelFromTrigger(trigger);
-    if (!panel || panel.classList.contains('show') || panel.classList.contains('collapsing')) {
-      return;
-    }
-
-    const now = Date.now();
-    if (panel === lastPrewarmedPanel && now - lastPrewarmedAt < 1000) {
-      return;
-    }
-    lastPrewarmedPanel = panel;
-    lastPrewarmedAt = now;
-
-    panel.classList.add('checklist-prewarm');
-    // Pre-measure the panel before Bootstrap starts the height transition.
-    // This moves the expensive layout work away from the visible accordion animation.
-    void panel.scrollHeight;
-    window.requestAnimationFrame(() => {
-      panel.classList.remove('checklist-prewarm');
-    });
-  }
 
   function restoreExpandedPanels(ids) {
     ids.forEach((id) => {
@@ -162,24 +130,10 @@ function initChecklistRefresher() {
     checklistTransitionInProgress = false;
     accordion.classList.remove('is-checklist-transitioning');
   });
-  accordion.addEventListener('pointerover', (event) => {
-    const trigger = event.target.closest('[data-bs-toggle="collapse"][data-bs-target]');
-    if (trigger && accordion.contains(trigger)) {
-      prewarmChecklistPanel(trigger);
-    }
-  });
-  accordion.addEventListener('focusin', (event) => {
-    const trigger = event.target.closest('[data-bs-toggle="collapse"][data-bs-target]');
-    if (trigger && accordion.contains(trigger)) {
-      prewarmChecklistPanel(trigger);
-    }
+  accordion.addEventListener('focusin', () => {
     pauseChecklistRefresh(10000);
   });
-  accordion.addEventListener('pointerdown', (event) => {
-    const trigger = event.target.closest('[data-bs-toggle="collapse"][data-bs-target]');
-    if (trigger && accordion.contains(trigger)) {
-      prewarmChecklistPanel(trigger);
-    }
+  accordion.addEventListener('pointerdown', () => {
     pauseChecklistRefresh(10000);
   });
   window.addEventListener('beforeunload', () => {

@@ -187,6 +187,11 @@
             display: none;
         }
 
+        .theme-toggle .icon-moon,
+        .theme-toggle .icon-sun {
+            display: none;
+        }
+
         :root[data-theme="dark"] .theme-toggle .theme-icon-sun {
             display: none;
         }
@@ -210,7 +215,6 @@
             background: var(--auth-toggle-hover);
             color: var(--auth-toolbar-text);
             border-color: var(--auth-toolbar-border);
-            transform: translateY(-1px);
             outline: none;
             transform: translateY(-1px);
             box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
@@ -703,8 +707,8 @@
                 data-theme-dark-title="{% translate 'Переключить на светлую тему' %}"
                 data-theme-light-label="{% translate 'Переключить на тёмную тему' %}"
                 data-theme-dark-label="{% translate 'Переключить на светлую тему' %}">
-                <span class="icon-sun">☀️</span>
-                <span class="icon-moon">🌙</span>
+                <i class="bi bi-sun-fill theme-icon-sun" aria-hidden="true"></i>
+                <i class="bi bi-moon-stars-fill theme-icon-moon" aria-hidden="true"></i>
                 <span class="auth-theme-toggle-text" data-theme-toggle-text>{% translate "Светлая тема" %}</span>
             </button>
         </div>

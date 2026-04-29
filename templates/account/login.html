@@ -82,7 +82,7 @@
                 {% endfor %}
               </div>
             {% endif %}
-            {% if field.help_text %}
+            {% if field.help_text and field.name != 'password' %}
               <p class="auth-help">{{ field.help_text|safe }}</p>
             {% endif %}
           </div>
