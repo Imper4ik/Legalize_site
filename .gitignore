@@ -10,7 +10,7 @@ local_settings.py
 
 # Кэш Python
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
 
@@ -30,16 +30,10 @@ logs/
 # Файлы IDE/редакторов
 .idea/
 .vscode/
-
-# Системные файлы
 .DS_Store
 Thumbs.db
-.idea/
-__pycache__/
-*.py[cod]
-staticfiles
 
-# Compiled translation catalogs are regenerated at runtime.
+# Compiled translation catalogs
 *.mo
 
 # Test & Debug artifacts
@@ -51,16 +45,10 @@ generated_media_test/
 tmp_*.js
 tmp_*.json
 tmp_*.html
+htmlcov/
 
 # Unnecessary project files
 CODE_REVIEW.md
-
-# Application data
-db.sqlite3
-media/
-staticfiles/
-static_root/
-logs/
-*.log
 tmp/
-htmlcov/
+scratch/
+
