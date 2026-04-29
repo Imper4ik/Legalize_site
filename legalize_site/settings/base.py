@@ -324,7 +324,10 @@ USE_TZ = True
 # --- СТАТИКА И МЕДИА (WHITENOISE) ---
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 if WHITENOISE_AVAILABLE:
-    STORAGES = {"staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"}}
+    STORAGES = {
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+    }
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.environ.get("MEDIA_ROOT", str(BASE_DIR / "media"))
