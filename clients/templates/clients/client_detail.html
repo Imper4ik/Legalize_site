@@ -11,6 +11,8 @@
 <link rel="stylesheet" href="{% static 'clients/css/client_detail.css' %}">
 {% endblock %}
 
+{% block page_header %}{% endblock %}
+
 {% block content %}
 <div id="client-overview" data-refresh-url="{% url 'clients:client_overview_partial' client.pk %}">
   {% include 'clients/partials/client_overview.html' with client=client workflow_summary=workflow_summary %}
