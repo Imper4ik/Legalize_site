@@ -300,7 +300,7 @@ def process_document_processing_job(
     with transaction.atomic():
         job = (
             DocumentProcessingJob.objects.select_for_update()
-            .select_related("document", "document__client", "created_by")
+            .select_related("document", "document__client")
             .get(pk=job_id)
         )
         if job.status != DocumentProcessingJob.STATUS_PENDING:
@@ -424,7 +424,7 @@ def _finalize_failed_document_job(
     with transaction.atomic():
         job = (
             DocumentProcessingJob.objects.select_for_update()
-            .select_related("document", "document__client", "created_by")
+            .select_related("document", "document__client")
             .get(pk=job_id)
         )
         document = Document.objects.select_for_update().select_related("client").get(pk=job.document_id)
@@ -487,7 +487,7 @@ def _finalize_successful_document_job(
     with transaction.atomic():
         job = (
             DocumentProcessingJob.objects.select_for_update()
-            .select_related("document", "document__client", "created_by")
+            .select_related("document", "document__client")
             .get(pk=job_id)
         )
         document = Document.objects.select_for_update().select_related("client").get(pk=job.document_id)
