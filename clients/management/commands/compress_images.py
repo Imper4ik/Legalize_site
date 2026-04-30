@@ -49,7 +49,7 @@ class Command(BaseCommand):
             # Check if file exists and should be compressed
             if not file_path.exists():
                 self.stdout.write(
-                    self.style.WARNING(f"[{i}/{total}] File not found: {file_path}")
+                    self.style.WARNING(f"[{i}/{total}] File not found for document_id={doc.pk}")
                 )
                 error_count += 1
                 continue
@@ -61,12 +61,12 @@ class Command(BaseCommand):
             original_size = file_path.stat().st_size
 
             self.stdout.write(
-                f"[{i}/{total}] Processing: {doc.client.last_name} - {doc.document_type}"
+                f"[{i}/{total}] Processing document_id={doc.pk} client_id={doc.client_id} type={doc.document_type}"
             )
 
             if dry_run:
                 self.stdout.write(
-                    self.style.WARNING(f"  Would compress: {file_path.name} ({original_size / 1024:.1f}KB)")
+                    self.style.WARNING(f"  Would compress document_id={doc.pk} ({original_size / 1024:.1f}KB)")
                 )
                 compressed_count += 1
                 continue

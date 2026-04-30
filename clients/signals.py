@@ -134,7 +134,11 @@ def compress_document_image_on_upload(sender, instance, **kwargs):
         if compressed_file:
             instance.file = compressed_file
     except Exception:
-        logger.warning("Failed to compress document %s, keeping original", instance.file.name)
+        logger.warning(
+            "Failed to compress uploaded document image: document_id=%s, client_id=%s",
+            instance.pk,
+            instance.client_id,
+        )
 
 
 @receiver(post_save, sender=EmailLog)

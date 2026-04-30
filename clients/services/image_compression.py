@@ -156,8 +156,8 @@ def compress_uploaded_file(uploaded_file: InMemoryUploadedFile) -> InMemoryUploa
         
         return compressed_file
         
-    except Exception as e:
-        logger.warning(f"Could not compress file {uploaded_file.name}: {e}")
+    except Exception:
+        logger.warning("Could not compress uploaded image file", exc_info=True)
         return None
 
 
@@ -195,9 +195,9 @@ def compress_existing_file(file_path: str | Path) -> bool:
         if new_path != file_path:
             file_path.unlink()
         
-        logger.info(f"Compressed existing file: {file_path} → {new_path}")
+        logger.info("Compressed existing image file")
         return True
         
-    except Exception as e:
-        logger.exception(f"Failed to compress existing file {file_path}: {e}")
+    except Exception:
+        logger.exception("Failed to compress existing image file")
         return False

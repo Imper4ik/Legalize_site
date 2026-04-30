@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import SimpleTestCase, override_settings
 
+from clients.models.document import document_upload_path
 from clients.validators import validate_uploaded_document
 
 
@@ -50,3 +51,12 @@ class UploadSecurityTests(SimpleTestCase):
         upload = DummyUpload("../secret.pdf", VALID_MINIMAL_PDF, "application/pdf")
         with self.assertRaises(ValidationError):
             validate_uploaded_document(upload)
+
+    def test_document_upload_path_does_not_preserve_user_filename(self):
+        path = document_upload_path(None, "Ivanov passport 123456.pdf")
+
+        self.assertTrue(path.startswith("documents/"))
+        self.assertTrue(path.endswith(".pdf"))
+        self.assertNotIn("Ivanov", path)
+        self.assertNotIn("passport", path)
+        self.assertNotIn("123456", path)

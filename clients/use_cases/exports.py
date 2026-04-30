@@ -54,7 +54,6 @@ def restore_document_version_for_client(
     metadata = {
         "restored_version_id": version.pk,
         "restored_version_number": version.version_number,
-        "restored_from_file": version.file_name,
     }
     log_client_activity(
         client=document.client,

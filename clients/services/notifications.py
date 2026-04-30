@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import logging
 import hashlib
-import threading
 from datetime import timedelta
 from io import BytesIO
 from pathlib import Path
@@ -82,24 +81,14 @@ def _send_email(
         ).exists():
             return 0
 
-    # Log the email as "queued" immediately so the caller has a record.
-    _log_email(
-        subject,
-        body,
-        recipient_list,
-        client=client,
-        template_type=template_type,
-        sent_by=sent_by,
-        idempotency_key=idempotency_key,
-        delivery_status="queued",
-    )
+    result = {"sent_count": 0}
 
     def _do_send():
-        """Run the actual SMTP I/O in a background thread."""
-        from django.db import connection
+        """Run SMTP I/O and record the final delivery status."""
 
         try:
             sent_count = send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, recipient_list)
+            result["sent_count"] = sent_count
             if sent_count:
                 _send_confirmation_email(subject, body, recipient_list)
                 _log_email(
@@ -112,8 +101,21 @@ def _send_email(
                     idempotency_key=idempotency_key,
                     delivery_status="sent",
                 )
+            else:
+                _log_email(
+                    subject,
+                    body,
+                    recipient_list,
+                    client=client,
+                    template_type=template_type,
+                    sent_by=sent_by,
+                    idempotency_key=idempotency_key,
+                    delivery_status="failed",
+                    error_message="send returned 0",
+                )
         except Exception:
             logger.exception("Failed to send notification email")
+            result["sent_count"] = 0
             _log_email(
                 subject,
                 body,
@@ -125,19 +127,8 @@ def _send_email(
                 delivery_status="failed",
                 error_message="send failed",
             )
-        finally:
-            connection.close()
-
-    # Tests use the in-memory email backend which is synchronous; honour that.
-    force_sync = getattr(settings, "FORCE_SYNC_EMAIL", False)
-    if force_sync or getattr(settings, "EMAIL_BACKEND", "").endswith("locmem.EmailBackend"):
-        _do_send()
-    else:
-        thread = threading.Thread(target=_do_send, daemon=True)
-        thread.start()
-
-    # Return 1 optimistically — the actual delivery happens in the thread.
-    return 1
+    _do_send()
+    return result["sent_count"]
 
 
 

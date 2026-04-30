@@ -3405,6 +3405,12 @@ msgstr "Wersje dokumentu"
 msgid "Current File"
 msgstr "Aktualny plik"
 
+msgid "Current document file"
+msgstr "Aktualny plik dokumentu"
+
+msgid "Archived version"
+msgstr "Wersja archiwalna"
+
 msgid "Version History"
 msgstr "Historia wersji"
 

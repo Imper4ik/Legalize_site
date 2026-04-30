@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -68,8 +69,7 @@ def client_export_zip(request, pk):
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
     buffer = generate_client_zip(client)
 
-    safe_name = f"{client.first_name}_{client.last_name}".replace(" ", "_")[:50]
-    filename = f"case_{safe_name}_{client.pk}.zip"
+    filename = f"case_{client.pk}.zip"
 
     record_client_export(
         client=client,
@@ -124,7 +124,8 @@ def document_version_download(request, version_id):
             "version_number": version.version_number,
         },
     )
-    filename = version.file_name or version.file.name.rsplit("/", 1)[-1]
+    extension = Path(version.file.name).suffix or ".bin"
+    filename = f"document-version-{version.pk}{extension}"
     return build_protected_file_response(version.file, filename=filename, as_attachment=True)
 
 

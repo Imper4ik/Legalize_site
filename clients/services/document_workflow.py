@@ -3,9 +3,10 @@ from __future__ import annotations
 import logging
 import os
 import tempfile
-from datetime import timedelta
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
+from datetime import timedelta
+from hashlib import sha256
 
 from django.conf import settings
 from django.db import models, transaction
@@ -32,6 +33,15 @@ MANUAL_WEZWANIE_REVIEW_MESSAGE = _(
 
 Parser = Callable[[str], WezwanieData]
 NotificationSender = Callable[[Client], int]
+
+
+def _document_file_identity(document: Document) -> str:
+    """Stable non-PII token used to detect whether a queued file changed."""
+
+    source_name = document.file.name or ""
+    if not source_name:
+        return ""
+    return sha256(source_name.encode("utf-8")).hexdigest()
 
 
 @dataclass
@@ -193,7 +203,7 @@ def enqueue_document_processing_job(*, document: Document, actor=None, requires_
     job_defaults = {
         "created_by": actor if getattr(actor, "is_authenticated", False) else None,
         "status": DocumentProcessingJob.STATUS_PENDING,
-        "source_file_name": document.file.name,
+        "source_file_name": _document_file_identity(document),
         "max_attempts": DEFAULT_JOB_MAX_ATTEMPTS,
         "error_message": "",
         "next_attempt_at": timezone.now(),
@@ -279,7 +289,7 @@ def process_document_processing_job(
                 message=_("Job is not pending."),
             )
 
-        source_file_name = job.source_file_name or job.document.file.name
+        source_file_name = job.source_file_name or _document_file_identity(job.document)
         job.status = DocumentProcessingJob.STATUS_PROCESSING
         job.attempts += 1
         job.started_at = timezone.now()
@@ -536,10 +546,11 @@ def _job_matches_processing_state(
     document: Document,
     source_file_name: str,
 ) -> bool:
+    current_file_identity = _document_file_identity(document)
     return (
         job.status == DocumentProcessingJob.STATUS_PROCESSING
         and job.source_file_name == source_file_name
-        and document.file.name == source_file_name
+        and source_file_name in {current_file_identity, document.file.name}
     )
 
 

@@ -56,6 +56,20 @@ class DocumentJobsStage18Tests(TestCase):
         job = enqueue_document_processing_job(document=document, actor=self.staff, requires_confirmation=False)
         return document, job
 
+    def test_queued_job_does_not_store_raw_storage_file_name(self):
+        document = Document.objects.create(
+            client=self.client_obj,
+            document_type=DocumentType.WEZWANIE.value,
+            file="documents/ivanov-passport-123456.pdf",
+        )
+
+        job = enqueue_document_processing_job(document=document, actor=self.staff, requires_confirmation=False)
+
+        self.assertEqual(len(job.source_file_name), 64)
+        self.assertNotIn("ivanov", job.source_file_name)
+        self.assertNotIn("passport", job.source_file_name)
+        self.assertNotIn("123456", job.source_file_name)
+
     @patch("clients.management.commands.process_document_jobs.parse_wezwanie")
     def test_empty_parse_result_requeues_job_with_backoff(self, parse_mock):
         parse_mock.return_value = WezwanieData(text="", error="no_text")

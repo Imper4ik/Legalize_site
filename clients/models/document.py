@@ -1,3 +1,6 @@
+from pathlib import Path
+from uuid import uuid4
+
 from django.db import models
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
@@ -8,6 +11,14 @@ from legalize_site.soft_delete import SoftDeleteModel
 
 DOCUMENT_TYPE_VALUES = {choice.value for choice in DocumentType}
 DOCUMENT_LABEL_ALIASES: dict[str, list[str]] = {}
+
+
+def document_upload_path(_instance, filename: str) -> str:
+    """Store uploaded documents without preserving user-provided filenames."""
+
+    suffix = Path(filename or "").suffix.lower() or ".bin"
+    return f"documents/{uuid4().hex}{suffix}"
+
 
 def _normalize_document_label(value: str) -> str:
     return " ".join(str(value).split()).casefold()
@@ -89,7 +100,7 @@ class Document(SoftDeleteModel):
 
     client = models.ForeignKey('clients.Client', on_delete=models.CASCADE, related_name='documents', verbose_name=_("Клиент"))
     document_type = models.CharField(max_length=255, verbose_name=_("Тип документа"))
-    file = models.FileField(upload_to='documents/', verbose_name=_("Файл"), validators=[validate_uploaded_document])
+    file = models.FileField(upload_to=document_upload_path, verbose_name=_("Файл"), validators=[validate_uploaded_document])
     expiry_date = models.DateField(null=True, blank=True, verbose_name=_("Действителен до"))
     uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Дата загрузки"))
     verified = models.BooleanField(default=False, verbose_name=_("Проверено"))

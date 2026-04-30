@@ -35,9 +35,8 @@ def archive_document_version(
     except (FileNotFoundError, OSError):
         logger.warning(
             "Skipping document version archive because the source file is missing: "
-            "document_id=%s file=%s",
+            "document_id=%s",
             document.pk,
-            document.file.name,
         )
         return None
     finally:
@@ -47,8 +46,8 @@ def archive_document_version(
     current_max = document.versions.aggregate(max_v=Max("version_number"))["max_v"] or 0
     version_number = current_max + 1
     
-    file_name = Path(document.file.name).name
-    ext = Path(file_name).suffix or ".bin"
+    ext = Path(document.file.name).suffix or ".bin"
+    file_name = f"document_{document.pk}_v{version_number}{ext}"
     # Ensure a unique path for the version file
     new_path = f"document_versions/{document.pk}_v{version_number}{ext}"
     
@@ -65,8 +64,8 @@ def archive_document_version(
     version.save()
     
     logger.info(
-        "Archived document version: doc_id=%s, version=%s, path=%s",
-        document.pk, version_number, version.file.name
+        "Archived document version: doc_id=%s, version=%s",
+        document.pk, version_number
     )
     return version
 

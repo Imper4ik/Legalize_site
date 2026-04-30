@@ -3400,6 +3400,12 @@ msgstr "Версии документа"
 msgid "Current File"
 msgstr "Текущий файл"
 
+msgid "Current document file"
+msgstr "Текущий файл документа"
+
+msgid "Archived version"
+msgstr "Архивная версия"
+
 msgid "Version History"
 msgstr "История версий"
 

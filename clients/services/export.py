@@ -15,12 +15,6 @@ from clients.services.document_helpers import document_file_exists
 logger = logging.getLogger(__name__)
 
 
-def _safe_filename(name: str) -> str:
-    """Sanitize a string for use as a filename inside a ZIP archive."""
-    keepchars = (" ", ".", "_", "-")
-    return "".join(c for c in name if c.isalnum() or c in keepchars).strip()[:100]
-
-
 def generate_client_summary_text(client) -> str:
     """Generate a plain-text summary of the client case."""
 
@@ -121,8 +115,7 @@ def generate_client_zip(client) -> io.BytesIO:
     """
 
     buffer = io.BytesIO()
-    safe_name = _safe_filename(f"{client.first_name}_{client.last_name}")
-    prefix = f"case_{safe_name}_{client.pk}"
+    prefix = f"case_{client.pk}"
 
     missing_files_info = []
 
@@ -140,9 +133,8 @@ def generate_client_zip(client) -> io.BytesIO:
                 missing_files_info.append(f"Document: ID={doc.pk}, Type={doc.document_type}, Name={doc.display_name}")
                 continue
             try:
-                doc_name = _safe_filename(doc.display_name)
                 ext = os.path.splitext(doc.file.name)[1] or ".bin"
-                archive_name = f"{prefix}/documents/{doc_name}{ext}"
+                archive_name = f"{prefix}/documents/document_{doc.pk}{ext}"
 
                 # Avoid duplicate names inside the archive
                 counter = 1
@@ -170,11 +162,8 @@ def generate_client_zip(client) -> io.BytesIO:
                 missing_files_info.append(f"Version: ID={version.pk}, DocID={version.document_id}, Version={version.version_number}")
                 continue
             try:
-                doc_name = _safe_filename(
-                    version.document.display_name if version.document else f"doc_{version.document_id}"
-                )
                 ext = os.path.splitext(version.file.name)[1] or ".bin"
-                archive_name = f"{prefix}/document_versions/{doc_name}_v{version.version_number}{ext}"
+                archive_name = f"{prefix}/document_versions/document_version_{version.pk}{ext}"
                 zf.writestr(archive_name, version.file.read())
             except Exception:
                 logger.exception("Failed to add version %s to ZIP", version.pk)

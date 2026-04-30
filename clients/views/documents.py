@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import logging
-
-
+from pathlib import Path
 
 from django.contrib import messages
 from django.http import JsonResponse
@@ -309,16 +308,17 @@ def document_download(request, doc_id):
         raise
 
     logger.info(
-        "Document storage info: file_field_name=%s, storage_class=%s",
-        document.file.name,
+        "Document storage info: document_id=%s, client_id=%s, storage_class=%s",
+        document.pk,
+        document.client_id,
         document.file.storage.__class__.__name__,
     )
 
     if not document_file_exists(document):
         logger.warning(
-            "Physical file missing in storage: document_id=%s, file_name=%s, storage_class=%s",
+            "Physical file missing in storage: document_id=%s, client_id=%s, storage_class=%s",
             document.pk,
-            document.file.name,
+            document.client_id,
             document.file.storage.__class__.__name__,
         )
         messages.error(
@@ -328,7 +328,8 @@ def document_download(request, doc_id):
         return redirect("clients:client_detail", pk=document.client.id)
 
     record_document_download(document=document, actor=request.user)
-    filename = document.file.name.rsplit("/", 1)[-1]
+    extension = Path(document.file.name).suffix or ".bin"
+    filename = f"document-{document.pk}{extension}"
     return build_protected_file_response(document.file, filename=filename, as_attachment=False)
 
 

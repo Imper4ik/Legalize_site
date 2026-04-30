@@ -27,6 +27,7 @@ def test_document_download_existing_file(logged_in_staff, sample_document):
 def test_document_download_missing_physical_file(logged_in_staff, sample_document, caplog):
     """Task 6.2: document_download missing physical file redirects and logs warning."""
     # Delete the physical file from storage but keep the DB record
+    stored_name = sample_document.file.name
     sample_document.file.storage.delete(sample_document.file.name)
     
     url = reverse("clients:document_download", kwargs={"doc_id": sample_document.pk})
@@ -39,6 +40,7 @@ def test_document_download_missing_physical_file(logged_in_staff, sample_documen
     messages = list(get_messages(response.wsgi_request))
     assert any("Файл отсутствует в хранилище" in str(m) for m in messages)
     assert "Physical file missing in storage" in caplog.text
+    assert stored_name not in caplog.text
 
 @pytest.mark.django_db
 def test_unauthorized_document_download(client, sample_document):
