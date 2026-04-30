@@ -45,6 +45,14 @@ def healthcheck(request):
 def readiness(request):
     components = {}
     overall_ok = True
+    show_details = (
+        getattr(settings, "DEBUG", False)
+        or (
+            request.GET.get("details") == "1"
+            and getattr(getattr(request, "user", None), "is_authenticated", False)
+            and getattr(request.user, "is_staff", False)
+        )
+    )
 
     try:
         connection.ensure_connection()
@@ -84,10 +92,9 @@ def readiness(request):
         "missing_keys": runtime["missing_keys"],
     }
 
-    payload = {
-        "status": "ok" if overall_ok else "error",
-        "components": components,
-    }
+    payload = {"status": "ok" if overall_ok else "degraded"}
+    if show_details:
+        payload["components"] = components
     return JsonResponse(payload, status=200 if overall_ok else 503)
 
 

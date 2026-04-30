@@ -46,6 +46,17 @@ function initDocumentUploadModal() {
     if (parsedDecisionDate) parsedDecisionDate.value = parsed.decision_date || '';
   }
 
+  function buildDocumentUrl(template, docId, fallbackPath) {
+    const encodedDocId = encodeURIComponent(docId);
+    if (!template) {
+      return fallbackPath(encodedDocId);
+    }
+    if (template.includes('__doc_id__')) {
+      return template.replace('__doc_id__', encodedDocId);
+    }
+    return template.replace('/0/', `/${encodedDocId}/`);
+  }
+
   function resetConfirmation() {
     uploadStep?.classList.remove('d-none');
     confirmStep?.classList.add('d-none');
@@ -153,34 +164,16 @@ function initDocumentUploadModal() {
           const parsed = data.parsed || {};
           fillWezwanieParsedFields(parsed);
 
-          const rawTextarea = modal.querySelector('#wezwanieRawText');
-          const rawTextContainer = modal.querySelector('#wezwanieRawTextContainer');
-          const toggleRawBtn = modal.querySelector('#wezwanieToggleRawText');
-
-          if (rawTextarea) {
-            rawTextarea.value = parsed.raw_text || '';
-          }
-          if (rawTextContainer) {
-            rawTextContainer.classList.add('d-none');
-          }
-
-          if (toggleRawBtn) {
-            toggleRawBtn.onclick = () => {
-              if (rawTextContainer) {
-                rawTextContainer.classList.toggle('d-none');
-              }
-            };
-          }
-
           confirmStep.classList.remove('d-none');
           confirmActions.classList.remove('d-none');
           uploadActions.classList.add('d-none');
 
           if (confirmButton) {
-            const confirmUrl = data.confirm_url
-              || (confirmTemplate || '')
-                .replace('__doc_id__', data.doc_id)
-                .replace('/0/', `/${data.doc_id}/`);
+            const confirmUrl = data.confirm_url || buildDocumentUrl(
+              confirmTemplate,
+              data.doc_id,
+              (encodedDocId) => `/staff/document/${encodedDocId}/confirm-wezwanie/`,
+            );
             confirmButton.dataset.confirmUrl = confirmUrl;
           }
           return;
@@ -290,31 +283,16 @@ function initDocumentUploadModal() {
     reviewBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
 
     try {
-      const url = parsedDataUrlTemplate ? parsedDataUrlTemplate.replace('0', docId) : `/staff/document/${docId}/parsed-data/`;
+      const url = buildDocumentUrl(
+        parsedDataUrlTemplate,
+        docId,
+        (encodedDocId) => `/staff/document/${encodedDocId}/parsed-data/`,
+      );
       const { response, data } = await fetchJson(url);
       if (response.ok && data.parsed_data) {
         const parsed = data.parsed_data;
 
         fillWezwanieParsedFields(parsed);
-
-        const rawTextarea = modal.querySelector('#wezwanieRawText');
-        const rawTextContainer = modal.querySelector('#wezwanieRawTextContainer');
-        const toggleRawBtn = modal.querySelector('#wezwanieToggleRawText');
-
-        if (rawTextarea) {
-          rawTextarea.value = parsed.raw_text || '';
-        }
-        if (rawTextContainer) {
-          rawTextContainer.classList.add('d-none');
-        }
-
-        if (toggleRawBtn) {
-          toggleRawBtn.onclick = () => {
-            if (rawTextContainer) {
-              rawTextContainer.classList.toggle('d-none');
-            }
-          };
-        }
 
         if (uploadStep) uploadStep.classList.add('d-none');
         
@@ -323,9 +301,11 @@ function initDocumentUploadModal() {
         uploadActions.classList.add('d-none');
 
         if (confirmButton) {
-          const confirmUrl = (confirmTemplate || '')
-              .replace('__doc_id__', docId)
-              .replace('/0/', `/${docId}/`);
+          const confirmUrl = buildDocumentUrl(
+            confirmTemplate,
+            docId,
+            (encodedDocId) => `/staff/document/${encodedDocId}/confirm-wezwanie/`,
+          );
           confirmButton.dataset.confirmUrl = confirmUrl;
         }
 
@@ -465,7 +445,11 @@ function initBulkVerification() {
       });
 
       if (response.ok && data.status === 'success') {
-        showDocumentAlert('Все загруженные документы отмечены как проверенные.');
+        if (data.verified_count > 0) {
+          showDocumentAlert(`Отмечено документов: ${data.verified_count}.`);
+        } else {
+          showDocumentAlert('Все документы уже были проверены.', 'info');
+        }
         if (typeof refreshChecklist === 'function') {
           await refreshChecklist({ force: true });
         } else {

@@ -41,7 +41,7 @@ class DocumentUploadResult:
     manual_review_required: bool = False
     pending_confirmation: bool = False
     ocr_processing_queued: bool = False
-    parsed_payload: dict[str, str] | None = None
+    parsed_payload: dict[str, object] | None = None
 
 
 @dataclass
@@ -123,29 +123,9 @@ def upload_client_document(
             ocr_processing_queued=True,
         )
 
-    # Route to background job queue if immediate parsing was not requested
-    job = enqueue_document_processing_job(
-        document=document,
-        actor=actor,
-        requires_confirmation=False,
-    )
-
-    if not getattr(settings, "ASYNC_OCR_PROCESSING", False):
-        return _process_upload_job_inline(
-            job_id=job.pk,
-            document=document,
-            document_type_display=document_type_display,
-            parser=parser,
-            send_missing_email=send_missing_email,
-            send_appointment_email=send_appointment_email,
-        )
-
     return DocumentUploadResult(
         document=document,
-        message=_(
-            "Document '%(name)s' uploaded successfully. OCR processing will continue in the background."
-        )
-        % {"name": document_type_display},
+        message=_("Document '%(name)s' uploaded successfully.") % {"name": document_type_display},
     )
 
 
@@ -175,26 +155,16 @@ def confirm_wezwanie_document(
             document=document,
         )
 
-    document.awaiting_confirmation = False
-    document.save(update_fields=["awaiting_confirmation"])
+    _append_required_documents_update_from_codes(
+        (document.parsed_data or {}).get("required_documents", []),
+        auto_updates,
+    )
 
-    manual_review_required = False
-    try:
-        with document.file.open("rb") as src:
-            ext = os.path.splitext(document.file.name)[1]
-            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
-                for chunk in src.chunks():
-                    tmp.write(chunk)
-                tmp_path = tmp.name
-        try:
-            parsed = parser(tmp_path)
-        finally:
-            os.remove(tmp_path)
-    except Exception:
-        logger.exception("Wezwanie parsing failed during confirmation for document %s", document.id)
-        manual_review_required = True
-    else:
-        _append_required_documents_update(parsed, auto_updates)
+    document.awaiting_confirmation = False
+    document.ocr_status = "success"
+    document.ocr_name_mismatch = False
+    document.parsed_data = _build_confirmed_wezwanie_payload(confirmation_data)
+    document.save(update_fields=["awaiting_confirmation", "ocr_status", "ocr_name_mismatch", "parsed_data"])
 
     if _send_notification(send_missing_email, client, "missing-documents email"):
         auto_updates.append(_("missing-documents email sent"))
@@ -207,15 +177,13 @@ def confirm_wezwanie_document(
         auto_updates.append(_("appointment notification sent"))
 
     message = _("Wezwanie data confirmed.")
-    if manual_review_required:
-        message = f"{message} {MANUAL_WEZWANIE_REVIEW_MESSAGE}"
     if auto_updates:
         message = f"{message} " + " ; ".join(auto_updates)
 
     return WezwanieConfirmationResult(
         document=document,
         message=message,
-        manual_review_required=manual_review_required,
+        manual_review_required=False,
     )
 
 
@@ -666,7 +634,7 @@ def _has_name_mismatch(parsed_full_name: str | None, client: Client) -> bool:
     )
 
 
-def _build_wezwanie_payload(parsed: WezwanieData) -> dict[str, str]:
+def _build_wezwanie_payload(parsed: WezwanieData) -> dict[str, object]:
     first_name = ""
     last_name = ""
     if parsed.full_name:
@@ -693,15 +661,20 @@ def _build_wezwanie_payload(parsed: WezwanieData) -> dict[str, str]:
         "decision_date_display": parsed.decision_date.strftime("%d.%m.%Y")
         if parsed.decision_date
         else "",
+        "required_documents": list(parsed.required_documents or []),
     }
 
 
 def _append_required_documents_update(parsed: WezwanieData, auto_updates: list[str]) -> None:
-    if not parsed.required_documents:
+    _append_required_documents_update_from_codes(parsed.required_documents, auto_updates)
+
+
+def _append_required_documents_update_from_codes(doc_codes, auto_updates: list[str]) -> None:
+    if not doc_codes:
         return
 
     doc_labels: list[str] = []
-    for doc_code in parsed.required_documents:
+    for doc_code in doc_codes:
         try:
             doc_labels.append(str(DocumentType(doc_code).label))
         except ValueError:
@@ -774,6 +747,31 @@ def _apply_parsed_client_updates(client: Client, parsed: WezwanieData) -> tuple[
             auto_updates.append(_("application purpose set to: %(val)s") % {"val": mapped_purpose})
 
     return updated_fields, auto_updates
+
+
+def _build_confirmed_wezwanie_payload(confirmation_data: Mapping[str, str]) -> dict[str, object]:
+    safe_field_names = (
+        "first_name",
+        "last_name",
+        "case_number",
+        "fingerprints_date",
+        "fingerprints_time",
+        "fingerprints_location",
+        "ticket_number",
+        "list_name",
+        "application_status_code",
+        "decision_date",
+    )
+    confirmed_fields = [
+        field_name
+        for field_name in safe_field_names
+        if (confirmation_data.get(field_name) or "").strip()
+    ]
+    return {
+        "confirmed": True,
+        "confirmed_fields": confirmed_fields,
+        "raw_text_removed": True,
+    }
 
 
 def _apply_confirmation_updates(

@@ -14,6 +14,7 @@ from reportlab.pdfgen import canvas
 
 from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentProcessingJob
+from clients.services.document_workflow import enqueue_document_processing_job
 from clients.services.roles import ensure_predefined_roles
 from clients.services.wezwanie_parser import WezwanieData
 
@@ -239,7 +240,7 @@ class DocumentFlowsStage4Tests(TestCase):
         docs = Document.objects.filter(client=self.client_obj, document_type=DocumentType.PASSPORT.value)
         self.assertEqual(docs.count(), 2)
 
-    def test_add_document_without_parse_requested_queues_background_ocr(self):
+    def test_add_document_without_parse_requested_only_saves_document(self):
         uploaded = build_pdf_upload("wezwanie-background.pdf")
 
         response = self.client.post(
@@ -256,13 +257,10 @@ class DocumentFlowsStage4Tests(TestCase):
         self.assertEqual(payload["status"], "success")
 
         document = Document.objects.get(client=self.client_obj, document_type=DocumentType.WEZWANIE.value)
-        job = DocumentProcessingJob.objects.get(document=document)
 
-        self.assertEqual(document.ocr_status, "pending")
+        self.assertEqual(document.ocr_status, "skipped")
         self.assertFalse(document.awaiting_confirmation)
-        self.assertEqual(job.status, DocumentProcessingJob.STATUS_PENDING)
-        self.assertEqual(job.source_file_name, document.file.name)
-        self.assertEqual(job.created_by, self.staff)
+        self.assertFalse(DocumentProcessingJob.objects.filter(document=document).exists())
 
     @patch("clients.management.commands.process_document_jobs.send_appointment_notification_email", return_value=1)
     @patch("clients.management.commands.process_document_jobs.send_missing_documents_email", return_value=1)
@@ -282,17 +280,12 @@ class DocumentFlowsStage4Tests(TestCase):
             required_documents=[DocumentType.PASSPORT.value],
         )
 
-        self.client.post(
-            reverse(
-                "clients:add_document",
-                kwargs={"client_id": self.client_obj.pk, "doc_type": DocumentType.WEZWANIE.value},
-            ),
-            data={"file": build_pdf_upload("wezwanie-queued.pdf"), "expiry_date": ""},
-            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        document = Document.objects.create(
+            client=self.client_obj,
+            document_type=DocumentType.WEZWANIE.value,
+            file=build_pdf_upload("wezwanie-queued.pdf"),
         )
-
-        document = Document.objects.get(client=self.client_obj, document_type=DocumentType.WEZWANIE.value)
-        job = DocumentProcessingJob.objects.get(document=document)
+        job = enqueue_document_processing_job(document=document, actor=self.staff, requires_confirmation=False)
 
         call_command("process_document_jobs")
 
@@ -311,17 +304,12 @@ class DocumentFlowsStage4Tests(TestCase):
     def test_process_document_jobs_marks_job_failed_for_empty_parse_result(self, parse_mock):
         parse_mock.return_value = WezwanieData(text="", error="no_text")
 
-        self.client.post(
-            reverse(
-                "clients:add_document",
-                kwargs={"client_id": self.client_obj.pk, "doc_type": DocumentType.WEZWANIE.value},
-            ),
-            data={"file": build_pdf_upload("wezwanie-empty.pdf"), "expiry_date": ""},
-            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        document = Document.objects.create(
+            client=self.client_obj,
+            document_type=DocumentType.WEZWANIE.value,
+            file=build_pdf_upload("wezwanie-empty.pdf"),
         )
-
-        document = Document.objects.get(client=self.client_obj, document_type=DocumentType.WEZWANIE.value)
-        job = DocumentProcessingJob.objects.get(document=document)
+        job = enqueue_document_processing_job(document=document, actor=self.staff, requires_confirmation=False)
 
         call_command("process_document_jobs")
 

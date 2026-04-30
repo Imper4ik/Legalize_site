@@ -15,7 +15,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.12"
 
       - name: Install system dependencies
         run: |
@@ -30,8 +30,14 @@ jobs:
       - name: Django check
         run: python manage.py check
 
+      - name: Django deploy check
+        run: python manage.py check --deploy
+
       - name: Migration drift check
         run: python manage.py makemigrations --check --dry-run
+
+      - name: Django test
+        run: python manage.py test --noinput
 
       - name: Pytest
         run: pytest --maxfail=1 -q --cov-fail-under=50

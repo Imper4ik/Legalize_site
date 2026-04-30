@@ -1,4 +1,5 @@
 {% load i18n %}
+{% get_current_language as CURRENT_LANGUAGE %}
 
 <div class="modal fade" id="addPaymentModal" tabindex="-1" aria-labelledby="addPaymentModalLabel" aria-hidden="true"
     data-price-url-template="{% url 'clients:get_price_for_service' service_value='__service__' %}">
@@ -131,7 +132,7 @@
     aria-hidden="true"
     data-action-template="{% url 'clients:add_document' client_id=client.pk doc_type='__doc_type__' %}"
     data-confirm-url-template="{% url 'clients:confirm_wezwanie_parse' doc_id=0 %}"
-    data-parsed-data-url-template="{% url 'clients:get_document_parsed_data' doc_id=0 %}">
+    data-parsed-data-url-template="/{{ CURRENT_LANGUAGE }}/staff/document/__doc_id__/parsed-data/">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">

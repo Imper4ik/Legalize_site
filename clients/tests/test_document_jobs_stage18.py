@@ -9,12 +9,11 @@ from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.test import TestCase, override_settings
-from django.urls import reverse
 from reportlab.pdfgen import canvas
 
 from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentProcessingJob
-from clients.services.document_workflow import reclaim_stale_document_jobs
+from clients.services.document_workflow import enqueue_document_processing_job, reclaim_stale_document_jobs
 from clients.services.roles import ensure_predefined_roles
 from clients.services.wezwanie_parser import WezwanieData
 
@@ -49,16 +48,12 @@ class DocumentJobsStage18Tests(TestCase):
         )
 
     def _queue_wezwanie_document(self):
-        self.client.post(
-            reverse(
-                "clients:add_document",
-                kwargs={"client_id": self.client_obj.pk, "doc_type": DocumentType.WEZWANIE.value},
-            ),
-            data={"file": build_pdf_upload("queued.pdf"), "expiry_date": ""},
-            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        document = Document.objects.create(
+            client=self.client_obj,
+            document_type=DocumentType.WEZWANIE.value,
+            file=build_pdf_upload("queued.pdf"),
         )
-        document = Document.objects.get(client=self.client_obj, document_type=DocumentType.WEZWANIE.value)
-        job = DocumentProcessingJob.objects.get(document=document)
+        job = enqueue_document_processing_job(document=document, actor=self.staff, requires_confirmation=False)
         return document, job
 
     @patch("clients.management.commands.process_document_jobs.parse_wezwanie")

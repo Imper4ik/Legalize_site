@@ -142,7 +142,7 @@ class WezwanieOCRStage19Tests(TestCase):
         self.assertEqual(self.client_obj.fingerprints_ticket, "X29")
         self.assertEqual(self.client_obj.fingerprints_list, "Lista X1")
 
-    def test_upload_background_ocr_queues_job(self):
+    def test_upload_without_parse_request_only_saves_document(self):
         uploaded = build_pdf_upload("bg_wezwanie.pdf")
         response = self.client.post(
             reverse("clients:add_document", kwargs={"client_id": self.client_obj.pk, "doc_type": "wezwanie"}),
@@ -155,8 +155,8 @@ class WezwanieOCRStage19Tests(TestCase):
         self.assertFalse(payload.get("pending_confirmation", False))
 
         doc = Document.objects.get(client=self.client_obj, document_type="wezwanie")
-        self.assertEqual(doc.ocr_status, "pending")
-        self.assertTrue(DocumentProcessingJob.objects.filter(document=doc).exists())
+        self.assertEqual(doc.ocr_status, "skipped")
+        self.assertFalse(DocumentProcessingJob.objects.filter(document=doc).exists())
 
     def test_parser_extracts_correct_fingerprint_date_and_time(self):
         # Sample text representing the new document type

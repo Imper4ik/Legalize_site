@@ -74,7 +74,7 @@ def add_document(request, client_id, doc_type):
                 )
             return redirect("clients:client_detail", pk=client.id)
 
-        last_result = None
+        upload_results = []
         success_count = 0
         errors = {}
 
@@ -92,21 +92,37 @@ def add_document(request, client_id, doc_type):
                     send_missing_email=send_missing_documents_email,
                     send_appointment_email=send_appointment_notification_email,
                 )
-                last_result = result
+                upload_results.append(result)
                 success_count += 1
             else:
                 errors = form.errors
                 break
 
         if success_count > 0 and success_count == len(files):
+            last_result = upload_results[-1]
             if helper.expects_json:
+                primary_result = next(
+                    (item for item in upload_results if item.pending_confirmation),
+                    last_result,
+                )
+                documents_payload = [
+                    {
+                        "doc_id": item.document.id,
+                        "manual_review_required": item.manual_review_required,
+                        "pending_confirmation": item.pending_confirmation,
+                        "ocr_processing_queued": item.ocr_processing_queued,
+                        "parsed": item.parsed_payload,
+                    }
+                    for item in upload_results
+                ]
                 payload = {
                     "message": _("Загружено документов: %(count)s") % {"count": success_count} if success_count > 1 else last_result.message,
-                    "doc_id": last_result.document.id,
-                    "manual_review_required": last_result.manual_review_required,
-                    "pending_confirmation": last_result.pending_confirmation,
-                    "ocr_processing_queued": last_result.ocr_processing_queued,
-                    "parsed": last_result.parsed_payload,
+                    "doc_id": primary_result.document.id,
+                    "manual_review_required": primary_result.manual_review_required,
+                    "pending_confirmation": primary_result.pending_confirmation,
+                    "ocr_processing_queued": primary_result.ocr_processing_queued,
+                    "parsed": primary_result.parsed_payload,
+                    "documents": documents_payload,
                 }
                 return helper.success(**payload)
 
@@ -368,13 +384,18 @@ def client_checklist_partial(request, pk):
     return apply_no_store(response)
 
 
-@staff_required_view
+@role_or_feature_required_view("can_run_ocr_review", "Admin", "Manager")
 def get_document_parsed_data(request, doc_id):
-    document = get_object_or_404(
-        Document.objects.select_related("client"),
-        pk=doc_id,
-        client__in=accessible_clients_queryset(request.user, Client.objects.all()),
+    document = (
+        Document.objects.select_related("client")
+        .filter(
+            pk=doc_id,
+            client__in=accessible_clients_queryset(request.user, Client.objects.all()),
+        )
+        .first()
     )
+    if document is None:
+        return JsonResponse({"error": _("Document not found.")}, status=404)
     if not document.awaiting_confirmation:
         return JsonResponse({"error": _("Document is not awaiting confirmation.")}, status=400)
     

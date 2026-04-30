@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Protocol
 
 from django.conf import settings
-from django.core.files.storage import default_storage
+from django.core.files.storage import storages
 from django.core.files.base import ContentFile
 
 logger = logging.getLogger(__name__)
@@ -128,12 +128,20 @@ class LocalBackupStorage:
         logger.info("Backup retained locally at %s", local_path)
         return False
 
-class S3BackupStorage:
+class ConfiguredBackupStorage:
     def upload(self, local_path: Path) -> bool:
+        storage_alias = getattr(settings, "BACKUP_STORAGE_ALIAS", "backups")
+        try:
+            backup_storage = storages[storage_alias]
+        except Exception as exc:
+            raise BackupError(
+                f"BACKUP_REMOTE_STORAGE is enabled but STORAGES[{storage_alias!r}] is not configured."
+            ) from exc
+
         try:
             with local_path.open("rb") as f:
                 remote_path = f"db_backups/{local_path.name}"
-                default_storage.save(remote_path, ContentFile(f.read()))
+                backup_storage.save(remote_path, ContentFile(f.read()))
             logger.info("Successfully uploaded backup to remote storage: %s", remote_path)
             return True
         except Exception as exc:
@@ -142,7 +150,7 @@ class S3BackupStorage:
 
 def _get_storage_backend() -> BackupStorageBackend:
     if _remote_storage_enabled():
-        return S3BackupStorage()
+        return ConfiguredBackupStorage()
     return LocalBackupStorage()
 
 

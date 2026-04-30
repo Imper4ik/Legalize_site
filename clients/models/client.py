@@ -278,6 +278,24 @@ class Client(SoftDeleteModel):
                     "is_custom_submission": False,
                 }
             )
+            seen_codes.add(code)
+
+        for code, documents in docs_map.items():
+            if code in seen_codes:
+                continue
+            status_list.append(
+                {
+                    "code": code,
+                    "name": str(resolve_document_label(code, language=current_language)),
+                    "is_uploaded": bool(documents),
+                    "is_submitted": False,
+                    "is_complete": bool(documents),
+                    "documents": documents,
+                    "submitted_records": [],
+                    "is_custom_submission": False,
+                }
+            )
+            seen_codes.add(code)
 
         for index, custom_item in enumerate(custom_submissions):
             status_list.append(
@@ -338,8 +356,8 @@ class Client(SoftDeleteModel):
             alerts.append(
                 {
                     "level": "warning",
-                    "title": _("Есть документы без подтверждения"),
-                    "message": _("Документов, ожидающих подтверждения: %(count)s.")
+                    "title": _("Есть OCR-данные без подтверждения"),
+                    "message": _("Документов с распознанными данными, ожидающими подтверждения: %(count)s.")
                     % {"count": awaiting_confirmation_count},
                 }
             )

@@ -21,6 +21,7 @@ MEDIA_STORAGE_ERROR_ID = "legalize_site.E004"
 MEDIA_STORAGE_WARNING_ID = "legalize_site.W006"
 BACKUP_STORAGE_WARNING_ID = "legalize_site.W007"
 RATE_LIMIT_CACHE_WARNING_ID = "legalize_site.W008"
+RATE_LIMIT_CACHE_ERROR_ID = "legalize_site.E005"
 
 BACKENDS = {
     "django.core.mail.backends.smtp.EmailBackend": {
@@ -228,15 +229,23 @@ def rate_limit_cache_check(app_configs=None, **kwargs):
     if not getattr(settings, "IS_PRODUCTION", False):
         return messages
 
+    active_limits = [
+        name
+        for name, rule in getattr(settings, "RATE_LIMITS", {}).items()
+        if int(rule.get("limit", 0)) > 0
+    ]
+    if not active_limits:
+        return messages
+
     redis_url = getattr(settings, "REDIS_URL", "")
     if redis_url:
         return messages
 
     messages.append(
-        Warning(
-            "REDIS_URL is not configured; rate limiting uses local cache and is not worker-safe.",
+        Error(
+            "REDIS_URL is not configured while production rate limits are enabled.",
             hint="Set REDIS_URL so Django cache uses RedisCache across all production workers.",
-            id=RATE_LIMIT_CACHE_WARNING_ID,
+            id=RATE_LIMIT_CACHE_ERROR_ID,
         )
     )
     return messages
@@ -274,5 +283,28 @@ def production_storage_safety_check(app_configs=None, **kwargs):
                 id=BACKUP_STORAGE_WARNING_ID,
             )
         )
+    else:
+        backup_alias = getattr(settings, "BACKUP_STORAGE_ALIAS", "backups")
+        storages_config = getattr(settings, "STORAGES", {})
+        backup_config = storages_config.get(backup_alias, {})
+        if not backup_config:
+            messages.append(
+                Error(
+                    "Remote database backup storage is not explicitly configured.",
+                    hint=(
+                        f"Configure STORAGES[{backup_alias!r}] for backups; do not route database "
+                        "backups through the database media storage backend."
+                    ),
+                    id=MEDIA_STORAGE_ERROR_ID,
+                )
+            )
+        elif backup_config.get("BACKEND") == "database_media.storage.DatabaseMediaStorage":
+            messages.append(
+                Error(
+                    "Database backups cannot use DatabaseMediaStorage.",
+                    hint="Configure BACKUP_STORAGE_ALIAS to point at object storage or another storage outside the database.",
+                    id=MEDIA_STORAGE_ERROR_ID,
+                )
+            )
 
     return messages

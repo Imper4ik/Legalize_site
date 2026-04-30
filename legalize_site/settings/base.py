@@ -337,6 +337,8 @@ DATABASE_MEDIA_FALLBACK_TO_FILE_SYSTEM = env_flag("DATABASE_MEDIA_FALLBACK_TO_FI
 DATABASE_MEDIA_AUTO_IMPORT_LEGACY_FILES = env_flag("DATABASE_MEDIA_AUTO_IMPORT_LEGACY_FILES", "True")
 USE_S3_MEDIA_STORAGE = env_flag("USE_S3_MEDIA_STORAGE", "False")
 PRIVATE_MEDIA_LOCATION = os.environ.get("PRIVATE_MEDIA_LOCATION", "private")
+BACKUP_STORAGE_ALIAS = os.environ.get("BACKUP_STORAGE_ALIAS", "backups")
+BACKUP_STORAGE_LOCATION = os.environ.get("BACKUP_STORAGE_LOCATION", "db_backups")
 if USE_DATABASE_MEDIA_STORAGE and USE_S3_MEDIA_STORAGE:
     raise ImproperlyConfigured("USE_DATABASE_MEDIA_STORAGE and USE_S3_MEDIA_STORAGE cannot both be enabled.")
 if USE_S3_MEDIA_STORAGE and not STORAGES_AVAILABLE:
@@ -381,6 +383,19 @@ elif USE_S3_MEDIA_STORAGE:
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
             if WHITENOISE_AVAILABLE
             else "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+        BACKUP_STORAGE_ALIAS: {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "bucket_name": AWS_STORAGE_BUCKET_NAME,
+                "region_name": AWS_S3_REGION_NAME or None,
+                "endpoint_url": AWS_S3_ENDPOINT_URL or None,
+                "custom_domain": AWS_S3_CUSTOM_DOMAIN or None,
+                "default_acl": None,
+                "querystring_auth": True,
+                "file_overwrite": False,
+                "location": BACKUP_STORAGE_LOCATION,
+            },
         },
     }
 

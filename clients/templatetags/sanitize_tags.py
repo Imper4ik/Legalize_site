@@ -25,4 +25,5 @@ def sanitize_html(value):
     if not value:
         return ""
     cleaned = bleach.clean(str(value), tags=ALLOWED_TAGS, attributes={}, strip=True)
-    return mark_safe(cleaned)  # noqa: S308 — output is sanitized by bleach
+    # The string has just been sanitized with a strict bleach allowlist.
+    return mark_safe(cleaned)  # nosec  # noqa: S308

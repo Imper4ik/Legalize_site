@@ -58,8 +58,19 @@ class HealthcheckViewTests(TestCase):
         self.assertEqual(payload["queues"]["pending_email_campaigns"], 1)
         self.assertEqual(payload["queues"]["running_email_campaigns"], 1)
 
-    def test_readiness_returns_component_statuses(self):
+    def test_readiness_returns_minimal_public_payload(self):
         response = self.client.get(reverse("readiness"))
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload, {"status": "ok"})
+
+    def test_staff_readiness_details_include_component_statuses(self):
+        user_model = get_user_model()
+        staff = user_model.objects.create_user(email="ready@example.com", password="pass", is_staff=True)
+        self.client.force_login(staff)
+
+        response = self.client.get(reverse("readiness"), {"details": "1"})
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()

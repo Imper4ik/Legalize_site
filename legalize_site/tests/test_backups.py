@@ -1,21 +1,35 @@
 from __future__ import annotations
 
-import tempfile
+import shutil
+from contextlib import contextmanager
 from pathlib import Path
+from uuid import uuid4
 from unittest.mock import patch
 
+from django.conf import settings
 from django.test import SimpleTestCase, override_settings
 
 from legalize_site.backups import create_db_backup
 
 
 class BackupTests(SimpleTestCase):
+    @contextmanager
+    def _temporary_backup_dir(self):
+        scratch_dir = Path(settings.BASE_DIR) / "scratch" / "test_backups"
+        scratch_dir.mkdir(parents=True, exist_ok=True)
+        tmp_dir = scratch_dir / f"backup-test-{uuid4().hex}"
+        tmp_dir.mkdir()
+        try:
+            yield str(tmp_dir)
+        finally:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+
     @override_settings(FERNET_KEYS=[])
     @patch("legalize_site.backups.shutil.which", return_value="/usr/bin/pg_dump")
     @patch("legalize_site.backups.subprocess.run")
     @patch("legalize_site.backups._backup_dir")
     def test_create_backup_has_path_and_invokes_pg_dump(self, backup_dir_mock, run_mock, _which):
-        with tempfile.TemporaryDirectory() as tmp_dir_name:
+        with self._temporary_backup_dir() as tmp_dir_name:
             tmp_dir = Path(tmp_dir_name)
             backup_dir_mock.return_value = tmp_dir
 
@@ -39,7 +53,7 @@ class BackupTests(SimpleTestCase):
     @patch("legalize_site.backups.subprocess.run")
     @patch("legalize_site.backups._backup_dir")
     def test_database_url_is_not_logged(self, backup_dir_mock, run_mock, _which, logger_mock):
-        with tempfile.TemporaryDirectory() as tmp_dir_name:
+        with self._temporary_backup_dir() as tmp_dir_name:
             tmp_dir = Path(tmp_dir_name)
             backup_dir_mock.return_value = tmp_dir
 
@@ -59,7 +73,7 @@ class BackupTests(SimpleTestCase):
     @patch("legalize_site.backups.subprocess.run")
     @patch("legalize_site.backups._backup_dir")
     def test_keeps_local_backup_when_remote_not_enabled(self, backup_dir_mock, run_mock, _which):
-        with tempfile.TemporaryDirectory() as tmp_dir_name:
+        with self._temporary_backup_dir() as tmp_dir_name:
             tmp_dir = Path(tmp_dir_name)
             backup_dir_mock.return_value = tmp_dir
 

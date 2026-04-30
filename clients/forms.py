@@ -1,8 +1,7 @@
 import logging
+
 import bleach
 from django import forms
-
-logger = logging.getLogger(__name__)
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.utils import translation
@@ -32,6 +31,8 @@ from .models import (
     get_fallback_document_checklist,
     resolve_document_label,
 )
+
+logger = logging.getLogger(__name__)
 
 
 EMPLOYEE_PERMISSION_FIELD_LABELS = (
