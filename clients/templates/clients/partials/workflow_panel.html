@@ -4,7 +4,7 @@
   <div class="card-body">
     <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
       <div>
-        <h4 class="mb-1">{% translate "Workflow и риски" %}</h4>
+        <h4 class="mb-1">{% translate "Этап и риски" %}</h4>
         <div class="text-muted small">{% translate "Текущий этап, открытые задачи и автоматические проверки по делу." %}</div>
       </div>
       <span class="badge bg-primary fs-6">{{ workflow_summary.stage_label }}</span>
@@ -26,7 +26,7 @@
       <div class="col-4">
         <div class="border rounded p-2 text-center">
           <div class="fw-semibold">{{ workflow_summary.alerts_count }}</div>
-          <div class="small text-muted">{% translate "Health alerts" %}</div>
+          <div class="small text-muted">{% translate "Риски" %}</div>
         </div>
       </div>
     </div>

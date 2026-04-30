@@ -175,7 +175,7 @@
                   </a>
                 </li>
                 {% endif %}
-                {% if user.is_superuser and translation_tooling_enabled %}
+                {% if user.is_superuser and translation_studio_available %}
                 <li>
                   <a class="dropdown-item fw-bold" href="{% url 'translations:dashboard' %}" style="color: #6366f1;">
                     <i class="bi bi-translate me-2"></i>Translation Studio

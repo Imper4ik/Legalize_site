@@ -5,7 +5,7 @@
     <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
       <div>
         <h4 class="mb-1">{% translate "Задачи по клиенту" %}</h4>
-        <div class="text-muted small">{% translate "Быстрый task center прямо в карточке клиента." %}</div>
+        <div class="text-muted small">{% translate "Быстрое создание и закрытие задач прямо в карточке клиента." %}</div>
       </div>
       <a href="{% url 'clients:task_list' %}" class="btn btn-outline-secondary btn-sm">{% translate "Все задачи" %}</a>
     </div>
@@ -59,7 +59,7 @@
               </div>
               <form method="post" action="{% url 'clients:complete_task' task_id=task.pk %}">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-outline-success btn-sm">{% translate "Done" %}</button>
+                <button type="submit" class="btn btn-outline-success btn-sm">{% translate "Готово" %}</button>
               </form>
             </div>
           </div>
