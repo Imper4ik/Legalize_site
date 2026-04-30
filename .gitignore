@@ -52,3 +52,7 @@ CODE_REVIEW.md
 tmp/
 scratch/
 
+
+/legalize_site/media/
+/tmp/db_backups/
+/database_backups/
