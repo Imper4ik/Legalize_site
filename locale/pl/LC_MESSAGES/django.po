@@ -3411,6 +3411,15 @@ msgstr "Aktualny plik dokumentu"
 msgid "Archived version"
 msgstr "Wersja archiwalna"
 
+msgid "Есть OCR-данные без подтверждения"
+msgstr "Dane OCR oczekują na potwierdzenie"
+
+msgid "Проверить все файлы"
+msgstr "Sprawdź wszystkie pliki"
+
+msgid "Документов с распознанными данными, ожидающими подтверждения: %(count)s."
+msgstr "Dokumenty z rozpoznanymi danymi oczekujące na potwierdzenie: %(count)s."
+
 msgid "Version History"
 msgstr "Historia wersji"
 

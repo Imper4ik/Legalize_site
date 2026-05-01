@@ -44,7 +44,7 @@ def add_payment(request, client_id):
         if helper.expects_json:
             return helper.error(
                 message=_("Проверьте правильность заполнения формы."),
-                errors=form.errors,
+                errors=form.errors.get_json_data(),
             )
 
     return redirect("clients:client_detail", pk=client.id)
@@ -75,7 +75,7 @@ def edit_payment(request, payment_id):
         if helper.expects_json:
             return helper.error(
                 message=_("Проверьте правильность заполнения формы."),
-                errors=form.errors,
+                errors=form.errors.get_json_data(),
             )
 
     return redirect("clients:client_detail", pk=payment.client.id)

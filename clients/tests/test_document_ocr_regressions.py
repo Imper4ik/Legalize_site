@@ -214,6 +214,41 @@ class DocumentOCRRegressionTests(TestCase):
         )
         self.assertEqual(response.status_code, 404)
 
+    def test_staff_without_ocr_permission_cannot_start_parse_via_upload(self):
+        self.client.force_login(self.staff)
+
+        response = self.client.post(
+            reverse(
+                "clients:add_document",
+                kwargs={"client_id": self.client_record.pk, "doc_type": DocumentType.WEZWANIE.value},
+            ),
+            data={"file": _pdf_upload("wezwanie.pdf"), "parse_wezwanie": "1"},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(Document.objects.filter(client=self.client_record).exists())
+
+    def test_staff_without_ocr_permission_cannot_confirm_parse(self):
+        document = Document.objects.create(
+            client=self.client_record,
+            document_type=DocumentType.WEZWANIE.value,
+            file=SimpleUploadedFile("wezwanie.pdf", b"file"),
+            awaiting_confirmation=True,
+            parsed_data={"case_number": "WSC-II-P.123.2026"},
+        )
+        self.client.force_login(self.staff)
+
+        response = self.client.post(
+            reverse("clients:confirm_wezwanie_parse", kwargs={"doc_id": document.pk}),
+            data={"case_number": "WSC-II-P.123.2026"},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        document.refresh_from_db()
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(document.awaiting_confirmation)
+
     def test_multiple_upload_response_contains_all_documents(self):
         self.client.force_login(self.staff)
         response = self.client.post(

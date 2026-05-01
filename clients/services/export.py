@@ -130,7 +130,7 @@ def generate_client_zip(client) -> io.BytesIO:
             if not doc.file:
                 continue
             if not document_file_exists(doc):
-                missing_files_info.append(f"Document: ID={doc.pk}, Type={doc.document_type}, Name={doc.display_name}")
+                missing_files_info.append(f"Document: ID={doc.pk}, Type={doc.document_type}")
                 continue
             try:
                 ext = os.path.splitext(doc.file.name)[1] or ".bin"

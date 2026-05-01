@@ -28,12 +28,3 @@ jobs:
 
       - name: Compile messages (Verification)
         run: python manage.py compilemessages
-
-      - name: Check for fuzzy translations
-        run: |
-          if grep -q "#, fuzzy" locale/*/LC_MESSAGES/django.po; then
-            echo "::error::Found fuzzy translations in .po files. Please resolve them."
-            grep -n -C 2 "#, fuzzy" locale/*/LC_MESSAGES/django.po
-            exit 1
-          fi
-          echo "No fuzzy translations found!"

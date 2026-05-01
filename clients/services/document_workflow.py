@@ -95,7 +95,7 @@ def upload_client_document(
         client=client,
         actor=actor,
         event_type="document_uploaded",
-        summary=f"Uploaded document: {document.display_name}",
+        summary="Uploaded document",
         metadata={"document_id": document.id, "document_type": document.document_type},
         document=document,
     )

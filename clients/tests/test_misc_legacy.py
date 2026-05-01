@@ -22,7 +22,7 @@ import shutil
 from allauth.account.models import EmailAddress
 
 from clients.forms import DocumentChecklistForm, DocumentRequirementAddForm, DocumentRequirementEditForm
-from clients.models import Client, Document, DocumentProcessingJob, DocumentRequirement, translate_document_name
+from clients.models import Client, Document, DocumentProcessingJob, DocumentRequirement, EmployeePermission, translate_document_name
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.services.notifications import send_missing_documents_email
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper
@@ -505,6 +505,10 @@ class WezwanieUploadFlowTests(TestCase):
             email="staff_wezwanie@example.com", password="pass", is_staff=True
         )
         _assign_staff_role(self.staff_user)
+        EmployeePermission.objects.update_or_create(
+            user=self.staff_user,
+            defaults={"can_run_ocr_review": True},
+        )
 
         DocumentRequirement.objects.filter(application_purpose="work").delete()
         DocumentRequirement.objects.create(

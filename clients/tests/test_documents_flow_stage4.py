@@ -13,7 +13,7 @@ from django.urls import reverse
 from reportlab.pdfgen import canvas
 
 from clients.constants import DocumentType
-from clients.models import Client, Document, DocumentProcessingJob
+from clients.models import Client, Document, DocumentProcessingJob, EmployeePermission
 from clients.services.document_workflow import enqueue_document_processing_job
 from clients.services.roles import ensure_predefined_roles
 from clients.services.wezwanie_parser import WezwanieData
@@ -39,6 +39,10 @@ class DocumentFlowsStage4Tests(TestCase):
         user_model = get_user_model()
         self.staff = user_model.objects.create_user(email="staff@example.com", password="pass", is_staff=True)
         _assign_staff_role(self.staff)
+        EmployeePermission.objects.update_or_create(
+            user=self.staff,
+            defaults={"can_run_ocr_review": True},
+        )
         self.client.login(email="staff@example.com", password="pass")
         self.client_obj = Client.objects.create(
             first_name="Anna",

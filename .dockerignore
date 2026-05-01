@@ -16,6 +16,9 @@ __pycache__
 *.env
 local_settings.py
 media
+legalize_site/media
+database_backups
+tmp/db_backups
 staticfiles
 static_root
 logs

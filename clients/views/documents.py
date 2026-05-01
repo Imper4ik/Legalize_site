@@ -12,12 +12,20 @@ from django.utils.translation import gettext as _
 from clients.constants import is_wezwanie_document_type
 from clients.forms import DocumentUploadForm
 from clients.models import Client, Document, WniosekAttachment
+from clients.services.access import (
+    accessible_clients_queryset,
+    accessible_documents_queryset,
+    user_has_internal_role,
+)
+from clients.services.document_helpers import document_file_exists
 from clients.services.document_workflow import confirm_wezwanie_document, upload_client_document
 from clients.services.notifications import (
     send_appointment_notification_email,
     send_missing_documents_email,
 )
+from clients.services.permissions import has_employee_permission
 from clients.services.responses import ResponseHelper, apply_no_store
+from clients.services.roles import DOCUMENT_DELETE_ROLES, DOCUMENT_EDIT_ROLES
 from clients.services.wezwanie_parser import parse_wezwanie
 from clients.use_cases.documents import (
     delete_client_document,
@@ -27,13 +35,17 @@ from clients.use_cases.documents import (
     update_client_notes_for_client,
     verify_all_client_documents,
 )
-from clients.services.access import accessible_clients_queryset, accessible_documents_queryset
-from clients.services.roles import DOCUMENT_DELETE_ROLES, DOCUMENT_EDIT_ROLES
 from clients.views.base import role_or_feature_required_view, role_required_view, staff_required_view
 from legalize_site.utils.files import build_protected_file_response
-from clients.services.document_helpers import document_file_exists
 
 logger = logging.getLogger(__name__)
+
+
+def _can_run_ocr_review(user) -> bool:
+    return (
+        user_has_internal_role(user, "Admin", "Manager")
+        or has_employee_permission(user, "can_run_ocr_review")
+    )
 
 
 
@@ -63,13 +75,17 @@ def add_document(request, client_id, doc_type):
     helper = ResponseHelper(request)
 
     if request.method == "POST":
+        parse_requested = request.POST.get("parse_wezwanie") == "1"
+        if parse_requested and not _can_run_ocr_review(request.user):
+            return helper.forbidden()
+
         files = request.FILES.getlist('file')
         if not files:
             form = DocumentUploadForm(request.POST, request.FILES)
             if helper.expects_json:
                 return helper.error(
                     message=_("Проверьте правильность заполнения формы."),
-                    errors=form.errors,
+                    errors=form.errors.get_json_data(),
                 )
             return redirect("clients:client_detail", pk=client.id)
 
@@ -86,7 +102,7 @@ def add_document(request, client_id, doc_type):
                     doc_type=doc_type,
                     uploaded_document=form.save(commit=False),
                     actor=request.user,
-                    parse_requested=request.POST.get("parse_wezwanie") == "1",
+                    parse_requested=parse_requested,
                     parser=parse_wezwanie,
                     send_missing_email=send_missing_documents_email,
                     send_appointment_email=send_appointment_notification_email,
@@ -94,7 +110,7 @@ def add_document(request, client_id, doc_type):
                 upload_results.append(result)
                 success_count += 1
             else:
-                errors = form.errors
+                errors = form.errors.get_json_data()
                 break
 
         if success_count > 0 and success_count == len(files):
@@ -151,7 +167,7 @@ def add_document(request, client_id, doc_type):
     )
 
 
-@role_required_view(*DOCUMENT_EDIT_ROLES)
+@role_or_feature_required_view("can_run_ocr_review", "Admin", "Manager")
 def confirm_wezwanie_parse(request, doc_id):
     document = get_object_or_404(accessible_documents_queryset(request.user, Document.objects.all()), pk=doc_id)
     helper = ResponseHelper(request)

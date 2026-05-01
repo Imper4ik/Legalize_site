@@ -1,3 +1,4 @@
+import copy
 import logging
 
 import bleach
@@ -310,7 +311,7 @@ class ClientForm(forms.ModelForm):
         next_stage = cleaned_data.get("workflow_stage")
         previous_stage = getattr(self.instance, "workflow_stage", None)
 
-        temp_client = self.instance
+        temp_client = copy.copy(self.instance)
         for field_name, value in cleaned_data.items():
             if hasattr(temp_client, field_name):
                 setattr(temp_client, field_name, value)
