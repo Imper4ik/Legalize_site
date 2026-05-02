@@ -18,6 +18,18 @@ def ensure_employee_permissions_for_staff(sender, instance, created, **kwargs):
     EmployeePermission.objects.get_or_create(user=instance)
 
 
+@receiver(pre_save, sender=EmailLog)
+def remember_previous_email_delivery_status(sender, instance, **kwargs):
+    if not instance.pk:
+        instance._previous_delivery_status = None
+        return
+
+    instance._previous_delivery_status = (
+        EmailLog.objects.filter(pk=instance.pk)
+        .values_list("delivery_status", flat=True)
+        .first()
+    )
+
 
 @receiver(post_save, sender=Payment)
 def sync_payment_reminder_on_save(sender, instance, **kwargs):
@@ -143,7 +155,14 @@ def compress_document_image_on_upload(sender, instance, **kwargs):
 
 @receiver(post_save, sender=EmailLog)
 def create_activity_for_email_log(sender, instance, created, **kwargs):
-    if not created or not instance.client_id:
+    if not instance.client_id:
+        return
+
+    if instance.delivery_status != EmailLog.DELIVERY_STATUS_SENT:
+        return
+
+    previous_status = getattr(instance, "_previous_delivery_status", None)
+    if not created and previous_status == EmailLog.DELIVERY_STATUS_SENT:
         return
 
     log_client_activity(

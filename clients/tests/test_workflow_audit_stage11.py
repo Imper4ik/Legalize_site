@@ -115,6 +115,37 @@ class WorkflowAuditStage11Tests(TestCase):
             ClientActivity.objects.filter(client=self.client_obj, event_type="email_sent").exists()
         )
 
+    def test_email_log_signal_waits_until_delivery_is_sent(self):
+        email_log = EmailLog.objects.create(
+            client=self.client_obj,
+            subject="Appointment notification",
+            body="Body",
+            recipients=self.client_obj.email,
+            template_type="appointment_notification",
+            sent_by=self.staff,
+            delivery_status=EmailLog.DELIVERY_STATUS_QUEUED,
+        )
+
+        self.assertFalse(
+            ClientActivity.objects.filter(client=self.client_obj, event_type="email_sent").exists()
+        )
+
+        email_log.delivery_status = EmailLog.DELIVERY_STATUS_SENT
+        email_log.save(update_fields=["delivery_status"])
+
+        self.assertEqual(
+            ClientActivity.objects.filter(client=self.client_obj, event_type="email_sent").count(),
+            1,
+        )
+
+        email_log.subject = "Updated subject"
+        email_log.save(update_fields=["subject"])
+
+        self.assertEqual(
+            ClientActivity.objects.filter(client=self.client_obj, event_type="email_sent").count(),
+            1,
+        )
+
     def test_client_export_zip_creates_export_audit_event(self):
         Document.objects.create(
             client=self.client_obj,

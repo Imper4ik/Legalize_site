@@ -1,6 +1,8 @@
 import os
 
 os.environ.setdefault("ENABLE_TRANSLATION_TOOLING", "True")
+if not os.environ.get("FERNET_KEYS"):
+    os.environ["FERNET_KEYS"] = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
 
 from .base import *  # noqa: F403
 

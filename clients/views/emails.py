@@ -22,6 +22,7 @@ from clients.services.notifications import (
     _get_subject,
     _log_email,
     _render_email_body,
+    _reserve_idempotent_email_send,
     _send_confirmation_email,
     build_email_idempotency_key,
 )
@@ -114,10 +115,15 @@ def send_custom_email(request, pk):
         )
         from clients.models import EmailLog
 
-        if EmailLog.objects.filter(
+        if not _reserve_idempotent_email_send(
+            subject,
+            body,
+            [client.email],
+            client=client,
+            template_type="custom",
+            sent_by=request.user,
             idempotency_key=idempotency_key,
-            delivery_status=EmailLog.DELIVERY_STATUS_SENT,
-        ).exists():
+        ):
             messages.info(request, _("Такое письмо уже было отправлено. Повторная отправка пропущена."))
             return redirect("clients:client_detail", pk=client.pk)
 
@@ -130,7 +136,6 @@ def send_custom_email(request, pk):
         if sent_count:
             cache.set(cache_key, sent_this_hour + 1, timeout=3600)
 
-            _send_confirmation_email(subject, body, [client.email])
             _log_email(
                 subject,
                 body,
@@ -139,13 +144,40 @@ def send_custom_email(request, pk):
                 template_type="custom",
                 sent_by=request.user,
                 idempotency_key=idempotency_key,
-                delivery_status="sent",
+                delivery_status=EmailLog.DELIVERY_STATUS_SENT,
             )
+            try:
+                _send_confirmation_email(subject, body, [client.email])
+            except Exception:
+                logger.exception("Failed to send staff confirmation email for custom email")
             messages.success(request, _("Письмо '%(subject)s' успешно отправлено.") % {"subject": subject})
         else:
+            _log_email(
+                subject,
+                body,
+                [client.email],
+                client=client,
+                template_type="custom",
+                sent_by=request.user,
+                idempotency_key=idempotency_key,
+                delivery_status=EmailLog.DELIVERY_STATUS_FAILED,
+                error_message="send returned 0",
+            )
             messages.error(request, _("Не удалось отправить письмо (send_mail вернул 0)."))
     except Exception as e:  # pragma: no cover - defensive safeguard
         logger.exception("Failed to send custom email manually")
+        if "idempotency_key" in locals():
+            _log_email(
+                subject,
+                body,
+                [client.email],
+                client=client,
+                template_type="custom",
+                sent_by=request.user,
+                idempotency_key=idempotency_key,
+                delivery_status=EmailLog.DELIVERY_STATUS_FAILED,
+                error_message="send failed",
+            )
         messages.error(request, _("Ошибка при отправке письма: %(err)s") % {"err": e})
 
     return redirect("clients:client_detail", pk=client.pk)

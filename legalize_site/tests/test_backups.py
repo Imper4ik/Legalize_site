@@ -9,7 +9,7 @@ from unittest.mock import patch
 from django.conf import settings
 from django.test import SimpleTestCase, override_settings
 
-from legalize_site.backups import create_db_backup
+from legalize_site.backups import ConfiguredBackupStorage, create_db_backup
 
 
 class BackupTests(SimpleTestCase):
@@ -86,4 +86,30 @@ class BackupTests(SimpleTestCase):
                 result = create_db_backup()
 
             self.assertTrue(Path(result.path).exists())
+
+    @override_settings(BACKUP_STORAGE_ALIAS="backups", BACKUP_STORAGE_LOCATION="custom/prefix")
+    @patch("legalize_site.backups.storages")
+    def test_configured_backup_storage_uses_configured_location(self, storages_mock):
+        class DummyStorage:
+            def __init__(self):
+                self.saved_path = ""
+                self.saved_content = b""
+
+            def save(self, path, content):
+                self.saved_path = path
+                self.saved_content = content.read()
+                return path
+
+        dummy_storage = DummyStorage()
+        storages_mock.__getitem__.return_value = dummy_storage
+
+        with self._temporary_backup_dir() as tmp_dir_name:
+            local_path = Path(tmp_dir_name) / "backup-test.sql"
+            local_path.write_bytes(b"-- dump --")
+
+            uploaded = ConfiguredBackupStorage().upload(local_path)
+
+        self.assertTrue(uploaded)
+        self.assertEqual(dummy_storage.saved_path, "custom/prefix/backup-test.sql")
+        self.assertEqual(dummy_storage.saved_content, b"-- dump --")
 

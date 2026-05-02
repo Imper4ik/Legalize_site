@@ -70,6 +70,9 @@ def _derive_fernet_key(secret: str) -> str:
     return base64.urlsafe_b64encode(digest).decode("utf-8")
 
 
+if os.environ.get("DJANGO_SETTINGS_MODULE", "").endswith(".test") and not os.environ.get("FERNET_KEYS"):
+    os.environ["FERNET_KEYS"] = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
+
 FERNET_KEYS = [key.strip() for key in os.environ.get("FERNET_KEYS", "").split(",") if key.strip()]
 FERNET_KEYS_CONFIGURED = bool(FERNET_KEYS)
 
@@ -481,23 +484,9 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_ADAPTER = "users.adapters.InternalAccountAdapter"
 SOCIALACCOUNT_ADAPTER = "users.adapters.InternalSocialAccountAdapter"
 
-# Deprecated settings that allauth 65.x still validates at system-check time.
-# They must be set explicitly to match the new-style keys below, otherwise
-# allauth falls back to username-based defaults and raises CRITICALs.
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_AUTHENTICATION_METHOD = "email"
-
-# Новые ключи (вместо устаревших ACCOUNT_AUTHENTICATION_METHOD / ACCOUNT_USERNAME_REQUIRED)
-ACCOUNT_LOGIN_METHODS = {"email"}  # логин только по email
-ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]  # поля регистрации
-
-# Silence allauth deprecation warnings for the old-style settings we keep above.
-SILENCED_SYSTEM_CHECKS = [
-    "account.W001",  # ACCOUNT_AUTHENTICATION_METHOD deprecated
-    "account.W002",  # ACCOUNT_EMAIL_REQUIRED deprecated
-    "account.W003",  # ACCOUNT_USERNAME_REQUIRED deprecated
-]
+# Email-only authentication settings for django-allauth 65+.
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
 
 # Редиректы
 ACCOUNT_ALLOW_SIGNUPS = False

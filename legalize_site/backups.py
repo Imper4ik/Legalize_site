@@ -140,7 +140,8 @@ class ConfiguredBackupStorage:
 
         try:
             with local_path.open("rb") as f:
-                remote_path = f"db_backups/{local_path.name}"
+                location = getattr(settings, "BACKUP_STORAGE_LOCATION", "db_backups").strip("/")
+                remote_path = f"{location}/{local_path.name}" if location else local_path.name
                 backup_storage.save(remote_path, ContentFile(f.read()))
             logger.info("Successfully uploaded backup to remote storage: %s", remote_path)
             return True

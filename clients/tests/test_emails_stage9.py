@@ -9,6 +9,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from clients.models import Client, Company, EmailCampaign, EmailLog
+from clients.services.notifications import _send_email, build_email_idempotency_key
 from clients.services.responses import NO_STORE_HEADER
 from clients.services.roles import ensure_predefined_roles
 
@@ -67,6 +68,99 @@ class EmailViewsStage9Tests(TestCase):
         self.assertEqual(second.status_code, 302)
         self.assertEqual(send_mail_mock.call_count, 1)
         self.assertEqual(EmailLog.objects.filter(template_type="custom").count(), 1)
+        self.assertEqual(EmailLog.objects.get(template_type="custom").delivery_status, EmailLog.DELIVERY_STATUS_SENT)
+
+    @patch("clients.views.emails.send_mail", return_value=1)
+    def test_send_custom_email_skips_existing_queued_idempotency_key(self, send_mail_mock):
+        key = build_email_idempotency_key(
+            "custom_email",
+            self.staff.pk,
+            self.client_obj.pk,
+            self.client_obj.email,
+            "Hello",
+            "Test body",
+        )
+        EmailLog.objects.create(
+            client=self.client_obj,
+            subject="Hello",
+            body="Test body",
+            recipients=self.client_obj.email,
+            template_type="custom",
+            sent_by=self.staff,
+            idempotency_key=key,
+            delivery_status=EmailLog.DELIVERY_STATUS_QUEUED,
+        )
+
+        response = self.client.post(
+            reverse("clients:send_custom_email", kwargs={"pk": self.client_obj.pk}),
+            data={"subject": "Hello", "body": "Test body"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        send_mail_mock.assert_not_called()
+        self.assertEqual(EmailLog.objects.filter(idempotency_key=key).count(), 1)
+
+    @patch("clients.views.emails._send_confirmation_email", side_effect=RuntimeError("copy failed"))
+    @patch("clients.views.emails.send_mail", return_value=1)
+    def test_send_custom_email_stays_sent_when_confirmation_copy_fails(self, send_mail_mock, confirm_mock):
+        response = self.client.post(
+            reverse("clients:send_custom_email", kwargs={"pk": self.client_obj.pk}),
+            data={"subject": "Hello", "body": "Test body"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        send_mail_mock.assert_called_once()
+        confirm_mock.assert_called_once()
+        email_log = EmailLog.objects.get(template_type="custom")
+        self.assertEqual(email_log.delivery_status, EmailLog.DELIVERY_STATUS_SENT)
+
+    @patch("clients.services.notifications._send_confirmation_email")
+    @patch("clients.services.notifications.send_mail")
+    def test_send_email_reserves_idempotency_before_smtp_io(self, send_mail_mock, confirm_mock):
+        key = build_email_idempotency_key("service-email", self.client_obj.pk)
+
+        def fake_send_mail(*_args, **_kwargs):
+            queued_log = EmailLog.objects.get(idempotency_key=key)
+            self.assertEqual(queued_log.delivery_status, EmailLog.DELIVERY_STATUS_QUEUED)
+            return 1
+
+        send_mail_mock.side_effect = fake_send_mail
+
+        sent_count = _send_email(
+            "Service message",
+            "Body",
+            [self.client_obj.email],
+            client=self.client_obj,
+            template_type="service",
+            sent_by=self.staff,
+            idempotency_key=key,
+        )
+
+        self.assertEqual(sent_count, 1)
+        confirm_mock.assert_called_once()
+        email_log = EmailLog.objects.get(idempotency_key=key)
+        self.assertEqual(email_log.delivery_status, EmailLog.DELIVERY_STATUS_SENT)
+
+    @patch("clients.services.notifications._send_confirmation_email", side_effect=RuntimeError("copy failed"))
+    @patch("clients.services.notifications.send_mail", return_value=1)
+    def test_send_email_stays_sent_when_confirmation_copy_fails(self, send_mail_mock, confirm_mock):
+        key = build_email_idempotency_key("service-email-copy-failure", self.client_obj.pk)
+
+        sent_count = _send_email(
+            "Service message",
+            "Body",
+            [self.client_obj.email],
+            client=self.client_obj,
+            template_type="service",
+            sent_by=self.staff,
+            idempotency_key=key,
+        )
+
+        self.assertEqual(sent_count, 1)
+        send_mail_mock.assert_called_once()
+        confirm_mock.assert_called_once()
+        email_log = EmailLog.objects.get(idempotency_key=key)
+        self.assertEqual(email_log.delivery_status, EmailLog.DELIVERY_STATUS_SENT)
 
     @patch("clients.views.emails.send_mail", return_value=1)
     def test_send_custom_email_requires_subject_and_body(self, send_mail_mock):

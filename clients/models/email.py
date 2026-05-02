@@ -9,10 +9,12 @@ from fernet_fields import EncryptedTextField
 class EmailLog(models.Model):
     """Журнал отправленных писем клиентам."""
 
+    DELIVERY_STATUS_QUEUED = "queued"
     DELIVERY_STATUS_SENT = "sent"
     DELIVERY_STATUS_SKIPPED = "skipped"
     DELIVERY_STATUS_FAILED = "failed"
     DELIVERY_STATUS_CHOICES = [
+        (DELIVERY_STATUS_QUEUED, _("В очереди")),
         (DELIVERY_STATUS_SENT, _("Отправлено")),
         (DELIVERY_STATUS_SKIPPED, _("Пропущено")),
         (DELIVERY_STATUS_FAILED, _("Ошибка")),

@@ -59,6 +59,62 @@ def _render_email_body(template_key: str, context: dict, language: str) -> str:
         return template.render(context)
 
 
+def _reserve_idempotent_email_send(
+    subject: str,
+    body: str,
+    recipients: list[str],
+    *,
+    client: Client | None = None,
+    template_type: str = "",
+    sent_by=None,
+    idempotency_key: str = "",
+) -> bool:
+    if not idempotency_key:
+        return True
+
+    from clients.models import EmailLog
+
+    payload = {
+        "client": client,
+        "subject": subject,
+        "body": body,
+        "recipients": ", ".join(recipients),
+        "template_type": template_type,
+        "sent_by": sent_by,
+        "delivery_status": EmailLog.DELIVERY_STATUS_QUEUED,
+        "error_message": "",
+    }
+    blocking_statuses = {
+        EmailLog.DELIVERY_STATUS_QUEUED,
+        EmailLog.DELIVERY_STATUS_SENT,
+    }
+
+    try:
+        with transaction.atomic():
+            existing = (
+                EmailLog.objects.select_for_update()
+                .filter(idempotency_key=idempotency_key)
+                .first()
+            )
+            if existing is not None and existing.delivery_status in blocking_statuses:
+                return False
+
+            if existing is not None:
+                for field_name, value in payload.items():
+                    setattr(existing, field_name, value)
+                existing.save(update_fields=[*payload.keys()])
+                return True
+
+            EmailLog.objects.create(
+                **payload,
+                idempotency_key=idempotency_key,
+            )
+            return True
+    except IntegrityError:
+        logger.info("Skipped duplicate queued email for idempotency_key=%s", idempotency_key)
+        return False
+
+
 def _send_email(
     subject: str,
     body: str,
@@ -71,15 +127,16 @@ def _send_email(
 ) -> int:
     recipient_list = list(recipients)
 
-    # Idempotency check is synchronous — prevents duplicate sends.
-    if idempotency_key:
-        from clients.models import EmailLog
-
-        if EmailLog.objects.filter(
-            idempotency_key=idempotency_key,
-            delivery_status=EmailLog.DELIVERY_STATUS_SENT,
-        ).exists():
-            return 0
+    if not _reserve_idempotent_email_send(
+        subject,
+        body,
+        recipient_list,
+        client=client,
+        template_type=template_type,
+        sent_by=sent_by,
+        idempotency_key=idempotency_key,
+    ):
+        return 0
 
     result = {"sent_count": 0}
 
@@ -90,7 +147,10 @@ def _send_email(
             sent_count = send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, recipient_list)
             result["sent_count"] = sent_count
             if sent_count:
-                _send_confirmation_email(subject, body, recipient_list)
+                try:
+                    _send_confirmation_email(subject, body, recipient_list)
+                except Exception:
+                    logger.exception("Failed to send staff confirmation email")
                 _log_email(
                     subject,
                     body,
