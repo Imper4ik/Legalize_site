@@ -28,46 +28,77 @@ def user_has_internal_role(user, *role_names: str) -> bool:
 
 
 def can_access_all_clients(user) -> bool:
-    return getattr(user, "is_superuser", False) or user_has_internal_role(user, *PRIVILEGED_INTERNAL_ROLES)
+    return getattr(user, "is_superuser", False) or user_has_internal_role(
+        user,
+        *PRIVILEGED_INTERNAL_ROLES,
+    )
 
 
 def accessible_clients_queryset(user, queryset: QuerySet | None = None) -> QuerySet:
-    queryset = queryset or Client.objects.all()
+    if queryset is None:
+        queryset = Client.objects.all()
+
     if not is_internal_staff_user(user):
         return queryset.none()
+
     if can_access_all_clients(user):
         return queryset
+
     return queryset.filter(
         Q(assigned_staff=user) | Q(assigned_staff__isnull=True)
     ).distinct()
 
 
 def accessible_documents_queryset(user, queryset: QuerySet | None = None) -> QuerySet:
-    queryset = queryset or Document.objects.select_related("client")
-    return queryset.filter(client__in=accessible_clients_queryset(user, Client.objects.all()))
+    if queryset is None:
+        queryset = Document.objects.select_related("client")
+
+    return queryset.filter(
+        client__in=accessible_clients_queryset(user, Client.objects.all())
+    )
 
 
 def accessible_payments_queryset(user, queryset: QuerySet | None = None) -> QuerySet:
-    queryset = queryset or Payment.objects.select_related("client")
-    return queryset.filter(client__in=accessible_clients_queryset(user, Client.objects.all()))
+    if queryset is None:
+        queryset = Payment.objects.select_related("client")
+
+    return queryset.filter(
+        client__in=accessible_clients_queryset(user, Client.objects.all())
+    )
 
 
 def accessible_reminders_queryset(user, queryset: QuerySet | None = None) -> QuerySet:
-    queryset = queryset or Reminder.objects.select_related("client", "payment", "document")
-    return queryset.filter(client__in=accessible_clients_queryset(user, Client.objects.all()))
+    if queryset is None:
+        queryset = Reminder.objects.select_related("client", "payment", "document")
+
+    return queryset.filter(
+        client__in=accessible_clients_queryset(user, Client.objects.all())
+    )
 
 
 def accessible_tasks_queryset(user, queryset: QuerySet | None = None) -> QuerySet:
-    queryset = queryset or StaffTask.objects.select_related("client", "assignee", "created_by")
+    if queryset is None:
+        queryset = StaffTask.objects.select_related("client", "assignee", "created_by")
+
+    if not is_internal_staff_user(user):
+        return queryset.none()
+
     if can_access_all_clients(user):
         return queryset
-    return queryset.filter(client__in=accessible_clients_queryset(user, Client.objects.all()))
+
+    return queryset.filter(
+        client__in=accessible_clients_queryset(user, Client.objects.all())
+    )
 
 
 def accessible_campaigns_queryset(user, queryset: QuerySet | None = None) -> QuerySet:
-    queryset = queryset or EmailCampaign.objects.select_related("created_by")
+    if queryset is None:
+        queryset = EmailCampaign.objects.select_related("created_by")
+
     if not is_internal_staff_user(user):
         return queryset.none()
+
     if can_access_all_clients(user):
         return queryset
+
     return queryset.filter(created_by=user)
