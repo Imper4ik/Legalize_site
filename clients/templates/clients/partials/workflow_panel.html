@@ -26,16 +26,28 @@
       <div class="col-4">
         <div class="border rounded p-2 text-center">
           <div class="fw-semibold">{{ workflow_summary.alerts_count }}</div>
-          <div class="small text-muted">{% translate "Риски" %}</div>
+          <div class="small text-muted">
+            {% blocktrans count count=workflow_summary.alerts_count %}тип проблемы{% plural %}типов проблем{% endblocktrans %}
+          </div>
         </div>
       </div>
     </div>
 
     {% if workflow_alerts %}
+      <div class="fw-semibold mb-2">
+        {% blocktrans count count=workflow_summary.alerts_count %}Риски: {{ count }} тип проблемы{% plural %}Риски: {{ count }} типов проблем{% endblocktrans %}
+      </div>
       <div class="d-flex flex-column gap-2">
         {% for alert in workflow_alerts %}
           <div class="alert alert-{{ alert.level }} mb-0 py-2 px-3">
-            <div class="fw-semibold">{{ alert.title }}</div>
+            <div class="d-flex flex-wrap justify-content-between gap-2">
+              <div class="fw-semibold">{{ alert.title }}</div>
+              {% if alert.action_label and alert.action_url %}
+                <a href="{{ alert.action_url }}" class="btn btn-sm btn-outline-dark">
+                  {{ alert.action_label }}
+                </a>
+              {% endif %}
+            </div>
             <div class="small">{{ alert.message }}</div>
           </div>
         {% endfor %}

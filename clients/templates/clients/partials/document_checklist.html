@@ -35,9 +35,9 @@
               <i class="fas fa-exclamation-triangle"></i> {% translate "Файл отсутствует" %}
             </span>
             {% else %}
-            <a href="{% url 'clients:document_download' doc.id %}" target="_blank" rel="noopener">
+            <span class="fw-semibold">
               {% translate "Файл от" %} {{ doc.uploaded_at|date:"d.m.Y H:i" }}
-            </a>
+            </span>
             {% endif %}
             {% if doc.expiry_date %}
             <br><small class="text-danger">{% translate "Действителен до:" %} {{ doc.expiry_date|date:"d.m.Y" }}</small>
@@ -57,7 +57,7 @@
             {% endif %}
             {% if doc.awaiting_confirmation %}
             <button type="button" class="btn btn-sm btn-outline-success review-ocr-data-btn ms-2" data-doc-id="{{ doc.id }}" data-doc-type="{{ doc.document_type }}">
-              {% translate "Review OCR Data" %}
+              {% translate "Проверить OCR" %}
             </button>
             {% endif %}
             {% if doc.version_count > 0 %}
@@ -67,6 +67,18 @@
             {% endif %}
           </div>
           <div class="btn-group document-row-actions">
+            {% if doc.file_exists != False %}
+            <a href="{% url 'clients:document_preview' doc.id %}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary"
+              title="{% translate 'Открыть' %}" aria-label="{% translate 'Открыть' %}">
+              <i class="bi bi-box-arrow-up-right"></i>
+              <span class="d-none d-xl-inline ms-1">{% translate "Открыть" %}</span>
+            </a>
+            <a href="{% url 'clients:document_download' doc.id %}" class="btn btn-sm btn-outline-secondary"
+              title="{% translate 'Скачать' %}" aria-label="{% translate 'Скачать' %}">
+              <i class="bi bi-download"></i>
+              <span class="d-none d-xl-inline ms-1">{% translate "Скачать" %}</span>
+            </a>
+            {% endif %}
             <form action="{% url 'clients:toggle_document_verification' doc.id %}" method="post"
               class="d-inline toggle-verification-form">
               {% csrf_token %}

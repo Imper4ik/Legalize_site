@@ -25,6 +25,7 @@ from .models import (
     Company,
     Document,
     DocumentRequirement,
+    FamilyGroup,
     Payment,
     ServicePrice,
     StaffTask,
@@ -255,6 +256,11 @@ class ClientForm(forms.ModelForm):
             choices = submissions
         else:
             choices = list(Client.APPLICATION_PURPOSE_CHOICES)
+        existing_choice_values = {value for value, _label in choices}
+        for value, label in Client.APPLICATION_PURPOSE_CHOICES:
+            if value not in existing_choice_values:
+                choices.append((value, label))
+                existing_choice_values.add(value)
 
         current_value = (
             self.data.get(self.add_prefix('application_purpose'))
@@ -269,6 +275,10 @@ class ClientForm(forms.ModelForm):
             is_staff=True,
             is_active=True,
         ).order_by('email')
+        self.fields['sponsor_client'].queryset = Client.objects.exclude(pk=self.instance.pk).order_by(
+            'last_name',
+            'first_name',
+        )
 
     class Meta:
         model = Client
@@ -278,7 +288,7 @@ class ClientForm(forms.ModelForm):
             'company', 'assigned_staff', 'status', 'workflow_stage',
             'basis_of_stay', 'legal_basis_end_date', 'submission_date',
             'employer_phone',
-            'fingerprints_date', 'notes'
+            'fingerprints_date', 'family_role', 'sponsor_client', 'notes'
         ]
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -294,6 +304,8 @@ class ClientForm(forms.ModelForm):
             'workflow_stage': forms.Select(attrs={'class': 'form-select'}),
             'company': forms.Select(attrs={'class': 'form-select'}),
             'assigned_staff': forms.Select(attrs={'class': 'form-select'}),
+            'family_role': forms.Select(attrs={'class': 'form-select'}),
+            'sponsor_client': forms.Select(attrs={'class': 'form-select'}),
             'basis_of_stay': forms.TextInput(attrs={'class': 'form-control'}),
             'employer_phone': forms.TextInput(attrs={'class': 'form-control'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
@@ -356,10 +368,11 @@ class DocumentUploadForm(forms.ModelForm):
 
     class Meta:
         model = Document
-        fields = ['file', 'expiry_date']
+        fields = ['file', 'expiry_date', 'zus_period_month']
         widgets = {
             'file': forms.FileInput(attrs={'class': 'form-control', 'accept': FILE_INPUT_ACCEPT}),
             'expiry_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'zus_period_month': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
         }
 
 
@@ -404,6 +417,29 @@ class PaymentForm(forms.ModelForm):
             'total_amount': forms.NumberInput(attrs={'class': 'form-control'}),
             'amount_paid': forms.NumberInput(attrs={'class': 'form-control'}),
             'transaction_id': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+
+class FamilyGroupFinanceForm(forms.ModelForm):
+    class Meta:
+        model = FamilyGroup
+        fields = [
+            "sponsor_monthly_income",
+            "monthly_support_per_person",
+            "monthly_housing_cost",
+            "meldunek_free_housing",
+        ]
+        widgets = {
+            "sponsor_monthly_income": forms.NumberInput(
+                attrs={"class": "form-control", "step": "0.01", "min": "0"}
+            ),
+            "monthly_support_per_person": forms.NumberInput(
+                attrs={"class": "form-control", "step": "0.01", "min": "0"}
+            ),
+            "monthly_housing_cost": forms.NumberInput(
+                attrs={"class": "form-control", "step": "0.01", "min": "0"}
+            ),
+            "meldunek_free_housing": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
 

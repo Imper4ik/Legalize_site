@@ -417,9 +417,11 @@ def send_required_documents_email(client: Client, *, sent_by=None) -> int:
 
 def _get_expired_documents_context(client: Client) -> dict | None:
     today = timezone.localdate()
-    expired_documents = client.documents.filter(expiry_date__isnull=False, expiry_date__lte=today).order_by(
+    expired_documents = client.documents.filter(expiry_date__isnull=False, expiry_date__lt=today).order_by(
         "expiry_date"
     )
+    if not expired_documents.exists():
+        return None
 
     return {
         "client": client,
@@ -436,6 +438,8 @@ def send_expired_documents_email(client: Client, *, sent_by=None) -> int:
 
     language = _get_preferred_language(client)
     context = _get_expired_documents_context(client)
+    if not context:
+        return 0
     
     with override(language):
         subject = _get_subject("expired_documents", language)
@@ -519,6 +523,8 @@ def send_missing_documents_email(client: Client, *, sent_by=None) -> int:
 
     subject = _get_subject("missing_documents", language)
     body = _render_email_body("missing_documents", context, language)
+    today = timezone.localdate()
+    iso_year, iso_week, _iso_weekday = today.isocalendar()
     return _send_email(
         subject,
         body,
@@ -530,6 +536,7 @@ def send_missing_documents_email(client: Client, *, sent_by=None) -> int:
             "missing_documents",
             client.pk,
             client.email,
+            f"{iso_year}-W{iso_week:02d}",
             sorted(item["name"] for item in context["documents"]),
         ),
     )

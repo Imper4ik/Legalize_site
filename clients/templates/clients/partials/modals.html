@@ -34,6 +34,11 @@
                     </div>
 
                     <div class="mb-3">
+                        <label for="id_due_date" class="form-label">{% translate "Срок оплаты" %}</label>
+                        <input type="date" name="due_date" class="form-control" id="id_due_date">
+                    </div>
+
+                    <div class="mb-3">
                         <label for="id_payment_method" class="form-label">{% translate "Способ оплаты" %}</label>
                         <select name="payment_method" class="form-select" id="id_payment_method">
                             <option value="cash">{% translate "Наличные" %}</option>
@@ -154,6 +159,10 @@
                         <div class="mb-3">
                             <label for="id_expiry_date" class="form-label">{% translate "Дата истечения (если есть)" %}</label>
                             <input type="date" name="expiry_date" class="form-control" id="id_expiry_date">
+                        </div>
+                        <div class="mb-3">
+                            <label for="id_zus_period_month" class="form-label">{% translate "ZUS RCA — месяц" %}</label>
+                            <input type="date" name="zus_period_month" class="form-control" id="id_zus_period_month">
                         </div>
                     </div>
 

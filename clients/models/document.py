@@ -1,3 +1,4 @@
+from datetime import date
 from pathlib import Path
 from uuid import uuid4
 
@@ -65,6 +66,13 @@ def translate_document_name(name: str, language: str | None = None) -> str:
         return source
     return translated
 
+
+def _first_day_of_month(value: date | None) -> date | None:
+    if value is None:
+        return None
+    return value.replace(day=1)
+
+
 def resolve_document_label(doc_type: str, custom_name: str | None = None, custom_name_pl: str | None = None, custom_name_en: str | None = None, custom_name_ru: str | None = None, language: str | None = None) -> str:
     custom_label = _select_custom_document_name(doc_type=doc_type, custom_name=custom_name, custom_name_pl=custom_name_pl, custom_name_en=custom_name_en, custom_name_ru=custom_name_ru, language=language)
     if custom_label:
@@ -102,6 +110,12 @@ class Document(SoftDeleteModel):
     document_type = models.CharField(max_length=255, verbose_name=_("Тип документа"))
     file = models.FileField(upload_to=document_upload_path, verbose_name=_("Файл"), validators=[validate_uploaded_document])
     expiry_date = models.DateField(null=True, blank=True, verbose_name=_("Действителен до"))
+    zus_period_month = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name=_("ZUS RCA — месяц"),
+        help_text=_("Первый день месяца, за который загружен ZUS RCA."),
+    )
     uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Дата загрузки"))
     verified = models.BooleanField(default=False, verbose_name=_("Проверено"))
     awaiting_confirmation = models.BooleanField(default=False, verbose_name=_("Ожидает подтверждения"))
@@ -129,10 +143,25 @@ class Document(SoftDeleteModel):
         indexes = [
             models.Index(fields=["client", "document_type"], name="doc_client_type_idx"),
             models.Index(fields=["ocr_status", "awaiting_confirmation"], name="doc_ocr_confirm_idx"),
+            models.Index(fields=["client", "document_type", "zus_period_month"], name="doc_zus_period_idx"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["client", "document_type", "zus_period_month"],
+                condition=models.Q(
+                    document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+                    zus_period_month__isnull=False,
+                ),
+                name="unique_zus_rca_period_per_client",
+            ),
         ]
 
     def __str__(self):
         return f"{self.display_name} для {self.client}"
+
+    def save(self, *args, **kwargs):
+        self.zus_period_month = _first_day_of_month(self.zus_period_month)
+        super().save(*args, **kwargs)
 
     @property
     def display_name(self) -> str:
@@ -219,7 +248,12 @@ class DocumentRequirement(models.Model):
             for code, _label in fallback:
                 if code in seen:
                     continue
-                items.append({"code": code, "label": resolve_document_label(code, language=language), "is_required": True})
+                label = (
+                    resolve_document_label(code, language=language)
+                    if code in DOCUMENT_TYPE_VALUES
+                    else translate_document_name(_label, language)
+                )
+                items.append({"code": code, "label": label, "is_required": True})
 
         if not include_optional:
             items = [item for item in items if item["is_required"]]

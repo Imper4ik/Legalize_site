@@ -1,0 +1,25 @@
+{% load i18n %}
+
+<article class="family-person-card">
+  <div>
+    <div class="text-muted small">{{ card.role_label }}</div>
+    <h4 class="h5 mb-1">{{ card.client.first_name }} {{ card.client.last_name }}</h4>
+    <div class="text-muted small">{{ card.client.email|default:_("Email не указан") }}</div>
+  </div>
+  <div class="family-person-meta">
+    <span class="badge {% if card.missing_documents_count %}bg-warning text-dark{% else %}bg-success{% endif %}">
+      {% blocktrans with count=card.missing_documents_count %}Недостающих: {{ count }}{% endblocktrans %}
+    </span>
+  </div>
+  <div class="d-flex flex-wrap gap-2 mt-3">
+    <a href="{{ card.open_url }}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-person-lines-fill me-1"></i>{% translate "Открыть клиента" %}
+    </a>
+    <a href="{{ card.documents_url }}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-folder2-open me-1"></i>{% translate "Документы" %}
+    </a>
+    <a href="{{ card.finances_url }}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-cash-coin me-1"></i>{% translate "Финансы" %}
+    </a>
+  </div>
+</article>

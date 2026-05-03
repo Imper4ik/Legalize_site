@@ -27,9 +27,14 @@
                 </div>
                 <div>
                     {% if document.file %}
-                    <a href="{% url 'clients:document_download' document.pk %}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-download me-1"></i>{% translate "Download" %}
-                    </a>
+                    <div class="btn-group">
+                        <a href="{% url 'clients:document_preview' document.pk %}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-box-arrow-up-right me-1"></i>{% translate "Открыть" %}
+                        </a>
+                        <a href="{% url 'clients:document_download' document.pk %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-download me-1"></i>{% translate "Скачать" %}
+                        </a>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -64,8 +69,8 @@
                             <td>
                                 {% if version.file %}
                                 <div class="btn-group">
-                                    <a href="{% url 'clients:document_version_download' version.pk %}" class="btn btn-outline-secondary btn-sm" title="{% translate 'Download' %}">
-                                        <i class="fas fa-download"></i>
+                                    <a href="{% url 'clients:document_version_download' version.pk %}" class="btn btn-outline-secondary btn-sm" title="{% translate 'Скачать' %}" aria-label="{% translate 'Скачать' %}">
+                                        <i class="bi bi-download"></i>
                                     </a>
                                     <form method="post" action="{% url 'clients:document_version_restore' version.pk %}" class="d-inline" onsubmit="return confirm('{% translate "Are you sure you want to restore this version? The current file will be archived." %}');">
                                         {% csrf_token %}

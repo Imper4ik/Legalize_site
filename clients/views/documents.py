@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from clients.constants import is_wezwanie_document_type
@@ -310,9 +311,9 @@ def verify_all_documents(request, client_id):
     return redirect("clients:client_detail", pk=client.id)
 
 
-@staff_required_view
-def document_download(request, doc_id):
-    logger.info("Download requested: doc_id=%s, user_id=%s", doc_id, request.user.pk)
+def _serve_document_file(request, doc_id, *, as_attachment: bool):
+    action = "download" if as_attachment else "preview"
+    logger.info("Document %s requested: doc_id=%s, user_id=%s", action, doc_id, request.user.pk)
     try:
         document = get_object_or_404(
             accessible_documents_queryset(request.user, Document.objects.select_related("client")),
@@ -346,19 +347,29 @@ def document_download(request, doc_id):
     record_document_download(document=document, actor=request.user)
     extension = Path(document.file.name).suffix or ".bin"
     filename = f"document-{document.pk}{extension}"
-    response = build_protected_file_response(document.file, filename=filename, as_attachment=False)
+    response = build_protected_file_response(document.file, filename=filename, as_attachment=as_attachment)
 
     logger.info(
-        "Serving document response: document_id=%s stored_name=%s served_filename=%s content_type=%s disposition=%s",
+        "Document served: document_id=%s filename=%s stored_name=%s content_type=%s content_disposition=%s action=%s",
         document.pk,
-        document.file.name,
         filename,
+        document.file.name,
         response.get("Content-Type"),
         response.get("Content-Disposition"),
+        action,
     )
 
     return response
 
+
+@staff_required_view
+def document_preview(request, doc_id):
+    return _serve_document_file(request, doc_id, as_attachment=False)
+
+
+@staff_required_view
+def document_download(request, doc_id):
+    return _serve_document_file(request, doc_id, as_attachment=True)
 
 
 
@@ -390,6 +401,13 @@ def client_overview_partial(request, pk):
         {
             "client": client,
             "workflow_summary": client.get_workflow_summary(document_status_list=document_status_list),
+            "show_family_dashboard_link": bool(
+                client.family_role
+                or client.sponsor_client_id
+                or client.application_purpose in {"family", "family_spouse", "family_child"}
+                or client.sponsored_family_members.exists()
+            ),
+            "family_dashboard_url": reverse("clients:family_dashboard", kwargs={"pk": client.pk}),
         },
         request=request,
     )

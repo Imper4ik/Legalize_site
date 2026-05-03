@@ -2,6 +2,8 @@ from legalize_site.constants import (
     DOCUMENT_CHECKLIST,
     STUDY_DOCS,
     WORK_DOCS,
+    FAMILY_CHILD_DOCS,
+    FAMILY_SPOUSE_DOCS,
     DocumentType,
     doc_entry,
 )
@@ -11,6 +13,8 @@ __all__ = [
     'doc_entry',
     'STUDY_DOCS',
     'WORK_DOCS',
+    'FAMILY_SPOUSE_DOCS',
+    'FAMILY_CHILD_DOCS',
     'DOCUMENT_CHECKLIST',
     'INTERNAL_DOCS',
 ]

@@ -94,6 +94,16 @@
                         {{ form.language }}
                         {% for error in form.language.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.family_role.label }}</label>
+                        {{ form.family_role }}
+                        {% for error in form.family_role.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ form.sponsor_client.label }}</label>
+                        {{ form.sponsor_client }}
+                        {% for error in form.sponsor_client.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+                    </div>
                     <div class="col-12">
                         <label class="form-label">{{ form.basis_of_stay.label }}</label>
                         {{ form.basis_of_stay }}

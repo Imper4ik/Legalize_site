@@ -12,6 +12,7 @@ from .document_version import DocumentVersion
 from .payment import Payment
 from .reminder import Reminder
 from .email import EmailLog
+from .family import FamilyGroup
 from .campaign import EmailCampaign
 from .pricing import ServicePrice
 from .task import StaffTask
@@ -30,6 +31,7 @@ __all__ = [
     'Payment',
     'Reminder',
     'EmailLog',
+    'FamilyGroup',
     'EmailCampaign',
     'ServicePrice',
     'StaffTask',

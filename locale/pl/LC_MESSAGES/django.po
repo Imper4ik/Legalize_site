@@ -2870,10 +2870,8 @@ msgstr "Utwórz"
 
 #: .\submissions\templates\submissions\submission_detail.html:42
 #: .\submissions\templates\submissions\submission_list.html:32
-#, fuzzy
-#| msgid "Закрыть"
 msgid "Открыть"
-msgstr "Zamknij"
+msgstr "Otwórz"
 
 #: .\submissions\templates\submissions\submission_detail.html:52
 #, fuzzy
@@ -3471,6 +3469,102 @@ msgstr "Automatyczna archiwizacja podczas przesyłania nowego pliku"
 
 msgid "Generated:"
 msgstr "Wygenerowano:"
+
+msgid "Скачать"
+msgstr "Pobierz"
+
+msgid "Риски"
+msgstr "Ryzyka"
+
+msgid "Не все документы собраны"
+msgstr "Nie wszystkie dokumenty są zebrane"
+
+msgid "Отсутствует обязательных документов"
+msgstr "Brakuje wymaganych dokumentów"
+
+msgid "Отсутствует обязательных документов: %(count)s."
+msgstr "Brakuje wymaganych dokumentów: %(count)s."
+
+msgid "Просроченные документы"
+msgstr "Przeterminowane dokumenty"
+
+msgid "Просроченные оплаты"
+msgstr "Zaległe płatności"
+
+msgid "Проверить OCR"
+msgstr "Sprawdź OCR"
+
+msgid "ZUS RCA — пропущены месяцы"
+msgstr "ZUS RCA — brakujące miesiące"
+
+msgid "Воссоединение с семьёй"
+msgstr "Łączenie rodzin"
+
+msgid "Супруг/супруга"
+msgstr "Małżonek/małżonka"
+
+msgid "Ребёнок"
+msgstr "Dziecko"
+
+msgid "Спонсор"
+msgstr "Sponsor"
+
+msgid "Семейная группа"
+msgstr "Grupa rodzinna"
+
+msgid "Финансовая достаточность"
+msgstr "Wystarczalność finansowa"
+
+msgid "Доход спонсора"
+msgstr "Dochód sponsora"
+
+msgid "Ежемесячное содержание"
+msgstr "Miesięczne utrzymanie"
+
+msgid "Стоимость жилья"
+msgstr "Koszt zakwaterowania"
+
+msgid "Meldunek / бесплатное жильё"
+msgstr "Meldunek / bezpłatne zakwaterowanie"
+
+msgid "Недостаточный доход спонсора"
+msgstr "Niewystarczający dochód sponsora"
+
+msgid "Бесплатное жильё требует подтверждения."
+msgstr "Bezpłatne zakwaterowanie wymaga potwierdzenia."
+
+msgid "Открыть чеклист"
+msgstr "Otwórz listę kontrolną"
+
+msgid "Открыть финансы"
+msgstr "Otwórz finanse"
+
+msgid "Открыть семейную группу"
+msgstr "Otwórz grupę rodzinną"
+
+msgid "Доход достаточный"
+msgstr "Dochód wystarczający"
+
+msgid "Запас"
+msgstr "Nadwyżka"
+
+msgid "Не хватает"
+msgstr "Brakuje"
+
+msgid "Итого требуется"
+msgstr "Łącznie wymagane"
+
+msgid "Члены семьи"
+msgstr "Członkowie rodziny"
+
+msgid "Роль в семье"
+msgstr "Rola w rodzinie"
+
+msgid "ZUS RCA — месяц"
+msgstr "ZUS RCA — miesiąc"
+
+msgid "Первый день месяца, за который загружен ZUS RCA."
+msgstr "Pierwszy dzień miesiąca, za który przesłano ZUS RCA."
 
 #~ msgid "Оплатить до"
 #~ msgstr "Termin płatności"

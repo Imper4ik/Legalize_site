@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import AppSettings, Client, ClientActivity, Company, Document, Payment, ServicePrice, StaffTask
+from .models import AppSettings, Client, ClientActivity, Company, Document, FamilyGroup, Payment, ServicePrice, StaffTask
 
 
 @admin.action(description="Archive selected records")
@@ -102,6 +102,7 @@ class ClientAdmin(admin.ModelAdmin):
         "company",
         "case_number",
         "application_purpose",
+        "family_role",
         "status",
         "workflow_stage",
         "phone",
@@ -109,7 +110,7 @@ class ClientAdmin(admin.ModelAdmin):
         "archived_at",
         "created_at",
     )
-    list_filter = ("company", "status", "workflow_stage", "application_purpose", "language", "archived_at")
+    list_filter = ("company", "status", "workflow_stage", "application_purpose", "family_role", "language", "archived_at")
     search_fields = ("first_name", "last_name", "email", "phone", "notes", "company__name")
     fieldsets = (
         (
@@ -120,6 +121,7 @@ class ClientAdmin(admin.ModelAdmin):
             "Детали подачи",
             {"fields": ("application_purpose", "basis_of_stay", "language", "legal_basis_end_date", "workflow_stage")},
         ),
+        ("Семья", {"fields": ("family_role", "sponsor_client")}),
         ("Статус и заметки", {"fields": ("status", "notes", "archived_at")}),
     )
     readonly_fields = ("archived_at",)
@@ -131,14 +133,27 @@ class ClientAdmin(admin.ModelAdmin):
 
 @admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):
-    list_display = ("client", "document_type", "uploaded_at", "archived_at")
-    list_filter = ("document_type", "archived_at")
+    list_display = ("client", "document_type", "zus_period_month", "uploaded_at", "archived_at")
+    list_filter = ("document_type", "zus_period_month", "archived_at")
     search_fields = ("client__first_name", "client__last_name")
     readonly_fields = ("archived_at",)
     actions = [archive_selected, restore_selected]
 
     def get_queryset(self, request):
         return Document.all_objects.select_related("client")
+
+
+@admin.register(FamilyGroup)
+class FamilyGroupAdmin(admin.ModelAdmin):
+    list_display = (
+        "sponsor",
+        "sponsor_monthly_income",
+        "monthly_support_per_person",
+        "monthly_housing_cost",
+        "meldunek_free_housing",
+    )
+    search_fields = ("sponsor__first_name", "sponsor__last_name", "sponsor__email")
+    autocomplete_fields = ("sponsor",)
 
 
 @admin.register(StaffTask)

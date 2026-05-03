@@ -3,6 +3,7 @@ import logging
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from clients.services.activity import log_client_activity
@@ -37,16 +38,17 @@ def sync_payment_reminder_on_save(sender, instance, **kwargs):
         Reminder.objects.filter(payment=instance).update(is_active=False)
         return
 
-    if instance.status == "partial" and instance.due_date:
+    today = timezone.localdate()
+    if instance.status in {"pending", "partial"} and instance.due_date and instance.due_date <= today:
         Reminder.objects.update_or_create(
             payment=instance,
             defaults={
                 "client": instance.client,
                 "reminder_type": "payment",
-                "title": _("Второй платёж: %(service)s") % {
+                "title": _("Просроченная оплата: %(service)s") % {
                     "service": instance.get_service_description_display(),
                 },
-                "notes": _("Остаток: %(amount)s zł. Счёт №%(number)s") % {
+                "notes": _("Осталось оплатить: %(amount)s zł. Счёт №%(number)s") % {
                     "amount": instance.amount_due,
                     "number": instance.id,
                 },
@@ -111,6 +113,8 @@ def sync_payment_service_check(sender, instance, **kwargs):
             "work": "work_service",
             "study": "study_service",
             "family": "consultation",
+            "family_spouse": "consultation",
+            "family_child": "consultation",
         }
 
         new_service = purpose_map.get(instance.application_purpose)

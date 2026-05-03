@@ -248,6 +248,31 @@
   justify-content: center;
 }
 
+.family-card-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.family-person-card,
+.family-finance-form,
+.family-finance-summary {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.family-person-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 10.5rem;
+}
+
+.family-person-meta {
+  margin-top: 0.75rem;
+}
+
 .client-detail-page #documentAccordion.is-checklist-transitioning .accordion-body * {
   transition-duration: 0s !important;
 }

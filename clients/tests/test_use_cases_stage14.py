@@ -76,8 +76,8 @@ class UseCasesStage14Tests(TestCase):
 
         self.assertEqual(result.changed_fields, ("workflow_stage", "fingerprints_date", "notes"))
         self.assertTrue(result.workflow_changed)
-        self.assertTrue(result.expired_documents_email_sent)
-        send_expired_email.assert_called_once_with(self.client_obj)
+        self.assertFalse(result.expired_documents_email_sent)
+        send_expired_email.assert_not_called()
         self.assertTrue(
             ClientActivity.objects.filter(client=self.client_obj, event_type="client_updated").exists()
         )

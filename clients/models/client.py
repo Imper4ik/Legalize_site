@@ -16,7 +16,15 @@ class Client(SoftDeleteModel):
     APPLICATION_PURPOSE_CHOICES = [
         ("study", _("Учёба")),
         ("work", _("Работа")),
-        ("family", _("Воссоединение семьи")),
+        ("family", _("Воссоединение с семьёй")),
+        ("family_spouse", _("Супруг/супруга")),
+        ("family_child", _("Ребёнок")),
+    ]
+    FAMILY_ROLE_CHOICES = [
+        ("", _("Не указано")),
+        ("sponsor", _("Спонсор")),
+        ("family_spouse", _("Супруг/супруга")),
+        ("family_child", _("Ребёнок")),
     ]
     LANGUAGE_CHOICES = getattr(
         settings,
@@ -126,6 +134,21 @@ class Client(SoftDeleteModel):
     )
     notes = models.TextField(blank=True, null=True, verbose_name=_("Uwagi / Заметки"))
     has_checklist_access = models.BooleanField(default=False, verbose_name=_("Доступ к чеклисту предоставлен"))
+    family_role = models.CharField(
+        max_length=32,
+        choices=FAMILY_ROLE_CHOICES,
+        blank=True,
+        default="",
+        verbose_name=_("Роль в семье"),
+    )
+    sponsor_client = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="sponsored_family_members",
+        verbose_name=_("Спонсор"),
+    )
 
     company = models.ForeignKey(
         "Company",
@@ -156,6 +179,7 @@ class Client(SoftDeleteModel):
             models.Index(fields=["assigned_staff", "status"], name="client_staff_status_idx"),
             models.Index(fields=["workflow_stage", "status"], name="client_workflow_status_idx"),
             models.Index(fields=["created_at"], name="client_created_at_idx"),
+            models.Index(fields=["sponsor_client", "family_role"], name="client_family_role_idx"),
         ]
 
     def __str__(self):
@@ -359,6 +383,37 @@ class Client(SoftDeleteModel):
                     "title": _("Есть OCR-данные без подтверждения"),
                     "message": _("Документов с распознанными данными, ожидающими подтверждения: %(count)s.")
                     % {"count": awaiting_confirmation_count},
+                    "action_label": _("Проверить OCR"),
+                    "action_url": "#documentAccordion",
+                }
+            )
+
+        expired_documents_count = self.documents.filter(expiry_date__isnull=False, expiry_date__lt=today).count()
+        if expired_documents_count:
+            alerts.append(
+                {
+                    "level": "danger",
+                    "title": _("Просроченные документы"),
+                    "message": _("Просроченных документов: %(count)s.") % {"count": expired_documents_count},
+                    "action_label": _("Открыть чеклист"),
+                    "action_url": "#documentAccordion",
+                }
+            )
+
+        expiring_documents_count = self.documents.filter(
+            expiry_date__isnull=False,
+            expiry_date__gte=today,
+            expiry_date__lte=today + timedelta(days=7),
+        ).count()
+        if expiring_documents_count:
+            alerts.append(
+                {
+                    "level": "warning",
+                    "title": _("Истекающие документы"),
+                    "message": _("Документов истекает в течение 7 дней: %(count)s.")
+                    % {"count": expiring_documents_count},
+                    "action_label": _("Открыть чеклист"),
+                    "action_url": "#documentAccordion",
                 }
             )
 
@@ -385,16 +440,20 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        payments_without_reminders = self.payments.filter(status__in=["pending", "partial"]).exclude(
-            reminder__is_active=True
+        overdue_payments_count = self.payments.filter(
+            status__in=["pending", "partial"],
+            due_date__isnull=False,
+            due_date__lte=today,
         ).count()
-        if payments_without_reminders:
+        if overdue_payments_count:
             alerts.append(
                 {
                     "level": "warning",
-                    "title": _("Есть оплаты без reminder"),
-                    "message": _("Платежей без активного reminder: %(count)s.")
-                    % {"count": payments_without_reminders},
+                    "title": _("Просроченные оплаты"),
+                    "message": _("Оплат с due date сегодня или раньше: %(count)s.")
+                    % {"count": overdue_payments_count},
+                    "action_label": _("Открыть финансы"),
+                    "action_url": "#payment-list-container",
                 }
             )
 
@@ -408,8 +467,53 @@ class Client(SoftDeleteModel):
                     "title": _("Не все документы собраны"),
                     "message": _("Отсутствует обязательных документов: %(count)s.")
                     % {"count": missing_documents_count},
+                    "count": missing_documents_count,
+                    "action_label": _("Открыть чеклист"),
+                    "action_url": "#documentAccordion",
                 }
             )
+
+        if self.fingerprints_date:
+            from clients.services.zus import format_zus_months, missing_zus_months
+
+            missing_zus = missing_zus_months(self, today=today)
+            if missing_zus:
+                alerts.append(
+                    {
+                        "level": "warning",
+                        "title": _("ZUS RCA — пропущены месяцы"),
+                        "message": _("Нет ZUS RCA за месяцы: %(months)s.")
+                        % {"months": format_zus_months(missing_zus)},
+                        "count": len(missing_zus),
+                        "action_label": _("Открыть чеклист"),
+                        "action_url": "#documentAccordion",
+                    }
+                )
+
+        family_group = None
+        try:
+            family_group = self.family_group
+        except Exception:
+            family_group = None
+        if family_group is None and self.sponsor_client_id:
+            try:
+                family_group = self.sponsor_client.family_group
+            except Exception:
+                family_group = None
+        if family_group is not None:
+            from clients.services.family import calculate_family_income
+
+            family_income = calculate_family_income(family_group)
+            for risk in family_income.risks:
+                alerts.append(
+                    {
+                        "level": "warning",
+                        "title": risk["title"],
+                        "message": risk["message"],
+                        "action_label": _("Открыть семейную группу"),
+                        "action_url": reverse("clients:family_dashboard", kwargs={"pk": self.pk}),
+                    }
+                )
 
         overdue_tasks_count = self.staff_tasks.filter(
             status__in=["open", "in_progress"],

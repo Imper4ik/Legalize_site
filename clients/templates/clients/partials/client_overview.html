@@ -27,6 +27,12 @@
         <i class="bi bi-pencil-square"></i>
         <span>{% translate "Редактировать" %}</span>
       </a>
+      {% if show_family_dashboard_link %}
+      <a href="{{ family_dashboard_url }}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-people"></i>
+        <span>{% translate "Семейная группа" %}</span>
+      </a>
+      {% endif %}
       <a href="{% url 'clients:client_print_wsc' pk=client.pk %}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-printer"></i>
         <span>{% translate "Обложка" %}</span>
@@ -88,6 +94,9 @@
     <div class="client-summary-item {% if workflow_summary.alerts_count %}is-alert{% endif %}">
       <span class="client-summary-label">{% translate "Риски" %}</span>
       <strong class="client-summary-value">{{ workflow_summary.alerts_count }}</strong>
+      <span class="client-summary-note">
+        {% blocktrans count count=workflow_summary.alerts_count %}тип проблемы{% plural %}типов проблем{% endblocktrans %}
+      </span>
     </div>
     <div class="client-summary-item">
       <span class="client-summary-label">{% translate "Основание пребывания" %}</span>

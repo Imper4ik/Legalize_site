@@ -74,8 +74,6 @@ def finalize_client_update(
     send_expired_email: ClientNotificationSender = send_expired_documents_email,
 ) -> ClientRecordScenarioResult:
     expired_documents_email_sent = False
-    if new_fingerprints_date and new_fingerprints_date != previous_fingerprints_date:
-        expired_documents_email_sent = bool(send_expired_email(client))
 
     changed_fields = tuple(
         field

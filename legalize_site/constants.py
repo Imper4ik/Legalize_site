@@ -71,6 +71,26 @@ WORK_DOCS = [
     doc_entry(DocumentType.STATEMENT_X),
 ]
 
+FAMILY_SPOUSE_DOCS = [
+    doc_entry(DocumentType.PHOTOS),
+    doc_entry(DocumentType.PASSPORT),
+    ("marriage_certificate", _("Akt małżeństwa")),
+    ("sponsor_residence_card", _("Karta pobytu sponsora")),
+    ("sponsor_income_proof", _("Dokumenty potwierdzające dochód sponsora")),
+    doc_entry(DocumentType.ADDRESS_PROOF),
+    doc_entry(DocumentType.HEALTH_INSURANCE),
+]
+
+FAMILY_CHILD_DOCS = [
+    doc_entry(DocumentType.PHOTOS),
+    doc_entry(DocumentType.PASSPORT),
+    ("birth_certificate", _("Akt urodzenia dziecka")),
+    ("sponsor_residence_card", _("Karta pobytu sponsora")),
+    ("sponsor_income_proof", _("Dokumenty potwierdzające dochód sponsora")),
+    doc_entry(DocumentType.ADDRESS_PROOF),
+    doc_entry(DocumentType.HEALTH_INSURANCE),
+]
+
 # Główna lista kontrolna.
 # Django automatycznie użyje odpowiedniego tłumaczenia w zależności od wybranego języka.
 DOCUMENT_CHECKLIST = {
@@ -83,4 +103,10 @@ DOCUMENT_CHECKLIST = {
     ('work', 'pl'): WORK_DOCS,
     ('work', 'en'): WORK_DOCS,
     ('work', 'ru'): WORK_DOCS,
+    ('family_spouse', 'pl'): FAMILY_SPOUSE_DOCS,
+    ('family_spouse', 'en'): FAMILY_SPOUSE_DOCS,
+    ('family_spouse', 'ru'): FAMILY_SPOUSE_DOCS,
+    ('family_child', 'pl'): FAMILY_CHILD_DOCS,
+    ('family_child', 'en'): FAMILY_CHILD_DOCS,
+    ('family_child', 'ru'): FAMILY_CHILD_DOCS,
 }

@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext as _
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
@@ -32,6 +32,15 @@ from clients.use_cases.client_records import (
 from clients.views.base import RoleOrFeatureRequiredMixin, RoleRequiredMixin, StaffRequiredMixin
 from clients.services.activity import log_client_view
 from clients.services.access import accessible_clients_queryset
+
+
+def _show_family_dashboard_link(client: Client) -> bool:
+    return bool(
+        client.family_role
+        or client.sponsor_client_id
+        or client.application_purpose in {"family", "family_spouse", "family_child"}
+        or client.sponsored_family_members.exists()
+    )
 
 
 class ClientListView(StaffRequiredMixin, ListView):
@@ -125,6 +134,8 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         context["recent_activities"] = client.activities.all()[:25]
         context["workflow_summary"] = client.get_workflow_summary(document_status_list=document_status_list)
         context["workflow_alerts"] = context["workflow_summary"]["alerts"]
+        context["show_family_dashboard_link"] = _show_family_dashboard_link(client)
+        context["family_dashboard_url"] = reverse("clients:family_dashboard", kwargs={"pk": client.pk})
         return context
 
     def get(self, request, *args, **kwargs):

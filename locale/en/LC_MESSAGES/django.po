@@ -2867,10 +2867,8 @@ msgstr "Create"
 
 #: .\submissions\templates\submissions\submission_detail.html:42
 #: .\submissions\templates\submissions\submission_list.html:32
-#, fuzzy
-#| msgid "Закрыть"
 msgid "Открыть"
-msgstr "Close"
+msgstr "Open"
 
 #: .\submissions\templates\submissions\submission_detail.html:52
 #, fuzzy
@@ -3467,6 +3465,102 @@ msgstr "Automatic archive on new file upload"
 
 msgid "Generated:"
 msgstr "Generated:"
+
+msgid "Скачать"
+msgstr "Download"
+
+msgid "Риски"
+msgstr "Risks"
+
+msgid "Не все документы собраны"
+msgstr "Not all documents collected"
+
+msgid "Отсутствует обязательных документов"
+msgstr "Missing required documents"
+
+msgid "Отсутствует обязательных документов: %(count)s."
+msgstr "Missing required documents: %(count)s."
+
+msgid "Просроченные документы"
+msgstr "Expired documents"
+
+msgid "Просроченные оплаты"
+msgstr "Overdue payments"
+
+msgid "Проверить OCR"
+msgstr "Check OCR"
+
+msgid "ZUS RCA — пропущены месяцы"
+msgstr "ZUS RCA — missing months"
+
+msgid "Воссоединение с семьёй"
+msgstr "Family reunification"
+
+msgid "Супруг/супруга"
+msgstr "Spouse"
+
+msgid "Ребёнок"
+msgstr "Child"
+
+msgid "Спонсор"
+msgstr "Sponsor"
+
+msgid "Семейная группа"
+msgstr "Family group"
+
+msgid "Финансовая достаточность"
+msgstr "Financial sufficiency"
+
+msgid "Доход спонсора"
+msgstr "Sponsor income"
+
+msgid "Ежемесячное содержание"
+msgstr "Monthly maintenance"
+
+msgid "Стоимость жилья"
+msgstr "Housing cost"
+
+msgid "Meldunek / бесплатное жильё"
+msgstr "Meldunek / free housing"
+
+msgid "Недостаточный доход спонсора"
+msgstr "Insufficient sponsor income"
+
+msgid "Бесплатное жильё требует подтверждения."
+msgstr "Free housing requires confirmation."
+
+msgid "Открыть чеклист"
+msgstr "Open checklist"
+
+msgid "Открыть финансы"
+msgstr "Open finances"
+
+msgid "Открыть семейную группу"
+msgstr "Open family group"
+
+msgid "Доход достаточный"
+msgstr "Income sufficient"
+
+msgid "Запас"
+msgstr "Surplus"
+
+msgid "Не хватает"
+msgstr "Shortfall"
+
+msgid "Итого требуется"
+msgstr "Total required"
+
+msgid "Члены семьи"
+msgstr "Family members"
+
+msgid "Роль в семье"
+msgstr "Family role"
+
+msgid "ZUS RCA — месяц"
+msgstr "ZUS RCA — month"
+
+msgid "Первый день месяца, за который загружен ZUS RCA."
+msgstr "First day of the month covered by the uploaded ZUS RCA."
 
 #~ msgid "Оплатить до"
 #~ msgstr "Due date"

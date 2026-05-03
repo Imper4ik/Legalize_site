@@ -5,12 +5,17 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db import transaction  # Импортируем для атомарных операций
 from collections import defaultdict
+import logging
 
 from clients.models import Client, Document, Payment, Reminder
 from clients.services.notifications import (
     send_expiring_documents_email,
     send_missing_documents_email,
 )
+from clients.services.zus import format_zus_months, missing_zus_months
+
+
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -27,6 +32,9 @@ class Command(BaseCommand):
         try:
             self.stdout.write(self.style.HTTP_INFO("-> Проверяю клиентов на недостающие документы..."))
             self.send_missing_document_notifications()
+
+            self.stdout.write(self.style.HTTP_INFO("-> Проверяю месяцы ZUS RCA..."))
+            self.check_zus_rca_missing_months()
 
             self.stdout.write(self.style.HTTP_INFO("-> Проверяю документы с приближающимся окончанием срока..."))
             self.send_expiring_document_notifications()
@@ -50,16 +58,47 @@ class Command(BaseCommand):
     def send_missing_document_notifications(self):
         """Автоматически отправляет письма клиентам с недостающими документами."""
 
-        clients = Client.objects.all()
+        clients = Client.objects.filter(
+            workflow_stage="waiting_decision",
+            fingerprints_date__isnull=False,
+            decision_date__isnull=True,
+        ).exclude(email="")
         sent_count = 0
+        skipped_count = 0
         for client in clients:
             sent = send_missing_documents_email(client)
             sent_count += sent
+            if sent:
+                logger.info(
+                    "notification sent: template=missing_documents client_id=%s",
+                    client.pk,
+                )
+            else:
+                skipped_count += 1
+                logger.info(
+                    "notification skipped: template=missing_documents client_id=%s",
+                    client.pk,
+                )
 
         if sent_count:
             self.stdout.write(self.style.SUCCESS(f"Отправлено {sent_count} писем о недостающих документах."))
         else:
             self.stdout.write("Клиентов с недостающими документами не найдено или письма уже отправлены.")
+        self.stdout.write(f"Missing documents summary: sent={sent_count}, skipped={skipped_count}.")
+
+
+    def check_zus_rca_missing_months(self):
+        clients = Client.objects.filter(fingerprints_date__isnull=False)
+        affected = 0
+        for client in clients:
+            missing = missing_zus_months(client)
+            if missing:
+                affected += 1
+                message = f"ZUS RCA missing months: client_id={client.pk}, months={format_zus_months(missing)}"
+                logger.info(message)
+                self.stdout.write(message)
+        if affected == 0:
+            self.stdout.write("ZUS RCA missing months logs: none.")
 
 
     def send_expiring_document_notifications(self):
@@ -147,13 +186,10 @@ class Command(BaseCommand):
         """
         today = timezone.now().date()
 
-        # Ищем неоплаченные или частично оплаченные счета с датой оплаты сегодня,
-        # для которых еще нет напоминания.
         due_payments = Payment.objects.filter(
-            due_date=today,
-            status__in=['pending', 'partial'], # Только для неоплаченных счетов
-            reminder__isnull=True  # Ключевая проверка: напоминание еще не создано
-        )
+            due_date__lte=today,
+            status__in=['pending', 'partial'],
+        ).exclude(reminder__is_active=True)
 
         if not due_payments.exists():
             self.stdout.write('Счетов для создания напоминаний об оплате на сегодня не найдено.')
@@ -162,13 +198,16 @@ class Command(BaseCommand):
         count = 0
         for payment in due_payments:
             # Создаем новое напоминание
-            Reminder.objects.create(
-                client=payment.client,
-                payment=payment, # Связываем с конкретным счетом
-                title=f"Сегодня срок оплаты: {payment.get_service_description_display()}",
-                notes=f"Счет на сумму {payment.total_amount} для клиента {payment.client}. Осталось оплатить: {payment.amount_due}.",
-                due_date=payment.due_date,
-                reminder_type='payment'
+            Reminder.objects.update_or_create(
+                payment=payment,
+                defaults={
+                    "client": payment.client,
+                    "title": f"Просроченная оплата: {payment.get_service_description_display()}",
+                    "notes": f"Счет на сумму {payment.total_amount} для клиента {payment.client}. Осталось оплатить: {payment.amount_due}.",
+                    "due_date": payment.due_date,
+                    "reminder_type": 'payment',
+                    "is_active": True,
+                },
             )
             count += 1
         self.stdout.write(self.style.SUCCESS(f'Создано {count} новых напоминаний по оплатам.'))

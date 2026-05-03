@@ -37,6 +37,7 @@ from clients.views.documents import (
     client_overview_partial,
     client_status_api,
     confirm_wezwanie_parse,
+    document_preview,
     document_download,
     document_delete,
     wniosek_attachment_delete,
@@ -61,6 +62,7 @@ from clients.views.reminders import (
     send_document_reminder_email,
 )
 from clients.views.metrics import MetricsDashboardView
+from clients.views.family import FamilyDashboardView
 from clients.views.admin_dashboard import AdminDashboardView
 from clients.views.schedule_views import fingerprints_schedule_view
 from clients.views.archive import (
@@ -106,6 +108,7 @@ __all__ = [
     'client_overview_partial',
     'client_status_api',
     'confirm_wezwanie_parse',
+    'document_preview',
     'document_download',
     'document_delete',
     'wniosek_attachment_delete',
@@ -126,6 +129,7 @@ __all__ = [
     'run_update_reminders',
     'send_document_reminder_email',
     'MetricsDashboardView',
+    'FamilyDashboardView',
     'mass_email_view',
     'campaign_status_api',
     'AdminDashboardView',
