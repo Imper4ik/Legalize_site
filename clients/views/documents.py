@@ -346,7 +346,18 @@ def document_download(request, doc_id):
     record_document_download(document=document, actor=request.user)
     extension = Path(document.file.name).suffix or ".bin"
     filename = f"document-{document.pk}{extension}"
-    return build_protected_file_response(document.file, filename=filename, as_attachment=False)
+    response = build_protected_file_response(document.file, filename=filename, as_attachment=False)
+
+    logger.info(
+        "Serving document response: document_id=%s stored_name=%s served_filename=%s content_type=%s disposition=%s",
+        document.pk,
+        document.file.name,
+        filename,
+        response.get("Content-Type"),
+        response.get("Content-Disposition"),
+    )
+
+    return response
 
 
 
