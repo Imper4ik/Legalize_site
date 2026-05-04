@@ -71,24 +71,31 @@ WORK_DOCS = [
     doc_entry(DocumentType.STATEMENT_X),
 ]
 
-FAMILY_SPOUSE_DOCS = [
+FAMILY_COMMON_DOCS = [
     doc_entry(DocumentType.PHOTOS),
     doc_entry(DocumentType.PASSPORT),
-    ("marriage_certificate", _("Akt małżeństwa")),
-    ("sponsor_residence_card", _("Karta pobytu sponsora")),
-    ("sponsor_income_proof", _("Dokumenty potwierdzające dochód sponsora")),
+    ("family_reunification_fee", _("Opłata skarbowa za pobyt czasowy + pełnomocnictwo, jeśli dotyczy")),
+    ("sponsor_residence_decision_or_card", _("Karta pobytu / decyzja / dokument pobytowy sponsora")),
+    ("sponsor_income_proof", _("Dochód sponsora: umowa, PIT, zaświadczenie o dochodzie lub dokumenty działalności")),
+    doc_entry(DocumentType.ZUS_RCA_OR_INSURANCE),
     doc_entry(DocumentType.ADDRESS_PROOF),
     doc_entry(DocumentType.HEALTH_INSURANCE),
 ]
 
+FAMILY_SPOUSE_DOCS = [
+    *FAMILY_COMMON_DOCS,
+    ("marriage_certificate", _("Akt małżeństwa uznawany w Polsce + tłumaczenie przysięgłe")),
+    ("joint_family_life_evidence", _("Dowody wspólnego życia rodzinnego / wspólnego zamieszkania, jeśli urząd wezwie")),
+    ("outside_poland_consent", _("Pisemna zgoda małżonka na złożenie wniosku przez sponsora, jeśli małżonek przebywa poza Polską")),
+]
+
 FAMILY_CHILD_DOCS = [
-    doc_entry(DocumentType.PHOTOS),
-    doc_entry(DocumentType.PASSPORT),
-    ("birth_certificate", _("Akt urodzenia dziecka")),
-    ("sponsor_residence_card", _("Karta pobytu sponsora")),
-    ("sponsor_income_proof", _("Dokumenty potwierdzające dochód sponsora")),
-    doc_entry(DocumentType.ADDRESS_PROOF),
-    doc_entry(DocumentType.HEALTH_INSURANCE),
+    *FAMILY_COMMON_DOCS,
+    ("birth_certificate", _("Akt urodzenia dziecka + tłumaczenie przysięgłe")),
+    ("parental_authority_docs", _("Dokumenty potwierdzające władzę rodzicielską / opiekę prawną")),
+    ("second_parent_consent", _("Zgoda drugiego rodzica lub orzeczenie sądu, jeśli dziecko podaje się z jednym rodzicem")),
+    ("school_certificate", _("Zaświadczenie ze szkoły, jeśli dziecko jest w wieku szkolnym")),
+    ("outside_poland_child_consent", _("Zgoda przedstawiciela ustawowego na złożenie wniosku przez sponsora, jeśli dziecko przebywa poza Polską")),
 ]
 
 # Główna lista kontrolna.
