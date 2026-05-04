@@ -59,8 +59,6 @@ class Command(BaseCommand):
         """Автоматически отправляет письма клиентам с недостающими документами."""
 
         today = timezone.localdate()
-        iso_year, iso_week, _iso_weekday = today.isocalendar()
-        weekly_key = f"{iso_year}-W{iso_week:02d}"
         clients = Client.objects.filter(
             workflow_stage="waiting_decision",
             fingerprints_date__isnull=False,
@@ -70,7 +68,7 @@ class Command(BaseCommand):
         sent_count = 0
         skipped_count = 0
         for client in clients:
-            sent = send_missing_documents_email(client, weekly_key=weekly_key)
+            sent = send_missing_documents_email(client)
             sent_count += sent
             if sent:
                 logger.info(
