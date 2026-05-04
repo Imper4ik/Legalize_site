@@ -14,6 +14,16 @@
         <span><i class="bi bi-envelope"></i>{{ client.email|default:_("Email не указан") }}</span>
         <span><i class="bi bi-telephone"></i>{{ client.phone|default:_("Телефон не указан") }}</span>
         <span><i class="bi bi-file-earmark-text"></i>{{ client.get_application_purpose_display }}</span>
+        {% if client.sponsored_family_members.exists %}
+          <span class="badge rounded-pill bg-info text-dark">
+            <i class="bi bi-people me-1"></i>{% translate "Спонсор семьи" %}: {{ client.sponsored_family_members.count }}
+          </span>
+        {% endif %}
+        {% if client.sponsor_client_id %}
+          <span class="badge rounded-pill bg-secondary">
+            <i class="bi bi-person-heart me-1"></i>{% translate "Воссоединение с семьёй" %}
+          </span>
+        {% endif %}
       </div>
     </div>
 
@@ -31,6 +41,12 @@
       <a href="{{ family_dashboard_url }}" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-people"></i>
         <span>{% translate "Семейная группа" %}</span>
+      </a>
+      {% endif %}
+      {% if client.sponsored_family_members.exists %}
+      <a href="{% url 'clients:client_add' %}?sponsor={{ client.pk }}&application_purpose=family" class="btn btn-outline-success btn-sm">
+        <i class="bi bi-person-plus"></i>
+        <span>{% translate "Добавить родственника" %}</span>
       </a>
       {% endif %}
       <a href="{% url 'clients:client_print_wsc' pk=client.pk %}" class="btn btn-outline-secondary btn-sm">
@@ -78,6 +94,44 @@
     </div>
   </div>
 
+  {% if client.sponsored_family_members.exists or client.sponsor_client_id %}
+  <div class="alert alert-info d-flex flex-wrap align-items-center justify-content-between gap-2 mt-3 mb-0">
+    <div>
+      {% if client.sponsored_family_members.exists %}
+        <div class="fw-semibold">
+          <i class="bi bi-people me-1"></i>{% translate "Этот клиент является спонсором семейной группы" %}
+        </div>
+        <div class="small">
+          {% translate "Членов семьи" %}: {{ client.sponsored_family_members.count }}
+          {% for member in client.sponsored_family_members.all|slice:":3" %}
+            <span class="ms-2">• {{ member }}</span>
+          {% endfor %}
+        </div>
+      {% elif client.sponsor_client_id %}
+        <div class="fw-semibold">
+          <i class="bi bi-person-heart me-1"></i>{% translate "Этот клиент подаётся по воссоединению с семьёй" %}
+        </div>
+        <div class="small">
+          {% translate "Спонсор" %}:
+          <a href="{% url 'clients:client_detail' client.sponsor_client.pk %}">{{ client.sponsor_client }}</a>
+        </div>
+      {% endif %}
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+      {% if show_family_dashboard_link %}
+      <a href="{{ family_dashboard_url }}" class="btn btn-primary btn-sm">
+        <i class="bi bi-diagram-3 me-1"></i>{% translate "Открыть семейную группу" %}
+      </a>
+      {% endif %}
+      {% if client.sponsored_family_members.exists %}
+      <a href="{% url 'clients:client_add' %}?sponsor={{ client.pk }}&application_purpose=family" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-person-plus me-1"></i>{% translate "Добавить родственника" %}
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
   <div class="client-summary-grid">
     <div class="client-summary-item">
       <span class="client-summary-label">{% translate "Статус" %}</span>
@@ -87,6 +141,19 @@
       <span class="client-summary-label">{% translate "Этап" %}</span>
       <strong class="client-summary-value">{{ workflow_summary.stage_label }}</strong>
     </div>
+    {% if client.sponsored_family_members.exists %}
+    <div class="client-summary-item">
+      <span class="client-summary-label">{% translate "Семейная роль" %}</span>
+      <strong class="client-summary-value">{% translate "Спонсор семьи" %}</strong>
+      <span class="client-summary-note">{{ client.sponsored_family_members.count }} {% translate "член(ов) семьи" %}</span>
+    </div>
+    {% elif client.sponsor_client_id %}
+    <div class="client-summary-item">
+      <span class="client-summary-label">{% translate "Семейная роль" %}</span>
+      <strong class="client-summary-value">{{ client.get_family_role_display }}</strong>
+      <span class="client-summary-note">{% translate "Спонсор" %}: {{ client.sponsor_client }}</span>
+    </div>
+    {% endif %}
     <div class="client-summary-item">
       <span class="client-summary-label">{% translate "Открытые задачи" %}</span>
       <strong class="client-summary-value">{{ workflow_summary.open_tasks_count }}</strong>
