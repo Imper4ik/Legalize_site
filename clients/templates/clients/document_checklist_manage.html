@@ -26,7 +26,11 @@
             <a class="btn text-nowrap {% if submission.slug == current_purpose %}btn-primary{% else %}btn-outline-primary text-primary{% endif %}"
                href="?purpose={{ submission.slug }}">
               {{ submission.localized_name }}
+              {% if submission.is_system %}
+                <span class="badge bg-secondary-subtle text-secondary-emphasis ms-1">{% translate "system" %}</span>
+              {% endif %}
             </a>
+            {% if not submission.is_system %}
             <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
                     data-bs-toggle="dropdown" aria-expanded="false" aria-label="{% translate 'Действия с основанием' %}">
               <span class="visually-hidden">{% translate "Действия" %}</span>
@@ -48,6 +52,7 @@
                 </form>
               </li>
             </ul>
+            {% endif %}
           </div>
         {% empty %}
           <span class="text-muted small">{% translate "Добавьте основание, чтобы настроить чеклист." %}</span>
