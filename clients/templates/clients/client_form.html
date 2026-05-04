@@ -94,14 +94,16 @@
                         {{ form.language }}
                         {% for error in form.language.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-6" id="family-role-field" data-family-only-field>
                         <label class="form-label">{{ form.family_role.label }}</label>
                         {{ form.family_role }}
+                        <div class="form-text">{% translate "Выберите роль только для цели подачи «Воссоединение с семьёй»." %}</div>
                         {% for error in form.family_role.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-6" id="family-sponsor-field" data-family-only-field>
                         <label class="form-label">{{ form.sponsor_client.label }}</label>
                         {{ form.sponsor_client }}
+                        <div class="form-text">{% translate "Спонсор — клиент, к которому добавляется супруг/супруга или ребёнок." %}</div>
                         {% for error in form.sponsor_client.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
                     <div class="col-12">
@@ -261,6 +263,43 @@
         const target = event.target;
         target.classList.add('is-invalid');
       }, true);
+    });
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const params = new URLSearchParams(window.location.search);
+      const purposeSelect = document.getElementById('id_application_purpose');
+      const roleSelect = document.getElementById('id_family_role');
+      const sponsorSelect = document.getElementById('id_sponsor_client');
+      const familyFields = document.querySelectorAll('[data-family-only-field]');
+
+      if (purposeSelect && params.get('application_purpose') && !purposeSelect.value) {
+        purposeSelect.value = params.get('application_purpose');
+      }
+      if (purposeSelect && params.get('application_purpose') === 'family') {
+        purposeSelect.value = 'family';
+      }
+      if (sponsorSelect && params.get('sponsor')) {
+        sponsorSelect.value = params.get('sponsor');
+      }
+
+      function updateFamilyFields() {
+        const isFamily = purposeSelect && purposeSelect.value === 'family';
+        familyFields.forEach((field) => {
+          field.classList.toggle('d-none', !isFamily);
+        });
+        if (roleSelect) {
+          roleSelect.required = Boolean(isFamily);
+        }
+        if (sponsorSelect) {
+          sponsorSelect.required = Boolean(isFamily);
+        }
+      }
+
+      if (purposeSelect) {
+        purposeSelect.addEventListener('change', updateFamilyFields);
+      }
+      updateFamilyFields();
     });
   </script>
   <script>
