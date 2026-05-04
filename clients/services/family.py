@@ -13,14 +13,16 @@ logger = logging.getLogger(__name__)
 
 FAMILY_PURPOSE = "family"
 FAMILY_ROLE_SPONSOR = "sponsor"
-FAMILY_ROLE_SPOUSE = "spouse"
-FAMILY_ROLE_CHILD = "child"
-LEGACY_FAMILY_ROLE_SPOUSE = "family_spouse"
-LEGACY_FAMILY_ROLE_CHILD = "family_child"
+FAMILY_ROLE_SPOUSE = "family_spouse"
+FAMILY_ROLE_CHILD = "family_child"
+FAMILY_ROLE_SPOUSE_ALIAS = "spouse"
+FAMILY_ROLE_CHILD_ALIAS = "child"
 FAMILY_MEMBER_ROLES = {FAMILY_ROLE_SPOUSE, FAMILY_ROLE_CHILD}
 LEGACY_FAMILY_MEMBER_ROLES = {
-    LEGACY_FAMILY_ROLE_SPOUSE: FAMILY_ROLE_SPOUSE,
-    LEGACY_FAMILY_ROLE_CHILD: FAMILY_ROLE_CHILD,
+    FAMILY_ROLE_SPOUSE_ALIAS: FAMILY_ROLE_SPOUSE,
+    FAMILY_ROLE_CHILD_ALIAS: FAMILY_ROLE_CHILD,
+    FAMILY_ROLE_SPOUSE: FAMILY_ROLE_SPOUSE,
+    FAMILY_ROLE_CHILD: FAMILY_ROLE_CHILD,
 }
 
 
@@ -92,8 +94,8 @@ def create_family_member(
 def calculate_family_income(group: FamilyGroup) -> FamilyIncomeResult:
     sponsor = group.sponsor
     members = list(get_family_members(sponsor))
-    spouse_count = sum(1 for member in members if member.family_role == FAMILY_ROLE_SPOUSE)
-    child_count = sum(1 for member in members if member.family_role == FAMILY_ROLE_CHILD)
+    spouse_count = sum(1 for member in members if member.family_role in {FAMILY_ROLE_SPOUSE, FAMILY_ROLE_SPOUSE_ALIAS})
+    child_count = sum(1 for member in members if member.family_role in {FAMILY_ROLE_CHILD, FAMILY_ROLE_CHILD_ALIAS})
     sponsor_count = 1
     family_size = sponsor_count + len(members)
 
