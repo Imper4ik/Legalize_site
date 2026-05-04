@@ -11,7 +11,11 @@ from clients.models import Client, FamilyGroup
 
 logger = logging.getLogger(__name__)
 
-FAMILY_MEMBER_ROLES = {"family_spouse", "family_child"}
+FAMILY_MEMBER_ROLES = {Client.FAMILY_ROLE_SPOUSE, Client.FAMILY_ROLE_CHILD}
+LEGACY_FAMILY_MEMBER_ROLES = {
+    Client.LEGACY_FAMILY_SPOUSE_PURPOSE: Client.FAMILY_ROLE_SPOUSE,
+    Client.LEGACY_FAMILY_CHILD_PURPOSE: Client.FAMILY_ROLE_CHILD,
+}
 
 
 @dataclass(frozen=True)
@@ -41,8 +45,8 @@ def get_family_members(sponsor: Client):
 
 def get_or_create_family_group(sponsor: Client) -> FamilyGroup:
     with transaction.atomic():
-        if sponsor.family_role != "sponsor":
-            sponsor.family_role = "sponsor"
+        if sponsor.family_role != Client.FAMILY_ROLE_SPONSOR:
+            sponsor.family_role = Client.FAMILY_ROLE_SPONSOR
             sponsor.save(update_fields=["family_role"])
         group, _created = FamilyGroup.objects.get_or_create(sponsor=sponsor)
     return group
@@ -59,8 +63,9 @@ def create_family_member(
     citizenship: str = "",
     assigned_staff=None,
 ) -> Client:
+    role = LEGACY_FAMILY_MEMBER_ROLES.get(role, role)
     if role not in FAMILY_MEMBER_ROLES:
-        raise ValueError("role must be family_spouse or family_child")
+        raise ValueError("role must be spouse or child")
 
     get_or_create_family_group(sponsor)
     return Client.objects.create(
@@ -69,7 +74,7 @@ def create_family_member(
         email=email,
         phone=phone,
         citizenship=citizenship or sponsor.citizenship,
-        application_purpose=role,
+        application_purpose=Client.APPLICATION_PURPOSE_FAMILY,
         family_role=role,
         sponsor_client=sponsor,
         assigned_staff=assigned_staff or sponsor.assigned_staff,
@@ -81,8 +86,8 @@ def create_family_member(
 def calculate_family_income(group: FamilyGroup) -> FamilyIncomeResult:
     sponsor = group.sponsor
     members = list(get_family_members(sponsor))
-    spouse_count = sum(1 for member in members if member.family_role == "family_spouse")
-    child_count = sum(1 for member in members if member.family_role == "family_child")
+    spouse_count = sum(1 for member in members if member.family_role == Client.FAMILY_ROLE_SPOUSE)
+    child_count = sum(1 for member in members if member.family_role == Client.FAMILY_ROLE_CHILD)
     sponsor_count = 1
     family_size = sponsor_count + len(members)
 
