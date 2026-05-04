@@ -58,15 +58,19 @@ class Command(BaseCommand):
     def send_missing_document_notifications(self):
         """Автоматически отправляет письма клиентам с недостающими документами."""
 
+        today = timezone.localdate()
+        iso_year, iso_week, _iso_weekday = today.isocalendar()
+        weekly_key = f"{iso_year}-W{iso_week:02d}"
         clients = Client.objects.filter(
             workflow_stage="waiting_decision",
             fingerprints_date__isnull=False,
+            fingerprints_date__lte=today,
             decision_date__isnull=True,
         ).exclude(email="")
         sent_count = 0
         skipped_count = 0
         for client in clients:
-            sent = send_missing_documents_email(client)
+            sent = send_missing_documents_email(client, weekly_key=weekly_key)
             sent_count += sent
             if sent:
                 logger.info(
@@ -88,10 +92,16 @@ class Command(BaseCommand):
 
 
     def check_zus_rca_missing_months(self):
-        clients = Client.objects.filter(fingerprints_date__isnull=False)
+        today = timezone.localdate()
+        clients = Client.objects.filter(
+            workflow_stage="waiting_decision",
+            fingerprints_date__isnull=False,
+            fingerprints_date__lte=today,
+            decision_date__isnull=True,
+        )
         affected = 0
         for client in clients:
-            missing = missing_zus_months(client)
+            missing = missing_zus_months(client, today=today)
             if missing:
                 affected += 1
                 message = f"ZUS RCA missing months: client_id={client.pk}, months={format_zus_months(missing)}"
@@ -137,13 +147,14 @@ class Command(BaseCommand):
         благодаря связи OneToOneField в модели Reminder.
         """
         today = timezone.now().date()
+        reminder_period_start = today - timedelta(days=30)
         reminder_period_end = today + timedelta(days=30) # Период напоминания - 30 дней
         expiring_email_cutoff = today + timedelta(days=7)
 
-        # Ищем документы, которые истекают в ближайшие 30 дней и для которых еще нет напоминания
+        # Ищем документы, которые истекли за последние 30 дней или истекают в ближайшие 30 дней.
         expiring_docs = Document.objects.filter(
             expiry_date__isnull=False, # Убедимся, что дата окончания срока вообще установлена
-            expiry_date__range=(today, reminder_period_end),
+            expiry_date__range=(reminder_period_start, reminder_period_end),
             reminder__isnull=True  # Ключевая проверка: напоминание еще не создано
         )
 
