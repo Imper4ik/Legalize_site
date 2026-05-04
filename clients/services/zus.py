@@ -40,7 +40,7 @@ def expected_zus_months(fingerprints_date: date | None, *, today: date | None = 
 
     today = today or timezone.localdate()
     first_expected = add_months(month_start(fingerprints_date), 1)
-    last_expected = add_months(month_start(today), -1 if today.day > 15 else -2)
+    last_expected = add_months(month_start(today), -1 if today.day >= 15 else -2)
     return iter_months(first_expected, last_expected)
 
 
