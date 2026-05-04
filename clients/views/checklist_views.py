@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -20,6 +22,34 @@ from submissions.forms import SubmissionForm
 from submissions.models import Submission
 
 
+FAMILY_CHECKLIST_PURPOSES = (
+    SimpleNamespace(
+        slug="family_spouse",
+        localized_name=_("Воссоединение — супруг/супруга"),
+        is_system=True,
+    ),
+    SimpleNamespace(
+        slug="family_child",
+        localized_name=_("Воссоединение — ребёнок"),
+        is_system=True,
+    ),
+)
+
+
+def _system_family_purpose_slugs() -> list[str]:
+    return [purpose.slug for purpose in FAMILY_CHECKLIST_PURPOSES]
+
+
+def _allowed_checklist_purposes() -> list[str]:
+    allowed = list(Submission.objects.values_list("slug", flat=True))
+    if not allowed:
+        allowed = [choice[0] for choice in Client.APPLICATION_PURPOSE_CHOICES]
+    for slug in _system_family_purpose_slugs():
+        if slug not in allowed:
+            allowed.append(slug)
+    return allowed
+
+
 class DocumentChecklistManageView(RoleOrFeatureRequiredMixin, FormView):
     allowed_roles = list(CHECKLIST_MANAGE_ROLES)
     required_permission_name = "can_manage_checklists"
@@ -28,16 +58,14 @@ class DocumentChecklistManageView(RoleOrFeatureRequiredMixin, FormView):
 
     @staticmethod
     def _default_required_codes(purpose: str) -> list[str]:
-        for (purpose_code, purpose_label), docs in DOCUMENT_CHECKLIST.items():
+        for (purpose_code, _language_code), docs in DOCUMENT_CHECKLIST.items():
             if purpose_code == purpose:
                 return [code for code, _ in docs]
         return []
 
     def get_purpose(self) -> str:
         requested = self.request.GET.get("purpose") or self.request.POST.get("purpose")
-        allowed = list(Submission.objects.values_list("slug", flat=True))
-        if not allowed:
-            allowed = [choice[0] for choice in Client.APPLICATION_PURPOSE_CHOICES]
+        allowed = _allowed_checklist_purposes()
         if requested in allowed:
             return requested
         return allowed[0] if allowed else ""
@@ -62,14 +90,16 @@ class DocumentChecklistManageView(RoleOrFeatureRequiredMixin, FormView):
         context = super().get_context_data(**kwargs)
         purpose = self.get_purpose()
         submissions = list(Submission.objects.all())
+        purpose_choices = [*submissions, *FAMILY_CHECKLIST_PURPOSES]
         context["current_purpose"] = purpose
-        context["purpose_choices"] = submissions
+        context["purpose_choices"] = purpose_choices
         context["add_form"] = DocumentRequirementAddForm(purpose=purpose)
         context["submission_edit_forms"] = [
             (submission, SubmissionForm(instance=submission, prefix=f"submission-{submission.id}"))
             for submission in submissions
         ]
         purpose_lookup = {submission.slug: submission.localized_name for submission in submissions}
+        purpose_lookup.update({purpose.slug: purpose.localized_name for purpose in FAMILY_CHECKLIST_PURPOSES})
         purpose_labels = dict(Client.APPLICATION_PURPOSE_CHOICES)
         context["current_purpose_label"] = purpose_lookup.get(
             purpose,
@@ -94,9 +124,7 @@ class DocumentChecklistManageView(RoleOrFeatureRequiredMixin, FormView):
 @role_or_feature_required_view("can_manage_checklists", *CHECKLIST_MANAGE_ROLES)
 def document_requirement_add(request):
     purpose = request.POST.get("purpose") or request.GET.get("purpose")
-    allowed = list(Submission.objects.values_list("slug", flat=True))
-    if not allowed:
-        allowed = [choice[0] for choice in Client.APPLICATION_PURPOSE_CHOICES]
+    allowed = _allowed_checklist_purposes()
     if purpose not in allowed and allowed:
         purpose = allowed[0]
 
