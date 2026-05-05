@@ -488,7 +488,12 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        if self.fingerprints_date:
+        if (
+            self.workflow_stage == "waiting_decision"
+            and self.fingerprints_date
+            and self.fingerprints_date <= today
+            and not self.decision_date
+        ):
             from clients.services.zus import format_zus_months, missing_zus_months
 
             missing_zus = missing_zus_months(self, today=today)

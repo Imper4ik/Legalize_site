@@ -81,6 +81,11 @@ class StaffTask(models.Model):
         ordering = ["status", "due_date", "-created_at"]
         verbose_name = _("Задача сотрудника")
         verbose_name_plural = _("Задачи сотрудников")
+        indexes = [
+            models.Index(fields=["status", "due_date"], name="task_status_due_idx"),
+            models.Index(fields=["client", "status", "due_date"], name="task_client_status_due_idx"),
+            models.Index(fields=["assignee", "status", "due_date"], name="task_assignee_status_due_idx"),
+        ]
 
     def __str__(self):
         return self.title

@@ -7,12 +7,24 @@ import logging
 import os
 import zipfile
 
+from django.conf import settings
 from django.utils import timezone
 
 from clients.services.document_helpers import document_file_exists
 
 
 logger = logging.getLogger(__name__)
+
+
+class ExportSizeLimitExceeded(Exception):
+    """Raised when total export file size exceeds the configured limit."""
+
+    def __init__(self, total_mb: float, limit_mb: int):
+        self.total_mb = total_mb
+        self.limit_mb = limit_mb
+        super().__init__(
+            f"Export size {total_mb:.1f} MB exceeds limit of {limit_mb} MB"
+        )
 
 
 def generate_client_summary_text(client) -> str:
@@ -108,11 +120,40 @@ def generate_client_summary_text(client) -> str:
     return "\n".join(lines)
 
 
+def _check_export_size_limit(client, max_mb: int) -> None:
+    """Raise ExportSizeLimitExceeded if client files exceed *max_mb*."""
+    from clients.models import DocumentVersion
+
+    total_bytes = 0
+    for doc in client.documents.all():
+        if doc.file and document_file_exists(doc):
+            try:
+                total_bytes += doc.file.size
+            except Exception:
+                pass
+
+    for version in DocumentVersion.objects.filter(document__client=client):
+        if version.file:
+            try:
+                if version.file.storage.exists(version.file.name):
+                    total_bytes += version.file.size
+            except Exception:
+                pass
+
+    total_mb = total_bytes / (1024 * 1024)
+    if total_mb > max_mb:
+        raise ExportSizeLimitExceeded(total_mb, max_mb)
+
+
 def generate_client_zip(client) -> io.BytesIO:
     """Create a ZIP archive containing the client summary and all documents.
 
     Returns an in-memory BytesIO buffer ready for streaming to the response.
+    Raises ExportSizeLimitExceeded if total file sizes exceed the configured limit.
     """
+
+    max_mb = getattr(settings, "MAX_TOTAL_CLIENT_EXPORT_MB", 200)
+    _check_export_size_limit(client, max_mb)
 
     buffer = io.BytesIO()
     prefix = f"case_{client.pk}"

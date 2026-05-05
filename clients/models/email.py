@@ -64,6 +64,10 @@ class EmailLog(models.Model):
         ordering = ["-sent_at"]
         verbose_name = _("Журнал email")
         verbose_name_plural = _("Журнал email")
+        indexes = [
+            models.Index(fields=["client", "-sent_at"], name="emaillog_client_sent_idx"),
+            models.Index(fields=["client", "template_type"], name="emaillog_client_tmpl_idx"),
+        ]
         constraints = [
             models.UniqueConstraint(
                 fields=["idempotency_key"],

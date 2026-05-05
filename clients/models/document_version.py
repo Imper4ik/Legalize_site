@@ -56,6 +56,9 @@ class DocumentVersion(models.Model):
         unique_together = ("document", "version_number")
         verbose_name = _("Версия документа")
         verbose_name_plural = _("Версии документов")
+        indexes = [
+            models.Index(fields=["document", "-version_number"], name="docver_doc_version_idx"),
+        ]
 
     def __str__(self):
         return f"v{self.version_number} — {self.document}"

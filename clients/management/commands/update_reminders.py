@@ -163,7 +163,6 @@ class Command(BaseCommand):
         today = timezone.localdate()
         reminder_period_start = today - timedelta(days=30)
         reminder_period_end = today + timedelta(days=30)
-        expiring_email_cutoff = today + timedelta(days=7)
 
         expiring_docs = Document.objects.select_related("client").filter(
             expiry_date__isnull=False,
@@ -176,7 +175,6 @@ class Command(BaseCommand):
             self.stdout.write("No expiring documents need reminders.")
             return
 
-        expiring_soon: dict[int, list[Document]] = defaultdict(list)
         count = 0
         for document in expiring_docs.iterator():
             count += 1
@@ -191,17 +189,9 @@ class Command(BaseCommand):
                 due_date=document.expiry_date,
                 reminder_type="document",
             )
-            if document.expiry_date <= expiring_email_cutoff:
-                expiring_soon[document.client_id].append(document)
 
         prefix = "DRY RUN: would create" if dry_run else "Created"
         self.stdout.write(self.style.SUCCESS(f"{prefix} {count} document reminders."))
-
-        if dry_run:
-            return
-
-        for documents in expiring_soon.values():
-            send_expiring_documents_email(documents[0].client, documents)
 
     def create_payment_reminders(self, *, dry_run: bool = False):
         today = timezone.localdate()

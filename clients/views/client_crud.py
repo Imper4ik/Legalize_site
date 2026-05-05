@@ -51,9 +51,13 @@ class ClientListView(StaffRequiredMixin, ListView):
     paginate_by = 15
 
     def get_queryset(self):
+        from django.db.models import Count
+
         queryset = accessible_clients_queryset(
             self.request.user,
             Client.objects.filter(Q(user__is_staff=False) | Q(user__isnull=True)),
+        ).select_related("sponsor_client").annotate(
+            family_members_count=Count("sponsored_family_members")
         )
 
         company_id = self.request.GET.get("company")

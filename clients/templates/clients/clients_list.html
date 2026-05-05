@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n static sanitize_tags %}
+{% load i18n static sanitize_tags role_tags %}
 
 {% block extra_head %}
   {{ block.super }}
@@ -15,12 +15,16 @@
     <div class="text-muted">{% translate "Поиск, быстрые заметки и переход в карточку клиента" %}</div>
   </div>
   <div class="d-flex flex-wrap gap-2 justify-content-end">
-    <a href="{% url 'clients:mass_email' %}" class="btn btn-outline-primary">
+    {% if user|has_any_role:"Admin,Manager" %}
+    <a href="{% url 'clients:mass_email' %}" class="btn btn-outline-primary" id="btn-mass-email">
       <i class="bi bi-envelope me-1"></i>{% translate "Массовая рассылка" %}
     </a>
+    {% endif %}
+    {% if user|has_any_role:"Admin,Manager,Staff" %}
     <a href="{% url 'clients:client_add' %}" class="btn btn-gradient">
       <i class="bi bi-plus-lg me-1"></i>{% translate "Новый клиент" %}
     </a>
+    {% endif %}
   </div>
 </div>
 {% endblock %}
@@ -81,6 +85,30 @@
           <td class="client-identity-cell">
             <div class="fw-semibold">{{ client.first_name }} {{ client.last_name }}</div>
             <div class="small text-muted">{{ client.email }}</div>
+            <div class="d-flex flex-wrap gap-1 mt-1">
+              {% if client.family_members_count > 0 %}
+                <span class="badge bg-primary bg-opacity-75" title="{% translate 'Спонсор семьи' %}">
+                  <i class="bi bi-people-fill me-1"></i>{% blocktrans with count=client.family_members_count %}Спонсор: {{ count }}{% endblocktrans %}
+                </span>
+              {% endif %}
+              {% if client.sponsor_client_id %}
+                {% if client.family_role == "family_spouse" %}
+                  <span class="badge bg-info text-dark">
+                    <i class="bi bi-heart-fill me-1"></i>{% translate "Супруг/супруга" %}
+                  </span>
+                {% elif client.family_role == "family_child" %}
+                  <span class="badge bg-warning text-dark">
+                    <i class="bi bi-emoji-smile me-1"></i>{% translate "Ребёнок" %}
+                  </span>
+                {% endif %}
+                <span class="badge bg-secondary">
+                  <i class="bi bi-arrow-return-right me-1"></i>
+                  <a href="{% url 'clients:client_detail' pk=client.sponsor_client_id %}" class="text-white text-decoration-none">
+                    {{ client.sponsor_client.first_name }} {{ client.sponsor_client.last_name }}
+                  </a>
+                </span>
+              {% endif %}
+            </div>
           </td>
           <td><strong>{{ client.case_number|default:"—" }}</strong></td>
           <td>
@@ -96,7 +124,6 @@
             <form action="{% url 'clients:update_client_notes' pk=client.pk %}" method="post" class="notes-form">
               {% csrf_token %}
               <input type="hidden" name="notes" class="hidden-notes-input">
-              <!-- “None” видно до фокуса; на фокусе очищаем; на blur возвращаем, если пусто -->
               <div class="form-control notes-editor"
                    contenteditable="true"
                    role="textbox"
@@ -118,11 +145,13 @@
                 <i class="bi bi-eye"></i>
                 <span class="visually-hidden">{% translate "Подробнее" %}</span>
               </a>
+              {% if user|has_any_role:"Admin,Manager" %}
               <a href="{% url 'clients:client_delete' pk=client.pk %}" class="btn btn-outline-danger btn-sm"
-                title="{% translate 'Удалить' %}" aria-label="{% translate 'Удалить' %}">
+                title="{% translate 'Удалить' %}" aria-label="{% translate 'Удалить' %}" id="btn-delete-{{ client.pk }}">
                 <i class="bi bi-trash"></i>
                 <span class="visually-hidden">{% translate "Удалить" %}</span>
               </a>
+              {% endif %}
             </div>
           </td>
         </tr>

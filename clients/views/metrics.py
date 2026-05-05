@@ -1,5 +1,6 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
+from django.conf import settings
 from django.utils import timezone
 from django.views.generic import TemplateView
 
@@ -7,61 +8,75 @@ from clients.models import Client
 from clients.services.roles import SETTINGS_ALLOWED_ROLES
 from clients.views.base import RoleOrFeatureRequiredMixin
 
+
 class MetricsDashboardView(RoleOrFeatureRequiredMixin, TemplateView):
     template_name = 'clients/metrics_dashboard.html'
     allowed_roles = list(SETTINGS_ALLOWED_ROLES)
     required_permission_name = "can_view_reports"
 
+    def _parse_date_param(self, name: str, default):
+        """Parse a YYYY-MM-DD GET param, returning *default* on failure."""
+        raw = self.request.GET.get(name, "")
+        if not raw:
+            return default
+        try:
+            return datetime.strptime(raw, "%Y-%m-%d").date()
+        except (ValueError, TypeError):
+            return default
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
-        # Last 30 days default
-        end_date = timezone.localdate()
-        start_date = end_date - timedelta(days=30)
-        
-        # 1. Заведено клиентов за период
-        clients_created = Client.objects.filter(created_at__date__gte=start_date, created_at__date__lte=end_date).count()
-        
-        # 2. Из них загрузили документы
-        # Находим клиентов созданных в этот период, у которых есть хотя бы один загруженный документ
+        today = timezone.localdate()
+
+        # Period filters — default last 30 days, support GET ?start=&end=
+        end_date = self._parse_date_param("end", today)
+        start_date = self._parse_date_param("start", end_date - timedelta(days=30))
+
+        # Use datetime range instead of created_at__date to avoid index issues
+        start_dt = timezone.make_aware(datetime.combine(start_date, datetime.min.time()))
+        end_dt = timezone.make_aware(datetime.combine(end_date + timedelta(days=1), datetime.min.time()))
+
+        # 1. Clients created in the period
+        period_filter = dict(created_at__gte=start_dt, created_at__lt=end_dt)
+        clients_created = Client.objects.filter(**period_filter).count()
+
+        # 2. Of those, who uploaded documents
         clients_with_docs = Client.objects.filter(
-            created_at__date__gte=start_date, 
-            created_at__date__lte=end_date,
-            documents__isnull=False
-        ).distinct().count()
-        
-        # 3. Созданы платежи
-        clients_with_payments = Client.objects.filter(
-            created_at__date__gte=start_date, 
-            created_at__date__lte=end_date,
-            payments__isnull=False
-        ).distinct().count()
-        
-        # 4. Совершена оплата
-        clients_paid = Client.objects.filter(
-            created_at__date__gte=start_date, 
-            created_at__date__lte=end_date,
-            payments__status='paid' # assuming 'paid' or similar status
-        ).distinct().count()
-        
-        # 5. Кейс закрыт / Решение получено
-        # Assuming decision_date is set or logic dictates closure
-        cases_closed = Client.objects.filter(
-            created_at__date__gte=start_date, 
-            created_at__date__lte=end_date,
-            decision_date__isnull=False
+            **period_filter,
+            documents__isnull=False,
         ).distinct().count()
 
-        # Просроченные SLA
+        # 3. Created payments
+        clients_with_payments = Client.objects.filter(
+            **period_filter,
+            payments__isnull=False,
+        ).distinct().count()
+
+        # 4. Paid
+        clients_paid = Client.objects.filter(
+            **period_filter,
+            payments__status='paid',
+        ).distinct().count()
+
+        # 5. Decision received
+        cases_closed = Client.objects.filter(
+            **period_filter,
+            decision_date__isnull=False,
+        ).distinct().count()
+
+        # 6. Overdue SLA — correct logic
+        sla_days = getattr(settings, "DECISION_SLA_DAYS", 180)
         overdue_sla = Client.objects.filter(
-            decision_date__lt=end_date,
-            # We can define "closed" properly if there is a status field, 
-            # for now let's just count total with past decision_dates to check SLA.
+            workflow_stage="waiting_decision",
+            fingerprints_date__isnull=False,
+            fingerprints_date__lt=today - timedelta(days=sla_days),
+            decision_date__isnull=True,
         ).count()
 
         context.update({
             'start_date': start_date,
             'end_date': end_date,
+            'sla_days': sla_days,
             'funnel': {
                 'clients_created': clients_created,
                 'clients_with_docs': clients_with_docs,
@@ -69,7 +84,7 @@ class MetricsDashboardView(RoleOrFeatureRequiredMixin, TemplateView):
                 'clients_paid': clients_paid,
                 'cases_closed': cases_closed,
             },
-            'overdue_sla': overdue_sla
+            'overdue_sla': overdue_sla,
         })
-        
+
         return context

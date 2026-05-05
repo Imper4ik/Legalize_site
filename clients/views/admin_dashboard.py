@@ -6,7 +6,7 @@ import logging
 import os
 
 from django.conf import settings
-from django.db.models import Count
+from django.db.models import Count, Sum
 from django.utils import timezone
 from django.views.generic import TemplateView
 
@@ -147,7 +147,9 @@ class AdminDashboardView(RoleOrFeatureRequiredMixin, TemplateView):
         context["upcoming_reminders"] = Reminder.objects.filter(is_active=True, due_date__gt=today).count()
 
         context["pending_payments"] = Payment.objects.filter(status="pending").count()
-        context["total_revenue"] = sum(p.amount_paid for p in Payment.objects.filter(status="paid"))
+        context["total_revenue"] = Payment.objects.filter(status="paid").aggregate(
+            total=Sum("amount_paid")
+        )["total"] or 0
 
         context["failed_campaigns"] = EmailCampaign.objects.filter(status=EmailCampaign.STATUS_FAILED).count()
         context["pending_campaigns"] = EmailCampaign.objects.filter(status=EmailCampaign.STATUS_PENDING).count()

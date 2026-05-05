@@ -144,6 +144,11 @@ class Document(SoftDeleteModel):
             models.Index(fields=["client", "document_type"], name="doc_client_type_idx"),
             models.Index(fields=["ocr_status", "awaiting_confirmation"], name="doc_ocr_confirm_idx"),
             models.Index(fields=["client", "document_type", "zus_period_month"], name="doc_zus_period_idx"),
+            models.Index(
+                fields=["expiry_date"],
+                name="doc_expiry_date_idx",
+                condition=models.Q(expiry_date__isnull=False),
+            ),
         ]
         constraints = [
             models.UniqueConstraint(

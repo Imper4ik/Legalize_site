@@ -79,6 +79,9 @@ class ClientActivity(models.Model):
         ordering = ["-created_at"]
         verbose_name = _("Событие клиента")
         verbose_name_plural = _("События клиентов")
+        indexes = [
+            models.Index(fields=["client", "-created_at"], name="activity_client_created_idx"),
+        ]
 
     def __str__(self):
         return f"[{self.created_at:%d.%m.%Y %H:%M}] {self.summary}"

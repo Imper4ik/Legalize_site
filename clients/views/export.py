@@ -13,7 +13,7 @@ from django.views.generic import DetailView
 
 from clients.models import Client, Document, DocumentVersion
 from clients.services.access import accessible_clients_queryset, accessible_documents_queryset
-from clients.services.export import generate_client_zip
+from clients.services.export import ExportSizeLimitExceeded, generate_client_zip
 from clients.services.responses import apply_no_store
 from clients.use_cases.exports import (
     record_client_export,
@@ -66,8 +66,19 @@ class ClientExportPDFView(RoleOrFeatureRequiredMixin, DetailView):
 def client_export_zip(request, pk):
     """Stream a ZIP archive of the full client case as a download."""
 
+    from django.contrib import messages as django_messages
+
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
-    buffer = generate_client_zip(client)
+
+    try:
+        buffer = generate_client_zip(client)
+    except ExportSizeLimitExceeded as exc:
+        django_messages.error(
+            request,
+            _("Экспорт невозможен: суммарный размер файлов клиента (%(total).1f MB) "
+              "превышает лимит (%(limit)s MB).") % {"total": exc.total_mb, "limit": exc.limit_mb},
+        )
+        return redirect("clients:client_detail", pk=pk)
 
     filename = f"case_{client.pk}.zip"
 
