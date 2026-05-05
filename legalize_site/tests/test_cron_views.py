@@ -72,7 +72,8 @@ class CronViewsTests(TestCase):
             backup_id="backup-20260428-020000",
             path="/tmp/backup.sql.enc",
             size_bytes=123,
-            sha256="abc123",
+            plaintext_sha256="abc123",
+            stored_file_sha256="abc123",
             encrypted=True,
             stored_remotely=True,
         )
@@ -95,7 +96,8 @@ class CronViewsTests(TestCase):
             backup_id="backup-20260428-020000",
             path="/tmp/backup.sql.enc",
             size_bytes=123,
-            sha256="abc123",
+            plaintext_sha256="abc123",
+            stored_file_sha256="abc123",
             encrypted=True,
             stored_remotely=True,
         )

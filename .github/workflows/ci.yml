@@ -48,6 +48,13 @@ jobs:
       - name: Bandit
         run: bandit -r . -x "*/migrations/*,*/tests/*"
 
+
+      - name: Ruff
+        run: ruff check .
+
+      - name: Bandit
+        run: bandit -r . -x "*/migrations/*,*/tests/*"
+
       - name: pip-audit
         run: pip-audit
 
@@ -60,4 +67,13 @@ jobs:
             echo "Found committed __pycache__/pyc artifacts"
             git ls-files | grep -E '(__pycache__/|\.pyc$)'
             exit 1
+          fi
+
+      - name: Check shell scripts syntax
+        run: |
+          bash -n start.sh
+          bash -n release.sh
+          bash -n build.sh
+          if command -v shellcheck >/dev/null 2>&1; then
+            shellcheck start.sh release.sh build.sh
           fi

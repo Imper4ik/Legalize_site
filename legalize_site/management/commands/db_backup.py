@@ -21,9 +21,12 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                "Backup created: "
-                f"id={backup_result.backup_id} "
-                f"size_bytes={backup_result.size_bytes} "
-                f"sha256={backup_result.sha256}"
+                "Backup created:\n"
+                f"  id={backup_result.backup_id}\n"
+                f"  size_bytes={backup_result.size_bytes}\n"
+                f"  encrypted={backup_result.encrypted}\n"
+                f"  stored_remotely={backup_result.stored_remotely}\n"
+                f"  plaintext_sha256={backup_result.plaintext_sha256}\n"
+                f"  stored_file_sha256={backup_result.stored_file_sha256}"
             )
         )

@@ -308,3 +308,22 @@ def production_storage_safety_check(app_configs=None, **kwargs):
             )
 
     return messages
+
+
+@register("legalize_site")
+def cron_allowed_ips_check(app_configs=None, **kwargs):
+    messages = []
+    is_production = getattr(settings, "IS_PRODUCTION", False)
+    if not is_production:
+        return messages
+
+    cron_allowed_ips = os.environ.get("CRON_ALLOWED_IPS", "").strip()
+    if not cron_allowed_ips:
+        messages.append(
+            Warning(
+                "CRON_ALLOWED_IPS is empty in production.",
+                hint="CRON_TOKEN provides baseline security, but configuring CRON_ALLOWED_IPS adds an important IP allowlist layer.",
+                id="legalize_site.W009",
+            )
+        )
+    return messages

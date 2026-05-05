@@ -11,8 +11,8 @@ from pathlib import Path
 from typing import Protocol
 
 from django.conf import settings
+from django.core.files import File
 from django.core.files.storage import storages
-from django.core.files.base import ContentFile
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,8 @@ class BackupResult:
     backup_id: str
     path: str
     size_bytes: int
-    sha256: str
+    plaintext_sha256: str
+    stored_file_sha256: str
     encrypted: bool
     stored_remotely: bool
 
@@ -131,8 +132,17 @@ class LocalBackupStorage:
 class ConfiguredBackupStorage:
     def upload(self, local_path: Path) -> bool:
         storage_alias = getattr(settings, "BACKUP_STORAGE_ALIAS", "backups")
+        
         try:
             backup_storage = storages[storage_alias]
+            backend_class_name = backup_storage.__class__.__name__
+            if "DatabaseMediaStorage" in backend_class_name:
+                raise BackupError(
+                    f"BACKUP_STORAGE_ALIAS ({storage_alias}) points to DatabaseMediaStorage. "
+                    "Database backups cannot be stored in the database."
+                )
+        except BackupError:
+            raise
         except Exception as exc:
             raise BackupError(
                 f"BACKUP_REMOTE_STORAGE is enabled but STORAGES[{storage_alias!r}] is not configured."
@@ -142,7 +152,7 @@ class ConfiguredBackupStorage:
             with local_path.open("rb") as f:
                 location = getattr(settings, "BACKUP_STORAGE_LOCATION", "db_backups").strip("/")
                 remote_path = f"{location}/{local_path.name}" if location else local_path.name
-                backup_storage.save(remote_path, ContentFile(f.read()))
+                backup_storage.save(remote_path, File(f))
             logger.info("Successfully uploaded backup to remote storage: %s", remote_path)
             return True
         except Exception as exc:
@@ -186,15 +196,16 @@ def create_db_backup() -> BackupResult:
     except OSError:
         pass
 
-    size_bytes = backup_path.stat().st_size if backup_path.exists() else 0
-    sha256 = _sha256_for_file(backup_path)
+    plaintext_sha256 = _sha256_for_file(backup_path)
 
     # Encrypt the backup if Fernet keys are available
     encrypted = False
     final_path = _encrypt_file(backup_path)
     if final_path != backup_path:
         encrypted = True
-        size_bytes = final_path.stat().st_size
+    
+    stored_file_sha256 = _sha256_for_file(final_path)
+    size_bytes = final_path.stat().st_size if final_path.exists() else 0
 
     storage_backend = _get_storage_backend()
     stored_remotely = storage_backend.upload(final_path)
@@ -206,7 +217,8 @@ def create_db_backup() -> BackupResult:
         backup_id=backup_path.stem,
         path=str(final_path),
         size_bytes=size_bytes,
-        sha256=sha256,
+        plaintext_sha256=plaintext_sha256,
+        stored_file_sha256=stored_file_sha256,
         encrypted=encrypted,
         stored_remotely=stored_remotely,
     )

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# release.sh - one-time deploy preparation
 set -o errexit
 set -o pipefail
 

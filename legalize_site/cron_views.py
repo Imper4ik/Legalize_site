@@ -86,19 +86,21 @@ def db_backup(request: HttpRequest) -> JsonResponse:
         request_ip = _get_request_ip(request)
         backup_result = create_db_backup()
         logger.info(
-            "Database backup created: backup_id=%s ip=%s size_bytes=%s encrypted=%s sha256=%s",
+            "Database backup created: backup_id=%s ip=%s size_bytes=%s encrypted=%s plaintext_sha256=%s stored_file_sha256=%s",
             backup_result.backup_id,
             request_ip,
             backup_result.size_bytes,
             backup_result.encrypted,
-            backup_result.sha256,
+            backup_result.plaintext_sha256,
+            backup_result.stored_file_sha256,
         )
         return JsonResponse(
             {
                 "status": "backup created",
                 "backup_id": backup_result.backup_id,
                 "size_bytes": backup_result.size_bytes,
-                "sha256": backup_result.sha256,
+                "plaintext_sha256": backup_result.plaintext_sha256,
+                "stored_file_sha256": backup_result.stored_file_sha256,
                 "encrypted": backup_result.encrypted,
             }
         )

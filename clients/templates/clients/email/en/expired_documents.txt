@@ -2,9 +2,9 @@
 
 Thank you for submitting your fingerprints{% if fingerprints_date %} on {{ fingerprints_date|date:"d.m.Y" }}{% endif %}.
 
-Our records show that the following documents have expired or are expiring:
+Our records show that the following documents have expired:
 {% if expired_documents %}
-{% for document in expired_documents %}- {{ document.get_document_type_display }} (valid until {{ document.expiry_date|date:"d.m.Y" }})
+{% for document in expired_documents %}- {{ document.display_name }} (valid until {{ document.expiry_date|date:"d.m.Y" }})
 {% endfor %}
 {% else %}- No expired documents at this time.
 {% endif %}
