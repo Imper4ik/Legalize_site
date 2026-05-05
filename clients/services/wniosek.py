@@ -76,12 +76,13 @@ def _build_requirement_match_index(client, language: str | None = None) -> list[
     active_language = (language or translation.get_language() or client.language or "pl").split("-")[0].lower()
     language_codes.add(active_language)
 
+    purpose = client.get_document_requirement_purpose()
     requirements = {
         requirement.document_type: requirement
-        for requirement in DocumentRequirement.objects.filter(application_purpose=client.application_purpose)
+        for requirement in DocumentRequirement.objects.filter(application_purpose=purpose)
     }
     catalog = DocumentRequirement.catalog_for(
-        client.application_purpose,
+        purpose,
         active_language,
         include_optional=True,
         include_fallback=True,

@@ -51,13 +51,24 @@ def get_family_members(sponsor: Client):
     return sponsor.sponsored_family_members.all().order_by("family_role", "last_name", "first_name")
 
 
-def get_or_create_family_group(sponsor: Client) -> FamilyGroup:
+def get_existing_family_group(sponsor: Client) -> FamilyGroup | None:
+    try:
+        return sponsor.family_group
+    except FamilyGroup.DoesNotExist:
+        return None
+
+
+def ensure_family_group(sponsor: Client) -> FamilyGroup:
     with transaction.atomic():
         if sponsor.family_role != FAMILY_ROLE_SPONSOR:
             sponsor.family_role = FAMILY_ROLE_SPONSOR
             sponsor.save(update_fields=["family_role"])
         group, _created = FamilyGroup.objects.get_or_create(sponsor=sponsor)
     return group
+
+
+def get_or_create_family_group(sponsor: Client) -> FamilyGroup:
+    return ensure_family_group(sponsor)
 
 
 def create_family_member(
@@ -75,14 +86,18 @@ def create_family_member(
     if role not in FAMILY_MEMBER_ROLES:
         raise ValueError("role must be spouse or child")
 
-    get_or_create_family_group(sponsor)
+    ensure_family_group(sponsor)
     return Client.objects.create(
         first_name=first_name,
         last_name=last_name,
         email=email,
         phone=phone,
         citizenship=citizenship or sponsor.citizenship,
+<<<<<<< HEAD
         application_purpose=FAMILY_PURPOSE,
+=======
+        application_purpose="family",
+>>>>>>> 44699f3 (fix)
         family_role=role,
         sponsor_client=sponsor,
         assigned_staff=assigned_staff or sponsor.assigned_staff,

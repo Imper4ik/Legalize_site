@@ -160,7 +160,10 @@ class Document(SoftDeleteModel):
         return f"{self.display_name} для {self.client}"
 
     def save(self, *args, **kwargs):
-        self.zus_period_month = _first_day_of_month(self.zus_period_month)
+        if self.document_type == DocumentType.ZUS_RCA_OR_INSURANCE.value:
+            self.zus_period_month = _first_day_of_month(self.zus_period_month)
+        else:
+            self.zus_period_month = None
         super().save(*args, **kwargs)
 
     @property
@@ -168,8 +171,9 @@ class Document(SoftDeleteModel):
         if hasattr(self, "_preloaded_requirement"):
             requirement = self._preloaded_requirement
         else:
+            purpose = self.client.get_document_requirement_purpose()
             requirement = DocumentRequirement.objects.filter(
-                application_purpose=self.client.application_purpose,
+                application_purpose=purpose,
                 document_type=self.document_type,
             ).first()
         if requirement:

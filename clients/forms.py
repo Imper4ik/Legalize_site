@@ -8,6 +8,7 @@ from django.contrib.auth.models import Group
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 
+from clients.services.access import accessible_clients_queryset
 from clients.services.calculator import CURRENCY_EUR, CURRENCY_PLN
 from clients.services.workflow import validate_client_workflow_transition
 from clients.use_cases.document_requirements import (
@@ -247,11 +248,16 @@ class ClientForm(forms.ModelForm):
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('дд.мм.гггг')})
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
         super().__init__(*args, **kwargs)
         
         # Use localized_name so application purpose is translated
-        submissions = [(sub.slug, sub.localized_name) for sub in Submission.objects.all()]
+        reserved_purposes = Client.FAMILY_MEMBER_REQUIREMENT_PURPOSES
+        submissions = [
+            (sub.slug, sub.localized_name)
+            for sub in Submission.objects.exclude(slug__in=reserved_purposes)
+        ]
         if submissions:
             choices = submissions
         else:
@@ -267,7 +273,11 @@ class ClientForm(forms.ModelForm):
             or self.initial.get('application_purpose')
             or getattr(self.instance, 'application_purpose', None)
         )
-        if current_value and current_value not in {value for value, _label in choices}:
+        if (
+            current_value
+            and current_value not in reserved_purposes
+            and current_value not in {value for value, _label in choices}
+        ):
             choices.append((current_value, current_value))
 
         self.fields['application_purpose'].choices = choices
@@ -275,10 +285,12 @@ class ClientForm(forms.ModelForm):
             is_staff=True,
             is_active=True,
         ).order_by('email')
-        self.fields['sponsor_client'].queryset = Client.objects.exclude(pk=self.instance.pk).order_by(
-            'last_name',
-            'first_name',
-        )
+        sponsor_queryset = Client.objects.exclude(pk=self.instance.pk)
+        if self.user is not None:
+            sponsor_queryset = accessible_clients_queryset(self.user, sponsor_queryset)
+        else:
+            sponsor_queryset = Client.objects.none()
+        self.fields['sponsor_client'].queryset = sponsor_queryset.order_by('last_name', 'first_name')
 
     class Meta:
         model = Client
@@ -320,6 +332,31 @@ class ClientForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+        application_purpose = cleaned_data.get("application_purpose")
+        family_role = cleaned_data.get("family_role") or ""
+        sponsor_client = cleaned_data.get("sponsor_client")
+
+        family_member_roles = Client.FAMILY_MEMBER_REQUIREMENT_PURPOSES
+
+        if application_purpose == "family":
+            if not family_role:
+                self.add_error("family_role", _("Select a family role."))
+            elif family_role not in family_member_roles:
+                self.add_error("family_role", _("Family members must be spouse or child."))
+
+            if sponsor_client is None:
+                self.add_error("sponsor_client", _("Select a sponsor."))
+            else:
+                self._validate_sponsor_relationship(sponsor_client)
+        else:
+            cleaned_data["sponsor_client"] = None
+            has_family_members = bool(
+                self.instance.pk
+                and self.instance.sponsored_family_members.exists()
+            )
+            if not has_family_members or family_role != "sponsor":
+                cleaned_data["family_role"] = ""
+
         next_stage = cleaned_data.get("workflow_stage")
         previous_stage = getattr(self.instance, "workflow_stage", None)
 
@@ -337,6 +374,25 @@ class ClientForm(forms.ModelForm):
             self.add_error("workflow_stage", transition_result.message)
 
         return cleaned_data
+
+    def _validate_sponsor_relationship(self, sponsor_client: Client) -> None:
+        if self.instance.pk and sponsor_client.pk == self.instance.pk:
+            self.add_error("sponsor_client", _("A client cannot sponsor themselves."))
+            return
+
+        if not self.instance.pk:
+            return
+
+        seen: set[int] = set()
+        current = sponsor_client
+        while current is not None and current.pk:
+            if current.pk == self.instance.pk:
+                self.add_error("sponsor_client", _("Sponsor relationship cannot create a cycle."))
+                return
+            if current.pk in seen:
+                return
+            seen.add(current.pk)
+            current = current.sponsor_client
 
 class MassEmailForm(forms.Form):
     subject = forms.CharField(
@@ -363,8 +419,31 @@ class MassEmailForm(forms.Form):
 
 
 class DocumentUploadForm(forms.ModelForm):
+    def __init__(self, *args, doc_type=None, client=None, **kwargs):
+        self.doc_type = doc_type
+        self.client = client
+        super().__init__(*args, **kwargs)
+
     def clean_file(self):
         return validate_uploaded_document(self.cleaned_data.get("file"))
+
+    def clean_zus_period_month(self):
+        value = self.cleaned_data.get("zus_period_month")
+        if self.doc_type != DocumentType.ZUS_RCA_OR_INSURANCE.value:
+            return None
+        if not value:
+            raise forms.ValidationError(_("Select the ZUS RCA month."))
+        normalized = value.replace(day=1)
+        if (
+            self.client is not None
+            and Document.objects.filter(
+                client=self.client,
+                document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+                zus_period_month=normalized,
+            ).exists()
+        ):
+            raise forms.ValidationError(_("ZUS RCA for this month is already uploaded."))
+        return normalized
 
     class Meta:
         model = Document

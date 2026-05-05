@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Prefetch, Q
+from django.http import Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext as _
@@ -152,6 +153,29 @@ class ClientCreateView(RoleRequiredMixin, CreateView):
     template_name = "clients/client_form.html"
     success_url = reverse_lazy("clients:client_list")
 
+    def get_initial(self):
+        initial = super().get_initial()
+        sponsor_id = self.request.GET.get("sponsor")
+        if not sponsor_id:
+            return initial
+        try:
+            sponsor_pk = int(sponsor_id)
+        except (TypeError, ValueError):
+            raise Http404("Sponsor not found")
+
+        sponsor = accessible_clients_queryset(self.request.user, Client.objects.all()).filter(pk=sponsor_pk).first()
+        if sponsor is None:
+            raise Http404("Sponsor not found")
+
+        initial["application_purpose"] = "family"
+        initial["sponsor_client"] = sponsor.pk
+        return initial
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["title"] = _("Добавить нового клиента")
@@ -186,6 +210,11 @@ class ClientUpdateView(RoleRequiredMixin, UpdateView):
 
     def get_queryset(self):
         return accessible_clients_queryset(self.request.user, Client.objects.all())
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["user"] = self.request.user
+        return kwargs
 
     def get_success_url(self):
         return reverse_lazy("clients:client_detail", kwargs={"pk": self.object.pk})

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import base64
 from datetime import date, timedelta
 from decimal import Decimal
 from unittest.mock import Mock, patch
@@ -14,14 +15,18 @@ from django.urls import reverse
 from django.utils import timezone
 
 from clients.constants import DocumentType
+from clients.forms import ClientForm, DocumentUploadForm
 from clients.models import Client, Document, DocumentRequirement, EmailLog, Payment, Reminder
 from clients.services.family import calculate_family_income, create_family_member, get_or_create_family_group
 from clients.services.notifications import (
     _get_expired_documents_context,
     _get_expiring_documents_context,
+    _get_missing_documents_context,
     send_appointment_notification_email,
     send_expired_documents_email,
 )
+from clients.services.wniosek import match_attachment_to_document_type
+from clients.services.workflow import validate_client_workflow_transition
 from clients.services.zus import expected_zus_months, missing_zus_months
 from clients.tests.factories import create_admin_user, create_staff_user
 from clients.use_cases.client_records import finalize_client_update, snapshot_client_update_state
@@ -49,6 +54,33 @@ def require_passport(purpose: str = "work") -> DocumentRequirement:
         is_required=True,
         position=0,
     )
+
+
+def client_form_data(**overrides):
+    defaults = {
+        "first_name": "Ira",
+        "last_name": "Kowalska",
+        "email": "ira-form@example.com",
+        "phone": "+48123123123",
+        "citizenship": "UA",
+        "application_purpose": "work",
+        "language": "pl",
+        "status": "new",
+        "workflow_stage": "new_client",
+        "family_role": "",
+        "sponsor_client": "",
+        "notes": "",
+    }
+    defaults.update(overrides)
+    return defaults
+
+
+def tiny_png(name: str = "document.png") -> SimpleUploadedFile:
+    payload = base64.b64decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1Pe"
+        "AAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC"
+    )
+    return SimpleUploadedFile(name, payload, content_type="image/png")
 
 
 @pytest.mark.django_db
@@ -180,6 +212,30 @@ def test_payment_reminders_use_due_date_lte_today_and_do_not_duplicate(sample_cl
 
 
 @pytest.mark.django_db
+def test_update_reminders_dry_run_creates_and_sends_nothing(sample_client):
+    require_passport()
+    sample_client.workflow_stage = "waiting_decision"
+    sample_client.fingerprints_date = timezone.localdate() - timedelta(days=10)
+    sample_client.save(update_fields=["workflow_stage", "fingerprints_date"])
+    Payment.objects.create(
+        client=sample_client,
+        service_description="consultation",
+        total_amount=Decimal("100.00"),
+        status="pending",
+        due_date=timezone.localdate(),
+    )
+    mail.outbox = []
+    reminders_before = Reminder.objects.count()
+    email_logs_before = EmailLog.objects.count()
+
+    call_command("update_reminders", "--dry-run")
+
+    assert mail.outbox == []
+    assert Reminder.objects.count() == reminders_before
+    assert EmailLog.objects.count() == email_logs_before
+
+
+@pytest.mark.django_db
 def test_health_alerts_missing_docs_and_payment_due_dates():
     sample_client = make_client(application_purpose="custom_health")
     require_passport("custom_health")
@@ -239,6 +295,10 @@ def test_expected_zus_months_respects_15th_day_cutoff():
     fingerprints = date(2026, 1, 20)
 
     assert expected_zus_months(fingerprints, today=date(2026, 4, 10)) == [date(2026, 2, 1)]
+    assert expected_zus_months(fingerprints, today=date(2026, 4, 15)) == [
+        date(2026, 2, 1),
+        date(2026, 3, 1),
+    ]
     assert expected_zus_months(fingerprints, today=date(2026, 4, 16)) == [
         date(2026, 2, 1),
         date(2026, 3, 1),
@@ -248,7 +308,8 @@ def test_expected_zus_months_respects_15th_day_cutoff():
 @pytest.mark.django_db
 def test_zus_rca_uploaded_period_closes_month_and_duplicates_are_blocked(sample_client):
     sample_client.fingerprints_date = date(2026, 1, 20)
-    sample_client.save(update_fields=["fingerprints_date"])
+    sample_client.workflow_stage = "waiting_decision"
+    sample_client.save(update_fields=["fingerprints_date", "workflow_stage"])
     Document.objects.create(
         client=sample_client,
         document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
@@ -266,6 +327,40 @@ def test_zus_rca_uploaded_period_closes_month_and_duplicates_are_blocked(sample_
                 file=SimpleUploadedFile("zus-feb-duplicate.pdf", b"x", content_type="application/pdf"),
                 zus_period_month=date(2026, 2, 1),
             )
+
+
+@pytest.mark.django_db
+def test_zus_period_form_ignores_non_zus_and_requires_zus_month(sample_client):
+    non_zus_form = DocumentUploadForm(
+        data={"expiry_date": "", "zus_period_month": "2026-04-20"},
+        files={"file": tiny_png("passport.png")},
+        doc_type=DocumentType.PASSPORT.value,
+        client=sample_client,
+    )
+    assert non_zus_form.is_valid(), non_zus_form.errors
+    document = non_zus_form.save(commit=False)
+    document.client = sample_client
+    document.document_type = DocumentType.PASSPORT.value
+    document.save()
+    assert document.zus_period_month is None
+
+    missing_month_form = DocumentUploadForm(
+        data={"expiry_date": "", "zus_period_month": ""},
+        files={"file": tiny_png("zus.png")},
+        doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+        client=sample_client,
+    )
+    assert not missing_month_form.is_valid()
+    assert "zus_period_month" in missing_month_form.errors
+
+    zus_form = DocumentUploadForm(
+        data={"expiry_date": "", "zus_period_month": "2026-04-20"},
+        files={"file": tiny_png("zus-apr.png")},
+        doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+        client=sample_client,
+    )
+    assert zus_form.is_valid(), zus_form.errors
+    assert zus_form.cleaned_data["zus_period_month"] == date(2026, 4, 1)
 
 
 @pytest.mark.django_db
@@ -297,6 +392,11 @@ def test_family_roles_checklists_child_client_link_and_dashboard_access(client):
 
     spouse_codes = {item["code"] for item in spouse.get_document_checklist()}
     child_codes = {item["code"] for item in child_member.get_document_checklist()}
+    sponsor_codes = {item["code"] for item in sponsor.get_document_checklist()}
+    assert spouse.application_purpose == "family"
+    assert child_member.application_purpose == "family"
+    assert "zus_rca_or_insurance" in sponsor_codes
+    assert "marriage_certificate" not in sponsor_codes
     assert "marriage_certificate" in spouse_codes
     assert "birth_certificate" in child_codes
     assert child_member.pk != sponsor.pk
@@ -308,6 +408,150 @@ def test_family_roles_checklists_child_client_link_and_dashboard_access(client):
     other_staff = create_staff_user()
     client.force_login(other_staff)
     assert client.get(reverse("clients:family_dashboard", kwargs={"pk": sponsor.pk})).status_code == 404
+
+
+@pytest.mark.django_db
+def test_client_form_family_validation_access_and_cleaning():
+    admin = create_admin_user()
+    staff = create_staff_user()
+    other_staff = create_staff_user()
+    sponsor = make_client(first_name="Sponsor", last_name="Allowed", assigned_staff=staff)
+    inaccessible_sponsor = make_client(
+        first_name="Sponsor",
+        last_name="Blocked",
+        assigned_staff=other_staff,
+    )
+
+    form = ClientForm(data=client_form_data(application_purpose="family"), user=staff)
+    purpose_choices = {value for value, _label in form.fields["application_purpose"].choices}
+    assert "family_spouse" not in purpose_choices
+    assert "family_child" not in purpose_choices
+    assert not form.is_valid()
+    assert "family_role" in form.errors
+    assert "sponsor_client" in form.errors
+
+    form = ClientForm(
+        data=client_form_data(
+            application_purpose="family",
+            family_role="sponsor",
+            sponsor_client=str(sponsor.pk),
+        ),
+        user=staff,
+    )
+    assert not form.is_valid()
+    assert "family_role" in form.errors
+
+    form = ClientForm(
+        data=client_form_data(
+            application_purpose="family",
+            family_role="family_spouse",
+            sponsor_client=str(inaccessible_sponsor.pk),
+        ),
+        user=staff,
+    )
+    assert not form.is_valid()
+    assert "sponsor_client" in form.errors
+
+    form = ClientForm(
+        data=client_form_data(
+            application_purpose="work",
+            family_role="family_spouse",
+            sponsor_client=str(sponsor.pk),
+        ),
+        user=staff,
+    )
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["sponsor_client"] is None
+    assert form.cleaned_data["family_role"] == ""
+
+    self_sponsor = make_client(first_name="Self", last_name="Sponsor", assigned_staff=admin)
+    form = ClientForm(
+        data=client_form_data(
+            application_purpose="family",
+            family_role="family_spouse",
+            sponsor_client=str(self_sponsor.pk),
+        ),
+        instance=self_sponsor,
+        user=admin,
+    )
+    assert not form.is_valid()
+    assert "sponsor_client" in form.errors
+
+    a = make_client(first_name="Cycle", last_name="A", assigned_staff=admin)
+    b = make_client(
+        first_name="Cycle",
+        last_name="B",
+        application_purpose="family",
+        family_role="family_child",
+        sponsor_client=a,
+        assigned_staff=admin,
+    )
+    form = ClientForm(
+        data=client_form_data(
+            application_purpose="family",
+            family_role="family_spouse",
+            sponsor_client=str(b.pk),
+        ),
+        instance=a,
+        user=admin,
+    )
+    assert not form.is_valid()
+    assert "sponsor_client" in form.errors
+
+
+@pytest.mark.django_db
+def test_family_role_checklist_used_for_workflow_notifications_and_wniosek():
+    sponsor = make_client(first_name="Sponsor", last_name="Workflow")
+    spouse = make_client(
+        first_name="Spouse",
+        last_name="Workflow",
+        application_purpose="family",
+        family_role="family_spouse",
+        sponsor_client=sponsor,
+    )
+    DocumentRequirement.objects.filter(application_purpose="family_spouse").delete()
+    DocumentRequirement.objects.create(
+        application_purpose="family_spouse",
+        document_type="spouse_only_document",
+        custom_name="Spouse-only document",
+        is_required=True,
+        position=0,
+    )
+
+    result = validate_client_workflow_transition(
+        client=spouse,
+        previous_stage="document_collection",
+        next_stage="application_submitted",
+    )
+    assert not result.allowed
+
+    context = _get_missing_documents_context(spouse, language="en")
+    assert context is not None
+    assert [item["name"] for item in context["documents"]] == ["Spouse-only document"]
+    assert match_attachment_to_document_type(spouse, "Spouse-only document", "en") == "spouse_only_document"
+
+    for code, _label in DocumentRequirement.required_for("family_spouse", "en"):
+        Document.objects.get_or_create(client=spouse, document_type=code)
+    result = validate_client_workflow_transition(
+        client=spouse,
+        previous_stage="document_collection",
+        next_stage="application_submitted",
+    )
+    assert result.allowed
+
+
+@pytest.mark.django_db
+def test_family_dashboard_get_does_not_create_group_or_mark_sponsor(client):
+    admin = create_admin_user()
+    sponsor = make_client(first_name="Plain", last_name="Work", assigned_staff=admin)
+    client.force_login(admin)
+
+    response = client.get(reverse("clients:family_dashboard", kwargs={"pk": sponsor.pk}))
+
+    sponsor.refresh_from_db()
+    assert response.status_code == 200
+    assert sponsor.family_role == ""
+    assert not hasattr(sponsor, "family_group")
 
 
 @pytest.mark.django_db

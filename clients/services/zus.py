@@ -39,6 +39,8 @@ def expected_zus_months(fingerprints_date: date | None, *, today: date | None = 
         return []
 
     today = today or timezone.localdate()
+    if fingerprints_date > today:
+        return []
     first_expected = add_months(month_start(fingerprints_date), 1)
     last_expected = add_months(month_start(today), -1 if today.day >= 15 else -2)
     return iter_months(first_expected, last_expected)
@@ -56,6 +58,14 @@ def uploaded_zus_months(client) -> set[date]:
 
 
 def missing_zus_months(client, *, today: date | None = None) -> list[date]:
+    today = today or timezone.localdate()
+    if getattr(client, "workflow_stage", None) != "waiting_decision":
+        return []
+    if not client.fingerprints_date or client.fingerprints_date > today:
+        return []
+    if getattr(client, "decision_date", None):
+        return []
+
     expected = expected_zus_months(client.fingerprints_date, today=today)
     uploaded = uploaded_zus_months(client)
     missing = [month for month in expected if month not in uploaded]

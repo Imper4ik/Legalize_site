@@ -42,11 +42,16 @@ def validate_client_workflow_transition(*, client, previous_stage: str | None, n
         )
 
     if next_stage == "application_submitted":
+        purpose = client.get_document_requirement_purpose()
+        has_db_records = DocumentRequirement.objects.filter(application_purpose=purpose).exists()
         required_codes = set(
-            DocumentRequirement.objects.filter(
-                application_purpose=client.application_purpose,
-                is_required=True,
-            ).values_list("document_type", flat=True)
+            item["code"]
+            for item in DocumentRequirement.catalog_for(
+                purpose,
+                getattr(client, "language", None),
+                include_optional=False,
+                include_fallback=not has_db_records,
+            )
         )
         uploaded_codes = set(client.documents.values_list("document_type", flat=True))
         submitted_codes = set(client.get_submitted_document_codes())

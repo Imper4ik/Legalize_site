@@ -378,8 +378,9 @@ def _get_required_documents_context(client: Client, language: str | None = None)
     if language is None:
         language = _get_preferred_language(client)
     from clients.models import DocumentRequirement
+    purpose = client.get_document_requirement_purpose()
     catalog = DocumentRequirement.catalog_for(
-        client.application_purpose,
+        purpose,
         language,
         include_optional=False,
         include_fallback=True,
@@ -465,11 +466,12 @@ def _get_missing_documents_context(client: Client, language: str | None = None) 
     if language is None:
         language = _get_preferred_language(client)
     from clients.models import DocumentRequirement
+    purpose = client.get_document_requirement_purpose()
     has_db_records = DocumentRequirement.objects.filter(
-        application_purpose=client.application_purpose
+        application_purpose=purpose
     ).exists()
     catalog = DocumentRequirement.catalog_for(
-        client.application_purpose,
+        purpose,
         language,
         include_optional=False,
         include_fallback=not has_db_records,
@@ -510,7 +512,13 @@ def _get_missing_documents_context(client: Client, language: str | None = None) 
     }
 
 
-def send_missing_documents_email(client: Client, *, sent_by=None) -> int:
+def send_missing_documents_email(
+    client: Client,
+    *,
+    sent_by=None,
+    weekly_key: str | None = None,
+    idempotency_extra: str | None = None,
+) -> int:
     """Send a reminder listing documents that are still missing for the client."""
 
     if not client.email:
@@ -525,6 +533,9 @@ def send_missing_documents_email(client: Client, *, sent_by=None) -> int:
     body = _render_email_body("missing_documents", context, language)
     today = timezone.localdate()
     iso_year, iso_week, _iso_weekday = today.isocalendar()
+    idempotency_key = weekly_key or idempotency_extra or (
+        f"missing_documents:{client.pk}:{iso_year}-W{iso_week:02d}"
+    )
     return _send_email(
         subject,
         body,
@@ -532,13 +543,7 @@ def send_missing_documents_email(client: Client, *, sent_by=None) -> int:
         client=client,
         template_type="missing_documents",
         sent_by=sent_by,
-        idempotency_key=build_email_idempotency_key(
-            "missing_documents",
-            client.pk,
-            client.email,
-            f"{iso_year}-W{iso_week:02d}",
-            sorted(item["name"] for item in context["documents"]),
-        ),
+        idempotency_key=idempotency_key,
     )
 
 

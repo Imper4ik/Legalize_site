@@ -9,7 +9,13 @@ from django.views import View
 from clients.forms import FamilyGroupFinanceForm
 from clients.models import Client
 from clients.services.access import accessible_clients_queryset
-from clients.services.family import calculate_family_income, family_sponsor_for, get_family_members, get_or_create_family_group
+from clients.services.family import (
+    calculate_family_income,
+    ensure_family_group,
+    family_sponsor_for,
+    get_existing_family_group,
+    get_family_members,
+)
 from clients.views.base import StaffRequiredMixin
 
 
@@ -23,12 +29,12 @@ class FamilyDashboardView(StaffRequiredMixin, View):
 
     def get(self, request, pk):
         sponsor = self._get_sponsor(pk)
-        group = get_or_create_family_group(sponsor)
+        group = get_existing_family_group(sponsor)
         return render(request, self.template_name, self._context(sponsor, group))
 
     def post(self, request, pk):
         sponsor = self._get_sponsor(pk)
-        group = get_or_create_family_group(sponsor)
+        group = ensure_family_group(sponsor)
         form = FamilyGroupFinanceForm(request.POST, instance=group)
         if form.is_valid():
             form.save()
@@ -37,6 +43,7 @@ class FamilyDashboardView(StaffRequiredMixin, View):
         return render(request, self.template_name, self._context(sponsor, group, form=form), status=400)
 
     def _context(self, sponsor: Client, group, *, form=None) -> dict:
+        group = group or self._empty_family_group(sponsor)
         members = list(get_family_members(sponsor))
         person_cards = [
             self._person_card(sponsor, role_label=_("Спонсор")),
@@ -72,7 +79,7 @@ class FamilyDashboardView(StaffRequiredMixin, View):
         }
 
     def _person_card(self, client: Client, *, role_label: str) -> dict:
-        checklist = client.get_document_checklist(check_file_existence=True)
+        checklist = client.get_document_checklist(check_file_existence=False)
         missing_documents_count = sum(1 for item in checklist if not item.get("is_complete"))
         return {
             "client": client,
@@ -82,3 +89,9 @@ class FamilyDashboardView(StaffRequiredMixin, View):
             "documents_url": reverse("clients:client_detail", kwargs={"pk": client.pk}) + "#documentAccordion",
             "finances_url": reverse("clients:client_detail", kwargs={"pk": client.pk}) + "#payment-list-container",
         }
+
+    @staticmethod
+    def _empty_family_group(sponsor: Client):
+        from clients.models import FamilyGroup
+
+        return FamilyGroup(sponsor=sponsor)

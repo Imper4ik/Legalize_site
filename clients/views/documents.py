@@ -10,7 +10,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.translation import gettext as _
 
-from clients.constants import is_wezwanie_document_type
+from clients.constants import DocumentType, is_wezwanie_document_type
 from clients.forms import DocumentUploadForm
 from clients.models import Client, Document, WniosekAttachment
 from clients.services.access import (
@@ -82,12 +82,19 @@ def add_document(request, client_id, doc_type):
 
         files = request.FILES.getlist('file')
         if not files:
-            form = DocumentUploadForm(request.POST, request.FILES)
+            form = DocumentUploadForm(request.POST, request.FILES, doc_type=doc_type, client=client)
             if helper.expects_json:
                 return helper.error(
                     message=_("Проверьте правильность заполнения формы."),
                     errors=form.errors.get_json_data(),
-                )
+            )
+            return redirect("clients:client_detail", pk=client.id)
+
+        if doc_type == DocumentType.ZUS_RCA_OR_INSURANCE.value and len(files) > 1:
+            message = _("ZUS RCA can be uploaded only one month at a time.")
+            if helper.expects_json:
+                return helper.error(message=message, errors={"file": [{"message": str(message)}]})
+            messages.error(request, message)
             return redirect("clients:client_detail", pk=client.id)
 
         upload_results = []
@@ -96,7 +103,7 @@ def add_document(request, client_id, doc_type):
 
         for f in files:
             file_dict = {'file': f}
-            form = DocumentUploadForm(request.POST, file_dict)
+            form = DocumentUploadForm(request.POST, file_dict, doc_type=doc_type, client=client)
             if form.is_valid():
                 result = upload_client_document(
                     client=client,
@@ -155,7 +162,7 @@ def add_document(request, client_id, doc_type):
                 errors=errors,
             )
 
-    form = DocumentUploadForm()
+    form = DocumentUploadForm(doc_type=doc_type, client=client)
     return render(
         request,
         "clients/add_document.html",

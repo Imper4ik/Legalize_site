@@ -63,9 +63,31 @@ class DocumentChecklistManageView(RoleOrFeatureRequiredMixin, FormView):
                 return [code for code, _ in docs]
         return []
 
+    @staticmethod
+    def _system_purpose_choices(existing_slugs: set[str] | None = None) -> list[SimpleNamespace]:
+        existing_slugs = existing_slugs or set()
+        return [
+            SimpleNamespace(slug=value, localized_name=label, id="", is_system=True)
+            for value, label in Client.DOCUMENT_REQUIREMENT_PURPOSE_CHOICES
+            if value not in existing_slugs
+        ]
+
+    @staticmethod
+    def _submission_queryset():
+        return Submission.objects.exclude(slug__in=Client.FAMILY_MEMBER_REQUIREMENT_PURPOSES)
+
+    def _allowed_purposes(self) -> list[str]:
+        submission_slugs = list(self._submission_queryset().values_list("slug", flat=True))
+        system_slugs = [value for value, _label in Client.DOCUMENT_REQUIREMENT_PURPOSE_CHOICES]
+        return list(dict.fromkeys([*submission_slugs, *system_slugs]))
+
     def get_purpose(self) -> str:
         requested = self.request.GET.get("purpose") or self.request.POST.get("purpose")
+<<<<<<< HEAD
         allowed = _allowed_checklist_purposes()
+=======
+        allowed = self._allowed_purposes()
+>>>>>>> 44699f3 (fix)
         if requested in allowed:
             return requested
         return allowed[0] if allowed else ""
@@ -89,18 +111,30 @@ class DocumentChecklistManageView(RoleOrFeatureRequiredMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         purpose = self.get_purpose()
+<<<<<<< HEAD
         submissions = list(Submission.objects.all())
         purpose_choices = [*submissions, *FAMILY_CHECKLIST_PURPOSES]
         context["current_purpose"] = purpose
         context["purpose_choices"] = purpose_choices
+=======
+        submissions = list(self._submission_queryset())
+        submission_slugs = {submission.slug for submission in submissions}
+        system_choices = self._system_purpose_choices(submission_slugs)
+        context["current_purpose"] = purpose
+        context["purpose_choices"] = [*submissions, *system_choices]
+>>>>>>> 44699f3 (fix)
         context["add_form"] = DocumentRequirementAddForm(purpose=purpose)
         context["submission_edit_forms"] = [
             (submission, SubmissionForm(instance=submission, prefix=f"submission-{submission.id}"))
             for submission in submissions
         ]
         purpose_lookup = {submission.slug: submission.localized_name for submission in submissions}
+<<<<<<< HEAD
         purpose_lookup.update({purpose.slug: purpose.localized_name for purpose in FAMILY_CHECKLIST_PURPOSES})
         purpose_labels = dict(Client.APPLICATION_PURPOSE_CHOICES)
+=======
+        purpose_labels = dict(Client.DOCUMENT_REQUIREMENT_PURPOSE_CHOICES)
+>>>>>>> 44699f3 (fix)
         context["current_purpose_label"] = purpose_lookup.get(
             purpose,
             purpose_labels.get(purpose, purpose),
@@ -124,7 +158,13 @@ class DocumentChecklistManageView(RoleOrFeatureRequiredMixin, FormView):
 @role_or_feature_required_view("can_manage_checklists", *CHECKLIST_MANAGE_ROLES)
 def document_requirement_add(request):
     purpose = request.POST.get("purpose") or request.GET.get("purpose")
+<<<<<<< HEAD
     allowed = _allowed_checklist_purposes()
+=======
+    reserved = Client.FAMILY_MEMBER_REQUIREMENT_PURPOSES
+    allowed = list(Submission.objects.exclude(slug__in=reserved).values_list("slug", flat=True))
+    allowed = list(dict.fromkeys([*allowed, *[choice[0] for choice in Client.DOCUMENT_REQUIREMENT_PURPOSE_CHOICES]]))
+>>>>>>> 44699f3 (fix)
     if purpose not in allowed and allowed:
         purpose = allowed[0]
 
