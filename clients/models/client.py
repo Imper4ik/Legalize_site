@@ -17,8 +17,6 @@ class Client(SoftDeleteModel):
         ("study", _("Учёба")),
         ("work", _("Работа")),
         ("family", _("Воссоединение с семьёй")),
-<<<<<<< HEAD
-=======
     ]
     FAMILY_MEMBER_REQUIREMENT_PURPOSES = {"family_spouse", "family_child"}
     DOCUMENT_REQUIREMENT_PURPOSE_CHOICES = [
@@ -26,7 +24,6 @@ class Client(SoftDeleteModel):
         ("work", _("Работа")),
         ("family_spouse", _("Супруг/супруга")),
         ("family_child", _("Ребёнок")),
->>>>>>> 44699f3 (fix)
     ]
     FAMILY_ROLE_CHOICES = [
         ("", _("Не указано")),
@@ -242,18 +239,12 @@ class Client(SoftDeleteModel):
         return dict(self.APPLICATION_PURPOSE_CHOICES).get(self.application_purpose, self.application_purpose or "")
 
     def get_document_requirement_purpose(self) -> str:
-<<<<<<< HEAD
-        if self.application_purpose == "family" and self.family_role in {"family_spouse", "family_child"}:
-            return self.family_role
-        return self.application_purpose or ""
-=======
         if (
             self.application_purpose == "family"
             and self.family_role in self.FAMILY_MEMBER_REQUIREMENT_PURPOSES
         ):
             return self.family_role
         return self.application_purpose
->>>>>>> 44699f3 (fix)
 
     def get_submitted_document_summary(self):
         from clients.services.wniosek import build_submitted_document_summary
@@ -269,22 +260,13 @@ class Client(SoftDeleteModel):
         from clients.services.document_helpers import document_file_exists
 
         current_language = translation.get_language() or self.language
-<<<<<<< HEAD
-        checklist_purpose = self.get_document_requirement_purpose()
-        required_docs = DocumentRequirement.required_for(checklist_purpose, current_language)
-=======
         purpose = self.get_document_requirement_purpose()
         required_docs = DocumentRequirement.required_for(purpose, current_language)
->>>>>>> 44699f3 (fix)
         uploaded_docs = self.documents.all().annotate(
             preloaded_version_count=models.Count('versions')
         ).order_by("-uploaded_at")
 
-<<<<<<< HEAD
-        reqs = DocumentRequirement.objects.filter(application_purpose=checklist_purpose)
-=======
         reqs = DocumentRequirement.objects.filter(application_purpose=purpose)
->>>>>>> 44699f3 (fix)
         req_map = {r.document_type: r for r in reqs}
 
         docs_map = {}
@@ -372,15 +354,9 @@ class Client(SoftDeleteModel):
         from .document import DocumentRequirement, get_available_document_types, resolve_document_label
 
         current_language = translation.get_language() or self.language
-<<<<<<< HEAD
-        checklist_purpose = self.get_document_requirement_purpose()
-        catalog = DocumentRequirement.catalog_for(
-            checklist_purpose,
-=======
         purpose = self.get_document_requirement_purpose()
         catalog = DocumentRequirement.catalog_for(
             purpose,
->>>>>>> 44699f3 (fix)
             current_language,
             include_optional=True,
             include_fallback=True,
@@ -388,11 +364,7 @@ class Client(SoftDeleteModel):
         for item in catalog:
             if item["code"] == doc_code:
                 return item["label"]
-<<<<<<< HEAD
-        if doc_code in get_available_document_types(checklist_purpose):
-=======
         if doc_code in get_available_document_types(purpose):
->>>>>>> 44699f3 (fix)
             return resolve_document_label(doc_code, language=current_language)
         return doc_code.replace("_", " ").capitalize()
 

@@ -77,10 +77,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"update_reminders failed: {exc}"))
             raise CommandError("update_reminders failed") from exc
 
-<<<<<<< HEAD
-=======
     def send_missing_document_notifications(self, *, dry_run: bool = False):
->>>>>>> 44699f3 (fix)
         today = timezone.localdate()
         clients = Client.objects.filter(
             workflow_stage="waiting_decision",
@@ -120,11 +117,7 @@ class Command(BaseCommand):
             decision_date__isnull=True,
         )
         affected = 0
-<<<<<<< HEAD
-        for client in clients:
-=======
         for client in clients.iterator():
->>>>>>> 44699f3 (fix)
             missing = missing_zus_months(client, today=today)
             if missing:
                 affected += 1
@@ -163,24 +156,6 @@ class Command(BaseCommand):
 
             sent_count += send_expiring_documents_email(client, documents)
 
-<<<<<<< HEAD
-    def create_document_reminders(self):
-        """
-        Создает напоминания для документов, у которых скоро истекает срок.
-        Проверка `reminder__isnull=True` гарантирует, что мы не создадим дубликат
-        благодаря связи OneToOneField в модели Reminder.
-        """
-        today = timezone.now().date()
-        reminder_period_start = today - timedelta(days=30)
-        reminder_period_end = today + timedelta(days=30) # Период напоминания - 30 дней
-        expiring_email_cutoff = today + timedelta(days=7)
-
-        # Ищем документы, которые истекли за последние 30 дней или истекают в ближайшие 30 дней.
-        expiring_docs = Document.objects.filter(
-            expiry_date__isnull=False, # Убедимся, что дата окончания срока вообще установлена
-            expiry_date__range=(reminder_period_start, reminder_period_end),
-            reminder__isnull=True  # Ключевая проверка: напоминание еще не создано
-=======
         if not dry_run:
             self.stdout.write(f"Sent {sent_count} expiring-document emails.")
 
@@ -194,7 +169,6 @@ class Command(BaseCommand):
             expiry_date__gte=today,
             expiry_date__lte=reminder_period_end,
             reminder__isnull=True,
->>>>>>> 44699f3 (fix)
         )
 
         if not expiring_docs.exists():

@@ -93,11 +93,7 @@ def create_family_member(
         email=email,
         phone=phone,
         citizenship=citizenship or sponsor.citizenship,
-<<<<<<< HEAD
-        application_purpose=FAMILY_PURPOSE,
-=======
         application_purpose="family",
->>>>>>> 44699f3 (fix)
         family_role=role,
         sponsor_client=sponsor,
         assigned_staff=assigned_staff or sponsor.assigned_staff,
