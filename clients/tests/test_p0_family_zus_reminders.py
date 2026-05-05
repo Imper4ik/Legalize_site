@@ -85,7 +85,7 @@ class TestFamilyChecklistResolution:
         assert c.get_document_requirement_purpose() == "family_child"
 
     @pytest.mark.django_db
-    def test_family_sponsor_gets_family_purpose(self):
+    def test_family_sponsor_gets_work_checklist(self):
         c = _make_client(None, application_purpose="family", family_role="sponsor")
         assert c.get_document_requirement_purpose() == "work"
 
@@ -134,21 +134,36 @@ class TestClientFormFamilyValidation:
         assert "family_role" in form.errors
 
     @pytest.mark.django_db
-    def test_family_role_sponsor_errors(self):
+    def test_family_sponsor_form_valid_without_sponsor_client(self):
         user = create_staff_user()
-        sponsor = _make_client(None, email="sponsor@x.com")
         form = ClientForm(
             data={
                 "first_name": "A", "last_name": "B", "email": "a@b.com",
                 "phone": "+48000000000", "citizenship": "UA",
                 "application_purpose": "family", "family_role": "sponsor",
-                "sponsor_client": sponsor.pk,
+                "sponsor_client": "",
                 "language": "pl", "status": "new", "workflow_stage": "new_client",
             },
             user=user,
         )
-        assert not form.is_valid()
-        assert "family_role" in form.errors
+        assert form.is_valid(), form.errors
+
+    @pytest.mark.django_db
+    def test_family_sponsor_form_clears_sponsor_client(self):
+        user = create_staff_user()
+        random_sponsor = _make_client(None, email="sponsor@x.com")
+        form = ClientForm(
+            data={
+                "first_name": "A", "last_name": "B", "email": "a@b.com",
+                "phone": "+48000000000", "citizenship": "UA",
+                "application_purpose": "family", "family_role": "sponsor",
+                "sponsor_client": random_sponsor.pk,
+                "language": "pl", "status": "new", "workflow_stage": "new_client",
+            },
+            user=user,
+        )
+        assert form.is_valid(), form.errors
+        assert form.cleaned_data["sponsor_client"] is None
 
     @pytest.mark.django_db
     def test_self_sponsor_errors(self):

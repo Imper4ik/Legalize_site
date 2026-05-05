@@ -428,7 +428,6 @@ def test_client_form_family_validation_access_and_cleaning():
     assert "family_child" not in purpose_choices
     assert not form.is_valid()
     assert "family_role" in form.errors
-    assert "sponsor_client" in form.errors
 
     form = ClientForm(
         data=client_form_data(
@@ -438,8 +437,8 @@ def test_client_form_family_validation_access_and_cleaning():
         ),
         user=staff,
     )
-    assert not form.is_valid()
-    assert "family_role" in form.errors
+    # family_role="sponsor" is now valid for application_purpose="family"
+    assert form.is_valid(), form.errors
 
     form = ClientForm(
         data=client_form_data(

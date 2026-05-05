@@ -341,13 +341,15 @@ class ClientForm(forms.ModelForm):
         if application_purpose == "family":
             if not family_role:
                 self.add_error("family_role", _("Select a family role."))
-            elif family_role not in family_member_roles:
-                self.add_error("family_role", _("Family members must be spouse or child."))
-
-            if sponsor_client is None:
-                self.add_error("sponsor_client", _("Select a sponsor."))
+            elif family_role == "sponsor":
+                cleaned_data["sponsor_client"] = None
+            elif family_role in family_member_roles:
+                if sponsor_client is None:
+                    self.add_error("sponsor_client", _("Select a sponsor."))
+                else:
+                    self._validate_sponsor_relationship(sponsor_client)
             else:
-                self._validate_sponsor_relationship(sponsor_client)
+                self.add_error("family_role", _("Family members must be spouse or child."))
         else:
             cleaned_data["sponsor_client"] = None
             has_family_members = bool(
