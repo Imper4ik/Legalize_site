@@ -205,4 +205,21 @@ class ProductionStorageSafetyCheckTests(SimpleTestCase):
     def test_explicit_local_media_acknowledgement_silences_media_storage_error(self):
         self.assertEqual(production_storage_safety_check(), [])
 
+class CronAllowedIpsCheckTests(SimpleTestCase):
+    @override_settings(IS_PRODUCTION=True)
+    @patch.dict("os.environ", {"CRON_TOKEN": "secret", "CRON_ALLOWED_IPS": ""}, clear=True)
+    def test_empty_cron_allowed_ips_returns_warning(self):
+        from legalize_site.checks import cron_allowed_ips_check
 
+        messages = cron_allowed_ips_check()
+        self.assertEqual(len(messages), 1)
+        self.assertIsInstance(messages[0], Warning)
+        self.assertEqual(messages[0].id, "legalize_site.W009")
+        self.assertIn("CRON_ALLOWED_IPS is empty", messages[0].msg)
+
+    @override_settings(IS_PRODUCTION=True)
+    @patch.dict("os.environ", {"CRON_TOKEN": "secret", "CRON_ALLOWED_IPS": "127.0.0.1"}, clear=True)
+    def test_configured_cron_allowed_ips_returns_no_warnings(self):
+        from legalize_site.checks import cron_allowed_ips_check
+
+        self.assertEqual(cron_allowed_ips_check(), [])

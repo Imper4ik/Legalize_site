@@ -110,6 +110,50 @@ class BackupTests(SimpleTestCase):
             uploaded = ConfiguredBackupStorage().upload(local_path)
 
         self.assertTrue(uploaded)
-        self.assertEqual(dummy_storage.saved_path, "custom/prefix/backup-test.sql")
+        self.assertEqual(dummy_storage.saved_path, "backup-test.sql")
         self.assertEqual(dummy_storage.saved_content, b"-- dump --")
+
+    @override_settings(FERNET_KEYS=[])
+    @patch("legalize_site.backups.shutil.which", return_value="/usr/bin/pg_dump")
+    @patch("legalize_site.backups.subprocess.run")
+    @patch("legalize_site.backups._backup_dir")
+    def test_backup_hashes_unencrypted(self, backup_dir_mock, run_mock, _which):
+        with self._temporary_backup_dir() as tmp_dir_name:
+            tmp_dir = Path(tmp_dir_name)
+            backup_dir_mock.return_value = tmp_dir
+
+            def _fake_run(cmd, check, capture_output, text):
+                Path(cmd[-1]).write_text("-- dump --")
+
+            run_mock.side_effect = _fake_run
+
+            with patch.dict("os.environ", {"DATABASE_URL": "postgresql://user:pass@localhost/db"}, clear=False):
+                result = create_db_backup()
+
+            self.assertTrue(result.plaintext_sha256)
+            self.assertTrue(result.stored_file_sha256)
+            self.assertEqual(result.plaintext_sha256, result.stored_file_sha256)
+            self.assertFalse(result.encrypted)
+
+    @override_settings(FERNET_KEYS=["QUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE="])
+    @patch("legalize_site.backups.shutil.which", return_value="/usr/bin/pg_dump")
+    @patch("legalize_site.backups.subprocess.run")
+    @patch("legalize_site.backups._backup_dir")
+    def test_backup_hashes_encrypted(self, backup_dir_mock, run_mock, _which):
+        with self._temporary_backup_dir() as tmp_dir_name:
+            tmp_dir = Path(tmp_dir_name)
+            backup_dir_mock.return_value = tmp_dir
+
+            def _fake_run(cmd, check, capture_output, text):
+                Path(cmd[-1]).write_text("-- dump --")
+
+            run_mock.side_effect = _fake_run
+
+            with patch.dict("os.environ", {"DATABASE_URL": "postgresql://user:pass@localhost/db"}, clear=False):
+                result = create_db_backup()
+
+            self.assertTrue(result.plaintext_sha256)
+            self.assertTrue(result.stored_file_sha256)
+            self.assertNotEqual(result.plaintext_sha256, result.stored_file_sha256)
+            self.assertTrue(result.encrypted)
 

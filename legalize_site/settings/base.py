@@ -174,6 +174,7 @@ INSTALLED_APPS = [
     "users.apps.UsersConfig",
     "clients.apps.ClientsConfig",
     "submissions.apps.SubmissionsConfig",
+    "legalize_site",
     "allauth",
     "allauth.account",
     "allauth.socialaccount",

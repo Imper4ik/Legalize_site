@@ -106,11 +106,11 @@ function initDocumentUploadModal() {
       if (isWezwanie) {
         parseButton.classList.remove('d-none');
         submitButton.classList.remove('d-none');
-        submitButton.innerHTML = 'Просто загрузить';
+        submitButton.innerHTML = modal.dataset.uploadOnlyText || 'Просто загрузить';
       } else {
         parseButton.classList.add('d-none');
         submitButton.classList.remove('d-none');
-        submitButton.innerHTML = 'Загрузить';
+        submitButton.innerHTML = modal.dataset.uploadText || 'Загрузить';
       }
     }
 
@@ -172,7 +172,8 @@ function initDocumentUploadModal() {
     if (parseButton) {
       parseButton.setAttribute('disabled', 'disabled');
       if (isParsing) {
-        parseButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Распознаём документ...';
+        const text = modal.dataset.recognizingText || 'Распознаём документ...';
+        parseButton.innerHTML = <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ;
       }
     }
     
@@ -217,16 +218,16 @@ function initDocumentUploadModal() {
 
       console.error('Document upload error:', { status: response.status, data });
       showDocumentAlert(
-        getErrorMessage(data.errors || data.message, 'Не удалось загрузить документ. Попробуйте ещё раз.'),
+        getErrorMessage(data.errors || data.message, modal.dataset.uploadErrorText || 'Не удалось загрузить документ. Попробуйте ещё раз.'),
         'danger',
       );
     } catch (error) {
       logAjaxError('upload document', error, { url: form.action });
       console.error('AJAX Catch - upload document:', error);
       
-      let errMsg = error.message || 'Не удалось загрузить документ. Попробуйте ещё раз.';
+      let errMsg = error.message || modal.dataset.uploadErrorText || 'Не удалось загрузить документ. Попробуйте ещё раз.';
       if (error.responseStatus === 413) {
-        errMsg = 'Файл слишком большой.';
+        errMsg = modal.dataset.fileTooLargeText || 'Файл слишком большой.';
       } else if (error.responseText && error.responseText.includes('CSRF')) {
         errMsg = 'Сессия истекла. Пожалуйста, обновите страницу.';
       }

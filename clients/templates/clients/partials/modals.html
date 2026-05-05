@@ -137,7 +137,14 @@
     aria-hidden="true"
     data-action-template="{% url 'clients:add_document' client_id=client.pk doc_type='__doc_type__' %}"
     data-confirm-url-template="{% url 'clients:confirm_wezwanie_parse' doc_id=0 %}"
-    data-parsed-data-url-template="/{{ CURRENT_LANGUAGE }}/staff/document/__doc_id__/parsed-data/">
+    data-parsed-data-url-template="/{{ CURRENT_LANGUAGE }}/staff/document/__doc_id__/parsed-data/"
+    data-upload-text="{% translate 'Загрузить' %}"
+    data-upload-only-text="{% translate 'Просто загрузить' %}"
+    data-uploading-text="{% translate 'Загрузка...' %}"
+    data-recognizing-text="{% translate 'Распознаём документ...' %}"
+    data-upload-error-text="{% translate 'Не удалось загрузить документ. Попробуйте ещё раз.' %}"
+    data-file-too-large-text="{% translate 'Файл слишком большой.' %}"
+    data-uploading-document-prefix="{% translate 'Вы загружаете документ:' %}">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">

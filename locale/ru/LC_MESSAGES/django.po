@@ -45,7 +45,7 @@ msgstr "Дата сдачи отпечатков"
 #, fuzzy
 #| msgid "Текст письма"
 msgid "Тема письма"
-msgstr "Текст письма"
+msgstr "Тема письма"
 
 #: .\clients\forms.py:103
 #, fuzzy
@@ -222,7 +222,7 @@ msgstr "Доступ к чеклисту предоставлен"
 #, fuzzy
 #| msgid "Телефон работодателя"
 msgid "Компания / Работодатель"
-msgstr "Телефон работодателя"
+msgstr "Компания / Работодатель"
 
 #: .\clients\models\company.py:6
 #, fuzzy
@@ -421,7 +421,7 @@ msgstr "Дата оплаты"
 #, fuzzy
 #| msgid "Способ оплаты"
 msgid "Срок оплаты"
-msgstr "Способ оплаты"
+msgstr "Срок оплаты"
 
 #: .\clients\models\payment.py:33
 #, fuzzy
@@ -1472,7 +1472,7 @@ msgstr ""
 #, fuzzy
 #| msgid "Отправить email"
 msgid "История email"
-msgstr "Отправить email"
+msgstr "История email"
 
 #: .\clients\templates\clients\partials\email_history.html:16
 #, fuzzy
@@ -1606,7 +1606,7 @@ msgstr ""
 #, fuzzy
 #| msgid "Отправитель"
 msgid "Отправить"
-msgstr "Отправитель"
+msgstr "Отправить"
 
 #: .\clients\templates\clients\partials\payment_item.html:8
 msgid "Счёт от"
@@ -1655,7 +1655,7 @@ msgstr "Дополнительно"
 #, fuzzy
 #| msgid "Вы уверены, что хотите навсегда удалить клиента?"
 msgid "Вы уверены, что хотите безвозвратно удалить это напоминание?"
-msgstr "Вы уверены, что хотите навсегда удалить клиента?"
+msgstr "Вы уверены, что хотите безвозвратно удалить это напоминание?"
 
 #: .\clients\templates\clients\payment_reminder_list.html:5
 #: .\clients\templates\clients\payment_reminder_list.html:12
@@ -1679,7 +1679,7 @@ msgstr ""
 #, fuzzy
 #| msgid "Нет напоминаний по документам, соответствующих фильтрам."
 msgid "Нет напоминаний по оплатам, соответствующих фильтрам."
-msgstr "Нет напоминаний по документам, соответствующих фильтрам."
+msgstr "Нет напоминаний по оплатам, соответствующих фильтрам."
 
 #: .\clients\templates\clients\register.html:4
 #: .\templates\account\signup.html:4
