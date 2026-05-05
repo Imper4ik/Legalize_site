@@ -114,6 +114,23 @@ function initDocumentUploadModal() {
       }
     }
 
+    const isZusRca = docType === 'zus_rca_or_insurance';
+    const zusGroup = modal.querySelector('#zusPeriodMonthGroup');
+    const zusInput = modal.querySelector('#id_zus_period_month');
+    const fileInput = modal.querySelector('#id_file');
+    if (zusGroup) zusGroup.classList.toggle('d-none', !isZusRca);
+    if (zusInput) {
+      zusInput.required = isZusRca;
+      if (!isZusRca) zusInput.value = '';
+    }
+    if (fileInput) {
+      if (isZusRca) {
+        fileInput.removeAttribute('multiple');
+      } else {
+        fileInput.setAttribute('multiple', 'multiple');
+      }
+    }
+
     resetConfirmation();
   });
 
@@ -122,6 +139,15 @@ function initDocumentUploadModal() {
     if (description) {
       description.textContent = '';
     }
+    const zusGroup = modal.querySelector('#zusPeriodMonthGroup');
+    const zusInput = modal.querySelector('#id_zus_period_month');
+    const fileInput = modal.querySelector('#id_file');
+    if (zusGroup) zusGroup.classList.add('d-none');
+    if (zusInput) {
+      zusInput.required = false;
+      zusInput.value = '';
+    }
+    if (fileInput) fileInput.setAttribute('multiple', 'multiple');
     resetConfirmation();
   });
 

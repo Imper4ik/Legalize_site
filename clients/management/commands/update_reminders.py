@@ -161,12 +161,13 @@ class Command(BaseCommand):
 
     def create_document_reminders(self, *, dry_run: bool = False):
         today = timezone.localdate()
+        reminder_period_start = today - timedelta(days=30)
         reminder_period_end = today + timedelta(days=30)
         expiring_email_cutoff = today + timedelta(days=7)
 
         expiring_docs = Document.objects.select_related("client").filter(
             expiry_date__isnull=False,
-            expiry_date__gte=today,
+            expiry_date__gte=reminder_period_start,
             expiry_date__lte=reminder_period_end,
             reminder__isnull=True,
         )
