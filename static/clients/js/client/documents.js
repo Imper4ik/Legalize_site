@@ -85,7 +85,8 @@ function initDocumentUploadModal() {
     }
 
     if (description) {
-      description.textContent = docName ? `Вы загружаете документ: "${docName}"` : '';
+      const uploadPrefix = modal.dataset.uploadingDocumentPrefix || 'Вы загружаете документ:';
+      description.textContent = docName ? `${uploadPrefix} "${docName}"` : '';
     }
 
     const WEZWANIE_DOCUMENT_TYPES = [
@@ -173,7 +174,7 @@ function initDocumentUploadModal() {
       parseButton.setAttribute('disabled', 'disabled');
       if (isParsing) {
         const text = modal.dataset.recognizingText || 'Распознаём документ...';
-        parseButton.innerHTML = <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ;
+        parseButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ${text}`;
       }
     }
     
@@ -207,7 +208,7 @@ function initDocumentUploadModal() {
         }
 
         bootstrap.Modal.getOrCreateInstance(modal).hide();
-        showDocumentAlert(data.message || 'Документ успешно добавлен.');
+        showDocumentAlert(data.message || modal.dataset.uploadSuccessText || 'Документ успешно добавлен.');
         if (typeof refreshChecklist === 'function') {
           await refreshChecklist({ force: true });
         } else {
@@ -229,7 +230,7 @@ function initDocumentUploadModal() {
       if (error.responseStatus === 413) {
         errMsg = modal.dataset.fileTooLargeText || 'Файл слишком большой.';
       } else if (error.responseText && error.responseText.includes('CSRF')) {
-        errMsg = 'Сессия истекла. Пожалуйста, обновите страницу.';
+        errMsg = modal.dataset.sessionExpiredText || 'Сессия истекла. Пожалуйста, обновите страницу.';
       }
       showDocumentAlert(errMsg, 'danger');
     } finally {

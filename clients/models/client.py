@@ -239,11 +239,11 @@ class Client(SoftDeleteModel):
         return dict(self.APPLICATION_PURPOSE_CHOICES).get(self.application_purpose, self.application_purpose or "")
 
     def get_document_requirement_purpose(self) -> str:
-        if (
-            self.application_purpose == "family"
-            and self.family_role in self.FAMILY_MEMBER_REQUIREMENT_PURPOSES
-        ):
-            return self.family_role
+        if self.application_purpose == "family":
+            if self.family_role in self.FAMILY_MEMBER_REQUIREMENT_PURPOSES:
+                return self.family_role
+            if self.family_role == "sponsor":
+                return "work"
         return self.application_purpose
 
     def get_submitted_document_summary(self):

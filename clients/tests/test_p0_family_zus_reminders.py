@@ -87,7 +87,7 @@ class TestFamilyChecklistResolution:
     @pytest.mark.django_db
     def test_family_sponsor_gets_family_purpose(self):
         c = _make_client(None, application_purpose="family", family_role="sponsor")
-        assert c.get_document_requirement_purpose() == "family"
+        assert c.get_document_requirement_purpose() == "work"
 
     @pytest.mark.django_db
     def test_study_client_gets_study_checklist(self):

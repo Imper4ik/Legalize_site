@@ -42,7 +42,7 @@ msgstr "Data pobrania odcisków palców"
 
 #: .\clients\forms.py:102 .\clients\templates\clients\partials\modals.html:233
 #: .\templates\clients\partials\modals.html:222
-#, fuzzy
+
 #| msgid "Текст письма"
 msgid "Тема письма"
 msgstr "Temat wiadomości"
@@ -219,7 +219,7 @@ msgid "Доступ к чеклисту предоставлен"
 msgstr "Dostęp do listy kontrolnej przyznany"
 
 #: .\clients\models\client.py:61
-#, fuzzy
+
 #| msgid "Телефон работодателя"
 msgid "Компания / Работодатель"
 msgstr "Firma / Pracodawca"
@@ -418,7 +418,7 @@ msgid "Дата оплаты"
 msgstr "Data płatności"
 
 #: .\clients\models\payment.py:32
-#, fuzzy
+
 #| msgid "Способ оплаты"
 msgid "Срок оплаты"
 msgstr "Termin płatności"
@@ -1471,7 +1471,7 @@ msgstr ""
 "Dla celu \"%(purpose)s\" w języku \"%(language)s\" lista kontrolna nie została zdefiniowana w ustawieniach."
 
 #: .\clients\templates\clients\partials\email_history.html:6
-#, fuzzy
+
 #| msgid "Отправить email"
 msgid "История email"
 msgstr "Historia wiadomości e-mail"
@@ -1605,7 +1605,7 @@ msgstr ""
 
 #: .\clients\templates\clients\partials\modals.html:248
 #: .\templates\clients\partials\modals.html:235
-#, fuzzy
+
 #| msgid "Отправитель"
 msgid "Отправить"
 msgstr "Wyślij"
@@ -1654,7 +1654,7 @@ msgid "Выполнено"
 msgstr "Dodatkowo"
 
 #: .\clients\templates\clients\partials\reminder_item.html:94
-#, fuzzy
+
 #| msgid "Вы уверены, что хотите навсегда удалить клиента?"
 msgid "Вы уверены, что хотите безвозвратно удалить это напоминание?"
 msgstr "Czy na pewno chcesz trwale usunąć to przypomnienie?"
@@ -1677,7 +1677,7 @@ msgstr ""
 "Sprawdź i wygeneruj aktualne przypomnienia, filtruj wg klienta i okresów"
 
 #: .\clients\templates\clients\payment_reminder_list.html:81
-#, fuzzy
+
 #| msgid "Нет напоминаний по документам, соответствующих фильтрам."
 msgid "Нет напоминаний по оплатам, соответствующих фильтрам."
 msgstr "Brak przypomnień o płatnościach pasujących do filtrów."

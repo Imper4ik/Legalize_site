@@ -42,7 +42,7 @@ msgstr "Дата сдачи отпечатков"
 
 #: .\clients\forms.py:102 .\clients\templates\clients\partials\modals.html:233
 #: .\templates\clients\partials\modals.html:222
-#, fuzzy
+
 #| msgid "Текст письма"
 msgid "Тема письма"
 msgstr "Тема письма"
@@ -219,7 +219,7 @@ msgid "Доступ к чеклисту предоставлен"
 msgstr "Доступ к чеклисту предоставлен"
 
 #: .\clients\models\client.py:61
-#, fuzzy
+
 #| msgid "Телефон работодателя"
 msgid "Компания / Работодатель"
 msgstr "Компания / Работодатель"
@@ -418,7 +418,7 @@ msgid "Дата оплаты"
 msgstr "Дата оплаты"
 
 #: .\clients\models\payment.py:32
-#, fuzzy
+
 #| msgid "Способ оплаты"
 msgid "Срок оплаты"
 msgstr "Срок оплаты"
@@ -1469,7 +1469,7 @@ msgstr ""
 "  "
 
 #: .\clients\templates\clients\partials\email_history.html:6
-#, fuzzy
+
 #| msgid "Отправить email"
 msgid "История email"
 msgstr "История email"
@@ -1603,7 +1603,7 @@ msgstr ""
 
 #: .\clients\templates\clients\partials\modals.html:248
 #: .\templates\clients\partials\modals.html:235
-#, fuzzy
+
 #| msgid "Отправитель"
 msgid "Отправить"
 msgstr "Отправить"
@@ -1652,7 +1652,7 @@ msgid "Выполнено"
 msgstr "Дополнительно"
 
 #: .\clients\templates\clients\partials\reminder_item.html:94
-#, fuzzy
+
 #| msgid "Вы уверены, что хотите навсегда удалить клиента?"
 msgid "Вы уверены, что хотите безвозвратно удалить это напоминание?"
 msgstr "Вы уверены, что хотите безвозвратно удалить это напоминание?"
@@ -1676,7 +1676,7 @@ msgstr ""
 "периодам"
 
 #: .\clients\templates\clients\payment_reminder_list.html:81
-#, fuzzy
+
 #| msgid "Нет напоминаний по документам, соответствующих фильтрам."
 msgid "Нет напоминаний по оплатам, соответствующих фильтрам."
 msgstr "Нет напоминаний по оплатам, соответствующих фильтрам."
