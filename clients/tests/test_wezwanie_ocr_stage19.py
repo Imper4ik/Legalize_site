@@ -142,6 +142,16 @@ class WezwanieOCRStage19Tests(TestCase):
         self.assertEqual(self.client_obj.fingerprints_ticket, "X29")
         self.assertEqual(self.client_obj.fingerprints_list, "Lista X1")
 
+        self.assertTrue(document.parsed_data.get("pii_scrubbed"))
+        self.assertNotIn("full_name", document.parsed_data)
+        self.assertNotIn("first_name", document.parsed_data)
+        self.assertNotIn("last_name", document.parsed_data)
+        self.assertNotIn("case_number", document.parsed_data)
+        self.assertNotIn("text", document.parsed_data)
+        self.assertNotIn("raw_text", document.parsed_data)
+        self.assertIn("application_status_code", document.parsed_data)
+        self.assertIn("fingerprints_date", document.parsed_data)
+
     def test_upload_without_parse_request_only_saves_document(self):
         uploaded = build_pdf_upload("bg_wezwanie.pdf")
         response = self.client.post(

@@ -166,10 +166,14 @@ def process_document_jobs_cron(request: HttpRequest) -> JsonResponse:
             return forbidden_response
 
         limit_raw = (request.POST.get("limit") or "").strip()
-        limit = int(limit_raw) if limit_raw else None
-        
-        # We capture stdout/stderr to return some status, but call_command prints.
-        # Alternatively, we can just call it and return success.
+        limit = None
+        if limit_raw:
+            limit = int(limit_raw)
+            if limit <= 0:
+                return JsonResponse({"error": "limit must be positive"}, status=400)
+            if limit > 100:
+                limit = 100
+
         args = []
         if limit:
             args.extend(["--limit", str(limit)])

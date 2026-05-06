@@ -3571,3 +3571,6 @@ msgstr "Pierwszy dzień miesiąca, za który przesłano ZUS RCA."
 
 #~ msgid "Дата создания счёта"
 #~ msgstr "Data utworzenia rachunku"
+
+msgid "OCR awaiting review"
+msgstr "OCR oczekuje na weryfikację"

@@ -147,6 +147,32 @@ class CronViewsTests(TestCase):
 
     @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
     @patch("django.core.management.call_command")
+    def test_process_document_jobs_cron_negative_limit(self, call_command_mock):
+        response = self.client.post(
+            reverse("process_document_jobs_cron"),
+            data={"limit": "-5"},
+            HTTP_X_CRON_TOKEN="secret",
+            REMOTE_ADDR="127.0.0.1",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["error"], "limit must be positive")
+        call_command_mock.assert_not_called()
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    @patch("django.core.management.call_command")
+    def test_process_document_jobs_cron_large_limit(self, call_command_mock):
+        response = self.client.post(
+            reverse("process_document_jobs_cron"),
+            data={"limit": "150"},
+            HTTP_X_CRON_TOKEN="secret",
+            REMOTE_ADDR="127.0.0.1",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "processed")
+        call_command_mock.assert_called_once_with("process_document_jobs", "--limit", "100")
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    @patch("django.core.management.call_command")
     def test_process_document_jobs_cron_bearer_token(self, call_command_mock):
         response = self.client.post(
             reverse("process_document_jobs_cron"),
