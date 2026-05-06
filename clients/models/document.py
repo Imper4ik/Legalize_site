@@ -220,7 +220,7 @@ class Document(SoftDeleteModel):
         if not self.parsed_data:
             return False
 
-        keys_to_remove = ["full_name", "first_name", "last_name", "case_number", "text"]
+        keys_to_remove = ["full_name", "first_name", "last_name", "case_number", "text", "raw_text"]
         scrubbed = False
         for key in keys_to_remove:
             if key in self.parsed_data:

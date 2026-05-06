@@ -177,9 +177,11 @@ class Command(BaseCommand):
 
         count = 0
         for document in expiring_docs.iterator():
-            count += 1
             if dry_run:
+                count += 1
                 continue
+            
+            count += 1
 
             Reminder.objects.create(
                 client=document.client,

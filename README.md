@@ -42,10 +42,10 @@ Railway's ephemeral filesystem means uploaded files are lost on redeploy. Choose
    - `USE_S3_MEDIA_STORAGE=True`
    - Configure `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_STORAGE_BUCKET_NAME`, etc.
    
-2. **PostgreSQL Database Storage**: Good for small/MVP deployments
+2. **PostgreSQL Database Storage (Recommended for MVP)**:
    - `USE_DATABASE_MEDIA_STORAGE=True`
    - Document metadata remains in the filesystem schema, but actual file bytes are saved to PostgreSQL.
-   - Note: Database backups will grow much faster.
+   - Note: Database backups will grow much faster, but it requires zero additional infrastructure.
 
 3. **Railway Volume**: Requires explicitly acknowledging the volume path
    - `MEDIA_ROOT=/app/media` (or your exact volume mount)
@@ -63,6 +63,37 @@ Railway does not support native cron. You must configure an external ping servic
 - **Daily Reminders**: `POST /cron/update-reminders/`
 
 Secure these endpoints by setting `CRON_TOKEN` and passing it via the `Authorization: Bearer <TOKEN>` header. You can also restrict access by IP using `CRON_ALLOWED_IPS`.
+
+Example using `curl`:
+```bash
+curl -X POST https://your-app.railway.app/cron/process-document-jobs/ \
+     -H "Authorization: Bearer YOUR_CRON_TOKEN"
+```
+
+## Management Commands
+
+The application provides several Django management commands for administration:
+
+```bash
+# Apply database migrations
+python manage.py migrate
+
+# Collect static files (done automatically during build)
+python manage.py collectstatic --noinput
+
+# Create an initial admin user
+python manage.py createsuperuser
+
+# Manually trigger background OCR processing (if not using cron)
+python manage.py process_document_jobs
+
+# Manually trigger reminders and missing document emails
+python manage.py update_reminders
+
+# Scrub PII from old OCR data (dry-run first)
+python manage.py scrub_ocr_pii --dry-run
+python manage.py scrub_ocr_pii
+```
 
 ## Local Development
 

@@ -112,3 +112,76 @@ class CronViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "backup created")
         create_backup_mock.assert_called_once()
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    def test_process_document_jobs_cron_requires_token(self):
+        response = self.client.post(reverse("process_document_jobs_cron"))
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json(), {"error": "forbidden"})
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    @patch("django.core.management.call_command")
+    def test_process_document_jobs_cron_calls_command(self, call_command_mock):
+        response = self.client.post(
+            reverse("process_document_jobs_cron"),
+            data={"limit": "5"},
+            HTTP_X_CRON_TOKEN="secret",
+            REMOTE_ADDR="127.0.0.1",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "processed")
+        call_command_mock.assert_called_once_with("process_document_jobs", "--limit", "5")
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    @patch("django.core.management.call_command")
+    def test_process_document_jobs_cron_invalid_limit(self, call_command_mock):
+        response = self.client.post(
+            reverse("process_document_jobs_cron"),
+            data={"limit": "invalid"},
+            HTTP_X_CRON_TOKEN="secret",
+            REMOTE_ADDR="127.0.0.1",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["error"], "invalid limit")
+        call_command_mock.assert_not_called()
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    @patch("django.core.management.call_command")
+    def test_process_document_jobs_cron_bearer_token(self, call_command_mock):
+        response = self.client.post(
+            reverse("process_document_jobs_cron"),
+            HTTP_AUTHORIZATION="Bearer secret",
+            REMOTE_ADDR="127.0.0.1",
+        )
+        self.assertEqual(response.status_code, 200)
+        call_command_mock.assert_called_once_with("process_document_jobs")
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    def test_update_reminders_cron_requires_token(self):
+        response = self.client.post(reverse("update_reminders_cron"))
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json(), {"error": "forbidden"})
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    @patch("django.core.management.call_command")
+    def test_update_reminders_cron_calls_command(self, call_command_mock):
+        response = self.client.post(
+            reverse("update_reminders_cron"),
+            data={"only": ["documents", "payments"]},
+            HTTP_X_CRON_TOKEN="secret",
+            REMOTE_ADDR="127.0.0.1",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "processed")
+        call_command_mock.assert_called_once_with("update_reminders", "--only", "documents", "--only", "payments")
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    @patch("django.core.management.call_command")
+    def test_update_reminders_cron_bearer_token(self, call_command_mock):
+        response = self.client.post(
+            reverse("update_reminders_cron"),
+            HTTP_AUTHORIZATION="Bearer secret",
+            REMOTE_ADDR="127.0.0.1",
+        )
+        self.assertEqual(response.status_code, 200)
+        call_command_mock.assert_called_once_with("update_reminders")

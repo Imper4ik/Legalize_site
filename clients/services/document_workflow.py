@@ -509,6 +509,7 @@ def _finalize_successful_document_job(
             document.ocr_status = "success"
             document.awaiting_confirmation = False
             document.ocr_name_mismatch = _has_name_mismatch(parsed.full_name, client)
+            document.scrub_parsed_pii()
             document.save(update_fields=["parsed_data", "ocr_status", "awaiting_confirmation", "ocr_name_mismatch"])
 
         requires_confirmation = job.requires_confirmation
