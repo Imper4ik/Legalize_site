@@ -272,6 +272,20 @@
       const roleSelect = document.getElementById('id_family_role');
       const sponsorSelect = document.getElementById('id_sponsor_client');
       const familyFields = document.querySelectorAll('[data-family-only-field]');
+      const sponsorField = document.getElementById('family-sponsor-field');
+
+      /* --- Sponsor-role help text (injected once) --- */
+      let sponsorHelpText = document.getElementById('sponsor-role-help-text');
+      if (!sponsorHelpText && sponsorField) {
+        sponsorHelpText = document.createElement('div');
+        sponsorHelpText.id = 'sponsor-role-help-text';
+        sponsorHelpText.className = 'form-text text-info d-none';
+        sponsorHelpText.textContent = 'Спонсор семьи использует рабочий чеклист документов.';
+        const roleFieldEl = document.getElementById('family-role-field');
+        if (roleFieldEl) {
+          roleFieldEl.appendChild(sponsorHelpText);
+        }
+      }
 
       if (purposeSelect && params.get('application_purpose') && !purposeSelect.value) {
         purposeSelect.value = params.get('application_purpose');
@@ -285,19 +299,46 @@
 
       function updateFamilyFields() {
         const isFamily = purposeSelect && purposeSelect.value === 'family';
+        const role = roleSelect ? roleSelect.value : '';
+        const needsSponsor = isFamily && ['family_spouse', 'family_child'].includes(role);
+
+        /* Show / hide all family-only fields (role + sponsor container) */
         familyFields.forEach((field) => {
           field.classList.toggle('d-none', !isFamily);
         });
+
+        /* Role is required whenever purpose is family */
         if (roleSelect) {
           roleSelect.required = Boolean(isFamily);
         }
+
+        /* Sponsor field: visible only when spouse / child is selected */
+        if (sponsorField) {
+          sponsorField.classList.toggle('d-none', !needsSponsor);
+        }
+
+        /* Sponsor select: required only for spouse / child */
         if (sponsorSelect) {
-          sponsorSelect.required = Boolean(isFamily);
+          sponsorSelect.required = needsSponsor;
+
+          /* Safe clearing: only clear when not family, or role is sponsor.
+             Never clear when role is spouse/child (preserves add-relative prefill). */
+          if (!isFamily || role === 'sponsor') {
+            sponsorSelect.value = '';
+          }
+        }
+
+        /* Help text for sponsor role */
+        if (sponsorHelpText) {
+          sponsorHelpText.classList.toggle('d-none', !(isFamily && role === 'sponsor'));
         }
       }
 
       if (purposeSelect) {
         purposeSelect.addEventListener('change', updateFamilyFields);
+      }
+      if (roleSelect) {
+        roleSelect.addEventListener('change', updateFamilyFields);
       }
       updateFamilyFields();
     });

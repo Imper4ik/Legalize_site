@@ -557,3 +557,36 @@ class TestChecklistManageFamilyPurposes:
         assert response.status_code == 302
         req.refresh_from_db()
         assert req.custom_name == "Birth Certificate Updated"
+
+
+# ===========================================================================
+# 9. CLIENT FORM TEMPLATE — JS LOGIC KEYWORDS
+# ===========================================================================
+
+class TestClientFormTemplateJsLogic:
+    """Verify client_form.html contains the updated family/sponsor JS logic."""
+
+    def _template_source(self):
+        from pathlib import Path
+        tpl = Path(__file__).resolve().parent.parent / "templates" / "clients" / "client_form.html"
+        return tpl.read_text(encoding="utf-8")
+
+    def test_needs_sponsor_variable(self):
+        src = self._template_source()
+        assert "needsSponsor" in src
+
+    def test_family_spouse_in_js(self):
+        src = self._template_source()
+        assert "family_spouse" in src
+
+    def test_family_child_in_js(self):
+        src = self._template_source()
+        assert "family_child" in src
+
+    def test_role_sponsor_check(self):
+        src = self._template_source()
+        assert "role === 'sponsor'" in src
+
+    def test_role_select_change_listener(self):
+        src = self._template_source()
+        assert "roleSelect.addEventListener" in src
