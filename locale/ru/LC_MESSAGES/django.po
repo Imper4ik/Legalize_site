@@ -3569,3 +3569,39 @@ msgstr "Первый день месяца, за который загружен
 
 msgid "OCR awaiting review"
 msgstr "OCR ожидает проверки"
+
+msgid "Documents awaiting verification"
+msgstr "Документы ожидают проверки"
+
+msgid "No documents awaiting OCR"
+msgstr "Нет документов, ожидающих OCR"
+
+msgid "No expired documents"
+msgstr "Нет просроченных документов"
+
+msgid "No active reminders"
+msgstr "Нет активных напоминаний"
+
+msgid "Active cases"
+msgstr "Активные дела"
+
+msgid "Missing documents"
+msgstr "Отсутствующие документы"
+
+msgid "Expired documents"
+msgstr "Просроченные документы"
+
+msgid "Unpaid payments"
+msgstr "Неоплаченные платежи"
+
+msgid "Upcoming fingerprints"
+msgstr "Ближайшие отпечатки"
+
+msgid "Waiting after fingerprints"
+msgstr "Ожидание после отпечатков"
+
+msgid "Decisions"
+msgstr "Решения"
+
+msgid "Active reminders"
+msgstr "Активные напоминания"

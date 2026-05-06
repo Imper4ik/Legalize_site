@@ -53,7 +53,7 @@
     <nav class="navbar navbar-expand-lg theme-navbar shadow-sm">
       <div class="container">
         <a class="navbar-brand fw-semibold d-flex align-items-center"
-          href="{% if user.is_authenticated and user.is_staff %}{% url 'clients:client_list' %}{% else %}{% url 'account_login' %}{% endif %}">
+          href="{% if user.is_authenticated and user|has_any_role:'Admin,Manager,Staff,ReadOnly' %}{% url 'clients:client_list' %}{% else %}{% url 'account_login' %}{% endif %}">
           <img src="{% static 'img/favicon.jpg' %}" alt="Logo" width="30" height="30"
             class="d-inline-block align-text-top me-2 rounded-circle object-fit-cover">
           {% translate "Legalize" %}
@@ -65,7 +65,7 @@
         <div class="collapse navbar-collapse" id="navbarNav">
           {% if user.is_authenticated %}
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            {% if user.is_staff %}
+            {% if user|has_any_role:"Admin,Manager,Staff,ReadOnly" %}
             <li class="nav-item">
               <a class="nav-link text-nowrap" href="{% url 'clients:client_list' %}">
                 <i class="bi bi-people me-1"></i>{% translate "Клиенты" %}
@@ -157,7 +157,7 @@
                 <i class="fas fa-user-circle me-1"></i>{{ user.first_name|default:user.email }}
               </a>
               <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
-                {% if user.is_staff %}
+                {% if user|has_any_role:"Admin,Manager,Staff,ReadOnly" %}
                 <li>
                   <a class="dropdown-item" href="{% url 'clients:admin_panel' %}">
                     <i class="bi bi-grid-1x2 me-2"></i>Админ панель
@@ -177,14 +177,14 @@
                   </a>
                 </li>
                 {% endif %}
-                {% if user.is_superuser and translation_studio_available %}
+                {% if user|has_any_role:"Admin,Translator" and translation_studio_available %}
                 <li>
                   <a class="dropdown-item fw-bold" href="{% url 'translations:dashboard' %}" style="color: #6366f1;">
                     <i class="bi bi-translate me-2"></i>Translation Studio
                   </a>
                 </li>
                 {% endif %}
-                {% if user.is_superuser %}
+                {% if user|has_any_role:"Admin,Manager" %}
                 <li>
                   <a class="dropdown-item fw-bold text-danger" href="{% url 'clients:admin_dashboard' %}">
                     <i class="bi bi-shield-lock me-2"></i>{% translate "System Health" %}

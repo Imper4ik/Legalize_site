@@ -180,7 +180,7 @@ class Command(BaseCommand):
             if dry_run:
                 count += 1
                 continue
-            
+
             count += 1
 
             Reminder.objects.create(

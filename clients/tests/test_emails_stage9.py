@@ -245,6 +245,28 @@ class EmailViewsStage9Tests(TestCase):
         self.assertEqual(send_mail_mock.call_count, 1)
         self.assertEqual(EmailLog.objects.filter(template_type="mass_email").count(), 1)
 
+    @patch(
+        "clients.services.email_campaigns.send_mail",
+        side_effect=RuntimeError("smtp failure for email-user@example.com"),
+    )
+    def test_process_email_campaign_redacts_failed_recipient_details(self, _send_mail_mock):
+        campaign = EmailCampaign.objects.create(
+            subject="News",
+            message="Body",
+            total_recipients=1,
+            recipient_emails=["email-user@example.com"],
+            created_by=self.staff,
+        )
+
+        call_command("process_email_campaigns", campaign_id=campaign.pk)
+
+        campaign.refresh_from_db()
+        self.assertEqual(campaign.status, EmailCampaign.STATUS_FAILED)
+        self.assertEqual(campaign.failed_count, 1)
+        self.assertIn("recipient #1: RuntimeError", campaign.error_details)
+        self.assertNotIn("email-user@example.com", campaign.error_details)
+        self.assertNotIn("smtp failure", campaign.error_details)
+
     def test_campaign_status_api_returns_no_store_payload(self):
         campaign = EmailCampaign.objects.create(
             subject="Queued",

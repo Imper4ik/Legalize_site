@@ -12,6 +12,8 @@ from legalize_site.soft_delete import SoftDeleteModel
 
 DOCUMENT_TYPE_VALUES = {choice.value for choice in DocumentType}
 DOCUMENT_LABEL_ALIASES: dict[str, list[str]] = {}
+PARSED_DATA_PII_KEYS = {"full_name", "first_name", "last_name", "case_number", "text", "raw_text"}
+PARSED_DATA_RAW_TEXT_KEYS = {"text", "raw_text"}
 
 
 def document_upload_path(_instance, filename: str) -> str:
@@ -220,14 +222,17 @@ class Document(SoftDeleteModel):
         if not self.parsed_data:
             return False
 
-        keys_to_remove = ["full_name", "first_name", "last_name", "case_number", "text", "raw_text"]
         scrubbed = False
-        for key in keys_to_remove:
+        removed_raw_text = False
+        for key in PARSED_DATA_PII_KEYS:
             if key in self.parsed_data:
                 del self.parsed_data[key]
                 scrubbed = True
-        
+                removed_raw_text = removed_raw_text or key in PARSED_DATA_RAW_TEXT_KEYS
+
         self.parsed_data["pii_scrubbed"] = True
+        if removed_raw_text:
+            self.parsed_data["raw_text_removed"] = True
         return scrubbed
 
 

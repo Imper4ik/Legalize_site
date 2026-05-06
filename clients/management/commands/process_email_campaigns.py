@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 from clients.services.email_campaigns import process_campaign, process_pending_email_campaigns
 
@@ -29,6 +29,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         limit = options["limit"]
         campaign_id = options["campaign_id"]
+        if limit is not None:
+            if limit <= 0:
+                raise CommandError("--limit must be positive.")
+            if limit > 100:
+                limit = 100
 
         if campaign_id is not None:
             logger.info("Processing queued email campaign %s", campaign_id)

@@ -6,49 +6,49 @@ logger = logging.getLogger(__name__)
 
 def patch_translations():
     """
-    Perform a deep monkey-patch of Django's translation system 
+    Perform a deep monkey-patch of Django's translation system
     to wrap all gettext calls in our markers for the Translation Studio.
     """
     if hasattr(translation, '_studio_patched'):
         return
 
     from django.utils.translation import trans_real
-    
+
     # 1. Patch the main translation proxy
     if not hasattr(translation, '_original_gettext'):
         translation._original_gettext = translation.gettext
-        
+
         def wrapped_gettext(message):
             result = translation._original_gettext(message)
             if getattr(translation, '_studio_active', False) and message and not message.startswith('[[i18n:'):
                 return f"[[i18n:{message}]]{result}[[/i18n]]"
             return result
-        
+
         translation.gettext = wrapped_gettext
 
     # 2. Patch trans_real for more direct access (used by translate/blocktrans tags)
     if not hasattr(trans_real, '_original_gettext'):
         trans_real._original_gettext = trans_real.gettext
-        
+
         def wrapped_real_gettext(message):
             result = trans_real._original_gettext(message)
             if getattr(translation, '_studio_active', False) and message and not message.startswith('[[i18n:'):
                 return f"[[i18n:{message}]]{result}[[/i18n]]"
             return result
-        
+
         trans_real.gettext = wrapped_real_gettext
 
     # 3. Patch DjangoTranslation.gettext (the actual translator class)
     if hasattr(trans_real, 'DjangoTranslation'):
         if not hasattr(trans_real.DjangoTranslation, '_original_gettext'):
             trans_real.DjangoTranslation._original_gettext = trans_real.DjangoTranslation.gettext
-            
+
             def wrapped_class_gettext(self, message):
                 result = self._original_gettext(message)
                 if getattr(translation, '_studio_active', False) and message and not message.startswith('[[i18n:'):
                     return f"[[i18n:{message}]]{result}[[/i18n]]"
                 return result
-            
+
             trans_real.DjangoTranslation.gettext = wrapped_class_gettext
 
     # 4. Patch plural form functions (ngettext) to ensure plurals are wrapped as well
@@ -77,13 +77,13 @@ def patch_translations():
     if hasattr(trans_real, 'DjangoTranslation'):
         if not hasattr(trans_real.DjangoTranslation, '_original_ngettext') and hasattr(trans_real.DjangoTranslation, 'ngettext'):
             trans_real.DjangoTranslation._original_ngettext = trans_real.DjangoTranslation.ngettext
-            
+
             def wrapped_class_ngettext(self, singular, plural, number):
                 result = self._original_ngettext(singular, plural, number)
                 if getattr(translation, '_studio_active', False) and singular and not singular.startswith('[[i18n:'):
                     return f"[[i18n:{singular}]]{result}[[/i18n]]"
                 return result
-            
+
             trans_real.DjangoTranslation.ngettext = wrapped_class_ngettext
 
     translation._studio_patched = True

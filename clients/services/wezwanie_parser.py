@@ -30,19 +30,19 @@ CASE_NUMBER_PATTERNS = (
     re.compile(r"sygnatura[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     re.compile(r"nr\s+akt[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
     re.compile(r"znak\s+sprawy[:\s]*([-A-Za-z0-9./ ]+)", re.IGNORECASE),
-    
+
     # 1. Wide net for WSC (single line only)
     # Matches "WSC", "W S C" etc. followed by chars, spaces, dots, slashes But NOT newlines
     # Exclude if it contains ".pl" (URL)
     re.compile(r"((?:W[ \t]*S[ \t]*C|S[ \t]*O[ \t]*C|W[ \t]*5[ \t]*C|V[ \t]*V[ \t]*S[ \t]*C|W[ \t]*\$[ \t]*C|W[ \t]*\.[ \t]*S[ \t]*\.[ \t]*C)(?!\.[\w]+\.pl)[-\w. /]{5,})", re.IGNORECASE),
-    
+
     # 2. Structure match (single line only)
     # "2-5 Chars - Roman/Digits ... "
     re.compile(r"([A-Z0-9 ]{2,5}[- ]+[XIV1l\d]{1,5}[- ]+[A-Z0-9][. ]+\d{4}[. ]+\d+(?:[. ]+\d+)?)", re.IGNORECASE),
-    
+
     # 3. Generic fallback
     re.compile(r"\b([A-Z]{2,4}[- ][XIV]+\.[-\w./]+)\b", re.IGNORECASE),
-    
+
     # 4. Old Strict fallback
     re.compile(r"\b([A-Z]{1,3}[ \t]?/[ \t]?\d{1,5}[ \t]?/[ \t]?\d{2,4})\b"),
 )
@@ -137,15 +137,15 @@ def _extract_pdf_text(path: Path) -> str:
                 except pytesseract.TesseractNotFoundError:
                     logger.warning("Tesseract binary is not available; skipping PDF OCR for %s", path)
                     break
-                except Exception as e:
-                    logger.warning("OCR failed on page %s: %s", i, e)
+                except Exception as exc:
+                    logger.warning("OCR failed on page %s: error_type=%s", i, type(exc).__name__)
 
             text_content = "\n".join(ocr_text)
             logger.debug("Extracted PDF OCR text length=%s", len(text_content))
         except ImportError:
             logger.warning("pdf2image or pytesseract not available")
-        except Exception as e:
-            logger.exception("PDF OCR extraction failed: %s", e)
+        except Exception as exc:
+            logger.warning("PDF OCR extraction failed: error_type=%s", type(exc).__name__)
 
     # 2. Fallback: naive binary extraction (only works for some streams, mostly debug)
     if not text_content or len(text_content.strip()) < 50:
@@ -177,7 +177,7 @@ def _preprocess_for_ocr(img):
         prepared_img = ImageOps.autocontrast(prepared_img)
         prepared_img = prepared_img.filter(ImageFilter.SHARPEN)
         return prepared_img
-    
+
     # 0. Fix EXIF orientation (crucial for phone photos)
     try:
         img = ImageOps.exif_transpose(img)
@@ -221,11 +221,11 @@ def _preprocess_for_ocr(img):
         # Convert PIL to CV2 (OpenCV uses BGR, PIL uses RGB)
         # Note: We need grayscale mainly.
         cv_img = np.array(img)
-        
+
         # Check if we have alpha channel, drop it
         if cv_img.shape[-1] == 4:
             cv_img = cv2.cvtColor(cv_img, cv2.COLOR_RGBA2RGB)
-            
+
         # Convert to Gray
         if len(cv_img.shape) == 3:
             gray = cv2.cvtColor(cv_img, cv2.COLOR_RGB2GRAY)
@@ -243,15 +243,15 @@ def _preprocess_for_ocr(img):
         thresh = cv2.adaptiveThreshold(
             img_blur, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 31, 10
         )
-        
+
         # 3.3. Denoise (Morphological Opening/Closing or Median)
         # Often simple median blur cleans "salt and pepper" noise from thresholding
         clean = cv2.medianBlur(thresh, 3)
-        
+
         # Convert back to PIL
         return Image.fromarray(clean)
-    except Exception as e:
-        logger.exception("OpenCV preprocessing failed: %s, falling back", e)
+    except Exception as exc:
+        logger.warning("OpenCV preprocessing failed: error_type=%s; falling back", type(exc).__name__)
         return _pil_fallback(img)
 
 
@@ -271,23 +271,23 @@ def _extract_image_text(path: Path) -> str:
         with Image.open(path) as img:
             # Preprocess image to improve accuracy (fix "eaten" letters)
             processed_img = _preprocess_for_ocr(img)
-            
+
             text_out = pytesseract.image_to_string(processed_img, lang='pol+eng')
             logger.debug("Extracted image OCR text length=%s", len(text_out))
             return text_out
     except pytesseract.TesseractNotFoundError:
         logger.warning("Tesseract binary is not available; skipping image OCR for %s", path)
         return ""
-    except Exception:  # pragma: no cover - defensive logging
-        logger.exception("Не удалось прочитать изображение %s через OCR", path)
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.warning("Image OCR failed: error_type=%s", type(exc).__name__)
         return ""
 
 
 def _read_plain_text(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8", errors="ignore")
-    except Exception:  # pragma: no cover - defensive logging
-        logger.exception("Не удалось прочитать файл %s как текст", path)
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.warning("Plain text extraction failed: error_type=%s", type(exc).__name__)
         return ""
 
 
@@ -295,23 +295,23 @@ def _normalize_ocr_text(text: str) -> str:
     """Clean up common OCR and PDF text extraction artifacts."""
     if not text:
         return ""
-    
+
     # 1. Replace weird unicode separators (often seen in bad PDF streams)
     text = text.replace('\ufffe', '-')
-    
+
     # 2. Soft hyphens (\u00ad) and invisible BOMs
     text = text.replace('\u00ad', '').replace('\ufeff', '')
-    
+
     # 3. Non-breaking spaces and tabs to regular spaces
     text = text.replace('\u00a0', ' ').replace('\t', ' ')
-    
+
     # 4. Normalize various dash types to standard hyphen
     for dash in ['\u2013', '\u2014', '\u2012', '\u2212']:
         text = text.replace(dash, '-')
-        
+
     # 5. Clean up multiple spaces
     text = re.sub(r' +', ' ', text)
-    
+
     return text.strip()
 
 
@@ -345,15 +345,15 @@ def _try_normalize_wsc(text: str) -> str | None:
     # Regex to pull apart the components: Prefix - Roman - Code . Numbers
     # Matches things like "Ws -11-5.6151..."
     pattern = re.compile(
-        r"^([A-Z0-9\s]{2,5})[-\s]+([XIV1l\d]{1,5})[-\s]+([A-Z0-9])([.\s]+\d+(?:[.\s]+\d+)+)", 
+        r"^([A-Z0-9\s]{2,5})[-\s]+([XIV1l\d]{1,5})[-\s]+([A-Z0-9])([.\s]+\d+(?:[.\s]+\d+)+)",
         re.IGNORECASE
     )
     match = pattern.search(text)
     if not match:
         return None
-        
+
     prefix, roman, code, numbers = match.groups()
-    
+
     # 1. Normalize Prefix
     n_prefix = prefix.upper().replace(" ", "").replace("VV", "W").replace("5", "S").replace("$", "S")
     if n_prefix == "WS":
@@ -362,57 +362,57 @@ def _try_normalize_wsc(text: str) -> str | None:
         n_prefix = "WSC"
     if n_prefix == "SOC":
         n_prefix = "WSC"
-        
+
     # 2. Normalize Roman (1->I, 11->II, l->I)
     n_roman = roman.upper().replace("1", "I").replace("L", "I")
     if n_roman == "II" or n_roman == "I":
-        # Heuristic: If it shows 'I' but typically 'II' is expected for residence permits... 
-        # But WSC-I exists (Citizenship?). WSC-II is Foreigners. 
+        # Heuristic: If it shows 'I' but typically 'II' is expected for residence permits...
+        # But WSC-I exists (Citizenship?). WSC-II is Foreigners.
         # Safest is not to force 'II' unless we see '11'.
         pass
-    
+
     # 3. Normalize Code (5->S)
     n_code = code.upper().replace("5", "S")
-    
+
     # 4. Normalize Numbers (remove spaces)
     n_numbers = numbers.replace(" ", "")
-    
+
     return f"{n_prefix}-{n_roman}-{n_code}{n_numbers}"
 
 
 def _find_case_number(text: str) -> str | None:
     candidate_log = []
-    
+
     # 1. Try Specific Patterns (Prefix-based)
     for pattern in CASE_NUMBER_PATTERNS:
         # scan the whole text for matches
         for match in pattern.finditer(text):
             raw_val = match.group(1)
-            
+
             # Filter out URL artifacts manually if regex missed it
             if "mazowieckie.pl" in raw_val.lower():
                 continue
-                
+
             candidate_log.append(f"Pattern match: '{raw_val}'")
-            
+
             # Try advanced WSC normalization first
             advanced_norm = _try_normalize_wsc(raw_val)
             if advanced_norm:
                 logger.debug("Advanced WSC normalization: %s -> %s", raw_val, advanced_norm)
                 return advanced_norm
-            
+
             # Standard cleanup if advanced failed
             normalized = re.sub(r"\s+", "", raw_val)
             normalized = normalized.replace("VV", "W").replace("5", "S").replace("$", "S")
             normalized = normalized.strip(".,-:/")
             normalized = normalized.upper()
-            
+
             # Reject if too short (e.g. just "WSC") or looks like a date "2023-10-10"
             if len(normalized) < 5:
                 continue
             if re.match(r"^\d{4}-\d{2}-\d{2}$", normalized):
                 continue
-                
+
             logger.debug("Case number candidate accepted: %s (from '%s')", normalized, raw_val)
             return normalized
 
@@ -444,7 +444,7 @@ def _find_first_date(text: str) -> date | None:
 def _detect_wezwanie_type(text: str) -> str | None:
     """Detect if this is a fingerprints invitation, decision notification, or fingerprint confirmation."""
     text_lower = text.lower()
-    
+
     # Keywords for confirmation (post-visit)
     confirmation_keywords = ["potwierdzenie złożenia", "potwierdzenie przyjęcia", "odciski linii papilarnych zostały pobrane"]
     if any(keyword in text_lower for keyword in confirmation_keywords):
@@ -454,7 +454,7 @@ def _detect_wezwanie_type(text: str) -> str | None:
     decision_keywords = ["decyzj", "wydanie decyzji", "termin wydania", "termin rozpatrz"]
     if any(keyword in text_lower for keyword in decision_keywords):
         return "decision"
-    
+
     # Keywords for fingerprints wezwanie (first type)
     fingerprint_keywords = [
         "odcisk", "odciski", "pobran", "fingerprint",
@@ -464,7 +464,7 @@ def _detect_wezwanie_type(text: str) -> str | None:
     ]
     if any(keyword in text_lower for keyword in fingerprint_keywords):
         return "fingerprints"
-    
+
     return None
 
 
@@ -499,7 +499,7 @@ def _find_fingerprints_datetime(text: str) -> tuple[date | None, str | None]:
             re.IGNORECASE | re.DOTALL
         ),
     ]
-    
+
     for pattern in combined_patterns:
         for match in pattern.finditer(text):
             # Heuristic: Skip if it looks like the letter creation date (usually top-right: Warszawa, dnia ...)
@@ -513,7 +513,7 @@ def _find_fingerprints_datetime(text: str) -> tuple[date | None, str | None]:
             t = match.group(2).replace('.', ':')
             if d:
                 return d, t
-                
+
     # 2. Fallback to separate but still prioritizing proximity if possible
     # (We only do this if the specific combined patterns failed)
     d = _find_first_date(text)
@@ -530,7 +530,7 @@ def _find_fingerprints_location(text: str) -> str | None:
     # Try to find pokój/sala and stanowisko
     room_match = re.search(r"(?:pok|sala|pokój)\.?\s*([\d\s,/]+)", text, re.IGNORECASE)
     booth_match = re.search(r"(?:stanowisko|stan\.)\s*([\d\s,/]+)", text, re.IGNORECASE)
-    
+
     parts = []
     if address:
         parts.append(address)
@@ -538,10 +538,10 @@ def _find_fingerprints_location(text: str) -> str | None:
         parts.append(f"pok. {room_match.group(1).strip()}")
     if booth_match:
         parts.append(f"stan. {booth_match.group(1).strip()}")
-        
+
     if parts:
         return ", ".join(parts)
-        
+
     # Fallback to general patterns
     location_patterns = [
         re.compile(r"miejsce[:\s]+(.*?)(?:\.|\n)", re.IGNORECASE),
@@ -578,7 +578,7 @@ def _extract_status_code(text: str, case_number: str | None) -> str | None:
         match = re.search(r"WSC-II-([PSK])", case_number, re.IGNORECASE)
         if match:
             return match.group(1).upper()
-            
+
     # 2. From text keywords
     text_lower = text.lower()
     if "prac" in text_lower or "work" in text_lower:
@@ -587,7 +587,7 @@ def _extract_status_code(text: str, case_number: str | None) -> str | None:
         return "S"
     if "rodzin" in text_lower or "family" in text_lower or "małżeń" in text_lower:
         return "K"
-        
+
     return None
 
 
@@ -608,14 +608,14 @@ def _find_decision_date(text: str) -> date | None:
         # General fallback
         re.compile(r"(?:rozpatrzenie|termin).*?do[:\s]+([\d./-]+)", re.IGNORECASE),
     ]
-    
+
     for pattern in decision_patterns:
         match = pattern.search(text)
         if match:
             parsed = _parse_date(match.group(1))
             if parsed:
                 return parsed
-    
+
     return None
 
 
@@ -639,7 +639,7 @@ def _find_full_name(text: str) -> str | None:
         # Pattern 3: "Imię i nazwisko: Jan Kowalski" (Strict with colon/newline)
         re.compile(
             r"(?:imię i nazwisko|imi[ęe] oraz nazwisko)[:\s\n]+"
-            r"([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+(?:[ \t]+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+)+)", 
+            r"([A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+(?:[ \t]+[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+)+)",
             re.IGNORECASE | re.UNICODE
         ),
     ]
@@ -661,7 +661,7 @@ def parse_wezwanie(file_path: str | Path) -> WezwanieData:
 
     raw_text = extract_text(file_path)
     text = _normalize_ocr_text(raw_text)
-    
+
     if not text.strip():
         return WezwanieData(text="", error="no_text")
     logger.debug("Extracted wezwanie text length=%s", len(text))
@@ -675,7 +675,7 @@ def parse_wezwanie(file_path: str | Path) -> WezwanieData:
     full_name = _find_full_name(text)
     logger.debug("Full name: %s", full_name)
 
-    
+
     # Extract dates based on type
     fingerprints_date = None
     fingerprints_time = None
@@ -684,7 +684,7 @@ def parse_wezwanie(file_path: str | Path) -> WezwanieData:
     list_name = None
     application_status_code = None
     decision_date = None
-    
+
     if wezwanie_type == "decision":
         # Second wezwanie - look for decision date
         decision_date = _find_decision_date(text)
@@ -701,10 +701,10 @@ def parse_wezwanie(file_path: str | Path) -> WezwanieData:
     else:
         # Unknown/Confirmation - look for fingerprints date
         fingerprints_date = _find_first_date(text)
-    
+
     # Extract required documents
     required_documents = _extract_required_documents(text)
-    
+
     return WezwanieData(
         text=text,
         case_number=case_number,
@@ -726,7 +726,7 @@ def _extract_required_documents(text: str) -> list[str]:
     """Scan text for keywords indicating required documents."""
     found_docs = set()
     text_lower = text.lower()
-    
+
     # Mapping of DocumentType to regex patterns
     # Note: These should be robust enough to catch standard phrasing in Wezwanias
     patterns = {
@@ -747,5 +747,5 @@ def _extract_required_documents(text: str) -> list[str]:
             if re.search(pattern, text_lower):
                 found_docs.add(doc_type.value)
                 break  # Found this document type, move to next
-    
+
     return sorted(found_docs)

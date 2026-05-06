@@ -42,6 +42,90 @@
   </div>
 </div>
 
+<div class="row g-4 mb-4">
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-2">{% translate "Active cases" %}</div>
+        <div class="display-6 fw-semibold">{{ active_cases }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-2">{% translate "OCR awaiting review" %}</div>
+        <div class="display-6 fw-semibold">{{ ocr_awaiting_review }}</div>
+        {% if not ocr_awaiting_review %}
+        <div class="small text-muted">{% translate "No documents awaiting OCR" %}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-2">{% translate "Documents awaiting verification" %}</div>
+        <div class="display-6 fw-semibold">{{ documents_awaiting_verification }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-2">{% translate "Missing documents" %}</div>
+        <div class="display-6 fw-semibold">{{ missing_documents }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-2">{% translate "Expired documents" %}</div>
+        <div class="display-6 fw-semibold">{{ expired_documents }}</div>
+        {% if not expired_documents %}
+        <div class="small text-muted">{% translate "No expired documents" %}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-2">{% translate "Upcoming fingerprints" %}</div>
+        <div class="display-6 fw-semibold">{{ upcoming_fingerprints }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-2">{% translate "Waiting after fingerprints" %}</div>
+        <div class="display-6 fw-semibold">{{ waiting_after_fingerprints }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-2">{% translate "Decisions" %}</div>
+        <div class="display-6 fw-semibold">{{ decisions_received }}</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12 col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-2">{% translate "Active reminders" %}</div>
+        <div class="display-6 fw-semibold">{{ active_reminders }}</div>
+        {% if not active_reminders %}
+        <div class="small text-muted">{% translate "No active reminders" %}</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="row g-4">
   {% if user|has_any_role:"Admin,Manager" %}
   <div class="col-12 col-lg-6">

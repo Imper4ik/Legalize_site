@@ -37,7 +37,7 @@ class Submission(SoftDeleteModel):
         from django.utils import translation
         lang = translation.get_language() or 'pl'
         lang = lang.split('-')[0].lower()
-        
+
         localized = getattr(self, f'name_{lang}', None)
         if localized and localized.strip():
             return localized

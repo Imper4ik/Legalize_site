@@ -451,5 +451,5 @@ def get_document_parsed_data(request, doc_id):
         return JsonResponse({"error": _("Document not found.")}, status=404)
     if not document.awaiting_confirmation:
         return JsonResponse({"error": _("Document is not awaiting confirmation.")}, status=400)
-    
+
     return JsonResponse({"parsed_data": document.parsed_data or {}})

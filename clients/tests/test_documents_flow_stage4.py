@@ -216,7 +216,7 @@ class DocumentFlowsStage4Tests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        
+
         docs = Document.objects.filter(client=self.client_obj, document_type=DocumentType.PASSPORT.value)
         self.assertEqual(docs.count(), 2)
 

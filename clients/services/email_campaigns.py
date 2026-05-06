@@ -114,7 +114,7 @@ def process_campaign(campaign_id: int) -> CampaignProcessingResult | None:
         len(recipients),
     )
 
-    for email_addr in recipients:
+    for index, email_addr in enumerate(recipients, start=1):
         try:
             result = send_mail(
                 campaign.subject,
@@ -135,11 +135,16 @@ def process_campaign(campaign_id: int) -> CampaignProcessingResult | None:
                 )
             else:
                 failed += 1
-                errors.append(f"{email_addr}: send_mail returned 0")
+                errors.append(f"recipient #{index}: send_mail returned 0")
         except Exception as exc:  # pragma: no cover - defensive safeguard
             failed += 1
-            errors.append(f"{email_addr}: {exc}")
-            logger.exception("Mass email delivery failed for %s", email_addr)
+            errors.append(f"recipient #{index}: {type(exc).__name__}")
+            logger.warning(
+                "Mass email delivery failed for campaign=%s recipient_index=%s error_type=%s",
+                campaign.id,
+                index,
+                type(exc).__name__,
+            )
 
         EmailCampaign.objects.filter(pk=campaign.pk).update(
             sent_count=sent,
@@ -152,8 +157,12 @@ def process_campaign(campaign_id: int) -> CampaignProcessingResult | None:
             campaign.message,
             recipients,
         )
-    except Exception:  # pragma: no cover - defensive safeguard
-        logger.exception("Failed to send confirmation email for campaign %s", campaign.id)
+    except Exception as exc:  # pragma: no cover - defensive safeguard
+        logger.warning(
+            "Failed to send confirmation email for campaign %s: error_type=%s",
+            campaign.id,
+            type(exc).__name__,
+        )
 
     campaign.sent_count = sent
     campaign.failed_count = failed

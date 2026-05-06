@@ -2,6 +2,7 @@ import re
 from django.conf import settings
 from django.urls import reverse
 from django.utils import translation
+from clients.services.roles import user_has_any_role
 
 # TAG_PATTERN is for matching [[i18n:Key]]Text[[/i18n]] in final HTML
 TAG_PATTERN = re.compile(r'\[\[i18n:(?P<msgid>.*?)\]\](?P<text>.*?)\[\[/i18n\]\]', re.DOTALL | re.IGNORECASE)
@@ -13,13 +14,15 @@ class TranslationStudioMiddleware:
 
     def __call__(self, request):
         # 1. Determine if Studio Mode is active
-        # Visible to superusers with session flag or 'studio' in GET
-        is_superuser = request.user.is_authenticated and request.user.is_superuser
-        studio_active = is_superuser and (request.session.get('studio_mode') or 'studio' in request.GET)
-        
+        # Visible to superusers or dedicated translation roles with session flag or 'studio' in GET.
+        can_use_studio = request.user.is_authenticated and (
+            request.user.is_superuser or user_has_any_role(request.user, "Admin", "Translator")
+        )
+        studio_active = can_use_studio and (request.session.get('studio_mode') or 'studio' in request.GET)
+
         # 2. Store state globally for current thread (gettext monkey-patches use this)
         translation._studio_active = studio_active
-        
+
         response = self.get_response(request)
 
         # IMPORTANT: previous approach attempted to convert server-side markers

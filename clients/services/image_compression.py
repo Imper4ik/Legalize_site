@@ -44,14 +44,14 @@ def compress_image(
 ) -> tuple[BytesIO, str]:
     """
     Compress image and return BytesIO buffer with compressed data.
-    
+
     Args:
         image_file: Input image file or file-like object
         output_format: Output format ('WEBP', 'JPEG', 'PNG')
         quality: Compression quality (1-100)
         max_width: Maximum width in pixels
         max_height: Maximum height in pixels
-        
+
     Returns:
         Tuple of (compressed_buffer, new_extension)
     """
@@ -60,11 +60,11 @@ def compress_image(
     quality = quality or settings_dict['quality']
     max_width = max_width or settings_dict['max_width']
     max_height = max_height or settings_dict['max_height']
-    
+
     # Open image
     try:
         img = Image.open(image_file)
-        
+
         # Convert RGBA to RGB if needed (for JPEG/WEBP)
         if img.mode in ('RGBA', 'LA', 'P') and output_format in ('JPEG', 'WEBP'):
             # Create white background
@@ -73,23 +73,23 @@ def compress_image(
                 img = img.convert('RGBA')
             background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
             img = background
-        
+
         # Resize if too large
         original_size = img.size
         if img.width > max_width or img.height > max_height:
             img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
             logger.info(f"Resized image from {original_size} to {img.size}")
-        
+
         # Compress to buffer
         buffer = BytesIO()
         save_kwargs = {'format': output_format, 'optimize': True}
-        
+
         if output_format in ('JPEG', 'WEBP'):
             save_kwargs['quality'] = quality
-        
+
         img.save(buffer, **save_kwargs)
         buffer.seek(0)
-        
+
         # Determine new extension
         extension_map = {
             'WEBP': '.webp',
@@ -97,7 +97,7 @@ def compress_image(
             'PNG': '.png',
         }
         new_ext = extension_map.get(output_format, '.webp')
-        
+
         # Log compression stats
         original_size_kb = image_file.size / 1024 if hasattr(image_file, 'size') else 0
         compressed_size_kb = len(buffer.getvalue()) / 1024
@@ -107,9 +107,9 @@ def compress_image(
                 f"Compressed image: {original_size_kb:.1f}KB → {compressed_size_kb:.1f}KB "
                 f"(saved {savings:.1f}%)"
             )
-        
+
         return buffer, new_ext
-        
+
     except Exception as e:
         logger.exception(f"Failed to compress image: {e}")
         raise
@@ -118,20 +118,20 @@ def compress_image(
 def compress_uploaded_file(uploaded_file: InMemoryUploadedFile) -> InMemoryUploadedFile | None:
     """
     Compress an uploaded Django file and return new InMemoryUploadedFile.
-    
+
     Args:
         uploaded_file: Django uploaded file
-        
+
     Returns:
         New compressed InMemoryUploadedFile or None if compression failed
     """
     if not should_compress(uploaded_file.name):
         return None
-    
+
     try:
         settings_dict = get_compression_settings()
         output_format = 'WEBP' if settings_dict['convert_to_webp'] else 'JPEG'
-        
+
         buffer, new_ext = compress_image(
             uploaded_file,
             output_format=output_format,
@@ -139,11 +139,11 @@ def compress_uploaded_file(uploaded_file: InMemoryUploadedFile) -> InMemoryUploa
             max_width=settings_dict['max_width'],
             max_height=settings_dict['max_height'],
         )
-        
+
         # Change file extension
         original_path = Path(uploaded_file.name)
         new_name = str(original_path.with_suffix(new_ext))
-        
+
         # Create new InMemoryUploadedFile
         compressed_file = InMemoryUploadedFile(
             file=buffer,
@@ -153,9 +153,9 @@ def compress_uploaded_file(uploaded_file: InMemoryUploadedFile) -> InMemoryUploa
             size=len(buffer.getvalue()),
             charset=getattr(uploaded_file, 'charset', None),
         )
-        
+
         return compressed_file
-        
+
     except Exception:
         logger.warning("Could not compress uploaded image file", exc_info=True)
         return None
@@ -164,40 +164,40 @@ def compress_uploaded_file(uploaded_file: InMemoryUploadedFile) -> InMemoryUploa
 def compress_existing_file(file_path: str | Path) -> bool:
     """
     Compress an existing file on disk and replace it.
-    
+
     Args:
         file_path: Path to existing file
-        
+
     Returns:
         True if compressed successfully, False otherwise
     """
     file_path = Path(file_path)
-    
+
     if not file_path.exists() or not should_compress(file_path):
         return False
-    
+
     try:
         with file_path.open('rb') as f:
             settings_dict = get_compression_settings()
             output_format = 'WEBP' if settings_dict['convert_to_webp'] else 'JPEG'
-            
+
             buffer, new_ext = compress_image(
                 f,
                 output_format=output_format,
             )
-        
+
         # Write compressed file
         new_path = file_path.with_suffix(new_ext)
         with new_path.open('wb') as f:
             f.write(buffer.getvalue())
-        
+
         # Remove old file if extension changed
         if new_path != file_path:
             file_path.unlink()
-        
+
         logger.info("Compressed existing image file")
         return True
-        
+
     except Exception:
         logger.exception("Failed to compress existing image file")
         return False

@@ -3,18 +3,22 @@ from __future__ import annotations
 from django.db.models import Q, QuerySet
 
 from clients.models import Client, Document, EmailCampaign, Payment, Reminder, StaffTask
-from clients.services.roles import SETTINGS_ALLOWED_ROLES
+from clients.services.roles import ADMIN_PANEL_ALLOWED_ROLES, SETTINGS_ALLOWED_ROLES
 
 
 PRIVILEGED_INTERNAL_ROLES = tuple(SETTINGS_ALLOWED_ROLES)
 
 
 def is_internal_staff_user(user) -> bool:
-    return bool(
+    if not (
         getattr(user, "is_authenticated", False)
         and getattr(user, "is_active", False)
         and getattr(user, "is_staff", False)
-    )
+    ):
+        return False
+    if getattr(user, "is_superuser", False):
+        return True
+    return user.groups.filter(name__in=ADMIN_PANEL_ALLOWED_ROLES).exists()
 
 
 def user_has_internal_role(user, *role_names: str) -> bool:

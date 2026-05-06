@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 from django.conf import settings
@@ -24,7 +23,7 @@ class EmailTemplatesTests(SimpleTestCase):
                 path = self.email_dir / lang / f"{template_type}.txt" if lang else self.email_dir / f"{template_type}.txt"
                 if not path.exists():
                     missing.append(str(path))
-        
+
         self.assertEqual(missing, [], "Missing email templates found")
 
     def test_expired_documents_uses_display_name(self):

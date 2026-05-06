@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+from datetime import timedelta
+
 from django.contrib import messages
 from django.db.models import Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
+from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.generic import TemplateView, UpdateView
 
@@ -11,7 +14,7 @@ from clients.forms import (
     AppSettingsForm,
     ServicePriceForm,
 )
-from clients.models import AppSettings, Client, Payment, ServicePrice, StaffTask
+from clients.models import AppSettings, Client, Document, Payment, Reminder, ServicePrice, StaffTask
 from clients.services.roles import (
     ADMIN_PANEL_ALLOWED_ROLES,
     SETTINGS_ALLOWED_ROLES,
@@ -27,13 +30,54 @@ class AdminPanelView(RoleRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        today = timezone.localdate()
+        upcoming_cutoff = today + timedelta(days=30)
         context["total_submissions"] = Submission.objects.count()
         context["total_service_prices"] = ServicePrice.objects.count()
         context["active_clients"] = Client.objects.count()
+        context["active_cases"] = Client.objects.exclude(workflow_stage__in=["closed", "decision_received"]).count()
+        context["ocr_awaiting_review"] = Document.objects.filter(awaiting_confirmation=True).count()
+        context["documents_awaiting_verification"] = Document.objects.filter(
+            file__gt="",
+            verified=False,
+            awaiting_confirmation=False,
+        ).count()
+        context["missing_documents"] = _count_missing_document_items()
+        context["expired_documents"] = Document.objects.filter(
+            expiry_date__isnull=False,
+            expiry_date__lt=today,
+        ).count()
         context["open_tasks"] = StaffTask.objects.filter(status__in=["open", "in_progress"]).count()
         context["pending_payments"] = Payment.objects.filter(status__in=["pending", "partial"]).count()
+        context["upcoming_fingerprints"] = Client.objects.filter(
+            fingerprints_date__isnull=False,
+            fingerprints_date__gte=today,
+            fingerprints_date__lte=upcoming_cutoff,
+        ).count()
+        context["waiting_after_fingerprints"] = Client.objects.filter(
+            workflow_stage="waiting_decision",
+            fingerprints_date__isnull=False,
+            fingerprints_date__lte=today,
+            decision_date__isnull=True,
+        ).count()
+        context["decisions_received"] = Client.objects.filter(decision_date__isnull=False).count()
+        context["active_reminders"] = Reminder.objects.filter(is_active=True).count()
         context["total_price_sum"] = ServicePrice.objects.aggregate(total=Sum("price")).get("total") or 0
         return context
+
+
+def _count_missing_document_items() -> int:
+    clients = Client.objects.exclude(workflow_stage__in=["closed", "decision_received"]).prefetch_related(
+        "documents",
+        "wniosek_submissions",
+        "wniosek_submissions__attachments",
+    )
+    return sum(
+        1
+        for client in clients
+        for item in client.get_document_checklist()
+        if not item.get("is_complete")
+    )
 
 
 class AppSettingsUpdateView(RoleRequiredMixin, UpdateView):

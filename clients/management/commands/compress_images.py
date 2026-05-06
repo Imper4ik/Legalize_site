@@ -28,7 +28,7 @@ class Command(BaseCommand):
 
         # Find all documents with image files
         documents = Document.objects.exclude(file='').exclude(file__isnull=True)
-        
+
         if limit:
             documents = documents[:limit]
 
@@ -45,7 +45,7 @@ class Command(BaseCommand):
                 continue
 
             file_path = Path(doc.file.path)
-            
+
             # Check if file exists and should be compressed
             if not file_path.exists():
                 self.stdout.write(
@@ -87,7 +87,7 @@ class Command(BaseCommand):
                             )
                         )
                         compressed_count += 1
-                        
+
                         # Update file path in database if extension changed
                         if new_path != file_path:
                             doc.file.name = str(new_path.relative_to(Path(doc.file.storage.location)))
@@ -107,14 +107,14 @@ class Command(BaseCommand):
         self.stdout.write(f"Compressed: {compressed_count}")
         self.stdout.write(f"Skipped (non-image): {skipped_count}")
         self.stdout.write(f"Errors: {error_count}")
-        
+
         if not dry_run and total_saved_bytes > 0:
             self.stdout.write(
                 self.style.SUCCESS(
                     f"\nTotal space saved: {total_saved_bytes / 1024 / 1024:.2f} MB"
                 )
             )
-        
+
         if dry_run:
             self.stdout.write(
                 self.style.WARNING("\nDRY RUN - No files were actually compressed")

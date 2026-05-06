@@ -148,8 +148,11 @@ def send_custom_email(request, pk):
             )
             try:
                 _send_confirmation_email(subject, body, [client.email])
-            except Exception:
-                logger.exception("Failed to send staff confirmation email for custom email")
+            except Exception as exc:
+                logger.warning(
+                    "Failed to send staff confirmation email for custom email: error_type=%s",
+                    type(exc).__name__,
+                )
             messages.success(request, _("Письмо '%(subject)s' успешно отправлено.") % {"subject": subject})
         else:
             _log_email(
@@ -164,8 +167,8 @@ def send_custom_email(request, pk):
                 error_message="send returned 0",
             )
             messages.error(request, _("Не удалось отправить письмо (send_mail вернул 0)."))
-    except Exception as e:  # pragma: no cover - defensive safeguard
-        logger.exception("Failed to send custom email manually")
+    except Exception:  # pragma: no cover - defensive safeguard
+        logger.warning("Failed to send custom email manually for client_id=%s", client.pk)
         if "idempotency_key" in locals():
             _log_email(
                 subject,
@@ -178,7 +181,7 @@ def send_custom_email(request, pk):
                 delivery_status=EmailLog.DELIVERY_STATUS_FAILED,
                 error_message="send failed",
             )
-        messages.error(request, _("Ошибка при отправке письма: %(err)s") % {"err": e})
+        messages.error(request, _("Email delivery failed. Check application logs for technical details."))
 
     return redirect("clients:client_detail", pk=client.pk)
 

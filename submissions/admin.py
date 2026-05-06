@@ -9,7 +9,7 @@ class SubmissionAdmin(admin.ModelAdmin):
     list_filter = ('status', 'archived_at')
     search_fields = ('name', 'slug')
     ordering = ('-created_at',)
-    
+
     def get_queryset(self, request):
         return Submission.all_objects.all()
 

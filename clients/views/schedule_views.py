@@ -13,7 +13,7 @@ from clients.views.base import role_required_view
 def fingerprints_schedule_view(request):
     """View to display upcoming fingerprint appointments for all clients."""
     today = timezone.localdate()
-    
+
     # Get all clients with fingerprints_date set, ordered by date and time
     # Focus on future and today appointments by default
     upcoming_appointments = Client.objects.filter(
@@ -21,12 +21,12 @@ def fingerprints_schedule_view(request):
     ).filter(
         Q(fingerprints_date__gte=today)
     ).order_by("fingerprints_date", "fingerprints_time")
-    
+
     # Also get some recent past appointments for context
     past_appointments = Client.objects.filter(
         fingerprints_date__lt=today
     ).order_by("-fingerprints_date", "-fingerprints_time")[:20]
-    
+
     return render(
         request,
         "clients/fingerprints_schedule.html",

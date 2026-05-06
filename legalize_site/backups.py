@@ -132,7 +132,7 @@ class LocalBackupStorage:
 class ConfiguredBackupStorage:
     def upload(self, local_path: Path) -> bool:
         storage_alias = getattr(settings, "BACKUP_STORAGE_ALIAS", "backups")
-        
+
         try:
             backup_storage = storages[storage_alias]
             backend_class_name = backup_storage.__class__.__name__
@@ -202,7 +202,7 @@ def create_db_backup() -> BackupResult:
     final_path = _encrypt_file(backup_path)
     if final_path != backup_path:
         encrypted = True
-    
+
     stored_file_sha256 = _sha256_for_file(final_path)
     size_bytes = final_path.stat().st_size if final_path.exists() else 0
 

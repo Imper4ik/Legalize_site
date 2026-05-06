@@ -172,24 +172,24 @@ class WezwanieOCRStage19Tests(TestCase):
         # Sample text representing the new document type
         text = """
         Warszawa, dnia 23.04.2026 r.
-        
+
         INFORMACJA O TERMINIE UZUPEŁNIENIA BRAKÓW FORMALNYCH WNIOSKU ORAZ ZŁOŻENIA ODCISKÓW LINII PAPILARNYCH
-        
+
         Pan/i Darya AFANASENKA
         Numer sprawy: WSC-II-P.6151.138285.2025
-        
+
         Termin został wyznaczony na dzień i godzinę: 4.05.2026, 10:30
         Miejsce: Marszałkowska 3/5, pok. 14,16, stanowisko 10,11
         Bilet: X29
         Lista X1
-        
+
         Prosimy zabrać: paszport, 4 zdjęcia, załącznik nr 1, opłata skarbowa 440 zł.
         """
-        
+
         # We need to mock extract_text because we are passing a fake path
         with patch("clients.services.wezwanie_parser.extract_text", return_value=text):
             data = parse_wezwanie("fake_path.pdf")
-            
+
             self.assertEqual(data.wezwanie_type, "fingerprints")
             self.assertEqual(data.full_name, "Darya AFANASENKA")
             self.assertEqual(data.case_number, "WSC-II-P.6151.138285.2025")
@@ -199,7 +199,7 @@ class WezwanieOCRStage19Tests(TestCase):
             self.assertIn("Marszałkowska 3/5", data.fingerprints_location)
             self.assertEqual(data.ticket_number, "X29")
             self.assertEqual(data.list_name, "Lista X1")
-            
+
             # Check required documents
             self.assertIn(DocumentType.PASSPORT.value, data.required_documents)
             self.assertIn(DocumentType.PHOTOS.value, data.required_documents)

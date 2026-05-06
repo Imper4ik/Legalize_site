@@ -5,12 +5,19 @@ import logging
 import os
 import secrets
 import subprocess  # nosec B404
+import time
 
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
+from clients.services.document_workflow import process_pending_document_jobs, reclaim_stale_document_jobs
 from clients.services.email_campaigns import process_pending_email_campaigns
+from clients.services.notifications import (
+    send_appointment_notification_email,
+    send_missing_documents_email,
+)
+from clients.services.wezwanie_parser import parse_wezwanie
 
 from .backups import BackupError, create_db_backup
 
@@ -78,6 +85,7 @@ def _authorize_cron_request(request: HttpRequest, *, action_name: str) -> JsonRe
 @csrf_exempt
 @require_POST
 def db_backup(request: HttpRequest) -> JsonResponse:
+    started_at = time.perf_counter()
     try:
         forbidden_response = _authorize_cron_request(request, action_name="database backup")
         if forbidden_response is not None:
@@ -102,6 +110,9 @@ def db_backup(request: HttpRequest) -> JsonResponse:
                 "plaintext_sha256": backup_result.plaintext_sha256,
                 "stored_file_sha256": backup_result.stored_file_sha256,
                 "encrypted": backup_result.encrypted,
+                "ok": True,
+                "command": "db_backup",
+                "duration_ms": round((time.perf_counter() - started_at) * 1000),
             }
         )
 
@@ -125,6 +136,7 @@ def db_backup(request: HttpRequest) -> JsonResponse:
 @csrf_exempt
 @require_POST
 def process_email_campaigns_cron(request: HttpRequest) -> JsonResponse:
+    started_at = time.perf_counter()
     try:
         forbidden_response = _authorize_cron_request(request, action_name="email campaign processing")
         if forbidden_response is not None:
@@ -132,10 +144,19 @@ def process_email_campaigns_cron(request: HttpRequest) -> JsonResponse:
 
         limit_raw = (request.POST.get("limit") or "").strip()
         limit = int(limit_raw) if limit_raw else None
+        if limit is not None:
+            if limit <= 0:
+                return JsonResponse({"error": "limit must be positive"}, status=400)
+            if limit > 100:
+                limit = 100
         results = process_pending_email_campaigns(limit=limit)
         payload = {
             "status": "processed",
+            "ok": True,
+            "command": "process_email_campaigns",
             "processed_count": len(results),
+            "errors": [],
+            "duration_ms": round((time.perf_counter() - started_at) * 1000),
             "campaigns": [
                 {
                     "campaign_id": result.campaign_id,
@@ -158,8 +179,7 @@ def process_email_campaigns_cron(request: HttpRequest) -> JsonResponse:
 @csrf_exempt
 @require_POST
 def process_document_jobs_cron(request: HttpRequest) -> JsonResponse:
-    from django.core.management import call_command
-
+    started_at = time.perf_counter()
     try:
         forbidden_response = _authorize_cron_request(request, action_name="document OCR jobs")
         if forbidden_response is not None:
@@ -174,13 +194,30 @@ def process_document_jobs_cron(request: HttpRequest) -> JsonResponse:
             if limit > 100:
                 limit = 100
 
-        args = []
-        if limit:
-            args.extend(["--limit", str(limit)])
-        
-        call_command("process_document_jobs", *args)
-        logger.info("Executed process_document_jobs via cron")
-        return JsonResponse({"status": "processed"})
+        reclaimed = reclaim_stale_document_jobs()
+        results = process_pending_document_jobs(
+            limit=limit,
+            parser=parse_wezwanie,
+            send_missing_email=send_missing_documents_email,
+            send_appointment_email=send_appointment_notification_email,
+        )
+        errors = [
+            f"job_id={result.job.id} status={result.status}"
+            for result in results
+            if result.status == "failed"
+        ]
+        logger.info("Processed %s document OCR job(s) via cron; reclaimed=%s", len(results), reclaimed)
+        return JsonResponse(
+            {
+                "status": "processed",
+                "ok": True,
+                "command": "process_document_jobs",
+                "processed_count": len(results),
+                "errors": errors,
+                "reclaimed_count": reclaimed,
+                "duration_ms": round((time.perf_counter() - started_at) * 1000),
+            }
+        )
     except ValueError:
         return JsonResponse({"error": "invalid limit"}, status=400)
     except Exception as e:
@@ -193,6 +230,7 @@ def process_document_jobs_cron(request: HttpRequest) -> JsonResponse:
 def update_reminders_cron(request: HttpRequest) -> JsonResponse:
     from django.core.management import call_command
 
+    started_at = time.perf_counter()
     try:
         forbidden_response = _authorize_cron_request(request, action_name="update reminders")
         if forbidden_response is not None:
@@ -202,10 +240,19 @@ def update_reminders_cron(request: HttpRequest) -> JsonResponse:
         args = []
         for section in only_sections:
             args.extend(["--only", section])
-        
+
         call_command("update_reminders", *args)
         logger.info("Executed update_reminders via cron")
-        return JsonResponse({"status": "processed"})
+        return JsonResponse(
+            {
+                "status": "processed",
+                "ok": True,
+                "command": "update_reminders",
+                "processed_count": None,
+                "errors": [],
+                "duration_ms": round((time.perf_counter() - started_at) * 1000),
+            }
+        )
     except Exception as e:
         logger.exception("Unexpected error during update_reminders")
         return JsonResponse({"error": str(e)}, status=500)

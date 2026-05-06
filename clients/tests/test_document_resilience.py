@@ -23,20 +23,46 @@ def test_document_download_existing_file(logged_in_staff, sample_document):
     assert response.status_code == 200
     assert sample_document.client.activities.filter(event_type="document_downloaded").exists()
 
+
+@pytest.mark.django_db
+def test_document_download_uses_safe_content_disposition(logged_in_staff, sample_client):
+    document = Document.objects.create(
+        client=sample_client,
+        document_type="passport",
+    )
+    document.file.save("ivan-passport-case-number.pdf", ContentFile(b"%PDF-1.4"))
+
+    response = logged_in_staff.get(reverse("clients:document_download", kwargs={"doc_id": document.pk}))
+
+    assert response.status_code == 200
+    content_disposition = response["Content-Disposition"]
+    assert "attachment" in content_disposition
+    assert f"document-{document.pk}.pdf" in content_disposition
+    assert "ivan-passport-case-number" not in content_disposition
+
+
+@pytest.mark.django_db
+def test_archived_document_cannot_be_downloaded(logged_in_staff, sample_document):
+    sample_document.archive()
+
+    response = logged_in_staff.get(reverse("clients:document_download", kwargs={"doc_id": sample_document.pk}))
+
+    assert response.status_code == 404
+
 @pytest.mark.django_db
 def test_document_download_missing_physical_file(logged_in_staff, sample_document, caplog):
     """Task 6.2: document_download missing physical file redirects and logs warning."""
     # Delete the physical file from storage but keep the DB record
     stored_name = sample_document.file.name
     sample_document.file.storage.delete(sample_document.file.name)
-    
+
     url = reverse("clients:document_download", kwargs={"doc_id": sample_document.pk})
     with caplog.at_level(logging.WARNING):
         response = logged_in_staff.get(url)
-    
+
     assert response.status_code == 302
     assert response.url == reverse("clients:client_detail", kwargs={"pk": sample_document.client.pk})
-    
+
     messages = list(get_messages(response.wsgi_request))
     assert any("Файл отсутствует в хранилище" in str(m) for m in messages)
     assert "Physical file missing in storage" in caplog.text
@@ -55,9 +81,9 @@ def test_unauthorized_document_download(client, sample_document):
 def test_zip_export_with_missing_file(sample_client, sample_document):
     """Task 6.4: ZIP export handles missing files and includes MISSING_FILES.txt."""
     sample_document.file.storage.delete(sample_document.file.name)
-    
+
     from clients.services.export import generate_client_zip
-    
+
     buffer = generate_client_zip(sample_client)
     with zipfile.ZipFile(buffer) as zf:
         file_list = zf.namelist()
@@ -70,30 +96,30 @@ def test_zip_export_with_missing_file(sample_client, sample_document):
 def test_document_version_archive_copies_file_physically(sample_document):
     """Task 6.5: document version archive copies file physically."""
     from clients.services.document_versions import archive_document_version
-    
+
     original_content = b"original content"
     sample_document.file.save("original.txt", ContentFile(original_content))
-    
+
     version = archive_document_version(sample_document)
     assert version is not None
     assert version.file.name != sample_document.file.name
-    
+
     # Verify content in version
     version.file.open("rb")
     assert version.file.read() == original_content
     version.file.close()
-    
+
     # Replace current document file
     sample_document.file.save("new.txt", ContentFile(b"new content"))
-    
+
     # Verify version STILL has original content
     version.file.open("rb")
     assert version.file.read() == original_content
     version.file.close()
-    
+
     # Even if we delete the current document file
     sample_document.file.storage.delete(sample_document.file.name)
-    
+
     version.file.open("rb")
     assert version.file.read() == original_content
     version.file.close()

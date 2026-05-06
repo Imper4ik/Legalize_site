@@ -251,7 +251,7 @@ class ClientForm(forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         self.user = user
         super().__init__(*args, **kwargs)
-        
+
         # Use localized_name so application purpose is translated
         reserved_purposes = Client.FAMILY_MEMBER_REQUIREMENT_PURPOSES
         submissions = [
@@ -622,7 +622,7 @@ class DocumentChecklistForm(forms.Form):
         )
 
         choices = []
-        
+
         if existing_requirements:
             for requirement in existing_requirements:
                 if requirement.document_type in INTERNAL_DOCS:

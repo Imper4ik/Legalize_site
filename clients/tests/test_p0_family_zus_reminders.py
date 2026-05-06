@@ -1,9 +1,7 @@
 """P0 regression tests: family, ZUS RCA, reminders, and checklists."""
 from __future__ import annotations
 
-import re
 from datetime import date, timedelta
-from io import BytesIO
 from unittest.mock import patch
 
 import pytest
@@ -14,17 +12,14 @@ from django.utils import timezone
 
 from clients.constants import DocumentType
 from clients.forms import ClientForm, DocumentUploadForm
-from clients.management.commands.update_reminders import Command as UpdateRemindersCommand
 from clients.models import (
     Client,
     Document,
     DocumentRequirement,
-    EmailLog,
     FamilyGroup,
     Payment,
     Reminder,
 )
-from clients.services.family import ensure_family_group
 from clients.services.zus import expected_zus_months, missing_zus_months
 from clients.tests.factories import create_admin_user, create_staff_user
 

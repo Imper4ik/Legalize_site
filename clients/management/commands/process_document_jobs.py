@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 from clients.services.document_workflow import process_pending_document_jobs, reclaim_stale_document_jobs
 from clients.services.notifications import (
@@ -27,6 +27,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         limit = options["limit"]
+        if limit is not None:
+            if limit <= 0:
+                raise CommandError("--limit must be positive.")
+            if limit > 100:
+                limit = 100
         logger.info("Starting queued OCR job processing (limit=%s)", limit)
         reclaimed = reclaim_stale_document_jobs()
         if reclaimed:

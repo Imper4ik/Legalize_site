@@ -4,8 +4,7 @@ and database indexes.
 """
 from __future__ import annotations
 
-from datetime import date, timedelta
-from decimal import Decimal
+from datetime import timedelta
 from io import StringIO
 from unittest.mock import patch
 
@@ -14,12 +13,10 @@ from django.test import Client as DjangoClient, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from clients.models import Client, Document, Payment, Reminder
+from clients.models import Client, Document, Reminder
 from clients.tests.factories import (
     create_admin_user,
-    create_manager_user,
     create_readonly_user,
-    create_staff_user,
 )
 
 
@@ -189,7 +186,7 @@ class TestUIPermissions:
 
     def test_admin_sees_delete_button(self):
         admin = create_admin_user()
-        sample = _make_client(None, first_name="A", last_name="B", email="ab@e.com")
+        _make_client(None, first_name="A", last_name="B", email="ab@e.com")
 
         c = DjangoClient()
         c.force_login(admin)

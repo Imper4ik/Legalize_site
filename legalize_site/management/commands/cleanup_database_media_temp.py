@@ -19,7 +19,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         dry_run = options["dry_run"]
         temp_root = getattr(settings, "DATABASE_MEDIA_TEMP_ROOT", None)
-        
+
         if not temp_root:
             self.stdout.write(self.style.WARNING("DATABASE_MEDIA_TEMP_ROOT is not configured. Nothing to do."))
             return
@@ -35,7 +35,7 @@ class Command(BaseCommand):
             return
 
         cutoff_time = time.time() - (max_age_hours * 3600)
-        
+
         deleted_count = 0
         deleted_size = 0
 
@@ -53,7 +53,7 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.ERROR(f"Error processing {filepath}: {exc}"))
 
         size_mb = deleted_size / (1024 * 1024)
-        
+
         if dry_run:
             self.stdout.write(
                 self.style.SUCCESS(

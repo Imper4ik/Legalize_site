@@ -321,11 +321,15 @@ def process_document_processing_job(
         finally:
             os.remove(tmp_path)
     except Exception as exc:
-        logger.exception("Automatic wezwanie parsing failed for queued job %s", job_id)
+        logger.warning(
+            "Automatic wezwanie parsing failed for queued job %s: error_type=%s",
+            job_id,
+            type(exc).__name__,
+        )
         return _finalize_failed_document_job(
             job_id=job_id,
             source_file_name=source_file_name,
-            error_message=str(exc) or _("Automatic wezwanie parsing failed."),
+            error_message=_("Automatic wezwanie parsing failed."),
         )
 
     if not _has_meaningful_parsed_data(parsed):
@@ -602,8 +606,13 @@ def _send_background_notifications(
 def _send_notification(sender: NotificationSender, client: Client, label: str) -> bool:
     try:
         return bool(sender(client))
-    except Exception:
-        logger.exception("Failed to send %s for client %s", label, client.pk)
+    except Exception as exc:
+        logger.warning(
+            "Failed to send %s for client_id=%s error_type=%s",
+            label,
+            client.pk,
+            type(exc).__name__,
+        )
         return False
 
 
@@ -706,7 +715,7 @@ def _apply_parsed_client_updates(client: Client, parsed: WezwanieData) -> tuple[
     if parsed.case_number and parsed.case_number != client.case_number:
         client.case_number = parsed.case_number
         updated_fields.append("case_number")
-        auto_updates.append(_("case number: %(val)s") % {"val": parsed.case_number})
+        auto_updates.append(_("case number updated"))
 
     if parsed.fingerprints_date and parsed.fingerprints_date != client.fingerprints_date:
         client.fingerprints_date = parsed.fingerprints_date
@@ -738,7 +747,7 @@ def _apply_parsed_client_updates(client: Client, parsed: WezwanieData) -> tuple[
             client.first_name = name_parts[0]
             client.last_name = " ".join(name_parts[1:])
             updated_fields.extend(["first_name", "last_name"])
-            auto_updates.append(_("full name: %(val)s") % {"val": parsed.full_name})
+            auto_updates.append(_("client name updated"))
 
     if parsed.ticket_number and parsed.ticket_number != client.fingerprints_ticket:
         client.fingerprints_ticket = parsed.ticket_number
@@ -813,7 +822,7 @@ def _apply_confirmation_updates(
     if case_number and case_number != client.case_number:
         client.case_number = case_number
         updated_fields.append("case_number")
-        auto_updates.append(_("case number: %(val)s") % {"val": case_number})
+        auto_updates.append(_("case number updated"))
 
     fingerprints_date = parse_date(fingerprints_date_raw) if fingerprints_date_raw else None
     if fingerprints_date and fingerprints_date != client.fingerprints_date:

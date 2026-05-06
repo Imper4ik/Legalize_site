@@ -3567,3 +3567,42 @@ msgstr "First day of the month covered by the uploaded ZUS RCA."
 
 #~ msgid "Дата создания счёта"
 #~ msgstr "Invoice creation date"
+
+msgid "OCR awaiting review"
+msgstr "OCR awaiting review"
+
+msgid "Documents awaiting verification"
+msgstr "Documents awaiting verification"
+
+msgid "No documents awaiting OCR"
+msgstr "No documents awaiting OCR"
+
+msgid "No expired documents"
+msgstr "No expired documents"
+
+msgid "No active reminders"
+msgstr "No active reminders"
+
+msgid "Active cases"
+msgstr "Active cases"
+
+msgid "Missing documents"
+msgstr "Missing documents"
+
+msgid "Expired documents"
+msgstr "Expired documents"
+
+msgid "Unpaid payments"
+msgstr "Unpaid payments"
+
+msgid "Upcoming fingerprints"
+msgstr "Upcoming fingerprints"
+
+msgid "Waiting after fingerprints"
+msgstr "Waiting after fingerprints"
+
+msgid "Decisions"
+msgstr "Decisions"
+
+msgid "Active reminders"
+msgstr "Active reminders"

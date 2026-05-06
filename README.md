@@ -93,6 +93,9 @@ python manage.py update_reminders
 # Scrub PII from old OCR data (dry-run first)
 python manage.py scrub_ocr_pii --dry-run
 python manage.py scrub_ocr_pii
+
+# Create safe demo data for thesis defense
+python manage.py seed_demo_data --confirm
 ```
 
 ## Local Development
@@ -114,3 +117,53 @@ The project uses `pytest` with extensive test coverage.
 ```bash
 pytest
 ```
+
+## Production checklist before going live
+
+- `DJANGO_SETTINGS_MODULE=legalize_site.settings.production`
+- `APP_ENV=production`
+- `DEBUG=False`
+- Strong `SECRET_KEY`, never the fallback value.
+- Explicit `FERNET_KEYS`; keep old keys during rotation until data is re-encrypted.
+- Explicit `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`, or Railway public domain envs.
+- PostgreSQL `DATABASE_URL` and Redis `REDIS_URL`.
+- Real email credentials and verified `DEFAULT_FROM_EMAIL`.
+- `CRON_TOKEN` set; `CRON_ALLOWED_IPS` configured when the scheduler has stable IPs.
+- Persistent media: prefer `USE_DATABASE_MEDIA_STORAGE=True` for the MVP, or S3/R2/B2 for production growth.
+- Remote backup storage configured, or a documented Railway Volume backup process.
+- Run `python manage.py check --deploy`, migrations, `collectstatic`, and a smoke login before handover.
+
+## Cron schedule
+
+- `process_document_jobs`: every 5-15 minutes.
+- `process_email_campaigns`: every 5-15 minutes.
+- `update_reminders`: once daily in the morning.
+- `db_backup`: once daily.
+- `scrub_ocr_pii`: manually after deploy or after OCR cleanup changes.
+
+Example:
+
+```bash
+curl -X POST https://your-app.railway.app/cron/process-document-jobs/ \
+  -H "Authorization: Bearer $CRON_TOKEN" \
+  -d "limit=50"
+```
+
+## Demo scenario for thesis defense
+
+1. Run `python manage.py seed_demo_data --confirm`.
+2. Login as `demo-staff@example.test` with the printed password.
+3. Open the dashboard and show client counts, OCR awaiting review, reminders, payments, and document warnings.
+4. Open a client detail page, upload a safe demo document, and show the protected preview/download flow.
+5. Open the OCR awaiting review example and confirm the wezwanie fields.
+6. Show generated missing documents, reminders, and EmailLog.
+7. Briefly show production checks: cron token, encryption keys, persistent media, backup notes.
+
+## More documentation
+
+- `docs/BUSINESS_WORKFLOW.md`
+- `docs/OCR_WORKFLOW.md`
+- `docs/SECURITY_RODO.md`
+- `docs/RAILWAY_DEPLOYMENT.md`
+- `docs/TESTING.md`
+- `docs/backups.md`

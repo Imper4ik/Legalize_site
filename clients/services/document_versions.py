@@ -45,12 +45,12 @@ def archive_document_version(
 
     current_max = document.versions.aggregate(max_v=Max("version_number"))["max_v"] or 0
     version_number = current_max + 1
-    
+
     ext = Path(document.file.name).suffix or ".bin"
     file_name = f"document_{document.pk}_v{version_number}{ext}"
     # Ensure a unique path for the version file
     new_path = f"document_versions/{document.pk}_v{version_number}{ext}"
-    
+
     version = DocumentVersion(
         document=document,
         version_number=version_number,
@@ -62,7 +62,7 @@ def archive_document_version(
     # Physically save the content to a new file path
     version.file.save(new_path, ContentFile(content), save=False)
     version.save()
-    
+
     logger.info(
         "Archived document version: doc_id=%s, version=%s",
         document.pk, version_number

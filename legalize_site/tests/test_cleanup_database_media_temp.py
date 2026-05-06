@@ -3,7 +3,6 @@ import shutil
 from datetime import timedelta
 from io import StringIO
 from pathlib import Path
-from unittest.mock import patch
 
 from django.conf import settings
 from django.core.management import call_command
@@ -23,7 +22,7 @@ class CleanupDatabaseMediaTempTests(SimpleTestCase):
     def _create_file(self, filename, age_hours):
         file_path = self.temp_root / filename
         file_path.write_text("test")
-        
+
         mtime = (timezone.now() - timedelta(hours=age_hours)).timestamp()
         os.utime(file_path, (mtime, mtime))
         return file_path
@@ -39,25 +38,25 @@ class CleanupDatabaseMediaTempTests(SimpleTestCase):
 
     def test_dry_run_does_not_delete_old_files(self):
         file_path = self._create_file("old.pdf", age_hours=25)
-        
+
         output = self._run_command(dry_run=True)
-        
+
         self.assertTrue(file_path.exists())
         self.assertIn("Would delete", output)
 
     def test_deletes_old_files(self):
         file_path = self._create_file("old.pdf", age_hours=25)
-        
+
         output = self._run_command()
-        
+
         self.assertFalse(file_path.exists())
         self.assertIn("Deleted", output)
 
     def test_keeps_recent_files(self):
         file_path = self._create_file("new.pdf", age_hours=23)
-        
+
         output = self._run_command()
-        
+
         self.assertTrue(file_path.exists())
         self.assertIn("Deleted 0 files", output)
         self.assertNotIn("new.pdf", output)
@@ -65,7 +64,7 @@ class CleanupDatabaseMediaTempTests(SimpleTestCase):
     def test_safety_does_not_delete_outside_temp_root(self):
         outside_file = self.temp_root.parent / "outside.txt"
         outside_file.write_text("test")
-        
+
         mtime = (timezone.now() - timedelta(hours=25)).timestamp()
         os.utime(outside_file, (mtime, mtime))
 

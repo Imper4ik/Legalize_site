@@ -46,6 +46,9 @@ class CronViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["status"], "processed")
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["command"], "process_email_campaigns")
+        self.assertIn("duration_ms", payload)
         self.assertEqual(payload["processed_count"], 1)
         self.assertEqual(payload["campaigns"][0]["campaign_id"], campaign.pk)
 
@@ -55,6 +58,34 @@ class CronViewsTests(TestCase):
         send_mail_mock.assert_called_once()
         confirm_mock.assert_called_once()
         log_mock.assert_called_once()
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    @patch("legalize_site.cron_views.process_pending_email_campaigns")
+    def test_process_email_campaigns_cron_rejects_non_positive_limit(self, process_mock):
+        response = self.client.post(
+            reverse("process_email_campaigns_cron"),
+            data={"limit": "0"},
+            HTTP_X_CRON_TOKEN="secret",
+            REMOTE_ADDR="127.0.0.1",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["error"], "limit must be positive")
+        process_mock.assert_not_called()
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    @patch("legalize_site.cron_views.process_pending_email_campaigns", return_value=[])
+    def test_process_email_campaigns_cron_clamps_large_limit(self, process_mock):
+        response = self.client.post(
+            reverse("process_email_campaigns_cron"),
+            data={"limit": "150"},
+            HTTP_X_CRON_TOKEN="secret",
+            REMOTE_ADDR="127.0.0.1",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["processed_count"], 0)
+        process_mock.assert_called_once_with(limit=100)
 
     @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
     def test_db_backup_cron_is_csrf_exempt_but_still_requires_token(self):
@@ -120,8 +151,9 @@ class CronViewsTests(TestCase):
         self.assertEqual(response.json(), {"error": "forbidden"})
 
     @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
-    @patch("django.core.management.call_command")
-    def test_process_document_jobs_cron_calls_command(self, call_command_mock):
+    @patch("legalize_site.cron_views.reclaim_stale_document_jobs", return_value=0)
+    @patch("legalize_site.cron_views.process_pending_document_jobs", return_value=[])
+    def test_process_document_jobs_cron_processes_jobs(self, process_mock, reclaim_mock):
         response = self.client.post(
             reverse("process_document_jobs_cron"),
             data={"limit": "5"},
@@ -130,11 +162,16 @@ class CronViewsTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "processed")
-        call_command_mock.assert_called_once_with("process_document_jobs", "--limit", "5")
+        self.assertTrue(response.json()["ok"])
+        self.assertEqual(response.json()["command"], "process_document_jobs")
+        self.assertEqual(response.json()["processed_count"], 0)
+        self.assertEqual(response.json()["reclaimed_count"], 0)
+        reclaim_mock.assert_called_once()
+        self.assertEqual(process_mock.call_args.kwargs["limit"], 5)
 
     @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
-    @patch("django.core.management.call_command")
-    def test_process_document_jobs_cron_invalid_limit(self, call_command_mock):
+    @patch("legalize_site.cron_views.process_pending_document_jobs")
+    def test_process_document_jobs_cron_invalid_limit(self, process_mock):
         response = self.client.post(
             reverse("process_document_jobs_cron"),
             data={"limit": "invalid"},
@@ -143,11 +180,11 @@ class CronViewsTests(TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()["error"], "invalid limit")
-        call_command_mock.assert_not_called()
+        process_mock.assert_not_called()
 
     @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
-    @patch("django.core.management.call_command")
-    def test_process_document_jobs_cron_negative_limit(self, call_command_mock):
+    @patch("legalize_site.cron_views.process_pending_document_jobs")
+    def test_process_document_jobs_cron_negative_limit(self, process_mock):
         response = self.client.post(
             reverse("process_document_jobs_cron"),
             data={"limit": "-5"},
@@ -156,11 +193,12 @@ class CronViewsTests(TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()["error"], "limit must be positive")
-        call_command_mock.assert_not_called()
+        process_mock.assert_not_called()
 
     @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
-    @patch("django.core.management.call_command")
-    def test_process_document_jobs_cron_large_limit(self, call_command_mock):
+    @patch("legalize_site.cron_views.reclaim_stale_document_jobs", return_value=0)
+    @patch("legalize_site.cron_views.process_pending_document_jobs", return_value=[])
+    def test_process_document_jobs_cron_large_limit(self, process_mock, _reclaim_mock):
         response = self.client.post(
             reverse("process_document_jobs_cron"),
             data={"limit": "150"},
@@ -169,18 +207,21 @@ class CronViewsTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "processed")
-        call_command_mock.assert_called_once_with("process_document_jobs", "--limit", "100")
+        self.assertEqual(response.json()["processed_count"], 0)
+        self.assertEqual(process_mock.call_args.kwargs["limit"], 100)
 
     @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
-    @patch("django.core.management.call_command")
-    def test_process_document_jobs_cron_bearer_token(self, call_command_mock):
+    @patch("legalize_site.cron_views.reclaim_stale_document_jobs", return_value=0)
+    @patch("legalize_site.cron_views.process_pending_document_jobs", return_value=[])
+    def test_process_document_jobs_cron_bearer_token(self, process_mock, _reclaim_mock):
         response = self.client.post(
             reverse("process_document_jobs_cron"),
             HTTP_AUTHORIZATION="Bearer secret",
             REMOTE_ADDR="127.0.0.1",
         )
         self.assertEqual(response.status_code, 200)
-        call_command_mock.assert_called_once_with("process_document_jobs")
+        self.assertEqual(response.json()["command"], "process_document_jobs")
+        self.assertIsNone(process_mock.call_args.kwargs["limit"])
 
     @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
     def test_update_reminders_cron_requires_token(self):
@@ -199,6 +240,8 @@ class CronViewsTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "processed")
+        self.assertTrue(response.json()["ok"])
+        self.assertEqual(response.json()["command"], "update_reminders")
         call_command_mock.assert_called_once_with("update_reminders", "--only", "documents", "--only", "payments")
 
     @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)

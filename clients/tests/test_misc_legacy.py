@@ -783,12 +783,12 @@ class ClientViewsTestCase(TestCase):
     def test_add_payment_creates_payment(self):
         self.client.login(email='staff@example.com', password='pass')
         url = reverse('clients:add_payment', kwargs={'client_id': self.client_record.pk})
-        
+
         response_invalid = self.client.post(url, {}, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
         self.assertEqual(response_invalid.status_code, 400)
         payload = json.loads(response_invalid.content)
         self.assertEqual(payload['status'], 'error')
-        
+
         response_valid = self.client.post(url, {
             'service_description': 'work_service',
             'total_amount': '1500.00',
@@ -800,7 +800,7 @@ class ClientViewsTestCase(TestCase):
         payload = json.loads(response_valid.content)
         self.assertEqual(payload['status'], 'success')
         self.assertIn('payment_id', payload)
-        
+
         payment = self.client_record.payments.first()
         self.assertIsNotNone(payment)
         self.assertEqual(payment.total_amount, Decimal('1500.00'))

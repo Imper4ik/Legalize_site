@@ -33,7 +33,7 @@ def load_all_translations():
     """
     po_files = get_po_files()
     data = {}
-    
+
     for lang, path in po_files.items():
         po = polib.pofile(path)
         for entry in po:
@@ -49,7 +49,7 @@ def load_all_translations():
                     'comment': entry.comment
                 }
             data[entry.msgid][lang] = entry.msgstr
-            
+
     # Convert to sorted list (by msgid)
     result = sorted(data.values(), key=lambda x: x['msgid'])
     return result
@@ -63,8 +63,8 @@ def save_translation_entry(msgid, ru=None, en=None, pl=None):
     # canonical entry rather than creating duplicates.
     canonical = msgid
     normalized_input = normalize_text(msgid)
-    
-    # Track potential matches. 
+
+    # Track potential matches.
     # We prefer: 1) Exact msgid, 2) Normalized msgid, 3) msgstr match
     potential_canonical = None
 
@@ -75,11 +75,11 @@ def save_translation_entry(msgid, ru=None, en=None, pl=None):
             except Exception as exc:
                 logger.debug('Skipping unreadable PO file %s: %s', path, exc)
                 continue
-            
+
             for entry in po:
                 if not entry.msgid:
                     continue
-                
+
                 n_id = normalize_text(entry.msgid)
                 n_str = normalize_text(entry.msgstr)
 
@@ -89,17 +89,17 @@ def save_translation_entry(msgid, ru=None, en=None, pl=None):
                     logger.info('Found exact msgid match in %s: %s', language, canonical)
                     potential_canonical = canonical
                     break
-                
+
                 # 2. Normalized msgid match (Secondary)
                 if not potential_canonical and n_id == normalized_input:
                     potential_canonical = entry.msgid
                     logger.info('Found normalized msgid match in %s: %s', language, potential_canonical)
-                
+
                 # 3. msgstr match (Resolution from UI text to technical key)
                 if not potential_canonical and n_str == normalized_input:
                     potential_canonical = entry.msgid
                     logger.info('Found msgstr match (resolved UI text to key) in %s: %s', language, potential_canonical)
-            
+
             if potential_canonical and potential_canonical == msgid: # Already found best possible
                 break
 
@@ -145,7 +145,7 @@ def save_translation_entry(msgid, ru=None, en=None, pl=None):
                 logger.info('Appended new translation to %s for msgid=%s (lang=%s): "%s"', path, canonical, lang, updates[lang])
             except Exception as e:
                 logger.exception('Failed to save PO file %s after append: %s', path, e)
-            
+
     # Rebuild MO catalogs after update so changes appear immediately.
     # This helper already falls back to a pure-Python compiler when gettext
     # binaries are unavailable (common on some hosted environments).

@@ -9,7 +9,7 @@ class SubmissionModelTest(TestCase):
         self.assertEqual(self.submission.name, "Test Submission")
         self.assertEqual(self.submission.status, Submission.Status.DRAFT)
         self.assertTrue(self.submission.slug)
-    
+
     def test_slug_generation(self):
         s2 = Submission.objects.create(name="Test Submission")
         self.assertNotEqual(self.submission.slug, s2.slug)

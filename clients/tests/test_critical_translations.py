@@ -49,17 +49,17 @@ class CriticalTranslationsTest(SimpleTestCase):
                 # Find block for this msgid
                 # Match everything from `msgid "..."` to `msgstr "..."` (and possibly multi-line msgstr)
                 # But to just check fuzzy, we look at the lines right before msgid
-                
+
                 # regex to find the msgstr for the given msgid
                 msgid_escaped = re.escape(msgid)
                 pattern_msgstr = re.compile(rf'msgid "{msgid_escaped}"\nmsgstr "(.*?)"', re.DOTALL)
                 match = pattern_msgstr.search(content)
                 self.assertIsNotNone(match, f"Could not find msgid '{msgid}' in {lang}")
-                
+
                 actual_msgstr = match.group(1).replace('\n"', '')
                 self.assertEqual(
-                    actual_msgstr, 
-                    expected_msgstr, 
+                    actual_msgstr,
+                    expected_msgstr,
                     f"msgstr for '{msgid}' in {lang} does not match expected."
                 )
 
@@ -67,7 +67,7 @@ class CriticalTranslationsTest(SimpleTestCase):
                 # Find the block up to msgid
                 pattern_block = re.compile(rf'(?:^|\n)(.*?)\nmsgid "{msgid_escaped}"', re.DOTALL)
                 block_matches = pattern_block.findall(content)
-                
+
                 # The last match is the block immediately preceding our msgid
                 if block_matches:
                     preceding_block = block_matches[-1]

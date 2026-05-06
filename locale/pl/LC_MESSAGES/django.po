@@ -3574,3 +3574,39 @@ msgstr "Pierwszy dzień miesiąca, za który przesłano ZUS RCA."
 
 msgid "OCR awaiting review"
 msgstr "OCR oczekuje na weryfikację"
+
+msgid "Documents awaiting verification"
+msgstr "Dokumenty oczekują na weryfikację"
+
+msgid "No documents awaiting OCR"
+msgstr "Brak dokumentów oczekujących na OCR"
+
+msgid "No expired documents"
+msgstr "Brak przeterminowanych dokumentów"
+
+msgid "No active reminders"
+msgstr "Brak aktywnych przypomnień"
+
+msgid "Active cases"
+msgstr "Aktywne sprawy"
+
+msgid "Missing documents"
+msgstr "Brakujące dokumenty"
+
+msgid "Expired documents"
+msgstr "Przeterminowane dokumenty"
+
+msgid "Unpaid payments"
+msgstr "Nieopłacone płatności"
+
+msgid "Upcoming fingerprints"
+msgstr "Nadchodzące odciski palców"
+
+msgid "Waiting after fingerprints"
+msgstr "Oczekiwanie po odciskach"
+
+msgid "Decisions"
+msgstr "Decyzje"
+
+msgid "Active reminders"
+msgstr "Aktywne przypomnienia"

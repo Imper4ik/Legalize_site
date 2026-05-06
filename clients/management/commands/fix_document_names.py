@@ -19,16 +19,16 @@ class Command(BaseCommand):
 
         updated_count = 0
         requirements = DocumentRequirement.objects.all()
-        
+
         self.stdout.write(f"Checking {requirements.count()} requirements...")
 
         for req in requirements:
             # Check custom_name or custom_name_pl
             source_text = req.custom_name or req.custom_name_pl
-            
+
             if not source_text:
                 continue
-                
+
             matched = False
             for pl_key, ru_text in translations.items():
                 if pl_key in source_text:
@@ -39,7 +39,7 @@ class Command(BaseCommand):
                         updated_count += 1
                         matched = True
                     break
-            
+
             if not matched and not req.custom_name_ru:
                 # Optional: try to translate logic if needed, but for now specific list
                 pass

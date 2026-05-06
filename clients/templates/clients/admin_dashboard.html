@@ -60,6 +60,41 @@
         </div>
     </div>
 
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-xs fw-bold text-uppercase mb-1 text-muted">{% translate "Active cases" %}</div>
+                    <div class="h4 mb-0 fw-bold">{{ active_cases }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-xs fw-bold text-uppercase mb-1 text-muted">{% translate "Missing documents" %}</div>
+                    <div class="h4 mb-0 fw-bold">{{ missing_documents }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-xs fw-bold text-uppercase mb-1 text-muted">{% translate "Unpaid payments" %}</div>
+                    <div class="h4 mb-0 fw-bold">{{ unpaid_payments }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-xs fw-bold text-uppercase mb-1 text-muted">{% translate "Waiting after fingerprints" %}</div>
+                    <div class="h4 mb-0 fw-bold">{{ waiting_after_fingerprints }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-4">
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm h-100">
@@ -120,6 +155,13 @@
                         <div class="col-4">
                             <div class="h3 mb-0 {% if docs_awaiting_confirmation > 0 %}text-warning{% endif %}">{{ docs_awaiting_confirmation }}</div>
                             <div class="small text-muted">{% translate "OCR awaiting review" %}</div>
+                            {% if not docs_awaiting_confirmation %}
+                            <div class="small text-muted">{% translate "No documents awaiting OCR" %}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-4">
+                            <div class="h3 mb-0 {% if docs_awaiting_verification > 0 %}text-warning{% endif %}">{{ docs_awaiting_verification }}</div>
+                            <div class="small text-muted">{% translate "Documents awaiting verification" %}</div>
                         </div>
                         <div class="col-4">
                             <div class="h3 mb-0 {% if overdue_tasks > 0 %}text-danger{% endif %}">{{ overdue_tasks }}</div>
@@ -128,6 +170,20 @@
                         <div class="col-4">
                             <div class="h3 mb-0 {% if docs_name_mismatch > 0 %}text-danger{% endif %}">{{ docs_name_mismatch }}</div>
                             <div class="small text-muted">{% translate "OCR Mismatches" %}</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="h3 mb-0 {% if expired_documents > 0 %}text-danger{% endif %}">{{ expired_documents }}</div>
+                            <div class="small text-muted">{% translate "Expired documents" %}</div>
+                            {% if not expired_documents %}
+                            <div class="small text-muted">{% translate "No expired documents" %}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-4">
+                            <div class="h3 mb-0 {% if active_reminders > 0 %}text-info{% endif %}">{{ active_reminders }}</div>
+                            <div class="small text-muted">{% translate "Active reminders" %}</div>
+                            {% if not active_reminders %}
+                            <div class="small text-muted">{% translate "No active reminders" %}</div>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

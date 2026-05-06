@@ -3,16 +3,19 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from django.test import Client as DjangoClient, RequestFactory, TestCase
 from django.urls import reverse
 
+from clients.services.roles import ensure_predefined_roles
 from translations.middleware import TranslationStudioMiddleware
 
 
 class TranslationViewsTests(TestCase):
     def setUp(self):
+        ensure_predefined_roles()
         user_model = get_user_model()
         self.superuser = user_model.objects.create_superuser(
             email="super@example.com", password="pass"
@@ -20,6 +23,11 @@ class TranslationViewsTests(TestCase):
         self.staff = user_model.objects.create_user(
             email="staff@example.com", password="pass", is_staff=True
         )
+        self.staff.groups.add(Group.objects.get(name="Staff"))
+        self.translator = user_model.objects.create_user(
+            email="translator@example.com", password="pass", is_staff=True
+        )
+        self.translator.groups.add(Group.objects.get(name="Translator"))
 
     def test_superuser_can_get_stub_for_unknown_msgid(self):
         self.client.login(email="super@example.com", password="pass")
@@ -125,11 +133,33 @@ class TranslationViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
 
+    def test_translator_role_can_open_studio_but_not_crm(self):
+        self.client.login(email="translator@example.com", password="pass")
+
+        studio_response = self.client.get(reverse("translations:dashboard"))
+        client_list_response = self.client.get(reverse("clients:client_list"))
+
+        self.assertEqual(studio_response.status_code, 200)
+        self.assertEqual(client_list_response.status_code, 403)
+
+    def test_translator_root_redirects_to_studio(self):
+        self.client.login(email="translator@example.com", password="pass")
+
+        response = self.client.get(reverse("root_dashboard"))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse("translations:dashboard"))
+
     def test_studio_menu_item_is_visible_only_for_superusers(self):
         self.client.login(email="staff@example.com", password="pass")
         staff_response = self.client.get(reverse("clients:client_list"))
         self.assertEqual(staff_response.status_code, 200)
         self.assertNotIn("Translation Studio", staff_response.content.decode("utf-8"))
+
+        self.client.login(email="translator@example.com", password="pass")
+        translator_response = self.client.get(reverse("translations:dashboard"))
+        self.assertEqual(translator_response.status_code, 200)
+        self.assertIn("Translation Studio", translator_response.content.decode("utf-8"))
 
         self.client.login(email="super@example.com", password="pass")
         superuser_response = self.client.get(reverse("clients:client_list"))
@@ -156,6 +186,7 @@ class TranslationViewsTests(TestCase):
 
 class TranslationMiddlewareTests(TestCase):
     def setUp(self):
+        ensure_predefined_roles()
         self.factory = RequestFactory()
 
     def test_sets_studio_active_true_for_superuser_with_flag(self):
@@ -182,6 +213,21 @@ class TranslationMiddlewareTests(TestCase):
         from django.utils import translation
 
         self.assertFalse(getattr(translation, "_studio_active", True))
+
+    def test_sets_studio_active_true_for_translator_role(self):
+        user_model = get_user_model()
+        translator = user_model.objects.create_user(email="mw-translator@example.com", password="pass", is_staff=True)
+        translator.groups.add(Group.objects.get(name="Translator"))
+        request = self.factory.get("/any/?studio=1")
+        request.user = translator
+        request.session = {}
+
+        middleware = TranslationStudioMiddleware(lambda _req: HttpResponse("ok"))
+        middleware(request)
+
+        from django.utils import translation
+
+        self.assertTrue(getattr(translation, "_studio_active", False))
 
     def test_injects_overlay_script_for_superuser_in_studio_mode(self):
         request = self.factory.get("/pl/staff/")

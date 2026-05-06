@@ -6,7 +6,7 @@ class UploadModalDatasetTest(TestCase):
     def test_upload_modal_dataset_attributes(self):
         # We need a dummy client to pass to the template
         # The template expects 'client', 'CURRENT_LANGUAGE'
-        
+
         # We can just render the modals.html template or use SimpleTestCase if we pass a mock.
         # Let's create a real client since we are in TestCase
         client = Client.objects.create(
@@ -15,7 +15,7 @@ class UploadModalDatasetTest(TestCase):
             email="test@example.com",
             phone="123456789"
         )
-        
+
         context = {
             'client': client,
             'CURRENT_LANGUAGE': 'ru',
@@ -25,9 +25,9 @@ class UploadModalDatasetTest(TestCase):
                 'payment_method': type('MockField', (), {'field': type('MockInner', (), {'choices': []})()})(),
             })()
         }
-        
+
         html = render_to_string('clients/partials/modals.html', context)
-        
+
         # Check for dataset attributes in upload modal
         expected_attributes = [
             'data-upload-text',
@@ -38,6 +38,6 @@ class UploadModalDatasetTest(TestCase):
             'data-upload-success-text',
             'data-session-expired-text'
         ]
-        
+
         for attr in expected_attributes:
             self.assertIn(attr, html, f"Modal HTML is missing '{attr}' dataset attribute.")

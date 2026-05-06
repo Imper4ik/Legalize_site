@@ -14,11 +14,15 @@ from legalize_site.checks import (
     RATE_LIMIT_CACHE_ERROR_ID,
     RUNTIME_DEPENDENCY_WARNING_ID,
     SECRET_KEY_ERROR_ID,
+    CRON_TOKEN_ERROR_ID,
+    UPLOAD_LIMIT_ERROR_ID,
     encryption_configuration_check,
+    cron_token_check,
     email_configuration_check,
     production_storage_safety_check,
     rate_limit_cache_check,
     runtime_dependency_check,
+    upload_policy_check,
 )
 
 
@@ -205,7 +209,7 @@ class ProductionStorageSafetyCheckTests(SimpleTestCase):
     def test_explicit_local_media_acknowledgement_silences_media_storage_error(self):
         self.assertEqual(production_storage_safety_check(), [])
 
-class CronAllowedIpsCheckTests(SimpleTestCase):
+class CronAllowedIpsCheckTests(SimpleTestCase):
     @override_settings(IS_PRODUCTION=True)
     @patch.dict("os.environ", {"CRON_TOKEN": "secret", "CRON_ALLOWED_IPS": ""}, clear=True)
     def test_empty_cron_allowed_ips_returns_warning(self):
@@ -223,3 +227,33 @@ class ProductionStorageSafetyCheckTests(SimpleTestCase):
         from legalize_site.checks import cron_allowed_ips_check
 
         self.assertEqual(cron_allowed_ips_check(), [])
+
+
+class CronTokenCheckTests(SimpleTestCase):
+    @override_settings(IS_PRODUCTION=True)
+    @patch.dict("os.environ", {"CRON_TOKEN": ""}, clear=True)
+    def test_production_requires_cron_token(self):
+        messages = cron_token_check()
+
+        self.assertEqual(len(messages), 1)
+        self.assertIsInstance(messages[0], Error)
+        self.assertEqual(messages[0].id, CRON_TOKEN_ERROR_ID)
+
+    @override_settings(IS_PRODUCTION=True)
+    @patch.dict("os.environ", {"CRON_TOKEN": "secret"}, clear=True)
+    def test_configured_cron_token_has_no_messages(self):
+        self.assertEqual(cron_token_check(), [])
+
+
+class UploadPolicyCheckTests(SimpleTestCase):
+    @override_settings(MAX_UPLOAD_SIZE_MB=0)
+    def test_upload_size_limit_must_be_positive(self):
+        messages = upload_policy_check()
+
+        self.assertEqual(len(messages), 1)
+        self.assertIsInstance(messages[0], Error)
+        self.assertEqual(messages[0].id, UPLOAD_LIMIT_ERROR_ID)
+
+    @override_settings(MAX_UPLOAD_SIZE_MB=20)
+    def test_valid_upload_policy_has_no_messages(self):
+        self.assertEqual(upload_policy_check(), [])

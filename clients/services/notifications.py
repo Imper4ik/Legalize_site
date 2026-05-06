@@ -149,8 +149,11 @@ def _send_email(
             if sent_count:
                 try:
                     _send_confirmation_email(subject, body, recipient_list)
-                except Exception:
-                    logger.exception("Failed to send staff confirmation email")
+                except Exception as exc:
+                    logger.warning(
+                        "Failed to send staff confirmation email: error_type=%s",
+                        type(exc).__name__,
+                    )
                 _log_email(
                     subject,
                     body,
@@ -173,8 +176,13 @@ def _send_email(
                     delivery_status="failed",
                     error_message="send returned 0",
                 )
-        except Exception:
-            logger.exception("Failed to send notification email")
+        except Exception as exc:
+            logger.warning(
+                "Failed to send notification email: template=%s client_id=%s error_type=%s",
+                template_type,
+                getattr(client, "pk", None),
+                type(exc).__name__,
+            )
             result["sent_count"] = 0
             _log_email(
                 subject,
@@ -229,8 +237,8 @@ def _log_email(
             )
     except IntegrityError:
         logger.info("Skipped duplicate email log for idempotency_key=%s", idempotency_key)
-    except Exception:
-        logger.exception("Failed to log sent email")
+    except Exception as exc:
+        logger.warning("Failed to log sent email: error_type=%s", type(exc).__name__)
 
 
 def _get_staff_recipients() -> list[str]:
@@ -370,8 +378,8 @@ def _send_confirmation_email(subject: str, body: str, recipients: list[str]) -> 
         message.attach_alternative(f"<p>{confirmation_body}</p>", "text/html")
         message.attach("sent-email.pdf", pdf_bytes, "application/pdf")
         message.send()
-    except Exception:  # pragma: no cover - defensive safeguard
-        logger.exception("Failed to send confirmation email")
+    except Exception as exc:  # pragma: no cover - defensive safeguard
+        logger.warning("Failed to send confirmation email: error_type=%s", type(exc).__name__)
 
 
 def _get_required_documents_context(client: Client, language: str | None = None) -> dict | None:
@@ -441,7 +449,7 @@ def send_expired_documents_email(client: Client, *, sent_by=None) -> int:
     context = _get_expired_documents_context(client)
     if not context:
         return 0
-    
+
     with override(language):
         subject = _get_subject("expired_documents", language)
     body = _render_email_body("expired_documents", context, language)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+from datetime import timedelta
 
 from django.conf import settings
 from django.db.models import Count, Sum
@@ -86,6 +87,20 @@ def _get_storage_usage() -> dict:
     return {"total_bytes": total_size, "total_display": display, "file_count": file_count}
 
 
+def _count_missing_document_items() -> int:
+    clients = Client.objects.exclude(workflow_stage__in=["closed", "decision_received"]).prefetch_related(
+        "documents",
+        "wniosek_submissions",
+        "wniosek_submissions__attachments",
+    )
+    return sum(
+        1
+        for client in clients
+        for item in client.get_document_checklist()
+        if not item.get("is_complete")
+    )
+
+
 class AdminDashboardView(RoleOrFeatureRequiredMixin, TemplateView):
     """Global health and status dashboard for administrators."""
 
@@ -120,6 +135,16 @@ class AdminDashboardView(RoleOrFeatureRequiredMixin, TemplateView):
 
         context["total_documents"] = Document.objects.count()
         context["docs_awaiting_confirmation"] = Document.objects.filter(awaiting_confirmation=True).count()
+        context["docs_awaiting_verification"] = Document.objects.filter(
+            file__gt="",
+            verified=False,
+            awaiting_confirmation=False,
+        ).count()
+        context["missing_documents"] = _count_missing_document_items()
+        context["expired_documents"] = Document.objects.filter(
+            expiry_date__isnull=False,
+            expiry_date__lt=today,
+        ).count()
         context["docs_ocr_failed"] = Document.objects.filter(ocr_status="failed").count()
         context["docs_name_mismatch"] = Document.objects.filter(ocr_name_mismatch=True).count()
 
@@ -145,11 +170,26 @@ class AdminDashboardView(RoleOrFeatureRequiredMixin, TemplateView):
 
         context["pending_reminders"] = Reminder.objects.filter(is_active=True, due_date__lte=today).count()
         context["upcoming_reminders"] = Reminder.objects.filter(is_active=True, due_date__gt=today).count()
+        context["active_reminders"] = Reminder.objects.filter(is_active=True).count()
 
         context["pending_payments"] = Payment.objects.filter(status="pending").count()
+        context["unpaid_payments"] = Payment.objects.filter(status__in=["pending", "partial"]).count()
         context["total_revenue"] = Payment.objects.filter(status="paid").aggregate(
             total=Sum("amount_paid")
         )["total"] or 0
+        context["active_cases"] = Client.objects.exclude(workflow_stage__in=["closed", "decision_received"]).count()
+        context["upcoming_fingerprints"] = Client.objects.filter(
+            fingerprints_date__isnull=False,
+            fingerprints_date__gte=today,
+            fingerprints_date__lte=today + timedelta(days=30),
+        ).count()
+        context["waiting_after_fingerprints"] = Client.objects.filter(
+            workflow_stage="waiting_decision",
+            fingerprints_date__isnull=False,
+            fingerprints_date__lte=today,
+            decision_date__isnull=True,
+        ).count()
+        context["decisions_received"] = Client.objects.filter(decision_date__isnull=False).count()
 
         context["failed_campaigns"] = EmailCampaign.objects.filter(status=EmailCampaign.STATUS_FAILED).count()
         context["pending_campaigns"] = EmailCampaign.objects.filter(status=EmailCampaign.STATUS_PENDING).count()

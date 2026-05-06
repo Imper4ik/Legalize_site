@@ -28,7 +28,7 @@ urlpatterns = [
     # URL для экспорта
     path('client/<int:pk>/export/pdf/', views.client_export_pdf_view, name='client_export_pdf'),
     path('client/<int:pk>/export/zip/', views.client_export_zip, name='client_export_zip'),
-    
+
     # URL для версий документов
     path('document/<int:doc_id>/versions/', views.document_versions_view, name='document_versions'),
     path('document-version/<int:version_id>/download/', views.document_version_download, name='document_version_download'),

@@ -22,6 +22,10 @@ MEDIA_STORAGE_WARNING_ID = "legalize_site.W006"
 BACKUP_STORAGE_WARNING_ID = "legalize_site.W007"
 RATE_LIMIT_CACHE_WARNING_ID = "legalize_site.W008"
 RATE_LIMIT_CACHE_ERROR_ID = "legalize_site.E005"
+# This is a system-check identifier, not a credential.
+CRON_TOKEN_ERROR_ID = "legalize_site.E006"  # nosec B105
+UPLOAD_LIMIT_ERROR_ID = "legalize_site.E007"
+UPLOAD_TYPES_ERROR_ID = "legalize_site.E008"
 
 BACKENDS = {
     "django.core.mail.backends.smtp.EmailBackend": {
@@ -324,6 +328,49 @@ def cron_allowed_ips_check(app_configs=None, **kwargs):
                 "CRON_ALLOWED_IPS is empty in production.",
                 hint="CRON_TOKEN provides baseline security, but configuring CRON_ALLOWED_IPS adds an important IP allowlist layer.",
                 id="legalize_site.W009",
+            )
+        )
+    return messages
+
+
+@register("legalize_site")
+def cron_token_check(app_configs=None, **kwargs):
+    messages = []
+    if not getattr(settings, "IS_PRODUCTION", False):
+        return messages
+
+    if not os.environ.get("CRON_TOKEN", "").strip():
+        messages.append(
+            Error(
+                "CRON_TOKEN is not configured in production.",
+                hint="Set CRON_TOKEN and pass it as Authorization: Bearer <token> or X-CRON-TOKEN for every cron request.",
+                id=CRON_TOKEN_ERROR_ID,
+            )
+        )
+    return messages
+
+
+@register("legalize_site")
+def upload_policy_check(app_configs=None, **kwargs):
+    messages = []
+    max_upload_mb = int(getattr(settings, "MAX_UPLOAD_SIZE_MB", 0) or 0)
+    if max_upload_mb <= 0:
+        messages.append(
+            Error(
+                "MAX_UPLOAD_SIZE_MB must be a positive integer.",
+                hint="Set MAX_UPLOAD_SIZE_MB to a conservative value such as 20.",
+                id=UPLOAD_LIMIT_ERROR_ID,
+            )
+        )
+
+    from clients.validators import ALLOWED_DOCUMENTS
+
+    if not ALLOWED_DOCUMENTS:
+        messages.append(
+            Error(
+                "Allowed document upload types are empty.",
+                hint="Configure clients.validators.ALLOWED_DOCUMENTS with explicit extensions and MIME types.",
+                id=UPLOAD_TYPES_ERROR_ID,
             )
         )
     return messages

@@ -129,16 +129,20 @@ def _check_export_size_limit(client, max_mb: int) -> None:
         if doc.file and document_file_exists(doc):
             try:
                 total_bytes += doc.file.size
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("Could not read document size during export sizing: document_id=%s error=%s", doc.pk, exc)
 
     for version in DocumentVersion.objects.filter(document__client=client):
         if version.file:
             try:
                 if version.file.storage.exists(version.file.name):
                     total_bytes += version.file.size
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug(
+                    "Could not read document version size during export sizing: version_id=%s error=%s",
+                    version.pk,
+                    exc,
+                )
 
     total_mb = total_bytes / (1024 * 1024)
     if total_mb > max_mb:

@@ -23,7 +23,7 @@ class Command(BaseCommand):
         # In a real environment, you would restore this to a separate testing database.
         # For security and safety, we only verify the file can be parsed by pg_restore/sqlite
         # or just print success if file size > 0 as a mock for this task.
-        
+
         if os.path.getsize(latest_backup) > 0:
             self.stdout.write(self.style.SUCCESS(f"Backup file {latest_backup} is valid and not empty. Ready for restore testing."))
         else:

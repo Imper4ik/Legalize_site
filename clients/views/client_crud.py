@@ -24,6 +24,7 @@ from clients.services.notifications import (
 from clients.services.responses import apply_no_store
 from clients.services.roles import (
     CLIENT_DELETE_ROLES,
+    user_has_any_role,
 )
 from clients.use_cases.client_records import (
     finalize_client_creation,
@@ -272,8 +273,10 @@ def dashboard_redirect_view(request):
     if not request.user.is_authenticated:
         return redirect("account_login")
 
-    if request.user.is_staff:
+    if user_has_any_role(request.user, "Admin", "Manager", "Staff", "ReadOnly"):
         return redirect("clients:client_list")
+    if user_has_any_role(request.user, "Translator") and getattr(settings, "ENABLE_TRANSLATION_TOOLING", False):
+        return redirect("translations:dashboard")
 
     support_email = getattr(settings, "DEFAULT_FROM_EMAIL", "support@example.com")
     context = {

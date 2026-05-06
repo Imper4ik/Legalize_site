@@ -1,6 +1,20 @@
 from django.contrib import admin
 
-from .models import AppSettings, Client, ClientActivity, Company, Document, FamilyGroup, Payment, ServicePrice, StaffTask
+from .models import (
+    AppSettings,
+    Client,
+    ClientActivity,
+    Company,
+    Document,
+    DocumentProcessingJob,
+    EmailCampaign,
+    EmailLog,
+    FamilyGroup,
+    Payment,
+    Reminder,
+    ServicePrice,
+    StaffTask,
+)
 
 
 @admin.action(description="Archive selected records")
@@ -133,14 +147,128 @@ class ClientAdmin(admin.ModelAdmin):
 
 @admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):
-    list_display = ("client", "document_type", "zus_period_month", "uploaded_at", "archived_at")
-    list_filter = ("document_type", "zus_period_month", "archived_at")
+    list_display = (
+        "client",
+        "document_type",
+        "verified",
+        "awaiting_confirmation",
+        "ocr_status",
+        "zus_period_month",
+        "uploaded_at",
+        "archived_at",
+    )
+    list_filter = (
+        "document_type",
+        "verified",
+        "awaiting_confirmation",
+        "ocr_status",
+        "zus_period_month",
+        "archived_at",
+    )
     search_fields = ("client__first_name", "client__last_name")
     readonly_fields = ("archived_at",)
     actions = [archive_selected, restore_selected]
 
     def get_queryset(self, request):
         return Document.all_objects.select_related("client")
+
+
+@admin.register(Reminder)
+class ReminderAdmin(admin.ModelAdmin):
+    list_display = ("title", "client", "reminder_type", "due_date", "is_active", "created_at")
+    list_filter = ("reminder_type", "is_active", "due_date")
+    search_fields = ("title", "notes", "client__first_name", "client__last_name", "client__email")
+    autocomplete_fields = ("client", "payment", "document")
+    readonly_fields = ("created_at",)
+
+
+@admin.register(EmailLog)
+class EmailLogAdmin(admin.ModelAdmin):
+    list_display = ("sent_at", "client", "template_type", "delivery_status", "subject", "sent_by")
+    list_filter = ("delivery_status", "template_type", "sent_at")
+    search_fields = ("subject", "client__first_name", "client__last_name", "client__email", "sent_by__email")
+    autocomplete_fields = ("client", "sent_by")
+    readonly_fields = (
+        "client",
+        "subject",
+        "body",
+        "recipients",
+        "template_type",
+        "sent_at",
+        "delivery_status",
+        "idempotency_key",
+        "error_message",
+        "sent_by",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(DocumentProcessingJob)
+class DocumentProcessingJobAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "document",
+        "job_type",
+        "status",
+        "attempts",
+        "requires_confirmation",
+        "created_at",
+        "updated_at",
+    )
+    list_filter = ("job_type", "status", "requires_confirmation", "created_at")
+    search_fields = ("document__client__first_name", "document__client__last_name", "document__client__email")
+    autocomplete_fields = ("document", "created_by")
+    readonly_fields = (
+        "document",
+        "created_by",
+        "job_type",
+        "status",
+        "source_file_name",
+        "attempts",
+        "max_attempts",
+        "error_message",
+        "next_attempt_at",
+        "lease_expires_at",
+        "created_at",
+        "started_at",
+        "completed_at",
+        "updated_at",
+        "requires_confirmation",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.register(EmailCampaign)
+class EmailCampaignAdmin(admin.ModelAdmin):
+    list_display = ("created_at", "subject", "status", "total_recipients", "sent_count", "failed_count", "created_by")
+    list_filter = ("status", "created_at")
+    search_fields = ("subject", "created_by__email")
+    autocomplete_fields = ("created_by",)
+    readonly_fields = (
+        "subject",
+        "message",
+        "recipient_emails",
+        "total_recipients",
+        "status",
+        "sent_count",
+        "failed_count",
+        "error_details",
+        "filters_snapshot",
+        "created_by",
+        "created_at",
+        "started_at",
+        "completed_at",
+    )
+
+    def has_add_permission(self, request):
+        return False
 
 
 @admin.register(FamilyGroup)

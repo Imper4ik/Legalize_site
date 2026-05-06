@@ -3,15 +3,18 @@ import logging
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import user_passes_test
 from django.http import JsonResponse
+from clients.services.roles import user_has_any_role
 from .utils import load_all_translations, save_translation_entry
 
 logger = logging.getLogger(__name__)
 
-# Admin-only views
-def is_superuser(user):
-    return user.is_authenticated and user.is_superuser
+def can_use_translation_studio(user):
+    return user.is_authenticated and (
+        user.is_superuser or user_has_any_role(user, "Admin", "Translator")
+    )
 
-@user_passes_test(is_superuser)
+
+@user_passes_test(can_use_translation_studio)
 def studio_dashboard(request):
     """Render the side-by-side translation dashboard."""
     translations = load_all_translations()
@@ -20,7 +23,7 @@ def studio_dashboard(request):
         'languages': ['ru', 'en', 'pl']
     })
 
-@user_passes_test(is_superuser)
+@user_passes_test(can_use_translation_studio)
 def update_translation_api(request):
     """API to save a single translation msgid across all languages."""
     if request.method == 'POST':
@@ -48,7 +51,7 @@ def update_translation_api(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
 
-@user_passes_test(is_superuser)
+@user_passes_test(can_use_translation_studio)
 def toggle_studio_mode(request):
     """Turn on/off the in-context editing spans."""
     current = request.session.get('studio_mode', False)
@@ -66,33 +69,33 @@ def toggle_studio_mode(request):
         referer = None
     return redirect(referer or '/')
 
-@user_passes_test(is_superuser)
+@user_passes_test(can_use_translation_studio)
 def get_translation_api(request):
     """Fetch all 3 languages for a specific msgid."""
     msgid = request.GET.get('msgid')
     if not msgid:
         return JsonResponse({'status': 'error', 'message': 'Missing msgid'}, status=400)
-    
+
     translations = load_all_translations()
     entry = next((e for e in translations if e['msgid'] == msgid), None)
-    
+
     if entry:
         return JsonResponse({'status': 'ok', 'data': entry})
-        
+
     # Return a stub for new strings so the user can save them
     return JsonResponse({
-        'status': 'ok', 
+        'status': 'ok',
         'data': {
-            'msgid': msgid, 
+            'msgid': msgid,
             'ru': msgid, # default to msgid for RU
-            'en': '', 
-            'pl': '', 
+            'en': '',
+            'pl': '',
             'is_new': True
         }
     })
 
 
-@user_passes_test(is_superuser)
+@user_passes_test(can_use_translation_studio)
 def scan_translations_api(request):
     """Return a mapping of translated text -> msgid for the current language.
 
@@ -117,7 +120,7 @@ def scan_translations_api(request):
         msgid = entry['msgid']
         # Map the msgid itself
         mapping[normalize(msgid)] = msgid
-        
+
         # Map ALL localized versions
         for lang_code in ['ru', 'en', 'pl']:
             val = entry.get(lang_code)

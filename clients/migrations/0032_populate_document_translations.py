@@ -5,7 +5,7 @@ from django.db import migrations
 def populate_document_translations(apps, schema_editor):
     """Populate custom_name_pl/ru/en for all DocumentRequirements."""
     DocumentRequirement = apps.get_model('clients', 'DocumentRequirement')
-    
+
     # Complete translations for all document types
     translations = {
         # Standard documents
@@ -145,7 +145,7 @@ def populate_document_translations(apps, schema_editor):
             'en': 'Summons'
         },
     }
-    
+
     # Update all existing DocumentRequirements
     updated_count = 0
     for doc_req in DocumentRequirement.objects.all():
@@ -156,7 +156,7 @@ def populate_document_translations(apps, schema_editor):
             doc_req.custom_name_en = tr['en']
             doc_req.save(update_fields=['custom_name_pl', 'custom_name_ru', 'custom_name_en'])
             updated_count += 1
-    
+
     print(f"Updated {updated_count} document requirements with translations")
 
 
