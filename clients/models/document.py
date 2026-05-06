@@ -215,6 +215,21 @@ class Document(SoftDeleteModel):
         }
         return badge_map.get(self.ocr_status, "")
 
+    def scrub_parsed_pii(self) -> bool:
+        """Remove PII and raw text from parsed_data, keeping only metadata."""
+        if not self.parsed_data:
+            return False
+
+        keys_to_remove = ["full_name", "first_name", "last_name", "case_number", "text"]
+        scrubbed = False
+        for key in keys_to_remove:
+            if key in self.parsed_data:
+                del self.parsed_data[key]
+                scrubbed = True
+        
+        self.parsed_data["pii_scrubbed"] = True
+        return scrubbed
+
 
 class DocumentRequirement(models.Model):
     application_purpose = models.CharField(max_length=50, verbose_name=_("Цель подачи"))

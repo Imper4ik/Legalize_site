@@ -153,3 +153,55 @@ def process_email_campaigns_cron(request: HttpRequest) -> JsonResponse:
     except Exception:
         logger.exception("Unexpected error during queued email campaign processing")
         return JsonResponse({"error": "email campaign processing failed"}, status=500)
+
+
+@csrf_exempt
+@require_POST
+def process_document_jobs_cron(request: HttpRequest) -> JsonResponse:
+    from django.core.management import call_command
+
+    try:
+        forbidden_response = _authorize_cron_request(request, action_name="document OCR jobs")
+        if forbidden_response is not None:
+            return forbidden_response
+
+        limit_raw = (request.POST.get("limit") or "").strip()
+        limit = int(limit_raw) if limit_raw else None
+        
+        # We capture stdout/stderr to return some status, but call_command prints.
+        # Alternatively, we can just call it and return success.
+        args = []
+        if limit:
+            args.extend(["--limit", str(limit)])
+        
+        call_command("process_document_jobs", *args)
+        logger.info("Executed process_document_jobs via cron")
+        return JsonResponse({"status": "processed"})
+    except ValueError:
+        return JsonResponse({"error": "invalid limit"}, status=400)
+    except Exception as e:
+        logger.exception("Unexpected error during document job processing")
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@require_POST
+def update_reminders_cron(request: HttpRequest) -> JsonResponse:
+    from django.core.management import call_command
+
+    try:
+        forbidden_response = _authorize_cron_request(request, action_name="update reminders")
+        if forbidden_response is not None:
+            return forbidden_response
+
+        only_sections = request.POST.getlist("only")
+        args = []
+        for section in only_sections:
+            args.extend(["--only", section])
+        
+        call_command("update_reminders", *args)
+        logger.info("Executed update_reminders via cron")
+        return JsonResponse({"status": "processed"})
+    except Exception as e:
+        logger.exception("Unexpected error during update_reminders")
+        return JsonResponse({"error": str(e)}, status=500)

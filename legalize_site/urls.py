@@ -9,7 +9,12 @@ from clients import views
 from clients.views.admin_views import update_translations_view
 from users.security_views import SignupDisabledView
 from users.views import ResendVerificationEmailView
-from .cron_views import db_backup, process_email_campaigns_cron
+from .cron_views import (
+    db_backup,
+    process_email_campaigns_cron,
+    process_document_jobs_cron,
+    update_reminders_cron,
+)
 
 from legalize_site.views import healthcheck, readiness
 
@@ -21,6 +26,8 @@ urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')),
     path('cron/db-backup/', db_backup, name='db_backup'),
     path('cron/process-email-campaigns/', process_email_campaigns_cron, name='process_email_campaigns_cron'),
+    path('cron/process-document-jobs/', process_document_jobs_cron, name='process_document_jobs_cron'),
+    path('cron/update-reminders/', update_reminders_cron, name='update_reminders_cron'),
 ]
 
 if getattr(settings, "ENABLE_TRANSLATION_TOOLING", False):

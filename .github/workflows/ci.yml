@@ -48,13 +48,6 @@ jobs:
       - name: Bandit
         run: bandit -r . -x "*/migrations/*,*/tests/*"
 
-
-      - name: Ruff
-        run: ruff check .
-
-      - name: Bandit
-        run: bandit -r . -x "*/migrations/*,*/tests/*"
-
       - name: pip-audit
         run: pip-audit
 

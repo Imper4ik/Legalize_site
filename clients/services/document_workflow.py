@@ -174,6 +174,7 @@ def confirm_wezwanie_document(
     document.ocr_status = "success"
     document.ocr_name_mismatch = False
     document.parsed_data = _build_confirmed_wezwanie_payload(confirmation_data)
+    document.scrub_parsed_pii()
     document.save(update_fields=["awaiting_confirmation", "ocr_status", "ocr_name_mismatch", "parsed_data"])
 
     if _send_notification(send_missing_email, client, "missing-documents email"):

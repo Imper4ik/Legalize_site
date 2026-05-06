@@ -1,0 +1,85 @@
+# Legalize_site CRM
+
+A modern CRM built with Django for managing client applications, documents, appointments, and payments. Features automated OCR for official documents (wezwanie), an idempotent email notification system, and comprehensive tracking for ZUS and residence permits.
+
+## Features
+
+- **Document Management**: Upload, verify, and track document expiry. Includes S3, PostgreSQL, and local filesystem backends.
+- **OCR Processing**: Automatically extract PII and application details from official letters using Tesseract OCR.
+- **Workflow Automation**: Track clients through stages (New -> Document Collection -> Application Submitted -> Fingerprints -> Decision Received).
+- **Automated Notifications**: Idempotent email delivery system with queueing, deduplication, and cron-based dispatch for missing/expired documents.
+- **Secure by Default**: Encrypted sensitive fields (passport, case numbers), rate limiting, and robust CSRF/HSTS policies.
+- **Localization**: Full translation support (PL, EN, RU).
+
+## Deployment (Railway)
+
+This application is ready for deployment on [Railway](https://railway.app/). 
+
+### Quick Start
+1. Provision a PostgreSQL database and a Redis instance (optional, for rate-limiting cache).
+2. Connect the GitHub repository to a new Railway service.
+3. Configure Environment Variables (see below).
+4. Deploy! Railway uses `nixpacks.toml` to automatically install required system dependencies (`tesseract-ocr`, `poppler-utils`, etc.).
+
+### Environment Variables
+
+At a minimum, configure the following variables in Railway:
+- `SECRET_KEY`: A secure random string.
+- `FERNET_KEYS`: A comma-separated list of 32-byte url-safe base64-encoded keys for field encryption.
+- `ALLOWED_HOSTS` & `CSRF_TRUSTED_ORIGINS`: Explicit hostnames, or allow Railway to inject `RAILWAY_PUBLIC_DOMAIN`.
+- `DATABASE_URL`: Automatically provided by Railway Postgres.
+- `REDIS_URL`: Automatically provided by Railway Redis (used for rate-limiting across workers).
+- `APP_ENV`: Set to `production`.
+- `PDF_FONT_PATH`: Set to `/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf`.
+
+For a full list of variables, see `.env.example`.
+
+### Media Storage
+
+Railway's ephemeral filesystem means uploaded files are lost on redeploy. Choose a persistent storage option:
+
+1. **S3-Compatible (Recommended)**: AWS S3, Cloudflare R2, Backblaze B2
+   - `USE_S3_MEDIA_STORAGE=True`
+   - Configure `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_STORAGE_BUCKET_NAME`, etc.
+   
+2. **PostgreSQL Database Storage**: Good for small/MVP deployments
+   - `USE_DATABASE_MEDIA_STORAGE=True`
+   - Document metadata remains in the filesystem schema, but actual file bytes are saved to PostgreSQL.
+   - Note: Database backups will grow much faster.
+
+3. **Railway Volume**: Requires explicitly acknowledging the volume path
+   - `MEDIA_ROOT=/app/media` (or your exact volume mount)
+   - `ALLOW_PRODUCTION_LOCAL_MEDIA=true`
+
+See `docs/deployment.md` for more details.
+
+### Automated Tasks (Cron)
+
+Railway does not support native cron. You must configure an external ping service (like cron-job.org) to hit the CRM's secure webhook endpoints:
+
+- **Database Backup**: `POST /cron/db-backup/`
+- **Email Campaigns**: `POST /cron/process-email-campaigns/`
+- **Background OCR**: `POST /cron/process-document-jobs/`
+- **Daily Reminders**: `POST /cron/update-reminders/`
+
+Secure these endpoints by setting `CRON_TOKEN` and passing it via the `Authorization: Bearer <TOKEN>` header. You can also restrict access by IP using `CRON_ALLOWED_IPS`.
+
+## Local Development
+
+```bash
+# Install dependencies
+pip install -r requirements-dev.txt
+
+# Setup environment variables
+cp .env.example .env
+
+# Run migrations and start the server
+python manage.py migrate
+python manage.py runserver
+```
+
+### Running Tests
+The project uses `pytest` with extensive test coverage.
+```bash
+pytest
+```
