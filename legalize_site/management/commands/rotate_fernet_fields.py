@@ -48,11 +48,19 @@ class Command(BaseCommand):
             for obj in queryset.iterator():
                 changed_fields = []
                 for field in encrypted_fields:
-                    value = getattr(obj, field.attname)
-                    if value in (None, ""):
+                    try:
+                        value = getattr(obj, field.attname)
+                        if value in (None, ""):
+                            continue
+                        setattr(obj, field.attname, value)
+                        changed_fields.append(field.attname)
+                    except Exception as e:
+                        self.stderr.write(
+                            self.style.ERROR(
+                                f"Failed to decrypt {label} (pk={obj.pk}) field '{field.name}': {e}"
+                            )
+                        )
                         continue
-                    setattr(obj, field.attname, value)
-                    changed_fields.append(field.attname)
 
                 if not changed_fields:
                     continue

@@ -42,14 +42,29 @@ class EncryptedTextField(models.TextField):
     def from_db_value(self, value: Any, expression: Any, connection: Any) -> Any:
         if value is None or value == "":
             return value
-        return self._decrypt(value, fail_closed=True)
+        try:
+            return self._decrypt(value, fail_closed=True)
+        except EncryptedFieldDecryptionError:
+            if getattr(settings, "FERNET_FIELDS_ALLOW_DECRYPTION_FAILURE", False):
+                import logging
+                logging.getLogger(__name__).warning(
+                    "Decryption failed for a field, but FERNET_FIELDS_ALLOW_DECRYPTION_FAILURE is True. "
+                    "Returning raw encrypted value."
+                )
+                return value
+            raise
 
     def to_python(self, value: Any) -> Any:
         if value is None or value == "":
             return value
         if not self._looks_like_fernet_token(value):
             return value
-        return self._decrypt(value, fail_closed=True)
+        try:
+            return self._decrypt(value, fail_closed=True)
+        except EncryptedFieldDecryptionError:
+            if getattr(settings, "FERNET_FIELDS_ALLOW_DECRYPTION_FAILURE", False):
+                return value
+            raise
 
     @staticmethod
     def _looks_like_fernet_token(value: Any) -> bool:
@@ -62,6 +77,9 @@ class EncryptedTextField(models.TextField):
             decrypted = self._fernet.decrypt(value.encode("utf-8"))
         except InvalidToken:
             if fail_closed:
-                raise EncryptedFieldDecryptionError("Encrypted field value could not be decrypted") from None
+                raise EncryptedFieldDecryptionError(
+                    "Encrypted field value could not be decrypted. This usually means "
+                    "FERNET_KEYS has changed and no longer matches the key used for encryption."
+                ) from None
             return value
         return force_str(decrypted)
