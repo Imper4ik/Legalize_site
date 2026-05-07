@@ -3,7 +3,7 @@ from __future__ import annotations
 from django.conf import settings
 from django.contrib import messages
 from django.db import transaction
-from django.db.models import Prefetch, Q
+from django.db.models import Count, Prefetch, Q
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
@@ -16,7 +16,7 @@ from clients.forms import (
     PaymentForm,
     StaffTaskForm,
 )
-from clients.models import Client, ClientActivity, Document, Payment, StaffTask, WniosekSubmission
+from clients.models import Client, ClientActivity, Document, EmailLog, Payment, StaffTask, WniosekSubmission
 from clients.services.notifications import (
     send_expired_documents_email,
     send_required_documents_email,
@@ -94,11 +94,14 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
     def get_queryset(self):
         return accessible_clients_queryset(
             self.request.user,
-            (
-            Client.objects.select_related("user")
-            .prefetch_related(
+            Client.objects.select_related("user", "sponsor_client", "company", "assigned_staff").prefetch_related(
                 Prefetch("payments", queryset=Payment.objects.order_by("-created_at")),
-                Prefetch("documents", queryset=Document.objects.order_by("-uploaded_at")),
+                Prefetch(
+                    "documents",
+                    queryset=Document.objects.annotate(
+                        preloaded_version_count=Count("versions")
+                    ).order_by("-uploaded_at"),
+                ),
                 Prefetch(
                     "staff_tasks",
                     queryset=StaffTask.objects.select_related("assignee", "created_by").order_by(
@@ -113,13 +116,15 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
                         "-created_at"
                     ),
                 ),
+                Prefetch("email_logs", queryset=EmailLog.objects.select_related("sent_by").order_by("-sent_at")),
                 Prefetch(
                     "wniosek_submissions",
-                    queryset=WniosekSubmission.objects.prefetch_related("attachments").order_by("-confirmed_at"),
+                    queryset=WniosekSubmission.objects.select_related("confirmed_by")
+                    .prefetch_related("attachments")
+                    .order_by("-confirmed_at"),
                 ),
                 "reminders",
-                "email_logs",
-            )
+                "sponsored_family_members",
             ),
         )
 
@@ -131,12 +136,21 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         context["payment_form"] = PaymentForm()
         context["document_upload_form"] = DocumentUploadForm()
         context["document_status_list"] = document_status_list
-        context["email_logs"] = client.email_logs.select_related("sent_by").order_by("-sent_at")[:50]
+        prefetched = getattr(client, "_prefetched_objects_cache", {})
+        email_logs = prefetched.get("email_logs")
+        if email_logs is None:
+            email_logs = client.email_logs.select_related("sent_by").order_by("-sent_at")
+        context["email_logs"] = email_logs[:50]
         context["service_choices"] = Payment.SERVICE_CHOICES
         context["task_form"] = StaffTaskForm(initial={"assignee": self.request.user.pk})
-        context["open_tasks"] = client.staff_tasks.filter(
-            status__in=["open", "in_progress"],
-        ).select_related("assignee", "created_by")[:10]
+        staff_tasks = prefetched.get("staff_tasks")
+        if staff_tasks is None:
+            open_tasks = client.staff_tasks.filter(
+                status__in=["open", "in_progress"],
+            ).select_related("assignee", "created_by")
+        else:
+            open_tasks = [task for task in staff_tasks if task.status in {"open", "in_progress"}]
+        context["open_tasks"] = open_tasks[:10]
         context["recent_activities"] = client.activities.all()[:25]
         context["workflow_summary"] = client.get_workflow_summary(document_status_list=document_status_list)
         context["workflow_alerts"] = context["workflow_summary"]["alerts"]

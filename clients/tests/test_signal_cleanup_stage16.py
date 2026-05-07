@@ -48,3 +48,12 @@ class SignalCleanupStage16Tests(TestCase):
 
         self.portal_user.refresh_from_db()
         self.assertFalse(self.portal_user.is_active)
+
+    def test_deleting_portal_user_keeps_client_record(self):
+        client_id = self.client_obj.pk
+
+        self.portal_user.delete()
+
+        self.client_obj.refresh_from_db()
+        self.assertIsNone(self.client_obj.user_id)
+        self.assertTrue(Client.objects.filter(pk=client_id).exists())

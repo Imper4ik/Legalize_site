@@ -9,6 +9,10 @@ from django.utils.encoding import force_str
 from django.utils.functional import cached_property
 
 
+class EncryptedFieldDecryptionError(ValueError):
+    """Raised when an encrypted database value cannot be decrypted."""
+
+
 def _build_fernet():
     keys = getattr(settings, "FERNET_KEYS", [])
     if not keys:
@@ -36,18 +40,26 @@ class EncryptedTextField(models.TextField):
     def from_db_value(self, value, expression, connection):
         if value is None or value == "":
             return value
-        return self._decrypt(value)
+        return self._decrypt(value, fail_closed=True)
 
     def to_python(self, value):
         if value is None or value == "":
             return value
-        return self._decrypt(value)
+        if not self._looks_like_fernet_token(value):
+            return value
+        return self._decrypt(value, fail_closed=True)
 
-    def _decrypt(self, value):
+    @staticmethod
+    def _looks_like_fernet_token(value) -> bool:
+        return isinstance(value, str) and value.startswith("gAAAA")
+
+    def _decrypt(self, value, *, fail_closed: bool = False):
         if not isinstance(value, str):
             return value
         try:
             decrypted = self._fernet.decrypt(value.encode("utf-8"))
         except InvalidToken:
+            if fail_closed:
+                raise EncryptedFieldDecryptionError("Encrypted field value could not be decrypted") from None
             return value
         return force_str(decrypted)

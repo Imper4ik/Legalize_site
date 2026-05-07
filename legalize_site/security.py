@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 
 from django.conf import settings
 from django.core.cache import cache
@@ -8,6 +9,8 @@ from django.http import HttpResponse
 from django.urls import Resolver404, resolve
 from django.utils import timezone
 from django.utils.translation import gettext as _
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -44,15 +47,22 @@ def is_rate_limited(request, url_name: str, rule: RateLimitRule) -> bool:
         return False
 
     cache_key = _build_rate_limit_key(request, url_name, rule)
-    current = cache.get(cache_key)
-    if current is None:
-        cache.set(cache_key, 1, timeout=rule.window_seconds)
-        return False
     try:
+        created = cache.add(cache_key, 1, timeout=rule.window_seconds)
+        if created:
+            return False
         current = cache.incr(cache_key)
     except ValueError:
         cache.set(cache_key, 1, timeout=rule.window_seconds)
         return False
+    except Exception:
+        failure_mode = getattr(settings, "RATE_LIMIT_CACHE_FAILURE_MODE", "closed")
+        logger.exception(
+            "Rate limit cache backend failed for url_name=%s failure_mode=%s",
+            url_name,
+            failure_mode,
+        )
+        return str(failure_mode).lower() == "closed"
     return current > rule.limit
 
 

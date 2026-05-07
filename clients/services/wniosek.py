@@ -190,7 +190,9 @@ def record_wniosek_submission(
 
 
 def get_submitted_document_codes(client) -> set[str]:
-    attachments = WniosekAttachment.objects.filter(submission__client=client).order_by("id")
+    attachments = _prefetched_wniosek_attachments(client)
+    if attachments is None:
+        attachments = WniosekAttachment.objects.filter(submission__client=client).order_by("id")
     submitted_codes: set[str] = set()
     for attachment in attachments:
         resolved_code = resolve_attachment_document_type(client, attachment, client.language)
@@ -199,12 +201,30 @@ def get_submitted_document_codes(client) -> set[str]:
     return submitted_codes
 
 
+def _prefetched_wniosek_attachments(client) -> list[WniosekAttachment] | None:
+    submissions = getattr(client, "_prefetched_objects_cache", {}).get("wniosek_submissions")
+    if submissions is None:
+        return None
+
+    attachments: list[WniosekAttachment] = []
+    for submission in submissions:
+        submission_attachments = getattr(submission, "_prefetched_objects_cache", {}).get("attachments")
+        if submission_attachments is None:
+            return None
+        for attachment in submission_attachments:
+            attachment.submission = submission
+            attachments.append(attachment)
+    return attachments
+
+
 def build_submitted_document_summary(client) -> dict[str, object]:
-    attachments = (
-        WniosekAttachment.objects.filter(submission__client=client)
-        .select_related("submission", "submission__confirmed_by")
-        .order_by("-submission__confirmed_at", "position", "id")
-    )
+    attachments = _prefetched_wniosek_attachments(client)
+    if attachments is None:
+        attachments = (
+            WniosekAttachment.objects.filter(submission__client=client)
+            .select_related("submission", "submission__confirmed_by")
+            .order_by("-submission__confirmed_at", "position", "id")
+        )
 
     grouped_by_code: dict[str, list[dict[str, object]]] = defaultdict(list)
     custom_groups: dict[str, dict[str, object]] = {}

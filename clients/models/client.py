@@ -13,6 +13,8 @@ from legalize_site.soft_delete import SoftDeleteModel
 
 
 class Client(SoftDeleteModel):
+    _application_purpose_display_cache: dict[str, dict[str, str]] = {}
+
     APPLICATION_PURPOSE_CHOICES = [
         ("study", _("Учёба")),
         ("work", _("Работа")),
@@ -173,7 +175,7 @@ class Client(SoftDeleteModel):
     )
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name="client_profile",
         null=True,
         blank=True,
@@ -193,11 +195,10 @@ class Client(SoftDeleteModel):
     def on_archive(self):
         if not self.user_id:
             return
-        user = type(self.user).objects.filter(pk=self.user_id).first() if hasattr(type(self), "user") else None
-        if user is None:
-            from django.contrib.auth import get_user_model
 
-            user = get_user_model().objects.filter(pk=self.user_id).first()
+        from django.contrib.auth import get_user_model
+
+        user = get_user_model().objects.filter(pk=self.user_id).first()
         if user and not user.is_staff and user.is_active:
             user.is_active = False
             user.save(update_fields=["is_active"])
@@ -231,12 +232,30 @@ class Client(SoftDeleteModel):
     def get_application_purpose_display(self):
         from submissions.models import Submission
 
+        fallback = dict(self.APPLICATION_PURPOSE_CHOICES).get(
+            self.application_purpose,
+            self.application_purpose or "",
+        )
         if self.application_purpose:
-            submission = Submission.objects.filter(slug=self.application_purpose).first()
-            if submission:
-                return submission.localized_name
+            current_language = translation.get_language() or self.language or "pl"
+            language_code = current_language.split("-")[0].lower()
+            display_map = self._application_purpose_display_cache.get(language_code)
+            if display_map is None:
+                display_map = {}
+                for submission in Submission.objects.all().only(
+                    "slug",
+                    "name",
+                    "name_pl",
+                    "name_en",
+                    "name_ru",
+                ):
+                    localized = getattr(submission, f"name_{language_code}", None)
+                    display_map[submission.slug] = localized.strip() if localized and localized.strip() else submission.name
+                self._application_purpose_display_cache[language_code] = display_map
+            if self.application_purpose in display_map:
+                return display_map[self.application_purpose]
 
-        return dict(self.APPLICATION_PURPOSE_CHOICES).get(self.application_purpose, self.application_purpose or "")
+        return fallback
 
     def get_document_requirement_purpose(self) -> str:
         if self.application_purpose == "family":
@@ -262,16 +281,24 @@ class Client(SoftDeleteModel):
         current_language = translation.get_language() or self.language
         purpose = self.get_document_requirement_purpose()
         required_docs = DocumentRequirement.required_for(purpose, current_language)
-        uploaded_docs = self.documents.all().annotate(
-            preloaded_version_count=models.Count('versions')
-        ).order_by("-uploaded_at")
+        prefetched_documents = getattr(self, "_prefetched_objects_cache", {}).get("documents")
+        if prefetched_documents is None:
+            uploaded_docs = self.documents.all().annotate(
+                preloaded_version_count=models.Count("versions")
+            ).order_by("-uploaded_at")
+        else:
+            uploaded_docs = sorted(
+                prefetched_documents,
+                key=lambda document: document.uploaded_at,
+                reverse=True,
+            )
 
         reqs = DocumentRequirement.objects.filter(application_purpose=purpose)
         req_map = {r.document_type: r for r in reqs}
 
         docs_map = {}
         for doc in uploaded_docs:
-            doc._preloaded_version_count = getattr(doc, 'preloaded_version_count', 0)
+            doc._preloaded_version_count = getattr(doc, "preloaded_version_count", 0)
             doc._preloaded_requirement = req_map.get(doc.document_type)
             if check_file_existence:
                 doc.file_exists = document_file_exists(doc)
@@ -371,6 +398,11 @@ class Client(SoftDeleteModel):
     def get_health_alerts(self, document_status_list=None):
         alerts = []
         today = timezone.localdate()
+        prefetched = getattr(self, "_prefetched_objects_cache", {})
+        prefetched_documents = prefetched.get("documents")
+        prefetched_payments = prefetched.get("payments")
+        prefetched_email_logs = prefetched.get("email_logs")
+        prefetched_staff_tasks = prefetched.get("staff_tasks")
 
         if self.legal_basis_end_date:
             if self.legal_basis_end_date < today:
@@ -390,7 +422,10 @@ class Client(SoftDeleteModel):
                     }
                 )
 
-        awaiting_confirmation_count = self.documents.filter(awaiting_confirmation=True).count()
+        if prefetched_documents is None:
+            awaiting_confirmation_count = self.documents.filter(awaiting_confirmation=True).count()
+        else:
+            awaiting_confirmation_count = sum(1 for document in prefetched_documents if document.awaiting_confirmation)
         if awaiting_confirmation_count:
             alerts.append(
                 {
@@ -403,7 +438,14 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        expired_documents_count = self.documents.filter(expiry_date__isnull=False, expiry_date__lt=today).count()
+        if prefetched_documents is None:
+            expired_documents_count = self.documents.filter(expiry_date__isnull=False, expiry_date__lt=today).count()
+        else:
+            expired_documents_count = sum(
+                1
+                for document in prefetched_documents
+                if document.expiry_date and document.expiry_date < today
+            )
         if expired_documents_count:
             alerts.append(
                 {
@@ -415,11 +457,19 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        expiring_documents_count = self.documents.filter(
-            expiry_date__isnull=False,
-            expiry_date__gte=today,
-            expiry_date__lte=today + timedelta(days=7),
-        ).count()
+        expiring_cutoff = today + timedelta(days=7)
+        if prefetched_documents is None:
+            expiring_documents_count = self.documents.filter(
+                expiry_date__isnull=False,
+                expiry_date__gte=today,
+                expiry_date__lte=expiring_cutoff,
+            ).count()
+        else:
+            expiring_documents_count = sum(
+                1
+                for document in prefetched_documents
+                if document.expiry_date and today <= document.expiry_date <= expiring_cutoff
+            )
         if expiring_documents_count:
             alerts.append(
                 {
@@ -432,9 +482,11 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        wezwanie_exists = self.documents.filter(
-            document_type__in=[DocumentType.WEZWANIE, DocumentType.WEZWANIE.value]
-        ).exists()
+        wezwanie_types = {DocumentType.WEZWANIE, DocumentType.WEZWANIE.value}
+        if prefetched_documents is None:
+            wezwanie_exists = self.documents.filter(document_type__in=wezwanie_types).exists()
+        else:
+            wezwanie_exists = any(document.document_type in wezwanie_types for document in prefetched_documents)
         if wezwanie_exists and not self.case_number:
             alerts.append(
                 {
@@ -444,9 +496,14 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        if self.fingerprints_date and not self.email_logs.filter(
-            template_type="appointment_notification"
-        ).exists():
+        if prefetched_email_logs is None:
+            appointment_email_sent = self.email_logs.filter(template_type="appointment_notification").exists()
+        else:
+            appointment_email_sent = any(
+                email_log.template_type == "appointment_notification"
+                for email_log in prefetched_email_logs
+            )
+        if self.fingerprints_date and not appointment_email_sent:
             alerts.append(
                 {
                     "level": "warning",
@@ -455,11 +512,18 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        overdue_payments_count = self.payments.filter(
-            status__in=["pending", "partial"],
-            due_date__isnull=False,
-            due_date__lte=today,
-        ).count()
+        if prefetched_payments is None:
+            overdue_payments_count = self.payments.filter(
+                status__in=["pending", "partial"],
+                due_date__isnull=False,
+                due_date__lte=today,
+            ).count()
+        else:
+            overdue_payments_count = sum(
+                1
+                for payment in prefetched_payments
+                if payment.status in {"pending", "partial"} and payment.due_date and payment.due_date <= today
+            )
         if overdue_payments_count:
             alerts.append(
                 {
@@ -535,10 +599,17 @@ class Client(SoftDeleteModel):
                     }
                 )
 
-        overdue_tasks_count = self.staff_tasks.filter(
-            status__in=["open", "in_progress"],
-            due_date__lt=today,
-        ).count()
+        if prefetched_staff_tasks is None:
+            overdue_tasks_count = self.staff_tasks.filter(
+                status__in=["open", "in_progress"],
+                due_date__lt=today,
+            ).count()
+        else:
+            overdue_tasks_count = sum(
+                1
+                for task in prefetched_staff_tasks
+                if task.status in {"open", "in_progress"} and task.due_date and task.due_date < today
+            )
         if overdue_tasks_count:
             alerts.append(
                 {
@@ -552,12 +623,22 @@ class Client(SoftDeleteModel):
 
     def get_workflow_summary(self, document_status_list=None):
         alerts = self.get_health_alerts(document_status_list=document_status_list)
-        open_tasks = self.staff_tasks.filter(status__in=["open", "in_progress"])
-        overdue_tasks = open_tasks.filter(due_date__lt=timezone.localdate()).count()
+        prefetched_staff_tasks = getattr(self, "_prefetched_objects_cache", {}).get("staff_tasks")
+        if prefetched_staff_tasks is None:
+            open_tasks = self.staff_tasks.filter(status__in=["open", "in_progress"])
+            open_tasks_count = open_tasks.count()
+            overdue_tasks = open_tasks.filter(due_date__lt=timezone.localdate()).count()
+        else:
+            today = timezone.localdate()
+            open_tasks_list = [
+                task for task in prefetched_staff_tasks if task.status in {"open", "in_progress"}
+            ]
+            open_tasks_count = len(open_tasks_list)
+            overdue_tasks = sum(1 for task in open_tasks_list if task.due_date and task.due_date < today)
         return {
             "stage_label": self.get_workflow_stage_display(),
             "alerts": alerts,
             "alerts_count": len(alerts),
-            "open_tasks_count": open_tasks.count(),
+            "open_tasks_count": open_tasks_count,
             "overdue_tasks_count": overdue_tasks,
         }

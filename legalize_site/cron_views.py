@@ -7,10 +7,13 @@ import secrets
 import subprocess  # nosec B404
 import time
 
+from django.conf import settings
+from django.core.mail import mail_admins
 from django.http import HttpRequest, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
+from clients.models import EmailCampaign
 from clients.services.document_workflow import process_pending_document_jobs, reclaim_stale_document_jobs
 from clients.services.email_campaigns import process_pending_email_campaigns
 from clients.services.notifications import (
@@ -22,6 +25,41 @@ from clients.services.wezwanie_parser import parse_wezwanie
 from .backups import BackupError, create_db_backup
 
 logger = logging.getLogger(__name__)
+
+
+def _alert_cron_failure(command: str, exc: BaseException, *, details: dict | None = None) -> None:
+    logger.error(
+        "Cron command failed: command=%s error_type=%s details=%s",
+        command,
+        type(exc).__name__,
+        details or {},
+    )
+    try:
+        from legalize_site.observability import sentry_sdk
+
+        if sentry_sdk is not None:
+            if hasattr(sentry_sdk, "push_scope"):
+                with sentry_sdk.push_scope() as scope:
+                    scope.set_tag("cron_command", command)
+                    for key, value in (details or {}).items():
+                        scope.set_extra(key, value)
+                    sentry_sdk.capture_exception(exc)
+            else:
+                sentry_sdk.capture_exception(exc)
+    except Exception:
+        logger.warning("Failed to report cron failure to Sentry", exc_info=True)
+
+    if not getattr(settings, "CRON_FAILURE_EMAIL_ALERTS", False):
+        return
+
+    try:
+        mail_admins(
+            subject=f"[Legalize] Cron failed: {command}",
+            message=f"Command: {command}\nError type: {type(exc).__name__}\nDetails: {details or {}}",
+            fail_silently=False,
+        )
+    except Exception:
+        logger.warning("Failed to send cron failure email alert", exc_info=True)
 
 
 def _get_request_ip(request: HttpRequest) -> str:
@@ -118,9 +156,11 @@ def db_backup(request: HttpRequest) -> JsonResponse:
 
     except BackupError as exc:
         logger.error("Database backup failed: %s", exc)
+        _alert_cron_failure("db_backup", exc)
         return JsonResponse({"error": "backup failed"}, status=500)
     except subprocess.CalledProcessError as e:
         logger.error("pg_dump CalledProcessError: %s", e.stderr if e.stderr else str(e))
+        _alert_cron_failure("db_backup", e, details={"returncode": e.returncode})
         return JsonResponse(
             {
                 "error": "backup failed",
@@ -130,6 +170,7 @@ def db_backup(request: HttpRequest) -> JsonResponse:
         )
     except Exception as e:
         logger.exception("Unexpected error during backup: %s: %s", type(e).__name__, str(e))
+        _alert_cron_failure("db_backup", e)
         return JsonResponse({"error": "backup failed"}, status=500)
 
 
@@ -150,12 +191,24 @@ def process_email_campaigns_cron(request: HttpRequest) -> JsonResponse:
             if limit > 100:
                 limit = 100
         results = process_pending_email_campaigns(limit=limit)
+        errors = [
+            f"campaign_id={result.campaign_id} status={result.status} failed_count={result.failed_count}"
+            for result in results
+            if result.failed_count or result.status == EmailCampaign.STATUS_FAILED
+        ]
+        ok = not errors
+        if errors:
+            _alert_cron_failure(
+                "process_email_campaigns",
+                RuntimeError("email campaign processing completed with failed campaign(s)"),
+                details={"errors": errors},
+            )
         payload = {
             "status": "processed",
-            "ok": True,
+            "ok": ok,
             "command": "process_email_campaigns",
             "processed_count": len(results),
-            "errors": [],
+            "errors": errors,
             "duration_ms": round((time.perf_counter() - started_at) * 1000),
             "campaigns": [
                 {
@@ -168,11 +221,12 @@ def process_email_campaigns_cron(request: HttpRequest) -> JsonResponse:
             ],
         }
         logger.info("Processed %s queued email campaign(s) via cron", len(results))
-        return JsonResponse(payload)
+        return JsonResponse(payload, status=200 if ok else 500)
     except ValueError:
         return JsonResponse({"error": "invalid limit"}, status=400)
-    except Exception:
+    except Exception as e:
         logger.exception("Unexpected error during queued email campaign processing")
+        _alert_cron_failure("process_email_campaigns", e)
         return JsonResponse({"error": "email campaign processing failed"}, status=500)
 
 
@@ -206,23 +260,32 @@ def process_document_jobs_cron(request: HttpRequest) -> JsonResponse:
             for result in results
             if result.status == "failed"
         ]
+        ok = not errors
+        if errors:
+            _alert_cron_failure(
+                "process_document_jobs",
+                RuntimeError("document OCR processing completed with failed job(s)"),
+                details={"errors": errors, "reclaimed_count": reclaimed},
+            )
         logger.info("Processed %s document OCR job(s) via cron; reclaimed=%s", len(results), reclaimed)
         return JsonResponse(
             {
                 "status": "processed",
-                "ok": True,
+                "ok": ok,
                 "command": "process_document_jobs",
                 "processed_count": len(results),
                 "errors": errors,
                 "reclaimed_count": reclaimed,
                 "duration_ms": round((time.perf_counter() - started_at) * 1000),
-            }
+            },
+            status=200 if ok else 500,
         )
     except ValueError:
         return JsonResponse({"error": "invalid limit"}, status=400)
     except Exception as e:
         logger.exception("Unexpected error during document job processing")
-        return JsonResponse({"error": str(e)}, status=500)
+        _alert_cron_failure("process_document_jobs", e)
+        return JsonResponse({"error": "document job processing failed"}, status=500)
 
 
 @csrf_exempt
@@ -255,4 +318,5 @@ def update_reminders_cron(request: HttpRequest) -> JsonResponse:
         )
     except Exception as e:
         logger.exception("Unexpected error during update_reminders")
-        return JsonResponse({"error": str(e)}, status=500)
+        _alert_cron_failure("update_reminders", e)
+        return JsonResponse({"error": "update reminders failed"}, status=500)

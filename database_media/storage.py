@@ -94,6 +94,8 @@ class DatabaseMediaStorage(Storage):
     def delete(self, name: str) -> None:
         cleaned = self._clean_name(name)
         self._model().objects.filter(name=cleaned).delete()
+        if self.fallback_enabled and self.fallback_storage.exists(cleaned):
+            self.fallback_storage.delete(cleaned)
 
     def exists(self, name: str) -> bool:
         cleaned = self._clean_name(name)

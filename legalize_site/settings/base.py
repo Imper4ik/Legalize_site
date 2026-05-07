@@ -42,6 +42,7 @@ load_env()
 
 WHITENOISE_AVAILABLE = importlib.util.find_spec("whitenoise") is not None
 STORAGES_AVAILABLE = importlib.util.find_spec("storages") is not None
+DJANGO_CLEANUP_AVAILABLE = importlib.util.find_spec("django_cleanup") is not None
 DEFAULT_SECRET_KEY_FALLBACK = "django-insecure-change-me"  # nosec B105
 
 
@@ -188,6 +189,8 @@ if ENABLE_TRANSLATION_TOOLING:
             "translations",
         ]
     )
+if DJANGO_CLEANUP_AVAILABLE:
+    INSTALLED_APPS.append("django_cleanup.apps.CleanupConfig")
 
 AUTH_USER_MODEL = "users.User"
 
@@ -573,6 +576,11 @@ RATE_LIMITS = {
         "message": _("Too many email sends. Try again later."),
     },
 }
+RATE_LIMIT_CACHE_FAILURE_MODE = os.environ.get(
+    "RATE_LIMIT_CACHE_FAILURE_MODE",
+    "closed" if IS_PRODUCTION else "open",
+).lower()
+CRON_FAILURE_EMAIL_ALERTS = env_flag("CRON_FAILURE_EMAIL_ALERTS", "True" if IS_PRODUCTION else "False")
 
 # --- SENTRY ---
 SENTRY_DSN = os.environ.get("SENTRY_DSN")

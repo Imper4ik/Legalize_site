@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.test import Client as DjangoClient
@@ -86,6 +87,32 @@ class CronViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["processed_count"], 0)
         process_mock.assert_called_once_with(limit=100)
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    @patch("legalize_site.cron_views._alert_cron_failure")
+    @patch("legalize_site.cron_views.process_pending_email_campaigns")
+    def test_process_email_campaigns_cron_alerts_on_failed_campaign(self, process_mock, alert_mock):
+        process_mock.return_value = [
+            SimpleNamespace(
+                campaign_id=42,
+                status=EmailCampaign.STATUS_FAILED,
+                sent_count=0,
+                failed_count=1,
+            )
+        ]
+
+        response = self.client.post(
+            reverse("process_email_campaigns_cron"),
+            HTTP_X_CRON_TOKEN="secret",
+            REMOTE_ADDR="127.0.0.1",
+        )
+
+        payload = response.json()
+        self.assertEqual(response.status_code, 500)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["processed_count"], 1)
+        self.assertEqual(payload["errors"], ["campaign_id=42 status=failed failed_count=1"])
+        alert_mock.assert_called_once()
 
     @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
     def test_db_backup_cron_is_csrf_exempt_but_still_requires_token(self):
@@ -222,6 +249,42 @@ class CronViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["command"], "process_document_jobs")
         self.assertIsNone(process_mock.call_args.kwargs["limit"])
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    @patch("legalize_site.cron_views._alert_cron_failure")
+    @patch("legalize_site.cron_views.reclaim_stale_document_jobs", return_value=2)
+    @patch("legalize_site.cron_views.process_pending_document_jobs")
+    def test_process_document_jobs_cron_alerts_on_failed_job(self, process_mock, reclaim_mock, alert_mock):
+        process_mock.return_value = [SimpleNamespace(job=SimpleNamespace(id=9), status="failed")]
+
+        response = self.client.post(
+            reverse("process_document_jobs_cron"),
+            HTTP_X_CRON_TOKEN="secret",
+            REMOTE_ADDR="127.0.0.1",
+        )
+
+        payload = response.json()
+        self.assertEqual(response.status_code, 500)
+        self.assertFalse(payload["ok"])
+        self.assertEqual(payload["reclaimed_count"], 2)
+        self.assertEqual(payload["errors"], ["job_id=9 status=failed"])
+        reclaim_mock.assert_called_once()
+        alert_mock.assert_called_once()
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    @patch("legalize_site.cron_views._alert_cron_failure")
+    @patch("legalize_site.cron_views.reclaim_stale_document_jobs", return_value=0)
+    @patch("legalize_site.cron_views.process_pending_document_jobs", side_effect=RuntimeError("secret path"))
+    def test_process_document_jobs_cron_exception_is_generic(self, _process_mock, _reclaim_mock, alert_mock):
+        response = self.client.post(
+            reverse("process_document_jobs_cron"),
+            HTTP_X_CRON_TOKEN="secret",
+            REMOTE_ADDR="127.0.0.1",
+        )
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.json(), {"error": "document job processing failed"})
+        alert_mock.assert_called_once()
 
     @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
     def test_update_reminders_cron_requires_token(self):

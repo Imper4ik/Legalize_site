@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from cryptography.fernet import Fernet, MultiFernet
+from cryptography.fernet import Fernet, InvalidToken, MultiFernet
 from django.test import SimpleTestCase, override_settings
 
-from fernet_fields.fields import EncryptedTextField, _build_fernet
+from fernet_fields.fields import EncryptedFieldDecryptionError, EncryptedTextField, _build_fernet
 
 
 class BuildFernetTests(SimpleTestCase):
@@ -45,6 +45,31 @@ class EncryptedTextFieldTests(SimpleTestCase):
             field = EncryptedTextField()
             value = "not-a-valid-token"
             self.assertEqual(field.to_python(value), value)
+
+    @override_settings(FERNET_KEYS=["dummy"])
+    def test_corrupted_fernet_token_fails_closed(self):
+        key = Fernet.generate_key().decode()
+        with override_settings(FERNET_KEYS=[key]):
+            field = EncryptedTextField()
+            with self.assertRaises(EncryptedFieldDecryptionError):
+                field.from_db_value("gAAAA-corrupted-token", None, None)
+            with self.assertRaises(EncryptedFieldDecryptionError):
+                field.to_python("gAAAA-corrupted-token")
+
+    @override_settings(FERNET_KEYS=["dummy"])
+    def test_fernet_key_rotation_reads_old_key_and_writes_primary_key(self):
+        old_key = Fernet.generate_key().decode()
+        new_key = Fernet.generate_key().decode()
+        old_token = Fernet(old_key).encrypt(b"secret").decode()
+
+        with override_settings(FERNET_KEYS=[new_key, old_key]):
+            field = EncryptedTextField()
+            self.assertEqual(field.from_db_value(old_token, None, None), "secret")
+
+            rotated_token = field.get_prep_value("secret")
+            self.assertEqual(Fernet(new_key).decrypt(rotated_token.encode()), b"secret")
+            with self.assertRaises(InvalidToken):
+                Fernet(old_key).decrypt(rotated_token.encode())
 
     @override_settings(FERNET_KEYS=["dummy"])
     def test_none_and_empty_values_stay_unchanged(self):

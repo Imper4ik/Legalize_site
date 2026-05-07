@@ -1,5 +1,5 @@
 """Project-local encrypted field helpers."""
 
-from .fields import EncryptedTextField
+from .fields import EncryptedFieldDecryptionError, EncryptedTextField
 
-__all__ = ["EncryptedTextField"]
+__all__ = ["EncryptedFieldDecryptionError", "EncryptedTextField"]

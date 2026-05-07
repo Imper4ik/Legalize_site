@@ -44,10 +44,13 @@ jobs:
         run: python manage.py test --noinput
 
       - name: Pytest
-        run: pytest --maxfail=1 -q --cov-fail-under=50
+        run: pytest --maxfail=1 -q --cov-fail-under=70
 
       - name: Ruff
         run: ruff check .
+
+      - name: Mypy
+        run: mypy clients/services clients/use_cases database_media fernet_fields legalize_site/security.py legalize_site/cron_views.py legalize_site/backups.py --config-file mypy.ini
 
       - name: Bandit
         run: bandit -r clients legalize_site submissions users database_media fernet_fields translations -x "*/migrations/*,*/tests/*"

@@ -30,3 +30,23 @@ class DatabaseMediaStorageTests(TestCase):
         storage.delete(name)
         self.assertFalse(DatabaseMediaFile.objects.filter(name=name).exists())
         self.assertFalse(storage.exists(name))
+
+    @override_settings(
+        DATABASE_MEDIA_FALLBACK_TO_FILE_SYSTEM=True,
+        DATABASE_MEDIA_TEMP_ROOT="tmp/test_database_media",
+        MEDIA_ROOT="tmp/test_database_media_fallback",
+    )
+    def test_delete_removes_database_row_and_fallback_file(self):
+        storage = DatabaseMediaStorage()
+        name = storage.save("documents/fallback.pdf", ContentFile(b"%PDF-db", name="fallback.pdf"))
+        if storage.fallback_storage.exists(name):
+            storage.fallback_storage.delete(name)
+        storage.fallback_storage.save(name, ContentFile(b"%PDF-fallback", name="fallback.pdf"))
+
+        self.assertTrue(DatabaseMediaFile.objects.filter(name=name).exists())
+        self.assertTrue(storage.fallback_storage.exists(name))
+
+        storage.delete(name)
+
+        self.assertFalse(DatabaseMediaFile.objects.filter(name=name).exists())
+        self.assertFalse(storage.fallback_storage.exists(name))
