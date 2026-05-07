@@ -42,29 +42,14 @@ class EncryptedTextField(models.TextField):
     def from_db_value(self, value: Any, expression: Any, connection: Any) -> Any:
         if value is None or value == "":
             return value
-        try:
-            return self._decrypt(value, fail_closed=True)
-        except EncryptedFieldDecryptionError:
-            if getattr(settings, "FERNET_FIELDS_ALLOW_DECRYPTION_FAILURE", False):
-                import logging
-                logging.getLogger(__name__).warning(
-                    "Decryption failed for a field, but FERNET_FIELDS_ALLOW_DECRYPTION_FAILURE is True. "
-                    "Returning raw encrypted value."
-                )
-                return value
-            raise
+        return self._decrypt(value, fail_closed=True)
 
     def to_python(self, value: Any) -> Any:
         if value is None or value == "":
             return value
         if not self._looks_like_fernet_token(value):
             return value
-        try:
-            return self._decrypt(value, fail_closed=True)
-        except EncryptedFieldDecryptionError:
-            if getattr(settings, "FERNET_FIELDS_ALLOW_DECRYPTION_FAILURE", False):
-                return value
-            raise
+        return self._decrypt(value, fail_closed=True)
 
     @staticmethod
     def _looks_like_fernet_token(value: Any) -> bool:
