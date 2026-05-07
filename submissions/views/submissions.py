@@ -1,3 +1,4 @@
+from __future__ import annotations
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.contrib import messages
