@@ -111,7 +111,9 @@ class DatabaseMediaStorage(Storage):
             return self.fallback_storage.size(self._clean_name(name))
         raise FileNotFoundError(name)
 
-    def url(self, name: str) -> str:
+    def url(self, name: str | None) -> str:
+        if name is None:
+            return ""
         return urljoin(settings.MEDIA_URL, filepath_to_uri(self._clean_name(name)))
 
     def path(self, name: str) -> str:

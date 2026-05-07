@@ -64,7 +64,11 @@ def changed_field_labels(instance: models.Model, field_names: list[str]) -> list
     labels = []
     for field_name in field_names:
         try:
-            labels.append(str(instance._meta.get_field(field_name).verbose_name))
+            field = instance._meta.get_field(field_name)
+            if hasattr(field, "verbose_name"):
+                labels.append(str(field.verbose_name))
+            else:
+                labels.append(field_name.replace("_", " "))
         except Exception:
             labels.append(field_name.replace("_", " "))
     return labels

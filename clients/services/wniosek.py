@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from typing import Any
 import re
 import unicodedata
 
@@ -217,7 +218,7 @@ def _prefetched_wniosek_attachments(client) -> list[WniosekAttachment] | None:
     return attachments
 
 
-def build_submitted_document_summary(client) -> dict[str, object]:
+def build_submitted_document_summary(client) -> dict[str, Any]:
     attachments = _prefetched_wniosek_attachments(client)
     if attachments is None:
         attachments = (
@@ -226,8 +227,8 @@ def build_submitted_document_summary(client) -> dict[str, object]:
             .order_by("-submission__confirmed_at", "position", "id")
         )
 
-    grouped_by_code: dict[str, list[dict[str, object]]] = defaultdict(list)
-    custom_groups: dict[str, dict[str, object]] = {}
+    grouped_by_code: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    custom_groups: dict[str, dict[str, Any]] = {}
 
     for attachment in attachments:
         resolved_code = resolve_attachment_document_type(client, attachment, client.language)

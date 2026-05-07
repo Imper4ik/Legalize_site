@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, TypeVar
 
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.utils.translation import gettext as _
@@ -13,7 +13,10 @@ from legalize_site.utils.http import request_is_ajax
 NO_STORE_HEADER = "no-store, no-cache, must-revalidate"
 
 
-def apply_no_store(response: HttpResponse) -> HttpResponse:
+T = TypeVar("T", bound=HttpResponse)
+
+
+def apply_no_store(response: T) -> T:
     """Add strict cache-prevention headers to the response.
 
     Sets ``Cache-Control: no-store, no-cache, must-revalidate`` and

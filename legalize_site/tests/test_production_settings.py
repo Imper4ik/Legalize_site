@@ -99,21 +99,22 @@ class ProductionSettingsTests(SimpleTestCase):
             settings_module.ALLOWED_HOSTS,
         )
         self.assertEqual(settings_module.SECURE_HSTS_SECONDS, 31536000)
-        self.assertFalse(settings_module.SECURE_HSTS_INCLUDE_SUBDOMAINS)
-        self.assertFalse(settings_module.SECURE_HSTS_PRELOAD)
-
-    def test_hsts_settings_can_be_overridden_by_environment(self):
-        settings_module = load_production_settings(
-            {
-                "SECURE_HSTS_SECONDS": "7200",
-                "SECURE_HSTS_INCLUDE_SUBDOMAINS": "True",
-                "SECURE_HSTS_PRELOAD": "True",
-            }
-        )
-
-        self.assertEqual(settings_module.SECURE_HSTS_SECONDS, 7200)
         self.assertTrue(settings_module.SECURE_HSTS_INCLUDE_SUBDOMAINS)
         self.assertTrue(settings_module.SECURE_HSTS_PRELOAD)
+        self.assertEqual(settings_module.SECURE_REFERRER_POLICY, "strict-origin-when-cross-origin")
+        self.assertEqual(settings_module.SECURE_CROSS_ORIGIN_OPENER_POLICY, "same-origin")
+
+    def test_security_headers_are_hardcoded_to_standards(self):
+        settings_module = load_production_settings()
+        self.assertEqual(settings_module.SECURE_HSTS_SECONDS, 31536000)
+        self.assertTrue(settings_module.SECURE_HSTS_INCLUDE_SUBDOMAINS)
+        self.assertTrue(settings_module.SECURE_HSTS_PRELOAD)
+        self.assertEqual(settings_module.SECURE_REFERRER_POLICY, "strict-origin-when-cross-origin")
+        self.assertEqual(settings_module.SECURE_CROSS_ORIGIN_OPENER_POLICY, "same-origin")
+        self.assertTrue(settings_module.SECURE_CONTENT_TYPE_NOSNIFF)
+        self.assertTrue(settings_module.SESSION_COOKIE_SECURE)
+        self.assertTrue(settings_module.CSRF_COOKIE_SECURE)
+
 
     def test_production_requires_hosts_and_csrf_origins(self):
         with patch.dict(

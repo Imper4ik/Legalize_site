@@ -3,16 +3,74 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.db import models
+from django.db.models import Count, Q
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.translation import gettext_lazy as _
 from fernet_fields import EncryptedTextField
 
 from clients.constants import DocumentType
-from legalize_site.soft_delete import SoftDeleteModel
+from legalize_site.soft_delete import SoftDeleteModel, SoftDeleteQuerySet
+
+
+class ClientQuerySet(SoftDeleteQuerySet):
+    def with_health_stats(self, today=None):
+        if today is None:
+            today = timezone.localdate()
+        expiring_cutoff = today + timedelta(days=7)
+        wezwanie_types = {DocumentType.WEZWANIE, DocumentType.WEZWANIE.value}
+
+        return self.annotate(
+            health_awaiting_confirmation_count=Count(
+                "documents",
+                filter=Q(documents__awaiting_confirmation=True, documents__archived_at__isnull=True),
+            ),
+            health_expired_documents_count=Count(
+                "documents",
+                filter=Q(
+                    documents__expiry_date__isnull=False,
+                    documents__expiry_date__lt=today,
+                    documents__archived_at__isnull=True,
+                ),
+            ),
+            health_expiring_documents_count=Count(
+                "documents",
+                filter=Q(
+                    documents__expiry_date__isnull=False,
+                    documents__expiry_date__gte=today,
+                    documents__expiry_date__lte=expiring_cutoff,
+                    documents__archived_at__isnull=True,
+                ),
+            ),
+            health_wezwanie_count=Count(
+                "documents",
+                filter=Q(documents__document_type__in=wezwanie_types, documents__archived_at__isnull=True),
+            ),
+            health_appointment_email_sent_count=Count(
+                "email_logs",
+                filter=Q(email_logs__template_type="appointment_notification"),
+            ),
+            health_overdue_payments_count=Count(
+                "payments",
+                filter=Q(
+                    payments__status__in=["pending", "partial"],
+                    payments__due_date__isnull=False,
+                    payments__due_date__lte=today,
+                    payments__archived_at__isnull=True,
+                ),
+            ),
+            health_overdue_tasks_count=Count(
+                "staff_tasks",
+                filter=Q(
+                    staff_tasks__status__in=["open", "in_progress"],
+                    staff_tasks__due_date__lt=today,
+                ),
+            ),
+        )
 
 
 class Client(SoftDeleteModel):
+    objects = ClientQuerySet.as_manager()
     _application_purpose_display_cache: dict[str, dict[str, str]] = {}
 
     APPLICATION_PURPOSE_CHOICES = [
@@ -398,11 +456,25 @@ class Client(SoftDeleteModel):
     def get_health_alerts(self, document_status_list=None):
         alerts = []
         today = timezone.localdate()
-        prefetched = getattr(self, "_prefetched_objects_cache", {})
-        prefetched_documents = prefetched.get("documents")
-        prefetched_payments = prefetched.get("payments")
-        prefetched_email_logs = prefetched.get("email_logs")
-        prefetched_staff_tasks = prefetched.get("staff_tasks")
+
+        # Optimize: ensure health stats are annotated
+        if not hasattr(self, "health_awaiting_confirmation_count"):
+            stats = (
+                self.__class__.objects.filter(pk=self.pk)
+                .with_health_stats(today=today)
+                .values(
+                    "health_awaiting_confirmation_count",
+                    "health_expired_documents_count",
+                    "health_expiring_documents_count",
+                    "health_wezwanie_count",
+                    "health_appointment_email_sent_count",
+                    "health_overdue_payments_count",
+                    "health_overdue_tasks_count",
+                )
+                .get()
+            )
+            for key, value in stats.items():
+                setattr(self, key, value)
 
         if self.legal_basis_end_date:
             if self.legal_basis_end_date < today:
@@ -422,72 +494,42 @@ class Client(SoftDeleteModel):
                     }
                 )
 
-        if prefetched_documents is None:
-            awaiting_confirmation_count = self.documents.filter(awaiting_confirmation=True).count()
-        else:
-            awaiting_confirmation_count = sum(1 for document in prefetched_documents if document.awaiting_confirmation)
-        if awaiting_confirmation_count:
+        if self.health_awaiting_confirmation_count:
             alerts.append(
                 {
                     "level": "warning",
                     "title": _("Есть OCR-данные без подтверждения"),
                     "message": _("Документов с распознанными данными, ожидающими подтверждения: %(count)s.")
-                    % {"count": awaiting_confirmation_count},
+                    % {"count": self.health_awaiting_confirmation_count},
                     "action_label": _("Проверить OCR"),
                     "action_url": "#documentAccordion",
                 }
             )
 
-        if prefetched_documents is None:
-            expired_documents_count = self.documents.filter(expiry_date__isnull=False, expiry_date__lt=today).count()
-        else:
-            expired_documents_count = sum(
-                1
-                for document in prefetched_documents
-                if document.expiry_date and document.expiry_date < today
-            )
-        if expired_documents_count:
+        if self.health_expired_documents_count:
             alerts.append(
                 {
                     "level": "danger",
                     "title": _("Просроченные документы"),
-                    "message": _("Просроченных документов: %(count)s.") % {"count": expired_documents_count},
+                    "message": _("Просроченных документов: %(count)s.") % {"count": self.health_expired_documents_count},
                     "action_label": _("Открыть чеклист"),
                     "action_url": "#documentAccordion",
                 }
             )
 
-        expiring_cutoff = today + timedelta(days=7)
-        if prefetched_documents is None:
-            expiring_documents_count = self.documents.filter(
-                expiry_date__isnull=False,
-                expiry_date__gte=today,
-                expiry_date__lte=expiring_cutoff,
-            ).count()
-        else:
-            expiring_documents_count = sum(
-                1
-                for document in prefetched_documents
-                if document.expiry_date and today <= document.expiry_date <= expiring_cutoff
-            )
-        if expiring_documents_count:
+        if self.health_expiring_documents_count:
             alerts.append(
                 {
                     "level": "warning",
                     "title": _("Истекающие документы"),
                     "message": _("Документов истекает в течение 7 дней: %(count)s.")
-                    % {"count": expiring_documents_count},
+                    % {"count": self.health_expiring_documents_count},
                     "action_label": _("Открыть чеклист"),
                     "action_url": "#documentAccordion",
                 }
             )
 
-        wezwanie_types = {DocumentType.WEZWANIE, DocumentType.WEZWANIE.value}
-        if prefetched_documents is None:
-            wezwanie_exists = self.documents.filter(document_type__in=wezwanie_types).exists()
-        else:
-            wezwanie_exists = any(document.document_type in wezwanie_types for document in prefetched_documents)
-        if wezwanie_exists and not self.case_number:
+        if self.health_wezwanie_count > 0 and not self.case_number:
             alerts.append(
                 {
                     "level": "warning",
@@ -496,14 +538,7 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        if prefetched_email_logs is None:
-            appointment_email_sent = self.email_logs.filter(template_type="appointment_notification").exists()
-        else:
-            appointment_email_sent = any(
-                email_log.template_type == "appointment_notification"
-                for email_log in prefetched_email_logs
-            )
-        if self.fingerprints_date and not appointment_email_sent:
+        if self.fingerprints_date and not self.health_appointment_email_sent_count:
             alerts.append(
                 {
                     "level": "warning",
@@ -512,25 +547,13 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        if prefetched_payments is None:
-            overdue_payments_count = self.payments.filter(
-                status__in=["pending", "partial"],
-                due_date__isnull=False,
-                due_date__lte=today,
-            ).count()
-        else:
-            overdue_payments_count = sum(
-                1
-                for payment in prefetched_payments
-                if payment.status in {"pending", "partial"} and payment.due_date and payment.due_date <= today
-            )
-        if overdue_payments_count:
+        if self.health_overdue_payments_count:
             alerts.append(
                 {
                     "level": "warning",
                     "title": _("Просроченные оплаты"),
                     "message": _("Оплат с due date сегодня или раньше: %(count)s.")
-                    % {"count": overdue_payments_count},
+                    % {"count": self.health_overdue_payments_count},
                     "action_label": _("Открыть финансы"),
                     "action_url": "#payment-list-container",
                 }
@@ -599,23 +622,12 @@ class Client(SoftDeleteModel):
                     }
                 )
 
-        if prefetched_staff_tasks is None:
-            overdue_tasks_count = self.staff_tasks.filter(
-                status__in=["open", "in_progress"],
-                due_date__lt=today,
-            ).count()
-        else:
-            overdue_tasks_count = sum(
-                1
-                for task in prefetched_staff_tasks
-                if task.status in {"open", "in_progress"} and task.due_date and task.due_date < today
-            )
-        if overdue_tasks_count:
+        if self.health_overdue_tasks_count:
             alerts.append(
                 {
                     "level": "danger",
                     "title": _("Есть просроченные задачи"),
-                    "message": _("Просроченных задач: %(count)s.") % {"count": overdue_tasks_count},
+                    "message": _("Просроченных задач: %(count)s.") % {"count": self.health_overdue_tasks_count},
                 }
             )
 

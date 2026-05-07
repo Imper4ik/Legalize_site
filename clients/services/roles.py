@@ -43,7 +43,10 @@ def user_has_any_role(user: AbstractBaseUser, *role_names: str) -> bool:
         return False
     if not role_names:
         return getattr(user, "is_staff", False)
-    return user.groups.filter(name__in=role_names).exists()
+    from django.contrib.auth.models import PermissionsMixin
+    if isinstance(user, PermissionsMixin):
+        return user.groups.filter(name__in=role_names).exists()
+    return False
 
 
 def ensure_predefined_roles() -> list[Group]:
@@ -57,19 +60,19 @@ def ensure_predefined_roles() -> list[Group]:
 
     groups["Admin"].permissions.set(Permission.objects.all())
 
-    manager_perms = []
+    manager_perms: list[Permission] = []
     for model in [Client, Document, Payment, StaffTask]:
         ct = ContentType.objects.get_for_model(model)
         manager_perms.extend(Permission.objects.filter(content_type=ct))
     groups["Manager"].permissions.set(manager_perms)
 
-    staff_perms = []
+    staff_perms: list[Permission] = []
     for model in [Client, Document, StaffTask]:
         ct = ContentType.objects.get_for_model(model)
         staff_perms.extend(Permission.objects.filter(content_type=ct).exclude(codename__startswith="delete_"))
     groups["Staff"].permissions.set(staff_perms)
 
-    readonly_perms = []
+    readonly_perms: list[Permission] = []
     for model in [Client, Document]:
         ct = ContentType.objects.get_for_model(model)
         readonly_perms.extend(Permission.objects.filter(content_type=ct, codename__startswith="view_"))

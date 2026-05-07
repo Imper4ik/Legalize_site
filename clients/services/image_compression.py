@@ -99,7 +99,7 @@ def compress_image(
         new_ext = extension_map.get(output_format, '.webp')
 
         # Log compression stats
-        original_size_kb = image_file.size / 1024 if hasattr(image_file, 'size') else 0
+        original_size_kb = (getattr(image_file, 'size', 0) or 0) / 1024
         compressed_size_kb = len(buffer.getvalue()) / 1024
         if original_size_kb > 0:
             savings = ((original_size_kb - compressed_size_kb) / original_size_kb) * 100
@@ -125,7 +125,7 @@ def compress_uploaded_file(uploaded_file: InMemoryUploadedFile) -> InMemoryUploa
     Returns:
         New compressed InMemoryUploadedFile or None if compression failed
     """
-    if not should_compress(uploaded_file.name):
+    if not uploaded_file.name or not should_compress(uploaded_file.name):
         return None
 
     try:
@@ -141,7 +141,7 @@ def compress_uploaded_file(uploaded_file: InMemoryUploadedFile) -> InMemoryUploa
         )
 
         # Change file extension
-        original_path = Path(uploaded_file.name)
+        original_path = Path(uploaded_file.name or "unknown")
         new_name = str(original_path.with_suffix(new_ext))
 
         # Create new InMemoryUploadedFile
