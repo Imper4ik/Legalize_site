@@ -35,7 +35,7 @@ class AdminDashboardView(RoleRequiredMixin, StaffRequiredMixin, View):
         clients = self.get_queryset()
         context = {
             "total_clients": clients.count(),
-            "active_clients": clients.filter(status="active").count(),
-            "pending_documents": clients.filter(documents__status="pending").distinct().count(),
+            "active_clients": clients.active().count(),
+            "pending_documents": clients.filter(documents__ocr_status="pending").distinct().count(),
         }
         return render(request, self.template_name, context)
