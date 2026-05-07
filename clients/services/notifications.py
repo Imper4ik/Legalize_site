@@ -6,7 +6,7 @@ import hashlib
 from datetime import timedelta
 from io import BytesIO
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable, TYPE_CHECKING
 
 from django.conf import settings
 from django.db import IntegrityError, transaction
@@ -19,6 +19,9 @@ from PIL import Image, ImageDraw, ImageFont
 
 from clients.models import Client, Document
 from clients.services.wniosek import get_submitted_document_codes
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +40,7 @@ def build_email_idempotency_key(*parts: object) -> str:
 
 
 def _get_preferred_language(client: Client) -> str:
-    return (client.language or settings.LANGUAGE_CODE or "ru")[:2]
+    return str(client.language or settings.LANGUAGE_CODE or "ru")[:2]
 
 
 def _get_subject(key: str, language: str) -> str:
@@ -49,14 +52,14 @@ def _get_subject(key: str, language: str) -> str:
         return str(subject)
 
 
-def _render_email_body(template_key: str, context: dict, language: str) -> str:
+def _render_email_body(template_key: str, context: dict[str, Any], language: str) -> str:
     template_names = [
         f"clients/email/{language}/{template_key}.txt",
         f"clients/email/{template_key}.txt",
     ]
     template = select_template(template_names)
     with override(language):
-        return template.render(context)
+        return str(template.render(context))
 
 
 def _reserve_idempotent_email_send(
@@ -66,7 +69,7 @@ def _reserve_idempotent_email_send(
     *,
     client: Client | None = None,
     template_type: str = "",
-    sent_by=None,
+    sent_by: AbstractBaseUser | AnonymousUser | None = None,
     idempotency_key: str = "",
 ) -> bool:
     if not idempotency_key:
@@ -74,13 +77,15 @@ def _reserve_idempotent_email_send(
 
     from clients.models import EmailLog
 
-    payload = {
+    real_sent_by = sent_by if sent_by and sent_by.is_authenticated else None
+
+    payload: dict[str, Any] = {
         "client": client,
         "subject": subject,
         "body": body,
         "recipients": ", ".join(recipients),
         "template_type": template_type,
-        "sent_by": sent_by,
+        "sent_by": real_sent_by,
         "delivery_status": EmailLog.DELIVERY_STATUS_QUEUED,
         "error_message": "",
     }
@@ -122,7 +127,7 @@ def _send_email(
     *,
     client: Client | None = None,
     template_type: str = "",
-    sent_by=None,
+    sent_by: AbstractBaseUser | AnonymousUser | None = None,
     idempotency_key: str = "",
 ) -> int:
     recipient_list = list(recipients)
@@ -140,7 +145,7 @@ def _send_email(
 
     result = {"sent_count": 0}
 
-    def _do_send():
+    def _do_send() -> None:
         """Run SMTP I/O and record the final delivery status."""
 
         try:
@@ -199,7 +204,6 @@ def _send_email(
     return result["sent_count"]
 
 
-
 def _log_email(
     subject: str,
     body: str,
@@ -207,12 +211,15 @@ def _log_email(
     *,
     client: Client | None = None,
     template_type: str = "",
-    sent_by=None,
+    sent_by: AbstractBaseUser | AnonymousUser | None = None,
     idempotency_key: str = "",
     delivery_status: str = "sent",
     error_message: str = "",
 ) -> None:
     from clients.models import EmailLog
+    
+    real_sent_by = sent_by if sent_by and sent_by.is_authenticated else None
+    
     try:
         payload = {
             "client": client,
@@ -220,7 +227,7 @@ def _log_email(
             "body": body,
             "recipients": ", ".join(recipients),
             "template_type": template_type,
-            "sent_by": sent_by,
+            "sent_by": real_sent_by,
             "delivery_status": delivery_status,
             "error_message": error_message,
         }
@@ -242,8 +249,8 @@ def _log_email(
 
 
 def _get_staff_recipients() -> list[str]:
-    reply_to = getattr(settings, "EMAIL_REPLY_TO", "")
-    default_from = getattr(settings, "DEFAULT_FROM_EMAIL", "")
+    reply_to = str(getattr(settings, "EMAIL_REPLY_TO", ""))
+    default_from = str(getattr(settings, "DEFAULT_FROM_EMAIL", ""))
     recipients = [email for email in (reply_to, default_from) if email]
     return list(dict.fromkeys(recipients))
 
@@ -252,7 +259,7 @@ PDF_FONT_TEST_TEXT = "Привет"
 
 
 def _get_pdf_font_path() -> Path | None:
-    configured_path = getattr(settings, "PDF_FONT_PATH", "")
+    configured_path = str(getattr(settings, "PDF_FONT_PATH", ""))
     if configured_path:
         path = Path(configured_path)
         if path.exists():
@@ -268,7 +275,7 @@ def _get_pdf_font_path() -> Path | None:
             nix_store.glob("**/share/fonts/truetype/noto/NotoSans-Regular.ttf")
         )
     candidate_paths = [
-        Path(settings.BASE_DIR) / "static" / "fonts" / "DejaVuSans.ttf",
+        Path(str(settings.BASE_DIR)) / "static" / "fonts" / "DejaVuSans.ttf",
         Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
         Path("/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf"),
         Path("/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"),
@@ -292,7 +299,7 @@ def _get_pdf_font_path() -> Path | None:
     return None
 
 
-def _wrap_text_lines(text: str, draw: ImageDraw.ImageDraw, font: ImageFont.FreeTypeFont, max_width: int) -> list[str]:
+def _wrap_text_lines(text: str, draw: ImageDraw.ImageDraw, font: Any, max_width: int) -> list[str]:
     lines: list[str] = []
     for paragraph in text.splitlines():
         if not paragraph:
@@ -326,7 +333,15 @@ def _render_email_pdf(text: str) -> bytes:
     draw = ImageDraw.Draw(temp_image)
     max_width = page_width - (margin * 2)
     lines = _wrap_text_lines(text, draw, font, max_width)
-    line_height = font.getbbox("Hg")[3] - font.getbbox("Hg")[1] + 6
+    
+    # Calculate line height
+    if hasattr(font, "getbbox"):
+        bbox = font.getbbox("Hg")
+        line_height = bbox[3] - bbox[1] + 6
+    else:
+        # Fallback for old PIL versions or default font
+        line_height = 30
+        
     max_lines_per_page = max(1, (page_height - (margin * 2)) // line_height)
 
     pages: list[Image.Image] = []
@@ -340,7 +355,8 @@ def _render_email_pdf(text: str) -> bytes:
         pages.append(page)
 
     buffer = BytesIO()
-    pages[0].save(buffer, format="PDF", save_all=True, append_images=pages[1:])
+    if pages:
+        pages[0].save(buffer, format="PDF", save_all=True, append_images=pages[1:])
     return buffer.getvalue()
 
 
@@ -353,20 +369,20 @@ def _send_confirmation_email(subject: str, body: str, recipients: list[str]) -> 
     recipient_list = ", ".join(recipients)
     pdf_text = "\n".join(
         [
-            _("Подтверждение отправки письма клиенту."),
-            _("Время отправки: %(timestamp)s") % {"timestamp": timestamp},
-            _("Кому: %(recipients)s") % {"recipients": recipient_list},
-            _("Тема: %(subject)s") % {"subject": subject},
+            str(_("Подтверждение отправки письма клиенту.")),
+            str(_("Время отправки: %(timestamp)s") % {"timestamp": timestamp}),
+            str(_("Кому: %(recipients)s") % {"recipients": recipient_list}),
+            str(_("Тема: %(subject)s") % {"subject": subject}),
             "",
-            _("Текст письма:"),
+            str(_("Текст письма:")),
             body,
         ]
     )
     pdf_bytes = _render_email_pdf(pdf_text)
-    confirmation_subject = _("Подтверждение отправки письма клиенту")
-    confirmation_body = _(
+    confirmation_subject = str(_("Подтверждение отправки письма клиенту"))
+    confirmation_body = str(_(
         "Письмо клиенту было отправлено. Во вложении находится текст отправленного письма."
-    )
+    ))
     try:
         from django.core.mail import EmailMultiAlternatives
         message = EmailMultiAlternatives(
@@ -382,7 +398,7 @@ def _send_confirmation_email(subject: str, body: str, recipients: list[str]) -> 
         logger.warning("Failed to send confirmation email: error_type=%s", type(exc).__name__)
 
 
-def _get_required_documents_context(client: Client, language: str | None = None) -> dict | None:
+def _get_required_documents_context(client: Client, language: str | None = None) -> dict[str, Any] | None:
     if language is None:
         language = _get_preferred_language(client)
     from clients.models import DocumentRequirement
@@ -401,7 +417,7 @@ def _get_required_documents_context(client: Client, language: str | None = None)
     }
 
 
-def send_required_documents_email(client: Client, *, sent_by=None) -> int:
+def send_required_documents_email(client: Client, *, sent_by: AbstractBaseUser | AnonymousUser | None = None) -> int:
     """Send the required document checklist to the client upon account creation."""
     if not client.email:
         return 0
@@ -424,7 +440,7 @@ def send_required_documents_email(client: Client, *, sent_by=None) -> int:
     )
 
 
-def _get_expired_documents_context(client: Client) -> dict | None:
+def _get_expired_documents_context(client: Client) -> dict[str, Any] | None:
     today = timezone.localdate()
     expired_documents = client.documents.filter(expiry_date__isnull=False, expiry_date__lt=today).order_by(
         "expiry_date"
@@ -440,7 +456,7 @@ def _get_expired_documents_context(client: Client) -> dict | None:
     }
 
 
-def send_expired_documents_email(client: Client, *, sent_by=None) -> int:
+def send_expired_documents_email(client: Client, *, sent_by: AbstractBaseUser | AnonymousUser | None = None) -> int:
     """Send a summary of expired documents after fingerprints are submitted."""
     if not client.email:
         return 0
@@ -470,7 +486,7 @@ def send_expired_documents_email(client: Client, *, sent_by=None) -> int:
     )
 
 
-def _get_missing_documents_context(client: Client, language: str | None = None) -> dict | None:
+def _get_missing_documents_context(client: Client, language: str | None = None) -> dict[str, Any] | None:
     if language is None:
         language = _get_preferred_language(client)
     from clients.models import DocumentRequirement
@@ -523,7 +539,7 @@ def _get_missing_documents_context(client: Client, language: str | None = None) 
 def send_missing_documents_email(
     client: Client,
     *,
-    sent_by=None,
+    sent_by: AbstractBaseUser | AnonymousUser | None = None,
     weekly_key: str | None = None,
     idempotency_extra: str | None = None,
 ) -> int:
@@ -555,7 +571,7 @@ def send_missing_documents_email(
     )
 
 
-def _get_expiring_documents_context(client: Client, documents: list[Document]) -> dict | None:
+def _get_expiring_documents_context(client: Client, documents: list[Document]) -> dict[str, Any] | None:
     if not documents:
         return None
 
@@ -592,7 +608,9 @@ def _get_expiring_documents_context(client: Client, documents: list[Document]) -
     for item in checklist:
         if item.get("is_complete"):
             continue
-        latest_document = (item.get("documents") or [None])[0]
+        # Accessing private attribute or method from item safely
+        item_docs = item.get("documents")
+        latest_document = item_docs[0] if item_docs else None
         missing_documents.append(
             {
                 "name": item.get("name"),
@@ -612,7 +630,7 @@ def _get_expiring_documents_context(client: Client, documents: list[Document]) -
     }
 
 
-def send_expiring_documents_email(client: Client, documents: list[Document], *, sent_by=None) -> int:
+def send_expiring_documents_email(client: Client, documents: list[Document], *, sent_by: AbstractBaseUser | AnonymousUser | None = None) -> int:
     """Send a notice about documents expiring soon (within the next week)."""
 
     if not client.email or not documents:
@@ -641,7 +659,7 @@ def send_expiring_documents_email(client: Client, documents: list[Document], *, 
     )
 
 
-def _get_appointment_context(client: Client) -> dict | None:
+def _get_appointment_context(client: Client) -> dict[str, Any] | None:
     if not client.fingerprints_date:
         return None
 
@@ -653,7 +671,7 @@ def _get_appointment_context(client: Client) -> dict | None:
     }
 
 
-def send_appointment_notification_email(client: Client, *, sent_by=None) -> int:
+def send_appointment_notification_email(client: Client, *, sent_by: AbstractBaseUser | AnonymousUser | None = None) -> int:
     """Send a notification about a fingerprint appointment."""
     if not client.email or not client.fingerprints_date:
         return 0

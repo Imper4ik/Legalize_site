@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from django.core.management.base import BaseCommand
 
 from clients.models import EmailCampaign, EmailLog
@@ -8,7 +10,7 @@ from clients.models import EmailCampaign, EmailLog
 class Command(BaseCommand):
     help = "Re-save email sensitive fields to enforce encrypted-at-rest values."
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         logs_updated = 0
         campaigns_updated = 0
 

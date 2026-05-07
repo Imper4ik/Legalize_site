@@ -9,7 +9,7 @@ from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.test import TestCase, override_settings
-from reportlab.pdfgen import canvas
+from reportlab.pdfgen import canvas # type: ignore[import-untyped]
 
 from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentProcessingJob

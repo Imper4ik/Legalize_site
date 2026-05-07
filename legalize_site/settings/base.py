@@ -7,6 +7,7 @@ import hashlib
 import importlib.util
 import os
 import sys
+from typing import Any
 from urllib.parse import quote_plus
 
 import dj_database_url
@@ -114,7 +115,7 @@ def _is_sensitive_key(key: str | None) -> bool:
     return any(fragment in normalized for fragment in sensitive_fragments)
 
 
-def _sanitize_sentry_value(value, *, key_hint: str | None = None):
+def _sanitize_sentry_value(value: Any, *, key_hint: str | None = None) -> Any:
     if value is None:
         return None
     if _is_sensitive_key(key_hint):
@@ -133,7 +134,7 @@ def _sanitize_sentry_value(value, *, key_hint: str | None = None):
     return value
 
 
-def _sentry_before_send(event, hint):
+def _sentry_before_send(event: dict[str, Any], hint: dict[str, Any]) -> dict[str, Any]:
     event = dict(event)
     if "request" in event:
         request_data = dict(event["request"])
@@ -158,7 +159,7 @@ def _sentry_before_send(event, hint):
     return event
 
 
-def _sentry_before_breadcrumb(crumb, hint):
+def _sentry_before_breadcrumb(crumb: dict[str, Any], hint: dict[str, Any]) -> Any:
     return _sanitize_sentry_value(crumb)
 
 # --- ПРИЛОЖЕНИЯ И MIDDLEWARE ---
@@ -331,7 +332,7 @@ USE_TZ = True
 # --- СТАТИКА И МЕДИА (WHITENOISE) ---
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 if WHITENOISE_AVAILABLE:
-    STORAGES = {
+    STORAGES: dict[str, dict[str, Any]] = {
         "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
         "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
     }
@@ -351,6 +352,7 @@ if USE_DATABASE_MEDIA_STORAGE and USE_S3_MEDIA_STORAGE:
     raise ImproperlyConfigured("USE_DATABASE_MEDIA_STORAGE and USE_S3_MEDIA_STORAGE cannot both be enabled.")
 if USE_S3_MEDIA_STORAGE and not STORAGES_AVAILABLE:
     raise ImproperlyConfigured("USE_S3_MEDIA_STORAGE requires django-storages to be installed.")
+
 if USE_DATABASE_MEDIA_STORAGE:
     STORAGES = {
         "default": {

@@ -1,4 +1,7 @@
 """Management command to set up predefined roles and permissions."""
+from __future__ import annotations
+
+from typing import Any
 
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
@@ -10,7 +13,7 @@ from clients.models import Client, Document, Payment, StaffTask
 class Command(BaseCommand):
     help = "Creates predefined roles (Groups) and assigns permissions."
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         roles = {
             "Admin": "All permissions (Superuser equivalent)",
             "Manager": "CRUD clients, documents, payments, tasks; send emails; view metrics",
@@ -28,14 +31,14 @@ class Command(BaseCommand):
 
         self._assign_permissions()
 
-    def _assign_permissions(self):
+    def _assign_permissions(self) -> None:
         # Admin gets everything (usually handled by is_superuser flag, but we can assign all perms)
         admin_group = Group.objects.get(name="Admin")
         admin_group.permissions.set(Permission.objects.all())
 
         # Manager
         manager_group = Group.objects.get(name="Manager")
-        manager_perms = []
+        manager_perms: list[Permission] = []
         for model in [Client, Document, Payment, StaffTask]:
             ct = ContentType.objects.get_for_model(model)
             manager_perms.extend(Permission.objects.filter(content_type=ct))
@@ -43,7 +46,7 @@ class Command(BaseCommand):
 
         # Staff
         staff_group = Group.objects.get(name="Staff")
-        staff_perms = []
+        staff_perms: list[Permission] = []
         for model in [Client, Document, StaffTask]:
             ct = ContentType.objects.get_for_model(model)
             # Exclude delete permissions
@@ -52,7 +55,7 @@ class Command(BaseCommand):
 
         # ReadOnly
         readonly_group = Group.objects.get(name="ReadOnly")
-        readonly_perms = []
+        readonly_perms: list[Permission] = []
         for model in [Client, Document]:
             ct = ContentType.objects.get_for_model(model)
             readonly_perms.extend(Permission.objects.filter(content_type=ct, codename__startswith="view_"))

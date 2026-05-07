@@ -2,11 +2,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, cast
 
 from django.db import transaction
 
 from clients.models import Client, StaffTask
 from clients.services.activity import log_client_activity
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
 
 @dataclass(frozen=True)
@@ -20,16 +24,22 @@ class TaskScenarioResult:
 def create_task_for_client(
     *,
     client: Client,
-    actor,
-    cleaned_data: Mapping[str, object],
+    actor: AbstractBaseUser | AnonymousUser | None,
+    cleaned_data: Mapping[str, Any],
 ) -> TaskScenarioResult:
     with transaction.atomic():
-        task = StaffTask(client=client, created_by=actor)
+        # AnonymousUser cannot be assigned to ForeignKey
+        creator = actor if actor and actor.is_authenticated else None
+        
+        task = StaffTask(client=client, created_by=cast(Any, creator))
         for field in ("title", "description", "due_date", "priority", "status", "assignee", "document", "payment"):
             if field in cleaned_data:
                 setattr(task, field, cleaned_data[field])
-        if task.assignee_id is None:
-            task.assignee = actor
+        
+        if task.assignee_id is None and actor and actor.is_authenticated:
+            # Cast to Any to satisfy mypy for ForeignKey assignment
+            task.assignee = cast(Any, actor)
+        
         task.save()
 
         log_client_activity(
@@ -49,7 +59,7 @@ def create_task_for_client(
     return TaskScenarioResult(client=client, task=task, created=True)
 
 
-def complete_task_for_client(*, task: StaffTask, actor) -> TaskScenarioResult:
+def complete_task_for_client(*, task: StaffTask, actor: AbstractBaseUser | AnonymousUser | None) -> TaskScenarioResult:
     with transaction.atomic():
         locked_task = (
             StaffTask.objects.select_for_update()

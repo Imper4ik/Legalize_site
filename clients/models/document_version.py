@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -60,7 +62,7 @@ class DocumentVersion(models.Model):
             models.Index(fields=["document", "-version_number"], name="docver_doc_version_idx"),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"v{self.version_number} — {self.document}"
 
     @property

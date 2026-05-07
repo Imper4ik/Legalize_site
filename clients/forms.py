@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 import copy
 import logging
+from typing import Any, cast, Iterable, TYPE_CHECKING
 
 import bleach
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.core.files.base import ContentFile
+from django.db.models import QuerySet
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 
@@ -35,6 +40,9 @@ from .models import (
     resolve_document_label,
 )
 
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
+
 logger = logging.getLogger(__name__)
 
 
@@ -52,7 +60,7 @@ EMPLOYEE_PERMISSION_FIELD_LABELS = (
 )
 
 
-def _build_permission_fields():
+def _build_permission_fields() -> dict[str, forms.BooleanField]:
     return {
         name: forms.BooleanField(required=False, label=label)
         for name, label in EMPLOYEE_PERMISSION_FIELD_LABELS
@@ -144,13 +152,13 @@ class StaffUserCreateForm(forms.ModelForm):
             "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
-    def clean(self):
+    def clean(self) -> dict[str, Any]:
         cleaned = super().clean()
-        if cleaned.get("password1") != cleaned.get("password2"):
+        if cleaned and cleaned.get("password1") != cleaned.get("password2"):
             self.add_error("password2", "Passwords do not match.")
-        return cleaned
+        return cleaned or {}
 
-    def save(self, commit=True):
+    def save(self, commit: bool = True) -> Any:
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password1"])
         if commit:
@@ -177,7 +185,7 @@ class StaffUserUpdateForm(forms.ModelForm):
             "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         for field_name, field in _build_permission_fields().items():
             field.widget.attrs.setdefault("class", "form-check-input")
@@ -189,7 +197,7 @@ class StaffUserUpdateForm(forms.ModelForm):
                 getattr(permission_object, field_name, False) if permission_object else False
             )
 
-    def save(self, commit=True):
+    def save(self, commit: bool = True) -> Any:
         user = super().save(commit=commit)
         permission_object, _ = EmployeePermission.objects.get_or_create(user=user)
         updated_fields: list[str] = []
@@ -209,7 +217,7 @@ class StaffUserUpdateForm(forms.ModelForm):
 
 def _label_for_document_type(code: str) -> str:
     try:
-        return DocumentType(code).label
+        return str(DocumentType(code).label)
     except ValueError:
         return code.replace('_', ' ').capitalize()
 
@@ -248,24 +256,26 @@ class ClientForm(forms.ModelForm):
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('дд.мм.гггг')})
     )
 
-    def __init__(self, *args, user=None, **kwargs):
+    def __init__(self, *args: Any, user: AbstractBaseUser | AnonymousUser | None = None, **kwargs: Any) -> None:
         self.user = user
         super().__init__(*args, **kwargs)
 
         # Use localized_name so application purpose is translated
         reserved_purposes = Client.FAMILY_MEMBER_REQUIREMENT_PURPOSES
         submissions = [
-            (sub.slug, sub.localized_name)
+            (sub.slug, str(sub.localized_name))
             for sub in Submission.objects.exclude(slug__in=reserved_purposes)
         ]
+        choices: list[tuple[str, str]] = []
         if submissions:
             choices = submissions
         else:
-            choices = list(Client.APPLICATION_PURPOSE_CHOICES)
+            choices = [(str(v), str(l)) for v, l in Client.APPLICATION_PURPOSE_CHOICES]
+            
         existing_choice_values = {value for value, _label in choices}
         for value, label in Client.APPLICATION_PURPOSE_CHOICES:
             if value not in existing_choice_values:
-                choices.append((value, label))
+                choices.append((str(value), str(label)))
                 existing_choice_values.add(value)
 
         current_value = (
@@ -278,19 +288,26 @@ class ClientForm(forms.ModelForm):
             and current_value not in reserved_purposes
             and current_value not in {value for value, _label in choices}
         ):
-            choices.append((current_value, current_value))
+            choices.append((str(current_value), str(current_value)))
 
-        self.fields['application_purpose'].choices = choices
-        self.fields['assigned_staff'].queryset = get_user_model().objects.filter(
+        cast(forms.ChoiceField, self.fields['application_purpose']).choices = choices
+        
+        # Fixed typing for queryset assignment
+        staff_qs = get_user_model().objects.filter(
             is_staff=True,
             is_active=True,
         ).order_by('email')
+        if hasattr(self.fields['assigned_staff'], 'queryset'):
+            setattr(self.fields['assigned_staff'], 'queryset', staff_qs)
+
         sponsor_queryset = Client.objects.exclude(pk=self.instance.pk)
         if self.user is not None:
-            sponsor_queryset = accessible_clients_queryset(self.user, sponsor_queryset)
+            sponsor_queryset = cast(Any, accessible_clients_queryset(self.user, sponsor_queryset))
         else:
             sponsor_queryset = Client.objects.none()
-        self.fields['sponsor_client'].queryset = sponsor_queryset.order_by('last_name', 'first_name')
+        
+        if hasattr(self.fields['sponsor_client'], 'queryset'):
+            setattr(self.fields['sponsor_client'], 'queryset', sponsor_queryset.order_by('last_name', 'first_name'))
 
     class Meta:
         model = Client
@@ -323,15 +340,17 @@ class ClientForm(forms.ModelForm):
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
-    def clean_notes(self):
+    def clean_notes(self) -> str | None:
         notes = self.cleaned_data.get('notes')
         if not notes:
             return notes
         allowed_tags = ["b", "strong", "i", "em", "br", "ul", "ol", "li", "p"]
-        return bleach.clean(notes, tags=allowed_tags, attributes={}, strip=True)
+        return str(bleach.clean(notes, tags=allowed_tags, attributes={}, strip=True))
 
-    def clean(self):
+    def clean(self) -> dict[str, Any]:
         cleaned_data = super().clean()
+        if cleaned_data is None:
+            return {}
         application_purpose = cleaned_data.get("application_purpose")
         family_role = cleaned_data.get("family_role") or ""
         sponsor_client = cleaned_data.get("sponsor_client")
@@ -386,7 +405,7 @@ class ClientForm(forms.ModelForm):
             return
 
         seen: set[int] = set()
-        current = sponsor_client
+        current: Client | None = sponsor_client
         while current is not None and current.pk:
             if current.pk == self.instance.pk:
                 self.add_error("sponsor_client", _("Sponsor relationship cannot create a cycle."))
@@ -395,6 +414,7 @@ class ClientForm(forms.ModelForm):
                 return
             seen.add(current.pk)
             current = current.sponsor_client
+
 
 class MassEmailForm(forms.Form):
     subject = forms.CharField(
@@ -415,21 +435,21 @@ class MassEmailForm(forms.Form):
     status = forms.ChoiceField(
         label=_("Фильтр по Статусу"),
         required=False,
-        choices=[('', _("Все статусы"))] + Client.STATUS_CHOICES,
+        choices=[('', _("Все статусы"))] + list(Client.STATUS_CHOICES),
         widget=forms.Select(attrs={'class': 'form-select'})
     )
 
 
 class DocumentUploadForm(forms.ModelForm):
-    def __init__(self, *args, doc_type=None, client=None, **kwargs):
+    def __init__(self, *args: Any, doc_type: str | None = None, client: Client | None = None, **kwargs: Any) -> None:
         self.doc_type = doc_type
         self.client = client
         super().__init__(*args, **kwargs)
 
-    def clean_file(self):
+    def clean_file(self) -> Any:
         return validate_uploaded_document(self.cleaned_data.get("file"))
 
-    def clean_zus_period_month(self):
+    def clean_zus_period_month(self) -> Any:
         value = self.cleaned_data.get("zus_period_month")
         if self.doc_type != DocumentType.ZUS_RCA_OR_INSURANCE.value:
             return None
@@ -542,15 +562,17 @@ class StaffTaskForm(forms.ModelForm):
             'assignee': forms.Select(attrs={'class': 'form-select'}),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         user_model = get_user_model()
-        self.fields['assignee'].queryset = user_model.objects.filter(is_staff=True, is_active=True).order_by('email')
+        staff_qs = user_model.objects.filter(is_staff=True, is_active=True).order_by('email')
+        if hasattr(self.fields['assignee'], 'queryset'):
+            setattr(self.fields['assignee'], 'queryset', staff_qs)
         self.fields['assignee'].required = False
 
 
 class DocumentRequirementEditForm(forms.ModelForm):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         if not self.instance.custom_name:
             self.initial.setdefault('custom_name', _label_for_document_type(self.instance.document_type))
@@ -566,12 +588,13 @@ class DocumentRequirementEditForm(forms.ModelForm):
             'is_required': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
-    def save(self, commit=True):
+    def save(self, commit: bool = True) -> DocumentRequirement:
         instance = self.instance
         result = update_document_requirement_record(
             requirement=instance,
             cleaned_data=self.cleaned_data,
         )
+        assert result.requirement is not None
         return result.requirement
 
 
@@ -581,27 +604,28 @@ class DocumentRequirementAddForm(forms.Form):
         widget=forms.TextInput(attrs={'class': 'form-control'}),
     )
 
-    def __init__(self, *args, purpose: str | None = None, **kwargs):
+    def __init__(self, *args: Any, purpose: str | None = None, **kwargs: Any) -> None:
         self.purpose = purpose
         super().__init__(*args, **kwargs)
         self.fields['name'].widget.attrs.setdefault('autofocus', 'autofocus')
 
-    def clean_name(self):
+    def clean_name(self) -> str:
         name = (self.cleaned_data.get('name') or '').strip()
         self.cleaned_data['slug'] = build_document_requirement_code(
-            purpose=self.purpose,
+            purpose=self.purpose or "",
             name=name,
         )
         return name
 
-    def save(self):
+    def save(self) -> DocumentRequirement:
         if not hasattr(self, 'cleaned_data'):
             raise RuntimeError("Call is_valid() before save()")
         result = create_document_requirement_for_purpose(
-            purpose=self.purpose,
+            purpose=self.purpose or "",
             name=self.cleaned_data['name'],
             slug=self.cleaned_data['slug'],
         )
+        assert result.requirement is not None
         return result.requirement
 
 
@@ -613,7 +637,7 @@ class DocumentChecklistForm(forms.Form):
         choices=DocumentType.choices,
     )
 
-    def __init__(self, *args, purpose: str | None = None, **kwargs):
+    def __init__(self, *args: Any, purpose: str | None = None, **kwargs: Any) -> None:
         self.purpose = purpose
         super().__init__(*args, **kwargs)
         existing_requirements = list(
@@ -621,7 +645,7 @@ class DocumentChecklistForm(forms.Form):
             .order_by('position', 'id')
         )
 
-        choices = []
+        choices: list[tuple[str, str]] = []
 
         if existing_requirements:
             for requirement in existing_requirements:
@@ -637,13 +661,13 @@ class DocumentChecklistForm(forms.Form):
                 )
                 choices.append((requirement.document_type, label))
         else:
-            fallback_docs = get_fallback_document_checklist(self.purpose)
+            fallback_docs = get_fallback_document_checklist(self.purpose or "")
             if fallback_docs:
-                choices.extend([doc for doc in fallback_docs if doc[0] not in INTERNAL_DOCS])
+                choices.extend([(str(doc[0]), str(doc[1])) for doc in fallback_docs if doc[0] not in INTERNAL_DOCS])
             else:
-                choices.extend([choice for choice in DocumentType.choices if choice[0] not in INTERNAL_DOCS])
+                choices.extend([(str(c[0]), str(c[1])) for c in DocumentType.choices if c[0] not in INTERNAL_DOCS])
 
-        self.fields['required_documents'].choices = choices
+        cast(forms.MultipleChoiceField, self.fields['required_documents']).choices = choices
 
         if 'required_documents' not in self.initial:
             self.initial['required_documents'] = self._initial_documents()
@@ -652,7 +676,7 @@ class DocumentChecklistForm(forms.Form):
     def _label_for_code(code: str) -> str:
         return _label_for_document_type(code)
 
-    def _initial_documents(self):
+    def _initial_documents(self) -> list[str]:
         existing = (
             DocumentRequirement.objects.filter(application_purpose=self.purpose, is_required=True)
             .exclude(document_type__in=INTERNAL_DOCS)
@@ -665,14 +689,14 @@ class DocumentChecklistForm(forms.Form):
         if DocumentRequirement.objects.filter(application_purpose=self.purpose).exists():
             return []
 
-        fallback_docs = get_fallback_document_checklist(self.purpose)
+        fallback_docs = get_fallback_document_checklist(self.purpose or "")
         if fallback_docs:
-            return [code for code, _ in fallback_docs if code not in INTERNAL_DOCS]
+            return [str(code) for code, _ in fallback_docs if code not in INTERNAL_DOCS]
         return []
 
     def save(self) -> int:
         result = sync_document_checklist_for_purpose(
-            purpose=self.purpose,
+            purpose=self.purpose or "",
             selected_codes=self.cleaned_data.get('required_documents', []),
         )
         return result.updated_count

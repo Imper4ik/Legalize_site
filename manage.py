@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
+from __future__ import annotations
+
 import os
 import sys
 
 from legalize_site.env import load_env
 
 
-def main():
+def main() -> None:
     """Run administrative tasks."""
     load_env()
     default_settings = (

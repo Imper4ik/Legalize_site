@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
 from django.db.models import Q
@@ -10,7 +11,7 @@ from clients.views.base import role_required_view
 
 
 @role_required_view(*ADMIN_PANEL_ALLOWED_ROLES)
-def fingerprints_schedule_view(request):
+def fingerprints_schedule_view(request: HttpRequest) -> HttpResponse:
     """View to display upcoming fingerprint appointments for all clients."""
     today = timezone.localdate()
 

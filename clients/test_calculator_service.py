@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 from datetime import date, timedelta
 from decimal import Decimal
+from typing import Any
 from unittest.mock import Mock, patch
 
 import requests
@@ -16,7 +19,7 @@ from clients.services.calculator import (
 
 
 class CalculatorServiceTests(SimpleTestCase):
-    def setUp(self):
+    def setUp(self) -> None:
         self.base_data = {
             "total_end_date": date.today() + timedelta(days=30),
             "tuition_fee": Decimal("1000.00"),
@@ -30,7 +33,7 @@ class CalculatorServiceTests(SimpleTestCase):
         }
 
     @patch("clients.services.calculator.get_eur_to_pln_rate", return_value=Decimal("4.3"))
-    def test_converts_eur_values_to_pln(self, mock_get_rate):
+    def test_converts_eur_values_to_pln(self, mock_get_rate: Any) -> None:
         data = {
             **self.base_data,
             "tuition_currency": "EUR",
@@ -45,7 +48,7 @@ class CalculatorServiceTests(SimpleTestCase):
         self.assertEqual(result.monthly_tuition_calculated, Decimal("43.00"))
         self.assertEqual(result.rent_total, Decimal("43.00"))
 
-    def test_caps_months_to_maximum(self):
+    def test_caps_months_to_maximum(self) -> None:
         far_future = date.today().replace(year=date.today().year + 3)
         data = {**self.base_data, "total_end_date": far_future}
 
@@ -54,7 +57,7 @@ class CalculatorServiceTests(SimpleTestCase):
         self.assertEqual(result.months_for_calc, MAX_MONTHS_LIVING)
         self.assertTrue(result.is_capped)
 
-    def test_past_end_date_defaults_to_single_month(self):
+    def test_past_end_date_defaults_to_single_month(self) -> None:
         past_date = date.today() - timedelta(days=10)
         data = {**self.base_data, "total_end_date": past_date}
 
@@ -63,7 +66,7 @@ class CalculatorServiceTests(SimpleTestCase):
         self.assertEqual(result.total_months_real, 1)
         self.assertEqual(result.months_for_calc, 1)
 
-    def test_semester_with_custom_month_count(self):
+    def test_semester_with_custom_month_count(self) -> None:
         data = {
             **self.base_data,
             "fee_type": "per_semester",
@@ -79,7 +82,7 @@ class CalculatorServiceTests(SimpleTestCase):
     @patch("clients.services.calculator.cache.get", return_value=None)
     @patch("clients.services.calculator.cache.set")
     @patch("clients.services.calculator.requests.get")
-    def test_fetches_exchange_rate_over_https_and_caches_it(self, mocked_get, mocked_cache_set, _mocked_cache_get):
+    def test_fetches_exchange_rate_over_https_and_caches_it(self, mocked_get: Any, mocked_cache_set: Any, _mocked_cache_get: Any) -> None:
         response = Mock()
         response.json.return_value = {"rates": [{"mid": 4.21}]}
         mocked_get.return_value = response
@@ -93,7 +96,7 @@ class CalculatorServiceTests(SimpleTestCase):
 
     @patch("clients.services.calculator.cache.get", return_value=None)
     @patch("clients.services.calculator.requests.get", side_effect=requests.RequestException("network down"))
-    def test_uses_default_rate_when_fetch_fails(self, _mocked_get, _mocked_cache_get):
+    def test_uses_default_rate_when_fetch_fails(self, _mocked_get: Any, _mocked_cache_get: Any) -> None:
         rate = get_eur_to_pln_rate()
 
         self.assertEqual(rate, DEFAULT_EUR_TO_PLN_RATE)

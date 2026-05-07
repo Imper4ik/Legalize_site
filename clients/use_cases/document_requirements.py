@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from typing import Any, cast
 
 from django.utils.crypto import get_random_string
 from django.utils.text import slugify
@@ -37,7 +38,7 @@ def create_document_requirement_for_purpose(
     slug: str | None = None,
 ) -> DocumentRequirementScenarioResult:
     requirement = DocumentRequirement.objects.create(
-        application_purpose=purpose,
+        application_purpose=cast(Any, purpose),
         document_type=slug or build_document_requirement_code(purpose=purpose, name=name),
         custom_name=name,
         is_required=True,
@@ -111,7 +112,7 @@ def sync_document_checklist_for_purpose(
             requirement.save(update_fields=["is_required", "position"])
         else:
             DocumentRequirement.objects.create(
-                application_purpose=purpose,
+                application_purpose=cast(Any, purpose),
                 document_type=code,
                 is_required=True,
                 position=selected_positions.get(code, 0),

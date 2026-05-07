@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Any
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -26,18 +30,18 @@ class DocumentType(models.TextChoices):
     ZUS_RCA_OR_INSURANCE = 'zus_rca_or_insurance', _('ZUS RCA lub polisa ubezpieczeniowa')
     ZUS_CONTRIBUTION_HISTORY = 'zus_contribution_history', _('Zaświadczenie z ZUS o przebiegu ubezpieczenia cudzoziemca')
     EMPLOYER_TAX_RETURN = 'employer_tax_return', _('CIT lub PIT pracodawcy')
-    ZUS_EMPLOYEE_COUNT = 'zus_employee_count', _('Zaświadczenie z ZUS o liczbie zgłoszonych pracowników i składkach')
+    ZUS_EMPLOYEE_COUNT = 'zus_employee_count', _('Zaświadczenie z ZUS o liczbie zgłoszonych работников и składках')
     STATEMENT_X = 'statement_x', _('Oświadczenie „x”')
     MAINTENANCE_STATEMENT = 'maintenance_statement', _('Oświadczenie o utrzymaniu')
     WEZWANIE = 'wezwanie', _('Wezwanie')
     FINGERPRINT_CONFIRMATION = 'fingerprint_confirmation', _('Potwierdzenie złożenia odcisków palców')
 
 
-def doc_entry(doc_type: DocumentType) -> tuple[str, str]:
+def doc_entry(doc_type: DocumentType) -> tuple[str, Any]:
     return doc_type.value, doc_type.label
 
 
-# Dokumenty dla CELU: STUDIA
+# Dokumenty для CELU: STUDIA
 STUDY_DOCS = [
     doc_entry(DocumentType.PHOTOS),
     doc_entry(DocumentType.STUDY_APPLICATION_FEE),
@@ -51,7 +55,7 @@ STUDY_DOCS = [
     doc_entry(DocumentType.FINANCIAL_PROOF),
 ]
 
-# Dokumenty dla CELU: PRACA
+# Dokumenty для CELU: PRACA
 WORK_DOCS = [
     doc_entry(DocumentType.PHOTOS),
     doc_entry(DocumentType.PASSPORT),
@@ -99,11 +103,11 @@ FAMILY_CHILD_DOCS = [
 ]
 
 # Główna lista kontrolna.
-# Django automatycznie użyje odpowiedniego tłumaczenia w zależności od wybranego języka.
+# Django automatycznie użyje odpowiedniego tłumaczenia w зависимости od wybranego языка.
 DOCUMENT_CHECKLIST = {
     # Klucz to ('cel_złożenia', 'język_dokumentów_w_systemie')
     # Ale ponieważ wszystkie nazwy są teraz oznaczone do tłumaczenia,
-    # możemy używać jednej listy dla wszystkich języków.
+    # możemy użyвать jednej listy для wszystkich języków.
     ('study', 'pl'): STUDY_DOCS,
     ('study', 'en'): STUDY_DOCS,
     ('study', 'ru'): STUDY_DOCS,

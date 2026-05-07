@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from datetime import timedelta
+from typing import Any, cast
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
@@ -25,7 +26,7 @@ class Command(BaseCommand):
 
     SECTIONS = ("payments", "documents", "zus", "missing-docs")
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
             "--dry-run",
             action="store_true",
@@ -38,7 +39,7 @@ class Command(BaseCommand):
             help="Run only one reminder section. Can be passed multiple times.",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         dry_run = bool(options.get("dry_run"))
         selected_sections = set(options.get("only") or self.SECTIONS)
 
@@ -77,7 +78,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"update_reminders failed: {exc}"))
             raise CommandError("update_reminders failed") from exc
 
-    def send_missing_document_notifications(self, *, dry_run: bool = False):
+    def send_missing_document_notifications(self, *, dry_run: bool = False) -> None:
         today = timezone.localdate()
         clients = Client.objects.filter(
             workflow_stage="waiting_decision",
@@ -108,7 +109,7 @@ class Command(BaseCommand):
         prefix = "DRY RUN: would send" if dry_run else "Sent"
         self.stdout.write(f"{prefix} {sent_count} missing-document emails. skipped={skipped_count}")
 
-    def check_zus_rca_missing_months(self):
+    def check_zus_rca_missing_months(self) -> None:
         today = timezone.localdate()
         clients = Client.objects.filter(
             workflow_stage="waiting_decision",
@@ -127,7 +128,7 @@ class Command(BaseCommand):
         if affected == 0:
             self.stdout.write("ZUS RCA missing months logs: none.")
 
-    def send_expiring_document_notifications(self, *, dry_run: bool = False):
+    def send_expiring_document_notifications(self, *, dry_run: bool = False) -> None:
         today = timezone.localdate()
         cutoff = today + timedelta(days=7)
         expiring_docs = Document.objects.select_related("client").filter(
@@ -159,7 +160,7 @@ class Command(BaseCommand):
         if not dry_run:
             self.stdout.write(f"Sent {sent_count} expiring-document emails.")
 
-    def create_document_reminders(self, *, dry_run: bool = False):
+    def create_document_reminders(self, *, dry_run: bool = False) -> None:
         today = timezone.localdate()
         reminder_period_start = today - timedelta(days=30)
         reminder_period_end = today + timedelta(days=30)
@@ -188,14 +189,14 @@ class Command(BaseCommand):
                 document=document,
                 title=f"Document expires: {document.display_name}",
                 notes=f"Document for client_id={document.client_id} expires on {document.expiry_date:%d.%m.%Y}.",
-                due_date=document.expiry_date,
+                due_date=cast(Any, document.expiry_date),
                 reminder_type="document",
             )
 
         prefix = "DRY RUN: would create" if dry_run else "Created"
         self.stdout.write(self.style.SUCCESS(f"{prefix} {count} document reminders."))
 
-    def create_payment_reminders(self, *, dry_run: bool = False):
+    def create_payment_reminders(self, *, dry_run: bool = False) -> None:
         today = timezone.localdate()
         due_payments = Payment.objects.select_related("client").filter(
             due_date__lte=today,
@@ -221,7 +222,7 @@ class Command(BaseCommand):
                         f"Payment total={payment.total_amount}; amount_due={payment.amount_due}; "
                         f"client_id={payment.client_id}."
                     ),
-                    "due_date": payment.due_date,
+                    "due_date": cast(Any, payment.due_date),
                     "reminder_type": "payment",
                     "is_active": True,
                 },

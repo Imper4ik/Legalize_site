@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from typing import Any, cast, TYPE_CHECKING
+
 from django.conf import settings
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import Count, Prefetch, Q
-from django.http import Http404
+from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext as _
@@ -35,6 +37,9 @@ from clients.views.base import RoleOrFeatureRequiredMixin, RoleRequiredMixin, St
 from clients.services.activity import log_client_view
 from clients.services.access import accessible_clients_queryset
 
+if TYPE_CHECKING:
+    from django.http.response import HttpResponseBase
+
 
 def _show_family_dashboard_link(client: Client) -> bool:
     return bool(
@@ -51,9 +56,7 @@ class ClientListView(StaffRequiredMixin, ListView):
     context_object_name = "clients"
     paginate_by = 15
 
-    def get_queryset(self):
-        from django.db.models import Count
-
+    def get_queryset(self) -> Any:
         queryset = accessible_clients_queryset(
             self.request.user,
             Client.objects.filter(Q(user__is_staff=False) | Q(user__isnull=True)),
@@ -77,7 +80,7 @@ class ClientListView(StaffRequiredMixin, ListView):
             ).distinct().order_by("-created_at")
         return queryset.order_by("-created_at")
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         from clients.models import Company
 
         context = super().get_context_data(**kwargs)
@@ -91,7 +94,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
     model = Client
     template_name = "clients/client_detail.html"
 
-    def get_queryset(self):
+    def get_queryset(self) -> Any:
         return accessible_clients_queryset(
             self.request.user,
             Client.objects.select_related("user", "sponsor_client", "company", "assigned_staff").prefetch_related(
@@ -128,7 +131,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
             ),
         )
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         client = self.object
         document_status_list = client.get_document_checklist(check_file_existence=True) if hasattr(client, "get_document_checklist") else []
@@ -158,7 +161,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         context["family_dashboard_url"] = reverse("clients:family_dashboard", kwargs={"pk": client.pk})
         return context
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         self.object = self.get_object()
         log_client_view(client=self.object, actor=request.user, request=request)
         context = self.get_context_data(object=self.object)
@@ -172,8 +175,8 @@ class ClientCreateView(RoleRequiredMixin, CreateView):
     template_name = "clients/client_form.html"
     success_url = reverse_lazy("clients:client_list")
 
-    def get_initial(self):
-        initial = super().get_initial()
+    def get_initial(self) -> dict[str, Any]:
+        initial = super().get_initial() or {}
         sponsor_id = self.request.GET.get("sponsor")
         if not sponsor_id:
             return initial
@@ -190,17 +193,17 @@ class ClientCreateView(RoleRequiredMixin, CreateView):
         initial["sponsor_client"] = sponsor.pk
         return initial
 
-    def get_form_kwargs(self):
+    def get_form_kwargs(self) -> dict[str, Any]:
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
         return kwargs
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        context["title"] = _("Добавить нового клиента")
+        context["title"] = str(_("Добавить нового клиента"))
         return context
 
-    def form_valid(self, form):
+    def form_valid(self, form: ClientForm) -> HttpResponse:
         if not form.instance.assigned_staff_id:
             form.instance.assigned_staff = self.request.user
         messages.success(self.request, _("Клиент успешно добавлен!"))
@@ -213,7 +216,7 @@ class ClientCreateView(RoleRequiredMixin, CreateView):
             )
         return redirect(self.get_success_url())
 
-    def form_invalid(self, form):
+    def form_invalid(self, form: ClientForm) -> HttpResponse:
         messages.error(
             self.request,
             _("Не удалось сохранить клиента. Проверьте выделенные поля и попробуйте снова."),
@@ -227,23 +230,23 @@ class ClientUpdateView(RoleRequiredMixin, UpdateView):
     form_class = ClientForm
     template_name = "clients/client_form.html"
 
-    def get_queryset(self):
+    def get_queryset(self) -> Any:
         return accessible_clients_queryset(self.request.user, Client.objects.all())
 
-    def get_form_kwargs(self):
+    def get_form_kwargs(self) -> dict[str, Any]:
         kwargs = super().get_form_kwargs()
         kwargs["user"] = self.request.user
         return kwargs
 
-    def get_success_url(self):
-        return reverse_lazy("clients:client_detail", kwargs={"pk": self.object.pk})
+    def get_success_url(self) -> str:
+        return str(reverse_lazy("clients:client_detail", kwargs={"pk": self.object.pk}))
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        context["title"] = _("Редактировать данные клиента")
+        context["title"] = str(_("Редактировать данные клиента"))
         return context
 
-    def form_valid(self, form):
+    def form_valid(self, form: ClientForm) -> HttpResponse:
         previous_fingerprints_date = self.object.fingerprints_date
         previous_values = snapshot_client_update_state(self.object)
         messages.success(self.request, _("Данные клиента успешно обновлены!"))
@@ -259,7 +262,7 @@ class ClientUpdateView(RoleRequiredMixin, UpdateView):
             )
         return redirect(self.get_success_url())
 
-    def form_invalid(self, form):
+    def form_invalid(self, form: ClientForm) -> HttpResponse:
         messages.error(
             self.request,
             _("Не удалось сохранить клиента. Проверьте выделенные поля и попробуйте снова."),
@@ -274,16 +277,16 @@ class ClientDeleteView(RoleOrFeatureRequiredMixin, DeleteView):
     template_name = "clients/client_confirm_delete.html"
     success_url = reverse_lazy("clients:client_list")
 
-    def get_queryset(self):
+    def get_queryset(self) -> Any:
         return accessible_clients_queryset(self.request.user, Client.objects.all())
 
-    def form_valid(self, form):
+    def form_valid(self, form: Any) -> HttpResponse:
         client_name = self.get_object()
         messages.success(self.request, _("Клиент %(name)s был успешно удалён.") % {"name": client_name})
         return super().form_valid(form)
 
 
-def dashboard_redirect_view(request):
+def dashboard_redirect_view(request: HttpRequest) -> HttpResponseBase:
     if not request.user.is_authenticated:
         return redirect("account_login")
 
@@ -292,7 +295,7 @@ def dashboard_redirect_view(request):
     if user_has_any_role(request.user, "Translator") and getattr(settings, "ENABLE_TRANSLATION_TOOLING", False):
         return redirect("translations:dashboard")
 
-    support_email = getattr(settings, "DEFAULT_FROM_EMAIL", "support@example.com")
+    support_email = str(getattr(settings, "DEFAULT_FROM_EMAIL", "support@example.com"))
     context = {
         "support_email": support_email,
         "error_title": _("Доступ запрещен"),
@@ -300,7 +303,7 @@ def dashboard_redirect_view(request):
     return render(request, "403.html", context=context, status=403)
 
 
-def calculator_view(request):
+def calculator_view(request: HttpRequest) -> HttpResponseBase:
     from clients.forms import CalculatorForm
     from clients.services.calculator import (
         LIVING_ALLOWANCE,
@@ -310,14 +313,14 @@ def calculator_view(request):
     )
 
     form = CalculatorForm(request.POST or None)
-    form_data = {}
+    form_data: dict[str, Any] = {}
     result = None
     if request.method == "POST":
         if form.is_valid():
             result = calculate_calculator_result(form.cleaned_data)
             form_data = form.cleaned_data
         else:
-            form_data = form.data
+            form_data = dict(form.data)
             messages.error(request, _("Ошибка. Пожалуйста, заполните все поля корректными значениями."))
 
     context = {

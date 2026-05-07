@@ -11,6 +11,10 @@ from legalize_site.utils.files import build_protected_file_response
 from ..forms import DocumentForm
 from ..models import Document, Submission
 
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from django.http.response import HttpResponseBase
+
 
 class DocumentCreateView(RoleRequiredMixin, View):
     allowed_roles = list(SUBMISSION_EDIT_ROLES)
@@ -80,7 +84,12 @@ class DocumentDownloadView(StaffRequiredMixin, View):
     def get_object(self, pk: int) -> Document:
         return get_object_or_404(Document.objects.select_related("submission"), pk=pk)
 
-    def get(self, request: HttpRequest, pk: int) -> HttpResponse:
+    def get(self, request: HttpRequest, pk: int) -> HttpResponseBase:
         document = self.get_object(pk)
-        filename = document.file_path.name.rsplit("/", 1)[-1] if document.file_path else document.title
+        
+        file_path_name = ""
+        if document.file_path and hasattr(document.file_path, "name") and document.file_path.name:
+            file_path_name = str(document.file_path.name)
+            
+        filename = file_path_name.rsplit("/", 1)[-1] if file_path_name else document.title
         return build_protected_file_response(document.file_path, filename=filename, as_attachment=True)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -12,7 +13,7 @@ from clients.models import EmailCampaign, EmailLog
 class Command(BaseCommand):
     help = "Clear sensitive email payloads older than retention period."
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         retention_days = int(getattr(settings, "EMAIL_LOG_BODY_RETENTION_DAYS", 180))
         cutoff = timezone.now() - timedelta(days=retention_days)
 

@@ -1,7 +1,8 @@
 """Custom email backends used by the Legalize site project."""
+from __future__ import annotations
 
 import logging
-from typing import Iterable
+from typing import Any, Iterable, Sequence
 
 from django.conf import settings
 from django.core.mail import EmailMessage
@@ -19,21 +20,24 @@ class SafeSMTPEmailBackend(SMTPEmailBackend):
     application can report success even though the provider rejected delivery.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self._allow_console_fallback = getattr(
+        self._allow_console_fallback = bool(getattr(
             settings,
             "EMAIL_FALLBACK_TO_CONSOLE",
             False,
-        )
+        ))
         self._fallback_backend = ConsoleEmailBackend(*args, **kwargs)
 
     def send_messages(self, email_messages: Iterable[EmailMessage] | None) -> int:
         if not email_messages:
             return 0
 
+        # Django's BaseEmailBackend.send_messages expects a Sequence[EmailMessage]
+        messages_list: Sequence[EmailMessage] = list(email_messages)
+
         try:
-            return super().send_messages(email_messages)
+            return super().send_messages(messages_list)
         except Exception as exc:  # pragma: no cover - defensive safeguard
             if not self._allow_console_fallback:
                 logger.exception("SMTP send failed and console fallback is disabled")
@@ -43,4 +47,4 @@ class SafeSMTPEmailBackend(SMTPEmailBackend):
                 exc,
                 exc_info=True,
             )
-            return self._fallback_backend.send_messages(email_messages)
+            return self._fallback_backend.send_messages(messages_list)

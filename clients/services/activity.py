@@ -1,28 +1,37 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any, cast, TYPE_CHECKING
 
 from django.db import models
 from django.utils import timezone
 
 from clients.models import ClientActivity
 
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
+    from django.http import HttpRequest
+    from clients.models import Client, Document, Payment, StaffTask
+
 
 def log_client_activity(
     *,
-    client,
+    client: Client,
     event_type: str,
     summary: str,
-    actor=None,
+    actor: AbstractBaseUser | AnonymousUser | None = None,
     details: str = "",
-    metadata: dict | None = None,
-    document=None,
-    payment=None,
-    task=None,
-):
+    metadata: dict[str, Any] | None = None,
+    document: Document | None = None,
+    payment: Payment | None = None,
+    task: StaffTask | None = None,
+) -> ClientActivity:
+    # AnonymousUser cannot be assigned to ForeignKey
+    real_actor = actor if actor and actor.is_authenticated else None
+    
     return ClientActivity.objects.create(
         client=client,
-        actor=actor,
+        actor=cast(Any, real_actor),
         event_type=event_type,
         summary=summary,
         details=details,
@@ -33,20 +42,20 @@ def log_client_activity(
     )
 
 
-def log_client_view(*, client, actor, request=None):
-    if actor is None:
+def log_client_view(*, client: Client, actor: AbstractBaseUser | AnonymousUser | None, request: HttpRequest | None = None) -> ClientActivity | None:
+    if actor is None or not actor.is_authenticated:
         return None
 
     recent_threshold = timezone.now() - timedelta(minutes=15)
     if ClientActivity.objects.filter(
         client=client,
-        actor=actor,
+        actor=cast(Any, actor),
         event_type="client_viewed",
         created_at__gte=recent_threshold,
     ).exists():
         return None
 
-    metadata = {}
+    metadata: dict[str, Any] = {}
     if request is not None:
         metadata["path"] = request.path
         metadata["method"] = request.method

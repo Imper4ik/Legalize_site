@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from io import BytesIO
 from pathlib import Path
-from typing import BinaryIO
+from typing import BinaryIO, Any
 
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -19,7 +19,7 @@ DEFAULT_MAX_HEIGHT = 2000
 SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.tiff', '.tif', '.bmp'}
 
 
-def get_compression_settings() -> dict:
+def get_compression_settings() -> dict[str, Any]:
     """Get compression settings from Django settings."""
     return {
         'quality': getattr(settings, 'IMAGE_COMPRESSION_QUALITY', DEFAULT_QUALITY),
@@ -36,7 +36,7 @@ def should_compress(file_path: str | Path) -> bool:
 
 
 def compress_image(
-    image_file: BinaryIO | InMemoryUploadedFile,
+    image_file: BinaryIO | InMemoryUploadedFile | Any,
     output_format: str = 'WEBP',
     quality: int | None = None,
     max_width: int | None = None,
@@ -115,7 +115,7 @@ def compress_image(
         raise
 
 
-def compress_uploaded_file(uploaded_file: InMemoryUploadedFile) -> InMemoryUploadedFile | None:
+def compress_uploaded_file(uploaded_file: Any) -> InMemoryUploadedFile | None:
     """
     Compress an uploaded Django file and return new InMemoryUploadedFile.
 
@@ -125,7 +125,8 @@ def compress_uploaded_file(uploaded_file: InMemoryUploadedFile) -> InMemoryUploa
     Returns:
         New compressed InMemoryUploadedFile or None if compression failed
     """
-    if not uploaded_file.name or not should_compress(uploaded_file.name):
+    file_name = getattr(uploaded_file, 'name', '')
+    if not file_name or not should_compress(file_name):
         return None
 
     try:
@@ -141,7 +142,7 @@ def compress_uploaded_file(uploaded_file: InMemoryUploadedFile) -> InMemoryUploa
         )
 
         # Change file extension
-        original_path = Path(uploaded_file.name or "unknown")
+        original_path = Path(file_name)
         new_name = str(original_path.with_suffix(new_ext))
 
         # Create new InMemoryUploadedFile

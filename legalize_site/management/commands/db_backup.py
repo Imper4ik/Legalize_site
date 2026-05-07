@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess  # nosec B404
+from typing import Any
 
 from django.core.management.base import BaseCommand, CommandError
 
@@ -10,7 +11,7 @@ from legalize_site.backups import BackupError, create_db_backup
 class Command(BaseCommand):
     help = "Create a PostgreSQL backup and print its metadata."
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         try:
             backup_result = create_db_backup()
         except BackupError as exc:

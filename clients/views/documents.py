@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import Any, cast, TYPE_CHECKING
 
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -39,20 +40,22 @@ from clients.use_cases.documents import (
 from clients.views.base import role_or_feature_required_view, role_required_view, staff_required_view
 from legalize_site.utils.files import build_protected_file_response
 
+if TYPE_CHECKING:
+    from django.http.response import HttpResponseBase
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
+
 logger = logging.getLogger(__name__)
 
 
-def _can_run_ocr_review(user) -> bool:
+def _can_run_ocr_review(user: AbstractBaseUser | AnonymousUser | None) -> bool:
     return (
         user_has_internal_role(user, "Admin", "Manager")
         or has_employee_permission(user, "can_run_ocr_review")
     )
 
 
-
-
 @role_required_view(*DOCUMENT_EDIT_ROLES)
-def update_client_notes(request, pk):
+def update_client_notes(request: HttpRequest, pk: int) -> HttpResponseBase:
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
     helper = ResponseHelper(request)
 
@@ -63,14 +66,14 @@ def update_client_notes(request, pk):
             notes=request.POST.get("notes", ""),
         )
         if helper.expects_json:
-            return helper.success(message=_("Заметка сохранена"))
+            return helper.success(message=str(_("Заметка сохранена")))
         messages.success(request, _("Заметка сохранена."))
         return redirect("clients:client_detail", pk=pk)
     return redirect("clients:client_list")
 
 
 @role_required_view(*DOCUMENT_EDIT_ROLES)
-def add_document(request, client_id, doc_type):
+def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpResponseBase:
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
     document_type_display = client.get_document_name_by_code(doc_type)
     helper = ResponseHelper(request)
@@ -85,7 +88,7 @@ def add_document(request, client_id, doc_type):
             form = DocumentUploadForm(request.POST, request.FILES, doc_type=doc_type, client=client)
             if helper.expects_json:
                 return helper.error(
-                    message=_("Проверьте правильность заполнения формы."),
+                    message=str(_("Проверьте правильность заполнения формы.")),
                     errors=form.errors.get_json_data(),
             )
             return redirect("clients:client_detail", pk=client.id)
@@ -93,7 +96,7 @@ def add_document(request, client_id, doc_type):
         if doc_type == DocumentType.ZUS_RCA_OR_INSURANCE.value and len(files) > 1:
             message = _("ZUS RCA can be uploaded only one month at a time.")
             if helper.expects_json:
-                return helper.error(message=message, errors={"file": [{"message": str(message)}]})
+                return helper.error(message=str(message), errors={"file": [{"message": str(message)}]})
             messages.error(request, message)
             return redirect("clients:client_detail", pk=client.id)
 
@@ -138,16 +141,18 @@ def add_document(request, client_id, doc_type):
                     }
                     for item in upload_results
                 ]
-                payload = {
-                    "message": _("Загружено документов: %(count)s") % {"count": success_count} if success_count > 1 else last_result.message,
-                    "doc_id": primary_result.document.id,
-                    "manual_review_required": primary_result.manual_review_required,
-                    "pending_confirmation": primary_result.pending_confirmation,
-                    "ocr_processing_queued": primary_result.ocr_processing_queued,
-                    "parsed": primary_result.parsed_payload,
-                    "documents": documents_payload,
-                }
-                return helper.success(**payload)
+                
+                msg = str(_("Загружено документов: %(count)s") % {"count": success_count}) if success_count > 1 else last_result.message
+                
+                return helper.success(
+                    message=msg,
+                    doc_id=primary_result.document.id,
+                    manual_review_required=primary_result.manual_review_required,
+                    pending_confirmation=primary_result.pending_confirmation,
+                    ocr_processing_queued=primary_result.ocr_processing_queued,
+                    parsed=primary_result.parsed_payload,
+                    documents=documents_payload,
+                )
 
             if last_result.manual_review_required:
                 messages.warning(request, last_result.message)
@@ -158,7 +163,7 @@ def add_document(request, client_id, doc_type):
 
         if helper.expects_json:
             return helper.error(
-                message=_("Проверьте правильность заполнения формы."),
+                message=str(_("Проверьте правильность заполнения формы.")),
                 errors=errors,
             )
 
@@ -176,18 +181,18 @@ def add_document(request, client_id, doc_type):
 
 
 @role_or_feature_required_view("can_run_ocr_review", "Admin", "Manager")
-def confirm_wezwanie_parse(request, doc_id):
+def confirm_wezwanie_parse(request: HttpRequest, doc_id: int) -> HttpResponseBase:
     document = get_object_or_404(accessible_documents_queryset(request.user, Document.objects.all()), pk=doc_id)
     helper = ResponseHelper(request)
 
     if request.method != "POST":
         if helper.expects_json:
-            return helper.error(message=_("Недопустимый метод запроса."), status=405)
+            return helper.error(message=str(_("Недопустимый метод запроса.")), status=405)
         return redirect("clients:client_detail", pk=document.client.id)
 
     if not is_wezwanie_document_type(document.document_type):
         if helper.expects_json:
-            return helper.error(message=_("Документ не является wezwanie."), status=400)
+            return helper.error(message=str(_("Документ не является wezwanie.")), status=400)
         messages.error(request, _("Документ не является wezwanie."))
         return redirect("clients:client_detail", pk=document.client.id)
 
@@ -214,15 +219,16 @@ def confirm_wezwanie_parse(request, doc_id):
 
 
 @role_or_feature_required_view("can_delete_documents", *DOCUMENT_DELETE_ROLES)
-def document_delete(request, pk):
+def document_delete(request: HttpRequest, pk: int) -> HttpResponseBase:
     document = get_object_or_404(accessible_documents_queryset(request.user, Document.objects.all()), pk=pk)
     client_id = document.client.id
     helper = ResponseHelper(request)
 
     if request.method == "POST":
         result = delete_client_document(document=document, actor=request.user)
+        msg = str(_("Документ '%(name)s' удалён.") % {"name": result.document_display_name})
         if helper.expects_json:
-            return helper.success(message=_("Документ '%(name)s' удалён.") % {"name": result.document_display_name})
+            return helper.success(message=msg)
 
         messages.success(request, _("Документ '%(name)s' успешно удалён.") % {"name": result.document_display_name})
     else:
@@ -232,7 +238,7 @@ def document_delete(request, pk):
 
 
 @role_or_feature_required_view("can_delete_documents", *DOCUMENT_DELETE_ROLES)
-def wniosek_attachment_delete(request, attachment_id):
+def wniosek_attachment_delete(request: HttpRequest, attachment_id: int) -> HttpResponseBase:
     attachment = get_object_or_404(
         WniosekAttachment.objects.select_related("submission", "submission__client").filter(
             submission__client__in=accessible_clients_queryset(request.user, Client.objects.all())
@@ -245,7 +251,7 @@ def wniosek_attachment_delete(request, attachment_id):
 
     if request.method == "POST":
         result = delete_wniosek_attachment(attachment=attachment, actor=request.user)
-        message = _("Отметка '%(name)s' удалена.") % {"name": result.attachment_name}
+        message = str(_("Отметка '%(name)s' удалена.") % {"name": result.attachment_name})
         if helper.expects_json:
             return helper.success(message=message)
 
@@ -257,7 +263,7 @@ def wniosek_attachment_delete(request, attachment_id):
 
 
 @role_required_view(*DOCUMENT_EDIT_ROLES)
-def toggle_document_verification(request, doc_id):
+def toggle_document_verification(request: HttpRequest, doc_id: int) -> HttpResponseBase:
     """Toggle verification status for a client document."""
 
     document = get_object_or_404(accessible_documents_queryset(request.user, Document.objects.all()), pk=doc_id)
@@ -272,7 +278,7 @@ def toggle_document_verification(request, doc_id):
         if helper.expects_json:
             return helper.success(
                 verified=result.verified,
-                button_text=_("Снять отметку") if result.verified else _("Проверить"),
+                button_text=str(_("Снять отметку") if result.verified else _("Проверить")),
                 emails_sent=result.emails_sent,
             )
 
@@ -286,7 +292,7 @@ def toggle_document_verification(request, doc_id):
 
 
 @role_required_view(*DOCUMENT_EDIT_ROLES)
-def verify_all_documents(request, client_id):
+def verify_all_documents(request: HttpRequest, client_id: int) -> HttpResponseBase:
     """Mark all uploaded documents for the client as verified."""
 
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
@@ -318,71 +324,46 @@ def verify_all_documents(request, client_id):
     return redirect("clients:client_detail", pk=client.id)
 
 
-def _serve_document_file(request, doc_id, *, as_attachment: bool):
+def _serve_document_file(request: HttpRequest, doc_id: int, *, as_attachment: bool) -> HttpResponseBase:
     action = "download" if as_attachment else "preview"
-    logger.info("Document %s requested: doc_id=%s, user_id=%s", action, doc_id, request.user.pk)
-    try:
-        document = get_object_or_404(
-            accessible_documents_queryset(request.user, Document.objects.select_related("client")),
-            pk=doc_id,
-        )
-        logger.info("Document found and access granted: doc_id=%s", doc_id)
-    except Exception:
-        logger.warning("Document not found or access denied: doc_id=%s, user_id=%s", doc_id, request.user.pk)
-        raise
-
-    logger.info(
-        "Document storage info: document_id=%s, client_id=%s, storage_class=%s",
-        document.pk,
-        document.client_id,
-        document.file.storage.__class__.__name__,
+    logger.info("Document %s requested: doc_id=%s, user_id=%s", action, doc_id, getattr(request.user, 'pk', 'None'))
+    
+    document = get_object_or_404(
+        accessible_documents_queryset(request.user, Document.objects.select_related("client")),
+        pk=doc_id,
     )
 
     if not document_file_exists(document):
         logger.warning(
-            "Physical file missing in storage: document_id=%s, client_id=%s, storage_class=%s",
+            "Physical file missing in storage: document_id=%s, client_id=%s",
             document.pk,
             document.client_id,
-            document.file.storage.__class__.__name__,
         )
         messages.error(
             request,
-            _("Файл отсутствует в хранилище. Возможно, он был потерян после redeploy или загружен до настройки постоянного хранилища. Загрузите файл заново."),
+            _("Файл отсутствует в хранилище. Загрузите файл заново."),
         )
-        return redirect("clients:client_detail", pk=document.client.id)
+        return cast('HttpResponseBase', redirect("clients:client_detail", pk=document.client.id))
 
     record_document_download(document=document, actor=request.user)
-    extension = Path(document.file.name).suffix or ".bin"
+    file_name = str(document.file.name)
+    extension = Path(file_name).suffix or ".bin"
     filename = f"document-{document.pk}{extension}"
-    response = build_protected_file_response(document.file, filename=filename, as_attachment=as_attachment)
-
-    logger.info(
-        "Document served: document_id=%s filename=%s stored_name=%s content_type=%s content_disposition=%s action=%s",
-        document.pk,
-        filename,
-        document.file.name,
-        response.get("Content-Type"),
-        response.get("Content-Disposition"),
-        action,
-    )
-
-    return response
+    return build_protected_file_response(document.file, filename=filename, as_attachment=as_attachment)
 
 
 @staff_required_view
-def document_preview(request, doc_id):
+def document_preview(request: HttpRequest, doc_id: int) -> HttpResponseBase:
     return _serve_document_file(request, doc_id, as_attachment=False)
 
 
 @staff_required_view
-def document_download(request, doc_id):
+def document_download(request: HttpRequest, doc_id: int) -> HttpResponseBase:
     return _serve_document_file(request, doc_id, as_attachment=True)
 
 
-
-
 @staff_required_view
-def client_status_api(request, pk):
+def client_status_api(request: HttpRequest, pk: int) -> HttpResponseBase:
     """Return the latest client checklist as JSON for AJAX refreshes."""
 
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
@@ -398,7 +379,7 @@ def client_status_api(request, pk):
 
 
 @staff_required_view
-def client_overview_partial(request, pk):
+def client_overview_partial(request: HttpRequest, pk: int) -> HttpResponseBase:
     """Return the rendered client overview partial for AJAX refreshes."""
 
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
@@ -423,7 +404,7 @@ def client_overview_partial(request, pk):
 
 
 @staff_required_view
-def client_checklist_partial(request, pk):
+def client_checklist_partial(request: HttpRequest, pk: int) -> HttpResponseBase:
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
     document_status_list = client.get_document_checklist(check_file_existence=True)
     response = render(
@@ -438,7 +419,7 @@ def client_checklist_partial(request, pk):
 
 
 @role_or_feature_required_view("can_run_ocr_review", "Admin", "Manager")
-def get_document_parsed_data(request, doc_id):
+def get_document_parsed_data(request: HttpRequest, doc_id: int) -> HttpResponseBase:
     document = (
         Document.objects.select_related("client")
         .filter(
@@ -448,8 +429,8 @@ def get_document_parsed_data(request, doc_id):
         .first()
     )
     if document is None:
-        return JsonResponse({"error": _("Document not found.")}, status=404)
+        return JsonResponse({"error": str(_("Document not found."))}, status=404)
     if not document.awaiting_confirmation:
-        return JsonResponse({"error": _("Document is not awaiting confirmation.")}, status=400)
+        return JsonResponse({"error": str(_("Document is not awaiting confirmation."))}, status=400)
 
     return JsonResponse({"parsed_data": document.parsed_data or {}})

@@ -1,27 +1,36 @@
+from __future__ import annotations
+
 import re
+from typing import Any, Callable
+
 from django.conf import settings
+from django.http import HttpRequest, HttpResponse
 from django.urls import reverse
 from django.utils import translation
+
 from clients.services.roles import user_has_any_role
 
 # TAG_PATTERN is for matching [[i18n:Key]]Text[[/i18n]] in final HTML
 TAG_PATTERN = re.compile(r'\[\[i18n:(?P<msgid>.*?)\]\](?P<text>.*?)\[\[/i18n\]\]', re.DOTALL | re.IGNORECASE)
 
 class TranslationStudioMiddleware:
-    def __init__(self, get_response):
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]):
         self.get_response = get_response
         # Patching is now handled in apps.py ready() for better coverage
 
-    def __call__(self, request):
+    def __call__(self, request: HttpRequest) -> HttpResponse:
         # 1. Determine if Studio Mode is active
         # Visible to superusers or dedicated translation roles with session flag or 'studio' in GET.
-        can_use_studio = request.user.is_authenticated and (
-            request.user.is_superuser or user_has_any_role(request.user, "Admin", "Translator")
+        user = getattr(request, "user", None)
+        session = getattr(request, "session", {})
+        
+        can_use_studio = user and getattr(user, "is_authenticated", False) and (
+            getattr(user, "is_superuser", False) or user_has_any_role(user, "Admin", "Translator")
         )
-        studio_active = can_use_studio and (request.session.get('studio_mode') or 'studio' in request.GET)
+        studio_active = bool(can_use_studio and (session.get('studio_mode') or 'studio' in request.GET))
 
         # 2. Store state globally for current thread (gettext monkey-patches use this)
-        translation._studio_active = studio_active
+        setattr(translation, '_studio_active', studio_active)
 
         response = self.get_response(request)
 
@@ -40,7 +49,7 @@ class TranslationStudioMiddleware:
         return response
 
     @staticmethod
-    def _inject_overlay_script(response):
+    def _inject_overlay_script(response: HttpResponse) -> None:
         if getattr(response, "streaming", False):
             return
 

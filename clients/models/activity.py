@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -48,7 +50,7 @@ class ClientActivity(models.Model):
     event_type = models.CharField(max_length=50, choices=EVENT_TYPE_CHOICES, verbose_name=_("Тип события"))
     summary = models.CharField(max_length=255, verbose_name=_("Краткое описание"))
     details = models.TextField(blank=True, verbose_name=_("Детали"))
-    metadata = models.JSONField(default=dict, blank=True, verbose_name=_("Метаданные"))
+    metadata: models.JSONField[dict[str, Any]] = models.JSONField(default=dict, blank=True, verbose_name=_("Метаданные"))
     document = models.ForeignKey(
         "clients.Document",
         null=True,
@@ -83,7 +85,7 @@ class ClientActivity(models.Model):
             models.Index(fields=["client", "-created_at"], name="activity_client_created_idx"),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"[{self.created_at:%d.%m.%Y %H:%M}] {self.summary}"
 
     @property

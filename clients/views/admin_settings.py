@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from django.contrib import messages
 from django.db.models import Sum
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -28,7 +30,7 @@ class AdminPanelView(RoleRequiredMixin, TemplateView):
     template_name = "clients/admin_panel.html"
     allowed_roles = list(ADMIN_PANEL_ALLOWED_ROLES)
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         today = timezone.localdate()
         upcoming_cutoff = today + timedelta(days=30)
@@ -87,10 +89,10 @@ class AppSettingsUpdateView(RoleRequiredMixin, UpdateView):
     success_url = reverse_lazy("clients:app_settings")
     allowed_roles = list(SETTINGS_ALLOWED_ROLES)
 
-    def get_object(self, queryset=None):
+    def get_object(self, queryset: Any = None) -> AppSettings:
         return AppSettings.get_solo()
 
-    def form_valid(self, form):
+    def form_valid(self, form: AppSettingsForm) -> HttpResponse:
         messages.success(self.request, _("Настройки шаблона wniosek сохранены."))
         return super().form_valid(form)
 
@@ -101,7 +103,7 @@ class DocumentTemplateHubView(RoleRequiredMixin, TemplateView):
 
 
 @role_required_view(*SETTINGS_ALLOWED_ROLES)
-def service_price_manage_view(request):
+def service_price_manage_view(request: HttpRequest) -> HttpResponse:
     existing_by_code = {item.service_code: item for item in ServicePrice.objects.all()}
     forms = []
 
@@ -153,7 +155,7 @@ def service_price_manage_view(request):
 
 
 @role_required_view(*SETTINGS_ALLOWED_ROLES)
-def submission_manage_view(request):
+def submission_manage_view(request: HttpRequest) -> HttpResponse:
     submissions = list(Submission.objects.all().order_by("-created_at"))
     edit_forms = [
         (submission, SubmissionForm(instance=submission, prefix=f"submission-{submission.id}"))

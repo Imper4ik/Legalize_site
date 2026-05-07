@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from typing import Any
 
 from django.conf import settings
 from django.core.checks import Error, Warning, register
@@ -60,14 +61,14 @@ def _smtp_provider() -> str:
 
 
 @register("legalize_site")
-def email_configuration_check(app_configs=None, **kwargs):
+def email_configuration_check(app_configs: Any = None, **kwargs: Any) -> list[Error | Warning]:
     """Validate the production email settings."""
 
     provider = None
     env_var = None
     mode = None
 
-    messages = []
+    messages: list[Error | Warning] = []
 
     if settings.EMAIL_BACKEND == "django.core.mail.backends.console.EmailBackend":
         messages.append(
@@ -81,7 +82,7 @@ def email_configuration_check(app_configs=None, **kwargs):
         )
 
         default_from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "")
-        if default_from_email.endswith("yourdomain.tld"):
+        if str(default_from_email).endswith("yourdomain.tld"):
             messages.append(
                 Warning(
                     "DEFAULT_FROM_EMAIL still uses the placeholder domain 'yourdomain.tld'.",
@@ -107,26 +108,26 @@ def email_configuration_check(app_configs=None, **kwargs):
             env_var = "EMAIL_HOST_PASSWORD"
         mode = "smtp"
     else:
-        backend = BACKENDS.get(settings.EMAIL_BACKEND)
+        backend = BACKENDS.get(str(settings.EMAIL_BACKEND))
         if not backend:
             return []
         provider = backend["provider"]
         env_var = backend["env_var"]
         mode = backend["mode"]
 
-    host_label = settings.EMAIL_HOST or "the SMTP host"
-    provider_label = provider or "Email"
+    host_label = str(settings.EMAIL_HOST or "the SMTP host")
+    provider_label = str(provider or "Email")
     if provider_label == "custom":
         provider_label = "SMTP"
 
     if mode == "api":
-        api_key = getattr(settings, "ANYMAIL", {}).get(env_var) or os.getenv(env_var)
+        api_key = getattr(settings, "ANYMAIL", {}).get(str(env_var)) or os.getenv(str(env_var))
         hint = (
             f"Set the {env_var} environment variable so the anymail {provider_label} backend can authenticate against the provider API."
         )
         provider_label = f"{provider_label} API key"
     else:
-        api_key = getattr(settings, "EMAIL_HOST_PASSWORD", None) or os.getenv(env_var)
+        api_key = getattr(settings, "EMAIL_HOST_PASSWORD", None) or os.getenv(str(env_var))
         hint = (
             f"Set the {env_var} environment variable or provide a value for settings.EMAIL_HOST_PASSWORD so Django can authenticate with {host_label}."
         )
@@ -142,7 +143,7 @@ def email_configuration_check(app_configs=None, **kwargs):
         )
 
     default_from_email = getattr(settings, "DEFAULT_FROM_EMAIL", "")
-    if default_from_email.endswith("yourdomain.tld"):
+    if str(default_from_email).endswith("yourdomain.tld"):
         messages.append(
             Warning(
                 "DEFAULT_FROM_EMAIL still uses the placeholder domain 'yourdomain.tld'.",
@@ -157,10 +158,10 @@ def email_configuration_check(app_configs=None, **kwargs):
 
 
 @register("legalize_site")
-def encryption_configuration_check(app_configs=None, **kwargs):
+def encryption_configuration_check(app_configs: Any = None, **kwargs: Any) -> list[Error | Warning]:
     """Validate secret and encryption key configuration."""
 
-    messages = []
+    messages: list[Error | Warning] = []
     placeholder_secret = "django-insecure-change-me"  # nosec B105
     secret_key = getattr(settings, "SECRET_KEY", "")
     is_production = getattr(settings, "IS_PRODUCTION", False)
@@ -210,10 +211,10 @@ def encryption_configuration_check(app_configs=None, **kwargs):
 
 
 @register("legalize_site")
-def runtime_dependency_check(app_configs=None, **kwargs):
+def runtime_dependency_check(app_configs: Any = None, **kwargs: Any) -> list[Error | Warning]:
     """Surface missing OCR/backup/runtime tooling as Django warnings."""
 
-    messages = []
+    messages: list[Error | Warning] = []
     for dependency in collect_runtime_dependency_statuses():
         if dependency["available"]:
             continue
@@ -228,8 +229,8 @@ def runtime_dependency_check(app_configs=None, **kwargs):
 
 
 @register("legalize_site")
-def rate_limit_cache_check(app_configs=None, **kwargs):
-    messages = []
+def rate_limit_cache_check(app_configs: Any = None, **kwargs: Any) -> list[Error | Warning]:
+    messages: list[Error | Warning] = []
     if not getattr(settings, "IS_PRODUCTION", False):
         return messages
 
@@ -256,8 +257,8 @@ def rate_limit_cache_check(app_configs=None, **kwargs):
 
 
 @register("legalize_site")
-def production_storage_safety_check(app_configs=None, **kwargs):
-    messages = []
+def production_storage_safety_check(app_configs: Any = None, **kwargs: Any) -> list[Error | Warning]:
+    messages: list[Error | Warning] = []
     is_production = getattr(settings, "IS_PRODUCTION", False)
     if not is_production:
         return messages
@@ -288,7 +289,7 @@ def production_storage_safety_check(app_configs=None, **kwargs):
             )
         )
     else:
-        backup_alias = getattr(settings, "BACKUP_STORAGE_ALIAS", "backups")
+        backup_alias = str(getattr(settings, "BACKUP_STORAGE_ALIAS", "backups"))
         storages_config = getattr(settings, "STORAGES", {})
         backup_config = storages_config.get(backup_alias, {})
         if not backup_config:
@@ -315,8 +316,8 @@ def production_storage_safety_check(app_configs=None, **kwargs):
 
 
 @register("legalize_site")
-def cron_allowed_ips_check(app_configs=None, **kwargs):
-    messages = []
+def cron_allowed_ips_check(app_configs: Any = None, **kwargs: Any) -> list[Error | Warning]:
+    messages: list[Error | Warning] = []
     is_production = getattr(settings, "IS_PRODUCTION", False)
     if not is_production:
         return messages
@@ -334,8 +335,8 @@ def cron_allowed_ips_check(app_configs=None, **kwargs):
 
 
 @register("legalize_site")
-def cron_token_check(app_configs=None, **kwargs):
-    messages = []
+def cron_token_check(app_configs: Any = None, **kwargs: Any) -> list[Error | Warning]:
+    messages: list[Error | Warning] = []
     if not getattr(settings, "IS_PRODUCTION", False):
         return messages
 
@@ -351,8 +352,8 @@ def cron_token_check(app_configs=None, **kwargs):
 
 
 @register("legalize_site")
-def upload_policy_check(app_configs=None, **kwargs):
-    messages = []
+def upload_policy_check(app_configs: Any = None, **kwargs: Any) -> list[Error | Warning]:
+    messages: list[Error | Warning] = []
     max_upload_mb = int(getattr(settings, "MAX_UPLOAD_SIZE_MB", 0) or 0)
     if max_upload_mb <= 0:
         messages.append(

@@ -7,7 +7,7 @@ from django.apps import AppConfig
 logger = logging.getLogger(__name__)
 
 
-def _compile_translations():
+def _compile_translations() -> None:
     """Compile translation catalogs so document names render in all locales.
 
     Some environments lack gettext binaries and cannot rely on compiled ``.mo``
@@ -38,7 +38,7 @@ class ClientsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'clients'
 
-    def ready(self):
+    def ready(self) -> None:
         # Этот импорт для регистрации сигналов
         import clients.signals  # noqa: F401
 

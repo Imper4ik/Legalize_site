@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from typing import Any, TYPE_CHECKING
 
 from django.contrib import messages
+from django.db.models import QuerySet
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
@@ -21,16 +24,19 @@ from clients.views.base import RoleOrFeatureRequiredMixin, role_or_feature_requi
 from submissions.forms import SubmissionForm
 from submissions.models import Submission
 
+if TYPE_CHECKING:
+    from django.http.response import HttpResponseBase
+
 
 FAMILY_CHECKLIST_PURPOSES = (
     SimpleNamespace(
         slug="family_spouse",
-        localized_name=_("Воссоединение — супруг/супруга"),
+        localized_name=str(_("Воссоединение — супруг/супруга")),
         is_system=True,
     ),
     SimpleNamespace(
         slug="family_child",
-        localized_name=_("Воссоединение — ребёнок"),
+        localized_name=str(_("Воссоединение — ребёнок")),
         is_system=True,
     ),
 )
@@ -73,7 +79,7 @@ class DocumentChecklistManageView(RoleOrFeatureRequiredMixin, FormView):
         ]
 
     @staticmethod
-    def _submission_queryset():
+    def _submission_queryset() -> QuerySet[Submission]:
         return Submission.objects.exclude(slug__in=Client.FAMILY_MEMBER_REQUIREMENT_PURPOSES)
 
     def _allowed_purposes(self) -> list[str]:
@@ -85,15 +91,15 @@ class DocumentChecklistManageView(RoleOrFeatureRequiredMixin, FormView):
         requested = self.request.GET.get("purpose") or self.request.POST.get("purpose")
         allowed = self._allowed_purposes()
         if requested in allowed:
-            return requested
+            return str(requested)
         return allowed[0] if allowed else ""
 
-    def get_form_kwargs(self):
+    def get_form_kwargs(self) -> dict[str, Any]:
         kwargs = super().get_form_kwargs()
         kwargs["purpose"] = self.get_purpose()
         return kwargs
 
-    def form_valid(self, form):
+    def form_valid(self, form: DocumentChecklistForm) -> HttpResponse:
         updated = form.save()
         messages.success(
             self.request,
@@ -101,10 +107,10 @@ class DocumentChecklistManageView(RoleOrFeatureRequiredMixin, FormView):
         )
         return super().form_valid(form)
 
-    def get_success_url(self):
-        return reverse_lazy("clients:document_checklist_manage") + f"?purpose={self.get_purpose()}"
+    def get_success_url(self) -> str:
+        return str(reverse_lazy("clients:document_checklist_manage") + f"?purpose={self.get_purpose()}")
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         purpose = self.get_purpose()
         submissions = list(self._submission_queryset())
@@ -140,7 +146,7 @@ class DocumentChecklistManageView(RoleOrFeatureRequiredMixin, FormView):
 
 
 @role_or_feature_required_view("can_manage_checklists", *CHECKLIST_MANAGE_ROLES)
-def document_requirement_add(request):
+def document_requirement_add(request: HttpRequest) -> HttpResponse:
     purpose = request.POST.get("purpose") or request.GET.get("purpose")
     reserved = Client.FAMILY_MEMBER_REQUIREMENT_PURPOSES
     allowed = list(Submission.objects.exclude(slug__in=reserved).values_list("slug", flat=True))
@@ -148,7 +154,7 @@ def document_requirement_add(request):
     if purpose not in allowed and allowed:
         purpose = allowed[0]
 
-    form = DocumentRequirementAddForm(request.POST or None, purpose=purpose)
+    form = DocumentRequirementAddForm(request.POST or None, purpose=str(purpose))
     if request.method == "POST":
         if form.is_valid():
             requirement = form.save()
@@ -163,11 +169,11 @@ def document_requirement_add(request):
                 _("Не удалось добавить документ. Проверьте форму."),
             )
 
-    return redirect(reverse_lazy("clients:document_checklist_manage") + f"?purpose={purpose}")
+    return redirect(str(reverse_lazy("clients:document_checklist_manage") + f"?purpose={purpose}"))
 
 
 @role_or_feature_required_view("can_manage_checklists", *CHECKLIST_MANAGE_ROLES)
-def document_requirement_edit(request, pk):
+def document_requirement_edit(request: HttpRequest, pk: int) -> HttpResponse:
     requirement = get_object_or_404(DocumentRequirement, pk=pk)
     form = DocumentRequirementEditForm(
         request.POST or None,
@@ -193,11 +199,11 @@ def document_requirement_edit(request, pk):
                 _("Не удалось сохранить изменения. Проверьте форму."),
             )
 
-    return redirect(reverse_lazy("clients:document_checklist_manage") + f"?purpose={requirement.application_purpose}")
+    return redirect(str(reverse_lazy("clients:document_checklist_manage") + f"?purpose={requirement.application_purpose}"))
 
 
 @role_or_feature_required_view("can_manage_checklists", *CHECKLIST_MANAGE_ROLES)
-def document_requirement_delete(request, pk):
+def document_requirement_delete(request: HttpRequest, pk: int) -> HttpResponse:
     requirement = get_object_or_404(DocumentRequirement, pk=pk)
 
     if request.method == "POST":
@@ -206,7 +212,7 @@ def document_requirement_delete(request, pk):
             request,
             _("Документ удалён: %(name)s.") % {"name": result.requirement_name},
         )
-        return redirect(reverse_lazy("clients:document_checklist_manage") + f"?purpose={result.purpose}")
+        return redirect(str(reverse_lazy("clients:document_checklist_manage") + f"?purpose={result.purpose}"))
 
     messages.error(request, _("Удаление доступно только через POST-запрос."))
-    return redirect(reverse_lazy("clients:document_checklist_manage"))
+    return redirect(str(reverse_lazy("clients:document_checklist_manage")))

@@ -1,4 +1,7 @@
 """Template filters for enriching form widgets with CSS classes and placeholders."""
+from __future__ import annotations
+
+from typing import Any
 
 from django import template
 
@@ -6,7 +9,7 @@ register = template.Library()
 
 
 @register.filter(name="add_class")
-def add_class(field, css_class):
+def add_class(field: Any, css_class: str) -> Any:
     """Return the field rendered with an extra CSS class."""
     if hasattr(field, "as_widget"):
         attrs = field.field.widget.attrs.copy() if hasattr(field, "field") else {}
@@ -17,7 +20,7 @@ def add_class(field, css_class):
 
 
 @register.filter(name="add_placeholder")
-def add_placeholder(field, placeholder_text):
+def add_placeholder(field: Any, placeholder_text: str) -> Any:
     """Return the field rendered with a placeholder attribute."""
     if hasattr(field, "as_widget"):
         attrs = field.field.widget.attrs.copy() if hasattr(field, "field") else {}
@@ -27,7 +30,7 @@ def add_placeholder(field, placeholder_text):
 
 
 @register.filter(name="get_item")
-def get_item(mapping, key):
+def get_item(mapping: Any, key: Any) -> Any:
     """Safely fetch a dictionary item in templates."""
 
     if isinstance(mapping, dict):

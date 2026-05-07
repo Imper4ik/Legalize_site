@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import logging
+from typing import Any, cast, TYPE_CHECKING
 
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save, pre_save
@@ -9,31 +12,35 @@ from django.utils.translation import gettext as _
 from clients.services.activity import log_client_activity
 from .models import Client, Document, EmailLog, EmployeePermission, Payment, Reminder
 
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
+
 logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=get_user_model())
-def ensure_employee_permissions_for_staff(sender, instance, created, **kwargs):
+def ensure_employee_permissions_for_staff(sender: Any, instance: Any, created: bool, **kwargs: Any) -> None:
     if not getattr(instance, "is_staff", False):
         return
     EmployeePermission.objects.get_or_create(user=instance)
 
 
 @receiver(pre_save, sender=EmailLog)
-def remember_previous_email_delivery_status(sender, instance, **kwargs):
+def remember_previous_email_delivery_status(sender: Any, instance: EmailLog, **kwargs: Any) -> None:
     if not instance.pk:
-        instance._previous_delivery_status = None
+        setattr(instance, "_previous_delivery_status", None)
         return
 
-    instance._previous_delivery_status = (
+    prev_status = (
         EmailLog.objects.filter(pk=instance.pk)
         .values_list("delivery_status", flat=True)
         .first()
     )
+    setattr(instance, "_previous_delivery_status", prev_status)
 
 
 @receiver(post_save, sender=Payment)
-def sync_payment_reminder_on_save(sender, instance, **kwargs):
+def sync_payment_reminder_on_save(sender: Any, instance: Payment, **kwargs: Any) -> None:
     if getattr(instance, "archived_at", None):
         Reminder.objects.filter(payment=instance).update(is_active=False)
         return
@@ -61,7 +68,7 @@ def sync_payment_reminder_on_save(sender, instance, **kwargs):
 
 
 @receiver(pre_save, sender=Payment)
-def deactivate_payment_reminders_on_archive(sender, instance, **kwargs):
+def deactivate_payment_reminders_on_archive(sender: Any, instance: Payment, **kwargs: Any) -> None:
     if not instance.pk or not getattr(instance, "archived_at", None):
         return
     try:
@@ -73,7 +80,7 @@ def deactivate_payment_reminders_on_archive(sender, instance, **kwargs):
 
 
 @receiver(pre_save, sender=Client)
-def deactivate_user_account_when_client_archived(sender, instance, **kwargs):
+def deactivate_user_account_when_client_archived(sender: Any, instance: Client, **kwargs: Any) -> None:
     if not instance.pk or not instance.user_id or not getattr(instance, "archived_at", None):
         return
 
@@ -99,7 +106,7 @@ def deactivate_user_account_when_client_archived(sender, instance, **kwargs):
 
 
 @receiver(pre_save, sender=Client)
-def sync_payment_service_check(sender, instance, **kwargs):
+def sync_payment_service_check(sender: Any, instance: Client, **kwargs: Any) -> None:
     if not instance.pk:
         return
 
@@ -123,7 +130,7 @@ def sync_payment_service_check(sender, instance, **kwargs):
 
 
 @receiver(pre_save, sender=Document)
-def compress_document_image_on_upload(sender, instance, **kwargs):
+def compress_document_image_on_upload(sender: Any, instance: Document, **kwargs: Any) -> None:
     from clients.services.image_compression import compress_uploaded_file, should_compress
 
     if not instance.file:
@@ -142,7 +149,8 @@ def compress_document_image_on_upload(sender, instance, **kwargs):
     if not (is_new_upload or file_changed):
         return
 
-    if not should_compress(instance.file.name):
+    file_name = str(instance.file.name or "")
+    if not should_compress(file_name):
         return
 
     try:
@@ -158,7 +166,7 @@ def compress_document_image_on_upload(sender, instance, **kwargs):
 
 
 @receiver(post_save, sender=EmailLog)
-def create_activity_for_email_log(sender, instance, created, **kwargs):
+def create_activity_for_email_log(sender: Any, instance: EmailLog, created: bool, **kwargs: Any) -> None:
     if not instance.client_id:
         return
 
@@ -169,14 +177,15 @@ def create_activity_for_email_log(sender, instance, created, **kwargs):
     if not created and previous_status == EmailLog.DELIVERY_STATUS_SENT:
         return
 
-    log_client_activity(
-        client=instance.client,
-        actor=instance.sent_by,
-        event_type="email_sent",
-        summary=f"Отправлено письмо: {instance.subject}",
-        metadata={
-            "email_log_id": instance.pk,
-            "template_type": instance.template_type,
-            "recipients_count": len([item for item in (instance.recipients or "").split(",") if item.strip()]),
-        },
-    )
+    if instance.client:
+        log_client_activity(
+            client=instance.client,
+            actor=instance.sent_by,
+            event_type="email_sent",
+            summary=f"Отправлено письмо: {instance.subject}",
+            metadata={
+                "email_log_id": instance.pk,
+                "template_type": instance.template_type,
+                "recipients_count": len([item for item in (instance.recipients or "").split(",") if item.strip()]),
+            },
+        )

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Any, Iterable, TYPE_CHECKING, cast
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -10,6 +10,9 @@ from django.utils import timezone
 
 from clients.models import Client, EmailCampaign
 from clients.services.notifications import _log_email, _send_confirmation_email, build_email_idempotency_key
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
 logger = logging.getLogger(__name__)
 
@@ -42,19 +45,22 @@ def queue_mass_email_campaign(
     subject: str,
     message: str,
     recipient_emails: Iterable[str],
-    created_by=None,
-    filters_snapshot: dict | None = None,
+    created_by: AbstractBaseUser | AnonymousUser | None = None,
+    filters_snapshot: dict[str, Any] | None = None,
 ) -> EmailCampaign:
     normalized_recipients = normalize_recipient_emails(recipient_emails)
     if not normalized_recipients:
         raise ValueError("Mass email campaign requires at least one recipient")
+
+    # AnonymousUser cannot be assigned to ForeignKey
+    creator = created_by if created_by and created_by.is_authenticated else None
 
     campaign = EmailCampaign(
         subject=subject,
         message=message,
         total_recipients=len(normalized_recipients),
         filters_snapshot=filters_snapshot or {},
-        created_by=created_by,
+        created_by=cast(Any, creator),
     )
     campaign.set_recipient_emails(normalized_recipients)
     campaign.save()

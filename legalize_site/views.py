@@ -1,9 +1,12 @@
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from django.db import connection
 from django.conf import settings
 from django.core.cache import cache
-from django.http import JsonResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils.translation import gettext as _
 
@@ -14,19 +17,20 @@ from legalize_site.utils.http import request_is_ajax
 logger = logging.getLogger(__name__)
 
 
-def healthcheck(request):
+def healthcheck(request: HttpRequest) -> HttpResponse:
     try:
         connection.ensure_connection()
         db_status = "ok"
     except Exception:
         db_status = "error"
 
-    payload = {"status": "ok", "database": db_status}
+    payload: dict[str, Any] = {"status": "ok", "database": db_status}
 
+    user = getattr(request, "user", None)
     show_details = (
         request.GET.get("details") == "1"
-        and getattr(getattr(request, "user", None), "is_authenticated", False)
-        and getattr(request.user, "is_staff", False)
+        and user and getattr(user, "is_authenticated", False)
+        and getattr(user, "is_staff", False)
     )
     if show_details:
         payload["queues"] = {
@@ -42,15 +46,16 @@ def healthcheck(request):
     return JsonResponse(payload, status=200 if db_status == "ok" else 503)
 
 
-def readiness(request):
-    components = {}
+def readiness(request: HttpRequest) -> HttpResponse:
+    components: dict[str, Any] = {}
     overall_ok = True
+    user = getattr(request, "user", None)
     show_details = (
         getattr(settings, "DEBUG", False)
         or (
             request.GET.get("details") == "1"
-            and getattr(getattr(request, "user", None), "is_authenticated", False)
-            and getattr(request.user, "is_staff", False)
+            and user and getattr(user, "is_authenticated", False)
+            and getattr(user, "is_staff", False)
         )
     )
 
@@ -87,44 +92,44 @@ def readiness(request):
 
     runtime = runtime_dependency_summary()
     components["runtime"] = {
-        "status": runtime["status"],
-        "missing_count": runtime["missing_count"],
-        "missing_keys": runtime["missing_keys"],
+        "status": str(runtime["status"]),
+        "missing_count": int(runtime["missing_count"]),
+        "missing_keys": list(runtime["missing_keys"]),
     }
 
-    payload = {"status": "ok" if overall_ok else "degraded"}
+    payload: dict[str, Any] = {"status": "ok" if overall_ok else "degraded"}
     if show_details:
         payload["components"] = components
     return JsonResponse(payload, status=200 if overall_ok else 503)
 
 
-def csrf_failure(request, reason="", template_name="403.html"):
+def csrf_failure(request: HttpRequest, reason: str = "", template_name: str = "403.html") -> HttpResponse:
     is_ajax = request_is_ajax(request)
+    user = getattr(request, "user", None)
     logger.warning(
         "CSRF failure on %s %s (ajax=%s, authenticated=%s): %s",
         request.method,
         request.path,
         is_ajax,
-        getattr(getattr(request, "user", None), "is_authenticated", False),
+        user and getattr(user, "is_authenticated", False),
         reason,
     )
 
     if is_ajax:
         payload = {
             "status": "error",
-            "message": _("Сессия истекла или защитный токен недействителен. Обновите страницу и повторите действие."),
+            "message": str(_("Сессия истекла или защитный токен недействителен. Обновите страницу и повторите действие.")),
             "reason": reason,
         }
-        response = JsonResponse(
+        json_response = JsonResponse(
             payload,
             status=403,
         )
-        response.json = lambda: payload
-        response["Cache-Control"] = "no-store, no-cache, must-revalidate"
-        response["Pragma"] = "no-cache"
-        return response
+        json_response["Cache-Control"] = "no-store, no-cache, must-revalidate"
+        json_response["Pragma"] = "no-cache"
+        return json_response
 
-    response = render(
+    html_response = render(
         request,
         template_name,
         {
@@ -136,6 +141,6 @@ def csrf_failure(request, reason="", template_name="403.html"):
         },
         status=403,
     )
-    response["Cache-Control"] = "no-store, no-cache, must-revalidate"
-    response["Pragma"] = "no-cache"
-    return response
+    html_response["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    html_response["Pragma"] = "no-cache"
+    return html_response

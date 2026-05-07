@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from clients.models import DocumentRequirement
 
+if TYPE_CHECKING:
+    from clients.models.client import Client
 
 WORKFLOW_SEQUENCE = (
     "new_client",
@@ -22,7 +25,7 @@ class WorkflowValidationResult:
     message: str = ""
 
 
-def validate_client_workflow_transition(*, client, previous_stage: str | None, next_stage: str | None) -> WorkflowValidationResult:
+def validate_client_workflow_transition(*, client: Client, previous_stage: str | None, next_stage: str | None) -> WorkflowValidationResult:
     if not previous_stage or not next_stage or previous_stage == next_stage:
         return WorkflowValidationResult(True)
 

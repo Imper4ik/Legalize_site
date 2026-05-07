@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from django.core.files import File
 from django.core.files.storage import FileSystemStorage
@@ -19,14 +20,14 @@ class FileFieldRef:
 class Command(BaseCommand):
     help = "Copy existing local media files into PostgreSQL-backed media storage."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
             "--dry-run",
             action="store_true",
             help="Report what would be copied without writing database media rows.",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         from clients.models import Document as ClientDocument
         from clients.models import DocumentVersion
         from submissions.models import Document as SubmissionDocument

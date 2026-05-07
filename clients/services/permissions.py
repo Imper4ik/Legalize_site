@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 from functools import wraps
+from typing import Any, Callable, TYPE_CHECKING
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
+from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
 from django.utils.translation import gettext as _
 
 from clients.services.access import is_internal_staff_user
 from clients.services.responses import ResponseHelper
 from clients.services.roles import user_has_any_role
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
 EMPLOYEE_PERMISSION_FIELDS = {
     "can_manage_payments",
@@ -36,8 +40,8 @@ READONLY_BLOCKED_PERMISSION_FIELDS = {
 }
 
 
-def has_employee_permission(user, permission_name: str) -> bool:
-    if not getattr(user, "is_authenticated", False):
+def has_employee_permission(user: AbstractBaseUser | AnonymousUser | None, permission_name: str) -> bool:
+    if user is None or not getattr(user, "is_authenticated", False):
         return False
     if getattr(user, "is_superuser", False):
         return True
@@ -56,11 +60,11 @@ def has_employee_permission(user, permission_name: str) -> bool:
     return bool(getattr(permission_object, permission_name, False))
 
 
-def feature_permission_required(permission_name: str):
-    def decorator(view_func):
+def feature_permission_required(permission_name: str) -> Callable[[Callable[..., HttpResponse]], Callable[..., HttpResponse]]:
+    def decorator(view_func: Callable[..., HttpResponse]) -> Callable[..., HttpResponse]:
         @wraps(view_func)
         @login_required
-        def _wrapped(request, *args, **kwargs):
+        def _wrapped(request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
             if not has_employee_permission(request.user, permission_name):
                 helper = ResponseHelper(request)
                 if helper.expects_json:

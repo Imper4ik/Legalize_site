@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from django.contrib import messages
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext as _
 
@@ -19,7 +20,7 @@ from clients.views.base import role_required_view
 
 
 @role_required_view("Admin", "Manager")
-def restore_client_view(request, pk):
+def restore_client_view(request: HttpRequest, pk: int) -> HttpResponse:
     if request.method != "POST":
         return redirect("clients:client_list")
 
@@ -34,7 +35,7 @@ def restore_client_view(request, pk):
 
 
 @role_required_view("Admin", "Manager")
-def restore_document_view(request, pk):
+def restore_document_view(request: HttpRequest, pk: int) -> HttpResponse:
     if request.method != "POST":
         return redirect("clients:client_list")
 
@@ -49,7 +50,7 @@ def restore_document_view(request, pk):
 
 
 @role_required_view("Admin", "Manager")
-def restore_payment_view(request, pk):
+def restore_payment_view(request: HttpRequest, pk: int) -> HttpResponse:
     if request.method != "POST":
         return redirect("clients:client_list")
 

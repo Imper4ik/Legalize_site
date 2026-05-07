@@ -1,14 +1,22 @@
+from __future__ import annotations
+
 from datetime import date
 from pathlib import Path
+from typing import Any, cast, TYPE_CHECKING
 from uuid import uuid4
 
+from django.conf import settings
 from django.db import models
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
-from django.conf import settings
+
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.validators import validate_uploaded_document
 from legalize_site.soft_delete import SoftDeleteModel
+
+if TYPE_CHECKING:
+    from clients.models.client import Client
+
 
 DOCUMENT_TYPE_VALUES = {choice.value for choice in DocumentType}
 DOCUMENT_LABEL_ALIASES: dict[str, list[str]] = {}
@@ -16,15 +24,16 @@ PARSED_DATA_PII_KEYS = {"full_name", "first_name", "last_name", "case_number", "
 PARSED_DATA_RAW_TEXT_KEYS = {"text", "raw_text"}
 
 
-def document_upload_path(_instance, filename: str) -> str:
+def document_upload_path(_instance: Document, filename: str) -> str:
     """Store uploaded documents without preserving user-provided filenames."""
 
     suffix = Path(filename or "").suffix.lower() or ".bin"
     return f"documents/{uuid4().hex}{suffix}"
 
 
-def _normalize_document_label(value: str) -> str:
+def _normalize_document_label(value: Any) -> str:
     return " ".join(str(value).split()).casefold()
+
 
 def _document_label_variants(doc_type: str) -> set[str]:
     if doc_type not in DOCUMENT_TYPE_VALUES:
@@ -39,6 +48,7 @@ def _document_label_variants(doc_type: str) -> set[str]:
         variants.add(_normalize_document_label(alias))
     return {variant for variant in variants if variant}
 
+
 def is_default_document_label(name: str, doc_type: str) -> bool:
     if doc_type not in DOCUMENT_TYPE_VALUES:
         return False
@@ -46,6 +56,7 @@ def is_default_document_label(name: str, doc_type: str) -> bool:
     if not normalized:
         return False
     return normalized in _document_label_variants(doc_type)
+
 
 def _select_custom_document_name(*, doc_type: str, custom_name: str | None = None, custom_name_pl: str | None = None, custom_name_en: str | None = None, custom_name_ru: str | None = None, language: str | None = None) -> str | None:
     lang = (language or translation.get_language() or "").split("-")[0].lower()
@@ -57,7 +68,8 @@ def _select_custom_document_name(*, doc_type: str, custom_name: str | None = Non
             return custom_name
     return None
 
-def translate_document_name(name: str, language: str | None = None) -> str:
+
+def translate_document_name(name: Any, language: str | None = None) -> str:
     source = str(getattr(name, "_args", [name])[0])
     lang = language or translation.get_language()
     if not lang:
@@ -83,14 +95,16 @@ def resolve_document_label(doc_type: str, custom_name: str | None = None, custom
         return translate_document_name(DocumentType(doc_type).label, language)
     return doc_type.replace('_', ' ').capitalize()
 
-def get_fallback_document_checklist(purpose: str, language: str | None = None):
+
+def get_fallback_document_checklist(purpose: str, language: str | None = None) -> list[tuple[str, Any]]:
     checklist_key = (purpose, language)
     if checklist_key in DOCUMENT_CHECKLIST:
-        return DOCUMENT_CHECKLIST[checklist_key]
+        return cast(list[tuple[str, Any]], DOCUMENT_CHECKLIST[checklist_key])
     for (stored_purpose, _lang), documents in DOCUMENT_CHECKLIST.items():
         if stored_purpose == purpose:
-            return documents
+            return cast(list[tuple[str, Any]], documents)
     return []
+
 
 def get_available_document_types(purpose: str | None = None) -> set[str]:
     types = set(DOCUMENT_TYPE_VALUES)
@@ -99,6 +113,7 @@ def get_available_document_types(purpose: str | None = None) -> set[str]:
         queryset = queryset.filter(application_purpose=purpose)
     types.update(queryset.values_list("document_type", flat=True))
     return types
+
 
 class Document(SoftDeleteModel):
     OCR_STATUS_CHOICES = [
@@ -132,11 +147,16 @@ class Document(SoftDeleteModel):
         default=False,
         verbose_name=_("Несовпадение имени OCR"),
     )
-    parsed_data = models.JSONField(
+    parsed_data: models.JSONField[dict[str, Any]] = models.JSONField(
         null=True,
         blank=True,
         verbose_name=_("Распознанные данные"),
     )
+
+    if TYPE_CHECKING:
+        _preloaded_version_count: int
+        _preloaded_requirement: DocumentRequirement | None
+        file_exists: bool
 
     class Meta:
         verbose_name = _("Документ")
@@ -163,10 +183,10 @@ class Document(SoftDeleteModel):
             ),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.display_name} для {self.client}"
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: Any, **kwargs: Any) -> None:
         if self.document_type == DocumentType.ZUS_RCA_OR_INSURANCE.value:
             self.zus_period_month = _first_day_of_month(self.zus_period_month)
         else:
@@ -255,13 +275,13 @@ class DocumentRequirement(models.Model):
         verbose_name = _("Требование к документу")
         verbose_name_plural = _("Требования к документам")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.application_purpose}: {self.custom_name or self.document_type}"
 
     @classmethod
-    def catalog_for(cls, purpose: str, language: str | None = None, *, include_optional: bool = True, include_fallback: bool = True) -> list[dict[str, str | bool]]:
+    def catalog_for(cls, purpose: str, language: str | None = None, *, include_optional: bool = True, include_fallback: bool = True) -> list[dict[str, Any]]:
         records = list(cls.objects.filter(application_purpose=purpose).order_by("position", "id"))
-        items: list[dict[str, str | bool]] = []
+        items: list[dict[str, Any]] = []
         seen: set[str] = set()
 
         for record in records:
@@ -291,4 +311,4 @@ class DocumentRequirement(models.Model):
     @classmethod
     def required_for(cls, purpose: str, language: str | None = None) -> list[tuple[str, str]]:
         catalog = cls.catalog_for(purpose, language, include_optional=False, include_fallback=True)
-        return [(item["code"], str(item["label"])) for item in catalog]
+        return [(str(item["code"]), str(item["label"])) for item in catalog]

@@ -10,7 +10,7 @@ from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
-from reportlab.pdfgen import canvas
+from reportlab.pdfgen import canvas # type: ignore[import-untyped]
 
 from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentProcessingJob, EmployeePermission

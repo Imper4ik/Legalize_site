@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -87,8 +89,8 @@ class StaffTask(models.Model):
             models.Index(fields=["assignee", "status", "due_date"], name="task_assignee_status_due_idx"),
         ]
 
-    def __str__(self):
-        return self.title
+    def __str__(self) -> str:
+        return str(self.title)
 
     @property
     def is_open(self) -> bool:

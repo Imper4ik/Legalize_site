@@ -1,4 +1,9 @@
+from __future__ import annotations
+
+from typing import Any, TYPE_CHECKING
+
 from django.contrib import admin
+from django.db.models import QuerySet
 
 from .models import (
     AppSettings,
@@ -16,16 +21,19 @@ from .models import (
     StaffTask,
 )
 
+if TYPE_CHECKING:
+    from django.http import HttpRequest
+
 
 @admin.action(description="Archive selected records")
-def archive_selected(modeladmin, request, queryset):
+def archive_selected(modeladmin: Any, request: HttpRequest, queryset: QuerySet) -> None:
     for obj in queryset:
         if hasattr(obj, "archive"):
             obj.archive()
 
 
 @admin.action(description="Restore selected archived records")
-def restore_selected(modeladmin, request, queryset):
+def restore_selected(modeladmin: Any, request: HttpRequest, queryset: QuerySet) -> None:
     base_queryset = getattr(modeladmin.model, "all_objects", None)
     if base_queryset is None:
         return
@@ -64,10 +72,10 @@ class AppSettingsAdmin(admin.ModelAdmin):
         ),
     )
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request: HttpRequest) -> bool:
         return not AppSettings.objects.exists()
 
-    def has_delete_permission(self, request, obj=None):
+    def has_delete_permission(self, request: HttpRequest, obj: Any = None) -> bool:
         return False
 
 
@@ -103,7 +111,7 @@ class PaymentAdmin(admin.ModelAdmin):
     search_fields = ("client__first_name", "client__last_name", "transaction_id")
     actions = [archive_selected, restore_selected]
 
-    def get_queryset(self, request):
+    def get_queryset(self, request: HttpRequest) -> QuerySet[Payment]:
         return Payment.all_objects.select_related("client")
 
 
@@ -141,7 +149,7 @@ class ClientAdmin(admin.ModelAdmin):
     readonly_fields = ("archived_at",)
     actions = [archive_selected, restore_selected]
 
-    def get_queryset(self, request):
+    def get_queryset(self, request: HttpRequest) -> QuerySet[Client]:
         return Client.all_objects.select_related("company")
 
 
@@ -169,7 +177,7 @@ class DocumentAdmin(admin.ModelAdmin):
     readonly_fields = ("archived_at",)
     actions = [archive_selected, restore_selected]
 
-    def get_queryset(self, request):
+    def get_queryset(self, request: HttpRequest) -> QuerySet[Document]:
         return Document.all_objects.select_related("client")
 
 
@@ -201,10 +209,10 @@ class EmailLogAdmin(admin.ModelAdmin):
         "sent_by",
     )
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request: HttpRequest) -> bool:
         return False
 
-    def has_change_permission(self, request, obj=None):
+    def has_change_permission(self, request: HttpRequest, obj: Any = None) -> bool:
         return False
 
 
@@ -241,7 +249,7 @@ class DocumentProcessingJobAdmin(admin.ModelAdmin):
         "requires_confirmation",
     )
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request: HttpRequest) -> bool:
         return False
 
 
@@ -267,7 +275,7 @@ class EmailCampaignAdmin(admin.ModelAdmin):
         "completed_at",
     )
 
-    def has_add_permission(self, request):
+    def has_add_permission(self, request: HttpRequest) -> bool:
         return False
 
 

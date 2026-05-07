@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from typing import Any, cast, TYPE_CHECKING
+
 from django.contrib import messages
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.utils.translation import gettext as _
@@ -18,9 +21,13 @@ from clients.use_cases.payments import (
 from clients.services.roles import PAYMENT_MUTATION_ROLES
 from clients.views.base import role_or_feature_required_view
 
+if TYPE_CHECKING:
+    from django.http.response import HttpResponseBase
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
+
 
 @role_or_feature_required_view("can_manage_payments", *PAYMENT_MUTATION_ROLES)
-def add_payment(request, client_id):
+def add_payment(request: HttpRequest, client_id: int) -> HttpResponseBase:
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
     helper = ResponseHelper(request)
     if request.method == "POST":
@@ -31,11 +38,11 @@ def add_payment(request, client_id):
                 actor=request.user,
                 cleaned_data=form.cleaned_data,
             )
-            payment = result.payment
+            payment = cast(Payment, result.payment)
             if helper.expects_json:
                 html = render_to_string("clients/partials/payment_item.html", {"payment": payment})
                 return helper.success(
-                    message=_("Платёж успешно добавлен."),
+                    message=str(_("Платёж успешно добавлен.")),
                     html=html,
                     payment_id=payment.id,
                 )
@@ -43,7 +50,7 @@ def add_payment(request, client_id):
             return redirect("clients:client_detail", pk=client.id)
         if helper.expects_json:
             return helper.error(
-                message=_("Проверьте правильность заполнения формы."),
+                message=str(_("Проверьте правильность заполнения формы.")),
                 errors=form.errors.get_json_data(),
             )
 
@@ -51,7 +58,7 @@ def add_payment(request, client_id):
 
 
 @role_or_feature_required_view("can_manage_payments", *PAYMENT_MUTATION_ROLES)
-def edit_payment(request, payment_id):
+def edit_payment(request: HttpRequest, payment_id: int) -> HttpResponseBase:
     payment = get_object_or_404(accessible_payments_queryset(request.user, Payment.objects.all()), pk=payment_id)
     helper = ResponseHelper(request)
     if request.method == "POST":
@@ -62,11 +69,11 @@ def edit_payment(request, payment_id):
                 actor=request.user,
                 cleaned_data=form.cleaned_data,
             )
-            updated_payment = result.payment
+            updated_payment = cast(Payment, result.payment)
             if helper.expects_json:
                 html = render_to_string("clients/partials/payment_item.html", {"payment": updated_payment})
                 return helper.success(
-                    message=_("Платёж успешно обновлён."),
+                    message=str(_("Платёж успешно обновлён.")),
                     html=html,
                     payment_id=updated_payment.id,
                 )
@@ -74,7 +81,7 @@ def edit_payment(request, payment_id):
             return redirect("clients:client_detail", pk=updated_payment.client.id)
         if helper.expects_json:
             return helper.error(
-                message=_("Проверьте правильность заполнения формы."),
+                message=str(_("Проверьте правильность заполнения формы.")),
                 errors=form.errors.get_json_data(),
             )
 
@@ -82,20 +89,20 @@ def edit_payment(request, payment_id):
 
 
 @role_or_feature_required_view("can_manage_payments", *PAYMENT_MUTATION_ROLES)
-def delete_payment(request, payment_id):
+def delete_payment(request: HttpRequest, payment_id: int) -> HttpResponseBase:
     payment = get_object_or_404(accessible_payments_queryset(request.user, Payment.objects.all()), pk=payment_id)
     client_id = payment.client.id
     helper = ResponseHelper(request)
     if request.method == "POST":
         delete_payment_for_client(payment=payment, actor=request.user)
         if helper.expects_json:
-            return helper.success(message=_("Платёж успешно удалён."))
+            return helper.success(message=str(_("Платёж успешно удалён.")))
         messages.success(request, _("Платёж успешно удалён."))
     return redirect("clients:client_detail", pk=client_id)
 
 
 @role_or_feature_required_view("can_manage_payments", *PAYMENT_MUTATION_ROLES)
-def get_price_for_service(request, service_value):
+def get_price_for_service(request: HttpRequest, service_value: str) -> HttpResponseBase:
     price = get_service_price(service_value)
     helper = ResponseHelper(request)
     return helper.success(price=price)

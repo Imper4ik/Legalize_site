@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from typing import Any
+
 from allauth.account.adapter import get_adapter
 from allauth.account.models import EmailAddress
 from django.contrib.auth import get_user_model
+from django.http import HttpResponse
 from django.urls import reverse_lazy
 from django.views.generic import FormView
 
@@ -14,14 +17,14 @@ class ResendVerificationEmailView(FormView):
     template_name = "account/resend_verification.html"
     success_url = reverse_lazy("account_email_verification_sent")
 
-    def get_initial(self):
+    def get_initial(self) -> dict[str, Any]:
         initial = super().get_initial()
         email = self.request.GET.get("email", "").strip()
         if email:
             initial["email"] = email
         return initial
 
-    def form_valid(self, form):
+    def form_valid(self, form: ResendVerificationEmailForm) -> HttpResponse:
         email = get_user_model().objects.normalize_email(form.cleaned_data["email"])
         email_address = (
             EmailAddress.objects.select_related("user")

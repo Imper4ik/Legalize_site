@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import hashlib
-from datetime import timedelta
+from datetime import date, timedelta
+from typing import Any, cast, Self, TYPE_CHECKING
 
 from django.conf import settings
 from django.db import models
@@ -12,9 +15,14 @@ from fernet_fields import EncryptedTextField
 from clients.constants import DocumentType
 from legalize_site.soft_delete import SoftDeleteModel, SoftDeleteQuerySet
 
+if TYPE_CHECKING:
+    from .document import Document
+    from .company import Company
+    from users.models import User as StaffUser
+
 
 class ClientQuerySet(SoftDeleteQuerySet):
-    def with_health_stats(self, today=None):
+    def with_health_stats(self, today: date | None = None) -> Self:
         if today is None:
             today = timezone.localdate()
         expiring_cutoff = today + timedelta(days=7)
@@ -70,7 +78,7 @@ class ClientQuerySet(SoftDeleteQuerySet):
 
 
 class Client(SoftDeleteModel):
-    objects = ClientQuerySet.as_manager()
+    objects = ClientQuerySet.as_manager()  # type: ignore[assignment, misc]
     _application_purpose_display_cache: dict[str, dict[str, str]] = {}
 
     APPLICATION_PURPOSE_CHOICES = [
@@ -239,6 +247,16 @@ class Client(SoftDeleteModel):
         blank=True,
     )
 
+    if TYPE_CHECKING:
+        health_awaiting_confirmation_count: int
+        health_expired_documents_count: int
+        health_expiring_documents_count: int
+        health_wezwanie_count: int
+        health_appointment_email_sent_count: int
+        health_overdue_payments_count: int
+        health_overdue_tasks_count: int
+        family_group: Any
+
     class Meta:
         indexes = [
             models.Index(fields=["assigned_staff", "status"], name="client_staff_status_idx"),
@@ -247,10 +265,10 @@ class Client(SoftDeleteModel):
             models.Index(fields=["sponsor_client", "family_role"], name="client_family_role_idx"),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.first_name} {self.last_name}"
 
-    def on_archive(self):
+    def on_archive(self) -> None:
         if not self.user_id:
             return
 
@@ -270,9 +288,9 @@ class Client(SoftDeleteModel):
         normalized = cls.normalize_case_number(case_number)
         return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: Any, **kwargs: Any) -> None:
         if self.case_number:
-            self.case_number_hash = self.hash_case_number(self.case_number)
+            self.case_number_hash = self.hash_case_number(cast(str, self.case_number))
         else:
             self.case_number_hash = None
 
@@ -284,10 +302,10 @@ class Client(SoftDeleteModel):
 
         super().save(*args, **kwargs)
 
-    def get_absolute_url(self):
+    def get_absolute_url(self) -> str:
         return reverse("clients:client_detail", kwargs={"pk": self.id})
 
-    def get_application_purpose_display(self):
+    def get_application_purpose_display(self) -> str:
         from submissions.models import Submission
 
         fallback = dict(self.APPLICATION_PURPOSE_CHOICES).get(
@@ -308,31 +326,31 @@ class Client(SoftDeleteModel):
                     "name_ru",
                 ):
                     localized = getattr(submission, f"name_{language_code}", None)
-                    display_map[submission.slug] = localized.strip() if localized and localized.strip() else submission.name
+                    display_map[submission.slug] = str(localized).strip() if localized and str(localized).strip() else submission.name
                 self._application_purpose_display_cache[language_code] = display_map
             if self.application_purpose in display_map:
                 return display_map[self.application_purpose]
 
-        return fallback
+        return str(fallback)
 
     def get_document_requirement_purpose(self) -> str:
         if self.application_purpose == "family":
             if self.family_role in self.FAMILY_MEMBER_REQUIREMENT_PURPOSES:
-                return self.family_role
+                return str(self.family_role)
             if self.family_role == "sponsor":
                 return "work"
-        return self.application_purpose
+        return str(self.application_purpose)
 
-    def get_submitted_document_summary(self):
+    def get_submitted_document_summary(self) -> dict[str, Any]:
         from clients.services.wniosek import build_submitted_document_summary
 
-        return build_submitted_document_summary(self)
+        return cast(dict[str, Any], build_submitted_document_summary(self))
 
     def get_submitted_document_codes(self) -> set[str]:
         summary = self.get_submitted_document_summary()
         return set(summary.get("codes", {}).keys())
 
-    def get_document_checklist(self, check_file_existence: bool = False):
+    def get_document_checklist(self, check_file_existence: bool = False) -> list[dict[str, Any]]:
         from .document import DocumentRequirement, resolve_document_label
         from clients.services.document_helpers import document_file_exists
 
@@ -340,6 +358,8 @@ class Client(SoftDeleteModel):
         purpose = self.get_document_requirement_purpose()
         required_docs = DocumentRequirement.required_for(purpose, current_language)
         prefetched_documents = getattr(self, "_prefetched_objects_cache", {}).get("documents")
+        
+        uploaded_docs: list[Document] | models.QuerySet[Document]
         if prefetched_documents is None:
             uploaded_docs = self.documents.all().annotate(
                 preloaded_version_count=models.Count("versions")
@@ -354,19 +374,19 @@ class Client(SoftDeleteModel):
         reqs = DocumentRequirement.objects.filter(application_purpose=purpose)
         req_map = {r.document_type: r for r in reqs}
 
-        docs_map = {}
+        docs_map: dict[str, list[Document]] = {}
         for doc in uploaded_docs:
-            doc._preloaded_version_count = getattr(doc, "preloaded_version_count", 0)
-            doc._preloaded_requirement = req_map.get(doc.document_type)
+            setattr(doc, "_preloaded_version_count", getattr(doc, "preloaded_version_count", 0))
+            setattr(doc, "_preloaded_requirement", req_map.get(doc.document_type))
             if check_file_existence:
-                doc.file_exists = document_file_exists(doc)
+                setattr(doc, "file_exists", document_file_exists(doc))
             docs_map.setdefault(doc.document_type, []).append(doc)
 
         submitted_summary = self.get_submitted_document_summary()
         submitted_by_code = submitted_summary.get("codes", {})
         custom_submissions = submitted_summary.get("custom", [])
 
-        status_list = []
+        status_list: list[dict[str, Any]] = []
         seen_codes = set()
         for code, name in required_docs:
             documents = docs_map.get(code, [])
@@ -435,7 +455,7 @@ class Client(SoftDeleteModel):
             )
         return status_list
 
-    def get_document_name_by_code(self, doc_code):
+    def get_document_name_by_code(self, doc_code: str) -> str:
         from .document import DocumentRequirement, get_available_document_types, resolve_document_label
 
         current_language = translation.get_language() or self.language
@@ -448,19 +468,19 @@ class Client(SoftDeleteModel):
         )
         for item in catalog:
             if item["code"] == doc_code:
-                return item["label"]
+                return str(item["label"])
         if doc_code in get_available_document_types(purpose):
-            return resolve_document_label(doc_code, language=current_language)
+            return str(resolve_document_label(doc_code, language=current_language))
         return doc_code.replace("_", " ").capitalize()
 
-    def get_health_alerts(self, document_status_list=None):
-        alerts = []
+    def get_health_alerts(self, document_status_list: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+        alerts: list[dict[str, Any]] = []
         today = timezone.localdate()
 
         # Optimize: ensure health stats are annotated
         if not hasattr(self, "health_awaiting_confirmation_count"):
             stats = (
-                self.__class__.objects.filter(pk=self.pk)
+                cast(Any, self.__class__.objects).filter(pk=self.pk)
                 .with_health_stats(today=today)
                 .values(
                     "health_awaiting_confirmation_count",
@@ -494,7 +514,7 @@ class Client(SoftDeleteModel):
                     }
                 )
 
-        if self.health_awaiting_confirmation_count:
+        if getattr(self, "health_awaiting_confirmation_count", 0):
             alerts.append(
                 {
                     "level": "warning",
@@ -506,7 +526,7 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        if self.health_expired_documents_count:
+        if getattr(self, "health_expired_documents_count", 0):
             alerts.append(
                 {
                     "level": "danger",
@@ -517,7 +537,7 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        if self.health_expiring_documents_count:
+        if getattr(self, "health_expiring_documents_count", 0):
             alerts.append(
                 {
                     "level": "warning",
@@ -529,7 +549,7 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        if self.health_wezwanie_count > 0 and not self.case_number:
+        if getattr(self, "health_wezwanie_count", 0) > 0 and not self.case_number:
             alerts.append(
                 {
                     "level": "warning",
@@ -538,7 +558,7 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        if self.fingerprints_date and not self.health_appointment_email_sent_count:
+        if self.fingerprints_date and not getattr(self, "health_appointment_email_sent_count", 0):
             alerts.append(
                 {
                     "level": "warning",
@@ -547,7 +567,7 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        if self.health_overdue_payments_count:
+        if getattr(self, "health_overdue_payments_count", 0):
             alerts.append(
                 {
                     "level": "warning",
@@ -599,12 +619,12 @@ class Client(SoftDeleteModel):
 
         family_group = None
         try:
-            family_group = self.family_group
+            family_group = getattr(self, 'family_group', None)
         except Exception:
             family_group = None
         if family_group is None and self.sponsor_client_id:
             try:
-                family_group = self.sponsor_client.family_group
+                family_group = getattr(self.sponsor_client, 'family_group', None)
             except Exception:
                 family_group = None
         if family_group is not None:
@@ -622,7 +642,7 @@ class Client(SoftDeleteModel):
                     }
                 )
 
-        if self.health_overdue_tasks_count:
+        if getattr(self, "health_overdue_tasks_count", 0):
             alerts.append(
                 {
                     "level": "danger",
@@ -633,7 +653,7 @@ class Client(SoftDeleteModel):
 
         return alerts
 
-    def get_workflow_summary(self, document_status_list=None):
+    def get_workflow_summary(self, document_status_list: list[dict[str, Any]] | None = None) -> dict[str, Any]:
         alerts = self.get_health_alerts(document_status_list=document_status_list)
         prefetched_staff_tasks = getattr(self, "_prefetched_objects_cache", {}).get("staff_tasks")
         if prefetched_staff_tasks is None:

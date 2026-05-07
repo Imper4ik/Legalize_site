@@ -1,21 +1,30 @@
+from __future__ import annotations
+
 import json
 import logging
+from typing import Any, TYPE_CHECKING
+
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import user_passes_test
-from django.http import JsonResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
+
 from clients.services.roles import user_has_any_role
 from .utils import load_all_translations, save_translation_entry
 
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
+
 logger = logging.getLogger(__name__)
 
-def can_use_translation_studio(user):
+
+def can_use_translation_studio(user: AbstractBaseUser | AnonymousUser) -> bool:
     return user.is_authenticated and (
-        user.is_superuser or user_has_any_role(user, "Admin", "Translator")
+        getattr(user, "is_superuser", False) or user_has_any_role(user, "Admin", "Translator")
     )
 
 
 @user_passes_test(can_use_translation_studio)
-def studio_dashboard(request):
+def studio_dashboard(request: HttpRequest) -> HttpResponse:
     """Render the side-by-side translation dashboard."""
     translations = load_all_translations()
     return render(request, 'translations/studio_dashboard.html', {
@@ -23,8 +32,9 @@ def studio_dashboard(request):
         'languages': ['ru', 'en', 'pl']
     })
 
+
 @user_passes_test(can_use_translation_studio)
-def update_translation_api(request):
+def update_translation_api(request: HttpRequest) -> JsonResponse:
     """API to save a single translation msgid across all languages."""
     if request.method == 'POST':
         try:
@@ -51,8 +61,9 @@ def update_translation_api(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
 
+
 @user_passes_test(can_use_translation_studio)
-def toggle_studio_mode(request):
+def toggle_studio_mode(request: HttpRequest) -> HttpResponse:
     """Turn on/off the in-context editing spans."""
     current = request.session.get('studio_mode', False)
     next_state = not current
@@ -69,8 +80,9 @@ def toggle_studio_mode(request):
         referer = None
     return redirect(referer or '/')
 
+
 @user_passes_test(can_use_translation_studio)
-def get_translation_api(request):
+def get_translation_api(request: HttpRequest) -> JsonResponse:
     """Fetch all 3 languages for a specific msgid."""
     msgid = request.GET.get('msgid')
     if not msgid:
@@ -96,7 +108,7 @@ def get_translation_api(request):
 
 
 @user_passes_test(can_use_translation_studio)
-def scan_translations_api(request):
+def scan_translations_api(request: HttpRequest) -> JsonResponse:
     """Return a mapping of translated text -> msgid for the current language.
 
     This is used by the in-context editor to find translation occurrences that
@@ -111,7 +123,7 @@ def scan_translations_api(request):
     mapping = {}
     import re
 
-    def normalize(s):
+    def normalize(s: Any) -> str:
         if not s:
             return ""
         return re.sub(r'\s+', ' ', str(s)).strip()

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional, TypeVar
 
 from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.http.response import HttpResponseBase
 from django.utils.translation import gettext as _
 
 from legalize_site.utils.http import request_is_ajax
@@ -13,7 +14,7 @@ from legalize_site.utils.http import request_is_ajax
 NO_STORE_HEADER = "no-store, no-cache, must-revalidate"
 
 
-T = TypeVar("T", bound=HttpResponse)
+T = TypeVar("T", bound=HttpResponseBase)
 
 
 def apply_no_store(response: T) -> T:

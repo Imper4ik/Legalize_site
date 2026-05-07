@@ -1,11 +1,16 @@
+from __future__ import annotations
+
 import os
-from django.core.management.base import BaseCommand
+from typing import Any
+
 from django.conf import settings
+from django.core.management.base import BaseCommand
+
 
 class Command(BaseCommand):
     help = "Tests the database backup restore process on a temporary local database"
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         # Determine the latest backup
         backup_dir = os.path.join(settings.BASE_DIR, "tmp", "db_backups")
         if not os.path.exists(backup_dir):

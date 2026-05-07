@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from django.core.management.base import BaseCommand, CommandError
 
@@ -17,7 +18,7 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     help = "Process queued document OCR jobs."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
             "--limit",
             type=int,
@@ -25,7 +26,7 @@ class Command(BaseCommand):
             help="Maximum number of queued jobs to process in one run.",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         limit = options["limit"]
         if limit is not None:
             if limit <= 0:

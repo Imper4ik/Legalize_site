@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Self
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -49,10 +53,12 @@ class AppSettings(models.Model):
         verbose_name = _("Настройки приложения")
         verbose_name_plural = _("Настройки приложения")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "App settings"
 
     @classmethod
-    def get_solo(cls):
+    def get_solo(cls) -> Self:
         obj, _created = cls.objects.get_or_create(pk=1)
-        return obj
+        return cast(Self, obj)
+
+from typing import cast

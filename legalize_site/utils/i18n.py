@@ -5,7 +5,7 @@ import logging
 import shutil
 import struct
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 from django.conf import settings
 from django.core.management import call_command
@@ -40,13 +40,13 @@ def _write_mo_file(po_path: Path, mo_path: Path) -> None:
     external gettext binaries.
     """
 
-    messages = {}
-    message_ctxt = None
-    message_id = None
+    messages: dict[str, list[str]] = {}
+    message_ctxt: str | None = None
+    message_id: str | None = None
     message_strs: list[str] = []
-    fuzzy = False
+    fuzzy: bool = False
 
-    def _add_message():
+    def _add_message() -> None:
         if fuzzy or message_id is None:
             return
         # Support message context via \x04 separator (GNU gettext convention).
@@ -130,17 +130,17 @@ def _write_mo_file(po_path: Path, mo_path: Path) -> None:
     orig_table = bytearray()
     trans_table = bytearray()
 
-    for msgid, msgstr in zip(msgid_bytes, msgstr_bytes):
-        orig_table += struct.pack("ii", len(msgid), ooffset)
-        ooffset += len(msgid) + 1
-        trans_table += struct.pack("ii", len(msgstr), toffset)
-        toffset += len(msgstr) + 1
+    for msgid_b, msgstr_b in zip(msgid_bytes, msgstr_bytes):
+        orig_table += struct.pack("ii", len(msgid_b), ooffset)
+        ooffset += len(msgid_b) + 1
+        trans_table += struct.pack("ii", len(msgstr_b), toffset)
+        toffset += len(msgstr_b) + 1
 
     output += orig_table
     output += trans_table
 
-    for msgid in msgid_bytes:
-        output += msgid + b"\0"
+    for msgid_b in msgid_bytes:
+        output += msgid_b + b"\0"
     for msg in msgstr_bytes:
         output += msg + b"\0"
 
@@ -160,7 +160,7 @@ def compile_message_catalogs() -> None:
     """
 
     locale_dirs = [
-        Path(settings.BASE_DIR) / "locale",
+        Path(str(settings.BASE_DIR)) / "locale",
         Path(__file__).resolve().parent.parent / "locale",
     ]
 

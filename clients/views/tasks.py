@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from typing import Any, cast, TYPE_CHECKING
+
 from django.contrib import messages
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from django.views.generic import ListView
@@ -12,6 +15,10 @@ from clients.use_cases.tasks import complete_task_for_client, create_task_for_cl
 from clients.services.roles import TASK_MUTATION_ROLES
 from clients.views.base import RoleOrFeatureRequiredMixin, role_or_feature_required_view
 
+if TYPE_CHECKING:
+    from django.http.response import HttpResponseBase
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
+
 
 class TaskListView(RoleOrFeatureRequiredMixin, ListView):
     model = StaffTask
@@ -21,7 +28,7 @@ class TaskListView(RoleOrFeatureRequiredMixin, ListView):
     context_object_name = "tasks"
     paginate_by = 50
 
-    def get_queryset(self):
+    def get_queryset(self) -> Any:
         queryset = (
             accessible_tasks_queryset(
                 self.request.user,
@@ -32,10 +39,10 @@ class TaskListView(RoleOrFeatureRequiredMixin, ListView):
         )
         assignee_filter = self.request.GET.get("assignee")
         if assignee_filter == "me":
-            queryset = queryset.filter(assignee=self.request.user)
+            queryset = queryset.filter(assignee=cast(Any, self.request.user))
         return queryset
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         today = timezone.localdate()
         context["overdue_count"] = self.get_queryset().filter(due_date__lt=today).count()
@@ -45,7 +52,7 @@ class TaskListView(RoleOrFeatureRequiredMixin, ListView):
 
 
 @role_or_feature_required_view("can_manage_staff_tasks", *TASK_MUTATION_ROLES)
-def add_task(request, client_id):
+def add_task(request: HttpRequest, client_id: int) -> HttpResponseBase:
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
 
     if request.method != "POST":
@@ -65,7 +72,7 @@ def add_task(request, client_id):
 
 
 @role_or_feature_required_view("can_manage_staff_tasks", *TASK_MUTATION_ROLES)
-def complete_task(request, task_id):
+def complete_task(request: HttpRequest, task_id: int) -> HttpResponseBase:
     task = get_object_or_404(
         accessible_tasks_queryset(request.user, StaffTask.objects.select_related("client")),
         pk=task_id,

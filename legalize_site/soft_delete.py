@@ -1,32 +1,35 @@
 from __future__ import annotations
 
+from typing import Any, Self
+
 from django.db import models
 from django.utils import timezone
 
 
 class SoftDeleteQuerySet(models.QuerySet):
-    def active(self):
+    def active(self) -> Self:
         return self.filter(archived_at__isnull=True)
 
-    def archived(self):
+    def archived(self) -> Self:
         return self.filter(archived_at__isnull=False)
 
-    def delete(self):
+    def delete(self) -> tuple[int, dict[str, int]]:
         count = 0
         for obj in self:
-            obj.archive(save=True)
-            count += 1
+            if hasattr(obj, 'archive'):
+                obj.archive(save=True)
+                count += 1
         return count, {self.model._meta.label: count}
 
-    def hard_delete(self):
+    def hard_delete(self) -> tuple[int, dict[str, int]]:
         return super().delete()
 
-    def restore(self):
+    def restore(self) -> int:
         return super().update(archived_at=None)
 
 
 class SoftDeleteManager(models.Manager):
-    def get_queryset(self):
+    def get_queryset(self) -> SoftDeleteQuerySet:
         return SoftDeleteQuerySet(self.model, using=self._db).active()
 
 
@@ -45,7 +48,7 @@ class SoftDeleteModel(models.Model):
     def is_archived(self) -> bool:
         return self.archived_at is not None
 
-    def archive(self, *, save: bool = True):
+    def archive(self, *, save: bool = True) -> Self:
         if self.archived_at is None:
             self.archived_at = timezone.now()
             if save:
@@ -55,7 +58,7 @@ class SoftDeleteModel(models.Model):
                 on_archive()
         return self
 
-    def restore(self, *, save: bool = True):
+    def restore(self, *, save: bool = True) -> Self:
         if self.archived_at is not None:
             self.archived_at = None
             if save:
@@ -65,7 +68,7 @@ class SoftDeleteModel(models.Model):
                 on_restore()
         return self
 
-    def delete(self, using=None, keep_parents=False, *, hard: bool = False):
+    def delete(self, using: Any = None, keep_parents: bool = False, *, hard: bool = False) -> tuple[int, dict[str, int]]:
         if hard:
             return super().delete(using=using, keep_parents=keep_parents)
         self.archive(save=True)

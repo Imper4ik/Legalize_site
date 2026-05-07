@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from contextlib import suppress
+from datetime import date
+from typing import Any, TYPE_CHECKING, cast
 
 import logging
 from pathlib import Path
@@ -12,13 +14,16 @@ from django.utils.translation import gettext as _
 
 from clients.models import Document, DocumentVersion
 
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
+
 logger = logging.getLogger(__name__)
 
 
 def archive_document_version(
     document: Document,
     *,
-    uploaded_by=None,
+    uploaded_by: AbstractBaseUser | AnonymousUser | None = None,
     comment: str = "",
 ) -> DocumentVersion | None:
     """Persist the current file as a historical document version by making a physical copy."""
@@ -44,17 +49,21 @@ def archive_document_version(
             document.file.close()
 
     current_max = document.versions.aggregate(max_v=Max("version_number"))["max_v"] or 0
-    version_number = current_max + 1
+    version_number = int(current_max) + 1
 
-    ext = Path(document.file.name).suffix or ".bin"
+    file_name_attr = str(document.file.name)
+    ext = Path(file_name_attr).suffix or ".bin"
     file_name = f"document_{document.pk}_v{version_number}{ext}"
     # Ensure a unique path for the version file
     new_path = f"document_versions/{document.pk}_v{version_number}{ext}"
 
+    # AnonymousUser cannot be assigned to ForeignKey
+    real_uploaded_by = uploaded_by if uploaded_by and uploaded_by.is_authenticated else None
+
     version = DocumentVersion(
         document=document,
         version_number=version_number,
-        uploaded_by=uploaded_by,
+        uploaded_by=cast(Any, real_uploaded_by),
         comment=comment,
         file_name=file_name,
         file_size=file_size,
@@ -73,8 +82,8 @@ def archive_document_version(
 def replace_document_file(
     document: Document,
     *,
-    uploaded_file,
-    expiry_date=None,
+    uploaded_file: Any,
+    expiry_date: date | None = None,
 ) -> Document:
     """Replace the active document file and reset file-derived state."""
 
@@ -89,7 +98,7 @@ def replace_document_file(
     return document
 
 
-def restore_document_version(version: DocumentVersion, *, uploaded_by=None) -> Document:
+def restore_document_version(version: DocumentVersion, *, uploaded_by: AbstractBaseUser | AnonymousUser | None = None) -> Document:
     """Restore a stored version and archive the previously active file."""
 
     document = version.document
@@ -107,7 +116,8 @@ def restore_document_version(version: DocumentVersion, *, uploaded_by=None) -> D
         finally:
             version.file.close()
 
-        ext = Path(version.file.name).suffix or ".bin"
+        file_name_attr = str(version.file.name)
+        ext = Path(file_name_attr).suffix or ".bin"
         new_name = f"documents/restored_{document.pk}{ext}"
         document.file.save(new_name, ContentFile(restored_content), save=False)
         document.verified = False

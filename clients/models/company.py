@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -11,5 +13,5 @@ class Company(models.Model):
         verbose_name_plural = _("Компании")
         ordering = ["name"]
 
-    def __str__(self):
-        return self.name
+    def __str__(self) -> str:
+        return str(self.name)

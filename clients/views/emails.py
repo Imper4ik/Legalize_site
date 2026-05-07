@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import logging
+from typing import Any, cast, TYPE_CHECKING
 
 from django.conf import settings
 from django.contrib import messages
 from django.core.cache import cache
 from django.core.mail import send_mail
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 from django.utils.translation import gettext as _
@@ -30,12 +32,16 @@ from clients.services.responses import json_no_store
 from clients.services.roles import EMAIL_MUTATION_ROLES
 from clients.views.base import role_or_feature_required_view, role_required_view
 
+if TYPE_CHECKING:
+    from django.http.response import HttpResponseBase
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
+
 logger = logging.getLogger(__name__)
 
 
 @role_required_view(*EMAIL_MUTATION_ROLES)
 @require_GET
-def email_preview_api(request, pk):
+def email_preview_api(request: HttpRequest, pk: int) -> HttpResponseBase:
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
 
     template_type = request.GET.get("template_type")
@@ -78,16 +84,18 @@ def email_preview_api(request, pk):
 
 @role_or_feature_required_view("can_send_custom_email", *EMAIL_MUTATION_ROLES)
 @require_POST
-def send_custom_email(request, pk):
+def send_custom_email(request: HttpRequest, pk: int) -> HttpResponseBase:
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
 
     if not client.email:
         messages.error(request, _("У клиента не указан email."))
         return redirect("clients:client_detail", pk=client.pk)
 
-    rate_limit = getattr(settings, "EMAIL_RATE_LIMIT_PER_HOUR", 50)
-    cache_key = f"email_rate_limit_{request.user.id}"
-    sent_this_hour = cache.get(cache_key, 0)
+    rate_limit = int(getattr(settings, "EMAIL_RATE_LIMIT_PER_HOUR", 50))
+    # User ID can be int or str, ensure it's usable in cache key
+    user_id = getattr(request.user, 'pk', 'unknown')
+    cache_key = f"email_rate_limit_{user_id}"
+    sent_this_hour = int(cache.get(cache_key, 0))
 
     if sent_this_hour >= rate_limit:
         messages.error(
@@ -107,13 +115,16 @@ def send_custom_email(request, pk):
     try:
         idempotency_key = build_email_idempotency_key(
             "custom_email",
-            request.user.pk,
+            cast('int', request.user.pk),
             client.pk,
             client.email,
             subject,
             body,
         )
         from clients.models import EmailLog
+        
+        # Actor for service functions must be authenticated User or None
+        actor = request.user if request.user.is_authenticated else None
 
         if not _reserve_idempotent_email_send(
             subject,
@@ -121,7 +132,7 @@ def send_custom_email(request, pk):
             [client.email],
             client=client,
             template_type="custom",
-            sent_by=request.user,
+            sent_by=actor,
             idempotency_key=idempotency_key,
         ):
             messages.info(request, _("Такое письмо уже было отправлено. Повторная отправка пропущена."))
@@ -142,7 +153,7 @@ def send_custom_email(request, pk):
                 [client.email],
                 client=client,
                 template_type="custom",
-                sent_by=request.user,
+                sent_by=actor,
                 idempotency_key=idempotency_key,
                 delivery_status=EmailLog.DELIVERY_STATUS_SENT,
             )
@@ -161,7 +172,7 @@ def send_custom_email(request, pk):
                 [client.email],
                 client=client,
                 template_type="custom",
-                sent_by=request.user,
+                sent_by=actor,
                 idempotency_key=idempotency_key,
                 delivery_status=EmailLog.DELIVERY_STATUS_FAILED,
                 error_message="send returned 0",
@@ -176,7 +187,7 @@ def send_custom_email(request, pk):
                 [client.email],
                 client=client,
                 template_type="custom",
-                sent_by=request.user,
+                sent_by=actor,
                 idempotency_key=idempotency_key,
                 delivery_status=EmailLog.DELIVERY_STATUS_FAILED,
                 error_message="send failed",
@@ -187,7 +198,7 @@ def send_custom_email(request, pk):
 
 
 @role_or_feature_required_view("can_send_mass_email", *EMAIL_MUTATION_ROLES)
-def mass_email_view(request):
+def mass_email_view(request: HttpRequest) -> HttpResponseBase:
     from clients.forms import MassEmailForm
 
     if request.method == "POST":
@@ -217,8 +228,8 @@ def mass_email_view(request):
                 campaign = queue_mass_email_campaign(
                     subject=subject,
                     message=message_text,
-                    recipient_emails=queryset.values_list("email", flat=True),
-                    created_by=request.user,
+                    recipient_emails=list(queryset.values_list("email", flat=True)),
+                    created_by=request.user if request.user.is_authenticated else None,
                     filters_snapshot=filters_snapshot,
                 )
             except ValueError:
@@ -247,12 +258,12 @@ def mass_email_view(request):
     else:
         form = MassEmailForm()
 
-    return render(request, "clients/mass_email.html", {"form": form, "title": _("Массовая рассылка")})
+    return render(request, "clients/mass_email.html", {"form": form, "title": str(_("Массовая рассылка"))})
 
 
 @role_or_feature_required_view("can_send_mass_email", *EMAIL_MUTATION_ROLES)
 @require_GET
-def campaign_status_api(request, campaign_id):
+def campaign_status_api(request: HttpRequest, campaign_id: int) -> HttpResponseBase:
     campaign = get_object_or_404(
         accessible_campaigns_queryset(request.user, EmailCampaign.objects.all()),
         pk=campaign_id,

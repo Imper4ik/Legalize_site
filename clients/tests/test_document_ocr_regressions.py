@@ -12,7 +12,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template.loader import get_template
 from django.test import TestCase
 from django.urls import reverse
-from reportlab.pdfgen import canvas
+from reportlab.pdfgen import canvas # type: ignore[import-untyped]
 
 from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentProcessingJob, DocumentRequirement, EmployeePermission

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from django.db import models
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
@@ -39,16 +41,16 @@ class Submission(SoftDeleteModel):
         lang = lang.split('-')[0].lower()
 
         localized = getattr(self, f'name_{lang}', None)
-        if localized and localized.strip():
-            return localized
-        return self.name
+        if localized and str(localized).strip():
+            return str(localized)
+        return str(self.name)
 
     def __str__(self) -> str:  # pragma: no cover - human friendly
         return self.localized_name
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: Any, **kwargs: Any) -> None:
         if not self.slug:
-            base_slug = slugify(self.name, allow_unicode=True) or 'submission'
+            base_slug = slugify(str(self.name), allow_unicode=True) or 'submission'
             candidate = base_slug
             counter = 1
 

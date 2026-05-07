@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from django import forms
 from django.utils.translation import gettext_lazy as _
 
@@ -18,8 +20,8 @@ class SubmissionForm(forms.ModelForm):
             'status': forms.Select(attrs={'class': 'form-select'}),
         }
 
-    def clean_name(self):
-        name = self.cleaned_data['name'].strip()
+    def clean_name(self) -> str:
+        name = str(self.cleaned_data['name']).strip()
         if not name:
             raise forms.ValidationError(_('Название не может быть пустым'))
         return name
@@ -30,14 +32,16 @@ class DocumentForm(forms.ModelForm):
         model = Document
         fields = ['title', 'status', 'file_path']
 
-    def clean_title(self):
-        title = self.cleaned_data['title'].strip()
+    def clean_title(self) -> str:
+        title = str(self.cleaned_data['title']).strip()
         if not title:
             raise forms.ValidationError(_('Название документа обязательно'))
         return title
 
-    def clean(self):
+    def clean(self) -> dict[str, Any]:
         cleaned = super().clean()
+        if cleaned is None:
+            return {}
         status = cleaned.get('status')
         file_path = cleaned.get('file_path')
 

@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import uuid
+from typing import Any, Callable
 
 try:
     import sentry_sdk
 except Exception:  # pragma: no cover - optional dependency
     sentry_sdk = None
 
+from django.http import HttpRequest, HttpResponse
 from legalize_site.utils.logging import clear_log_context, set_log_context
 
 
@@ -14,14 +16,14 @@ class RequestIDMiddleware:
     REQUEST_ID_HEADER = "HTTP_X_REQUEST_ID"
     RESPONSE_HEADER = "X-Request-ID"
 
-    def __init__(self, get_response):
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]) -> None:
         self.get_response = get_response
 
-    def __call__(self, request):
+    def __call__(self, request: HttpRequest) -> HttpResponse:
         request_id = request.META.get(self.REQUEST_ID_HEADER) or uuid.uuid4().hex
         correlation_id = request.META.get(self.REQUEST_ID_HEADER) or request_id
-        request.request_id = request_id
-        request.correlation_id = correlation_id
+        setattr(request, 'request_id', request_id)
+        setattr(request, 'correlation_id', correlation_id)
         set_log_context(request_id=request_id, correlation_id=correlation_id)
 
         if sentry_sdk is not None:

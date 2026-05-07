@@ -5,7 +5,7 @@ from .activity import ClientActivity
 from .document import (
     Document, DocumentRequirement, get_fallback_document_checklist,
     resolve_document_label, get_available_document_types,
-    translate_document_name
+    translate_document_name, is_default_document_label
 )
 from .document_processing import DocumentProcessingJob
 from .document_version import DocumentVersion
@@ -42,5 +42,5 @@ __all__ = [
     'resolve_document_label',
     'get_available_document_types',
     'translate_document_name',
+    'is_default_document_label',
 ]
-

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -19,7 +21,7 @@ class Reminder(models.Model):
     is_active = models.BooleanField(default=True, verbose_name=_("Активно"))
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Напоминание для {self.client}: {self.title}"
 
     class Meta:

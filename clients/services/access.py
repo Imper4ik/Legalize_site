@@ -1,15 +1,21 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any, cast
+
 from django.db.models import Q, QuerySet
 
 from clients.models import Client, Document, EmailCampaign, Payment, Reminder, StaffTask
 from clients.services.roles import ADMIN_PANEL_ALLOWED_ROLES, SETTINGS_ALLOWED_ROLES
 
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
 PRIVILEGED_INTERNAL_ROLES = tuple(SETTINGS_ALLOWED_ROLES)
 
 
-def is_internal_staff_user(user) -> bool:
+def is_internal_staff_user(user: AbstractBaseUser | AnonymousUser | None) -> bool:
+    if user is None:
+        return False
     if not (
         getattr(user, "is_authenticated", False)
         and getattr(user, "is_active", False)
@@ -18,27 +24,38 @@ def is_internal_staff_user(user) -> bool:
         return False
     if getattr(user, "is_superuser", False):
         return True
-    return user.groups.filter(name__in=ADMIN_PANEL_ALLOWED_ROLES).exists()
+    
+    # Check groups if it's a real user object
+    groups = getattr(user, "groups", None)
+    if groups:
+        return bool(groups.filter(name__in=ADMIN_PANEL_ALLOWED_ROLES).exists())
+    return False
 
 
-def user_has_internal_role(user, *role_names: str) -> bool:
+def user_has_internal_role(user: AbstractBaseUser | AnonymousUser | None, *role_names: str) -> bool:
+    if user is None:
+        return False
     if getattr(user, "is_superuser", False):
         return True
     if not is_internal_staff_user(user):
         return False
     if not role_names:
         return True
-    return user.groups.filter(name__in=role_names).exists()
+        
+    groups = getattr(user, "groups", None)
+    if groups:
+        return bool(groups.filter(name__in=role_names).exists())
+    return False
 
 
-def can_access_all_clients(user) -> bool:
-    return getattr(user, "is_superuser", False) or user_has_internal_role(
+def can_access_all_clients(user: AbstractBaseUser | AnonymousUser | None) -> bool:
+    return bool(getattr(user, "is_superuser", False) or user_has_internal_role(
         user,
         *PRIVILEGED_INTERNAL_ROLES,
-    )
+    ))
 
 
-def accessible_clients_queryset(user, queryset: QuerySet | None = None) -> QuerySet:
+def accessible_clients_queryset(user: AbstractBaseUser | AnonymousUser | None, queryset: QuerySet[Client] | None = None) -> QuerySet[Client]:
     if queryset is None:
         queryset = Client.objects.all()
 
@@ -48,12 +65,13 @@ def accessible_clients_queryset(user, queryset: QuerySet | None = None) -> Query
     if can_access_all_clients(user):
         return queryset
 
+    # Cast user to Any for ForeignKey lookup compatibility in filter
     return queryset.filter(
-        Q(assigned_staff=user) | Q(assigned_staff__isnull=True)
+        Q(assigned_staff=cast(Any, user)) | Q(assigned_staff__isnull=True)
     ).distinct()
 
 
-def accessible_documents_queryset(user, queryset: QuerySet | None = None) -> QuerySet:
+def accessible_documents_queryset(user: AbstractBaseUser | AnonymousUser | None, queryset: QuerySet[Document] | None = None) -> QuerySet[Document]:
     if queryset is None:
         queryset = Document.objects.select_related("client")
 
@@ -62,7 +80,7 @@ def accessible_documents_queryset(user, queryset: QuerySet | None = None) -> Que
     )
 
 
-def accessible_payments_queryset(user, queryset: QuerySet | None = None) -> QuerySet:
+def accessible_payments_queryset(user: AbstractBaseUser | AnonymousUser | None, queryset: QuerySet[Payment] | None = None) -> QuerySet[Payment]:
     if queryset is None:
         queryset = Payment.objects.select_related("client")
 
@@ -71,7 +89,7 @@ def accessible_payments_queryset(user, queryset: QuerySet | None = None) -> Quer
     )
 
 
-def accessible_reminders_queryset(user, queryset: QuerySet | None = None) -> QuerySet:
+def accessible_reminders_queryset(user: AbstractBaseUser | AnonymousUser | None, queryset: QuerySet[Reminder] | None = None) -> QuerySet[Reminder]:
     if queryset is None:
         queryset = Reminder.objects.select_related("client", "payment", "document")
 
@@ -80,7 +98,7 @@ def accessible_reminders_queryset(user, queryset: QuerySet | None = None) -> Que
     )
 
 
-def accessible_tasks_queryset(user, queryset: QuerySet | None = None) -> QuerySet:
+def accessible_tasks_queryset(user: AbstractBaseUser | AnonymousUser | None, queryset: QuerySet[StaffTask] | None = None) -> QuerySet[StaffTask]:
     if queryset is None:
         queryset = StaffTask.objects.select_related("client", "assignee", "created_by")
 
@@ -95,7 +113,7 @@ def accessible_tasks_queryset(user, queryset: QuerySet | None = None) -> QuerySe
     )
 
 
-def accessible_campaigns_queryset(user, queryset: QuerySet | None = None) -> QuerySet:
+def accessible_campaigns_queryset(user: AbstractBaseUser | AnonymousUser | None, queryset: QuerySet[EmailCampaign] | None = None) -> QuerySet[EmailCampaign]:
     if queryset is None:
         queryset = EmailCampaign.objects.select_related("created_by")
 
@@ -105,4 +123,5 @@ def accessible_campaigns_queryset(user, queryset: QuerySet | None = None) -> Que
     if can_access_all_clients(user):
         return queryset
 
-    return queryset.filter(created_by=user)
+    # Cast user to Any for ForeignKey lookup compatibility in filter
+    return queryset.filter(created_by=cast(Any, user))

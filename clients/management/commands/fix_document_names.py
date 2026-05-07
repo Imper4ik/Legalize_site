@@ -1,10 +1,14 @@
+from __future__ import annotations
+
+from typing import Any
+
 from django.core.management.base import BaseCommand
 from clients.models import DocumentRequirement
 
 class Command(BaseCommand):
     help = 'Updates Russian translations for DocumentRequirements based on Polish names'
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         # Map Polish (prefix/text) to Russian
         translations = {
             'oryginał oświadczenia o powierzeniu': 'Оригинал заявления о поручении выполнения работ или оригинал разрешения на работу',

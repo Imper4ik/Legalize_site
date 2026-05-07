@@ -1,6 +1,9 @@
 """Email campaign tracking model for asynchronous mass email delivery."""
 
+from __future__ import annotations
+
 import json
+from typing import Any
 
 from django.conf import settings
 from django.db import models
@@ -36,7 +39,7 @@ class EmailCampaign(models.Model):
     sent_count = models.PositiveIntegerField(default=0, verbose_name=_("Отправлено"))
     failed_count = models.PositiveIntegerField(default=0, verbose_name=_("Ошибок"))
     recipient_emails = EncryptedTextField(default="[]", blank=True, verbose_name=_("Получатели"))
-    filters_snapshot = models.JSONField(default=dict, blank=True, verbose_name=_("Фильтры"))
+    filters_snapshot: models.JSONField[dict[str, Any]] = models.JSONField(default=dict, blank=True, verbose_name=_("Фильтры"))
     error_details = EncryptedTextField(blank=True, default="", verbose_name=_("Детали ошибок"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Создано"))
     started_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Запущено"))
@@ -54,7 +57,7 @@ class EmailCampaign(models.Model):
         verbose_name = _("Email-кампания")
         verbose_name_plural = _("Email-кампании")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"[{self.get_status_display()}] {self.subject} ({self.sent_count}/{self.total_recipients})"
 
     @property
@@ -77,7 +80,7 @@ class EmailCampaign(models.Model):
     def set_recipient_emails(self, recipients: list[str]) -> None:
         self.recipient_emails = json.dumps([str(item) for item in recipients])
 
-    def save(self, *args, **kwargs):
+    def save(self, *args: Any, **kwargs: Any) -> None:
         if isinstance(self.recipient_emails, list):
             self.set_recipient_emails([str(item) for item in self.recipient_emails])
         super().save(*args, **kwargs)

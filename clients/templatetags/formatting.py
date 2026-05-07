@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
+from typing import Any
 
 from django import template
 
@@ -9,7 +10,7 @@ register = template.Library()
 
 
 @register.filter
-def format_currency(value):
+def format_currency(value: Any) -> str:
     try:
         number = Decimal(value)
     except (TypeError, InvalidOperation):
@@ -19,7 +20,7 @@ def format_currency(value):
 
 
 @register.filter
-def format_date(value, fmt: str = "%d-%m-%Y"):
+def format_date(value: Any, fmt: str = "%d-%m-%Y") -> Any:
     if isinstance(value, (date, datetime)):
         return value.strftime(fmt)
     return value

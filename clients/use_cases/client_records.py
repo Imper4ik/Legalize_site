@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
 
 from django.db import transaction
 
@@ -11,6 +12,9 @@ from clients.services.notifications import (
     send_expired_documents_email,
     send_required_documents_email,
 )
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
 ClientNotificationSender = Callable[[Client], int]
 
@@ -39,14 +43,14 @@ def snapshot_client_update_state(
     client: Client,
     *,
     tracked_fields: tuple[str, ...] = CLIENT_UPDATE_TRACKED_FIELDS,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     return {field: getattr(client, field) for field in tracked_fields}
 
 
 def finalize_client_creation(
     *,
     client: Client,
-    actor,
+    actor: AbstractBaseUser | AnonymousUser | None,
     send_required_email: ClientNotificationSender = send_required_documents_email,
 ) -> ClientRecordScenarioResult:
     required_documents_email_sent = bool(send_required_email(client))
@@ -67,10 +71,10 @@ def finalize_client_creation(
 def finalize_client_update(
     *,
     client: Client,
-    actor,
-    previous_values: Mapping[str, object],
-    previous_fingerprints_date,
-    new_fingerprints_date,
+    actor: AbstractBaseUser | AnonymousUser | None,
+    previous_values: Mapping[str, Any],
+    previous_fingerprints_date: Any,
+    new_fingerprints_date: Any,
     send_expired_email: ClientNotificationSender = send_expired_documents_email,
 ) -> ClientRecordScenarioResult:
     expired_documents_email_sent = False
@@ -102,7 +106,7 @@ def finalize_client_update(
                 summary="Статус клиента изменён",
                 details=client.get_status_display(),
                 metadata={
-                    "old_status": previous_values.get("status"),
+                    "old_status": str(previous_values.get("status")),
                     "new_status": client.status,
                 },
             )
@@ -115,7 +119,7 @@ def finalize_client_update(
                 summary="Этап workflow изменён",
                 details=client.get_workflow_stage_display(),
                 metadata={
-                    "old_workflow_stage": previous_values.get("workflow_stage"),
+                    "old_workflow_stage": str(previous_values.get("workflow_stage")),
                     "workflow_stage": client.workflow_stage,
                 },
             )
@@ -126,8 +130,21 @@ def finalize_client_update(
         ):
             if field_name not in changed_fields:
                 continue
-            old_value = previous_values.get(field_name)
-            new_value = getattr(client, field_name)
+            old_val = previous_values.get(field_name)
+            new_val = getattr(client, field_name)
+            
+            old_val_iso = ""
+            if old_val and hasattr(old_val, "isoformat"):
+                old_val_iso = old_val.isoformat()
+            else:
+                old_val_iso = str(old_val or "")
+                
+            new_val_iso = ""
+            if new_val and hasattr(new_val, "isoformat"):
+                new_val_iso = new_val.isoformat()
+            else:
+                new_val_iso = str(new_val or "")
+
             log_client_activity(
                 client=client,
                 actor=actor,
@@ -135,8 +152,8 @@ def finalize_client_update(
                 summary=summary,
                 metadata={
                     "field": field_name,
-                    "old_value": old_value.isoformat() if old_value else "",
-                    "new_value": new_value.isoformat() if new_value else "",
+                    "old_value": old_val_iso,
+                    "new_value": new_val_iso,
                 },
             )
 

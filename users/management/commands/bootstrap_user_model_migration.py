@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from django.core.management.base import BaseCommand
 from django.db import connection
 from django.utils import timezone
@@ -8,7 +10,7 @@ from django.utils import timezone
 class Command(BaseCommand):
     help = "Marks users.0001_initial as applied when bootstrapping an existing auth_user table."
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         tables = set(connection.introspection.table_names())
         if "django_migrations" not in tables:
             self.stdout.write("Skipping user-model bootstrap: django_migrations table does not exist yet.")
@@ -42,4 +44,3 @@ class Command(BaseCommand):
             )
 
         self.stdout.write(self.style.SUCCESS("Recorded users.0001_initial for an existing auth_user table."))
-

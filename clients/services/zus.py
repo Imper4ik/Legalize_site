@@ -2,10 +2,14 @@ from __future__ import annotations
 
 import logging
 from datetime import date
+from typing import TYPE_CHECKING
 
 from django.utils import timezone
 
 from clients.constants import DocumentType
+
+if TYPE_CHECKING:
+    from clients.models.client import Client
 
 logger = logging.getLogger(__name__)
 
@@ -42,11 +46,12 @@ def expected_zus_months(fingerprints_date: date | None, *, today: date | None = 
     if fingerprints_date > today:
         return []
     first_expected = add_months(month_start(fingerprints_date), 1)
+    # ZUS RCA for previous month is usually available after 15th
     last_expected = add_months(month_start(today), -1 if today.day >= 15 else -2)
     return iter_months(first_expected, last_expected)
 
 
-def uploaded_zus_months(client) -> set[date]:
+def uploaded_zus_months(client: Client) -> set[date]:
     return {
         month_start(value)
         for value in client.documents.filter(
@@ -57,7 +62,7 @@ def uploaded_zus_months(client) -> set[date]:
     }
 
 
-def missing_zus_months(client, *, today: date | None = None) -> list[date]:
+def missing_zus_months(client: Client, *, today: date | None = None) -> list[date]:
     today = today or timezone.localdate()
     if getattr(client, "workflow_stage", None) != "waiting_decision":
         return []

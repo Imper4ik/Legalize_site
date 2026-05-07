@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import bleach
 from django.db import transaction
@@ -9,6 +10,9 @@ from django.db import transaction
 from clients.models import Client, Document, WniosekAttachment
 from clients.services.activity import log_client_activity
 from clients.services.notifications import send_missing_documents_email
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
 MissingDocumentsSender = Callable[[Client], int]
 
@@ -39,8 +43,7 @@ class WniosekAttachmentScenarioResult:
     submission_deleted: bool
 
 
-
-def update_client_notes_for_client(*, client: Client, actor, notes: str) -> ClientNoteScenarioResult:
+def update_client_notes_for_client(*, client: Client, actor: AbstractBaseUser | AnonymousUser | None, notes: str) -> ClientNoteScenarioResult:
     allowed_tags = ["b", "strong", "i", "em", "br", "ul", "ol", "li", "p"]
     cleaned_notes = bleach.clean(notes, tags=allowed_tags, attributes={}, strip=True)
     with transaction.atomic():
@@ -55,7 +58,7 @@ def update_client_notes_for_client(*, client: Client, actor, notes: str) -> Clie
     return ClientNoteScenarioResult(client=client, notes=client.notes or "")
 
 
-def delete_client_document(*, document: Document, actor) -> DocumentScenarioResult:
+def delete_client_document(*, document: Document, actor: AbstractBaseUser | AnonymousUser | None) -> DocumentScenarioResult:
     client = document.client
     document_id = document.pk
     document_display_name = document.display_name
@@ -79,7 +82,7 @@ def delete_client_document(*, document: Document, actor) -> DocumentScenarioResu
     )
 
 
-def delete_wniosek_attachment(*, attachment: WniosekAttachment, actor) -> WniosekAttachmentScenarioResult:
+def delete_wniosek_attachment(*, attachment: WniosekAttachment, actor: AbstractBaseUser | AnonymousUser | None) -> WniosekAttachmentScenarioResult:
     submission = attachment.submission
     client = submission.client
     attachment_id = attachment.pk
@@ -124,7 +127,7 @@ def delete_wniosek_attachment(*, attachment: WniosekAttachment, actor) -> Wniose
 def toggle_client_document_verification(
     *,
     document: Document,
-    actor,
+    actor: AbstractBaseUser | AnonymousUser | None,
     send_missing_email: MissingDocumentsSender = send_missing_documents_email,
 ) -> DocumentScenarioResult:
     was_verified = document.verified
@@ -158,7 +161,7 @@ def toggle_client_document_verification(
 def verify_all_client_documents(
     *,
     client: Client,
-    actor,
+    actor: AbstractBaseUser | AnonymousUser | None,
     send_missing_email: MissingDocumentsSender = send_missing_documents_email,
 ) -> DocumentScenarioResult:
     with transaction.atomic():
@@ -183,7 +186,7 @@ def verify_all_client_documents(
     )
 
 
-def record_document_download(*, document: Document, actor) -> DocumentScenarioResult:
+def record_document_download(*, document: Document, actor: AbstractBaseUser | AnonymousUser | None) -> DocumentScenarioResult:
     log_client_activity(
         client=document.client,
         actor=actor,

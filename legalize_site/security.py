@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
+from typing import Any, Callable
 
 from django.conf import settings
 from django.core.cache import cache
-from django.http import HttpResponse
+from django.http import HttpRequest, HttpResponse
 from django.urls import Resolver404, resolve
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -23,27 +24,27 @@ class RateLimitRule:
     message: str = _("Too many requests. Please try again later.")
 
 
-def _client_ip(request) -> str:
-    forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR", "")
+def _client_ip(request: HttpRequest) -> str:
+    forwarded_for = str(request.META.get("HTTP_X_FORWARDED_FOR", ""))
     if forwarded_for:
         return forwarded_for.split(",")[0].strip()
-    return request.META.get("REMOTE_ADDR", "") or "unknown"
+    return str(request.META.get("REMOTE_ADDR", "") or "unknown")
 
 
-def _build_rate_limit_key(request, url_name: str, rule: RateLimitRule) -> str:
+def _build_rate_limit_key(request: HttpRequest, url_name: str, rule: RateLimitRule) -> str:
     parts: list[str] = ["rl", url_name]
     user = getattr(request, "user", None)
     if rule.by_ip:
         parts.append(f"ip:{_client_ip(request)}")
     if rule.by_user and getattr(user, "is_authenticated", False):
-        parts.append(f"user:{user.pk}")
+        parts.append(f"user:{getattr(user, 'pk', 'unknown')}")
     elif rule.by_user:
         parts.append("user:anon")
     return "|".join(parts)
 
 
-def is_rate_limited(request, url_name: str, rule: RateLimitRule) -> bool:
-    if request.method.upper() not in rule.methods:
+def is_rate_limited(request: HttpRequest, url_name: str, rule: RateLimitRule) -> bool:
+    if str(request.method).upper() not in rule.methods:
         return False
 
     cache_key = _build_rate_limit_key(request, url_name, rule)
@@ -51,7 +52,7 @@ def is_rate_limited(request, url_name: str, rule: RateLimitRule) -> bool:
         created = cache.add(cache_key, 1, timeout=rule.window_seconds)
         if created:
             return False
-        current = cache.incr(cache_key)
+        current = int(cache.incr(cache_key))
     except ValueError:
         cache.set(cache_key, 1, timeout=rule.window_seconds)
         return False
@@ -66,7 +67,7 @@ def is_rate_limited(request, url_name: str, rule: RateLimitRule) -> bool:
     return current > rule.limit
 
 
-def build_rate_limited_response(request, message: str) -> HttpResponse:
+def build_rate_limited_response(request: HttpRequest, message: str) -> HttpResponse:
     from clients.services.responses import ResponseHelper
 
     helper = ResponseHelper(request)
@@ -78,10 +79,10 @@ def build_rate_limited_response(request, message: str) -> HttpResponse:
 class RateLimitMiddleware:
     """Apply path-name based rate limits to sensitive endpoints."""
 
-    def __init__(self, get_response):
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]):
         self.get_response = get_response
 
-    def __call__(self, request):
+    def __call__(self, request: HttpRequest) -> HttpResponse:
         try:
             match = resolve(request.path_info)
         except Resolver404:
@@ -89,11 +90,11 @@ class RateLimitMiddleware:
 
         url_name = match.url_name
         full_name = match.view_name
-        configured_rules: dict[str, dict] = getattr(settings, "RATE_LIMITS", {})
-        rule_config = configured_rules.get(full_name) or configured_rules.get(url_name)
+        configured_rules: dict[str, Any] = getattr(settings, "RATE_LIMITS", {})
+        rule_config = configured_rules.get(str(full_name)) or configured_rules.get(str(url_name))
         if rule_config:
             rule = RateLimitRule(**rule_config)
-            if is_rate_limited(request, full_name or url_name or "unknown", rule):
+            if is_rate_limited(request, str(full_name or url_name or "unknown"), rule):
                 response = build_rate_limited_response(request, rule.message)
                 retry_after = str(rule.window_seconds)
                 response["Retry-After"] = retry_after

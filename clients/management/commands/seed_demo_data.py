@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from datetime import time, timedelta
+from datetime import date, time, timedelta
 from decimal import Decimal
+from typing import Any
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -22,7 +23,7 @@ DEMO_PDF_BYTES = b"%PDF-1.4\n% Legalize demo placeholder\n1 0 obj<<>>endobj\n%%E
 class Command(BaseCommand):
     help = "Seed safe fake demo data for thesis defense and product demos."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
             "--confirm",
             action="store_true",
@@ -39,7 +40,7 @@ class Command(BaseCommand):
             help="Password for demo-staff@example.test.",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         if not options["confirm"]:
             raise CommandError("Refusing to seed demo data without --confirm.")
 
@@ -165,7 +166,7 @@ class Command(BaseCommand):
         self.stdout.write("Login: demo-staff@example.test")
         self.stdout.write(f"Password: {options['password']}")
 
-    def _upsert_demo_staff(self, password: str):
+    def _upsert_demo_staff(self, password: str) -> Any:
         user_model = get_user_model()
         user, _created = user_model.objects.update_or_create(
             email="demo-staff@example.test",
@@ -176,7 +177,7 @@ class Command(BaseCommand):
         user.groups.add(Group.objects.get(name="Staff"))
         return user
 
-    def _upsert_client(self, *, email: str, first_name: str, last_name: str, **defaults) -> Client:
+    def _upsert_client(self, *, email: str, first_name: str, last_name: str, **defaults: Any) -> Client:
         payload = {
             "first_name": first_name,
             "last_name": last_name,
@@ -194,11 +195,11 @@ class Command(BaseCommand):
         client: Client,
         document_type: str,
         filename: str,
-        expiry_date=None,
+        expiry_date: date | None = None,
         verified: bool = False,
         awaiting_confirmation: bool = False,
         ocr_status: str = "skipped",
-        parsed_data: dict | None = None,
+        parsed_data: dict[str, Any] | None = None,
     ) -> Document:
         document, created = Document.objects.get_or_create(
             client=client,
@@ -217,6 +218,6 @@ class Command(BaseCommand):
         document.verified = verified
         document.awaiting_confirmation = awaiting_confirmation
         document.ocr_status = ocr_status
-        document.parsed_data = parsed_data
+        document.parsed_data = parsed_data or {}
         document.save()
         return document

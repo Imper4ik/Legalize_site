@@ -3,21 +3,25 @@ from __future__ import annotations
 import hashlib
 import posixpath
 from pathlib import Path
+from typing import Any, cast, TYPE_CHECKING
 from urllib.parse import urljoin
 
 from django.conf import settings
 from django.core.exceptions import SuspiciousFileOperation
-from django.core.files.base import ContentFile
+from django.core.files.base import ContentFile, File
 from django.core.files.storage import FileSystemStorage, Storage
 from django.db import IntegrityError, transaction
 from django.utils._os import safe_join
 from django.utils.encoding import filepath_to_uri
 
+if TYPE_CHECKING:
+    from database_media.models import DatabaseMediaFile
+
 
 class DatabaseMediaStorage(Storage):
     """Django storage backend that persists uploaded media bytes in PostgreSQL."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.fallback_storage = FileSystemStorage(location=settings.MEDIA_ROOT, base_url=settings.MEDIA_URL)
         self.fallback_enabled = getattr(settings, "DATABASE_MEDIA_FALLBACK_TO_FILE_SYSTEM", True)
@@ -30,30 +34,30 @@ class DatabaseMediaStorage(Storage):
             raise SuspiciousFileOperation(f"Invalid database media path: {name!r}")
         return normalized
 
-    def _model(self):
+    def _model(self) -> type[DatabaseMediaFile]:
         from database_media.models import DatabaseMediaFile
 
         return DatabaseMediaFile
 
-    def _read_content(self, content) -> tuple[bytes, str]:
+    def _read_content(self, content: Any) -> tuple[bytes, str]:
         if hasattr(content, "seek"):
             content.seek(0)
         chunks = content.chunks() if hasattr(content, "chunks") else [content.read()]
         data = b"".join(bytes(chunk) for chunk in chunks)
-        return data, getattr(content, "content_type", "") or ""
+        return data, str(getattr(content, "content_type", "") or "")
 
-    def _create_blob(self, name: str, data: bytes, content_type: str):
+    def _create_blob(self, name: str, data: bytes, content_type: str) -> DatabaseMediaFile:
         model = self._model()
         digest = hashlib.sha256(data).hexdigest()
-        return model.objects.create(
+        return cast("DatabaseMediaFile", model.objects.create(
             name=name,
             content=data,
             content_type=content_type,
             size=len(data),
             sha256=digest,
-        )
+        ))
 
-    def _import_from_fallback(self, name: str):
+    def _import_from_fallback(self, name: str) -> DatabaseMediaFile | None:
         if not self.fallback_enabled or not self.auto_import_legacy_files:
             return None
         if not self.fallback_storage.exists(name):
@@ -63,23 +67,23 @@ class DatabaseMediaStorage(Storage):
         try:
             return self._create_blob(name, data, "")
         except IntegrityError:
-            return self._model().objects.filter(name=name).first()
+            return cast("DatabaseMediaFile | None", self._model().objects.filter(name=name).first())
 
-    def _get_blob(self, name: str):
+    def _get_blob(self, name: str) -> DatabaseMediaFile | None:
         cleaned = self._clean_name(name)
         model = self._model()
         blob = model.objects.filter(name=cleaned).first()
         if blob is not None:
-            return blob
+            return cast("DatabaseMediaFile", blob)
         return self._import_from_fallback(cleaned)
 
-    def _open(self, name: str, mode: str = "rb"):
+    def _open(self, name: str, mode: str = "rb") -> File:
         blob = self._get_blob(name)
         if blob is None:
             raise FileNotFoundError(name)
         return ContentFile(bytes(blob.content), name=blob.name)
 
-    def _save(self, name: str, content) -> str:
+    def _save(self, name: str, content: Any) -> str:
         cleaned = self._clean_name(name)
         data, content_type = self._read_content(content)
         try:
@@ -101,14 +105,14 @@ class DatabaseMediaStorage(Storage):
         cleaned = self._clean_name(name)
         if self._model().objects.filter(name=cleaned).exists():
             return True
-        return self.fallback_enabled and self.fallback_storage.exists(cleaned)
+        return bool(self.fallback_enabled and self.fallback_storage.exists(cleaned))
 
     def size(self, name: str) -> int:
         blob = self._get_blob(name)
         if blob is not None:
-            return blob.size
+            return int(blob.size)
         if self.fallback_enabled:
-            return self.fallback_storage.size(self._clean_name(name))
+            return int(self.fallback_storage.size(self._clean_name(name)))
         raise FileNotFoundError(name)
 
     def url(self, name: str | None) -> str:
@@ -124,20 +128,20 @@ class DatabaseMediaStorage(Storage):
                 return self.fallback_storage.path(cleaned)
             raise FileNotFoundError(name)
 
-        temp_root = Path(getattr(settings, "DATABASE_MEDIA_TEMP_ROOT"))
+        temp_root = Path(str(getattr(settings, "DATABASE_MEDIA_TEMP_ROOT")))
         target = Path(safe_join(str(temp_root), cleaned))
         target.parent.mkdir(parents=True, exist_ok=True)
         if not target.exists() or target.stat().st_size != blob.size:
             target.write_bytes(bytes(blob.content))
         return str(target)
 
-    def get_created_time(self, name: str):
+    def get_created_time(self, name: str) -> Any:
         blob = self._get_blob(name)
         if blob is None:
             raise FileNotFoundError(name)
         return blob.created_at
 
-    def get_modified_time(self, name: str):
+    def get_modified_time(self, name: str) -> Any:
         blob = self._get_blob(name)
         if blob is None:
             raise FileNotFoundError(name)

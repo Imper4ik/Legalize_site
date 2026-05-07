@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from datetime import timedelta
+from typing import Any, TYPE_CHECKING
 
 from django.contrib import messages
 from django.core.management import call_command
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -23,18 +25,23 @@ from clients.use_cases.reminders import (
 from clients.services.roles import REPORT_MUTATION_ROLES
 from clients.views.base import StaffRequiredMixin, role_required_view
 
+if TYPE_CHECKING:
+    from django.http.response import HttpResponseBase
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
+
 
 class ReminderListView(StaffRequiredMixin, ListView):
     model = Reminder
     context_object_name = "reminders"
-    reminder_type = None
+    reminder_type: str | None = None
     template_name = ""
-    title = ""
+    title: str = ""
     client_param = "client"
     start_date_param = "start_date"
     end_date_param = "end_date"
+    client_filter_id: int | None = None
 
-    def get_queryset(self):
+    def get_queryset(self) -> Any:
         queryset = (
             accessible_reminders_queryset(
                 self.request.user,
@@ -60,7 +67,7 @@ class ReminderListView(StaffRequiredMixin, ListView):
 
         return queryset
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         reminders = context["reminders"]
         context.update(
@@ -81,15 +88,15 @@ class ReminderListView(StaffRequiredMixin, ListView):
 class DocumentReminderListView(ReminderListView):
     reminder_type = "document"
     template_name = "clients/document_reminder_list.html"
-    title = _lazy("Напоминания по документам")
+    title = str(_lazy("Напоминания по документам"))
     client_param = "doc_client"
     start_date_param = "doc_start_date"
     end_date_param = "doc_end_date"
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         reminders = list(context["reminders"])
-        grouped = OrderedDict()
+        grouped: OrderedDict[int, dict[str, Any]] = OrderedDict()
         today = timezone.localdate()
         soon_cutoff = today + timedelta(days=3)
         for reminder in reminders:
@@ -150,11 +157,11 @@ class DocumentReminderListView(ReminderListView):
 class PaymentReminderListView(ReminderListView):
     reminder_type = "payment"
     template_name = "clients/payment_reminder_list.html"
-    title = _lazy("Напоминания по оплатам")
+    title = str(_lazy("Напоминания по оплатам"))
 
 
 @role_required_view(*REPORT_MUTATION_ROLES)
-def run_update_reminders(request):
+def run_update_reminders(request: HttpRequest) -> HttpResponseBase:
     if request.method == "POST":
         try:
             call_command("update_reminders")
@@ -171,7 +178,7 @@ def run_update_reminders(request):
 
 
 @role_required_view(*REPORT_MUTATION_ROLES)
-def reminder_action(request, reminder_id):
+def reminder_action(request: HttpRequest, reminder_id: int) -> HttpResponseBase:
     reminder = get_object_or_404(accessible_reminders_queryset(request.user, Reminder.objects.all()), pk=reminder_id)
     if request.method == "POST":
         action = request.POST.get("action")
@@ -199,7 +206,7 @@ def reminder_action(request, reminder_id):
 
 
 @role_required_view(*REPORT_MUTATION_ROLES)
-def send_document_reminder_email(request, client_id):
+def send_document_reminder_email(request: HttpRequest, client_id: int) -> HttpResponseBase:
     if request.method == "POST":
         client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
         result = send_document_reminder_for_client(

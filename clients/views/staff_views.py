@@ -3,6 +3,7 @@ from __future__ import annotations
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 
@@ -16,7 +17,7 @@ from clients.views.base import role_required_view
 
 
 @role_required_view(*PEOPLE_ALLOWED_ROLES)
-def staff_manage_view(request):
+def staff_manage_view(request: HttpRequest) -> HttpResponse:
     user_model = get_user_model()
     staff_users = list(user_model.objects.filter(is_staff=True).order_by("email"))
     edit_forms = [
@@ -71,7 +72,7 @@ def staff_manage_view(request):
 
 
 @role_required_view(*PEOPLE_ALLOWED_ROLES)
-def role_manage_view(request):
+def role_manage_view(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         ensure_predefined_roles()
         messages.success(request, _("Роли и права синхронизированы."))

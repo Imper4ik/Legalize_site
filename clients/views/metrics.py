@@ -1,4 +1,7 @@
-from datetime import datetime, timedelta
+from __future__ import annotations
+
+from datetime import datetime, timedelta, date
+from typing import Any
 
 from django.conf import settings
 from django.utils import timezone
@@ -14,7 +17,7 @@ class MetricsDashboardView(RoleOrFeatureRequiredMixin, TemplateView):
     allowed_roles = list(SETTINGS_ALLOWED_ROLES)
     required_permission_name = "can_view_reports"
 
-    def _parse_date_param(self, name: str, default):
+    def _parse_date_param(self, name: str, default: date) -> date:
         """Parse a YYYY-MM-DD GET param, returning *default* on failure."""
         raw = self.request.GET.get(name, "")
         if not raw:
@@ -24,7 +27,7 @@ class MetricsDashboardView(RoleOrFeatureRequiredMixin, TemplateView):
         except (ValueError, TypeError):
             return default
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         today = timezone.localdate()
 

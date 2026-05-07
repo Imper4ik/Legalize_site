@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Any
+
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
@@ -76,5 +80,5 @@ class EmailLog(models.Model):
             ),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"[{self.sent_at:%d.%m.%Y %H:%M}] {self.subject} -> {self.recipients}"

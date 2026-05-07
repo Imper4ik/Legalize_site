@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+from decimal import Decimal
+from typing import Any
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -36,19 +41,19 @@ class Payment(SoftDeleteModel):
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Обновлено"))
 
     @property
-    def amount_due(self):
-        return self.total_amount - self.amount_paid
+    def amount_due(self) -> Decimal:
+        return cast(Decimal, self.total_amount) - cast(Decimal, self.amount_paid)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Счёт {self.pk} - {self.client} ({self.total_amount} PLN)"
 
-    def on_archive(self):
+    def on_archive(self) -> None:
         reminder = getattr(self, "reminder", None)
         if reminder is not None:
             reminder.is_active = False
             reminder.save(update_fields=["is_active"])
 
-    def on_restore(self):
+    def on_restore(self) -> None:
         reminder = getattr(self, "reminder", None)
         if self.status == "partial" and self.due_date and reminder is not None:
             reminder.is_active = True
@@ -62,3 +67,5 @@ class Payment(SoftDeleteModel):
         ]
         verbose_name = _("Платёж")
         verbose_name_plural = _("Платежи")
+
+from typing import cast

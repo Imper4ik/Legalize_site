@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Any
+
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from clients.models import Document
@@ -7,14 +11,14 @@ from clients.models.document import PARSED_DATA_PII_KEYS
 class Command(BaseCommand):
     help = "Scrub PII (Personally Identifiable Information) from old Document parsed_data."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
             "--dry-run",
             action="store_true",
             help="Show what would be scrubbed without actually modifying data.",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         dry_run = options["dry_run"]
 
         documents = Document.objects.filter(

@@ -1,6 +1,11 @@
 """Django management command to compress existing document images."""
-from django.core.management.base import BaseCommand
+from __future__ import annotations
+
 from pathlib import Path
+from typing import Any
+
+from django.conf import settings
+from django.core.management.base import BaseCommand
 
 from clients.models import Document
 from clients.services.image_compression import compress_existing_file, should_compress
@@ -9,7 +14,7 @@ from clients.services.image_compression import compress_existing_file, should_co
 class Command(BaseCommand):
     help = 'Compress existing document images to save storage space'
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
             '--dry-run',
             action='store_true',
@@ -22,7 +27,7 @@ class Command(BaseCommand):
             help='Limit number of documents to process',
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         dry_run = options['dry_run']
         limit = options['limit']
 
@@ -90,7 +95,8 @@ class Command(BaseCommand):
 
                         # Update file path in database if extension changed
                         if new_path != file_path:
-                            doc.file.name = str(new_path.relative_to(Path(doc.file.storage.location)))
+                            media_root = Path(settings.MEDIA_ROOT)
+                            doc.file.name = str(new_path.relative_to(media_root)).replace("\\", "/")
                             doc.save(update_fields=['file'])
                 else:
                     self.stdout.write(self.style.ERROR("  Failed to compress"))

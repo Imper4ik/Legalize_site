@@ -2,10 +2,14 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
 
 from clients.models import Client, Reminder
 from clients.services.activity import log_client_activity
 from clients.services.notifications import send_expiring_documents_email
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
 DocumentReminderSender = Callable[..., int]
 
@@ -19,7 +23,7 @@ class ReminderScenarioResult:
     deleted_reminder_id: int | None = None
 
 
-def _reminder_metadata(reminder: Reminder) -> dict:
+def _reminder_metadata(reminder: Reminder) -> dict[str, Any]:
     return {
         "reminder_id": reminder.pk,
         "reminder_type": reminder.reminder_type,
@@ -30,7 +34,7 @@ def _reminder_metadata(reminder: Reminder) -> dict:
     }
 
 
-def delete_reminder(*, reminder: Reminder, actor) -> ReminderScenarioResult:
+def delete_reminder(*, reminder: Reminder, actor: AbstractBaseUser | AnonymousUser | None) -> ReminderScenarioResult:
     client = reminder.client
     reminder_id = reminder.pk
     log_client_activity(
@@ -45,7 +49,7 @@ def delete_reminder(*, reminder: Reminder, actor) -> ReminderScenarioResult:
     return ReminderScenarioResult(client=client, deleted_reminder_id=reminder_id)
 
 
-def deactivate_reminder(*, reminder: Reminder, actor) -> ReminderScenarioResult:
+def deactivate_reminder(*, reminder: Reminder, actor: AbstractBaseUser | AnonymousUser | None) -> ReminderScenarioResult:
     reminder.is_active = False
     reminder.save(update_fields=["is_active"])
     log_client_activity(
@@ -61,7 +65,7 @@ def deactivate_reminder(*, reminder: Reminder, actor) -> ReminderScenarioResult:
 def send_document_reminder_for_reminder(
     *,
     reminder: Reminder,
-    actor,
+    actor: AbstractBaseUser | AnonymousUser | None,
     send_email: DocumentReminderSender = send_expiring_documents_email,
 ) -> ReminderScenarioResult:
     documents = []
@@ -80,7 +84,7 @@ def send_document_reminder_for_reminder(
 def send_document_reminder_for_client(
     *,
     client: Client,
-    actor,
+    actor: AbstractBaseUser | AnonymousUser | None,
     send_email: DocumentReminderSender = send_expiring_documents_email,
 ) -> ReminderScenarioResult:
     reminders = (

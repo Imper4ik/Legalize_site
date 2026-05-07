@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from typing import Any
+
 from django.apps import apps
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandParser
 
 from fernet_fields.fields import EncryptedTextField
 
@@ -9,7 +11,7 @@ from fernet_fields.fields import EncryptedTextField
 class Command(BaseCommand):
     help = "Re-encrypt project-local Fernet fields with the current primary FERNET_KEYS entry."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument(
             "--model",
             action="append",
@@ -22,13 +24,13 @@ class Command(BaseCommand):
             help="Report rows that would be rewritten without saving them.",
         )
 
-    def handle(self, *args, **options):
-        model_filters = {item.lower() for item in options["model"]}
-        dry_run = bool(options["dry_run"])
+    def handle(self, *args: Any, **options: Any) -> None:
+        model_filters = {str(item).lower() for item in options.get("model", [])}
+        dry_run = bool(options.get("dry_run", False))
         total_updated = 0
 
         for model in apps.get_models():
-            label = model._meta.label
+            label = str(model._meta.label)
             if model_filters and label.lower() not in model_filters:
                 continue
 

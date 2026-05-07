@@ -2,10 +2,14 @@ from __future__ import annotations
 
 from importlib import import_module
 from pathlib import Path
+from typing import Any, TYPE_CHECKING
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+
+if TYPE_CHECKING:
+    from django.core.files.uploadedfile import UploadedFile
 
 FILE_INPUT_ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp"
 
@@ -37,7 +41,7 @@ ALLOWED_DOCUMENTS = {
 }
 
 
-def _validate_uploaded_filename(uploaded_file) -> None:
+def _validate_uploaded_filename(uploaded_file: Any) -> None:
     raw_name = str(getattr(uploaded_file, "name", "") or "")
     if "/" in raw_name or "\\" in raw_name:
         raise ValidationError(_("Имя файла не должно содержать пути или вложенные каталоги."))
@@ -60,7 +64,7 @@ def _validate_uploaded_filename(uploaded_file) -> None:
         raise ValidationError(_("Имя файла содержит недопустимые управляющие символы."))
 
 
-def _get_pdf_reader():
+def _get_pdf_reader() -> Any | None:
     try:
         module = import_module("pypdf")
         return getattr(module, "PdfReader", None)
@@ -68,12 +72,12 @@ def _get_pdf_reader():
         return None
 
 
-def _reset_position(uploaded_file, position: int) -> None:
+def _reset_position(uploaded_file: Any, position: int) -> None:
     if hasattr(uploaded_file, "seek"):
         uploaded_file.seek(position)
 
 
-def _validate_pdf_file(uploaded_file) -> None:
+def _validate_pdf_file(uploaded_file: Any) -> None:
     start_position = uploaded_file.tell()
     try:
         uploaded_file.seek(0)
@@ -103,7 +107,7 @@ def _validate_pdf_file(uploaded_file) -> None:
         _reset_position(uploaded_file, start_position)
 
 
-def _validate_image_file(uploaded_file, *, allowed_formats: set[str], label: str) -> None:
+def _validate_image_file(uploaded_file: Any, *, allowed_formats: set[str], label: str) -> None:
     start_position = uploaded_file.tell()
     try:
         from PIL import Image, UnidentifiedImageError
@@ -134,7 +138,7 @@ def _validate_image_file(uploaded_file, *, allowed_formats: set[str], label: str
         _reset_position(uploaded_file, start_position)
 
 
-def validate_uploaded_document(uploaded_file):
+def validate_uploaded_document(uploaded_file: Any) -> Any:
     if uploaded_file is None:
         raise ValidationError(_("Выберите файл для загрузки."))
 

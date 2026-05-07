@@ -5,8 +5,9 @@ import os
 import tempfile
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import datetime, timedelta
 from hashlib import sha256
+from typing import Any, cast, TYPE_CHECKING
 
 from django.conf import settings
 from django.db import models, transaction
@@ -22,6 +23,9 @@ from clients.services.notifications import (
     send_missing_documents_email,
 )
 from clients.services.wezwanie_parser import WezwanieData, parse_wezwanie
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
 logger = logging.getLogger(__name__)
 DEFAULT_JOB_LEASE_SECONDS = 600
@@ -51,7 +55,7 @@ class DocumentUploadResult:
     manual_review_required: bool = False
     pending_confirmation: bool = False
     ocr_processing_queued: bool = False
-    parsed_payload: dict[str, object] | None = None
+    parsed_payload: dict[str, Any] | None = None
 
 
 @dataclass
@@ -76,7 +80,7 @@ def upload_client_document(
     client: Client,
     doc_type: str,
     uploaded_document: Document,
-    actor,
+    actor: AbstractBaseUser | AnonymousUser | None,
     parse_requested: bool,
     parser: Parser = parse_wezwanie,
     send_missing_email: NotificationSender = send_missing_documents_email,
@@ -142,7 +146,7 @@ def upload_client_document(
 def confirm_wezwanie_document(
     *,
     document: Document,
-    actor,
+    actor: AbstractBaseUser | AnonymousUser | None,
     confirmation_data: Mapping[str, str],
     parser: Parser = parse_wezwanie,
     send_missing_email: NotificationSender = send_missing_documents_email,
@@ -198,11 +202,11 @@ def confirm_wezwanie_document(
     )
 
 
-def enqueue_document_processing_job(*, document: Document, actor=None, requires_confirmation: bool = False) -> DocumentProcessingJob:
+def enqueue_document_processing_job(*, document: Document, actor: AbstractBaseUser | AnonymousUser | None = None, requires_confirmation: bool = False) -> DocumentProcessingJob:
     """Queue background OCR work for the current document file."""
 
     job_defaults = {
-        "created_by": actor if getattr(actor, "is_authenticated", False) else None,
+        "created_by": actor if actor and actor.is_authenticated else None,
         "status": DocumentProcessingJob.STATUS_PENDING,
         "source_file_name": _document_file_identity(document),
         "max_attempts": DEFAULT_JOB_MAX_ATTEMPTS,
@@ -311,7 +315,7 @@ def process_document_processing_job(
 
     try:
         with document_file.open("rb") as src:
-            ext = os.path.splitext(document_file.name)[1]
+            ext = os.path.splitext(document_file.name or "")[1]
             with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
                 for chunk in src.chunks():
                     tmp.write(chunk)
@@ -353,7 +357,7 @@ def _save_client_document(
     client: Client,
     doc_type: str,
     uploaded_document: Document,
-    actor,
+    actor: AbstractBaseUser | AnonymousUser | None,
 ) -> Document:
     uploaded_document.client = client
     uploaded_document.document_type = doc_type
@@ -556,11 +560,11 @@ def _job_matches_processing_state(
     return (
         job.status == DocumentProcessingJob.STATUS_PROCESSING
         and job.source_file_name == source_file_name
-        and source_file_name in {current_file_identity, document.file.name}
+        and source_file_name in {current_file_identity, document.file.name or ""}
     )
 
 
-def reclaim_stale_document_jobs(*, now=None) -> int:
+def reclaim_stale_document_jobs(*, now: datetime | None = None) -> int:
     now = now or timezone.now()
     stale_jobs = DocumentProcessingJob.objects.filter(
         job_type=DocumentProcessingJob.JOB_TYPE_WEZWANIE_OCR,
@@ -656,7 +660,7 @@ def _has_name_mismatch(parsed_full_name: str | None, client: Client) -> bool:
     )
 
 
-def _build_wezwanie_payload(parsed: WezwanieData) -> dict[str, object]:
+def _build_wezwanie_payload(parsed: WezwanieData) -> dict[str, Any]:
     first_name = ""
     last_name = ""
     if parsed.full_name:
@@ -691,7 +695,7 @@ def _append_required_documents_update(parsed: WezwanieData, auto_updates: list[s
     _append_required_documents_update_from_codes(parsed.required_documents, auto_updates)
 
 
-def _append_required_documents_update_from_codes(doc_codes, auto_updates: list[str]) -> None:
+def _append_required_documents_update_from_codes(doc_codes: list[str] | None, auto_updates: list[str]) -> None:
     if not doc_codes:
         return
 
@@ -771,7 +775,7 @@ def _apply_parsed_client_updates(client: Client, parsed: WezwanieData) -> tuple[
     return updated_fields, auto_updates
 
 
-def _build_confirmed_wezwanie_payload(confirmation_data: Mapping[str, str]) -> dict[str, object]:
+def _build_confirmed_wezwanie_payload(confirmation_data: Mapping[str, str]) -> dict[str, Any]:
     safe_field_names = (
         "first_name",
         "last_name",

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 from cryptography.fernet import Fernet, InvalidToken, MultiFernet
 from django.conf import settings
 from django.db import models
@@ -13,7 +15,7 @@ class EncryptedFieldDecryptionError(ValueError):
     """Raised when an encrypted database value cannot be decrypted."""
 
 
-def _build_fernet():
+def _build_fernet() -> Fernet | MultiFernet:
     keys = getattr(settings, "FERNET_KEYS", [])
     if not keys:
         raise ValueError("FERNET_KEYS must contain at least one key")
@@ -27,22 +29,22 @@ class EncryptedTextField(models.TextField):
     """TextField encrypted at rest using Fernet keys."""
 
     @cached_property
-    def _fernet(self):
+    def _fernet(self) -> Fernet | MultiFernet:
         return _build_fernet()
 
-    def get_prep_value(self, value):
+    def get_prep_value(self, value: Any) -> Any:
         value = super().get_prep_value(value)
         if value is None or value == "":
             return value
         token = self._fernet.encrypt(force_str(value).encode("utf-8"))
         return token.decode("utf-8")
 
-    def from_db_value(self, value, expression, connection):
+    def from_db_value(self, value: Any, expression: Any, connection: Any) -> Any:
         if value is None or value == "":
             return value
         return self._decrypt(value, fail_closed=True)
 
-    def to_python(self, value):
+    def to_python(self, value: Any) -> Any:
         if value is None or value == "":
             return value
         if not self._looks_like_fernet_token(value):
@@ -50,10 +52,10 @@ class EncryptedTextField(models.TextField):
         return self._decrypt(value, fail_closed=True)
 
     @staticmethod
-    def _looks_like_fernet_token(value) -> bool:
+    def _looks_like_fernet_token(value: Any) -> bool:
         return isinstance(value, str) and value.startswith("gAAAA")
 
-    def _decrypt(self, value, *, fail_closed: bool = False):
+    def _decrypt(self, value: Any, *, fail_closed: bool = False) -> Any:
         if not isinstance(value, str):
             return value
         try:

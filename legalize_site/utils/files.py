@@ -2,10 +2,14 @@ from __future__ import annotations
 
 import mimetypes
 from pathlib import Path
+from typing import Any, TYPE_CHECKING
 
-from django.http import FileResponse, Http404
+from django.http import FileResponse, Http404, HttpResponse
 
 from clients.services.responses import apply_no_store
+
+if TYPE_CHECKING:
+    from django.http.response import HttpResponseBase
 
 
 mimetypes.add_type("image/webp", ".webp", True)
@@ -31,12 +35,12 @@ def _guess_content_type(filename: str) -> str:
 
 
 def build_protected_file_response(
-    file_field,
+    file_field: Any,
     *,
     filename: str | None = None,
     as_attachment: bool = True,
     content_type: str | None = None,
-):
+) -> HttpResponseBase:
     if not file_field:
         raise Http404("File not found")
 
@@ -45,8 +49,8 @@ def build_protected_file_response(
     except FileNotFoundError as exc:
         raise Http404("File not found") from exc
 
-    resolved_name = filename or Path(file_field.name).name
-    resolved_content_type = content_type or _guess_content_type(resolved_name or file_field.name)
+    resolved_name = filename or Path(str(file_field.name)).name
+    resolved_content_type = content_type or _guess_content_type(resolved_name or str(file_field.name))
 
     response = FileResponse(
         file_handle,

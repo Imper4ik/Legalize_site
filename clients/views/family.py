@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+from typing import Any, TYPE_CHECKING
+
 from django.contrib import messages
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
@@ -18,6 +21,9 @@ from clients.services.family import (
 )
 from clients.views.base import StaffRequiredMixin
 
+if TYPE_CHECKING:
+    from clients.models import FamilyGroup
+
 
 class FamilyDashboardView(StaffRequiredMixin, View):
     template_name = "clients/family_dashboard.html"
@@ -27,12 +33,12 @@ class FamilyDashboardView(StaffRequiredMixin, View):
         sponsor = family_sponsor_for(client)
         return get_object_or_404(accessible_clients_queryset(self.request.user, Client.objects.all()), pk=sponsor.pk)
 
-    def get(self, request, pk):
+    def get(self, request: HttpRequest, pk: int) -> HttpResponse:
         sponsor = self._get_sponsor(pk)
         group = get_existing_family_group(sponsor)
         return render(request, self.template_name, self._context(sponsor, group))
 
-    def post(self, request, pk):
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
         sponsor = self._get_sponsor(pk)
         group = ensure_family_group(sponsor)
         form = FamilyGroupFinanceForm(request.POST, instance=group)
@@ -42,18 +48,18 @@ class FamilyDashboardView(StaffRequiredMixin, View):
             return redirect("clients:family_dashboard", pk=sponsor.pk)
         return render(request, self.template_name, self._context(sponsor, group, form=form), status=400)
 
-    def _context(self, sponsor: Client, group, *, form=None) -> dict:
-        group = group or self._empty_family_group(sponsor)
+    def _context(self, sponsor: Client, group: FamilyGroup | None, *, form: FamilyGroupFinanceForm | None = None) -> dict[str, Any]:
+        group_obj = group or self._empty_family_group(sponsor)
         members = list(get_family_members(sponsor))
         person_cards = [
-            self._person_card(sponsor, role_label=_("Спонсор")),
+            self._person_card(sponsor, role_label=str(_("Спонсор"))),
             *[
-                self._person_card(member, role_label=member.get_family_role_display())
+                self._person_card(member, role_label=str(member.get_family_role_display()))
                 for member in members
             ],
         ]
         total_missing_documents = sum(card["missing_documents_count"] for card in person_cards)
-        income = calculate_family_income(group)
+        income = calculate_family_income(group_obj)
 
         family_risks = list(income.risks)
         if total_missing_documents:
@@ -69,8 +75,8 @@ class FamilyDashboardView(StaffRequiredMixin, View):
             "sponsor": sponsor,
             "members": members,
             "person_cards": person_cards,
-            "family_group": group,
-            "finance_form": form or FamilyGroupFinanceForm(instance=group),
+            "family_group": group_obj,
+            "finance_form": form or FamilyGroupFinanceForm(instance=group_obj),
             "income": income,
             "family_risks": family_risks,
             "housing_note": _("Бесплатное жильё требует подтверждения.")
@@ -78,7 +84,7 @@ class FamilyDashboardView(StaffRequiredMixin, View):
             else "",
         }
 
-    def _person_card(self, client: Client, *, role_label: str) -> dict:
+    def _person_card(self, client: Client, *, role_label: str) -> dict[str, Any]:
         checklist = client.get_document_checklist(check_file_existence=False)
         missing_documents_count = sum(1 for item in checklist if not item.get("is_complete"))
         return {
@@ -91,7 +97,7 @@ class FamilyDashboardView(StaffRequiredMixin, View):
         }
 
     @staticmethod
-    def _empty_family_group(sponsor: Client):
+    def _empty_family_group(sponsor: Client) -> FamilyGroup:
         from clients.models import FamilyGroup
 
         return FamilyGroup(sponsor=sponsor)

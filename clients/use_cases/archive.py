@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from django.db import transaction
 
 from clients.models import Client, Document, Payment
 from clients.services.activity import log_client_activity
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
 
 @dataclass(frozen=True)
@@ -15,7 +19,7 @@ class RestoreScenarioResult:
     restored_object_type: str
 
 
-def restore_client_record(*, client: Client, actor) -> RestoreScenarioResult:
+def restore_client_record(*, client: Client, actor: AbstractBaseUser | AnonymousUser | None) -> RestoreScenarioResult:
     with transaction.atomic():
         client.restore()
         log_client_activity(
@@ -28,7 +32,7 @@ def restore_client_record(*, client: Client, actor) -> RestoreScenarioResult:
     return RestoreScenarioResult(client=client, restored_object_id=client.pk, restored_object_type="client")
 
 
-def restore_client_document(*, document: Document, actor) -> RestoreScenarioResult:
+def restore_client_document(*, document: Document, actor: AbstractBaseUser | AnonymousUser | None) -> RestoreScenarioResult:
     with transaction.atomic():
         document.restore()
         log_client_activity(
@@ -46,7 +50,7 @@ def restore_client_document(*, document: Document, actor) -> RestoreScenarioResu
     )
 
 
-def restore_client_payment(*, payment: Payment, actor) -> RestoreScenarioResult:
+def restore_client_payment(*, payment: Payment, actor: AbstractBaseUser | AnonymousUser | None) -> RestoreScenarioResult:
     with transaction.atomic():
         payment.restore()
         log_client_activity(

@@ -3,11 +3,15 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
+from typing import Any, cast, TYPE_CHECKING
 
 from django.db import transaction
 from django.utils.translation import gettext as _
 
 from clients.models import Client, FamilyGroup
+
+if TYPE_CHECKING:
+    from users.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -44,16 +48,18 @@ class FamilyIncomeResult:
 
 
 def family_sponsor_for(client: Client) -> Client:
-    return client.sponsor_client if client.sponsor_client_id else client
+    if client.sponsor_client_id:
+        return cast(Client, client.sponsor_client)
+    return client
 
 
-def get_family_members(sponsor: Client):
+def get_family_members(sponsor: Client) -> Any:
     return sponsor.sponsored_family_members.all().order_by("family_role", "last_name", "first_name")
 
 
 def get_existing_family_group(sponsor: Client) -> FamilyGroup | None:
     try:
-        return sponsor.family_group
+        return cast(FamilyGroup, sponsor.family_group)
     except FamilyGroup.DoesNotExist:
         return None
 
@@ -64,7 +70,7 @@ def ensure_family_group(sponsor: Client) -> FamilyGroup:
             sponsor.family_role = FAMILY_ROLE_SPONSOR
             sponsor.save(update_fields=["family_role"])
         group, _created = FamilyGroup.objects.get_or_create(sponsor=sponsor)
-    return group
+    return cast(FamilyGroup, group)
 
 
 def get_or_create_family_group(sponsor: Client) -> FamilyGroup:
@@ -80,14 +86,14 @@ def create_family_member(
     email: str = "",
     phone: str = "",
     citizenship: str = "",
-    assigned_staff=None,
+    assigned_staff: User | None = None,
 ) -> Client:
     role = LEGACY_FAMILY_MEMBER_ROLES.get(role, role)
     if role not in FAMILY_MEMBER_ROLES:
         raise ValueError("role must be spouse or child")
 
     ensure_family_group(sponsor)
-    return Client.objects.create(
+    return cast(Client, Client.objects.create(
         first_name=first_name,
         last_name=last_name,
         email=email,
@@ -99,7 +105,7 @@ def create_family_member(
         assigned_staff=assigned_staff or sponsor.assigned_staff,
         language=sponsor.language,
         status=sponsor.status,
-    )
+    ))
 
 
 def calculate_family_income(group: FamilyGroup) -> FamilyIncomeResult:
@@ -156,5 +162,5 @@ def calculate_family_income(group: FamilyGroup) -> FamilyIncomeResult:
         surplus=surplus,
         is_sufficient=is_sufficient,
         risks=tuple(risks),
-        housing_confirmation_required=group.meldunek_free_housing,
+        housing_confirmation_required=bool(group.meldunek_free_housing),
     )

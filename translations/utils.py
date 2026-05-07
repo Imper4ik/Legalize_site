@@ -1,20 +1,24 @@
-import os
+from __future__ import annotations
+
 import logging
+import os
+import re
+from typing import Any, Dict, List, Optional
+
 import polib
 from django.conf import settings
 
-import re
 logger = logging.getLogger(__name__)
 
-def normalize_text(s):
+def normalize_text(s: Any) -> str:
     """Normalize whitespace and newlines for comparison."""
     if not s:
         return ""
     return re.sub(r'\s+', ' ', str(s)).strip()
 
-def get_po_files():
+def get_po_files() -> Dict[str, str]:
     """Returns a dict of language_code -> path to django.po"""
-    locales_dir = os.path.join(settings.BASE_DIR, 'locale')
+    locales_dir = os.path.join(str(settings.BASE_DIR), 'locale')
     langs = ['ru', 'en', 'pl']
     files = {}
     for lang in langs:
@@ -23,7 +27,7 @@ def get_po_files():
             files[lang] = path
     return files
 
-def load_all_translations():
+def load_all_translations() -> List[Dict[str, Any]]:
     """
     Returns a unified list of translations.
     Format: [
@@ -32,7 +36,7 @@ def load_all_translations():
     ]
     """
     po_files = get_po_files()
-    data = {}
+    data: Dict[str, Dict[str, Any]] = {}
 
     for lang, path in po_files.items():
         po = polib.pofile(path)
@@ -51,10 +55,10 @@ def load_all_translations():
             data[entry.msgid][lang] = entry.msgstr
 
     # Convert to sorted list (by msgid)
-    result = sorted(data.values(), key=lambda x: x['msgid'])
+    result = sorted(data.values(), key=lambda x: str(x['msgid']))
     return result
 
-def save_translation_entry(msgid, ru=None, en=None, pl=None):
+def save_translation_entry(msgid: str, ru: Optional[str] = None, en: Optional[str] = None, pl: Optional[str] = None) -> None:
     """Updates a specific msgid in all 3 PO files."""
     po_files = get_po_files()
     updates = {'ru': ru, 'en': en, 'pl': pl}
@@ -66,7 +70,7 @@ def save_translation_entry(msgid, ru=None, en=None, pl=None):
 
     # Track potential matches.
     # We prefer: 1) Exact msgid, 2) Normalized msgid, 3) msgstr match
-    potential_canonical = None
+    potential_canonical: Optional[str] = None
 
     try:
         for language, path in po_files.items():

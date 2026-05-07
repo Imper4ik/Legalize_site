@@ -1,7 +1,12 @@
 from __future__ import annotations
 
-from django.contrib.auth.models import AbstractBaseUser, Group, Permission
+from typing import TYPE_CHECKING
+
+from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
 
 PREDEFINED_ROLES: dict[str, str] = {
@@ -34,7 +39,9 @@ CLIENT_DELETE_ROLES = ("Admin", "Manager")
 CHECKLIST_MANAGE_ROLES = ("Admin", "Manager")
 
 
-def user_has_any_role(user: AbstractBaseUser, *role_names: str) -> bool:
+def user_has_any_role(user: AbstractBaseUser | AnonymousUser | None, *role_names: str) -> bool:
+    if user is None:
+        return False
     if not getattr(user, "is_authenticated", False):
         return False
     if getattr(user, "is_superuser", False):
@@ -42,10 +49,11 @@ def user_has_any_role(user: AbstractBaseUser, *role_names: str) -> bool:
     if not getattr(user, "is_staff", False):
         return False
     if not role_names:
-        return getattr(user, "is_staff", False)
-    from django.contrib.auth.models import PermissionsMixin
-    if isinstance(user, PermissionsMixin):
-        return user.groups.filter(name__in=role_names).exists()
+        return bool(getattr(user, "is_staff", False))
+    
+    groups = getattr(user, "groups", None)
+    if groups:
+        return bool(groups.filter(name__in=role_names).exists())
     return False
 
 

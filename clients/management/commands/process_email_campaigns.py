@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from django.core.management.base import BaseCommand, CommandError
 
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     help = "Process queued mass email campaigns."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
             "--limit",
             type=int,
@@ -26,7 +27,7 @@ class Command(BaseCommand):
             help="Process one specific pending campaign by id.",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         limit = options["limit"]
         campaign_id = options["campaign_id"]
         if limit is not None:

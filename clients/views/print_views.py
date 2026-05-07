@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from typing import Any, cast, TYPE_CHECKING
 from urllib.parse import urlencode
 
-from django.http import Http404
+from django.http import Http404, HttpRequest, HttpResponse
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
@@ -16,12 +17,14 @@ from clients.services.wniosek import record_wniosek_submission
 from clients.views.base import StaffRequiredMixin, role_required_view
 from clients.services.access import accessible_clients_queryset
 
+if TYPE_CHECKING:
+    from django.contrib.auth.models import User
 
 class ClientPrintBaseView(StaffRequiredMixin, DetailView):
     model = Client
     context_object_name = "client"
 
-    def get_queryset(self):
+    def get_queryset(self) -> Any:
         return accessible_clients_queryset(self.request.user, Client.objects.all())
 
 
@@ -49,7 +52,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
         "Pełnomocnik",
     ]
 
-    documents = {
+    documents: dict[str, dict[str, str]] = {
         "acceleration_request": {
             "template": "clients/documents/acceleration_request.html",
         },
@@ -58,24 +61,27 @@ class ClientDocumentPrintView(ClientPrintBaseView):
         },
     }
 
-    def get_template_names(self):
+    def get_template_names(self) -> list[str]:
         doc_type = self.kwargs.get("doc_type")
-        document = self.documents.get(doc_type)
+        document = self.documents.get(str(doc_type))
         if not document:
             raise Http404("Документ не найден")
         return [document["template"]]
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         context["doc_type"] = self.kwargs.get("doc_type")
         if context["doc_type"] == "mazowiecki_application":
             client = context["client"]
             application_date = client.submission_date or client.created_at.date()
             attachment_names = self._get_attachment_names(client)
-            attachment_count = self.request.GET.get("attachment_count")
+            
+            # Ensure attachment_count is str or int as expected by templates
+            attachment_count: str | int = self.request.GET.get("attachment_count") or ""
             if not attachment_count:
                 filled_attachments = [name for name in attachment_names if name]
                 attachment_count = len(filled_attachments) if filled_attachments else ""
+                
             context.update(
                 {
                     "current_date": timezone.localdate(),
@@ -110,7 +116,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
             )
         return context
 
-    def _get_attachment_names(self, client) -> list[str]:
+    def _get_attachment_names(self, client: Client) -> list[str]:
         attachments = [name.strip() for name in self.request.GET.getlist("attachments") if name.strip()]
 
         today = timezone.localdate()
@@ -118,7 +124,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
             days_overdue = (today - client.decision_date).days
             reminder_text = (
                 f"Prośba o przyspieszenie wydania decyzji "
-                f"(termin był {client.decision_date.strftime('%d.%m.%Y')}, {days_overdue} dni temu)"
+                f"(termin был {client.decision_date.strftime('%d.%m.%Y')}, {days_overdue} dni temu)"
             )
             if not any("przyspieszenie" in att.lower() for att in attachments):
                 attachments.insert(0, reminder_text)
@@ -138,7 +144,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
             if settings_attr:
                 app_settings = AppSettings.objects.filter(pk=1).first()
                 if app_settings is not None:
-                    template_value = getattr(app_settings, settings_attr, "") or ""
+                    template_value = str(getattr(app_settings, settings_attr, "") or "")
                     return template_value.splitlines()
             return list(default_lines)
         return [value.strip() for value in values]
@@ -150,7 +156,7 @@ client_document_print_view = ClientDocumentPrintView.as_view()
 
 
 @role_required_view(*DOCUMENT_EDIT_ROLES)
-def client_document_print_confirm_view(request, pk, doc_type):
+def client_document_print_confirm_view(request: HttpRequest, pk: int, doc_type: str) -> HttpResponse:
     if request.method != "POST":
         return redirect("clients:client_document_print", pk=pk, doc_type=doc_type)
 
@@ -158,11 +164,15 @@ def client_document_print_confirm_view(request, pk, doc_type):
         raise Http404("Confirmation is only available for this document type")
 
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
+    
+    # Cast user to User for record_wniosek_submission
+    confirmed_by = cast('User', request.user) if request.user.is_authenticated else None
+    
     submission = record_wniosek_submission(
         client=client,
         document_kind=doc_type,
         attachment_names=request.POST.getlist("attachments"),
-        confirmed_by=request.user if request.user.is_authenticated else None,
+        confirmed_by=confirmed_by,
         language=client.language,
     )
 
@@ -171,7 +181,7 @@ def client_document_print_confirm_view(request, pk, doc_type):
     )
     params: list[tuple[str, str]] = [("auto_print", "1"), ("submission_id", str(submission.pk))]
     for attachment_name in confirmed_attachments:
-        params.append(("attachments", attachment_name))
+        params.append(("attachments", str(attachment_name)))
     if confirmed_attachments:
         params.append(("attachment_count", str(len(confirmed_attachments))))
     for office_line in request.POST.getlist("office_line"):

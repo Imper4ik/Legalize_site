@@ -1,25 +1,25 @@
 import logging
 import runpy
 from pathlib import Path
+from typing import cast
 
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.management import call_command
-from django.http import HttpResponseForbidden
-from django.http import Http404
+from django.http import Http404, HttpRequest, HttpResponse, HttpResponseForbidden
 from django.shortcuts import redirect
-from django.utils.translation import gettext as _
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_protect
 from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.translation import gettext as _
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import require_POST
 
 logger = logging.getLogger(__name__)
 
 @staff_member_required
 @require_POST
 @csrf_protect
-def update_translations_view(request):
+def update_translations_view(request: HttpRequest) -> HttpResponse:
     """
     A view accessible only by superusers.
     It programmatically runs:
@@ -65,10 +65,10 @@ def update_translations_view(request):
 
     redirect_url = request.META.get('HTTP_REFERER')
     if not url_has_allowed_host_and_scheme(
-        url=redirect_url,
+        url=cast(str, redirect_url),
         allowed_hosts={request.get_host()},
         require_https=request.is_secure()
     ):
         redirect_url = '/admin/'
 
-    return redirect(redirect_url)
+    return redirect(str(redirect_url))

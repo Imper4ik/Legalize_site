@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+from typing import Any, cast
+
 from django.core.management.base import BaseCommand
 
 from clients.constants import DocumentType
@@ -7,14 +11,14 @@ from clients.models import DocumentRequirement, is_default_document_label
 class Command(BaseCommand):
     help = "Normalize document requirement custom names to default translations."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
             "--dry-run",
             action="store_true",
             help="Show how many records would be updated without saving changes.",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         dry_run = options["dry_run"]
         doc_type_values = {choice.value for choice in DocumentType}
         queryset = DocumentRequirement.objects.exclude(custom_name__isnull=True).exclude(custom_name__exact="")
@@ -24,7 +28,12 @@ class Command(BaseCommand):
         for requirement in queryset.iterator():
             if requirement.document_type not in doc_type_values:
                 continue
-            if not is_default_document_label(requirement.custom_name, requirement.document_type):
+            
+            # requirement.custom_name is str | None in model, but we excluded None in queryset.
+            # is_default_document_label expects str.
+            custom_name = cast(str, requirement.custom_name)
+            
+            if not is_default_document_label(custom_name, requirement.document_type):
                 continue
             updated += 1
             if dry_run:

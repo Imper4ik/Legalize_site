@@ -6,11 +6,15 @@ import io
 import logging
 import os
 import zipfile
+from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.utils import timezone
 
 from clients.services.document_helpers import document_file_exists
+
+if TYPE_CHECKING:
+    from clients.models.client import Client
 
 
 logger = logging.getLogger(__name__)
@@ -27,7 +31,7 @@ class ExportSizeLimitExceeded(Exception):
         )
 
 
-def generate_client_summary_text(client) -> str:
+def generate_client_summary_text(client: Client) -> str:
     """Generate a plain-text summary of the client case."""
 
     lines = []
@@ -120,7 +124,7 @@ def generate_client_summary_text(client) -> str:
     return "\n".join(lines)
 
 
-def _check_export_size_limit(client, max_mb: int) -> None:
+def _check_export_size_limit(client: Client, max_mb: int) -> None:
     """Raise ExportSizeLimitExceeded if client files exceed *max_mb*."""
     from clients.models import DocumentVersion
 
@@ -135,7 +139,8 @@ def _check_export_size_limit(client, max_mb: int) -> None:
     for version in DocumentVersion.objects.filter(document__client=client):
         if version.file:
             try:
-                if version.file.storage.exists(version.file.name):
+                file_name = str(version.file.name)
+                if version.file.storage.exists(file_name):
                     total_bytes += version.file.size
             except Exception as exc:
                 logger.debug(
@@ -149,14 +154,14 @@ def _check_export_size_limit(client, max_mb: int) -> None:
         raise ExportSizeLimitExceeded(total_mb, max_mb)
 
 
-def generate_client_zip(client) -> io.BytesIO:
+def generate_client_zip(client: Client) -> io.BytesIO:
     """Create a ZIP archive containing the client summary and all documents.
 
     Returns an in-memory BytesIO buffer ready for streaming to the response.
     Raises ExportSizeLimitExceeded if total file sizes exceed the configured limit.
     """
 
-    max_mb = getattr(settings, "MAX_TOTAL_CLIENT_EXPORT_MB", 200)
+    max_mb = int(getattr(settings, "MAX_TOTAL_CLIENT_EXPORT_MB", 200))
     _check_export_size_limit(client, max_mb)
 
     buffer = io.BytesIO()
@@ -178,7 +183,8 @@ def generate_client_zip(client) -> io.BytesIO:
                 missing_files_info.append(f"Document: ID={doc.pk}, Type={doc.document_type}")
                 continue
             try:
-                ext = os.path.splitext(doc.file.name)[1] or ".bin"
+                file_name = str(doc.file.name)
+                ext = os.path.splitext(file_name)[1] or ".bin"
                 archive_name = f"{prefix}/documents/document_{doc.pk}{ext}"
 
                 # Avoid duplicate names inside the archive
@@ -203,11 +209,12 @@ def generate_client_zip(client) -> io.BytesIO:
         for version in versions:
             if not version.file:
                 continue
-            if not version.file.storage.exists(version.file.name):
+            file_name = str(version.file.name)
+            if not version.file.storage.exists(file_name):
                 missing_files_info.append(f"Version: ID={version.pk}, DocID={version.document_id}, Version={version.version_number}")
                 continue
             try:
-                ext = os.path.splitext(version.file.name)[1] or ".bin"
+                ext = os.path.splitext(file_name)[1] or ".bin"
                 archive_name = f"{prefix}/document_versions/document_version_{version.pk}{ext}"
                 zf.writestr(archive_name, version.file.read())
             except Exception:

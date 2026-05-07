@@ -15,7 +15,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from django.utils import translation
-from reportlab.pdfgen import canvas
+from reportlab.pdfgen import canvas # type: ignore[import-untyped]
 
 import shutil
 

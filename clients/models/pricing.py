@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from .payment import Payment
@@ -20,5 +22,5 @@ class ServicePrice(models.Model):
         verbose_name = _("Цена на услугу")
         verbose_name_plural = _("Цены на услуги")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.get_service_code_display()}: {self.price} PLN"

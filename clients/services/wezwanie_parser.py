@@ -7,6 +7,8 @@ import shutil
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
+from typing import Any
+
 from clients.constants import DocumentType
 
 logger = logging.getLogger(__name__)
@@ -95,22 +97,14 @@ def _extract_pdf_text(path: Path) -> str:
     text_content = ""
 
     # 1. Try native text extraction first (fastest, best for digital PDFs)
-    pdf_reader = None
     try:
         from pypdf import PdfReader
-
-        pdf_reader = PdfReader
-    except ImportError:
-        pdf_reader = None
-
-    if pdf_reader:
-        try:
-            reader = pdf_reader(str(path))
-            pages = reader.pages[:2]
-            extracted = [page.extract_text() or "" for page in pages]
-            text_content = "\n".join(extracted).strip()
-        except Exception as exc:
-            logger.warning("Native PDF extraction failed: %s", exc)
+        reader = PdfReader(str(path))
+        pages = reader.pages[:2]
+        extracted = [page.extract_text() or "" for page in pages]
+        text_content = "\n".join(extracted).strip()
+    except Exception as exc:
+        logger.warning("Native PDF extraction failed: %s", exc)
 
     if not text_content or len(text_content.strip()) < 50:
         try:
@@ -160,7 +154,7 @@ def _extract_pdf_text(path: Path) -> str:
     return text_content
 
 
-def _preprocess_for_ocr(img):
+def _preprocess_for_ocr(img: Any) -> Any:
     """
     Preprocess image for better OCR accuracy using OpenCV (Adaptive Thresholding).
     1. EXIF Transpose (fix phone orientation)
@@ -172,7 +166,7 @@ def _preprocess_for_ocr(img):
     """
     from PIL import Image, ImageOps, ImageFilter
 
-    def _pil_fallback(prepared_img):
+    def _pil_fallback(prepared_img: Any) -> Any:
         prepared_img = prepared_img.convert("L")
         prepared_img = ImageOps.autocontrast(prepared_img)
         prepared_img = prepared_img.filter(ImageFilter.SHARPEN)
@@ -213,11 +207,6 @@ def _preprocess_for_ocr(img):
         import cv2
         import numpy as np
 
-    except ImportError:
-        logger.warning("OpenCV or numpy not found, falling back to simple PIL preprocessing")
-        return _pil_fallback(img)
-
-    try:
         # Convert PIL to CV2 (OpenCV uses BGR, PIL uses RGB)
         # Note: We need grayscale mainly.
         cv_img = np.array(img)
@@ -259,26 +248,23 @@ def _extract_image_text(path: Path) -> str:
     try:
         from PIL import Image
         import pytesseract
-    except ImportError:  # pragma: no cover - optional dependency
-        logger.warning("OCR dependencies (Pillow, pytesseract) are not installed; skipping OCR")
-        return ""
 
-    if not _tesseract_binary_available():
-        logger.warning("Tesseract binary is not available; skipping image OCR for %s", path)
-        return ""
 
-    try:
+        if not _tesseract_binary_available():
+            logger.warning("Tesseract binary is not available; skipping image OCR for %s", path)
+            return ""
+
         with Image.open(path) as img:
             # Preprocess image to improve accuracy (fix "eaten" letters)
             processed_img = _preprocess_for_ocr(img)
 
             text_out = pytesseract.image_to_string(processed_img, lang='pol+eng')
             logger.debug("Extracted image OCR text length=%s", len(text_out))
-            return text_out
-    except pytesseract.TesseractNotFoundError:
-        logger.warning("Tesseract binary is not available; skipping image OCR for %s", path)
+            return str(text_out)
+    except ImportError:
+        logger.warning("OCR dependencies (Pillow, pytesseract) are not installed; skipping OCR")
         return ""
-    except Exception as exc:  # pragma: no cover - defensive logging
+    except Exception as exc:
         logger.warning("Image OCR failed: error_type=%s", type(exc).__name__)
         return ""
 
@@ -286,7 +272,7 @@ def _extract_image_text(path: Path) -> str:
 def _read_plain_text(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8", errors="ignore")
-    except Exception as exc:  # pragma: no cover - defensive logging
+    except Exception as exc:
         logger.warning("Plain text extraction failed: error_type=%s", type(exc).__name__)
         return ""
 
@@ -480,7 +466,7 @@ def _find_fingerprints_time(text: str) -> str | None:
     for pattern in time_patterns:
         match = pattern.search(text)
         if match:
-            return match.group(1).replace('.', ':')
+            return str(match.group(1).replace('.', ':'))
     return None
 
 
@@ -550,7 +536,7 @@ def _find_fingerprints_location(text: str) -> str | None:
     for pattern in location_patterns:
         match = pattern.search(text)
         if match:
-            return match.group(0).strip()
+            return str(match.group(0).strip())
     return None
 
 

@@ -1,5 +1,5 @@
 import json
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -17,6 +17,9 @@ from clients.views.base import role_required_view
 from ..forms import DocumentForm, SubmissionForm
 from ..models import Document, Submission
 
+if TYPE_CHECKING:
+    from django.http.response import HttpResponseBase
+
 
 @method_decorator(login_required, name='dispatch')
 class SubmissionApiView(LoginRequiredMixin, View):
@@ -32,10 +35,10 @@ class SubmissionApiView(LoginRequiredMixin, View):
         if form.is_valid():
             submission = form.save()
             return helper.success(
-                message=_('Основание создано'),
+                message=str(_('Основание создано')),
                 submission=self._serialize_submission(submission),
             )
-        return helper.error(message=_('Ошибка валидации'), errors=form.errors, status=400)
+        return helper.error(message=str(_('Ошибка валидации')), errors=form.errors, status=400)
 
     def _get_payload(self, request: HttpRequest) -> dict[str, Any]:
         if request.content_type and 'application/json' in request.content_type:
@@ -67,7 +70,7 @@ class SubmissionDetailApiView(LoginRequiredMixin, View):
             return helper.forbidden()
         submission = get_object_or_404(Submission, pk=pk)
         submission.delete()
-        return helper.success(message=_('Основание удалено'))
+        return helper.success(message=str(_('Основание удалено')))
 
     def _serialize(self, submission: Submission) -> dict[str, Any]:
         return {
@@ -113,10 +116,10 @@ class DocumentApiView(LoginRequiredMixin, View):
             document.submission = submission
             document.save()
             return helper.success(
-                message=_('Документ создан'),
+                message=str(_('Документ создан')),
                 document=self._serialize_document(document),
             )
-        return helper.error(message=_('Ошибка валидации'), errors=form.errors, status=400)
+        return helper.error(message=str(_('Ошибка валидации')), errors=form.errors, status=400)
 
     def _serialize_document(self, document: Document) -> dict[str, Any]:
         return {
@@ -143,7 +146,7 @@ class DocumentDetailApiView(LoginRequiredMixin, View):
             return helper.forbidden()
         document = get_object_or_404(Document, pk=pk)
         document.delete()
-        return helper.success(message=_('Документ удалён'))
+        return helper.success(message=str(_('Документ удалён')))
 
     def _update(self, request: HttpRequest, pk: int) -> JsonResponse:
         helper = ResponseHelper(request)
@@ -169,7 +172,7 @@ class DocumentDetailApiView(LoginRequiredMixin, View):
         if form.is_valid():
             form.save()
             return helper.success(
-                message=_('Документ обновлён'),
+                message=str(_('Документ обновлён')),
                 document={
                     'id': document.id,
                     'submission_id': document.submission_id,
@@ -179,7 +182,7 @@ class DocumentDetailApiView(LoginRequiredMixin, View):
                     'created_at': document.created_at,
                 },
             )
-        return helper.error(message=_('Ошибка валидации'), errors=form.errors, status=400)
+        return helper.error(message=str(_('Ошибка валидации')), errors=form.errors, status=400)
 
 
 submission_api = role_required_view(*SUBMISSION_EDIT_ROLES)(SubmissionApiView.as_view())
