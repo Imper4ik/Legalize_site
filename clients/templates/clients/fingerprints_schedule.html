@@ -20,7 +20,7 @@
         </div>
     </div>
 
-    <div class="card shadow mb-4 border-start border-primary border-4">
+    <div class="card shadow-sm mb-4 fingerprints-schedule-card">
         <div class="card-header py-3 d-flex justify-content-between align-items-center bg-transparent">
             <h6 class="m-0 fw-bold text-primary">{% trans "Предстоящие визиты" %}</h6>
         </div>
@@ -138,6 +138,10 @@
 </div>
 
 <style>
+    .fingerprints-schedule-card {
+        border: 1px solid var(--border, rgba(0, 0, 0, .125));
+        border-left: 1px solid var(--border, rgba(0, 0, 0, .125)) !important;
+    }
     .opacity-75 { opacity: 0.75; }
     .table-warning { background-color: rgba(255, 249, 219, 0.3) !important; }
     [data-theme="dark"] .table-warning { background-color: rgba(255, 249, 219, 0.1) !important; color: #fff9db !important; }
