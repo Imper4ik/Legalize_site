@@ -105,7 +105,7 @@
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-sm table-hover table-modern mb-0 opacity-75">
+                <table class="table table-sm table-hover table-modern mb-0 past-appointments-table">
                     <thead>
                         <tr>
                             <th>{% trans "Дата" %}</th>
@@ -116,15 +116,19 @@
                     </thead>
                     <tbody>
                         {% for client in past_appointments %}
-                        <tr class="text-muted">
+                        <tr class="past-appointment-row">
                             <td>{{ client.fingerprints_date|date:"d.m.Y" }}</td>
                             <td>{{ client.first_name }} {{ client.last_name }}</td>
                             <td>{{ client.fingerprints_location|truncatechars:50 }}</td>
                             <td>
                                 {% if client.workflow_stage == 'fingerprints' %}
-                                <span class="badge bg-light border text-warning">{% trans "В процессе" %}</span>
+                                <span class="badge past-status-badge past-status-in-progress">
+                                    {% trans "В процессе" %}
+                                </span>
                                 {% else %}
-                                <span class="badge bg-light border">{% trans "Завершено" %}</span>
+                                <span class="badge past-status-badge past-status-done">
+                                    {% trans "Завершено" %}
+                                </span>
                                 {% endif %}
                             </td>
                         </tr>
@@ -141,6 +145,37 @@
     .fingerprints-schedule-card {
         border: 1px solid var(--border, rgba(0, 0, 0, .125));
         border-left: 1px solid var(--border, rgba(0, 0, 0, .125)) !important;
+    }
+    .past-appointments-table {
+        opacity: .9;
+    }
+    .past-appointment-row {
+        color: var(--bs-body-color);
+    }
+    .past-status-badge {
+        font-weight: 700;
+        letter-spacing: .01em;
+        padding: .4rem .65rem;
+    }
+    .past-status-in-progress {
+        background-color: #fff3cd;
+        color: #664d03;
+        border: 1px solid #ffda6a;
+    }
+    .past-status-done {
+        background-color: #d1e7dd;
+        color: #0f5132;
+        border: 1px solid #a3cfbb;
+    }
+    [data-theme="dark"] .past-status-in-progress {
+        background-color: rgba(255, 193, 7, .2);
+        color: #ffda6a;
+        border-color: rgba(255, 218, 106, .55);
+    }
+    [data-theme="dark"] .past-status-done {
+        background-color: rgba(25, 135, 84, .24);
+        color: #75b798;
+        border-color: rgba(117, 183, 152, .55);
     }
     .opacity-75 { opacity: 0.75; }
     .table-warning { background-color: rgba(255, 249, 219, 0.3) !important; }
