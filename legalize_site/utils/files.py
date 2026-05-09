@@ -4,7 +4,7 @@ import mimetypes
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
 
-from django.http import FileResponse, Http404, HttpResponse
+from django.http import FileResponse, Http404
 
 from clients.services.responses import apply_no_store
 

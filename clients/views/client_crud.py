@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, cast, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from django.conf import settings
 from django.contrib import messages

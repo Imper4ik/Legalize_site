@@ -19,7 +19,7 @@ from ..forms import DocumentForm, SubmissionForm
 from ..models import Document, Submission
 
 if TYPE_CHECKING:
-    from django.http.response import HttpResponseBase
+    pass
 
 
 @method_decorator(login_required, name='dispatch')

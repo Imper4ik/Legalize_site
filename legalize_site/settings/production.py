@@ -86,9 +86,17 @@ if REDIS_URL:
             "LOCATION": REDIS_URL,
         }
     }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+            "LOCATION": os.environ.get("DJANGO_CACHE_TABLE", "cache_table"),
+        }
+    }
 
 # --- SECURITY HEADERS ---
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = env_flag("SECURE_SSL_REDIRECT", "True")
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True

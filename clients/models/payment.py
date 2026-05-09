@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any
+from typing import cast
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -67,5 +67,3 @@ class Payment(SoftDeleteModel):
         ]
         verbose_name = _("Платёж")
         verbose_name_plural = _("Платежи")
-
-from typing import cast

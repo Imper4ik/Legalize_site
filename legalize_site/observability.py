@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Callable
+from typing import Callable
 
 try:
     import sentry_sdk

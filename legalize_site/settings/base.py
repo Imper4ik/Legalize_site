@@ -348,10 +348,34 @@ USE_S3_MEDIA_STORAGE = env_flag("USE_S3_MEDIA_STORAGE", "False")
 PRIVATE_MEDIA_LOCATION = os.environ.get("PRIVATE_MEDIA_LOCATION", "private")
 BACKUP_STORAGE_ALIAS = os.environ.get("BACKUP_STORAGE_ALIAS", "backups")
 BACKUP_STORAGE_LOCATION = os.environ.get("BACKUP_STORAGE_LOCATION", "db_backups")
+BACKUP_REMOTE_STORAGE = env_flag("BACKUP_REMOTE_STORAGE", "False")
+AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME", "")
+AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "")
+AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL", "")
+AWS_S3_CUSTOM_DOMAIN = os.environ.get("AWS_S3_CUSTOM_DOMAIN", "")
+AWS_S3_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "")
+AWS_S3_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
+AWS_QUERYSTRING_AUTH = True
+AWS_DEFAULT_ACL = None
+AWS_S3_FILE_OVERWRITE = False
+AWS_LOCATION = PRIVATE_MEDIA_LOCATION
 if USE_DATABASE_MEDIA_STORAGE and USE_S3_MEDIA_STORAGE:
     raise ImproperlyConfigured("USE_DATABASE_MEDIA_STORAGE and USE_S3_MEDIA_STORAGE cannot both be enabled.")
-if USE_S3_MEDIA_STORAGE and not STORAGES_AVAILABLE:
-    raise ImproperlyConfigured("USE_S3_MEDIA_STORAGE requires django-storages to be installed.")
+if (USE_S3_MEDIA_STORAGE or BACKUP_REMOTE_STORAGE) and not STORAGES_AVAILABLE:
+    raise ImproperlyConfigured("S3 media or backup storage requires django-storages to be installed.")
+
+
+def _s3_storage_options(location: str) -> dict[str, Any]:
+    return {
+        "bucket_name": AWS_STORAGE_BUCKET_NAME,
+        "region_name": AWS_S3_REGION_NAME or None,
+        "endpoint_url": AWS_S3_ENDPOINT_URL or None,
+        "custom_domain": AWS_S3_CUSTOM_DOMAIN or None,
+        "default_acl": None,
+        "querystring_auth": True,
+        "file_overwrite": False,
+        "location": location,
+    }
 
 if USE_DATABASE_MEDIA_STORAGE:
     STORAGES = {
@@ -364,30 +388,16 @@ if USE_DATABASE_MEDIA_STORAGE:
             else "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     }
+    if BACKUP_REMOTE_STORAGE:
+        STORAGES[BACKUP_STORAGE_ALIAS] = {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": _s3_storage_options(BACKUP_STORAGE_LOCATION),
+        }
 elif USE_S3_MEDIA_STORAGE:
-    AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME", "")
-    AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME", "")
-    AWS_S3_ENDPOINT_URL = os.environ.get("AWS_S3_ENDPOINT_URL", "")
-    AWS_S3_CUSTOM_DOMAIN = os.environ.get("AWS_S3_CUSTOM_DOMAIN", "")
-    AWS_S3_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "")
-    AWS_S3_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
-    AWS_QUERYSTRING_AUTH = True
-    AWS_DEFAULT_ACL = None
-    AWS_S3_FILE_OVERWRITE = False
-    AWS_LOCATION = PRIVATE_MEDIA_LOCATION
     STORAGES = {
         "default": {
             "BACKEND": "storages.backends.s3.S3Storage",
-            "OPTIONS": {
-                "bucket_name": AWS_STORAGE_BUCKET_NAME,
-                "region_name": AWS_S3_REGION_NAME or None,
-                "endpoint_url": AWS_S3_ENDPOINT_URL or None,
-                "custom_domain": AWS_S3_CUSTOM_DOMAIN or None,
-                "default_acl": None,
-                "querystring_auth": True,
-                "file_overwrite": False,
-                "location": PRIVATE_MEDIA_LOCATION,
-            },
+            "OPTIONS": _s3_storage_options(PRIVATE_MEDIA_LOCATION),
         },
         "staticfiles": {
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
@@ -396,16 +406,7 @@ elif USE_S3_MEDIA_STORAGE:
         },
         BACKUP_STORAGE_ALIAS: {
             "BACKEND": "storages.backends.s3.S3Storage",
-            "OPTIONS": {
-                "bucket_name": AWS_STORAGE_BUCKET_NAME,
-                "region_name": AWS_S3_REGION_NAME or None,
-                "endpoint_url": AWS_S3_ENDPOINT_URL or None,
-                "custom_domain": AWS_S3_CUSTOM_DOMAIN or None,
-                "default_acl": None,
-                "querystring_auth": True,
-                "file_overwrite": False,
-                "location": BACKUP_STORAGE_LOCATION,
-            },
+            "OPTIONS": _s3_storage_options(BACKUP_STORAGE_LOCATION),
         },
     }
 

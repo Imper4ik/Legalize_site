@@ -242,14 +242,24 @@ def rate_limit_cache_check(app_configs: Any = None, **kwargs: Any) -> list[Error
     if not active_limits:
         return messages
 
-    redis_url = getattr(settings, "REDIS_URL", "")
-    if redis_url:
+    cache_backend = str(
+        getattr(settings, "CACHES", {})
+        .get("default", {})
+        .get("BACKEND", "")
+    )
+    if cache_backend in {
+        "django.core.cache.backends.redis.RedisCache",
+        "django.core.cache.backends.db.DatabaseCache",
+    }:
         return messages
 
     messages.append(
         Error(
-            "REDIS_URL is not configured while production rate limits are enabled.",
-            hint="Set REDIS_URL so Django cache uses RedisCache across all production workers.",
+            "Production rate limits need a shared cache backend.",
+            hint=(
+                "Set REDIS_URL for RedisCache, or use Django's DatabaseCache backed by "
+                "the PostgreSQL cache table created during release."
+            ),
             id=RATE_LIMIT_CACHE_ERROR_ID,
         )
     )
@@ -311,6 +321,16 @@ def production_storage_safety_check(app_configs: Any = None, **kwargs: Any) -> l
                     id=MEDIA_STORAGE_ERROR_ID,
                 )
             )
+        elif backup_config.get("BACKEND") == "storages.backends.s3.S3Storage":
+            backup_options = backup_config.get("OPTIONS", {})
+            if not backup_options.get("bucket_name"):
+                messages.append(
+                    Error(
+                        "Remote database backup storage has no bucket configured.",
+                        hint="Set AWS_STORAGE_BUCKET_NAME for S3/R2/B2 backup uploads.",
+                        id=MEDIA_STORAGE_ERROR_ID,
+                    )
+                )
 
     return messages
 

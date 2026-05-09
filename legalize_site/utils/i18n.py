@@ -5,7 +5,7 @@ import logging
 import shutil
 import struct
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Iterable
 
 from django.conf import settings
 from django.core.management import call_command

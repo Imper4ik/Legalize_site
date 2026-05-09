@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 
 if TYPE_CHECKING:
-    from django.core.files.uploadedfile import UploadedFile
+    pass
 
 FILE_INPUT_ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp"
 

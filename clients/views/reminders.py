@@ -6,7 +6,7 @@ from typing import Any, TYPE_CHECKING
 
 from django.contrib import messages
 from django.core.management import call_command
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -27,7 +27,6 @@ from clients.views.base import StaffRequiredMixin, role_required_view
 
 if TYPE_CHECKING:
     from django.http.response import HttpResponseBase
-    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
 
 class ReminderListView(StaffRequiredMixin, ListView):

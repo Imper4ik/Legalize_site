@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast, TYPE_CHECKING
+from typing import cast, TYPE_CHECKING
 
 from django.conf import settings
 from django.contrib import messages
 from django.core.cache import cache
 from django.core.mail import send_mail
-from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 from django.utils.translation import gettext as _
@@ -34,7 +34,6 @@ from clients.views.base import role_or_feature_required_view, role_required_view
 
 if TYPE_CHECKING:
     from django.http.response import HttpResponseBase
-    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
 logger = logging.getLogger(__name__)
 

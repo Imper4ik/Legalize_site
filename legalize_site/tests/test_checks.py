@@ -140,8 +140,11 @@ class RuntimeDependencyCheckTests(SimpleTestCase):
 
 
 class RateLimitCacheCheckTests(SimpleTestCase):
-    @override_settings(IS_PRODUCTION=True, REDIS_URL="")
-    def test_production_errors_when_redis_url_is_missing(self):
+    @override_settings(
+        IS_PRODUCTION=True,
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}},
+    )
+    def test_production_errors_without_shared_cache(self):
         messages = rate_limit_cache_check()
 
         self.assertEqual(len(messages), 1)
@@ -149,19 +152,29 @@ class RateLimitCacheCheckTests(SimpleTestCase):
         self.assertEqual(messages[0].id, RATE_LIMIT_CACHE_ERROR_ID)
         self.assertEqual(
             messages[0].msg,
-            "REDIS_URL is not configured while production rate limits are enabled.",
+            "Production rate limits need a shared cache backend.",
         )
 
-    @override_settings(IS_PRODUCTION=True, REDIS_URL="redis://redis.internal:6379/0")
-    def test_production_redis_url_silences_rate_limit_warning(self):
+    @override_settings(
+        IS_PRODUCTION=True,
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.redis.RedisCache"}},
+    )
+    def test_production_redis_cache_silences_rate_limit_warning(self):
         self.assertEqual(rate_limit_cache_check(), [])
 
-    @override_settings(IS_PRODUCTION=False, REDIS_URL="")
-    def test_non_production_does_not_warn_when_redis_url_is_missing(self):
+    @override_settings(
+        IS_PRODUCTION=True,
+        CACHES={"default": {"BACKEND": "django.core.cache.backends.db.DatabaseCache"}},
+    )
+    def test_production_database_cache_silences_rate_limit_warning(self):
         self.assertEqual(rate_limit_cache_check(), [])
 
-    @override_settings(IS_PRODUCTION=True, REDIS_URL="", RATE_LIMITS={})
-    def test_production_without_enabled_rate_limits_does_not_require_redis(self):
+    @override_settings(IS_PRODUCTION=False)
+    def test_non_production_does_not_warn_when_shared_cache_is_missing(self):
+        self.assertEqual(rate_limit_cache_check(), [])
+
+    @override_settings(IS_PRODUCTION=True, RATE_LIMITS={})
+    def test_production_without_enabled_rate_limits_does_not_require_shared_cache(self):
         self.assertEqual(rate_limit_cache_check(), [])
 
 
@@ -180,7 +193,7 @@ class ProductionStorageSafetyCheckTests(SimpleTestCase):
         IS_PRODUCTION=True,
         USE_S3_MEDIA_STORAGE=True,
         BACKUP_STORAGE_ALIAS="backups",
-        STORAGES={"backups": {"BACKEND": "storages.backends.s3.S3Storage"}},
+        STORAGES={"backups": {"BACKEND": "storages.backends.s3.S3Storage", "OPTIONS": {"bucket_name": "bucket"}}},
     )
     @patch.dict("os.environ", {"BACKUP_REMOTE_STORAGE": "true"}, clear=False)
     def test_s3_media_storage_silences_media_storage_error(self):
@@ -199,7 +212,7 @@ class ProductionStorageSafetyCheckTests(SimpleTestCase):
         IS_PRODUCTION=True,
         USE_S3_MEDIA_STORAGE=False,
         BACKUP_STORAGE_ALIAS="backups",
-        STORAGES={"backups": {"BACKEND": "storages.backends.s3.S3Storage"}},
+        STORAGES={"backups": {"BACKEND": "storages.backends.s3.S3Storage", "OPTIONS": {"bucket_name": "bucket"}}},
     )
     @patch.dict(
         "os.environ",

@@ -5,7 +5,7 @@ from typing import Any, Callable, TYPE_CHECKING
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
+from django.http import HttpRequest, HttpResponseForbidden
 from django.utils.translation import gettext as _
 
 from clients.services.access import is_internal_staff_user, user_has_internal_role
@@ -14,7 +14,6 @@ from clients.services.responses import ResponseHelper
 
 if TYPE_CHECKING:
     from django.http.response import HttpResponseBase
-    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
 
 class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):

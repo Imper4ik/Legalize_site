@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save, pre_save
@@ -13,7 +13,7 @@ from clients.services.activity import log_client_activity
 from .models import Client, Document, EmailLog, EmployeePermission, Payment, Reminder
 
 if TYPE_CHECKING:
-    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
+    pass
 
 logger = logging.getLogger(__name__)
 

@@ -15,7 +15,7 @@ from clients.validators import validate_uploaded_document
 from legalize_site.soft_delete import SoftDeleteModel
 
 if TYPE_CHECKING:
-    from clients.models.client import Client
+    pass
 
 
 DOCUMENT_TYPE_VALUES = {choice.value for choice in DocumentType}

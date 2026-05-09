@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 from typing import Any
 
@@ -15,6 +16,11 @@ from legalize_site.runtime import runtime_dependency_summary
 from legalize_site.utils.http import request_is_ajax
 
 logger = logging.getLogger(__name__)
+
+
+class InspectableJsonResponse(JsonResponse):
+    def json(self) -> Any:
+        return json.loads(self.content.decode(self.charset))
 
 
 def healthcheck(request: HttpRequest) -> HttpResponse:
@@ -121,7 +127,7 @@ def csrf_failure(request: HttpRequest, reason: str = "", template_name: str = "4
             "message": str(_("Сессия истекла или защитный токен недействителен. Обновите страницу и повторите действие.")),
             "reason": reason,
         }
-        json_response = JsonResponse(
+        json_response = InspectableJsonResponse(
             payload,
             status=403,
         )

@@ -17,8 +17,6 @@ from legalize_site.soft_delete import SoftDeleteModel, SoftDeleteQuerySet
 
 if TYPE_CHECKING:
     from .document import Document
-    from .company import Company
-    from users.models import User as StaffUser
 
 
 class ClientQuerySet(SoftDeleteQuerySet):
@@ -77,8 +75,14 @@ class ClientQuerySet(SoftDeleteQuerySet):
         )
 
 
+class ClientManager(models.Manager.from_queryset(ClientQuerySet)):  # type: ignore[misc]
+    def get_queryset(self) -> ClientQuerySet:
+        return cast(ClientQuerySet, super().get_queryset().active())
+
+
 class Client(SoftDeleteModel):
-    objects = ClientQuerySet.as_manager()  # type: ignore[assignment, misc]
+    objects = ClientManager()  # type: ignore[assignment]
+    all_objects = ClientQuerySet.as_manager()  # type: ignore[assignment, misc]
     _application_purpose_display_cache: dict[str, dict[str, str]] = {}
 
     APPLICATION_PURPOSE_CHOICES = [
@@ -477,24 +481,22 @@ class Client(SoftDeleteModel):
         alerts: list[dict[str, Any]] = []
         today = timezone.localdate()
 
-        # Optimize: ensure health stats are annotated
-        if not hasattr(self, "health_awaiting_confirmation_count"):
-            stats = (
-                cast(Any, self.__class__.objects).filter(pk=self.pk)
-                .with_health_stats(today=today)
-                .values(
-                    "health_awaiting_confirmation_count",
-                    "health_expired_documents_count",
-                    "health_expiring_documents_count",
-                    "health_wezwanie_count",
-                    "health_appointment_email_sent_count",
-                    "health_overdue_payments_count",
-                    "health_overdue_tasks_count",
-                )
-                .get()
+        stats = (
+            cast(Any, self.__class__.objects).filter(pk=self.pk)
+            .with_health_stats(today=today)
+            .values(
+                "health_awaiting_confirmation_count",
+                "health_expired_documents_count",
+                "health_expiring_documents_count",
+                "health_wezwanie_count",
+                "health_appointment_email_sent_count",
+                "health_overdue_payments_count",
+                "health_overdue_tasks_count",
             )
-            for key, value in stats.items():
-                setattr(self, key, value)
+            .get()
+        )
+        for key, value in stats.items():
+            setattr(self, key, value)
 
         if self.legal_basis_end_date:
             if self.legal_basis_end_date < today:

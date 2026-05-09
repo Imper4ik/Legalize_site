@@ -28,7 +28,7 @@ At a minimum, configure the following variables in Railway:
 - `FERNET_KEYS`: A comma-separated list of 32-byte url-safe base64-encoded keys for field encryption.
 - `ALLOWED_HOSTS` & `CSRF_TRUSTED_ORIGINS`: Explicit hostnames, or allow Railway to inject `RAILWAY_PUBLIC_DOMAIN`.
 - `DATABASE_URL`: Automatically provided by Railway Postgres.
-- `REDIS_URL`: Automatically provided by Railway Redis (used for rate-limiting across workers).
+- `REDIS_URL`: Optional Railway Redis URL. If omitted, production uses PostgreSQL `DatabaseCache` for rate-limiting.
 - `APP_ENV`: Set to `production`.
 - `PDF_FONT_PATH`: Set to `/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf`.
 
@@ -126,7 +126,7 @@ pytest
 - Strong `SECRET_KEY`, never the fallback value.
 - Explicit `FERNET_KEYS`; keep old keys during rotation until data is re-encrypted.
 - Explicit `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`, or Railway public domain envs.
-- PostgreSQL `DATABASE_URL` and Redis `REDIS_URL`.
+- PostgreSQL `DATABASE_URL`; Redis `REDIS_URL` is optional because the app falls back to PostgreSQL cache.
 - Real email credentials and verified `DEFAULT_FROM_EMAIL`.
 - `CRON_TOKEN` set; `CRON_ALLOWED_IPS` configured when the scheduler has stable IPs.
 - Persistent media: prefer `USE_DATABASE_MEDIA_STORAGE=True` for the MVP, or S3/R2/B2 for production growth.

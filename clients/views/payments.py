@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Any, cast, TYPE_CHECKING
+from typing import cast, TYPE_CHECKING
 
 from django.contrib import messages
-from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
 from django.utils.translation import gettext as _
@@ -23,7 +23,6 @@ from clients.views.base import role_or_feature_required_view
 
 if TYPE_CHECKING:
     from django.http.response import HttpResponseBase
-    from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
 
 @role_or_feature_required_view("can_manage_payments", *PAYMENT_MUTATION_ROLES)

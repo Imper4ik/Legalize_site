@@ -11,7 +11,7 @@ FERNET_KEYS=...
 ALLOWED_HOSTS=your-app.railway.app
 CSRF_TRUSTED_ORIGINS=https://your-app.railway.app
 DATABASE_URL=...
-REDIS_URL=...
+REDIS_URL=...  # optional; PostgreSQL DatabaseCache is used when omitted
 DEFAULT_FROM_EMAIL=...
 EMAIL_HOST=...
 EMAIL_PORT=587
@@ -25,7 +25,7 @@ SENTRY_DSN=
 BACKUP_REMOTE_STORAGE=
 ```
 
-Railway may provide `RAILWAY_PUBLIC_DOMAIN` or `RAILWAY_STATIC_URL`; production settings can derive hosts and CSRF origins from those.
+Railway may provide `RAILWAY_PUBLIC_DOMAIN` or `RAILWAY_STATIC_URL`; production settings can derive hosts and CSRF origins from those. `REDIS_URL` is optional: when it is absent, production rate limiting uses Django `DatabaseCache` on the PostgreSQL cache table created by `release.sh`.
 
 ## Build and release
 

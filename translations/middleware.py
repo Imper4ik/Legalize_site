@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Callable
+from typing import Callable
 
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Self
+from typing import cast, Self
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -60,5 +60,3 @@ class AppSettings(models.Model):
     def get_solo(cls) -> Self:
         obj, _created = cls.objects.get_or_create(pk=1)
         return cast(Self, obj)
-
-from typing import cast

@@ -25,7 +25,7 @@ from submissions.forms import SubmissionForm
 from submissions.models import Submission
 
 if TYPE_CHECKING:
-    from django.http.response import HttpResponseBase
+    pass
 
 
 FAMILY_CHECKLIST_PURPOSES = (

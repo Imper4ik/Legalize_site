@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import copy
 import logging
-from typing import Any, cast, Iterable, TYPE_CHECKING
+from typing import Any, cast, TYPE_CHECKING
 
 import bleach
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.core.files.base import ContentFile
-from django.db.models import QuerySet
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 
@@ -270,8 +268,8 @@ class ClientForm(forms.ModelForm):
         if submissions:
             choices = submissions
         else:
-            choices = [(str(v), str(l)) for v, l in Client.APPLICATION_PURPOSE_CHOICES]
-            
+            choices = [(str(value), str(label)) for value, label in Client.APPLICATION_PURPOSE_CHOICES]
+
         existing_choice_values = {value for value, _label in choices}
         for value, label in Client.APPLICATION_PURPOSE_CHOICES:
             if value not in existing_choice_values:
@@ -594,7 +592,8 @@ class DocumentRequirementEditForm(forms.ModelForm):
             requirement=instance,
             cleaned_data=self.cleaned_data,
         )
-        assert result.requirement is not None
+        if result.requirement is None:
+            raise RuntimeError("Document requirement update did not return a record")
         return result.requirement
 
 
@@ -625,7 +624,8 @@ class DocumentRequirementAddForm(forms.Form):
             name=self.cleaned_data['name'],
             slug=self.cleaned_data['slug'],
         )
-        assert result.requirement is not None
+        if result.requirement is None:
+            raise RuntimeError("Document requirement creation did not return a record")
         return result.requirement
 
 
