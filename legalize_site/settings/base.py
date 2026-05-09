@@ -559,7 +559,7 @@ RATE_LIMITS = {
         "message": _("Too many verification email requests. Try again later."),
     },
     "clients:add_document": {
-        "limit": int(os.environ.get("RATE_LIMIT_DOCUMENT_UPLOAD", "20")),
+        "limit": int(os.environ.get("RATE_LIMIT_DOCUMENT_UPLOAD", "80")),
         "window_seconds": int(os.environ.get("RATE_LIMIT_DOCUMENT_UPLOAD_WINDOW", "3600")),
         "message": _("Too many document uploads. Try again later."),
     },
