@@ -3611,14 +3611,8 @@ msgstr "Decyzje"
 msgid "Active reminders"
 msgstr "Aktywne przypomnienia"
 
-msgid "Добавить клиента"
-msgstr "Dodaj klienta"
-
 msgid "Создание новой карточки клиента"
 msgstr "Tworzenie nowej karty klienta"
-
-msgid "Основания подачи"
-msgstr "Podstawy zgłoszenia"
 
 msgid "Управление типами подачи и их локализованными названиями."
 msgstr "Zarządzanie typami zgłoszeń i ich zlokalizowanymi nazwami."

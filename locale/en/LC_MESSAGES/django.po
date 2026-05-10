@@ -3607,14 +3607,8 @@ msgstr "Decisions"
 msgid "Active reminders"
 msgstr "Active reminders"
 
-msgid "Добавить клиента"
-msgstr "Add Client"
-
 msgid "Создание новой карточки клиента"
 msgstr "Create new client card"
-
-msgid "Основания подачи"
-msgstr "Submission Purposes"
 
 msgid "Управление типами подачи и их локализованными названиями."
 msgstr "Manage submission types and their localized names."
