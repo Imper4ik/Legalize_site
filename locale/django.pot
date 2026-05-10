@@ -2047,7 +2047,7 @@ msgid "Zaświadczenie o niezaleganiu opłacania składek cudzoziemca"
 msgstr ""
 
 #: .\legalize_site\constants.py:25
-msgid "Oświadczenie o braku osób na utrzymaniu w Polsce"
+msgid "Zaświadczenie o niezaleganiu w podatkach"
 msgstr ""
 
 #: .\legalize_site\constants.py:26

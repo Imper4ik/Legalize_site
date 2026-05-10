@@ -7,10 +7,12 @@ python manage.py check
 python manage.py makemigrations --check --dry-run
 python manage.py migrate --check
 python manage.py test --noinput
-pytest
+pytest --maxfail=1 -q --cov-fail-under=70
 ruff check .
-bandit -r . -x "*/migrations/*,*/tests/*"
-python manage.py compilemessages
+mypy clients/services clients/use_cases database_media fernet_fields legalize_site/security.py legalize_site/cron_views.py legalize_site/backups.py --config-file mypy.ini
+bandit -r clients legalize_site submissions users database_media fernet_fields translations -x "*/migrations/*,*/tests/*"
+pip-audit
+python manage.py compilemessages --ignore "venv" --ignore ".venv"
 python manage.py collectstatic --noinput
 ```
 
@@ -40,4 +42,4 @@ Use the virtualenv Python on Windows:
 
 ## CI
 
-GitHub Actions installs system OCR/gettext/backup dependencies, runs Django checks, migration drift check, Django tests, pytest, Ruff, Bandit, pip-audit, compilemessages, and shell script syntax checks. Production secrets are not required because CI uses `legalize_site.settings.test`.
+GitHub Actions installs system OCR/gettext/backup dependencies, runs Django checks, deploy checks, migration drift check, Django tests, pytest with 70% coverage gate, Ruff, mypy, Bandit, pip-audit, compilemessages, collectstatic, committed pycache detection, and shell script syntax checks. Production secrets are not required because CI uses `legalize_site.settings.test`.

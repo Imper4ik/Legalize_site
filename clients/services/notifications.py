@@ -324,6 +324,7 @@ def _render_email_pdf(text: str) -> bytes:
     page_width, page_height = (1240, 1754)
     margin = 80
     font_path = _get_pdf_font_path()
+    font: ImageFont.FreeTypeFont | ImageFont.ImageFont
     if font_path:
         font = ImageFont.truetype(str(font_path), 24)
     else:
@@ -337,7 +338,7 @@ def _render_email_pdf(text: str) -> bytes:
     # Calculate line height
     if hasattr(font, "getbbox"):
         bbox = font.getbbox("Hg")
-        line_height = bbox[3] - bbox[1] + 6
+        line_height = int(bbox[3] - bbox[1] + 6)
     else:
         # Fallback for old PIL versions or default font
         line_height = 30

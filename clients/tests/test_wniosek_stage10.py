@@ -9,6 +9,7 @@ from clients.constants import DocumentType
 from clients.models import AppSettings, Client, WniosekAttachment, WniosekSubmission
 from clients.services.notifications import _get_missing_documents_context
 from clients.services.roles import ensure_predefined_roles
+from clients.services.wniosek import get_submitted_document_codes, match_attachment_to_document_type
 
 
 class WniosekFlowStage10Tests(TestCase):
@@ -103,6 +104,38 @@ class WniosekFlowStage10Tests(TestCase):
         self.assertEqual(response.status_code, 302)
         attachment = WniosekAttachment.objects.get(submission__client=self.client_obj)
         self.assertEqual(attachment.document_type, DocumentType.EMPLOYER_TAX_RETURN.value)
+
+    def test_attachment_matching_handles_core_aliases_and_custom_rows(self):
+        cases = {
+            "załącznik nr 1": DocumentType.ZALACZNIK_NR_1.value,
+            "ZUS RCA": DocumentType.ZUS_RCA_OR_INSURANCE.value,
+            "CIT/PIT pracodawcy": DocumentType.EMPLOYER_TAX_RETURN.value,
+            "kopia paszportu": DocumentType.PASSPORT.value,
+        }
+
+        for entered_name, expected_code in cases.items():
+            with self.subTest(entered_name=entered_name):
+                self.assertEqual(
+                    match_attachment_to_document_type(self.client_obj, entered_name, "pl"),
+                    expected_code,
+                )
+
+        self.assertEqual(match_attachment_to_document_type(self.client_obj, "Umowa od klienta", "pl"), "")
+
+    def test_submitted_document_codes_return_codes_not_entered_names(self):
+        self.client.post(
+            reverse(
+                "clients:client_document_print_confirm",
+                kwargs={"pk": self.client_obj.pk, "doc_type": "mazowiecki_application"},
+            ),
+            data={"attachments": ["załącznik nr 1", "Umowa od klienta"]},
+        )
+
+        submitted_codes = get_submitted_document_codes(self.client_obj)
+
+        self.assertIn(DocumentType.ZALACZNIK_NR_1.value, submitted_codes)
+        self.assertNotIn("załącznik nr 1", submitted_codes)
+        self.assertNotIn("Umowa od klienta", submitted_codes)
 
     def test_confirm_mazowiecki_preserves_custom_office_and_proxy_lines(self):
         response = self.client.post(

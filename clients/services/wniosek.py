@@ -30,6 +30,11 @@ ATTACHMENT_ALIASES = {
     "cit8": DocumentType.EMPLOYER_TAX_RETURN.value,
     "pit 8": DocumentType.EMPLOYER_TAX_RETURN.value,
     "pit8": DocumentType.EMPLOYER_TAX_RETURN.value,
+    "cit pit": DocumentType.EMPLOYER_TAX_RETURN.value,
+    "cit pit pracodawcy": DocumentType.EMPLOYER_TAX_RETURN.value,
+    "cit lub pit pracodawcy": DocumentType.EMPLOYER_TAX_RETURN.value,
+    "cit pracodawcy": DocumentType.EMPLOYER_TAX_RETURN.value,
+    "pit pracodawcy": DocumentType.EMPLOYER_TAX_RETURN.value,
 }
 
 
@@ -61,7 +66,7 @@ def match_attachment_to_document_type(client: Client, entered_name: str, languag
     if alias_match:
         return str(alias_match)
 
-    languages = []
+    languages: list[str] = []
     if language:
         languages.append(language)
     if client.language and client.language not in languages:
@@ -71,7 +76,8 @@ def match_attachment_to_document_type(client: Client, entered_name: str, languag
     purpose = client.get_document_requirement_purpose()
     best_match = ""
     best_match_length = 0
-    for language_code in languages or [None]:
+    language_codes: list[str | None] = [*languages] or [None]
+    for language_code in language_codes:
         for item in DocumentRequirement.catalog_for(
             purpose,
             language_code,

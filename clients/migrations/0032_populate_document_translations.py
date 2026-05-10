@@ -105,9 +105,9 @@ def populate_document_translations(apps, schema_editor):
             'en': 'Certificate of no contribution arrears for foreigner'
         },
         'no_dependents_statement': {
-            'pl': 'Oświadczenie o braku osób na utrzymaniu w Polsce',
-            'ru': 'Заявление об отсутствии иждивенцев в Польше',
-            'en': 'Statement of no dependents in Poland'
+            'pl': 'Zaświadczenie o niezaleganiu w podatkach',
+            'ru': 'Справка об отсутствии задолженности по налогам',
+            'en': 'Certificate of no tax arrears'
         },
         'zus_rca_or_insurance': {
             'pl': 'ZUS RCA lub polisa ubezpieczeniowa',

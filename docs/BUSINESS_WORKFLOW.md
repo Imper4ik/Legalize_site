@@ -47,3 +47,5 @@ Daily reminders cover overdue payments, expiring/expired documents, missing docu
 ## Demo path
 
 Use `python manage.py seed_demo_data --confirm` in a non-production environment. It creates fake clients across collection, waiting-decision, and decision-received stages, plus an OCR awaiting review example, expired document, payment, reminder, and email log.
+
+Before the demo, run migrations, `python manage.py compilemessages --ignore "venv" --ignore ".venv"`, `python manage.py collectstatic --noinput`, and create a superuser with `python manage.py createsuperuser` if one was not bootstrapped by Railway release variables.

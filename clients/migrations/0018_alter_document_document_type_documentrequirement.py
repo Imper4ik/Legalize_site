@@ -65,7 +65,7 @@ class Migration(migrations.Migration):
                     ),
                     (
                         "no_dependents_statement",
-                        "Заявление об отсутствии иждивенцев в Польше",
+                        "Справка об отсутствии задолженности по налогам",
                     ),
                 ],
                 max_length=50,
@@ -121,7 +121,7 @@ class Migration(migrations.Migration):
                             ),
                             (
                                 "no_dependents_statement",
-                                "Заявление об отсутствии иждивенцев в Польше",
+                                "Справка об отсутствии задолженности по налогам",
                             ),
                         ],
                         max_length=50,

@@ -9,6 +9,7 @@ from legalize_site.checks import (
     EMAIL_CONSOLE_WARNING_ID,
     EMAIL_ERROR_ID,
     EMAIL_WARNING_ID,
+    BACKUP_STORAGE_WARNING_ID,
     FERNET_KEYS_ERROR_ID,
     MEDIA_STORAGE_ERROR_ID,
     RATE_LIMIT_CACHE_ERROR_ID,
@@ -207,6 +208,34 @@ class ProductionStorageSafetyCheckTests(SimpleTestCase):
         self.assertEqual(len(messages), 1)
         self.assertIsInstance(messages[0], Error)
         self.assertEqual(messages[0].id, MEDIA_STORAGE_ERROR_ID)
+
+    @override_settings(IS_PRODUCTION=True, USE_S3_MEDIA_STORAGE=False, USE_DATABASE_MEDIA_STORAGE=True)
+    @patch.dict("os.environ", {"BACKUP_REMOTE_STORAGE": "false"}, clear=False)
+    def test_database_media_mvp_without_remote_backup_warns_only(self):
+        messages = production_storage_safety_check()
+
+        self.assertEqual(len(messages), 1)
+        self.assertIsInstance(messages[0], Warning)
+        self.assertEqual(messages[0].id, BACKUP_STORAGE_WARNING_ID)
+
+    @override_settings(
+        IS_PRODUCTION=True,
+        USE_S3_MEDIA_STORAGE=False,
+        USE_DATABASE_MEDIA_STORAGE=True,
+        BACKUP_STORAGE_ALIAS="backups",
+        STORAGES={
+            "default": {"BACKEND": "database_media.storage.DatabaseMediaStorage"},
+            "backups": {"BACKEND": "storages.backends.s3.S3Storage", "OPTIONS": {}},
+        },
+    )
+    @patch.dict("os.environ", {"BACKUP_REMOTE_STORAGE": "true"}, clear=False)
+    def test_remote_backup_storage_requires_bucket(self):
+        messages = production_storage_safety_check()
+
+        self.assertEqual(len(messages), 1)
+        self.assertIsInstance(messages[0], Error)
+        self.assertEqual(messages[0].id, MEDIA_STORAGE_ERROR_ID)
+        self.assertEqual(messages[0].msg, "Remote database backup storage has no bucket configured.")
 
     @override_settings(
         IS_PRODUCTION=True,

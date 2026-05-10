@@ -12,6 +12,7 @@ ALLOWED_HOSTS=your-app.railway.app
 CSRF_TRUSTED_ORIGINS=https://your-app.railway.app
 DATABASE_URL=...
 REDIS_URL=...  # optional; PostgreSQL DatabaseCache is used when omitted
+DJANGO_CACHE_TABLE=cache_table
 DEFAULT_FROM_EMAIL=...
 EMAIL_HOST=...
 EMAIL_PORT=587
@@ -25,7 +26,7 @@ SENTRY_DSN=
 BACKUP_REMOTE_STORAGE=
 ```
 
-Railway may provide `RAILWAY_PUBLIC_DOMAIN` or `RAILWAY_STATIC_URL`; production settings can derive hosts and CSRF origins from those. `REDIS_URL` is optional: when it is absent, production rate limiting uses Django `DatabaseCache` on the PostgreSQL cache table created by `release.sh`.
+Railway may provide `RAILWAY_PUBLIC_DOMAIN` or `RAILWAY_STATIC_URL`; production settings can derive hosts and CSRF origins from those. `REDIS_URL` is optional: when it is absent, production rate limiting uses Django `DatabaseCache` on the PostgreSQL cache table named by `DJANGO_CACHE_TABLE` (default `cache_table`). `release.sh` runs `python manage.py createcachetable`, so the table is created during release.
 
 ## Build and release
 
@@ -36,6 +37,8 @@ Typical sequence:
 ```bash
 python manage.py check
 python manage.py migrate --noinput
+python manage.py createcachetable
+python manage.py compilemessages --ignore "venv" --ignore ".venv"
 python manage.py collectstatic --noinput
 gunicorn legalize_site.wsgi:application
 ```
@@ -79,6 +82,10 @@ For production growth, use S3/R2/B2 and set the S3-compatible variables. A Railw
 
 Run daily DB backups and verify restore with `python manage.py test_restore`. If media is in PostgreSQL, DB backups include files. If media is local or S3, backup media separately.
 
+For a thesis/MVP deployment, `BACKUP_REMOTE_STORAGE=false` is allowed and emits a warning rather than an error. For real business use, set `BACKUP_REMOTE_STORAGE=true`, keep `BACKUP_STORAGE_ALIAS=backups`, set `BACKUP_STORAGE_LOCATION=db_backups`, and configure S3/R2/B2 credentials including `AWS_STORAGE_BUCKET_NAME`. Backups must not use `DatabaseMediaStorage`.
+
+Expected `check --deploy` warnings for MVP are limited to Django's standard HTTPS/HSTS reminders if you intentionally changed those settings and the project warning that remote backup storage is not enabled. Media storage and cache misconfiguration should be treated as errors.
+
 ## Health and readiness
 
 Use the lightweight healthcheck endpoint from the project URLs. Do not make healthchecks run OCR, migrations, or external email tests.
@@ -87,8 +94,11 @@ Use the lightweight healthcheck endpoint from the project URLs. Do not make heal
 
 ```bash
 python manage.py migrate --noinput
+python manage.py createcachetable
+python manage.py compilemessages --ignore "venv" --ignore ".venv"
 python manage.py collectstatic --noinput
 python manage.py setup_roles
+python manage.py seed_demo_data --confirm
 python manage.py scrub_ocr_pii --dry-run
 python manage.py scrub_ocr_pii
 ```

@@ -38,6 +38,17 @@ def import_production_settings_fresh():
 
 
 class ProductionSettingsTests(SimpleTestCase):
+    def test_missing_redis_url_uses_database_cache_table(self):
+        settings_module = load_production_settings(
+            {"REDIS_URL": "", "DJANGO_CACHE_TABLE": "custom_cache_table"}
+        )
+
+        self.assertEqual(
+            settings_module.CACHES["default"]["BACKEND"],
+            "django.core.cache.backends.db.DatabaseCache",
+        )
+        self.assertEqual(settings_module.CACHES["default"]["LOCATION"], "custom_cache_table")
+
     def test_redis_url_configures_redis_cache_backend(self):
         settings_module = load_production_settings(
             {"REDIS_URL": "redis://redis.internal:6379/0"}

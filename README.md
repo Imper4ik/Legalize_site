@@ -16,7 +16,7 @@ A modern CRM built with Django for managing client applications, documents, appo
 This application is ready for deployment on [Railway](https://railway.app/). 
 
 ### Quick Start
-1. Provision a PostgreSQL database and a Redis instance (optional, for rate-limiting cache).
+1. Provision a PostgreSQL database. Redis is optional; without `REDIS_URL`, rate limiting uses PostgreSQL `DatabaseCache`.
 2. Connect the GitHub repository to a new Railway service.
 3. Configure Environment Variables (see below).
 4. Deploy! Railway uses `nixpacks.toml` to automatically install required system dependencies (`tesseract-ocr`, `poppler-utils`, etc.).
@@ -29,6 +29,7 @@ At a minimum, configure the following variables in Railway:
 - `ALLOWED_HOSTS` & `CSRF_TRUSTED_ORIGINS`: Explicit hostnames, or allow Railway to inject `RAILWAY_PUBLIC_DOMAIN`.
 - `DATABASE_URL`: Automatically provided by Railway Postgres.
 - `REDIS_URL`: Optional Railway Redis URL. If omitted, production uses PostgreSQL `DatabaseCache` for rate-limiting.
+- `DJANGO_CACHE_TABLE`: Optional cache table name, defaults to `cache_table`; `release.sh` creates it.
 - `APP_ENV`: Set to `production`.
 - `PDF_FONT_PATH`: Set to `/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf`.
 
@@ -127,11 +128,12 @@ pytest
 - Explicit `FERNET_KEYS`; keep old keys during rotation until data is re-encrypted.
 - Explicit `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS`, or Railway public domain envs.
 - PostgreSQL `DATABASE_URL`; Redis `REDIS_URL` is optional because the app falls back to PostgreSQL cache.
+- `DJANGO_CACHE_TABLE=cache_table`, unless you intentionally changed the cache table name.
 - Real email credentials and verified `DEFAULT_FROM_EMAIL`.
 - `CRON_TOKEN` set; `CRON_ALLOWED_IPS` configured when the scheduler has stable IPs.
 - Persistent media: prefer `USE_DATABASE_MEDIA_STORAGE=True` for the MVP, or S3/R2/B2 for production growth.
-- Remote backup storage configured, or a documented Railway Volume backup process.
-- Run `python manage.py check --deploy`, migrations, `collectstatic`, and a smoke login before handover.
+- Remote backup storage configured for business use, or a documented Railway Volume/DB backup process for MVP.
+- Run `python manage.py check --deploy`, migrations, `compilemessages`, `collectstatic`, and a smoke login before handover.
 
 ## Cron schedule
 

@@ -63,7 +63,7 @@ def compress_image(
 
     # Open image
     try:
-        img = Image.open(image_file)
+        img: Image.Image = Image.open(image_file)
 
         # Convert RGBA to RGB if needed (for JPEG/WEBP)
         if img.mode in ('RGBA', 'LA', 'P') and output_format in ('JPEG', 'WEBP'):
@@ -82,7 +82,7 @@ def compress_image(
 
         # Compress to buffer
         buffer = BytesIO()
-        save_kwargs = {'format': output_format, 'optimize': True}
+        save_kwargs: dict[str, Any] = {'format': output_format, 'optimize': True}
 
         if output_format in ('JPEG', 'WEBP'):
             save_kwargs['quality'] = quality

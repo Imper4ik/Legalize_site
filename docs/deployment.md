@@ -14,11 +14,11 @@ For production, you must set the `PDF_FONT_PATH` variable with the absolute path
 
 Set `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` explicitly. Railway deployments may also provide `RAILWAY_PUBLIC_DOMAIN` and `RAILWAY_STATIC_URL`; Render deployments may provide `RENDER_EXTERNAL_HOSTNAME`. The app derives host and CSRF entries from these platform variables, but it no longer ships with a hardcoded Railway hostname.
 
-Set `REDIS_URL` in production so rate limiting uses Django `RedisCache` across workers. Without `REDIS_URL`, Django falls back to local cache and a system check warning is emitted.
+`REDIS_URL` is optional. When it is set, rate limiting uses Django `RedisCache`; when it is omitted, production uses Django `DatabaseCache` on the PostgreSQL cache table named by `DJANGO_CACHE_TABLE` (default `cache_table`). `release.sh` runs `python manage.py createcachetable` so the cache table exists before the app starts.
 
 Runtime OCR preprocessing depends on both `opencv-python-headless` and `numpy`; they are installed from `requirements.txt` during Docker and Railway/Nixpacks builds. The image also needs Tesseract and Poppler binaries, which are installed by the Dockerfile/Nixpacks configuration.
 
-Default HSTS production values are `SECURE_HSTS_SECONDS=31536000`, `SECURE_HSTS_INCLUDE_SUBDOMAINS=False`, and `SECURE_HSTS_PRELOAD=False`. Override them via env only after confirming the domain policy. Do not enable preload until the domain is ready for browser preload submission.
+Default production security values are `SECURE_SSL_REDIRECT=True`, `SECURE_HSTS_SECONDS=31536000`, `SECURE_HSTS_INCLUDE_SUBDOMAINS=True`, and `SECURE_HSTS_PRELOAD=True`. Use a real HTTPS custom domain before relying on browser preload behavior.
 
 Sentry tracing is controlled by `SENTRY_TRACES_SAMPLE_RATE`; use `0.1` for normal production traffic unless active debugging requires a temporary increase.
 

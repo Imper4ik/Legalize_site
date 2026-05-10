@@ -28,6 +28,8 @@ For Railway, do not rely on ephemeral local media. Use one of:
 - S3/R2/B2 with `USE_S3_MEDIA_STORAGE=True` for growth;
 - Railway Volume plus explicit `ALLOW_PRODUCTION_LOCAL_MEDIA=true`.
 
+Database backups should be copied to storage outside the application database for business use. The MVP may run with `BACKUP_REMOTE_STORAGE=false`, but that is a warning state; production operations should use the separate `backups` storage alias with S3/R2/B2 and a tested restore procedure.
+
 ## Logs and Sentry
 
 Logging uses a PII redaction filter. Sentry is configured with `send_default_pii=False`, no request body capture, and value sanitization for sensitive keys. Avoid logging raw OCR text, email bodies, file names, passport numbers, or case numbers.
