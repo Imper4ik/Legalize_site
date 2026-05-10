@@ -3619,39 +3619,6 @@ msgstr "Employees"
 msgid "Управление staff-аккаунтами и ролями без Django admin."
 msgstr "Manage staff accounts and roles without Django admin."
 
-msgid "Учёба"
-msgstr "Study"
-
-msgid "Работа"
-msgstr "Work"
-
-msgid "Воссоединение с семьёй"
-msgstr "Family reunification"
-
-msgid "Супруг/супруга"
-msgstr "Spouse"
-
-msgid "Ребёнок"
-msgstr "Child"
-
-msgid "Не указано"
-msgstr "Not specified"
-
-msgid "Спонсор"
-msgstr "Sponsor"
-
-msgid "Новый"
-msgstr "New"
-
-msgid "В ожидании"
-msgstr "Pending"
-
-msgid "Одобрен"
-msgstr "Approved"
-
-msgid "Отклонён"
-msgstr "Rejected"
-
 msgid "Новый клиент"
 msgstr "New client"
 
