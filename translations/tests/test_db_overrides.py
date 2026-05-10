@@ -133,7 +133,6 @@ class TestTranslationOverrides:
     def test_commands(self):
         """Test import/export commands."""
         from django.core.management import call_command
-        import os
         
         # Import dry-run
         call_command('import_po_to_db', '--dry-run')

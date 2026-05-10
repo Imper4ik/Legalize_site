@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import polib
 from django.core.management.base import BaseCommand
-from django.conf import settings
 from translations.models import TranslationOverride
 from translations.utils import get_po_files
 

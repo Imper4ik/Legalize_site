@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import logging
-from typing import Any
 
 from django.core.cache import cache
 from django.db.utils import OperationalError, ProgrammingError

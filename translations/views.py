@@ -58,9 +58,12 @@ def update_translation_api(request: HttpRequest) -> JsonResponse:
             logger.info('Saved translation for msgid=%s via %s', msgid, storage)
             
             updated_langs = []
-            if ru is not None: updated_langs.append('ru')
-            if en is not None: updated_langs.append('en')
-            if pl is not None: updated_langs.append('pl')
+            if ru is not None:
+                updated_langs.append('ru')
+            if en is not None:
+                updated_langs.append('en')
+            if pl is not None:
+                updated_langs.append('pl')
 
             return JsonResponse({
                 'status': 'ok',
