@@ -13,6 +13,7 @@ from django.core.management import call_command
 from django.db import IntegrityError, transaction
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from clients.constants import DocumentType
 from clients.forms import ClientForm, DocumentUploadForm
@@ -249,9 +250,11 @@ def test_health_alerts_missing_docs_and_payment_due_dates():
     assert not Reminder.objects.filter(payment=future_payment).exists()
 
     alerts = sample_client.get_health_alerts()
-    missing_alert = next(alert for alert in alerts if str(alert["title"]) == "Не все документы собраны")
+    missing_docs_title = _("Не все документы собраны")
+    overdue_payments_title = _("Просроченные оплаты")
+    missing_alert = next(alert for alert in alerts if str(alert["title"]) == missing_docs_title)
     assert missing_alert["count"] == 1
-    assert all(str(alert["title"]) != "Просроченные оплаты" for alert in alerts)
+    assert all(str(alert["title"]) != overdue_payments_title for alert in alerts)
 
     Payment.objects.create(
         client=sample_client,
@@ -261,7 +264,7 @@ def test_health_alerts_missing_docs_and_payment_due_dates():
         due_date=timezone.localdate() - timedelta(days=1),
     )
     alerts = sample_client.get_health_alerts()
-    assert any(str(alert["title"]) == "Просроченные оплаты" for alert in alerts)
+    assert any(str(alert["title"]) == overdue_payments_title for alert in alerts)
 
 
 @pytest.mark.django_db

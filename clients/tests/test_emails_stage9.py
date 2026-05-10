@@ -7,6 +7,7 @@ from django.contrib.auth.models import Group
 from django.core.management import call_command
 from django.test import TestCase
 from django.urls import reverse
+from django.utils.translation import gettext as _
 
 from clients.models import Client, Company, EmailCampaign, EmailLog
 from clients.services.notifications import _send_email, build_email_idempotency_key
@@ -41,7 +42,11 @@ class EmailViewsStage9Tests(TestCase):
         payload = response.json()
         self.assertIn("subject", payload)
         self.assertIn("body", payload)
-        self.assertIn("Недостаточно данных", payload["body"])
+        expected_body = _(
+            "Недостаточно данных у клиента для этого шаблона "
+            "(например, нет даты отпечатков или списка документов)."
+        )
+        self.assertIn(expected_body, payload["body"])
 
     @patch("clients.views.emails._log_email")
     @patch("clients.views.emails._send_confirmation_email")

@@ -72,7 +72,7 @@ def _write_mo_file(po_path: Path, mo_path: Path) -> None:
             if line.startswith("msgid") and not line.startswith("msgid_plural"):
                 if message_id is not None:
                     _add_message()
-                message_ctxt = None if message_ctxt is None else message_ctxt
+                    message_ctxt = None
                 message_id = _parse_po_literal(line[5:].strip())
                 message_strs = []
                 fuzzy = False

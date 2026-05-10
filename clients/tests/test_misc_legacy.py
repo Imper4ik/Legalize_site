@@ -81,6 +81,48 @@ class PurePythonMsgfmtTests(SimpleTestCase):
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
 
+    def test_message_context_does_not_leak_to_following_entries(self):
+        from legalize_site.utils.i18n import _write_mo_file
+
+        tmp_root = Path(__file__).resolve().parents[2] / "tmp"
+        tmp_root.mkdir(exist_ok=True)
+        tmp = tmp_root / f"msgfmt-{uuid.uuid4().hex}"
+        try:
+            tmp.mkdir(parents=True)
+            locale_dir = Path(tmp) / "en" / "LC_MESSAGES"
+            locale_dir.mkdir(parents=True)
+            po_path = locale_dir / "django.po"
+            po_path.write_text(
+                '\n'.join(
+                    [
+                        'msgid ""',
+                        'msgstr ""',
+                        '"Content-Type: text/plain; charset=UTF-8\\n"',
+                        '"Language: en\\n"',
+                        '',
+                        'msgctxt "menu"',
+                        'msgid "Open"',
+                        'msgstr "Open from menu"',
+                        '',
+                        'msgid "Print"',
+                        'msgstr "Print translated"',
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            mo_path = po_path.with_suffix(".mo")
+            _write_mo_file(po_path, mo_path)
+
+            with mo_path.open("rb") as fp:
+                translations = GNUTranslations(fp)
+
+            self.assertEqual(translations.pgettext("menu", "Open"), "Open from menu")
+            self.assertEqual(translations.gettext("Open"), "Open")
+            self.assertEqual(translations.gettext("Print"), "Print translated")
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
 
 class CalculatorViewTests(TestCase):
     def setUp(self):

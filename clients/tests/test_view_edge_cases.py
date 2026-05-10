@@ -8,6 +8,7 @@ from django.contrib.auth.models import Group
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.http import HttpResponse
+from django.utils.translation import gettext as _
 
 from clients.models import AppSettings, Client, ClientActivity, Document, Payment, Reminder, ServicePrice
 from clients.services.access import user_has_internal_role
@@ -212,7 +213,7 @@ class ClientViewEdgeCaseTests(TestCase):
         response = self.client.get(reverse("clients:staff_manage"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Сотрудники")
+        self.assertContains(response, _("Сотрудники"))
 
     def test_role_manage_renders_and_syncs_roles(self):
         response = self.client.get(reverse("clients:role_manage"))

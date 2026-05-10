@@ -4,6 +4,7 @@ import zipfile
 from django.urls import reverse
 from django.core.files.base import ContentFile
 from django.contrib.messages import get_messages
+from django.utils.translation import gettext as _
 from clients.models import Document
 
 @pytest.fixture
@@ -64,7 +65,8 @@ def test_document_download_missing_physical_file(logged_in_staff, sample_documen
     assert response.url == reverse("clients:client_detail", kwargs={"pk": sample_document.client.pk})
 
     messages = list(get_messages(response.wsgi_request))
-    assert any("Файл отсутствует в хранилище" in str(m) for m in messages)
+    expected_message = _("Файл отсутствует в хранилище. Загрузите файл заново.")
+    assert any(expected_message in str(m) for m in messages)
     assert "Physical file missing in storage" in caplog.text
     assert stored_name not in caplog.text
 
