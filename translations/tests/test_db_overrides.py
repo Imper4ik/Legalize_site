@@ -42,6 +42,19 @@ class TestTranslationOverrides:
         translated = apply_db_override("Hello", "Original", "ru")
         assert translated == "Привет"
 
+    def test_override_can_match_translated_result(self):
+        """Runtime should recover when gettext returns a stale translated value."""
+        TranslationOverride.objects.create(
+            msgid="Nowy klient",
+            language="ru",
+            text="Новый клиент",
+            is_active=True,
+        )
+
+        translated = apply_db_override("Новый клиент", "Nowy klient", "ru")
+
+        assert translated == "Новый клиент"
+
     def test_cache_usage_and_clear(self):
         """Runtime should use cache and clear it on update."""
         TranslationOverride.objects.create(msgid="Hello", language="ru", text="Привет", is_active=True)

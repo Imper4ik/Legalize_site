@@ -57,6 +57,12 @@ def apply_db_override(msgid: str, translated: str, language: str | None = None) 
     override = get_db_translation_override(msgid, language)
     if override is not None:
         return override
+
+    if translated and translated != msgid:
+        translated_override = get_db_translation_override(str(translated), language)
+        if translated_override is not None:
+            return translated_override
+
     return translated
 
 def clear_translation_override_cache(msgid: str, language: str) -> None:
