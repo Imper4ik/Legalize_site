@@ -4338,6 +4338,7 @@ msgid ""
 "                        Если вы считаете, что это ошибка, обратитесь к администратору сайта.\n"
 "                        "
 msgstr ""
+"\n"
 "Jesteś zalogowany, ale Twój profil nie ma uprawnień do przeglądania tej sekcji personelu.\n"
 "                        Jeśli uważasz, że to błąd, skontaktuj się z administratorem witryny."
 
@@ -4927,6 +4928,7 @@ msgid ""
 "                    Вы собираетесь войти на сайт, используя свой аккаунт %(provider)s.\n"
 "                    "
 msgstr ""
+"\n"
 "Za chwilę zalogujesz się do serwisu przy użyciu swojego konta %(provider)s."
 
 #: .\templates\socialaccount\login.html:22
@@ -7751,7 +7753,7 @@ msgstr "Przekierowano, ale w odpowiedzi brakuje nagłówka Lokalizacja:."
 #: .\tmp\uv-python\cpython-3.12.13-windows-x86_64-none\Lib\argparse.py:2650
 #, python-format
 msgid "%(prog)s: error: %(message)s\n"
-msgstr "%(prog)s: błąd: %(message)s"
+msgstr "%(prog)s: błąd: %(message)s\n"
 
 #: .\tmp\uv-cache\archive-v0\kubqama122zp1McREYeWc\Lib\site-packages\packageurl\contrib\django\models.py:88
 #: .\tmp\uv-cache\archive-v0\smjmlW0CYddyNI6EOVREO\packageurl\contrib\django\models.py:88
@@ -8082,7 +8084,7 @@ msgstr "opcja niejednoznaczna: %s (%s?)"
 #: .\tmp\uv-python\cpython-3.12.13-windows-x86_64-none\Lib\optparse.py:381
 #, python-format
 msgid "Usage: %s\n"
-msgstr "Użycie: %s"
+msgstr "Użycie: %s\n"
 
 #: .\tmp\uv-python\cpython-3.12-windows-x86_64-none\Lib\optparse.py:400
 #: .\tmp\uv-python\cpython-3.12.13-windows-x86_64-none\Lib\optparse.py:400

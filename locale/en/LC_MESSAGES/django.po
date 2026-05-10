@@ -4325,6 +4325,7 @@ msgid ""
 "                        Если вы считаете, что это ошибка, обратитесь к администратору сайта.\n"
 "                        "
 msgstr ""
+"\n"
 "You are signed in, but your profile does not have permission to view this staff section.\n"
 "                        If you think this is an error, please contact your site administrator."
 
@@ -4909,7 +4910,9 @@ msgid ""
 "\n"
 "                    Вы собираетесь войти на сайт, используя свой аккаунт %(provider)s.\n"
 "                    "
-msgstr "You are about to log in to the site using your %(provider)s account."
+msgstr ""
+"\n"
+"You are about to log in to the site using your %(provider)s account."
 
 #: .\templates\socialaccount\login.html:22
 msgid "Нажмите \"Продолжить\", чтобы перейти к Google для аутентификации."
