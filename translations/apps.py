@@ -101,18 +101,35 @@ def patch_translations() -> None:
     setattr(translation, '_studio_patched', True)
     logger.info("Successfully performed deep patch on Django translation system.")
 
+def patch_db_override() -> None:
+    """Patch Django's trans_real.gettext to apply DB overrides."""
+    from django.utils.translation import trans_real
+    from .runtime import apply_db_override
+
+    if hasattr(trans_real, '_db_patched'):
+        return
+
+    orig_gettext = trans_real.gettext
+
+    def db_wrapped_gettext(message: Any) -> Any:
+        translated = orig_gettext(message)
+        return apply_db_override(str(message), translated)
+
+    trans_real.gettext = db_wrapped_gettext
+    trans_real._db_patched = True
+    logger.info("Successfully patched Django translation system with DB overrides.")
+
+
 class TranslationsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'translations'
 
     def ready(self) -> None:
-        # Server-side wrapping of gettext results can leak markers into HTML
-        # when not carefully controlled. By default we disable the deep
-        # monkey-patch and rely on the client-side overlay + scan API to
-        # safely create editable spans in the browser. If you really need
-        # server-side wrapping, set `TRANSLATION_STUDIO_SERVER_WRAP = True`
-        # in your settings.
         from django.conf import settings
+        
+        if getattr(settings, 'TRANSLATION_DB_OVERRIDES_ENABLED', True):
+            patch_db_override()
+
         use_wrap = getattr(settings, 'TRANSLATION_STUDIO_SERVER_WRAP', False)
 
         if use_wrap:

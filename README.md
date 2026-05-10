@@ -91,12 +91,15 @@ python manage.py process_document_jobs
 # Manually trigger reminders and missing document emails
 python manage.py update_reminders
 
-# Scrub PII from old OCR data (dry-run first)
 python manage.py scrub_ocr_pii --dry-run
 python manage.py scrub_ocr_pii
 
 # Create safe demo data for thesis defense
 python manage.py seed_demo_data --confirm
+
+# Import/Export translations
+python manage.py import_po_to_db
+python manage.py export_db_translations_to_po
 ```
 
 ## Local Development
@@ -169,3 +172,4 @@ curl -X POST https://your-app.railway.app/cron/process-document-jobs/ \
 - `docs/RAILWAY_DEPLOYMENT.md`
 - `docs/TESTING.md`
 - `docs/backups.md`
+- `docs/TRANSLATION_AND_BUSINESS_TEXTS.md`

@@ -7,6 +7,7 @@ from typing import Any, TYPE_CHECKING
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.conf import settings
 
 from clients.services.roles import user_has_any_role
 from .utils import load_all_translations, save_translation_entry
@@ -38,7 +39,6 @@ def update_translation_api(request: HttpRequest) -> JsonResponse:
     """API to save a single translation msgid across all languages."""
     if request.method == 'POST':
         try:
-            # Defensive decode of request body for logging
             body = request.body.decode('utf-8') if isinstance(request.body, (bytes, bytearray)) else str(request.body)
             try:
                 data = json.loads(body)
@@ -46,16 +46,28 @@ def update_translation_api(request: HttpRequest) -> JsonResponse:
                 data = {}
 
             msgid = data.get('msgid')
-            # Fetch languages
             ru = data.get('ru')
             en = data.get('en')
             pl = data.get('pl')
 
             logger.info('update_translation_api called by %s referer=%s payload=%s', getattr(request, 'user', None), request.META.get('HTTP_REFERER'), data)
 
-            save_translation_entry(msgid, ru=ru, en=en, pl=pl)
-            logger.info('Saved translation for msgid=%s', msgid)
-            return JsonResponse({'status': 'ok'})
+            storage = getattr(settings, 'TRANSLATION_STUDIO_STORAGE', 'database')
+            
+            save_translation_entry(msgid, ru=ru, en=en, pl=pl, updated_by=request.user, storage=storage)
+            logger.info('Saved translation for msgid=%s via %s', msgid, storage)
+            
+            updated_langs = []
+            if ru is not None: updated_langs.append('ru')
+            if en is not None: updated_langs.append('en')
+            if pl is not None: updated_langs.append('pl')
+
+            return JsonResponse({
+                'status': 'ok',
+                'storage': storage,
+                'msgid': msgid,
+                'updated_languages': updated_langs
+            })
         except Exception as e:
             logger.exception('Error in update_translation_api: %s', e)
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
@@ -102,18 +114,17 @@ def get_translation_api(request: HttpRequest) -> JsonResponse:
             'ru': msgid, # default to msgid for RU
             'en': '',
             'pl': '',
-            'is_new': True
+            'is_new': True,
+            'source_ru': 'po',
+            'source_en': 'po',
+            'source_pl': 'po'
         }
     })
 
 
 @user_passes_test(can_use_translation_studio)
 def scan_translations_api(request: HttpRequest) -> JsonResponse:
-    """Return a mapping of translated text -> msgid for the current language.
-
-    This is used by the in-context editor to find translation occurrences that
-    were not wrapped server-side (e.g. dynamically included partials).
-    """
+    """Return a mapping of translated text -> msgid for the current language."""
     lang = getattr(request, 'LANGUAGE_CODE', None)
     if not lang:
         from django.utils import translation as _t
@@ -130,10 +141,8 @@ def scan_translations_api(request: HttpRequest) -> JsonResponse:
 
     for entry in translations:
         msgid = entry['msgid']
-        # Map the msgid itself
         mapping[normalize(msgid)] = msgid
 
-        # Map ALL localized versions
         for lang_code in ['ru', 'en', 'pl']:
             val = entry.get(lang_code)
             if val:

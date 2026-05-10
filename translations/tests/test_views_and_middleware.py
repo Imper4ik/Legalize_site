@@ -71,7 +71,14 @@ class TranslationViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "ok")
-        save_mock.assert_called_once_with("hello", ru="\u043f\u0440\u0438\u0432\u0435\u0442", en="hello", pl="cze\u015b\u0107")
+        save_mock.assert_called_once_with(
+            "hello", 
+            ru="\u043f\u0440\u0438\u0432\u0435\u0442", 
+            en="hello", 
+            pl="cze\u015b\u0107", 
+            updated_by=self.superuser, 
+            storage='database'
+        )
 
     def test_update_translation_api_requires_csrf_token(self):
         csrf_client = DjangoClient(enforce_csrf_checks=True)

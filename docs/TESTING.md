@@ -32,6 +32,7 @@ Use the virtualenv Python on Windows:
 - Cron token validation and cron limit validation.
 - Read-only and staff role permissions.
 - Database media storage and backup/restore behavior.
+- Translation overrides and DB fallback behavior.
 
 ## When a test fails
 

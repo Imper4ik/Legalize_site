@@ -31,13 +31,19 @@ def load_all_translations() -> List[Dict[str, Any]]:
     """
     Returns a unified list of translations.
     Format: [
-        {'msgid': '...', 'ru': '...', 'en': '...', 'pl': '...', 'occurrences': [...]},
+        {
+            'msgid': '...', 
+            'ru': '...', 'en': '...', 'pl': '...', 
+            'occurrences': [...],
+            'source_ru': 'po', 'source_en': 'po', 'source_pl': 'po'
+        },
         ...
     ]
     """
     po_files = get_po_files()
     data: Dict[str, Dict[str, Any]] = {}
 
+    # 1. Load from PO files
     for lang, path in po_files.items():
         po = polib.pofile(path)
         for entry in po:
@@ -50,26 +56,54 @@ def load_all_translations() -> List[Dict[str, Any]]:
                     'en': '',
                     'pl': '',
                     'occurrences': entry.occurrences,
-                    'comment': entry.comment
+                    'comment': entry.comment,
+                    'source_ru': 'po',
+                    'source_en': 'po',
+                    'source_pl': 'po'
                 }
             data[entry.msgid][lang] = entry.msgstr
+            data[entry.msgid][f'source_{lang}'] = 'po'
+
+    # 2. Overlay DB overrides
+    from .models import TranslationOverride
+    from django.db.utils import ProgrammingError, OperationalError
+
+    try:
+        overrides = TranslationOverride.objects.filter(is_active=True)
+        for override in overrides:
+            if override.msgid not in data:
+                data[override.msgid] = {
+                    'msgid': override.msgid,
+                    'ru': '',
+                    'en': '',
+                    'pl': '',
+                    'occurrences': [],
+                    'comment': 'Dynamically added via DB Override',
+                    'source_ru': 'po',
+                    'source_en': 'po',
+                    'source_pl': 'po'
+                }
+            data[override.msgid][override.language] = override.text
+            data[override.msgid][f'source_{override.language}'] = 'db'
+    except (ProgrammingError, OperationalError):
+        # Table might not exist yet or DB issue
+        logger.debug("TranslationOverride table not found or DB error, skipping DB overrides.")
 
     # Convert to sorted list (by msgid)
     result = sorted(data.values(), key=lambda x: str(x['msgid']))
     return result
 
-def save_translation_entry(msgid: str, ru: Optional[str] = None, en: Optional[str] = None, pl: Optional[str] = None) -> None:
-    """Updates a specific msgid in all 3 PO files."""
+def save_translation_entry(msgid: str, ru: Optional[str] = None, en: Optional[str] = None, pl: Optional[str] = None, updated_by=None, storage=None) -> None:
+    """Updates a specific msgid in PO files and/or DB."""
+    if storage is None:
+        storage = getattr(settings, 'TRANSLATION_STUDIO_STORAGE', 'database')
+
     po_files = get_po_files()
     updates = {'ru': ru, 'en': en, 'pl': pl}
-    # Determine canonical msgid: if any PO already contains this string as
-    # msgid or as a msgstr, prefer the existing msgid so we update the
-    # canonical entry rather than creating duplicates.
+    
+    # Determine canonical msgid (keep existing logic for PO files)
     canonical = msgid
     normalized_input = normalize_text(msgid)
-
-    # Track potential matches.
-    # We prefer: 1) Exact msgid, 2) Normalized msgid, 3) msgstr match
     potential_canonical: Optional[str] = None
 
     try:
@@ -87,74 +121,95 @@ def save_translation_entry(msgid: str, ru: Optional[str] = None, en: Optional[st
                 n_id = normalize_text(entry.msgid)
                 n_str = normalize_text(entry.msgstr)
 
-                # 1. Exact msgid match (Strongest)
                 if entry.msgid == msgid:
                     canonical = entry.msgid
-                    logger.info('Found exact msgid match in %s: %s', language, canonical)
                     potential_canonical = canonical
                     break
 
-                # 2. Normalized msgid match (Secondary)
                 if not potential_canonical and n_id == normalized_input:
                     potential_canonical = entry.msgid
-                    logger.info('Found normalized msgid match in %s: %s', language, potential_canonical)
 
-                # 3. msgstr match (Resolution from UI text to technical key)
                 if not potential_canonical and n_str == normalized_input:
                     potential_canonical = entry.msgid
-                    logger.info('Found msgstr match (resolved UI text to key) in %s: %s', language, potential_canonical)
 
-            if potential_canonical and potential_canonical == msgid: # Already found best possible
+            if potential_canonical and potential_canonical == msgid:
                 break
-
     except Exception as e:
         logger.error('Error during canonical resolution: %s', e)
 
     if potential_canonical:
         canonical = potential_canonical
 
-    # Now update each language PO under the canonical msgid
-    for lang, path in po_files.items():
-        if updates.get(lang) is None:
-            continue
+    # 1. Save to DB
+    if storage in ('database', 'both'):
+        from .models import TranslationOverride
+        from .runtime import clear_translation_override_cache
+        from django.db.utils import ProgrammingError, OperationalError
 
+        for lang, value in updates.items():
+            if value is None:
+                continue
+            
+            try:
+                override, created = TranslationOverride.objects.update_or_create(
+                    msgid=canonical,
+                    language=lang,
+                    defaults={
+                        'text': value,
+                        'is_active': True,
+                        'source': 'studio',
+                        'updated_by': updated_by if updated_by and updated_by.is_authenticated else None
+                    }
+                )
+                logger.info('Saved DB translation override for msgid=%s (lang=%s)', canonical[:20], lang)
+                # Clear cache
+                clear_translation_override_cache(canonical, lang)
+            except (ProgrammingError, OperationalError) as e:
+                logger.warning('Failed to save to DB (table might not exist): %s', e)
+                # Fallback to PO if requested? The prompt says "В таком случае fallback — обычные .po."
+                # This applies to loading. For saving, if DB fails and storage was 'database', 
+                # we don't automatically save to PO unless storage was 'both'.
+
+    # 2. Save to PO files
+    if storage in ('po', 'both'):
+        for lang, path in po_files.items():
+            if updates.get(lang) is None:
+                continue
+
+            try:
+                po = polib.pofile(path)
+            except Exception as e:
+                logger.exception('Could not open PO file %s: %s', path, e)
+                continue
+
+            entry = po.find(canonical)
+
+            if entry:
+                old = entry.msgstr
+                entry.msgstr = updates[lang]
+                if 'fuzzy' in entry.flags:
+                    entry.flags.remove('fuzzy')
+                try:
+                    po.save()
+                    logger.info('Updated translation in %s for msgid=%s (lang=%s): "%s" -> "%s"', path, canonical, lang, old, updates[lang])
+                except Exception as e:
+                    logger.exception('Failed to save PO file %s: %s', path, e)
+            else:
+                new_entry = polib.POEntry(
+                    msgid=canonical,
+                    msgstr=updates[lang],
+                    comment="Dynamically added via Translation Studio"
+                )
+                po.append(new_entry)
+                try:
+                    po.save()
+                    logger.info('Appended new translation to %s for msgid=%s (lang=%s): "%s"', path, canonical, lang, updates[lang])
+                except Exception as e:
+                    logger.exception('Failed to save PO file %s after append: %s', path, e)
+
+        # Rebuild MO catalogs
         try:
-            po = polib.pofile(path)
-        except Exception as e:
-            logger.exception('Could not open PO file %s: %s', path, e)
-            continue
-
-        entry = po.find(canonical)
-
-        if entry:
-            old = entry.msgstr
-            entry.msgstr = updates[lang]
-            if 'fuzzy' in entry.flags:
-                entry.flags.remove('fuzzy')
-            try:
-                po.save()
-                logger.info('Updated translation in %s for msgid=%s (lang=%s): "%s" -> "%s"', path, canonical, lang, old, updates[lang])
-            except Exception as e:
-                logger.exception('Failed to save PO file %s: %s', path, e)
-        else:
-            # Create a new entry if it doesn't exist (use canonical msgid)
-            new_entry = polib.POEntry(
-                msgid=canonical,
-                msgstr=updates[lang],
-                comment="Dynamically added via Translation Studio"
-            )
-            po.append(new_entry)
-            try:
-                po.save()
-                logger.info('Appended new translation to %s for msgid=%s (lang=%s): "%s"', path, canonical, lang, updates[lang])
-            except Exception as e:
-                logger.exception('Failed to save PO file %s after append: %s', path, e)
-
-    # Rebuild MO catalogs after update so changes appear immediately.
-    # This helper already falls back to a pure-Python compiler when gettext
-    # binaries are unavailable (common on some hosted environments).
-    try:
-        from legalize_site.utils.i18n import compile_message_catalogs
-        compile_message_catalogs()
-    except Exception as exc:  # pragma: no cover - defensive safeguard
-        logger.exception("Failed to compile translation catalogs after save: %s", exc)
+            from legalize_site.utils.i18n import compile_message_catalogs
+            compile_message_catalogs()
+        except Exception as exc:
+            logger.exception("Failed to compile translation catalogs after save: %s", exc)

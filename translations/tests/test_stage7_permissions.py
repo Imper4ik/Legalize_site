@@ -43,7 +43,14 @@ class TranslationStage7PermissionTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "ok")
-        save_mock.assert_called_once_with(None, ru=None, en=None, pl=None)
+        save_mock.assert_called_once_with(
+            None, 
+            ru=None, 
+            en=None, 
+            pl=None, 
+            updated_by=self.superuser, 
+            storage='database'
+        )
 
     def test_scan_api_normalizes_whitespace_keys(self):
         self.client.login(email="super2@example.com", password="pass")

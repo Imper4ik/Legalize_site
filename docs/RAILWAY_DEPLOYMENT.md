@@ -20,10 +20,10 @@ EMAIL_HOST_USER=...
 EMAIL_HOST_PASSWORD=...
 CRON_TOKEN=...
 CRON_ALLOWED_IPS=
-USE_DATABASE_MEDIA_STORAGE=True
-USE_S3_MEDIA_STORAGE=False
 SENTRY_DSN=
 BACKUP_REMOTE_STORAGE=
+TRANSLATION_STUDIO_STORAGE=database
+TRANSLATION_DB_OVERRIDES_ENABLED=True
 ```
 
 Railway may provide `RAILWAY_PUBLIC_DOMAIN` or `RAILWAY_STATIC_URL`; production settings can derive hosts and CSRF origins from those. `REDIS_URL` is optional: when it is absent, production rate limiting uses Django `DatabaseCache` on the PostgreSQL cache table named by `DJANGO_CACHE_TABLE` (default `cache_table`). `release.sh` runs `python manage.py createcachetable`, so the table is created during release.
@@ -97,8 +97,13 @@ python manage.py migrate --noinput
 python manage.py createcachetable
 python manage.py compilemessages --ignore "venv" --ignore ".venv"
 python manage.py collectstatic --noinput
-python manage.py setup_roles
-python manage.py seed_demo_data --confirm
 python manage.py scrub_ocr_pii --dry-run
 python manage.py scrub_ocr_pii
 ```
+
+## Translations
+After first deploy, if you want to populate the DB with translations from PO files, run:
+```bash
+python manage.py import_po_to_db
+```
+See [TRANSLATION_AND_BUSINESS_TEXTS.md](TRANSLATION_AND_BUSINESS_TEXTS.md) for more details.

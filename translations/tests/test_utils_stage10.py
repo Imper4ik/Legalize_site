@@ -3,12 +3,12 @@ from __future__ import annotations
 from unittest.mock import MagicMock, patch
 
 import polib
-from django.test import SimpleTestCase
+from django.test import TestCase
 
 from translations.utils import save_translation_entry
 
 
-class TranslationUtilsStage10Tests(SimpleTestCase):
+class TranslationUtilsStage10Tests(TestCase):
     @patch("translations.utils.get_po_files", return_value={"ru": "ru.po", "en": "en.po", "pl": "pl.po"})
     @patch("legalize_site.utils.i18n.compile_message_catalogs")
     def test_save_translation_entry_updates_entries_and_compiles(self, compile_mock, _files_mock):
@@ -27,7 +27,7 @@ class TranslationUtilsStage10Tests(SimpleTestCase):
             return po
 
         with patch("translations.utils.polib.pofile", side_effect=fake_pofile):
-            save_translation_entry("Калькулятор", ru="Кальк", en="Calc", pl="Kalk")
+            save_translation_entry("Калькулятор", ru="Кальк", en="Calc", pl="Kalk", storage="po")
 
         self.assertEqual(po_ru.find("Калькулятор").msgstr, "Кальк")
         self.assertEqual(po_en.find("Калькулятор").msgstr, "Calc")
@@ -46,7 +46,7 @@ class TranslationUtilsStage10Tests(SimpleTestCase):
 
         with patch("translations.utils.polib.pofile", side_effect=fake_pofile):
             with patch("legalize_site.utils.i18n.compile_message_catalogs", side_effect=RuntimeError("boom")):
-                save_translation_entry("Key", ru="New")
+                save_translation_entry("Key", ru="New", storage="po")
 
         self.assertEqual(po_ru.find("Key").msgstr, "New")
         self.assertTrue(logger_mock.exception.called)
