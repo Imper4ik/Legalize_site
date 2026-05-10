@@ -65,11 +65,11 @@ def load_all_translations() -> List[Dict[str, Any]]:
             data[entry.msgid][f'source_{lang}'] = 'po'
 
     # 2. Overlay DB overrides
-    from .models import TranslationOverride
+    from .models import RuntimeTranslation
     from django.db.utils import ProgrammingError, OperationalError
 
     try:
-        overrides = TranslationOverride.objects.filter(is_active=True)
+        overrides = RuntimeTranslation.objects.filter(is_active=True)
         for override in overrides:
             if override.msgid not in data:
                 data[override.msgid] = {
@@ -83,11 +83,11 @@ def load_all_translations() -> List[Dict[str, Any]]:
                     'source_en': 'po',
                     'source_pl': 'po'
                 }
-            data[override.msgid][override.language] = override.text
-            data[override.msgid][f'source_{override.language}'] = 'db'
+            data[override.msgid][override.language_code] = override.msgstr
+            data[override.msgid][f'source_{override.language_code}'] = 'db'
     except (ProgrammingError, OperationalError):
         # Table might not exist yet or DB issue
-        logger.debug("TranslationOverride table not found or DB error, skipping DB overrides.")
+        logger.debug("RuntimeTranslation table not found or DB error, skipping DB overrides.")
 
     # Convert to sorted list (by msgid)
     result = sorted(data.values(), key=lambda x: str(x['msgid']))
@@ -142,7 +142,7 @@ def save_translation_entry(msgid: str, ru: Optional[str] = None, en: Optional[st
 
     # 1. Save to DB
     if storage in ('database', 'both'):
-        from .models import TranslationOverride
+        from .models import RuntimeTranslation
         from .runtime import clear_translation_override_cache
         from django.db.utils import ProgrammingError, OperationalError
 
@@ -151,11 +151,11 @@ def save_translation_entry(msgid: str, ru: Optional[str] = None, en: Optional[st
                 continue
             
             try:
-                override, created = TranslationOverride.objects.update_or_create(
+                override, created = RuntimeTranslation.objects.update_or_create(
                     msgid=canonical,
-                    language=lang,
+                    language_code=lang,
                     defaults={
-                        'text': value,
+                        'msgstr': value,
                         'is_active': True,
                         'source': 'studio',
                         'updated_by': updated_by if updated_by and updated_by.is_authenticated else None
@@ -166,9 +166,6 @@ def save_translation_entry(msgid: str, ru: Optional[str] = None, en: Optional[st
                 clear_translation_override_cache(canonical, lang)
             except (ProgrammingError, OperationalError) as e:
                 logger.warning('Failed to save to DB (table might not exist): %s', e)
-                # Fallback to PO if requested? The prompt says "В таком случае fallback — обычные .po."
-                # This applies to loading. For saving, if DB fails and storage was 'database', 
-                # we don't automatically save to PO unless storage was 'both'.
 
     # 2. Save to PO files
     if storage in ('po', 'both'):

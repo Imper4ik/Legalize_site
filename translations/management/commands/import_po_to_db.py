@@ -3,7 +3,7 @@ from __future__ import annotations
 import polib
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from translations.models import TranslationOverride
+from translations.models import RuntimeTranslation
 from translations.utils import get_po_files
 
 class Command(BaseCommand):
@@ -30,7 +30,7 @@ class Command(BaseCommand):
                 if not entry.msgid or not entry.msgstr:
                     continue
                 
-                exists = TranslationOverride.objects.filter(msgid=entry.msgid, language=lang).exists()
+                exists = RuntimeTranslation.objects.filter(msgid=entry.msgid, language_code=lang).exists()
                 
                 if exists and not overwrite:
                     self.stdout.write(self.style.WARNING(f"Skipping existing override for '{entry.msgid[:30]}' in {lang}"))
@@ -39,11 +39,11 @@ class Command(BaseCommand):
                 if dry_run:
                     self.stdout.write(f"[Dry-run] Would save override for '{entry.msgid[:30]}' in {lang}")
                 else:
-                    override, created = TranslationOverride.objects.update_or_create(
+                    override, created = RuntimeTranslation.objects.update_or_create(
                         msgid=entry.msgid,
-                        language=lang,
+                        language_code=lang,
                         defaults={
-                            'text': entry.msgstr,
+                            'msgstr': entry.msgstr,
                             'is_active': True,
                             'source': 'po_import'
                         }

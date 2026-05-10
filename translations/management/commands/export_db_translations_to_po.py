@@ -3,7 +3,7 @@ from __future__ import annotations
 import polib
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from translations.models import TranslationOverride
+from translations.models import RuntimeTranslation
 from translations.utils import get_po_files
 
 class Command(BaseCommand):
@@ -18,7 +18,7 @@ class Command(BaseCommand):
         no_compile = options['no_compile']
         dry_run = options['dry_run']
 
-        overrides = TranslationOverride.objects.filter(is_active=True)
+        overrides = RuntimeTranslation.objects.filter(is_active=True)
         
         if not overrides.exists():
             self.stdout.write(self.style.WARNING("No active DB overrides found to export."))
@@ -33,17 +33,17 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR(f"Failed to read PO file {path}: {e}"))
                 continue
 
-            lang_overrides = overrides.filter(language=lang)
+            lang_overrides = overrides.filter(language_code=lang)
             updated_count = 0
             
             for override in lang_overrides:
                 entry = po.find(override.msgid)
                 if entry:
-                    if entry.msgstr != override.text:
+                    if entry.msgstr != override.msgstr:
                         if dry_run:
                             self.stdout.write(f"[Dry-run] Would update '{override.msgid[:30]}' in {lang}")
                         else:
-                            entry.msgstr = override.text
+                            entry.msgstr = override.msgstr
                             if 'fuzzy' in entry.flags:
                                 entry.flags.remove('fuzzy')
                             updated_count += 1
@@ -53,7 +53,7 @@ class Command(BaseCommand):
                     else:
                         new_entry = polib.POEntry(
                             msgid=override.msgid,
-                            msgstr=override.text,
+                            msgstr=override.msgstr,
                             comment="Exported from DB TranslationOverride"
                         )
                         po.append(new_entry)

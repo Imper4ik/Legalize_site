@@ -28,15 +28,15 @@ def get_db_translation_override(msgid: str, language: str) -> str | None:
     if cached_val is not None:
         return cached_val if cached_val != "__NONE__" else None
 
-    from .models import TranslationOverride
+    from .models import RuntimeTranslation
 
     try:
-        override = TranslationOverride.objects.filter(
-            msgid=msgid, language=language, is_active=True
+        override = RuntimeTranslation.objects.filter(
+            msgid=msgid, language_code=language, is_active=True
         ).first()
         if override:
-            cache.set(cache_key, override.text, timeout=3600)  # Cache for 1 hour
-            return override.text
+            cache.set(cache_key, override.msgstr, timeout=3600)  # Cache for 1 hour
+            return override.msgstr
         else:
             cache.set(cache_key, "__NONE__", timeout=3600)
             return None
