@@ -79,8 +79,16 @@ class DocumentChecklistManageView(RoleOrFeatureRequiredMixin, FormView):
         ]
 
     @staticmethod
-    def _submission_queryset() -> QuerySet[Submission]:
-        return Submission.objects.exclude(slug__in=Client.FAMILY_MEMBER_REQUIREMENT_PURPOSES)
+    def _system_submission_slugs() -> set[str]:
+        return {
+            *Client.FAMILY_MEMBER_REQUIREMENT_PURPOSES,
+            *[value for value, _label in Client.APPLICATION_PURPOSE_CHOICES],
+            *[value for value, _label in Client.DOCUMENT_REQUIREMENT_PURPOSE_CHOICES],
+        }
+
+    @classmethod
+    def _submission_queryset(cls) -> QuerySet[Submission]:
+        return Submission.objects.exclude(slug__in=cls._system_submission_slugs())
 
     def _allowed_purposes(self) -> list[str]:
         submission_slugs = list(self._submission_queryset().values_list("slug", flat=True))

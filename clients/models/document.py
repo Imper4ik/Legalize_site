@@ -58,13 +58,35 @@ def is_default_document_label(name: str, doc_type: str) -> bool:
     return normalized in _document_label_variants(doc_type)
 
 
+def _fallback_document_label_for_code(doc_type: str, language: str | None = None) -> str | None:
+    for (_purpose, _language_code), documents in DOCUMENT_CHECKLIST.items():
+        for code, label in documents:
+            if code == doc_type:
+                return translate_document_name(label, language)
+    return None
+
+
+def _is_fallback_document_label(value: str, doc_type: str) -> bool:
+    normalized = _normalize_document_label(value)
+    if not normalized:
+        return False
+    languages = {code for code, _label in settings.LANGUAGES}
+    languages.update({"pl", "en", "ru"})
+    return any(
+        normalized == _normalize_document_label(label)
+        for language_code in languages
+        for label in [_fallback_document_label_for_code(doc_type, language_code)]
+        if label
+    )
+
+
 def _select_custom_document_name(*, doc_type: str, custom_name: str | None = None, custom_name_pl: str | None = None, custom_name_en: str | None = None, custom_name_ru: str | None = None, language: str | None = None) -> str | None:
     lang = (language or translation.get_language() or "").split("-")[0].lower()
     localized_name = {"pl": custom_name_pl, "en": custom_name_en, "ru": custom_name_ru}.get(lang)
     if localized_name and localized_name.strip():
         return localized_name
     if custom_name and custom_name.strip():
-        if doc_type not in DOCUMENT_TYPE_VALUES:
+        if doc_type not in DOCUMENT_TYPE_VALUES and not _is_fallback_document_label(custom_name, doc_type):
             return custom_name
     return None
 
@@ -93,6 +115,9 @@ def resolve_document_label(doc_type: str, custom_name: str | None = None, custom
         return custom_label
     if doc_type in DOCUMENT_TYPE_VALUES:
         return translate_document_name(DocumentType(doc_type).label, language)
+    fallback_label = _fallback_document_label_for_code(doc_type, language)
+    if fallback_label:
+        return fallback_label
     return doc_type.replace('_', ' ').capitalize()
 
 
