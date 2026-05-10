@@ -8815,6 +8815,21 @@ msgstr "Выбор языка интерфейса"
 msgid "Szukaj według imienia..."
 msgstr "Поиск по имени..."
 
+msgid "Tytuł przypomnienia"
+msgstr "Заголовок напоминания"
+
+msgid "Filtruj"
+msgstr "Фильтровать"
+
+msgid ""
+"Sprawdź i wygeneruj aktualне przypomnienia, filtruj wg klienta i okresów"
+msgstr ""
+"Проверьте и сгенерируйте актуальные напоминания, отфильтруйте по клиенту и "
+"периодам"
+
+msgid "Filtruj wg klienta i okresów"
+msgstr "Отфильтруйте по клиенту и периодам"
+
 #, python-format
 #~ msgid "Второй платёж: %(service)s"
 #~ msgstr "Второй платёж: %(service)s"
