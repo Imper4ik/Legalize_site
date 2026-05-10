@@ -30,7 +30,7 @@ class DocumentType(models.TextChoices):
     ZUS_RCA_OR_INSURANCE = 'zus_rca_or_insurance', _('ZUS RCA lub polisa ubezpieczeniowa')
     ZUS_CONTRIBUTION_HISTORY = 'zus_contribution_history', _('Zaświadczenie z ZUS o przebiegu ubezpieczenia cudzoziemca')
     EMPLOYER_TAX_RETURN = 'employer_tax_return', _('CIT lub PIT pracodawcy')
-    ZUS_EMPLOYEE_COUNT = 'zus_employee_count', _('Zaświadczenie z ZUS o liczbie zgłoszonych работников и składkach')
+    ZUS_EMPLOYEE_COUNT = 'zus_employee_count', _('Zaświadczenie z ZUS o liczbie zgłoszonych pracowników i składkach')
     STATEMENT_X = 'statement_x', _('Oświadczenie „x”')
     MAINTENANCE_STATEMENT = 'maintenance_statement', _('Oświadczenie o utrzymaniu')
     WEZWANIE = 'wezwanie', _('Wezwanie')

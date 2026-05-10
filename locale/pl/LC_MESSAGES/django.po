@@ -2601,7 +2601,7 @@ msgstr ""
 #: .\legalize_site\templates\base.html:207 .\templates\base.html:68
 #| msgid "Клиент"
 msgid "Клиенты"
-msgstr "Klienty"
+msgstr "Klienci"
 
 #: .\legalize_site\templates\base.html:209 .\templates\base.html:70
 msgid "Калькулятор"
@@ -3610,3 +3610,21 @@ msgstr "Decyzje"
 
 msgid "Active reminders"
 msgstr "Aktywne przypomnienia"
+
+msgid "Добавить клиента"
+msgstr "Dodaj klienta"
+
+msgid "Создание новой карточки клиента"
+msgstr "Tworzenie nowej karty klienta"
+
+msgid "Основания подачи"
+msgstr "Podstawy zgłoszenia"
+
+msgid "Управление типами подачи и их локализованными названиями."
+msgstr "Zarządzanie typami zgłoszeń i ich zlokalizowanymi nazwami."
+
+msgid "Сотрудники"
+msgstr "Pracownicy"
+
+msgid "Управление staff-аккаунтами и ролями без Django admin."
+msgstr "Zarządzanie kontami personelu i rolami bez Django admin."
