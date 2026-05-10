@@ -1743,13 +1743,11 @@ msgstr "Добавить документ: \"%(document_type_display)s\""
 #, python-format
 msgid ""
 "\n"
-"          Для клиента: <strong>%(client.first_name)s %(client.last_name)s</"
-"strong>\n"
+"          Для клиента: <strong>%(client.first_name)s %(client.last_name)s</strong>\n"
 "          "
 msgstr ""
 "\n"
-"          Для клиента: <strong>%(client.first_name)s %(client.last_name)s</"
-"strong>\n"
+"          Для клиента: <strong>%(client.first_name)s %(client.last_name)s</strong>\n"
 "          "
 
 #: .\clients\templates\clients\add_document.html:24
@@ -2673,9 +2671,11 @@ msgstr "Напоминания по документам"
 
 #: .\clients\templates\clients\document_reminder_list.html:17
 msgid ""
-"Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и периодам"
+"Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и "
+"периодам"
 msgstr ""
-"Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и периодам"
+"Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и "
+"периодам"
 
 #: .\clients\templates\clients\document_reminder_list.html:25
 #: .\clients\templates\clients\payment_reminder_list.html:23
@@ -3299,7 +3299,7 @@ msgstr ""
 
 #: .\clients\templates\clients\partials\client_overview.html:192
 msgid "Lista"
-msgstr ""
+msgstr "Список"
 
 #: .\clients\templates\clients\partials\client_tasks.html:7
 #, fuzzy
@@ -3429,13 +3429,11 @@ msgstr "Добавить еще один файл"
 #, python-format
 msgid ""
 "\n"
-"  Для цели \"%(purpose)s\" на языке \"%(language)s\" чеклист не определен в "
-"настройках.\n"
+"  Для цели \"%(purpose)s\" на языке \"%(language)s\" чеклист не определен в настройках.\n"
 "  "
 msgstr ""
 "\n"
-"  Для цели \"%(purpose)s\" на языке \"%(language)s\" чеклист не определен в "
-"настройках.\n"
+"  Для цели \"%(purpose)s\" на языке \"%(language)s\" чеклист не определен в настройках.\n"
 "  "
 
 #: .\clients\templates\clients\partials\email_history.html:6
@@ -3784,7 +3782,8 @@ msgstr "Напоминания по документам"
 #| "периодам"
 msgid "Отслеживание оплат, фильтры по клиенту и периоду"
 msgstr ""
-"Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и периодам"
+"Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и "
+"периодам"
 
 #: .\clients\templates\clients\payment_reminder_list.html:81
 msgid "Нет напоминаний по оплатам, соответствующих фильтрам."
@@ -3886,7 +3885,8 @@ msgstr "Основная информация"
 
 #: .\clients\templates\clients\submission_manage.html:6
 #, fuzzy
-#| msgid "Управляйте списком обязательных документов для каждой цели подачи."
+#| msgid ""
+#| "Управляйте списком обязательных документов для каждой цели подачи."
 msgid "Управление типами подачи и их локализованными названиями."
 msgstr "Управляйте списком обязательных документов для каждой цели подачи."
 
@@ -4386,7 +4386,8 @@ msgstr ""
 msgid ""
 "Проверка завершена. Новые напоминания, если были найдены, успешно созданы!"
 msgstr ""
-"Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и периодам"
+"Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и "
+"периодам"
 
 #: .\clients\views\reminders.py:169
 #, python-format
@@ -4490,7 +4491,7 @@ msgstr ""
 
 #: .\legalize_site\constants.py:15
 msgid "Karta pobytu"
-msgstr ""
+msgstr "Карта побыту"
 
 #: .\legalize_site\constants.py:16
 msgid "Zaświadczenie z uczelni o przyjęciu lub kontynuacji studiów"
@@ -4886,10 +4887,8 @@ msgstr ""
 #: .\templates\403.html:25
 msgid ""
 "\n"
-"                        Вы вошли в систему, но ваш профиль не имеет прав для "
-"просмотра этого раздела сотрудников.\n"
-"                        Если вы считаете, что это ошибка, обратитесь к "
-"администратору сайта.\n"
+"                        Вы вошли в систему, но ваш профиль не имеет прав для просмотра этого раздела сотрудников.\n"
+"                        Если вы считаете, что это ошибка, обратитесь к администратору сайта.\n"
 "                        "
 msgstr ""
 
@@ -5041,8 +5040,8 @@ msgstr ""
 
 #: .\templates\account\email_confirm.html:72
 msgid ""
-"Если это не ваш адрес, просто проигнорируйте письмо и запросите новую ссылку "
-"из личного кабинета."
+"Если это не ваш адрес, просто проигнорируйте письмо и запросите новую ссылку"
+" из личного кабинета."
 msgstr ""
 
 #: .\templates\account\email_confirm.html:77
@@ -5206,8 +5205,8 @@ msgstr "Запросить новую ссылку"
 
 #: .\templates\account\resend_verification.html:17
 msgid ""
-"Введите email, который использовали при регистрации. Если аккаунт существует "
-"и почта ещё не подтверждена, мы отправим новое письмо."
+"Введите email, который использовали при регистрации. Если аккаунт существует"
+" и почта ещё не подтверждена, мы отправим новое письмо."
 msgstr ""
 
 #: .\templates\account\resend_verification.html:25
@@ -5316,11 +5315,11 @@ msgstr "Письмо уже в пути"
 
 #: .\templates\account\verification_sent.html:55
 msgid ""
-"Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
-"завершить регистрацию."
+"Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы"
+" завершить регистрацию."
 msgstr ""
-"Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
-"завершить регистрацию."
+"Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы"
+" завершить регистрацию."
 
 #: .\templates\account\verification_sent.html:63
 msgid "Что происходит дальше"
@@ -5356,7 +5355,8 @@ msgstr "Нужно новое письмо"
 
 #: .\templates\account\verification_sent.html:93
 msgid "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
-msgstr "Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
+msgstr ""
+"Запросите ещё одну ссылку в личном кабинете, если срок действия истёк."
 
 #: .\templates\account\verification_sent.html:106
 msgid "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
@@ -5380,7 +5380,8 @@ msgstr ""
 
 #: .\templates\admin\login.html:16
 #, fuzzy
-#| msgid "Управляйте списком обязательных документов для каждой цели подачи."
+#| msgid ""
+#| "Управляйте списком обязательных документов для каждой цели подачи."
 msgid "Управляйте клиентами, платежами и документооборотом из единого центра."
 msgstr "Управляйте списком обязательных документов для каждой цели подачи."
 
@@ -5524,8 +5525,7 @@ msgstr "Войти через Google"
 #, python-format
 msgid ""
 "\n"
-"                    Вы собираетесь войти на сайт, используя свой аккаунт "
-"%(provider)s.\n"
+"                    Вы собираетесь войти на сайт, используя свой аккаунт %(provider)s.\n"
 "                    "
 msgstr ""
 
@@ -5713,8 +5713,8 @@ msgstr ""
 #: .\tmp\uv-cache\archive-v0\tXhJ6DsMXBM7jF07mHUHS\Lib\site-packages\django\core\validators.py:297
 #: .\venv\Lib\site-packages\django\core\validators.py:297
 msgid ""
-"Enter a valid “slug” consisting of Unicode letters, numbers, underscores, or "
-"hyphens."
+"Enter a valid “slug” consisting of Unicode letters, numbers, underscores, or"
+" hyphens."
 msgstr ""
 
 #: .\tmp\uv-cache\archive-v0\0qmmlPryXg7vZI7mglRS3\Lib\site-packages\django\core\validators.py:309
@@ -6163,8 +6163,8 @@ msgstr ""
 #: .\venv\Lib\site-packages\django\db\models\fields\__init__.py:1569
 #, python-format
 msgid ""
-"“%(value)s” value has the correct format (YYYY-MM-DD HH:MM[:ss[.uuuuuu]]"
-"[TZ]) but it is an invalid date/time."
+"“%(value)s” value has the correct format (YYYY-MM-DD "
+"HH:MM[:ss[.uuuuuu]][TZ]) but it is an invalid date/time."
 msgstr ""
 
 #: .\tmp\uv-cache\archive-v0\0qmmlPryXg7vZI7mglRS3\Lib\site-packages\django\db\models\fields\__init__.py:1574
@@ -6659,7 +6659,8 @@ msgstr ""
 #: .\tmp\uv-cache\archive-v0\tXhJ6DsMXBM7jF07mHUHS\Lib\site-packages\django\forms\fields.py:642
 #: .\venv\Lib\site-packages\django\forms\fields.py:643
 #, python-format
-msgid "Ensure this filename has at most %(max)d character (it has %(length)d)."
+msgid ""
+"Ensure this filename has at most %(max)d character (it has %(length)d)."
 msgid_plural ""
 "Ensure this filename has at most %(max)d characters (it has %(length)d)."
 msgstr[0] ""
@@ -6891,7 +6892,8 @@ msgstr ""
 #: .\tmp\uv-cache\archive-v0\kubqama122zp1McREYeWc\Lib\site-packages\django\forms\models.py:1474
 #: .\tmp\uv-cache\archive-v0\tXhJ6DsMXBM7jF07mHUHS\Lib\site-packages\django\forms\models.py:1474
 #: .\venv\Lib\site-packages\django\forms\models.py:1474
-msgid "Select a valid choice. That choice is not one of the available choices."
+msgid ""
+"Select a valid choice. That choice is not one of the available choices."
 msgstr ""
 
 #: .\tmp\uv-cache\archive-v0\0qmmlPryXg7vZI7mglRS3\Lib\site-packages\django\forms\models.py:1623
@@ -7895,10 +7897,10 @@ msgstr ""
 #: .\tmp\uv-cache\archive-v0\tXhJ6DsMXBM7jF07mHUHS\Lib\site-packages\django\views\csrf.py:45
 #: .\venv\Lib\site-packages\django\views\csrf.py:45
 msgid ""
-"If you are using the <meta name=\"referrer\" content=\"no-referrer\"> tag or "
-"including the “Referrer-Policy: no-referrer” header, please remove them. The "
-"CSRF protection requires the “Referer” header to do strict referer checking. "
-"If you’re concerned about privacy, use alternatives like <a "
+"If you are using the <meta name=\"referrer\" content=\"no-referrer\"> tag or"
+" including the “Referrer-Policy: no-referrer” header, please remove them. "
+"The CSRF protection requires the “Referer” header to do strict referer "
+"checking. If you’re concerned about privacy, use alternatives like <a "
 "rel=\"noreferrer\" …> for links to third-party sites."
 msgstr ""
 
@@ -8144,10 +8146,10 @@ msgstr ""
 #: .\venv\Lib\site-packages\django\views\templates\default_urlconf.html:208
 #, python-format
 msgid ""
-"You are seeing this page because <a href=\"https://docs.djangoproject.com/en/"
-"%(version)s/ref/settings/#debug\" target=\"_blank\" "
-"rel=\"noopener\">DEBUG=True</a> is in your settings file and you have not "
-"configured any URLs."
+"You are seeing this page because <a "
+"href=\"https://docs.djangoproject.com/en/%(version)s/ref/settings/#debug\" "
+"target=\"_blank\" rel=\"noopener\">DEBUG=True</a> is in your settings file "
+"and you have not configured any URLs."
 msgstr ""
 
 #: .\tmp\uv-cache\archive-v0\0qmmlPryXg7vZI7mglRS3\Lib\site-packages\django\views\templates\default_urlconf.html:217
@@ -8285,8 +8287,8 @@ msgstr ""
 #: .\tmp\uv-cache\archive-v0\tXhJ6DsMXBM7jF07mHUHS\Lib\site-packages\packageurl\contrib\django\models.py:88
 msgid ""
 "A short code to identify the type of this package. For example: gem for a "
-"Rubygem, docker for a container, pypi for a Python Wheel or Egg, maven for a "
-"Maven Jar, deb for a Debian package, etc."
+"Rubygem, docker for a container, pypi for a Python Wheel or Egg, maven for a"
+" Maven Jar, deb for a Debian package, etc."
 msgstr ""
 
 #: .\tmp\uv-cache\archive-v0\kubqama122zp1McREYeWc\Lib\site-packages\packageurl\contrib\django\models.py:99
@@ -8313,8 +8315,8 @@ msgstr ""
 #: .\tmp\uv-cache\archive-v0\smjmlW0CYddyNI6EOVREO\packageurl\contrib\django\models.py:120
 #: .\tmp\uv-cache\archive-v0\tXhJ6DsMXBM7jF07mHUHS\Lib\site-packages\packageurl\contrib\django\models.py:120
 msgid ""
-"Extra qualifying data for a package such as the name of an OS, architecture, "
-"distro, etc."
+"Extra qualifying data for a package such as the name of an OS, architecture,"
+" distro, etc."
 msgstr ""
 
 #: .\tmp\uv-cache\archive-v0\kubqama122zp1McREYeWc\Lib\site-packages\packageurl\contrib\django\models.py:128
@@ -8786,6 +8788,33 @@ msgstr ""
 msgid "users"
 msgstr ""
 
+msgid "Nowy klient"
+msgstr "Новый клиент"
+
+msgid "Edytuj dane"
+msgstr "Редактировать данные"
+
+msgid "Odciski palców"
+msgstr "Отпечатки пальцев"
+
+msgid "Przypomnienia o dokumentach"
+msgstr "Напоминания о документах"
+
+msgid "Drukuj"
+msgstr "Печать"
+
+msgid "Powrót"
+msgstr "Назад"
+
+msgid "Przełącz motyw"
+msgstr "Переключить тему"
+
+msgid "Wybór języka interfejsu"
+msgstr "Выбор языка интерфейса"
+
+msgid "Szukaj według imienia..."
+msgstr "Поиск по имени..."
+
 #, python-format
 #~ msgid "Второй платёж: %(service)s"
 #~ msgstr "Второй платёж: %(service)s"
@@ -8800,88 +8829,70 @@ msgstr ""
 #~ msgstr "Печать обложки"
 
 #, fuzzy
-#~| msgid "Клиенты не найдены."
 #~ msgid "ID платежа не найден"
 #~ msgstr "Клиенты не найдены."
 
 #, fuzzy, python-format
-#~| msgid "Номер дела"
 #~ msgid "номер дела: %(val)s"
 #~ msgstr "Номер дела"
 
 #, fuzzy, python-format
-#~| msgid "Дата сдачи отпечатков"
 #~ msgid "дата сдачи отпечатков: %(val)s"
 #~ msgstr "Дата сдачи отпечатков"
 
 #, fuzzy
-#~| msgid "Список недостающих документов"
 #~ msgid "отправлено письмо с недостающими документами"
 #~ msgstr "Список недостающих документов"
 
 #, fuzzy
-#~| msgid "Уведомление о встрече"
 #~ msgid "отправлено уведомление о встрече"
 #~ msgstr "Уведомление о встрече"
 
 #, fuzzy, python-format
-#~| msgid "Подтверждение отправки письма клиенту"
 #~ msgid "Ошибка при отправке письма: %(err)s"
 #~ msgstr "Подтверждение отправки письма клиенту"
 
 #, python-format
-#~ msgid ""
-#~ "Нет аккаунта? <a href=\"%(signup_url)s\">Зарегистрируйтесь за минуту</a>"
-#~ msgstr ""
-#~ "Нет аккаунта? <a href=\"%(signup_url)s\">Зарегистрируйтесь за минуту</a>"
+#~ msgid "Нет аккаунта? <a href=\"%(signup_url)s\">Зарегистрируйтесь за минуту</a>"
+#~ msgstr "Нет аккаунта? <a href=\"%(signup_url)s\">Зарегистрируйтесь за минуту</a>"
 
 #, fuzzy
-#~| msgid "Сбросить"
 #~ msgid "Сброс пароля"
 #~ msgstr "Сбросить"
 
 #, fuzzy
-#~| msgid "Сбросить"
 #~ msgid "Сбросить пароль"
 #~ msgstr "Сбросить"
 
 #, fuzzy
-#~| msgid "Пароль"
 #~ msgid "Новый пароль"
 #~ msgstr "Пароль"
 
 #, fuzzy
-#~| msgid "Действителен до"
 #~ msgid "Ссылка недействительна."
 #~ msgstr "Действителен до"
 
 #, fuzzy
-#~| msgid "Сохранить изменения"
 #~ msgid "Сохранить новый пароль"
 #~ msgstr "Сохранить изменения"
 
 #, fuzzy
-#~| msgid "Сохранить изменения"
 #~ msgid "Пароль изменен"
 #~ msgstr "Сохранить изменения"
 
 #, fuzzy
-#~| msgid "Напоминания по документам"
 #~ msgid "Напоминания платежей"
 #~ msgstr "Напоминания по документам"
 
 #, fuzzy
-#~| msgid "Добавить счёт"
 #~ msgid "Добавить новый счёт"
 #~ msgstr "Добавить счёт"
 
 #, fuzzy
-#~| msgid "ID транзакции (если есть)"
 #~ msgid "Дата оплаты (если есть)"
 #~ msgstr "ID транзакции (если есть)"
 
 #, fuzzy
-#~| msgid "Добавить счёт"
 #~ msgid "Сохранить счёт"
 #~ msgstr "Добавить счёт"
 
