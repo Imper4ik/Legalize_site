@@ -7,7 +7,7 @@ from django.db.utils import ProgrammingError
 from django.urls import reverse
 from unittest.mock import patch
 
-from translations.models import RuntimeTranslation
+from translations.models import TranslationOverride
 from translations.utils import load_all_translations, save_translation_entry
 from translations.runtime import apply_db_override, clear_translation_override_cache
 
@@ -19,39 +19,39 @@ class TestTranslationOverrides:
     def setup_method(self):
         cache.clear()
         # Ensure we have clean state
-        RuntimeTranslation.objects.all().delete()
+        TranslationOverride.objects.all().delete()
 
     def test_model_uniqueness(self):
-        """RuntimeTranslation should be unique per msgid and language_code."""
-        RuntimeTranslation.objects.create(msgid="Hello", language_code="ru", msgstr="Привет")
+        """TranslationOverride should be unique per msgid and language."""
+        TranslationOverride.objects.create(msgid="Hello", language="ru", text="Привет")
         
         with pytest.raises(Exception): # IntegrityError or similar depending on DB
-            RuntimeTranslation.objects.create(msgid="Hello", language_code="ru", msgstr="Здравствуй")
+            TranslationOverride.objects.create(msgid="Hello", language="ru", text="Здравствуй")
 
     def test_inactive_override_not_applied(self):
         """Inactive overrides should not be returned by runtime."""
-        RuntimeTranslation.objects.create(msgid="Hello", language_code="ru", msgstr="Привет", is_active=False)
+        TranslationOverride.objects.create(msgid="Hello", language="ru", text="Привет", is_active=False)
         
         translated = apply_db_override("Hello", "Original", "ru")
         assert translated == "Original"
 
     def test_active_override_applied(self):
         """Active overrides should be returned by runtime."""
-        RuntimeTranslation.objects.create(msgid="Hello", language_code="ru", msgstr="Привет", is_active=True)
+        TranslationOverride.objects.create(msgid="Hello", language="ru", text="Привет", is_active=True)
         
         translated = apply_db_override("Hello", "Original", "ru")
         assert translated == "Привет"
 
     def test_cache_usage_and_clear(self):
         """Runtime should use cache and clear it on update."""
-        RuntimeTranslation.objects.create(msgid="Hello", language_code="ru", msgstr="Привет", is_active=True)
+        TranslationOverride.objects.create(msgid="Hello", language="ru", text="Привет", is_active=True)
         
         # First call hits DB
         translated = apply_db_override("Hello", "Original", "ru")
         assert translated == "Привет"
         
         # Update DB directly without clearing cache
-        RuntimeTranslation.objects.filter(msgid="Hello", language_code="ru").update(msgstr="Здравствуй")
+        TranslationOverride.objects.filter(msgid="Hello", language="ru").update(text="Здравствуй")
         
         # Second call should still return cached value
         translated = apply_db_override("Hello", "Original", "ru")
@@ -66,7 +66,7 @@ class TestTranslationOverrides:
 
     def test_fallback_when_db_missing(self):
         """App should not crash if DB table is missing."""
-        with patch('translations.models.RuntimeTranslation.objects.filter') as mock_filter:
+        with patch('translations.models.TranslationOverride.objects.filter') as mock_filter:
             mock_filter.side_effect = ProgrammingError("Table does not exist")
             
             # Should not raise exception
@@ -77,13 +77,13 @@ class TestTranslationOverrides:
         """save_translation_entry should save to DB when storage=database."""
         save_translation_entry("Hello", ru="Привет", storage="database")
         
-        override = RuntimeTranslation.objects.filter(msgid="Hello", language_code="ru").first()
+        override = TranslationOverride.objects.filter(msgid="Hello", language="ru").first()
         assert override is not None
-        assert override.msgstr == "Привет"
+        assert override.text == "Привет"
 
     def test_utils_load_overlays_db(self):
         """load_all_translations should overlay DB on top of PO."""
-        RuntimeTranslation.objects.create(msgid="Clients", language_code="ru", msgstr="Клиенты из БД", is_active=True)
+        TranslationOverride.objects.create(msgid="Clients", language="ru", text="Клиенты из БД", is_active=True)
         
         all_trans = load_all_translations()
         
@@ -124,8 +124,8 @@ class TestTranslationOverrides:
         
         # Import dry-run
         call_command('import_po_to_db', '--dry-run')
-        assert RuntimeTranslation.objects.count() == 0
+        assert TranslationOverride.objects.count() == 0
         
         # Export dry-run
-        RuntimeTranslation.objects.create(msgid="Hello", language_code="ru", msgstr="Привет", is_active=True)
+        TranslationOverride.objects.create(msgid="Hello", language="ru", text="Привет", is_active=True)
         call_command('export_db_translations_to_po', '--dry-run')

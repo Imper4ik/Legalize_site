@@ -4,14 +4,7 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-class RuntimeTranslation(models.Model):
-    """Database-backed translation override saved from Translation Studio.
-
-    The normal Django `.po/.mo` catalogs remain the file-based baseline. This
-    model stores runtime edits in PostgreSQL so Railway redeploys do not lose
-    changes made from Translation Studio.
-    """
-
+class TranslationOverride(models.Model):
     SOURCE_STUDIO = "studio"
     SOURCE_IMPORT = "import"
     SOURCE_MANUAL = "manual"
@@ -28,9 +21,9 @@ class RuntimeTranslation(models.Model):
         ("en", _("English")),
     ]
 
-    msgid = models.TextField(verbose_name=_("Source text / msgid"))
-    language_code = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, db_index=True)
-    msgstr = models.TextField(blank=True, verbose_name=_("Translated text / msgstr"))
+    msgid = models.TextField(db_index=True, verbose_name=_("Original text (msgid)"))
+    language = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, db_index=True)
+    text = models.TextField(blank=True, verbose_name=_("Translated text"))
     source = models.CharField(max_length=32, choices=SOURCE_CHOICES, default=SOURCE_STUDIO)
     is_active = models.BooleanField(default=True, verbose_name=_("Is active"))
     
@@ -39,7 +32,7 @@ class RuntimeTranslation(models.Model):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="runtime_translation_updates",
+        related_name="translation_override_updates",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -47,18 +40,17 @@ class RuntimeTranslation(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["msgid", "language_code"],
-                name="unique_runtime_translation_msgid_lang",
+                fields=["msgid", "language"],
+                name="unique_translation_override_msgid_lang",
             ),
         ]
         indexes = [
-            models.Index(fields=["language_code", "updated_at"], name="runtime_tr_lang_updated_idx"),
-            models.Index(fields=["is_active", "language_code"], name="runtime_tr_active_lang_idx"),
+            models.Index(fields=["language", "msgid"], name="trans_lang_msgid_idx"),
+            models.Index(fields=["is_active", "language"], name="trans_active_lang_idx"),
         ]
-        ordering = ["msgid", "language_code"]
-        verbose_name = _("Runtime translation")
-        verbose_name_plural = _("Runtime translations")
+        ordering = ["language", "msgid"]
+        verbose_name = _("Translation Override")
+        verbose_name_plural = _("Translation Overrides")
 
     def __str__(self) -> str:
-        preview = self.msgid.replace("\n", " ")[:80]
-        return f"{self.language_code}: {preview}"
+        return f"[{self.language}] {self.msgid[:30]}... -> {self.text[:30]}..."

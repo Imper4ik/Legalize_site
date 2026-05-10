@@ -9,12 +9,10 @@ from django.db.utils import OperationalError, ProgrammingError
 
 logger = logging.getLogger(__name__)
 
-
 def get_cache_key(msgid: str, language: str) -> str:
     """Generate a cache key for a translation override."""
     msgid_hash = hashlib.sha256(msgid.encode("utf-8")).hexdigest()[:16]
     return f"trans_override:{language}:{msgid_hash}"
-
 
 def get_db_translation_override(msgid: str, language: str) -> str | None:
     """Fetch translation override from DB with caching."""
@@ -28,15 +26,15 @@ def get_db_translation_override(msgid: str, language: str) -> str | None:
     if cached_val is not None:
         return cached_val if cached_val != "__NONE__" else None
 
-    from .models import RuntimeTranslation
+    from .models import TranslationOverride
 
     try:
-        override = RuntimeTranslation.objects.filter(
-            msgid=msgid, language_code=language, is_active=True
+        override = TranslationOverride.objects.filter(
+            msgid=msgid, language=language, is_active=True
         ).first()
         if override:
-            cache.set(cache_key, override.msgstr, timeout=3600)  # Cache for 1 hour
-            return override.msgstr
+            cache.set(cache_key, override.text, timeout=3600)  # Cache for 1 hour
+            return override.text
         else:
             cache.set(cache_key, "__NONE__", timeout=3600)
             return None
@@ -47,12 +45,10 @@ def get_db_translation_override(msgid: str, language: str) -> str | None:
         logger.exception("Error fetching translation override: %s", e)
         return None
 
-
 def apply_db_override(msgid: str, translated: str, language: str | None = None) -> str:
     """Apply DB override on top of a translated string."""
     if language is None:
         from django.utils import translation
-
         language = translation.get_language()
 
     if not language:
@@ -62,7 +58,6 @@ def apply_db_override(msgid: str, translated: str, language: str | None = None) 
     if override is not None:
         return override
     return translated
-
 
 def clear_translation_override_cache(msgid: str, language: str) -> None:
     """Clear cache for a specific translation override."""

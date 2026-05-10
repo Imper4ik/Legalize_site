@@ -65,11 +65,11 @@ def load_all_translations() -> List[Dict[str, Any]]:
             data[entry.msgid][f'source_{lang}'] = 'po'
 
     # 2. Overlay DB overrides
-    from .models import RuntimeTranslation
+    from .models import TranslationOverride
     from django.db.utils import ProgrammingError, OperationalError
 
     try:
-        overrides = RuntimeTranslation.objects.filter(is_active=True)
+        overrides = TranslationOverride.objects.filter(is_active=True)
         for override in overrides:
             if override.msgid not in data:
                 data[override.msgid] = {
@@ -83,11 +83,11 @@ def load_all_translations() -> List[Dict[str, Any]]:
                     'source_en': 'po',
                     'source_pl': 'po'
                 }
-            data[override.msgid][override.language_code] = override.msgstr
-            data[override.msgid][f'source_{override.language_code}'] = 'db'
+            data[override.msgid][override.language] = override.text
+            data[override.msgid][f'source_{override.language}'] = 'db'
     except (ProgrammingError, OperationalError):
         # Table might not exist yet or DB issue
-        logger.debug("RuntimeTranslation table not found or DB error, skipping DB overrides.")
+        logger.debug("TranslationOverride table not found or DB error, skipping DB overrides.")
 
     # Convert to sorted list (by msgid)
     result = sorted(data.values(), key=lambda x: str(x['msgid']))
@@ -142,7 +142,7 @@ def save_translation_entry(msgid: str, ru: Optional[str] = None, en: Optional[st
 
     # 1. Save to DB
     if storage in ('database', 'both'):
-        from .models import RuntimeTranslation
+        from .models import TranslationOverride
         from .runtime import clear_translation_override_cache
         from django.db.utils import ProgrammingError, OperationalError
 
@@ -151,13 +151,13 @@ def save_translation_entry(msgid: str, ru: Optional[str] = None, en: Optional[st
                 continue
             
             try:
-                override, created = RuntimeTranslation.objects.update_or_create(
+                override, created = TranslationOverride.objects.update_or_create(
                     msgid=canonical,
-                    language_code=lang,
+                    language=lang,
                     defaults={
-                        'msgstr': value,
+                        'text': value,
                         'is_active': True,
-                        'source': 'studio',
+                        'source': TranslationOverride.SOURCE_STUDIO,
                         'updated_by': updated_by if updated_by and updated_by.is_authenticated else None
                     }
                 )
