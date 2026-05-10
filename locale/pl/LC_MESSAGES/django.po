@@ -3622,3 +3622,57 @@ msgstr "Pracownicy"
 
 msgid "Управление staff-аккаунтами и ролями без Django admin."
 msgstr "Zarządzanie kontami personelu i rolami bez Django admin."
+
+msgid "Учёба"
+msgstr "Studia"
+
+msgid "Работа"
+msgstr "Praca"
+
+msgid "Воссоединение с семьёй"
+msgstr "Łączenie rodzin"
+
+msgid "Супруг/супруга"
+msgstr "Małżonek/Małżonka"
+
+msgid "Ребёнок"
+msgstr "Dziecko"
+
+msgid "Не указано"
+msgstr "Nie określono"
+
+msgid "Спонсор"
+msgstr "Sponsor"
+
+msgid "Новый"
+msgstr "Nowy"
+
+msgid "В ожидании"
+msgstr "W oczekiwaniu"
+
+msgid "Одобрен"
+msgstr "Zatwierdzony"
+
+msgid "Отклонён"
+msgstr "Odrzucony"
+
+msgid "Новый клиент"
+msgstr "Nowy klient"
+
+msgid "Сбор документов"
+msgstr "Zbieranie dokumentów"
+
+msgid "Подача"
+msgstr "Złożenie"
+
+msgid "Отпечатки"
+msgstr "Odciski palców"
+
+msgid "Ожидание решения"
+msgstr "Oczekiwanie na decyzję"
+
+msgid "Децизия"
+msgstr "Decyzja"
+
+msgid "Закрыто"
+msgstr "Zamknięte"
