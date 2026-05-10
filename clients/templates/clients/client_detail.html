@@ -37,7 +37,13 @@
   <div id="payment-alerts" class="mb-2"></div>
   <div class="card">
     <ul class="list-group list-group-flush" id="payment-list-container"
-      data-empty-text="{% translate 'Счета на оплату ещё не созданы.' %}">
+      data-empty-text="{% translate 'Счета на оплату ещё не созданы.' %}"
+      data-payment-created="{% translate 'Платёж успешно добавлен.' %}"
+      data-payment-create-error="{% translate 'Не удалось создать платёж. Попробуйте ещё раз.' %}"
+      data-payment-updated="{% translate 'Платёж успешно обновлён.' %}"
+      data-payment-update-error="{% translate 'Не удалось обновить платёж. Попробуйте ещё раз.' %}"
+      data-payment-deleted="{% translate 'Платёж успешно удалён.' %}"
+      data-payment-delete-error="{% translate 'Не удалось удалить платёж. Попробуйте ещё раз.' %}">
       {% for payment in client.payments.all %}
       <li class="list-group-item" data-payment-id="{{ payment.id }}">
         {% include 'clients/partials/payment_item.html' with payment=payment %}
@@ -67,7 +73,10 @@
         <i class="bi bi-envelope"></i> {% translate "Email" %}
       </button>
       <form id="verify-all-documents-form" action="{% url 'clients:verify_all_documents' client_id=client.pk %}"
-        method="post" class="m-0">
+        method="post" class="m-0"
+        data-verified-count-text="{% translate 'Отмечено документов:' %}"
+        data-all-verified-text="{% translate 'Все документы уже были проверены.' %}"
+        data-update-error-text="{% translate 'Не удалось обновить статус документов. Попробуйте ещё раз.' %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-outline-success btn-sm">
           <i class="bi bi-check2-all me-1"></i>{% translate "Проверить все файлы" %}

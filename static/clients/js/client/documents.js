@@ -85,7 +85,7 @@ function initDocumentUploadModal() {
     }
 
     if (description) {
-      const uploadPrefix = modal.dataset.uploadingDocumentPrefix || 'Вы загружаете документ:';
+      const uploadPrefix = modal.dataset.uploadingDocumentPrefix || 'You are uploading document:';
       description.textContent = docName ? `${uploadPrefix} "${docName}"` : '';
     }
 
@@ -107,11 +107,11 @@ function initDocumentUploadModal() {
       if (isWezwanie) {
         parseButton.classList.remove('d-none');
         submitButton.classList.remove('d-none');
-        submitButton.innerHTML = modal.dataset.uploadOnlyText || 'Просто загрузить';
+        submitButton.innerHTML = modal.dataset.uploadOnlyText || 'Just upload';
       } else {
         parseButton.classList.add('d-none');
         submitButton.classList.remove('d-none');
-        submitButton.innerHTML = modal.dataset.uploadText || 'Загрузить';
+        submitButton.innerHTML = modal.dataset.uploadText || 'Upload';
       }
     }
 
@@ -173,7 +173,7 @@ function initDocumentUploadModal() {
     if (parseButton) {
       parseButton.setAttribute('disabled', 'disabled');
       if (isParsing) {
-        const text = modal.dataset.recognizingText || 'Распознаём документ...';
+        const text = modal.dataset.recognizingText || 'Recognizing document...';
         parseButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ${text}`;
       }
     }
@@ -208,7 +208,7 @@ function initDocumentUploadModal() {
         }
 
         bootstrap.Modal.getOrCreateInstance(modal).hide();
-        showDocumentAlert(data.message || modal.dataset.uploadSuccessText || 'Документ успешно добавлен.');
+        showDocumentAlert(data.message || modal.dataset.uploadSuccessText || 'Document uploaded successfully.');
         if (typeof refreshChecklist === 'function') {
           await refreshChecklist({ force: true });
         } else {
@@ -219,18 +219,18 @@ function initDocumentUploadModal() {
 
       console.error('Document upload error:', { status: response.status, data });
       showDocumentAlert(
-        getErrorMessage(data.errors || data.message, modal.dataset.uploadErrorText || 'Не удалось загрузить документ. Попробуйте ещё раз.'),
+        getErrorMessage(data.errors || data.message, modal.dataset.uploadErrorText || 'Failed to upload document. Please try again.'),
         'danger',
       );
     } catch (error) {
       logAjaxError('upload document', error, { url: form.action });
       console.error('AJAX Catch - upload document:', error);
       
-      let errMsg = error.message || modal.dataset.uploadErrorText || 'Не удалось загрузить документ. Попробуйте ещё раз.';
+      let errMsg = error.message || modal.dataset.uploadErrorText || 'Failed to upload document. Please try again.';
       if (error.responseStatus === 413) {
-        errMsg = modal.dataset.fileTooLargeText || 'Файл слишком большой.';
+        errMsg = modal.dataset.fileTooLargeText || 'File too large.';
       } else if (error.responseText && error.responseText.includes('CSRF')) {
-        errMsg = modal.dataset.sessionExpiredText || 'Сессия истекла. Пожалуйста, обновите страницу.';
+        errMsg = modal.dataset.sessionExpiredText || 'Session expired. Please refresh the page.';
       }
       showDocumentAlert(errMsg, 'danger');
     } finally {
@@ -274,7 +274,7 @@ function initDocumentUploadModal() {
 
       if (response.ok && data.status === 'success') {
         bootstrap.Modal.getOrCreateInstance(modal).hide();
-        showDocumentAlert(data.message || 'Данные wezwanie подтверждены.');
+        showDocumentAlert(data.message || modal.dataset.wezwanieConfirmed || 'Wezwanie data confirmed.');
         if (typeof refreshChecklist === 'function') {
           await refreshChecklist({ force: true });
         } else {
@@ -284,12 +284,12 @@ function initDocumentUploadModal() {
       }
 
       showDocumentAlert(
-        getErrorMessage(data.errors || data.message, 'Не удалось подтвердить данные wezwanie.'),
+        getErrorMessage(data.errors || data.message, modal.dataset.wezwanieConfirmError || 'Failed to confirm wezwanie data.'),
         'danger',
       );
     } catch (error) {
       logAjaxError('confirm wezwanie', error, { url: confirmUrl });
-      showDocumentAlert('Не удалось подтвердить данные wezwanie.', 'danger');
+      showDocumentAlert(modal.dataset.wezwanieConfirmError || 'Failed to confirm wezwanie data.', 'danger');
     } finally {
       confirmButton.removeAttribute('disabled');
     }
@@ -338,16 +338,16 @@ function initDocumentUploadModal() {
         }
 
         if (description) {
-          description.textContent = 'Проверьте данные, извлеченные из документа:';
+          description.textContent = modal.dataset.ocrCheckData || 'Check data extracted from document:';
         }
 
         bootstrap.Modal.getOrCreateInstance(modal).show();
       } else {
-        showDocumentAlert('Не удалось загрузить данные OCR.', 'danger');
+        showDocumentAlert(modal.dataset.ocrLoadError || 'Failed to load OCR data.', 'danger');
       }
     } catch (error) {
       logAjaxError('review OCR data', error);
-      showDocumentAlert('Не удалось загрузить данные OCR.', 'danger');
+      showDocumentAlert(modal.dataset.ocrLoadError || 'Failed to load OCR data.', 'danger');
     } finally {
       reviewBtn.removeAttribute('disabled');
       reviewBtn.innerHTML = originalText;
@@ -374,6 +374,7 @@ function initDocumentDeletion() {
     event.preventDefault();
     button.setAttribute('disabled', 'disabled');
     pauseChecklistRefresh();
+    const modal = document.getElementById('uploadDocumentModal');
 
     try {
       const { response, data } = await fetchJson(form.action, {
@@ -382,7 +383,7 @@ function initDocumentDeletion() {
       });
 
       if (response.ok && data.status === 'success') {
-        showDocumentAlert(data.message || 'Документ удалён.');
+        showDocumentAlert(data.message || modal?.dataset.documentDeleted || 'Document deleted.');
         if (typeof refreshChecklist === 'function') {
           await refreshChecklist({ force: true });
         } else {
@@ -392,12 +393,12 @@ function initDocumentDeletion() {
       }
 
       showDocumentAlert(
-        getErrorMessage(data.errors || data.message, 'Не удалось удалить документ. Попробуйте ещё раз.'),
+        getErrorMessage(data.errors || data.message, modal?.dataset.documentDeleteError || 'Failed to delete document. Please try again.'),
         'danger',
       );
     } catch (error) {
       logAjaxError('delete document', error, { url: form.action });
-      showDocumentAlert('Не удалось удалить документ. Попробуйте ещё раз.', 'danger');
+      showDocumentAlert(modal?.dataset.documentDeleteError || 'Failed to delete document. Please try again.', 'danger');
     } finally {
       button.removeAttribute('disabled');
     }
@@ -420,6 +421,7 @@ function initDocumentVerification() {
     const button = form.querySelector('[type="submit"]');
     button?.setAttribute('disabled', 'disabled');
     pauseChecklistRefresh();
+    const modal = document.getElementById('uploadDocumentModal');
 
     try {
       const { response, data } = await fetchJson(form.action, {
@@ -429,8 +431,8 @@ function initDocumentVerification() {
 
       if (response.ok && data.status === 'success') {
         const successMessage = data.emails_sent
-          ? 'Статус документа обновлён. Письмо с недостающими документами отправлено.'
-          : 'Статус документа обновлён.';
+          ? (modal?.dataset.statusUpdatedEmailSent || 'Document status updated. Email with missing documents sent.')
+          : (modal?.dataset.statusUpdated || 'Document status updated.');
         showDocumentAlert(data.message || successMessage);
         if (typeof refreshChecklist === 'function') {
           await refreshChecklist({ force: true });
@@ -441,12 +443,12 @@ function initDocumentVerification() {
       }
 
       showDocumentAlert(
-        getErrorMessage(data.errors || data.message, 'Не удалось обновить статус документа. Попробуйте ещё раз.'),
+        getErrorMessage(data.errors || data.message, modal?.dataset.statusUpdateError || 'Failed to update document status. Please try again.'),
         'danger',
       );
     } catch (error) {
       logAjaxError('toggle document verification', error, { url: form.action });
-      showDocumentAlert('Не удалось обновить статус документа. Попробуйте ещё раз.', 'danger');
+      showDocumentAlert(modal?.dataset.statusUpdateError || 'Failed to update document status. Please try again.', 'danger');
     } finally {
       button?.removeAttribute('disabled');
     }
@@ -474,9 +476,10 @@ function initBulkVerification() {
 
       if (response.ok && data.status === 'success') {
         if (data.verified_count > 0) {
-          showDocumentAlert(`Отмечено документов: ${data.verified_count}.`);
+          const prefix = form.dataset.verifiedCountText || 'Documents marked:';
+          showDocumentAlert(`${prefix} ${data.verified_count}.`);
         } else {
-          showDocumentAlert('Все документы уже были проверены.', 'info');
+          showDocumentAlert(form.dataset.allVerifiedText || 'All documents have already been verified.', 'info');
         }
         if (typeof refreshChecklist === 'function') {
           await refreshChecklist({ force: true });
@@ -487,12 +490,12 @@ function initBulkVerification() {
       }
 
       showDocumentAlert(
-        getErrorMessage(data.errors || data.message, 'Не удалось обновить статус документов. Попробуйте ещё раз.'),
+        getErrorMessage(data.errors || data.message, form.dataset.updateErrorText || 'Failed to update document status. Please try again.'),
         'danger',
       );
     } catch (error) {
       logAjaxError('verify all documents', error, { url: form.action });
-      showDocumentAlert('Не удалось обновить статус документов. Попробуйте ещё раз.', 'danger');
+      showDocumentAlert(form.dataset.updateErrorText || 'Failed to update document status. Please try again.', 'danger');
     } finally {
       submitButton?.removeAttribute('disabled');
     }

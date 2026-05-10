@@ -146,7 +146,16 @@
     data-file-too-large-text="{% translate 'Файл слишком большой.' %}"
     data-uploading-document-prefix="{% translate 'Вы загружаете документ:' %}"
     data-upload-success-text="{% translate 'Документ успешно добавлен.' %}"
-    data-session-expired-text="{% translate 'Сессия истекла. Пожалуйста, обновите страницу.' %}">
+    data-session-expired-text="{% translate 'Сессия истекла. Пожалуйста, обновите страницу.' %}"
+    data-wezwanie-confirmed="{% translate 'Данные wezwanie подтверждены.' %}"
+    data-wezwanie-confirm-error="{% translate 'Не удалось подтвердить данные wezwanie.' %}"
+    data-ocr-load-error="{% translate 'Не удалось загрузить данные OCR.' %}"
+    data-ocr-check-data="{% translate 'Проверьте данные, извлеченные из документа:' %}"
+    data-document-deleted="{% translate 'Документ удалён.' %}"
+    data-document-delete-error="{% translate 'Не удалось удалить документ. Попробуйте ещё раз.' %}"
+    data-status-updated-email-sent="{% translate 'Статус документа обновлён. Письмо с недостающими документами отправлено.' %}"
+    data-status-updated="{% translate 'Статус документа обновлён.' %}"
+    data-status-update-error="{% translate 'Не удалось обновить статус документа. Попробуйте ещё раз.' %}">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -249,7 +258,11 @@
 </div>
 
 <div class="modal fade" id="sendEmailModal" tabindex="-1" aria-labelledby="sendEmailModalLabel" aria-hidden="true"
-    data-preview-url="{% url 'clients:email_preview_api' client.pk %}">
+    data-preview-url="{% url 'clients:email_preview_api' client.pk %}"
+    data-loading-text="{% translate 'Загрузка...' %}"
+    data-loading-template-text="{% translate 'Загрузка шаблона...' %}"
+    data-error-loading-template="{% translate 'Ошибка загрузки шаблона.' %}"
+    data-sending-text="{% translate 'Отправка...' %}">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">

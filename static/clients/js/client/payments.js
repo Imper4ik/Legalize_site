@@ -87,7 +87,7 @@ function removePaymentItem(paymentId) {
     const emptyState = document.createElement('li');
     emptyState.className = 'list-group-item text-muted';
     emptyState.id = 'no-payments-message';
-    emptyState.textContent = list.dataset.emptyText || 'Счета на оплату ещё не созданы.';
+    emptyState.textContent = list.dataset.emptyText || 'No payment invoices created yet.';
     list.append(emptyState);
   }
 }
@@ -106,6 +106,7 @@ function initAddPaymentForm() {
     event.preventDefault();
     const submitButton = form.querySelector('[type="submit"]');
     submitButton?.setAttribute('disabled', 'disabled');
+    const list = document.getElementById('payment-list-container');
 
     try {
       const { response, data } = await fetchJson(form.action, {
@@ -117,17 +118,17 @@ function initAddPaymentForm() {
         prependPaymentItem(data.html, data.payment_id);
         bootstrap.Modal.getOrCreateInstance(modal).hide();
         form.reset();
-        showPaymentAlert('Платёж успешно добавлен.');
+        showPaymentAlert(list?.dataset.paymentCreated || 'Payment added successfully.');
         return;
       }
 
       showPaymentAlert(
-        getErrorMessage(data.errors || data.message, 'Не удалось создать платёж. Попробуйте ещё раз.'),
+        getErrorMessage(data.errors || data.message, list?.dataset.paymentCreateError || 'Failed to create payment. Please try again.'),
         'danger',
       );
     } catch (error) {
       logAjaxError('create payment', error, { url: form.action });
-      showPaymentAlert('Не удалось создать платёж. Попробуйте ещё раз.', 'danger');
+      showPaymentAlert(list?.dataset.paymentCreateError || 'Failed to create payment. Please try again.', 'danger');
     } finally {
       submitButton?.removeAttribute('disabled');
     }
@@ -183,6 +184,7 @@ function initEditPaymentModal() {
     event.preventDefault();
     const submitButton = form.querySelector('[type="submit"]');
     submitButton?.setAttribute('disabled', 'disabled');
+    const list = document.getElementById('payment-list-container');
 
     try {
       const { response, data } = await fetchJson(form.action, {
@@ -193,17 +195,17 @@ function initEditPaymentModal() {
       if (response.ok && data.status === 'success' && data.html && data.payment_id) {
         updatePaymentItem(data.html, data.payment_id);
         bootstrap.Modal.getOrCreateInstance(modal).hide();
-        showPaymentAlert('Платёж успешно обновлён.');
+        showPaymentAlert(list?.dataset.paymentUpdated || 'Payment updated successfully.');
         return;
       }
 
       showPaymentAlert(
-        getErrorMessage(data.errors || data.message, 'Не удалось обновить платёж. Попробуйте ещё раз.'),
+        getErrorMessage(data.errors || data.message, list?.dataset.paymentUpdateError || 'Failed to update payment. Please try again.'),
         'danger',
       );
     } catch (error) {
       logAjaxError('edit payment', error, { url: form.action });
-      showPaymentAlert('Не удалось обновить платёж. Попробуйте ещё раз.', 'danger');
+      showPaymentAlert(list?.dataset.paymentUpdateError || 'Failed to update payment. Please try again.', 'danger');
     } finally {
       submitButton?.removeAttribute('disabled');
     }
@@ -240,17 +242,17 @@ function initPaymentDeletion() {
 
       if (response.ok && data.status === 'success') {
         removePaymentItem(paymentId);
-        showPaymentAlert(data.message || 'Платёж успешно удалён.');
+        showPaymentAlert(data.message || list.dataset.paymentDeleted || 'Payment deleted successfully.');
         return;
       }
 
       showPaymentAlert(
-        getErrorMessage(data.errors || data.message, 'Не удалось удалить платёж. Попробуйте ещё раз.'),
+        getErrorMessage(data.errors || data.message, list.dataset.paymentDeleteError || 'Failed to delete payment. Please try again.'),
         'danger',
       );
     } catch (error) {
       logAjaxError('delete payment', error, { url: form.action, paymentId });
-      showPaymentAlert('Не удалось удалить платёж. Попробуйте ещё раз.', 'danger');
+      showPaymentAlert(list.dataset.paymentDeleteError || 'Failed to delete payment. Please try again.', 'danger');
     } finally {
       button.removeAttribute('disabled');
     }

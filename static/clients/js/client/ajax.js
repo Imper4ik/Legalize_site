@@ -135,7 +135,7 @@ function showPaymentAlert(message, type = 'success') {
 function showDocumentAlert(message, type = 'success') {
   showAlert('document-alerts', message, type);
 }
-function getErrorMessage(errors, fallbackMessage = 'Не удалось завершить операцию. Попробуйте ещё раз.') {
+function getErrorMessage(errors, fallbackMessage = 'Operation failed. Please try again.') {
   if (!errors) {
     return fallbackMessage;
   }

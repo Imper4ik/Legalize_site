@@ -58,8 +58,8 @@ function initSendEmailModal() {
       return;
     }
 
-    subjectInput.value = 'Загрузка...';
-    bodyInput.value = 'Загрузка шаблона...';
+    subjectInput.value = modal.dataset.loadingText || 'Loading...';
+    bodyInput.value = modal.dataset.loadingTemplateText || 'Loading template...';
     sendButton.setAttribute('disabled', 'disabled');
 
     try {
@@ -73,12 +73,12 @@ function initSendEmailModal() {
         bodyInput.value = data.body || '';
       } else {
         subjectInput.value = '';
-        bodyInput.value = 'Ошибка загрузки шаблона.';
+        bodyInput.value = modal.dataset.errorLoadingTemplate || 'Error loading template.';
       }
     } catch (error) {
       logAjaxError('load email preview', error, { url: previewUrlTemplate });
       subjectInput.value = '';
-      bodyInput.value = 'Ошибка загрузки шаблона.';
+      bodyInput.value = modal.dataset.errorLoadingTemplate || 'Error loading template.';
     } finally {
       sendButton.removeAttribute('disabled');
     }
@@ -96,7 +96,8 @@ function initSendEmailModal() {
   form.addEventListener('submit', () => {
     setTimeout(() => {
       sendButton.setAttribute('disabled', 'disabled');
-      sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Отправка...';
+      const sendingText = modal.dataset.sendingText || 'Sending...';
+      sendButton.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ${sendingText}`;
     }, 0);
   });
 }
@@ -112,8 +113,8 @@ function initEmailHistoryToggle() {
     const extraRows = container.querySelectorAll('.email-log-extra');
     const isHidden = extraRows[0]?.classList.contains('d-none');
 
-    const showMoreLabel = toggleBtn.dataset.labelShowMore || 'Показать ещё';
-    const showLessLabel = toggleBtn.dataset.labelShowLess || 'Свернуть';
+    const showMoreLabel = toggleBtn.dataset.labelShowMore || 'Show more';
+    const showLessLabel = toggleBtn.dataset.labelShowLess || 'Collapse';
     const hiddenCount = toggleBtn.dataset.hiddenCount || '0';
 
     extraRows.forEach((row) => {

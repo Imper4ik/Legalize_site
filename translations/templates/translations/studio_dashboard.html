@@ -277,21 +277,21 @@
                 row.querySelectorAll('textarea').forEach(ta => {
                     ta.style.borderLeft = '1px solid transparent';
                 });
-                btn.innerText = '✅ Saved';
-                setTimeout(() => btn.innerText = 'Save Row', 2000);
+                btn.innerText = '✅ {% trans "Saved" %}';
+                setTimeout(() => btn.innerText = '{% trans "Save Row" %}', 2000);
             } else {
-                alert('Error saving translation');
+                alert('{% trans "Error saving translation" %}');
             }
         } catch (e) {
             console.error(e);
-            alert('Error saving translation');
+            alert('{% trans "Error saving translation" %}');
         }
     }
 
     function saveAll() {
         const dirtyRows = document.querySelectorAll('.grid-row[data-dirty="true"]');
         if (dirtyRows.length === 0) {
-            alert('No changes to save');
+            alert('{% trans "No changes to save" %}');
             return;
         }
         
