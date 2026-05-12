@@ -8328,3 +8328,6 @@ msgstr "Fingerprints"
 
 #~ msgid "Дата создания счёта"
 #~ msgstr "Invoice creation date"
+
+msgid "Создайте карточку клиента и заполните основные данные для дальнейшей работы."
+msgstr "Create a client card and fill in the basic details for further work."

@@ -8361,3 +8361,6 @@ msgstr "Odciski palców"
 
 #~ msgid "Дата создания счёта"
 #~ msgstr "Data utworzenia rachunku"
+
+msgid "Создайте карточку клиента и заполните основные данные для дальнейшей работы."
+msgstr "Utwórz kartę klienta i wypełnij podstawowe dane do dalszej pracy."
