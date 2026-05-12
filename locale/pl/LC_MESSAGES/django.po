@@ -3377,7 +3377,7 @@ msgstr "Obecnie w sprawie nie ma krytycznych sygnałów automatycznych."
 #: .\clients\templates\clients\payment_reminder_list.html:12
 #: .\clients\templates\clients\payment_reminder_list.html:35
 msgid "Напоминания по оплатам"
-msgstr "Przypomnienia o dokumentach"
+msgstr "Przypomnienia o płatnościach"
 
 #: .\clients\templates\clients\payment_reminder_list.html:15
 msgid "Отслеживание оплат, фильтры по клиенту и периоду"

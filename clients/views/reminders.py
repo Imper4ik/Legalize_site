@@ -9,6 +9,7 @@ from django.core.management import call_command
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
+from django.utils.functional import Promise
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _, gettext_lazy as _lazy
 from django.views.generic import ListView
@@ -34,7 +35,7 @@ class ReminderListView(StaffRequiredMixin, ListView):
     context_object_name = "reminders"
     reminder_type: str | None = None
     template_name = ""
-    title: str = ""
+    title: str | Promise = ""
     client_param = "client"
     start_date_param = "start_date"
     end_date_param = "end_date"
@@ -87,7 +88,7 @@ class ReminderListView(StaffRequiredMixin, ListView):
 class DocumentReminderListView(ReminderListView):
     reminder_type = "document"
     template_name = "clients/document_reminder_list.html"
-    title = str(_lazy("Напоминания по документам"))
+    title = _lazy("Напоминания по документам")
     client_param = "doc_client"
     start_date_param = "doc_start_date"
     end_date_param = "doc_end_date"
@@ -156,7 +157,7 @@ class DocumentReminderListView(ReminderListView):
 class PaymentReminderListView(ReminderListView):
     reminder_type = "payment"
     template_name = "clients/payment_reminder_list.html"
-    title = str(_lazy("Напоминания по оплатам"))
+    title = _lazy("Напоминания по оплатам")
 
 
 @role_required_view(*REPORT_MUTATION_ROLES)

@@ -170,11 +170,89 @@ html[data-theme="dark"] .editor-toolbar .btn {
 }
 
 @media (max-width: 767.98px) {
+  .table-container {
+    max-height: none;
+    overflow-x: visible;
+  }
+
+  .table-modern {
+    display: block;
+  }
+
+  .table-modern thead {
+    display: none;
+  }
+
+  .table-modern tbody,
+  .table-modern tr,
+  .table-modern td {
+    display: block;
+    width: 100%;
+  }
+
+  .table-modern tbody {
+    padding: 0.75rem;
+  }
+
+  .table-modern tbody tr {
+    border: 1px solid rgba(15, 118, 110, 0.16);
+    border-radius: 10px;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+  }
+
+  .table-modern tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .table-modern th,
+  .table-modern td {
+    padding: 0.75rem;
+  }
+
+  .table-modern td {
+    border-top: 1px solid rgba(15, 118, 110, 0.12);
+  }
+
+  .table-modern td:first-child {
+    border-top: 0;
+  }
+
+  .table-modern td::before {
+    color: var(--muted);
+    content: attr(data-label);
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+  }
+
+  .table-modern td.text-end {
+    text-align: left !important;
+  }
+
+  .client-row-actions {
+    justify-content: flex-start;
+  }
+
   .client-notes-column {
     width: auto;
   }
 
-  .table-container {
-    max-height: none;
+  .client-identity-cell {
+    min-width: 0;
+  }
+
+  .notes-save-button {
+    width: 100%;
+  }
+
+  html[data-theme="dark"] .table-modern tbody tr {
+    border-color: rgba(45, 212, 191, 0.18);
+  }
+
+  html[data-theme="dark"] .table-modern td {
+    border-top-color: rgba(45, 212, 191, 0.13);
   }
 }

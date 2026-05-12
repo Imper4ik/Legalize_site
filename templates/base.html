@@ -160,7 +160,7 @@
                 {% if user|has_any_role:"Admin,Manager,Staff,ReadOnly" %}
                 <li>
                   <a class="dropdown-item" href="{% url 'clients:admin_panel' %}">
-                    <i class="bi bi-grid-1x2 me-2"></i>Админ панель
+                    <i class="bi bi-grid-1x2 me-2"></i>{% translate "Админ панель" %}
                   </a>
                 </li>
                 {% if user|has_any_role:"Admin,Manager" %}
@@ -173,7 +173,7 @@
                 {% if user|has_any_role:"Admin,Manager" %}
                 <li>
                   <a class="dropdown-item" href="{% url 'clients:app_settings' %}">
-                    <i class="bi bi-sliders me-2"></i>Template Settings
+                    <i class="bi bi-sliders me-2"></i>{% translate "Настройки шаблонов" %}
                   </a>
                 </li>
                 {% endif %}
@@ -187,7 +187,7 @@
                 {% if user|has_any_role:"Admin,Manager" %}
                 <li>
                   <a class="dropdown-item fw-bold text-danger" href="{% url 'clients:admin_dashboard' %}">
-                    <i class="bi bi-shield-lock me-2"></i>{% translate "System Health" %}
+                    <i class="bi bi-shield-lock me-2"></i>{% translate "Здоровье системы" %}
                   </a>
                 </li>
                 {% endif %}
@@ -237,8 +237,6 @@
       </div>
       <div class="d-flex gap-2">
         {% block page_actions %}
-        <a href="#" class="btn btn-soft"><i class="bi bi-funnel me-1"></i>{% translate "Фильтр" %}</a>
-        <a href="#" class="btn btn-gradient"><i class="bi bi-plus-lg me-1"></i>{% translate "Добавить" %}</a>
         {% endblock %}
       </div>
     </div>

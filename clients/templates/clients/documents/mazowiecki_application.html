@@ -1,5 +1,7 @@
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="{{ LANGUAGE_CODE|default:'pl' }}">
 <head>
     <meta charset="UTF-8">
     <title>Wniosek Mazowiecki Urząd Wojewódzki</title>
@@ -261,12 +263,21 @@
     <form id="wniosekConfirmForm" method="post" action="{{ confirm_url }}">
         {% csrf_token %}
         <div class="print-actions">
-            <button type="submit">Confirm and print</button>
-            <a href="javascript:window.history.back()">Back</a>
+            <button type="submit">
+                {% if LANGUAGE_CODE == "pl" %}Potwierdź i drukuj{% elif LANGUAGE_CODE == "en" %}Confirm and print{% else %}Подтвердить и печатать{% endif %}
+            </button>
+            <a href="javascript:window.history.back()">
+                {% if LANGUAGE_CODE == "pl" %}Wróć{% elif LANGUAGE_CODE == "en" %}Back{% else %}Назад{% endif %}
+            </a>
         </div>
         <div class="print-hint">
-            Attachments entered here can stay custom. After confirmation the system will match known checklist items
-            automatically and mark them as submitted for this client.
+            {% if LANGUAGE_CODE == "pl" %}
+                Załączniki wpisane tutaj mogą pozostać niestandardowe. Po potwierdzeniu system automatycznie dopasuje znane pozycje checklisty i oznaczy je jako złożone dla tego klienta.
+            {% elif LANGUAGE_CODE == "en" %}
+                Attachments entered here can stay custom. After confirmation the system will match known checklist items automatically and mark them as submitted for this client.
+            {% else %}
+                Вложения, введённые здесь, могут остаться произвольными. После подтверждения система автоматически сопоставит известные пункты чеклиста и отметит их как поданные для этого клиента.
+            {% endif %}
         </div>
 
     <div class="page">

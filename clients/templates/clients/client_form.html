@@ -2,6 +2,14 @@
 {% load i18n %}
 
 {% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block page_subtitle %}
+  {% if object %}
+    {% translate "Обновите данные клиента, сроки, статус дела и рабочие заметки." %}
+  {% else %}
+    {% translate "Создайте карточку клиента и заполните основные данные для дальнейшей работы." %}
+  {% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">

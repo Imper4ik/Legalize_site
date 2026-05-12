@@ -3371,7 +3371,7 @@ msgstr "There are currently no critical automatic signals in the case."
 #: .\clients\templates\clients\payment_reminder_list.html:12
 #: .\clients\templates\clients\payment_reminder_list.html:35
 msgid "Напоминания по оплатам"
-msgstr "Document reminders"
+msgstr "Payment reminders"
 
 #: .\clients\templates\clients\payment_reminder_list.html:15
 msgid "Отслеживание оплат, фильтры по клиенту и периоду"
