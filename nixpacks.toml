@@ -17,5 +17,8 @@ cmds = [
   "python manage.py collectstatic --no-input"
 ]
 
+[phases.release]
+cmds = ["bash release.sh"]
+
 [start]
 cmd = "bash start.sh"

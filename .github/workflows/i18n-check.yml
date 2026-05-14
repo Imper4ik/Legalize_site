@@ -9,6 +9,8 @@ on:
 jobs:
   check-translations:
     runs-on: ubuntu-latest
+    env:
+      DJANGO_SETTINGS_MODULE: legalize_site.settings.test
     steps:
       - uses: actions/checkout@v4
 
@@ -19,7 +21,7 @@ jobs:
           cache: 'pip'
 
       - name: Install system dependencies
-        run: sudo apt-get update && sudo apt-get install -y gettext pkg-config default-libmysqlclient-dev
+        run: sudo apt-get update && sudo apt-get install -y gettext
 
       - name: Install Python dependencies
         run: |
@@ -27,4 +29,29 @@ jobs:
           pip install -r requirements.txt
 
       - name: Compile messages (Verification)
-        run: python manage.py compilemessages
+        run: python manage.py compilemessages --ignore "venv" --ignore ".venv"
+
+      - name: Check for fuzzy translations
+        run: |
+          FUZZY_COUNT=$(grep -r '#, fuzzy' locale/ --include='*.po' | wc -l)
+          if [ "$FUZZY_COUNT" -gt 0 ]; then
+            echo "::warning::Found $FUZZY_COUNT fuzzy translation(s) that need review:"
+            grep -rn '#, fuzzy' locale/ --include='*.po'
+          fi
+
+      - name: Check for untranslated strings
+        run: |
+          UNTRANSLATED=0
+          for PO_FILE in $(find locale -name '*.po'); do
+            LANG_DIR=$(echo "$PO_FILE" | grep -oP 'locale/\K[^/]+')
+            COUNT=$(msgfmt --statistics -o /dev/null "$PO_FILE" 2>&1 | grep -oP '\d+ untranslated' | grep -oP '\d+' || echo 0)
+            if [ "$COUNT" -gt 0 ] 2>/dev/null; then
+              echo "::warning file=$PO_FILE::$COUNT untranslated string(s) in $LANG_DIR"
+              UNTRANSLATED=$((UNTRANSLATED + COUNT))
+            fi
+          done
+          if [ "$UNTRANSLATED" -gt 0 ]; then
+            echo "::warning::Total $UNTRANSLATED untranslated string(s) across all locales"
+          else
+            echo "All translations are complete ✓"
+          fi

@@ -109,6 +109,15 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = os.environ.get("SESSION_COOKIE_SAMESITE", "Lax")
 CSRF_COOKIE_SAMESITE = os.environ.get("CSRF_COOKIE_SAMESITE", "Lax")
 X_FRAME_OPTIONS = os.environ.get("X_FRAME_OPTIONS", "DENY")
+PERMISSIONS_POLICY = {
+    "camera": "()",
+    "microphone": "()",
+    "geolocation": "()",
+    "payment": "()",
+    "usb": "()",
+    "interest-cohort": "()",
+}
+SECURE_PERMISSIONS_POLICY = ", ".join(f"{k}={v}" for k, v in PERMISSIONS_POLICY.items())
 
 if SESSION_COOKIE_SAMESITE.lower() == "none" and not SESSION_COOKIE_SECURE:
     raise ImproperlyConfigured("SESSION_COOKIE_SAMESITE=None requires SESSION_COOKIE_SECURE=True in production.")

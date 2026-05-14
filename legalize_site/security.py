@@ -105,3 +105,17 @@ class RateLimitMiddleware:
                 return response
 
         return self.get_response(request)
+
+
+class PermissionsPolicyMiddleware:
+    """Attach ``Permissions-Policy`` header when the setting is configured."""
+
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]):
+        self.get_response = get_response
+        self.header_value: str = getattr(settings, "SECURE_PERMISSIONS_POLICY", "")
+
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        response = self.get_response(request)
+        if self.header_value and "Permissions-Policy" not in response:
+            response["Permissions-Policy"] = self.header_value
+        return response
