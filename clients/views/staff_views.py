@@ -7,13 +7,80 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.translation import gettext as _
 
-from clients.forms import StaffUserCreateForm, StaffUserUpdateForm
+from clients.forms import EMPLOYEE_PERMISSION_FIELD_LABELS, StaffUserCreateForm, StaffUserUpdateForm
+from clients.models import EmployeePermission, StaffAuditEvent
 from clients.services.roles import (
     PEOPLE_ALLOWED_ROLES,
     PREDEFINED_ROLES,
     ensure_predefined_roles,
 )
 from clients.views.base import role_required_view
+
+
+STAFF_AUDIT_PROFILE_FIELDS = ("email", "first_name", "last_name", "is_staff", "is_active")
+
+
+def _staff_update_snapshot(staff_user) -> dict[str, object]:
+    permission_object = EmployeePermission.objects.filter(user=staff_user).first()
+    permissions = {
+        field_name: bool(getattr(permission_object, field_name, False))
+        for field_name, _label in EMPLOYEE_PERMISSION_FIELD_LABELS
+    }
+    return {
+        "profile": {field_name: getattr(staff_user, field_name) for field_name in STAFF_AUDIT_PROFILE_FIELDS},
+        "groups": set(staff_user.groups.values_list("name", flat=True)),
+        "permissions": permissions,
+    }
+
+
+def _log_staff_update_audit(*, actor, target, before: dict[str, object]) -> None:
+    after = _staff_update_snapshot(target)
+    before_profile = before["profile"]
+    after_profile = after["profile"]
+    before_groups = before["groups"]
+    after_groups = after["groups"]
+    before_permissions = before["permissions"]
+    after_permissions = after["permissions"]
+
+    profile_fields_changed = [
+        field_name
+        for field_name in STAFF_AUDIT_PROFILE_FIELDS
+        if before_profile[field_name] != after_profile[field_name]
+    ]
+    permission_changes = {
+        field_name: {
+            "old": before_permissions[field_name],
+            "new": after_permissions[field_name],
+        }
+        for field_name, _label in EMPLOYEE_PERMISSION_FIELD_LABELS
+        if before_permissions[field_name] != after_permissions[field_name]
+    }
+    groups_added = sorted(after_groups - before_groups)
+    groups_removed = sorted(before_groups - after_groups)
+
+    if not profile_fields_changed and not permission_changes and not groups_added and not groups_removed:
+        return
+
+    changed_fields = [
+        *profile_fields_changed,
+        *(f"permission:{field_name}" for field_name in permission_changes),
+    ]
+    if groups_added or groups_removed:
+        changed_fields.append("groups")
+
+    StaffAuditEvent.objects.create(
+        actor=actor if getattr(actor, "is_authenticated", False) else None,
+        target=target,
+        event_type=StaffAuditEvent.EVENT_STAFF_UPDATED,
+        summary=f"Staff user updated: user_id={target.pk}",
+        metadata={
+            "changed_fields": changed_fields,
+            "profile_fields_changed": profile_fields_changed,
+            "permission_changes": permission_changes,
+            "groups_added": groups_added,
+            "groups_removed": groups_removed,
+        },
+    )
 
 
 @role_required_view(*PEOPLE_ALLOWED_ROLES)
@@ -42,9 +109,9 @@ def staff_manage_view(request: HttpRequest) -> HttpResponse:
             staff_user = get_object_or_404(user_model, pk=user_id, is_staff=True)
             form = StaffUserUpdateForm(request.POST, instance=staff_user, prefix=f"user-{staff_user.id}")
             if form.is_valid():
-                # TODO(audit): add an organization-level audit/event log for employee permission changes
-                # (actor=request.user, target=staff_user, changed_fields only, no PII) once such model exists.
-                form.save()
+                before = _staff_update_snapshot(staff_user)
+                saved_user = form.save()
+                _log_staff_update_audit(actor=request.user, target=saved_user, before=before)
                 messages.success(request, _("Сотрудник обновлён."))
                 return redirect("clients:staff_manage")
             messages.error(request, _("Не удалось обновить сотрудника. Проверьте форму."))
@@ -56,8 +123,20 @@ def staff_manage_view(request: HttpRequest) -> HttpResponse:
         elif action == "toggle_active":
             user_id = request.POST.get("user_id")
             staff_user = get_object_or_404(user_model, pk=user_id, is_staff=True)
+            old_is_active = staff_user.is_active
             staff_user.is_active = not staff_user.is_active
             staff_user.save(update_fields=["is_active"])
+            StaffAuditEvent.objects.create(
+                actor=request.user if getattr(request.user, "is_authenticated", False) else None,
+                target=staff_user,
+                event_type=StaffAuditEvent.EVENT_STAFF_ACTIVE_TOGGLED,
+                summary=f"Staff active status toggled: user_id={staff_user.pk}",
+                metadata={
+                    "changed_fields": ["is_active"],
+                    "old": old_is_active,
+                    "new": staff_user.is_active,
+                },
+            )
             messages.success(request, _("Статус сотрудника обновлён."))
             return redirect("clients:staff_manage")
 

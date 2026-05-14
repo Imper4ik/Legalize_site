@@ -1336,8 +1336,8 @@ msgid ""
 "Document uploaded, but automatic wezwanie parsing failed. Manual review is "
 "required."
 msgstr ""
-"Dokument przesłano, ale automatyczne analizowanie wezwanie nie powiodło się. "
-"Wymagana jest ręczna recenzja."
+"Dokument przesłano, ale automatyczne analizowanie wezwanie nie powiodło się."
+" Wymagana jest ręczna recenzja."
 
 #: .\clients\services\document_workflow.py:114
 #: .\clients\services\document_workflow.py:142
@@ -1382,7 +1382,8 @@ msgstr "Przeanalizowane dane wezwanie były puste."
 
 #: .\clients\services\document_workflow.py:388
 msgid "Document uploaded. Review recognized data before applying it."
-msgstr "Dokument przesłany. Przejrzyj rozpoznane dane przed ich zastosowaniem."
+msgstr ""
+"Dokument przesłany. Przejrzyj rozpoznane dane przed ich zastosowaniem."
 
 #: .\clients\services\document_workflow.py:423
 #: .\clients\services\document_workflow.py:486
@@ -1550,13 +1551,11 @@ msgstr "Dodaj dokument: \"%(document_type_display)s\""
 #, python-format
 msgid ""
 "\n"
-"          Для клиента: <strong>%(client.first_name)s %(client.last_name)s</"
-"strong>\n"
+"          Для клиента: <strong>%(client.first_name)s %(client.last_name)s</strong>\n"
 "          "
 msgstr ""
 "\n"
-"          Dla klienta: <strong>%(client.first_name)s %(client.last_name)s</"
-"strong>\n"
+"          Dla klienta: <strong>%(client.first_name)s %(client.last_name)s</strong>\n"
 "          "
 
 #: .\clients\templates\clients\add_document.html:25
@@ -1792,78 +1791,67 @@ msgid "Decisions"
 msgstr "Decyzje"
 
 #: .\clients\templates\clients\admin_panel.html:197 .\templates\base.html:190
-#, fuzzy
-#| msgid "Вход в систему"
 msgid "Здоровье системы"
-msgstr "Logowanie do systemu"
+msgstr "Zdrowie systemu"
 
 #: .\clients\templates\clients\app_settings_form.html:4
 #: .\clients\templates\clients\app_settings_form.html:5
 #: .\templates\base.html:176
-#, fuzzy
-#| msgid "Настройка чеклистов"
 msgid "Настройки шаблонов"
-msgstr "Konfiguracja checklist"
+msgstr "Ustawienia szablonow"
 
 #: .\clients\templates\clients\app_settings_form.html:6
 msgid "Настройте значения по умолчанию для текущей базы данных."
-msgstr ""
+msgstr "Skonfiguruj wartosci domyslne dla biezacej bazy danych."
 
 #: .\clients\templates\clients\app_settings_form.html:17
-#, fuzzy
-#| msgid "Настройки приложения"
 msgid "Настройки базы"
-msgstr "Ustawienia aplikacji"
+msgstr "Ustawienia bazy"
 
 #: .\clients\templates\clients\app_settings_form.html:18
 msgid "Общие данные инстанса и значения по умолчанию для документов."
-msgstr ""
+msgstr "Ogolne dane instancji i wartosci domyslne dla dokumentow."
 
 #: .\clients\templates\clients\app_settings_form.html:20
 #: .\templates\base.html:163
 msgid "Админ панель"
-msgstr ""
+msgstr "Panel administracyjny"
 
 #: .\clients\templates\clients\app_settings_form.html:26
-#, fuzzy
-#| msgid "Метаданные"
 msgid "Общие данные"
-msgstr "Metadane"
+msgstr "Dane ogolne"
 
 #: .\clients\templates\clients\app_settings_form.html:43
 msgid ""
 "Каждая новая строка хранится отдельно, чтобы потом использовать в шаблонах."
 msgstr ""
+"Kazdy nowy wiersz jest przechowywany osobno, aby mozna go bylo pozniej uzyc "
+"w szablonach."
 
 #: .\clients\templates\clients\app_settings_form.html:46
-#, fuzzy
-#| msgid "Имя pełnomocnika по умолчанию"
 msgid "Pełnomocnik по умолчанию"
-msgstr "Domyślna nazwa przekaza"
+msgstr "Domyslny pelnomocnik"
 
 #: .\clients\templates\clients\app_settings_form.html:56
 msgid "Эти поля будут автоматически подставляться всем клиентам этой базы."
 msgstr ""
+"Te pola beda automatycznie podstawiane dla wszystkich klientow tej bazy."
 
 #: .\clients\templates\clients\app_settings_form.html:60
-#, fuzzy
-#| msgid "Mazowiecki: адрес urzedu"
 msgid "Адрес urzędu"
-msgstr "Mazowiecki: urzedu adresu"
+msgstr "Adres urzedu"
 
 #: .\clients\templates\clients\app_settings_form.html:63
-#, fuzzy
-#| msgid "Финансовая достаточность обновлена."
 msgid "Каждая новая строка станет отдельной строкой в бланке."
-msgstr "Zaktualizowano adekwatność finansową."
+msgstr "Kazdy nowy wiersz stanie sie osobnym wierszem w formularzu."
 
 #: .\clients\templates\clients\app_settings_form.html:68
 msgid "Pełnomocnik"
-msgstr ""
+msgstr "Pelnomocnik"
 
 #: .\clients\templates\clients\app_settings_form.html:71
 msgid "Можно оставить пустые строки или вообще очистить блок."
-msgstr ""
+msgstr "Mozesz zostawic puste wiersze albo calkowicie wyczyscic blok."
 
 #: .\clients\templates\clients\app_settings_form.html:79
 #: .\clients\templates\clients\client_add.html:97
@@ -1888,7 +1876,7 @@ msgstr "Kalkulator wyciągu bankowego"
 
 #: .\clients\templates\clients\calculator.html:6
 msgid "Рассчитайте минимальную сумму средств для периода пребывания."
-msgstr ""
+msgstr "Oblicz minimalna kwote srodkow na okres pobytu."
 
 #: .\clients\templates\clients\calculator.html:11
 msgid "Введите данные, чтобы рассчитать итоговую сумму на счету."
@@ -1941,7 +1929,8 @@ msgstr "Bilet powrotny"
 
 #: .\clients\templates\clients\calculator.html:81
 msgid "Страна граничит с Польшей? (билет 500 zł, иначе 2500 zł)"
-msgstr "Czy kraj graniczy z Polską? (bilet 500 zł, w przeciwnym razie 2500 zł)"
+msgstr ""
+"Czy kraj graniczy z Polską? (bilet 500 zł, w przeciwnym razie 2500 zł)"
 
 #: .\clients\templates\clients\calculator.html:89
 msgid "Рассчитать итоговую сумму"
@@ -2248,10 +2237,8 @@ msgid "Activity Log"
 msgstr "Dziennik aktywności"
 
 #: .\clients\templates\clients\client_form.html:8
-#, fuzzy
-#| msgid "Следите за клиентами, сроками и платежами из единого интерфейса."
 msgid "Обновите данные клиента, сроки, статус дела и рабочие заметки."
-msgstr "Śledź klientów, terminy i płatności z jednego panelu."
+msgstr "Zaktualizuj dane klienta, terminy, status sprawy i notatki robocze."
 
 #: .\clients\templates\clients\client_form.html:10
 msgid ""
@@ -2334,10 +2321,8 @@ msgid "Спонсор: %(count)s"
 msgstr "Sponsor: %(count)s"
 
 #: .\clients\templates\clients\clients_list.html:114
-#, fuzzy
-#| msgid "Основание до"
 msgid "Основание"
-msgstr "Bazuj"
+msgstr "Podstawa"
 
 #: .\clients\templates\clients\clients_list.html:119
 #, python-format
@@ -2425,10 +2410,10 @@ msgid ""
 "отредактировать название или обязательность — добавьте собственный вариант "
 "через кнопку «Добавить документ»."
 msgstr ""
-"Etykieta „Dokument standardowy” oznacza podstawową listę dla wybranego celu. "
-"Pozycje te pochodzą z typowych dokumentów i pojawiają się, dopóki nie ma dla "
-"nich oddzielnego ustawienia. Można je włączać lub wyłączać za pomocą pola "
-"wyboru, a aby edytować nazwę lub wymagalność — dodaj własny wariant za "
+"Etykieta „Dokument standardowy” oznacza podstawową listę dla wybranego celu."
+" Pozycje te pochodzą z typowych dokumentów i pojawiają się, dopóki nie ma "
+"dla nich oddzielnego ustawienia. Można je włączać lub wyłączać za pomocą "
+"pola wyboru, a aby edytować nazwę lub wymagalność — dodaj własny wariant za "
 "pomocą przycisku „Dodaj dokument”."
 
 #: .\clients\templates\clients\document_checklist_manage.html:89
@@ -2532,7 +2517,8 @@ msgstr "Przypomnienia o dokumentach"
 
 #: .\clients\templates\clients\document_reminder_list.html:17
 msgid ""
-"Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и периодам"
+"Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и "
+"периодам"
 msgstr ""
 "Sprawdź i wygeneruj aktualne przypomnienia, filtruj wg klienta i okresów"
 
@@ -2796,10 +2782,8 @@ msgid "Расписание отпечатков"
 msgstr "Wydrukuj harmonogram"
 
 #: .\clients\templates\clients\fingerprints_schedule.html:7
-#, fuzzy
-#| msgid "Нет предстоящих записей на отпечатки."
 msgid "Предстоящие и недавние визиты клиентов на отпечатки."
-msgstr "Brak nadchodzących spotkań do druku."
+msgstr "Nadchodzace i ostatnie wizyty klientow na odciski palcow."
 
 #: .\clients\templates\clients\fingerprints_schedule.html:16
 msgid "Мониторинг предстоящих визитов в Ужонд"
@@ -2942,8 +2926,6 @@ msgid "Метрики и Воронка"
 msgstr "Metryki i lejek"
 
 #: .\clients\templates\clients\metrics_dashboard.html:5
-#, fuzzy
-#| msgid "Метрики и Воронка"
 msgid "Метрики и воронка"
 msgstr "Metryki i lejek"
 
@@ -2952,6 +2934,7 @@ msgid ""
 "Ключевые показатели по клиентам, оплатам и закрытым делам за выбранный "
 "период."
 msgstr ""
+"Kluczowe wskazniki klientow, platnosci i zamknietych spraw za wybrany okres."
 
 #: .\clients\templates\clients\metrics_dashboard.html:11
 msgid "Бизнес-метрики (Воронка)"
@@ -3235,13 +3218,11 @@ msgstr "Dodaj kolejny plik"
 #, python-format
 msgid ""
 "\n"
-"  Для цели \"%(purpose)s\" на языке \"%(language)s\" чеклист не определен в "
-"настройках.\n"
+"  Для цели \"%(purpose)s\" на языке \"%(language)s\" чеклист не определен в настройках.\n"
 "  "
 msgstr ""
 "\n"
-"Dla celu \"%(purpose)s\" w języku \"%(language)s\" lista kontrolna nie "
-"została zdefiniowana w ustawieniach."
+"Dla celu \"%(purpose)s\" w języku \"%(language)s\" lista kontrolna nie została zdefiniowana w ustawieniach."
 
 #: .\clients\templates\clients\partials\email_history.html:6
 msgid "История email"
@@ -3556,8 +3537,7 @@ msgstr "Filtruj"
 #: .\clients\templates\clients\register.html:53
 #, python-format
 msgid "Уже есть аккаунт? <a class=\"ms-2\" href=\"%(login_url)s\">Войти</a>"
-msgstr ""
-"Masz już konto? <a class=\"ms-2\" href=\"%(login_url)s\">Zaloguj się</a>"
+msgstr "Masz już konto? <a class=\"ms-2\" href=\"%(login_url)s\">Zaloguj się</a>"
 
 #: .\clients\templates\clients\search.html:4
 #: .\clients\templates\clients\search.html:12
@@ -3657,15 +3637,15 @@ msgstr "Witam"
 #: .\clients\tests\test_misc_legacy.py:120
 msgctxt "menu"
 msgid "Open"
-msgstr ""
+msgstr "Otworz"
 
 #: .\clients\tests\test_misc_legacy.py:121
 msgid "Open"
-msgstr ""
+msgstr "Otworz"
 
 #: .\clients\tests\test_misc_legacy.py:122
 msgid "Print"
-msgstr ""
+msgstr "Drukuj"
 
 #: .\clients\validators.py:47 .\clients\validators.py:55
 msgid "Имя файла не должно содержать пути или вложенные каталоги."
@@ -3999,8 +3979,8 @@ msgstr "Nie udało się wysłać e-maila (send_mail zwróciło 0)."
 #: .\clients\views\emails.py:194
 msgid "Email delivery failed. Check application logs for technical details."
 msgstr ""
-"Dostarczenie wiadomości e-mail nie powiodło się. Sprawdź dzienniki aplikacji "
-"pod kątem szczegółów technicznych."
+"Dostarczenie wiadomości e-mail nie powiodło się. Sprawdź dzienniki aplikacji"
+" pod kątem szczegółów technicznych."
 
 #: .\clients\views\emails.py:237
 msgid "Не найдено получателей по заданным фильтрам (с указанным email)."
@@ -4493,17 +4473,13 @@ msgstr "Nie masz dostępu do tej strony"
 #: .\templates\403.html:25
 msgid ""
 "\n"
-"                        Вы вошли в систему, но ваш профиль не имеет прав для "
-"просмотра этого раздела сотрудников.\n"
-"                        Если вы считаете, что это ошибка, обратитесь к "
-"администратору сайта.\n"
+"                        Вы вошли в систему, но ваш профиль не имеет прав для просмотра этого раздела сотрудников.\n"
+"                        Если вы считаете, что это ошибка, обратитесь к администратору сайта.\n"
 "                        "
 msgstr ""
 "\n"
-"Jesteś zalogowany, ale Twój profil nie ma uprawnień do przeglądania tej "
-"sekcji personelu.\n"
-"                        Jeśli uważasz, że to błąd, skontaktuj się z "
-"administratorem witryny."
+"Jesteś zalogowany, ale Twój profil nie ma uprawnień do przeglądania tej sekcji personelu.\n"
+"                        Jeśli uważasz, że to błąd, skontaktuj się z administratorem witryny."
 
 #: .\templates\403.html:34
 msgid "Выйти и войти под другим аккаунтом"
@@ -4534,24 +4510,26 @@ msgid "Вернуться назад"
 msgstr "Powrót do profilu"
 
 #: .\templates\500.html:7
-#, fuzzy
-#| msgid "Ошибка доставки"
 msgid "Ошибка сервера"
-msgstr "Błąd dostawy"
+msgstr "Blad serwera"
 
 #: .\templates\500.html:21
 msgid "Внутренняя ошибка сервера"
-msgstr ""
+msgstr "Wewnetrzny blad serwera"
 
 #: .\templates\500.html:24
 msgid ""
 "\n"
 "              Произошла непредвиденная ошибка. Наша команда уже уведомлена\n"
-"              и работает над устранением проблемы. Попробуйте повторить "
-"действие\n"
+"              и работает над устранением проблемы. Попробуйте повторить действие\n"
 "              через несколько минут.\n"
 "              "
 msgstr ""
+"\n"
+"              Wystapil nieoczekiwany blad. Nasz zespol zostal juz powiadomiony\n"
+"              i pracuje nad rozwiazaniem problemu. Sprobuj ponowic dzialanie\n"
+"              za kilka minut.\n"
+"              "
 
 #: .\templates\account\auth_base.html:730 .\templates\base.html:144
 msgid "Выбор языка интерфейса"
@@ -4665,11 +4643,11 @@ msgstr "Potwierdź e-mail"
 
 #: .\templates\account\email_confirm.html:72
 msgid ""
-"Если это не ваш адрес, просто проигнорируйте письмо и запросите новую ссылку "
-"из личного кабинета."
+"Если это не ваш адрес, просто проигнорируйте письмо и запросите новую ссылку"
+" из личного кабинета."
 msgstr ""
-"Jeśli to nie jest Twój adres, po prostu zignoruj ​​list i poproś o nowy link "
-"ze swojego konta osobistego."
+"Jeśli to nie jest Twój adres, po prostu zignoruj ​​list i poproś o nowy link"
+" ze swojego konta osobistego."
 
 #: .\templates\account\email_confirm.html:77
 msgid "Ссылка для подтверждения недействительна или уже была использована."
@@ -4802,43 +4780,35 @@ msgstr "Dodaj nowy dokument"
 
 #: .\templates\account\password_reset_from_key.html:18
 msgid "Придумайте надежную комбинацию, которую будете помнить только вы."
-msgstr ""
+msgstr "Utworz bezpieczna kombinacje, ktora zapamietasz tylko Ty."
 
 #: .\templates\account\password_reset_from_key.html:22
-#, fuzzy
-#| msgid "Ссылка для подтверждения недействительна или уже была использована."
 msgid "Ссылка недействительна или устарела. Запросите новую инструкцию."
-msgstr "Link potwierdzający jest nieprawidłowy lub został już wykorzystany."
+msgstr "Link jest nieprawidlowy lub wygasl. Popros o nowa instrukcje."
 
 #: .\templates\account\password_reset_from_key.html:38
 msgid "Сохранить новый пароль"
 msgstr "Zapisz zmiany"
 
 #: .\templates\account\password_reset_from_key_done.html:9
-#, fuzzy
-#| msgid "Пароль изменен"
 msgid "Пароль изменён"
-msgstr "Zapisz zmiany"
+msgstr "Haslo zostalo zmienione"
 
 #: .\templates\account\password_reset_from_key_done.html:23
-#, fuzzy
-#| msgid "Пароль изменен"
 msgid "Пароль успешно изменён"
-msgstr "Zapisz zmiany"
+msgstr "Haslo zostalo pomyslnie zmienione"
 
 #: .\templates\account\password_reset_from_key_done.html:24
 msgid "Теперь вы можете войти в систему, используя новую комбинацию."
-msgstr ""
+msgstr "Mozesz teraz zalogowac sie do systemu, uzywajac nowej kombinacji."
 
 #: .\templates\account\password_reset_from_key_done.html:25
 msgid "Мы автоматически перенаправим вас на страницу входа через 3 секунды."
-msgstr ""
+msgstr "Automatycznie przekierujemy Cie na strone logowania za 3 sekundy."
 
 #: .\templates\account\password_reset_from_key_done.html:26
-#, fuzzy
-#| msgid "Вернуться ко входу"
 msgid "Перейти ко входу сейчас"
-msgstr "Powrót do profilu"
+msgstr "Przejdz teraz do logowania"
 
 #: .\templates\account\resend_verification.html:4
 msgid "Повторная отправка письма"
@@ -4854,8 +4824,8 @@ msgstr "Wyślemy Ci nowy link"
 
 #: .\templates\account\resend_verification.html:17
 msgid ""
-"Введите email, который использовали при регистрации. Если аккаунт существует "
-"и почта ещё не подтверждена, мы отправим новое письмо."
+"Введите email, который использовали при регистрации. Если аккаунт существует"
+" и почта ещё не подтверждена, мы отправим новое письмо."
 msgstr ""
 "Wpisz adres e-mail użyty podczas rejestracji. Jeśli konto istnieje, a adres "
 "e-mail nie został jeszcze potwierdzony, wyślemy nowy e-mail."
@@ -4910,8 +4880,8 @@ msgid ""
 "Зарегистрируйтесь, чтобы следить за документами, платежами и клиентами в "
 "одном месте."
 msgstr ""
-"Zarejestruj się, aby mieć kontrolę nad dokumentami, płatnościami i klientami "
-"w jednym miejscu."
+"Zarejestruj się, aby mieć kontrolę nad dokumentami, płatnościami i klientami"
+" w jednym miejscu."
 
 #: .\templates\account\signup.html:27
 msgid ""
@@ -4961,8 +4931,8 @@ msgstr "E-mail jest już w drodze"
 
 #: .\templates\account\verification_sent.html:55
 msgid ""
-"Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
-"завершить регистрацию."
+"Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы"
+" завершить регистрацию."
 msgstr ""
 "Wysłaliśmy Ci wiadomość e-mail w celu weryfikacji. Kliknij link w e-mailu, "
 "aby zakończyć rejestrację."
@@ -5004,8 +4974,8 @@ msgstr "Poproś o kolejny link w swoim profilu, jeśli obecny wygasł."
 #: .\templates\account\verification_sent.html:106
 msgid "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
 msgstr ""
-"Skontaktuj się z naszym wsparciem, jeśli nadal nie otrzymałeś wiadomości e-"
-"mail."
+"Skontaktuj się z naszym wsparciem, jeśli nadal nie otrzymałeś wiadomości "
+"e-mail."
 
 #: .\templates\admin\base_site.html:4
 msgid "Администрирование Legalize"
@@ -5140,8 +5110,7 @@ msgstr "Zaloguj się przez Google"
 #, python-format
 msgid ""
 "\n"
-"                    Вы собираетесь войти на сайт, используя свой аккаунт "
-"%(provider)s.\n"
+"                    Вы собираетесь войти на сайт, используя свой аккаунт %(provider)s.\n"
 "                    "
 msgstr ""
 "\n"
@@ -5309,11 +5278,11 @@ msgstr ""
 #: .\tmp\uv-cache\archive-v0\kubqama122zp1McREYeWc\Lib\site-packages\django\core\validators.py:297
 #: .\tmp\uv-cache\archive-v0\tXhJ6DsMXBM7jF07mHUHS\Lib\site-packages\django\core\validators.py:297
 msgid ""
-"Enter a valid “slug” consisting of Unicode letters, numbers, underscores, or "
-"hyphens."
+"Enter a valid “slug” consisting of Unicode letters, numbers, underscores, or"
+" hyphens."
 msgstr ""
-"Wprowadź prawidłowy „korek” składający się z liter Unicode, cyfr, podkreśleń "
-"lub łączników."
+"Wprowadź prawidłowy „korek” składający się z liter Unicode, cyfr, podkreśleń"
+" lub łączników."
 
 #: .\tmp\uv-cache\archive-v0\0qmmlPryXg7vZI7mglRS3\Lib\site-packages\django\core\validators.py:309
 #: .\tmp\uv-cache\archive-v0\0qmmlPryXg7vZI7mglRS3\Lib\site-packages\django\core\validators.py:318
@@ -5426,8 +5395,8 @@ msgid ""
 "%(offset)s, e.g. %(offset)s, %(valid_value1)s, %(valid_value2)s, and so on."
 msgstr ""
 "Upewnij się, że ta wartość jest wielokrotnością rozmiaru kroku "
-"%(limit_value)s, zaczynając od %(offset)s, np. %(offset)s, %(valid_value1)s, "
-"%(valid_value2)s i tak dalej."
+"%(limit_value)s, zaczynając od %(offset)s, np. %(offset)s, %(valid_value1)s,"
+" %(valid_value2)s i tak dalej."
 
 #: .\tmp\uv-cache\archive-v0\0qmmlPryXg7vZI7mglRS3\Lib\site-packages\django\core\validators.py:473
 #: .\tmp\uv-cache\archive-v0\A-dpfIwIWp6jkoeA-SBwj\Lib\site-packages\django\core\validators.py:473
@@ -5518,9 +5487,11 @@ msgid ""
 msgid_plural ""
 "Ensure that there are no more than %(max)s digits before the decimal point."
 msgstr[0] ""
-"Upewnij się, że przed przecinkiem dziesiętnym nie ma więcej niż %(max)s cyfr."
+"Upewnij się, że przed przecinkiem dziesiętnym nie ma więcej niż %(max)s "
+"cyfr."
 msgstr[1] ""
-"Upewnij się, że przed przecinkiem dziesiętnym nie ma więcej niż %(max)s cyfr."
+"Upewnij się, że przed przecinkiem dziesiętnym nie ma więcej niż %(max)s "
+"cyfr."
 
 #: .\tmp\uv-cache\archive-v0\0qmmlPryXg7vZI7mglRS3\Lib\site-packages\django\core\validators.py:597
 #: .\tmp\uv-cache\archive-v0\A-dpfIwIWp6jkoeA-SBwj\Lib\site-packages\django\core\validators.py:597
@@ -5532,8 +5503,8 @@ msgid ""
 "File extension “%(extension)s” is not allowed. Allowed extensions are: "
 "%(allowed_extensions)s."
 msgstr ""
-"Rozszerzenie pliku „%(extension)s” jest niedozwolone. Dozwolone rozszerzenia "
-"to: %(allowed_extensions)s."
+"Rozszerzenie pliku „%(extension)s” jest niedozwolone. Dozwolone rozszerzenia"
+" to: %(allowed_extensions)s."
 
 #: .\tmp\uv-cache\archive-v0\0qmmlPryXg7vZI7mglRS3\Lib\site-packages\django\core\validators.py:659
 #: .\tmp\uv-cache\archive-v0\A-dpfIwIWp6jkoeA-SBwj\Lib\site-packages\django\core\validators.py:659
@@ -5740,11 +5711,11 @@ msgstr ""
 #: .\tmp\uv-cache\archive-v0\tXhJ6DsMXBM7jF07mHUHS\Lib\site-packages\django\db\models\fields\__init__.py:1569
 #, python-format
 msgid ""
-"“%(value)s” value has the correct format (YYYY-MM-DD HH:MM[:ss[.uuuuuu]]"
-"[TZ]) but it is an invalid date/time."
+"“%(value)s” value has the correct format (YYYY-MM-DD "
+"HH:MM[:ss[.uuuuuu]][TZ]) but it is an invalid date/time."
 msgstr ""
-"Wartość „%(value)s” ma poprawny format (RRRR-MM-DD HH:MM[:ss[.uuuuuu]][TZ]), "
-"ale jest to nieprawidłowa data/godzina."
+"Wartość „%(value)s” ma poprawny format (RRRR-MM-DD HH:MM[:ss[.uuuuuu]][TZ]),"
+" ale jest to nieprawidłowa data/godzina."
 
 #: .\tmp\uv-cache\archive-v0\0qmmlPryXg7vZI7mglRS3\Lib\site-packages\django\db\models\fields\__init__.py:1574
 #: .\tmp\uv-cache\archive-v0\A-dpfIwIWp6jkoeA-SBwj\Lib\site-packages\django\db\models\fields\__init__.py:1574
@@ -6188,13 +6159,15 @@ msgstr "Przesłany plik jest pusty."
 #: .\tmp\uv-cache\archive-v0\kubqama122zp1McREYeWc\Lib\site-packages\django\forms\fields.py:642
 #: .\tmp\uv-cache\archive-v0\tXhJ6DsMXBM7jF07mHUHS\Lib\site-packages\django\forms\fields.py:642
 #, python-format
-msgid "Ensure this filename has at most %(max)d character (it has %(length)d)."
+msgid ""
+"Ensure this filename has at most %(max)d character (it has %(length)d)."
 msgid_plural ""
 "Ensure this filename has at most %(max)d characters (it has %(length)d)."
 msgstr[0] ""
 "Upewnij się, że ta nazwa pliku ma co najwyżej %(max)d znaku (ma %(length)d)."
 msgstr[1] ""
-"Upewnij się, że ta nazwa pliku ma co najwyżej %(max)d znaków (ma %(length)d)."
+"Upewnij się, że ta nazwa pliku ma co najwyżej %(max)d znaków (ma "
+"%(length)d)."
 
 #: .\tmp\uv-cache\archive-v0\0qmmlPryXg7vZI7mglRS3\Lib\site-packages\django\forms\fields.py:647
 #: .\tmp\uv-cache\archive-v0\A-dpfIwIWp6jkoeA-SBwj\Lib\site-packages\django\forms\fields.py:647
@@ -6233,7 +6206,8 @@ msgstr ""
 #: .\tmp\uv-cache\archive-v0\tXhJ6DsMXBM7jF07mHUHS\Lib\site-packages\django\forms\models.py:1621
 #, python-format
 msgid "Select a valid choice. %(value)s is not one of the available choices."
-msgstr "Wybierz prawidłowy wybór. %(value)s nie jest jedną z dostępnych opcji."
+msgstr ""
+"Wybierz prawidłowy wybór. %(value)s nie jest jedną z dostępnych opcji."
 
 #: .\tmp\uv-cache\archive-v0\0qmmlPryXg7vZI7mglRS3\Lib\site-packages\django\forms\fields.py:951
 #: .\tmp\uv-cache\archive-v0\0qmmlPryXg7vZI7mglRS3\Lib\site-packages\django\forms\fields.py:1070
@@ -6305,8 +6279,8 @@ msgid ""
 "ManagementForm data is missing or has been tampered with. Missing fields: "
 "%(field_names)s. You may need to file a bug report if the issue persists."
 msgstr ""
-"Brakuje danych ManagementForm lub zostały one zmodyfikowane. Brakujące pola: "
-"%(field_names)s. Jeśli problem będzie się powtarzał, może być konieczne "
+"Brakuje danych ManagementForm lub zostały one zmodyfikowane. Brakujące pola:"
+" %(field_names)s. Jeśli problem będzie się powtarzał, może być konieczne "
 "przesłanie raportu o błędzie."
 
 #: .\tmp\uv-cache\archive-v0\0qmmlPryXg7vZI7mglRS3\Lib\site-packages\django\forms\formsets.py:65
@@ -6404,7 +6378,8 @@ msgstr "Wartość wbudowana nie jest zgodna z instancją nadrzędną."
 #: .\tmp\uv-cache\archive-v0\U7MoVaekbC0t-GmYLD-EE\django\forms\models.py:1474
 #: .\tmp\uv-cache\archive-v0\kubqama122zp1McREYeWc\Lib\site-packages\django\forms\models.py:1474
 #: .\tmp\uv-cache\archive-v0\tXhJ6DsMXBM7jF07mHUHS\Lib\site-packages\django\forms\models.py:1474
-msgid "Select a valid choice. That choice is not one of the available choices."
+msgid ""
+"Select a valid choice. That choice is not one of the available choices."
 msgstr "Wybierz prawidłowy wybór. Ten wybór nie jest jednym z dostępnych."
 
 #: .\tmp\uv-cache\archive-v0\0qmmlPryXg7vZI7mglRS3\Lib\site-packages\django\forms\models.py:1623
@@ -7285,8 +7260,8 @@ msgid ""
 "hijacked by third parties."
 msgstr ""
 "Widzisz tę wiadomość, ponieważ ta witryna HTTPS wymaga wysłania przez "
-"przeglądarkę internetową „nagłówka strony odsyłającej”, ale żaden nie został "
-"wysłany. Ten nagłówek jest wymagany ze względów bezpieczeństwa, aby mieć "
+"przeglądarkę internetową „nagłówka strony odsyłającej”, ale żaden nie został"
+" wysłany. Ten nagłówek jest wymagany ze względów bezpieczeństwa, aby mieć "
 "pewność, że Twoja przeglądarka nie zostanie przejęta przez osoby trzecie."
 
 #: .\tmp\uv-cache\archive-v0\0qmmlPryXg7vZI7mglRS3\Lib\site-packages\django\views\csrf.py:40
@@ -7309,10 +7284,10 @@ msgstr ""
 #: .\tmp\uv-cache\archive-v0\kubqama122zp1McREYeWc\Lib\site-packages\django\views\csrf.py:45
 #: .\tmp\uv-cache\archive-v0\tXhJ6DsMXBM7jF07mHUHS\Lib\site-packages\django\views\csrf.py:45
 msgid ""
-"If you are using the <meta name=\"referrer\" content=\"no-referrer\"> tag or "
-"including the “Referrer-Policy: no-referrer” header, please remove them. The "
-"CSRF protection requires the “Referer” header to do strict referer checking. "
-"If you’re concerned about privacy, use alternatives like <a "
+"If you are using the <meta name=\"referrer\" content=\"no-referrer\"> tag or"
+" including the “Referrer-Policy: no-referrer” header, please remove them. "
+"The CSRF protection requires the “Referer” header to do strict referer "
+"checking. If you’re concerned about privacy, use alternatives like <a "
 "rel=\"noreferrer\" …> for links to third-party sites."
 msgstr ""
 "Jeśli używasz tagu <meta name=\"referrer\" content=\"no-referrer\"> lub "
@@ -7550,15 +7525,15 @@ msgstr ""
 #: .\tmp\uv-cache\archive-v0\tXhJ6DsMXBM7jF07mHUHS\Lib\site-packages\django\views\templates\default_urlconf.html:208
 #, python-format
 msgid ""
-"You are seeing this page because <a href=\"https://docs.djangoproject.com/en/"
-"%(version)s/ref/settings/#debug\" target=\"_blank\" "
-"rel=\"noopener\">DEBUG=True</a> is in your settings file and you have not "
-"configured any URLs."
+"You are seeing this page because <a "
+"href=\"https://docs.djangoproject.com/en/%(version)s/ref/settings/#debug\" "
+"target=\"_blank\" rel=\"noopener\">DEBUG=True</a> is in your settings file "
+"and you have not configured any URLs."
 msgstr ""
-"Widzisz tę stronę, ponieważ <a href=\"https://docs.djangoproject.com/en/"
-"%(version)s/ref/settings/#debug\" target=\"_blank\" "
-"rel=\"noopener\">DEBUG=True</a> znajduje się w Twoim pliku ustawień i nie "
-"skonfigurowałeś żadnych adresów URL."
+"Widzisz tę stronę, ponieważ <a "
+"href=\"https://docs.djangoproject.com/en/%(version)s/ref/settings/#debug\" "
+"target=\"_blank\" rel=\"noopener\">DEBUG=True</a> znajduje się w Twoim pliku"
+" ustawień i nie skonfigurowałeś żadnych adresów URL."
 
 #: .\tmp\uv-cache\archive-v0\0qmmlPryXg7vZI7mglRS3\Lib\site-packages\django\views\templates\default_urlconf.html:217
 #: .\tmp\uv-cache\archive-v0\A-dpfIwIWp6jkoeA-SBwj\Lib\site-packages\django\views\templates\default_urlconf.html:217
@@ -7649,7 +7624,8 @@ msgstr "Nieobsługiwana wartość algorytmu: %s."
 #: .\tmp\uv-cache\archive-v0\tXhJ6DsMXBM7jF07mHUHS\Lib\site-packages\httplib2\__init__.py:648
 msgid "The challenge doesn't contain a server nonce, or this one is empty."
 msgstr ""
-"Wyzwanie nie zawiera numeru jednorazowego serwera lub to wyzwanie jest puste."
+"Wyzwanie nie zawiera numeru jednorazowego serwera lub to wyzwanie jest "
+"puste."
 
 #: .\tmp\uv-cache\archive-v0\0qmmlPryXg7vZI7mglRS3\Lib\site-packages\httplib2\__init__.py:658
 #: .\tmp\uv-cache\archive-v0\2MhRN2hMPSBJo02ecM1Mh\httplib2\__init__.py:658
@@ -7685,8 +7661,8 @@ msgstr "%(prog)s: błąd: %(message)s\n"
 #: .\tmp\uv-cache\archive-v0\tXhJ6DsMXBM7jF07mHUHS\Lib\site-packages\packageurl\contrib\django\models.py:88
 msgid ""
 "A short code to identify the type of this package. For example: gem for a "
-"Rubygem, docker for a container, pypi for a Python Wheel or Egg, maven for a "
-"Maven Jar, deb for a Debian package, etc."
+"Rubygem, docker for a container, pypi for a Python Wheel or Egg, maven for a"
+" Maven Jar, deb for a Debian package, etc."
 msgstr ""
 "Krótki kod identyfikujący typ tej paczki. Na przykład: gem dla Rubygem, "
 "docker dla kontenera, pypi dla Python Wheel lub Egg, maven dla Maven Jar, "
@@ -7718,11 +7694,11 @@ msgstr "Wersja pakietu."
 #: .\tmp\uv-cache\archive-v0\smjmlW0CYddyNI6EOVREO\packageurl\contrib\django\models.py:120
 #: .\tmp\uv-cache\archive-v0\tXhJ6DsMXBM7jF07mHUHS\Lib\site-packages\packageurl\contrib\django\models.py:120
 msgid ""
-"Extra qualifying data for a package such as the name of an OS, architecture, "
-"distro, etc."
+"Extra qualifying data for a package such as the name of an OS, architecture,"
+" distro, etc."
 msgstr ""
-"Dodatkowe dane kwalifikacyjne pakietu, takie jak nazwa systemu operacyjnego, "
-"architektura, dystrybucja itp."
+"Dodatkowe dane kwalifikacyjne pakietu, takie jak nazwa systemu operacyjnego,"
+" architektura, dystrybucja itp."
 
 #: .\tmp\uv-cache\archive-v0\kubqama122zp1McREYeWc\Lib\site-packages\packageurl\contrib\django\models.py:128
 #: .\tmp\uv-cache\archive-v0\smjmlW0CYddyNI6EOVREO\packageurl\contrib\django\models.py:128
@@ -8185,6 +8161,9 @@ msgstr "użytkownik"
 msgid "users"
 msgstr "użytkownicy"
 
+msgid "Фильтр"
+msgstr "Filtr"
+
 #~ msgid "System Health"
 #~ msgstr "Stan Systemu"
 
@@ -8226,10 +8205,8 @@ msgstr "użytkownicy"
 #~ msgstr "Potwierdzenie wysłania wiadomości do klienta"
 
 #, python-format
-#~ msgid ""
-#~ "Нет аккаунта? <a href=\"%(signup_url)s\">Зарегистрируйтесь за минуту</a>"
-#~ msgstr ""
-#~ "Nie masz konta? <a href=\"%(signup_url)s\">Zarejestruj się w minutę</a>"
+#~ msgid "Нет аккаунта? <a href=\"%(signup_url)s\">Зарегистрируйтесь за минуту</a>"
+#~ msgstr "Nie masz konta? <a href=\"%(signup_url)s\">Zarejestruj się w minutę</a>"
 
 #~ msgid "Сброс пароля"
 #~ msgstr "Resetuj"

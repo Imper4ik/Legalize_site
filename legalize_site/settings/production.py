@@ -118,6 +118,23 @@ PERMISSIONS_POLICY = {
     "interest-cohort": "()",
 }
 SECURE_PERMISSIONS_POLICY = ", ".join(f"{k}={v}" for k, v in PERMISSIONS_POLICY.items())
+CONTENT_SECURITY_POLICY = {
+    "default-src": ("'self'",),
+    "base-uri": ("'self'",),
+    "object-src": ("'none'",),
+    "frame-ancestors": ("'none'",),
+    "form-action": ("'self'",),
+    "img-src": ("'self'", "data:", "blob:"),
+    "font-src": ("'self'", "data:", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"),
+    "style-src": ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"),
+    "script-src": ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"),
+    "connect-src": ("'self'",),
+}
+SECURE_CONTENT_SECURITY_POLICY = "; ".join(
+    f"{directive} {' '.join(sources)}"
+    for directive, sources in CONTENT_SECURITY_POLICY.items()
+)
+SECURE_CSP_REPORT_ONLY = env_flag("SECURE_CSP_REPORT_ONLY", "False")
 
 if SESSION_COOKIE_SAMESITE.lower() == "none" and not SESSION_COOKIE_SECURE:
     raise ImproperlyConfigured("SESSION_COOKIE_SAMESITE=None requires SESSION_COOKIE_SECURE=True in production.")

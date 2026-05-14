@@ -15,6 +15,7 @@ from legalize_site.checks import (
     RATE_LIMIT_CACHE_ERROR_ID,
     RUNTIME_DEPENDENCY_WARNING_ID,
     SECRET_KEY_ERROR_ID,
+    TRANSLATION_TOOLING_WARNING_ID,
     CRON_TOKEN_ERROR_ID,
     UPLOAD_LIMIT_ERROR_ID,
     encryption_configuration_check,
@@ -23,6 +24,7 @@ from legalize_site.checks import (
     production_storage_safety_check,
     rate_limit_cache_check,
     runtime_dependency_check,
+    translation_tooling_check,
     upload_policy_check,
 )
 
@@ -285,6 +287,24 @@ class CronTokenCheckTests(SimpleTestCase):
     @patch.dict("os.environ", {"CRON_TOKEN": "secret"}, clear=True)
     def test_configured_cron_token_has_no_messages(self):
         self.assertEqual(cron_token_check(), [])
+
+
+class TranslationToolingCheckTests(SimpleTestCase):
+    @override_settings(IS_PRODUCTION=True, ENABLE_TRANSLATION_TOOLING=True)
+    def test_production_translation_tooling_returns_warning(self):
+        messages = translation_tooling_check()
+
+        self.assertEqual(len(messages), 1)
+        self.assertIsInstance(messages[0], Warning)
+        self.assertEqual(messages[0].id, TRANSLATION_TOOLING_WARNING_ID)
+
+    @override_settings(IS_PRODUCTION=True, ENABLE_TRANSLATION_TOOLING=False)
+    def test_disabled_production_translation_tooling_has_no_messages(self):
+        self.assertEqual(translation_tooling_check(), [])
+
+    @override_settings(IS_PRODUCTION=False, ENABLE_TRANSLATION_TOOLING=True)
+    def test_non_production_translation_tooling_has_no_messages(self):
+        self.assertEqual(translation_tooling_check(), [])
 
 
 class UploadPolicyCheckTests(SimpleTestCase):

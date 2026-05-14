@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.http import HttpResponse
 from django.utils.translation import gettext as _
 
-from clients.models import AppSettings, Client, ClientActivity, Document, Payment, Reminder, ServicePrice
+from clients.models import AppSettings, Client, ClientActivity, Document, Payment, Reminder, ServicePrice, StaffAuditEvent
 from clients.services.access import user_has_internal_role
 from clients.services.roles import ensure_predefined_roles
 from clients.views.base import staff_required_view
@@ -208,6 +208,65 @@ class ClientViewEdgeCaseTests(TestCase):
         self.assertEqual(response.status_code, 302)
         User = get_user_model()
         self.assertTrue(User.objects.filter(email="newstaff@example.com", is_staff=True).exists())
+
+    def test_staff_manage_update_creates_permission_audit_event(self):
+        user_model = get_user_model()
+        target = user_model.objects.create_user(
+            email="audited-staff@example.com",
+            password="pass",
+            is_staff=True,
+            is_active=True,
+        )
+        staff_group = Group.objects.get(name="Staff")
+        target.groups.add(staff_group)
+
+        response = self.client.post(
+            reverse("clients:staff_manage"),
+            data={
+                "action": "update",
+                "user_id": str(target.pk),
+                f"user-{target.pk}-email": target.email,
+                f"user-{target.pk}-first_name": "Audit",
+                f"user-{target.pk}-last_name": "Target",
+                f"user-{target.pk}-is_staff": "on",
+                f"user-{target.pk}-is_active": "on",
+                f"user-{target.pk}-groups": [str(staff_group.pk)],
+                f"user-{target.pk}-can_manage_payments": "on",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        event = StaffAuditEvent.objects.get(target=target)
+        self.assertEqual(event.actor, self.staff)
+        self.assertEqual(event.event_type, StaffAuditEvent.EVENT_STAFF_UPDATED)
+        self.assertEqual(
+            event.metadata["permission_changes"]["can_manage_payments"],
+            {"old": False, "new": True},
+        )
+        self.assertNotIn(target.email, json.dumps(event.metadata))
+
+    def test_staff_manage_toggle_active_creates_audit_event(self):
+        user_model = get_user_model()
+        target = user_model.objects.create_user(
+            email="toggle-staff@example.com",
+            password="pass",
+            is_staff=True,
+            is_active=True,
+        )
+        target.groups.add(Group.objects.get(name="Staff"))
+
+        response = self.client.post(
+            reverse("clients:staff_manage"),
+            data={"action": "toggle_active", "user_id": str(target.pk)},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        target.refresh_from_db()
+        self.assertFalse(target.is_active)
+        event = StaffAuditEvent.objects.get(target=target)
+        self.assertEqual(event.event_type, StaffAuditEvent.EVENT_STAFF_ACTIVE_TOGGLED)
+        self.assertEqual(event.metadata["old"], True)
+        self.assertEqual(event.metadata["new"], False)
 
     def test_staff_manage_renders(self):
         response = self.client.get(reverse("clients:staff_manage"))

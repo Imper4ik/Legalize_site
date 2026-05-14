@@ -26,6 +26,7 @@ esac
 
 mkdir -p "${MEDIA_ROOT:-/app/media}"
 python manage.py bootstrap_user_model_migration
+python manage.py audit_payment_integrity
 python manage.py migrate --no-input
 
 if [ "$should_bootstrap_superuser" = true ]; then

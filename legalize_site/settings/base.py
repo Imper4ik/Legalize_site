@@ -234,6 +234,7 @@ MIDDLEWARE += [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "legalize_site.security.PermissionsPolicyMiddleware",
+    "legalize_site.security.ContentSecurityPolicyMiddleware",
     "allauth.account.middleware.AccountMiddleware",
 ]
 if ENABLE_TRANSLATION_TOOLING:

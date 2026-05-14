@@ -12,7 +12,7 @@ services:
       - key: DJANGO_SETTINGS_MODULE
         value: legalize_site.settings.production
       - key: ENABLE_TRANSLATION_TOOLING
-        value: "True"
+        value: "False"
       - key: PYTHON_VERSION
         value: 3.12.6
 

@@ -27,6 +27,7 @@ RATE_LIMIT_CACHE_ERROR_ID = "legalize_site.E005"
 CRON_TOKEN_ERROR_ID = "legalize_site.E006"  # nosec B105
 UPLOAD_LIMIT_ERROR_ID = "legalize_site.E007"
 UPLOAD_TYPES_ERROR_ID = "legalize_site.E008"
+TRANSLATION_TOOLING_WARNING_ID = "legalize_site.W010"
 
 BACKENDS = {
     "django.core.mail.backends.smtp.EmailBackend": {
@@ -366,6 +367,26 @@ def cron_token_check(app_configs: Any = None, **kwargs: Any) -> list[Error | War
                 "CRON_TOKEN is not configured in production.",
                 hint="Set CRON_TOKEN and pass it as Authorization: Bearer <token> or X-CRON-TOKEN for every cron request.",
                 id=CRON_TOKEN_ERROR_ID,
+            )
+        )
+    return messages
+
+
+@register("legalize_site")
+def translation_tooling_check(app_configs: Any = None, **kwargs: Any) -> list[Error | Warning]:
+    messages: list[Error | Warning] = []
+    if not getattr(settings, "IS_PRODUCTION", False):
+        return messages
+
+    if getattr(settings, "ENABLE_TRANSLATION_TOOLING", False):
+        messages.append(
+            Warning(
+                "Translation tooling is enabled in production.",
+                hint=(
+                    "Set ENABLE_TRANSLATION_TOOLING=False unless the internal translation editor "
+                    "is intentionally exposed to authenticated translator/admin roles."
+                ),
+                id=TRANSLATION_TOOLING_WARNING_ID,
             )
         )
     return messages

@@ -119,3 +119,27 @@ class PermissionsPolicyMiddleware:
         if self.header_value and "Permissions-Policy" not in response:
             response["Permissions-Policy"] = self.header_value
         return response
+
+
+class ContentSecurityPolicyMiddleware:
+    """Attach a configured Content-Security-Policy header."""
+
+    def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]):
+        self.get_response = get_response
+        self.header_value: str = getattr(settings, "SECURE_CONTENT_SECURITY_POLICY", "")
+        report_only = getattr(settings, "SECURE_CSP_REPORT_ONLY", False)
+        self.report_only: bool = str(report_only).lower() in {"1", "true", "yes", "on"}
+
+    def __call__(self, request: HttpRequest) -> HttpResponse:
+        response = self.get_response(request)
+        if not self.header_value:
+            return response
+
+        header_name = (
+            "Content-Security-Policy-Report-Only"
+            if self.report_only
+            else "Content-Security-Policy"
+        )
+        if header_name not in response:
+            response[header_name] = self.header_value
+        return response

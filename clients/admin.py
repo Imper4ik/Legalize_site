@@ -18,6 +18,7 @@ from .models import (
     Payment,
     Reminder,
     ServicePrice,
+    StaffAuditEvent,
     StaffTask,
 )
 
@@ -306,4 +307,13 @@ class ClientActivityAdmin(admin.ModelAdmin):
     list_filter = ("event_type", "created_at")
     search_fields = ("summary", "details", "client__first_name", "client__last_name", "actor__email")
     autocomplete_fields = ("client", "actor", "document", "payment", "task")
+    readonly_fields = ("created_at",)
+
+
+@admin.register(StaffAuditEvent)
+class StaffAuditEventAdmin(admin.ModelAdmin):
+    list_display = ("created_at", "event_type", "target", "actor", "summary")
+    list_filter = ("event_type", "created_at")
+    search_fields = ("summary", "target__email", "actor__email")
+    autocomplete_fields = ("target", "actor")
     readonly_fields = ("created_at",)
