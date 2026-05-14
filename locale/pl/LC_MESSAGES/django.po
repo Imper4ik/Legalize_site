@@ -8167,8 +8167,7 @@ msgstr "Filtr"
 #~ msgid "System Health"
 #~ msgstr "Stan Systemu"
 
-#~ msgid "Фильтр"
-#~ msgstr "Filtruj"
+
 
 #, python-format
 #~ msgid "Второй платёж: %(service)s"
