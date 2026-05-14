@@ -83,4 +83,12 @@ def validate_client_workflow_transition(*, client: Client, previous_stage: str |
             "Нельзя завершить этап решения без даты решения.",
         )
 
+    if next_stage == "closed" and getattr(client, "pk", None):
+        has_open_payments = client.payments.filter(status__in=["pending", "partial"]).exists()
+        if has_open_payments:
+            return WorkflowValidationResult(
+                False,
+                "Cannot close a case while pending or partial payments exist.",
+            )
+
     return WorkflowValidationResult(True)

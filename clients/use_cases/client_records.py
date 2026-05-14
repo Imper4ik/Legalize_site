@@ -4,6 +4,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from clients.models import Client
@@ -12,6 +13,7 @@ from clients.services.notifications import (
     send_expired_documents_email,
     send_required_documents_email,
 )
+from clients.services.workflow import validate_client_workflow_transition
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
@@ -86,6 +88,14 @@ def finalize_client_update(
     )
 
     workflow_changed = "workflow_stage" in changed_fields
+    if workflow_changed:
+        transition_result = validate_client_workflow_transition(
+            client=client,
+            previous_stage=str(previous_values.get("workflow_stage") or ""),
+            next_stage=client.workflow_stage,
+        )
+        if not transition_result.allowed:
+            raise ValidationError({"workflow_stage": transition_result.message})
 
     with transaction.atomic():
         if changed_fields:

@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import cast
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -44,6 +45,54 @@ class Payment(SoftDeleteModel):
     def amount_due(self) -> Decimal:
         return cast(Decimal, self.total_amount) - cast(Decimal, self.amount_paid)
 
+    def clean(self) -> None:
+        super().clean()
+
+        errors: dict[str, list[str]] = {}
+        raw_total_amount = self.total_amount
+        raw_amount_paid = self.amount_paid
+
+        def _as_decimal(value: object) -> Decimal | None:
+            if value is None:
+                return None
+            if isinstance(value, Decimal):
+                return value
+            try:
+                return Decimal(str(value))
+            except (InvalidOperation, TypeError, ValueError):
+                return None
+
+        total_amount = _as_decimal(raw_total_amount)
+        amount_paid = _as_decimal(raw_amount_paid)
+
+        if raw_amount_paid is None:
+            amount_paid = Decimal("0.00")
+            self.amount_paid = amount_paid
+        elif amount_paid is None:
+            return
+
+        if total_amount is None:
+            return
+
+        if total_amount < Decimal("0.00"):
+            errors.setdefault("total_amount", []).append("Total amount cannot be negative.")
+
+        if amount_paid < Decimal("0.00"):
+            errors.setdefault("amount_paid", []).append("Amount paid cannot be negative.")
+
+        if amount_paid > total_amount:
+            errors.setdefault("amount_paid", []).append("Amount paid cannot exceed total amount.")
+
+        if self.status == "paid" and amount_paid != total_amount:
+            errors.setdefault("amount_paid", []).append("Paid payments must have amount paid equal to total amount.")
+        if self.status == "partial" and not (Decimal("0.00") < amount_paid < total_amount):
+            errors.setdefault("amount_paid", []).append("Partial payments must be greater than zero and below total amount.")
+        if self.status == "pending" and amount_paid != Decimal("0.00"):
+            errors.setdefault("amount_paid", []).append("Pending payments cannot have a paid amount.")
+
+        if errors:
+            raise ValidationError(errors)
+
     def __str__(self) -> str:
         return f"Счёт {self.pk} - {self.client} ({self.total_amount} PLN)"
 
@@ -64,6 +113,33 @@ class Payment(SoftDeleteModel):
         indexes = [
             models.Index(fields=["client", "status"], name="payment_client_status_idx"),
             models.Index(fields=["status", "due_date"], name="payment_status_due_idx"),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(total_amount__gte=0),
+                name="payment_total_amount_non_negative",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(amount_paid__gte=0),
+                name="payment_amount_paid_non_negative",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(amount_paid__lte=models.F("total_amount")),
+                name="payment_amount_paid_lte_total",
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(status="pending") | models.Q(amount_paid=0),
+                name="payment_pending_amount_zero",
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(status="paid") | models.Q(amount_paid=models.F("total_amount")),
+                name="payment_paid_amount_matches_total",
+            ),
+            models.CheckConstraint(
+                condition=~models.Q(status="partial")
+                | (models.Q(amount_paid__gt=0) & models.Q(amount_paid__lt=models.F("total_amount"))),
+                name="payment_partial_amount_between",
+            ),
         ]
         verbose_name = _("Платёж")
         verbose_name_plural = _("Платежи")

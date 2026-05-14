@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import logging
+from decimal import Decimal
 from typing import Any, cast, TYPE_CHECKING
 
 import bleach
@@ -13,6 +14,7 @@ from django.utils.translation import gettext_lazy as _
 
 from clients.services.access import accessible_clients_queryset
 from clients.services.calculator import CURRENCY_EUR, CURRENCY_PLN
+from clients.services.roles import user_has_any_role
 from clients.services.workflow import validate_client_workflow_transition
 from clients.use_cases.document_requirements import (
     build_document_requirement_code,
@@ -307,6 +309,16 @@ class ClientForm(forms.ModelForm):
         if hasattr(self.fields['sponsor_client'], 'queryset'):
             setattr(self.fields['sponsor_client'], 'queryset', sponsor_queryset.order_by('last_name', 'first_name'))
 
+        if self._is_limited_staff_user():
+            for field_name in ("assigned_staff", "status", "workflow_stage"):
+                self.fields.pop(field_name, None)
+
+    def _is_limited_staff_user(self) -> bool:
+        user = self.user
+        if user is None or not getattr(user, "is_authenticated", False):
+            return False
+        return user_has_any_role(user, "Staff") and not user_has_any_role(user, "Admin", "Manager")
+
     class Meta:
         model = Client
         fields = [
@@ -489,12 +501,14 @@ class PaymentForm(forms.ModelForm):
     amount_paid = forms.DecimalField(
         required=False,
         initial=0,
+        min_value=Decimal("0.00"),
         localize=True,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'})
     )
     total_amount = forms.DecimalField(
+        min_value=Decimal("0.00"),
         localize=True,
-        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'})
+        widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'})
     )
     status = forms.ChoiceField(
         required=False,
@@ -513,10 +527,13 @@ class PaymentForm(forms.ModelForm):
             'service_description': forms.Select(attrs={'class': 'form-select'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
             'payment_method': forms.Select(attrs={'class': 'form-select'}),
-            'total_amount': forms.NumberInput(attrs={'class': 'form-control'}),
-            'amount_paid': forms.NumberInput(attrs={'class': 'form-control'}),
+            'total_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'amount_paid': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
             'transaction_id': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+    def clean_amount_paid(self) -> Decimal:
+        return cast(Decimal, self.cleaned_data.get("amount_paid") or Decimal("0.00"))
 
 
 class FamilyGroupFinanceForm(forms.ModelForm):

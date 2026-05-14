@@ -82,16 +82,20 @@
                         {{ form.case_number }}
                         {% for error in form.case_number.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
+                    {% if form.status %}
                     <div class="col-md-6">
                         <label class="form-label">{{ form.status.label }}</label>
                         {{ form.status }}
                         {% for error in form.status.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
+                    {% endif %}
+                    {% if form.workflow_stage %}
                     <div class="col-md-6">
                         <label class="form-label">{{ form.workflow_stage.label }}</label>
                         {{ form.workflow_stage }}
                         {% for error in form.workflow_stage.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
+                    {% endif %}
                     <div class="col-md-6">
                         <label class="form-label">{{ form.application_purpose.label }}</label>
                         {{ form.application_purpose }}

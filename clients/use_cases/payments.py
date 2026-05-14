@@ -44,6 +44,10 @@ def _set_payment_fields(payment: Payment, cleaned_data: Mapping[str, Any]) -> tu
     return tuple(changed_fields)
 
 
+def _validate_payment(payment: Payment) -> None:
+    payment.full_clean()
+
+
 def create_payment_for_client(
     *,
     client: Client,
@@ -53,6 +57,7 @@ def create_payment_for_client(
     with transaction.atomic():
         payment = Payment(client=client)
         _set_payment_fields(payment, cleaned_data)
+        _validate_payment(payment)
         payment.save()
 
         log_client_activity(
@@ -78,6 +83,7 @@ def update_payment_for_client(
 ) -> PaymentScenarioResult:
     changed_fields = _set_payment_fields(payment, cleaned_data)
     if changed_fields:
+        _validate_payment(payment)
         with transaction.atomic():
             payment.save()
             log_client_activity(
