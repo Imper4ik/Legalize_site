@@ -3,7 +3,7 @@ from __future__ import annotations
 import base64
 from datetime import date, timedelta
 from decimal import Decimal
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 import pytest
 from django.core import mail
@@ -278,6 +278,20 @@ def test_weekly_document_reminder_loop_command_runs_document_sections():
         "--only",
         "documents",
     )
+
+
+@pytest.mark.django_db
+def test_background_automation_loop_runs_core_background_tasks():
+    with patch("clients.management.commands.run_background_automation_loop.cache.add", return_value=True):
+        with patch("clients.management.commands.run_background_automation_loop.cache.delete"):
+            with patch("clients.management.commands.run_background_automation_loop.call_command") as call_mock:
+                call_command("run_background_automation_loop")
+
+    assert call_mock.call_args_list == [
+        call("process_document_jobs", "--limit", "50"),
+        call("process_email_campaigns", "--limit", "50"),
+        call("run_weekly_document_reminders"),
+    ]
 
 
 @pytest.mark.django_db

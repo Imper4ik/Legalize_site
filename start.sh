@@ -11,11 +11,11 @@ mkdir -p "${MEDIA_ROOT:-/app/media}"
 : "${GUNICORN_TIMEOUT:=120}"
 : "${GUNICORN_MAX_REQUESTS:=1200}"
 : "${GUNICORN_MAX_REQUESTS_JITTER:=200}"
-: "${ENABLE_WEEKLY_DOCUMENT_REMINDER_LOOP:=true}"
+: "${ENABLE_BACKGROUND_AUTOMATION_LOOP:=true}"
 
-case "${ENABLE_WEEKLY_DOCUMENT_REMINDER_LOOP}" in
+case "${ENABLE_BACKGROUND_AUTOMATION_LOOP}" in
   1|true|TRUE|yes|YES|on|ON)
-    python manage.py run_weekly_document_reminders --loop &
+    python manage.py run_background_automation_loop --loop &
     ;;
 esac
 
