@@ -57,7 +57,19 @@ class WorkflowPolicyStage15Tests(TestCase):
         data.update(overrides)
         return data
 
-    def test_client_form_rejects_skipping_workflow_stages(self):
+    def test_client_form_allows_skipping_to_waiting_decision_with_fingerprints_date(self):
+        fingerprints_date = timezone.localdate() - timedelta(days=1)
+        form = ClientForm(
+            data=self._build_form_data(
+                workflow_stage="waiting_decision",
+                fingerprints_date=fingerprints_date.isoformat(),
+            ),
+            instance=self.client_obj,
+        )
+
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_client_form_still_requires_decision_date_when_skipping_to_decision(self):
         form = ClientForm(
             data=self._build_form_data(workflow_stage="decision_received"),
             instance=self.client_obj,

@@ -38,12 +38,6 @@ def validate_client_workflow_transition(*, client: Client, previous_stage: str |
     if next_index <= previous_index:
         return WorkflowValidationResult(True)
 
-    if next_index - previous_index > 1:
-        return WorkflowValidationResult(
-            False,
-            "Нельзя перепрыгивать этапы workflow. Переведите кейс через следующий обязательный этап.",
-        )
-
     if next_stage == "application_submitted":
         purpose = client.get_document_requirement_purpose()
         has_db_records = DocumentRequirement.objects.filter(application_purpose=purpose).exists()
