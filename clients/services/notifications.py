@@ -17,8 +17,10 @@ from django.utils.translation import gettext as _, gettext_lazy
 from django.utils.translation import override
 from PIL import Image, ImageDraw, ImageFont
 
+from clients.constants import DocumentType
 from clients.models import Client, Document
 from clients.services.wniosek import get_submitted_document_codes
+from clients.services.zus import format_zus_months, missing_zus_months
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
@@ -503,11 +505,15 @@ def _get_missing_documents_context(client: Client, language: str | None = None) 
     )
     uploaded_codes = set(client.documents.values_list("document_type", flat=True))
     submitted_codes = get_submitted_document_codes(client)
+    missing_zus = missing_zus_months(client)
     missing = []
     uploaded_with_expiry = []
 
     for item in catalog:
         code = item["code"]
+        if code == DocumentType.ZUS_RCA_OR_INSURANCE.value and missing_zus:
+            continue
+
         if code in uploaded_codes or code in submitted_codes:
             doc = client.documents.filter(document_type=code).order_by("-uploaded_at").first()
             expiry_date = getattr(doc, "expiry_date", None)
@@ -526,6 +532,16 @@ def _get_missing_documents_context(client: Client, language: str | None = None) 
                 "expiry_date": None,
             }
         )
+
+    if missing_zus:
+        with override(language):
+            missing.append(
+                {
+                    "name": _("Нет ZUS RCA за месяцы: %(months)s.")
+                    % {"months": format_zus_months(missing_zus)},
+                    "expiry_date": None,
+                }
+            )
 
     if not missing:
         return None
@@ -550,7 +566,7 @@ def send_missing_documents_email(
         return 0
 
     language = _get_preferred_language(client)
-    context = _get_missing_documents_context(client)
+    context = _get_missing_documents_context(client, language)
     if not context:
         return 0
 

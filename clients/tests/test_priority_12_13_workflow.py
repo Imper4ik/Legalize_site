@@ -142,6 +142,34 @@ def test_missing_documents_weekly_email_skips_without_missing_docs_or_email():
 
 
 @pytest.mark.django_db
+def test_missing_documents_weekly_email_includes_missing_zus_rca_months_when_checklist_complete():
+    require_passport()
+    client = make_client(
+        workflow_stage="waiting_decision",
+        fingerprints_date=date(2026, 3, 1),
+        language="en",
+    )
+    Document.objects.create(
+        client=client,
+        document_type=DocumentType.PASSPORT.value,
+        file=SimpleUploadedFile("passport.pdf", b"x", content_type="application/pdf"),
+    )
+    today = date(2026, 5, 18)
+    mail.outbox = []
+
+    with patch("clients.management.commands.update_reminders.timezone.localdate", return_value=today):
+        with patch("clients.services.zus.timezone.localdate", return_value=today):
+            with patch("clients.services.notifications._send_confirmation_email"):
+                call_command("update_reminders")
+                call_command("update_reminders")
+
+    assert len(mail.outbox) == 1
+    assert "ZUS RCA" in mail.outbox[0].body
+    assert "04.2026" in mail.outbox[0].body
+    assert EmailLog.objects.filter(client=client, template_type="missing_documents").count() == 1
+
+
+@pytest.mark.django_db
 def test_expired_documents_email_skips_empty_and_expiry_boundaries(sample_client):
     today = timezone.localdate()
 
@@ -234,6 +262,22 @@ def test_update_reminders_dry_run_creates_and_sends_nothing(sample_client):
     assert mail.outbox == []
     assert Reminder.objects.count() == reminders_before
     assert EmailLog.objects.count() == email_logs_before
+
+
+@pytest.mark.django_db
+def test_weekly_document_reminder_loop_command_runs_document_sections():
+    with patch("clients.management.commands.run_weekly_document_reminders.call_command") as call_mock:
+        call_command("run_weekly_document_reminders", "--force")
+
+    call_mock.assert_called_once_with(
+        "update_reminders",
+        "--only",
+        "missing-docs",
+        "--only",
+        "zus",
+        "--only",
+        "documents",
+    )
 
 
 @pytest.mark.django_db

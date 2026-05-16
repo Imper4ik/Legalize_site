@@ -146,6 +146,15 @@ pytest
 - `db_backup`: once daily.
 - `scrub_ocr_pii`: manually after deploy or after OCR cleanup changes.
 
+Weekly document checks also run automatically from the web service startup script.
+`start.sh` launches `python manage.py run_weekly_document_reminders --loop` by
+default, which checks missing checklist documents, missing ZUS RCA months, expiring
+documents, and creates the regular reminder records every Monday after 08:00
+Europe/Warsaw time. Missing-document emails are idempotent per client per week, so
+repeated manual runs or service restarts do not spam clients. Set
+`ENABLE_WEEKLY_DOCUMENT_REMINDER_LOOP=false` to disable the built-in loop and use an
+external scheduler instead.
+
 Example:
 
 ```bash
