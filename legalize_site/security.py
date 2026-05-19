@@ -126,8 +126,8 @@ class ContentSecurityPolicyMiddleware:
 
     def __init__(self, get_response: Callable[[HttpRequest], HttpResponse]):
         self.get_response = get_response
-        self.header_value: str = getattr(settings, "SECURE_CONTENT_SECURITY_POLICY", "")
-        report_only = getattr(settings, "SECURE_CSP_REPORT_ONLY", False)
+        self.header_value: str = getattr(settings, "LEGALIZE_CONTENT_SECURITY_POLICY", "")
+        report_only = getattr(settings, "LEGALIZE_CSP_REPORT_ONLY", False)
         self.report_only: bool = str(report_only).lower() in {"1", "true", "yes", "on"}
 
     def __call__(self, request: HttpRequest) -> HttpResponse:

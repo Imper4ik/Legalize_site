@@ -11,8 +11,8 @@ class ContentSecurityPolicyMiddlewareTests(SimpleTestCase):
         self.factory = RequestFactory()
 
     @override_settings(
-        SECURE_CONTENT_SECURITY_POLICY="default-src 'self'; object-src 'none'",
-        SECURE_CSP_REPORT_ONLY=False,
+        LEGALIZE_CONTENT_SECURITY_POLICY="default-src 'self'; object-src 'none'",
+        LEGALIZE_CSP_REPORT_ONLY=False,
     )
     def test_sets_content_security_policy_header(self):
         middleware = ContentSecurityPolicyMiddleware(lambda request: HttpResponse("ok"))
@@ -25,8 +25,8 @@ class ContentSecurityPolicyMiddlewareTests(SimpleTestCase):
         )
 
     @override_settings(
-        SECURE_CONTENT_SECURITY_POLICY="default-src 'self'",
-        SECURE_CSP_REPORT_ONLY=True,
+        LEGALIZE_CONTENT_SECURITY_POLICY="default-src 'self'",
+        LEGALIZE_CSP_REPORT_ONLY=True,
     )
     def test_sets_report_only_header_when_enabled(self):
         middleware = ContentSecurityPolicyMiddleware(lambda request: HttpResponse("ok"))
@@ -37,8 +37,8 @@ class ContentSecurityPolicyMiddlewareTests(SimpleTestCase):
         self.assertNotIn("Content-Security-Policy", response)
 
     @override_settings(
-        SECURE_CONTENT_SECURITY_POLICY="default-src 'self'",
-        SECURE_CSP_REPORT_ONLY="False",
+        LEGALIZE_CONTENT_SECURITY_POLICY="default-src 'self'",
+        LEGALIZE_CSP_REPORT_ONLY="False",
     )
     def test_string_false_uses_enforcing_header(self):
         middleware = ContentSecurityPolicyMiddleware(lambda request: HttpResponse("ok"))
@@ -49,8 +49,8 @@ class ContentSecurityPolicyMiddlewareTests(SimpleTestCase):
         self.assertNotIn("Content-Security-Policy-Report-Only", response)
 
     @override_settings(
-        SECURE_CONTENT_SECURITY_POLICY="default-src 'self'",
-        SECURE_CSP_REPORT_ONLY=False,
+        LEGALIZE_CONTENT_SECURITY_POLICY="",
+        LEGALIZE_CSP_REPORT_ONLY=False,
     )
     def test_does_not_overwrite_existing_header(self):
         def get_response(request):

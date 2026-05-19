@@ -130,11 +130,11 @@ CONTENT_SECURITY_POLICY = {
     "script-src": ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"),
     "connect-src": ("'self'",),
 }
-SECURE_CONTENT_SECURITY_POLICY = "; ".join(
+LEGALIZE_CONTENT_SECURITY_POLICY = "; ".join(
     f"{directive} {' '.join(sources)}"
     for directive, sources in CONTENT_SECURITY_POLICY.items()
 )
-SECURE_CSP_REPORT_ONLY = env_flag("SECURE_CSP_REPORT_ONLY", "False")
+LEGALIZE_CSP_REPORT_ONLY = env_flag("LEGALIZE_CSP_REPORT_ONLY", "False")
 
 if SESSION_COOKIE_SAMESITE.lower() == "none" and not SESSION_COOKIE_SECURE:
     raise ImproperlyConfigured("SESSION_COOKIE_SAMESITE=None requires SESSION_COOKIE_SECURE=True in production.")

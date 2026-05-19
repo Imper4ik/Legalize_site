@@ -125,11 +125,11 @@ class ProductionSettingsTests(SimpleTestCase):
         self.assertTrue(settings_module.SECURE_CONTENT_TYPE_NOSNIFF)
         self.assertTrue(settings_module.SESSION_COOKIE_SECURE)
         self.assertTrue(settings_module.CSRF_COOKIE_SECURE)
-        self.assertIn("default-src 'self'", settings_module.SECURE_CONTENT_SECURITY_POLICY)
-        self.assertIn("object-src 'none'", settings_module.SECURE_CONTENT_SECURITY_POLICY)
-        self.assertIn("frame-ancestors 'none'", settings_module.SECURE_CONTENT_SECURITY_POLICY)
-        self.assertIn("https://cdn.jsdelivr.net", settings_module.SECURE_CONTENT_SECURITY_POLICY)
-        self.assertFalse(settings_module.SECURE_CSP_REPORT_ONLY)
+        self.assertIn("default-src 'self'", settings_module.LEGALIZE_CONTENT_SECURITY_POLICY)
+        self.assertIn("object-src 'none'", settings_module.LEGALIZE_CONTENT_SECURITY_POLICY)
+        self.assertIn("frame-ancestors 'none'", settings_module.LEGALIZE_CONTENT_SECURITY_POLICY)
+        self.assertIn("https://cdn.jsdelivr.net", settings_module.LEGALIZE_CONTENT_SECURITY_POLICY)
+        self.assertFalse(settings_module.LEGALIZE_CSP_REPORT_ONLY)
 
 
     def test_production_requires_hosts_and_csrf_origins(self):
