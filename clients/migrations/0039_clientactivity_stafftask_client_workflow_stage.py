@@ -168,39 +168,6 @@ class Migration(migrations.Migration):
                         verbose_name="Клиент",
                     ),
                 ),
-                (
-                    "document",
-                    models.ForeignKey(
-                        blank=True,
-                        null=True,
-                        on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="activities",
-                        to="clients.document",
-                        verbose_name="Документ",
-                    ),
-                ),
-                (
-                    "payment",
-                    models.ForeignKey(
-                        blank=True,
-                        null=True,
-                        on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="activities",
-                        to="clients.payment",
-                        verbose_name="Платёж",
-                    ),
-                ),
-                (
-                    "task",
-                    models.ForeignKey(
-                        blank=True,
-                        null=True,
-                        on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="activities",
-                        to="clients.stafftask",
-                        verbose_name="Задача",
-                    ),
-                ),
             ],
             options={
                 "verbose_name": "Событие клиента",
