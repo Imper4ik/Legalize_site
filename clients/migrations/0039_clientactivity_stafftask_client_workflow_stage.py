@@ -98,6 +98,28 @@ class Migration(migrations.Migration):
                         verbose_name="Создал",
                     ),
                 ),
+                (
+                    "document",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="staff_tasks",
+                        to="clients.document",
+                        verbose_name="Документ",
+                    ),
+                ),
+                (
+                    "payment",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="staff_tasks",
+                        to="clients.payment",
+                        verbose_name="Платёж",
+                    ),
+                ),
             ],
             options={
                 "verbose_name": "Задача сотрудника",
