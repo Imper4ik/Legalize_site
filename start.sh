@@ -5,6 +5,9 @@ set -o pipefail
 
 mkdir -p "${MEDIA_ROOT:-/app/media}"
 
+echo "Running migrations..."
+python manage.py migrate --no-input
+
 : "${PORT:=8000}"
 : "${WEB_CONCURRENCY:=3}"
 : "${WEB_THREADS:=2}"
