@@ -131,6 +131,32 @@ class Migration(migrations.Migration):
             name="ClientActivity",
             fields=[
                 ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "event_type",
+                    models.CharField(
+                        choices=[
+                            ("client_viewed", "Карточка клиента открыта"),
+                            ("client_created", "Клиент создан"),
+                            ("client_updated", "Данные клиента изменены"),
+                            ("workflow_changed", "Этап workflow изменён"),
+                            ("document_uploaded", "Документ загружен"),
+                            ("document_downloaded", "Документ открыт"),
+                            ("document_deleted", "Документ удалён"),
+                            ("document_verified", "Статус документа изменён"),
+                            ("email_sent", "Письмо отправлено"),
+                            ("payment_created", "Платёж создан"),
+                            ("payment_updated", "Платёж обновлён"),
+                            ("payment_deleted", "Платёж удалён"),
+                            ("task_created", "Задача создана"),
+                            ("task_completed", "Задача завершена"),
+                            ("note_updated", "Заметка обновлена"),
+                        ],
+                        max_length=50,
+                        verbose_name="Тип события",
+                    ),
+                ),
+                ("details", models.TextField(blank=True, verbose_name="Детали")),
+                ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="Создано")),
 
                 (
                     "client",
