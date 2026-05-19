@@ -30,9 +30,9 @@ def rename_no_dependents_requirement(apps, schema_editor):
                 update_fields.append(field_name)
 
         # The base name was historically populated from the same old label in some databases.
-        if requirement.name in (None, "", OLD_VALUES["pl"]):
-            requirement.name = NEW_VALUES["pl"]
-            update_fields.append("name")
+        if requirement.custom_name in (None, "", OLD_VALUES["pl"]):
+            requirement.custom_name = NEW_VALUES["pl"]
+            update_fields.append("custom_name")
 
         if update_fields:
             requirement.save(update_fields=update_fields)
@@ -50,9 +50,9 @@ def reverse_rename_no_dependents_requirement(apps, schema_editor):
                 setattr(requirement, field_name, OLD_VALUES[lang])
                 update_fields.append(field_name)
 
-        if requirement.name == NEW_VALUES["pl"]:
-            requirement.name = OLD_VALUES["pl"]
-            update_fields.append("name")
+        if requirement.custom_name == NEW_VALUES["pl"]:
+            requirement.custom_name = OLD_VALUES["pl"]
+            update_fields.append("custom_name")
 
         if update_fields:
             requirement.save(update_fields=update_fields)
