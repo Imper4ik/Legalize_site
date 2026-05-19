@@ -149,6 +149,7 @@ class CalculatorViewTests(TestCase):
             'rent_currency': 'PLN',
             'num_people': '1',
             'fee_type': 'per_month',
+            'basis_of_stay': 'student',
         })
 
         self.assertEqual(response.status_code, 200)

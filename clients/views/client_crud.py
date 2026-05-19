@@ -324,7 +324,7 @@ def calculator_view(request: HttpRequest) -> HttpResponseBase:
             messages.error(request, _("Ошибка. Пожалуйста, заполните все поля корректными значениями."))
 
     context = {
-        "living_allowance": LIVING_ALLOWANCE,
+        "living_allowance": result.living_allowance if result else LIVING_ALLOWANCE,
         "eur_to_pln_rate": float(get_eur_to_pln_rate()),
         "max_months_living": MAX_MONTHS_LIVING,
         "form": form,

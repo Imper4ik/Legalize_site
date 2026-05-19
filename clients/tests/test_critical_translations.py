@@ -44,19 +44,25 @@ class CriticalTranslationsTest(SimpleTestCase):
 
             with open(po_path, 'r', encoding='utf-8') as f:
                 content = f.read()
+            content_normalized = content.replace('\r\n', '\n')
 
             for msgid, expected_msgstr in translations.items():
-                # Find block for this msgid
-                # Match everything from `msgid "..."` to `msgstr "..."` (and possibly multi-line msgstr)
-                # But to just check fuzzy, we look at the lines right before msgid
+                msgid_marker = f'msgid "{msgid}"\n'
+                idx = content_normalized.find(msgid_marker)
+                self.assertNotEqual(idx, -1, f"Could not find msgid '{msgid}' in {lang}")
 
-                # regex to find the msgstr for the given msgid
-                msgid_escaped = re.escape(msgid)
-                pattern_msgstr = re.compile(rf'msgid "{msgid_escaped}"\nmsgstr "(.*?)"', re.DOTALL)
-                match = pattern_msgstr.search(content)
-                self.assertIsNotNone(match, f"Could not find msgid '{msgid}' in {lang}")
+                # Find the msgstr line
+                msgstr_marker = 'msgstr "'
+                start_msgstr_line = content_normalized.find(msgstr_marker, idx + len(msgid_marker))
+                self.assertNotEqual(start_msgstr_line, -1, f"Could not find msgstr for msgid '{msgid}' in {lang}")
 
-                actual_msgstr = match.group(1).replace('\n"', '')
+                start_msgstr = start_msgstr_line + len(msgstr_marker)
+                end_msgstr = content_normalized.find('"\n', start_msgstr)
+                if end_msgstr == -1:
+                    # If it's the last line in the file
+                    end_msgstr = content_normalized.find('"', start_msgstr)
+
+                actual_msgstr = content_normalized[start_msgstr:end_msgstr].replace('\n"', '')
                 self.assertEqual(
                     actual_msgstr,
                     expected_msgstr,
@@ -64,13 +70,8 @@ class CriticalTranslationsTest(SimpleTestCase):
                 )
 
                 # Check if it has fuzzy
-                # Find the block up to msgid
-                pattern_block = re.compile(rf'(?:^|\n)(.*?)\nmsgid "{msgid_escaped}"', re.DOTALL)
-                block_matches = pattern_block.findall(content)
-
-                # The last match is the block immediately preceding our msgid
-                if block_matches:
-                    preceding_block = block_matches[-1]
-                    # Only look at the preceding comments block
-                    comments_block = preceding_block.split('\n\n')[-1]
-                    self.assertNotIn('#, fuzzy', comments_block, f"msgid '{msgid}' in {lang} is still marked as fuzzy")
+                # Get the block immediately preceding our msgid
+                preceding_text = content_normalized[max(0, idx - 500):idx]
+                preceding_blocks = preceding_text.split('\n\n')
+                comments_block = preceding_blocks[-1] if preceding_blocks else preceding_text
+                self.assertNotIn('#, fuzzy', comments_block, f"msgid '{msgid}' in {lang} is still marked as fuzzy")

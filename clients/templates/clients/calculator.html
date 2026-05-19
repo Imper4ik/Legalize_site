@@ -26,6 +26,13 @@
                 <button class="btn btn-outline-secondary" type="button" id="date-picker-button"><i class="bi bi-calendar3"></i></button>
               </div>
             </div>
+            <div class="mb-3">
+              <label class="form-label" for="id_basis_of_stay">{% translate "Основание пребывания" %}</label>
+              <select class="form-select" name="basis_of_stay" id="id_basis_of_stay">
+                <option value="student" {% if form_data.basis_of_stay == 'student' or not form_data.basis_of_stay %}selected{% endif %}>{% translate "Студент" %}</option>
+                <option value="family_reunification" {% if form_data.basis_of_stay == 'family_reunification' %}selected{% endif %}>{% translate "Воссоединение семьи" %}</option>
+              </select>
+            </div>
             <hr>
 
             <div class="mb-3">
@@ -105,7 +112,11 @@
                             <span>1. {% translate "Жильё в месяц (на 1 чел.)" %}</span>
                             <span class="fw-bold">{{ results.rent_per_person|format_currency }} zł</span>
                         </div>
+                        {% if results.basis_of_stay == 'student' %}
                         <small class="text-muted d-block text-end">({{ results.rent_total|format_currency }} zł / {{ results.num_people }} чел.)</small>
+                        {% else %}
+                        <small class="text-muted d-block text-end">({% translate "на всю семью" %}: {{ results.rent_total|format_currency }} zł)</small>
+                        {% endif %}
                     </li>
                     <li class="list-group-item px-0">
                         <div class="d-flex justify-content-between">
@@ -116,10 +127,19 @@
                     </li>
                      <li class="list-group-item px-0">
                         <div class="d-flex justify-content-between">
+                            {% if results.basis_of_stay == 'student' %}
                             <span>3. {% translate "Прожиточный минимум" %}</span>
                             <span class="fw-bold">{{ living_allowance|format_currency }} zł</span>
+                            {% else %}
+                            <span>3. {% translate "Прожиточный минимум семьи" %}</span>
+                            <span class="fw-bold">{% widthratio living_allowance 1 results.num_people %} zł</span>
+                            {% endif %}
                         </div>
+                        {% if results.basis_of_stay == 'student' %}
                         <small class="text-muted d-block text-end">({% translate "фиксированная сумма" %})</small>
+                        {% else %}
+                        <small class="text-muted d-block text-end">({{ living_allowance|format_currency }} zł * {{ results.num_people }} чел.)</small>
+                        {% endif %}
                     </li>
                      <li class="list-group-item px-0 bg-light">
                         <div class="d-flex justify-content-between">
@@ -143,6 +163,9 @@
                             <span>5. {% translate "Стоимость обратного билета" %}</span>
                             <span class="fw-bold">{{ results.return_ticket|format_currency }} zł</span>
                         </div>
+                        {% if results.basis_of_stay != 'student' %}
+                        <small class="text-muted d-block text-end">({{ results.num_people }} {% translate "чел." %})</small>
+                        {% endif %}
                     </li>
                 </ul>
             </div>

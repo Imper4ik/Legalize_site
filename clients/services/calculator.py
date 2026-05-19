@@ -39,6 +39,8 @@ class CalculatorResult:
     total_base_cost: Decimal
     return_ticket: Decimal
     final_total_required: Decimal
+    basis_of_stay: str
+    living_allowance: Decimal
 
 
 def get_eur_to_pln_rate() -> Decimal:
@@ -88,6 +90,7 @@ def calculate_calculator_result(data: dict, *, today: Optional[date] = None) -> 
     num_people = max(int(data["num_people"]), 1)
     has_border = bool(data.get("has_border"))
     fee_type = data.get("fee_type", "per_month")
+    basis_of_stay = data.get("basis_of_stay", "student")
 
     tuition_fee_pln = convert_to_pln(tuition_fee, tuition_currency)
     if fee_type != "per_month":
@@ -97,7 +100,17 @@ def calculate_calculator_result(data: dict, *, today: Optional[date] = None) -> 
     tuition_total = _quantize_money(monthly_tuition * months_in_period)
 
     monthly_rent_and_bills = convert_to_pln(rent_and_bills, rent_currency)
-    rent_per_person = _quantize_money(monthly_rent_and_bills / num_people)
+
+    if basis_of_stay == "student":
+        living_allowance_per_person = Decimal("1010")
+        rent_per_person = _quantize_money(monthly_rent_and_bills / num_people)
+        return_ticket = TICKET_BORDER if has_border else TICKET_NO_BORDER
+        total_monthly_costs = _quantize_money(rent_per_person + monthly_tuition + living_allowance_per_person)
+    else:
+        living_allowance_per_person = Decimal("823")
+        rent_per_person = monthly_rent_and_bills
+        return_ticket = (TICKET_BORDER if has_border else TICKET_NO_BORDER) * num_people
+        total_monthly_costs = _quantize_money(rent_per_person + monthly_tuition + (living_allowance_per_person * num_people))
 
     total_end_date: date = data["total_end_date"]
     current_date = today or timezone.now().date()
@@ -114,9 +127,6 @@ def calculate_calculator_result(data: dict, *, today: Optional[date] = None) -> 
     months_for_calc = min(total_months_real, MAX_MONTHS_LIVING)
     is_capped = total_months_real > MAX_MONTHS_LIVING
 
-    return_ticket = TICKET_BORDER if has_border else TICKET_NO_BORDER
-
-    total_monthly_costs = _quantize_money(rent_per_person + monthly_tuition + LIVING_ALLOWANCE)
     total_base_cost = _quantize_money(total_monthly_costs * months_for_calc)
     final_total_required = _quantize_money(total_base_cost + return_ticket)
 
@@ -134,6 +144,8 @@ def calculate_calculator_result(data: dict, *, today: Optional[date] = None) -> 
         total_base_cost=total_base_cost,
         return_ticket=return_ticket,
         final_total_required=final_total_required,
+        basis_of_stay=basis_of_stay,
+        living_allowance=living_allowance_per_person,
     )
 
 

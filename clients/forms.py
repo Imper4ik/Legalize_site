@@ -735,3 +735,8 @@ class CalculatorForm(forms.Form):
     rent_currency = forms.ChoiceField(choices=((CURRENCY_PLN, 'PLN'), (CURRENCY_EUR, 'EUR')))
     num_people = forms.IntegerField(min_value=1)
     has_border = forms.BooleanField(required=False)
+    basis_of_stay = forms.ChoiceField(
+        choices=(('student', _('Студент')), ('family_reunification', _('Воссоединение семьи'))),
+        initial='student',
+        widget=forms.Select(attrs={'class': 'form-select'}),
+    )
