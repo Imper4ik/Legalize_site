@@ -416,3 +416,78 @@ def upload_policy_check(app_configs: Any = None, **kwargs: Any) -> list[Error | 
             )
         )
     return messages
+
+
+@register("database")
+def check_database_schema(app_configs: Any = None, **kwargs: Any) -> list[Error | Warning]:
+    """
+    Validate that the database schema (tables and columns) matches the active Django models.
+    This prevents running with missing database columns/tables after schema desync.
+    """
+    from django.apps import apps
+    from django.db import connection, ProgrammingError, OperationalError
+
+    messages: list[Error | Warning] = []
+
+    # Skip check if we're running tests or if migrations are currently being executed,
+    # as database structure checks are only relevant for a running application.
+    if os.environ.get("DJANGO_SETTINGS_MODULE") == "legalize_site.settings.test":
+        return messages
+
+    try:
+        # Test connection quickly
+        with connection.cursor() as cursor:
+            pass
+    except (ProgrammingError, OperationalError):
+        # Database not accessible or not initialized yet (e.g. during initial Docker build steps)
+        return messages
+
+    try:
+        table_names = connection.introspection.table_names()
+
+        for model in apps.get_models():
+            # Only check managed models
+            if not model._meta.managed:
+                continue
+
+            db_table = model._meta.db_table
+
+            # 1. Check table existence
+            if db_table not in table_names:
+                messages.append(
+                    Warning(
+                        f"Database table '{db_table}' for model '{model.__name__}' does not exist in the database.",
+                        hint="Run 'python manage.py migrate' to create the missing table.",
+                        id="legalize_site.W012",
+                    )
+                )
+                continue
+
+            # 2. Check column existence
+            with connection.cursor() as cursor:
+                table_description = connection.introspection.get_table_description(cursor, db_table)
+                actual_columns = {col.name for col in table_description}
+
+            for field in model._meta.fields:
+                if not field.concrete:
+                    continue
+                db_column = field.column
+                if db_column not in actual_columns:
+                    messages.append(
+                        Warning(
+                            f"Column '{db_column}' for field '{field.name}' in model '{model.__name__}' does not exist in table '{db_table}'.",
+                            hint=f"Create and apply a new migration to add column '{db_column}' to table '{db_table}'.",
+                            id="legalize_site.W013",
+                        )
+                    )
+    except Exception as e:
+        messages.append(
+            Warning(
+                f"Failed to inspect database schema for consistency check: {e}",
+                hint="Verify database connectivity and permissions.",
+                id="legalize_site.W014",
+            )
+        )
+
+    return messages
+
