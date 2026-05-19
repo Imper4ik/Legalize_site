@@ -160,17 +160,6 @@ class Migration(migrations.Migration):
                 ("metadata", models.JSONField(blank=True, default=dict, verbose_name="Метаданные")),
                 ("created_at", models.DateTimeField(auto_now_add=True, verbose_name="Создано")),
                 (
-                    "actor",
-                    models.ForeignKey(
-                        blank=True,
-                        null=True,
-                        on_delete=django.db.models.deletion.SET_NULL,
-                        related_name="client_activities",
-                        to=settings.AUTH_USER_MODEL,
-                        verbose_name="Сотрудник",
-                    ),
-                ),
-                (
                     "client",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
