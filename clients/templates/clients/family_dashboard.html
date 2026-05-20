@@ -32,152 +32,181 @@
 {% endblock %}
 
 {% block content %}
-<section class="client-section pt-0">
-  <div class="client-section-header">
-    <h3>{% translate "Спонсор" %}</h3>
-  </div>
-  <div class="family-card-grid">
-    {% for card in person_cards %}
-      {% if forloop.first %}
-        {% include "clients/partials/family_person_card.html" with card=card %}
-      {% endif %}
-    {% endfor %}
-  </div>
-</section>
+<ul class="nav nav-tabs mb-4" id="familyTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="family-tab" data-bs-toggle="tab" data-bs-target="#family" type="button" role="tab" aria-controls="family" aria-selected="true">
+      <i class="bi bi-people-fill me-1"></i>{% translate "Состав семьи" %}
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="finance-tab" data-bs-toggle="tab" data-bs-target="#finance" type="button" role="tab" aria-controls="finance" aria-selected="false">
+      <i class="bi bi-wallet2 me-1"></i>{% translate "Финансовая достаточность" %}
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="risks-tab" data-bs-toggle="tab" data-bs-target="#risks" type="button" role="tab" aria-controls="risks" aria-selected="false">
+      <i class="bi bi-exclamation-triangle-fill me-1"></i>{% translate "Риски" %}
+    </button>
+  </li>
+</ul>
 
-<section class="client-section">
-  <div class="client-section-header">
-    <h3>{% translate "Члены семьи" %}</h3>
-    <a href="{% url 'clients:client_add' %}?sponsor={{ sponsor.pk }}&application_purpose=family" class="btn btn-primary btn-sm">
-      <i class="bi bi-person-plus me-1"></i>{% translate "Добавить родственника" %}
-    </a>
-  </div>
-  <div class="family-card-grid">
-    {% if members %}
-      {% for card in person_cards %}
-        {% if not forloop.first %}
-          {% include "clients/partials/family_person_card.html" with card=card %}
-        {% endif %}
-      {% endfor %}
-    {% else %}
-      <div class="alert alert-info mb-0">
-        {% translate "Члены семьи ещё не добавлены." %}
-        <a href="{% url 'clients:client_add' %}?sponsor={{ sponsor.pk }}&application_purpose=family" class="alert-link ms-1">
-          {% translate "Создать карточку супруга или ребёнка" %}
+<div class="tab-content" id="familyTabsContent">
+  <!-- Вкладка: Состав семьи -->
+  <div class="tab-pane fade show active" id="family" role="tabpanel" aria-labelledby="family-tab">
+    <section class="client-section border-0 p-0 shadow-none mb-4">
+      <div class="client-section-header">
+        <h3 class="h4 mb-0">{% translate "Спонсор" %}</h3>
+      </div>
+      <div class="family-card-grid">
+        {% for card in person_cards %}
+          {% if forloop.first %}
+            {% include "clients/partials/family_person_card.html" with card=card %}
+          {% endif %}
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="client-section border-0 p-0 shadow-none">
+      <div class="client-section-header">
+        <h3 class="h4 mb-0">{% translate "Члены семьи" %}</h3>
+        <a href="{% url 'clients:client_add' %}?sponsor={{ sponsor.pk }}&application_purpose=family" class="btn btn-primary btn-sm">
+          <i class="bi bi-person-plus me-1"></i>{% translate "Добавить родственника" %}
         </a>
       </div>
-    {% endif %}
+      <div class="family-card-grid">
+        {% if members %}
+          {% for card in person_cards %}
+            {% if not forloop.first %}
+              {% include "clients/partials/family_person_card.html" with card=card %}
+            {% endif %}
+          {% endfor %}
+        {% else %}
+          <div class="alert alert-info mb-0">
+            {% translate "Члены семьи ещё не добавлены." %}
+            <a href="{% url 'clients:client_add' %}?sponsor={{ sponsor.pk }}&application_purpose=family" class="alert-link ms-1">
+              {% translate "Создать карточку супруга или ребёнка" %}
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </section>
   </div>
-</section>
 
-<section class="client-section" id="family-financial-block">
-  <div class="client-section-header">
-    <h3>{% translate "Финансовая достаточность" %}</h3>
-  </div>
+  <!-- Вкладка: Финансовая достаточность -->
+  <div class="tab-pane fade" id="finance" role="tabpanel" aria-labelledby="finance-tab">
+    <section class="client-section border-0 p-0 shadow-none" id="family-financial-block">
+      <div class="client-section-header">
+        <h3 class="h4 mb-0">{% translate "Расчёт финансов" %}</h3>
+      </div>
 
-  <div class="row g-3">
-    <div class="col-lg-5">
-      <form method="post" class="family-finance-form">
-        {% csrf_token %}
-        <div class="row g-3">
-          <div class="col-12">
-            <label class="form-label">{{ finance_form.sponsor_monthly_income.label }}</label>
-            {{ finance_form.sponsor_monthly_income }}
-          </div>
-          <div class="col-12">
-            <label class="form-label">{{ finance_form.monthly_support_per_person.label }}</label>
-            {{ finance_form.monthly_support_per_person }}
-            <div class="form-text">823 zł</div>
-          </div>
-          <div class="col-12">
-            <label class="form-label">{{ finance_form.monthly_housing_cost.label }}</label>
-            {{ finance_form.monthly_housing_cost }}
-          </div>
-          <div class="col-12">
-            <div class="form-check">
-              {{ finance_form.meldunek_free_housing }}
-              <label class="form-check-label" for="{{ finance_form.meldunek_free_housing.id_for_label }}">
-                {{ finance_form.meldunek_free_housing.label }}
-              </label>
+      <div class="row g-3">
+        <div class="col-lg-5">
+          <form method="post" class="family-finance-form">
+            {% csrf_token %}
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label">{{ finance_form.sponsor_monthly_income.label }}</label>
+                {{ finance_form.sponsor_monthly_income }}
+              </div>
+              <div class="col-12">
+                <label class="form-label">{{ finance_form.monthly_support_per_person.label }}</label>
+                {{ finance_form.monthly_support_per_person }}
+                <div class="form-text">823 zł</div>
+              </div>
+              <div class="col-12">
+                <label class="form-label">{{ finance_form.monthly_housing_cost.label }}</label>
+                {{ finance_form.monthly_housing_cost }}
+              </div>
+              <div class="col-12">
+                <div class="form-check">
+                  {{ finance_form.meldunek_free_housing }}
+                  <label class="form-check-label" for="{{ finance_form.meldunek_free_housing.id_for_label }}">
+                    {{ finance_form.meldunek_free_housing.label }}
+                  </label>
+                </div>
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-save me-1"></i>{% translate "Сохранить" %}
+                </button>
+              </div>
             </div>
-          </div>
-          <div class="col-12">
-            <button type="submit" class="btn btn-primary">
-              <i class="bi bi-save me-1"></i>{% translate "Сохранить" %}
-            </button>
-          </div>
+          </form>
         </div>
-      </form>
-    </div>
-    <div class="col-lg-7">
-      <div class="family-finance-summary">
-        <div class="client-summary-grid mt-0">
-          <div class="client-summary-item">
-            <span class="client-summary-label">{% translate "Спонсор" %}</span>
-            <strong class="client-summary-value">{{ income.sponsor_count }}</strong>
-          </div>
-          <div class="client-summary-item">
-            <span class="client-summary-label">{% translate "Супруг/супруга" %}</span>
-            <strong class="client-summary-value">{{ income.spouse_count }}</strong>
-          </div>
-          <div class="client-summary-item">
-            <span class="client-summary-label">{% translate "Ребёнок" %}</span>
-            <strong class="client-summary-value">{{ income.child_count }}</strong>
-          </div>
-          <div class="client-summary-item">
-            <span class="client-summary-label">{% translate "Итого требуется" %}</span>
-            <strong class="client-summary-value">{{ income.required_income }} zł</strong>
-          </div>
-          <div class="client-summary-item">
-            <span class="client-summary-label">{% translate "Ежемесячное содержание" %}</span>
-            <strong class="client-summary-value">{{ income.monthly_support_total }} zł</strong>
-          </div>
-          <div class="client-summary-item">
-            <span class="client-summary-label">{% translate "Стоимость жилья" %}</span>
-            <strong class="client-summary-value">{{ income.housing_cost }} zł</strong>
-          </div>
-        </div>
+        <div class="col-lg-7">
+          <div class="family-finance-summary">
+            <div class="client-summary-grid mt-0">
+              <div class="client-summary-item">
+                <span class="client-summary-label">{% translate "Спонсор" %}</span>
+                <strong class="client-summary-value">{{ income.sponsor_count }}</strong>
+              </div>
+              <div class="client-summary-item">
+                <span class="client-summary-label">{% translate "Супруг/супруга" %}</span>
+                <strong class="client-summary-value">{{ income.spouse_count }}</strong>
+              </div>
+              <div class="client-summary-item">
+                <span class="client-summary-label">{% translate "Ребёнок" %}</span>
+                <strong class="client-summary-value">{{ income.child_count }}</strong>
+              </div>
+              <div class="client-summary-item">
+                <span class="client-summary-label">{% translate "Итого требуется" %}</span>
+                <strong class="client-summary-value">{{ income.required_income }} zł</strong>
+              </div>
+              <div class="client-summary-item">
+                <span class="client-summary-label">{% translate "Ежемесячное содержание" %}</span>
+                <strong class="client-summary-value">{{ income.monthly_support_total }} zł</strong>
+              </div>
+              <div class="client-summary-item">
+                <span class="client-summary-label">{% translate "Стоимость жилья" %}</span>
+                <strong class="client-summary-value">{{ income.housing_cost }} zł</strong>
+              </div>
+            </div>
 
-        <div class="mt-3">
-          {% if income.is_sufficient %}
-            <div class="alert alert-success mb-0">
-              <strong>{% translate "Доход достаточный" %}</strong>
-              {% if income.surplus != None %}
-                <span class="ms-2">{% translate "Запас" %}: {{ income.surplus }} zł</span>
+            <div class="mt-3">
+              {% if income.is_sufficient %}
+                <div class="alert alert-success mb-0">
+                  <strong>{% translate "Доход достаточный" %}</strong>
+                  {% if income.surplus != None %}
+                    <span class="ms-2">{% translate "Запас" %}: {{ income.surplus }} zł</span>
+                  {% endif %}
+                </div>
+              {% else %}
+                <div class="alert alert-warning mb-0">
+                  <strong>{% translate "Недостаточный доход спонсора" %}</strong>
+                  {% if income.surplus != None %}
+                    <span class="ms-2">{% translate "Не хватает" %}: {{ income.surplus|floatformat:2|cut:"-" }} zł</span>
+                  {% endif %}
+                </div>
+              {% endif %}
+              {% if housing_note %}
+                <div class="alert alert-info mt-2 mb-0">{{ housing_note }}</div>
               {% endif %}
             </div>
-          {% else %}
-            <div class="alert alert-warning mb-0">
-              <strong>{% translate "Недостаточный доход спонсора" %}</strong>
-              {% if income.surplus != None %}
-                <span class="ms-2">{% translate "Не хватает" %}: {{ income.surplus|floatformat:2|cut:"-" }} zł</span>
-              {% endif %}
-            </div>
-          {% endif %}
-          {% if housing_note %}
-            <div class="alert alert-info mt-2 mb-0">{{ housing_note }}</div>
-          {% endif %}
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   </div>
-</section>
 
-<section class="client-section">
-  <div class="client-section-header">
-    <h3>{% translate "Риски" %}</h3>
-  </div>
-  {% if family_risks %}
-    <div class="d-flex flex-column gap-2">
-      {% for risk in family_risks %}
-        <div class="alert alert-warning mb-0">
-          <div class="fw-semibold">{{ risk.title }}</div>
-          <div class="small">{{ risk.message }}</div>
+  <!-- Вкладка: Риски -->
+  <div class="tab-pane fade" id="risks" role="tabpanel" aria-labelledby="risks-tab">
+    <section class="client-section border-0 p-0 shadow-none">
+      <div class="client-section-header">
+        <h3 class="h4 mb-0">{% translate "Риски" %}</h3>
+      </div>
+      {% if family_risks %}
+        <div class="d-flex flex-column gap-2">
+          {% for risk in family_risks %}
+            <div class="alert alert-warning mb-0">
+              <div class="fw-semibold">{{ risk.title }}</div>
+              <div class="small">{{ risk.message }}</div>
+            </div>
+          {% endfor %}
         </div>
-      {% endfor %}
-    </div>
-  {% else %}
-    <div class="alert alert-success mb-0">{% translate "Рисков по семейной группе сейчас нет." %}</div>
-  {% endif %}
-</section>
+      {% else %}
+        <div class="alert alert-success mb-0">{% translate "Рисков по семейной группе сейчас нет." %}</div>
+      {% endif %}
+    </section>
+  </div>
+</div>
 {% endblock %}
