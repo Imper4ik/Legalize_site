@@ -3,7 +3,7 @@ from django.db.models import Q
 from django.utils.timezone import datetime
 from django.views.generic import ListView
 
-from clients.forms.logs import EmailLogFilterForm, StaffActivityFilterForm
+from clients.forms import EmailLogFilterForm, StaffActivityFilterForm
 from clients.models.activity import ClientActivity
 from clients.models.email import EmailLog
 
