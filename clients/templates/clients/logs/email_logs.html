@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Логи писем" %}{% endblock %}
+{% block page_title %}{% translate "Логи писем" %}{% endblock %}
+{% block page_subtitle %}{% translate "Журнал отправленных писем клиентам." %}{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mb-4">
+  <div class="card-body bg-light rounded">
+    <form method="get" class="row g-3 align-items-end">
+      <div class="col-12 col-md-3">
+        <label class="form-label fw-semibold small text-muted mb-1">{{ filter_form.status.label }}</label>
+        {{ filter_form.status }}
+      </div>
+      <div class="col-12 col-md-2">
+        <label class="form-label fw-semibold small text-muted mb-1">{{ filter_form.date_start.label }}</label>
+        {{ filter_form.date_start }}
+      </div>
+      <div class="col-12 col-md-2">
+        <label class="form-label fw-semibold small text-muted mb-1">{{ filter_form.date_end.label }}</label>
+        {{ filter_form.date_end }}
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label fw-semibold small text-muted mb-1">{{ filter_form.search.label }}</label>
+        {{ filter_form.search }}
+      </div>
+      <div class="col-12 col-md-1">
+        <button type="submit" class="btn btn-primary w-100 btn-sm">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>{% translate "Дата отправки" %}</th>
+            <th>{% translate "Клиент" %}</th>
+            <th>{% translate "Тема" %}</th>
+            <th>{% translate "Статус" %}</th>
+            <th>{% translate "Отправитель" %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in logs %}
+            <tr>
+              <td class="text-nowrap">{{ log.sent_at|date:"d.m.Y H:i" }}</td>
+              <td>
+                {% if log.client %}
+                  <a href="{% url 'clients:client_detail' log.client.pk %}" class="fw-semibold text-decoration-none">
+                    {{ log.client.get_full_name }}
+                  </a>
+                {% else %}
+                  <span class="text-muted">---</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="fw-semibold">{{ log.subject }}</div>
+                {% if log.template_type %}
+                  <div class="small text-muted">{{ log.template_type }}</div>
+                {% endif %}
+              </td>
+              <td>
+                {% if log.delivery_status == 'sent' %}
+                  <span class="badge bg-success-subtle text-success-emphasis">{% translate "Отправлено" %}</span>
+                {% elif log.delivery_status == 'queued' %}
+                  <span class="badge bg-warning-subtle text-warning-emphasis">{% translate "В очереди" %}</span>
+                {% elif log.delivery_status == 'skipped' %}
+                  <span class="badge bg-secondary-subtle text-secondary-emphasis">{% translate "Пропущено" %}</span>
+                {% elif log.delivery_status == 'failed' %}
+                  <span class="badge bg-danger-subtle text-danger-emphasis">{% translate "Ошибка" %}</span>
+                  {% if log.error_message %}
+                    <i class="bi bi-info-circle text-danger ms-1" data-bs-toggle="tooltip" title="{{ log.error_message }}"></i>
+                  {% endif %}
+                {% else %}
+                  <span class="badge bg-secondary">{{ log.get_delivery_status_display }}</span>
+                {% endif %}
+              </td>
+              <td class="text-muted small">
+                {{ log.sent_by.get_full_name|default:log.sent_by.email|default:"Система" }}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" class="text-center py-4 text-muted">
+                {% translate "Логи писем не найдены." %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% include "clients/partials/pagination.html" %}
+{% endblock %}

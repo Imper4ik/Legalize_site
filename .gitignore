@@ -25,7 +25,7 @@ __pycache__/
 
 # Логи
 *.log
-logs/
+/logs/
 
 # Файлы IDE/редакторов
 .idea/
