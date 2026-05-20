@@ -14,83 +14,127 @@
 {% block page_header %}{% endblock %}
 
 {% block content %}
-<div id="client-overview" data-refresh-url="{% url 'clients:client_overview_partial' client.pk %}">
-  {% include 'clients/partials/client_overview.html' with client=client workflow_summary=workflow_summary %}
-</div>
-
-<div class="row g-3 mb-4">
-  <div class="col-lg-6">
-    {% include 'clients/partials/workflow_panel.html' with workflow_summary=workflow_summary workflow_alerts=workflow_alerts %}
-  </div>
-  <div class="col-lg-6">
-    {% include 'clients/partials/client_tasks.html' with client=client task_form=task_form open_tasks=open_tasks %}
-  </div>
-</div>
-
-<section class="client-section">
-  <div class="client-section-header">
-    <h3>{% translate "Финансы" %}</h3>
-    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
-      <i class="bi bi-plus-lg me-1"></i>{% translate "Добавить счёт" %}
+<ul class="nav nav-tabs mb-4" id="clientTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">
+      <i class="bi bi-person-badge me-1"></i>{% translate "Обзор" %}
     </button>
-  </div>
-  <div id="payment-alerts" class="mb-2"></div>
-  <div class="card">
-    <ul class="list-group list-group-flush" id="payment-list-container"
-      data-empty-text="{% translate 'Счета на оплату ещё не созданы.' %}"
-      data-payment-created="{% translate 'Платёж успешно добавлен.' %}"
-      data-payment-create-error="{% translate 'Не удалось создать платёж. Попробуйте ещё раз.' %}"
-      data-payment-updated="{% translate 'Платёж успешно обновлён.' %}"
-      data-payment-update-error="{% translate 'Не удалось обновить платёж. Попробуйте ещё раз.' %}"
-      data-payment-deleted="{% translate 'Платёж успешно удалён.' %}"
-      data-payment-delete-error="{% translate 'Не удалось удалить платёж. Попробуйте ещё раз.' %}">
-      {% for payment in client.payments.all %}
-      <li class="list-group-item" data-payment-id="{{ payment.id }}">
-        {% include 'clients/partials/payment_item.html' with payment=payment %}
-      </li>
-      {% empty %}
-      <li class="list-group-item text-muted" id="no-payments-message">{% translate "Счета на оплату еще не созданы." %}
-      </li>
-      {% endfor %}
-    </ul>
-  </div>
-</section>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">
+      <i class="bi bi-folder2-open me-1"></i>{% translate "Документы" %}
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="finance-tab" data-bs-toggle="tab" data-bs-target="#finance" type="button" role="tab" aria-controls="finance" aria-selected="false">
+      <i class="bi bi-wallet2 me-1"></i>{% translate "Финансы" %}
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">
+      <i class="bi bi-clock-history me-1"></i>{% translate "История" %}
+    </button>
+  </li>
+</ul>
 
-<section class="client-section">
-  {% include 'clients/partials/email_history.html' with email_logs=email_logs %}
-</section>
+<div class="tab-content" id="clientTabsContent">
+  <!-- Вкладка: Обзор -->
+  <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+    <div id="client-overview" data-refresh-url="{% url 'clients:client_overview_partial' client.pk %}">
+      {% include 'clients/partials/client_overview.html' with client=client workflow_summary=workflow_summary %}
+    </div>
 
-<section class="client-section">
-  {% include 'clients/partials/activity_timeline.html' with recent_activities=recent_activities %}
-</section>
-
-<section class="client-section client-checklist-section">
-  <div class="client-section-header">
-    <h3>{% translate "Чеклист документов" %}</h3>
-    <div class="client-section-actions">
-      <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
-        data-bs-target="#sendEmailModal">
-        <i class="bi bi-envelope"></i> {% translate "Email" %}
-      </button>
-      <form id="verify-all-documents-form" action="{% url 'clients:verify_all_documents' client_id=client.pk %}"
-        method="post" class="m-0"
-        data-verified-count-text="{% translate 'Отмечено документов:' %}"
-        data-all-verified-text="{% translate 'Все документы уже были проверены.' %}"
-        data-update-error-text="{% translate 'Не удалось обновить статус документов. Попробуйте ещё раз.' %}">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-outline-success btn-sm">
-          <i class="bi bi-check2-all me-1"></i>{% translate "Проверить все файлы" %}
-        </button>
-      </form>
+    <div class="row g-3 mb-4">
+      <div class="col-lg-6">
+        {% include 'clients/partials/workflow_panel.html' with workflow_summary=workflow_summary workflow_alerts=workflow_alerts %}
+      </div>
+      <div class="col-lg-6">
+        {% include 'clients/partials/client_tasks.html' with client=client task_form=task_form open_tasks=open_tasks %}
+      </div>
     </div>
   </div>
 
-  <div id="document-alerts" class="mb-2"></div>
+  <!-- Вкладка: Документы -->
+  <div class="tab-pane fade" id="documents" role="tabpanel" aria-labelledby="documents-tab">
+    <section class="client-section client-checklist-section border-0 p-0 shadow-none">
+      <div class="client-section-header">
+        <h3 class="h4 mb-0">{% translate "Чеклист документов" %}</h3>
+        <div class="client-section-actions">
+          <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
+            data-bs-target="#sendEmailModal">
+            <i class="bi bi-envelope"></i> {% translate "Email" %}
+          </button>
+          <form id="verify-all-documents-form" action="{% url 'clients:verify_all_documents' client_id=client.pk %}"
+            method="post" class="m-0"
+            data-verified-count-text="{% translate 'Отмечено документов:' %}"
+            data-all-verified-text="{% translate 'Все документы уже были проверены.' %}"
+            data-update-error-text="{% translate 'Не удалось обновить статус документов. Попробуйте ещё раз.' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-success btn-sm">
+              <i class="bi bi-check2-all me-1"></i>{% translate "Проверить все файлы" %}
+            </button>
+          </form>
+        </div>
+      </div>
 
-  <div class="accordion" id="documentAccordion" data-refresh-url="{% url 'clients:client_checklist_partial' client.pk %}">
-    {% include 'clients/partials/document_checklist.html' with document_status_list=document_status_list client=client %}
+      <div id="document-alerts" class="mb-2"></div>
+
+      <div class="accordion" id="documentAccordion" data-refresh-url="{% url 'clients:client_checklist_partial' client.pk %}">
+        {% include 'clients/partials/document_checklist.html' with document_status_list=document_status_list client=client %}
+      </div>
+    </section>
   </div>
-</section>
+
+  <!-- Вкладка: Финансы -->
+  <div class="tab-pane fade" id="finance" role="tabpanel" aria-labelledby="finance-tab">
+    <section class="client-section border-0 p-0 shadow-none">
+      <div class="client-section-header">
+        <h3 class="h4 mb-0">{% translate "Финансы" %}</h3>
+        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addPaymentModal">
+          <i class="bi bi-plus-lg me-1"></i>{% translate "Добавить счёт" %}
+        </button>
+      </div>
+      <div id="payment-alerts" class="mb-2"></div>
+      <div class="card">
+        <ul class="list-group list-group-flush" id="payment-list-container"
+          data-empty-text="{% translate 'Счета на оплату ещё не созданы.' %}"
+          data-payment-created="{% translate 'Платёж успешно добавлен.' %}"
+          data-payment-create-error="{% translate 'Не удалось создать платёж. Попробуйте ещё раз.' %}"
+          data-payment-updated="{% translate 'Платёж успешно обновлён.' %}"
+          data-payment-update-error="{% translate 'Не удалось обновить платёж. Попробуйте ещё раз.' %}"
+          data-payment-deleted="{% translate 'Платёж успешно удалён.' %}"
+          data-payment-delete-error="{% translate 'Не удалось удалить платёж. Попробуйте ещё раз.' %}">
+          {% for payment in client.payments.all %}
+          <li class="list-group-item" data-payment-id="{{ payment.id }}">
+            {% include 'clients/partials/payment_item.html' with payment=payment %}
+          </li>
+          {% empty %}
+          <li class="list-group-item text-muted" id="no-payments-message">{% translate "Счета на оплату еще не созданы." %}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <!-- Вкладка: История и Логи -->
+  <div class="tab-pane fade" id="history" role="tabpanel" aria-labelledby="history-tab">
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <section class="client-section border-0 p-0 shadow-none h-100">
+          <h3 class="h4 mb-3">{% translate "История активности" %}</h3>
+          {% include 'clients/partials/activity_timeline.html' with recent_activities=recent_activities %}
+        </section>
+      </div>
+      <div class="col-lg-6">
+        <section class="client-section border-0 p-0 shadow-none h-100">
+          <h3 class="h4 mb-3">{% translate "История писем" %}</h3>
+          {% include 'clients/partials/email_history.html' with email_logs=email_logs %}
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 
