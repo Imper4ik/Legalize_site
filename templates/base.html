@@ -177,8 +177,13 @@
                   </a>
                 </li>
                 <li>
-                  <a class="dropdown-item" href="{% url 'admin:clients_emaillog_changelist' %}">
-                    <i class="bi bi-envelope me-2 text-muted"></i>{% translate "Логи писем" %}
+                  <a class="dropdown-item" href="{% url 'clients:email_logs' %}">
+                    <i class="bi bi-envelope-paper me-2 text-muted"></i>{% translate "Логи писем" %}
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{% url 'clients:staff_activity_logs' %}">
+                    <i class="bi bi-clock-history me-2 text-muted"></i>{% translate "Логи сотрудников" %}
                   </a>
                 </li>
                 {% endif %}

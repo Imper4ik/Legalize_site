@@ -34,9 +34,11 @@ urlpatterns = [
     path('document-version/<int:version_id>/download/', views.document_version_download, name='document_version_download'),
     path('document-version/<int:version_id>/restore/', views.document_version_restore, name='document_version_restore'),
 
-    # Admin Dashboard
+    # Admin Dashboard & Logs
     path('admin-dashboard/', views.AdminDashboardView.as_view(), name='admin_dashboard'),
     path('admin-panel/', views.AdminPanelView.as_view(), name='admin_panel'),
+    path('logs/emails/', views.EmailLogsView.as_view(), name='email_logs'),
+    path('logs/staff-activity/', views.StaffActivityLogsView.as_view(), name='staff_activity_logs'),
 
     # URL для печати
     path('client/<int:pk>/print/', views.client_print_view, name='client_print'),

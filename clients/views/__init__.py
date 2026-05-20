@@ -77,6 +77,7 @@ from clients.views.export import (
     document_versions_view,
     document_version_restore,
 )
+from clients.views.logs import EmailLogsView, StaffActivityLogsView
 
 __all__ = [
     'StaffRequiredMixin',
