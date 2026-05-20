@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-20 18:22+0200\n"
+"POT-Creation-Date: 2026-05-20 18:35+0200\n"
 "Language: ru\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -465,13 +465,13 @@ msgstr "Воссоединение с семьёй"
 
 #: .\clients\models\client.py:97 .\clients\models\client.py:103
 #: .\clients\templates\clients\clients_list.html:97
-#: .\clients\templates\clients\family_dashboard.html:120
+#: .\clients\templates\clients\family_dashboard.html:144
 msgid "Супруг/супруга"
 msgstr "Супруг/супруга"
 
 #: .\clients\models\client.py:98 .\clients\models\client.py:104
 #: .\clients\templates\clients\clients_list.html:101
-#: .\clients\templates\clients\family_dashboard.html:124
+#: .\clients\templates\clients\family_dashboard.html:148
 msgid "Ребёнок"
 msgstr "Ребёнок"
 
@@ -482,8 +482,8 @@ msgstr "Не указано"
 
 #: .\clients\models\client.py:102 .\clients\models\client.py:227
 #: .\clients\models\family.py:14
-#: .\clients\templates\clients\family_dashboard.html:37
-#: .\clients\templates\clients\family_dashboard.html:116
+#: .\clients\templates\clients\family_dashboard.html:58
+#: .\clients\templates\clients\family_dashboard.html:140
 #: .\clients\templates\clients\partials\client_overview.html:115
 #: .\clients\templates\clients\partials\client_overview.html:154
 #: .\clients\views\family.py:55
@@ -846,6 +846,7 @@ msgid "Распознанные данные"
 msgstr "Распознанные данные"
 
 #: .\clients\models\document.py:188
+#: .\clients\templates\clients\client_detail.html:25
 #: .\clients\templates\clients\family_dashboard.html:25
 #: .\clients\templates\clients\partials\client_overview.html:60
 #: .\clients\templates\clients\partials\family_person_card.html:19
@@ -1048,12 +1049,12 @@ msgid "Доход спонсора"
 msgstr "Доход спонсора"
 
 #: .\clients\models\family.py:27
-#: .\clients\templates\clients\family_dashboard.html:132
+#: .\clients\templates\clients\family_dashboard.html:156
 msgid "Ежемесячное содержание"
 msgstr "Ежемесячное содержание"
 
 #: .\clients\models\family.py:33
-#: .\clients\templates\clients\family_dashboard.html:136
+#: .\clients\templates\clients\family_dashboard.html:160
 msgid "Стоимость жилья"
 msgstr "Стоимость жилья"
 
@@ -1453,7 +1454,7 @@ msgid "application purpose set to: %(val)s"
 msgstr "цель приложения установлена ​​на: %(val)s"
 
 #: .\clients\services\family.py:131 .\clients\services\family.py:138
-#: .\clients\templates\clients\family_dashboard.html:151
+#: .\clients\templates\clients\family_dashboard.html:175
 msgid "Недостаточный доход спонсора"
 msgstr "Недостаточный доход спонсора"
 
@@ -1880,7 +1881,7 @@ msgstr ""
 #: .\clients\templates\clients\client_form.html:190
 #: .\clients\templates\clients\clients_list.html:137
 #: .\clients\templates\clients\document_checklist_manage.html:214
-#: .\clients\templates\clients\family_dashboard.html:106
+#: .\clients\templates\clients\family_dashboard.html:130
 #: .\clients\templates\clients\partials\modals.html:58
 #: .\clients\templates\clients\partials\modals.html:128
 #: .\submissions\templates\submissions\document_form.html:39
@@ -2124,75 +2125,96 @@ msgstr "Да, я уверен, удалить"
 msgid "Детали клиента: %(client_name)s"
 msgstr "Детали клиента: %(client_name)s"
 
-#: .\clients\templates\clients\client_detail.html:32
+#: .\clients\templates\clients\client_detail.html:20
+msgid "Обзор"
+msgstr ""
+
+#: .\clients\templates\clients\client_detail.html:30
+#: .\clients\templates\clients\client_detail.html:92
 #: .\clients\templates\clients\partials\family_person_card.html:22
 msgid "Финансы"
 msgstr "Финансы"
 
-#: .\clients\templates\clients\client_detail.html:34
-msgid "Добавить счёт"
-msgstr "Добавить счёт"
+#: .\clients\templates\clients\client_detail.html:35
+#, fuzzy
+#| msgid "История email"
+msgid "История"
+msgstr "История email"
 
-#: .\clients\templates\clients\client_detail.html:40
-msgid "Счета на оплату ещё не созданы."
-msgstr "Счета на оплату ещё не созданы."
-
-#: .\clients\templates\clients\client_detail.html:41
-#: .\clients\views\payments.py:44 .\clients\views\payments.py:48
-msgid "Платёж успешно добавлен."
-msgstr "Платёж успешно добавлен."
-
-#: .\clients\templates\clients\client_detail.html:42
-msgid "Не удалось создать платёж. Попробуйте ещё раз."
-msgstr "Не удалось создать платёж. Попробуйте ещё раз."
-
-#: .\clients\templates\clients\client_detail.html:43
-#: .\clients\views\payments.py:75 .\clients\views\payments.py:79
-msgid "Платёж успешно обновлён."
-msgstr "Платёж успешно обновлён."
-
-#: .\clients\templates\clients\client_detail.html:44
-msgid "Не удалось обновить платёж. Попробуйте ещё раз."
-msgstr "Не удалось обновить платёж. Попробуйте ещё раз."
-
-#: .\clients\templates\clients\client_detail.html:45
-#: .\clients\views\payments.py:98 .\clients\views\payments.py:99
-msgid "Платёж успешно удалён."
-msgstr "Платёж успешно удалён."
-
-#: .\clients\templates\clients\client_detail.html:46
-msgid "Не удалось удалить платёж. Попробуйте ещё раз."
-msgstr "Не удалось удалить платёж. Попробуйте ещё раз."
-
-#: .\clients\templates\clients\client_detail.html:52
-msgid "Счета на оплату еще не созданы."
-msgstr "Счета на оплату еще не созданы."
-
-#: .\clients\templates\clients\client_detail.html:69
+#: .\clients\templates\clients\client_detail.html:61
 msgid "Чеклист документов"
 msgstr "Чеклист документов"
 
-#: .\clients\templates\clients\client_detail.html:73
+#: .\clients\templates\clients\client_detail.html:65
 #: .\clients\templates\clients\client_export_pdf.html:38 .\users\forms.py:22
 #: .\users\forms.py:26
 msgid "Email"
 msgstr "Электронная почта"
 
-#: .\clients\templates\clients\client_detail.html:77
+#: .\clients\templates\clients\client_detail.html:69
 msgid "Отмечено документов:"
 msgstr "Отмечено документов:"
 
-#: .\clients\templates\clients\client_detail.html:78
+#: .\clients\templates\clients\client_detail.html:70
 msgid "Все документы уже были проверены."
 msgstr "Все документы уже были проверены."
 
-#: .\clients\templates\clients\client_detail.html:79
+#: .\clients\templates\clients\client_detail.html:71
 msgid "Не удалось обновить статус документов. Попробуйте ещё раз."
 msgstr "Не удалось обновить статус документов. Попробуйте ещё раз."
 
-#: .\clients\templates\clients\client_detail.html:82
+#: .\clients\templates\clients\client_detail.html:74
 msgid "Проверить все файлы"
 msgstr "Проверить все файлы"
+
+#: .\clients\templates\clients\client_detail.html:94
+msgid "Добавить счёт"
+msgstr "Добавить счёт"
+
+#: .\clients\templates\clients\client_detail.html:100
+msgid "Счета на оплату ещё не созданы."
+msgstr "Счета на оплату ещё не созданы."
+
+#: .\clients\templates\clients\client_detail.html:101
+#: .\clients\views\payments.py:44 .\clients\views\payments.py:48
+msgid "Платёж успешно добавлен."
+msgstr "Платёж успешно добавлен."
+
+#: .\clients\templates\clients\client_detail.html:102
+msgid "Не удалось создать платёж. Попробуйте ещё раз."
+msgstr "Не удалось создать платёж. Попробуйте ещё раз."
+
+#: .\clients\templates\clients\client_detail.html:103
+#: .\clients\views\payments.py:75 .\clients\views\payments.py:79
+msgid "Платёж успешно обновлён."
+msgstr "Платёж успешно обновлён."
+
+#: .\clients\templates\clients\client_detail.html:104
+msgid "Не удалось обновить платёж. Попробуйте ещё раз."
+msgstr "Не удалось обновить платёж. Попробуйте ещё раз."
+
+#: .\clients\templates\clients\client_detail.html:105
+#: .\clients\views\payments.py:98 .\clients\views\payments.py:99
+msgid "Платёж успешно удалён."
+msgstr "Платёж успешно удалён."
+
+#: .\clients\templates\clients\client_detail.html:106
+msgid "Не удалось удалить платёж. Попробуйте ещё раз."
+msgstr "Не удалось удалить платёж. Попробуйте ещё раз."
+
+#: .\clients\templates\clients\client_detail.html:112
+msgid "Счета на оплату еще не созданы."
+msgstr "Счета на оплату еще не созданы."
+
+#: .\clients\templates\clients\client_detail.html:125
+msgid "История активности"
+msgstr ""
+
+#: .\clients\templates\clients\client_detail.html:131
+#, fuzzy
+#| msgid "Тема письма"
+msgid "История писем"
+msgstr "Тема письма"
 
 #: .\clients\templates\clients\client_edit.html:5
 #: .\clients\templates\clients\client_edit.html:15
@@ -2763,51 +2785,64 @@ msgid "Назад"
 msgstr "Назад"
 
 #: .\clients\templates\clients\family_dashboard.html:22
-#: .\clients\templates\clients\family_dashboard.html:52
+#: .\clients\templates\clients\family_dashboard.html:73
 #: .\clients\templates\clients\partials\client_overview.html:49
 #: .\clients\templates\clients\partials\client_overview.html:128
 msgid "Добавить родственника"
 msgstr "Добавить родственника"
 
 #: .\clients\templates\clients\family_dashboard.html:28
-#: .\clients\templates\clients\family_dashboard.html:75
+#: .\clients\templates\clients\family_dashboard.html:43
 msgid "Финансовая достаточность"
 msgstr "Финансовая достаточность"
 
-#: .\clients\templates\clients\family_dashboard.html:50
-msgid "Члены семьи"
-msgstr "Члены семьи"
+#: .\clients\templates\clients\family_dashboard.html:38
+#, fuzzy
+#| msgid "Спонсор семьи"
+msgid "Состав семьи"
+msgstr "Спонсор семьи"
 
-#: .\clients\templates\clients\family_dashboard.html:64
-msgid "Члены семьи ещё не добавлены."
-msgstr "Члены семьи ещё не добавлены."
-
-#: .\clients\templates\clients\family_dashboard.html:66
-msgid "Создать карточку супруга или ребёнка"
-msgstr "Создать карточку супруга или ребёнка"
-
-#: .\clients\templates\clients\family_dashboard.html:128
-msgid "Итого требуется"
-msgstr "Итого требуется"
-
-#: .\clients\templates\clients\family_dashboard.html:144
-msgid "Доход достаточный"
-msgstr "Доход достаточный"
-
-#: .\clients\templates\clients\family_dashboard.html:146
-msgid "Запас"
-msgstr "Запас"
-
-#: .\clients\templates\clients\family_dashboard.html:153
-msgid "Не хватает"
-msgstr "Не хватает"
-
-#: .\clients\templates\clients\family_dashboard.html:168
+#: .\clients\templates\clients\family_dashboard.html:48
+#: .\clients\templates\clients\family_dashboard.html:195
 #: .\clients\templates\clients\partials\client_overview.html:162
 msgid "Риски"
 msgstr "Риски"
 
-#: .\clients\templates\clients\family_dashboard.html:180
+#: .\clients\templates\clients\family_dashboard.html:71
+msgid "Члены семьи"
+msgstr "Члены семьи"
+
+#: .\clients\templates\clients\family_dashboard.html:85
+msgid "Члены семьи ещё не добавлены."
+msgstr "Члены семьи ещё не добавлены."
+
+#: .\clients\templates\clients\family_dashboard.html:87
+msgid "Создать карточку супруга или ребёнка"
+msgstr "Создать карточку супруга или ребёнка"
+
+#: .\clients\templates\clients\family_dashboard.html:99
+#, fuzzy
+#| msgid "Открыть финансы"
+msgid "Расчёт финансов"
+msgstr "Открыть финансы"
+
+#: .\clients\templates\clients\family_dashboard.html:152
+msgid "Итого требуется"
+msgstr "Итого требуется"
+
+#: .\clients\templates\clients\family_dashboard.html:168
+msgid "Доход достаточный"
+msgstr "Доход достаточный"
+
+#: .\clients\templates\clients\family_dashboard.html:170
+msgid "Запас"
+msgstr "Запас"
+
+#: .\clients\templates\clients\family_dashboard.html:177
+msgid "Не хватает"
+msgstr "Не хватает"
+
+#: .\clients\templates\clients\family_dashboard.html:207
 msgid "Рисков по семейной группе сейчас нет."
 msgstr "Рисков по семейной группе сейчас нет."
 
