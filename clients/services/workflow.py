@@ -39,6 +39,12 @@ def validate_client_workflow_transition(*, client: Client, previous_stage: str |
         return WorkflowValidationResult(True)
 
     if next_stage == "application_submitted":
+        if not getattr(client, "pk", None):
+            return WorkflowValidationResult(
+                False,
+                "Сначала сохраните клиента, затем загрузите обязательные документы и переведите его к этапу подачи.",
+            )
+
         purpose = client.get_document_requirement_purpose()
         has_db_records = DocumentRequirement.objects.filter(application_purpose=purpose).exists()
         required_codes = set(
