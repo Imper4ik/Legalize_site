@@ -141,3 +141,42 @@ class TestTranslationOverrides:
         # Export dry-run
         TranslationOverride.objects.create(msgid="Hello", language="ru", text="Привет", is_active=True)
         call_command('export_db_translations_to_po', '--dry-run')
+
+    def test_import_po_updates_imported_overrides_by_default(self):
+        """Imported DB rows should track the current PO file on release sync."""
+        from django.core.management import call_command
+
+        expected = "\u041d\u0430\u0432\u0438\u0433\u0430\u0446\u0438\u044f \u043f\u043e \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0430\u043c"
+        TranslationOverride.objects.create(
+            msgid="Pagination",
+            language="ru",
+            text="Old import",
+            source=TranslationOverride.SOURCE_IMPORT,
+            is_active=True,
+        )
+        assert apply_db_override("Pagination", "fallback", "ru") == "Old import"
+
+        call_command("import_po_to_db", verbosity=0)
+
+        override = TranslationOverride.objects.get(msgid="Pagination", language="ru")
+        assert override.text == expected
+        assert override.source == TranslationOverride.SOURCE_IMPORT
+        assert apply_db_override("Pagination", "fallback", "ru") == expected
+
+    def test_import_po_preserves_studio_overrides_by_default(self):
+        """Release sync must not overwrite manual Translation Studio edits."""
+        from django.core.management import call_command
+
+        TranslationOverride.objects.create(
+            msgid="Pagination",
+            language="ru",
+            text="Manual studio edit",
+            source=TranslationOverride.SOURCE_STUDIO,
+            is_active=True,
+        )
+
+        call_command("import_po_to_db", verbosity=0)
+
+        override = TranslationOverride.objects.get(msgid="Pagination", language="ru")
+        assert override.text == "Manual studio edit"
+        assert override.source == TranslationOverride.SOURCE_STUDIO

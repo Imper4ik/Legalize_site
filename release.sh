@@ -90,3 +90,4 @@ else
 fi
 
 python manage.py createcachetable
+python manage.py import_po_to_db

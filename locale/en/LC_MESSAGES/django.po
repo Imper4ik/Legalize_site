@@ -154,11 +154,9 @@ msgstr "dd-mm-yyyy"
 
 #: .\clients\forms.py:739 .\clients\templates\clients\calculator.html:32
 msgid "Студент"
-msgstr ""
+msgstr "Student"
 
 #: .\clients\forms.py:739 .\clients\templates\clients\calculator.html:33
-#, fuzzy
-#| msgid "Воссоединение с семьёй"
 msgid "Воссоединение семьи"
 msgstr "Family reunification"
 
@@ -180,12 +178,10 @@ msgid "Статус"
 msgstr "Status"
 
 #: .\clients\forms\logs.py:19 .\clients\forms\logs.py:49
-#, fuzzy
 msgid "С даты"
 msgstr "From date"
 
 #: .\clients\forms\logs.py:24 .\clients\forms\logs.py:54
-#, fuzzy
 msgid "По дату"
 msgstr "To date"
 
@@ -194,12 +190,10 @@ msgid "Поиск"
 msgstr "Search"
 
 #: .\clients\forms\logs.py:33
-#, fuzzy
 msgid "Тема или имя клиента..."
 msgstr "Subject or client name..."
 
 #: .\clients\forms\logs.py:43
-#, fuzzy
 msgid "Все сотрудники"
 msgstr "All staff"
 
@@ -1592,13 +1586,11 @@ msgstr "Add document: \"%(document_type_display)s\""
 #, python-format
 msgid ""
 "\n"
-"          Для клиента: <strong>%(client.first_name)s %(client.last_name)s</"
-"strong>\n"
+"          Для клиента: <strong>%(client.first_name)s %(client.last_name)s</strong>\n"
 "          "
 msgstr ""
 "\n"
-"          For client: <strong>%(client.first_name)s %(client.last_name)s</"
-"strong>\n"
+"          For client: <strong>%(client.first_name)s %(client.last_name)s</strong>\n"
 "          "
 
 #: .\clients\templates\clients\add_document.html:25
@@ -1834,92 +1826,80 @@ msgid "Decisions"
 msgstr "Decisions"
 
 #: .\clients\templates\clients\admin_panel.html:197 .\templates\base.html:200
-#, fuzzy
-#| msgid "Вход в систему"
 msgid "Здоровье системы"
-msgstr "Log in to the system"
+msgstr "System health"
 
 #: .\clients\templates\clients\admin_panel.html:216
 #: .\clients\templates\clients\logs\staff_activity_logs.html:4
 #: .\clients\templates\clients\logs\staff_activity_logs.html:5
 #: .\templates\base.html:186
-#, fuzzy
 msgid "Логи сотрудников"
-msgstr "Staff Logs"
+msgstr "Staff logs"
 
 #: .\clients\templates\clients\admin_panel.html:217
 #: .\clients\templates\clients\logs\email_logs.html:4
-#: .\clients\templates\clients\logs\email_logs.html:5 .\templates\base.html:181
+#: .\clients\templates\clients\logs\email_logs.html:5
+#: .\templates\base.html:181
 msgid "Логи писем"
 msgstr "Email Logs"
 
 #: .\clients\templates\clients\app_settings_form.html:4
 #: .\clients\templates\clients\app_settings_form.html:5
 #: .\templates\base.html:176
-#, fuzzy
-#| msgid "Настройка чеклистов"
 msgid "Настройки шаблонов"
-msgstr "Checklists Settings"
+msgstr "Template settings"
 
 #: .\clients\templates\clients\app_settings_form.html:6
 msgid "Настройте значения по умолчанию для текущей базы данных."
-msgstr ""
+msgstr "Configure default values for the current database."
 
 #: .\clients\templates\clients\app_settings_form.html:17
-#, fuzzy
-#| msgid "Настройки приложения"
 msgid "Настройки базы"
-msgstr "Application Settings"
+msgstr "Database settings"
 
 #: .\clients\templates\clients\app_settings_form.html:18
 msgid "Общие данные инстанса и значения по умолчанию для документов."
-msgstr ""
+msgstr "Instance-wide data and default document values."
 
 #: .\clients\templates\clients\app_settings_form.html:20
 #: .\templates\base.html:163
 msgid "Админ панель"
-msgstr ""
+msgstr "Admin panel"
 
 #: .\clients\templates\clients\app_settings_form.html:26
-#, fuzzy
-#| msgid "Метаданные"
 msgid "Общие данные"
-msgstr "Metadata"
+msgstr "General data"
 
 #: .\clients\templates\clients\app_settings_form.html:43
 msgid ""
 "Каждая новая строка хранится отдельно, чтобы потом использовать в шаблонах."
-msgstr ""
+msgstr "Each new line is stored separately for later use in templates."
 
 #: .\clients\templates\clients\app_settings_form.html:46
-#, fuzzy
-#| msgid "Имя pełnomocnika по умолчанию"
 msgid "Pełnomocnik по умолчанию"
-msgstr "Default name pełnomocnika"
+msgstr "Default attorney-in-fact"
 
 #: .\clients\templates\clients\app_settings_form.html:56
 msgid "Эти поля будут автоматически подставляться всем клиентам этой базы."
 msgstr ""
+"These fields will be automatically inserted for all clients in this "
+"database."
 
 #: .\clients\templates\clients\app_settings_form.html:60
-#, fuzzy
-#| msgid "Mazowiecki: адрес urzedu"
 msgid "Адрес urzędu"
-msgstr "Mazowiecki: urzedu address"
+msgstr "Office address"
 
 #: .\clients\templates\clients\app_settings_form.html:63
-#, fuzzy
-#| msgid "Финансовая достаточность обновлена."
 msgid "Каждая новая строка станет отдельной строкой в бланке."
-msgstr "Financial adequacy updated."
+msgstr "Each new line will become a separate line in the form."
 
 #: .\clients\templates\clients\app_settings_form.html:68
 msgid "Pełnomocnik"
-msgstr ""
+msgstr "Attorney-in-fact"
 
 #: .\clients\templates\clients\app_settings_form.html:71
 msgid "Можно оставить пустые строки или вообще очистить блок."
-msgstr ""
+msgstr "You can leave blank lines or clear the block entirely."
 
 #: .\clients\templates\clients\app_settings_form.html:79
 #: .\clients\templates\clients\client_add.html:97
@@ -1944,7 +1924,7 @@ msgstr "Bank Statement Calculator"
 
 #: .\clients\templates\clients\calculator.html:6
 msgid "Рассчитайте минимальную сумму средств для периода пребывания."
-msgstr ""
+msgstr "Calculate the minimum funds required for the stay period."
 
 #: .\clients\templates\clients\calculator.html:11
 msgid "Введите данные, чтобы рассчитать итоговую сумму на счету."
@@ -2021,10 +2001,8 @@ msgid "Жильё в месяц (на 1 чел.)"
 msgstr "Housing per month (per person)"
 
 #: .\clients\templates\clients\calculator.html:118
-#, fuzzy
-#| msgid "Спонсор семьи"
 msgid "на всю семью"
-msgstr "Family Sponsor"
+msgstr "for the whole family"
 
 #: .\clients\templates\clients\calculator.html:123
 msgid "Обучение в месяц"
@@ -2035,10 +2013,8 @@ msgid "Прожиточный минимум"
 msgstr "Living wage"
 
 #: .\clients\templates\clients\calculator.html:134
-#, fuzzy
-#| msgid "Прожиточный минимум"
 msgid "Прожиточный минимум семьи"
-msgstr "Living wage"
+msgstr "Family subsistence minimum"
 
 #: .\clients\templates\clients\calculator.html:139
 msgid "фиксированная сумма"
@@ -2075,13 +2051,12 @@ msgstr "Return ticket cost"
 
 #: .\clients\templates\clients\calculator.html:167
 msgid "чел."
-msgstr ""
+msgstr "person(s)"
 
 #: .\clients\templates\clients\calculator.html:175
 msgid ""
 "Заполните все поля слева и нажмите \"Рассчитать\", чтобы увидеть результат."
-msgstr ""
-"Fill in all fields on the left and click \"Calculate\" to see the result."
+msgstr "Fill in all fields on the left and click \"Calculate\" to see the result."
 
 #: .\clients\templates\clients\calculator.html:212
 msgid "Цена билета: 500 zł"
@@ -2184,7 +2159,6 @@ msgid "Финансы"
 msgstr "Finances"
 
 #: .\clients\templates\clients\client_detail.html:35
-#, fuzzy
 msgid "История"
 msgstr "History"
 
@@ -2258,9 +2232,8 @@ msgid "История активности"
 msgstr "Activity History"
 
 #: .\clients\templates\clients\client_detail.html:131
-#, fuzzy
 msgid "История писем"
-msgstr "Email History"
+msgstr "Email history"
 
 #: .\clients\templates\clients\client_edit.html:5
 #: .\clients\templates\clients\client_edit.html:15
@@ -2343,10 +2316,8 @@ msgid "Activity Log"
 msgstr "Activity Log"
 
 #: .\clients\templates\clients\client_form.html:8
-#, fuzzy
-#| msgid "Следите за клиентами, сроками и платежами из единого интерфейса."
 msgid "Обновите данные клиента, сроки, статус дела и рабочие заметки."
-msgstr "Track clients, deadlines, and payments from a single interface."
+msgstr "Update client data, deadlines, case status, and working notes."
 
 #: .\clients\templates\clients\client_form.html:10
 msgid ""
@@ -2430,10 +2401,8 @@ msgid "Спонсор: %(count)s"
 msgstr "Sponsor: %(count)s"
 
 #: .\clients\templates\clients\clients_list.html:114
-#, fuzzy
-#| msgid "Основание до"
 msgid "Основание"
-msgstr "Base up"
+msgstr "Basis"
 
 #: .\clients\templates\clients\clients_list.html:119
 #, python-format
@@ -2521,9 +2490,9 @@ msgid ""
 "через кнопку «Добавить документ»."
 msgstr ""
 "The 'Standard document' badge indicates the basic list for the selected "
-"purpose. These items are taken from standard documents and appear as long as "
-"there is no separate setting for them. They can be enabled or disabled with "
-"a checkbox, and to edit the name or requirement — add your own variant via "
+"purpose. These items are taken from standard documents and appear as long as"
+" there is no separate setting for them. They can be enabled or disabled with"
+" a checkbox, and to edit the name or requirement — add your own variant via "
 "the 'Add document' button."
 
 #: .\clients\templates\clients\document_checklist_manage.html:89
@@ -2627,7 +2596,8 @@ msgstr "Document reminders"
 
 #: .\clients\templates\clients\document_reminder_list.html:17
 msgid ""
-"Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и периодам"
+"Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и "
+"периодам"
 msgstr ""
 "Review and generate up-to-date reminders, filter by client and timeframe"
 
@@ -2843,9 +2813,8 @@ msgid "Финансовая достаточность"
 msgstr "Financial sufficiency"
 
 #: .\clients\templates\clients\family_dashboard.html:38
-#, fuzzy
 msgid "Состав семьи"
-msgstr "Family Members"
+msgstr "Family composition"
 
 #: .\clients\templates\clients\family_dashboard.html:48
 #: .\clients\templates\clients\family_dashboard.html:195
@@ -2866,9 +2835,8 @@ msgid "Создать карточку супруга или ребёнка"
 msgstr "Create a spouse or child card"
 
 #: .\clients\templates\clients\family_dashboard.html:99
-#, fuzzy
 msgid "Расчёт финансов"
-msgstr "Finance Calculation"
+msgstr "Financial calculation"
 
 #: .\clients\templates\clients\family_dashboard.html:152
 msgid "Итого требуется"
@@ -2897,10 +2865,8 @@ msgid "Расписание отпечатков"
 msgstr "Print Schedule"
 
 #: .\clients\templates\clients\fingerprints_schedule.html:7
-#, fuzzy
-#| msgid "Нет предстоящих записей на отпечатки."
 msgid "Предстоящие и недавние визиты клиентов на отпечатки."
-msgstr "There are no upcoming print appointments."
+msgstr "Upcoming and recent client fingerprint appointments."
 
 #: .\clients\templates\clients\fingerprints_schedule.html:16
 msgid "Мониторинг предстоящих визитов в Ужонд"
@@ -3007,12 +2973,10 @@ msgid "Войти снова"
 msgstr "Log in again"
 
 #: .\clients\templates\clients\logs\email_logs.html:6
-#, fuzzy
 msgid "Журнал отправленных писем клиентам."
 msgstr "Log of sent emails to clients."
 
 #: .\clients\templates\clients\logs\email_logs.html:92
-#, fuzzy
 msgid "Логи писем не найдены."
 msgstr "No email logs found."
 
@@ -3021,6 +2985,7 @@ msgid ""
 "Просмотр всех значимых и незначимых действий, совершенных сотрудниками в "
 "системе."
 msgstr ""
+"View all significant and minor actions performed by staff in the system."
 
 #: .\clients\templates\clients\logs\staff_activity_logs.html:26
 msgid "Фильтр"
@@ -3032,17 +2997,14 @@ msgid "Время"
 msgstr "Time"
 
 #: .\clients\templates\clients\logs\staff_activity_logs.html:41
-#, fuzzy
 msgid "Действие"
 msgstr "Action"
 
 #: .\clients\templates\clients\logs\staff_activity_logs.html:42
-#, fuzzy
 msgid "Клиент / Объект"
 msgstr "Client / Object"
 
 #: .\clients\templates\clients\logs\staff_activity_logs.html:76
-#, fuzzy
 msgid "Логи активности не найдены."
 msgstr "No activity logs found."
 
@@ -3083,16 +3045,15 @@ msgid "Метрики и Воронка"
 msgstr "Metrics and Funnel"
 
 #: .\clients\templates\clients\metrics_dashboard.html:5
-#, fuzzy
-#| msgid "Метрики и Воронка"
 msgid "Метрики и воронка"
-msgstr "Metrics and Funnel"
+msgstr "Metrics and funnel"
 
 #: .\clients\templates\clients\metrics_dashboard.html:6
 msgid ""
 "Ключевые показатели по клиентам, оплатам и закрытым делам за выбранный "
 "период."
 msgstr ""
+"Key metrics for clients, payments, and closed cases for the selected period."
 
 #: .\clients\templates\clients\metrics_dashboard.html:11
 msgid "Бизнес-метрики (Воронка)"
@@ -3372,13 +3333,11 @@ msgstr "Add another file"
 #, python-format
 msgid ""
 "\n"
-"  Для цели \"%(purpose)s\" на языке \"%(language)s\" чеклист не определен в "
-"настройках.\n"
+"  Для цели \"%(purpose)s\" на языке \"%(language)s\" чеклист не определен в настройках.\n"
 "  "
 msgstr ""
 "\n"
-"Checklist not defined for purpose \"%(purpose)s\" and language "
-"\"%(language)s\"."
+"Checklist not defined for purpose \"%(purpose)s\" and language \"%(language)s\"."
 
 #: .\clients\templates\clients\partials\email_history.html:6
 msgid "История email"
@@ -3690,8 +3649,7 @@ msgstr "Filter"
 #: .\clients\templates\clients\register.html:53
 #, python-format
 msgid "Уже есть аккаунт? <a class=\"ms-2\" href=\"%(login_url)s\">Войти</a>"
-msgstr ""
-"Already have an account? <a class=\"ms-2\" href=\"%(login_url)s\">Log in</a>"
+msgstr "Already have an account? <a class=\"ms-2\" href=\"%(login_url)s\">Log in</a>"
 
 #: .\clients\templates\clients\search.html:4
 #: .\clients\templates\clients\search.html:12
@@ -3791,15 +3749,15 @@ msgstr "hello"
 #: .\clients\tests\test_misc_legacy.py:120
 msgctxt "menu"
 msgid "Open"
-msgstr ""
+msgstr "Open"
 
 #: .\clients\tests\test_misc_legacy.py:121
 msgid "Open"
-msgstr ""
+msgstr "Open"
 
 #: .\clients\tests\test_misc_legacy.py:122
 msgid "Print"
-msgstr ""
+msgstr "Print"
 
 #: .\clients\validators.py:47 .\clients\validators.py:55
 msgid "Имя файла не должно содержать пути или вложенные каталоги."
@@ -4620,17 +4578,13 @@ msgstr "You do not have access to this page"
 #: .\templates\403.html:25
 msgid ""
 "\n"
-"                        Вы вошли в систему, но ваш профиль не имеет прав для "
-"просмотра этого раздела сотрудников.\n"
-"                        Если вы считаете, что это ошибка, обратитесь к "
-"администратору сайта.\n"
+"                        Вы вошли в систему, но ваш профиль не имеет прав для просмотра этого раздела сотрудников.\n"
+"                        Если вы считаете, что это ошибка, обратитесь к администратору сайта.\n"
 "                        "
 msgstr ""
 "\n"
-"You are signed in, but your profile does not have permission to view this "
-"staff section.\n"
-"                        If you think this is an error, please contact your "
-"site administrator."
+"You are signed in, but your profile does not have permission to view this staff section.\n"
+"                        If you think this is an error, please contact your site administrator."
 
 #: .\templates\403.html:34
 msgid "Выйти и войти под другим аккаунтом"
@@ -4661,24 +4615,26 @@ msgid "Вернуться назад"
 msgstr "Back to profile"
 
 #: .\templates\500.html:7
-#, fuzzy
-#| msgid "Ошибка доставки"
 msgid "Ошибка сервера"
-msgstr "Delivery error"
+msgstr "Server error"
 
 #: .\templates\500.html:21
 msgid "Внутренняя ошибка сервера"
-msgstr ""
+msgstr "Internal server error"
 
 #: .\templates\500.html:24
 msgid ""
 "\n"
 "              Произошла непредвиденная ошибка. Наша команда уже уведомлена\n"
-"              и работает над устранением проблемы. Попробуйте повторить "
-"действие\n"
+"              и работает над устранением проблемы. Попробуйте повторить действие\n"
 "              через несколько минут.\n"
 "              "
 msgstr ""
+"\n"
+"              An unexpected error occurred. Our team has already been notified\n"
+"              and is working to resolve the problem. Please try again\n"
+"              in a few minutes.\n"
+"              "
 
 #: .\templates\account\auth_base.html:730 .\templates\base.html:144
 msgid "Выбор языка интерфейса"
@@ -4792,11 +4748,11 @@ msgstr "Confirm email"
 
 #: .\templates\account\email_confirm.html:72
 msgid ""
-"Если это не ваш адрес, просто проигнорируйте письмо и запросите новую ссылку "
-"из личного кабинета."
+"Если это не ваш адрес, просто проигнорируйте письмо и запросите новую ссылку"
+" из личного кабинета."
 msgstr ""
-"If this is not your address, simply ignore the letter and request a new link "
-"from your personal account."
+"If this is not your address, simply ignore the letter and request a new link"
+" from your personal account."
 
 #: .\templates\account\email_confirm.html:77
 msgid "Ссылка для подтверждения недействительна или уже была использована."
@@ -4824,8 +4780,8 @@ msgid ""
 "Перейдите по ссылке в письме, чтобы активировать ваш аккаунт и получить "
 "доступ ко всем функциям Legalize."
 msgstr ""
-"Follow the link in the email to activate your account and gain access to all "
-"Legalize features."
+"Follow the link in the email to activate your account and gain access to all"
+" Legalize features."
 
 #: .\templates\account\email_confirmation_required.html:63
 msgid "Не видите письмо?"
@@ -4929,43 +4885,35 @@ msgstr "Add New Document"
 
 #: .\templates\account\password_reset_from_key.html:18
 msgid "Придумайте надежную комбинацию, которую будете помнить только вы."
-msgstr ""
+msgstr "Choose a strong combination that only you will remember."
 
 #: .\templates\account\password_reset_from_key.html:22
-#, fuzzy
-#| msgid "Ссылка для подтверждения недействительна или уже была использована."
 msgid "Ссылка недействительна или устарела. Запросите новую инструкцию."
-msgstr "The confirmation link is invalid or has already been used."
+msgstr "This link is invalid or expired. Request a new instruction."
 
 #: .\templates\account\password_reset_from_key.html:38
 msgid "Сохранить новый пароль"
 msgstr "Save changes"
 
 #: .\templates\account\password_reset_from_key_done.html:9
-#, fuzzy
-#| msgid "Пароль изменен"
 msgid "Пароль изменён"
-msgstr "Save changes"
+msgstr "Password changed"
 
 #: .\templates\account\password_reset_from_key_done.html:23
-#, fuzzy
-#| msgid "Пароль изменен"
 msgid "Пароль успешно изменён"
-msgstr "Save changes"
+msgstr "Password changed successfully"
 
 #: .\templates\account\password_reset_from_key_done.html:24
 msgid "Теперь вы можете войти в систему, используя новую комбинацию."
-msgstr ""
+msgstr "You can now sign in using the new combination."
 
 #: .\templates\account\password_reset_from_key_done.html:25
 msgid "Мы автоматически перенаправим вас на страницу входа через 3 секунды."
-msgstr ""
+msgstr "We will automatically redirect you to the sign-in page in 3 seconds."
 
 #: .\templates\account\password_reset_from_key_done.html:26
-#, fuzzy
-#| msgid "Вернуться ко входу"
 msgid "Перейти ко входу сейчас"
-msgstr "Back to profile"
+msgstr "Go to sign in now"
 
 #: .\templates\account\resend_verification.html:4
 msgid "Повторная отправка письма"
@@ -4981,8 +4929,8 @@ msgstr "We'll send you a new link"
 
 #: .\templates\account\resend_verification.html:17
 msgid ""
-"Введите email, который использовали при регистрации. Если аккаунт существует "
-"и почта ещё не подтверждена, мы отправим новое письмо."
+"Введите email, который использовали при регистрации. Если аккаунт существует"
+" и почта ещё не подтверждена, мы отправим новое письмо."
 msgstr ""
 "Enter the email you used when registering. If the account exists and the "
 "email has not yet been confirmed, we will send a new email."
@@ -5034,7 +4982,8 @@ msgstr "Welcome to Legalize Platform"
 msgid ""
 "Зарегистрируйтесь, чтобы следить за документами, платежами и клиентами в "
 "одном месте."
-msgstr "Sign up to keep track of documents, payments and clients in one place."
+msgstr ""
+"Sign up to keep track of documents, payments and clients in one place."
 
 #: .\templates\account\signup.html:27
 msgid ""
@@ -5084,11 +5033,11 @@ msgstr "The email is on its way"
 
 #: .\templates\account\verification_sent.html:55
 msgid ""
-"Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
-"завершить регистрацию."
+"Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы"
+" завершить регистрацию."
 msgstr ""
-"We've sent you a verification email. Click the link in the email to complete "
-"your registration."
+"We've sent you a verification email. Click the link in the email to complete"
+" your registration."
 
 #: .\templates\account\verification_sent.html:63
 msgid "Что происходит дальше"
@@ -5179,8 +5128,8 @@ msgstr "Incorrect email or password. Please try again."
 msgid ""
 "Вы уже вошли как %(user)s. У вас может не быть прав доступа к этой странице."
 msgstr ""
-"You are already logged in as %(user)s. You may not have permission to access "
-"this page."
+"You are already logged in as %(user)s. You may not have permission to access"
+" this page."
 
 #: .\templates\base.html:34
 msgid "Legalize Site"
@@ -5262,8 +5211,7 @@ msgstr "Sign in with Google"
 #, python-format
 msgid ""
 "\n"
-"                    Вы собираетесь войти на сайт, используя свой аккаунт "
-"%(provider)s.\n"
+"                    Вы собираетесь войти на сайт, используя свой аккаунт %(provider)s.\n"
 "                    "
 msgstr ""
 "\n"
@@ -5417,6 +5365,22 @@ msgstr "user"
 msgid "users"
 msgstr "users"
 
+#: clients/templates/clients/partials/pagination.html:4
+msgid "Pagination"
+msgstr "Pagination"
+
+#: clients/templates/clients/partials/pagination.html:4
+msgid "Previous"
+msgstr "Previous"
+
+#: clients/templates/clients/partials/pagination.html:4
+msgid "Next"
+msgstr "Next"
+
+#: clients/templates/clients/partials/pagination.html:4
+msgid "Page %(current)s of %(total)s"
+msgstr "Page %(current)s of %(total)s"
+
 #~ msgid "System Health"
 #~ msgstr "System Health"
 
@@ -5460,18 +5424,16 @@ msgstr "users"
 #~ msgstr "Enter a valid email address."
 
 #~ msgid ""
-#~ "Enter a valid “slug” consisting of letters, numbers, underscores or "
-#~ "hyphens."
+#~ "Enter a valid “slug” consisting of letters, numbers, underscores or hyphens."
 #~ msgstr ""
-#~ "Enter a valid “slug” consisting of letters, numbers, underscores or "
-#~ "hyphens."
+#~ "Enter a valid “slug” consisting of letters, numbers, underscores or hyphens."
 
 #~ msgid ""
-#~ "Enter a valid “slug” consisting of Unicode letters, numbers, underscores, "
-#~ "or hyphens."
+#~ "Enter a valid “slug” consisting of Unicode letters, numbers, underscores, or"
+#~ " hyphens."
 #~ msgstr ""
-#~ "Enter a valid “slug” consisting of Unicode letters, numbers, underscores, "
-#~ "or hyphens."
+#~ "Enter a valid “slug” consisting of Unicode letters, numbers, underscores, or"
+#~ " hyphens."
 
 #, python-format
 #~ msgid "Enter a valid %(protocol)s address."
@@ -5507,13 +5469,11 @@ msgstr "users"
 
 #, python-format
 #~ msgid ""
-#~ "Ensure this value is a multiple of step size %(limit_value)s, starting "
-#~ "from %(offset)s, e.g. %(offset)s, %(valid_value1)s, %(valid_value2)s, and "
-#~ "so on."
+#~ "Ensure this value is a multiple of step size %(limit_value)s, starting from "
+#~ "%(offset)s, e.g. %(offset)s, %(valid_value1)s, %(valid_value2)s, and so on."
 #~ msgstr ""
-#~ "Ensure this value is a multiple of step size %(limit_value)s, starting "
-#~ "from %(offset)s, e.g. %(offset)s, %(valid_value1)s, %(valid_value2)s, and "
-#~ "so on."
+#~ "Ensure this value is a multiple of step size %(limit_value)s, starting from "
+#~ "%(offset)s, e.g. %(offset)s, %(valid_value1)s, %(valid_value2)s, and so on."
 
 #, python-format
 #~ msgid ""
@@ -5562,13 +5522,11 @@ msgstr "users"
 #~ msgid ""
 #~ "Ensure that there are no more than %(max)s digit before the decimal point."
 #~ msgid_plural ""
-#~ "Ensure that there are no more than %(max)s digits before the decimal "
-#~ "point."
+#~ "Ensure that there are no more than %(max)s digits before the decimal point."
 #~ msgstr[0] ""
 #~ "Ensure that there are no more than %(max)s digit before the decimal point."
 #~ msgstr[1] ""
-#~ "Ensure that there are no more than %(max)s digits before the decimal "
-#~ "point."
+#~ "Ensure that there are no more than %(max)s digits before the decimal point."
 
 #, python-format
 #~ msgid ""
@@ -5647,11 +5605,11 @@ msgstr "users"
 
 #, python-format
 #~ msgid ""
-#~ "“%(value)s” value has the correct format (YYYY-MM-DD) but it is an "
-#~ "invalid date."
+#~ "“%(value)s” value has the correct format (YYYY-MM-DD) but it is an invalid "
+#~ "date."
 #~ msgstr ""
-#~ "“%(value)s” value has the correct format (YYYY-MM-DD) but it is an "
-#~ "invalid date."
+#~ "“%(value)s” value has the correct format (YYYY-MM-DD) but it is an invalid "
+#~ "date."
 
 #~ msgid "Date (without time)"
 #~ msgstr "Date (without time)"
@@ -5666,11 +5624,11 @@ msgstr "users"
 
 #, python-format
 #~ msgid ""
-#~ "“%(value)s” value has the correct format (YYYY-MM-DD HH:MM[:ss[.uuuuuu]]"
-#~ "[TZ]) but it is an invalid date/time."
+#~ "“%(value)s” value has the correct format (YYYY-MM-DD "
+#~ "HH:MM[:ss[.uuuuuu]][TZ]) but it is an invalid date/time."
 #~ msgstr ""
-#~ "“%(value)s” value has the correct format (YYYY-MM-DD HH:MM[:ss[.uuuuuu]]"
-#~ "[TZ]) but it is an invalid date/time."
+#~ "“%(value)s” value has the correct format (YYYY-MM-DD "
+#~ "HH:MM[:ss[.uuuuuu]][TZ]) but it is an invalid date/time."
 
 #~ msgid "Date (with time)"
 #~ msgstr "Date (with time)"
@@ -5750,19 +5708,19 @@ msgstr "users"
 
 #, python-format
 #~ msgid ""
-#~ "“%(value)s” value has an invalid format. It must be in "
-#~ "HH:MM[:ss[.uuuuuu]] format."
+#~ "“%(value)s” value has an invalid format. It must be in HH:MM[:ss[.uuuuuu]] "
+#~ "format."
 #~ msgstr ""
-#~ "“%(value)s” value has an invalid format. It must be in "
-#~ "HH:MM[:ss[.uuuuuu]] format."
+#~ "“%(value)s” value has an invalid format. It must be in HH:MM[:ss[.uuuuuu]] "
+#~ "format."
 
 #, python-format
 #~ msgid ""
-#~ "“%(value)s” value has the correct format (HH:MM[:ss[.uuuuuu]]) but it is "
-#~ "an invalid time."
+#~ "“%(value)s” value has the correct format (HH:MM[:ss[.uuuuuu]]) but it is an "
+#~ "invalid time."
 #~ msgstr ""
-#~ "“%(value)s” value has the correct format (HH:MM[:ss[.uuuuuu]]) but it is "
-#~ "an invalid time."
+#~ "“%(value)s” value has the correct format (HH:MM[:ss[.uuuuuu]]) but it is an "
+#~ "invalid time."
 
 #~ msgid "Time"
 #~ msgstr "Time"
@@ -5865,10 +5823,8 @@ msgstr "users"
 #~ "corrupted image."
 
 #, python-format
-#~ msgid ""
-#~ "Select a valid choice. %(value)s is not one of the available choices."
-#~ msgstr ""
-#~ "Select a valid choice. %(value)s is not one of the available choices."
+#~ msgid "Select a valid choice. %(value)s is not one of the available choices."
+#~ msgstr "Select a valid choice. %(value)s is not one of the available choices."
 
 #~ msgid "Enter a list of values."
 #~ msgstr "Enter a list of values."
@@ -5920,8 +5876,7 @@ msgstr "users"
 #~ msgstr "Please correct the duplicate data for %(field)s."
 
 #, python-format
-#~ msgid ""
-#~ "Please correct the duplicate data for %(field)s, which must be unique."
+#~ msgid "Please correct the duplicate data for %(field)s, which must be unique."
 #~ msgstr ""
 #~ "Please correct the duplicate data for %(field)s, which must be unique."
 
@@ -5950,11 +5905,11 @@ msgstr "users"
 
 #, python-format
 #~ msgid ""
-#~ "%(datetime)s couldn’t be interpreted in time zone %(current_timezone)s; "
-#~ "it may be ambiguous or it may not exist."
+#~ "%(datetime)s couldn’t be interpreted in time zone %(current_timezone)s; it "
+#~ "may be ambiguous or it may not exist."
 #~ msgstr ""
-#~ "%(datetime)s couldn’t be interpreted in time zone %(current_timezone)s; "
-#~ "it may be ambiguous or it may not exist."
+#~ "%(datetime)s couldn’t be interpreted in time zone %(current_timezone)s; it "
+#~ "may be ambiguous or it may not exist."
 
 #~ msgid "Clear"
 #~ msgstr "Clear"
@@ -6315,26 +6270,26 @@ msgstr "users"
 #~ "hijacked by third parties."
 
 #~ msgid ""
-#~ "If you have configured your browser to disable “Referer” headers, please "
-#~ "re-enable them, at least for this site, or for HTTPS connections, or for "
-#~ "“same-origin” requests."
+#~ "If you have configured your browser to disable “Referer” headers, please re-"
+#~ "enable them, at least for this site, or for HTTPS connections, or for “same-"
+#~ "origin” requests."
 #~ msgstr ""
-#~ "If you have configured your browser to disable “Referer” headers, please "
-#~ "re-enable them, at least for this site, or for HTTPS connections, or for "
-#~ "“same-origin” requests."
+#~ "If you have configured your browser to disable “Referer” headers, please re-"
+#~ "enable them, at least for this site, or for HTTPS connections, or for “same-"
+#~ "origin” requests."
 
 #~ msgid ""
-#~ "If you are using the <meta name=\"referrer\" content=\"no-referrer\"> tag "
-#~ "or including the “Referrer-Policy: no-referrer” header, please remove "
-#~ "them. The CSRF protection requires the “Referer” header to do strict "
-#~ "referer checking. If you’re concerned about privacy, use alternatives "
-#~ "like <a rel=\"noreferrer\" …> for links to third-party sites."
+#~ "If you are using the <meta name=\"referrer\" content=\"no-referrer\"> tag or"
+#~ " including the “Referrer-Policy: no-referrer” header, please remove them. "
+#~ "The CSRF protection requires the “Referer” header to do strict referer "
+#~ "checking. If you’re concerned about privacy, use alternatives like <a "
+#~ "rel=\"noreferrer\" …> for links to third-party sites."
 #~ msgstr ""
-#~ "If you are using the <meta name=\"referrer\" content=\"no-referrer\"> tag "
-#~ "or including the “Referrer-Policy: no-referrer” header, please remove "
-#~ "them. The CSRF protection requires the “Referer” header to do strict "
-#~ "referer checking. If you’re concerned about privacy, use alternatives "
-#~ "like <a rel=\"noreferrer\" …> for links to third-party sites."
+#~ "If you are using the <meta name=\"referrer\" content=\"no-referrer\"> tag or"
+#~ " including the “Referrer-Policy: no-referrer” header, please remove them. "
+#~ "The CSRF protection requires the “Referer” header to do strict referer "
+#~ "checking. If you’re concerned about privacy, use alternatives like <a "
+#~ "rel=\"noreferrer\" …> for links to third-party sites."
 
 #~ msgid ""
 #~ "You are seeing this message because this site requires a CSRF cookie when "
@@ -6418,24 +6373,22 @@ msgstr "users"
 #, python-format
 #~ msgid ""
 #~ "View <a href=\"https://docs.djangoproject.com/en/%(version)s/releases/\" "
-#~ "target=\"_blank\" rel=\"noopener\">release notes</a> for Django "
-#~ "%(version)s"
+#~ "target=\"_blank\" rel=\"noopener\">release notes</a> for Django %(version)s"
 #~ msgstr ""
 #~ "View <a href=\"https://docs.djangoproject.com/en/%(version)s/releases/\" "
-#~ "target=\"_blank\" rel=\"noopener\">release notes</a> for Django "
-#~ "%(version)s"
+#~ "target=\"_blank\" rel=\"noopener\">release notes</a> for Django %(version)s"
 
 #, python-format
 #~ msgid ""
-#~ "You are seeing this page because <a href=\"https://docs.djangoproject.com/"
-#~ "en/%(version)s/ref/settings/#debug\" target=\"_blank\" "
-#~ "rel=\"noopener\">DEBUG=True</a> is in your settings file and you have not "
-#~ "configured any URLs."
+#~ "You are seeing this page because <a "
+#~ "href=\"https://docs.djangoproject.com/en/%(version)s/ref/settings/#debug\" "
+#~ "target=\"_blank\" rel=\"noopener\">DEBUG=True</a> is in your settings file "
+#~ "and you have not configured any URLs."
 #~ msgstr ""
-#~ "You are seeing this page because <a href=\"https://docs.djangoproject.com/"
-#~ "en/%(version)s/ref/settings/#debug\" target=\"_blank\" "
-#~ "rel=\"noopener\">DEBUG=True</a> is in your settings file and you have not "
-#~ "configured any URLs."
+#~ "You are seeing this page because <a "
+#~ "href=\"https://docs.djangoproject.com/en/%(version)s/ref/settings/#debug\" "
+#~ "target=\"_blank\" rel=\"noopener\">DEBUG=True</a> is in your settings file "
+#~ "and you have not configured any URLs."
 
 #~ msgid "Django Documentation"
 #~ msgstr "Django Documentation"
@@ -6457,8 +6410,7 @@ msgstr "users"
 
 #, python-format
 #~ msgid "Content purported to be compressed with %s but failed to decompress."
-#~ msgstr ""
-#~ "Content purported to be compressed with %s but failed to decompress."
+#~ msgstr "Content purported to be compressed with %s but failed to decompress."
 
 #, python-format
 #~ msgid "Unsupported value for qop: %s."
@@ -6484,19 +6436,19 @@ msgstr "users"
 
 #~ msgid ""
 #~ "A short code to identify the type of this package. For example: gem for a "
-#~ "Rubygem, docker for a container, pypi for a Python Wheel or Egg, maven "
-#~ "for a Maven Jar, deb for a Debian package, etc."
+#~ "Rubygem, docker for a container, pypi for a Python Wheel or Egg, maven for a"
+#~ " Maven Jar, deb for a Debian package, etc."
 #~ msgstr ""
 #~ "A short code to identify the type of this package. For example: gem for a "
-#~ "Rubygem, docker for a container, pypi for a Python Wheel or Egg, maven "
-#~ "for a Maven Jar, deb for a Debian package, etc."
+#~ "Rubygem, docker for a container, pypi for a Python Wheel or Egg, maven for a"
+#~ " Maven Jar, deb for a Debian package, etc."
 
 #~ msgid ""
-#~ "Package name prefix, such as Maven groupid, Docker image owner, GitHub "
-#~ "user or organization, etc."
+#~ "Package name prefix, such as Maven groupid, Docker image owner, GitHub user "
+#~ "or organization, etc."
 #~ msgstr ""
-#~ "Package name prefix, such as Maven groupid, Docker image owner, GitHub "
-#~ "user or organization, etc."
+#~ "Package name prefix, such as Maven groupid, Docker image owner, GitHub user "
+#~ "or organization, etc."
 
 #~ msgid "Name of the package."
 #~ msgstr "Name of the package."
@@ -6505,11 +6457,11 @@ msgstr "users"
 #~ msgstr "Version of the package."
 
 #~ msgid ""
-#~ "Extra qualifying data for a package such as the name of an OS, "
-#~ "architecture, distro, etc."
+#~ "Extra qualifying data for a package such as the name of an OS, architecture,"
+#~ " distro, etc."
 #~ msgstr ""
-#~ "Extra qualifying data for a package such as the name of an OS, "
-#~ "architecture, distro, etc."
+#~ "Extra qualifying data for a package such as the name of an OS, architecture,"
+#~ " distro, etc."
 
 #~ msgid "Extra subpath within a package, relative to the package root."
 #~ msgstr "Extra subpath within a package, relative to the package root."
@@ -6764,8 +6716,7 @@ msgstr "users"
 #~ msgstr "Confirmation of email sent to the client"
 
 #, python-format
-#~ msgid ""
-#~ "Нет аккаунта? <a href=\"%(signup_url)s\">Зарегистрируйтесь за минуту</a>"
+#~ msgid "Нет аккаунта? <a href=\"%(signup_url)s\">Зарегистрируйтесь за минуту</a>"
 #~ msgstr "No account? <a href=\"%(signup_url)s\">Sign up in a minute</a>"
 
 #~ msgid "Сброс пароля"
