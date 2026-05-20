@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-20 18:35+0200\n"
+"POT-Creation-Date: 2026-05-20 19:57+0200\n"
 "Language: en\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -125,7 +125,7 @@ msgstr "All companies"
 msgid "Фильтр по Статусу"
 msgstr "Filter by status"
 
-#: .\clients\forms.py:448
+#: .\clients\forms.py:448 .\clients\forms\logs.py:12
 msgid "Все статусы"
 msgstr "All statuses"
 
@@ -161,6 +161,52 @@ msgstr ""
 #| msgid "Воссоединение с семьёй"
 msgid "Воссоединение семьи"
 msgstr "Family reunification"
+
+#: .\clients\forms\logs.py:14 .\clients\models\campaign.py:36
+#: .\clients\models\client.py:157 .\clients\models\task.py:43
+#: .\clients\templates\clients\document_checklist_manage.html:179
+#: .\clients\templates\clients\document_checklist_manage.html:208
+#: .\clients\templates\clients\fingerprints_schedule.html:116
+#: .\clients\templates\clients\logs\email_logs.html:46
+#: .\clients\templates\clients\partials\client_overview.html:137
+#: .\clients\templates\clients\partials\modals.html:96
+#: .\submissions\models.py:28 .\submissions\models.py:91
+#: .\submissions\templates\submissions\document_form.html:28
+#: .\submissions\templates\submissions\submission_detail.html:29
+#: .\submissions\templates\submissions\submission_detail.html:81
+#: .\submissions\templates\submissions\submission_form.html:22
+#: .\submissions\templates\submissions\submission_list.html:20
+msgid "Статус"
+msgstr "Status"
+
+#: .\clients\forms\logs.py:19 .\clients\forms\logs.py:49
+#, fuzzy
+msgid "С даты"
+msgstr "From date"
+
+#: .\clients\forms\logs.py:24 .\clients\forms\logs.py:54
+#, fuzzy
+msgid "По дату"
+msgstr "To date"
+
+#: .\clients\forms\logs.py:29
+msgid "Поиск"
+msgstr "Search"
+
+#: .\clients\forms\logs.py:33
+#, fuzzy
+msgid "Тема или имя клиента..."
+msgstr "Subject or client name..."
+
+#: .\clients\forms\logs.py:43
+#, fuzzy
+msgid "Все сотрудники"
+msgstr "All staff"
+
+#: .\clients\forms\logs.py:44 .\clients\models\activity.py:48
+#: .\clients\templates\clients\logs\staff_activity_logs.html:40
+msgid "Сотрудник"
+msgstr "Staff member"
 
 #: .\clients\models\activity.py:12
 msgid "Карточка клиента открыта"
@@ -259,14 +305,11 @@ msgstr "Note updated"
 #: .\clients\templates\clients\document_reminder_list.html:116
 #: .\clients\templates\clients\fingerprints_schedule.html:35
 #: .\clients\templates\clients\fingerprints_schedule.html:114
+#: .\clients\templates\clients\logs\email_logs.html:44
 #: .\clients\templates\clients\payment_reminder_list.html:52
 #: .\clients\templates\clients\tasks_list.html:34
 msgid "Клиент"
 msgstr "Client"
-
-#: .\clients\models\activity.py:48
-msgid "Сотрудник"
-msgstr "Employee"
 
 #: .\clients\models\activity.py:50
 msgid "Тип события"
@@ -368,8 +411,9 @@ msgid "Настройки приложения"
 msgstr "Application Settings"
 
 #: .\clients\models\campaign.py:24 .\clients\models\email.py:20
+#: .\clients\templates\clients\logs\email_logs.html:73
 msgid "В очереди"
-msgstr "In line"
+msgstr "Queued"
 
 #: .\clients\models\campaign.py:25
 msgid "Отправка"
@@ -383,35 +427,22 @@ msgstr "Completed"
 
 #: .\clients\models\campaign.py:27 .\clients\models\document.py:147
 #: .\clients\models\email.py:23
+#: .\clients\templates\clients\logs\email_logs.html:77
 msgid "Ошибка"
 msgstr "Error"
 
 #: .\clients\models\campaign.py:30 .\clients\models\email.py:34
+#: .\clients\templates\clients\logs\email_logs.html:45
 #: .\clients\templates\clients\partials\email_history.html:17
 msgid "Тема"
 msgstr "Subject"
-
-#: .\clients\models\campaign.py:36 .\clients\models\client.py:157
-#: .\clients\models\task.py:43
-#: .\clients\templates\clients\document_checklist_manage.html:179
-#: .\clients\templates\clients\document_checklist_manage.html:208
-#: .\clients\templates\clients\fingerprints_schedule.html:116
-#: .\clients\templates\clients\partials\client_overview.html:137
-#: .\clients\templates\clients\partials\modals.html:96
-#: .\submissions\models.py:28 .\submissions\models.py:91
-#: .\submissions\templates\submissions\document_form.html:28
-#: .\submissions\templates\submissions\submission_detail.html:29
-#: .\submissions\templates\submissions\submission_detail.html:81
-#: .\submissions\templates\submissions\submission_form.html:22
-#: .\submissions\templates\submissions\submission_list.html:20
-msgid "Статус"
-msgstr "Status"
 
 #: .\clients\models\campaign.py:38
 msgid "Всего получателей"
 msgstr "Total recipients"
 
 #: .\clients\models\campaign.py:39 .\clients\models\email.py:21
+#: .\clients\templates\clients\logs\email_logs.html:71
 msgid "Отправлено"
 msgstr "Sent"
 
@@ -785,8 +816,9 @@ msgid "Компании"
 msgstr "Companies"
 
 #: .\clients\models\document.py:145 .\clients\models\email.py:22
+#: .\clients\templates\clients\logs\email_logs.html:75
 msgid "Пропущено"
-msgstr "Missed"
+msgstr "Skipped"
 
 #: .\clients\models\document.py:146
 msgid "Успешно"
@@ -1022,8 +1054,9 @@ msgid "Тип шаблона"
 msgstr "Template type"
 
 #: .\clients\models\email.py:43
+#: .\clients\templates\clients\logs\email_logs.html:43
 msgid "Дата отправки"
-msgstr "Date sent"
+msgstr "Sent date"
 
 #: .\clients\models\email.py:48
 msgid "Статус доставки"
@@ -1038,6 +1071,7 @@ msgid "Ошибка доставки"
 msgstr "Delivery error"
 
 #: .\clients\models\email.py:63
+#: .\clients\templates\clients\logs\email_logs.html:47
 msgid "Отправитель"
 msgstr "Sender"
 
@@ -1799,11 +1833,25 @@ msgstr "Upcoming fingerprints"
 msgid "Decisions"
 msgstr "Decisions"
 
-#: .\clients\templates\clients\admin_panel.html:197 .\templates\base.html:195
+#: .\clients\templates\clients\admin_panel.html:197 .\templates\base.html:200
 #, fuzzy
 #| msgid "Вход в систему"
 msgid "Здоровье системы"
 msgstr "Log in to the system"
+
+#: .\clients\templates\clients\admin_panel.html:216
+#: .\clients\templates\clients\logs\staff_activity_logs.html:4
+#: .\clients\templates\clients\logs\staff_activity_logs.html:5
+#: .\templates\base.html:186
+#, fuzzy
+msgid "Логи сотрудников"
+msgstr "Staff Logs"
+
+#: .\clients\templates\clients\admin_panel.html:217
+#: .\clients\templates\clients\logs\email_logs.html:4
+#: .\clients\templates\clients\logs\email_logs.html:5 .\templates\base.html:181
+msgid "Логи писем"
+msgstr "Email Logs"
 
 #: .\clients\templates\clients\app_settings_form.html:4
 #: .\clients\templates\clients\app_settings_form.html:5
@@ -2514,7 +2562,7 @@ msgstr "Add New Document"
 #: .\clients\templates\clients\document_checklist_manage.html:198
 #: .\clients\templates\clients\document_checklist_manage.html:232
 #: .\clients\templates\clients\partials\modals.html:241
-#: .\templates\base.html:227
+#: .\templates\base.html:232
 msgid "Закрыть"
 msgstr "Close"
 
@@ -2898,7 +2946,7 @@ msgid "В процессе"
 msgstr "In progress"
 
 #: .\clients\templates\clients\login.html:4 .\templates\account\login.html:4
-#: .\templates\base.html:212
+#: .\templates\base.html:217
 msgid "Вход"
 msgstr "Login"
 
@@ -2942,7 +2990,7 @@ msgstr ""
 "Don't have an account yet? <a class=\"ms-2\" href=\"%(register_url)s\">Sign "
 "up</a>"
 
-#: .\clients\templates\clients\logout.html:4 .\templates\base.html:205
+#: .\clients\templates\clients\logout.html:4 .\templates\base.html:210
 msgid "Выход"
 msgstr "Logout"
 
@@ -2957,6 +3005,46 @@ msgstr "We hope to see you again soon!"
 #: .\clients\templates\clients\logout.html:15
 msgid "Войти снова"
 msgstr "Log in again"
+
+#: .\clients\templates\clients\logs\email_logs.html:6
+#, fuzzy
+msgid "Журнал отправленных писем клиентам."
+msgstr "Log of sent emails to clients."
+
+#: .\clients\templates\clients\logs\email_logs.html:92
+#, fuzzy
+msgid "Логи писем не найдены."
+msgstr "No email logs found."
+
+#: .\clients\templates\clients\logs\staff_activity_logs.html:6
+msgid ""
+"Просмотр всех значимых и незначимых действий, совершенных сотрудниками в "
+"системе."
+msgstr ""
+
+#: .\clients\templates\clients\logs\staff_activity_logs.html:26
+msgid "Фильтр"
+msgstr "Filter"
+
+#: .\clients\templates\clients\logs\staff_activity_logs.html:39
+#: .\clients\templates\clients\partials\modals.html:209
+msgid "Время"
+msgstr "Time"
+
+#: .\clients\templates\clients\logs\staff_activity_logs.html:41
+#, fuzzy
+msgid "Действие"
+msgstr "Action"
+
+#: .\clients\templates\clients\logs\staff_activity_logs.html:42
+#, fuzzy
+msgid "Клиент / Объект"
+msgstr "Client / Object"
+
+#: .\clients\templates\clients\logs\staff_activity_logs.html:76
+#, fuzzy
+msgid "Логи активности не найдены."
+msgstr "No activity logs found."
 
 #: .\clients\templates\clients\mass_email.html:9
 msgid "Массовая рассылка клиентам"
@@ -3431,10 +3519,6 @@ msgstr "Verify checklist"
 #: .\clients\templates\clients\partials\modals.html:205
 msgid "Дата отпечатков"
 msgstr "Date of fingerprints submission"
-
-#: .\clients\templates\clients\partials\modals.html:209
-msgid "Время"
-msgstr "Time"
 
 #: .\clients\templates\clients\partials\modals.html:218
 msgid "Билет (Bilet)"
@@ -5142,16 +5226,11 @@ msgstr "By payments"
 msgid "Метрики"
 msgstr "Metrics"
 
-#: .\templates\base.html:181
-#, fuzzy
-msgid "Логи писем"
-msgstr "Email Logs"
-
-#: .\templates\base.html:239
+#: .\templates\base.html:244
 msgid "Заголовок страницы"
 msgstr "Reminder title"
 
-#: .\templates\base.html:240
+#: .\templates\base.html:245
 msgid "Короткое описание страницы"
 msgstr "Short description of the page"
 
@@ -5340,9 +5419,6 @@ msgstr "users"
 
 #~ msgid "System Health"
 #~ msgstr "System Health"
-
-#~ msgid "Фильтр"
-#~ msgstr "Filter"
 
 #~ msgid "Messages"
 #~ msgstr "Messages"
