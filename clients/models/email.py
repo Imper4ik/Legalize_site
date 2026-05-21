@@ -70,6 +70,8 @@ class EmailLog(models.Model):
         indexes = [
             models.Index(fields=["client", "-sent_at"], name="emaillog_client_sent_idx"),
             models.Index(fields=["client", "template_type"], name="emaillog_client_tmpl_idx"),
+            models.Index(fields=["delivery_status", "-sent_at"], name="emaillog_status_sent_idx"),
+            models.Index(fields=["-sent_at"], name="emaillog_sent_idx"),
         ]
         constraints = [
             models.UniqueConstraint(

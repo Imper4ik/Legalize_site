@@ -83,6 +83,8 @@ class ClientActivity(models.Model):
         verbose_name_plural = _("События клиентов")
         indexes = [
             models.Index(fields=["client", "-created_at"], name="activity_client_created_idx"),
+            models.Index(fields=["actor", "-created_at"], name="activity_actor_created_idx"),
+            models.Index(fields=["-created_at"], name="activity_created_idx"),
         ]
 
     def __str__(self) -> str:

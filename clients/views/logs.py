@@ -1,19 +1,15 @@
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Q
-from django.utils.timezone import datetime
 from django.views.generic import ListView
 
 from clients.forms import EmailLogFilterForm, StaffActivityFilterForm
 from clients.models.activity import ClientActivity
 from clients.models.email import EmailLog
+from clients.views.base import RoleRequiredMixin
 
 
-class BaseLogView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+class BaseLogView(RoleRequiredMixin, ListView):
     paginate_by = 50
-
-    def test_func(self):
-        # Only staff members (Admin/Manager roles) should access logs
-        return self.request.user.is_active and self.request.user.is_staff
+    allowed_roles = ["Admin", "Manager"]
 
 
 class EmailLogsView(BaseLogView):

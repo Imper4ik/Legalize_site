@@ -121,7 +121,7 @@ class WezwanieOCRStage19Tests(TestCase):
             fingerprints_date=date(2026, 5, 4),
             fingerprints_time="10:30",
             wezwanie_type="fingerprints",
-            fingerprints_location="MarszaЕ‚kowska 3/5, pok. 14,16, stan. 10,11",
+            fingerprints_location="Marszałkowska 3/5, pok. 14,16, stan. 10,11",
             ticket_number="X29",
             list_name="Lista X1",
             application_status_code="P",

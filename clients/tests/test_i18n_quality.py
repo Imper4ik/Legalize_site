@@ -1,5 +1,6 @@
 import os
 import re
+from pathlib import Path
 import polib
 import pytest
 from django.utils.translation import override, gettext as _
@@ -117,6 +118,45 @@ def test_no_broken_encoding_markers_in_po_files():
                     break
 
     assert not bad_entries, f"Found possible broken encoding in PO files: {bad_entries[:10]}"
+
+def _is_repairable_mojibake(value):
+    if not value or not re.search(r'[^\x00-\x7F]', value):
+        return False
+
+    for encoding in ('cp1251', 'cp1252'):
+        try:
+            repaired = value.encode(encoding).decode('utf-8')
+        except UnicodeError:
+            continue
+        if repaired != value and re.search(r'[\u0400-\u04FF\u0100-\u017F]', repaired):
+            return True
+    return False
+
+
+def test_no_repairable_mojibake_in_i18n_sources():
+    paths = []
+    for root in ['clients', 'translations', 'submissions', 'users', 'templates', 'locale']:
+        root_path = Path(root)
+        if not root_path.exists():
+            continue
+        for suffix in ('*.py', '*.html', '*.po'):
+            paths.extend(root_path.rglob(suffix))
+
+    bad_lines = []
+    for path in paths:
+        if any(part in {'migrations', '__pycache__'} for part in path.parts):
+            continue
+        try:
+            lines = path.read_text(encoding='utf-8').splitlines()
+        except UnicodeDecodeError:
+            continue
+        for line_no, line in enumerate(lines, 1):
+            if _is_repairable_mojibake(line):
+                bad_lines.append(f'{path}:{line_no}')
+                break
+
+    assert not bad_lines, f"Found repairable mojibake in i18n source files: {bad_lines[:20]}"
+
 
 def test_no_cyrillic_in_js_files():
     cyrillic_regex = re.compile(r'[\u0410-\u044F\u0401\u0451]')

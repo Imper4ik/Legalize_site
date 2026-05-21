@@ -45,6 +45,7 @@ generated_media_test/
 tmp_*.js
 tmp_*.json
 tmp_*.html
+update_logs_translations.py
 htmlcov/
 
 # Unnecessary project files

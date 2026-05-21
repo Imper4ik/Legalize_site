@@ -1,5 +1,4 @@
 import os
-import re
 from django.test import SimpleTestCase
 from django.conf import settings
 

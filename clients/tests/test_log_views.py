@@ -51,6 +51,24 @@ def test_staff_activity_logs_page_renders(logged_in_admin, sample_client):
     assert "Rendered activity log" in response.content.decode("utf-8")
 
 
+@pytest.mark.django_db
+@pytest.mark.parametrize("url_name", ["clients:email_logs", "clients:staff_activity_logs"])
+def test_log_pages_reject_plain_staff(logged_in_staff, url_name):
+    response = logged_in_staff.get(reverse(url_name))
+
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("url_name", ["clients:email_logs", "clients:staff_activity_logs"])
+def test_log_pages_allow_manager(client, manager_user, url_name):
+    client.force_login(manager_user)
+
+    response = client.get(reverse(url_name))
+
+    assert response.status_code == 200
+
+
 def test_pagination_partial_preserves_filters_without_duplicate_page():
     request = RequestFactory().get("/staff/logs/emails/?status=sent&page=2")
     page = Paginator(list(range(60)), 50).page(2)

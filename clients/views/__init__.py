@@ -145,4 +145,6 @@ __all__ = [
     'email_preview_api',
     'fingerprints_schedule_view',
     'send_custom_email',
+    'EmailLogsView',
+    'StaffActivityLogsView',
 ]

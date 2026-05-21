@@ -35,6 +35,7 @@ from .models import (
     Payment,
     ServicePrice,
     StaffTask,
+    EmailLog,
     EmployeePermission,
     get_fallback_document_checklist,
     resolve_document_label,
@@ -44,6 +45,7 @@ if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
 logger = logging.getLogger(__name__)
+User = get_user_model()
 
 
 EMPLOYEE_PERMISSION_FIELD_LABELS = (
@@ -743,14 +745,6 @@ class CalculatorForm(forms.Form):
 
 
 # --- LOG FILTER FORMS ---
-
-from django import forms
-from django.contrib.auth import get_user_model
-from django.utils.translation import gettext_lazy as _
-
-from clients.models.email import EmailLog
-
-User = get_user_model()
 
 
 class EmailLogFilterForm(forms.Form):

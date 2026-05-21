@@ -180,3 +180,38 @@ class TestTranslationOverrides:
         override = TranslationOverride.objects.get(msgid="Pagination", language="ru")
         assert override.text == "Manual studio edit"
         assert override.source == TranslationOverride.SOURCE_STUDIO
+
+    def test_import_po_can_overwrite_selected_studio_sources(self):
+        """Operators can repair bad production DB overrides from PO without enabling a broad overwrite."""
+        from django.core.management import call_command
+
+        expected = "\u041d\u0430\u0432\u0438\u0433\u0430\u0446\u0438\u044f \u043f\u043e \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0430\u043c"
+        TranslationOverride.objects.create(
+            msgid="Pagination",
+            language="ru",
+            text="Bad studio edit",
+            source=TranslationOverride.SOURCE_STUDIO,
+            is_active=True,
+        )
+
+        call_command("import_po_to_db", "--overwrite-sources=studio", verbosity=0)
+
+        override = TranslationOverride.objects.get(msgid="Pagination", language="ru")
+        assert override.text == expected
+        assert override.source == TranslationOverride.SOURCE_IMPORT
+
+    def test_import_po_can_fail_on_protected_skips(self):
+        """A dry production audit can fail when protected DB overrides differ from PO."""
+        from django.core.management import call_command
+        from django.core.management.base import CommandError
+
+        TranslationOverride.objects.create(
+            msgid="Pagination",
+            language="ru",
+            text="Protected studio edit",
+            source=TranslationOverride.SOURCE_STUDIO,
+            is_active=True,
+        )
+
+        with pytest.raises(CommandError):
+            call_command("import_po_to_db", "--dry-run", "--fail-on-skipped", verbosity=0)

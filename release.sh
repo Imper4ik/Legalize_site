@@ -90,4 +90,8 @@ else
 fi
 
 python manage.py createcachetable
-python manage.py import_po_to_db
+translation_import_args=()
+if [ -n "${TRANSLATION_IMPORT_ARGS:-}" ]; then
+  read -r -a translation_import_args <<< "$TRANSLATION_IMPORT_ARGS"
+fi
+python manage.py import_po_to_db "${translation_import_args[@]}"
