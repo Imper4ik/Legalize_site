@@ -591,12 +591,20 @@ CRON_FAILURE_EMAIL_ALERTS = env_flag("CRON_FAILURE_EMAIL_ALERTS", "True" if IS_P
 
 # --- SENTRY ---
 SENTRY_DSN = os.environ.get("SENTRY_DSN")
+SENTRY_ENVIRONMENT = (
+    os.environ.get("SENTRY_ENVIRONMENT")
+    or os.environ.get("RAILWAY_ENVIRONMENT")
+    or ("production" if IS_PRODUCTION else None)
+)
 SENTRY_TRACES_SAMPLE_RATE = env_float(
     "SENTRY_TRACES_SAMPLE_RATE",
     "0.1" if IS_PRODUCTION else "1.0",
 )
+SENTRY_PROFILES_SAMPLE_RATE = env_float("SENTRY_PROFILES_SAMPLE_RATE", "0.0")
 if not 0 <= SENTRY_TRACES_SAMPLE_RATE <= 1:
     raise ImproperlyConfigured("SENTRY_TRACES_SAMPLE_RATE must be between 0 and 1.")
+if not 0 <= SENTRY_PROFILES_SAMPLE_RATE <= 1:
+    raise ImproperlyConfigured("SENTRY_PROFILES_SAMPLE_RATE must be between 0 and 1.")
 
 if SENTRY_DSN:
     import sentry_sdk
@@ -606,6 +614,8 @@ if SENTRY_DSN:
         dsn=SENTRY_DSN,
         integrations=[DjangoIntegration()],
         traces_sample_rate=SENTRY_TRACES_SAMPLE_RATE,
+        profiles_sample_rate=SENTRY_PROFILES_SAMPLE_RATE,
+        environment=SENTRY_ENVIRONMENT,
         send_default_pii=False,
         max_request_body_size="never",
         before_send=_sentry_before_send,

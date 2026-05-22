@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -79,6 +80,38 @@ class TranslationViewsTests(TestCase):
             updated_by=self.superuser, 
             storage='database'
         )
+
+    def test_update_translation_api_logs_only_safe_metadata(self):
+        self.client.login(email="super@example.com", password="pass")
+        url = reverse("translations:update_api")
+        payload = {
+            "msgid": "Sensitive source text",
+            "ru": "raw-ru-secret-text",
+            "en": "raw-en-secret-text",
+            "pl": "raw-pl-secret-text",
+        }
+        msgid_hash = hashlib.sha256(payload["msgid"].encode("utf-8")).hexdigest()[:12]
+
+        from unittest.mock import patch
+
+        with (
+            patch("translations.views.save_translation_entry"),
+            self.assertLogs("translations.views", level="INFO") as logs,
+        ):
+            response = self.client.post(
+                url,
+                data=json.dumps(payload),
+                content_type="application/json",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        log_text = "\n".join(logs.output)
+        self.assertIn("msgid_hash=", log_text)
+        self.assertIn(msgid_hash, log_text)
+        self.assertIn("langs=['ru', 'en', 'pl']", log_text)
+        self.assertIn("storage=database", log_text)
+        for raw_value in payload.values():
+            self.assertNotIn(raw_value, log_text)
 
     def test_update_translation_api_requires_csrf_token(self):
         csrf_client = DjangoClient(enforce_csrf_checks=True)

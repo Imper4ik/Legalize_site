@@ -68,4 +68,5 @@ def clear_translation_override_cache(msgid: str, language: str) -> None:
     """Clear cache for a specific translation override."""
     cache_key = get_cache_key(msgid, language)
     cache.delete(cache_key)
-    logger.debug("Cleared translation cache for %s (%s)", msgid[:20], language)
+    msgid_hash = hashlib.sha256(str(msgid or "").encode("utf-8")).hexdigest()[:12]
+    logger.debug("Cleared translation cache msgid_hash=%s lang=%s", msgid_hash, language)

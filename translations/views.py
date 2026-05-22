@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 from typing import Any, TYPE_CHECKING
@@ -49,14 +50,8 @@ def update_translation_api(request: HttpRequest) -> JsonResponse:
             ru = data.get('ru')
             en = data.get('en')
             pl = data.get('pl')
-
-            logger.info('update_translation_api called by %s referer=%s payload=%s', getattr(request, 'user', None), request.META.get('HTTP_REFERER'), data)
-
             storage = getattr(settings, 'TRANSLATION_STUDIO_STORAGE', 'database')
-            
-            save_translation_entry(msgid, ru=ru, en=en, pl=pl, updated_by=request.user, storage=storage)
-            logger.info('Saved translation for msgid=%s via %s', msgid, storage)
-            
+
             updated_langs = []
             if ru is not None:
                 updated_langs.append('ru')
@@ -65,6 +60,17 @@ def update_translation_api(request: HttpRequest) -> JsonResponse:
             if pl is not None:
                 updated_langs.append('pl')
 
+            msgid_hash = hashlib.sha256(str(msgid or '').encode('utf-8')).hexdigest()[:12]
+            logger.info(
+                'update_translation_api called user=%s msgid_hash=%s langs=%s storage=%s',
+                getattr(request.user, 'pk', None),
+                msgid_hash,
+                updated_langs,
+                storage,
+            )
+
+            save_translation_entry(msgid, ru=ru, en=en, pl=pl, updated_by=request.user, storage=storage)
+
             return JsonResponse({
                 'status': 'ok',
                 'storage': storage,
@@ -72,7 +78,10 @@ def update_translation_api(request: HttpRequest) -> JsonResponse:
                 'updated_languages': updated_langs
             })
         except Exception as e:
-            logger.exception('Error in update_translation_api: %s', e)
+            logger.warning(
+                'Error in update_translation_api user=%s',
+                getattr(request.user, 'pk', None),
+            )
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     return JsonResponse({'status': 'error', 'message': 'Invalid method'}, status=405)
 

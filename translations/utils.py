@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
 import re
@@ -9,6 +10,11 @@ import polib
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
+
+
+def _msgid_hash(msgid: Any) -> str:
+    return hashlib.sha256(str(msgid or '').encode('utf-8')).hexdigest()[:12]
+
 
 def normalize_text(s: Any) -> str:
     """Normalize whitespace and newlines for comparison."""
@@ -140,6 +146,8 @@ def save_translation_entry(msgid: str, ru: Optional[str] = None, en: Optional[st
     if potential_canonical:
         canonical = potential_canonical
 
+    msgid_hash = _msgid_hash(canonical)
+
     # 1. Save to DB
     if storage in ('database', 'both'):
         from .models import TranslationOverride
@@ -151,7 +159,7 @@ def save_translation_entry(msgid: str, ru: Optional[str] = None, en: Optional[st
                 continue
             
             try:
-                override, created = TranslationOverride.objects.update_or_create(
+                _override, _created = TranslationOverride.objects.update_or_create(
                     msgid=canonical,
                     language=lang,
                     defaults={
@@ -161,7 +169,7 @@ def save_translation_entry(msgid: str, ru: Optional[str] = None, en: Optional[st
                         'updated_by': updated_by if updated_by and updated_by.is_authenticated else None
                     }
                 )
-                logger.info('Saved DB translation override for msgid=%s (lang=%s)', canonical[:20], lang)
+                logger.info('Saved DB translation override msgid_hash=%s lang=%s', msgid_hash, lang)
                 # Clear cache
                 clear_translation_override_cache(canonical, lang)
             except (ProgrammingError, OperationalError) as e:
@@ -182,13 +190,12 @@ def save_translation_entry(msgid: str, ru: Optional[str] = None, en: Optional[st
             entry = po.find(canonical)
 
             if entry:
-                old = entry.msgstr
                 entry.msgstr = updates[lang]
                 if 'fuzzy' in entry.flags:
                     entry.flags.remove('fuzzy')
                 try:
                     po.save()
-                    logger.info('Updated translation in %s for msgid=%s (lang=%s): "%s" -> "%s"', path, canonical, lang, old, updates[lang])
+                    logger.info('Updated translation in %s msgid_hash=%s lang=%s', path, msgid_hash, lang)
                 except Exception as e:
                     logger.exception('Failed to save PO file %s: %s', path, e)
             else:
@@ -200,7 +207,7 @@ def save_translation_entry(msgid: str, ru: Optional[str] = None, en: Optional[st
                 po.append(new_entry)
                 try:
                     po.save()
-                    logger.info('Appended new translation to %s for msgid=%s (lang=%s): "%s"', path, canonical, lang, updates[lang])
+                    logger.info('Appended new translation to %s msgid_hash=%s lang=%s', path, msgid_hash, lang)
                 except Exception as e:
                     logger.exception('Failed to save PO file %s after append: %s', path, e)
 

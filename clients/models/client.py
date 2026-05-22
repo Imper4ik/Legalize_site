@@ -270,7 +270,10 @@ class Client(SoftDeleteModel):
         ]
 
     def __str__(self) -> str:
-        return f"{self.first_name} {self.last_name}"
+        return self.get_full_name()
+
+    def get_full_name(self) -> str:
+        return f"{self.first_name} {self.last_name}".strip()
 
     def on_archive(self) -> None:
         if not self.user_id:

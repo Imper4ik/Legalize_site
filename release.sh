@@ -94,4 +94,11 @@ translation_import_args=()
 if [ -n "${TRANSLATION_IMPORT_ARGS:-}" ]; then
   read -r -a translation_import_args <<< "$TRANSLATION_IMPORT_ARGS"
 fi
-python manage.py import_po_to_db "${translation_import_args[@]}"
+case "${ENABLE_TRANSLATION_TOOLING:-False}" in
+  1|true|TRUE|yes|YES|on|ON)
+    python manage.py import_po_to_db "${translation_import_args[@]}"
+    ;;
+  *)
+    echo "Skipping import_po_to_db because ENABLE_TRANSLATION_TOOLING is disabled."
+    ;;
+esac

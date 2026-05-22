@@ -131,6 +131,26 @@ class ProductionSettingsTests(SimpleTestCase):
         self.assertIn("https://cdn.jsdelivr.net", settings_module.LEGALIZE_CONTENT_SECURITY_POLICY)
         self.assertFalse(settings_module.LEGALIZE_CSP_REPORT_ONLY)
 
+    def test_production_uses_single_sentry_init_with_redaction(self):
+        with patch("sentry_sdk.init") as sentry_init:
+            load_production_settings(
+                {
+                    "SENTRY_DSN": "https://public@example.com/1",
+                    "SENTRY_ENVIRONMENT": "railway-production",
+                    "SENTRY_TRACES_SAMPLE_RATE": "0.33",
+                    "SENTRY_PROFILES_SAMPLE_RATE": "0.25",
+                }
+            )
+
+        self.assertEqual(sentry_init.call_count, 1)
+        kwargs = sentry_init.call_args.kwargs
+        self.assertEqual(kwargs["environment"], "railway-production")
+        self.assertEqual(kwargs["traces_sample_rate"], 0.33)
+        self.assertEqual(kwargs["profiles_sample_rate"], 0.25)
+        self.assertFalse(kwargs["send_default_pii"])
+        self.assertEqual(kwargs["max_request_body_size"], "never")
+        self.assertEqual(kwargs["before_send"].__name__, "_sentry_before_send")
+        self.assertEqual(kwargs["before_breadcrumb"].__name__, "_sentry_before_breadcrumb")
 
     def test_production_requires_hosts_and_csrf_origins(self):
         with patch.dict(

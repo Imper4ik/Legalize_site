@@ -35,6 +35,26 @@ class TranslationUtilsStage10Tests(TestCase):
         compile_mock.assert_called_once()
 
     @patch("translations.utils.get_po_files", return_value={"ru": "ru.po"})
+    @patch("legalize_site.utils.i18n.compile_message_catalogs")
+    def test_save_translation_entry_logs_hash_without_raw_translation_text(self, _compile_mock, _files_mock):
+        po_ru = polib.POFile()
+        po_ru.append(polib.POEntry(msgid="Sensitive key", msgstr="old-secret-text"))
+
+        def fake_pofile(path):
+            po_ru.save = MagicMock()
+            return po_ru
+
+        with patch("translations.utils.polib.pofile", side_effect=fake_pofile):
+            with self.assertLogs("translations.utils", level="INFO") as logs:
+                save_translation_entry("Sensitive key", ru="new-secret-text", storage="po")
+
+        log_text = "\n".join(logs.output)
+        self.assertIn("msgid_hash=", log_text)
+        self.assertNotIn("Sensitive key", log_text)
+        self.assertNotIn("old-secret-text", log_text)
+        self.assertNotIn("new-secret-text", log_text)
+
+    @patch("translations.utils.get_po_files", return_value={"ru": "ru.po"})
     @patch("translations.utils.logger")
     def test_save_translation_entry_swallow_compile_errors(self, logger_mock, _files_mock):
         po_ru = polib.POFile()
