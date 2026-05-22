@@ -166,6 +166,43 @@
   </table>
 </div>
 
+{% if is_paginated %}
+  <nav aria-label="Page navigation" class="mt-4">
+    <ul class="pagination justify-content-center">
+      {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if selected_company %}&company={{ selected_company }}{% endif %}">
+            &laquo; {% translate "Первая" %}
+          </a>
+        </li>
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_company %}&company={{ selected_company }}{% endif %}">
+            {% translate "Назад" %}
+          </a>
+        </li>
+      {% endif %}
+
+      <li class="page-item disabled">
+        <span class="page-link">
+          {% translate "Страница" %} {{ page_obj.number }} {% translate "из" %} {{ page_obj.paginator.num_pages }}
+        </span>
+      </li>
+
+      {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_company %}&company={{ selected_company }}{% endif %}">
+            {% translate "Вперед" %}
+          </a>
+        </li>
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if selected_company %}&company={{ selected_company }}{% endif %}">
+            {% translate "Последняя" %} &raquo;
+          </a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endif %}
 {% endblock %}
 
 {% block extra_js %}

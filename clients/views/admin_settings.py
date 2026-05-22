@@ -68,8 +68,15 @@ class AdminPanelView(RoleRequiredMixin, TemplateView):
         return context
 
 
-def _count_missing_document_items() -> int:
-    clients = Client.objects.exclude(workflow_stage__in=["closed", "decision_received"]).prefetch_related(
+def _count_missing_document_items() -> int | str:
+    active_qs = Client.objects.exclude(workflow_stage__in=["closed", "decision_received"])
+    
+    # Для огромных баз данных мы не можем считать это в реальном времени, 
+    # так как это требует создания чеклистов для каждого клиента.
+    if active_qs.count() > 500:
+        return "500+ (Расчет отключен для скорости)"
+
+    clients = active_qs.prefetch_related(
         "documents",
         "wniosek_submissions",
         "wniosek_submissions__attachments",

@@ -60,63 +60,8 @@
         </div>
     </div>
 
-    <div class="row g-4 mb-4">
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="text-xs fw-bold text-uppercase mb-1 text-muted">{% translate "Active cases" %}</div>
-                    <div class="h4 mb-0 fw-bold">{{ active_cases }}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="text-xs fw-bold text-uppercase mb-1 text-muted">{% translate "Missing documents" %}</div>
-                    <div class="h4 mb-0 fw-bold">{{ missing_documents }}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="text-xs fw-bold text-uppercase mb-1 text-muted">{% translate "Unpaid payments" %}</div>
-                    <div class="h4 mb-0 fw-bold">{{ unpaid_payments }}</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-xl-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body">
-                    <div class="text-xs fw-bold text-uppercase mb-1 text-muted">{% translate "Waiting after fingerprints" %}</div>
-                    <div class="h4 mb-0 fw-bold">{{ waiting_after_fingerprints }}</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="row g-4">
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-header bg-transparent border-0 pt-4 pb-0">
-                    <h5 class="fw-semibold mb-0">{% translate "Clients by Stage" %} ({{ total_clients }})</h5>
-                </div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush">
-                        {% for stage in clients_by_stage %}
-                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                            {{ stage.display }}
-                            <span class="badge bg-primary rounded-pill">{{ stage.count }}</span>
-                        </li>
-                        {% empty %}
-                        <li class="list-group-item px-0 text-muted">{% translate "No clients found." %}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-6">
+        <div class="col-lg-12">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-header bg-transparent border-0 pt-4 pb-0">
                     <h5 class="fw-semibold mb-0">{% translate "Operational Queues" %}</h5>

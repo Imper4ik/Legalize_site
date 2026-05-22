@@ -267,6 +267,9 @@ class Client(SoftDeleteModel):
             models.Index(fields=["workflow_stage", "status"], name="client_workflow_status_idx"),
             models.Index(fields=["created_at"], name="client_created_at_idx"),
             models.Index(fields=["sponsor_client", "family_role"], name="client_family_role_idx"),
+            models.Index(fields=["email"], name="client_email_idx"),
+            models.Index(fields=["phone"], name="client_phone_idx"),
+            models.Index(fields=["last_name", "first_name"], name="client_name_idx"),
         ]
 
     def __str__(self) -> str:
