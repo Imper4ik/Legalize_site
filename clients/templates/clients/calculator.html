@@ -113,7 +113,7 @@
                             <span class="fw-bold">{{ results.rent_per_person|format_currency }} zł</span>
                         </div>
                         {% if results.basis_of_stay == 'student' %}
-                        <small class="text-muted d-block text-end">({{ results.rent_total|format_currency }} zł / {{ results.num_people }} чел.)</small>
+                        <small class="text-muted d-block text-end">({{ results.rent_total|format_currency }} zł / {{ results.num_people }} {% translate "чел.)" %}</small>
                         {% else %}
                         <small class="text-muted d-block text-end">({% translate "на всю семью" %}: {{ results.rent_total|format_currency }} zł)</small>
                         {% endif %}
@@ -123,7 +123,7 @@
                             <span>2. {% translate "Обучение в месяц" %}</span>
                             <span class="fw-bold">{{ results.monthly_tuition_calculated|format_currency }} zł</span>
                         </div>
-                        <small class="text-muted d-block text-end">({{ results.tuition_total|format_currency }} zł / {{ results.months_in_period }} мес.)</small>
+                        <small class="text-muted d-block text-end">({{ results.tuition_total|format_currency }} zł / {{ results.months_in_period }} {% translate "мес.)" %}</small>
                     </li>
                      <li class="list-group-item px-0">
                         <div class="d-flex justify-content-between">
@@ -138,7 +138,7 @@
                         {% if results.basis_of_stay == 'student' %}
                         <small class="text-muted d-block text-end">({% translate "фиксированная сумма" %})</small>
                         {% else %}
-                        <small class="text-muted d-block text-end">({{ living_allowance|format_currency }} zł * {{ results.num_people }} чел.)</small>
+                        <small class="text-muted d-block text-end">({{ living_allowance|format_currency }} zł * {{ results.num_people }} {% translate "чел.)" %}</small>
                         {% endif %}
                     </li>
                      <li class="list-group-item px-0 bg-light">

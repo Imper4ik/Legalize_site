@@ -22,10 +22,8 @@
                     {% if error_message %}
                         {{ error_message }}
                     {% else %}
-                        {% blocktranslate %}
-                        Вы вошли в систему, но ваш профиль не имеет прав для просмотра этого раздела сотрудников.
-                        Если вы считаете, что это ошибка, обратитесь к администратору сайта.
-                        {% endblocktranslate %}
+                        {% blocktranslate %}Вы вошли в систему, но ваш профиль не имеет прав для просмотра этого раздела сотрудников.
+                        Если вы считаете, что это ошибка, обратитесь к администратору сайта.{% endblocktranslate %}
                     {% endif %}
                 </p>
                 <div class="d-flex flex-column flex-sm-row gap-3 justify-content-center">

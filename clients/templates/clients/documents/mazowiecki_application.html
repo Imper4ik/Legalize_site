@@ -264,10 +264,10 @@
         {% csrf_token %}
         <div class="print-actions">
             <button type="submit">
-                {% if LANGUAGE_CODE == "pl" %}Potwierdź i drukuj{% elif LANGUAGE_CODE == "en" %}Confirm and print{% else %}Подтвердить и печатать{% endif %}
+                {% if LANGUAGE_CODE == "pl" %}Potwierdź i drukuj{% elif LANGUAGE_CODE == "en" %}Confirm and print{% else %}{% translate "Подтвердить и печатать" %}{% endif %}
             </button>
             <a href="javascript:window.history.back()">
-                {% if LANGUAGE_CODE == "pl" %}Wróć{% elif LANGUAGE_CODE == "en" %}Back{% else %}Назад{% endif %}
+                {% if LANGUAGE_CODE == "pl" %}Wróć{% elif LANGUAGE_CODE == "en" %}Back{% else %}{% translate "Назад" %}{% endif %}
             </a>
         </div>
         <div class="print-hint">
@@ -276,13 +276,13 @@
             {% elif LANGUAGE_CODE == "en" %}
                 Attachments entered here can stay custom. After confirmation the system will match known checklist items automatically and mark them as submitted for this client.
             {% else %}
-                Вложения, введённые здесь, могут остаться произвольными. После подтверждения система автоматически сопоставит известные пункты чеклиста и отметит их как поданные для этого клиента.
+                {% translate "Вложения, введённые здесь, могут остаться произвольными. После подтверждения система автоматически сопоставит известные пункты чеклиста и отметит их как поданные для этого клиента." %}
             {% endif %}
         </div>
 
     <div class="page">
         <div class="header-date">
-            Warszawa, data/date/дата <span class="bold">{{ date_current|date:"d.m.Y" }}</span>
+            {% translate "Warszawa, data/date/дата" %} <span class="bold">{{ date_current|date:"d.m.Y" }}</span>
         </div>
 
         <div class="urzad-box">
@@ -336,32 +336,32 @@
         <div class="id-row">
             <div class="id-col">
                 <span class="field-value">{{ mos_id }}</span>
-                <span class="field-label">(ID wniosku w MOS / Request ID form MOS / ID заявки в MOS)</span>
+                <span class="field-label">{% translate "(ID wniosku w MOS / Request ID form MOS / ID заявки в MOS)" %}</span>
             </div>
             <div class="id-col">
                 <span class="field-value">{{ inpol_id }}</span>
-                <span class="field-label">(ID wniosku w InPOL / Request ID form InPOL / ID заявки в InPOL)</span>
+                <span class="field-label">{% translate "(ID wniosku w InPOL / Request ID form InPOL / ID заявки в InPOL)" %}</span>
             </div>
         </div>
 
         <div class="field-group">
             <span class="field-value">{{ application_date|date:"d.m.Y" }}</span>
-            <span class="field-label">(data złożenia wniosku / date of application / дата подання заяви)</span>
+            <span class="field-label">{% translate "(data złożenia wniosku / date of application / дата подання заяви)" %}</span>
         </div>
 
         <div class="field-group">
             <span class="field-value">{{ full_name }}</span>
-            <span class="field-label">(Imię i nazwisko / name and surname / Ім'я та прізвище)</span>
+            <span class="field-label">{% translate "(Imię i nazwisko / name and surname / Ім'я та прізвище)" %}</span>
         </div>
 
         <div class="field-group">
             <span class="field-value">{{ birth_date|date:"d.m.Y" }}</span>
-            <span class="field-label">(data urodzenia / date of birth / дата народження)</span>
+            <span class="field-label">{% translate "(data urodzenia / date of birth / дата народження)" %}</span>
         </div>
 
         <div class="field-group">
             <span class="field-value">{{ citizenship }}</span>
-            <span class="field-label">(obywatelstwo / citizenship / громадянство)</span>
+            <span class="field-label">{% translate "(obywatelstwo / citizenship / громадянство)" %}</span>
         </div>
 
         <div class="footer-section">
@@ -389,7 +389,7 @@
 
         <div class="attachments-box">
             <div style="font-weight: bold;">
-                Zaznacz/mark/ знак - załączniki (ilość)/Attachments (number)/ Додані документи ( кількість):
+                {% translate "Zaznacz/mark/ знак - załączniki (ilość)/Attachments (number)/ Додані документи ( кількість):" %}
             </div>
             <div class="count-box">{{ attachment_count }}</div>
         </div>
@@ -409,7 +409,7 @@
         <div class="signature-line">
             <div class="signature-dash">
                 ( podpis osoby składającej dokumenty / signature /<br>
-                підпис особи, яка подає документи )
+                {% translate "підпис особи, яка подає документи )" %}
             </div>
         </div>
 

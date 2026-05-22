@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-23 00:36+0200\n"
+"POT-Creation-Date: 2026-05-23 00:44+0200\n"
 "Language: pl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -589,11 +589,15 @@ msgstr "Zamknięte"
 
 #: .\clients\models\client.py:131
 #: .\clients\templates\clients\partials\modals.html:192
+#: .\clients\templates\clients\staff_manage.html:26
+#: .\clients\templates\clients\staff_manage.html:66
 msgid "Имя"
 msgstr "Imię"
 
 #: .\clients\models\client.py:132
 #: .\clients\templates\clients\partials\modals.html:196
+#: .\clients\templates\clients\staff_manage.html:30
+#: .\clients\templates\clients\staff_manage.html:67
 msgid "Фамилия"
 msgstr "Nazwisko"
 
@@ -1807,14 +1811,16 @@ msgstr "Brak ostatnich kampanii."
 #: .\clients\templates\clients\admin_panel.html:5
 #: .\clients\templates\clients\admin_panel.html:6
 #: .\clients\templates\clients\app_settings_form.html:20
+#: .\clients\templates\clients\document_template_hub.html:10
+#: .\clients\templates\clients\role_manage.html:10
 #: .\clients\templates\clients\service_price_manage.html:10
+#: .\clients\templates\clients\staff_manage.html:10
 #: .\clients\templates\clients\submission_manage.html:10
 #: .\templates\base.html:163
 msgid "Админ панель"
 msgstr "Panel administracyjny"
 
 #: .\clients\templates\clients\admin_panel.html:7
-#| msgid "Управление staff-аккаунтами и ролями без Django admin."
 msgid "Управление рабочими настройками базы без Django admin."
 msgstr "Zarządzanie ustawieniami bazy bez Django admin."
 
@@ -1838,7 +1844,6 @@ msgid "Открытые задачи"
 msgstr "Otwórz zadania"
 
 #: .\clients\templates\clients\admin_panel.html:38
-#| msgid "Ожидает оплаты"
 msgid "Ожидают оплаты"
 msgstr "Oczekują na płatność"
 
@@ -1863,12 +1868,10 @@ msgid "Decisions"
 msgstr "Decyzje"
 
 #: .\clients\templates\clients\admin_panel.html:134
-#| msgid "Шаблон письма"
 msgid "Шаблоны"
 msgstr "Szablony"
 
 #: .\clients\templates\clients\admin_panel.html:135
-#| msgid "Настройте значения по умолчанию для текущей базы данных."
 msgid "Глобальные значения для печатных документов текущей базы."
 msgstr "Globalne wartości dla dokumentów do druku obecnej bazy."
 
@@ -1903,7 +1906,6 @@ msgstr ""
 #: .\clients\templates\clients\admin_panel.html:170
 #: .\clients\templates\clients\service_price_manage.html:4
 #: .\clients\templates\clients\service_price_manage.html:5
-#| msgid "Цены на услуги"
 msgid "Цены и услуги"
 msgstr "Ceny i usługi"
 
@@ -1912,12 +1914,10 @@ msgid "Рабочий прайс без Django admin."
 msgstr "Roboczy cennik bez Django admin."
 
 #: .\clients\templates\clients\admin_panel.html:172
-#| msgid "Логи писем"
 msgid "Записей:"
 msgstr "Wpisów:"
 
 #: .\clients\templates\clients\admin_panel.html:172
-#| msgid "Сумма оплаты"
 msgid "Сумма прайса:"
 msgstr "Suma cennika:"
 
@@ -1929,11 +1929,11 @@ msgid "Сотрудники"
 msgstr "Pracownicy"
 
 #: .\clients\templates\clients\admin_panel.html:184
-#| msgid "Управление staff-аккаунтами и ролями без Django admin."
 msgid "Управление staff-аккаунтами, доступом и рабочими ролями."
 msgstr "Zarządzanie kontami personelu, dostępem i rolami."
 
 #: .\clients\templates\clients\admin_panel.html:186
+#: .\clients\templates\clients\staff_manage.html:68
 msgid "Роли"
 msgstr "Role"
 
@@ -1956,14 +1956,10 @@ msgid "Быстрый переход к аналитике и воронке."
 msgstr "Szybkie przejście do analityki i lejka."
 
 #: .\clients\templates\clients\admin_panel.html:214
-#| msgid "Здоровье системы"
 msgid "Журналы системы"
 msgstr "Dzienniki systemowe"
 
 #: .\clients\templates\clients\admin_panel.html:215
-#| msgid ""
-#| "Просмотр всех значимых и незначимых действий, совершенных сотрудниками в "
-#| "системе."
 msgid "Просмотр отправленных писем и действий сотрудников (логи аудита)."
 msgstr ""
 "Przeglądanie wysłanych e-maili i działań personelu (dzienniki audytu)."
@@ -2046,6 +2042,7 @@ msgstr "Mozesz zostawic puste wiersze albo calkowicie wyczyscic blok."
 #: .\clients\templates\clients\family_dashboard.html:130
 #: .\clients\templates\clients\partials\modals.html:58
 #: .\clients\templates\clients\partials\modals.html:128
+#: .\clients\templates\clients\staff_manage.html:117
 #: .\clients\templates\clients\submission_manage.html:96
 #: .\submissions\templates\submissions\document_form.html:39
 #: .\submissions\templates\submissions\submission_form.html:28
@@ -2137,6 +2134,13 @@ msgstr "Szczegóły obliczeń:"
 msgid "Жильё в месяц (на 1 чел.)"
 msgstr "Mieszkanie miesięcznie (na 1 os.)"
 
+#: .\clients\templates\clients\calculator.html:116
+#: .\clients\templates\clients\calculator.html:141
+#, fuzzy
+#| msgid "чел."
+msgid "чел.)"
+msgstr "os."
+
 #: .\clients\templates\clients\calculator.html:118
 msgid "на всю семью"
 msgstr "dla calej rodziny"
@@ -2144,6 +2148,12 @@ msgstr "dla calej rodziny"
 #: .\clients\templates\clients\calculator.html:123
 msgid "Обучение в месяц"
 msgstr "Studia miesięcznie"
+
+#: .\clients\templates\clients\calculator.html:126
+#, fuzzy
+#| msgid "мес."
+msgid "мес.)"
+msgstr "mies."
 
 #: .\clients\templates\clients\calculator.html:131
 msgid "Прожиточный минимум"
@@ -2248,6 +2258,7 @@ msgid "Заметки"
 msgstr "Uwagi"
 
 #: .\clients\templates\clients\client_add.html:84
+#: .\clients\templates\clients\client_edit.html:85
 #: .\clients\templates\clients\clients_list.html:72
 msgid "Жирный"
 msgstr "Pogrubienie"
@@ -2487,10 +2498,59 @@ msgstr "Drukuj"
 msgid "Вернуться к профилю"
 msgstr "Powrót do profilu"
 
+#: .\clients\templates\clients\client_printable.html:233
+#: .\clients\templates\clients\client_wsc_print.html:197
+#, fuzzy
+#| msgid "Карточка клиента"
+msgid "Teczka klienta / Папка клиента"
+msgstr "Karta klienta"
+
+#: .\clients\templates\clients\client_printable.html:246
+#: .\clients\templates\clients\client_wsc_print.html:210
+msgid "Status i kluczowe dane / Статус и ключевые данные"
+msgstr "Status i kluczowe dane"
+
+#: .\clients\templates\clients\client_printable.html:251
+#: .\clients\templates\clients\client_wsc_print.html:215
+#, fuzzy
+#| msgid "Дата рождения"
+msgid "Data urodzenia / Дата рождения"
+msgstr "Data urodzenia"
+
+#: .\clients\templates\clients\client_printable.html:259
+#: .\clients\templates\clients\client_wsc_print.html:224
+#, fuzzy
+#| msgid "Телефон"
+msgid "Telefon / Телефон"
+msgstr "Telefon"
+
+#: .\clients\templates\clients\client_printable.html:266
+#: .\clients\templates\clients\client_wsc_print.html:231
+msgid "Cel złożenia wniosku / Цель"
+msgstr "Cel złożenia wniosku"
+
+#: .\clients\templates\clients\client_printable.html:271
+#: .\clients\templates\clients\client_wsc_print.html:236
+msgid "Podstawa pobytu i ważność / Основание и срок"
+msgstr "Podstawa pobytu i ważność"
+
+#: .\clients\templates\clients\client_printable.html:280
+#: .\clients\templates\clients\client_wsc_print.html:246
+#, fuzzy
+#| msgid "Дата подачи"
+msgid "Data złożenia wniosku / Дата подачи"
+msgstr "Data złożenia"
+
 #: .\clients\templates\clients\client_printable.html:289
 #: .\clients\templates\clients\client_wsc_print.html:254
 msgid "System zarządzania sprawami | Документ для внутреннего использования"
 msgstr "System zarządzania sprawami | Dokument do użytku wewnętrznego"
+
+#: .\clients\templates\clients\client_wsc_print.html:240
+#, fuzzy
+#| msgid "Действителен до:"
+msgid "(ważne do / действительно до:"
+msgstr "Ważny do:"
 
 #: .\clients\templates\clients\clients_list.html:9
 #: .\clients\templates\clients\clients_list.html:14
@@ -2522,6 +2582,7 @@ msgstr "Podstawa i data zakończenia"
 #: .\clients\templates\clients\clients_list.html:141
 #: .\clients\templates\clients\document_checklist_manage.html:36
 #: .\clients\templates\clients\fingerprints_schedule.html:39
+#: .\clients\templates\clients\staff_manage.html:70
 #: .\clients\templates\clients\submission_manage.html:61
 #: .\submissions\templates\submissions\submission_detail.html:32
 #: .\submissions\templates\submissions\submission_list.html:22
@@ -2578,6 +2639,7 @@ msgstr "Pierwsza"
 
 #: .\clients\templates\clients\clients_list.html:180
 #: .\clients\templates\clients\documents\acceleration_request.html:129
+#: .\clients\templates\clients\documents\mazowiecki_application.html:270
 #: .\clients\templates\clients\mass_email.html:13
 #: .\submissions\templates\submissions\submission_form.html:27
 msgid "Назад"
@@ -2611,6 +2673,7 @@ msgstr ""
 
 #: .\clients\templates\clients\document_checklist_manage.html:10
 #: .\clients\templates\clients\document_checklist_manage.html:168
+#: .\clients\templates\clients\submission_manage.html:17
 #: .\submissions\templates\submissions\submission_form.html:4
 #: .\submissions\templates\submissions\submission_form.html:12
 #: .\submissions\templates\submissions\submission_list.html:10
@@ -2713,6 +2776,8 @@ msgstr "Dodaj"
 
 #: .\clients\templates\clients\document_checklist_manage.html:175
 #: .\clients\templates\clients\document_checklist_manage.html:204
+#: .\clients\templates\clients\submission_manage.html:22
+#: .\clients\templates\clients\submission_manage.html:56
 #: .\submissions\templates\submissions\document_form.html:23
 #: .\submissions\templates\submissions\submission_detail.html:28
 #: .\submissions\templates\submissions\submission_detail.html:76
@@ -2874,6 +2939,81 @@ msgstr "Brak brakujących dokumentów."
 msgid "Нет напоминаний по документам, соответствующих фильтрам."
 msgstr "Brak przypomnień o dokumentach pasujących do filtrów."
 
+#: .\clients\templates\clients\document_template_hub.html:4
+#: .\clients\templates\clients\document_template_hub.html:5
+#, fuzzy
+#| msgid "Сбор документов"
+msgid "Шаблоны документов"
+msgstr "Zbieranie dokumentów"
+
+#: .\clients\templates\clients\document_template_hub.html:6
+msgid "Единая точка управления печатными шаблонами и значениями по умолчанию."
+msgstr ""
+"Pojedynczy punkt zarządzania szablonami do druku i wartościami domyślnymi."
+
+#: .\clients\templates\clients\document_template_hub.html:19
+#, fuzzy
+#| msgid "Настройки шаблонов"
+msgid "Глобальные настройки шаблонов"
+msgstr "Ustawienia szablonow"
+
+#: .\clients\templates\clients\document_template_hub.html:20
+msgid ""
+"Общие значения базы: контакты, адрес офиса, pełnomocnik и значения для "
+"Mazowiecki."
+msgstr ""
+"Ogólne wartości bazy: kontakty, adres biura, pełnomocnik i wartości dla "
+"Mazowieckiego."
+
+#: .\clients\templates\clients\document_template_hub.html:21
+#, fuzzy
+#| msgid "Настройки базы"
+msgid "Открыть настройки базы"
+msgstr "Ustawienia bazy"
+
+#: .\clients\templates\clients\document_template_hub.html:30
+msgid "Печать и шаблонные значения для Mazowiecki Urząd Wojewódzki."
+msgstr "Wydruk i wartości szablonów dla Mazowieckiego Urzędu Wojewódzkiego."
+
+#: .\clients\templates\clients\document_template_hub.html:31
+#, fuzzy
+#| msgid "Настройки шаблонов"
+msgid "Настроить шаблон"
+msgstr "Ustawienia szablonow"
+
+#: .\clients\templates\clients\document_template_hub.html:39
+#: .\clients\templates\clients\partials\client_overview.html:65
+msgid "Просьба об ускорении"
+msgstr "Prośba o przyspieszenie"
+
+#: .\clients\templates\clients\document_template_hub.html:40
+msgid ""
+"Следующий кандидат на вынесение общих шаблонных блоков из HTML в настройки "
+"базы."
+msgstr ""
+"Kolejny kandydat do przeniesienia ogólnych bloków szablonów z HTML do "
+"ustawień bazy."
+
+#: .\clients\templates\clients\document_template_hub.html:41
+#, fuzzy
+#| msgid "Создание новой карточки клиента"
+msgid "Открывать из карточки клиента"
+msgstr "Tworzenie nowej karty klienta"
+
+#: .\clients\templates\clients\document_template_hub.html:49
+#, fuzzy
+#| msgid "Настройки шаблонов"
+msgid "Реестр шаблонов"
+msgstr "Ustawienia szablonow"
+
+#: .\clients\templates\clients\document_template_hub.html:50
+msgid ""
+"Сейчас в системе уже есть печатные шаблоны `mazowiecki_application` и "
+"`acceleration_request`."
+msgstr ""
+"Obecnie system posiada już szablony do druku `mazowiecki_application` i "
+"`acceleration_request`."
+
 #: .\clients\templates\clients\document_versions.html:4
 #: .\clients\templates\clients\partials\document_checklist.html:93
 msgid "Versions"
@@ -2954,6 +3094,62 @@ msgstr "Nie znaleziono poprzednich wersji tego dokumentu."
 #: .\clients\templates\clients\documents\acceleration_request.html:128
 msgid "Печать"
 msgstr "Drukuj"
+
+#: .\clients\templates\clients\documents\mazowiecki_application.html:267
+#, fuzzy
+#| msgid "Подтвердить почту"
+msgid "Подтвердить и печатать"
+msgstr "Potwierdź e-mail"
+
+#: .\clients\templates\clients\documents\mazowiecki_application.html:279
+msgid ""
+"Вложения, введённые здесь, могут остаться произвольными. После подтверждения"
+" система автоматически сопоставит известные пункты чеклиста и отметит их как"
+" поданные для этого клиента."
+msgstr ""
+"Załączniki wpisane tutaj mogą pozostać dowolne. Po potwierdzeniu system "
+"automatycznie dopasuje znane pozycje z listy kontrolnej i oznaczy je jako "
+"przesłane dla tego klienta."
+
+#: .\clients\templates\clients\documents\mazowiecki_application.html:285
+msgid "Warszawa, data/date/дата"
+msgstr "Warszawa, data"
+
+#: .\clients\templates\clients\documents\mazowiecki_application.html:339
+msgid "(ID wniosku w MOS / Request ID form MOS / ID заявки в MOS)"
+msgstr "(ID wniosku w MOS)"
+
+#: .\clients\templates\clients\documents\mazowiecki_application.html:343
+msgid "(ID wniosku w InPOL / Request ID form InPOL / ID заявки в InPOL)"
+msgstr "(ID wniosku w InPOL)"
+
+#: .\clients\templates\clients\documents\mazowiecki_application.html:349
+msgid "(data złożenia wniosku / date of application / дата подання заяви)"
+msgstr "(data złożenia wniosku)"
+
+#: .\clients\templates\clients\documents\mazowiecki_application.html:354
+msgid "(Imię i nazwisko / name and surname / Ім'я та прізвище)"
+msgstr "(Imię i nazwisko)"
+
+#: .\clients\templates\clients\documents\mazowiecki_application.html:359
+msgid "(data urodzenia / date of birth / дата народження)"
+msgstr "(data urodzenia)"
+
+#: .\clients\templates\clients\documents\mazowiecki_application.html:364
+msgid "(obywatelstwo / citizenship / громадянство)"
+msgstr "(obywatelstwo)"
+
+#: .\clients\templates\clients\documents\mazowiecki_application.html:392
+msgid ""
+"Zaznacz/mark/ знак - załączniki (ilość)/Attachments (number)/ Додані "
+"документи ( кількість):"
+msgstr "Zaznacz - załączniki (ilość):"
+
+#: .\clients\templates\clients\documents\mazowiecki_application.html:412
+#, fuzzy
+#| msgid "Напоминания по документам"
+msgid "підпис особи, яка подає документи )"
+msgstr "Przypomnienia o dokumentach"
 
 #: .\clients\templates\clients\family_dashboard.html:22
 #: .\clients\templates\clients\family_dashboard.html:73
@@ -3090,6 +3286,7 @@ msgstr "Adres e-mail"
 
 #: .\clients\templates\clients\login.html:31
 #: .\clients\templates\clients\register.html:38
+#: .\clients\templates\clients\staff_manage.html:34
 msgid "Пароль"
 msgstr "Hasło"
 
@@ -3097,7 +3294,7 @@ msgstr "Hasło"
 msgid "Неверный email или пароль. Попробуйте снова."
 msgstr "Nieprawidłowy e-mail lub hasło. Spróbuj ponownie."
 
-#: .\clients\templates\clients\login.html:41 .\templates\403.html:38
+#: .\clients\templates\clients\login.html:41 .\templates\403.html:36
 #: .\templates\account\login.html:108 .\templates\admin\login.html:64
 msgid "Войти"
 msgstr "Zaloguj się"
@@ -3304,10 +3501,6 @@ msgstr "Edytuj dane"
 #: .\clients\templates\clients\partials\client_overview.html:54
 msgid "Обложка"
 msgstr "Okładka"
-
-#: .\clients\templates\clients\partials\client_overview.html:65
-msgid "Просьба об ускорении"
-msgstr "Prośba o przyspieszenie"
 
 #: .\clients\templates\clients\partials\client_overview.html:70
 msgid "Wniosek Mazowiecki Urząd Wojewódzki"
@@ -3521,6 +3714,7 @@ msgstr "Dodaj rachunek"
 
 #: .\clients\templates\clients\partials\modals.html:17
 #: .\clients\templates\clients\partials\modals.html:78
+#: .\clients\templates\clients\service_price_manage.html:23
 msgid "Услуга"
 msgstr "Praca"
 
@@ -3822,6 +4016,43 @@ msgstr "Filtruj"
 msgid "Уже есть аккаунт? <a class=\"ms-2\" href=\"%(login_url)s\">Войти</a>"
 msgstr "Masz już konto? <a class=\"ms-2\" href=\"%(login_url)s\">Zaloguj się</a>"
 
+#: .\clients\templates\clients\role_manage.html:4
+#: .\clients\templates\clients\role_manage.html:5
+#, fuzzy
+#| msgid "Безопасный доступ"
+msgid "Роли и доступ"
+msgstr "Bezpieczny dostęp"
+
+#: .\clients\templates\clients\role_manage.html:6
+#, fuzzy
+#| msgid "Управление рабочими настройками базы без Django admin."
+msgid "Явное управление рабочими ролями поверх Django groups."
+msgstr "Zarządzanie ustawieniami bazy bez Django admin."
+
+#: .\clients\templates\clients\role_manage.html:13
+#, fuzzy
+#| msgid "Добро пожаловать обратно"
+msgid "Синхронизировать роли"
+msgstr "Witamy ponownie"
+
+#: .\clients\templates\clients\role_manage.html:32
+#, fuzzy
+#| msgid "Получатели"
+msgid "Пользователей:"
+msgstr "Odbiorcy"
+
+#: .\clients\templates\clients\role_manage.html:35
+#, fuzzy
+#| msgid "Все сотрудники"
+msgid "Участники"
+msgstr "Wszyscy pracownicy"
+
+#: .\clients\templates\clients\role_manage.html:42
+#, fuzzy
+#| msgid "Логи писем не найдены."
+msgid "Пока никто не назначен."
+msgstr "Nie znaleziono logów e-maili."
+
 #: .\clients\templates\clients\search.html:4
 #: .\clients\templates\clients\search.html:12
 msgid "Поиск клиентов"
@@ -3845,18 +4076,91 @@ msgstr "Wyniki wyszukiwania dla „%(query)s”:"
 msgid "Ничего не найдено по запросу \"%(query)s\"."
 msgstr "Nie znaleziono wyników dla „%(query)s”."
 
+#: .\clients\templates\clients\service_price_manage.html:6
+#, fuzzy
+#| msgid "Редактировать основание подачи"
+msgid "Редактирование прайса внутри рабочей панели."
+msgstr "Edytuj podstawę złożenia"
+
 #: .\clients\templates\clients\service_price_manage.html:24
-#| msgid "Цена (PLN)"
 msgid "Цена PLN"
 msgstr "Cena PLN"
+
+#: .\clients\templates\clients\service_price_manage.html:48
+#, fuzzy
+#| msgid "Сохранить чеклист"
+msgid "Сохранить цены"
+msgstr "Zapisz checklistę"
 
 #: .\clients\templates\clients\staff_manage.html:6
 msgid "Управление staff-аккаунтами и ролями без Django admin."
 msgstr "Zarządzanie kontami personelu i rolami bez Django admin."
 
+#: .\clients\templates\clients\staff_manage.html:17
+#: .\clients\templates\clients\staff_manage.html:52
+#, fuzzy
+#| msgid "Задача сотрудника"
+msgid "Создать сотрудника"
+msgstr "Zadanie pracownika"
+
+#: .\clients\templates\clients\staff_manage.html:38
+msgid "Повтор"
+msgstr "Powtórz"
+
+#: .\clients\templates\clients\staff_manage.html:42
+#, fuzzy
+#| msgid "Семейные группы"
+msgid "Роли / группы"
+msgstr "Grupy rodzinne"
+
+#: .\clients\templates\clients\staff_manage.html:60
+#, fuzzy
+#| msgid "Все сотрудники"
+msgid "Текущие сотрудники"
+msgstr "Wszyscy pracownicy"
+
+#: .\clients\templates\clients\staff_manage.html:69
+msgid "Флаги"
+msgstr "Flagi"
+
+#: .\clients\templates\clients\staff_manage.html:101
+#, fuzzy
+#| msgid "Задача сотрудника"
+msgid "Функции сотрудника:"
+msgstr "Zadanie pracownika"
+
+#: .\clients\templates\clients\staff_manage.html:123
+#, fuzzy
+#| msgid "Редактировать"
+msgid "Деактивировать"
+msgstr "Edytuj dane"
+
+#: .\clients\templates\clients\staff_manage.html:123
+#, fuzzy
+#| msgid "Редактировать"
+msgid "Активировать"
+msgstr "Edytuj dane"
+
+#: .\clients\templates\clients\staff_manage.html:130
+#, fuzzy
+#| msgid "Создайте аккаунт"
+msgid "Пока нет staff-аккаунтов."
+msgstr "Utwórz konto"
+
 #: .\clients\templates\clients\submission_manage.html:6
 msgid "Управление типами подачи и их локализованными названиями."
 msgstr "Zarządzanie typami zgłoszeń i ich zlokalizowanymi nazwami."
+
+#: .\clients\templates\clients\submission_manage.html:50
+#, fuzzy
+#| msgid "Документ основания"
+msgid "Текущие основания"
+msgstr "Data zakończenia podstawy pobytu"
+
+#: .\clients\templates\clients\submission_manage.html:107
+#: .\submissions\templates\submissions\submission_list.html:41
+msgid "Пока нет оснований подачи."
+msgstr "Utwórz podstawę zgłoszenia"
 
 #: .\clients\templates\clients\tasks_list.html:4
 #: .\clients\templates\clients\tasks_list.html:5
@@ -4695,10 +4999,6 @@ msgstr "Dokumenty tego typu nie zostały jeszcze przesłane."
 msgid "Быстрое создание документа"
 msgstr "Nazwa dokumentu"
 
-#: .\submissions\templates\submissions\submission_list.html:41
-msgid "Пока нет оснований подачи."
-msgstr "Utwórz podstawę zgłoszenia"
-
 #: .\submissions\views\api.py:39
 msgid "Основание создано"
 msgstr "Podstawa pobytu"
@@ -4745,21 +5045,25 @@ msgid "У вас нет доступа к этой странице"
 msgstr "Nie masz dostępu do tej strony"
 
 #: .\templates\403.html:25
+#, fuzzy
+#| msgid ""
+#| "\n"
+#| "                        Вы вошли в систему, но ваш профиль не имеет прав для просмотра этого раздела сотрудников.\n"
+#| "                        Если вы считаете, что это ошибка, обратитесь к администратору сайта.\n"
+#| "                        "
 msgid ""
-"\n"
-"                        Вы вошли в систему, но ваш профиль не имеет прав для просмотра этого раздела сотрудников.\n"
-"                        Если вы считаете, что это ошибка, обратитесь к администратору сайта.\n"
-"                        "
+"Вы вошли в систему, но ваш профиль не имеет прав для просмотра этого раздела сотрудников.\n"
+"                        Если вы считаете, что это ошибка, обратитесь к администратору сайта."
 msgstr ""
 "\n"
 "Jesteś zalogowany, ale Twój profil nie ma uprawnień do przeglądania tej sekcji personelu.\n"
 "                        Jeśli uważasz, że to błąd, skontaktuj się z administratorem witryny."
 
-#: .\templates\403.html:34
+#: .\templates\403.html:32
 msgid "Выйти и войти под другим аккаунтом"
 msgstr "Wyloguj się i zaloguj na inne konto"
 
-#: .\templates\403.html:42 .\templates\500.html:35
+#: .\templates\403.html:40 .\templates\500.html:33
 msgid "Связаться с поддержкой"
 msgstr "Skontaktuj się z pomocą techniczną"
 
@@ -4775,7 +5079,7 @@ msgstr ""
 "Niestety, żądana strona nie istnieje lub została przeniesiona. Być może "
 "skorzystałeś z nieaktualnego linku lub popełniłeś literówkę w adresie."
 
-#: .\templates\404.html:20 .\templates\500.html:32
+#: .\templates\404.html:20 .\templates\500.html:30
 msgid "На главную"
 msgstr "Dom"
 
@@ -4792,12 +5096,17 @@ msgid "Внутренняя ошибка сервера"
 msgstr "Wewnetrzny blad serwera"
 
 #: .\templates\500.html:24
+#, fuzzy
+#| msgid ""
+#| "\n"
+#| "              Произошла непредвиденная ошибка. Наша команда уже уведомлена\n"
+#| "              и работает над устранением проблемы. Попробуйте повторить действие\n"
+#| "              через несколько минут.\n"
+#| "              "
 msgid ""
-"\n"
-"              Произошла непредвиденная ошибка. Наша команда уже уведомлена\n"
+"Произошла непредвиденная ошибка. Наша команда уже уведомлена\n"
 "              и работает над устранением проблемы. Попробуйте повторить действие\n"
-"              через несколько минут.\n"
-"              "
+"              через несколько минут."
 msgstr ""
 "\n"
 "              Wystapil nieoczekiwany blad. Nasz zespol zostal juz powiadomiony\n"
@@ -5036,6 +5345,23 @@ msgstr "Zapomniałeś hasła?"
 msgid "Вход доступен только для сотрудников."
 msgstr "Wstęp mają wyłącznie pracownicy."
 
+#: .\templates\account\password_reset.html:4
+#, fuzzy
+#| msgid "Подтвердите пароль"
+msgid "Восстановление пароля"
+msgstr "Potwierdzenie usunięcia"
+
+#: .\templates\account\password_reset.html:15
+#, fuzzy
+#| msgid "Документ восстановлен из архива."
+msgid "Поможем восстановить доступ"
+msgstr "Dokument został przywrócony z archiwum."
+
+#: .\templates\account\password_reset.html:16
+msgid ""
+"Введите электронную почту, привязанную к аккаунту, и мы отправим инструкции."
+msgstr "Wprowadź adres e-mail powiązany z kontem, a my wyślemy instrukcje."
+
 #: .\templates\account\password_reset.html:23
 msgid "example@mail.com"
 msgstr "przykład@mail.com"
@@ -5043,6 +5369,27 @@ msgstr "przykład@mail.com"
 #: .\templates\account\password_reset.html:27
 msgid "Получить инструкции"
 msgstr "Uzyskaj instrukcje"
+
+#: .\templates\account\password_reset.html:33
+#: .\templates\account\password_reset_done.html:18
+#: .\templates\account\resend_verification.html:75
+msgid "Вернуться ко входу"
+msgstr "Powrót do profilu"
+
+#: .\templates\account\password_reset_done.html:4
+#: .\templates\account\password_reset_done.html:14
+#, fuzzy
+#| msgid "Письмо отправлено"
+msgid "Инструкции отправлены"
+msgstr "Data wysłania"
+
+#: .\templates\account\password_reset_done.html:15
+msgid ""
+"Проверьте вашу электронную почту. Если письма нет, загляните в папку «Спам» "
+"или запросите инструкцию повторно через несколько минут."
+msgstr ""
+"Sprawdź pocztę e-mail. Jeśli nie ma wiadomości, sprawdź folder Spam lub "
+"poproś o instrukcję ponownie za kilka minut."
 
 #: .\templates\account\password_reset_from_key.html:6
 msgid "Создание нового пароля"
@@ -5064,6 +5411,7 @@ msgstr "Link jest nieprawidlowy lub wygasl. Popros o nowa instrukcje."
 msgid "Сохранить новый пароль"
 msgstr "Zapisz zmiany"
 
+#: .\templates\account\password_reset_from_key_done.html:4
 #: .\templates\account\password_reset_from_key_done.html:9
 msgid "Пароль изменён"
 msgstr "Haslo zostalo zmienione"
@@ -5136,10 +5484,6 @@ msgstr ""
 #: .\templates\account\resend_verification.html:70
 msgid "Отправить ссылку"
 msgstr "Wyślij link"
-
-#: .\templates\account\resend_verification.html:75
-msgid "Вернуться ко входу"
-msgstr "Powrót do profilu"
 
 #: .\templates\account\signup.html:16
 msgid "Новый аккаунт за 3 шага"
@@ -5254,6 +5598,12 @@ msgstr ""
 #: .\templates\admin\base_site.html:4
 msgid "Администрирование Legalize"
 msgstr "Administracja Legalize"
+
+#: .\templates\admin\base_site.html:305
+#, fuzzy
+#| msgid "Банковский перевод"
+msgid "&#x21bb; Обновить переводы"
+msgstr "Przelew bankowy"
 
 #: .\templates\admin\base_site.html:311
 msgid "Центр управления Legalize"

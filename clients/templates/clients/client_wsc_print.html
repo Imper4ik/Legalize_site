@@ -194,7 +194,7 @@
         <div class="content-wrapper">
 
             <div class="client-header-block">
-                <div class="folder-label upper">Teczka klienta / Папка клиента</div>
+                <div class="folder-label upper">{% translate "Teczka klienta / Папка клиента" %}</div>
 
                 <div class="surname-large upper">{{ client.last_name }}</div>
                 <div class="firstname-large">{{ client.first_name }}</div>
@@ -207,12 +207,12 @@
 
             <div class="status-section">
                 <div class="status-header upper">
-                    Status i kluczowe dane / Статус и ключевые данные
+                    {% translate "Status i kluczowe dane / Статус и ключевые данные" %}
                 </div>
 
                 <table class="styled-table">
                     <tr>
-                        <td class="label-col">Data urodzenia / Дата рождения</td>
+                        <td class="label-col">{% translate "Data urodzenia / Дата рождения" %}</td>
                         <td class="value-col">{% if client.birth_date %}{{ client.birth_date|date:"d.m.Y" }}{% endif %}
                         </td>
                     </tr>
@@ -221,29 +221,29 @@
                         <td class="value-col">{{ client.email }}</td>
                     </tr>
                     <tr>
-                        <td class="label-col">Telefon / Телефон</td>
+                        <td class="label-col">{% translate "Telefon / Телефон" %}</td>
                         <td class="value-col">{{ client.phone }}</td>
                     </tr>
                     <tr style="background: white;">
                         <td colspan="2" style="padding: 5px; border: none;"></td>
                     </tr>
                     <tr>
-                        <td class="label-col">Cel złożenia wniosku / Цель</td>
+                        <td class="label-col">{% translate "Cel złożenia wniosku / Цель" %}</td>
                         <td class="value-col">{% if client.application_purpose %}{{ client.get_application_purpose_display }}{% endif %}</td>
                     </tr>
 
                     <tr>
-                        <td class="label-col">Podstawa pobytu i ważność / Основание и срок</td>
+                        <td class="label-col">{% translate "Podstawa pobytu i ważność / Основание и срок" %}</td>
                         <td class="value-col">
                             <span class="bold">{{ client.basis_of_stay|default_if_none:"" }}</span>
                             <br>
-                            <span style="font-size: 0.9em; color: #666;">(ważne do / действительно до: <span
+                            <span style="font-size: 0.9em; color: #666;">{% translate "(ważne do / действительно до:" %} <span
                                     style="color: var(--primary-color); font-weight: bold;">{% if client.legal_basis_end_date %}{{ client.legal_basis_end_date|date:"d.m.Y" }}{% endif %}</span>)</span>
                         </td>
                     </tr>
 
                     <tr>
-                        <td class="label-col" style="background-color: #e8efff;">Data złożenia wniosku / Дата подачи</td>
+                        <td class="label-col" style="background-color: #e8efff;">{% translate "Data złożenia wniosku / Дата подачи" %}</td>
                         <td class="value-col bold" style="background-color: #f4f8ff;">{% if client.submission_date %}{{ client.submission_date|date:"d.m.Y" }}{% endif %}</td>
                     </tr>
                 </table>

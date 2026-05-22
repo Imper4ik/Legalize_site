@@ -82,7 +82,7 @@
         <div class="p-3 rounded" style="background-color: #e7f3ff;">
           <div class="editor-toolbar border rounded-top p-2 bg-light">
             <button type="button" class="btn btn-light btn-sm format-button" data-format="bold"
-              title="Жирный"><b>B</b></button>
+              title="{% translate "Жирный" %}"><b>B</b></button>
           </div>
           <div class="form-control notes-editor-main" id="notes-editor" contenteditable="true" style="height: 120px;">{{ form.notes.value|sanitize_html|default:'' }}</div>
           <input type="hidden" name="notes" id="id_notes_hidden" value="{{ form.notes.value|default:'' }}">

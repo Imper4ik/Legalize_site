@@ -7,14 +7,14 @@
 
 {% block page_actions %}
 <div class="d-flex gap-2">
-  <a href="{% url 'clients:admin_panel' %}" class="btn btn-outline-secondary">Админ панель</a>
+  <a href="{% url 'clients:admin_panel' %}" class="btn btn-outline-secondary">{% translate "Админ панель" %}</a>
 </div>
 {% endblock %}
 
 {% block content %}
 <div class="card shadow-sm mb-4">
   <div class="card-body">
-    <h5 class="mb-3">Создать сотрудника</h5>
+    <h5 class="mb-3">{% translate "Создать сотрудника" %}</h5>
     <form method="post" class="row g-3">
       {% csrf_token %}
       <input type="hidden" name="action" value="create">
@@ -23,23 +23,23 @@
         {{ create_form.email }}
       </div>
       <div class="col-12 col-lg-2">
-        <label for="{{ create_form.first_name.id_for_label }}" class="form-label">Имя</label>
+        <label for="{{ create_form.first_name.id_for_label }}" class="form-label">{% translate "Имя" %}</label>
         {{ create_form.first_name }}
       </div>
       <div class="col-12 col-lg-2">
-        <label for="{{ create_form.last_name.id_for_label }}" class="form-label">Фамилия</label>
+        <label for="{{ create_form.last_name.id_for_label }}" class="form-label">{% translate "Фамилия" %}</label>
         {{ create_form.last_name }}
       </div>
       <div class="col-12 col-lg-2">
-        <label for="{{ create_form.password1.id_for_label }}" class="form-label">Пароль</label>
+        <label for="{{ create_form.password1.id_for_label }}" class="form-label">{% translate "Пароль" %}</label>
         {{ create_form.password1 }}
       </div>
       <div class="col-12 col-lg-2">
-        <label for="{{ create_form.password2.id_for_label }}" class="form-label">Повтор</label>
+        <label for="{{ create_form.password2.id_for_label }}" class="form-label">{% translate "Повтор" %}</label>
         {{ create_form.password2 }}
       </div>
       <div class="col-12 col-lg-4">
-        <label for="{{ create_form.groups.id_for_label }}" class="form-label">Роли / группы</label>
+        <label for="{{ create_form.groups.id_for_label }}" class="form-label">{% translate "Роли / группы" %}</label>
         {{ create_form.groups }}
       </div>
       <div class="col-12 col-lg-8">
@@ -49,7 +49,7 @@
         </div>
       </div>
       <div class="col-12 d-flex justify-content-end">
-        <button type="submit" class="btn btn-primary">Создать сотрудника</button>
+        <button type="submit" class="btn btn-primary">{% translate "Создать сотрудника" %}</button>
       </div>
     </form>
   </div>
@@ -57,17 +57,17 @@
 
 <div class="card shadow-sm">
   <div class="card-body">
-    <h5 class="mb-3">Текущие сотрудники</h5>
+    <h5 class="mb-3">{% translate "Текущие сотрудники" %}</h5>
     <div class="table-responsive">
       <table class="table align-middle">
         <thead>
           <tr>
             <th>Email</th>
-            <th>Имя</th>
-            <th>Фамилия</th>
-            <th>Роли</th>
-            <th>Флаги</th>
-            <th class="text-end">Действия</th>
+            <th>{% translate "Имя" %}</th>
+            <th>{% translate "Фамилия" %}</th>
+            <th>{% translate "Роли" %}</th>
+            <th>{% translate "Флаги" %}</th>
+            <th class="text-end">{% translate "Действия" %}</th>
           </tr>
         </thead>
         <tbody>
@@ -98,7 +98,7 @@
                   <input class="form-check-input" type="checkbox" name="{{ form.is_active.html_name }}" value="on" form="update-user-{{ staff_user.id }}" {% if staff_user.is_active %}checked{% endif %}>
                   <label class="form-check-label">Active</label>
                 </div>
-                <div class="small text-muted mb-1">Функции сотрудника:</div>
+                <div class="small text-muted mb-1">{% translate "Функции сотрудника:" %}</div>
                 {% for field in form %}
                   {% if field.name|slice:":4" == "can_" %}
                     <div class="form-check">
@@ -114,20 +114,20 @@
                   <input type="hidden" name="action" value="update">
                   <input type="hidden" name="user_id" value="{{ staff_user.id }}">
                 </form>
-                <button type="submit" form="update-user-{{ staff_user.id }}" class="btn btn-sm btn-outline-primary">Сохранить</button>
+                <button type="submit" form="update-user-{{ staff_user.id }}" class="btn btn-sm btn-outline-primary">{% translate "Сохранить" %}</button>
                 <form method="post" class="d-inline">
                   {% csrf_token %}
                   <input type="hidden" name="action" value="toggle_active">
                   <input type="hidden" name="user_id" value="{{ staff_user.id }}">
                   <button type="submit" class="btn btn-sm btn-outline-secondary">
-                    {% if staff_user.is_active %}Деактивировать{% else %}Активировать{% endif %}
+                    {% if staff_user.is_active %}{% translate "Деактивировать" %}{% else %}{% translate "Активировать" %}{% endif %}
                   </button>
                 </form>
               </td>
             </tr>
           {% empty %}
             <tr>
-              <td colspan="6" class="text-center text-muted py-4">Пока нет staff-аккаунтов.</td>
+              <td colspan="6" class="text-center text-muted py-4">{% translate "Пока нет staff-аккаунтов." %}</td>
             </tr>
           {% endfor %}
         </tbody>
