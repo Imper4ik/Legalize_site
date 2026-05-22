@@ -106,6 +106,37 @@ class TestTranslationOverrides:
         assert entry['ru'] == "Клиенты из БД"
         assert entry['source_ru'] == "db"
 
+    def test_ru_log_repair_migration_updates_polish_ru_overrides(self):
+        """The production data migration should repair known bad RU log overrides."""
+        import importlib
+
+        from django.apps import apps
+
+        bad_ru_override = TranslationOverride.objects.create(
+            msgid="Логи сотрудников",
+            language="ru",
+            text="Logi pracowników",
+            source=TranslationOverride.SOURCE_STUDIO,
+            is_active=True,
+        )
+        pl_override = TranslationOverride.objects.create(
+            msgid="Логи сотрудников",
+            language="pl",
+            text="Logi pracowników",
+            source=TranslationOverride.SOURCE_STUDIO,
+            is_active=True,
+        )
+
+        migration = importlib.import_module("translations.migrations.0002_repair_ru_log_page_overrides")
+        migration.repair_ru_log_page_overrides(apps, None)
+
+        bad_ru_override.refresh_from_db()
+        pl_override.refresh_from_db()
+        assert bad_ru_override.text == "Логи сотрудников"
+        assert bad_ru_override.source == TranslationOverride.SOURCE_IMPORT
+        assert pl_override.text == "Logi pracowników"
+        assert pl_override.source == TranslationOverride.SOURCE_STUDIO
+
     def test_view_permissions(self, client):
         """Only superuser/Admin/Translator can access update API."""
         url = reverse('translations:update_api')

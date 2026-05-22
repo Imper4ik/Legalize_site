@@ -1,14 +1,18 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
+
+{% block extra_head %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'clients/css/clients_list.css' %}">
+{% endblock %}
 
 {% block title %}{% translate "Логи писем" %}{% endblock %}
 {% block page_title %}{% translate "Логи писем" %}{% endblock %}
 {% block page_subtitle %}{% translate "Журнал отправленных писем клиентам." %}{% endblock %}
 
 {% block content %}
-<div class="card shadow-sm mb-4">
-  <div class="card-body bg-light rounded">
-    <form method="get" class="row g-3 align-items-end">
+<form method="get" class="client-list-filters mb-3">
+  <div class="row g-3 align-items-end">
       <div class="col-12 col-md-3">
         <label class="form-label fw-semibold small text-muted mb-1">{{ filter_form.status.label }}</label>
         {{ filter_form.status }}
@@ -30,15 +34,12 @@
           <i class="bi bi-search"></i>
         </button>
       </div>
-    </form>
   </div>
-</div>
+</form>
 
-<div class="card shadow-sm">
-  <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
-        <thead class="table-light">
+<div class="table-container">
+  <table class="table table-modern table-hover align-middle mb-0">
+    <thead>
           <tr>
             <th>{% translate "Дата отправки" %}</th>
             <th>{% translate "Клиент" %}</th>
@@ -50,8 +51,8 @@
         <tbody>
           {% for log in logs %}
             <tr>
-              <td class="text-nowrap">{{ log.sent_at|date:"d.m.Y H:i" }}</td>
-              <td>
+              <td class="text-nowrap" data-label="{% translate 'Дата отправки' %}">{{ log.sent_at|date:"d.m.Y H:i" }}</td>
+              <td data-label="{% translate 'Клиент' %}">
                 {% if log.client %}
                   <a href="{% url 'clients:client_detail' log.client.pk %}" class="fw-semibold text-decoration-none">
                     {{ log.client.get_full_name }}
@@ -60,13 +61,13 @@
                   <span class="text-muted">---</span>
                 {% endif %}
               </td>
-              <td>
+              <td data-label="{% translate 'Тема' %}">
                 <div class="fw-semibold">{{ log.subject }}</div>
                 {% if log.template_type %}
                   <div class="small text-muted">{{ log.template_type }}</div>
                 {% endif %}
               </td>
-              <td>
+              <td data-label="{% translate 'Статус' %}">
                 {% if log.delivery_status == 'sent' %}
                   <span class="badge bg-success-subtle text-success-emphasis">{% translate "Отправлено" %}</span>
                 {% elif log.delivery_status == 'queued' %}
@@ -82,7 +83,7 @@
                   <span class="badge bg-secondary">{{ log.get_delivery_status_display }}</span>
                 {% endif %}
               </td>
-              <td class="text-muted small">
+              <td class="text-muted small" data-label="{% translate 'Отправитель' %}">
                 {% if log.sent_by %}
                   {{ log.sent_by.get_full_name|default:log.sent_by.email }}
                 {% else %}
@@ -98,9 +99,7 @@
             </tr>
           {% endfor %}
         </tbody>
-      </table>
-    </div>
-  </div>
+  </table>
 </div>
 
 {% include "clients/partials/pagination.html" %}

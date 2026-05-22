@@ -56,7 +56,7 @@ class StaffActivityLogsView(BaseLogView):
     context_object_name = "activities"
 
     def get_queryset(self):
-        qs = super().get_queryset().select_related("actor", "client")
+        qs = super().get_queryset().select_related("actor", "client", "document", "payment")
         form = StaffActivityFilterForm(self.request.GET)
         
         if form.is_valid():

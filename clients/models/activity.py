@@ -100,7 +100,7 @@ class ClientActivity(models.Model):
     @property
     def badge_class(self) -> str:
         badge_map = {
-            "client_viewed": "bg-light text-dark",
+            "client_viewed": "bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle",
             "client_created": "bg-primary",
             "client_updated": "bg-primary",
             "client_status_changed": "bg-warning text-dark",
