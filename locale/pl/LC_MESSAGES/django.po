@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-05-23 00:16+0200\n"
+"POT-Creation-Date: 2026-05-23 00:36+0200\n"
 "Language: pl\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -169,6 +169,8 @@ msgstr "Łączenie rodzin"
 #: .\clients\templates\clients\logs\email_logs.html:70
 #: .\clients\templates\clients\partials\client_overview.html:137
 #: .\clients\templates\clients\partials\modals.html:96
+#: .\clients\templates\clients\submission_manage.html:26
+#: .\clients\templates\clients\submission_manage.html:60
 #: .\submissions\models.py:28 .\submissions\models.py:91
 #: .\submissions\templates\submissions\document_form.html:28
 #: .\submissions\templates\submissions\submission_detail.html:29
@@ -356,6 +358,7 @@ msgid "События клиентов"
 msgstr "Wydarzenia klientów"
 
 #: .\clients\models\activity.py:96 .\clients\models\document_version.py:70
+#: .\clients\templates\clients\admin_panel.html:195
 #: .\clients\templates\clients\logs\email_logs.html:90
 msgid "Система"
 msgstr "System"
@@ -1382,8 +1385,8 @@ msgid ""
 "Document uploaded, but automatic wezwanie parsing failed. Manual review is "
 "required."
 msgstr ""
-"Dokument przesłano, ale automatyczne analizowanie wezwanie nie powiodło się. "
-"Wymagana jest ręczna recenzja."
+"Dokument przesłano, ale automatyczne analizowanie wezwanie nie powiodło się."
+" Wymagana jest ręczna recenzja."
 
 #: .\clients\services\document_workflow.py:114
 #: .\clients\services\document_workflow.py:142
@@ -1428,7 +1431,8 @@ msgstr "Przeanalizowane dane wezwanie były puste."
 
 #: .\clients\services\document_workflow.py:388
 msgid "Document uploaded. Review recognized data before applying it."
-msgstr "Dokument przesłany. Przejrzyj rozpoznane dane przed ich zastosowaniem."
+msgstr ""
+"Dokument przesłany. Przejrzyj rozpoznane dane przed ich zastosowaniem."
 
 #: .\clients\services\document_workflow.py:423
 #: .\clients\services\document_workflow.py:486
@@ -1596,13 +1600,11 @@ msgstr "Dodaj dokument: \"%(document_type_display)s\""
 #, python-format
 msgid ""
 "\n"
-"          Для клиента: <strong>%(client.first_name)s %(client.last_name)s</"
-"strong>\n"
+"          Для клиента: <strong>%(client.first_name)s %(client.last_name)s</strong>\n"
 "          "
 msgstr ""
 "\n"
-"          Dla klienta: <strong>%(client.first_name)s %(client.last_name)s</"
-"strong>\n"
+"          Dla klienta: <strong>%(client.first_name)s %(client.last_name)s</strong>\n"
 "          "
 
 #: .\clients\templates\clients\add_document.html:25
@@ -1718,7 +1720,7 @@ msgstr "Błąd"
 #: .\clients\templates\clients\admin_dashboard.html:102
 #: .\clients\templates\clients\admin_panel.html:57
 msgid "OCR awaiting review"
-msgstr "OCR oczekuje na weryfikację"
+msgstr "OCR czeka na weryfikację"
 
 #: .\clients\templates\clients\admin_dashboard.html:104
 #: .\clients\templates\clients\admin_panel.html:60
@@ -1741,12 +1743,12 @@ msgstr "Błędy OCR"
 #: .\clients\templates\clients\admin_dashboard.html:121
 #: .\clients\templates\clients\admin_panel.html:84
 msgid "Expired documents"
-msgstr "Przeterminowane dokumenty"
+msgstr "Wygasłe dokumenty"
 
 #: .\clients\templates\clients\admin_dashboard.html:123
 #: .\clients\templates\clients\admin_panel.html:87
 msgid "No expired documents"
-msgstr "Brak przeterminowanych dokumentów"
+msgstr "Brak wygasłych dokumentów"
 
 #: .\clients\templates\clients\admin_dashboard.html:128
 #: .\clients\templates\clients\admin_panel.html:119
@@ -1802,6 +1804,44 @@ msgstr "W kolejce"
 msgid "No recent campaigns."
 msgstr "Brak ostatnich kampanii."
 
+#: .\clients\templates\clients\admin_panel.html:5
+#: .\clients\templates\clients\admin_panel.html:6
+#: .\clients\templates\clients\app_settings_form.html:20
+#: .\clients\templates\clients\service_price_manage.html:10
+#: .\clients\templates\clients\submission_manage.html:10
+#: .\templates\base.html:163
+msgid "Админ панель"
+msgstr "Panel administracyjny"
+
+#: .\clients\templates\clients\admin_panel.html:7
+#| msgid "Управление staff-аккаунтами и ролями без Django admin."
+msgid "Управление рабочими настройками базы без Django admin."
+msgstr "Zarządzanie ustawieniami bazy bez Django admin."
+
+#: .\clients\templates\clients\admin_panel.html:14 .\templates\base.html:71
+msgid "Клиенты"
+msgstr "Klienci"
+
+#: .\clients\templates\clients\admin_panel.html:22
+#: .\clients\templates\clients\admin_panel.html:158
+#: .\clients\templates\clients\submission_manage.html:4
+#: .\clients\templates\clients\submission_manage.html:5
+#: .\submissions\models.py:34
+#: .\submissions\templates\submissions\submission_list.html:4
+#: .\submissions\templates\submissions\submission_list.html:9
+msgid "Основания подачи"
+msgstr "Podstawy wniosku"
+
+#: .\clients\templates\clients\admin_panel.html:30
+#: .\clients\templates\clients\partials\client_overview.html:158
+msgid "Открытые задачи"
+msgstr "Otwórz zadania"
+
+#: .\clients\templates\clients\admin_panel.html:38
+#| msgid "Ожидает оплаты"
+msgid "Ожидают оплаты"
+msgstr "Oczekują na płatność"
+
 #: .\clients\templates\clients\admin_panel.html:49
 msgid "Active cases"
 msgstr "Aktywne sprawy"
@@ -1822,9 +1862,111 @@ msgstr "Oczekiwanie po odciskach"
 msgid "Decisions"
 msgstr "Decyzje"
 
+#: .\clients\templates\clients\admin_panel.html:134
+#| msgid "Шаблон письма"
+msgid "Шаблоны"
+msgstr "Szablony"
+
+#: .\clients\templates\clients\admin_panel.html:135
+#| msgid "Настройте значения по умолчанию для текущей базы данных."
+msgid "Глобальные значения для печатных документов текущей базы."
+msgstr "Globalne wartości dla dokumentów do druku obecnej bazy."
+
+#: .\clients\templates\clients\admin_panel.html:136
+#: .\clients\templates\clients\admin_panel.html:148
+#: .\clients\templates\clients\admin_panel.html:160
+#: .\clients\templates\clients\admin_panel.html:173
+#: .\clients\templates\clients\admin_panel.html:185
+#: .\clients\templates\clients\document_versions.html:33
+#: .\clients\templates\clients\partials\document_checklist.html:72
+#: .\clients\templates\clients\partials\document_checklist.html:74
+#: .\submissions\templates\submissions\submission_detail.html:42
+#: .\submissions\templates\submissions\submission_list.html:32
+msgid "Открыть"
+msgstr "Otwórz"
+
+#: .\clients\templates\clients\admin_panel.html:146 .\templates\base.html:93
+msgid "Чеклисты"
+msgstr "Listy kontrolne"
+
+#: .\clients\templates\clients\admin_panel.html:147
+msgid "Обязательные документы и структура checklist по типу подачи."
+msgstr "Obowiązkowe dokumenty i struktura checklisty według typu wniosku."
+
+#: .\clients\templates\clients\admin_panel.html:159
+msgid ""
+"Список submission types, статусы и локализованные названия в рабочем "
+"интерфейсе."
+msgstr ""
+"Lista typów wniosków, statusy i zlokalizowane nazwy w interfejsie roboczym."
+
+#: .\clients\templates\clients\admin_panel.html:170
+#: .\clients\templates\clients\service_price_manage.html:4
+#: .\clients\templates\clients\service_price_manage.html:5
+#| msgid "Цены на услуги"
+msgid "Цены и услуги"
+msgstr "Ceny i usługi"
+
+#: .\clients\templates\clients\admin_panel.html:171
+msgid "Рабочий прайс без Django admin."
+msgstr "Roboczy cennik bez Django admin."
+
+#: .\clients\templates\clients\admin_panel.html:172
+#| msgid "Логи писем"
+msgid "Записей:"
+msgstr "Wpisów:"
+
+#: .\clients\templates\clients\admin_panel.html:172
+#| msgid "Сумма оплаты"
+msgid "Сумма прайса:"
+msgstr "Suma cennika:"
+
+#: .\clients\templates\clients\admin_panel.html:183
+#: .\clients\templates\clients\staff_manage.html:4
+#: .\clients\templates\clients\staff_manage.html:5
+#: .\clients\tests\test_view_edge_cases.py:275
+msgid "Сотрудники"
+msgstr "Pracownicy"
+
+#: .\clients\templates\clients\admin_panel.html:184
+#| msgid "Управление staff-аккаунтами и ролями без Django admin."
+msgid "Управление staff-аккаунтами, доступом и рабочими ролями."
+msgstr "Zarządzanie kontami personelu, dostępem i rolami."
+
+#: .\clients\templates\clients\admin_panel.html:186
+msgid "Роли"
+msgstr "Role"
+
+#: .\clients\templates\clients\admin_panel.html:196
+msgid "Техническое состояние, runtime checks и health dashboard."
+msgstr ""
+"Stan techniczny, sprawdzanie środowiska uruchomieniowego i panel zdrowia."
+
 #: .\clients\templates\clients\admin_panel.html:197 .\templates\base.html:200
 msgid "Здоровье системы"
 msgstr "Zdrowie systemu"
+
+#: .\clients\templates\clients\admin_panel.html:205
+#: .\clients\templates\clients\admin_panel.html:207 .\templates\base.html:169
+msgid "Метрики"
+msgstr "Metryki"
+
+#: .\clients\templates\clients\admin_panel.html:206
+msgid "Быстрый переход к аналитике и воронке."
+msgstr "Szybkie przejście do analityki i lejka."
+
+#: .\clients\templates\clients\admin_panel.html:214
+#| msgid "Здоровье системы"
+msgid "Журналы системы"
+msgstr "Dzienniki systemowe"
+
+#: .\clients\templates\clients\admin_panel.html:215
+#| msgid ""
+#| "Просмотр всех значимых и незначимых действий, совершенных сотрудниками в "
+#| "системе."
+msgid "Просмотр отправленных писем и действий сотрудников (логи аудита)."
+msgstr ""
+"Przeglądanie wysłanych e-maili i działań personelu (dzienniki audytu)."
 
 #: .\clients\templates\clients\admin_panel.html:216
 #: .\clients\templates\clients\logs\staff_activity_logs.html:9
@@ -1857,11 +1999,6 @@ msgstr "Ustawienia bazy"
 #: .\clients\templates\clients\app_settings_form.html:18
 msgid "Общие данные инстанса и значения по умолчанию для документов."
 msgstr "Ogolne dane instancji i wartosci domyslne dla dokumentow."
-
-#: .\clients\templates\clients\app_settings_form.html:20
-#: .\templates\base.html:163
-msgid "Админ панель"
-msgstr "Panel administracyjny"
 
 #: .\clients\templates\clients\app_settings_form.html:26
 msgid "Общие данные"
@@ -1909,6 +2046,7 @@ msgstr "Mozesz zostawic puste wiersze albo calkowicie wyczyscic blok."
 #: .\clients\templates\clients\family_dashboard.html:130
 #: .\clients\templates\clients\partials\modals.html:58
 #: .\clients\templates\clients\partials\modals.html:128
+#: .\clients\templates\clients\submission_manage.html:96
 #: .\submissions\templates\submissions\document_form.html:39
 #: .\submissions\templates\submissions\submission_form.html:28
 msgid "Сохранить"
@@ -1980,7 +2118,8 @@ msgstr "Bilet powrotny"
 
 #: .\clients\templates\clients\calculator.html:88
 msgid "Страна граничит с Польшей? (билет 500 zł, иначе 2500 zł)"
-msgstr "Czy kraj graniczy z Polską? (bilet 500 zł, w przeciwnym razie 2500 zł)"
+msgstr ""
+"Czy kraj graniczy z Polską? (bilet 500 zł, w przeciwnym razie 2500 zł)"
 
 #: .\clients\templates\clients\calculator.html:96
 msgid "Рассчитать итоговую сумму"
@@ -2383,10 +2522,11 @@ msgstr "Podstawa i data zakończenia"
 #: .\clients\templates\clients\clients_list.html:141
 #: .\clients\templates\clients\document_checklist_manage.html:36
 #: .\clients\templates\clients\fingerprints_schedule.html:39
+#: .\clients\templates\clients\submission_manage.html:61
 #: .\submissions\templates\submissions\submission_detail.html:32
 #: .\submissions\templates\submissions\submission_list.html:22
 msgid "Действия"
-msgstr "Akcje"
+msgstr "Działania"
 
 #: .\clients\templates\clients\clients_list.html:90
 #: .\clients\templates\clients\partials\client_overview.html:19
@@ -2423,6 +2563,7 @@ msgstr "Szczegóły"
 #: .\clients\templates\clients\partials\document_checklist.html:100
 #: .\clients\templates\clients\partials\document_checklist.html:136
 #: .\clients\templates\clients\partials\reminder_item.html:95
+#: .\clients\templates\clients\submission_manage.html:101
 #: .\submissions\templates\submissions\submission_detail.html:52
 msgid "Удалить"
 msgstr "Usuń"
@@ -2516,10 +2657,10 @@ msgid ""
 "отредактировать название или обязательность — добавьте собственный вариант "
 "через кнопку «Добавить документ»."
 msgstr ""
-"Etykieta „Dokument standardowy” oznacza podstawową listę dla wybranego celu. "
-"Pozycje te pochodzą z typowych dokumentów i pojawiają się, dopóki nie ma dla "
-"nich oddzielnego ustawienia. Można je włączać lub wyłączać za pomocą pola "
-"wyboru, a aby edytować nazwę lub wymagalność — dodaj własny wariant za "
+"Etykieta „Dokument standardowy” oznacza podstawową listę dla wybranego celu."
+" Pozycje te pochodzą z typowych dokumentów i pojawiają się, dopóki nie ma "
+"dla nich oddzielnego ustawienia. Można je włączać lub wyłączać za pomocą "
+"pola wyboru, a aby edytować nazwę lub wymagalność — dodaj własny wariant za "
 "pomocą przycisku „Dodaj dokument”."
 
 #: .\clients\templates\clients\document_checklist_manage.html:89
@@ -2581,8 +2722,9 @@ msgid "Название"
 msgstr "Nazwa"
 
 #: .\clients\templates\clients\document_checklist_manage.html:185
+#: .\clients\templates\clients\submission_manage.html:42
 msgid "Создать"
-msgstr "Tworzyć"
+msgstr "Utwórz"
 
 #: .\clients\templates\clients\document_checklist_manage.html:197
 msgid "Редактировать основание подачи"
@@ -2623,7 +2765,8 @@ msgstr "Przypomnienia o dokumentach"
 
 #: .\clients\templates\clients\document_reminder_list.html:17
 msgid ""
-"Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и периодам"
+"Проверь и сгенерируй актуальные напоминания, отфильтруй по клиенту и "
+"периодам"
 msgstr ""
 "Sprawdź i wygeneruj aktualne przypomnienia, filtruj wg klienta i okresów"
 
@@ -2751,14 +2894,6 @@ msgstr "Aktualny plik"
 #: .\clients\templates\clients\document_versions.html:26
 msgid "Current document file"
 msgstr "Aktualny plik dokumentu"
-
-#: .\clients\templates\clients\document_versions.html:33
-#: .\clients\templates\clients\partials\document_checklist.html:72
-#: .\clients\templates\clients\partials\document_checklist.html:74
-#: .\submissions\templates\submissions\submission_detail.html:42
-#: .\submissions\templates\submissions\submission_list.html:32
-msgid "Открыть"
-msgstr "Otwórz"
 
 #: .\clients\templates\clients\document_versions.html:36
 #: .\clients\templates\clients\document_versions.html:73
@@ -3215,10 +3350,6 @@ msgstr "Rola rodziny"
 msgid "член(ов) семьи"
 msgstr "członek(-i) rodziny"
 
-#: .\clients\templates\clients\partials\client_overview.html:158
-msgid "Открытые задачи"
-msgstr "Otwórz zadania"
-
 #: .\clients\templates\clients\partials\client_overview.html:165
 #: .\clients\templates\clients\partials\workflow_panel.html:30
 msgid "тип проблемы"
@@ -3357,13 +3488,11 @@ msgstr "Dodaj kolejny plik"
 #, python-format
 msgid ""
 "\n"
-"  Для цели \"%(purpose)s\" на языке \"%(language)s\" чеклист не определен в "
-"настройках.\n"
+"  Для цели \"%(purpose)s\" на языке \"%(language)s\" чеклист не определен в настройках.\n"
 "  "
 msgstr ""
 "\n"
-"Dla celu \"%(purpose)s\" w języku \"%(language)s\" lista kontrolna nie "
-"została zdefiniowana w ustawieniach."
+"Dla celu \"%(purpose)s\" w języku \"%(language)s\" lista kontrolna nie została zdefiniowana w ustawieniach."
 
 #: .\clients\templates\clients\partials\email_history.html:6
 msgid "История email"
@@ -3691,8 +3820,7 @@ msgstr "Filtruj"
 #: .\clients\templates\clients\register.html:53
 #, python-format
 msgid "Уже есть аккаунт? <a class=\"ms-2\" href=\"%(login_url)s\">Войти</a>"
-msgstr ""
-"Masz już konto? <a class=\"ms-2\" href=\"%(login_url)s\">Zaloguj się</a>"
+msgstr "Masz już konto? <a class=\"ms-2\" href=\"%(login_url)s\">Zaloguj się</a>"
 
 #: .\clients\templates\clients\search.html:4
 #: .\clients\templates\clients\search.html:12
@@ -3717,23 +3845,14 @@ msgstr "Wyniki wyszukiwania dla „%(query)s”:"
 msgid "Ничего не найдено по запросу \"%(query)s\"."
 msgstr "Nie znaleziono wyników dla „%(query)s”."
 
-#: .\clients\templates\clients\staff_manage.html:4
-#: .\clients\templates\clients\staff_manage.html:5
-#: .\clients\tests\test_view_edge_cases.py:275
-msgid "Сотрудники"
-msgstr "Pracownicy"
+#: .\clients\templates\clients\service_price_manage.html:24
+#| msgid "Цена (PLN)"
+msgid "Цена PLN"
+msgstr "Cena PLN"
 
 #: .\clients\templates\clients\staff_manage.html:6
 msgid "Управление staff-аккаунтами и ролями без Django admin."
 msgstr "Zarządzanie kontami personelu i rolami bez Django admin."
-
-#: .\clients\templates\clients\submission_manage.html:4
-#: .\clients\templates\clients\submission_manage.html:5
-#: .\submissions\models.py:34
-#: .\submissions\templates\submissions\submission_list.html:4
-#: .\submissions\templates\submissions\submission_list.html:9
-msgid "Основания подачи"
-msgstr "Podstawowe informacje"
 
 #: .\clients\templates\clients\submission_manage.html:6
 msgid "Управление типами подачи и их локализованными названиями."
@@ -4134,8 +4253,8 @@ msgstr "Nie udało się wysłać e-maila (send_mail zwróciło 0)."
 #: .\clients\views\emails.py:194
 msgid "Email delivery failed. Check application logs for technical details."
 msgstr ""
-"Dostarczenie wiadomości e-mail nie powiodło się. Sprawdź dzienniki aplikacji "
-"pod kątem szczegółów technicznych."
+"Dostarczenie wiadomości e-mail nie powiodło się. Sprawdź dzienniki aplikacji"
+" pod kątem szczegółów technicznych."
 
 #: .\clients\views\emails.py:237
 msgid "Не найдено получателей по заданным фильтрам (с указанным email)."
@@ -4628,17 +4747,13 @@ msgstr "Nie masz dostępu do tej strony"
 #: .\templates\403.html:25
 msgid ""
 "\n"
-"                        Вы вошли в систему, но ваш профиль не имеет прав для "
-"просмотра этого раздела сотрудников.\n"
-"                        Если вы считаете, что это ошибка, обратитесь к "
-"администратору сайта.\n"
+"                        Вы вошли в систему, но ваш профиль не имеет прав для просмотра этого раздела сотрудников.\n"
+"                        Если вы считаете, что это ошибка, обратитесь к администратору сайта.\n"
 "                        "
 msgstr ""
 "\n"
-"Jesteś zalogowany, ale Twój profil nie ma uprawnień do przeglądania tej "
-"sekcji personelu.\n"
-"                        Jeśli uważasz, że to błąd, skontaktuj się z "
-"administratorem witryny."
+"Jesteś zalogowany, ale Twój profil nie ma uprawnień do przeglądania tej sekcji personelu.\n"
+"                        Jeśli uważasz, że to błąd, skontaktuj się z administratorem witryny."
 
 #: .\templates\403.html:34
 msgid "Выйти и войти под другим аккаунтом"
@@ -4680,16 +4795,13 @@ msgstr "Wewnetrzny blad serwera"
 msgid ""
 "\n"
 "              Произошла непредвиденная ошибка. Наша команда уже уведомлена\n"
-"              и работает над устранением проблемы. Попробуйте повторить "
-"действие\n"
+"              и работает над устранением проблемы. Попробуйте повторить действие\n"
 "              через несколько минут.\n"
 "              "
 msgstr ""
 "\n"
-"              Wystapil nieoczekiwany blad. Nasz zespol zostal juz "
-"powiadomiony\n"
-"              i pracuje nad rozwiazaniem problemu. Sprobuj ponowic "
-"dzialanie\n"
+"              Wystapil nieoczekiwany blad. Nasz zespol zostal juz powiadomiony\n"
+"              i pracuje nad rozwiazaniem problemu. Sprobuj ponowic dzialanie\n"
 "              za kilka minut.\n"
 "              "
 
@@ -4805,11 +4917,11 @@ msgstr "Potwierdź e-mail"
 
 #: .\templates\account\email_confirm.html:72
 msgid ""
-"Если это не ваш адрес, просто проигнорируйте письмо и запросите новую ссылку "
-"из личного кабинета."
+"Если это не ваш адрес, просто проигнорируйте письмо и запросите новую ссылку"
+" из личного кабинета."
 msgstr ""
-"Jeśli to nie jest Twój adres, po prostu zignoruj ​​list i poproś o nowy link "
-"ze swojego konta osobistego."
+"Jeśli to nie jest Twój adres, po prostu zignoruj ​​list i poproś o nowy link"
+" ze swojego konta osobistego."
 
 #: .\templates\account\email_confirm.html:77
 msgid "Ссылка для подтверждения недействительна или уже была использована."
@@ -4986,8 +5098,8 @@ msgstr "Wyślemy Ci nowy link"
 
 #: .\templates\account\resend_verification.html:17
 msgid ""
-"Введите email, который использовали при регистрации. Если аккаунт существует "
-"и почта ещё не подтверждена, мы отправим новое письмо."
+"Введите email, который использовали при регистрации. Если аккаунт существует"
+" и почта ещё не подтверждена, мы отправим новое письмо."
 msgstr ""
 "Wpisz adres e-mail użyty podczas rejestracji. Jeśli konto istnieje, a adres "
 "e-mail nie został jeszcze potwierdzony, wyślemy nowy e-mail."
@@ -5042,8 +5154,8 @@ msgid ""
 "Зарегистрируйтесь, чтобы следить за документами, платежами и клиентами в "
 "одном месте."
 msgstr ""
-"Zarejestruj się, aby mieć kontrolę nad dokumentami, płatnościami i klientami "
-"w jednym miejscu."
+"Zarejestruj się, aby mieć kontrolę nad dokumentami, płatnościami i klientami"
+" w jednym miejscu."
 
 #: .\templates\account\signup.html:27
 msgid ""
@@ -5093,8 +5205,8 @@ msgstr "E-mail jest już w drodze"
 
 #: .\templates\account\verification_sent.html:55
 msgid ""
-"Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы "
-"завершить регистрацию."
+"Мы отправили вам письмо для верификации. Перейдите по ссылке в письме, чтобы"
+" завершить регистрацию."
 msgstr ""
 "Wysłaliśmy Ci wiadomość e-mail w celu weryfikacji. Kliknij link w e-mailu, "
 "aby zakończyć rejestrację."
@@ -5136,8 +5248,8 @@ msgstr "Poproś o kolejny link w swoim profilu, jeśli obecny wygasł."
 #: .\templates\account\verification_sent.html:106
 msgid "Свяжитесь с нашей поддержкой, если письмо так и не пришло."
 msgstr ""
-"Skontaktuj się z naszym wsparciem, jeśli nadal nie otrzymałeś wiadomości e-"
-"mail."
+"Skontaktuj się z naszym wsparciem, jeśli nadal nie otrzymałeś wiadomości "
+"e-mail."
 
 #: .\templates\admin\base_site.html:4
 msgid "Администрирование Legalize"
@@ -5204,10 +5316,6 @@ msgstr "Legalize"
 msgid "Переключить навигацию"
 msgstr "Przełącz nawigację"
 
-#: .\templates\base.html:71
-msgid "Клиенты"
-msgstr "Klienci"
-
 #: .\templates\base.html:82
 msgid "Операции"
 msgstr "Operacje"
@@ -5215,10 +5323,6 @@ msgstr "Operacje"
 #: .\templates\base.html:87
 msgid "Калькулятор"
 msgstr "Kalkulator"
-
-#: .\templates\base.html:93
-msgid "Чеклисты"
-msgstr "Czeklist"
 
 #: .\templates\base.html:107
 msgid "Напоминания"
@@ -5231,10 +5335,6 @@ msgstr "Według dokumentów"
 #: .\templates\base.html:117
 msgid "По оплатам"
 msgstr "Poprzez płatności"
-
-#: .\templates\base.html:169
-msgid "Метрики"
-msgstr "Metryka"
 
 #: .\templates\base.html:244
 msgid "Заголовок страницы"
@@ -5272,8 +5372,7 @@ msgstr "Zaloguj się przez Google"
 #, python-format
 msgid ""
 "\n"
-"                    Вы собираетесь войти на сайт, используя свой аккаунт "
-"%(provider)s.\n"
+"                    Вы собираетесь войти на сайт, используя свой аккаунт %(provider)s.\n"
 "                    "
 msgstr ""
 "\n"
@@ -5476,18 +5575,17 @@ msgstr "użytkownicy"
 #~ msgstr "Wpisz prawidłowy adres e-mail."
 
 #~ msgid ""
-#~ "Enter a valid “slug” consisting of letters, numbers, underscores or "
-#~ "hyphens."
+#~ "Enter a valid “slug” consisting of letters, numbers, underscores or hyphens."
 #~ msgstr ""
 #~ "Wprowadź prawidłowy „korek” składający się z liter, cyfr, podkreśleń lub "
 #~ "łączników."
 
 #~ msgid ""
-#~ "Enter a valid “slug” consisting of Unicode letters, numbers, underscores, "
-#~ "or hyphens."
+#~ "Enter a valid “slug” consisting of Unicode letters, numbers, underscores, or"
+#~ " hyphens."
 #~ msgstr ""
-#~ "Wprowadź prawidłowy „korek” składający się z liter Unicode, cyfr, "
-#~ "podkreśleń lub łączników."
+#~ "Wprowadź prawidłowy „korek” składający się z liter Unicode, cyfr, podkreśleń"
+#~ " lub łączników."
 
 #, python-format
 #~ msgid "Enter a valid %(protocol)s address."
@@ -5526,13 +5624,12 @@ msgstr "użytkownicy"
 
 #, python-format
 #~ msgid ""
-#~ "Ensure this value is a multiple of step size %(limit_value)s, starting "
-#~ "from %(offset)s, e.g. %(offset)s, %(valid_value1)s, %(valid_value2)s, and "
-#~ "so on."
+#~ "Ensure this value is a multiple of step size %(limit_value)s, starting from "
+#~ "%(offset)s, e.g. %(offset)s, %(valid_value1)s, %(valid_value2)s, and so on."
 #~ msgstr ""
 #~ "Upewnij się, że ta wartość jest wielokrotnością rozmiaru kroku "
-#~ "%(limit_value)s, zaczynając od %(offset)s, np. %(offset)s, "
-#~ "%(valid_value1)s, %(valid_value2)s i tak dalej."
+#~ "%(limit_value)s, zaczynając od %(offset)s, np. %(offset)s, %(valid_value1)s,"
+#~ " %(valid_value2)s i tak dalej."
 
 #, python-format
 #~ msgid ""
@@ -5574,17 +5671,14 @@ msgstr "użytkownicy"
 #, python-format
 #~ msgid "Ensure that there are no more than %(max)s decimal place."
 #~ msgid_plural "Ensure that there are no more than %(max)s decimal places."
-#~ msgstr[0] ""
-#~ "Upewnij się, że liczba miejsc po przecinku nie przekracza %(max)s."
-#~ msgstr[1] ""
-#~ "Upewnij się, że liczba miejsc po przecinku nie przekracza %(max)s."
+#~ msgstr[0] "Upewnij się, że liczba miejsc po przecinku nie przekracza %(max)s."
+#~ msgstr[1] "Upewnij się, że liczba miejsc po przecinku nie przekracza %(max)s."
 
 #, python-format
 #~ msgid ""
 #~ "Ensure that there are no more than %(max)s digit before the decimal point."
 #~ msgid_plural ""
-#~ "Ensure that there are no more than %(max)s digits before the decimal "
-#~ "point."
+#~ "Ensure that there are no more than %(max)s digits before the decimal point."
 #~ msgstr[0] ""
 #~ "Upewnij się, że przed przecinkiem dziesiętnym nie ma więcej niż %(max)s "
 #~ "cyfr."
@@ -5597,8 +5691,8 @@ msgstr "użytkownicy"
 #~ "File extension “%(extension)s” is not allowed. Allowed extensions are: "
 #~ "%(allowed_extensions)s."
 #~ msgstr ""
-#~ "Rozszerzenie pliku „%(extension)s” jest niedozwolone. Dozwolone "
-#~ "rozszerzenia to: %(allowed_extensions)s."
+#~ "Rozszerzenie pliku „%(extension)s” jest niedozwolone. Dozwolone rozszerzenia"
+#~ " to: %(allowed_extensions)s."
 
 #~ msgid "Null characters are not allowed."
 #~ msgstr "Znaki null są niedozwolone."
@@ -5632,8 +5726,7 @@ msgstr "użytkownicy"
 #~ msgid ""
 #~ "%(field_label)s must be unique for %(date_field_label)s %(lookup_type)s."
 #~ msgstr ""
-#~ "%(field_label)s musi być unikalny dla %(date_field_label)s "
-#~ "%(lookup_type)s."
+#~ "%(field_label)s musi być unikalny dla %(date_field_label)s %(lookup_type)s."
 
 #, python-format
 #~ msgid "Field of type: %(field_type)s"
@@ -5665,13 +5758,13 @@ msgstr "użytkownicy"
 #~ "“%(value)s” value has an invalid date format. It must be in YYYY-MM-DD "
 #~ "format."
 #~ msgstr ""
-#~ "Wartość „%(value)s” ma nieprawidłowy format daty. Musi być w formacie "
-#~ "RRRR-MM-DD."
+#~ "Wartość „%(value)s” ma nieprawidłowy format daty. Musi być w formacie RRRR-"
+#~ "MM-DD."
 
 #, python-format
 #~ msgid ""
-#~ "“%(value)s” value has the correct format (YYYY-MM-DD) but it is an "
-#~ "invalid date."
+#~ "“%(value)s” value has the correct format (YYYY-MM-DD) but it is an invalid "
+#~ "date."
 #~ msgstr ""
 #~ "Wartość „%(value)s” ma poprawny format (RRRR-MM-DD), ale jest to "
 #~ "nieprawidłowa data."
@@ -5684,16 +5777,16 @@ msgstr "użytkownicy"
 #~ "“%(value)s” value has an invalid format. It must be in YYYY-MM-DD "
 #~ "HH:MM[:ss[.uuuuuu]][TZ] format."
 #~ msgstr ""
-#~ "Wartość „%(value)s” ma nieprawidłowy format. Musi być w formacie RRRR-MM-"
-#~ "DD HH:MM[:ss[.uuuuuu]][TZ]."
+#~ "Wartość „%(value)s” ma nieprawidłowy format. Musi być w formacie RRRR-MM-DD "
+#~ "HH:MM[:ss[.uuuuuu]][TZ]."
 
 #, python-format
 #~ msgid ""
-#~ "“%(value)s” value has the correct format (YYYY-MM-DD HH:MM[:ss[.uuuuuu]]"
-#~ "[TZ]) but it is an invalid date/time."
+#~ "“%(value)s” value has the correct format (YYYY-MM-DD "
+#~ "HH:MM[:ss[.uuuuuu]][TZ]) but it is an invalid date/time."
 #~ msgstr ""
-#~ "Wartość „%(value)s” ma poprawny format (RRRR-MM-DD HH:MM[:ss[.uuuuuu]]"
-#~ "[TZ]), ale jest to nieprawidłowa data/godzina."
+#~ "Wartość „%(value)s” ma poprawny format (RRRR-MM-DD HH:MM[:ss[.uuuuuu]][TZ]),"
+#~ " ale jest to nieprawidłowa data/godzina."
 
 #~ msgid "Date (with time)"
 #~ msgstr "Data (z czasem)"
@@ -5773,16 +5866,16 @@ msgstr "użytkownicy"
 
 #, python-format
 #~ msgid ""
-#~ "“%(value)s” value has an invalid format. It must be in "
-#~ "HH:MM[:ss[.uuuuuu]] format."
+#~ "“%(value)s” value has an invalid format. It must be in HH:MM[:ss[.uuuuuu]] "
+#~ "format."
 #~ msgstr ""
 #~ "Wartość „%(value)s” ma nieprawidłowy format. Musi być w formacie "
 #~ "HH:MM[:ss[.uuuuuu]]."
 
 #, python-format
 #~ msgid ""
-#~ "“%(value)s” value has the correct format (HH:MM[:ss[.uuuuuu]]) but it is "
-#~ "an invalid time."
+#~ "“%(value)s” value has the correct format (HH:MM[:ss[.uuuuuu]]) but it is an "
+#~ "invalid time."
 #~ msgstr ""
 #~ "Wartość „%(value)s” ma poprawny format (GG:MM[:ss[.uuuuuu]]), ale jest to "
 #~ "nieprawidłowy czas."
@@ -5857,8 +5950,7 @@ msgstr "użytkownicy"
 
 #, python-brace-format
 #~ msgid "The number of days must be between {min_days} and {max_days}."
-#~ msgstr ""
-#~ "Liczba dni musi mieścić się w przedziale od {min_days} do {max_days}."
+#~ msgstr "Liczba dni musi mieścić się w przedziale od {min_days} do {max_days}."
 
 #~ msgid "No file was submitted. Check the encoding type on the form."
 #~ msgstr "Nie przesłano żadnego pliku. Sprawdź typ kodowania w formularzu."
@@ -5875,8 +5967,7 @@ msgstr "użytkownicy"
 #~ msgid_plural ""
 #~ "Ensure this filename has at most %(max)d characters (it has %(length)d)."
 #~ msgstr[0] ""
-#~ "Upewnij się, że ta nazwa pliku ma co najwyżej %(max)d znaku (ma "
-#~ "%(length)d)."
+#~ "Upewnij się, że ta nazwa pliku ma co najwyżej %(max)d znaku (ma %(length)d)."
 #~ msgstr[1] ""
 #~ "Upewnij się, że ta nazwa pliku ma co najwyżej %(max)d znaków (ma "
 #~ "%(length)d)."
@@ -5892,8 +5983,7 @@ msgstr "użytkownicy"
 #~ "uszkodzony."
 
 #, python-format
-#~ msgid ""
-#~ "Select a valid choice. %(value)s is not one of the available choices."
+#~ msgid "Select a valid choice. %(value)s is not one of the available choices."
 #~ msgstr ""
 #~ "Wybierz prawidłowy wybór. %(value)s nie jest jedną z dostępnych opcji."
 
@@ -5921,9 +6011,9 @@ msgstr "użytkownicy"
 #~ "ManagementForm data is missing or has been tampered with. Missing fields: "
 #~ "%(field_names)s. You may need to file a bug report if the issue persists."
 #~ msgstr ""
-#~ "Brakuje danych ManagementForm lub zostały one zmodyfikowane. Brakujące "
-#~ "pola: %(field_names)s. Jeśli problem będzie się powtarzał, może być "
-#~ "konieczne przesłanie raportu o błędzie."
+#~ "Brakuje danych ManagementForm lub zostały one zmodyfikowane. Brakujące pola:"
+#~ " %(field_names)s. Jeśli problem będzie się powtarzał, może być konieczne "
+#~ "przesłanie raportu o błędzie."
 
 #, python-format
 #~ msgid "Please submit at most %(num)d form."
@@ -5948,8 +6038,7 @@ msgstr "użytkownicy"
 #~ msgstr "Proszę poprawić zduplikowane dane dla %(field)s."
 
 #, python-format
-#~ msgid ""
-#~ "Please correct the duplicate data for %(field)s, which must be unique."
+#~ msgid "Please correct the duplicate data for %(field)s, which must be unique."
 #~ msgstr "Popraw zduplikowane dane dla %(field)s, które muszą być unikalne."
 
 #, python-format
@@ -5976,8 +6065,8 @@ msgstr "użytkownicy"
 
 #, python-format
 #~ msgid ""
-#~ "%(datetime)s couldn’t be interpreted in time zone %(current_timezone)s; "
-#~ "it may be ambiguous or it may not exist."
+#~ "%(datetime)s couldn’t be interpreted in time zone %(current_timezone)s; it "
+#~ "may be ambiguous or it may not exist."
 #~ msgstr ""
 #~ "%(datetime)s nie mógł zostać zinterpretowany w strefie czasowej "
 #~ "%(current_timezone)s; może być niejednoznaczne lub może nie istnieć."
@@ -6336,40 +6425,39 @@ msgstr "użytkownicy"
 #~ "hijacked by third parties."
 #~ msgstr ""
 #~ "Widzisz tę wiadomość, ponieważ ta witryna HTTPS wymaga wysłania przez "
-#~ "przeglądarkę internetową „nagłówka strony odsyłającej”, ale żaden nie "
-#~ "został wysłany. Ten nagłówek jest wymagany ze względów bezpieczeństwa, "
-#~ "aby mieć pewność, że Twoja przeglądarka nie zostanie przejęta przez osoby "
-#~ "trzecie."
+#~ "przeglądarkę internetową „nagłówka strony odsyłającej”, ale żaden nie został"
+#~ " wysłany. Ten nagłówek jest wymagany ze względów bezpieczeństwa, aby mieć "
+#~ "pewność, że Twoja przeglądarka nie zostanie przejęta przez osoby trzecie."
 
 #~ msgid ""
-#~ "If you have configured your browser to disable “Referer” headers, please "
-#~ "re-enable them, at least for this site, or for HTTPS connections, or for "
-#~ "“same-origin” requests."
+#~ "If you have configured your browser to disable “Referer” headers, please re-"
+#~ "enable them, at least for this site, or for HTTPS connections, or for “same-"
+#~ "origin” requests."
 #~ msgstr ""
 #~ "Jeśli skonfigurowałeś swoją przeglądarkę tak, aby wyłączała nagłówki "
 #~ "„Referer”, włącz je ponownie, przynajmniej dla tej witryny, dla połączeń "
 #~ "HTTPS lub dla żądań „tego samego pochodzenia”."
 
 #~ msgid ""
-#~ "If you are using the <meta name=\"referrer\" content=\"no-referrer\"> tag "
-#~ "or including the “Referrer-Policy: no-referrer” header, please remove "
-#~ "them. The CSRF protection requires the “Referer” header to do strict "
-#~ "referer checking. If you’re concerned about privacy, use alternatives "
-#~ "like <a rel=\"noreferrer\" …> for links to third-party sites."
+#~ "If you are using the <meta name=\"referrer\" content=\"no-referrer\"> tag or"
+#~ " including the “Referrer-Policy: no-referrer” header, please remove them. "
+#~ "The CSRF protection requires the “Referer” header to do strict referer "
+#~ "checking. If you’re concerned about privacy, use alternatives like <a "
+#~ "rel=\"noreferrer\" …> for links to third-party sites."
 #~ msgstr ""
 #~ "Jeśli używasz tagu <meta name=\"referrer\" content=\"no-referrer\"> lub "
 #~ "dołączasz nagłówek „Referrer-Policy: no-referrer”, usuń je. Ochrona CSRF "
 #~ "wymaga, aby nagłówek „Referer” przeprowadzał ścisłe sprawdzanie stron "
-#~ "odsyłających. Jeśli obawiasz się o prywatność, użyj alternatyw, takich "
-#~ "jak <a rel=\"noreferrer\" …> w przypadku linków do witryn stron trzecich."
+#~ "odsyłających. Jeśli obawiasz się o prywatność, użyj alternatyw, takich jak "
+#~ "<a rel=\"noreferrer\" …> w przypadku linków do witryn stron trzecich."
 
 #~ msgid ""
 #~ "You are seeing this message because this site requires a CSRF cookie when "
 #~ "submitting forms. This cookie is required for security reasons, to ensure "
 #~ "that your browser is not being hijacked by third parties."
 #~ msgstr ""
-#~ "Widzisz tę wiadomość, ponieważ ta witryna wymaga pliku cookie CSRF "
-#~ "podczas przesyłania formularzy. Ten plik cookie jest wymagany ze względów "
+#~ "Widzisz tę wiadomość, ponieważ ta witryna wymaga pliku cookie CSRF podczas "
+#~ "przesyłania formularzy. Ten plik cookie jest wymagany ze względów "
 #~ "bezpieczeństwa, aby zapewnić, że Twoja przeglądarka nie zostanie przejęta "
 #~ "przez osoby trzecie."
 
@@ -6378,8 +6466,8 @@ msgstr "użytkownicy"
 #~ "them, at least for this site, or for “same-origin” requests."
 #~ msgstr ""
 #~ "Jeśli skonfigurowałeś swoją przeglądarkę tak, aby wyłączała pliki cookie, "
-#~ "włącz je ponownie, przynajmniej dla tej witryny lub dla żądań „tego "
-#~ "samego pochodzenia”."
+#~ "włącz je ponownie, przynajmniej dla tej witryny lub dla żądań „tego samego "
+#~ "pochodzenia”."
 
 #~ msgid "More information is available with DEBUG=True."
 #~ msgstr "Więcej informacji jest dostępnych przy DEBUG=True."
@@ -6449,24 +6537,23 @@ msgstr "użytkownicy"
 #, python-format
 #~ msgid ""
 #~ "View <a href=\"https://docs.djangoproject.com/en/%(version)s/releases/\" "
-#~ "target=\"_blank\" rel=\"noopener\">release notes</a> for Django "
-#~ "%(version)s"
+#~ "target=\"_blank\" rel=\"noopener\">release notes</a> for Django %(version)s"
 #~ msgstr ""
-#~ "Zobacz <a href=\"https://docs.djangoproject.com/en/%(version)s/releases/"
-#~ "\" target=\"_blank\" rel=\"noopener\">notatki o wydaniu</a> dla Django "
+#~ "Zobacz <a href=\"https://docs.djangoproject.com/en/%(version)s/releases/\" "
+#~ "target=\"_blank\" rel=\"noopener\">notatki o wydaniu</a> dla Django "
 #~ "%(version)s"
 
 #, python-format
 #~ msgid ""
-#~ "You are seeing this page because <a href=\"https://docs.djangoproject.com/"
-#~ "en/%(version)s/ref/settings/#debug\" target=\"_blank\" "
-#~ "rel=\"noopener\">DEBUG=True</a> is in your settings file and you have not "
-#~ "configured any URLs."
+#~ "You are seeing this page because <a "
+#~ "href=\"https://docs.djangoproject.com/en/%(version)s/ref/settings/#debug\" "
+#~ "target=\"_blank\" rel=\"noopener\">DEBUG=True</a> is in your settings file "
+#~ "and you have not configured any URLs."
 #~ msgstr ""
-#~ "Widzisz tę stronę, ponieważ <a href=\"https://docs.djangoproject.com/en/"
-#~ "%(version)s/ref/settings/#debug\" target=\"_blank\" "
-#~ "rel=\"noopener\">DEBUG=True</a> znajduje się w Twoim pliku ustawień i nie "
-#~ "skonfigurowałeś żadnych adresów URL."
+#~ "Widzisz tę stronę, ponieważ <a "
+#~ "href=\"https://docs.djangoproject.com/en/%(version)s/ref/settings/#debug\" "
+#~ "target=\"_blank\" rel=\"noopener\">DEBUG=True</a> znajduje się w Twoim pliku"
+#~ " ustawień i nie skonfigurowałeś żadnych adresów URL."
 
 #~ msgid "Django Documentation"
 #~ msgstr "Dokumentacja Django"
@@ -6518,16 +6605,16 @@ msgstr "użytkownicy"
 
 #~ msgid ""
 #~ "A short code to identify the type of this package. For example: gem for a "
-#~ "Rubygem, docker for a container, pypi for a Python Wheel or Egg, maven "
-#~ "for a Maven Jar, deb for a Debian package, etc."
+#~ "Rubygem, docker for a container, pypi for a Python Wheel or Egg, maven for a"
+#~ " Maven Jar, deb for a Debian package, etc."
 #~ msgstr ""
 #~ "Krótki kod identyfikujący typ tej paczki. Na przykład: gem dla Rubygem, "
 #~ "docker dla kontenera, pypi dla Python Wheel lub Egg, maven dla Maven Jar, "
 #~ "deb dla pakietu Debiana itp."
 
 #~ msgid ""
-#~ "Package name prefix, such as Maven groupid, Docker image owner, GitHub "
-#~ "user or organization, etc."
+#~ "Package name prefix, such as Maven groupid, Docker image owner, GitHub user "
+#~ "or organization, etc."
 #~ msgstr ""
 #~ "Prefiks nazwy pakietu, taki jak groupid Maven, właściciel obrazu Docker, "
 #~ "użytkownik lub organizacja GitHub itp."
@@ -6539,11 +6626,11 @@ msgstr "użytkownicy"
 #~ msgstr "Wersja pakietu."
 
 #~ msgid ""
-#~ "Extra qualifying data for a package such as the name of an OS, "
-#~ "architecture, distro, etc."
+#~ "Extra qualifying data for a package such as the name of an OS, architecture,"
+#~ " distro, etc."
 #~ msgstr ""
-#~ "Dodatkowe dane kwalifikacyjne pakietu, takie jak nazwa systemu "
-#~ "operacyjnego, architektura, dystrybucja itp."
+#~ "Dodatkowe dane kwalifikacyjne pakietu, takie jak nazwa systemu operacyjnego,"
+#~ " architektura, dystrybucja itp."
 
 #~ msgid "Extra subpath within a package, relative to the package root."
 #~ msgstr ""
@@ -6802,10 +6889,8 @@ msgstr "użytkownicy"
 #~ msgstr "Potwierdzenie wysłania wiadomości do klienta"
 
 #, python-format
-#~ msgid ""
-#~ "Нет аккаунта? <a href=\"%(signup_url)s\">Зарегистрируйтесь за минуту</a>"
-#~ msgstr ""
-#~ "Nie masz konta? <a href=\"%(signup_url)s\">Zarejestruj się w minutę</a>"
+#~ msgid "Нет аккаунта? <a href=\"%(signup_url)s\">Зарегистрируйтесь за минуту</a>"
+#~ msgstr "Nie masz konta? <a href=\"%(signup_url)s\">Zarejestruj się w minutę</a>"
 
 #~ msgid "Сброс пароля"
 #~ msgstr "Resetuj"

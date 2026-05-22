@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}Цены и услуги{% endblock %}
-{% block page_title %}Цены и услуги{% endblock %}
+{% block title %}{% translate "Цены и услуги" %}{% endblock %}
+{% block page_title %}{% translate "Цены и услуги" %}{% endblock %}
 {% block page_subtitle %}Редактирование прайса внутри рабочей панели.{% endblock %}
 
 {% block page_actions %}
 <div class="d-flex gap-2">
-  <a href="{% url 'clients:admin_panel' %}" class="btn btn-outline-secondary">Админ панель</a>
+  <a href="{% url 'clients:admin_panel' %}" class="btn btn-outline-secondary">{% translate "Админ панель" %}</a>
 </div>
 {% endblock %}
 
@@ -21,7 +21,7 @@
           <thead>
             <tr>
               <th>Услуга</th>
-              <th style="width: 220px;">Цена PLN</th>
+              <th style="width: 220px;">{% translate "Цена PLN" %}</th>
             </tr>
           </thead>
           <tbody>
