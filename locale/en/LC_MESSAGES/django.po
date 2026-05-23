@@ -5661,11 +5661,11 @@ msgstr "Reminders"
 
 #: .\templates\base.html:112
 msgid "По документам"
-msgstr "According to documents"
+msgstr "Documents"
 
 #: .\templates\base.html:117
 msgid "По оплатам"
-msgstr "By payments"
+msgstr "Payments"
 
 #: .\templates\base.html:244
 msgid "Заголовок страницы"

@@ -1944,7 +1944,7 @@ msgstr ""
 
 #: .\clients\templates\clients\admin_panel.html:197 .\templates\base.html:200
 msgid "Здоровье системы"
-msgstr "Zdrowie systemu"
+msgstr "Stan systemu"
 
 #: .\clients\templates\clients\admin_panel.html:205
 #: .\clients\templates\clients\admin_panel.html:207 .\templates\base.html:169
@@ -1969,20 +1969,20 @@ msgstr ""
 #: .\clients\templates\clients\logs\staff_activity_logs.html:10
 #: .\templates\base.html:186
 msgid "Логи сотрудников"
-msgstr "Logi pracowników"
+msgstr "Logi personelu"
 
 #: .\clients\templates\clients\admin_panel.html:217
 #: .\clients\templates\clients\logs\email_logs.html:9
 #: .\clients\templates\clients\logs\email_logs.html:10
 #: .\templates\base.html:181
 msgid "Логи писем"
-msgstr "Logi e-maili"
+msgstr "Logi wiadomości"
 
 #: .\clients\templates\clients\app_settings_form.html:4
 #: .\clients\templates\clients\app_settings_form.html:5
 #: .\templates\base.html:176
 msgid "Настройки шаблонов"
-msgstr "Ustawienia szablonow"
+msgstr "Ustawienia szablonów"
 
 #: .\clients\templates\clients\app_settings_form.html:6
 msgid "Настройте значения по умолчанию для текущей базы данных."
@@ -5680,11 +5680,11 @@ msgstr "Przypomnienia"
 
 #: .\templates\base.html:112
 msgid "По документам"
-msgstr "Według dokumentów"
+msgstr "Dokumenty"
 
 #: .\templates\base.html:117
 msgid "По оплатам"
-msgstr "Poprzez płatności"
+msgstr "Płatności"
 
 #: .\templates\base.html:244
 msgid "Заголовок страницы"
