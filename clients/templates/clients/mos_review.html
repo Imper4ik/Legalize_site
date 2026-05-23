@@ -14,16 +14,37 @@
             <div class="card-header fw-bold">Паспортные и личные данные</div>
             <div class="card-body">
                 <h5>Личные данные</h5>
-                <pre class="bg-light p-2 rounded">{{ mos_data.personal_data|pprint }}</pre>
+                <ul class="list-group list-group-flush mb-3">
+                    {% for key, value in mos_data.personal_data.items %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">{{ key }}</span>
+                        <span class="fw-bold">{{ value }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
                 <h5>Паспорт</h5>
-                <pre class="bg-light p-2 rounded">{{ mos_data.passport_data|pprint }}</pre>
+                <ul class="list-group list-group-flush mb-3">
+                    {% for key, value in mos_data.passport_data.items %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">{{ key }}</span>
+                        <span class="fw-bold">{{ value }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
             </div>
         </div>
 
         <div class="card mb-3">
             <div class="card-header fw-bold">Адрес</div>
             <div class="card-body">
-                <pre class="bg-light p-2 rounded">{{ mos_data.address_data|pprint }}</pre>
+                <ul class="list-group list-group-flush mb-3">
+                    {% for key, value in mos_data.address_data.items %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">{{ key }}</span>
+                        <span class="fw-bold">{{ value }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
             </div>
         </div>
 
@@ -33,7 +54,14 @@
                 <p><strong>Основание:</strong> {{ mos_data.mos_purpose }}</p>
                 <p><strong>Легальное пребывание до:</strong> {{ mos_data.legal_stay_until }}</p>
                 <h5>Декларации</h5>
-                <pre class="bg-light p-2 rounded">{{ mos_data.legal_declarations|pprint }}</pre>
+                <ul class="list-group list-group-flush mb-3">
+                    {% for key, value in mos_data.legal_declarations.items %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">{{ key }}</span>
+                        <span class="fw-bold">{{ value }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
             </div>
         </div>
     </div>
