@@ -1,14 +1,102 @@
 {% extends "clients/onboarding/base_onboarding.html" %}
 
-{% block title %}Добро пожаловать в портал Onboarding{% endblock %}
+{% block title %}Личный кабинет клиента{% endblock %}
 
 {% block content %}
-<p>Для продолжения подготовки ваших документов нам необходимо собрать некоторую информацию.</p>
-<p>Пожалуйста, нажмите кнопку ниже, чтобы начать.</p>
-<form method="post">
-    {% csrf_token %}
-    <div class="d-grid gap-2 mt-4">
-        <button type="submit" class="btn btn-primary btn-lg">Начать заполнение</button>
+<div class="row">
+    <!-- Блок анкеты MOS -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-primary text-white fw-bold">Анкета для ВНЖ (MOS)</div>
+            <div class="card-body">
+                <p>Для подготовки вашего дела необходимо заполнить электронную анкету.</p>
+                {% if mos_data.status == 'client_completed' or mos_data.status == 'mos_package_ready' or mos_data.status == 'submitted_in_mos' or mos_data.status == 'approved_by_staff' %}
+                    <div class="alert alert-success">
+                        <strong>Статус: Заполнено</strong><br>
+                        Вы успешно заполнили анкету. Наши специалисты уже проверяют ваши данные.
+                    </div>
+                {% elif mos_data.status == 'needs_correction' %}
+                    <div class="alert alert-warning">
+                        <strong>Статус: Требуются исправления</strong><br>
+                        Пожалуйста, исправьте ошибки: {{ mos_data.correction_message }}
+                    </div>
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning w-100 fw-bold">Внести исправления</button>
+                    </form>
+                {% else %}
+                    <div class="alert alert-info">
+                        <strong>Статус: Ожидает заполнения</strong><br>
+                        Пожалуйста, ответьте на все вопросы анкеты.
+                    </div>
+                    <form method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">Начать / Продолжить заполнение</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
     </div>
-</form>
+
+    <!-- Блок документов -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-header bg-secondary text-white fw-bold">Ваши документы</div>
+            <div class="card-body p-0">
+                <div class="p-3">
+                    <p class="mb-0">Пожалуйста, загрузите сканы или качественные фото требуемых документов.</p>
+                </div>
+                
+                <ul class="list-group list-group-flush">
+                    {% for doc in checklist %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+                            <div class="pe-3">
+                                <strong>{{ doc.label }}</strong>
+                                {% if doc.is_required %}<span class="text-danger" title="Обязательный документ">*</span>{% endif %}
+                            </div>
+                            
+                            <div class="d-flex align-items-center gap-2">
+                                {% if doc.is_uploaded %}
+                                    <span class="badge bg-success">Загружено</span>
+                                    {% if allow_delete %}
+                                        <form action="{% url 'clients:onboarding_document_delete' session.token_hash doc.doc_id %}" method="post" class="m-0" onsubmit="return confirm('Вы уверены, что хотите удалить этот документ?');">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Удалить"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-warning text-dark">Ожидается</span>
+                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">Загрузить</button>
+                                    
+                                    <!-- Модальное окно загрузки для конкретного документа -->
+                                    <div class="modal fade" id="uploadModal{{ doc.code|slugify }}" tabindex="-1" aria-hidden="true">
+                                      <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content">
+                                          <form action="{% url 'clients:onboarding_document_upload' session.token_hash doc.code %}" method="post" enctype="multipart/form-data">
+                                              {% csrf_token %}
+                                              <div class="modal-header">
+                                                <h5 class="modal-title">Загрузка: {{ doc.label }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                                              </div>
+                                              <div class="modal-body">
+                                                <p class="text-muted small">Поддерживаются форматы: PDF, JPG, PNG.</p>
+                                                <input type="file" name="file" class="form-control" required>
+                                              </div>
+                                              <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                                                <button type="submit" class="btn btn-primary">Загрузить файл</button>
+                                              </div>
+                                          </form>
+                                        </div>
+                                      </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 import uuid
 from datetime import timedelta
-from clients.models import ClientOnboardingSession, ClientDigitalAccess, MOSApplicationData, Client, ClientFamilyMemberMOS
+from clients.models import ClientOnboardingSession, ClientDigitalAccess, MOSApplicationData, Client, ClientFamilyMemberMOS, Document, DocumentRequirement
 from clients.services.intake_extraction import pre_fill_mos_data_from_ocr
 
 def check_onboarding_session(token: str) -> ClientOnboardingSession | None:
@@ -22,10 +22,67 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
     if not session:
         return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
 
-    if request.method == "POST":
-        return redirect("clients:onboarding_digital_access", token=token)
+    client = session.client
+    mos_data = getattr(client, "mos_application_data", None)
 
-    return render(request, "clients/onboarding/start.html", {"session": session})
+    purpose = client.get_document_requirement_purpose()
+    required_docs_catalog = DocumentRequirement.catalog_for(purpose=purpose, language=client.language)
+    
+    existing_docs = Document.objects.filter(client=client).values_list('document_type', 'id')
+    existing_map = {doc_type: doc_id for doc_type, doc_id in existing_docs}
+
+    checklist = []
+    for item in required_docs_catalog:
+        doc_type = item["code"]
+        is_uploaded = doc_type in existing_map
+        checklist.append({
+            "code": doc_type,
+            "label": item["label"],
+            "is_required": item["is_required"],
+            "is_uploaded": is_uploaded,
+            "doc_id": existing_map.get(doc_type),
+        })
+
+    locked_statuses = ['client_completed', 'staff_review', 'approved_by_staff', 'mos_package_ready', 'submitted_in_mos', 'fingerprints', 'waiting_decision', 'decision_received', 'closed']
+    allow_delete = mos_data and mos_data.status not in locked_statuses
+
+    return render(request, "clients/onboarding/start.html", {
+        "session": session,
+        "mos_data": mos_data,
+        "checklist": checklist,
+        "allow_delete": allow_delete,
+    })
+
+def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) -> HttpResponse:
+    session = check_onboarding_session(token)
+    if not session:
+        return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
+        
+    if request.method == "POST" and request.FILES.get("file"):
+        Document.objects.create(
+            client=session.client,
+            document_type=doc_type,
+            file=request.FILES["file"]
+        )
+    return redirect("clients:onboarding_start", token=token)
+
+def onboarding_document_delete(request: HttpRequest, token: str, doc_id: int) -> HttpResponse:
+    session = check_onboarding_session(token)
+    if not session:
+        return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
+        
+    client = session.client
+    mos_data = getattr(client, "mos_application_data", None)
+    
+    locked_statuses = ['client_completed', 'staff_review', 'approved_by_staff', 'mos_package_ready', 'submitted_in_mos', 'fingerprints', 'waiting_decision', 'decision_received', 'closed']
+    if mos_data and mos_data.status in locked_statuses:
+        return HttpResponseForbidden("Удаление заблокировано.")
+        
+    doc = get_object_or_404(Document, id=doc_id, client=client)
+    if not doc.verified:
+        doc.delete()
+        
+    return redirect("clients:onboarding_start", token=token)
 
 def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
     session = check_onboarding_session(token)

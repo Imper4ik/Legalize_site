@@ -80,7 +80,10 @@ from clients.views.export import (
 from clients.views.logs import EmailLogsView, StaffActivityLogsView
 from clients.views.admin_mos_review import admin_mos_review
 from clients.views.onboarding_views import (
+    check_onboarding_session,
     onboarding_start,
+    onboarding_document_upload,
+    onboarding_document_delete,
     onboarding_digital_access,
     onboarding_personal_data,
     onboarding_passport,
@@ -160,7 +163,10 @@ __all__ = [
     'send_custom_email',
     'EmailLogsView',
     'StaffActivityLogsView',
+    'check_onboarding_session',
     'onboarding_start',
+    'onboarding_document_upload',
+    'onboarding_document_delete',
     'onboarding_digital_access',
     'onboarding_personal_data',
     'onboarding_passport',

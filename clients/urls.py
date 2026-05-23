@@ -122,6 +122,8 @@ urlpatterns = [
     # Onboarding / MOS Intake
     path('client/<int:client_id>/generate-onboarding-link/', views.generate_onboarding_link, name='generate_onboarding_link'),
     path('onboarding/<str:token>/', views.onboarding_start, name='onboarding_start'),
+    path('onboarding/<str:token>/upload/<str:doc_type>/', views.onboarding_document_upload, name='onboarding_document_upload'),
+    path('onboarding/<str:token>/delete-doc/<int:doc_id>/', views.onboarding_document_delete, name='onboarding_document_delete'),
     path('onboarding/<str:token>/digital-access/', views.onboarding_digital_access, name='onboarding_digital_access'),
     path('onboarding/<str:token>/personal-data/', views.onboarding_personal_data, name='onboarding_personal_data'),
     path('onboarding/<str:token>/passport/', views.onboarding_passport, name='onboarding_passport'),
