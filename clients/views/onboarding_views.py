@@ -110,32 +110,9 @@ def onboarding_family_purpose(request: HttpRequest, token: str) -> HttpResponse:
         if legal_stay_str:
             mos_data.legal_stay_until = legal_stay_str
         mos_data.save()
-        return redirect("clients:onboarding_finances", token=token)
-
-    return render(request, "clients/onboarding/family_purpose.html", {"session": session, "mos_data": mos_data})
-
-def onboarding_finances(request: HttpRequest, token: str) -> HttpResponse:
-    session = check_onboarding_session(token)
-    if not session:
-        return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
-
-    mos_data = get_object_or_404(MOSApplicationData, client=session.client)
-
-    if request.method == "POST":
-        finances = mos_data.financial_data or {}
-        finances["has_income"] = request.POST.get("has_income") == "yes"
-        finances["income_source"] = request.POST.get("income_source", "")
-        
-        insurance = mos_data.insurance_data or {}
-        insurance["has_zus"] = request.POST.get("has_zus") == "yes"
-        insurance["has_private"] = request.POST.get("has_private") == "yes"
-        
-        mos_data.financial_data = finances
-        mos_data.insurance_data = insurance
-        mos_data.save()
         return redirect("clients:onboarding_declarations", token=token)
 
-    return render(request, "clients/onboarding/finances.html", {"session": session, "mos_data": mos_data})
+    return render(request, "clients/onboarding/family_purpose.html", {"session": session, "mos_data": mos_data})
 
 def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
     session = check_onboarding_session(token)

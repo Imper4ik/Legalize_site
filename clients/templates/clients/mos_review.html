@@ -28,14 +28,10 @@
         </div>
 
         <div class="card mb-3">
-            <div class="card-header fw-bold">Финансы и Декларации</div>
+            <div class="card-header fw-bold">Декларации и Основание</div>
             <div class="card-body">
                 <p><strong>Основание:</strong> {{ mos_data.mos_purpose }}</p>
                 <p><strong>Легальное пребывание до:</strong> {{ mos_data.legal_stay_until }}</p>
-                <h5>Финансы</h5>
-                <pre class="bg-light p-2 rounded">{{ mos_data.financial_data|pprint }}</pre>
-                <h5>Страховка</h5>
-                <pre class="bg-light p-2 rounded">{{ mos_data.insurance_data|pprint }}</pre>
                 <h5>Декларации</h5>
                 <pre class="bg-light p-2 rounded">{{ mos_data.legal_declarations|pprint }}</pre>
             </div>
