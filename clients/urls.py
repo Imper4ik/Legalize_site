@@ -125,8 +125,9 @@ urlpatterns = [
     path('onboarding/<str:token>/digital-access/', views.onboarding_digital_access, name='onboarding_digital_access'),
     path('onboarding/<str:token>/personal-data/', views.onboarding_personal_data, name='onboarding_personal_data'),
     path('onboarding/<str:token>/passport/', views.onboarding_passport, name='onboarding_passport'),
+    path('onboarding/<str:token>/personal-extra/', views.onboarding_personal_extra, name='onboarding_personal_extra'),
     path('onboarding/<str:token>/address/', views.onboarding_address, name='onboarding_address'),
-    path('onboarding/<str:token>/family-purpose/', views.onboarding_family_purpose, name='onboarding_family_purpose'),
+    path('onboarding/<str:token>/travel/', views.onboarding_travel, name='onboarding_travel'),
     path('onboarding/<str:token>/declarations/', views.onboarding_declarations, name='onboarding_declarations'),
     path('onboarding/<str:token>/review/', views.onboarding_review, name='onboarding_review'),
     

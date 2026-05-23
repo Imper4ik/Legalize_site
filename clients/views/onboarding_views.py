@@ -74,9 +74,31 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         mos_data.passport_data = passport_data
 
         mos_data.save()
-        return redirect("clients:onboarding_address", token=token)
+        return redirect("clients:onboarding_personal_extra", token=token)
 
     return render(request, "clients/onboarding/passport.html", {"session": session, "mos_data": mos_data})
+
+def onboarding_personal_extra(request: HttpRequest, token: str) -> HttpResponse:
+    session = check_onboarding_session(token)
+    if not session:
+        return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
+
+    mos_data = get_object_or_404(MOSApplicationData, client=session.client)
+
+    if request.method == "POST":
+        personal_data = mos_data.personal_data or {}
+        personal_data["father_name"] = request.POST.get("father_name", "")
+        personal_data["mother_name"] = request.POST.get("mother_name", "")
+        personal_data["mother_maiden_name"] = request.POST.get("mother_maiden_name", "")
+        personal_data["height"] = request.POST.get("height", "")
+        personal_data["eye_color"] = request.POST.get("eye_color", "")
+        personal_data["education"] = request.POST.get("education", "")
+        personal_data["marital_status"] = request.POST.get("marital_status", "")
+        mos_data.personal_data = personal_data
+        mos_data.save()
+        return redirect("clients:onboarding_address", token=token)
+
+    return render(request, "clients/onboarding/personal_extra.html", {"session": session, "mos_data": mos_data})
 
 def onboarding_address(request: HttpRequest, token: str) -> HttpResponse:
     session = check_onboarding_session(token)
@@ -91,13 +113,16 @@ def onboarding_address(request: HttpRequest, token: str) -> HttpResponse:
         address_data["city"] = request.POST.get("city", "")
         address_data["postal_code"] = request.POST.get("postal_code", "")
         address_data["meldunek"] = request.POST.get("meldunek") == "yes"
+        address_data["home_country"] = request.POST.get("home_country", "")
+        address_data["home_city"] = request.POST.get("home_city", "")
+        address_data["home_street"] = request.POST.get("home_street", "")
         mos_data.address_data = address_data
         mos_data.save()
-        return redirect("clients:onboarding_family_purpose", token=token)
+        return redirect("clients:onboarding_travel", token=token)
 
     return render(request, "clients/onboarding/address.html", {"session": session, "mos_data": mos_data})
 
-def onboarding_family_purpose(request: HttpRequest, token: str) -> HttpResponse:
+def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
     session = check_onboarding_session(token)
     if not session:
         return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
@@ -109,10 +134,19 @@ def onboarding_family_purpose(request: HttpRequest, token: str) -> HttpResponse:
         legal_stay_str = request.POST.get("legal_stay_until")
         if legal_stay_str:
             mos_data.legal_stay_until = legal_stay_str
+            
+        stay_data = mos_data.stay_data or {}
+        stay_data["is_in_poland"] = request.POST.get("is_in_poland") == "yes"
+        stay_data["last_entry_date"] = request.POST.get("last_entry_date", "")
+        stay_data["stay_basis"] = request.POST.get("stay_basis", "")
+        stay_data["was_in_poland_before"] = request.POST.get("was_in_poland_before") == "yes"
+        mos_data.stay_data = stay_data
+        
+        mos_data.travel_history = [request.POST.get("travel_history", "")]
         mos_data.save()
         return redirect("clients:onboarding_declarations", token=token)
 
-    return render(request, "clients/onboarding/family_purpose.html", {"session": session, "mos_data": mos_data})
+    return render(request, "clients/onboarding/travel.html", {"session": session, "mos_data": mos_data})
 
 def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
     session = check_onboarding_session(token)

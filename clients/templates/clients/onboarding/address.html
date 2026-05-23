@@ -22,23 +22,40 @@
         </div>
     </div>
 
-    <div class="mb-4">
-        <label class="form-label fw-bold">У вас есть прописка (Meldunek) по этому адресу?</label>
-        <div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="meldunek" id="mel_yes" value="yes" {% if mos_data.address_data.meldunek %}checked{% endif %} required>
-                <label class="form-check-label" for="mel_yes">Да</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="meldunek" id="mel_no" value="no" {% if mos_data.address_data.meldunek == False %}checked{% endif %}>
-                <label class="form-check-label" for="mel_no">Нет</label>
+        <div class="mb-3">
+            <label class="form-label fw-bold">Есть ли у вас прописка (Meldunek)?</label>
+            <div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="meldunek" value="yes" id="meldunekYes" {% if mos_data.address_data.meldunek %}checked{% endif %} required>
+                    <label class="form-check-label" for="meldunekYes">Да</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="meldunek" value="no" id="meldunekNo" {% if mos_data.address_data and not mos_data.address_data.meldunek %}checked{% endif %}>
+                    <label class="form-check-label" for="meldunekNo">Нет</label>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="d-flex justify-content-between">
-        <a href="{% url 'clients:onboarding_passport' session.token_hash %}" class="btn btn-secondary">Назад</a>
-        <button type="submit" class="btn btn-primary">Далее: Цель подачи</button>
+    <div class="mb-4">
+        <h5>Адрес постоянного проживания на родине</h5>
+        <div class="mb-3">
+            <label class="form-label fw-bold">Страна</label>
+            <input type="text" name="home_country" class="form-control" value="{{ mos_data.address_data.home_country|default:'' }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-bold">Город</label>
+            <input type="text" name="home_city" class="form-control" value="{{ mos_data.address_data.home_city|default:'' }}" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-bold">Улица, дом, квартира</label>
+            <input type="text" name="home_street" class="form-control" value="{{ mos_data.address_data.home_street|default:'' }}" required>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+        <a href="{% url 'clients:onboarding_personal_extra' session.token_hash %}" class="btn btn-outline-secondary">Назад</a>
+        <button type="submit" class="btn btn-primary">Далее: Пребывание и Поездки</button>
     </div>
 </form>
 {% endblock %}

@@ -49,10 +49,30 @@
         </div>
 
         <div class="card mb-3">
-            <div class="card-header fw-bold">Декларации и Основание</div>
+            <div class="card-header fw-bold">Декларации, Пребывание и Поездки</div>
             <div class="card-body">
-                <p><strong>Основание:</strong> {{ mos_data.mos_purpose }}</p>
-                <p><strong>Легальное пребывание до:</strong> {{ mos_data.legal_stay_until }}</p>
+                <p><strong>Цель подачи:</strong> {{ mos_data.mos_purpose }}</p>
+                <p><strong>Легальное пребывание до:</strong> {{ mos_data.legal_stay_until|date:"d.m.Y" }}</p>
+                
+                <h5>Пребывание и въезды</h5>
+                <ul class="list-group list-group-flush mb-3">
+                    {% for key, value in mos_data.stay_data.items %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">{{ key }}</span>
+                        <span class="fw-bold">{{ value }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+
+                <h5>История поездок (5 лет)</h5>
+                <ul class="list-group list-group-flush mb-3">
+                    {% for item in mos_data.travel_history %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">{{ item }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+
                 <h5>Декларации</h5>
                 <ul class="list-group list-group-flush mb-3">
                     {% for key, value in mos_data.legal_declarations.items %}

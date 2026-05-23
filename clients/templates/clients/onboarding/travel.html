@@ -1,0 +1,92 @@
+{% extends "clients/onboarding/base_onboarding.html" %}
+
+{% block onboarding_step_title %}Шаг 4: Пребывание и Поездки{% endblock %}
+{% block onboarding_progress %}80{% endblock %}
+
+{% block onboarding_form %}
+<form method="post">
+    {% csrf_token %}
+
+    <div class="mb-4">
+        <h5>Текущее пребывание в Польше</h5>
+        
+        <div class="mb-3">
+            <label class="form-label fw-bold">Цель подачи (Основание для ВНЖ)</label>
+            <select name="mos_purpose" class="form-select" required>
+                <option value="">Выберите основание...</option>
+                <option value="Работа" {% if mos_data.mos_purpose == 'Работа' %}selected{% endif %}>Работа (Zezwolenie na pobyt i pracę)</option>
+                <option value="Учеба" {% if mos_data.mos_purpose == 'Учеба' %}selected{% endif %}>Учеба (Studia)</option>
+                <option value="Воссоединение семьи" {% if mos_data.mos_purpose == 'Воссоединение семьи' %}selected{% endif %}>Воссоединение семьи (Pobyt z rodziną)</option>
+                <option value="Бизнес" {% if mos_data.mos_purpose == 'Бизнес' %}selected{% endif %}>Бизнес (Działalność gospodarcza)</option>
+                <option value="Иное" {% if mos_data.mos_purpose == 'Иное' %}selected{% endif %}>Иное (Inne)</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Вы сейчас находитесь в Польше?</label>
+            <div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="is_in_poland" value="yes" id="inPolYes" {% if mos_data.stay_data.is_in_poland %}checked{% endif %} required>
+                    <label class="form-check-label" for="inPolYes">Да</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="is_in_poland" value="no" id="inPolNo" {% if mos_data.stay_data and not mos_data.stay_data.is_in_poland %}checked{% endif %}>
+                    <label class="form-check-label" for="inPolNo">Нет</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Дата последнего въезда в Польшу</label>
+            <input type="date" name="last_entry_date" class="form-control" value="{{ mos_data.stay_data.last_entry_date|default:'' }}">
+            <div class="form-text">Если не помните точный день, укажите примерную дату.</div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">На каком основании вы находитесь в Польше?</label>
+            <select name="stay_basis" class="form-select">
+                <option value="">Выберите...</option>
+                <option value="Безвизовый режим" {% if mos_data.stay_data.stay_basis == 'Безвизовый режим' %}selected{% endif %}>Безвизовый режим</option>
+                <option value="Национальная виза (D)" {% if mos_data.stay_data.stay_basis == 'Национальная виза (D)' %}selected{% endif %}>Национальная виза (D)</option>
+                <option value="Шенгенская виза (C)" {% if mos_data.stay_data.stay_basis == 'Шенгенская виза (C)' %}selected{% endif %}>Шенгенская виза (C)</option>
+                <option value="Карта побыту" {% if mos_data.stay_data.stay_basis == 'Карта побыту' %}selected{% endif %}>Карта побыту</option>
+                <option value="Печать в паспорте (ожидание решения)" {% if mos_data.stay_data.stay_basis == 'Печать в паспорте (ожидание решения)' %}selected{% endif %}>Печать в паспорте (ожидание решения)</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">До какого числа легально ваше пребывание (виза/карта/безвиз)?</label>
+            <input type="date" name="legal_stay_until" class="form-control" value="{{ mos_data.legal_stay_until|date:'Y-m-d' }}">
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <h5>История пребываний и поездок</h5>
+        
+        <div class="mb-3">
+            <label class="form-label fw-bold">Были ли вы в Польше до текущего приезда?</label>
+            <div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="was_in_poland_before" value="yes" id="wasPolYes" {% if mos_data.stay_data.was_in_poland_before %}checked{% endif %} required>
+                    <label class="form-check-label" for="wasPolYes">Да</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="was_in_poland_before" value="no" id="wasPolNo" {% if mos_data.stay_data and not mos_data.stay_data.was_in_poland_before %}checked{% endif %}>
+                    <label class="form-check-label" for="wasPolNo">Нет</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Поездки в другие страны (кроме родины и Польши) за последние 5 лет</label>
+            <textarea name="travel_history" class="form-control" rows="3" placeholder="Например: Турция (2022), Германия (2023). Если не было поездок, напишите 'Не было'.">{% if mos_data.travel_history %}{{ mos_data.travel_history.0 }}{% endif %}</textarea>
+            <div class="form-text">Укажите страну и примерный год поездки.</div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+        <a href="{% url 'clients:onboarding_address' session.token_hash %}" class="btn btn-outline-secondary">Назад</a>
+        <button type="submit" class="btn btn-primary">Далее: Декларации</button>
+    </div>
+</form>
+{% endblock %}
