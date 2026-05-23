@@ -1,61 +1,61 @@
 {% extends "clients/onboarding/base_onboarding.html" %}
+{% load i18n %}
 
-{% block title %}Шаг 2: Адрес проживания в Польше{% endblock %}
+{% block title %}{% trans "Шаг 3: Адрес проживания" %}{% endblock %}
 
 {% block content %}
 <form method="post">
     {% csrf_token %}
     
     <div class="mb-3">
-        <label for="street" class="form-label fw-bold">Улица, номер дома и квартиры</label>
+        <label for="street" class="form-label fw-bold">{% trans "Улица, номер дома и квартиры (В Польше)" %}</label>
         <input type="text" class="form-control" id="street" name="street" value="{{ mos_data.address_data.street|default:'' }}" required>
     </div>
     
     <div class="row mb-4">
         <div class="col-md-6">
-            <label for="city" class="form-label fw-bold">Город</label>
+            <label for="city" class="form-label fw-bold">{% trans "Город (В Польше)" %}</label>
             <input type="text" class="form-control" id="city" name="city" value="{{ mos_data.address_data.city|default:'' }}" required>
         </div>
         <div class="col-md-6">
-            <label for="postal_code" class="form-label fw-bold">Почтовый индекс (kod pocztowy)</label>
+            <label for="postal_code" class="form-label fw-bold">{% trans "Почтовый индекс (kod pocztowy)" %}</label>
             <input type="text" class="form-control" id="postal_code" name="postal_code" value="{{ mos_data.address_data.postal_code|default:'' }}" required>
         </div>
     </div>
 
-        <div class="mb-3">
-            <label class="form-label fw-bold">Есть ли у вас прописка (Meldunek)?</label>
-            <div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="meldunek" value="yes" id="meldunekYes" {% if mos_data.address_data.meldunek %}checked{% endif %} required>
-                    <label class="form-check-label" for="meldunekYes">Да</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="meldunek" value="no" id="meldunekNo" {% if mos_data.address_data and not mos_data.address_data.meldunek %}checked{% endif %}>
-                    <label class="form-check-label" for="meldunekNo">Нет</label>
-                </div>
+    <div class="mb-4">
+        <label class="form-label fw-bold">{% trans "Есть ли у вас прописка (Meldunek)?" %}</label>
+        <div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="meldunek" value="yes" id="meldunekYes" {% if mos_data.address_data.meldunek %}checked{% endif %} required>
+                <label class="form-check-label" for="meldunekYes">{% trans "Да" %}</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="meldunek" value="no" id="meldunekNo" {% if mos_data.address_data and not mos_data.address_data.meldunek %}checked{% endif %}>
+                <label class="form-check-label" for="meldunekNo">{% trans "Нет" %}</label>
             </div>
         </div>
     </div>
 
     <div class="mb-4">
-        <h5>Адрес постоянного проживания на родине</h5>
+        <h5>{% trans "Адрес постоянного проживания на родине" %}</h5>
         <div class="mb-3">
-            <label class="form-label fw-bold">Страна</label>
+            <label class="form-label fw-bold">{% trans "Страна" %}</label>
             <input type="text" name="home_country" class="form-control" value="{{ mos_data.address_data.home_country|default:'' }}" required>
         </div>
         <div class="mb-3">
-            <label class="form-label fw-bold">Город</label>
+            <label class="form-label fw-bold">{% trans "Город" %}</label>
             <input type="text" name="home_city" class="form-control" value="{{ mos_data.address_data.home_city|default:'' }}" required>
         </div>
         <div class="mb-3">
-            <label class="form-label fw-bold">Улица, дом, квартира</label>
+            <label class="form-label fw-bold">{% trans "Улица, дом, квартира" %}</label>
             <input type="text" name="home_street" class="form-control" value="{{ mos_data.address_data.home_street|default:'' }}" required>
         </div>
     </div>
 
     <div class="d-flex justify-content-between mt-4">
-        <a href="{% url 'clients:onboarding_personal_extra' session.token_hash %}" class="btn btn-outline-secondary">Назад</a>
-        <button type="submit" class="btn btn-primary">Далее: Пребывание и Поездки</button>
+        <a href="{% url 'clients:onboarding_personal_extra' session.token_hash %}" class="btn btn-outline-secondary">{% trans "Назад" %}</a>
+        <button type="submit" class="btn btn-primary">{% trans "Далее: Пребывание и Поездки" %}</button>
     </div>
 </form>
 {% endblock %}

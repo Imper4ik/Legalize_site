@@ -1,37 +1,81 @@
 {% extends "clients/onboarding/base_onboarding.html" %}
+{% load i18n %}
 
-{% block title %}Личный кабинет клиента{% endblock %}
+{% block title %}{% trans "Личный кабинет клиента" %}{% endblock %}
 
 {% block content %}
+<div class="mb-5">
+    <h4 class="mb-4 text-center">{% trans "Статус вашего дела" %}</h4>
+    <div class="position-relative m-4 pb-5">
+        <div class="progress" style="height: 4px;">
+            <div class="progress-bar bg-primary" role="progressbar" 
+                style="width: {% widthratio case_step|add:'-1' 5 100 %}%;" 
+                aria-valuenow="{{ case_step }}" aria-valuemin="1" aria-valuemax="6"></div>
+        </div>
+        <div class="d-flex justify-content-between position-absolute top-50 start-0 translate-middle-y w-100 mt-2">
+            <!-- Step 1 -->
+            <div class="text-center" style="width: 2rem;">
+                <div class="rounded-circle {% if case_step >= 1 %}bg-primary text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-center mx-auto" style="width: 2rem; height: 2rem; font-weight: bold;">1</div>
+                <div class="small mt-2" style="width: 100px; margin-left: -34px;">{% trans "Анкета" %}</div>
+            </div>
+            <!-- Step 2 -->
+            <div class="text-center" style="width: 2rem;">
+                <div class="rounded-circle {% if case_step >= 2 %}bg-primary text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-center mx-auto" style="width: 2rem; height: 2rem; font-weight: bold;">2</div>
+                <div class="small mt-2" style="width: 100px; margin-left: -34px;">{% trans "Проверка" %}</div>
+            </div>
+            <!-- Step 3 -->
+            <div class="text-center" style="width: 2rem;">
+                <div class="rounded-circle {% if case_step >= 3 %}bg-primary text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-center mx-auto" style="width: 2rem; height: 2rem; font-weight: bold;">3</div>
+                <div class="small mt-2" style="width: 100px; margin-left: -34px;">{% trans "Пакет готов" %}</div>
+            </div>
+            <!-- Step 4 -->
+            <div class="text-center" style="width: 2rem;">
+                <div class="rounded-circle {% if case_step >= 4 %}bg-primary text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-center mx-auto" style="width: 2rem; height: 2rem; font-weight: bold;">4</div>
+                <div class="small mt-2" style="width: 100px; margin-left: -34px;">{% trans "Подано" %}</div>
+            </div>
+            <!-- Step 5 -->
+            <div class="text-center" style="width: 2rem;">
+                <div class="rounded-circle {% if case_step >= 5 %}bg-primary text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-center mx-auto" style="width: 2rem; height: 2rem; font-weight: bold;">5</div>
+                <div class="small mt-2" style="width: 100px; margin-left: -34px;">{% trans "Отпечатки" %}</div>
+            </div>
+            <!-- Step 6 -->
+            <div class="text-center" style="width: 2rem;">
+                <div class="rounded-circle {% if case_step >= 6 %}bg-primary text-white{% else %}bg-secondary text-white{% endif %} d-flex align-items-center justify-content-center mx-auto" style="width: 2rem; height: 2rem; font-weight: bold;">6</div>
+                <div class="small mt-2" style="width: 100px; margin-left: -34px;">{% trans "Децизия" %}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <!-- Блок анкеты MOS -->
     <div class="col-md-6 mb-4">
         <div class="card h-100 shadow-sm border-0">
-            <div class="card-header bg-primary text-white fw-bold">Анкета для ВНЖ (MOS)</div>
+            <div class="card-header bg-primary text-white fw-bold">{% trans "Анкета для ВНЖ (MOS)" %}</div>
             <div class="card-body">
-                <p>Для подготовки вашего дела необходимо заполнить электронную анкету.</p>
+                <p>{% trans "Для подготовки вашего дела необходимо заполнить электронную анкету." %}</p>
                 {% if mos_data.status == 'client_completed' or mos_data.status == 'mos_package_ready' or mos_data.status == 'submitted_in_mos' or mos_data.status == 'approved_by_staff' %}
                     <div class="alert alert-success">
-                        <strong>Статус: Заполнено</strong><br>
-                        Вы успешно заполнили анкету. Наши специалисты уже проверяют ваши данные.
+                        <strong>{% trans "Статус: Заполнено" %}</strong><br>
+                        {% trans "Вы успешно заполнили анкету. Наши специалисты уже проверяют ваши данные." %}
                     </div>
                 {% elif mos_data.status == 'needs_correction' %}
                     <div class="alert alert-warning">
-                        <strong>Статус: Требуются исправления</strong><br>
-                        Пожалуйста, исправьте ошибки: {{ mos_data.correction_message }}
+                        <strong>{% trans "Статус: Требуются исправления" %}</strong><br>
+                        {% trans "Пожалуйста, исправьте ошибки:" %} {{ mos_data.correction_message }}
                     </div>
                     <form method="post">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-warning w-100 fw-bold">Внести исправления</button>
+                        <button type="submit" class="btn btn-warning w-100 fw-bold">{% trans "Внести исправления" %}</button>
                     </form>
                 {% else %}
                     <div class="alert alert-info">
-                        <strong>Статус: Ожидает заполнения</strong><br>
-                        Пожалуйста, ответьте на все вопросы анкеты.
+                        <strong>{% trans "Статус: Ожидает заполнения" %}</strong><br>
+                        {% trans "Пожалуйста, ответьте на все вопросы анкеты." %}
                     </div>
                     <form method="post">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-primary w-100 fw-bold">Начать / Продолжить заполнение</button>
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">{% trans "Начать / Продолжить заполнение" %}</button>
                     </form>
                 {% endif %}
             </div>
@@ -41,10 +85,10 @@
     <!-- Блок документов -->
     <div class="col-md-6 mb-4">
         <div class="card h-100 shadow-sm border-0">
-            <div class="card-header bg-secondary text-white fw-bold">Ваши документы</div>
+            <div class="card-header bg-secondary text-white fw-bold">{% trans "Ваши документы" %}</div>
             <div class="card-body p-0">
                 <div class="p-3">
-                    <p class="mb-0">Пожалуйста, загрузите сканы или качественные фото требуемых документов.</p>
+                    <p class="mb-0">{% trans "Пожалуйста, загрузите сканы или качественные фото требуемых документов." %}</p>
                 </div>
                 
                 <ul class="list-group list-group-flush">
@@ -52,21 +96,21 @@
                         <li class="list-group-item d-flex justify-content-between align-items-center py-3">
                             <div class="pe-3">
                                 <strong>{{ doc.label }}</strong>
-                                {% if doc.is_required %}<span class="text-danger" title="Обязательный документ">*</span>{% endif %}
+                                {% if doc.is_required %}<span class="text-danger" title="{% trans 'Обязательный документ' %}">*</span>{% endif %}
                             </div>
                             
                             <div class="d-flex align-items-center gap-2">
                                 {% if doc.is_uploaded %}
-                                    <span class="badge bg-success">Загружено</span>
+                                    <span class="badge bg-success">{% trans "Загружено" %}</span>
                                     {% if allow_delete %}
-                                        <form action="{% url 'clients:onboarding_document_delete' session.token_hash doc.doc_id %}" method="post" class="m-0" onsubmit="return confirm('Вы уверены, что хотите удалить этот документ?');">
+                                        <form action="{% url 'clients:onboarding_document_delete' session.token_hash doc.doc_id %}" method="post" class="m-0" onsubmit="return confirm('{% trans "Вы уверены, что хотите удалить этот документ?" %}');">
                                             {% csrf_token %}
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Удалить"><i class="bi bi-trash"></i></button>
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="{% trans 'Удалить' %}"><i class="bi bi-trash"></i></button>
                                         </form>
                                     {% endif %}
                                 {% else %}
-                                    <span class="badge bg-warning text-dark">Ожидается</span>
-                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">Загрузить</button>
+                                    <span class="badge bg-warning text-dark">{% trans "Ожидается" %}</span>
+                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">{% trans "Загрузить" %}</button>
                                     
                                     <!-- Модальное окно загрузки для конкретного документа -->
                                     <div class="modal fade" id="uploadModal{{ doc.code|slugify }}" tabindex="-1" aria-hidden="true">
@@ -75,16 +119,16 @@
                                           <form action="{% url 'clients:onboarding_document_upload' session.token_hash doc.code %}" method="post" enctype="multipart/form-data">
                                               {% csrf_token %}
                                               <div class="modal-header">
-                                                <h5 class="modal-title">Загрузка: {{ doc.label }}</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                                                <h5 class="modal-title">{% trans "Загрузка:" %} {{ doc.label }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Закрыть' %}"></button>
                                               </div>
                                               <div class="modal-body">
-                                                <p class="text-muted small">Поддерживаются форматы: PDF, JPG, PNG.</p>
+                                                <p class="text-muted small">{% trans "Поддерживаются форматы: PDF, JPG, PNG." %}</p>
                                                 <input type="file" name="file" class="form-control" required>
                                               </div>
                                               <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                                                <button type="submit" class="btn btn-primary">Загрузить файл</button>
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Отмена" %}</button>
+                                                <button type="submit" class="btn btn-primary">{% trans "Загрузить файл" %}</button>
                                               </div>
                                           </form>
                                         </div>

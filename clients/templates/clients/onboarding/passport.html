@@ -1,48 +1,49 @@
 {% extends "clients/onboarding/base_onboarding.html" %}
+{% load i18n %}
 
-{% block title %}Шаг 1: Паспортные и личные данные{% endblock %}
+{% block title %}{% trans "Шаг 1: Паспортные и личные данные" %}{% endblock %}
 
 {% block content %}
 <form method="post">
     {% csrf_token %}
-    <p>Если мы смогли распознать ваш паспорт, данные уже заполнены. Пожалуйста, проверьте их.</p>
+    <p>{% trans "Если мы смогли распознать ваш паспорт, данные уже заполнены. Пожалуйста, проверьте их." %}</p>
     
     <div class="row mb-3">
         <div class="col-md-6">
-            <label for="first_name" class="form-label fw-bold">Имя (лат.)</label>
+            <label for="first_name" class="form-label fw-bold">{% trans "Имя (лат.)" %}</label>
             <input type="text" class="form-control" id="first_name" name="first_name" value="{{ mos_data.personal_data.first_name|default:'' }}" required>
         </div>
         <div class="col-md-6">
-            <label for="last_name" class="form-label fw-bold">Фамилия (лат.)</label>
+            <label for="last_name" class="form-label fw-bold">{% trans "Фамилия (лат.)" %}</label>
             <input type="text" class="form-control" id="last_name" name="last_name" value="{{ mos_data.personal_data.last_name|default:'' }}" required>
         </div>
     </div>
     
     <div class="row mb-3">
         <div class="col-md-6">
-            <label for="birth_date" class="form-label fw-bold">Дата рождения</label>
+            <label for="birth_date" class="form-label fw-bold">{% trans "Дата рождения" %}</label>
             <input type="date" class="form-control" id="birth_date" name="birth_date" value="{{ mos_data.personal_data.birth_date|default:'' }}" required>
         </div>
         <div class="col-md-6">
-            <label for="citizenship" class="form-label fw-bold">Гражданство</label>
+            <label for="citizenship" class="form-label fw-bold">{% trans "Гражданство" %}</label>
             <input type="text" class="form-control" id="citizenship" name="citizenship" value="{{ mos_data.personal_data.citizenship|default:'' }}" required>
         </div>
     </div>
 
     <div class="row mb-4">
         <div class="col-md-6">
-            <label for="document_number" class="form-label fw-bold">Номер паспорта</label>
+            <label for="document_number" class="form-label fw-bold">{% trans "Номер паспорта" %}</label>
             <input type="text" class="form-control" id="document_number" name="document_number" value="{{ mos_data.passport_data.document_number|default:'' }}" required>
         </div>
         <div class="col-md-6">
-            <label for="expiry_date" class="form-label fw-bold">Годен до</label>
+            <label for="expiry_date" class="form-label fw-bold">{% trans "Годен до" %}</label>
             <input type="date" class="form-control" id="expiry_date" name="expiry_date" value="{{ mos_data.passport_data.expiry_date|default:'' }}" required>
         </div>
     </div>
 
     <div class="d-flex justify-content-between">
-        <a href="{% url 'clients:onboarding_digital_access' session.token_hash %}" class="btn btn-secondary">Назад</a>
-        <button type="submit" class="btn btn-primary">Далее: Адрес</button>
+        <a href="{% url 'clients:onboarding_digital_access' session.token_hash %}" class="btn btn-secondary">{% trans "Назад" %}</a>
+        <button type="submit" class="btn btn-primary">{% trans "Далее: Доп. данные" %}</button>
     </div>
 </form>
 {% endblock %}

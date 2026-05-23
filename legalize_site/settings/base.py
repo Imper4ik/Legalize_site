@@ -56,7 +56,7 @@ def running_in_production() -> bool:
 IS_PRODUCTION = running_in_production()
 ENABLE_TRANSLATION_TOOLING = env_flag(
     "ENABLE_TRANSLATION_TOOLING",
-    "False",
+    "True",
 )
 TRANSLATION_STUDIO_STORAGE = os.environ.get("TRANSLATION_STUDIO_STORAGE", "database")
 TRANSLATION_DB_OVERRIDES_ENABLED = env_flag("TRANSLATION_DB_OVERRIDES_ENABLED", "True")
@@ -326,6 +326,7 @@ LANGUAGES = [
     ("ru", _("Русский")),
     ("pl", _("Polski")),
     ("en", _("English")),
+    ("uk", _("Українська")),
 ]
 LOCALE_PATHS = [os.path.join(BASE_DIR, "locale")]
 LANGUAGE_CODE = "pl"

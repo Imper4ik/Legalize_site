@@ -1,6 +1,7 @@
 {% extends "clients/onboarding/base_onboarding.html" %}
+{% load i18n %}
 
-{% block onboarding_step_title %}Шаг 2: Дополнительные личные данные{% endblock %}
+{% block onboarding_step_title %}{% trans "Шаг 2: Дополнительные личные данные" %}{% endblock %}
 {% block onboarding_progress %}40{% endblock %}
 
 {% block onboarding_form %}
@@ -8,60 +9,60 @@
     {% csrf_token %}
     
     <div class="mb-4">
-        <h5>Данные родителей</h5>
+        <h5>{% trans "Данные родителей" %}</h5>
         <div class="mb-3">
-            <label class="form-label fw-bold">Имя отца</label>
+            <label class="form-label fw-bold">{% trans "Имя отца" %}</label>
             <input type="text" name="father_name" class="form-control" value="{{ mos_data.personal_data.father_name|default:'' }}" required>
         </div>
         <div class="mb-3">
-            <label class="form-label fw-bold">Имя матери</label>
+            <label class="form-label fw-bold">{% trans "Имя матери" %}</label>
             <input type="text" name="mother_name" class="form-control" value="{{ mos_data.personal_data.mother_name|default:'' }}" required>
         </div>
         <div class="mb-3">
-            <label class="form-label fw-bold">Девичья фамилия матери</label>
+            <label class="form-label fw-bold">{% trans "Девичья фамилия матери" %}</label>
             <input type="text" name="mother_maiden_name" class="form-control" value="{{ mos_data.personal_data.mother_maiden_name|default:'' }}" required>
         </div>
     </div>
 
     <div class="mb-4">
-        <h5>Физические характеристики</h5>
+        <h5>{% trans "Физические характеристики" %}</h5>
         <div class="mb-3">
-            <label class="form-label fw-bold">Рост (в сантиметрах)</label>
-            <input type="number" name="height" class="form-control" value="{{ mos_data.personal_data.height|default:'' }}" placeholder="Например: 175" required>
+            <label class="form-label fw-bold">{% trans "Рост (в сантиметрах)" %}</label>
+            <input type="number" name="height" class="form-control" value="{{ mos_data.personal_data.height|default:'' }}" placeholder="{% trans 'Например: 175' %}" required>
         </div>
         <div class="mb-3">
-            <label class="form-label fw-bold">Цвет глаз</label>
-            <input type="text" name="eye_color" class="form-control" value="{{ mos_data.personal_data.eye_color|default:'' }}" placeholder="Например: Карие, Голубые, Зеленые" required>
+            <label class="form-label fw-bold">{% trans "Цвет глаз" %}</label>
+            <input type="text" name="eye_color" class="form-control" value="{{ mos_data.personal_data.eye_color|default:'' }}" placeholder="{% trans 'Например: Карие, Голубые, Зеленые' %}" required>
         </div>
     </div>
 
     <div class="mb-4">
-        <h5>Образование и статус</h5>
+        <h5>{% trans "Образование и статус" %}</h5>
         <div class="mb-3">
-            <label class="form-label fw-bold">Уровень образования</label>
+            <label class="form-label fw-bold">{% trans "Уровень образования" %}</label>
             <select name="education" class="form-select" required>
-                <option value="">Выберите...</option>
-                <option value="Высшее" {% if mos_data.personal_data.education == 'Высшее' %}selected{% endif %}>Высшее (Университет)</option>
-                <option value="Среднее" {% if mos_data.personal_data.education == 'Среднее' %}selected{% endif %}>Среднее (Школа/Лицей)</option>
-                <option value="Среднее специальное" {% if mos_data.personal_data.education == 'Среднее специальное' %}selected{% endif %}>Среднее специальное (Колледж/Техникум)</option>
-                <option value="Базовое" {% if mos_data.personal_data.education == 'Базовое' %}selected{% endif %}>Базовое / Без образования</option>
+                <option value="">{% trans "Выберите..." %}</option>
+                <option value="Высшее" {% if mos_data.personal_data.education == 'Высшее' %}selected{% endif %}>{% trans "Высшее (Университет)" %}</option>
+                <option value="Среднее" {% if mos_data.personal_data.education == 'Среднее' %}selected{% endif %}>{% trans "Среднее (Школа/Лицей)" %}</option>
+                <option value="Среднее специальное" {% if mos_data.personal_data.education == 'Среднее специальное' %}selected{% endif %}>{% trans "Среднее специальное (Колледж/Техникум)" %}</option>
+                <option value="Базовое" {% if mos_data.personal_data.education == 'Базовое' %}selected{% endif %}>{% trans "Базовое / Без образования" %}</option>
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label fw-bold">Семейное положение</label>
+            <label class="form-label fw-bold">{% trans "Семейное положение" %}</label>
             <select name="marital_status" class="form-select" required>
-                <option value="">Выберите...</option>
-                <option value="Холост/Не замужем" {% if mos_data.personal_data.marital_status == 'Холост/Не замужем' %}selected{% endif %}>Холост / Не замужем</option>
-                <option value="Женат/Замужем" {% if mos_data.personal_data.marital_status == 'Женат/Замужем' %}selected{% endif %}>Женат / Замужем</option>
-                <option value="В разводе" {% if mos_data.personal_data.marital_status == 'В разводе' %}selected{% endif %}>В разводе</option>
-                <option value="Вдовец/Вдова" {% if mos_data.personal_data.marital_status == 'Вдовец/Вдова' %}selected{% endif %}>Вдовец / Вдова</option>
+                <option value="">{% trans "Выберите..." %}</option>
+                <option value="Холост/Не замужем" {% if mos_data.personal_data.marital_status == 'Холост/Не замужем' %}selected{% endif %}>{% trans "Холост / Не замужем" %}</option>
+                <option value="Женат/Замужем" {% if mos_data.personal_data.marital_status == 'Женат/Замужем' %}selected{% endif %}>{% trans "Женат / Замужем" %}</option>
+                <option value="В разводе" {% if mos_data.personal_data.marital_status == 'В разводе' %}selected{% endif %}>{% trans "В разводе" %}</option>
+                <option value="Вдовец/Вдова" {% if mos_data.personal_data.marital_status == 'Вдовец/Вдова' %}selected{% endif %}>{% trans "Вдовец / Вдова" %}</option>
             </select>
         </div>
     </div>
 
     <div class="d-flex justify-content-between mt-4">
-        <a href="{% url 'clients:onboarding_passport' session.token_hash %}" class="btn btn-outline-secondary">Назад</a>
-        <button type="submit" class="btn btn-primary">Далее: Адрес</button>
+        <a href="{% url 'clients:onboarding_passport' session.token_hash %}" class="btn btn-outline-secondary">{% trans "Назад" %}</a>
+        <button type="submit" class="btn btn-primary">{% trans "Далее: Адрес" %}</button>
     </div>
 </form>
 {% endblock %}

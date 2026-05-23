@@ -46,11 +46,28 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
     locked_statuses = ['client_completed', 'staff_review', 'approved_by_staff', 'mos_package_ready', 'submitted_in_mos', 'fingerprints', 'waiting_decision', 'decision_received', 'closed']
     allow_delete = mos_data and mos_data.status not in locked_statuses
 
+    status = mos_data.status if mos_data else 'draft'
+    if status in ['draft', 'client_filling', 'client_completed', 'needs_correction']:
+        case_step = 1
+    elif status in ['staff_review']:
+        case_step = 2
+    elif status in ['approved_by_staff', 'mos_package_ready']:
+        case_step = 3
+    elif status in ['submitted_in_mos']:
+        case_step = 4
+    elif status in ['fingerprints']:
+        case_step = 5
+    elif status in ['waiting_decision', 'decision_received', 'closed']:
+        case_step = 6
+    else:
+        case_step = 1
+
     return render(request, "clients/onboarding/start.html", {
         "session": session,
         "mos_data": mos_data,
         "checklist": checklist,
         "allow_delete": allow_delete,
+        "case_step": case_step,
     })
 
 def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) -> HttpResponse:

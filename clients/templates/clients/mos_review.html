@@ -15,21 +15,61 @@
             <div class="card-body">
                 <h5>Личные данные</h5>
                 <ul class="list-group list-group-flush mb-3">
-                    {% for key, value in mos_data.personal_data.items %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">{{ key }}</span>
-                        <span class="fw-bold">{{ value }}</span>
+                        <span class="text-muted">Имя</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.first_name|default:"-" }}</span>
                     </li>
-                    {% endfor %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Фамилия</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.last_name|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Дата рождения</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.birth_date|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Гражданство</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.citizenship|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Имя отца</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.father_name|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Имя матери</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.mother_name|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Девичья фамилия матери</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.mother_maiden_name|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Рост</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.height|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Цвет глаз</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.eye_color|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Образование</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.education|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Семейное положение</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.marital_status|default:"-" }}</span>
+                    </li>
                 </ul>
                 <h5>Паспорт</h5>
                 <ul class="list-group list-group-flush mb-3">
-                    {% for key, value in mos_data.passport_data.items %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">{{ key }}</span>
-                        <span class="fw-bold">{{ value }}</span>
+                        <span class="text-muted">Номер паспорта</span>
+                        <span class="fw-bold">{{ mos_data.passport_data.document_number|default:"-" }}</span>
                     </li>
-                    {% endfor %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Годен до</span>
+                        <span class="fw-bold">{{ mos_data.passport_data.expiry_date|default:"-" }}</span>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -38,12 +78,34 @@
             <div class="card-header fw-bold">Адрес</div>
             <div class="card-body">
                 <ul class="list-group list-group-flush mb-3">
-                    {% for key, value in mos_data.address_data.items %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">{{ key }}</span>
-                        <span class="fw-bold">{{ value }}</span>
+                        <span class="text-muted">Город (Польша)</span>
+                        <span class="fw-bold">{{ mos_data.address_data.city|default:"-" }}</span>
                     </li>
-                    {% endfor %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Улица, дом, квартира</span>
+                        <span class="fw-bold">{{ mos_data.address_data.street|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Почтовый индекс</span>
+                        <span class="fw-bold">{{ mos_data.address_data.postal_code|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Есть мельдунек?</span>
+                        <span class="fw-bold">{% if mos_data.address_data.meldunek %}Да{% else %}Нет{% endif %}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Страна происхождения</span>
+                        <span class="fw-bold">{{ mos_data.address_data.home_country|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Город на родине</span>
+                        <span class="fw-bold">{{ mos_data.address_data.home_city|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Улица на родине</span>
+                        <span class="fw-bold">{{ mos_data.address_data.home_street|default:"-" }}</span>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -51,36 +113,52 @@
         <div class="card mb-3">
             <div class="card-header fw-bold">Декларации, Пребывание и Поездки</div>
             <div class="card-body">
-                <p><strong>Цель подачи:</strong> {{ mos_data.mos_purpose }}</p>
-                <p><strong>Легальное пребывание до:</strong> {{ mos_data.legal_stay_until|date:"d.m.Y" }}</p>
+                <p><strong>Цель подачи:</strong> {{ mos_data.mos_purpose|default:"-" }}</p>
+                <p><strong>Легальное пребывание до:</strong> {{ mos_data.legal_stay_until|date:"d.m.Y"|default:"-" }}</p>
                 
                 <h5>Пребывание и въезды</h5>
                 <ul class="list-group list-group-flush mb-3">
-                    {% for key, value in mos_data.stay_data.items %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">{{ key }}</span>
-                        <span class="fw-bold">{{ value }}</span>
+                        <span class="text-muted">Находится в Польше сейчас?</span>
+                        <span class="fw-bold">{% if mos_data.stay_data.is_in_poland %}Да{% else %}Нет{% endif %}</span>
                     </li>
-                    {% endfor %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Дата последнего въезда</span>
+                        <span class="fw-bold">{{ mos_data.stay_data.last_entry_date|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Основание для въезда (виза, безвиз)</span>
+                        <span class="fw-bold">{{ mos_data.stay_data.stay_basis|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Был в Польше раньше?</span>
+                        <span class="fw-bold">{% if mos_data.stay_data.was_in_poland_before %}Да{% else %}Нет{% endif %}</span>
+                    </li>
                 </ul>
 
-                <h5>История поездок (5 лет)</h5>
+                <h5>История поездок за последние 5 лет</h5>
                 <ul class="list-group list-group-flush mb-3">
                     {% for item in mos_data.travel_history %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="fw-bold">{{ item }}</span>
-                    </li>
+                        {% if item %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">{{ item }}</span>
+                        </li>
+                        {% endif %}
+                    {% empty %}
+                        <li class="list-group-item"><span class="text-muted">Нет записей о поездках</span></li>
                     {% endfor %}
                 </ul>
 
                 <h5>Декларации</h5>
                 <ul class="list-group list-group-flush mb-3">
-                    {% for key, value in mos_data.legal_declarations.items %}
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">{{ key }}</span>
-                        <span class="fw-bold">{{ value }}</span>
+                        <span class="text-muted">Были ли судимости?</span>
+                        <span class="fw-bold">{% if mos_data.legal_declarations.criminal_record %}Да{% else %}Нет{% endif %}</span>
                     </li>
-                    {% endfor %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Есть ли задолженности по налогам?</span>
+                        <span class="fw-bold">{% if mos_data.legal_declarations.tax_arrears %}Да{% else %}Нет{% endif %}</span>
+                    </li>
                 </ul>
             </div>
         </div>
