@@ -1,0 +1,14 @@
+{% extends "clients/onboarding/base_onboarding.html" %}
+
+{% block title %}Добро пожаловать в портал Onboarding{% endblock %}
+
+{% block content %}
+<p>Для продолжения подготовки ваших документов нам необходимо собрать некоторую информацию.</p>
+<p>Пожалуйста, нажмите кнопку ниже, чтобы начать.</p>
+<form method="post">
+    {% csrf_token %}
+    <div class="d-grid gap-2 mt-4">
+        <button type="submit" class="btn btn-primary btn-lg">Начать заполнение</button>
+    </div>
+</form>
+{% endblock %}

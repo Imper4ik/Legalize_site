@@ -1,0 +1,47 @@
+{% extends "clients/onboarding/base_onboarding.html" %}
+
+{% block title %}Шаг 5: Правовые декларации{% endblock %}
+
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+    
+    <div class="mb-4">
+        <label class="form-label fw-bold">Были ли вы судимы в Польше или другой стране?</label>
+        <div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="criminal_record" id="crim_yes" value="yes" {% if mos_data.legal_declarations.criminal_record %}checked{% endif %} required>
+                <label class="form-check-label" for="crim_yes">Да, был(а) судим(а)</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="criminal_record" id="crim_no" value="no" {% if mos_data.legal_declarations.criminal_record == False %}checked{% endif %}>
+                <label class="form-check-label" for="crim_no">Нет, не был(а)</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <label class="form-label fw-bold">Имеете ли вы налоговые задолженности (неоплаченные налоги) в Польше?</label>
+        <div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="tax_arrears" id="tax_yes" value="yes" {% if mos_data.legal_declarations.tax_arrears %}checked{% endif %} required>
+                <label class="form-check-label" for="tax_yes">Да, есть долги</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="tax_arrears" id="tax_no" value="no" {% if mos_data.legal_declarations.tax_arrears == False %}checked{% endif %}>
+                <label class="form-check-label" for="tax_no">Нет долгов</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info">
+        Нажимая "Завершить анкету", вы подтверждаете правильность введенных данных. 
+        Наш сотрудник проверит их в ближайшее время.
+    </div>
+
+    <div class="d-flex justify-content-between">
+        <a href="{% url 'clients:onboarding_finances' session.token_hash %}" class="btn btn-secondary">Назад</a>
+        <button type="submit" class="btn btn-success">Завершить анкету</button>
+    </div>
+</form>
+{% endblock %}

@@ -78,6 +78,19 @@ from clients.views.export import (
     document_version_restore,
 )
 from clients.views.logs import EmailLogsView, StaffActivityLogsView
+from clients.views.admin_mos_review import admin_mos_review
+from clients.views.onboarding_views import (
+    onboarding_start,
+    onboarding_digital_access,
+    onboarding_personal_data,
+    onboarding_passport,
+    onboarding_address,
+    onboarding_family_purpose,
+    onboarding_finances,
+    onboarding_declarations,
+    onboarding_review,
+    generate_onboarding_link,
+)
 
 __all__ = [
     'StaffRequiredMixin',
@@ -147,4 +160,15 @@ __all__ = [
     'send_custom_email',
     'EmailLogsView',
     'StaffActivityLogsView',
+    'onboarding_start',
+    'onboarding_digital_access',
+    'onboarding_personal_data',
+    'onboarding_passport',
+    'onboarding_address',
+    'onboarding_family_purpose',
+    'onboarding_finances',
+    'onboarding_declarations',
+    'onboarding_review',
+    'generate_onboarding_link',
+    'admin_mos_review',
 ]

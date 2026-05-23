@@ -118,4 +118,18 @@ urlpatterns = [
     path('settings/submissions/', views.submission_manage_view, name='submission_manage'),
     path('settings/staff/', views.staff_manage_view, name='staff_manage'),
     path('settings/roles/', views.role_manage_view, name='role_manage'),
+
+    # Onboarding / MOS Intake
+    path('client/<int:client_id>/generate-onboarding-link/', views.generate_onboarding_link, name='generate_onboarding_link'),
+    path('onboarding/<str:token>/', views.onboarding_start, name='onboarding_start'),
+    path('onboarding/<str:token>/digital-access/', views.onboarding_digital_access, name='onboarding_digital_access'),
+    path('onboarding/<str:token>/personal-data/', views.onboarding_personal_data, name='onboarding_personal_data'),
+    path('onboarding/<str:token>/passport/', views.onboarding_passport, name='onboarding_passport'),
+    path('onboarding/<str:token>/address/', views.onboarding_address, name='onboarding_address'),
+    path('onboarding/<str:token>/family-purpose/', views.onboarding_family_purpose, name='onboarding_family_purpose'),
+    path('onboarding/<str:token>/finances/', views.onboarding_finances, name='onboarding_finances'),
+    path('onboarding/<str:token>/declarations/', views.onboarding_declarations, name='onboarding_declarations'),
+    path('onboarding/<str:token>/review/', views.onboarding_review, name='onboarding_review'),
+    
+    path('<int:client_id>/mos-review/', views.admin_mos_review, name='admin_mos_review'),
 ]

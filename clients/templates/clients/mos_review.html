@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Проверка анкеты MOS 2.0: {{ client.first_name }} {{ client.last_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Анкета MOS 2.0: {{ client.first_name }} {{ client.last_name }}</h2>
+    <a href="{% url 'clients:client_detail' client.id %}" class="btn btn-outline-secondary">Вернуться к клиенту</a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-3">
+            <div class="card-header fw-bold">Паспортные и личные данные</div>
+            <div class="card-body">
+                <h5>Личные данные</h5>
+                <pre class="bg-light p-2 rounded">{{ mos_data.personal_data|pprint }}</pre>
+                <h5>Паспорт</h5>
+                <pre class="bg-light p-2 rounded">{{ mos_data.passport_data|pprint }}</pre>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header fw-bold">Адрес</div>
+            <div class="card-body">
+                <pre class="bg-light p-2 rounded">{{ mos_data.address_data|pprint }}</pre>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header fw-bold">Финансы и Декларации</div>
+            <div class="card-body">
+                <p><strong>Основание:</strong> {{ mos_data.mos_purpose }}</p>
+                <p><strong>Легальное пребывание до:</strong> {{ mos_data.legal_stay_until }}</p>
+                <h5>Финансы</h5>
+                <pre class="bg-light p-2 rounded">{{ mos_data.financial_data|pprint }}</pre>
+                <h5>Страховка</h5>
+                <pre class="bg-light p-2 rounded">{{ mos_data.insurance_data|pprint }}</pre>
+                <h5>Декларации</h5>
+                <pre class="bg-light p-2 rounded">{{ mos_data.legal_declarations|pprint }}</pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card sticky-top" style="top: 20px;">
+            <div class="card-header fw-bold">Действия</div>
+            <div class="card-body">
+                <p><strong>Текущий статус:</strong> <span class="badge bg-primary">{{ mos_data.get_status_display }}</span></p>
+                
+                <form method="post" class="mb-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="approve">
+                    <button type="submit" class="btn btn-success w-100" {% if mos_data.status == 'mos_package_ready' or mos_data.status == 'submitted_in_mos' or mos_data.status == 'fingerprints' or mos_data.status == 'waiting_decision' or mos_data.status == 'decision_received' %}disabled{% endif %}>
+                        Утвердить (Пакет MOS готов)
+                    </button>
+                </form>
+
+                <hr>
+                
+                <h6>Дальнейшие шаги в MOS:</h6>
+                <div class="d-flex flex-column gap-2 mb-3">
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="mark_submitted">
+                        <button type="submit" class="btn btn-outline-primary w-100">Подано в MOS</button>
+                    </form>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="mark_fingerprints">
+                        <button type="submit" class="btn btn-outline-primary w-100">Отпечатки сданы</button>
+                    </form>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="mark_waiting">
+                        <button type="submit" class="btn btn-outline-primary w-100">Ожидание решения</button>
+                    </form>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="mark_decision">
+                        <button type="submit" class="btn btn-outline-success w-100">Децизия получена</button>
+                    </form>
+                </div>
+
+                <hr>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="request_correction">
+                    <div class="mb-2">
+                        <label class="form-label">Комментарий для клиента</label>
+                        <textarea class="form-control" name="correction_message" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100">Запросить исправления</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

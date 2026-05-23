@@ -1,0 +1,20 @@
+{% extends "clients/onboarding/base_onboarding.html" %}
+
+{% block title %}Личные данные и пребывание{% endblock %}
+
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+    <p>Пожалуйста, заполните базовую информацию (расширенная анкета будет в следующих версиях).</p>
+    
+    <div class="mb-3">
+        <label for="legal_stay_until" class="form-label fw-bold">До какого числа вы находитесь легально?</label>
+        <input type="date" class="form-control" id="legal_stay_until" name="legal_stay_until" required>
+        <div class="form-text">Укажите дату окончания визы, безвиза или карты побыту.</div>
+    </div>
+
+    <div class="d-grid mt-4">
+        <button type="submit" class="btn btn-primary">Продолжить</button>
+    </div>
+</form>
+{% endblock %}

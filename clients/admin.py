@@ -20,6 +20,11 @@ from .models import (
     ServicePrice,
     StaffAuditEvent,
     StaffTask,
+    ClientOnboardingSession,
+    ClientDigitalAccess,
+    MOSApplicationData,
+    PeselApplication,
+    ClientFamilyMemberMOS,
 )
 
 if TYPE_CHECKING:
@@ -317,3 +322,42 @@ class StaffAuditEventAdmin(admin.ModelAdmin):
     search_fields = ("summary", "target__email", "actor__email")
     autocomplete_fields = ("target", "actor")
     readonly_fields = ("created_at",)
+
+
+@admin.register(ClientOnboardingSession)
+class ClientOnboardingSessionAdmin(admin.ModelAdmin):
+    list_display = ("client", "status", "expires_at", "created_at")
+    list_filter = ("status", "created_at")
+    search_fields = ("client__first_name", "client__last_name", "client__email")
+    autocomplete_fields = ("client", "payment")
+
+
+@admin.register(ClientDigitalAccess)
+class ClientDigitalAccessAdmin(admin.ModelAdmin):
+    list_display = ("client", "has_pesel", "pesel_verified", "has_trusted_profile", "has_mos_account")
+    search_fields = ("client__first_name", "client__last_name")
+    autocomplete_fields = ("client",)
+
+
+@admin.register(MOSApplicationData)
+class MOSApplicationDataAdmin(admin.ModelAdmin):
+    list_display = ("client", "status", "mos_purpose", "legal_stay_until", "created_at")
+    list_filter = ("status", "mos_purpose")
+    search_fields = ("client__first_name", "client__last_name")
+    autocomplete_fields = ("client", "staff_reviewed_by")
+
+
+@admin.register(PeselApplication)
+class PeselApplicationAdmin(admin.ModelAdmin):
+    list_display = ("client", "status", "staff_checked_at", "created_at")
+    list_filter = ("status",)
+    search_fields = ("client__first_name", "client__last_name")
+    autocomplete_fields = ("client", "staff_checked_by")
+
+
+@admin.register(ClientFamilyMemberMOS)
+class ClientFamilyMemberMOSAdmin(admin.ModelAdmin):
+    list_display = ("client", "full_name", "relationship", "citizenship", "applies_for_temporary_residence")
+    search_fields = ("full_name", "client__first_name", "client__last_name")
+    autocomplete_fields = ("client",)
+

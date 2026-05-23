@@ -1,0 +1,32 @@
+{% extends "clients/onboarding/base_onboarding.html" %}
+
+{% block title %}Шаг 3: Цель подачи и легальное пребывание{% endblock %}
+
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+    
+    <div class="mb-3">
+        <label for="mos_purpose" class="form-label fw-bold">На каком основании вы подаетесь?</label>
+        <select class="form-select" id="mos_purpose" name="mos_purpose" required>
+            <option value="" disabled {% if not mos_data.mos_purpose %}selected{% endif %}>Выберите основание</option>
+            <option value="work" {% if mos_data.mos_purpose == 'work' %}selected{% endif %}>Работа (Zezwolenie на работу и пребывание)</option>
+            <option value="blue_card" {% if mos_data.mos_purpose == 'blue_card' %}selected{% endif %}>Blue Card (Высококвалифицированный специалист)</option>
+            <option value="student" {% if mos_data.mos_purpose == 'student' %}selected{% endif %}>Учёба (Студент дневного отделения)</option>
+            <option value="family" {% if mos_data.mos_purpose == 'family' %}selected{% endif %}>Воссоединение с семьей / Иные обстоятельства</option>
+            <option value="business" {% if mos_data.mos_purpose == 'business' %}selected{% endif %}>Ведение бизнеса</option>
+        </select>
+    </div>
+
+    <div class="mb-4">
+        <label for="legal_stay_until" class="form-label fw-bold">До какого числа вы находитесь легально в Польше?</label>
+        <input type="date" class="form-control" id="legal_stay_until" name="legal_stay_until" value="{{ mos_data.legal_stay_until|date:'Y-m-d' }}" required>
+        <div class="form-text">Укажите дату окончания вашей действующей визы, безвиза или карты побыту.</div>
+    </div>
+
+    <div class="d-flex justify-content-between">
+        <a href="{% url 'clients:onboarding_address' session.token_hash %}" class="btn btn-secondary">Назад</a>
+        <button type="submit" class="btn btn-primary">Далее: Финансы и Страховка</button>
+    </div>
+</form>
+{% endblock %}

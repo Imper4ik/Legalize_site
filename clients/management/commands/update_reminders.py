@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     help = "Create daily document, payment, ZUS RCA, and missing-document reminders safely."
 
-    SECTIONS = ("payments", "documents", "zus", "missing-docs")
+    SECTIONS = ("payments", "documents", "zus", "missing-docs", "legal-stay")
 
     def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
@@ -71,6 +71,14 @@ class Command(BaseCommand):
                 else:
                     with transaction.atomic():
                         self.create_payment_reminders()
+
+            if "legal-stay" in selected_sections:
+                self.stdout.write(self.style.HTTP_INFO("-> Checking legal stay expiration..."))
+                if dry_run:
+                    self.create_legal_stay_reminders(dry_run=True)
+                else:
+                    with transaction.atomic():
+                        self.create_legal_stay_reminders()
 
             self.stdout.write(self.style.SUCCESS("--- Reminder update completed ---"))
         except Exception as exc:
@@ -230,3 +238,44 @@ class Command(BaseCommand):
 
         prefix = "DRY RUN: would create" if dry_run else "Created"
         self.stdout.write(self.style.SUCCESS(f"{prefix} {count} payment reminders."))
+
+    def create_legal_stay_reminders(self, *, dry_run: bool = False) -> None:
+        from clients.models import MOSApplicationData
+        today = timezone.localdate()
+        cutoff = today + timedelta(days=45)
+
+        mos_data_list = MOSApplicationData.objects.select_related("client").filter(
+            legal_stay_until__isnull=False,
+            legal_stay_until__gte=today,
+            legal_stay_until__lte=cutoff,
+        )
+
+        count = 0
+        for mos in mos_data_list.iterator():
+            due_date = mos.legal_stay_until
+            
+            # Weekend adjustment logic
+            if due_date.weekday() == 5:  # Saturday
+                due_date = due_date - timedelta(days=1)
+            elif due_date.weekday() == 6:  # Sunday
+                due_date = due_date - timedelta(days=2)
+
+            exists = Reminder.objects.filter(
+                client=mos.client,
+                reminder_type="legal_stay",
+                is_active=True
+            ).exists()
+
+            if not exists:
+                count += 1
+                if not dry_run:
+                    Reminder.objects.create(
+                        client=mos.client,
+                        title=f"Истекает легальное пребывание: {due_date.strftime('%d.%m.%Y')}",
+                        notes=f"По срокам: {mos.legal_stay_until.strftime('%d.%m.%Y')}. Сдвиг дедлайна с учетом выходных: {due_date.strftime('%d.%m.%Y')}.",
+                        due_date=cast(Any, due_date),
+                        reminder_type="legal_stay",
+                    )
+
+        prefix = "DRY RUN: would create" if dry_run else "Created"
+        self.stdout.write(self.style.SUCCESS(f"{prefix} {count} legal stay reminders."))

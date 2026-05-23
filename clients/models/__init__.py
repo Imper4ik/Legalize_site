@@ -18,6 +18,9 @@ from .pricing import ServicePrice
 from .task import StaffTask
 from .permissions import EmployeePermission, StaffAuditEvent
 from .wniosek import WniosekAttachment, WniosekSubmission
+from .onboarding import ClientOnboardingSession, ClientDigitalAccess, MOSApplicationData, PeselApplication
+from .family_mos import ClientFamilyMemberMOS
+
 
 __all__ = [
     'Client',
@@ -44,4 +47,9 @@ __all__ = [
     'get_available_document_types',
     'translate_document_name',
     'is_default_document_label',
+    'ClientOnboardingSession',
+    'ClientDigitalAccess',
+    'MOSApplicationData',
+    'PeselApplication',
+    'ClientFamilyMemberMOS',
 ]

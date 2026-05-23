@@ -1,0 +1,62 @@
+<div class="card mt-3">
+    <div class="card-body">
+        <h5 class="card-title">Цифровой доступ</h5>
+        <div class="row">
+            <div class="col-md-4">
+                <strong>PESEL:</strong> 
+                {% if client.digital_access.has_pesel %}
+                    <span class="text-success"><i class="bi bi-check-circle-fill"></i> Есть</span>
+                {% else %}
+                    <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Нет</span>
+                {% endif %}
+            </div>
+            <div class="col-md-4">
+                <strong>Profil Zaufany:</strong>
+                {% if client.digital_access.has_trusted_profile %}
+                    <span class="text-success"><i class="bi bi-check-circle-fill"></i> Есть</span>
+                {% else %}
+                    <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Нет</span>
+                {% endif %}
+            </div>
+            <div class="col-md-4">
+                <strong>MOS 2.0 Account:</strong>
+                {% if client.digital_access.has_mos_account %}
+                    <span class="text-success"><i class="bi bi-check-circle-fill"></i> Есть</span>
+                {% else %}
+                    <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Нет</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body">
+        <h5 class="card-title">Анкета MOS 2.0</h5>
+        <p><strong>Статус:</strong> {{ client.mos_application_data.get_status_display|default:"Не начато" }}</p>
+        <p><strong>Легальное пребывание:</strong> {{ client.mos_application_data.legal_stay_until|date:"d.m.Y"|default:"Не указано" }}</p>
+        
+        <a href="{% url 'clients:admin_mos_review' client.id %}" class="btn btn-outline-primary mb-3">
+            <i class="bi bi-file-earmark-text"></i> Проверить анкету MOS
+        </a>
+
+        
+        <h6 class="mt-4">Доступ для клиента (Onboarding Link)</h6>
+        {% with session=client.onboarding_sessions.last %}
+            {% if session %}
+                <p>Текущая сессия: <strong>{{ session.get_status_display }}</strong> (истекает: {{ session.expires_at|date:"d.m.Y H:i" }})</p>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" value="{{ request.scheme }}://{{ request.get_host }}{% url 'clients:onboarding_start' token=session.token_hash %}" id="onboardingLink" readonly>
+                    <button class="btn btn-outline-secondary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('onboardingLink').value)">Копировать ссылку</button>
+                </div>
+            {% else %}
+                <p class="text-muted">Ссылка для онбординга еще не создана.</p>
+            {% endif %}
+            
+            <form action="{% url 'clients:generate_onboarding_link' client.id %}" method="POST" class="mt-2">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-sm">Сгенерировать новую ссылку</button>
+            </form>
+        {% endwith %}
+    </div>
+</div>

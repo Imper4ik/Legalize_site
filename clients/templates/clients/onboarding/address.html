@@ -1,0 +1,44 @@
+{% extends "clients/onboarding/base_onboarding.html" %}
+
+{% block title %}Шаг 2: Адрес проживания в Польше{% endblock %}
+
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+    
+    <div class="mb-3">
+        <label for="street" class="form-label fw-bold">Улица, номер дома и квартиры</label>
+        <input type="text" class="form-control" id="street" name="street" value="{{ mos_data.address_data.street|default:'' }}" required>
+    </div>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <label for="city" class="form-label fw-bold">Город</label>
+            <input type="text" class="form-control" id="city" name="city" value="{{ mos_data.address_data.city|default:'' }}" required>
+        </div>
+        <div class="col-md-6">
+            <label for="postal_code" class="form-label fw-bold">Почтовый индекс (kod pocztowy)</label>
+            <input type="text" class="form-control" id="postal_code" name="postal_code" value="{{ mos_data.address_data.postal_code|default:'' }}" required>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <label class="form-label fw-bold">У вас есть прописка (Meldunek) по этому адресу?</label>
+        <div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="meldunek" id="mel_yes" value="yes" {% if mos_data.address_data.meldunek %}checked{% endif %} required>
+                <label class="form-check-label" for="mel_yes">Да</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="meldunek" id="mel_no" value="no" {% if mos_data.address_data.meldunek == False %}checked{% endif %}>
+                <label class="form-check-label" for="mel_no">Нет</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between">
+        <a href="{% url 'clients:onboarding_passport' session.token_hash %}" class="btn btn-secondary">Назад</a>
+        <button type="submit" class="btn btn-primary">Далее: Цель подачи</button>
+    </div>
+</form>
+{% endblock %}

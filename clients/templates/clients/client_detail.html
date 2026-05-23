@@ -31,6 +31,11 @@
     </button>
   </li>
   <li class="nav-item" role="presentation">
+    <button class="nav-link" id="onboarding-tab" data-bs-toggle="tab" data-bs-target="#onboarding" type="button" role="tab" aria-controls="onboarding" aria-selected="false">
+      <i class="bi bi-door-open me-1"></i>{% translate "Онбординг / MOS" %}
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
     <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">
       <i class="bi bi-clock-history me-1"></i>{% translate "История" %}
     </button>
@@ -114,6 +119,16 @@
           {% endfor %}
         </ul>
       </div>
+    </section>
+  </div>
+
+  <!-- Вкладка: Онбординг -->
+  <div class="tab-pane fade" id="onboarding" role="tabpanel" aria-labelledby="onboarding-tab">
+    <section class="client-section border-0 p-0 shadow-none">
+      <div class="client-section-header">
+        <h3 class="h4 mb-0">{% translate "Онбординг клиента и MOS 2.0" %}</h3>
+      </div>
+      {% include 'clients/partials/onboarding_panel.html' with client=client %}
     </section>
   </div>
 
