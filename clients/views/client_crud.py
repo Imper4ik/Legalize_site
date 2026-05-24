@@ -60,9 +60,15 @@ class ClientListView(StaffRequiredMixin, ListView):
         queryset = accessible_clients_queryset(
             self.request.user,
             Client.objects.filter(Q(user__is_staff=False) | Q(user__isnull=True)),
-        ).select_related("sponsor_client").annotate(
+        ).select_related("sponsor_client", "mos_application_data").annotate(
             family_members_count=Count("sponsored_family_members")
         )
+
+        list_ordering = ["-created_at"]
+        self.onboarding_filter = self.request.GET.get("onboarding", "")
+        if self.onboarding_filter == "completed":
+            queryset = queryset.filter(mos_application_data__status="client_completed")
+            list_ordering = ["-mos_application_data__updated_at", "-created_at"]
 
         company_id = self.request.GET.get("company")
         if company_id:
@@ -77,8 +83,8 @@ class ClientListView(StaffRequiredMixin, ListView):
                 | Q(email__icontains=query)
                 | Q(phone__icontains=query)
                 | Q(case_number_hash=case_number_hash)
-            ).distinct().order_by("-created_at")
-        return queryset.order_by("-created_at")
+            ).distinct().order_by(*list_ordering)
+        return queryset.order_by(*list_ordering)
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         from clients.models import Company
@@ -86,6 +92,7 @@ class ClientListView(StaffRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["query"] = self.request.GET.get("q", "")
         context["selected_company"] = self.request.GET.get("company", "")
+        context["onboarding_filter"] = self.request.GET.get("onboarding", "")
         context["companies"] = Company.objects.all()
         return context
 

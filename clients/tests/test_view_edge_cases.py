@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.http import HttpResponse
 from django.utils.translation import gettext as _
 
-from clients.models import AppSettings, Client, ClientActivity, Document, Payment, Reminder, ServicePrice, StaffAuditEvent
+from clients.models import AppSettings, Client, ClientActivity, Document, MOSApplicationData, Payment, Reminder, ServicePrice, StaffAuditEvent
 from clients.services.access import user_has_internal_role
 from clients.services.roles import ensure_predefined_roles
 from clients.views.base import staff_required_view
@@ -95,6 +95,37 @@ class ClientViewEdgeCaseTests(TestCase):
             phone="+48123123123",
             email="jan-edge@example.com",
         )
+
+    def test_completed_onboarding_badge_filters_client_list(self):
+        completed_client = Client.objects.create(
+            first_name="Completed",
+            last_name="Onboarding",
+            email="completed-onboarding@example.com",
+        )
+        MOSApplicationData.objects.update_or_create(
+            client=completed_client,
+            defaults={"status": "client_completed"},
+        )
+        draft_client = Client.objects.create(
+            first_name="Draft",
+            last_name="Onboarding",
+            email="draft-onboarding@example.com",
+        )
+        MOSApplicationData.objects.update_or_create(
+            client=draft_client,
+            defaults={"status": "draft"},
+        )
+
+        list_url = reverse("clients:client_list")
+        response = self.client.get(list_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f'{list_url}?onboarding=completed')
+
+        filtered_response = self.client.get(list_url, {"onboarding": "completed"})
+        self.assertEqual(filtered_response.status_code, 200)
+        self.assertContains(filtered_response, "Completed")
+        self.assertNotContains(filtered_response, "Draft")
+        self.assertEqual(filtered_response.context["onboarding_filter"], "completed")
 
     def test_get_price_for_service_returns_success_json(self):
         response = self.client.get(reverse("clients:get_price_for_service", kwargs={"service_value": "study_service"}))

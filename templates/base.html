@@ -66,16 +66,19 @@
           {% if user.is_authenticated %}
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             {% if user|has_any_role:"Admin,Manager,Staff,ReadOnly" %}
-            <li class="nav-item">
-              <a class="nav-link text-nowrap d-flex align-items-center" href="{% url 'clients:client_list' %}">
+            <li class="nav-item d-flex align-items-center">
+              <a class="nav-link text-nowrap d-flex align-items-center pe-1" href="{% url 'clients:client_list' %}">
                 <i class="bi bi-people me-1"></i>
                 <span>{% translate "Клиенты" %}</span>
-                {% if completed_onboarding_count %}
-                  <span class="badge bg-danger rounded-pill ms-2" title="{% translate 'Есть новые заполненные анкеты' %}">
-                    {{ completed_onboarding_count }}
-                  </span>
-                {% endif %}
               </a>
+              {% if completed_onboarding_count %}
+                <a class="badge bg-danger rounded-pill ms-1 text-decoration-none"
+                   href="{% url 'clients:client_list' %}?onboarding=completed"
+                   title="{% translate 'Показать клиентов с заполненной анкетой' %}"
+                   aria-label="{% blocktranslate count count=completed_onboarding_count %}Показать {{ count }} клиента с заполненной анкетой{% plural %}Показать {{ count }} клиентов с заполненной анкетой{% endblocktranslate %}">
+                  {{ completed_onboarding_count }}
+                </a>
+              {% endif %}
             </li>
             <li class="nav-item">
               <a class="nav-link text-nowrap" href="{% url 'clients:client_add' %}">
