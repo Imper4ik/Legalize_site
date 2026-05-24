@@ -1,10 +1,9 @@
 {% extends "clients/onboarding/base_onboarding.html" %}
 {% load i18n %}
 
-{% block onboarding_step_title %}{% trans "Шаг 2: Дополнительные личные данные" %}{% endblock %}
-{% block onboarding_progress %}40{% endblock %}
+{% block title %}{% trans "Шаг 2: Дополнительные личные данные" %}{% endblock %}
 
-{% block onboarding_form %}
+{% block content %}
 <form method="post">
     {% csrf_token %}
     
