@@ -24,6 +24,9 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
     if not session:
         return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
 
+    if request.method == "POST":
+        return redirect("clients:onboarding_digital_access", token=token)
+
     client = session.client
     mos_data = getattr(client, "mos_application_data", None)
 

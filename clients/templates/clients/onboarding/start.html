@@ -111,29 +111,6 @@
                                 {% else %}
                                     <span class="badge bg-warning text-dark">{% trans "Ожидается" %}</span>
                                     <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">{% trans "Загрузить" %}</button>
-                                    
-                                    <!-- Модальное окно загрузки для конкретного документа -->
-                                    <div class="modal fade" id="uploadModal{{ doc.code|slugify }}" tabindex="-1" aria-hidden="true">
-                                      <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content">
-                                          <form action="{% url 'clients:onboarding_document_upload' session.token_hash doc.code %}" method="post" enctype="multipart/form-data">
-                                              {% csrf_token %}
-                                              <div class="modal-header">
-                                                <h5 class="modal-title">{% trans "Загрузка:" %} {{ doc.label }}</h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Закрыть' %}"></button>
-                                              </div>
-                                              <div class="modal-body">
-                                                <p class="text-muted small">{% trans "Поддерживаются форматы: PDF, JPG, PNG." %}</p>
-                                                <input type="file" name="file" class="form-control" required>
-                                              </div>
-                                              <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Отмена" %}</button>
-                                                <button type="submit" class="btn btn-primary">{% trans "Загрузить файл" %}</button>
-                                              </div>
-                                          </form>
-                                        </div>
-                                      </div>
-                                    </div>
                                 {% endif %}
                             </div>
                         </li>
@@ -143,4 +120,31 @@
         </div>
     </div>
 </div>
+
+{% for doc in checklist %}
+    {% if not doc.is_uploaded %}
+        <!-- Модальное окно загрузки для конкретного документа -->
+        <div class="modal fade" id="uploadModal{{ doc.code|slugify }}" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <form action="{% url 'clients:onboarding_document_upload' session.token_hash doc.code %}" method="post" enctype="multipart/form-data">
+                  {% csrf_token %}
+                  <div class="modal-header">
+                    <h5 class="modal-title">{% trans "Загрузка:" %} {{ doc.label }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Закрыть' %}"></button>
+                  </div>
+                  <div class="modal-body">
+                    <p class="text-muted small">{% trans "Поддерживаются форматы: PDF, JPG, PNG." %}</p>
+                    <input type="file" name="file" class="form-control" required>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Отмена" %}</button>
+                    <button type="submit" class="btn btn-primary">{% trans "Загрузить файл" %}</button>
+                  </div>
+              </form>
+            </div>
+          </div>
+        </div>
+    {% endif %}
+{% endfor %}
 {% endblock %}

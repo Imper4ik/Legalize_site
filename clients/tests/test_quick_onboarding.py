@@ -77,6 +77,26 @@ class QuickOnboardingTests(TestCase):
         self.assertIsNotNone(session)
         self.assertIn(session.token_hash, data["link"])
 
+    def test_onboarding_start_post_redirects_to_first_step(self):
+        """Verify that a POST request to onboarding_start redirects to onboarding_digital_access."""
+        client = Client.objects.create(
+            first_name="Новый",
+            last_name="Клиент",
+            assigned_staff=self.manager,
+        )
+        token = uuid.uuid4().hex
+        session = ClientOnboardingSession.objects.create(
+            client=client,
+            token_hash=token,
+            status="created",
+            expires_at=timezone.now() + timedelta(days=7)
+        )
+        
+        url = reverse("clients:onboarding_start", kwargs={"token": token})
+        response = self.client_agent.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse("clients:onboarding_digital_access", kwargs={"token": token}))
+
     def test_onboarding_step1_syncs_with_client_model(self):
         """Verify that when a client saves Step 1 of onboarding, the Client model is updated in real-time."""
         # Create a client placeholder
