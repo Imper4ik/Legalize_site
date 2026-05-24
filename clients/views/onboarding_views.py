@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.utils import timezone
+from django.utils import timezone, translation
 from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -26,7 +26,7 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
     mos_data = getattr(client, "mos_application_data", None)
 
     purpose = client.get_document_requirement_purpose()
-    required_docs_catalog = DocumentRequirement.catalog_for(purpose=purpose, language=client.language)
+    required_docs_catalog = DocumentRequirement.catalog_for(purpose=purpose, language=translation.get_language() or client.language)
     
     existing_docs = Document.objects.filter(client=client).values_list('document_type', 'id')
     existing_map = {doc_type: doc_id for doc_type, doc_id in existing_docs}
