@@ -130,10 +130,10 @@ class Client(SoftDeleteModel):
 
     first_name = models.CharField(max_length=100, verbose_name=_("Имя"))
     last_name = models.CharField(max_length=100, verbose_name=_("Фамилия"))
-    citizenship = models.CharField(max_length=100, verbose_name=_("Гражданство"))
+    citizenship = models.CharField(max_length=100, blank=True, verbose_name=_("Гражданство"))
     birth_date = models.DateField(null=True, blank=True, verbose_name=_("Дата рождения"))
-    phone = models.CharField(max_length=20, verbose_name=_("Телефон"))
-    email = models.EmailField(verbose_name="Email")
+    phone = models.CharField(max_length=20, blank=True, verbose_name=_("Телефон"))
+    email = models.EmailField(blank=True, verbose_name="Email")
     passport_num = EncryptedTextField(null=True, blank=True, verbose_name=_("Номер паспорта"))
     case_number = EncryptedTextField(blank=True, null=True, verbose_name=_("Номер дела"))
     case_number_hash = models.CharField(max_length=64, blank=True, null=True, db_index=True)

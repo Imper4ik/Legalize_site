@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.http import HttpResponse
 from django.utils.translation import gettext as _
@@ -79,6 +79,7 @@ class RolePolicyTests(TestCase):
         self.assertTrue(user_has_internal_role(self.staff_with_role, "Admin"))
 
 
+@override_settings(LANGUAGE_CODE="ru")
 class ClientViewEdgeCaseTests(TestCase):
     def setUp(self):
         user_model = get_user_model()
@@ -103,6 +104,7 @@ class ClientViewEdgeCaseTests(TestCase):
         self.assertEqual(payload["status"], "success")
         self.assertIn("price", payload)
 
+    @override_settings(LANGUAGE_CODE="ru")
     def test_admin_panel_renders_for_staff(self):
         response = self.client.get(reverse("clients:admin_panel"))
 

@@ -142,7 +142,249 @@
     });
   }
 
+  function initOnboardingLinkGenerator(root) {
+    const buttons = root.querySelectorAll('.btn-generate-onboarding-link');
+    const alertContainer = document.getElementById('ajax-alert-container');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    function showAlert(message, type = 'success') {
+      if (!alertContainer) return;
+      
+      const alert = document.createElement('div');
+      alert.className = `alert alert-${type} alert-dismissible fade show mt-2`;
+      alert.role = 'alert';
+      alert.textContent = message;
+
+      const closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'btn-close';
+      closeBtn.setAttribute('data-bs-dismiss', 'alert');
+      
+      const lang = document.documentElement.lang || 'en';
+      let closeLabel = 'Close';
+      if (lang.startsWith('ru')) closeLabel = '\u0417\u0430\u043a\u0440\u044b\u0442\u044c';
+      else if (lang.startsWith('pl')) closeLabel = 'Zamknij';
+      closeBtn.setAttribute('aria-label', closeLabel);
+
+      alert.appendChild(closeBtn);
+      alertContainer.appendChild(alert);
+
+      setTimeout(() => {
+        const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+        if (bsAlert) bsAlert.close();
+      }, 3500);
+    }
+
+    async function copyToClipboard(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return await navigator.clipboard.writeText(text);
+      }
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error('Fallback copy failed', err);
+      }
+      document.body.removeChild(textarea);
+    }
+
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const url = btn.dataset.generateUrl;
+        if (!url) return;
+
+        btn.disabled = true;
+        const icon = btn.querySelector('i');
+        const originalClass = icon ? icon.className : '';
+        if (icon) {
+          icon.className = 'spinner-border spinner-border-sm';
+        }
+
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              'Accept': 'application/json',
+              'X-CSRFToken': csrfToken,
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const data = await response.json();
+          if (data.status === 'ok') {
+            await copyToClipboard(data.link);
+            
+            if (icon) {
+              icon.className = 'bi bi-check-lg';
+              btn.classList.remove('btn-outline-success');
+              btn.classList.add('btn-success');
+            }
+            
+            const msg = data.message || 'Onboarding link copied!';
+            showAlert(msg, 'success');
+
+            setTimeout(() => {
+              if (icon) {
+                icon.className = originalClass;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-success');
+              }
+              btn.disabled = false;
+            }, 2000);
+          } else {
+            throw new Error(data.message || 'Generation failed');
+          }
+        } catch (error) {
+          console.error(error);
+          if (icon) {
+            icon.className = originalClass;
+          }
+          btn.disabled = false;
+          
+          const lang = document.documentElement.lang || 'en';
+          let errMsg = 'Failed to generate link. Please try again.';
+          if (lang.startsWith('ru')) errMsg = '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0441\u0433\u0435\u043d\u0435\u0440\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0441\u0441\u044b\u043b\u043a\u0443.';
+          else if (lang.startsWith('pl')) errMsg = 'Nie uda\u0142o si\u0119 wygenerowa\u0107 linku.';
+          
+          showAlert(errMsg, 'danger');
+        }
+      });
+    });
+  }
+
+  function initQuickOnboardingLink(root) {
+    const btn = root.getElementById('btn-quick-onboarding-link');
+    if (!btn) return;
+    
+    const alertContainer = document.getElementById('ajax-alert-container');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    function showAlert(message, type = 'success') {
+      if (!alertContainer) return;
+      const alert = document.createElement('div');
+      alert.className = `alert alert-${type} alert-dismissible fade show mt-2`;
+      alert.role = 'alert';
+      alert.textContent = message;
+
+      const closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'btn-close';
+      closeBtn.setAttribute('data-bs-dismiss', 'alert');
+      
+      const lang = document.documentElement.lang || 'en';
+      let closeLabel = 'Close';
+      if (lang.startsWith('ru')) closeLabel = '\u0417\u0430\u043a\u0440\u044b\u0442\u044c';
+      else if (lang.startsWith('pl')) closeLabel = 'Zamknij';
+      closeBtn.setAttribute('aria-label', closeLabel);
+
+      alert.appendChild(closeBtn);
+      alertContainer.appendChild(alert);
+
+      setTimeout(() => {
+        const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+        if (bsAlert) bsAlert.close();
+      }, 3500);
+    }
+
+    async function copyToClipboard(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return await navigator.clipboard.writeText(text);
+      }
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error('Fallback copy failed', err);
+      }
+      document.body.removeChild(textarea);
+    }
+
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const url = btn.dataset.generateUrl;
+      if (!url) return;
+
+      btn.disabled = true;
+      const icon = btn.querySelector('i');
+      const originalClass = icon ? icon.className : '';
+      if (icon) {
+        icon.className = 'spinner-border spinner-border-sm';
+      }
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'X-CSRFToken': csrfToken,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.status === 'ok') {
+          await copyToClipboard(data.link);
+          
+          if (icon) {
+            icon.className = 'bi bi-check-lg';
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-success');
+          }
+          
+          const msg = data.message || 'Onboarding link copied!';
+          showAlert(msg, 'success');
+
+          setTimeout(() => {
+            if (icon) {
+              icon.className = originalClass;
+              btn.classList.remove('btn-success');
+              btn.classList.add('btn-outline-primary');
+            }
+            btn.disabled = false;
+            window.location.reload();
+          }, 1500);
+        } else {
+          throw new Error(data.message || 'Generation failed');
+        }
+      } catch (error) {
+        console.error(error);
+        if (icon) {
+          icon.className = originalClass;
+        }
+        btn.disabled = false;
+        
+        const lang = document.documentElement.lang || 'en';
+        let errMsg = 'Failed to generate link. Please try again.';
+        if (lang.startsWith('ru')) errMsg = '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0441\u0433\u0435\u043d\u0435\u0440\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0441\u0441\u044b\u043b\u043a\u0443.';
+        else if (lang.startsWith('pl')) errMsg = 'Nie uda\u0142o si\u0119 wygenerowa\u0107 linku.';
+        
+        showAlert(errMsg, 'danger');
+      }
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     enhanceEditors(document);
+    initOnboardingLinkGenerator(document);
+    initQuickOnboardingLink(document);
   });
 })();

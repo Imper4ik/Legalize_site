@@ -21,6 +21,10 @@
     </a>
     {% endif %}
     {% if user|has_any_role:"Admin,Manager,Staff" %}
+    <button type="button" class="btn btn-outline-primary" id="btn-quick-onboarding-link"
+            data-generate-url="{% url 'clients:quick_create_client_onboarding' %}">
+      <i class="bi bi-link-45deg me-1"></i>{% translate "Быстрая ссылка" %}
+    </button>
     <a href="{% url 'clients:client_add' %}" class="btn btn-gradient">
       <i class="bi bi-plus-lg me-1"></i>{% translate "Новый клиент" %}
     </a>
@@ -30,6 +34,7 @@
 {% endblock %}
 
 {% block content %}
+<div id="ajax-alert-container"></div>
 
 <form method="get" class="client-list-filters mb-3">
   <div class="row g-2 align-items-center">
@@ -86,6 +91,11 @@
             <div class="fw-semibold">{{ client.first_name }} {{ client.last_name }}</div>
             <div class="small text-muted">{{ client.email }}</div>
             <div class="d-flex flex-wrap gap-1 mt-1">
+              {% if client.mos_application_data.status == 'client_completed' %}
+                <a href="{% url 'clients:admin_mos_review' client.id %}" class="badge bg-success text-decoration-none" title="{% translate 'Клиент завершил онбординг, нажать для проверки' %}">
+                  <i class="bi bi-file-earmark-check me-1"></i>{% translate "Анкета заполнена" %}
+                </a>
+              {% endif %}
               {% if client.family_members_count > 0 %}
                 <span class="badge bg-primary bg-opacity-75" title="{% translate 'Спонсор семьи' %}">
                   <i class="bi bi-people-fill me-1"></i>{% blocktrans with count=client.family_members_count %}Спонсор: {{ count }}{% endblocktrans %}
@@ -145,6 +155,14 @@
                 <i class="bi bi-eye"></i>
                 <span class="visually-hidden">{% translate "Подробнее" %}</span>
               </a>
+              {% if user|has_any_role:"Admin,Manager,Staff" %}
+              <button type="button" class="btn btn-outline-success btn-sm btn-generate-onboarding-link"
+                data-client-id="{{ client.pk }}"
+                data-generate-url="{% url 'clients:generate_onboarding_link' client.pk %}"
+                title="{% translate 'Скопировать ссылку на онбординг' %}" aria-label="{% translate 'Скопировать ссылку на онбординг' %}">
+                <i class="bi bi-link-45deg"></i>
+              </button>
+              {% endif %}
               {% if user|has_any_role:"Admin,Manager" %}
               <a href="{% url 'clients:client_delete' pk=client.pk %}" class="btn btn-outline-danger btn-sm"
                 title="{% translate 'Удалить' %}" aria-label="{% translate 'Удалить' %}" id="btn-delete-{{ client.pk }}">

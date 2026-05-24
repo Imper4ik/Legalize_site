@@ -261,6 +261,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "legalize_site.context_processors.feature_flags",
+                "legalize_site.context_processors.onboarding_notifications",
             ],
             "libraries": {
                 "form_filters": "clients.templatetags.form_filters",

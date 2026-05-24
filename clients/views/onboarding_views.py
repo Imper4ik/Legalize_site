@@ -1,7 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone, translation
-from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
+from django.http import HttpRequest, HttpResponse, HttpResponseForbidden, JsonResponse
 from django.contrib.auth.decorators import login_required
+from django.urls import reverse
+from legalize_site.utils.http import request_is_ajax
 from django.contrib import messages
 import uuid
 from datetime import timedelta
@@ -130,24 +132,84 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
     if not session:
         return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
 
-    mos_data = get_object_or_404(MOSApplicationData, client=session.client)
+    client = session.client
+    mos_data = get_object_or_404(MOSApplicationData, client=client)
+
+    # Pre-fill mos_data fields if they are blank and available in client
+    dirty = False
+    personal_data = mos_data.personal_data or {}
+    for key, val in [
+        ("first_name", client.first_name),
+        ("last_name", client.last_name),
+        ("citizenship", client.citizenship),
+    ]:
+        if val and (key not in personal_data or not personal_data[key]):
+            personal_data[key] = val
+            dirty = True
+
+    if client.birth_date and ("birth_date" not in personal_data or not personal_data["birth_date"]):
+        personal_data["birth_date"] = client.birth_date.isoformat()
+        dirty = True
+
+    mos_data.personal_data = personal_data
+
+    passport_data = mos_data.passport_data or {}
+    if client.passport_num and ("document_number" not in passport_data or not passport_data["document_number"]):
+        passport_data["document_number"] = client.passport_num
+        dirty = True
+
+    mos_data.passport_data = passport_data
+
+    if dirty:
+        mos_data.save()
 
     if request.method == "POST":
         mos_data.status = "client_filling"
         
+        first_name = request.POST.get("first_name", "").strip()
+        last_name = request.POST.get("last_name", "").strip()
+        birth_date_str = request.POST.get("birth_date", "").strip()
+        citizenship = request.POST.get("citizenship", "").strip()
+        doc_num = request.POST.get("document_number", "").strip()
+        expiry_date = request.POST.get("expiry_date", "").strip()
+
         personal_data = mos_data.personal_data or {}
-        personal_data["first_name"] = request.POST.get("first_name", "")
-        personal_data["last_name"] = request.POST.get("last_name", "")
-        personal_data["birth_date"] = request.POST.get("birth_date", "")
-        personal_data["citizenship"] = request.POST.get("citizenship", "")
+        personal_data["first_name"] = first_name
+        personal_data["last_name"] = last_name
+        personal_data["birth_date"] = birth_date_str
+        personal_data["citizenship"] = citizenship
         mos_data.personal_data = personal_data
 
         passport_data = mos_data.passport_data or {}
-        passport_data["document_number"] = request.POST.get("document_number", "")
-        passport_data["expiry_date"] = request.POST.get("expiry_date", "")
+        passport_data["document_number"] = doc_num
+        passport_data["expiry_date"] = expiry_date
         mos_data.passport_data = passport_data
 
         mos_data.save()
+
+        # Update Client model fields in real-time
+        client_dirty = False
+        if first_name and client.first_name != first_name:
+            client.first_name = first_name
+            client_dirty = True
+        if last_name and client.last_name != last_name:
+            client.last_name = last_name
+            client_dirty = True
+        if citizenship and client.citizenship != citizenship:
+            client.citizenship = citizenship
+            client_dirty = True
+        if doc_num and client.passport_num != doc_num:
+            client.passport_num = doc_num
+            client_dirty = True
+        if birth_date_str:
+            from django.utils.dateparse import parse_date
+            parsed_birth = parse_date(birth_date_str)
+            if parsed_birth and client.birth_date != parsed_birth:
+                client.birth_date = parsed_birth
+                client_dirty = True
+        if client_dirty:
+            client.save()
+
         return redirect("clients:onboarding_personal_extra", token=token)
 
     return render(request, "clients/onboarding/passport.html", {"session": session, "mos_data": mos_data})
@@ -238,6 +300,16 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
         mos_data.status = "client_completed"
         mos_data.client_confirmed_at = timezone.now()
         mos_data.save()
+
+        # Send notification to staff/manager
+        try:
+            from clients.services.notifications import send_onboarding_completed_email
+            send_onboarding_completed_email(session.client)
+        except Exception:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.exception("Failed to send onboarding completion email")
+
         return redirect("clients:onboarding_review", token=token)
 
     return render(request, "clients/onboarding/declarations.html", {"session": session, "mos_data": mos_data})
@@ -258,7 +330,7 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
     
     payment = client.payments.filter(status__in=["paid", "partial"]).first()
     
-    ClientOnboardingSession.objects.create(
+    session = ClientOnboardingSession.objects.create(
         client=client,
         payment=payment,
         token_hash=token,
@@ -266,8 +338,76 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
         expires_at=timezone.now() + timedelta(days=7)
     )
     
+    if request_is_ajax(request):
+        link = request.build_absolute_uri(
+            reverse("clients:onboarding_start", kwargs={"token": session.token_hash})
+        )
+        return JsonResponse({
+            "status": "ok",
+            "link": link,
+            "message": "Ссылка на онбординг скопирована!"
+        })
+    
     messages.success(request, "Ссылка на онбординг успешно создана.")
     return redirect("clients:client_detail", pk=client.id)
 
 def onboarding_personal_data(request: HttpRequest, token: str) -> HttpResponse:
     return redirect("clients:onboarding_passport", token=token)
+
+
+from django.db import transaction
+from clients.views.base import role_required_view
+from clients.use_cases.client_records import finalize_client_creation
+
+@role_required_view("Admin", "Manager", "Staff")
+def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+    
+    first_name = request.POST.get("first_name", "").strip() or "Новый"
+    last_name = request.POST.get("last_name", "").strip() or "Клиент"
+    email = request.POST.get("email", "").strip()
+    phone = request.POST.get("phone", "").strip()
+    language = request.POST.get("language", "pl").strip()
+    application_purpose = request.POST.get("application_purpose", "study").strip()
+
+    try:
+        with transaction.atomic():
+            client = Client.objects.create(
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                phone=phone,
+                citizenship="",
+                language=language,
+                application_purpose=application_purpose,
+                assigned_staff=request.user,
+                status="new",
+                workflow_stage="new_client",
+            )
+            finalize_client_creation(
+                client=client,
+                actor=request.user,
+            )
+            
+            token = uuid.uuid4().hex
+            session = ClientOnboardingSession.objects.create(
+                client=client,
+                token_hash=token,
+                status="created",
+                expires_at=timezone.now() + timedelta(days=7)
+            )
+
+        link = request.build_absolute_uri(
+            reverse("clients:onboarding_start", kwargs={"token": session.token_hash})
+        )
+        return JsonResponse({
+            "status": "ok",
+            "link": link,
+            "message": "Клиент добавлен и ссылка скопирована!"
+        })
+    except Exception as e:
+        return JsonResponse({
+            "status": "error",
+            "message": str(e)
+        }, status=500)

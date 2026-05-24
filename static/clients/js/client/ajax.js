@@ -121,7 +121,7 @@ function showAlert(containerId, message, type = 'success') {
   
   const lang = document.documentElement.lang || 'en';
   let closeLabel = 'Close';
-  if (lang.startsWith('ru')) closeLabel = 'Закрыть';
+  if (lang.startsWith('ru')) closeLabel = '\u0417\u0430\u043a\u0440\u044b\u0442\u044c';
   else if (lang.startsWith('pl')) closeLabel = 'Zamknij';
   
   closeButton.setAttribute('aria-label', closeLabel);
@@ -145,7 +145,7 @@ function getErrorMessage(errors, fallbackMessage) {
   if (!fallbackMessage) {
     const lang = document.documentElement.lang || 'en';
     if (lang.startsWith('ru')) {
-      fallbackMessage = 'Произошла ошибка. Пожалуйста, попробуйте еще раз.';
+      fallbackMessage = '\u041f\u0440\u043e\u0438\u0437\u043e\u0448\u043b\u0430 \u043e\u0448\u0438\u0431\u043a\u0430. \u041f\u043e\u0436\u0430\u043b\u0443\u0439\u0441\u0442\u0430, \u043f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0435\u0449\u0435 \u0440\u0430\u0437.';
     } else if (lang.startsWith('pl')) {
       fallbackMessage = 'Wystąpił błąd. Spróbuj ponownie.';
     } else {

@@ -716,3 +716,36 @@ def send_appointment_notification_email(client: Client, *, sent_by: AbstractBase
             client.fingerprints_location,
         ),
     )
+
+
+def send_onboarding_completed_email(client: Client) -> int:
+    """Send an email notification to the assigned staff (or admin staff) when a client completes onboarding."""
+    recipients = []
+    if client.assigned_staff and client.assigned_staff.email:
+        recipients.append(client.assigned_staff.email)
+    else:
+        recipients = _get_staff_recipients()
+        
+    if not recipients:
+        return 0
+        
+    subject = f"Клиент {client.get_full_name()} заполнил анкету онбординга"
+    body = (
+        f"Клиент {client.get_full_name()} завершил заполнение анкеты онбординга.\n\n"
+        f"Данные клиента:\n"
+        f"Имя: {client.first_name}\n"
+        f"Фамилия: {client.last_name}\n"
+        f"Почта: {client.email or 'не указана'}\n"
+        f"Телефон: {client.phone or 'не указан'}\n\n"
+        f"Просмотреть анкету и утвердить ее вы можете в панели управления по ссылке:\n"
+        f"{getattr(settings, 'SITE_URL', 'http://localhost:8000')}/clients/{client.id}/mos-review/\n"
+    )
+    
+    return send_mail(
+        subject,
+        body,
+        settings.DEFAULT_FROM_EMAIL,
+        recipients,
+        fail_silently=True
+    )
+
