@@ -20,7 +20,7 @@ def feature_flags(request: HttpRequest) -> dict[str, Any]:
 
 
 def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
-    if not request.user.is_authenticated:
+    if not hasattr(request, "user") or not request.user.is_authenticated:
         return {}
         
     from clients.services.access import is_internal_staff_user
@@ -38,4 +38,33 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
         }
     except Exception:
         return {}
+
+
+def onboarding_progress(request: HttpRequest) -> dict[str, Any]:
+    resolver_match = getattr(request, "resolver_match", None)
+    if not resolver_match:
+        return {}
+    
+    url_name = resolver_match.url_name
+    steps = {
+        "onboarding_digital_access": 1,
+        "onboarding_passport": 2,
+        "onboarding_personal_extra": 3,
+        "onboarding_address": 4,
+        "onboarding_travel": 5,
+        "onboarding_declarations": 6,
+        "onboarding_review": 7,
+    }
+    
+    if url_name in steps:
+        step_num = steps[url_name]
+        total_steps = 7
+        percent = int((step_num / total_steps) * 100)
+        return {
+            "onboarding_step_num": step_num,
+            "onboarding_step_total": total_steps,
+            "onboarding_step_percent": percent,
+        }
+    return {}
+
 

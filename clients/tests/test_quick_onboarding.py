@@ -152,3 +152,80 @@ class QuickOnboardingTests(TestCase):
         self.assertIn(self.manager.email, email.to)
         self.assertIn("Иван Иванов", email.subject)
         self.assertIn("завершил заполнение анкеты онбординга", email.body)
+
+    def test_onboarding_progress_context_processor(self):
+        """Verify that the onboarding_progress context processor correctly determines steps and percentages."""
+        client = Client.objects.create(
+            first_name="Новый",
+            last_name="Клиент",
+            assigned_staff=self.manager,
+        )
+        token = uuid.uuid4().hex
+        session = ClientOnboardingSession.objects.create(
+            client=client,
+            token_hash=token,
+            status="created",
+            expires_at=timezone.now() + timedelta(days=7)
+        )
+        
+        # Test step 1: digital access
+        url = reverse("clients:onboarding_digital_access", kwargs={"token": token})
+        response = self.client_agent.get(url)
+        self.assertEqual(response.context["onboarding_step_num"], 1)
+        self.assertEqual(response.context["onboarding_step_total"], 7)
+        self.assertEqual(response.context["onboarding_step_percent"], 14)
+        
+        # Test step 4: address
+        url = reverse("clients:onboarding_address", kwargs={"token": token})
+        response = self.client_agent.get(url)
+        self.assertEqual(response.context["onboarding_step_num"], 4)
+        self.assertEqual(response.context["onboarding_step_total"], 7)
+        self.assertEqual(response.context["onboarding_step_percent"], 57)
+
+    def test_onboarding_auto_save_endpoint(self):
+        """Verify that the onboarding_auto_save endpoint saves form fields as draft and updates Client model fields."""
+        client = Client.objects.create(
+            first_name="Новый",
+            last_name="Клиент",
+            assigned_staff=self.manager,
+        )
+        token = uuid.uuid4().hex
+        session = ClientOnboardingSession.objects.create(
+            client=client,
+            token_hash=token,
+            status="created",
+            expires_at=timezone.now() + timedelta(days=7)
+        )
+        mos_data = MOSApplicationData.objects.get(client=client)
+        
+        auto_save_url = reverse("clients:onboarding_auto_save", kwargs={"token": token})
+        
+        # Send partial data
+        response = self.client_agent.post(auto_save_url, {
+            "first_name": "Константин",
+            "last_name": "Хабенский",
+            "has_pesel": "yes",
+            "street": "Mickiewicza 12",
+        }, HTTP_X_REQUESTED_WITH="XMLHttpRequest")
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["status"], "ok")
+        
+        # Check Client model synced fields
+        client.refresh_from_db()
+        self.assertEqual(client.first_name, "Константин")
+        self.assertEqual(client.last_name, "Хабенский")
+        
+        # Check ClientDigitalAccess
+        from clients.models import ClientDigitalAccess
+        da = ClientDigitalAccess.objects.get(client=client)
+        self.assertTrue(da.has_pesel)
+        
+        # Check MOSApplicationData
+        mos_data.refresh_from_db()
+        self.assertEqual(mos_data.personal_data["first_name"], "Константин")
+        self.assertEqual(mos_data.personal_data["last_name"], "Хабенский")
+        self.assertEqual(mos_data.address_data["street"], "Mickiewicza 12")
+        self.assertEqual(mos_data.status, "client_filling")
+

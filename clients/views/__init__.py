@@ -94,6 +94,7 @@ from clients.views.onboarding_views import (
     onboarding_review,
     generate_onboarding_link,
     quick_create_client_onboarding,
+    onboarding_auto_save,
 )
 
 __all__ = [
@@ -178,5 +179,6 @@ __all__ = [
     'onboarding_review',
     'generate_onboarding_link',
     'quick_create_client_onboarding',
+    'onboarding_auto_save',
     'admin_mos_review',
 ]

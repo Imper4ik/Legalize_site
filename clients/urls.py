@@ -133,6 +133,7 @@ urlpatterns = [
     path('onboarding/<str:token>/travel/', views.onboarding_travel, name='onboarding_travel'),
     path('onboarding/<str:token>/declarations/', views.onboarding_declarations, name='onboarding_declarations'),
     path('onboarding/<str:token>/review/', views.onboarding_review, name='onboarding_review'),
+    path('onboarding/<str:token>/auto-save/', views.onboarding_auto_save, name='onboarding_auto_save'),
     
     path('<int:client_id>/mos-review/', views.admin_mos_review, name='admin_mos_review'),
 ]

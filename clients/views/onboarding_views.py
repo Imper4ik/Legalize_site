@@ -411,3 +411,167 @@ def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
             "status": "error",
             "message": str(e)
         }, status=500)
+
+
+def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
+    if request.method != "POST":
+        return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
+
+    session = check_onboarding_session(token)
+    if not session:
+        return JsonResponse({"status": "error", "message": "Invalid token"}, status=403)
+        
+    client = session.client
+    mos_data, _ = MOSApplicationData.objects.get_or_create(client=client)
+    
+    # Process digital access fields if any
+    digital_access_updated = False
+    if any(k in request.POST for k in ["has_pesel", "has_trusted_profile", "has_mos_account"]):
+        digital_access, _ = ClientDigitalAccess.objects.get_or_create(client=client)
+        if "has_pesel" in request.POST:
+            digital_access.has_pesel = request.POST.get("has_pesel") == "yes"
+            digital_access_updated = True
+        if "has_trusted_profile" in request.POST:
+            digital_access.has_trusted_profile = request.POST.get("has_trusted_profile") == "yes"
+            digital_access_updated = True
+        if "has_mos_account" in request.POST:
+            digital_access.has_mos_account = request.POST.get("has_mos_account") == "yes"
+            digital_access_updated = True
+        if digital_access_updated:
+            digital_access.save()
+            
+    # Process passport/personal fields (Step 1)
+    personal_dirty = False
+    passport_dirty = False
+    client_dirty = False
+    
+    personal_data = mos_data.personal_data or {}
+    passport_data = mos_data.passport_data or {}
+    
+    if "first_name" in request.POST:
+        val = request.POST.get("first_name", "").strip()
+        personal_data["first_name"] = val
+        personal_dirty = True
+        if val and client.first_name != val:
+            client.first_name = val
+            client_dirty = True
+            
+    if "last_name" in request.POST:
+        val = request.POST.get("last_name", "").strip()
+        personal_data["last_name"] = val
+        personal_dirty = True
+        if val and client.last_name != val:
+            client.last_name = val
+            client_dirty = True
+            
+    if "birth_date" in request.POST:
+        val = request.POST.get("birth_date", "").strip()
+        personal_data["birth_date"] = val
+        personal_dirty = True
+        if val:
+            from django.utils.dateparse import parse_date
+            parsed_birth = parse_date(val)
+            if parsed_birth and client.birth_date != parsed_birth:
+                client.birth_date = parsed_birth
+                client_dirty = True
+                
+    if "citizenship" in request.POST:
+        val = request.POST.get("citizenship", "").strip()
+        personal_data["citizenship"] = val
+        personal_dirty = True
+        if val and client.citizenship != val:
+            client.citizenship = val
+            client_dirty = True
+            
+    if "document_number" in request.POST:
+        val = request.POST.get("document_number", "").strip()
+        passport_data["document_number"] = val
+        passport_dirty = True
+        if val and client.passport_num != val:
+            client.passport_num = val
+            client_dirty = True
+            
+    if "expiry_date" in request.POST:
+        val = request.POST.get("expiry_date", "").strip()
+        passport_data["expiry_date"] = val
+        passport_dirty = True
+
+    # Process personal_extra fields (Step 2 of extra data)
+    for field in ["father_name", "mother_name", "mother_maiden_name", "height", "eye_color", "education", "marital_status"]:
+        if field in request.POST:
+            personal_data[field] = request.POST.get(field, "")
+            personal_dirty = True
+            
+    if personal_dirty:
+        mos_data.personal_data = personal_data
+    if passport_dirty:
+        mos_data.passport_data = passport_data
+        
+    # Process address fields
+    address_dirty = False
+    address_data = mos_data.address_data or {}
+    for field in ["street", "city", "postal_code", "home_country", "home_city", "home_street"]:
+        if field in request.POST:
+            address_data[field] = request.POST.get(field, "")
+            address_dirty = True
+    if "meldunek" in request.POST:
+        address_data["meldunek"] = request.POST.get("meldunek") == "yes"
+        address_dirty = True
+    if address_dirty:
+        mos_data.address_data = address_data
+        
+    # Process travel fields
+    travel_dirty = False
+    if "mos_purpose" in request.POST:
+        mos_data.mos_purpose = request.POST.get("mos_purpose", "")
+        travel_dirty = True
+    if "legal_stay_until" in request.POST:
+        val = request.POST.get("legal_stay_until", "").strip()
+        if val:
+            mos_data.legal_stay_until = val
+            travel_dirty = True
+            
+    stay_data = mos_data.stay_data or {}
+    stay_dirty = False
+    if "is_in_poland" in request.POST:
+        stay_data["is_in_poland"] = request.POST.get("is_in_poland") == "yes"
+        stay_dirty = True
+    if "last_entry_date" in request.POST:
+        stay_data["last_entry_date"] = request.POST.get("last_entry_date", "")
+        stay_dirty = True
+    if "stay_basis" in request.POST:
+        stay_data["stay_basis"] = request.POST.get("stay_basis", "")
+        stay_dirty = True
+    if "was_in_poland_before" in request.POST:
+        stay_data["was_in_poland_before"] = request.POST.get("was_in_poland_before") == "yes"
+        stay_dirty = True
+        
+    if stay_dirty:
+        mos_data.stay_data = stay_data
+        travel_dirty = True
+        
+    if "travel_history" in request.POST:
+        mos_data.travel_history = [request.POST.get("travel_history", "")]
+        travel_dirty = True
+        
+    # Process declarations fields
+    declarations_dirty = False
+    declarations = mos_data.legal_declarations or {}
+    if "criminal_record" in request.POST:
+        declarations["criminal_record"] = request.POST.get("criminal_record") == "yes"
+        declarations_dirty = True
+    if "tax_arrears" in request.POST:
+        declarations["tax_arrears"] = request.POST.get("tax_arrears") == "yes"
+        declarations_dirty = True
+    if declarations_dirty:
+        mos_data.legal_declarations = declarations
+
+    # Set status to client_filling if not already filled or completed
+    if mos_data.status not in ["client_completed", "staff_review", "approved_by_staff", "mos_package_ready", "submitted_in_mos", "fingerprints", "waiting_decision", "decision_received", "closed"]:
+        mos_data.status = "client_filling"
+
+    mos_data.save()
+    if client_dirty:
+        client.save()
+        
+    return JsonResponse({"status": "ok", "message": "Draft auto-saved"})
