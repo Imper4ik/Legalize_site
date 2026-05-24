@@ -6,8 +6,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.utils import timezone
 from django.core import mail
+from django.core.files.uploadedfile import SimpleUploadedFile
 
-from clients.models import Client, ClientOnboardingSession, MOSApplicationData
+from clients.models import Client, ClientOnboardingSession, Document, DocumentRequirement, MOSApplicationData
 from clients.forms import ClientForm
 from clients.views.onboarding_views import quick_create_client_onboarding
 from clients.services.roles import ensure_predefined_roles
@@ -97,43 +98,92 @@ class QuickOnboardingTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("clients:onboarding_digital_access", kwargs={"token": token}))
 
-    def test_onboarding_step1_syncs_with_client_model(self):
-        """Verify that when a client saves Step 1 of onboarding, the Client model is updated in real-time."""
-        # Create a client placeholder
+    def test_onboarding_start_upload_ui_requires_preview_confirmation(self):
+        DocumentRequirement.objects.filter(application_purpose="work", document_type__in=["passport_scan", "photo_scan"]).delete()
+        DocumentRequirement.objects.create(
+            application_purpose="work",
+            document_type="passport_scan",
+            custom_name="Passport scan",
+            position=1,
+        )
+        DocumentRequirement.objects.create(
+            application_purpose="work",
+            document_type="photo_scan",
+            custom_name="Photo scan",
+            position=2,
+        )
         client = Client.objects.create(
-            first_name="Новый",
-            last_name="Клиент",
+            first_name="Upload",
+            last_name="Client",
+            assigned_staff=self.manager,
+            application_purpose="work",
+            language="en",
+        )
+        token = uuid.uuid4().hex
+        ClientOnboardingSession.objects.create(
+            client=client,
+            token_hash=token,
+            status="created",
+            expires_at=timezone.now() + timedelta(days=7),
+        )
+        document = Document.objects.create(
+            client=client,
+            document_type="passport_scan",
+            file=SimpleUploadedFile("passport.pdf", b"%PDF-1.4\n", content_type="application/pdf"),
+        )
+
+        response = self.client_agent.get(reverse("clients:onboarding_start", kwargs={"token": token}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            reverse("clients:onboarding_document_preview", kwargs={"token": token, "doc_id": document.pk}),
+        )
+        self.assertContains(response, "onboarding-upload-preview")
+        self.assertContains(response, "onboarding-upload-confirm")
+        self.assertContains(response, 'class="btn btn-primary onboarding-upload-submit" disabled')
+
+    def test_onboarding_step1_syncs_contact_fields_only(self):
+        """Step 1 updates staff-visible contact fields immediately, keeping legal fields in MOS draft."""
+        client = Client.objects.create(
+            first_name="Placeholder",
+            last_name="Client",
             assigned_staff=self.manager,
             language="pl",
         )
         token = uuid.uuid4().hex
-        session = ClientOnboardingSession.objects.create(
+        ClientOnboardingSession.objects.create(
             client=client,
             token_hash=token,
             status="created",
-            expires_at=timezone.now() + timedelta(days=7)
+            expires_at=timezone.now() + timedelta(days=7),
         )
 
-        step1_url = reverse("clients:onboarding_passport", kwargs={"token": token})
-        
-        # Post real client details
-        response = self.client_agent.post(step1_url, {
-            "first_name": "Иван",
-            "last_name": "Иванов",
+        response = self.client_agent.post(reverse("clients:onboarding_passport", kwargs={"token": token}), {
+            "first_name": "Ivan",
+            "last_name": "Ivanov",
+            "phone": "+48111222333",
+            "email": "ivan@example.com",
             "birth_date": "1990-05-15",
             "citizenship": "BY",
             "document_number": "MP1234567",
             "expiry_date": "2030-05-15",
         })
-        self.assertEqual(response.status_code, 302) # Redirects to next step
+        self.assertEqual(response.status_code, 302)
 
-        # Refresh client and check synced fields
         client.refresh_from_db()
-        self.assertEqual(client.first_name, "Иван")
-        self.assertEqual(client.last_name, "Иванов")
-        self.assertEqual(client.citizenship, "BY")
-        self.assertEqual(client.passport_num, "MP1234567")
-        self.assertEqual(client.birth_date.isoformat(), "1990-05-15")
+        self.assertEqual(client.first_name, "Ivan")
+        self.assertEqual(client.last_name, "Ivanov")
+        self.assertEqual(client.phone, "+48111222333")
+        self.assertEqual(client.email, "ivan@example.com")
+        self.assertEqual(client.citizenship, "")
+        self.assertIsNone(client.passport_num)
+        self.assertIsNone(client.birth_date)
+
+        mos_data = MOSApplicationData.objects.get(client=client)
+        self.assertEqual(mos_data.personal_data["citizenship"], "BY")
+        self.assertEqual(mos_data.personal_data["birth_date"], "1990-05-15")
+        self.assertEqual(mos_data.passport_data["document_number"], "MP1234567")
 
     def test_onboarding_completion_notifies_staff(self):
         """Verify that completing onboarding sends an email notification to the assigned staff."""
@@ -203,49 +253,115 @@ class QuickOnboardingTests(TestCase):
         self.assertEqual(response.context["onboarding_step_percent"], 57)
 
     def test_onboarding_auto_save_endpoint(self):
-        """Verify that the onboarding_auto_save endpoint saves form fields as draft and updates Client model fields."""
+        """Autosave stores the questionnaire draft and syncs only contact fields to Client."""
         client = Client.objects.create(
-            first_name="Новый",
-            last_name="Клиент",
+            first_name="Placeholder",
+            last_name="Client",
             assigned_staff=self.manager,
         )
         token = uuid.uuid4().hex
-        session = ClientOnboardingSession.objects.create(
+        ClientOnboardingSession.objects.create(
             client=client,
             token_hash=token,
             status="created",
-            expires_at=timezone.now() + timedelta(days=7)
+            expires_at=timezone.now() + timedelta(days=7),
         )
         mos_data = MOSApplicationData.objects.get(client=client)
-        
+
         auto_save_url = reverse("clients:onboarding_auto_save", kwargs={"token": token})
-        
-        # Send partial data
+
         response = self.client_agent.post(auto_save_url, {
-            "first_name": "Константин",
-            "last_name": "Хабенский",
+            "first_name": "Konstantin",
+            "last_name": "Habensky",
+            "phone": "+48999888777",
+            "email": "konstantin@example.com",
+            "citizenship": "BY",
+            "document_number": "MP1234567",
             "has_pesel": "yes",
             "street": "Mickiewicza 12",
         }, HTTP_X_REQUESTED_WITH="XMLHttpRequest")
-        
+
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data["status"], "ok")
-        
-        # Check Client model synced fields
+
         client.refresh_from_db()
-        self.assertEqual(client.first_name, "Константин")
-        self.assertEqual(client.last_name, "Хабенский")
-        
-        # Check ClientDigitalAccess
+        self.assertEqual(client.first_name, "Konstantin")
+        self.assertEqual(client.last_name, "Habensky")
+        self.assertEqual(client.phone, "+48999888777")
+        self.assertEqual(client.email, "konstantin@example.com")
+        self.assertEqual(client.citizenship, "")
+        self.assertIsNone(client.passport_num)
+
         from clients.models import ClientDigitalAccess
         da = ClientDigitalAccess.objects.get(client=client)
         self.assertTrue(da.has_pesel)
-        
-        # Check MOSApplicationData
+
         mos_data.refresh_from_db()
-        self.assertEqual(mos_data.personal_data["first_name"], "Константин")
-        self.assertEqual(mos_data.personal_data["last_name"], "Хабенский")
+        self.assertEqual(mos_data.personal_data["first_name"], "Konstantin")
+        self.assertEqual(mos_data.personal_data["last_name"], "Habensky")
+        self.assertEqual(mos_data.personal_data["citizenship"], "BY")
+        self.assertEqual(mos_data.passport_data["document_number"], "MP1234567")
         self.assertEqual(mos_data.address_data["street"], "Mickiewicza 12")
         self.assertEqual(mos_data.status, "client_filling")
 
+    def test_admin_review_applies_legal_fields_to_client_card(self):
+        client = Client.objects.create(
+            first_name="Ivan",
+            last_name="Ivanov",
+            phone="+48000000000",
+            assigned_staff=self.manager,
+        )
+        mos_data = MOSApplicationData.objects.get(client=client)
+        mos_data.personal_data = {
+            "first_name": "Ivan",
+            "last_name": "Ivanov",
+            "phone": "+48000000000",
+            "email": "ivan@example.com",
+            "birth_date": "1990-05-15",
+            "citizenship": "BY",
+        }
+        mos_data.passport_data = {"document_number": "MP1234567"}
+        mos_data.status = "client_completed"
+        mos_data.save()
+
+        response = self.client_agent.post(
+            reverse("clients:admin_mos_review", kwargs={"client_id": client.pk}),
+            {"action": "approve"},
+        )
+        self.assertEqual(response.status_code, 302)
+
+        client.refresh_from_db()
+        self.assertEqual(client.email, "ivan@example.com")
+        self.assertEqual(client.citizenship, "BY")
+        self.assertEqual(client.passport_num, "MP1234567")
+        self.assertEqual(client.birth_date.isoformat(), "1990-05-15")
+
+        mos_data.refresh_from_db()
+        self.assertEqual(mos_data.status, "mos_package_ready")
+
+    def test_locked_onboarding_rejects_autosave(self):
+        client = Client.objects.create(
+            first_name="Locked",
+            last_name="Client",
+            assigned_staff=self.manager,
+        )
+        token = uuid.uuid4().hex
+        ClientOnboardingSession.objects.create(
+            client=client,
+            token_hash=token,
+            status="created",
+            expires_at=timezone.now() + timedelta(days=7),
+        )
+        mos_data = MOSApplicationData.objects.get(client=client)
+        mos_data.status = "client_completed"
+        mos_data.save(update_fields=["status"])
+
+        response = self.client_agent.post(
+            reverse("clients:onboarding_auto_save", kwargs={"token": token}),
+            {"first_name": "Changed"},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertEqual(response.status_code, 423)
+        client.refresh_from_db()
+        self.assertEqual(client.first_name, "Locked")

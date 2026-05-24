@@ -124,6 +124,7 @@ urlpatterns = [
     path('client/quick-onboarding/', views.quick_create_client_onboarding, name='quick_create_client_onboarding'),
     path('onboarding/<str:token>/', views.onboarding_start, name='onboarding_start'),
     path('onboarding/<str:token>/upload/<str:doc_type>/', views.onboarding_document_upload, name='onboarding_document_upload'),
+    path('onboarding/<str:token>/document/<int:doc_id>/preview/', views.onboarding_document_preview, name='onboarding_document_preview'),
     path('onboarding/<str:token>/delete-doc/<int:doc_id>/', views.onboarding_document_delete, name='onboarding_document_delete'),
     path('onboarding/<str:token>/digital-access/', views.onboarding_digital_access, name='onboarding_digital_access'),
     path('onboarding/<str:token>/personal-data/', views.onboarding_personal_data, name='onboarding_personal_data'),

@@ -1,8 +1,12 @@
 document.addEventListener("DOMContentLoaded", function() {
-    const form = document.querySelector("form");
+    const form = document.querySelector("form[data-onboarding-autosave]") || document.querySelector(".page-surface form");
     if (!form || !window.ONBOARDING_AUTO_SAVE_URL) return;
 
-    // Helper to get CSRF token
+    const controls = Array.from(form.querySelectorAll("input, select, textarea")).filter(input => {
+        return input.type !== "hidden" && input.type !== "file" && input.name !== "csrfmiddlewaretoken";
+    });
+    if (!controls.length) return;
+
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -19,18 +23,30 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     const csrfToken = getCookie('csrftoken') || form.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    const statusEl = document.createElement("div");
+    statusEl.className = "small text-muted mb-3";
+    statusEl.setAttribute("aria-live", "polite");
+    form.prepend(statusEl);
 
-    function saveDraft() {
-        // Collect form data
+    function setStatus(message, className) {
+        statusEl.textContent = message || "";
+        statusEl.className = className || "small text-muted mb-3";
+    }
+
+    function saveDraft(options = {}) {
         const formData = new FormData(form);
-        
-        fetch(window.ONBOARDING_AUTO_SAVE_URL, {
+        if (!options.silent) {
+            setStatus("Saving...", "small text-muted mb-3");
+        }
+
+        return fetch(window.ONBOARDING_AUTO_SAVE_URL, {
             method: "POST",
             headers: {
                 "X-CSRFToken": csrfToken,
                 "X-Requested-With": "XMLHttpRequest"
             },
-            body: formData
+            body: formData,
+            keepalive: Boolean(options.keepalive)
         })
         .then(response => {
             if (!response.ok) {
@@ -39,28 +55,48 @@ document.addEventListener("DOMContentLoaded", function() {
             return response.json();
         })
         .then(data => {
-            console.log("Draft auto-saved successfully:", data);
+            if (!options.silent) {
+                const savedAt = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                setStatus("Saved " + savedAt, "small text-success mb-3");
+            }
+            return data;
         })
         .catch(error => {
+            if (!options.silent) {
+                setStatus("Save failed. Check your connection.", "small text-danger mb-3");
+            }
             console.error("Error auto-saving draft:", error);
         });
     }
 
-    // Debounce function to limit rapid requests (e.g. while typing)
     let timeout = null;
     function debouncedSave() {
         clearTimeout(timeout);
-        timeout = setTimeout(saveDraft, 1000); // Wait 1 second after last input activity
+        timeout = setTimeout(saveDraft, 1000);
     }
 
-    // Listen to change/input/blur events on form controls
-    form.querySelectorAll("input, select, textarea").forEach(input => {
-        // Use 'input' event for text/date fields so it autosaves as they type (with debounce)
+    function flushDraft() {
+        clearTimeout(timeout);
+        const formData = new FormData(form);
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(window.ONBOARDING_AUTO_SAVE_URL, formData);
+            return;
+        }
+        saveDraft({ keepalive: true, silent: true });
+    }
+
+    controls.forEach(input => {
         if (input.type === "text" || input.type === "date" || input.tagName === "TEXTAREA" || input.type === "password" || input.type === "email" || input.type === "tel") {
             input.addEventListener("input", debouncedSave);
         } else {
-            // For checkboxes, radios, select dropdowns, save immediately
             input.addEventListener("change", saveDraft);
+        }
+    });
+
+    window.addEventListener("pagehide", flushDraft);
+    document.addEventListener("visibilitychange", function () {
+        if (document.visibilityState === "hidden") {
+            flushDraft();
         }
     });
 });

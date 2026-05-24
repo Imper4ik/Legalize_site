@@ -4,11 +4,35 @@ from django.http import HttpRequest, HttpResponse, HttpResponseForbidden, JsonRe
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from legalize_site.utils.http import request_is_ajax
+from legalize_site.utils.files import build_protected_file_response
 from django.contrib import messages
 import uuid
 from datetime import timedelta
-from clients.models import ClientOnboardingSession, ClientDigitalAccess, MOSApplicationData, Client, ClientFamilyMemberMOS, Document, DocumentRequirement
+from clients.forms import DocumentUploadForm
+from clients.models import ClientOnboardingSession, ClientDigitalAccess, MOSApplicationData, Client, Document, DocumentRequirement
 from clients.services.intake_extraction import pre_fill_mos_data_from_ocr
+
+EDITABLE_MOS_STATUSES = {"draft", "client_filling", "needs_correction"}
+CONTACT_SYNC_FIELDS = ("first_name", "last_name", "phone", "email")
+
+
+def _mos_data_is_editable(mos_data: MOSApplicationData | None) -> bool:
+    return mos_data is None or mos_data.status in EDITABLE_MOS_STATUSES
+
+
+def _locked_response() -> HttpResponseForbidden:
+    return HttpResponseForbidden("This onboarding form is locked for editing.")
+
+
+def _sync_contact_fields_to_client(client: Client, **values: str) -> None:
+    update_fields: list[str] = []
+    for field_name in CONTACT_SYNC_FIELDS:
+        value = (values.get(field_name) or "").strip()
+        if value and getattr(client, field_name) != value:
+            setattr(client, field_name, value)
+            update_fields.append(field_name)
+    if update_fields:
+        client.save(update_fields=update_fields)
 
 def check_onboarding_session(token: str) -> ClientOnboardingSession | None:
     session = ClientOnboardingSession.objects.filter(token_hash=token, expires_at__gt=timezone.now()).first()
@@ -24,11 +48,13 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
     if not session:
         return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
 
-    if request.method == "POST":
-        return redirect("clients:onboarding_digital_access", token=token)
-
     client = session.client
     mos_data = getattr(client, "mos_application_data", None)
+
+    if request.method == "POST":
+        if not _mos_data_is_editable(mos_data):
+            return _locked_response()
+        return redirect("clients:onboarding_digital_access", token=token)
 
     purpose = client.get_document_requirement_purpose()
     required_docs_catalog = DocumentRequirement.catalog_for(purpose=purpose, language=translation.get_language() or client.language)
@@ -48,8 +74,8 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
             "doc_id": existing_map.get(doc_type),
         })
 
-    locked_statuses = ['client_completed', 'staff_review', 'approved_by_staff', 'mos_package_ready', 'submitted_in_mos', 'fingerprints', 'waiting_decision', 'decision_received', 'closed']
-    allow_delete = mos_data and mos_data.status not in locked_statuses
+    allow_edit = _mos_data_is_editable(mos_data)
+    allow_delete = bool(mos_data and allow_edit)
 
     status = mos_data.status if mos_data else 'draft'
     if status in ['draft', 'client_filling', 'client_completed', 'needs_correction']:
@@ -71,6 +97,7 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
         "session": session,
         "mos_data": mos_data,
         "checklist": checklist,
+        "allow_edit": allow_edit,
         "allow_delete": allow_delete,
         "case_step": case_step,
     })
@@ -78,15 +105,32 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
 def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) -> HttpResponse:
     session = check_onboarding_session(token)
     if not session:
-        return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
-        
+        return HttpResponseForbidden("Invalid or expired onboarding link.")
+
+    mos_data = getattr(session.client, "mos_application_data", None)
+    if not _mos_data_is_editable(mos_data):
+        return _locked_response()
+
     if request.method == "POST" and request.FILES.get("file"):
-        Document.objects.create(
-            client=session.client,
-            document_type=doc_type,
-            file=request.FILES["file"]
-        )
+        form = DocumentUploadForm(request.POST, request.FILES, doc_type=doc_type, client=session.client)
+        if form.is_valid():
+            document = form.save(commit=False)
+            document.client = session.client
+            document.document_type = doc_type
+            document.save()
+        else:
+            messages.error(request, "File upload failed. Please check the selected file.")
     return redirect("clients:onboarding_start", token=token)
+
+
+def onboarding_document_preview(request: HttpRequest, token: str, doc_id: int) -> HttpResponse:
+    session = check_onboarding_session(token)
+    if not session:
+        return HttpResponseForbidden("Invalid or expired onboarding link.")
+
+    document = get_object_or_404(Document, id=doc_id, client=session.client)
+    return build_protected_file_response(document.file, as_attachment=False)
+
 
 def onboarding_document_delete(request: HttpRequest, token: str, doc_id: int) -> HttpResponse:
     session = check_onboarding_session(token)
@@ -96,9 +140,8 @@ def onboarding_document_delete(request: HttpRequest, token: str, doc_id: int) ->
     client = session.client
     mos_data = getattr(client, "mos_application_data", None)
     
-    locked_statuses = ['client_completed', 'staff_review', 'approved_by_staff', 'mos_package_ready', 'submitted_in_mos', 'fingerprints', 'waiting_decision', 'decision_received', 'closed']
-    if mos_data and mos_data.status in locked_statuses:
-        return HttpResponseForbidden("Удаление заблокировано.")
+    if not _mos_data_is_editable(mos_data):
+        return HttpResponseForbidden("Document changes are locked.")
         
     doc = get_object_or_404(Document, id=doc_id, client=client)
     if not doc.verified:
@@ -114,12 +157,15 @@ def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
     digital_access, _ = ClientDigitalAccess.objects.get_or_create(client=session.client)
 
     if request.method == "POST":
+        mos_data, created = MOSApplicationData.objects.get_or_create(client=session.client)
+        if not _mos_data_is_editable(mos_data):
+            return _locked_response()
+
         digital_access.has_pesel = request.POST.get("has_pesel") == "yes"
         digital_access.has_trusted_profile = request.POST.get("has_trusted_profile") == "yes"
         digital_access.has_mos_account = request.POST.get("has_mos_account") == "yes"
         digital_access.save()
-        
-        mos_data, created = MOSApplicationData.objects.get_or_create(client=session.client)
+
         if created or (not mos_data.passport_data and not mos_data.personal_data):
             pre_fill_mos_data_from_ocr(mos_data)
 
@@ -133,17 +179,18 @@ def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
 def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
     session = check_onboarding_session(token)
     if not session:
-        return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
+        return HttpResponseForbidden("Invalid or expired onboarding link.")
 
     client = session.client
     mos_data = get_object_or_404(MOSApplicationData, client=client)
 
-    # Pre-fill mos_data fields if they are blank and available in client
     dirty = False
     personal_data = mos_data.personal_data or {}
     for key, val in [
         ("first_name", client.first_name),
         ("last_name", client.last_name),
+        ("phone", client.phone),
+        ("email", client.email),
         ("citizenship", client.citizenship),
     ]:
         if val and (key not in personal_data or not personal_data[key]):
@@ -167,10 +214,15 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         mos_data.save()
 
     if request.method == "POST":
+        if not _mos_data_is_editable(mos_data):
+            return _locked_response()
+
         mos_data.status = "client_filling"
-        
+
         first_name = request.POST.get("first_name", "").strip()
         last_name = request.POST.get("last_name", "").strip()
+        phone = request.POST.get("phone", "").strip()
+        email = request.POST.get("email", "").strip()
         birth_date_str = request.POST.get("birth_date", "").strip()
         citizenship = request.POST.get("citizenship", "").strip()
         doc_num = request.POST.get("document_number", "").strip()
@@ -179,6 +231,8 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         personal_data = mos_data.personal_data or {}
         personal_data["first_name"] = first_name
         personal_data["last_name"] = last_name
+        personal_data["phone"] = phone
+        personal_data["email"] = email
         personal_data["birth_date"] = birth_date_str
         personal_data["citizenship"] = citizenship
         mos_data.personal_data = personal_data
@@ -189,29 +243,13 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         mos_data.passport_data = passport_data
 
         mos_data.save()
-
-        # Update Client model fields in real-time
-        client_dirty = False
-        if first_name and client.first_name != first_name:
-            client.first_name = first_name
-            client_dirty = True
-        if last_name and client.last_name != last_name:
-            client.last_name = last_name
-            client_dirty = True
-        if citizenship and client.citizenship != citizenship:
-            client.citizenship = citizenship
-            client_dirty = True
-        if doc_num and client.passport_num != doc_num:
-            client.passport_num = doc_num
-            client_dirty = True
-        if birth_date_str:
-            from django.utils.dateparse import parse_date
-            parsed_birth = parse_date(birth_date_str)
-            if parsed_birth and client.birth_date != parsed_birth:
-                client.birth_date = parsed_birth
-                client_dirty = True
-        if client_dirty:
-            client.save()
+        _sync_contact_fields_to_client(
+            client,
+            first_name=first_name,
+            last_name=last_name,
+            phone=phone,
+            email=email,
+        )
 
         return redirect("clients:onboarding_personal_extra", token=token)
 
@@ -225,6 +263,9 @@ def onboarding_personal_extra(request: HttpRequest, token: str) -> HttpResponse:
     mos_data = get_object_or_404(MOSApplicationData, client=session.client)
 
     if request.method == "POST":
+        if not _mos_data_is_editable(mos_data):
+            return _locked_response()
+
         personal_data = mos_data.personal_data or {}
         personal_data["father_name"] = request.POST.get("father_name", "")
         personal_data["mother_name"] = request.POST.get("mother_name", "")
@@ -247,6 +288,9 @@ def onboarding_address(request: HttpRequest, token: str) -> HttpResponse:
     mos_data = get_object_or_404(MOSApplicationData, client=session.client)
 
     if request.method == "POST":
+        if not _mos_data_is_editable(mos_data):
+            return _locked_response()
+
         address_data = mos_data.address_data or {}
         address_data["street"] = request.POST.get("street", "")
         address_data["city"] = request.POST.get("city", "")
@@ -269,6 +313,9 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
     mos_data = get_object_or_404(MOSApplicationData, client=session.client)
 
     if request.method == "POST":
+        if not _mos_data_is_editable(mos_data):
+            return _locked_response()
+
         mos_data.mos_purpose = request.POST.get("mos_purpose", "")
         legal_stay_str = request.POST.get("legal_stay_until")
         if legal_stay_str:
@@ -295,6 +342,9 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
     mos_data = get_object_or_404(MOSApplicationData, client=session.client)
 
     if request.method == "POST":
+        if not _mos_data_is_editable(mos_data):
+            return _locked_response()
+
         declarations = mos_data.legal_declarations or {}
         declarations["criminal_record"] = request.POST.get("criminal_record") == "yes"
         declarations["tax_arrears"] = request.POST.get("tax_arrears") == "yes"
@@ -426,6 +476,8 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         
     client = session.client
     mos_data, _ = MOSApplicationData.objects.get_or_create(client=client)
+    if not _mos_data_is_editable(mos_data):
+        return JsonResponse({"status": "locked", "message": "This onboarding form is locked."}, status=423)
     
     # Process digital access fields if any
     digital_access_updated = False
@@ -466,33 +518,37 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         if val and client.last_name != val:
             client.last_name = val
             client_dirty = True
+
+    if "phone" in request.POST:
+        val = request.POST.get("phone", "").strip()
+        personal_data["phone"] = val
+        personal_dirty = True
+        if val and client.phone != val:
+            client.phone = val
+            client_dirty = True
+
+    if "email" in request.POST:
+        val = request.POST.get("email", "").strip()
+        personal_data["email"] = val
+        personal_dirty = True
+        if val and client.email != val:
+            client.email = val
+            client_dirty = True
             
     if "birth_date" in request.POST:
         val = request.POST.get("birth_date", "").strip()
         personal_data["birth_date"] = val
         personal_dirty = True
-        if val:
-            from django.utils.dateparse import parse_date
-            parsed_birth = parse_date(val)
-            if parsed_birth and client.birth_date != parsed_birth:
-                client.birth_date = parsed_birth
-                client_dirty = True
                 
     if "citizenship" in request.POST:
         val = request.POST.get("citizenship", "").strip()
         personal_data["citizenship"] = val
         personal_dirty = True
-        if val and client.citizenship != val:
-            client.citizenship = val
-            client_dirty = True
             
     if "document_number" in request.POST:
         val = request.POST.get("document_number", "").strip()
         passport_data["document_number"] = val
         passport_dirty = True
-        if val and client.passport_num != val:
-            client.passport_num = val
-            client_dirty = True
             
     if "expiry_date" in request.POST:
         val = request.POST.get("expiry_date", "").strip()

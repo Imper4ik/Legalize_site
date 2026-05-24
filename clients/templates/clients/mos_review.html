@@ -169,6 +169,19 @@
             <div class="card-header fw-bold">Действия</div>
             <div class="card-body">
                 <p><strong>Текущий статус:</strong> <span class="badge bg-primary">{{ mos_data.get_status_display }}</span></p>
+
+                {% if review_diffs %}
+                    <div class="alert alert-info small">
+                        <strong>Поля, которые будут обновлены в карточке клиента</strong>
+                        <ul class="mb-0 mt-2 ps-3">
+                            {% for diff in review_diffs %}
+                                <li><strong>{{ diff.field }}</strong>: {{ diff.old }} -> {{ diff.new }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% else %}
+                    <div class="alert alert-secondary small mb-3">Изменений для карточки клиента нет.</div>
+                {% endif %}
                 
                 <form method="post" class="mb-3">
                     {% csrf_token %}
