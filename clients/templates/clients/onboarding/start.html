@@ -120,7 +120,9 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block modals %}
 {% for doc in checklist %}
     {% if not doc.is_uploaded %}
         <!-- Модальное окно загрузки для конкретного документа -->
