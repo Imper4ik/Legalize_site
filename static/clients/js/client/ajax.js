@@ -118,7 +118,13 @@ function showAlert(containerId, message, type = 'success') {
   closeButton.type = 'button';
   closeButton.className = 'btn-close';
   closeButton.setAttribute('data-bs-dismiss', 'alert');
-  closeButton.setAttribute('aria-label', 'Close');
+  
+  const lang = document.documentElement.lang || 'en';
+  let closeLabel = 'Close';
+  if (lang.startsWith('ru')) closeLabel = 'Закрыть';
+  else if (lang.startsWith('pl')) closeLabel = 'Zamknij';
+  
+  closeButton.setAttribute('aria-label', closeLabel);
   alert.appendChild(closeButton);
 
   container.append(alert);
@@ -135,7 +141,18 @@ function showPaymentAlert(message, type = 'success') {
 function showDocumentAlert(message, type = 'success') {
   showAlert('document-alerts', message, type);
 }
-function getErrorMessage(errors, fallbackMessage = 'Operation failed. Please try again.') {
+function getErrorMessage(errors, fallbackMessage) {
+  if (!fallbackMessage) {
+    const lang = document.documentElement.lang || 'en';
+    if (lang.startsWith('ru')) {
+      fallbackMessage = 'Произошла ошибка. Пожалуйста, попробуйте еще раз.';
+    } else if (lang.startsWith('pl')) {
+      fallbackMessage = 'Wystąpił błąd. Spróbuj ponownie.';
+    } else {
+      fallbackMessage = 'Operation failed. Please try again.';
+    }
+  }
+
   if (!errors) {
     return fallbackMessage;
   }
