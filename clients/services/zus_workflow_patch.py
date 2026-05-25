@@ -244,6 +244,7 @@ def _patch_process_zus_doc_job_internal() -> None:
             "employer_nip": parsed.employer_nip,
             "insurance_code": parsed.insurance_code,
             "detected_names": parsed.detected_names,
+            "zus_form_type": form_type,
             "ocr_month": detected_month.isoformat() if detected_month else None,
             "ocr_month_display": _format_month(detected_month) if detected_month else "",
             "manual_month": saved_month.isoformat() if saved_month else None,
