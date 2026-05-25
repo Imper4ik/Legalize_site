@@ -17,6 +17,13 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+try:
+    from clients.services.zus_workflow_patch import apply_zus_workflow_patch
+
+    apply_zus_workflow_patch()
+except Exception:
+    logger.exception("Failed to load ZUS OCR workflow fixes.")
+
 
 @receiver(post_save, sender=get_user_model())
 def ensure_employee_permissions_for_staff(sender: Any, instance: Any, created: bool, **kwargs: Any) -> None:
