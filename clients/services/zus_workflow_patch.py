@@ -161,11 +161,11 @@ def _patch_process_zus_doc_job_internal() -> None:
         # 2. Verify / auto-fill ZUS RCA reporting month.
         is_registration_form = False
         form_type = getattr(parsed, "zus_form_type", None)
-        if form_type in ("ZUA", "ZCNA"):
+        if form_type in ("ZUA", "ZCNA", "ZZA", "ZWUA"):
             is_registration_form = True
         elif parsed.text:
             normalized_text = parsed.text.upper()
-            if "ZUS ZUA" in normalized_text or "ZUS ZCNA" in normalized_text:
+            if any(t in normalized_text for t in ("ZUS ZUA", "ZUS ZCNA", "ZUS ZZA", "ZUS ZWUA")):
                 is_registration_form = True
 
         if is_registration_form:

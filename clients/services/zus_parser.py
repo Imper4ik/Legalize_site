@@ -70,14 +70,33 @@ def _compact_insurance_code(raw_code: str) -> str:
 def _detect_zus_form_type(text: str) -> str | None:
     """Detect which ZUS form type this document is (ZUA, ZCNA, RCA, etc.)."""
     upper = text.upper()
-    
-    # 1. Match with ZUS prefix (allowing spaces/dots/dashes)
+    normalized = _normalize_zus_text(text)
+
+    # 1. Check by full official Polish form titles in normalized text
+    if "zgloszenie do ubezpieczen" in normalized:
+        return "ZUA"
+    if "zgloszenie danych o czlonkach rodziny" in normalized:
+        return "ZCNA"
+    if "zgloszenie do ubezpieczenia zdrowotnego" in normalized:
+        return "ZZA"
+    if "wyrejestrowanie z ubezpieczen" in normalized:
+        return "ZWUA"
+    if "imienny raport miesieczny" in normalized:
+        if "swiadczeniach" in normalized or "przerwach" in normalized:
+            return "RSA"
+        if "zdrowotne" in normalized and not "spoleczne" in normalized:
+            return "RZA"
+        return "RCA"
+    if "deklaracja rozliczeniowa" in normalized:
+        return "DRA"
+
+    # 2. Match with ZUS prefix (allowing spaces/dots/dashes)
     for form_type in _ZUS_FORM_TYPES:
         pattern = rf"\bZUS\s*[.\-\s]*\s*{re.escape(form_type)}\b"
         if re.search(pattern, upper):
             return form_type
             
-    # 2. Fallback: if text contains 'ZUS' anywhere, search for standalone form types
+    # 3. Fallback: if text contains 'ZUS' anywhere, search for standalone form types
     if "ZUS" in upper or "ZAKLAD UBEZPIECZEN" in upper:
         for form_type in _ZUS_FORM_TYPES:
             if re.search(rf"\b{re.escape(form_type)}\b", upper):
