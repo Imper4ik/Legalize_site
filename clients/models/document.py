@@ -294,6 +294,6 @@ class DocumentRequirement(models.Model):
 
     class Meta:
         ordering = ["position", "id"]
-        unique_together = {("application_purpose", "document_type")}
+        unique_together = (("application_purpose", "document_type"),)
         verbose_name = _("Требование к документу")
         verbose_name_plural = _("Требования к документам")
