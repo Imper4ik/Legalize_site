@@ -70,11 +70,19 @@ def _compact_insurance_code(raw_code: str) -> str:
 def _detect_zus_form_type(text: str) -> str | None:
     """Detect which ZUS form type this document is (ZUA, ZCNA, RCA, etc.)."""
     upper = text.upper()
+    
+    # 1. Match with ZUS prefix (allowing spaces/dots/dashes)
     for form_type in _ZUS_FORM_TYPES:
-        # Look for "ZUS <form_type>" pattern, allowing for OCR noise
-        pattern = rf"\bZUS\s+{re.escape(form_type)}\b"
+        pattern = rf"\bZUS\s*[.\-\s]*\s*{re.escape(form_type)}\b"
         if re.search(pattern, upper):
             return form_type
+            
+    # 2. Fallback: if text contains 'ZUS' anywhere, search for standalone form types
+    if "ZUS" in upper or "ZAKLAD UBEZPIECZEN" in upper:
+        for form_type in _ZUS_FORM_TYPES:
+            if re.search(rf"\b{re.escape(form_type)}\b", upper):
+                return form_type
+                
     return None
 
 
@@ -153,7 +161,7 @@ def _find_zus_period_month(text: str) -> date | None:
             if parsed:
                 return parsed
 
-    looks_like_zus_rca = "zus" in normalized and "rca" in normalized
+    looks_like_zus_rca = "zus" in normalized and bool(re.search(r"\brca\b", normalized))
     if not looks_like_zus_rca:
         return None
 
