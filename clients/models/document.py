@@ -289,10 +289,11 @@ class DocumentRequirement(models.Model):
     custom_name_pl = models.CharField(max_length=255, blank=True, verbose_name=_("Название (PL)"))
     custom_name_en = models.CharField(max_length=255, blank=True, verbose_name=_("Название (EN)"))
     custom_name_ru = models.CharField(max_length=255, blank=True, verbose_name=_("Название (RU)"))
-    required = models.BooleanField(default=True, verbose_name=_("Обязательный"))
-    order = models.PositiveIntegerField(default=0, verbose_name=_("Порядок"))
+    is_required = models.BooleanField(default=True, verbose_name=_("Обязательный документ"))
+    position = models.PositiveIntegerField(default=0, verbose_name=_("Порядок отображения"))
 
     class Meta:
-        ordering = ["order", "id"]
+        ordering = ["position", "id"]
+        unique_together = {("application_purpose", "document_type")}
         verbose_name = _("Требование к документу")
         verbose_name_plural = _("Требования к документам")
