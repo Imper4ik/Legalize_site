@@ -5,7 +5,7 @@ from typing import Any, TYPE_CHECKING
 from django.conf import settings
 from django.contrib import messages
 from django.db import transaction
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Count, Max, Prefetch, Q
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
@@ -70,6 +70,29 @@ class ClientListView(StaffRequiredMixin, ListView):
             queryset = queryset.filter(mos_application_data__status="client_completed")
             list_ordering = ["-mos_application_data__updated_at", "-created_at"]
 
+        self.document_filter = self.request.GET.get("document", "")
+        if self.document_filter == "ocr_review":
+            queryset = queryset.filter(
+                documents__awaiting_confirmation=True,
+                documents__archived_at__isnull=True,
+            )
+            queryset = queryset.annotate(latest_event_uploaded_at=Max("documents__uploaded_at"))
+            list_ordering = ["-latest_event_uploaded_at", "-created_at"]
+        elif self.document_filter == "ocr_warning":
+            queryset = queryset.filter(
+                documents__ocr_name_mismatch=True,
+                documents__archived_at__isnull=True,
+            )
+            queryset = queryset.annotate(latest_event_uploaded_at=Max("documents__uploaded_at"))
+            list_ordering = ["-latest_event_uploaded_at", "-created_at"]
+        elif self.document_filter == "ocr_pending":
+            queryset = queryset.filter(
+                documents__ocr_status="pending",
+                documents__archived_at__isnull=True,
+            )
+            queryset = queryset.annotate(latest_event_uploaded_at=Max("documents__uploaded_at"))
+            list_ordering = ["-latest_event_uploaded_at", "-created_at"]
+
         company_id = self.request.GET.get("company")
         if company_id:
             queryset = queryset.filter(company_id=company_id)
@@ -77,14 +100,14 @@ class ClientListView(StaffRequiredMixin, ListView):
         query = self.request.GET.get("q", "")
         if query:
             case_number_hash = Client.hash_case_number(query)
-            return queryset.filter(
+            queryset = queryset.filter(
                 Q(first_name__icontains=query)
                 | Q(last_name__icontains=query)
                 | Q(email__icontains=query)
                 | Q(phone__icontains=query)
                 | Q(case_number_hash=case_number_hash)
-            ).distinct().order_by(*list_ordering)
-        return queryset.order_by(*list_ordering)
+            )
+        return queryset.distinct().order_by(*list_ordering)
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         from clients.models import Company
@@ -93,6 +116,7 @@ class ClientListView(StaffRequiredMixin, ListView):
         context["query"] = self.request.GET.get("q", "")
         context["selected_company"] = self.request.GET.get("company", "")
         context["onboarding_filter"] = self.request.GET.get("onboarding", "")
+        context["document_filter"] = self.request.GET.get("document", "")
         context["companies"] = Company.objects.all()
         return context
 

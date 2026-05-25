@@ -46,8 +46,21 @@
 </div>
 {% endif %}
 
+{% if document_filter %}
+<div class="alert alert-info d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
+  <div>
+    <strong>
+      {% if document_filter == "ocr_review" %}Клиенты с OCR на подтверждении{% elif document_filter == "ocr_warning" %}Клиенты с OCR предупреждениями{% elif document_filter == "ocr_pending" %}Клиенты с OCR в обработке{% else %}Отфильтрованные события клиентов{% endif %}
+    </strong>
+    <div class="small mb-0">Откройте карточку клиента, чтобы проверить документ и следующее действие.</div>
+  </div>
+  <a href="{% url 'clients:client_list' %}" class="btn btn-sm btn-outline-secondary">Показать всех клиентов</a>
+</div>
+{% endif %}
+
 <form method="get" class="client-list-filters mb-3">
 {% if onboarding_filter %}<input type="hidden" name="onboarding" value="{{ onboarding_filter }}">{% endif %}
+{% if document_filter %}<input type="hidden" name="document" value="{{ document_filter }}">{% endif %}
   <div class="row g-2 align-items-center">
     <div class="col-12 col-md-3">
     <select name="company" class="form-select">
@@ -208,12 +221,12 @@
     <ul class="pagination justify-content-center">
       {% if page_obj.has_previous %}
         <li class="page-item">
-          <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if selected_company %}&company={{ selected_company }}{% endif %}{% if onboarding_filter %}&onboarding={{ onboarding_filter }}{% endif %}">
+          <a class="page-link" href="?page=1{% if query %}&q={{ query }}{% endif %}{% if selected_company %}&company={{ selected_company }}{% endif %}{% if onboarding_filter %}&onboarding={{ onboarding_filter }}{% endif %}{% if document_filter %}&document={{ document_filter }}{% endif %}">
             &laquo; {% translate "Первая" %}
           </a>
         </li>
         <li class="page-item">
-          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_company %}&company={{ selected_company }}{% endif %}{% if onboarding_filter %}&onboarding={{ onboarding_filter }}{% endif %}">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_company %}&company={{ selected_company }}{% endif %}{% if onboarding_filter %}&onboarding={{ onboarding_filter }}{% endif %}{% if document_filter %}&document={{ document_filter }}{% endif %}">
             {% translate "Назад" %}
           </a>
         </li>
@@ -227,12 +240,12 @@
 
       {% if page_obj.has_next %}
         <li class="page-item">
-          <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_company %}&company={{ selected_company }}{% endif %}{% if onboarding_filter %}&onboarding={{ onboarding_filter }}{% endif %}">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}{% if selected_company %}&company={{ selected_company }}{% endif %}{% if onboarding_filter %}&onboarding={{ onboarding_filter }}{% endif %}{% if document_filter %}&document={{ document_filter }}{% endif %}">
             {% translate "Вперед" %}
           </a>
         </li>
         <li class="page-item">
-          <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if selected_company %}&company={{ selected_company }}{% endif %}{% if onboarding_filter %}&onboarding={{ onboarding_filter }}{% endif %}">
+          <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if query %}&q={{ query }}{% endif %}{% if selected_company %}&company={{ selected_company }}{% endif %}{% if onboarding_filter %}&onboarding={{ onboarding_filter }}{% endif %}{% if document_filter %}&document={{ document_filter }}{% endif %}">
             {% translate "Последняя" %} &raquo;
           </a>
         </li>

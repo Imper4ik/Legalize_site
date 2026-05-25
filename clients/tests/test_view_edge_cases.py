@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.http import HttpResponse
@@ -126,6 +127,58 @@ class ClientViewEdgeCaseTests(TestCase):
         self.assertContains(filtered_response, "Completed")
         self.assertNotContains(filtered_response, "Draft")
         self.assertEqual(filtered_response.context["onboarding_filter"], "completed")
+
+    def test_client_attention_menu_and_document_filters_show_ocr_events(self):
+        review_client = Client.objects.create(
+            first_name="Review",
+            last_name="Client",
+            email="ocr-review@example.com",
+        )
+        pending_client = Client.objects.create(
+            first_name="Pending",
+            last_name="Client",
+            email="ocr-pending@example.com",
+        )
+        warning_client = Client.objects.create(
+            first_name="Warning",
+            last_name="Client",
+            email="ocr-warning@example.com",
+        )
+        Document.objects.create(
+            client=review_client,
+            document_type="passport",
+            file=SimpleUploadedFile("review.pdf", b"file", content_type="application/pdf"),
+            awaiting_confirmation=True,
+            ocr_status="success",
+        )
+        Document.objects.create(
+            client=pending_client,
+            document_type="passport",
+            file=SimpleUploadedFile("pending.pdf", b"file", content_type="application/pdf"),
+            ocr_status="pending",
+        )
+        Document.objects.create(
+            client=warning_client,
+            document_type="passport",
+            file=SimpleUploadedFile("warning.pdf", b"file", content_type="application/pdf"),
+            ocr_status="success",
+            ocr_name_mismatch=True,
+        )
+
+        list_url = reverse("clients:client_list")
+        response = self.client.get(list_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f"{list_url}?document=ocr_review")
+        self.assertContains(response, f"{list_url}?document=ocr_pending")
+        self.assertContains(response, f"{list_url}?document=ocr_warning")
+        self.assertEqual(response.context["client_attention_count"], 3)
+
+        filtered_response = self.client.get(list_url, {"document": "ocr_review"})
+        self.assertEqual(filtered_response.status_code, 200)
+        self.assertContains(filtered_response, "Review")
+        self.assertNotContains(filtered_response, "Pending")
+        self.assertNotContains(filtered_response, "Warning")
+        self.assertEqual(filtered_response.context["document_filter"], "ocr_review")
 
     def test_get_price_for_service_returns_success_json(self):
         response = self.client.get(reverse("clients:get_price_for_service", kwargs={"service_value": "study_service"}))

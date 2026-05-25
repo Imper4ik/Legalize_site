@@ -64,8 +64,9 @@ class CompanyDocWorkflowTests(TestCase):
         self.assertEqual(job.job_type, DocumentProcessingJob.JOB_TYPE_COMPANY_DOC_OCR)
         self.assertEqual(job.status, DocumentProcessingJob.STATUS_PENDING)
 
+    @patch("clients.services.document_workflow.verify_employer")
     @patch("clients.services.document_workflow.parse_company_doc")
-    def test_company_document_successful_processing_with_krs(self, parse_mock):
+    def test_company_document_successful_processing_with_krs(self, parse_mock, verify_mock):
         # Mock parser output for a company with valid KRS and representatives
         # Google Poland Sp. z o.o.
         parse_mock.return_value = CompanyDocData(
@@ -76,6 +77,17 @@ class CompanyDocWorkflowTests(TestCase):
             valid_until=date(2026, 12, 31),
             detected_names=["Michal Kowalski"],
         )
+        verify_mock.return_value = {
+            "registry_source": "KRS",
+            "company_name": "Google Poland Sp. z o.o.",
+            "is_employer_active": True,
+            "nip": "5252344078",
+            "krs": "0000240611",
+            "representatives": [],
+            "signer_authorized": False,
+            "matched_signer": None,
+            "warnings": ["Signer not found among registry representatives."],
+        }
 
         doc = Document.objects.create(
             client=self.client_obj,
@@ -94,7 +106,7 @@ class CompanyDocWorkflowTests(TestCase):
         call_command("process_document_jobs")
 
         doc.refresh_from_db()
-        self.assertEqual(doc.ocr_status, "completed")
+        self.assertEqual(doc.ocr_status, "success")
         self.assertIsNotNone(doc.parsed_data)
         
         data = doc.parsed_data
@@ -110,8 +122,9 @@ class CompanyDocWorkflowTests(TestCase):
         self.assertTrue(doc.ocr_name_mismatch)
         self.assertTrue(any("Signer not found" in w for w in registry["warnings"]))
 
+    @patch("clients.services.document_workflow.verify_employer")
     @patch("clients.services.document_workflow.parse_company_doc")
-    def test_company_document_processing_low_salary_warning(self, parse_mock):
+    def test_company_document_processing_low_salary_warning(self, parse_mock, verify_mock):
         # Mock parser output with salary below 4300 PLN
         parse_mock.return_value = CompanyDocData(
             text="NIP: 525-23-44-078, KRS 0000240611, salary 3200 PLN",
@@ -120,6 +133,17 @@ class CompanyDocWorkflowTests(TestCase):
             salary=3200.0,
             detected_names=[],
         )
+        verify_mock.return_value = {
+            "registry_source": "KRS",
+            "company_name": "Google Poland Sp. z o.o.",
+            "is_employer_active": True,
+            "nip": "5252344078",
+            "krs": "0000240611",
+            "representatives": [],
+            "signer_authorized": True,
+            "matched_signer": None,
+            "warnings": [],
+        }
 
         doc = Document.objects.create(
             client=self.client_obj,

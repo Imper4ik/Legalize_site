@@ -2,9 +2,21 @@ from __future__ import annotations
 
 import importlib.util
 import shutil
+from pathlib import Path
 from typing import Any
 
 from django.conf import settings
+
+
+WINDOWS_TESSERACT_PATH = Path(r"C:\Program Files\Tesseract-OCR\tesseract.exe")
+
+
+def _binary_available(key: str) -> bool:
+    if shutil.which(key) is not None:
+        return True
+    if key == "tesseract" and WINDOWS_TESSERACT_PATH.exists():
+        return True
+    return False
 
 
 def collect_runtime_dependency_statuses() -> list[dict[str, Any]]:
@@ -90,7 +102,7 @@ def collect_runtime_dependency_statuses() -> list[dict[str, Any]]:
         )
 
     for check in binary_checks:
-        available = shutil.which(check["key"]) is not None
+        available = _binary_available(check["key"])
         statuses.append(
             {
                 **check,

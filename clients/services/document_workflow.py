@@ -212,11 +212,13 @@ def confirm_wezwanie_document(
     with transaction.atomic():
         document.awaiting_confirmation = False
         document.parsed_data = payload
-        document.ocr_status = "completed"
+        document.ocr_status = "success"
         document.save(update_fields=["awaiting_confirmation", "parsed_data", "ocr_status"])
 
     client = document.client
-    auto_updates, _skipped = _apply_confirmation_updates(client, confirmation_data)
+    updated_fields, auto_updates = _apply_confirmation_updates(client, confirmation_data)
+    if updated_fields:
+        client.save(update_fields=updated_fields)
 
     log_client_activity(
         client=client,
@@ -227,11 +229,14 @@ def confirm_wezwanie_document(
         document=document,
     )
 
-    _send_background_notifications(
-        client=client,
-        auto_updates=auto_updates,
-        send_missing_email=send_missing_email,
-        send_appointment_email=send_appointment_email,
+    notification_data = _build_confirmed_wezwanie_notification_data(confirmation_data)
+    auto_updates.extend(
+        _send_background_notifications(
+            client=client,
+            parsed=notification_data,
+            send_missing_email=send_missing_email,
+            send_appointment_email=send_appointment_email,
+        )
     )
 
     document_type_display = client.get_document_name_by_code(document.document_type)
@@ -273,7 +278,7 @@ def enqueue_document_processing_job(
             job_type=job_type,
             defaults=job_defaults,
         )
-        document.awaiting_confirmation = requires_confirmation
+        document.awaiting_confirmation = False
         document.ocr_status = "pending"
         document.ocr_name_mismatch = False
         document.save(update_fields=["awaiting_confirmation", "ocr_status", "ocr_name_mismatch"])
@@ -560,7 +565,7 @@ def _finalize_successful_company_job(
 
         document = job.document
         document.parsed_data = parsed_payload
-        document.ocr_status = "completed"
+        document.ocr_status = "success"
         document.ocr_name_mismatch = bool(warnings)
         document.save(update_fields=["parsed_data", "ocr_status", "ocr_name_mismatch"])
 
@@ -625,7 +630,7 @@ def _finalize_successful_ocr_job(
 
         document = job.document
         document.parsed_data = parsed_payload
-        document.ocr_status = "completed"
+        document.ocr_status = "success"
         document.ocr_name_mismatch = bool(warnings)
         document.save(update_fields=["parsed_data", "ocr_status", "ocr_name_mismatch"])
 
@@ -929,7 +934,7 @@ def _process_zus_doc_job_internal(
     company_docs = Document.objects.filter(
         client=client,
         document_type__in=list(COMPANY_DOCUMENT_TYPES),
-        ocr_status="completed"
+        ocr_status__in=["success", "completed"]
     )
     for doc in company_docs:
         if doc.parsed_data and isinstance(doc.parsed_data, dict):
@@ -1522,6 +1527,16 @@ def _build_confirmed_wezwanie_payload(confirmation_data: Mapping[str, str]) -> d
         "confirmed_fields": confirmed_fields,
         "raw_text_removed": True,
     }
+
+
+def _build_confirmed_wezwanie_notification_data(confirmation_data: Mapping[str, str]) -> WezwanieData:
+    fingerprints_date_raw = (confirmation_data.get("fingerprints_date") or "").strip()
+    fingerprints_date = parse_date(fingerprints_date_raw) if fingerprints_date_raw else None
+    return WezwanieData(
+        text="",
+        fingerprints_date=fingerprints_date,
+        wezwanie_type="fingerprints" if fingerprints_date else None,
+    )
 
 
 def _apply_confirmation_updates(

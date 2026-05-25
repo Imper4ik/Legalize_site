@@ -71,13 +71,26 @@
                 <i class="bi bi-people me-1"></i>
                 <span>{% translate "Клиенты" %}</span>
               </a>
-              {% if completed_onboarding_count %}
-                <a class="badge bg-danger rounded-pill ms-1 text-decoration-none"
-                   href="{% url 'clients:client_list' %}?onboarding=completed"
-                   title="{% translate 'Показать клиентов с заполненной анкетой' %}"
-                   aria-label="{% blocktranslate count count=completed_onboarding_count %}Показать {{ count }} клиента с заполненной анкетой{% plural %}Показать {{ count }} клиентов с заполненной анкетой{% endblocktranslate %}">
-                  {{ completed_onboarding_count }}
-                </a>
+              {% if client_attention_items %}
+                <div class="dropdown ms-1">
+                  <button class="badge bg-danger rounded-pill border-0" type="button"
+                          data-bs-toggle="dropdown" aria-expanded="false"
+                          title="{% translate 'События клиентов требуют внимания' %}"
+                          aria-label="{% translate 'События клиентов требуют внимания' %}: {{ client_attention_count }}">
+                    {{ client_attention_count }}
+                  </button>
+                  <ul class="dropdown-menu shadow-sm">
+                    <li><h6 class="dropdown-header">{% translate "События клиентов" %}</h6></li>
+                    {% for item in client_attention_items %}
+                      <li>
+                        <a class="dropdown-item d-flex align-items-center justify-content-between gap-3" href="{{ item.url }}">
+                          <span><i class="bi {{ item.icon }} me-2 text-{{ item.level }}"></i>{{ item.label }}</span>
+                          <span class="badge text-bg-{{ item.level }}">{{ item.count }}</span>
+                        </a>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
               {% endif %}
             </li>
             <li class="nav-item">

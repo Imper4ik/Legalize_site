@@ -15,7 +15,7 @@ from clients.tests.test_company_doc_workflow import build_pdf_upload
 # Import parsers directly to test parser logic
 from clients.services.passport_parser import PassportDocData
 from clients.services.rental_parser import RentalDocData
-from clients.services.zus_parser import ZusDocData
+from clients.services.zus_parser import ZusDocData, parse_zus_doc
 from clients.services.insurance_parser import InsuranceDocData
 
 
@@ -66,7 +66,7 @@ class NewOcrWorkflowsTests(TestCase):
         doc.refresh_from_db()
         self.client_obj.refresh_from_db()
 
-        self.assertEqual(doc.ocr_status, "completed")
+        self.assertEqual(doc.ocr_status, "success")
         self.assertFalse(doc.ocr_name_mismatch) # No warnings
         
         # Verify autoupdate of passport_num
@@ -102,7 +102,7 @@ class NewOcrWorkflowsTests(TestCase):
         call_command("process_document_jobs")
 
         doc.refresh_from_db()
-        self.assertEqual(doc.ocr_status, "completed")
+        self.assertEqual(doc.ocr_status, "success")
         self.assertTrue(doc.ocr_name_mismatch) # Yes, warnings
         
         warnings = doc.parsed_data["warnings"]
@@ -145,7 +145,7 @@ class NewOcrWorkflowsTests(TestCase):
         call_command("process_document_jobs")
 
         doc.refresh_from_db()
-        self.assertEqual(doc.ocr_status, "completed")
+        self.assertEqual(doc.ocr_status, "success")
         self.assertFalse(doc.ocr_name_mismatch) # No warnings, address and name match!
 
     @patch("clients.services.rental_parser.parse_rental_doc")
@@ -189,13 +189,29 @@ class NewOcrWorkflowsTests(TestCase):
         self.assertTrue(any("address does not match" in w for w in warnings))
         self.assertTrue(any("expired on" in w for w in warnings))
 
+    def test_zus_parser_extracts_contextual_insurance_code(self):
+        text = "ZUS ZUA\nKod tytu\u0142u ubezpieczenia: 04 11 00\nUbezpieczony: Jan Kowalski"
+
+        with patch("clients.services.zus_parser.extract_text", return_value=text):
+            parsed = parse_zus_doc("fake-zus.pdf")
+
+        self.assertEqual(parsed.insurance_code, "041100")
+
+    def test_zus_parser_does_not_use_identifier_as_insurance_code(self):
+        text = "03. TYP 04. IDENTYFIKATOR\nDARYA P 043208 11580"
+
+        with patch("clients.services.zus_parser.extract_text", return_value=text):
+            parsed = parse_zus_doc("fake-zus.pdf")
+
+        self.assertIsNone(parsed.insurance_code)
+
     @patch("clients.services.zus_parser.parse_zus_doc")
     def test_zus_document_processing(self, parse_mock):
         # Upload a completed company doc first to have NIP in database
         company_doc = Document.objects.create(
             client=self.client_obj,
             document_type=DocumentType.ZALACZNIK_NR_1.value,
-            ocr_status="completed",
+            ocr_status="success",
             parsed_data={"nip": "5252344078"}
         )
 
@@ -222,7 +238,7 @@ class NewOcrWorkflowsTests(TestCase):
         call_command("process_document_jobs")
 
         doc.refresh_from_db()
-        self.assertEqual(doc.ocr_status, "completed")
+        self.assertEqual(doc.ocr_status, "success")
         self.assertFalse(doc.ocr_name_mismatch) # Name, NIP match contract, code is standard 011000!
 
     @patch("clients.services.zus_parser.parse_zus_doc")
@@ -231,7 +247,7 @@ class NewOcrWorkflowsTests(TestCase):
         company_doc = Document.objects.create(
             client=self.client_obj,
             document_type=DocumentType.ZALACZNIK_NR_1.value,
-            ocr_status="completed",
+            ocr_status="success",
             parsed_data={"nip": "5252344078"}
         )
 
@@ -290,7 +306,7 @@ class NewOcrWorkflowsTests(TestCase):
         call_command("process_document_jobs")
 
         doc.refresh_from_db()
-        self.assertEqual(doc.ocr_status, "completed")
+        self.assertEqual(doc.ocr_status, "success")
         self.assertFalse(doc.ocr_name_mismatch)
 
     @patch("clients.services.insurance_parser.parse_insurance_doc")
@@ -320,7 +336,7 @@ class NewOcrWorkflowsTests(TestCase):
         call_command("process_document_jobs")
 
         doc.refresh_from_db()
-        self.assertEqual(doc.ocr_status, "completed")
+        self.assertEqual(doc.ocr_status, "success")
         self.assertFalse(doc.ocr_name_mismatch)
 
     @patch("clients.services.insurance_parser.parse_insurance_doc")
