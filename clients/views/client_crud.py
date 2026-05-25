@@ -23,6 +23,7 @@ from clients.services.notifications import (
     send_expired_documents_email,
     send_required_documents_email,
 )
+from clients.services.zus import missing_zus_month_upload_options
 from clients.services.responses import apply_no_store
 from clients.services.roles import (
     CLIENT_DELETE_ROLES,
@@ -170,6 +171,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         context["payment_form"] = PaymentForm()
         context["document_upload_form"] = DocumentUploadForm()
         context["document_status_list"] = document_status_list
+        context["missing_zus_months_for_upload"] = missing_zus_month_upload_options(client)
         prefetched = getattr(client, "_prefetched_objects_cache", {})
         email_logs = prefetched.get("email_logs")
         if email_logs is None:

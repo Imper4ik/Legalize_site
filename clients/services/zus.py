@@ -85,3 +85,13 @@ def missing_zus_months(client: Client, *, today: date | None = None) -> list[dat
 
 def format_zus_months(months: list[date]) -> str:
     return ", ".join(month.strftime("%m.%Y") for month in months)
+
+
+def missing_zus_month_upload_options(client: Client, *, today: date | None = None) -> list[dict[str, str]]:
+    return [
+        {
+            "value": month.isoformat(),
+            "label": month.strftime("%m.%Y"),
+        }
+        for month in missing_zus_months(client, today=today)
+    ]

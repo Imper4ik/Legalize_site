@@ -296,6 +296,30 @@ class TestZusRcaBackend:
         assert missing_zus_months(c, today=date(2026, 5, 15)) == []
 
 
+class TestClientDetailZusUploadMonths:
+
+    @pytest.mark.django_db
+    def test_missing_zus_month_buttons_prefill_upload_month(self):
+        admin = create_admin_user()
+        client = _make_client(
+            None,
+            workflow_stage="waiting_decision",
+            fingerprints_date=date(2026, 2, 10),
+        )
+        http = DjangoClient()
+        http.force_login(admin)
+
+        with patch("clients.services.zus.timezone.localdate", return_value=date(2026, 5, 15)):
+            response = http.get(reverse("clients:client_detail", kwargs={"pk": client.pk}))
+
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert 'data-zus-period-month="2026-03-01"' in content
+        assert 'data-zus-period-month="2026-04-01"' in content
+        assert "ZUS 03.2026" in content
+        assert "ZUS 04.2026" in content
+
+
 class TestDocumentUploadFormZus:
 
     @pytest.mark.django_db

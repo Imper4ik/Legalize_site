@@ -79,6 +79,7 @@ function initDocumentUploadModal() {
 
     const docType = button.getAttribute('data-doc-type');
     const docName = button.getAttribute('data-doc-name');
+    const defaultZusPeriodMonth = button.getAttribute('data-zus-period-month') || '';
 
     if (docType) {
       form.setAttribute('action', actionTemplate.replace('__doc_type__', encodeURIComponent(docType)));
@@ -122,7 +123,7 @@ function initDocumentUploadModal() {
     if (zusGroup) zusGroup.classList.toggle('d-none', !isZusRca);
     if (zusInput) {
       zusInput.required = false;
-      if (!isZusRca) zusInput.value = '';
+      zusInput.value = isZusRca ? defaultZusPeriodMonth : '';
     }
     if (fileInput) {
       if (isZusRca) {

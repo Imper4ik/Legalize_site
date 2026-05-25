@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import cast, TYPE_CHECKING
+from typing import Any, cast, TYPE_CHECKING
 
 from django.contrib import messages
 from django.http import HttpRequest, JsonResponse
@@ -25,6 +25,7 @@ from clients.services.notifications import (
     send_appointment_notification_email,
     send_missing_documents_email,
 )
+from clients.services.zus import missing_zus_month_upload_options
 from clients.services.permissions import has_employee_permission
 from clients.services.responses import ResponseHelper, apply_no_store
 from clients.services.roles import DOCUMENT_DELETE_ROLES, DOCUMENT_EDIT_ROLES
@@ -45,6 +46,16 @@ if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
 logger = logging.getLogger(__name__)
+
+
+def _uploaded_file_log_payload(files: list[Any]) -> list[dict[str, Any]]:
+    return [
+        {
+            "size": getattr(uploaded_file, "size", None),
+            "content_type": getattr(uploaded_file, "content_type", ""),
+        }
+        for uploaded_file in files
+    ]
 
 
 def _can_run_ocr_review(user: AbstractBaseUser | AnonymousUser | None) -> bool:
@@ -86,15 +97,29 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
         files = request.FILES.getlist('file')
         if not files:
             form = DocumentUploadForm(request.POST, request.FILES, doc_type=doc_type, client=client)
+            errors = form.errors.get_json_data()
+            logger.warning(
+                "Document upload rejected: client_id=%s doc_type=%s errors=%s files=%s",
+                client.pk,
+                doc_type,
+                errors,
+                _uploaded_file_log_payload(files),
+            )
             if helper.expects_json:
                 return helper.error(
-                    message=str(_("Проверьте правильность заполнения формы.")),
-                    errors=form.errors.get_json_data(),
+                    message=str(_("\u041f\u0440\u043e\u0432\u0435\u0440\u044c\u0442\u0435 \u043f\u0440\u0430\u0432\u0438\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u0437\u0430\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u044f \u0444\u043e\u0440\u043c\u044b.")),
+                    errors=errors,
             )
             return redirect("clients:client_detail", pk=client.id)
 
         if doc_type == DocumentType.ZUS_RCA_OR_INSURANCE.value and len(files) > 1:
             message = _("ZUS RCA can be uploaded only one month at a time.")
+            logger.warning(
+                "Document upload rejected: client_id=%s doc_type=%s reason=multiple_zus_files files=%s",
+                client.pk,
+                doc_type,
+                _uploaded_file_log_payload(files),
+            )
             if helper.expects_json:
                 return helper.error(message=str(message), errors={"file": [{"message": str(message)}]})
             messages.error(request, message)
@@ -122,6 +147,13 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
                 success_count += 1
             else:
                 errors = form.errors.get_json_data()
+                logger.warning(
+                    "Document upload rejected: client_id=%s doc_type=%s errors=%s files=%s",
+                    client.pk,
+                    doc_type,
+                    errors,
+                    _uploaded_file_log_payload([f]),
+                )
                 break
 
         if success_count > 0 and success_count == len(files):
@@ -371,6 +403,7 @@ def client_status_api(request: HttpRequest, pk: int) -> HttpResponseBase:
         "clients/partials/document_checklist.html",
         {
             "document_status_list": client.get_document_checklist(check_file_existence=True),
+            "missing_zus_months_for_upload": missing_zus_month_upload_options(client),
             "client": client,
         },
     )
@@ -413,6 +446,7 @@ def client_checklist_partial(request: HttpRequest, pk: int) -> HttpResponseBase:
         {
             "client": client,
             "document_status_list": document_status_list,
+            "missing_zus_months_for_upload": missing_zus_month_upload_options(client),
         },
     )
     return apply_no_store(response)
