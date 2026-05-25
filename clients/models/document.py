@@ -203,6 +203,7 @@ class Document(SoftDeleteModel):
                 condition=models.Q(
                     document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
                     zus_period_month__isnull=False,
+                    archived_at__isnull=True,
                 ),
                 name="unique_zus_rca_period_per_client",
             ),
@@ -281,59 +282,29 @@ class Document(SoftDeleteModel):
         return scrubbed
 
 
-class DocumentRequirement(models.Model):
-    application_purpose = models.CharField(max_length=50, verbose_name=_("Цель подачи"))
-    document_type = models.CharField(max_length=255, verbose_name=_("Код типа документа"))
-    custom_name = models.CharField(max_length=500, blank=True, null=True, verbose_name=_("Название документа"))
-    custom_name_pl = models.CharField(max_length=500, blank=True, null=True, verbose_name=_("Название документа (PL)"))
-    custom_name_en = models.CharField(max_length=500, blank=True, null=True, verbose_name=_("Название документа (EN)"))
-    custom_name_ru = models.CharField(max_length=500, blank=True, null=True, verbose_name=_("Название документа (RU)"))
-    position = models.PositiveIntegerField(default=0, verbose_name=_("Порядок отображения"))
-    is_required = models.BooleanField(default=True, verbose_name=_("Обязательный документ"))
+class DocumentVersion(models.Model):
+    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name="versions", verbose_name=_("Документ"))
+    file = models.FileField(upload_to=document_upload_path, verbose_name=_("Файл"), validators=[validate_uploaded_document])
+    uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Дата загрузки"))
+    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
 
     class Meta:
-        unique_together = ("application_purpose", "document_type")
-        ordering = ["position", "id"]
-        indexes = [
-            models.Index(fields=["application_purpose", "position"], name="docreq_purpose_pos_idx"),
-        ]
+        ordering = ["-uploaded_at"]
+        verbose_name = _("Версия документа")
+        verbose_name_plural = _("Версии документов")
+
+
+class DocumentRequirement(models.Model):
+    application_purpose = models.CharField(max_length=20, verbose_name=_("Цель подачи"))
+    document_type = models.CharField(max_length=255, verbose_name=_("Тип документа"))
+    custom_name = models.CharField(max_length=255, blank=True, verbose_name=_("Название"))
+    custom_name_pl = models.CharField(max_length=255, blank=True, verbose_name=_("Название (PL)"))
+    custom_name_en = models.CharField(max_length=255, blank=True, verbose_name=_("Название (EN)"))
+    custom_name_ru = models.CharField(max_length=255, blank=True, verbose_name=_("Название (RU)"))
+    required = models.BooleanField(default=True, verbose_name=_("Обязательный"))
+    order = models.PositiveIntegerField(default=0, verbose_name=_("Порядок"))
+
+    class Meta:
+        ordering = ["order", "id"]
         verbose_name = _("Требование к документу")
         verbose_name_plural = _("Требования к документам")
-
-    def __str__(self) -> str:
-        return f"{self.application_purpose}: {self.custom_name or self.document_type}"
-
-    @classmethod
-    def catalog_for(cls, purpose: str, language: str | None = None, *, include_optional: bool = True, include_fallback: bool = True) -> list[dict[str, Any]]:
-        records = list(cls.objects.filter(application_purpose=purpose).order_by("position", "id"))
-        items: list[dict[str, Any]] = []
-        seen: set[str] = set()
-
-        for record in records:
-            label = resolve_document_label(
-                record.document_type, record.custom_name, record.custom_name_pl,
-                record.custom_name_en, record.custom_name_ru, language
-            )
-            items.append({"code": record.document_type, "label": label, "is_required": record.is_required})
-            seen.add(record.document_type)
-
-        if include_fallback:
-            fallback = get_fallback_document_checklist(purpose, language)
-            for code, _label in fallback:
-                if code in seen:
-                    continue
-                label = (
-                    resolve_document_label(code, language=language)
-                    if code in DOCUMENT_TYPE_VALUES
-                    else translate_document_name(_label, language)
-                )
-                items.append({"code": code, "label": label, "is_required": True})
-
-        if not include_optional:
-            items = [item for item in items if item["is_required"]]
-        return items
-
-    @classmethod
-    def required_for(cls, purpose: str, language: str | None = None) -> list[tuple[str, str]]:
-        catalog = cls.catalog_for(purpose, language, include_optional=False, include_fallback=True)
-        return [(str(item["code"]), str(item["label"])) for item in catalog]
