@@ -39,6 +39,17 @@
               {% translate "Файл от" %} {{ doc.uploaded_at|date:"d.m.Y H:i" }}
             </span>
             {% endif %}
+            {% if doc.document_type == 'zus_rca_or_insurance' %}
+              {% if doc.zus_period_month %}
+              <span class="badge bg-info text-dark ms-2" title="{% translate 'Месяц отчета ZUS' %}">
+                <i class="bi bi-calendar-month"></i> {% translate "ZUS за месяц:" %} {{ doc.zus_period_month|date:"m.Y" }}
+              </span>
+              {% else %}
+              <span class="badge bg-secondary ms-2" title="{% translate 'Для страхового полиса месяц может быть пустым' %}">
+                <i class="bi bi-calendar-x"></i> {% translate "Месяц ZUS не указан" %}
+              </span>
+              {% endif %}
+            {% endif %}
             {% if doc.expiry_date %}
             <br><small class="text-danger">{% translate "Действителен до:" %} {{ doc.expiry_date|date:"d.m.Y" }}</small>
             {% endif %}

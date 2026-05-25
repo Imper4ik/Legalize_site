@@ -319,6 +319,25 @@ class TestClientDetailZusUploadMonths:
         assert "ZUS 03.2026" in content
         assert "ZUS 04.2026" in content
 
+    @pytest.mark.django_db
+    def test_uploaded_zus_document_shows_saved_report_month(self):
+        admin = create_admin_user()
+        client = _make_client(None)
+        _make_doc(
+            client,
+            doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+            zus_period_month=date(2026, 4, 1),
+        )
+        http = DjangoClient()
+        http.force_login(admin)
+
+        response = http.get(reverse("clients:client_detail", kwargs={"pk": client.pk}))
+
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "ZUS \u0437\u0430 \u043c\u0435\u0441\u044f\u0446:" in content
+        assert "04.2026" in content
+
 
 class TestDocumentUploadFormZus:
 
