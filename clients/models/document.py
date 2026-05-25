@@ -297,3 +297,55 @@ class DocumentRequirement(models.Model):
         unique_together = (("application_purpose", "document_type"),)
         verbose_name = _("Требование к документу")
         verbose_name_plural = _("Требования к документам")
+
+    def __str__(self) -> str:
+        return f"{self.application_purpose}: {self.custom_name or self.document_type}"
+
+    @classmethod
+    def catalog_for(
+        cls,
+        purpose: str,
+        language: str | None = None,
+        *,
+        include_optional: bool = True,
+        include_fallback: bool = True,
+    ) -> list[dict[str, Any]]:
+        records = list(cls.objects.filter(application_purpose=purpose).order_by("position", "id"))
+        items: list[dict[str, Any]] = []
+        seen: set[str] = set()
+
+        for record in records:
+            label = resolve_document_label(
+                record.document_type,
+                record.custom_name,
+                record.custom_name_pl,
+                record.custom_name_en,
+                record.custom_name_ru,
+                language,
+            )
+            items.append({
+                "code": record.document_type,
+                "label": label,
+                "is_required": record.is_required,
+            })
+            seen.add(record.document_type)
+
+        if include_fallback:
+            fallback = get_fallback_document_checklist(purpose, language)
+            for code, _label in fallback:
+                if code in seen:
+                    continue
+                items.append({
+                    "code": code,
+                    "label": resolve_document_label(code, language=language),
+                    "is_required": True,
+                })
+
+        if not include_optional:
+            items = [item for item in items if item["is_required"]]
+        return items
+
+    @classmethod
+    def required_for(cls, purpose: str, language: str | None = None) -> list[tuple[str, str]]:
+        catalog = cls.catalog_for(purpose, language, include_optional=False, include_fallback=True)
+        return [(item["code"], str(item["label"])) for item in catalog]
