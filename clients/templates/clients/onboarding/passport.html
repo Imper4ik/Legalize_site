@@ -12,10 +12,12 @@
         <div class="col-md-6">
             <label for="first_name" class="form-label fw-bold">{% trans "Имя (лат.)" %}</label>
             <input type="text" class="form-control" id="first_name" name="first_name" value="{{ mos_data.personal_data.first_name|default:'' }}" required>
+            <div class="form-text text-muted">{% trans "Укажите имя латиницей строго как в заграничном паспорте." %}</div>
         </div>
         <div class="col-md-6">
             <label for="last_name" class="form-label fw-bold">{% trans "Фамилия (лат.)" %}</label>
             <input type="text" class="form-control" id="last_name" name="last_name" value="{{ mos_data.personal_data.last_name|default:'' }}" required>
+            <div class="form-text text-muted">{% trans "Укажите фамилию латиницей строго как в заграничном паспорте." %}</div>
         </div>
     </div>
 
@@ -38,6 +40,7 @@
         <div class="col-md-6">
             <label for="citizenship" class="form-label fw-bold">{% trans "Гражданство" %}</label>
             <input type="text" class="form-control" id="citizenship" name="citizenship" value="{{ mos_data.personal_data.citizenship|default:'' }}" required>
+            <div class="form-text text-muted">{% trans "Страна вашего гражданства (например, Украина, Беларусь, Казахстан)." %}</div>
         </div>
     </div>
 

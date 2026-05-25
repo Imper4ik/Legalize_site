@@ -20,6 +20,7 @@
                 <option value="Бизнес" {% if mos_data.mos_purpose == 'Бизнес' %}selected{% endif %}>{% trans "Бизнес (Działalność gospodarcza)" %}</option>
                 <option value="Иное" {% if mos_data.mos_purpose == 'Иное' %}selected{% endif %}>{% trans "Иное (Inne)" %}</option>
             </select>
+            <div class="form-text text-muted">{% trans "Выбор цели влияет на перечень документов, которые мы у вас запросим." %}</div>
         </div>
 
         <div class="mb-3">
@@ -39,7 +40,7 @@
         <div class="mb-3">
             <label class="form-label fw-bold">{% trans "Дата последнего въезда в Польшу" %}</label>
             <input type="date" name="last_entry_date" class="form-control" value="{{ mos_data.stay_data.last_entry_date|default:'' }}">
-            <div class="form-text">{% trans "Если не помните точный день, укажите примерную дату." %}</div>
+            <div class="form-text text-muted">{% trans "Дата последнего пересечения границы Республики Польша. Если вы ехали транзитом, укажите дату въезда в Польшу." %}</div>
         </div>
 
         <div class="mb-3">
@@ -57,6 +58,7 @@
         <div class="mb-3">
             <label class="form-label fw-bold">{% trans "До какого числа легально ваше пребывание (виза/карта/безвиз)?" %}</label>
             <input type="date" name="legal_stay_until" class="form-control" value="{{ mos_data.legal_stay_until|date:'Y-m-d' }}">
+            <div class="form-text text-muted">{% trans "Дата окончания срока действия вашей текущей визы, карты или 90 дней безвизового режима." %}</div>
         </div>
     </div>
 
@@ -75,12 +77,13 @@
                     <label class="form-check-label" for="wasPolNo">{% trans "Нет" %}</label>
                 </div>
             </div>
+            <div class="form-text text-muted">{% trans "Учитываются любые более ранние въезды в Польшу (туризм, работа, учеба)." %}</div>
         </div>
 
         <div class="mb-3">
             <label class="form-label fw-bold">{% trans "Поездки в другие страны (кроме родины и Польши) за последние 5 лет" %}</label>
             <textarea name="travel_history" class="form-control" rows="3" placeholder="{% trans 'Например: Турция (2022), Германия (2023). Если не было поездок, напишите Нет.' %}">{% if mos_data.travel_history %}{{ mos_data.travel_history.0 }}{% endif %}</textarea>
-            <div class="form-text">{% trans "Укажите страну и примерный год поездки." %}</div>
+            <div class="form-text text-muted">{% trans "Укажите страны (не включая вашу родину и Польшу) и примерный год поездки." %}</div>
         </div>
     </div>
 

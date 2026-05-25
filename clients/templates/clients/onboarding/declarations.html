@@ -19,6 +19,9 @@
                 <label class="form-check-label" for="crim_no">{% trans "Нет, не был(а)" %}</label>
             </div>
         </div>
+        <div class="form-text text-muted">
+            {% trans "Учитываются только официальные судебные приговоры. Административные штрафы (например, за парковку или превышение скорости) не считаются судимостью." %}
+        </div>
     </div>
 
     <div class="mb-4">
@@ -32,6 +35,9 @@
                 <input class="form-check-input" type="radio" name="tax_arrears" id="tax_no" value="no" {% if mos_data.legal_declarations.tax_arrears == False %}checked{% endif %}>
                 <label class="form-check-label" for="tax_no">{% trans "Нет долгов" %}</label>
             </div>
+        </div>
+        <div class="form-text text-muted">
+            {% trans "Включает неоплаченные налоги (PIT), мандаты (штрафы) или долги перед ZUS. Если долгов нет или они полностью погашены, выберите «Нет»." %}
         </div>
     </div>
 

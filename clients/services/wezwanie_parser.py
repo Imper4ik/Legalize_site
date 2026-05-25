@@ -75,8 +75,38 @@ class WezwanieData:
 
 
 
+def _get_poppler_path() -> str | None:
+    # Try system PATH first
+    if shutil.which("pdftoppm") is not None:
+        return None
+    # Check winget standard packages directory
+    import glob
+    import os
+    local_appdata = os.environ.get("LOCALAPPDATA", "")
+    if local_appdata:
+        winget_path = os.path.join(local_appdata, "Microsoft", "WinGet", "Packages")
+        if os.path.exists(winget_path):
+            pattern = os.path.join(winget_path, "oschwartz10612.Poppler_*", "**", "Library", "bin")
+            matches = glob.glob(pattern, recursive=True)
+            if matches:
+                # return the first match that contains pdftoppm.exe
+                for match in matches:
+                    if os.path.exists(os.path.join(match, "pdftoppm.exe")):
+                        return match
+    return None
+
+
 def _tesseract_binary_available() -> bool:
-    return shutil.which("tesseract") is not None
+    if shutil.which("tesseract") is not None:
+        return True
+    # Check default Windows path
+    default_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    import os
+    if os.path.exists(default_path):
+        import pytesseract
+        pytesseract.pytesseract.tesseract_cmd = default_path
+        return True
+    return False
 
 
 def _parse_date(raw: str | None) -> date | None:
@@ -115,9 +145,9 @@ def _extract_pdf_text(path: Path) -> str:
                 logger.warning("Tesseract binary is not available; skipping PDF OCR for %s", path)
                 return text_content
 
-            # Convert PDF to images (first 2 pages usually enough for Wezwanie)
+            # Convert PDF to images (up to 10 pages for longer documents like Załącznik)
             try:
-                images = convert_from_path(str(path), first_page=1, last_page=2)
+                images = convert_from_path(str(path), first_page=1, last_page=10, poppler_path=_get_poppler_path())
             except Exception as e:
                 logger.warning("pdf2image failed: %s", e)
                 images = []
@@ -309,20 +339,15 @@ def extract_text(path: str | Path) -> str:
     """
 
     file_path = Path(path)
-
-    text = ""
     suffix = file_path.suffix.lower()
 
     if suffix == ".pdf":
-        text = _extract_pdf_text(file_path)
+        return _extract_pdf_text(file_path)
 
     if suffix in IMAGE_SUFFIXES:
         return _extract_image_text(file_path)
 
-    if not text:
-        text = _read_plain_text(file_path)
-
-    return text
+    return _read_plain_text(file_path)
 
 
 

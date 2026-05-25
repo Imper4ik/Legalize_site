@@ -18,6 +18,9 @@
                 <label class="form-check-label" for="pesel_no">{% trans "Нет" %}</label>
             </div>
         </div>
+        <div class="form-text text-muted">
+            {% trans "PESEL — это 11-значный идентификационный номер в Польше. Если у вас PESEL со статусом UKR (для граждан Украины, прибывших после 24.02.2022), также выберите «Да»." %}
+        </div>
     </div>
     
     <div class="mb-4">
@@ -32,6 +35,9 @@
                 <label class="form-check-label" for="pz_no">{% trans "Нет" %}</label>
             </div>
         </div>
+        <div class="form-text text-muted">
+            {% trans "Profil Zaufany — это электронный подтвержденный профиль для доступа к госуслугам в Польше. Вы могли создать его через свой польский банк (IPKO, Pekao, mBank и др.) при открытии счета." %}
+        </div>
     </div>
 
     <div class="mb-4">
@@ -45,6 +51,9 @@
                 <input class="form-check-input" type="radio" name="has_mos_account" id="mos_no" value="no">
                 <label class="form-check-label" for="mos_no">{% trans "Нет" %}</label>
             </div>
+        </div>
+        <div class="form-text text-muted">
+            {% trans "MOS (Moduł Obsługi Spraw) — это портал Управления по делам иностранцев в Польше (mos.gov.pl) для заполнения заявлений на карту побыту. Если у вас еще нет аккаунта, мы поможем его создать." %}
         </div>
     </div>
 

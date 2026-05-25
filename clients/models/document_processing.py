@@ -7,6 +7,11 @@ from django.utils.translation import gettext_lazy as _
 
 class DocumentProcessingJob(models.Model):
     JOB_TYPE_WEZWANIE_OCR = "wezwanie_ocr"
+    JOB_TYPE_COMPANY_DOC_OCR = "company_doc_ocr"
+    JOB_TYPE_PASSPORT_OCR = "passport_ocr"
+    JOB_TYPE_RENTAL_OCR = "rental_ocr"
+    JOB_TYPE_ZUS_OCR = "zus_ocr"
+    JOB_TYPE_INSURANCE_OCR = "insurance_ocr"
 
     STATUS_PENDING = "pending"
     STATUS_PROCESSING = "processing"
@@ -15,6 +20,11 @@ class DocumentProcessingJob(models.Model):
 
     JOB_TYPE_CHOICES = [
         (JOB_TYPE_WEZWANIE_OCR, _("Wezwanie OCR")),
+        (JOB_TYPE_COMPANY_DOC_OCR, _("Company Doc OCR")),
+        (JOB_TYPE_PASSPORT_OCR, _("Passport OCR")),
+        (JOB_TYPE_RENTAL_OCR, _("Rental Agreement OCR")),
+        (JOB_TYPE_ZUS_OCR, _("ZUS Documents OCR")),
+        (JOB_TYPE_INSURANCE_OCR, _("Insurance Policy OCR")),
     ]
     STATUS_CHOICES = [
         (STATUS_PENDING, _("Pending")),

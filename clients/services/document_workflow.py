@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 import tempfile
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from hashlib import sha256
 from typing import Any, TYPE_CHECKING
 
@@ -23,6 +24,8 @@ from clients.services.notifications import (
     send_missing_documents_email,
 )
 from clients.services.wezwanie_parser import WezwanieData, parse_wezwanie
+from clients.services.company_parser import parse_company_doc
+from clients.services.registry_api import verify_employer, normalize_string, match_names
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
@@ -105,35 +108,77 @@ def upload_client_document(
     )
 
     document_type_display = client.get_document_name_by_code(doc_type)
-    from clients.constants import is_wezwanie_document_type
+    from clients.constants import (
+        is_wezwanie_document_type,
+        is_company_document_type,
+        is_passport_document_type,
+        is_rental_document_type,
+        is_zus_document_type,
+        is_insurance_document_type,
+    )
     is_wezwanie = is_wezwanie_document_type(doc_type)
+    is_company = is_company_document_type(doc_type)
+    is_passport = is_passport_document_type(doc_type)
+    is_rental = is_rental_document_type(doc_type)
+    is_zus = is_zus_document_type(doc_type)
+    is_insurance = is_insurance_document_type(doc_type)
 
-    if not is_wezwanie:
+    is_ocr_eligible = is_wezwanie or is_company or is_passport or is_rental or is_zus or is_insurance
+
+    if not is_ocr_eligible:
         return DocumentUploadResult(
             document=document,
             message=_("Document '%(name)s' uploaded successfully.") % {"name": document_type_display},
         )
 
-    if parse_requested:
+    if parse_requested or is_company or is_passport or is_rental or is_zus or is_insurance:
+        # Determine job type
+        if is_company:
+            job_type = DocumentProcessingJob.JOB_TYPE_COMPANY_DOC_OCR
+        elif is_passport:
+            job_type = DocumentProcessingJob.JOB_TYPE_PASSPORT_OCR
+        elif is_rental:
+            job_type = DocumentProcessingJob.JOB_TYPE_RENTAL_OCR
+        elif is_zus:
+            job_type = DocumentProcessingJob.JOB_TYPE_ZUS_OCR
+        elif is_insurance:
+            job_type = DocumentProcessingJob.JOB_TYPE_INSURANCE_OCR
+        else:
+            job_type = DocumentProcessingJob.JOB_TYPE_WEZWANIE_OCR
+
+        requires_confirmation = (job_type == DocumentProcessingJob.JOB_TYPE_WEZWANIE_OCR)
         job = enqueue_document_processing_job(
             document=document,
             actor=actor,
-            requires_confirmation=True,
+            requires_confirmation=requires_confirmation,
+            job_type=job_type,
         )
+
         if not getattr(settings, "ASYNC_OCR_PROCESSING", False):
-            return _process_upload_job_inline(
-                job_id=job.pk,
-                document=document,
-                document_type_display=document_type_display,
-                parser=parser,
-                send_missing_email=send_missing_email,
-                send_appointment_email=send_appointment_email,
-            )
+            if not requires_confirmation:
+                return _process_company_upload_job_inline(
+                    job_id=job.pk,
+                    document=document,
+                    document_type_display=document_type_display,
+                )
+            else:
+                return _process_upload_job_inline(
+                    job_id=job.pk,
+                    document=document,
+                    document_type_display=document_type_display,
+                    parser=parser,
+                    send_missing_email=send_missing_email,
+                    send_appointment_email=send_appointment_email,
+                )
+        
+        msg = (
+            _("Document uploaded. OCR and automatic verification were queued; review details after processing completes.")
+            if not requires_confirmation
+            else _("Document uploaded. OCR processing was queued; review recognized data after processing completes.")
+        )
         return DocumentUploadResult(
             document=document,
-            message=_(
-                "Document uploaded. OCR processing was queued; review recognized data after processing completes."
-            ),
+            message=msg,
             ocr_processing_queued=True,
         )
 
@@ -152,57 +197,61 @@ def confirm_wezwanie_document(
     send_missing_email: NotificationSender = send_missing_documents_email,
     send_appointment_email: NotificationSender = send_appointment_notification_email,
 ) -> WezwanieConfirmationResult:
-    """Apply confirmed wezwanie fields to the client and trigger follow-up actions."""
+    """Validate, persist and update metadata following confirmation of a wezwanie."""
 
-    client = document.client
-    updated_fields, auto_updates = _apply_confirmation_updates(client, confirmation_data)
-
-    if updated_fields:
-        client.save(update_fields=updated_fields)
-        log_client_activity(
-            client=client,
-            actor=actor,
-            event_type="client_updated",
-            summary="Wezwanie data confirmed",
-            details=", ".join(changed_field_labels(client, updated_fields)),
-            metadata={"changed_fields": updated_fields, "source": "wezwanie_confirmation"},
+    from clients.constants import is_wezwanie_document_type
+    if not is_wezwanie_document_type(document.document_type):
+        return WezwanieConfirmationResult(
             document=document,
+            message=_("Selected document type cannot be confirmed as a wezwanie."),
+            manual_review_required=True,
         )
 
-    _append_required_documents_update_from_codes(
-        (document.parsed_data or {}).get("required_documents", []),
-        auto_updates,
+    payload = _build_confirmed_wezwanie_payload(confirmation_data)
+    
+    with transaction.atomic():
+        document.awaiting_confirmation = False
+        document.parsed_data = payload
+        document.ocr_status = "completed"
+        document.save(update_fields=["awaiting_confirmation", "parsed_data", "ocr_status"])
+
+    client = document.client
+    auto_updates, _skipped = _apply_confirmation_updates(client, confirmation_data)
+
+    log_client_activity(
+        client=client,
+        actor=actor,
+        event_type="document_confirmed",
+        summary="Confirmed wezwanie data",
+        metadata={"document_id": document.id, "auto_updates": auto_updates},
+        document=document,
     )
 
-    document.awaiting_confirmation = False
-    document.ocr_status = "success"
-    document.ocr_name_mismatch = False
-    document.parsed_data = _build_confirmed_wezwanie_payload(confirmation_data)
-    document.scrub_parsed_pii()
-    document.save(update_fields=["awaiting_confirmation", "ocr_status", "ocr_name_mismatch", "parsed_data"])
+    _send_background_notifications(
+        client=client,
+        auto_updates=auto_updates,
+        send_missing_email=send_missing_email,
+        send_appointment_email=send_appointment_email,
+    )
 
-    if _send_notification(send_missing_email, client, "missing-documents email"):
-        auto_updates.append(_("missing-documents email sent"))
-
-    if client.fingerprints_date and _send_notification(
-        send_appointment_email,
-        client,
-        "appointment notification",
-    ):
-        auto_updates.append(_("appointment notification sent"))
-
-    message = _("Wezwanie data confirmed.")
-    if auto_updates:
-        message = f"{message} " + " ; ".join(auto_updates)
-
+    document_type_display = client.get_document_name_by_code(document.document_type)
     return WezwanieConfirmationResult(
         document=document,
-        message=message,
-        manual_review_required=False,
+        message=_compose_upload_message(
+            document_type_display=document_type_display,
+            auto_updates=auto_updates,
+            manual_review_required=False,
+        ),
     )
 
 
-def enqueue_document_processing_job(*, document: Document, actor: AbstractBaseUser | AnonymousUser | None = None, requires_confirmation: bool = False) -> DocumentProcessingJob:
+def enqueue_document_processing_job(
+    *,
+    document: Document,
+    actor: AbstractBaseUser | AnonymousUser | None = None,
+    requires_confirmation: bool = False,
+    job_type: str = DocumentProcessingJob.JOB_TYPE_WEZWANIE_OCR,
+) -> DocumentProcessingJob:
     """Queue background OCR work for the current document file."""
 
     job_defaults = {
@@ -221,10 +270,10 @@ def enqueue_document_processing_job(*, document: Document, actor: AbstractBaseUs
     with transaction.atomic():
         job, _created = DocumentProcessingJob.objects.update_or_create(
             document=document,
-            job_type=DocumentProcessingJob.JOB_TYPE_WEZWANIE_OCR,
+            job_type=job_type,
             defaults=job_defaults,
         )
-        document.awaiting_confirmation = False
+        document.awaiting_confirmation = requires_confirmation
         document.ocr_status = "pending"
         document.ocr_name_mismatch = False
         document.save(update_fields=["awaiting_confirmation", "ocr_status", "ocr_name_mismatch"])
@@ -245,7 +294,6 @@ def process_pending_document_jobs(
     now = timezone.now()
 
     queryset = DocumentProcessingJob.objects.filter(
-        job_type=DocumentProcessingJob.JOB_TYPE_WEZWANIE_OCR,
         status=DocumentProcessingJob.STATUS_PENDING,
         attempts__lt=models.F("max_attempts"),
     ).filter(
@@ -274,7 +322,7 @@ def process_document_processing_job(
     send_missing_email: NotificationSender | None = None,
     send_appointment_email: NotificationSender | None = None,
 ) -> DocumentProcessingRunResult:
-    """Run OCR for a queued wezwanie document and persist the result."""
+    """Run OCR for a queued document and persist the result."""
 
     parser = parser or parse_wezwanie
     send_missing_email = send_missing_email or send_missing_documents_email
@@ -313,6 +361,17 @@ def process_document_processing_job(
         )
         document_file = job.document.file
 
+    if job.job_type == DocumentProcessingJob.JOB_TYPE_COMPANY_DOC_OCR:
+        return _process_company_doc_job_internal(job, source_file_name, document_file)
+    elif job.job_type == DocumentProcessingJob.JOB_TYPE_PASSPORT_OCR:
+        return _process_passport_doc_job_internal(job, source_file_name, document_file)
+    elif job.job_type == DocumentProcessingJob.JOB_TYPE_RENTAL_OCR:
+        return _process_rental_doc_job_internal(job, source_file_name, document_file)
+    elif job.job_type == DocumentProcessingJob.JOB_TYPE_ZUS_OCR:
+        return _process_zus_doc_job_internal(job, source_file_name, document_file)
+    elif job.job_type == DocumentProcessingJob.JOB_TYPE_INSURANCE_OCR:
+        return _process_insurance_doc_job_internal(job, source_file_name, document_file)
+
     try:
         with document_file.open("rb") as src:
             ext = os.path.splitext(document_file.name or "")[1]
@@ -349,6 +408,672 @@ def process_document_processing_job(
         parsed=parsed,
         send_missing_email=send_missing_email,
         send_appointment_email=send_appointment_email,
+    )
+
+
+def _process_company_upload_job_inline(
+    *,
+    job_id: int,
+    document: Document,
+    document_type_display: str,
+) -> DocumentUploadResult:
+    result = process_document_processing_job(job_id=job_id)
+    document.refresh_from_db()
+    
+    manual_review_required = result.manual_review_required or document.ocr_status == "failed"
+    return DocumentUploadResult(
+        document=document,
+        message=_("Document '%(name)s' uploaded and verified: %(msg)s") % {
+            "name": document_type_display,
+            "msg": result.message,
+        },
+        manual_review_required=manual_review_required,
+        parsed_payload=document.parsed_data or {},
+    )
+
+
+def _process_company_doc_job_internal(
+    job: DocumentProcessingJob,
+    source_file_name: str,
+    document_file: Any,
+) -> DocumentProcessingRunResult:
+    try:
+        with document_file.open("rb") as src:
+            ext = os.path.splitext(document_file.name or "")[1]
+            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+                for chunk in src.chunks():
+                    tmp.write(chunk)
+                tmp_path = tmp.name
+        try:
+            parsed = parse_company_doc(tmp_path)
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+    except Exception as exc:
+        logger.warning(
+            "Automatic company doc parsing failed for queued job %s: error_type=%s",
+            job.id,
+            type(exc).__name__,
+        )
+        return _finalize_failed_company_job(
+            job_id=job.id,
+            source_file_name=source_file_name,
+            error_message=str(_("Automatic company doc parsing failed.")),
+        )
+
+    # Call registry verification
+    try:
+        report = verify_employer(
+            nip=parsed.nip,
+            krs=parsed.krs,
+            detected_names=parsed.detected_names,
+        )
+    except Exception as exc:
+        logger.warning(
+            "Registry verification failed for job %s: error_type=%s",
+            job.id,
+            type(exc).__name__,
+        )
+        report = {
+            "registry_source": None,
+            "company_name": None,
+            "is_employer_active": False,
+            "nip": parsed.nip,
+            "krs": parsed.krs,
+            "representatives": [],
+            "signer_authorized": False,
+            "matched_signer": None,
+            "warnings": [f"Registry query failed with error: {str(exc)}"]
+        }
+
+    # Minimum salary check (4300 PLN as of 2026)
+    MIN_SALARY = 4300.0
+    if parsed.salary is not None:
+        if parsed.salary < MIN_SALARY:
+            report["warnings"].append(
+                str(_("Salary %(salary)s PLN is below the statutory minimum of %(min)s PLN.") % {
+                    "salary": parsed.salary,
+                    "min": MIN_SALARY
+                })
+            )
+    else:
+        report["warnings"].append(str(_("Could not extract salary from the document.")))
+
+    parsed_payload = {
+        "nip": parsed.nip,
+        "krs": parsed.krs,
+        "salary": parsed.salary,
+        "valid_until": parsed.valid_until.isoformat() if parsed.valid_until else None,
+        "detected_names": parsed.detected_names,
+        "registry_verification": report
+    }
+
+    return _finalize_successful_company_job(
+        job_id=job.id,
+        source_file_name=source_file_name,
+        parsed_payload=parsed_payload,
+        warnings=report["warnings"],
+    )
+
+
+def _finalize_failed_company_job(
+    *,
+    job_id: int,
+    source_file_name: str,
+    error_message: str,
+) -> DocumentProcessingRunResult:
+    with transaction.atomic():
+        job = DocumentProcessingJob.objects.select_for_update().get(pk=job_id)
+        job.status = DocumentProcessingJob.STATUS_FAILED
+        job.error_message = error_message
+        job.completed_at = timezone.now()
+        job.source_file_name = source_file_name
+        job.save(update_fields=["status", "error_message", "completed_at", "source_file_name"])
+
+        document = job.document
+        document.ocr_status = "failed"
+        document.save(update_fields=["ocr_status"])
+
+    return DocumentProcessingRunResult(
+        job=job,
+        status=DocumentProcessingJob.STATUS_FAILED,
+        processed=False,
+        message=error_message,
+        manual_review_required=True,
+    )
+
+
+def _finalize_successful_company_job(
+    *,
+    job_id: int,
+    source_file_name: str,
+    parsed_payload: dict[str, Any],
+    warnings: list[str],
+) -> DocumentProcessingRunResult:
+    with transaction.atomic():
+        job = DocumentProcessingJob.objects.select_for_update().get(pk=job_id)
+        job.status = DocumentProcessingJob.STATUS_COMPLETED
+        job.completed_at = timezone.now()
+        job.error_message = ""
+        job.source_file_name = source_file_name
+        job.save(update_fields=["status", "completed_at", "error_message", "source_file_name"])
+
+        document = job.document
+        document.parsed_data = parsed_payload
+        document.ocr_status = "completed"
+        document.ocr_name_mismatch = bool(warnings)
+        document.save(update_fields=["parsed_data", "ocr_status", "ocr_name_mismatch"])
+
+    msg = (
+        _("Company document verified successfully with %(warning_count)s warnings.") % {
+            "warning_count": len(warnings)
+        }
+        if warnings else
+        _("Company document verified successfully.")
+    )
+    return DocumentProcessingRunResult(
+        job=job,
+        status=DocumentProcessingJob.STATUS_COMPLETED,
+        processed=True,
+        message=msg,
+        manual_review_required=bool(warnings),
+    )
+
+
+def _finalize_failed_ocr_job(
+    *,
+    job_id: int,
+    source_file_name: str,
+    error_message: str,
+) -> DocumentProcessingRunResult:
+    with transaction.atomic():
+        job = DocumentProcessingJob.objects.select_for_update().get(pk=job_id)
+        job.status = DocumentProcessingJob.STATUS_FAILED
+        job.error_message = error_message
+        job.completed_at = timezone.now()
+        job.source_file_name = source_file_name
+        job.save(update_fields=["status", "error_message", "completed_at", "source_file_name"])
+
+        document = job.document
+        document.ocr_status = "failed"
+        document.save(update_fields=["ocr_status"])
+
+    return DocumentProcessingRunResult(
+        job=job,
+        status=DocumentProcessingJob.STATUS_FAILED,
+        processed=False,
+        message=error_message,
+        manual_review_required=True,
+    )
+
+
+def _finalize_successful_ocr_job(
+    *,
+    job_id: int,
+    source_file_name: str,
+    parsed_payload: dict[str, Any],
+    warnings: list[str],
+    doc_type_display: str,
+) -> DocumentProcessingRunResult:
+    with transaction.atomic():
+        job = DocumentProcessingJob.objects.select_for_update().get(pk=job_id)
+        job.status = DocumentProcessingJob.STATUS_COMPLETED
+        job.completed_at = timezone.now()
+        job.error_message = ""
+        job.source_file_name = source_file_name
+        job.save(update_fields=["status", "completed_at", "error_message", "source_file_name"])
+
+        document = job.document
+        document.parsed_data = parsed_payload
+        document.ocr_status = "completed"
+        document.ocr_name_mismatch = bool(warnings)
+        document.save(update_fields=["parsed_data", "ocr_status", "ocr_name_mismatch"])
+
+    msg = (
+        _("%(doc_type)s verified with %(warning_count)s warnings.") % {
+            "doc_type": doc_type_display,
+            "warning_count": len(warnings)
+        }
+        if warnings else
+        _("%(doc_type)s verified successfully.") % {"doc_type": doc_type_display}
+    )
+    return DocumentProcessingRunResult(
+        job=job,
+        status=DocumentProcessingJob.STATUS_COMPLETED,
+        processed=True,
+        message=msg,
+        manual_review_required=bool(warnings),
+    )
+
+
+def _check_client_name_in_document(client: Client, detected_names: list[str], text: str) -> bool:
+    """
+    Checks if client's name matches one of the detected names,
+    or if both first name and last name are found in the text.
+    """
+    client_full_name = client.get_full_name()
+    if detected_names:
+        matched = match_names(detected_names, [client_full_name])
+        if matched:
+            return True
+            
+    # Fallback check on raw text
+    norm_text = normalize_string(text)
+    norm_first = normalize_string(client.first_name)
+    norm_last = normalize_string(client.last_name)
+    if norm_first and norm_last:
+        if norm_first in norm_text and norm_last in norm_text:
+            return True
+    return False
+
+
+def _process_passport_doc_job_internal(
+    job: DocumentProcessingJob,
+    source_file_name: str,
+    document_file: Any,
+) -> DocumentProcessingRunResult:
+    from clients.services.passport_parser import parse_passport_doc
+    
+    try:
+        with document_file.open("rb") as src:
+            ext = os.path.splitext(document_file.name or "")[1]
+            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+                for chunk in src.chunks():
+                    tmp.write(chunk)
+                tmp_path = tmp.name
+        try:
+            parsed = parse_passport_doc(tmp_path)
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+    except Exception as exc:
+        logger.warning(
+            "Automatic passport parsing failed for queued job %s: error_type=%s",
+            job.id,
+            type(exc).__name__,
+        )
+        return _finalize_failed_ocr_job(
+            job_id=job.id,
+            source_file_name=source_file_name,
+            error_message=str(_("Automatic passport parsing failed.")),
+        )
+
+    if parsed.error == "no_text":
+        return _finalize_failed_ocr_job(
+            job_id=job.id,
+            source_file_name=source_file_name,
+            error_message=str(_("Could not extract any text from the passport.")),
+        )
+
+    client = job.document.client
+    warnings = []
+    auto_updates = []
+
+    # 1. Verify Name
+    passport_names = []
+    if parsed.first_name and parsed.last_name:
+        passport_names.append(f"{parsed.first_name} {parsed.last_name}")
+    
+    name_matched = _check_client_name_in_document(client, passport_names, parsed.text)
+    if not name_matched:
+        warnings.append(str(_("Client name not matched in the passport.")))
+
+    # 2. Verify DOB
+    if parsed.date_of_birth and client.birth_date:
+        if parsed.date_of_birth != client.birth_date:
+            warnings.append(
+                str(_("Passport Date of Birth (%(passport_dob)s) does not match Client DOB (%(client_dob)s).") % {
+                    "passport_dob": parsed.date_of_birth.isoformat(),
+                    "client_dob": client.birth_date.isoformat(),
+                })
+            )
+    elif not parsed.date_of_birth:
+        warnings.append(str(_("Could not extract Date of Birth from the passport.")))
+
+    # 3. Verify validity/expiry
+    if parsed.valid_until:
+        if parsed.valid_until < date.today():
+            warnings.append(
+                str(_("Passport has expired on %(expiry)s.") % {"expiry": parsed.valid_until.isoformat()})
+            )
+        elif parsed.valid_until <= date.today() + timedelta(days=90):
+            warnings.append(
+                str(_("Passport expires soon (%(expiry)s), in less than 3 months.") % {"expiry": parsed.valid_until.isoformat()})
+            )
+    else:
+        warnings.append(str(_("Could not extract Passport expiration date.")))
+
+    # 4. Auto-update passport number if missing in DB
+    if parsed.passport_number:
+        passport_num_clean = re.sub(r"\s+", "", parsed.passport_number).upper()
+        if not client.passport_num:
+            client.passport_num = passport_num_clean
+            client.save(update_fields=["passport_num"])
+            auto_updates.append(f"Updated missing client passport number to: {passport_num_clean}")
+        elif client.passport_num.replace(" ", "").upper() != passport_num_clean:
+            warnings.append(
+                str(_("Passport number in document (%(doc_num)s) does not match profile (%(profile_num)s).") % {
+                    "doc_num": passport_num_clean,
+                    "profile_num": client.passport_num,
+                })
+            )
+
+    parsed_payload = {
+        "passport_number": parsed.passport_number,
+        "first_name": parsed.first_name,
+        "last_name": parsed.last_name,
+        "date_of_birth": parsed.date_of_birth.isoformat() if parsed.date_of_birth else None,
+        "valid_until": parsed.valid_until.isoformat() if parsed.valid_until else None,
+        "country": parsed.country,
+        "warnings": warnings,
+        "auto_updates": auto_updates
+    }
+
+    return _finalize_successful_ocr_job(
+        job_id=job.id,
+        source_file_name=source_file_name,
+        parsed_payload=parsed_payload,
+        warnings=warnings,
+        doc_type_display=str(_("Passport")),
+    )
+
+
+def _process_rental_doc_job_internal(
+    job: DocumentProcessingJob,
+    source_file_name: str,
+    document_file: Any,
+) -> DocumentProcessingRunResult:
+    from clients.services.rental_parser import parse_rental_doc
+    
+    try:
+        with document_file.open("rb") as src:
+            ext = os.path.splitext(document_file.name or "")[1]
+            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+                for chunk in src.chunks():
+                    tmp.write(chunk)
+                tmp_path = tmp.name
+        try:
+            parsed = parse_rental_doc(tmp_path)
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+    except Exception as exc:
+        logger.warning(
+            "Automatic rental agreement parsing failed for queued job %s: error_type=%s",
+            job.id,
+            type(exc).__name__,
+        )
+        return _finalize_failed_ocr_job(
+            job_id=job.id,
+            source_file_name=source_file_name,
+            error_message=str(_("Automatic rental agreement parsing failed.")),
+        )
+
+    if parsed.error == "no_text":
+        return _finalize_failed_ocr_job(
+            job_id=job.id,
+            source_file_name=source_file_name,
+            error_message=str(_("Could not extract any text from the rental agreement.")),
+        )
+
+    client = job.document.client
+    warnings = []
+
+    # 1. Verify Name
+    name_matched = _check_client_name_in_document(client, parsed.detected_names, parsed.text)
+    if not name_matched:
+        warnings.append(str(_("Client name not matched in the rental agreement.")))
+
+    # 2. Verify Address
+    mos_data = getattr(client, "mos_application_data", None)
+    if mos_data and mos_data.address_data:
+        street = mos_data.address_data.get("street", "").strip()
+        city = mos_data.address_data.get("city", "").strip()
+        postal_code = mos_data.address_data.get("postal_code", "").strip()
+        
+        if street or city or postal_code:
+            norm_parsed_addr = normalize_string(parsed.address or "")
+            norm_street = normalize_string(street)
+            norm_city = normalize_string(city)
+            norm_postcode = re.sub(r"\D", "", postal_code)
+            norm_parsed_postcode = re.sub(r"\D", "", parsed.address or "")
+            
+            has_street = norm_street in norm_parsed_addr if norm_street else True
+            has_city = norm_city in norm_parsed_addr if norm_city else True
+            has_postcode = norm_postcode in norm_parsed_postcode if norm_postcode else True
+            
+            if not (has_street and has_city and has_postcode):
+                warnings.append(
+                    str(_("Agreement address does not match onboarding address: %(onboarding_addr)s.") % {
+                        "onboarding_addr": f"{street}, {postal_code} {city}".strip(", "),
+                    })
+                )
+        else:
+            warnings.append(str(_("Address details are not filled in onboarding profile.")))
+    else:
+        warnings.append(str(_("Onboarding address data not found.")))
+
+    # 3. Verify validity/expiry
+    if parsed.valid_until:
+        if parsed.valid_until < date.today():
+            warnings.append(
+                str(_("Rental agreement has expired on %(expiry)s.") % {"expiry": parsed.valid_until.isoformat()})
+            )
+
+    parsed_payload = {
+        "address": parsed.address,
+        "valid_until": parsed.valid_until.isoformat() if parsed.valid_until else None,
+        "monthly_cost": parsed.monthly_cost,
+        "detected_names": parsed.detected_names,
+        "warnings": warnings,
+    }
+
+    return _finalize_successful_ocr_job(
+        job_id=job.id,
+        source_file_name=source_file_name,
+        parsed_payload=parsed_payload,
+        warnings=warnings,
+        doc_type_display=str(_("Rental Agreement")),
+    )
+
+
+def _process_zus_doc_job_internal(
+    job: DocumentProcessingJob,
+    source_file_name: str,
+    document_file: Any,
+) -> DocumentProcessingRunResult:
+    from clients.services.zus_parser import parse_zus_doc
+    
+    try:
+        with document_file.open("rb") as src:
+            ext = os.path.splitext(document_file.name or "")[1]
+            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+                for chunk in src.chunks():
+                    tmp.write(chunk)
+                tmp_path = tmp.name
+        try:
+            parsed = parse_zus_doc(tmp_path)
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+    except Exception as exc:
+        logger.warning(
+            "Automatic ZUS document parsing failed for queued job %s: error_type=%s",
+            job.id,
+            type(exc).__name__,
+        )
+        return _finalize_failed_ocr_job(
+            job_id=job.id,
+            source_file_name=source_file_name,
+            error_message=str(_("Automatic ZUS document parsing failed.")),
+        )
+
+    if parsed.error == "no_text":
+        return _finalize_failed_ocr_job(
+            job_id=job.id,
+            source_file_name=source_file_name,
+            error_message=str(_("Could not extract any text from the ZUS document.")),
+        )
+
+    client = job.document.client
+    warnings = []
+
+    # 1. Verify Name
+    name_matched = _check_client_name_in_document(client, parsed.detected_names, parsed.text)
+    if not name_matched:
+        warnings.append(str(_("Client name not matched in the ZUS document.")))
+
+    # 2. Verify Employer NIP
+    contract_nip = None
+    from clients.constants import COMPANY_DOCUMENT_TYPES
+    company_docs = Document.objects.filter(
+        client=client,
+        document_type__in=list(COMPANY_DOCUMENT_TYPES),
+        ocr_status="completed"
+    )
+    for doc in company_docs:
+        if doc.parsed_data and isinstance(doc.parsed_data, dict):
+            nip_val = doc.parsed_data.get("nip")
+            if nip_val:
+                contract_nip = re.sub(r"[^\d]", "", str(nip_val))
+                break
+                
+    if parsed.employer_nip:
+        zus_nip_clean = re.sub(r"[^\d]", "", parsed.employer_nip)
+        if contract_nip:
+            if zus_nip_clean != contract_nip:
+                warnings.append(
+                    str(_("ZUS employer NIP (%(zus_nip)s) does not match contract NIP (%(contract_nip)s).") % {
+                        "zus_nip": parsed.employer_nip,
+                        "contract_nip": contract_nip,
+                    })
+                )
+        else:
+            from clients.services.company_parser import validate_nip
+            if not validate_nip(zus_nip_clean):
+                warnings.append(str(_("Extracted employer NIP %(nip)s is invalid.") % {"nip": parsed.employer_nip}))
+    else:
+        warnings.append(str(_("Could not extract employer NIP from the ZUS document.")))
+
+    # 3. Check Insurance Code
+    if parsed.insurance_code:
+        if not parsed.insurance_code.startswith(("0110", "0411")):
+            warnings.append(
+                str(_("Insurance code '%(code)s' indicates non-standard employment type (expected Umowa o pracę/zlecenie).") % {
+                    "code": parsed.insurance_code
+                })
+            )
+    else:
+        warnings.append(str(_("Could not extract insurance code (e.g. 011000) from ZUS.")))
+
+    parsed_payload = {
+        "employer_nip": parsed.employer_nip,
+        "insurance_code": parsed.insurance_code,
+        "detected_names": parsed.detected_names,
+        "warnings": warnings,
+    }
+
+    return _finalize_successful_ocr_job(
+        job_id=job.id,
+        source_file_name=source_file_name,
+        parsed_payload=parsed_payload,
+        warnings=warnings,
+        doc_type_display=str(_("ZUS Document")),
+    )
+
+
+def _process_insurance_doc_job_internal(
+    job: DocumentProcessingJob,
+    source_file_name: str,
+    document_file: Any,
+) -> DocumentProcessingRunResult:
+    from clients.services.insurance_parser import parse_insurance_doc
+    
+    try:
+        with document_file.open("rb") as src:
+            ext = os.path.splitext(document_file.name or "")[1]
+            with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+                for chunk in src.chunks():
+                    tmp.write(chunk)
+                tmp_path = tmp.name
+        try:
+            parsed = parse_insurance_doc(tmp_path)
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+    except Exception as exc:
+        logger.warning(
+            "Automatic insurance parsing failed for queued job %s: error_type=%s",
+            job.id,
+            type(exc).__name__,
+        )
+        return _finalize_failed_ocr_job(
+            job_id=job.id,
+            source_file_name=source_file_name,
+            error_message=str(_("Automatic insurance parsing failed.")),
+        )
+
+    if parsed.error == "no_text":
+        return _finalize_failed_ocr_job(
+            job_id=job.id,
+            source_file_name=source_file_name,
+            error_message=str(_("Could not extract any text from the insurance document.")),
+        )
+
+    client = job.document.client
+    warnings = []
+
+    # 1. Verify Name
+    name_matched = _check_client_name_in_document(client, parsed.detected_names, parsed.text)
+    if not name_matched:
+        warnings.append(str(_("Client name not matched in the insurance policy.")))
+
+    # 2. Verify validity/expiry
+    if parsed.valid_until:
+        if parsed.valid_until < date.today():
+            warnings.append(
+                str(_("Insurance policy has expired on %(expiry)s.") % {"expiry": parsed.valid_until.isoformat()})
+            )
+    else:
+        warnings.append(str(_("Could not extract insurance expiration date.")))
+
+    # 3. Verify Coverage Limit (>= 30,000 EUR or >= 120,000 PLN)
+    if parsed.coverage_amount and parsed.currency:
+        if parsed.currency == "EUR" and parsed.coverage_amount < 30000.0:
+            warnings.append(
+                str(_("Insurance coverage limit (%(amount)s EUR) is below the statutory minimum of 30,000 EUR.") % {
+                    "amount": parsed.coverage_amount
+                })
+            )
+        elif parsed.currency == "PLN" and parsed.coverage_amount < 120000.0:
+            warnings.append(
+                str(_("Insurance coverage limit (%(amount)s PLN) is below the statutory minimum of 120,000 PLN.") % {
+                    "amount": parsed.coverage_amount
+                })
+            )
+        elif parsed.currency not in ("EUR", "PLN"):
+            warnings.append(
+                str(_("Insurance coverage currency is '%(curr)s' (expected EUR or PLN). Cannot verify coverage limit.") % {
+                    "curr": parsed.currency
+                })
+            )
+    else:
+        warnings.append(str(_("Could not extract insurance coverage amount or currency (min 30,000 EUR / 120,000 PLN).")))
+
+    parsed_payload = {
+        "valid_until": parsed.valid_until.isoformat() if parsed.valid_until else None,
+        "coverage_amount": parsed.coverage_amount,
+        "currency": parsed.currency,
+        "detected_names": parsed.detected_names,
+        "warnings": warnings,
+    }
+
+    return _finalize_successful_ocr_job(
+        job_id=job.id,
+        source_file_name=source_file_name,
+        parsed_payload=parsed_payload,
+        warnings=warnings,
+        doc_type_display=str(_("Health Insurance")),
     )
 
 
@@ -567,7 +1292,6 @@ def _job_matches_processing_state(
 def reclaim_stale_document_jobs(*, now: datetime | None = None) -> int:
     now = now or timezone.now()
     stale_jobs = DocumentProcessingJob.objects.filter(
-        job_type=DocumentProcessingJob.JOB_TYPE_WEZWANIE_OCR,
         status=DocumentProcessingJob.STATUS_PROCESSING,
         lease_expires_at__isnull=False,
         lease_expires_at__lt=now,

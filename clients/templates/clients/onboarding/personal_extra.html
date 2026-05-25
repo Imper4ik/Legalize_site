@@ -12,14 +12,17 @@
         <div class="mb-3">
             <label class="form-label fw-bold">{% trans "Имя отца" %}</label>
             <input type="text" name="father_name" class="form-control" value="{{ mos_data.personal_data.father_name|default:'' }}" required>
+            <div class="form-text text-muted">{% trans "Только первое имя отца латиницей (например: IVAN, без отчества)." %}</div>
         </div>
         <div class="mb-3">
             <label class="form-label fw-bold">{% trans "Имя матери" %}</label>
             <input type="text" name="mother_name" class="form-control" value="{{ mos_data.personal_data.mother_name|default:'' }}" required>
+            <div class="form-text text-muted">{% trans "Только первое имя матери латиницей (например: MARIIA, без отчества)." %}</div>
         </div>
         <div class="mb-3">
             <label class="form-label fw-bold">{% trans "Девичья фамилия матери" %}</label>
             <input type="text" name="mother_maiden_name" class="form-control" value="{{ mos_data.personal_data.mother_maiden_name|default:'' }}" required>
+            <div class="form-text text-muted">{% trans "Фамилия матери при рождении (до замужества) латиницей." %}</div>
         </div>
     </div>
 

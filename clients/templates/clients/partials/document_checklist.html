@@ -65,6 +65,178 @@
               v{{ doc.version_count|add:"1" }} ({% translate "History" %})
             </a>
             {% endif %}
+            
+            {% if doc.parsed_data and doc.parsed_data.registry_verification %}
+            <div class="mt-2 p-2 border rounded bg-light small" style="max-width: 600px;">
+              <div class="fw-bold text-secondary mb-1">
+                <i class="bi bi-building"></i> {% translate "Проверка работодателя (KRS/CEIDG):" %}
+              </div>
+              <div class="mb-1">
+                <strong>{% translate "Компания:" %}</strong> {{ doc.parsed_data.registry_verification.company_name|default:"-" }}
+              </div>
+              <div class="mb-1">
+                <strong>NIP:</strong> {{ doc.parsed_data.nip|default:"-" }} | <strong>KRS:</strong> {{ doc.parsed_data.krs|default:"-" }}
+              </div>
+              {% if doc.parsed_data.salary %}
+              <div class="mb-1">
+                <strong>{% translate "Зарплата:" %}</strong> {{ doc.parsed_data.salary }} PLN
+              </div>
+              {% endif %}
+              {% if doc.parsed_data.valid_until %}
+              <div class="mb-1">
+                <strong>{% translate "Действует до:" %}</strong> {{ doc.parsed_data.valid_until }}
+              </div>
+              {% endif %}
+              <div class="mt-1">
+                <strong>{% translate "Статус представительства:" %}</strong>
+                {% if doc.parsed_data.registry_verification.signer_authorized %}
+                <span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> {% translate "Подписант подтвержден" %} ({{ doc.parsed_data.registry_verification.matched_signer }})</span>
+                {% else %}
+                <span class="text-warning fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> {% translate "Подписант не подтвержден" %}</span>
+                {% endif %}
+              </div>
+              {% if doc.parsed_data.registry_verification.warnings %}
+              <div class="text-danger mt-1">
+                <strong>{% translate "Предупреждения:" %}</strong>
+                <ul class="mb-0 ps-3">
+                  {% for warning in doc.parsed_data.registry_verification.warnings %}
+                  <li>{{ warning }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            {% if doc.document_type == 'passport' and doc.parsed_data %}
+            <div class="mt-2 p-2 border rounded bg-light small" style="max-width: 600px;">
+              <div class="fw-bold text-secondary mb-1">
+                <i class="bi bi-card-text"></i> {% translate "Автоматическая проверка паспорта (OCR):" %}
+              </div>
+              <div class="mb-1">
+                <strong>{% translate "Имя / Фамилия:" %}</strong> {{ doc.parsed_data.first_name|default:"-" }} {{ doc.parsed_data.last_name|default:"-" }}
+              </div>
+              <div class="mb-1">
+                <strong>{% translate "Номер паспорта:" %}</strong> {{ doc.parsed_data.passport_number|default:"-" }}
+              </div>
+              <div class="mb-1">
+                <strong>{% translate "Дата рождения:" %}</strong> {{ doc.parsed_data.date_of_birth|default:"-" }}
+              </div>
+              <div class="mb-1">
+                <strong>{% translate "Действует до:" %}</strong> {{ doc.parsed_data.valid_until|default:"-" }}
+              </div>
+              {% if doc.parsed_data.country %}
+              <div class="mb-1">
+                <strong>{% translate "Страна:" %}</strong> {{ doc.parsed_data.country }}
+              </div>
+              {% endif %}
+              {% if doc.parsed_data.warnings %}
+              <div class="text-danger mt-1">
+                <strong>{% translate "Предупреждения:" %}</strong>
+                <ul class="mb-0 ps-3">
+                  {% for warning in doc.parsed_data.warnings %}
+                  <li>{{ warning }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              {% endif %}
+              {% if doc.parsed_data.auto_updates %}
+              <div class="text-success mt-1">
+                <strong>{% translate "Автоматические обновления:" %}</strong>
+                <ul class="mb-0 ps-3">
+                  {% for update in doc.parsed_data.auto_updates %}
+                  <li>{{ update }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            {% if doc.document_type == 'address_proof' and doc.parsed_data %}
+            <div class="mt-2 p-2 border rounded bg-light small" style="max-width: 600px;">
+              <div class="fw-bold text-secondary mb-1">
+                <i class="bi bi-house"></i> {% translate "Автоматическая проверка договора аренды (OCR):" %}
+              </div>
+              <div class="mb-1">
+                <strong>{% translate "Адрес:" %}</strong> {{ doc.parsed_data.address|default:"-" }}
+              </div>
+              {% if doc.parsed_data.monthly_cost %}
+              <div class="mb-1">
+                <strong>{% translate "Стоимость аренды:" %}</strong> {{ doc.parsed_data.monthly_cost }} PLN
+              </div>
+              {% endif %}
+              {% if doc.parsed_data.valid_until %}
+              <div class="mb-1">
+                <strong>{% translate "Действует до:" %}</strong> {{ doc.parsed_data.valid_until }}
+              </div>
+              {% endif %}
+              {% if doc.parsed_data.warnings %}
+              <div class="text-danger mt-1">
+                <strong>{% translate "Предупреждения:" %}</strong>
+                <ul class="mb-0 ps-3">
+                  {% for warning in doc.parsed_data.warnings %}
+                  <li>{{ warning }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            {% if doc.document_type == 'zus_rca_or_insurance' or doc.document_type == 'zus_contribution_history' %}
+              {% if doc.parsed_data %}
+              <div class="mt-2 p-2 border rounded bg-light small" style="max-width: 600px;">
+                <div class="fw-bold text-secondary mb-1">
+                  <i class="bi bi-file-earmark-medical"></i> {% translate "Автоматическая проверка ZUS (OCR):" %}
+                </div>
+                <div class="mb-1">
+                  <strong>{% translate "NIP работодателя:" %}</strong> {{ doc.parsed_data.employer_nip|default:"-" }}
+                </div>
+                <div class="mb-1">
+                  <strong>{% translate "Код страхования:" %}</strong> {{ doc.parsed_data.insurance_code|default:"-" }}
+                </div>
+                {% if doc.parsed_data.warnings %}
+                <div class="text-danger mt-1">
+                  <strong>{% translate "Предупреждения:" %}</strong>
+                  <ul class="mb-0 ps-3">
+                    {% for warning in doc.parsed_data.warnings %}
+                    <li>{{ warning }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+                {% endif %}
+              </div>
+              {% endif %}
+            {% endif %}
+
+            {% if doc.document_type == 'health_insurance' and doc.parsed_data %}
+            <div class="mt-2 p-2 border rounded bg-light small" style="max-width: 600px;">
+              <div class="fw-bold text-secondary mb-1">
+                <i class="bi bi-shield-check"></i> {% translate "Автоматическая проверка страховки (OCR):" %}
+              </div>
+              {% if doc.parsed_data.coverage_amount %}
+              <div class="mb-1">
+                <strong>{% translate "Сумма покрытия:" %}</strong> {{ doc.parsed_data.coverage_amount }} {{ doc.parsed_data.currency }}
+              </div>
+              {% endif %}
+              {% if doc.parsed_data.valid_until %}
+              <div class="mb-1">
+                <strong>{% translate "Действует до:" %}</strong> {{ doc.parsed_data.valid_until }}
+              </div>
+              {% endif %}
+              {% if doc.parsed_data.warnings %}
+              <div class="text-danger mt-1">
+                <strong>{% translate "Предупреждения:" %}</strong>
+                <ul class="mb-0 ps-3">
+                  {% for warning in doc.parsed_data.warnings %}
+                  <li>{{ warning }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              {% endif %}
+            </div>
+            {% endif %}
           </div>
           <div class="btn-group document-row-actions">
             {% if doc.file_exists != False %}
