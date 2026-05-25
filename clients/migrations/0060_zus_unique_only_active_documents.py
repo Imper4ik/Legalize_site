@@ -2,8 +2,6 @@
 
 from django.db import migrations, models
 
-import clients.constants
-
 
 class Migration(migrations.Migration):
 
@@ -22,7 +20,7 @@ class Migration(migrations.Migration):
                 fields=("client", "document_type", "zus_period_month"),
                 condition=models.Q(
                     ("archived_at__isnull", True),
-                    ("document_type", clients.constants.DocumentType["ZUS_RCA_OR_INSURANCE"]),
+                    ("document_type", "zus_rca_or_insurance"),
                     ("zus_period_month__isnull", False),
                 ),
                 name="unique_zus_rca_period_per_client",
