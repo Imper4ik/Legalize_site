@@ -391,7 +391,7 @@ def test_zus_rca_uploaded_period_closes_month_and_duplicates_are_blocked(sample_
 
 
 @pytest.mark.django_db
-def test_zus_period_form_ignores_non_zus_and_requires_zus_month(sample_client):
+def test_zus_period_form_ignores_non_zus_and_normalizes_optional_zus_month(sample_client):
     non_zus_form = DocumentUploadForm(
         data={"expiry_date": "", "zus_period_month": "2026-04-20"},
         files={"file": tiny_png("passport.png")},
@@ -405,14 +405,14 @@ def test_zus_period_form_ignores_non_zus_and_requires_zus_month(sample_client):
     document.save()
     assert document.zus_period_month is None
 
-    missing_month_form = DocumentUploadForm(
+    blank_month_form = DocumentUploadForm(
         data={"expiry_date": "", "zus_period_month": ""},
         files={"file": tiny_png("zus.png")},
         doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
         client=sample_client,
     )
-    assert not missing_month_form.is_valid()
-    assert "zus_period_month" in missing_month_form.errors
+    assert blank_month_form.is_valid(), blank_month_form.errors
+    assert blank_month_form.cleaned_data["zus_period_month"] is None
 
     zus_form = DocumentUploadForm(
         data={"expiry_date": "", "zus_period_month": "2026-04-20"},

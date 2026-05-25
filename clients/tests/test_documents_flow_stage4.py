@@ -80,6 +80,27 @@ class DocumentFlowsStage4Tests(TestCase):
         self.assertTrue(job.requires_confirmation)
         self.assertEqual(job.status, DocumentProcessingJob.STATUS_PENDING)
 
+    def test_add_zus_or_insurance_document_allows_blank_period_month(self):
+        uploaded = build_pdf_upload("zus-or-insurance.pdf", "ZUS or insurance test")
+        response = self.client.post(
+            reverse(
+                "clients:add_document",
+                kwargs={"client_id": self.client_obj.pk, "doc_type": DocumentType.ZUS_RCA_OR_INSURANCE.value},
+            ),
+            data={"file": uploaded, "expiry_date": "", "zus_period_month": ""},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["status"], "success")
+        self.assertTrue(payload["ocr_processing_queued"])
+
+        document = Document.objects.get(client=self.client_obj, document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value)
+        self.assertIsNone(document.zus_period_month)
+        self.assertEqual(document.ocr_status, "pending")
+        self.assertTrue(DocumentProcessingJob.objects.filter(document=document).exists())
+
     @override_settings(ASYNC_OCR_PROCESSING=False)
     @patch("clients.views.documents.parse_wezwanie")
     def test_add_document_with_inline_parse_returns_confirmation_payload(self, parse_mock):

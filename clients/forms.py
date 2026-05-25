@@ -466,7 +466,7 @@ class DocumentUploadForm(forms.ModelForm):
         if self.doc_type != DocumentType.ZUS_RCA_OR_INSURANCE.value:
             return None
         if not value:
-            raise forms.ValidationError(_("Select the ZUS RCA month."))
+            return None
         normalized = value.replace(day=1)
         if (
             self.client is not None

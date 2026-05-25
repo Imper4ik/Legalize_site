@@ -299,7 +299,7 @@ class TestZusRcaBackend:
 class TestDocumentUploadFormZus:
 
     @pytest.mark.django_db
-    def test_zus_rca_requires_period_month(self):
+    def test_zus_rca_allows_blank_period_month_for_insurance_policy(self):
         client = _make_client(None)
         form = DocumentUploadForm(
             data={"expiry_date": "", "zus_period_month": ""},
@@ -307,8 +307,8 @@ class TestDocumentUploadFormZus:
             doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
             client=client,
         )
-        assert not form.is_valid()
-        assert "zus_period_month" in form.errors
+        assert form.is_valid(), form.errors
+        assert form.cleaned_data["zus_period_month"] is None
 
     @pytest.mark.django_db
     def test_non_zus_clears_period_month(self):

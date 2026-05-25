@@ -121,7 +121,7 @@ function initDocumentUploadModal() {
     const fileInput = modal.querySelector('#id_file');
     if (zusGroup) zusGroup.classList.toggle('d-none', !isZusRca);
     if (zusInput) {
-      zusInput.required = isZusRca;
+      zusInput.required = false;
       if (!isZusRca) zusInput.value = '';
     }
     if (fileInput) {
