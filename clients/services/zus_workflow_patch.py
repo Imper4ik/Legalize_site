@@ -173,6 +173,9 @@ def _patch_process_zus_doc_job_internal() -> None:
             saved_month = None
             display_month = None
             month_mismatch = False
+            if document.zus_period_month is not None:
+                document.zus_period_month = None
+                document.save(update_fields=["zus_period_month"])
         else:
             detected_month = getattr(parsed, "period_month", None)
             month_warnings, month_infos, month_mismatch, final_month = _build_zus_month_status(
@@ -250,6 +253,7 @@ def _patch_process_zus_doc_job_internal() -> None:
             "month_mismatch": month_mismatch,
             "warnings": warnings,
             "infos": infos,
+            "has_name_mismatch": not name_matched,
         }
 
         return workflow._finalize_successful_ocr_job(

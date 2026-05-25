@@ -58,7 +58,11 @@
             </span>
             {% endif %}
             {% if doc.document_type == 'zus_rca_or_insurance' %}
-              {% if doc.zus_period_month %}
+              {% if doc.parsed_data.zus_form_type == 'ZUA' or doc.parsed_data.zus_form_type == 'ZCNA' or doc.parsed_data.zus_form_type == 'ZIUA' or doc.parsed_data.zus_form_type == 'ZZA' or doc.parsed_data.zus_form_type == 'ZWUA' %}
+              <span class="badge bg-info text-dark ms-2" title="{% translate 'Регистрационная форма ZUS' %}">
+                <i class="bi bi-file-earmark-person"></i> ZUS {{ doc.parsed_data.zus_form_type }}
+              </span>
+              {% elif doc.zus_period_month %}
               <span class="badge bg-info text-dark ms-2" title="{% translate 'Месяц отчета ZUS' %}">
                 <i class="bi bi-calendar-month"></i> {% translate "ZUS за месяц:" %} {{ doc.zus_period_month|date:"m.Y" }}
               </span>
@@ -104,7 +108,7 @@
             {% endif %}
             
             {% if doc.parsed_data and doc.parsed_data.registry_verification %}
-            <details class="mt-2 p-3 border border-secondary rounded text-light small ocr-details-container" style="max-width: 600px; background-color: rgba(255, 255, 255, 0.05);" {% if doc.ocr_name_mismatch or doc.parsed_data.registry_verification.warnings %}open{% endif %}>
+            <details class="mt-2 p-3 border border-secondary rounded text-light small ocr-details-container" style="max-width: 600px; background-color: rgba(255, 255, 255, 0.05);" {% if doc.parsed_data.has_name_mismatch %}open{% endif %}>
               <summary class="fw-bold text-info d-flex justify-content-between align-items-center cursor-pointer select-none" style="font-size: 0.95rem; list-style: none;">
                 <span>
                   <i class="bi bi-building"></i> {% translate "Проверка работодателя (KRS/CEIDG):" %}
@@ -151,7 +155,7 @@
             {% endif %}
 
             {% if doc.document_type == 'passport' and doc.parsed_data %}
-            <details class="mt-2 p-3 border border-secondary rounded text-light small ocr-details-container" style="max-width: 600px; background-color: rgba(255, 255, 255, 0.05);" {% if doc.ocr_name_mismatch %}open{% endif %}>
+            <details class="mt-2 p-3 border border-secondary rounded text-light small ocr-details-container" style="max-width: 600px; background-color: rgba(255, 255, 255, 0.05);" {% if doc.parsed_data.has_name_mismatch %}open{% endif %}>
               <summary class="fw-bold text-info d-flex justify-content-between align-items-center cursor-pointer select-none" style="font-size: 0.95rem; list-style: none;">
                 <span>
                   <i class="bi bi-card-text"></i> {% translate "Автоматическая проверка паспорта (OCR):" %}
@@ -201,7 +205,7 @@
             {% endif %}
 
             {% if doc.document_type == 'address_proof' and doc.parsed_data %}
-            <details class="mt-2 p-3 border border-secondary rounded text-light small ocr-details-container" style="max-width: 600px; background-color: rgba(255, 255, 255, 0.05);" {% if doc.ocr_name_mismatch %}open{% endif %}>
+            <details class="mt-2 p-3 border border-secondary rounded text-light small ocr-details-container" style="max-width: 600px; background-color: rgba(255, 255, 255, 0.05);" {% if doc.parsed_data.has_name_mismatch %}open{% endif %}>
               <summary class="fw-bold text-info d-flex justify-content-between align-items-center cursor-pointer select-none" style="font-size: 0.95rem; list-style: none;">
                 <span>
                   <i class="bi bi-house"></i> {% translate "Автоматическая проверка договора аренды (OCR):" %}
@@ -238,7 +242,7 @@
 
             {% if doc.document_type == 'zus_rca_or_insurance' or doc.document_type == 'zus_contribution_history' %}
               {% if doc.parsed_data %}
-              <details class="mt-2 p-3 border border-secondary rounded text-light small ocr-details-container" style="max-width: 600px; background-color: rgba(255, 255, 255, 0.05);" {% if doc.ocr_name_mismatch %}open{% endif %}>
+              <details class="mt-2 p-3 border border-secondary rounded text-light small ocr-details-container" style="max-width: 600px; background-color: rgba(255, 255, 255, 0.05);" {% if doc.parsed_data.has_name_mismatch %}open{% endif %}>
                 <summary class="fw-bold text-info d-flex justify-content-between align-items-center cursor-pointer select-none" style="font-size: 0.95rem; list-style: none;">
                   <span>
                     <i class="bi bi-file-earmark-medical"></i> {% translate "Автоматическая проверка ZUS (OCR):" %}
@@ -298,7 +302,7 @@
             {% endif %}
 
             {% if doc.document_type == 'health_insurance' and doc.parsed_data %}
-            <details class="mt-2 p-3 border border-secondary rounded text-light small ocr-details-container" style="max-width: 600px; background-color: rgba(255, 255, 255, 0.05);" {% if doc.ocr_name_mismatch %}open{% endif %}>
+            <details class="mt-2 p-3 border border-secondary rounded text-light small ocr-details-container" style="max-width: 600px; background-color: rgba(255, 255, 255, 0.05);" {% if doc.parsed_data.has_name_mismatch %}open{% endif %}>
               <summary class="fw-bold text-info d-flex justify-content-between align-items-center cursor-pointer select-none" style="font-size: 0.95rem; list-style: none;">
                 <span>
                   <i class="bi bi-shield-check"></i> {% translate "Автоматическая проверка страховки (OCR):" %}

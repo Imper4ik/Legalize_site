@@ -510,7 +510,8 @@ def _process_company_doc_job_internal(
         "salary": parsed.salary,
         "valid_until": parsed.valid_until.isoformat() if parsed.valid_until else None,
         "detected_names": parsed.detected_names,
-        "registry_verification": report
+        "registry_verification": report,
+        "has_name_mismatch": not report.get("signer_authorized", True),
     }
 
     return _finalize_successful_company_job(
@@ -771,7 +772,8 @@ def _process_passport_doc_job_internal(
         "valid_until": parsed.valid_until.isoformat() if parsed.valid_until else None,
         "country": parsed.country,
         "warnings": warnings,
-        "auto_updates": auto_updates
+        "auto_updates": auto_updates,
+        "has_name_mismatch": not name_matched,
     }
 
     return _finalize_successful_ocr_job(
@@ -871,6 +873,7 @@ def _process_rental_doc_job_internal(
         "monthly_cost": parsed.monthly_cost,
         "detected_names": parsed.detected_names,
         "warnings": warnings,
+        "has_name_mismatch": not name_matched,
     }
 
     return _finalize_successful_ocr_job(
@@ -1082,6 +1085,7 @@ def _process_insurance_doc_job_internal(
         "currency": parsed.currency,
         "detected_names": parsed.detected_names,
         "warnings": warnings,
+        "has_name_mismatch": not name_matched,
     }
 
     return _finalize_successful_ocr_job(
