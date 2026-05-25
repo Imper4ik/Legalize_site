@@ -282,18 +282,6 @@ class Document(SoftDeleteModel):
         return scrubbed
 
 
-class DocumentVersion(models.Model):
-    document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name="versions", verbose_name=_("Документ"))
-    file = models.FileField(upload_to=document_upload_path, verbose_name=_("Файл"), validators=[validate_uploaded_document])
-    uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Дата загрузки"))
-    uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
-
-    class Meta:
-        ordering = ["-uploaded_at"]
-        verbose_name = _("Версия документа")
-        verbose_name_plural = _("Версии документов")
-
-
 class DocumentRequirement(models.Model):
     application_purpose = models.CharField(max_length=20, verbose_name=_("Цель подачи"))
     document_type = models.CharField(max_length=255, verbose_name=_("Тип документа"))
