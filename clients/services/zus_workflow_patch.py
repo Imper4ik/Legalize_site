@@ -72,12 +72,7 @@ def _build_zus_month_status(document: Document, ocr_month: Any) -> tuple[list[st
 
 
 def _safe_assign_zus_month(document: Document, final_month: Any) -> tuple[Any, str | None]:
-    """Assign OCR-detected ZUS month without violating the unique month constraint.
-
-    The database allows only one ZUS RCA document per client/month. When OCR
-    detects a month that is already present, keep the newly uploaded file without
-    a month and surface a warning instead of crashing the AJAX request.
-    """
+    """Assign OCR-detected ZUS month without violating active-document uniqueness."""
     if not final_month or document.zus_period_month == final_month:
         return document.zus_period_month, None
 
@@ -88,8 +83,8 @@ def _safe_assign_zus_month(document: Document, final_month: Any) -> tuple[Any, s
     ).exclude(pk=document.pk).exists()
 
     if duplicate_exists:
-        return document.zus_period_month, str(
-            _("ZUS RCA for %(month)s already exists. OCR month was not saved to avoid a duplicate.")
+        return None, str(
+            _("ZUS RCA for %(month)s already exists. OCR month is shown below but was not saved to avoid an active duplicate.")
             % {"month": _format_month(final_month)}
         )
 
@@ -108,7 +103,7 @@ def _safe_assign_zus_month(document: Document, final_month: Any) -> tuple[Any, s
         )
         document.zus_period_month = None
         return None, str(
-            _("ZUS RCA for %(month)s already exists. OCR month was not saved to avoid a duplicate.")
+            _("ZUS RCA for %(month)s already exists. OCR month is shown below but was not saved to avoid an active duplicate.")
             % {"month": _format_month(final_month)}
         )
 
@@ -164,9 +159,10 @@ def _patch_process_zus_doc_job_internal() -> None:
             warnings.append(str(_("Client name not matched in the ZUS document.")))
 
         # 2. Verify / auto-fill ZUS RCA reporting month.
+        detected_month = getattr(parsed, "period_month", None)
         month_warnings, month_infos, month_mismatch, final_month = _build_zus_month_status(
             document,
-            getattr(parsed, "period_month", None),
+            detected_month,
         )
         warnings.extend(month_warnings)
         infos.extend(month_infos)
@@ -176,7 +172,8 @@ def _patch_process_zus_doc_job_internal() -> None:
                 infos.append(assignment_message)
             else:
                 warnings.append(assignment_message)
-        final_month = saved_month or _normalize_month(document.zus_period_month)
+
+        display_month = saved_month or final_month or _normalize_month(document.zus_period_month)
 
         # 3. Verify employer NIP.
         contract_nip = None
@@ -229,10 +226,12 @@ def _patch_process_zus_doc_job_internal() -> None:
             "employer_nip": parsed.employer_nip,
             "insurance_code": parsed.insurance_code,
             "detected_names": parsed.detected_names,
-            "ocr_month": parsed.period_month.isoformat() if getattr(parsed, "period_month", None) else None,
-            "ocr_month_display": _format_month(parsed.period_month) if getattr(parsed, "period_month", None) else "",
-            "manual_month": final_month.isoformat() if final_month else None,
-            "manual_month_display": _format_month(final_month) if final_month else "",
+            "ocr_month": detected_month.isoformat() if detected_month else None,
+            "ocr_month_display": _format_month(detected_month) if detected_month else "",
+            "manual_month": saved_month.isoformat() if saved_month else None,
+            "manual_month_display": _format_month(saved_month) if saved_month else "",
+            "detected_month": display_month.isoformat() if display_month else None,
+            "detected_month_display": _format_month(display_month) if display_month else "",
             "month_mismatch": month_mismatch,
             "warnings": warnings,
             "infos": infos,
