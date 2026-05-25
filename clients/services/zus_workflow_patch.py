@@ -110,13 +110,13 @@ def _safe_assign_zus_month(document: Document, final_month: Any) -> tuple[Any, s
 
 def _patch_process_zus_doc_job_internal() -> None:
     from clients.services import document_workflow as workflow
-    from clients.services.zus_parser import parse_zus_doc
 
     def _process_zus_doc_job_internal(
         job: DocumentProcessingJob,
         source_file_name: str,
         document_file: Any,
     ) -> Any:
+        from clients.services.zus_parser import parse_zus_doc
         try:
             with document_file.open("rb") as src:
                 ext = os.path.splitext(document_file.name or "")[1]
@@ -159,21 +159,36 @@ def _patch_process_zus_doc_job_internal() -> None:
             warnings.append(str(_("Client name not matched in the ZUS document.")))
 
         # 2. Verify / auto-fill ZUS RCA reporting month.
-        detected_month = getattr(parsed, "period_month", None)
-        month_warnings, month_infos, month_mismatch, final_month = _build_zus_month_status(
-            document,
-            detected_month,
-        )
-        warnings.extend(month_warnings)
-        infos.extend(month_infos)
-        saved_month, assignment_message = _safe_assign_zus_month(document, final_month)
-        if assignment_message:
-            if saved_month == final_month:
-                infos.append(assignment_message)
-            else:
-                warnings.append(assignment_message)
+        is_registration_form = False
+        form_type = getattr(parsed, "zus_form_type", None)
+        if form_type in ("ZUA", "ZCNA"):
+            is_registration_form = True
+        elif parsed.text:
+            normalized_text = parsed.text.upper()
+            if "ZUS ZUA" in normalized_text or "ZUS ZCNA" in normalized_text:
+                is_registration_form = True
 
-        display_month = saved_month or final_month or _normalize_month(document.zus_period_month)
+        if is_registration_form:
+            detected_month = None
+            saved_month = None
+            display_month = None
+            month_mismatch = False
+        else:
+            detected_month = getattr(parsed, "period_month", None)
+            month_warnings, month_infos, month_mismatch, final_month = _build_zus_month_status(
+                document,
+                detected_month,
+            )
+            warnings.extend(month_warnings)
+            infos.extend(month_infos)
+            saved_month, assignment_message = _safe_assign_zus_month(document, final_month)
+            if assignment_message:
+                if saved_month == final_month:
+                    infos.append(assignment_message)
+                else:
+                    warnings.append(assignment_message)
+
+            display_month = saved_month or final_month or _normalize_month(document.zus_period_month)
 
         # 3. Verify employer NIP.
         contract_nip = None
