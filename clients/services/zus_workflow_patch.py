@@ -6,6 +6,7 @@ import re
 import tempfile
 from typing import Any
 
+from django.db import IntegrityError
 from django.utils.translation import gettext as _
 
 from clients.constants import COMPANY_DOCUMENT_TYPES, DocumentType
@@ -40,7 +41,7 @@ def _build_zus_month_status(document: Document, ocr_month: Any) -> tuple[list[st
     if ocr_month and not final_month:
         final_month = ocr_month
         infos.append(
-            str(_("ZUS month was detected by OCR and saved automatically: %(month)s") % {
+            str(_("ZUS month was detected by OCR: %(month)s") % {
                 "month": _format_month(ocr_month),
             })
         )
@@ -68,6 +69,48 @@ def _build_zus_month_status(document: Document, ocr_month: Any) -> tuple[list[st
         )
 
     return warnings, infos, month_mismatch, final_month
+
+
+def _safe_assign_zus_month(document: Document, final_month: Any) -> tuple[Any, str | None]:
+    """Assign OCR-detected ZUS month without violating the unique month constraint.
+
+    The database allows only one ZUS RCA document per client/month. When OCR
+    detects a month that is already present, keep the newly uploaded file without
+    a month and surface a warning instead of crashing the AJAX request.
+    """
+    if not final_month or document.zus_period_month == final_month:
+        return document.zus_period_month, None
+
+    duplicate_exists = Document.objects.filter(
+        client_id=document.client_id,
+        document_type=document.document_type,
+        zus_period_month=final_month,
+    ).exclude(pk=document.pk).exists()
+
+    if duplicate_exists:
+        return document.zus_period_month, str(
+            _("ZUS RCA for %(month)s already exists. OCR month was not saved to avoid a duplicate.")
+            % {"month": _format_month(final_month)}
+        )
+
+    try:
+        document.zus_period_month = final_month
+        document.save(update_fields=["zus_period_month"])
+        return document.zus_period_month, str(
+            _("ZUS month was saved automatically: %(month)s") % {"month": _format_month(final_month)}
+        )
+    except IntegrityError:
+        logger.info(
+            "Skipped duplicate OCR ZUS month assignment: document_id=%s client_id=%s month=%s",
+            document.pk,
+            document.client_id,
+            final_month,
+        )
+        document.zus_period_month = None
+        return None, str(
+            _("ZUS RCA for %(month)s already exists. OCR month was not saved to avoid a duplicate.")
+            % {"month": _format_month(final_month)}
+        )
 
 
 def _patch_process_zus_doc_job_internal() -> None:
@@ -127,9 +170,13 @@ def _patch_process_zus_doc_job_internal() -> None:
         )
         warnings.extend(month_warnings)
         infos.extend(month_infos)
-        if final_month and document.zus_period_month != final_month:
-            document.zus_period_month = final_month
-            document.save(update_fields=["zus_period_month"])
+        saved_month, assignment_message = _safe_assign_zus_month(document, final_month)
+        if assignment_message:
+            if saved_month == final_month:
+                infos.append(assignment_message)
+            else:
+                warnings.append(assignment_message)
+        final_month = saved_month or _normalize_month(document.zus_period_month)
 
         # 3. Verify employer NIP.
         contract_nip = None
