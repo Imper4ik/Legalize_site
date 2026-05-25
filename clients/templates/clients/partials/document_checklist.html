@@ -213,7 +213,14 @@
                   {% endif %}
                 </div>
                 <div class="mb-1">
-                  <strong class="text-secondary">{% translate "Месяц ZUS по OCR:" %}</strong> {{ doc.parsed_data.ocr_month_display|default:doc.parsed_data.detected_month_display|default:"-" }}
+                  <strong class="text-secondary">{% translate "Месяц ZUS по OCR:" %}</strong>
+                  {% if doc.parsed_data.ocr_month_display %}
+                    {{ doc.parsed_data.ocr_month_display }}
+                  {% elif doc.parsed_data.detected_month_display %}
+                    {{ doc.parsed_data.detected_month_display }}
+                  {% else %}
+                    -
+                  {% endif %}
                 </div>
                 <div class="mb-1">
                   <strong class="text-secondary">{% translate "Месяц файла в системе:" %}</strong>
