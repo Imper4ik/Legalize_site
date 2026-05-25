@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -13,6 +14,8 @@ from clients.services.notifications import send_missing_documents_email
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
+
+logger = logging.getLogger(__name__)
 
 MissingDocumentsSender = Callable[[Client], int]
 
@@ -41,6 +44,23 @@ class WniosekAttachmentScenarioResult:
     attachment_name: str
     remaining_count: int
     submission_deleted: bool
+
+
+def _safe_send_missing_documents_email(
+    client: Client,
+    send_missing_email: MissingDocumentsSender,
+) -> bool:
+    """Send missing-documents email without breaking AJAX document actions.
+
+    Verification itself should not fail just because SMTP/template delivery had
+    a temporary error. The caller can still see emails_sent=False, while the
+    backend logs the real delivery problem.
+    """
+    try:
+        return bool(send_missing_email(client))
+    except Exception:
+        logger.exception("Failed to send missing-documents email for client_id=%s", client.pk)
+        return False
 
 
 def update_client_notes_for_client(*, client: Client, actor: AbstractBaseUser | AnonymousUser | None, notes: str) -> ClientNoteScenarioResult:
@@ -147,7 +167,7 @@ def toggle_client_document_verification(
 
     emails_sent = False
     if document.verified and not was_verified:
-        emails_sent = bool(send_missing_email(document.client))
+        emails_sent = _safe_send_missing_documents_email(document.client, send_missing_email)
 
     return DocumentScenarioResult(
         client=document.client,
@@ -177,7 +197,7 @@ def verify_all_client_documents(
 
     emails_sent = False
     if updated_count:
-        emails_sent = bool(send_missing_email(client))
+        emails_sent = _safe_send_missing_documents_email(client, send_missing_email)
 
     return DocumentScenarioResult(
         client=client,
