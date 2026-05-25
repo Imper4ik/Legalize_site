@@ -44,6 +44,14 @@
               <span class="badge bg-info text-dark ms-2" title="{% translate 'Месяц отчета ZUS' %}">
                 <i class="bi bi-calendar-month"></i> {% translate "ZUS за месяц:" %} {{ doc.zus_period_month|date:"m.Y" }}
               </span>
+              {% elif doc.parsed_data.detected_month_display %}
+              <span class="badge bg-info text-dark ms-2" title="{% translate 'Месяц ZUS найден OCR, но не сохранён как основной месяц файла' %}">
+                <i class="bi bi-calendar-month"></i> {% translate "OCR месяц:" %} {{ doc.parsed_data.detected_month_display }}
+              </span>
+              {% elif doc.parsed_data.ocr_month_display %}
+              <span class="badge bg-info text-dark ms-2" title="{% translate 'Месяц ZUS найден OCR, но не сохранён как основной месяц файла' %}">
+                <i class="bi bi-calendar-month"></i> {% translate "OCR месяц:" %} {{ doc.parsed_data.ocr_month_display }}
+              </span>
               {% else %}
               <span class="badge bg-secondary ms-2" title="{% translate 'Для страхового полиса месяц может быть пустым' %}">
                 <i class="bi bi-calendar-x"></i> {% translate "Месяц ZUS не указан" %}
@@ -202,11 +210,28 @@
                   <i class="bi bi-file-earmark-medical"></i> {% translate "Автоматическая проверка ZUS (OCR):" %}
                 </div>
                 <div class="mb-1">
+                  <strong class="text-secondary">{% translate "Месяц ZUS по OCR:" %}</strong> {{ doc.parsed_data.ocr_month_display|default:doc.parsed_data.detected_month_display|default:"-" }}
+                </div>
+                <div class="mb-1">
+                  <strong class="text-secondary">{% translate "Месяц файла в системе:" %}</strong>
+                  {% if doc.zus_period_month %}{{ doc.zus_period_month|date:"m.Y" }}{% else %}{% translate "не сохранён" %}{% endif %}
+                </div>
+                <div class="mb-1">
                   <strong class="text-secondary">{% translate "NIP работодателя:" %}</strong> {{ doc.parsed_data.employer_nip|default:"-" }}
                 </div>
                 <div class="mb-1">
                   <strong class="text-secondary">{% translate "Код страхования:" %}</strong> {{ doc.parsed_data.insurance_code|default:"-" }}
                 </div>
+                {% if doc.parsed_data.infos %}
+                <div class="text-success mt-2">
+                  <strong>{% translate "Информация:" %}</strong>
+                  <ul class="mb-0 ps-3">
+                    {% for info in doc.parsed_data.infos %}
+                    <li>{{ info }}</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+                {% endif %}
                 {% if doc.parsed_data.warnings %}
                 <div class="text-danger mt-2">
                   <strong>{% translate "Предупреждения:" %}</strong>
