@@ -1,4 +1,4 @@
-"""Utility helpers for extracting data from ZUS documents (ZUS ZUA / ZUS RCA)."""
+"""Utility helpers for extracting data from ZUS documents (ZUS ZUA / ZUS ZCNA / ZUS RCA)."""
 from __future__ import annotations
 
 import logging
@@ -12,6 +12,19 @@ from clients.services.company_parser import _find_nip, _find_detected_names
 
 logger = logging.getLogger(__name__)
 
+# Known ZUS form types in order of specificity
+_ZUS_FORM_TYPES = [
+    "ZCNA",  # Zgłoszenie danych o członkach rodziny
+    "ZIUA",  # Zgłoszenie zmiany danych identyfikacyjnych osoby ubezpieczonej
+    "ZUA",   # Zgłoszenie do ubezpieczeń / zgłoszenie zmiany danych
+    "ZZA",   # Zgłoszenie do ubezpieczenia zdrowotnego
+    "ZWUA",  # Wyrejestrowanie z ubezpieczeń
+    "RCA",   # Imienny raport miesięczny o należnych składkach
+    "RSA",   # Imienny raport miesięczny o wypłaconych świadczeniach
+    "RZA",   # Imienny raport miesięczny o należnych składkach na ubezpieczenie zdrowotne
+    "DRA",   # Deklaracja rozliczeniowa
+]
+
 
 @dataclass
 class ZusDocData:
@@ -21,6 +34,7 @@ class ZusDocData:
     insurance_code: str | None = None  # e.g., "011000"
     period_month: date | None = None  # normalized to the first day of the ZUS month
     detected_names: list[str] = field(default_factory=list)
+    zus_form_type: str | None = None   # e.g., "ZUA", "ZCNA", "RCA"
 
 
 _ACCENT_TRANSLATION = str.maketrans({
@@ -53,6 +67,17 @@ def _compact_insurance_code(raw_code: str) -> str:
     return re.sub(r"\D", "", raw_code)
 
 
+def _detect_zus_form_type(text: str) -> str | None:
+    """Detect which ZUS form type this document is (ZUA, ZCNA, RCA, etc.)."""
+    upper = text.upper()
+    for form_type in _ZUS_FORM_TYPES:
+        # Look for "ZUS <form_type>" pattern, allowing for OCR noise
+        pattern = rf"\bZUS\s+{re.escape(form_type)}\b"
+        if re.search(pattern, upper):
+            return form_type
+    return None
+
+
 def _find_insurance_code(text: str) -> str | None:
     """Find ZUS title insurance code without confusing PESEL/identifier values for it."""
     normalized = _normalize_zus_text(text)
@@ -62,6 +87,8 @@ def _find_insurance_code(text: str) -> str | None:
         rf"kod\s+tytulu[^\d]{{0,100}}{code_pattern}",
         rf"tytul\s+ubezpieczenia[^\d]{{0,100}}{code_pattern}",
         rf"kod[^\n]{{0,40}}ubezpieczenia[^\d]{{0,100}}{code_pattern}",
+        # ZUA-specific: "V. TYTUŁ UBEZPIECZENIA" section header followed by code
+        rf"v\.\s*tytul\s+ubezpieczenia[^\d]{{0,100}}{code_pattern}",
     ]
     for pattern in contextual_patterns:
         match = re.search(pattern, normalized, flags=re.IGNORECASE)
@@ -151,8 +178,30 @@ def _find_zus_period_month(text: str) -> date | None:
     return None
 
 
+def _find_zcna_family_members(text: str) -> list[str]:
+    """Extract family member names from ZUS ZCNA form.
+
+    ZCNA has sections like "V. DANE O CZŁONKU RODZINY" with name fields.
+    """
+    names: list[str] = []
+    normalized = _normalize_zus_text(text)
+
+    # ZCNA typically lists family members under sections with "nazwisko" and "imię"
+    member_patterns = [
+        r"nazwisko\s*[:\-]?\s*([A-Za-z\u00C0-\u024F\s]+?)(?:\s{2,}|\n|imie|data)",
+        r"czlonek\s+rodziny[^\n]*?([A-Z][a-z]+\s+[A-Z][a-z]+)",
+    ]
+    for pattern in member_patterns:
+        for m in re.finditer(pattern, normalized, flags=re.IGNORECASE):
+            name = m.group(1).strip()
+            if len(name) > 3 and name not in names:
+                names.append(name)
+
+    return names
+
+
 def parse_zus_doc(file_path: str | Path) -> ZusDocData:
-    """Parse ZUS document scan."""
+    """Parse ZUS document scan (supports ZUA, ZCNA, RCA, and other ZUS forms)."""
     raw_text = extract_text(file_path)
     cleaned_text = raw_text.replace('\ufffe', '-').replace('\u00ad', '').replace('\ufeff', '')
     cleaned_text = cleaned_text.replace('\u00a0', ' ').replace('\t', ' ')
@@ -161,10 +210,26 @@ def parse_zus_doc(file_path: str | Path) -> ZusDocData:
     if not cleaned_text:
         return ZusDocData(text="", error="no_text")
 
+    zus_form_type = _detect_zus_form_type(cleaned_text)
     employer_nip = _find_nip(cleaned_text)
     insurance_code = _find_insurance_code(cleaned_text)
     period_month = _find_zus_period_month(cleaned_text)
     detected_names = _find_detected_names(cleaned_text)
+
+    # For ZCNA, also try to extract family member names
+    if zus_form_type == "ZCNA":
+        family_names = _find_zcna_family_members(cleaned_text)
+        for name in family_names:
+            if name not in detected_names:
+                detected_names.append(name)
+
+    logger.info(
+        "ZUS document parsed: form_type=%s, nip=%s, insurance_code=%s, names=%d",
+        zus_form_type,
+        bool(employer_nip),
+        insurance_code,
+        len(detected_names),
+    )
 
     return ZusDocData(
         text=cleaned_text,
@@ -172,4 +237,5 @@ def parse_zus_doc(file_path: str | Path) -> ZusDocData:
         insurance_code=insurance_code,
         period_month=period_month,
         detected_names=detected_names,
+        zus_form_type=zus_form_type,
     )

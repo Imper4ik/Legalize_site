@@ -922,6 +922,7 @@ def _process_zus_doc_job_internal(
 
     client = job.document.client
     warnings = []
+    form_type = parsed.zus_form_type  # e.g., "ZUA", "ZCNA", "RCA"
 
     # 1. Verify Name
     name_matched = _check_client_name_in_document(client, parsed.detected_names, parsed.text)
@@ -958,23 +959,33 @@ def _process_zus_doc_job_internal(
             if not validate_nip(zus_nip_clean):
                 warnings.append(str(_("Extracted employer NIP %(nip)s is invalid.") % {"nip": parsed.employer_nip}))
     else:
-        warnings.append(str(_("Could not extract employer NIP from the ZUS document.")))
+        # ZCNA may not always contain employer NIP in a standard location
+        if form_type != "ZCNA":
+            warnings.append(str(_("Could not extract employer NIP from the ZUS document.")))
 
-    # 3. Check Insurance Code
-    if parsed.insurance_code:
-        if not parsed.insurance_code.startswith(("0110", "0411")):
-            warnings.append(
-                str(_("Insurance code '%(code)s' indicates non-standard employment type (expected Umowa o pracę/zlecenie).") % {
-                    "code": parsed.insurance_code
-                })
-            )
+    # 3. Check Insurance Code (skip for ZCNA – family member registration has no insurance code)
+    if form_type != "ZCNA":
+        if parsed.insurance_code:
+            if not parsed.insurance_code.startswith(("0110", "0411")):
+                warnings.append(
+                    str(_("Insurance code '%(code)s' indicates non-standard employment type (expected Umowa o pracę/zlecenie).") % {
+                        "code": parsed.insurance_code
+                    })
+                )
+        else:
+            warnings.append(str(_("Could not extract insurance code (e.g. 011000) from ZUS.")))
+
+    # Build form-specific display name
+    if form_type:
+        doc_type_label = str(_("ZUS %(form_type)s")) % {"form_type": form_type}
     else:
-        warnings.append(str(_("Could not extract insurance code (e.g. 011000) from ZUS.")))
+        doc_type_label = str(_("ZUS Document"))
 
     parsed_payload = {
         "employer_nip": parsed.employer_nip,
         "insurance_code": parsed.insurance_code,
         "detected_names": parsed.detected_names,
+        "zus_form_type": form_type,
         "warnings": warnings,
     }
 
@@ -983,7 +994,7 @@ def _process_zus_doc_job_internal(
         source_file_name=source_file_name,
         parsed_payload=parsed_payload,
         warnings=warnings,
-        doc_type_display=str(_("ZUS Document")),
+        doc_type_display=doc_type_label,
     )
 
 

@@ -208,6 +208,9 @@
               <div class="mt-2 p-3 border border-secondary rounded text-light small" style="max-width: 600px; background-color: rgba(255, 255, 255, 0.05);">
                 <div class="fw-bold text-info mb-2" style="font-size: 0.95rem;">
                   <i class="bi bi-file-earmark-medical"></i> {% translate "Автоматическая проверка ZUS (OCR):" %}
+                  {% if doc.parsed_data.zus_form_type %}
+                  <span class="badge bg-secondary ms-1">{{ doc.parsed_data.zus_form_type }}</span>
+                  {% endif %}
                 </div>
                 <div class="mb-1">
                   <strong class="text-secondary">{% translate "Месяц ZUS по OCR:" %}</strong> {{ doc.parsed_data.ocr_month_display|default:doc.parsed_data.detected_month_display|default:"-" }}
@@ -219,6 +222,7 @@
                 <div class="mb-1">
                   <strong class="text-secondary">{% translate "NIP работодателя:" %}</strong> {{ doc.parsed_data.employer_nip|default:"-" }}
                 </div>
+                {% if doc.parsed_data.zus_form_type != 'ZCNA' %}
                 <div class="mb-1">
                   <strong class="text-secondary">{% translate "Код страхования:" %}</strong> {{ doc.parsed_data.insurance_code|default:"-" }}
                 </div>
@@ -231,6 +235,8 @@
                     {% endfor %}
                   </ul>
                 </div>
+                {% endif %}
+
                 {% endif %}
                 {% if doc.parsed_data.warnings %}
                 <div class="text-danger mt-2">
