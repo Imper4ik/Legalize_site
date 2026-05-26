@@ -11,6 +11,7 @@ from django.test import TestCase, override_settings
 from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentProcessingJob, MOSApplicationData
 from clients.tests.test_company_doc_workflow import build_pdf_upload
+from clients.services.document_workflow import upload_client_document
 
 # Import parsers directly to test parser logic
 from clients.services.passport_parser import PassportDocData
@@ -278,6 +279,116 @@ class NewOcrWorkflowsTests(TestCase):
         warnings = doc.parsed_data["warnings"]
         self.assertTrue(any("does not match contract NIP" in w for w in warnings))
         self.assertTrue(any("non-standard employment type" in w for w in warnings))
+
+    @patch("clients.services.zus_parser.parse_zus_doc")
+    def test_zus_period_month_saved_and_exposed_in_parsed_data(self, parse_mock):
+        self.client_obj.workflow_stage = "waiting_decision"
+        self.client_obj.save(update_fields=["workflow_stage"])
+        parse_mock.return_value = ZusDocData(
+            text="ZUS RCA",
+            employer_nip="525-23-44-078",
+            insurance_code="011000",
+            detected_names=["Jan Kowalski"],
+            period_month=date(2026, 4, 1),
+        )
+        doc = Document.objects.create(
+            client=self.client_obj,
+            document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+            file=build_pdf_upload("zus_period.pdf"),
+            ocr_status="pending",
+        )
+        DocumentProcessingJob.objects.create(
+            document=doc,
+            created_by=self.staff,
+            status=DocumentProcessingJob.STATUS_PENDING,
+            job_type=DocumentProcessingJob.JOB_TYPE_ZUS_OCR,
+        )
+        call_command("process_document_jobs")
+        doc.refresh_from_db()
+        self.assertEqual(doc.ocr_status, "success")
+        self.assertEqual(doc.zus_period_month, date(2026, 4, 1))
+        self.assertEqual(doc.parsed_data.get("period_month"), "2026-04-01")
+
+    @patch("clients.services.zus_parser.parse_zus_doc")
+    def test_duplicate_zus_period_does_not_fail_job(self, parse_mock):
+        Document.objects.create(
+            client=self.client_obj,
+            document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+            file=build_pdf_upload("zus_existing.pdf"),
+            zus_period_month=date(2026, 4, 1),
+            ocr_status="success",
+        )
+        parse_mock.return_value = ZusDocData(
+            text="ZUS RCA",
+            employer_nip="525-23-44-078",
+            insurance_code="011000",
+            detected_names=["Jan Kowalski"],
+            period_month=date(2026, 4, 1),
+        )
+        second = Document.objects.create(
+            client=self.client_obj,
+            document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+            file=build_pdf_upload("zus_second.pdf"),
+            ocr_status="pending",
+        )
+        DocumentProcessingJob.objects.create(
+            document=second,
+            created_by=self.staff,
+            status=DocumentProcessingJob.STATUS_PENDING,
+            job_type=DocumentProcessingJob.JOB_TYPE_ZUS_OCR,
+        )
+        call_command("process_document_jobs")
+        second.refresh_from_db()
+        self.assertEqual(second.ocr_status, "success")
+        self.assertIsNone(second.zus_period_month)
+        self.assertEqual(second.parsed_data.get("period_month"), "2026-04-01")
+        self.assertTrue(any("already uploaded" in w for w in second.parsed_data.get("warnings", [])))
+
+    def test_zus_rca_or_insurance_job_type_by_month_field(self):
+        doc_with_month = Document(file=build_pdf_upload("with_month.pdf"), zus_period_month=date(2026, 4, 1))
+        res = upload_client_document(
+            client=self.client_obj,
+            doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+            uploaded_document=doc_with_month,
+            actor=self.staff,
+            parse_requested=False,
+        )
+        job_with_month = DocumentProcessingJob.objects.get(document=res.document)
+        self.assertEqual(job_with_month.job_type, DocumentProcessingJob.JOB_TYPE_ZUS_OCR)
+
+        doc_without_month = Document(file=build_pdf_upload("without_month.pdf"))
+        res2 = upload_client_document(
+            client=self.client_obj,
+            doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+            uploaded_document=doc_without_month,
+            actor=self.staff,
+            parse_requested=False,
+        )
+        job_without_month = DocumentProcessingJob.objects.get(document=res2.document)
+        self.assertEqual(job_without_month.job_type, DocumentProcessingJob.JOB_TYPE_INSURANCE_OCR)
+
+    def test_job_type_for_health_insurance_and_zus_history(self):
+        health_doc = Document(file=build_pdf_upload("health.pdf"))
+        health_res = upload_client_document(
+            client=self.client_obj,
+            doc_type=DocumentType.HEALTH_INSURANCE.value,
+            uploaded_document=health_doc,
+            actor=self.staff,
+            parse_requested=False,
+        )
+        health_job = DocumentProcessingJob.objects.get(document=health_res.document)
+        self.assertEqual(health_job.job_type, DocumentProcessingJob.JOB_TYPE_INSURANCE_OCR)
+
+        zus_hist = Document(file=build_pdf_upload("zus_hist.pdf"))
+        zus_res = upload_client_document(
+            client=self.client_obj,
+            doc_type=DocumentType.ZUS_CONTRIBUTION_HISTORY.value,
+            uploaded_document=zus_hist,
+            actor=self.staff,
+            parse_requested=False,
+        )
+        zus_job = DocumentProcessingJob.objects.get(document=zus_res.document)
+        self.assertEqual(zus_job.job_type, DocumentProcessingJob.JOB_TYPE_ZUS_OCR)
 
     @patch("clients.services.insurance_parser.parse_insurance_doc")
     def test_insurance_policy_processing(self, parse_mock):
