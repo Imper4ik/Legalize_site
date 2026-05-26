@@ -457,6 +457,9 @@ class DocumentUploadForm(forms.ModelForm):
         self.doc_type = doc_type
         self.client = client
         super().__init__(*args, **kwargs)
+        self.fields["zus_period_month"].help_text = _(
+            "Для ZUS RCA укажите месяц отчёта. Если загружаете страховой полис, добавьте его как отдельный документ «Polisa ubezpieczeniowa / Health insurance»."
+        )
 
     def clean_file(self) -> Any:
         return validate_uploaded_document(self.cleaned_data.get("file"))
@@ -522,20 +525,42 @@ class PaymentForm(forms.ModelForm):
     class Meta:
         model = Payment
         fields = [
-            'service_description', 'total_amount', 'amount_paid', 'status',
-            'payment_method', 'payment_date', 'due_date', 'transaction_id'
+            "service_description",
+            "total_amount",
+            "amount_paid",
+            "status",
+            "payment_method",
+            "payment_date",
+            "due_date",
+            "transaction_id",
         ]
         widgets = {
-            'service_description': forms.Select(attrs={'class': 'form-select'}),
-            'status': forms.Select(attrs={'class': 'form-select'}),
-            'payment_method': forms.Select(attrs={'class': 'form-select'}),
-            'total_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
-            'amount_paid': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
-            'transaction_id': forms.TextInput(attrs={'class': 'form-control'}),
+            "service_description": forms.Select(attrs={"class": "form-select"}),
+            "status": forms.Select(attrs={"class": "form-select"}),
+            "payment_method": forms.Select(attrs={"class": "form-select"}),
+            "total_amount": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "min": "0"}),
+            "amount_paid": forms.NumberInput(attrs={"class": "form-control", "step": "0.01", "min": "0"}),
+            "transaction_id": forms.TextInput(attrs={"class": "form-control"}),
         }
 
     def clean_amount_paid(self) -> Decimal:
         return cast(Decimal, self.cleaned_data.get("amount_paid") or Decimal("0.00"))
+
+
+class ClientDocumentRequirementForm(forms.ModelForm):
+    class Meta:
+        from clients.models import ClientDocumentRequirement
+        model = ClientDocumentRequirement
+        fields = ["name", "description", "is_required", "due_date"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "is_required": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "due_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+        }
+
+    def clean_name(self) -> str:
+        return str(self.cleaned_data["name"]).strip()
 
 
 class FamilyGroupFinanceForm(forms.ModelForm):

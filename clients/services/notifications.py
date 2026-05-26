@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Iterable, TYPE_CHECKING
 
 from django.conf import settings
+from django.urls import reverse
 from django.db import IntegrityError, transaction
 from django.core.mail import send_mail
 from django.template.loader import select_template
@@ -730,6 +731,9 @@ def send_onboarding_completed_email(client: Client) -> int:
         return 0
         
     subject = f"Клиент {client.get_full_name()} заполнил анкету онбординга"
+    review_path = reverse("clients:admin_mos_review", kwargs={"client_id": client.id})
+    base_url = getattr(settings, "PUBLIC_BASE_URL", "") or getattr(settings, "SITE_URL", "")
+    review_url = f"{base_url.rstrip('/')}{review_path}" if base_url else review_path
     body = (
         f"Клиент {client.get_full_name()} завершил заполнение анкеты онбординга.\n\n"
         f"Данные клиента:\n"
@@ -738,14 +742,17 @@ def send_onboarding_completed_email(client: Client) -> int:
         f"Почта: {client.email or 'не указана'}\n"
         f"Телефон: {client.phone or 'не указан'}\n\n"
         f"Просмотреть анкету и утвердить ее вы можете в панели управления по ссылке:\n"
-        f"{getattr(settings, 'SITE_URL', 'http://localhost:8000')}/clients/{client.id}/mos-review/\n"
+        f"{review_url}\n"
     )
-    
-    return send_mail(
-        subject,
-        body,
-        settings.DEFAULT_FROM_EMAIL,
-        recipients,
-        fail_silently=True
-    )
-
+    try:
+        return _send_email(
+            subject,
+            body,
+            recipients,
+            client=client,
+            template_type="onboarding_completed",
+            idempotency_key=build_email_idempotency_key("onboarding_completed", client.pk, client.updated_at),
+        )
+    except Exception:
+        logger.exception("Failed to send onboarding completed email for client_id=%s", client.pk)
+        return 0

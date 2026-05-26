@@ -30,6 +30,7 @@ class ClientQuerySet(SoftDeleteQuerySet):
             health_awaiting_confirmation_count=Count(
                 "documents",
                 filter=Q(documents__awaiting_confirmation=True, documents__archived_at__isnull=True),
+                distinct=True,
             ),
             health_expired_documents_count=Count(
                 "documents",
@@ -38,6 +39,7 @@ class ClientQuerySet(SoftDeleteQuerySet):
                     documents__expiry_date__lt=today,
                     documents__archived_at__isnull=True,
                 ),
+                distinct=True,
             ),
             health_expiring_documents_count=Count(
                 "documents",
@@ -47,14 +49,17 @@ class ClientQuerySet(SoftDeleteQuerySet):
                     documents__expiry_date__lte=expiring_cutoff,
                     documents__archived_at__isnull=True,
                 ),
+                distinct=True,
             ),
             health_wezwanie_count=Count(
                 "documents",
                 filter=Q(documents__document_type__in=wezwanie_types, documents__archived_at__isnull=True),
+                distinct=True,
             ),
             health_appointment_email_sent_count=Count(
                 "email_logs",
                 filter=Q(email_logs__template_type="appointment_notification"),
+                distinct=True,
             ),
             health_overdue_payments_count=Count(
                 "payments",
@@ -64,6 +69,7 @@ class ClientQuerySet(SoftDeleteQuerySet):
                     payments__due_date__lte=today,
                     payments__archived_at__isnull=True,
                 ),
+                distinct=True,
             ),
             health_overdue_tasks_count=Count(
                 "staff_tasks",
@@ -71,6 +77,7 @@ class ClientQuerySet(SoftDeleteQuerySet):
                     staff_tasks__status__in=["open", "in_progress"],
                     staff_tasks__due_date__lt=today,
                 ),
+                distinct=True,
             ),
         )
 
@@ -450,6 +457,28 @@ class Client(SoftDeleteModel):
             )
             seen_codes.add(code)
 
+        for requirement in self.custom_document_requirements.filter(is_active=True).order_by("due_date", "created_at"):
+            documents = list(
+                self.documents.filter(document_type=requirement.document_type, archived_at__isnull=True).order_by("-uploaded_at")
+            )
+            status_list.append(
+                {
+                    "code": requirement.document_type,
+                    "name": requirement.name,
+                    "description": requirement.description,
+                    "is_uploaded": bool(documents),
+                    "is_submitted": False,
+                    "is_complete": bool(documents) or not requirement.is_required,
+                    "documents": documents,
+                    "submitted_records": [],
+                    "is_custom_submission": False,
+                    "is_custom_requirement": True,
+                    "custom_requirement": requirement,
+                    "due_date": requirement.due_date,
+                    "is_required": requirement.is_required,
+                }
+            )
+
         for index, custom_item in enumerate(custom_submissions):
             status_list.append(
                 {
@@ -467,6 +496,9 @@ class Client(SoftDeleteModel):
 
     def get_document_name_by_code(self, doc_code: str) -> str:
         from .document import DocumentRequirement, get_available_document_types, resolve_document_label
+        custom = self.custom_document_requirements.filter(document_type=doc_code).order_by("-is_active", "-id").first()
+        if custom:
+            return custom.name
 
         current_language = translation.get_language() or self.language
         purpose = self.get_document_requirement_purpose()

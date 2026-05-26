@@ -5,8 +5,13 @@ set -o pipefail
 
 mkdir -p "${MEDIA_ROOT:-/app/media}"
 
-echo "Running migrations..."
-python manage.py migrate --no-input
+: "${RUN_MIGRATIONS_ON_START:=false}"
+case "${RUN_MIGRATIONS_ON_START}" in
+  1|true|TRUE|yes|YES|on|ON)
+    echo "Running migrations on start..."
+    python manage.py migrate --no-input
+    ;;
+esac
 
 : "${PORT:=8000}"
 : "${WEB_CONCURRENCY:=3}"

@@ -6,6 +6,8 @@ from django.utils.dateparse import parse_date
 
 from clients.models import Client, MOSApplicationData
 from clients.services.access import accessible_clients_queryset
+from clients.services.workflow_transitions import transition_client_workflow
+from django.core.exceptions import ValidationError
 from clients.services.activity import log_client_activity
 from clients.views.base import role_required_view
 
@@ -121,21 +123,48 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
         elif action == "mark_submitted":
             mos_data.status = "submitted_in_mos"
             mos_data.save(update_fields=["status"])
+            try:
+                transition_client_workflow(client=client, target_stage="application_submitted", actor=request.user)
+            except ValidationError as exc:
+                messages.error(request, str(exc))
+                return redirect("clients:admin_mos_review", client_id=client.id)
             messages.success(request, "Status: submitted in MOS.")
             return redirect("clients:admin_mos_review", client_id=client.id)
         elif action == "mark_fingerprints":
             mos_data.status = "fingerprints"
             mos_data.save(update_fields=["status"])
+            try:
+                next_stage = "waiting_decision" if client.fingerprints_date and client.fingerprints_date <= timezone.localdate() else "fingerprints"
+                transition_client_workflow(client=client, target_stage=next_stage, actor=request.user)
+            except ValidationError as exc:
+                messages.error(request, str(exc))
+                return redirect("clients:admin_mos_review", client_id=client.id)
             messages.success(request, "Status: fingerprints completed.")
             return redirect("clients:admin_mos_review", client_id=client.id)
         elif action == "mark_waiting":
+            if not client.fingerprints_date:
+                messages.error(request, "Cannot mark waiting decision without fingerprints date.")
+                return redirect("clients:admin_mos_review", client_id=client.id)
             mos_data.status = "waiting_decision"
             mos_data.save(update_fields=["status"])
+            try:
+                transition_client_workflow(client=client, target_stage="waiting_decision", actor=request.user)
+            except ValidationError as exc:
+                messages.error(request, str(exc))
+                return redirect("clients:admin_mos_review", client_id=client.id)
             messages.success(request, "Status: waiting for decision.")
             return redirect("clients:admin_mos_review", client_id=client.id)
         elif action == "mark_decision":
+            if not client.decision_date:
+                messages.error(request, "Cannot mark decision received without decision date.")
+                return redirect("clients:admin_mos_review", client_id=client.id)
             mos_data.status = "decision_received"
             mos_data.save(update_fields=["status"])
+            try:
+                transition_client_workflow(client=client, target_stage="decision_received", actor=request.user)
+            except ValidationError as exc:
+                messages.error(request, str(exc))
+                return redirect("clients:admin_mos_review", client_id=client.id)
             messages.success(request, "Status: decision received.")
             return redirect("clients:admin_mos_review", client_id=client.id)
 
