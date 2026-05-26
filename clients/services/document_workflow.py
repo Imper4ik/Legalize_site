@@ -140,7 +140,14 @@ def upload_client_document(
         elif is_rental:
             job_type = DocumentProcessingJob.JOB_TYPE_RENTAL_OCR
         elif is_zus:
-            job_type = DocumentProcessingJob.JOB_TYPE_ZUS_OCR
+            is_zus_rca_with_month = (
+                doc_type == DocumentType.ZUS_RCA_OR_INSURANCE.value and bool(document.zus_period_month)
+            )
+            job_type = (
+                DocumentProcessingJob.JOB_TYPE_ZUS_OCR
+                if is_zus_rca_with_month or doc_type == DocumentType.ZUS_CONTRIBUTION_HISTORY.value
+                else DocumentProcessingJob.JOB_TYPE_INSURANCE_OCR
+            )
         elif is_insurance:
             job_type = DocumentProcessingJob.JOB_TYPE_INSURANCE_OCR
         else:
