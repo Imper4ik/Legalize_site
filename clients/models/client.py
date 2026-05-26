@@ -457,6 +457,28 @@ class Client(SoftDeleteModel):
             )
             seen_codes.add(code)
 
+        for requirement in self.custom_document_requirements.filter(is_active=True).order_by("due_date", "created_at"):
+            documents = list(
+                self.documents.filter(document_type=requirement.document_type, archived_at__isnull=True).order_by("-uploaded_at")
+            )
+            status_list.append(
+                {
+                    "code": requirement.document_type,
+                    "name": requirement.name,
+                    "description": requirement.description,
+                    "is_uploaded": bool(documents),
+                    "is_submitted": False,
+                    "is_complete": bool(documents) or not requirement.is_required,
+                    "documents": documents,
+                    "submitted_records": [],
+                    "is_custom_submission": False,
+                    "is_custom_requirement": True,
+                    "custom_requirement": requirement,
+                    "due_date": requirement.due_date,
+                    "is_required": requirement.is_required,
+                }
+            )
+
         for index, custom_item in enumerate(custom_submissions):
             status_list.append(
                 {
@@ -474,6 +496,9 @@ class Client(SoftDeleteModel):
 
     def get_document_name_by_code(self, doc_code: str) -> str:
         from .document import DocumentRequirement, get_available_document_types, resolve_document_label
+        custom = self.custom_document_requirements.filter(document_type=doc_code).order_by("-is_active", "-id").first()
+        if custom:
+            return custom.name
 
         current_language = translation.get_language() or self.language
         purpose = self.get_document_requirement_purpose()

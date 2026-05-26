@@ -457,6 +457,9 @@ class DocumentUploadForm(forms.ModelForm):
         self.doc_type = doc_type
         self.client = client
         super().__init__(*args, **kwargs)
+        self.fields["zus_period_month"].help_text = _(
+            "Для ZUS RCA укажите месяц отчёта. Если загружаете страховой полис, добавьте его как отдельный документ «Polisa ubezpieczeniowa / Health insurance»."
+        )
 
     def clean_file(self) -> Any:
         return validate_uploaded_document(self.cleaned_data.get("file"))
@@ -518,6 +521,22 @@ class PaymentForm(forms.ModelForm):
         initial='pending',
         widget=forms.Select(attrs={'class': 'form-select'})
     )
+
+
+class ClientDocumentRequirementForm(forms.ModelForm):
+    class Meta:
+        from clients.models import ClientDocumentRequirement
+        model = ClientDocumentRequirement
+        fields = ["name", "description", "is_required", "due_date"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "is_required": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "due_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+        }
+
+    def clean_name(self) -> str:
+        return str(self.cleaned_data["name"]).strip()
 
     class Meta:
         model = Payment

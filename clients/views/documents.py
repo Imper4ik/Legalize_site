@@ -12,8 +12,8 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from clients.constants import DocumentType, is_wezwanie_document_type
-from clients.forms import DocumentUploadForm
-from clients.models import Client, Document, WniosekAttachment
+from clients.forms import ClientDocumentRequirementForm, DocumentUploadForm
+from clients.models import Client, ClientDocumentRequirement, Document, WniosekAttachment
 from clients.services.access import (
     accessible_clients_queryset,
     accessible_documents_queryset,
@@ -26,6 +26,7 @@ from clients.services.notifications import (
     send_missing_documents_email,
 )
 from clients.services.zus import missing_zus_month_upload_options
+from clients.services.custom_document_requirements import sync_custom_document_requirement_reminder
 from clients.services.permissions import has_employee_permission
 from clients.services.responses import ResponseHelper, apply_no_store
 from clients.services.roles import DOCUMENT_DELETE_ROLES, DOCUMENT_EDIT_ROLES
@@ -157,6 +158,13 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
                 break
 
         if success_count > 0 and success_count == len(files):
+            custom_requirement = ClientDocumentRequirement.objects.filter(
+                client=client,
+                document_type=doc_type,
+                is_active=True,
+            ).first()
+            if custom_requirement:
+                sync_custom_document_requirement_reminder(custom_requirement)
             last_result = upload_results[-1]
             if helper.expects_json:
                 primary_result = next(
@@ -210,6 +218,21 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
             "document_type_display": document_type_display,
         },
     )
+
+
+@role_required_view(*DOCUMENT_EDIT_ROLES)
+def add_client_document_requirement(request: HttpRequest, client_id: int) -> HttpResponseBase:
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
+    if request.method == "POST":
+        form = ClientDocumentRequirementForm(request.POST)
+        if form.is_valid():
+            requirement = form.save(commit=False)
+            requirement.client = client
+            requirement.created_by = request.user
+            requirement.save()
+            sync_custom_document_requirement_reminder(requirement)
+            messages.success(request, _("Индивидуальный документ добавлен."))
+    return redirect("clients:client_detail", pk=client.pk)
 
 
 @role_or_feature_required_view("can_run_ocr_review", "Admin", "Manager")

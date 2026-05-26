@@ -61,6 +61,7 @@ urlpatterns = [
 
     # URL для работы с документами
     path('client/<int:client_id>/documents/add/<str:doc_type>/', views.add_document, name='add_document'),
+    path('clients/<int:client_id>/requirements/add/', views.add_client_document_requirement, name='client_document_requirement_add'),
     path(
         'document/<int:doc_id>/confirm-wezwanie/',
         views.confirm_wezwanie_parse,

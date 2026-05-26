@@ -14,6 +14,13 @@ class Reminder(models.Model):
     client = models.ForeignKey('clients.Client', on_delete=models.CASCADE, related_name='reminders', verbose_name=_("Клиент"))
     payment = models.OneToOneField('clients.Payment', on_delete=models.CASCADE, null=True, blank=True, related_name="reminder")
     document = models.OneToOneField('clients.Document', on_delete=models.CASCADE, null=True, blank=True, related_name="reminder")
+    custom_document_requirement = models.ForeignKey(
+        "clients.ClientDocumentRequirement",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="reminders",
+    )
     reminder_type = models.CharField(max_length=20, choices=REMINDER_TYPE_CHOICES, default='document',
                                      verbose_name=_("Тип напоминания"))
     title = models.CharField(max_length=255, verbose_name=_("Заголовок напоминания"))
