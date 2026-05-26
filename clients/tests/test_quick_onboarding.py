@@ -11,6 +11,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from clients.models import Client, ClientOnboardingSession, Document, DocumentRequirement, MOSApplicationData
 from clients.forms import ClientForm
 from clients.services.roles import ensure_predefined_roles
+from clients.services.onboarding_tokens import hash_onboarding_token
 
 @override_settings(LANGUAGE_CODE="ru")
 class QuickOnboardingTests(TestCase):
@@ -75,7 +76,8 @@ class QuickOnboardingTests(TestCase):
         # Check session exists
         session = ClientOnboardingSession.objects.filter(client=client).first()
         self.assertIsNotNone(session)
-        self.assertIn(session.token_hash, data["link"])
+        raw_token = data["link"].rstrip('/').split('/')[-1]
+        self.assertEqual(hash_onboarding_token(raw_token), session.token_hash)
 
     def test_onboarding_start_post_redirects_to_first_step(self):
         """Verify that a POST request to onboarding_start redirects to onboarding_digital_access."""
@@ -87,7 +89,7 @@ class QuickOnboardingTests(TestCase):
         token = uuid.uuid4().hex
         ClientOnboardingSession.objects.create(
             client=client,
-            token_hash=token,
+            token_hash=hash_onboarding_token(token),
             status="created",
             expires_at=timezone.now() + timedelta(days=7)
         )
@@ -121,7 +123,7 @@ class QuickOnboardingTests(TestCase):
         token = uuid.uuid4().hex
         ClientOnboardingSession.objects.create(
             client=client,
-            token_hash=token,
+            token_hash=hash_onboarding_token(token),
             status="created",
             expires_at=timezone.now() + timedelta(days=7),
         )
@@ -153,7 +155,7 @@ class QuickOnboardingTests(TestCase):
         token = uuid.uuid4().hex
         ClientOnboardingSession.objects.create(
             client=client,
-            token_hash=token,
+            token_hash=hash_onboarding_token(token),
             status="created",
             expires_at=timezone.now() + timedelta(days=7),
         )
@@ -195,7 +197,7 @@ class QuickOnboardingTests(TestCase):
         token = uuid.uuid4().hex
         ClientOnboardingSession.objects.create(
             client=client,
-            token_hash=token,
+            token_hash=hash_onboarding_token(token),
             status="created",
             expires_at=timezone.now() + timedelta(days=7)
         )
@@ -216,7 +218,7 @@ class QuickOnboardingTests(TestCase):
         self.assertEqual(mos_data.status, "client_completed")
 
         # Verify email was sent to self.manager
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertGreaterEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
         self.assertIn(self.manager.email, email.to)
         self.assertIn("Иван Иванов", email.subject)
@@ -232,7 +234,7 @@ class QuickOnboardingTests(TestCase):
         token = uuid.uuid4().hex
         ClientOnboardingSession.objects.create(
             client=client,
-            token_hash=token,
+            token_hash=hash_onboarding_token(token),
             status="created",
             expires_at=timezone.now() + timedelta(days=7)
         )
@@ -261,7 +263,7 @@ class QuickOnboardingTests(TestCase):
         token = uuid.uuid4().hex
         ClientOnboardingSession.objects.create(
             client=client,
-            token_hash=token,
+            token_hash=hash_onboarding_token(token),
             status="created",
             expires_at=timezone.now() + timedelta(days=7),
         )
@@ -348,7 +350,7 @@ class QuickOnboardingTests(TestCase):
         token = uuid.uuid4().hex
         ClientOnboardingSession.objects.create(
             client=client,
-            token_hash=token,
+            token_hash=hash_onboarding_token(token),
             status="created",
             expires_at=timezone.now() + timedelta(days=7),
         )

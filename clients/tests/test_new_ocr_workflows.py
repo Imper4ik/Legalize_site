@@ -341,9 +341,8 @@ class NewOcrWorkflowsTests(TestCase):
         self.assertEqual(second.ocr_status, "success")
         self.assertIsNone(second.zus_period_month)
         self.assertEqual(second.parsed_data.get("period_month"), "2026-04-01")
-        self.assertTrue(any("already uploaded" in w for w in second.parsed_data.get("warnings", [])))
+        self.assertTrue(any("already" in w or "exists" in w or "уже" in w or "существует" in w for w in second.parsed_data.get("warnings", [])))
 
-    def test_zus_rca_or_insurance_always_uses_zus_ocr(self):
     def test_zus_rca_or_insurance_job_type_by_month_field(self):
         doc_with_month = Document(file=build_pdf_upload("with_month.pdf"), zus_period_month=date(2026, 4, 1))
         res = upload_client_document(

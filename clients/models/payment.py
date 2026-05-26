@@ -43,7 +43,9 @@ class Payment(SoftDeleteModel):
 
     @property
     def amount_due(self) -> Decimal:
-        return cast(Decimal, self.total_amount) - cast(Decimal, self.amount_paid)
+        total = Decimal(str(self.total_amount)) if self.total_amount is not None else Decimal("0.00")
+        paid = Decimal(str(self.amount_paid)) if self.amount_paid is not None else Decimal("0.00")
+        return total - paid
 
     def clean(self) -> None:
         super().clean()

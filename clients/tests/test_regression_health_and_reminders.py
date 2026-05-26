@@ -56,7 +56,9 @@ def test_with_health_stats_uses_distinct_counts(db):
 
 def test_legal_stay_choice_and_no_duplicate_reminders(db):
     client = Client.objects.create(first_name="L", last_name="S", application_purpose="work")
-    MOSApplicationData.objects.create(client=client, legal_stay_until=date.today() + timedelta(days=10))
+    mos_data = client.mos_application_data
+    mos_data.legal_stay_until = date.today() + timedelta(days=10)
+    mos_data.save()
 
     call_command("update_reminders", "--only", "legal-stay")
     reminder = Reminder.objects.get(client=client, reminder_type="legal_stay")

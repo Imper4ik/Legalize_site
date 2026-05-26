@@ -751,7 +751,7 @@ def send_onboarding_completed_email(client: Client) -> int:
             recipients,
             client=client,
             template_type="onboarding_completed",
-            idempotency_key=build_email_idempotency_key("onboarding_completed", client.pk, client.updated_at),
+            idempotency_key=build_email_idempotency_key("onboarding_completed", client.pk, client.created_at),
         )
     except Exception:
         logger.exception("Failed to send onboarding completed email for client_id=%s", client.pk)
