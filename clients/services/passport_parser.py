@@ -6,6 +6,7 @@ import re
 from dataclasses import dataclass
 from datetime import date, datetime
 from pathlib import Path
+from typing import Any
 
 from clients.services.wezwanie_parser import extract_text, _parse_date
 
@@ -23,7 +24,7 @@ class PassportDocData:
     country: str | None = None
 
 
-def _parse_mrz(text: str) -> dict | None:
+def _parse_mrz(text: str) -> dict[str, Any] | None:
     """Attempt to parse MRZ (Machine Readable Zone) from passport text."""
     # Find two lines of 44 characters containing a lot of '<'
     lines = [line.strip().replace(" ", "") for line in text.splitlines()]
@@ -51,7 +52,7 @@ def _parse_mrz(text: str) -> dict | None:
     if len(line1) < 30 or len(line2) < 30:
         return None
 
-    result = {}
+    result: dict[str, Any] = {}
     try:
         # Line 1: P<COUNTRYLASTNAME<<FIRSTNAME<<<<<
         country = line1[2:5].replace("<", "")

@@ -2,7 +2,6 @@ import os
 import sys
 import time
 import random
-import threading
 from concurrent.futures import ThreadPoolExecutor
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -10,8 +9,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "legalize_site.settings.developm
 import django
 django.setup()
 
-from clients.models import Client
-from django.db import connection
+from clients.models import Client  # noqa: E402
+from django.db import connection  # noqa: E402
 
 # Убедимся, что мы не трогаем защищенные аккаунты
 PROTECTED_EMAILS = ["nindse@gmail.com", "afanasenko860@gmail.com"]

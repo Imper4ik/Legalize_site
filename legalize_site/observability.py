@@ -1,15 +1,20 @@
 from __future__ import annotations
 
 import uuid
-from typing import Callable
-
-try:
-    import sentry_sdk
-except Exception:  # pragma: no cover - optional dependency
-    sentry_sdk = None
+from typing import Any, Callable
 
 from django.http import HttpRequest, HttpResponse
+
 from legalize_site.utils.logging import clear_log_context, set_log_context
+
+try:
+    import sentry_sdk as sentry_sdk_module
+except Exception:  # pragma: no cover - optional dependency
+    _sentry_sdk: Any | None = None
+else:
+    _sentry_sdk = sentry_sdk_module
+
+sentry_sdk = _sentry_sdk
 
 
 class RequestIDMiddleware:
@@ -26,8 +31,8 @@ class RequestIDMiddleware:
         setattr(request, 'correlation_id', correlation_id)
         set_log_context(request_id=request_id, correlation_id=correlation_id)
 
-        if sentry_sdk is not None:
-            scope = sentry_sdk.get_current_scope()
+        if _sentry_sdk is not None:
+            scope = _sentry_sdk.get_current_scope()
             scope.set_tag("request_id", request_id)
             scope.set_tag("correlation_id", correlation_id)
 

@@ -1,6 +1,10 @@
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from fernet_fields import EncryptedTextField
+from typing import Any
+
 
 class ClientOnboardingSession(models.Model):
     client = models.ForeignKey("clients.Client", on_delete=models.CASCADE, related_name="onboarding_sessions")
@@ -27,7 +31,7 @@ class ClientOnboardingSession(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Session for {self.client} - {self.status}"
 
 
@@ -54,7 +58,7 @@ class ClientDigitalAccess(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Digital Access for {self.client}"
 
 
@@ -112,7 +116,7 @@ class MOSApplicationData(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"MOS Data for {self.client} - {self.status}"
 
 
@@ -156,16 +160,12 @@ class PeselApplication(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"PESEL App for {self.client} - {self.status}"
 
 
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-
 @receiver(post_save, sender="clients.Client")
-def create_client_onboarding_profiles(sender, instance, created, **kwargs):
+def create_client_onboarding_profiles(sender: object, instance: Any, created: bool, **kwargs: object) -> None:
     if created:
         ClientDigitalAccess.objects.get_or_create(client=instance)
         MOSApplicationData.objects.get_or_create(client=instance)
-

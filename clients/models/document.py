@@ -122,9 +122,10 @@ def resolve_document_label(doc_type: str, custom_name: str | None = None, custom
 
 
 def get_fallback_document_checklist(purpose: str, language: str | None = None) -> list[tuple[str, Any]]:
-    checklist_key = (purpose, language)
-    if checklist_key in DOCUMENT_CHECKLIST:
-        return cast(list[tuple[str, Any]], DOCUMENT_CHECKLIST[checklist_key])
+    if language is not None:
+        checklist_key = (purpose, language)
+        if checklist_key in DOCUMENT_CHECKLIST:
+            return cast(list[tuple[str, Any]], DOCUMENT_CHECKLIST[checklist_key])
     for (stored_purpose, _lang), documents in DOCUMENT_CHECKLIST.items():
         if stored_purpose == purpose:
             return cast(list[tuple[str, Any]], documents)

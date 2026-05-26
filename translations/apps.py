@@ -116,7 +116,7 @@ def patch_db_override() -> None:
         return apply_db_override(str(message), translated)
 
     trans_real.gettext = db_wrapped_gettext
-    trans_real._db_patched = True
+    setattr(trans_real, "_db_patched", True)
     logger.info("Successfully patched Django translation system with DB overrides.")
 
 

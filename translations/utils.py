@@ -99,7 +99,14 @@ def load_all_translations() -> List[Dict[str, Any]]:
     result = sorted(data.values(), key=lambda x: str(x['msgid']))
     return result
 
-def save_translation_entry(msgid: str, ru: Optional[str] = None, en: Optional[str] = None, pl: Optional[str] = None, updated_by=None, storage=None) -> None:
+def save_translation_entry(
+    msgid: str,
+    ru: Optional[str] = None,
+    en: Optional[str] = None,
+    pl: Optional[str] = None,
+    updated_by: Any = None,
+    storage: Optional[str] = None,
+) -> None:
     """Updates a specific msgid in PO files and/or DB."""
     if storage is None:
         storage = getattr(settings, 'TRANSLATION_STUDIO_STORAGE', 'database')

@@ -9,7 +9,7 @@ from typing import Any
 from django.db import IntegrityError
 from django.utils.translation import gettext as _
 
-from clients.constants import COMPANY_DOCUMENT_TYPES, DocumentType
+from clients.constants import COMPANY_DOCUMENT_TYPES
 from clients.models import Document, DocumentProcessingJob
 
 logger = logging.getLogger(__name__)

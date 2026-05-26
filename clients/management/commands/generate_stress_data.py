@@ -1,7 +1,7 @@
 import time
+from typing import Any
+
 from django.core.management.base import BaseCommand
-from django.db import transaction
-from django.utils import timezone
 from clients.models import Client
 from faker import Faker
 
@@ -10,11 +10,11 @@ fake = Faker()
 class Command(BaseCommand):
     help = "Генерирует миллионы/тысячи записей для стресс-тестирования базы данных"
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument("--clients", type=int, default=10000, help="Количество клиентов для создания")
         parser.add_argument("--batch-size", type=int, default=2000, help="Размер батча для bulk_create")
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         total_clients = options["clients"]
         batch_size = options["batch_size"]
 

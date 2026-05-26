@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
-from clients.services.wezwanie_parser import extract_text, _parse_date
+from clients.services.wezwanie_parser import extract_text
 from clients.services.company_parser import _find_detected_names, _clean_number
 
 logger = logging.getLogger(__name__)

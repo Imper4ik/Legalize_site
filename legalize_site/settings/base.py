@@ -136,7 +136,7 @@ def _sanitize_sentry_value(value: Any, *, key_hint: str | None = None) -> Any:
     return value
 
 
-def _sentry_before_send(event: dict[str, Any], hint: dict[str, Any]) -> dict[str, Any]:
+def _sentry_before_send(event: Any, hint: Any) -> Any:
     event = dict(event)
     if "request" in event:
         request_data = dict(event["request"])
@@ -161,7 +161,7 @@ def _sentry_before_send(event: dict[str, Any], hint: dict[str, Any]) -> dict[str
     return event
 
 
-def _sentry_before_breadcrumb(crumb: dict[str, Any], hint: dict[str, Any]) -> Any:
+def _sentry_before_breadcrumb(crumb: Any, hint: Any) -> Any:
     return _sanitize_sentry_value(crumb)
 
 # --- ПРИЛОЖЕНИЯ И MIDDLEWARE ---

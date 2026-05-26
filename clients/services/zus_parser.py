@@ -84,7 +84,7 @@ def _detect_zus_form_type(text: str) -> str | None:
     if "imienny raport miesieczny" in normalized:
         if "swiadczeniach" in normalized or "przerwach" in normalized:
             return "RSA"
-        if "zdrowotne" in normalized and not "spoleczne" in normalized:
+        if "zdrowotne" in normalized and "spoleczne" not in normalized:
             return "RZA"
         return "RCA"
     if "deklaracja rozliczeniowa" in normalized:

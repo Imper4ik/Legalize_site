@@ -88,8 +88,8 @@ class ClientManager(models.Manager.from_queryset(ClientQuerySet)):  # type: igno
 
 
 class Client(SoftDeleteModel):
-    objects = ClientManager()  # type: ignore[assignment]
-    all_objects = ClientQuerySet.as_manager()  # type: ignore[assignment, misc]
+    objects = ClientManager()  # type: ignore[misc]
+    all_objects = ClientQuerySet.as_manager()  # type: ignore[misc]
     _application_purpose_display_cache: dict[str, dict[str, str]] = {}
 
     APPLICATION_PURPOSE_CHOICES = [

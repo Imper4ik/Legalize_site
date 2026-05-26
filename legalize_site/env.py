@@ -1,10 +1,12 @@
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 try:
-    from dotenv import load_dotenv
+    from dotenv import load_dotenv as dotenv_load_dotenv
 except ImportError:  # pragma: no cover - handled by dependency management
-    load_dotenv = None
+    _load_dotenv: Any | None = None
+else:
+    _load_dotenv = dotenv_load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -17,8 +19,8 @@ def load_env(env_path: Optional[Path] = None) -> None:
     directly, but local development relies on ``.env`` for convenience.
     """
 
-    if load_dotenv is None:
+    if _load_dotenv is None:
         return
 
     env_file = env_path or BASE_DIR / ".env"
-    load_dotenv(env_file)
+    _load_dotenv(env_file)

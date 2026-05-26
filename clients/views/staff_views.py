@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any, cast
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -20,7 +22,7 @@ from clients.views.base import role_required_view
 STAFF_AUDIT_PROFILE_FIELDS = ("email", "first_name", "last_name", "is_staff", "is_active")
 
 
-def _staff_update_snapshot(staff_user) -> dict[str, object]:
+def _staff_update_snapshot(staff_user: Any) -> dict[str, Any]:
     permission_object = EmployeePermission.objects.filter(user=staff_user).first()
     permissions = {
         field_name: bool(getattr(permission_object, field_name, False))
@@ -33,7 +35,7 @@ def _staff_update_snapshot(staff_user) -> dict[str, object]:
     }
 
 
-def _log_staff_update_audit(*, actor, target, before: dict[str, object]) -> None:
+def _log_staff_update_audit(*, actor: Any, target: Any, before: dict[str, Any]) -> None:
     after = _staff_update_snapshot(target)
     before_profile = before["profile"]
     after_profile = after["profile"]
@@ -69,7 +71,7 @@ def _log_staff_update_audit(*, actor, target, before: dict[str, object]) -> None
         changed_fields.append("groups")
 
     StaffAuditEvent.objects.create(
-        actor=actor if getattr(actor, "is_authenticated", False) else None,
+        actor=cast(Any, actor) if getattr(actor, "is_authenticated", False) else None,
         target=target,
         event_type=StaffAuditEvent.EVENT_STAFF_UPDATED,
         summary=f"Staff user updated: user_id={target.pk}",
@@ -127,7 +129,7 @@ def staff_manage_view(request: HttpRequest) -> HttpResponse:
             staff_user.is_active = not staff_user.is_active
             staff_user.save(update_fields=["is_active"])
             StaffAuditEvent.objects.create(
-                actor=request.user if getattr(request.user, "is_authenticated", False) else None,
+                actor=cast(Any, request.user) if getattr(request.user, "is_authenticated", False) else None,
                 target=staff_user,
                 event_type=StaffAuditEvent.EVENT_STAFF_ACTIVE_TOGGLED,
                 summary=f"Staff active status toggled: user_id={staff_user.pk}",

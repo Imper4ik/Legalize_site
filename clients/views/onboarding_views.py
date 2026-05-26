@@ -7,6 +7,10 @@ from legalize_site.utils.http import request_is_ajax
 from legalize_site.utils.files import build_protected_file_response
 from django.contrib import messages
 from datetime import timedelta
+from typing import cast
+
+from django.db import transaction
+
 from clients.forms import DocumentUploadForm
 from clients.models import ClientOnboardingSession, ClientDigitalAccess, MOSApplicationData, Client, Document, DocumentRequirement
 from clients.services.intake_extraction import pre_fill_mos_data_from_ocr
@@ -14,6 +18,7 @@ from clients.services.document_workflow import upload_client_document
 from clients.services.access import accessible_clients_queryset
 from clients.views.base import role_required_view
 from clients.services.onboarding_tokens import generate_onboarding_token, hash_onboarding_token
+from clients.use_cases.client_records import finalize_client_creation
 
 EDITABLE_MOS_STATUSES = {"draft", "client_filling", "needs_correction"}
 CONTACT_SYNC_FIELDS = ("first_name", "last_name", "phone", "email")
@@ -140,7 +145,7 @@ def onboarding_document_preview(request: HttpRequest, token: str, doc_id: int) -
         return HttpResponseForbidden("Invalid or expired onboarding link.")
 
     document = get_object_or_404(Document, id=doc_id, client=session.client)
-    return build_protected_file_response(document.file, as_attachment=False)
+    return cast(HttpResponse, build_protected_file_response(document.file, as_attachment=False))
 
 
 def onboarding_document_delete(request: HttpRequest, token: str, doc_id: int) -> HttpResponse:
@@ -422,8 +427,6 @@ def onboarding_personal_data(request: HttpRequest, token: str) -> HttpResponse:
     return redirect("clients:onboarding_passport", token=token)
 
 
-from clients.use_cases.client_records import finalize_client_creation
-
 @role_required_view("Admin", "Manager", "Staff")
 def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
     if request.method != "POST":
@@ -592,15 +595,12 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         mos_data.address_data = address_data
         
     # Process travel fields
-    travel_dirty = False
     if "mos_purpose" in request.POST:
         mos_data.mos_purpose = request.POST.get("mos_purpose", "")
-        travel_dirty = True
     if "legal_stay_until" in request.POST:
         val = request.POST.get("legal_stay_until", "").strip()
         if val:
             mos_data.legal_stay_until = val
-            travel_dirty = True
             
     stay_data = mos_data.stay_data or {}
     stay_dirty = False
@@ -619,12 +619,10 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         
     if stay_dirty:
         mos_data.stay_data = stay_data
-        travel_dirty = True
-        
+
     if "travel_history" in request.POST:
         mos_data.travel_history = [request.POST.get("travel_history", "")]
-        travel_dirty = True
-        
+
     # Process declarations fields
     declarations_dirty = False
     declarations = mos_data.legal_declarations or {}

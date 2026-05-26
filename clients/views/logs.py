@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.db.models import Q
 from django.views.generic import ListView
 
@@ -17,7 +19,7 @@ class EmailLogsView(BaseLogView):
     template_name = "clients/logs/email_logs.html"
     context_object_name = "logs"
 
-    def get_queryset(self):
+    def get_queryset(self) -> Any:
         qs = super().get_queryset().select_related("client", "sent_by")
         form = EmailLogFilterForm(self.request.GET)
         
@@ -44,7 +46,7 @@ class EmailLogsView(BaseLogView):
                 
         return qs
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         context["filter_form"] = EmailLogFilterForm(self.request.GET or None)
         return context
@@ -55,7 +57,7 @@ class StaffActivityLogsView(BaseLogView):
     template_name = "clients/logs/staff_activity_logs.html"
     context_object_name = "activities"
 
-    def get_queryset(self):
+    def get_queryset(self) -> Any:
         qs = super().get_queryset().select_related("actor", "client", "document", "payment")
         form = StaffActivityFilterForm(self.request.GET)
         
@@ -74,7 +76,7 @@ class StaffActivityLogsView(BaseLogView):
                 
         return qs
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         context["filter_form"] = StaffActivityFilterForm(self.request.GET or None)
         return context

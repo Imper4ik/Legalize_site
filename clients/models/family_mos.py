@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class ClientFamilyMemberMOS(models.Model):
     client = models.ForeignKey("clients.Client", on_delete=models.CASCADE, related_name="mos_family_members")
 
@@ -16,5 +17,5 @@ class ClientFamilyMemberMOS(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.full_name} ({self.relationship}) - {self.client}"

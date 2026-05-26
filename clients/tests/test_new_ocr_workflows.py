@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-import re
-from datetime import date, timedelta
+from datetime import date
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -209,7 +208,7 @@ class NewOcrWorkflowsTests(TestCase):
     @patch("clients.services.zus_parser.parse_zus_doc")
     def test_zus_document_processing(self, parse_mock):
         # Upload a completed company doc first to have NIP in database
-        company_doc = Document.objects.create(
+        Document.objects.create(
             client=self.client_obj,
             document_type=DocumentType.ZALACZNIK_NR_1.value,
             ocr_status="success",
@@ -245,7 +244,7 @@ class NewOcrWorkflowsTests(TestCase):
     @patch("clients.services.zus_parser.parse_zus_doc")
     def test_zus_document_warnings(self, parse_mock):
         # Mismatch NIP and wrong insurance code
-        company_doc = Document.objects.create(
+        Document.objects.create(
             client=self.client_obj,
             document_type=DocumentType.ZALACZNIK_NR_1.value,
             ocr_status="success",

@@ -1,5 +1,4 @@
-from typing import Any
-from clients.models import Client, MOSApplicationData
+from clients.models import MOSApplicationData
 
 def pre_fill_mos_data_from_ocr(mos_data: MOSApplicationData) -> bool:
     """

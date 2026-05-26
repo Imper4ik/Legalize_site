@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import polib
+from typing import Any
+
 from django.core.management.base import BaseCommand, CommandError
 
 from translations.models import TranslationOverride
@@ -31,7 +33,7 @@ def _parse_sources(raw_value: str) -> set[str]:
 class Command(BaseCommand):
     help = "Import translations from PO files into the database"
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument("--overwrite", action="store_true", help="Overwrite all existing DB overrides")
         parser.add_argument(
             "--overwrite-sources",
@@ -48,7 +50,7 @@ class Command(BaseCommand):
             help="Exit non-zero if protected non-import overrides prevent syncing PO entries.",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         po_files = get_po_files()
         overwrite = options["overwrite"]
         dry_run = options["dry_run"]
@@ -70,13 +72,12 @@ class Command(BaseCommand):
 
                 existing = TranslationOverride.objects.filter(msgid=entry.msgid, language=lang).first()
 
-                protected_existing = (
-                    existing
+                if (
+                    existing is not None
                     and not overwrite
                     and existing.source != TranslationOverride.SOURCE_IMPORT
                     and existing.source not in overwrite_sources
-                )
-                if protected_existing:
+                ):
                     totals["skipped"] += 1
                     totals["protected_skipped"] += 1
                     self.stdout.write(

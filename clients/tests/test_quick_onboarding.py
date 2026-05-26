@@ -10,7 +10,6 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 
 from clients.models import Client, ClientOnboardingSession, Document, DocumentRequirement, MOSApplicationData
 from clients.forms import ClientForm
-from clients.views.onboarding_views import quick_create_client_onboarding
 from clients.services.roles import ensure_predefined_roles
 
 @override_settings(LANGUAGE_CODE="ru")
@@ -86,7 +85,7 @@ class QuickOnboardingTests(TestCase):
             assigned_staff=self.manager,
         )
         token = uuid.uuid4().hex
-        session = ClientOnboardingSession.objects.create(
+        ClientOnboardingSession.objects.create(
             client=client,
             token_hash=token,
             status="created",
@@ -194,7 +193,7 @@ class QuickOnboardingTests(TestCase):
             language="pl",
         )
         token = uuid.uuid4().hex
-        session = ClientOnboardingSession.objects.create(
+        ClientOnboardingSession.objects.create(
             client=client,
             token_hash=token,
             status="created",
@@ -231,7 +230,7 @@ class QuickOnboardingTests(TestCase):
             assigned_staff=self.manager,
         )
         token = uuid.uuid4().hex
-        session = ClientOnboardingSession.objects.create(
+        ClientOnboardingSession.objects.create(
             client=client,
             token_hash=token,
             status="created",

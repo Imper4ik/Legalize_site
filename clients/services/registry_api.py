@@ -2,6 +2,7 @@ import logging
 import re
 import requests
 import unicodedata
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -104,7 +105,7 @@ def match_names(ocr_names: list[str], representative_names: list[str]) -> str | 
     return None
 
 
-def query_krs(krs_number: str) -> dict:
+def query_krs(krs_number: str) -> dict[str, Any]:
     """
     Query the official Polish KRS API.
     Returns a dictionary with name, active status, representatives, and raw data.
@@ -113,7 +114,7 @@ def query_krs(krs_number: str) -> dict:
     krs_clean = re.sub(r"[^\d]", "", krs_number).zfill(10)
     url = f"https://api-krs.ms.gov.pl/api/krs/OdpisAktualny/{krs_clean}?rejestr=P&format=json"
     
-    result = {
+    result: dict[str, Any] = {
         "source": "KRS",
         "company_name": None,
         "is_active": False,
@@ -177,14 +178,14 @@ def query_krs(krs_number: str) -> dict:
     return result
 
 
-def query_ceidg_stub(nip: str) -> dict:
+def query_ceidg_stub(nip: str) -> dict[str, Any]:
     """
     Stub for CEIDG API query.
     Always returns mock success with active status and a placeholder representative name if NIP is valid.
     """
     from clients.services.company_parser import validate_nip
     
-    result = {
+    result: dict[str, Any] = {
         "source": "CEIDG",
         "company_name": None,
         "is_active": False,
@@ -205,12 +206,16 @@ def query_ceidg_stub(nip: str) -> dict:
     return result
 
 
-def verify_employer(nip: str | None = None, krs: str | None = None, detected_names: list[str] = None) -> dict:
+def verify_employer(
+    nip: str | None = None,
+    krs: str | None = None,
+    detected_names: list[str] | None = None,
+) -> dict[str, Any]:
     """
     Verify employer against Polish registries (KRS or CEIDG stub).
     Matches detected_names against representatives.
     """
-    report = {
+    report: dict[str, Any] = {
         "registry_source": None,
         "company_name": None,
         "is_employer_active": False,
@@ -222,7 +227,7 @@ def verify_employer(nip: str | None = None, krs: str | None = None, detected_nam
         "warnings": []
     }
     
-    registry_data = None
+    registry_data: dict[str, Any] | None = None
     
     # 1. Query KRS if KRS number is detected
     if krs:

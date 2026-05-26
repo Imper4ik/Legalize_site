@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import date
-import pytest
 
 from clients.services.company_parser import (
     validate_nip,

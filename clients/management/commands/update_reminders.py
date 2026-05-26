@@ -256,8 +256,12 @@ class Command(BaseCommand):
 
         count = 0
         for mos in mos_data_list.iterator():
-            due_date = mos.legal_stay_until
-            
+            if mos.legal_stay_until is None:
+                continue
+
+            legal_stay_until = mos.legal_stay_until
+            due_date = legal_stay_until
+
             # Weekend adjustment logic
             if due_date.weekday() == 5:  # Saturday
                 due_date = due_date - timedelta(days=1)

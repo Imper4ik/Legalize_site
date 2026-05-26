@@ -147,7 +147,11 @@ def _extract_pdf_text(path: Path) -> str:
 
             # Convert PDF to images (up to 10 pages for longer documents like Załącznik)
             try:
-                images = convert_from_path(str(path), first_page=1, last_page=10, poppler_path=_get_poppler_path())
+                convert_kwargs: dict[str, Any] = {"first_page": 1, "last_page": 10}
+                poppler_path = _get_poppler_path()
+                if poppler_path:
+                    convert_kwargs["poppler_path"] = poppler_path
+                images = convert_from_path(str(path), **convert_kwargs)
             except Exception as e:
                 logger.warning("pdf2image failed: %s", e)
                 images = []

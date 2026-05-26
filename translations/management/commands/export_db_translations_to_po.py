@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import polib
+from typing import Any
+
 from django.core.management.base import BaseCommand
 from translations.models import TranslationOverride
 from translations.utils import get_po_files
@@ -8,11 +10,11 @@ from translations.utils import get_po_files
 class Command(BaseCommand):
     help = 'Export DB translation overrides to PO files'
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: Any) -> None:
         parser.add_argument('--no-compile', action='store_true', help='Disable compilemessages after export')
         parser.add_argument('--dry-run', action='store_true', help='Show what would be done without changing files')
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         po_files = get_po_files()
         no_compile = options['no_compile']
         dry_run = options['dry_run']

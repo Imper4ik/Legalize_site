@@ -14,7 +14,6 @@ from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentProcessingJob
 from clients.services.document_workflow import (
     upload_client_document,
-    process_pending_document_jobs,
 )
 from clients.services.company_parser import CompanyDocData
 

@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 from django.contrib import messages
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -73,7 +75,7 @@ def _build_review_diffs(client: Client, mos_data: MOSApplicationData) -> list[di
     return diffs
 
 
-def _apply_mos_data_to_client(*, client: Client, mos_data: MOSApplicationData, actor) -> list[str]:
+def _apply_mos_data_to_client(*, client: Client, mos_data: MOSApplicationData, actor: Any) -> list[str]:
     values = _mos_client_update_values(mos_data)
     changed_fields: list[str] = []
     for field_name in APPLY_TO_CLIENT_FIELDS:
@@ -107,7 +109,7 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
             changed_fields = _apply_mos_data_to_client(client=client, mos_data=mos_data, actor=request.user)
             mos_data.status = "mos_package_ready"
             mos_data.staff_reviewed_at = timezone.now()
-            mos_data.staff_reviewed_by = request.user
+            mos_data.staff_reviewed_by = cast(Any, request.user)
             mos_data.save(update_fields=["status", "staff_reviewed_at", "staff_reviewed_by"])
             if changed_fields:
                 messages.success(request, "Questionnaire approved and client card updated.")

@@ -38,7 +38,7 @@ class Command(BaseCommand):
             updated += 1
             if dry_run:
                 continue
-            requirement.custom_name = None
+            requirement.custom_name = ""
             requirement.save(update_fields=["custom_name"])
 
         if dry_run:

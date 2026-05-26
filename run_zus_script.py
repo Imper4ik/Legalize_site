@@ -7,10 +7,12 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "legalize_site.settings.development")
 django.setup()
 
-from datetime import timedelta
-from django.utils import timezone
-from clients.models import Client, Reminder, EmailLog
-from django.core.management import call_command
+from datetime import timedelta  # noqa: E402
+
+from django.core.management import call_command  # noqa: E402
+from django.utils import timezone  # noqa: E402
+
+from clients.models import Client, Reminder, EmailLog  # noqa: E402
 
 # Удаляем старого тестового клиента, если есть
 Client.all_objects.filter(email="zus-test@example.com").delete()
@@ -30,7 +32,7 @@ client = Client.objects.create(
     application_purpose="work"
 )
 
-print(f"--- Создан тестовый клиент ---")
+print("--- Создан тестовый клиент ---")
 print(f"Имя: {client.get_full_name()}")
 print(f"Дата отпечатков: {client.fingerprints_date}")
 print(f"Текущая дата: {today}")
@@ -43,7 +45,7 @@ print("------------------------------\n")
 reminders = Reminder.objects.filter(client=client)
 emails = EmailLog.objects.filter(client=client)
 
-print(f"=== Результат ===")
+print("=== Результат ===")
 print(f"Сгенерировано напоминаний в CRM: {reminders.count()}")
 for r in reminders:
     print(f" - [{r.due_date}] {r.title}: {r.notes}")
