@@ -30,6 +30,7 @@ class ClientQuerySet(SoftDeleteQuerySet):
             health_awaiting_confirmation_count=Count(
                 "documents",
                 filter=Q(documents__awaiting_confirmation=True, documents__archived_at__isnull=True),
+                distinct=True,
             ),
             health_expired_documents_count=Count(
                 "documents",
@@ -38,6 +39,7 @@ class ClientQuerySet(SoftDeleteQuerySet):
                     documents__expiry_date__lt=today,
                     documents__archived_at__isnull=True,
                 ),
+                distinct=True,
             ),
             health_expiring_documents_count=Count(
                 "documents",
@@ -47,14 +49,17 @@ class ClientQuerySet(SoftDeleteQuerySet):
                     documents__expiry_date__lte=expiring_cutoff,
                     documents__archived_at__isnull=True,
                 ),
+                distinct=True,
             ),
             health_wezwanie_count=Count(
                 "documents",
                 filter=Q(documents__document_type__in=wezwanie_types, documents__archived_at__isnull=True),
+                distinct=True,
             ),
             health_appointment_email_sent_count=Count(
                 "email_logs",
                 filter=Q(email_logs__template_type="appointment_notification"),
+                distinct=True,
             ),
             health_overdue_payments_count=Count(
                 "payments",
@@ -64,6 +69,7 @@ class ClientQuerySet(SoftDeleteQuerySet):
                     payments__due_date__lte=today,
                     payments__archived_at__isnull=True,
                 ),
+                distinct=True,
             ),
             health_overdue_tasks_count=Count(
                 "staff_tasks",
@@ -71,6 +77,7 @@ class ClientQuerySet(SoftDeleteQuerySet):
                     staff_tasks__status__in=["open", "in_progress"],
                     staff_tasks__due_date__lt=today,
                 ),
+                distinct=True,
             ),
         )
 

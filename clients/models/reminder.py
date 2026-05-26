@@ -7,6 +7,7 @@ class Reminder(models.Model):
     REMINDER_TYPE_CHOICES = [
         ('payment', _('Оплата')),
         ('document', _('Документ')),
+        ('legal_stay', _('Легальное пребывание')),
         ('other', _('Другое')),
     ]
 
