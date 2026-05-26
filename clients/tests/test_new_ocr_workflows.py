@@ -345,6 +345,7 @@ class NewOcrWorkflowsTests(TestCase):
         self.assertTrue(any("already uploaded" in w for w in second.parsed_data.get("warnings", [])))
 
     def test_zus_rca_or_insurance_always_uses_zus_ocr(self):
+    def test_zus_rca_or_insurance_job_type_by_month_field(self):
         doc_with_month = Document(file=build_pdf_upload("with_month.pdf"), zus_period_month=date(2026, 4, 1))
         res = upload_client_document(
             client=self.client_obj,
@@ -365,7 +366,7 @@ class NewOcrWorkflowsTests(TestCase):
             parse_requested=False,
         )
         job_without_month = DocumentProcessingJob.objects.get(document=res2.document)
-        self.assertEqual(job_without_month.job_type, DocumentProcessingJob.JOB_TYPE_ZUS_OCR)
+        self.assertEqual(job_without_month.job_type, DocumentProcessingJob.JOB_TYPE_INSURANCE_OCR)
 
     def test_job_type_for_health_insurance_and_zus_history(self):
         health_doc = Document(file=build_pdf_upload("health.pdf"))

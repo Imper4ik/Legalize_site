@@ -522,6 +522,22 @@ class PaymentForm(forms.ModelForm):
         widget=forms.Select(attrs={'class': 'form-select'})
     )
 
+
+class ClientDocumentRequirementForm(forms.ModelForm):
+    class Meta:
+        from clients.models import ClientDocumentRequirement
+        model = ClientDocumentRequirement
+        fields = ["name", "description", "is_required", "due_date"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "is_required": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "due_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+        }
+
+    def clean_name(self) -> str:
+        return str(self.cleaned_data["name"]).strip()
+
     class Meta:
         model = Payment
         fields = [

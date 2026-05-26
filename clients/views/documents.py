@@ -235,36 +235,6 @@ def add_client_document_requirement(request: HttpRequest, client_id: int) -> Htt
     return redirect("clients:client_detail", pk=client.pk)
 
 
-@role_required_view(*DOCUMENT_EDIT_ROLES)
-def edit_client_document_requirement(request: HttpRequest, pk: int) -> HttpResponseBase:
-    requirement = get_object_or_404(
-        ClientDocumentRequirement.objects.select_related("client"),
-        pk=pk,
-        client__in=accessible_clients_queryset(request.user, Client.objects.all()),
-    )
-    if request.method == "POST":
-        form = ClientDocumentRequirementForm(request.POST, instance=requirement)
-        if form.is_valid():
-            requirement = form.save()
-            sync_custom_document_requirement_reminder(requirement)
-            messages.success(request, _("Индивидуальный документ обновлён."))
-    return redirect("clients:client_detail", pk=requirement.client_id)
-
-
-@role_required_view(*DOCUMENT_EDIT_ROLES)
-def delete_client_document_requirement(request: HttpRequest, pk: int) -> HttpResponseBase:
-    requirement = get_object_or_404(
-        ClientDocumentRequirement.objects.select_related("client"),
-        pk=pk,
-        client__in=accessible_clients_queryset(request.user, Client.objects.all()),
-    )
-    requirement.is_active = False
-    requirement.save(update_fields=["is_active", "updated_at"])
-    sync_custom_document_requirement_reminder(requirement)
-    messages.success(request, _("Индивидуальный документ деактивирован."))
-    return redirect("clients:client_detail", pk=requirement.client_id)
-
-
 @role_or_feature_required_view("can_run_ocr_review", "Admin", "Manager")
 def confirm_wezwanie_parse(request: HttpRequest, doc_id: int) -> HttpResponseBase:
     document = get_object_or_404(accessible_documents_queryset(request.user, Document.objects.all()), pk=doc_id)

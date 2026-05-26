@@ -33,8 +33,6 @@ from clients.views.checklist_views import (
 )
 from clients.views.documents import (
     add_client_document_requirement,
-    edit_client_document_requirement,
-    delete_client_document_requirement,
     add_document,
     client_checklist_partial,
     client_overview_partial,
@@ -128,8 +126,6 @@ __all__ = [
     'dashboard_redirect_view',
     'add_document',
     'add_client_document_requirement',
-    'edit_client_document_requirement',
-    'delete_client_document_requirement',
     'client_checklist_partial',
     'client_overview_partial',
     'client_status_api',
