@@ -1,16 +1,19 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.db import transaction
 from django.utils import timezone, translation
 from django.http import HttpRequest, HttpResponse, HttpResponseForbidden, JsonResponse
-from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from legalize_site.utils.http import request_is_ajax
 from legalize_site.utils.files import build_protected_file_response
 from django.contrib import messages
-import uuid
 from datetime import timedelta
 from clients.forms import DocumentUploadForm
 from clients.models import ClientOnboardingSession, ClientDigitalAccess, MOSApplicationData, Client, Document, DocumentRequirement
 from clients.services.intake_extraction import pre_fill_mos_data_from_ocr
+from clients.services.document_workflow import upload_client_document
+from clients.services.access import accessible_clients_queryset
+from clients.views.base import role_required_view
+from clients.services.onboarding_tokens import generate_onboarding_token, hash_onboarding_token
 
 EDITABLE_MOS_STATUSES = {"draft", "client_filling", "needs_correction"}
 CONTACT_SYNC_FIELDS = ("first_name", "last_name", "phone", "email")
@@ -35,12 +38,17 @@ def _sync_contact_fields_to_client(client: Client, **values: str) -> None:
         client.save(update_fields=update_fields)
 
 def check_onboarding_session(token: str) -> ClientOnboardingSession | None:
-    session = ClientOnboardingSession.objects.filter(token_hash=token, expires_at__gt=timezone.now()).first()
+    token_h = hash_onboarding_token(token)
+    session = ClientOnboardingSession.objects.filter(token_hash=token_h, expires_at__gt=timezone.now()).first()
     if not session or session.status not in ["created", "active"]:
         return None
     if session.status == "created":
         session.status = "active"
         session.save(update_fields=["status"])
+    # Keep templates backward-compatible: they still reference `session.token_hash` in URLs.
+    # We expose the raw token in-memory only (not persisted), so links remain functional
+    # while the database stores only hashed values.
+    session.token_hash = token
     return session
 
 def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
@@ -114,10 +122,13 @@ def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) 
     if request.method == "POST" and request.FILES.get("file"):
         form = DocumentUploadForm(request.POST, request.FILES, doc_type=doc_type, client=session.client)
         if form.is_valid():
-            document = form.save(commit=False)
-            document.client = session.client
-            document.document_type = doc_type
-            document.save()
+            upload_client_document(
+                client=session.client,
+                doc_type=doc_type,
+                uploaded_document=form.save(commit=False),
+                actor=None,
+                parse_requested=False,
+            )
         else:
             messages.error(request, "File upload failed. Please check the selected file.")
     return redirect("clients:onboarding_start", token=token)
@@ -353,6 +364,9 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
         mos_data.status = "client_completed"
         mos_data.client_confirmed_at = timezone.now()
         mos_data.save()
+        session.status = "completed"
+        session.completed_at = timezone.now()
+        session.save(update_fields=["status", "completed_at", "updated_at"])
 
         # Send notification to staff/manager
         try:
@@ -376,24 +390,24 @@ def onboarding_review(request: HttpRequest, token: str) -> HttpResponse:
     
     return render(request, "clients/onboarding/review.html", {"session": session, "mos_data": mos_data})
 
-@login_required
+@role_required_view("Admin", "Manager", "Staff")
 def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpResponse:
-    client = get_object_or_404(Client, id=client_id)
-    token = uuid.uuid4().hex
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), id=client_id)
+    token, token_hash = generate_onboarding_token()
     
     payment = client.payments.filter(status__in=["paid", "partial"]).first()
     
     session = ClientOnboardingSession.objects.create(
         client=client,
         payment=payment,
-        token_hash=token,
+        token_hash=token_hash,
         status="created",
         expires_at=timezone.now() + timedelta(days=7)
     )
     
     if request_is_ajax(request):
         link = request.build_absolute_uri(
-            reverse("clients:onboarding_start", kwargs={"token": session.token_hash})
+            reverse("clients:onboarding_start", kwargs={"token": token})
         )
         return JsonResponse({
             "status": "ok",
@@ -408,8 +422,6 @@ def onboarding_personal_data(request: HttpRequest, token: str) -> HttpResponse:
     return redirect("clients:onboarding_passport", token=token)
 
 
-from django.db import transaction
-from clients.views.base import role_required_view
 from clients.use_cases.client_records import finalize_client_creation
 
 @role_required_view("Admin", "Manager", "Staff")
@@ -443,16 +455,16 @@ def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
                 actor=request.user,
             )
             
-            token = uuid.uuid4().hex
+            token, token_hash = generate_onboarding_token()
             session = ClientOnboardingSession.objects.create(
                 client=client,
-                token_hash=token,
+                token_hash=token_hash,
                 status="created",
                 expires_at=timezone.now() + timedelta(days=7)
             )
 
         link = request.build_absolute_uri(
-            reverse("clients:onboarding_start", kwargs={"token": session.token_hash})
+            reverse("clients:onboarding_start", kwargs={"token": token})
         )
         return JsonResponse({
             "status": "ok",
