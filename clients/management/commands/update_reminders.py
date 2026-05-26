@@ -10,6 +10,8 @@ from django.db import transaction
 from django.utils import timezone
 
 from clients.models import Client, Document, Payment, Reminder
+from clients.models import ClientDocumentRequirement
+from clients.services.custom_document_requirements import sync_custom_document_requirement_reminder
 from clients.services.notifications import (
     _get_missing_documents_context,
     send_expiring_documents_email,
@@ -24,7 +26,7 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     help = "Create daily document, payment, ZUS RCA, and missing-document reminders safely."
 
-    SECTIONS = ("payments", "documents", "zus", "missing-docs", "legal-stay")
+    SECTIONS = ("payments", "documents", "zus", "missing-docs", "legal-stay", "custom-documents")
 
     def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
@@ -79,6 +81,8 @@ class Command(BaseCommand):
                 else:
                     with transaction.atomic():
                         self.create_legal_stay_reminders()
+            if "custom-documents" in selected_sections:
+                self.sync_custom_document_requirement_reminders(dry_run=dry_run)
 
             self.stdout.write(self.style.SUCCESS("--- Reminder update completed ---"))
         except Exception as exc:
@@ -279,3 +283,15 @@ class Command(BaseCommand):
 
         prefix = "DRY RUN: would create" if dry_run else "Created"
         self.stdout.write(self.style.SUCCESS(f"{prefix} {count} legal stay reminders."))
+
+    def sync_custom_document_requirement_reminders(self, *, dry_run: bool = False) -> None:
+        counts = defaultdict(int)
+        for requirement in ClientDocumentRequirement.objects.select_related("client").all().iterator():
+            outcome = sync_custom_document_requirement_reminder(requirement, dry_run=dry_run)
+            counts[outcome] += 1
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Custom requirements synced: upserted={counts['upserted']} deactivated={counts['deactivated']} "
+                f"would_upsert={counts['would_upsert']} would_deactivate={counts['would_deactivate']} noop={counts['noop']}"
+            )
+        )

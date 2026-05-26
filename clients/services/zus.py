@@ -72,6 +72,11 @@ def missing_zus_months(client: Client, *, today: date | None = None) -> list[dat
         return []
 
     expected = expected_zus_months(client.fingerprints_date, today=today)
+    insurance_expiry = latest_health_insurance_expiry(client)
+    if insurance_expiry:
+        covered_until = month_start(insurance_expiry)
+        # TODO: optionally require verified=True for insurance coverage.
+        expected = [month for month in expected if month > covered_until]
     uploaded = uploaded_zus_months(client)
     missing = [month for month in expected if month not in uploaded]
     if missing:
@@ -81,6 +86,14 @@ def missing_zus_months(client: Client, *, today: date | None = None) -> list[dat
             [month.isoformat() for month in missing],
         )
     return missing
+
+
+def latest_health_insurance_expiry(client: Client) -> date | None:
+    return client.documents.filter(
+        document_type=DocumentType.HEALTH_INSURANCE.value,
+        expiry_date__isnull=False,
+        archived_at__isnull=True,
+    ).order_by("-expiry_date").values_list("expiry_date", flat=True).first()
 
 
 def format_zus_months(months: list[date]) -> str:

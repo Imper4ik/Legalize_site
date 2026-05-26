@@ -349,3 +349,36 @@ class DocumentRequirement(models.Model):
     def required_for(cls, purpose: str, language: str | None = None) -> list[tuple[str, str]]:
         catalog = cls.catalog_for(purpose, language, include_optional=False, include_fallback=True)
         return [(item["code"], str(item["label"])) for item in catalog]
+
+
+class ClientDocumentRequirement(models.Model):
+    client = models.ForeignKey("clients.Client", on_delete=models.CASCADE, related_name="custom_document_requirements")
+    document_type = models.CharField(max_length=255, blank=True, default="")
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, default="")
+    is_required = models.BooleanField(default=True)
+    due_date = models.DateField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="created_client_document_requirements",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["due_date", "created_at"]
+        indexes = [
+            models.Index(fields=["client", "is_active"], name="cl_doc_req_cl_act_idx"),
+            models.Index(fields=["document_type"], name="cl_doc_req_type_idx"),
+            models.Index(fields=["due_date"], name="cl_doc_req_due_idx"),
+        ]
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        super().save(*args, **kwargs)
+        if not self.document_type and self.pk:
+            self.document_type = f"client_custom_{self.pk}"
+            super().save(update_fields=["document_type"])

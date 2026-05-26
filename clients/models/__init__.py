@@ -4,7 +4,7 @@ from .company import Company
 from .activity import ClientActivity
 from .document import (
     Document, DocumentRequirement, get_fallback_document_checklist,
-    resolve_document_label, get_available_document_types,
+    ClientDocumentRequirement, resolve_document_label, get_available_document_types,
     translate_document_name, is_default_document_label
 )
 from .document_processing import DocumentProcessingJob
@@ -30,6 +30,7 @@ __all__ = [
     'Document',
     'DocumentProcessingJob',
     'DocumentRequirement',
+    'ClientDocumentRequirement',
     'DocumentVersion',
     'Payment',
     'Reminder',

@@ -11,7 +11,7 @@ from hashlib import sha256
 from typing import Any, TYPE_CHECKING
 
 from django.conf import settings
-from django.db import models, transaction
+from django.db import IntegrityError, models, transaction
 from django.utils import timezone
 from django.utils.dateparse import parse_date, parse_time
 from django.utils.translation import gettext as _
@@ -513,6 +513,9 @@ def _process_company_doc_job_internal(
         "registry_verification": report,
         "has_name_mismatch": not report.get("signer_authorized", True),
     }
+    if job.document.document_type == DocumentType.ZUS_RCA_OR_INSURANCE.value and not parsed.period_month:
+        warnings.append(str(_("Could not extract ZUS RCA reporting month.")))
+        parsed_payload["warnings"] = warnings
 
     return _finalize_successful_company_job(
         job_id=job.id,
@@ -989,8 +992,21 @@ def _process_zus_doc_job_internal(
         "insurance_code": parsed.insurance_code,
         "detected_names": parsed.detected_names,
         "zus_form_type": form_type,
+        "period_month": parsed.period_month.isoformat() if parsed.period_month else None,
         "warnings": warnings,
     }
+
+    if (
+        parsed.period_month
+        and job.document.document_type == DocumentType.ZUS_RCA_OR_INSURANCE.value
+        and not job.document.zus_period_month
+    ):
+        job.document.zus_period_month = parsed.period_month
+        try:
+            job.document.save(update_fields=["zus_period_month"])
+        except IntegrityError:
+            warnings.append(str(_("ZUS RCA for this month is already uploaded.")))
+            parsed_payload["warnings"] = warnings
 
     return _finalize_successful_ocr_job(
         job_id=job.id,
