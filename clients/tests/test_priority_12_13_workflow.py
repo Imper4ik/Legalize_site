@@ -277,6 +277,10 @@ def test_weekly_document_reminder_loop_command_runs_document_sections():
         "zus",
         "--only",
         "documents",
+        "--only",
+        "legal-stay",
+        "--only",
+        "custom-documents",
     )
 
 
