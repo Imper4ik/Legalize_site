@@ -32,7 +32,7 @@ def transition_client_workflow(*, client: Client, target_stage: str, actor: Any 
     old_stage = client.workflow_stage
     client.workflow_stage = target_stage
     if save:
-        fields = ["workflow_stage", "updated_at"]
+        fields = ["workflow_stage"]
         if submission_date is not None:
             fields.append("submission_date")
         if fingerprints_date is not None:
