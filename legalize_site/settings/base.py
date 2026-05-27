@@ -576,7 +576,7 @@ RATE_LIMITS = {
         "message": _("Too many bulk email actions. Try again later."),
     },
     "clients:run_update_reminders": {
-        "limit": int(os.environ.get("RATE_LIMIT_REMINDER_RUN", "5")),
+        "limit": int(os.environ.get("RATE_LIMIT_REMINDER_RUN", "100")),
         "window_seconds": int(os.environ.get("RATE_LIMIT_REMINDER_RUN_WINDOW", "3600")),
         "message": _("Too many reminder refresh requests. Try again later."),
     },
