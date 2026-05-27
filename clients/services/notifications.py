@@ -34,6 +34,7 @@ EMAIL_SUBJECTS = {
     "missing_documents": gettext_lazy("Список недостающих документов"),
     "expiring_documents": gettext_lazy("Документы скоро истекают"),
     "appointment_notification": gettext_lazy("Уведомление о встрече"),
+    "legal_stay_expiring": gettext_lazy("Истекает легальное пребывание"),
 }
 
 
@@ -756,3 +757,38 @@ def send_onboarding_completed_email(client: Client) -> int:
     except Exception:
         logger.exception("Failed to send onboarding completed email for client_id=%s", client.pk)
         return 0
+
+
+def send_legal_stay_email(
+    client: Client,
+    legal_stay_until: Any,
+    due_date: Any,
+    *,
+    sent_by: AbstractBaseUser | AnonymousUser | None = None,
+) -> int:
+    """Send a notification about the client's legal stay expiring soon."""
+    if not client.email:
+        return 0
+
+    language = _get_preferred_language(client)
+    context = {
+        "client": client,
+        "legal_stay_until": legal_stay_until,
+        "due_date": due_date,
+    }
+    subject = _get_subject("legal_stay_expiring", language)
+    body = _render_email_body("legal_stay", context, language)
+    return _send_email(
+        subject,
+        body,
+        [client.email],
+        client=client,
+        template_type="legal_stay_expiring",
+        sent_by=sent_by,
+        idempotency_key=build_email_idempotency_key(
+            "legal_stay_expiring",
+            client.pk,
+            client.email,
+            legal_stay_until,
+        ),
+    )

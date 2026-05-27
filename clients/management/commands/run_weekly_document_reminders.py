@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     help = "Run weekly document/ZUS RCA reminder checks, optionally as a long-running loop."
 
-    UPDATE_REMINDER_ARGS = ("--only", "missing-docs", "--only", "zus", "--only", "documents")
+    UPDATE_REMINDER_ARGS = ("--only", "missing-docs", "--only", "zus", "--only", "documents", "--only", "legal-stay", "--only", "custom-documents")
 
     def add_arguments(self, parser: Any) -> None:
         parser.add_argument(

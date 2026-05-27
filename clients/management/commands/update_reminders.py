@@ -15,6 +15,7 @@ from clients.services.custom_document_requirements import sync_custom_document_r
 from clients.services.notifications import (
     _get_missing_documents_context,
     send_expiring_documents_email,
+    send_legal_stay_email,
     send_missing_documents_email,
 )
 from clients.services.zus import format_zus_months, missing_zus_months
@@ -76,6 +77,7 @@ class Command(BaseCommand):
 
             if "legal-stay" in selected_sections:
                 self.stdout.write(self.style.HTTP_INFO("-> Checking legal stay expiration..."))
+                self.send_legal_stay_notifications(dry_run=dry_run)
                 if dry_run:
                     self.create_legal_stay_reminders(dry_run=True)
                 else:
@@ -299,3 +301,60 @@ class Command(BaseCommand):
                 f"would_upsert={counts['would_upsert']} would_deactivate={counts['would_deactivate']} noop={counts['noop']}"
             )
         )
+
+    def send_legal_stay_notifications(self, *, dry_run: bool = False) -> None:
+        from clients.models import MOSApplicationData
+        today = timezone.localdate()
+        cutoff = today + timedelta(days=45)
+
+        mos_data_list = MOSApplicationData.objects.select_related("client").filter(
+            legal_stay_until__isnull=False,
+            legal_stay_until__gte=today,
+            legal_stay_until__lte=cutoff,
+        )
+
+        if not mos_data_list.exists():
+            self.stdout.write("No legal stay expirations within the email window.")
+            return
+
+        sent_count = 0
+        skipped_count = 0
+        for mos in mos_data_list.iterator():
+            client = mos.client
+            if not client.email:
+                skipped_count += 1
+                continue
+
+            legal_stay_until = mos.legal_stay_until
+            due_date = legal_stay_until
+
+            # Weekend adjustment logic
+            if due_date.weekday() == 5:  # Saturday
+                due_date = due_date - timedelta(days=1)
+            elif due_date.weekday() == 6:  # Sunday
+                due_date = due_date - timedelta(days=2)
+
+            if dry_run:
+                sent_count += 1
+                self.stdout.write(
+                    f"DRY RUN: would send legal_stay email client_id={client.pk} "
+                    f"legal_stay_until={legal_stay_until} due_date={due_date}"
+                )
+                continue
+
+            sent = send_legal_stay_email(client, legal_stay_until, due_date)
+            if sent:
+                sent_count += 1
+                logger.info(
+                    "notification sent: template=legal_stay_expiring client_id=%s legal_stay_until=%s",
+                    client.pk, legal_stay_until,
+                )
+            else:
+                skipped_count += 1
+                logger.info(
+                    "notification skipped: template=legal_stay_expiring client_id=%s (duplicate or no email)",
+                    client.pk,
+                )
+
+        prefix = "DRY RUN: would send" if dry_run else "Sent"
+        self.stdout.write(f"{prefix} {sent_count} legal-stay emails. skipped={skipped_count}")

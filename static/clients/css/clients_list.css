@@ -9,8 +9,7 @@
 }
 
 .table-container {
-  max-height: 70vh;
-  overflow-y: auto;
+  overflow-x: auto;
   border-radius: 12px;
   border: 1px solid rgba(15, 118, 110, 0.16);
   background:
@@ -29,8 +28,6 @@
 }
 
 .table-modern thead th {
-  position: sticky;
-  top: 0;
   z-index: 2;
   backdrop-filter: blur(8px);
   background: linear-gradient(180deg, rgba(239, 253, 250, 0.98), rgba(229, 246, 243, 0.95));
