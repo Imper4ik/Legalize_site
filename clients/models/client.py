@@ -536,23 +536,33 @@ class Client(SoftDeleteModel):
         for key, value in stats.items():
             setattr(self, key, value)
 
-        if self.legal_basis_end_date:
-            if self.legal_basis_end_date < today:
-                alerts.append(
-                    {
-                        "level": "danger",
-                        "title": _("Основание пребывания уже истекло"),
-                        "message": _("Проверьте основание пребывания и срочно свяжитесь с клиентом."),
-                    }
-                )
-            elif self.legal_basis_end_date <= today + timedelta(days=30):
-                alerts.append(
-                    {
-                        "level": "warning",
-                        "title": _("Основание пребывания скоро истекает"),
-                        "message": _("До окончания основания пребывания осталось меньше 30 дней."),
-                    }
-                )
+        # Check legal stay expiration only if client hasn't submitted yet
+        if self.workflow_stage in ["new_client", "document_collection"]:
+            legal_stay_date = self.legal_basis_end_date
+            if not legal_stay_date:
+                try:
+                    if hasattr(self, "mos_application_data") and self.mos_application_data.legal_stay_until:
+                        legal_stay_date = self.mos_application_data.legal_stay_until
+                except Exception:
+                    pass
+
+            if legal_stay_date:
+                if legal_stay_date < today:
+                    alerts.append(
+                        {
+                            "level": "danger",
+                            "title": _("Основание пребывания уже истекло"),
+                            "message": _("Проверьте основание пребывания и срочно свяжитесь с клиентом."),
+                        }
+                    )
+                elif legal_stay_date <= today + timedelta(days=30):
+                    alerts.append(
+                        {
+                            "level": "warning",
+                            "title": _("Основание пребывания скоро истекает"),
+                            "message": _("До окончания основания пребывания осталось меньше 30 дней."),
+                        }
+                    )
 
         if getattr(self, "health_awaiting_confirmation_count", 0):
             alerts.append(
