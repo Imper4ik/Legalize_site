@@ -66,3 +66,19 @@ def test_legal_stay_choice_and_no_duplicate_reminders(db):
 
     call_command("update_reminders", "--only", "legal-stay")
     assert Reminder.objects.filter(client=client, reminder_type="legal_stay", is_active=True).count() == 1
+
+
+def test_legal_stay_ignored_for_submitted_and_later_stages(db):
+    client = Client.objects.create(
+        first_name="L",
+        last_name="S",
+        application_purpose="work",
+        workflow_stage="application_submitted",
+    )
+    mos_data = client.mos_application_data
+    mos_data.legal_stay_until = date.today() + timedelta(days=10)
+    mos_data.save()
+
+    call_command("update_reminders", "--only", "legal-stay")
+    assert not Reminder.objects.filter(client=client, reminder_type="legal_stay").exists()
+

@@ -254,6 +254,7 @@ class Command(BaseCommand):
             legal_stay_until__isnull=False,
             legal_stay_until__gte=today,
             legal_stay_until__lte=cutoff,
+            client__workflow_stage__in=["new_client", "document_collection"],
         )
 
         count = 0
@@ -311,6 +312,7 @@ class Command(BaseCommand):
             legal_stay_until__isnull=False,
             legal_stay_until__gte=today,
             legal_stay_until__lte=cutoff,
+            client__workflow_stage__in=["new_client", "document_collection"],
         )
 
         if not mos_data_list.exists():
