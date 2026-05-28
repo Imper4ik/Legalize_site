@@ -323,3 +323,33 @@
     align-self: flex-start;
   }
 }
+
+.activity-timeline-scroll {
+  max-height: 450px;
+  overflow-y: auto;
+}
+
+@media (max-width: 575.98px) {
+  .client-action-bar {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    gap: 0.3rem;
+  }
+  .client-action-bar .btn span {
+    display: none;
+  }
+  .client-action-bar .btn i {
+    font-size: 1.1rem;
+    margin: 0 !important;
+  }
+  .client-action-bar .btn,
+  .client-action-bar .btn-group {
+    flex: 1 1 auto;
+  }
+  .client-action-bar .btn {
+    padding: 0.4rem 0.5rem;
+    min-height: 2.3rem;
+    justify-content: center;
+  }
+}
