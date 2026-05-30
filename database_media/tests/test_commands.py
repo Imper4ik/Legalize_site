@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
@@ -59,7 +58,7 @@ class DatabaseMediaCommandsTests(TestCase):
         self.file_system.save(file_name, ContentFile(b"%PDF-cmd-data"))
 
         # Create a client document referencing it
-        doc = ClientDocument.objects.create(
+        ClientDocument.objects.create(
             client=self.client_obj,
             document_type="passport",
             file=file_name,

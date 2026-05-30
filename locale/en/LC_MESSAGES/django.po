@@ -1960,7 +1960,7 @@ msgstr "Quick navigation to analytics and funnel."
 
 #: .\clients\templates\clients\admin_panel.html:214
 msgid "Журналы системы"
-msgstr "System logs"
+msgstr "System Logs"
 
 #: .\clients\templates\clients\admin_panel.html:215
 msgid "Просмотр отправленных писем и действий сотрудников (логи аудита)."
@@ -1971,7 +1971,7 @@ msgstr "View sent emails and staff actions (audit logs)."
 #: .\clients\templates\clients\logs\staff_activity_logs.html:10
 #: .\templates\base.html:186
 msgid "Логи сотрудников"
-msgstr "Staff logs"
+msgstr "Staff Logs"
 
 #: .\clients\templates\clients\admin_panel.html:217
 #: .\clients\templates\clients\logs\email_logs.html:9

@@ -1964,11 +1964,11 @@ msgstr "Szybkie przejście do analityki i lejka."
 
 #: .\clients\templates\clients\admin_panel.html:214
 msgid "Журналы системы"
-msgstr "Dzienniki systemowe"
+msgstr "Dzienniki systemu"
 
 #: .\clients\templates\clients\admin_panel.html:215
 msgid "Просмотр отправленных писем и действий сотрудников (логи аудита)."
-msgstr ""
+msgstr "Przegląd wysłanych e-maili i działań pracowników (logi audytu)."
 "Przeglądanie wysłanych e-maili i działań personelu (dzienniki audytu)."
 
 #: .\clients\templates\clients\admin_panel.html:216
@@ -1976,14 +1976,14 @@ msgstr ""
 #: .\clients\templates\clients\logs\staff_activity_logs.html:10
 #: .\templates\base.html:186
 msgid "Логи сотрудников"
-msgstr "Logi personelu"
+msgstr "Logi pracowników"
 
 #: .\clients\templates\clients\admin_panel.html:217
 #: .\clients\templates\clients\logs\email_logs.html:9
 #: .\clients\templates\clients\logs\email_logs.html:10
 #: .\templates\base.html:181
 msgid "Логи писем"
-msgstr "Logi wiadomości"
+msgstr "Logi e-maili"
 
 #: .\clients\templates\clients\app_settings_form.html:4
 #: .\clients\templates\clients\app_settings_form.html:5
@@ -3320,7 +3320,7 @@ msgstr "Zaloguj się ponownie"
 
 #: .\clients\templates\clients\logs\email_logs.html:11
 msgid "Журнал отправленных писем клиентам."
-msgstr "Dziennik e-maili wyslanych do klientow."
+msgstr "Dziennik wysłanych e-maili do klientów."
 
 #: .\clients\templates\clients\logs\email_logs.html:97
 msgid "Логи писем не найдены."
@@ -3352,7 +3352,7 @@ msgstr "Działanie"
 #: .\clients\templates\clients\logs\staff_activity_logs.html:43
 #: .\clients\templates\clients\logs\staff_activity_logs.html:60
 msgid "Клиент / Объект"
-msgstr "Klient / obiekt"
+msgstr "Klient / Obiekt"
 
 #: .\clients\templates\clients\logs\staff_activity_logs.html:77
 msgid "Логи активности не найдены."

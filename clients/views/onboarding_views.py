@@ -9,7 +9,6 @@ from django.contrib import messages
 from datetime import timedelta
 from typing import cast
 
-from django.db import transaction
 
 from clients.forms import DocumentUploadForm
 from clients.models import ClientOnboardingSession, ClientDigitalAccess, MOSApplicationData, Client, Document, DocumentRequirement
@@ -435,7 +434,7 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
     
     payment = client.payments.filter(status__in=["paid", "partial"]).first()
     
-    session = ClientOnboardingSession.objects.create(
+    ClientOnboardingSession.objects.create(
         client=client,
         payment=payment,
         token_hash=token_hash,
@@ -492,7 +491,7 @@ def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
             )
             
             token, token_hash = generate_onboarding_token()
-            session = ClientOnboardingSession.objects.create(
+            ClientOnboardingSession.objects.create(
                 client=client,
                 token_hash=token_hash,
                 status="created",

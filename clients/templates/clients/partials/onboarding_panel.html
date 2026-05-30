@@ -45,13 +45,19 @@
         {% with session=client.onboarding_sessions.last %}
             <div id="onboarding-session-container">
                 {% if session %}
-                    <p id="onboarding-session-info">Текущая сессия: <strong>{{ session.get_status_display }}</strong> (истекает: {{ session.expires_at|date:"d.m.Y H:i" }})</p>
+                    <p id="onboarding-session-info"
+                       data-label-ru="Текущая сессия: <strong>Создана</strong> (истекает: {date})"
+                       data-label-pl="Bieżąca sesja: <strong>Utworzona</strong> (wygasa: {date})"
+                       data-label-en="Current session: <strong>Created</strong> (expires: {date})">Текущая сессия: <strong>{{ session.get_status_display }}</strong> (истекает: {{ session.expires_at|date:"d.m.Y H:i" }})</p>
                     <div class="input-group mb-3">
                         <input type="text" class="form-control" value="" id="onboardingLink" placeholder="{% translate 'Сгенерируйте или скопируйте ссылку' %}" readonly>
                         <button class="btn btn-outline-secondary" type="button" id="btn-copy-onboarding-link" onclick="const val=document.getElementById('onboardingLink').value; if(val) { navigator.clipboard.writeText(val); }" disabled>Копировать ссылку</button>
                     </div>
                 {% else %}
-                    <p class="text-muted" id="onboarding-session-info">Ссылка для онбординга еще не создана.</p>
+                    <p class="text-muted" id="onboarding-session-info"
+                       data-label-ru="Текущая сессия: <strong>Создана</strong> (истекает: {date})"
+                       data-label-pl="Bieżąca sesja: <strong>Utworzona</strong> (wygasa: {date})"
+                       data-label-en="Current session: <strong>Created</strong> (expires: {date})">Ссылка для онбординга еще не создана.</p>
                     <div class="input-group mb-3">
                         <input type="text" class="form-control" value="" id="onboardingLink" placeholder="{% translate 'Сгенерируйте ссылку для получения доступа' %}" readonly>
                         <button class="btn btn-outline-secondary" type="button" id="btn-copy-onboarding-link" onclick="const val=document.getElementById('onboardingLink').value; if(val) { navigator.clipboard.writeText(val); }" disabled>Копировать ссылку</button>
@@ -61,6 +67,12 @@
             
             <button type="button" class="btn btn-primary btn-sm btn-generate-onboarding-link"
                     id="btn-generate-detail-onboarding"
+                    data-text-generating-ru="Генерация..."
+                    data-text-generating-pl="Generowanie..."
+                    data-text-generating-en="Generating..."
+                    data-error-ru="Не удалось сгенерировать ссылку. Попробуйте еще раз."
+                    data-error-pl="Nie udało się wygenerować linku. Spróbuj ponownie."
+                    data-error-en="Failed to generate link. Please try again."
                     data-generate-url="{% url 'clients:generate_onboarding_link' client.id %}">
                 Сгенерировать новую ссылку
             </button>

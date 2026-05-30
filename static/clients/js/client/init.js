@@ -52,9 +52,17 @@ function initOnboardingPanelLinkGenerator() {
     const url = btn.dataset.generateUrl;
     if (!url) return;
 
+    const lang = document.documentElement.lang || 'en';
     btn.disabled = true;
     const originalText = btn.textContent;
-    btn.textContent = 'Генерация...';
+    
+    let genText = btn.dataset.textGeneratingEn || 'Generating...';
+    if (lang.startsWith('ru')) {
+      genText = btn.dataset.textGeneratingRu || genText;
+    } else if (lang.startsWith('pl')) {
+      genText = btn.dataset.textGeneratingPl || genText;
+    }
+    btn.textContent = genText;
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
                       document.querySelector('[name=csrfmiddlewaretoken]')?.value;
@@ -94,16 +102,15 @@ function initOnboardingPanelLinkGenerator() {
           const year = now.getFullYear();
           const hour = String(now.getHours()).padStart(2, '0');
           const minute = String(now.getMinutes()).padStart(2, '0');
+          const formattedDate = `${day}.${month}.${year} ${hour}:${minute}`;
           
-          let statusText = 'Создана';
-          const lang = document.documentElement.lang || 'en';
+          let template = infoEl.dataset.labelEn || 'Current session: <strong>Created</strong> (expires: {date})';
           if (lang.startsWith('ru')) {
-            infoEl.innerHTML = `Текущая сессия: <strong>Создана</strong> (истекает: ${day}.${month}.${year} ${hour}:${minute})`;
+            template = infoEl.dataset.labelRu || template;
           } else if (lang.startsWith('pl')) {
-            infoEl.innerHTML = `Bieżąca sesja: <strong>Utworzona</strong> (wygasa: ${day}.${month}.${year} ${hour}:${minute})`;
-          } else {
-            infoEl.innerHTML = `Current session: <strong>Created</strong> (expires: ${day}.${month}.${year} ${hour}:${minute})`;
+            template = infoEl.dataset.labelPl || template;
           }
+          infoEl.innerHTML = template.replace('{date}', formattedDate);
         }
 
         // Copy to clipboard
@@ -112,13 +119,19 @@ function initOnboardingPanelLinkGenerator() {
         }
 
         // Show alert
-        showAlert('onboarding-alerts', data.message || 'Ссылка скопирована в буфер обмена!', 'success');
+        showAlert('onboarding-alerts', data.message || 'Link copied to clipboard!', 'success');
       } else {
-        throw new Error(data.message || 'Ошибка генерации');
+        throw new Error(data.message || 'Generation error');
       }
     } catch (error) {
       console.error(error);
-      showAlert('onboarding-alerts', 'Не удалось сгенерировать ссылку. Попробуйте еще раз.', 'danger');
+      let errorMsg = btn.dataset.errorEn || 'Failed to generate link. Please try again.';
+      if (lang.startsWith('ru')) {
+        errorMsg = btn.dataset.errorRu || errorMsg;
+      } else if (lang.startsWith('pl')) {
+        errorMsg = btn.dataset.errorPl || errorMsg;
+      }
+      showAlert('onboarding-alerts', errorMsg, 'danger');
     } finally {
       btn.disabled = false;
       btn.textContent = originalText;

@@ -520,9 +520,7 @@ def _process_company_doc_job_internal(
         "registry_verification": report,
         "has_name_mismatch": not report.get("signer_authorized", True),
     }
-    if job.document.document_type == DocumentType.ZUS_RCA_OR_INSURANCE.value and not parsed.period_month:
-        warnings.append(str(_("Could not extract ZUS RCA reporting month.")))
-        parsed_payload["warnings"] = warnings
+
 
     return _finalize_successful_company_job(
         job_id=job.id,
@@ -1002,6 +1000,10 @@ def _process_zus_doc_job_internal(
         "period_month": parsed.period_month.isoformat() if parsed.period_month else None,
         "warnings": warnings,
     }
+
+    if job.document.document_type == DocumentType.ZUS_RCA_OR_INSURANCE.value and not parsed.period_month:
+        warnings.append(str(_("Could not extract ZUS RCA reporting month.")))
+        parsed_payload["warnings"] = warnings
 
     if (
         parsed.period_month

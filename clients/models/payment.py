@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
-from typing import cast
 
 from django.core.exceptions import ValidationError
 from django.db import models

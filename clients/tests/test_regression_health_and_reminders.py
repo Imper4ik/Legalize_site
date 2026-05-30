@@ -5,7 +5,7 @@ from datetime import date, timedelta
 from django.core.management import call_command
 
 from clients.constants import DocumentType
-from clients.models import Client, Document, EmailLog, MOSApplicationData, Payment, Reminder, StaffTask
+from clients.models import Client, Document, EmailLog, Payment, Reminder, StaffTask
 
 
 def test_with_health_stats_uses_distinct_counts(db):
