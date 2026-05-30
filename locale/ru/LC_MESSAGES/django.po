@@ -6271,6 +6271,54 @@ msgstr "пользователь"
 msgid "users"
 msgstr "пользователи"
 
+msgid "Draft"
+msgstr "Черновик"
+
+msgid "Client filling"
+msgstr "Заполнение клиентом"
+
+msgid "Client completed"
+msgstr "Анкета заполнена иностранцем"
+
+msgid "Staff review"
+msgstr "Ожидает подтверждения"
+
+msgid "Needs correction"
+msgstr "Требует исправления"
+
+msgid "Approved by staff"
+msgstr "Одобрено сотрудником"
+
+msgid "MOS package ready"
+msgstr "Пакет MOS готов"
+
+msgid "Submitted in MOS"
+msgstr "Анкета выслана в ужонд"
+
+msgid "Fingerprints"
+msgstr "Отпечатки пальцев"
+
+msgid "Waiting decision"
+msgstr "Ожидание решения"
+
+msgid "Decision received"
+msgstr "Решение получено"
+
+msgid "Closed"
+msgstr "Закрыто"
+
+msgid "Показаны клиенты со статусом:"
+msgstr "Показаны клиенты со статусом:"
+
+msgid "Показаны отфильтрованные клиенты"
+msgstr "Показаны отфильтрованные клиенты"
+
+msgid "Анкета на рассмотрении, нажать для проверки"
+msgstr "Анкета на рассмотрении, нажать для проверки"
+
+msgid "Анкета выслана в ужонд, нажать для проверки"
+msgstr "Анкета выслана в ужонд, нажать для проверки"
+
 #~ msgid "Unpaid payments"
 #~ msgstr "Неоплаченные платежи"
 

@@ -1968,8 +1968,9 @@ msgstr "Dzienniki systemu"
 
 #: .\clients\templates\clients\admin_panel.html:215
 msgid "Просмотр отправленных писем и действий сотрудников (логи аудита)."
-msgstr "Przegląd wysłanych e-maili i działań pracowników (logi audytu)."
-"Przeglądanie wysłanych e-maili i działań personelu (dzienniki audytu)."
+msgstr ""
+"Przegląd wysłanych e-maili i działań pracowników (logi audytu).Przeglądanie "
+"wysłanych e-maili i działań personelu (dzienniki audytu)."
 
 #: .\clients\templates\clients\admin_panel.html:216
 #: .\clients\templates\clients\logs\staff_activity_logs.html:9
@@ -6278,6 +6279,54 @@ msgstr "użytkownik"
 #: .\users\models.py:86
 msgid "users"
 msgstr "użytkownicy"
+
+msgid "Draft"
+msgstr "Szkic"
+
+msgid "Client filling"
+msgstr "Wypełnianie przez klienta"
+
+msgid "Client completed"
+msgstr "Formularz wypełniony przez klienta"
+
+msgid "Staff review"
+msgstr "Oczekuje na weryfikację"
+
+msgid "Needs correction"
+msgstr "Wymaga poprawek"
+
+msgid "Approved by staff"
+msgstr "Zatwierdzony przez pracownika"
+
+msgid "MOS package ready"
+msgstr "Pakiet MOS gotowy"
+
+msgid "Submitted in MOS"
+msgstr "Wysłano do MOS"
+
+msgid "Fingerprints"
+msgstr "Odciski palców"
+
+msgid "Waiting decision"
+msgstr "Oczekiwanie na decyzję"
+
+msgid "Decision received"
+msgstr "Decyzja otrzymana"
+
+msgid "Closed"
+msgstr "Zamknięte"
+
+msgid "Показаны клиенты со статусом:"
+msgstr "Pokazywanie klientów ze statusem:"
+
+msgid "Показаны отфильтрованные клиенты"
+msgstr "Pokazywanie przefiltrowanych klientów"
+
+msgid "Анкета на рассмотрении, нажать для проверки"
+msgstr "Kwestionariusz w trakcie weryfikacji, kliknij aby sprawdzić"
+
+msgid "Анкета выслана в ужонд, нажать для проверки"
+msgstr "Kwestionariusz wysłany do MOS, kliknij aby sprawdzić"
 
 #~ msgid "Unpaid payments"
 #~ msgstr "Nieopłacone płatności"

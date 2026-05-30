@@ -6259,6 +6259,54 @@ msgstr "user"
 msgid "users"
 msgstr "users"
 
+msgid "Draft"
+msgstr "Draft"
+
+msgid "Client filling"
+msgstr "Client filling"
+
+msgid "Client completed"
+msgstr "Client completed"
+
+msgid "Staff review"
+msgstr "Staff review"
+
+msgid "Needs correction"
+msgstr "Needs correction"
+
+msgid "Approved by staff"
+msgstr "Approved by staff"
+
+msgid "MOS package ready"
+msgstr "MOS package ready"
+
+msgid "Submitted in MOS"
+msgstr "Submitted in MOS"
+
+msgid "Fingerprints"
+msgstr "Fingerprints"
+
+msgid "Waiting decision"
+msgstr "Waiting decision"
+
+msgid "Decision received"
+msgstr "Decision received"
+
+msgid "Closed"
+msgstr "Closed"
+
+msgid "Показаны клиенты со статусом:"
+msgstr "Showing clients with status:"
+
+msgid "Показаны отфильтрованные клиенты"
+msgstr "Showing filtered clients"
+
+msgid "Анкета на рассмотрении, нажать для проверки"
+msgstr "Questionnaire under review, click to check"
+
+msgid "Анкета выслана в ужонд, нажать для проверки"
+msgstr "Questionnaire submitted to MOS, click to check"
+
 #~ msgid "Unpaid payments"
 #~ msgstr "Unpaid payments"
 
