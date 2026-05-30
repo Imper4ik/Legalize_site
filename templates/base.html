@@ -41,8 +41,10 @@
   <link rel="stylesheet" href="{% static 'css/theme.css' %}">
   <meta name="csrf-token" content="{{ csrf_token }}">
 
-  <!-- Favicon -->
+  <!-- Favicon & PWA Manifest -->
   <link rel="icon" type="image/jpeg" href="{% static 'img/favicon.jpg' %}">
+  <link rel="manifest" href="{% static 'manifest.json' %}">
+  <meta name="theme-color" content="#1d4ed8">
 
   {% block extra_head %}{% endblock %}
 </head>
@@ -279,6 +281,91 @@
 
   {% block modals %}{% endblock %}
 
+  <!-- BOTTOM MOBILE NAVIGATION BAR -->
+  {% if user.is_authenticated %}
+  <nav class="mobile-nav-bar d-flex d-lg-none">
+    {% if user|has_any_role:"Admin,Manager,Staff,ReadOnly" %}
+      <!-- Staff Mobile Navigation -->
+      <a href="{% url 'clients:client_list' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'client_list' %}active{% endif %}">
+        <i class="bi bi-people-fill"></i>
+        <span>{% translate "Клиенты" %}</span>
+      </a>
+      <a href="{% url 'clients:client_add' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'client_add' %}active{% endif %}">
+        <i class="bi bi-person-plus-fill"></i>
+        <span>{% translate "Новый" %}</span>
+      </a>
+      <a href="{% url 'clients:fingerprints_schedule' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'fingerprints_schedule' %}active{% endif %}">
+        <i class="bi bi-fingerprint"></i>
+        <span>{% translate "Отпечатки" %}</span>
+      </a>
+      <a href="{% url 'clients:document_reminder_list' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'document_reminder_list' or request.resolver_match.url_name == 'payment_reminder_list' %}active{% endif %}">
+        <i class="bi bi-bell-fill"></i>
+        <span>{% translate "Напоминания" %}</span>
+      </a>
+      
+      <div class="dropup d-flex flex-column align-items-center justify-content-center flex-1">
+        <a href="#" class="mobile-nav-item" data-bs-toggle="dropdown" aria-expanded="false" id="mobileMenuDropdown">
+          <i class="bi bi-grid-fill"></i>
+          <span>{% translate "Меню" %}</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="mobileMenuDropdown" style="margin-bottom: 12px; z-index: 1050;">
+          <li>
+            <a class="dropdown-item" href="{% url 'clients:admin_panel' %}">
+              <i class="bi bi-grid me-2 text-muted"></i>{% translate "Админ панель" %}
+            </a>
+          </li>
+          {% if user|has_any_role:"Admin,Manager" %}
+          <li>
+            <a class="dropdown-item" href="{% url 'clients:metrics_dashboard' %}">
+              <i class="bi bi-bar-chart me-2 text-muted"></i>{% translate "Метрики" %}
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="{% url 'clients:app_settings' %}">
+              <i class="bi bi-sliders me-2 text-muted"></i>{% translate "Настройки" %}
+            </a>
+          </li>
+          {% endif %}
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <form id="mobile-logout-form" method="post" action="{% url 'account_logout' %}" class="m-0">
+              {% csrf_token %}
+              <button type="submit" class="dropdown-item w-100 text-start">
+                <i class="fas fa-sign-out-alt me-2 text-muted"></i>{% translate "Выход" %}
+              </button>
+            </form>
+          </li>
+        </ul>
+      </div>
+    {% else %}
+      <!-- Client Mobile Navigation -->
+      {% if user.client_profile %}
+        <a href="{% url 'clients:client_detail' pk=user.client_profile.pk %}" class="mobile-nav-item active">
+          <i class="bi bi-person-badge-fill"></i>
+          <span>{% translate "Моё дело" %}</span>
+        </a>
+      {% endif %}
+      
+      <div class="dropup d-flex flex-column align-items-center justify-content-center flex-1">
+        <a href="#" class="mobile-nav-item" data-bs-toggle="dropdown" aria-expanded="false" id="mobileClientMenuDropdown">
+          <i class="bi bi-gear-fill"></i>
+          <span>{% translate "Ещё" %}</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="mobileClientMenuDropdown" style="margin-bottom: 12px; z-index: 1050;">
+          <li>
+            <form id="mobile-client-logout-form" method="post" action="{% url 'account_logout' %}" class="m-0">
+              {% csrf_token %}
+              <button type="submit" class="dropdown-item w-100 text-start">
+                <i class="fas fa-sign-out-alt me-2 text-muted"></i>{% translate "Выход" %}
+              </button>
+            </form>
+          </li>
+        </ul>
+      </div>
+    {% endif %}
+  </nav>
+  {% endif %}
+
   <!-- Vendor JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -290,6 +377,12 @@
       // Auto-dismiss alerts
       document.querySelectorAll('.alert.alert-dismissible').forEach((el) => {
         setTimeout(() => bootstrap.Alert.getOrCreateInstance(el).close(), 3000);
+      });
+
+      // Initialize Bootstrap tooltips
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
       });
     });
   </script>

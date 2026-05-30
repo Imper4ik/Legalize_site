@@ -43,7 +43,10 @@
               <div class="form-text">{% translate "Каждая новая строка хранится отдельно, чтобы потом использовать в шаблонах." %}</div>
             </div>
             <div class="col-12 col-lg-6">
-              <label for="{{ form.default_proxy_name.id_for_label }}" class="form-label fw-semibold">{% translate "Pełnomocnik по умолчанию" %}</label>
+              <label for="{{ form.default_proxy_name.id_for_label }}" class="form-label fw-semibold d-flex align-items-center gap-1">
+                {% translate "Pełnomocnik по умолчанию" %}
+                <i class="bi bi-question-circle text-muted text-nowrap" data-bs-toggle="tooltip" data-bs-placement="top" title="{% translate 'Уполномоченный представитель (полномочник), представляющий интересы клиента в ведомствах.' %}"></i>
+              </label>
               {{ form.default_proxy_name }}
             </div>
           </div>
@@ -64,8 +67,9 @@
             </div>
 
             <div class="col-12 col-lg-6">
-              <label for="{{ form.mazowiecki_proxy_template.id_for_label }}" class="form-label fw-semibold">
+              <label for="{{ form.mazowiecki_proxy_template.id_for_label }}" class="form-label fw-semibold d-flex align-items-center gap-1">
                 {% translate "Pełnomocnik" %}
+                <i class="bi bi-question-circle text-muted text-nowrap" data-bs-toggle="tooltip" data-bs-placement="top" title="{% translate 'Шаблон данных представителя, который будет автоматически подставляться в бланки заявлений (Wniosek).' %}"></i>
               </label>
               {{ form.mazowiecki_proxy_template }}
               <div class="form-text">{% translate "Можно оставить пустые строки или вообще очистить блок." %}</div>
