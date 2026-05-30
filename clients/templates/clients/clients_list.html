@@ -36,10 +36,20 @@
 {% block content %}
 <div id="ajax-alert-container"></div>
 
-{% if onboarding_filter == "completed" %}
+{% if onboarding_filter %}
 <div class="alert alert-warning d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
   <div>
-    <strong>{% translate "Показаны клиенты с заполненной анкетой" %}</strong>
+    <strong>
+      {% if onboarding_filter == "completed" %}
+        {% translate "Показаны клиенты со статусом:" %} {% translate "Client completed" %}
+      {% elif onboarding_filter == "staff_review" %}
+        {% translate "Показаны клиенты со статусом:" %} {% translate "Staff review" %}
+      {% elif onboarding_filter == "submitted_in_mos" %}
+        {% translate "Показаны клиенты со статусом:" %} {% translate "Submitted in MOS" %}
+      {% else %}
+        {% translate "Показаны отфильтрованные клиенты" %}
+      {% endif %}
+    </strong>
     <div class="small mb-0">{% translate "Откройте карточку клиента или бейдж анкеты, чтобы проверить данные." %}</div>
   </div>
   <a href="{% url 'clients:client_list' %}" class="btn btn-sm btn-outline-secondary">{% translate "Показать всех клиентов" %}</a>
@@ -122,6 +132,24 @@
                 <span class="badge bg-warning text-dark" title="{% translate 'Ждет проверки сотрудником' %}">
                   {% translate "Ждет проверки" %}
                 </span>
+                {% if client.mos_application_data.updated_at %}
+                  <span class="badge bg-light text-dark border" title="{% translate 'Когда анкета была обновлена' %}">
+                    {{ client.mos_application_data.updated_at|date:"d.m.Y H:i" }}
+                  </span>
+                {% endif %}
+              {% elif client.mos_application_data.status == 'staff_review' %}
+                <a href="{% url 'clients:admin_mos_review' client.id %}" class="badge bg-warning text-dark text-decoration-none" title="{% translate 'Анкета на рассмотрении, нажать для проверки' %}">
+                  <i class="bi bi-clock me-1"></i>{{ client.mos_application_data.get_status_display }}
+                </a>
+                {% if client.mos_application_data.updated_at %}
+                  <span class="badge bg-light text-dark border" title="{% translate 'Когда анкета была обновлена' %}">
+                    {{ client.mos_application_data.updated_at|date:"d.m.Y H:i" }}
+                  </span>
+                {% endif %}
+              {% elif client.mos_application_data.status == 'submitted_in_mos' %}
+                <a href="{% url 'clients:admin_mos_review' client.id %}" class="badge bg-info text-dark text-decoration-none" title="{% translate 'Анкета выслана в ужонд, нажать для проверки' %}">
+                  <i class="bi bi-send me-1"></i>{{ client.mos_application_data.get_status_display }}
+                </a>
                 {% if client.mos_application_data.updated_at %}
                   <span class="badge bg-light text-dark border" title="{% translate 'Когда анкета была обновлена' %}">
                     {{ client.mos_application_data.updated_at|date:"d.m.Y H:i" }}

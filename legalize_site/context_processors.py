@@ -38,6 +38,8 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
             Client.objects.filter(Q(user__is_staff=False) | Q(user__isnull=True)),
         )
         completed_onboarding_count = qs.filter(mos_application_data__status="client_completed").count()
+        staff_review_count = qs.filter(mos_application_data__status="staff_review").count()
+        submitted_in_mos_count = qs.filter(mos_application_data__status="submitted_in_mos").count()
         ocr_review_count = qs.filter(
             documents__awaiting_confirmation=True,
             documents__archived_at__isnull=True,
@@ -55,11 +57,27 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
         items = []
         if completed_onboarding_count:
             items.append({
-                "label": _("Заполненные анкеты"),
+                "label": _("Client completed"),
                 "count": completed_onboarding_count,
                 "url": f"{client_list_url}?onboarding=completed",
                 "icon": "bi-file-earmark-check",
                 "level": "success",
+            })
+        if staff_review_count:
+            items.append({
+                "label": _("Staff review"),
+                "count": staff_review_count,
+                "url": f"{client_list_url}?onboarding=staff_review",
+                "icon": "bi-clock",
+                "level": "warning",
+            })
+        if submitted_in_mos_count:
+            items.append({
+                "label": _("Submitted in MOS"),
+                "count": submitted_in_mos_count,
+                "url": f"{client_list_url}?onboarding=submitted_in_mos",
+                "icon": "bi-send",
+                "level": "info",
             })
         if ocr_review_count:
             items.append({

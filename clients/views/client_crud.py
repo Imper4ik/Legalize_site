@@ -67,9 +67,13 @@ class ClientListView(StaffRequiredMixin, ListView):
 
         list_ordering = ["-created_at"]
         self.onboarding_filter = self.request.GET.get("onboarding", "")
-        if self.onboarding_filter == "completed":
-            queryset = queryset.filter(mos_application_data__status="client_completed")
-            list_ordering = ["-mos_application_data__updated_at", "-created_at"]
+        if self.onboarding_filter:
+            if self.onboarding_filter == "completed":
+                queryset = queryset.filter(mos_application_data__status="client_completed")
+                list_ordering = ["-mos_application_data__updated_at", "-created_at"]
+            elif self.onboarding_filter in ["staff_review", "submitted_in_mos"]:
+                queryset = queryset.filter(mos_application_data__status=self.onboarding_filter)
+                list_ordering = ["-mos_application_data__updated_at", "-created_at"]
 
         self.document_filter = self.request.GET.get("document", "")
         if self.document_filter == "ocr_review":

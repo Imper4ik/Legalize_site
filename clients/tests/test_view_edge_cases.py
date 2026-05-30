@@ -99,7 +99,7 @@ class ClientViewEdgeCaseTests(TestCase):
 
     def test_completed_onboarding_badge_filters_client_list(self):
         completed_client = Client.objects.create(
-            first_name="Completed",
+            first_name="CompletedClient",
             last_name="Onboarding",
             email="completed-onboarding@example.com",
         )
@@ -107,8 +107,26 @@ class ClientViewEdgeCaseTests(TestCase):
             client=completed_client,
             defaults={"status": "client_completed"},
         )
+        review_client = Client.objects.create(
+            first_name="ReviewClient",
+            last_name="Onboarding",
+            email="review-onboarding@example.com",
+        )
+        MOSApplicationData.objects.update_or_create(
+            client=review_client,
+            defaults={"status": "staff_review"},
+        )
+        submitted_client = Client.objects.create(
+            first_name="SubmittedClient",
+            last_name="Onboarding",
+            email="submitted-onboarding@example.com",
+        )
+        MOSApplicationData.objects.update_or_create(
+            client=submitted_client,
+            defaults={"status": "submitted_in_mos"},
+        )
         draft_client = Client.objects.create(
-            first_name="Draft",
+            first_name="DraftClient",
             last_name="Onboarding",
             email="draft-onboarding@example.com",
         )
@@ -121,12 +139,32 @@ class ClientViewEdgeCaseTests(TestCase):
         response = self.client.get(list_url)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, f'{list_url}?onboarding=completed')
+        self.assertContains(response, f'{list_url}?onboarding=staff_review')
+        self.assertContains(response, f'{list_url}?onboarding=submitted_in_mos')
 
-        filtered_response = self.client.get(list_url, {"onboarding": "completed"})
-        self.assertEqual(filtered_response.status_code, 200)
-        self.assertContains(filtered_response, "Completed")
-        self.assertNotContains(filtered_response, "Draft")
-        self.assertEqual(filtered_response.context["onboarding_filter"], "completed")
+        filtered_completed = self.client.get(list_url, {"onboarding": "completed"})
+        self.assertEqual(filtered_completed.status_code, 200)
+        self.assertContains(filtered_completed, "CompletedClient")
+        self.assertNotContains(filtered_completed, "ReviewClient")
+        self.assertNotContains(filtered_completed, "SubmittedClient")
+        self.assertNotContains(filtered_completed, "DraftClient")
+        self.assertEqual(filtered_completed.context["onboarding_filter"], "completed")
+
+        filtered_review = self.client.get(list_url, {"onboarding": "staff_review"})
+        self.assertEqual(filtered_review.status_code, 200)
+        self.assertContains(filtered_review, "ReviewClient")
+        self.assertNotContains(filtered_review, "CompletedClient")
+        self.assertNotContains(filtered_review, "SubmittedClient")
+        self.assertNotContains(filtered_review, "DraftClient")
+        self.assertEqual(filtered_review.context["onboarding_filter"], "staff_review")
+
+        filtered_submitted = self.client.get(list_url, {"onboarding": "submitted_in_mos"})
+        self.assertEqual(filtered_submitted.status_code, 200)
+        self.assertContains(filtered_submitted, "SubmittedClient")
+        self.assertNotContains(filtered_submitted, "CompletedClient")
+        self.assertNotContains(filtered_submitted, "ReviewClient")
+        self.assertNotContains(filtered_submitted, "DraftClient")
+        self.assertEqual(filtered_submitted.context["onboarding_filter"], "submitted_in_mos")
 
     def test_client_attention_menu_and_document_filters_show_ocr_events(self):
         review_client = Client.objects.create(
