@@ -770,6 +770,17 @@ def send_legal_stay_email(
     if not client.email:
         return 0
 
+    from datetime import date
+    from django.utils import timezone
+
+    today = timezone.localdate()
+    if hasattr(legal_stay_until, "date"):
+        stay_date = legal_stay_until.date()
+    else:
+        stay_date = legal_stay_until
+
+    days_left = (stay_date - today).days
+
     language = _get_preferred_language(client)
     context = {
         "client": client,
@@ -778,17 +789,44 @@ def send_legal_stay_email(
     }
     subject = _get_subject("legal_stay_expiring", language)
     body = _render_email_body("legal_stay", context, language)
-    return _send_email(
-        subject,
-        body,
-        [client.email],
-        client=client,
-        template_type="legal_stay_expiring",
-        sent_by=sent_by,
-        idempotency_key=build_email_idempotency_key(
-            "legal_stay_expiring",
+
+    if days_left <= 14:
+        recipients = [client.email]
+        if client.assigned_staff and client.assigned_staff.email:
+            recipients.append(client.assigned_staff.email)
+
+        days_epoch = (today - date(2026, 1, 1)).days
+        interval = days_epoch // 3
+
+        idempotency_key = build_email_idempotency_key(
+            "legal_stay_expiring_critical",
             client.pk,
             client.email,
+            client.assigned_staff.email if (client.assigned_staff and client.assigned_staff.email) else "",
             legal_stay_until,
-        ),
-    )
+            interval,
+        )
+        return _send_email(
+            subject,
+            body,
+            recipients,
+            client=client,
+            template_type="legal_stay_expiring",
+            sent_by=sent_by,
+            idempotency_key=idempotency_key,
+        )
+    else:
+        return _send_email(
+            subject,
+            body,
+            [client.email],
+            client=client,
+            template_type="legal_stay_expiring",
+            sent_by=sent_by,
+            idempotency_key=build_email_idempotency_key(
+                "legal_stay_expiring",
+                client.pk,
+                client.email,
+                legal_stay_until,
+            ),
+        )

@@ -117,7 +117,7 @@
             <div class="d-flex flex-wrap gap-1 mt-1">
               {% if client.mos_application_data.status == 'client_completed' %}
                 <a href="{% url 'clients:admin_mos_review' client.id %}" class="badge bg-success text-decoration-none" title="{% translate 'Клиент завершил онбординг, нажать для проверки' %}">
-                  <i class="bi bi-file-earmark-check me-1"></i>{% translate "Анкета заполнена" %}
+                  <i class="bi bi-file-earmark-check me-1"></i>{{ client.mos_application_data.get_status_display }}
                 </a>
                 <span class="badge bg-warning text-dark" title="{% translate 'Ждет проверки сотрудником' %}">
                   {% translate "Ждет проверки" %}

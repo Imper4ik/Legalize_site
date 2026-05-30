@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.translation import gettext_lazy as _
 from fernet_fields import EncryptedTextField
 from typing import Any
 
@@ -68,18 +69,18 @@ class MOSApplicationData(models.Model):
     status = models.CharField(
         max_length=40,
         choices=[
-            ("draft", "Draft"),
-            ("client_filling", "Client filling"),
-            ("client_completed", "Client completed"),
-            ("staff_review", "Staff review"),
-            ("needs_correction", "Needs correction"),
-            ("approved_by_staff", "Approved by staff"),
-            ("mos_package_ready", "MOS package ready"),
-            ("submitted_in_mos", "Submitted in MOS"),
-            ("fingerprints", "Fingerprints"),
-            ("waiting_decision", "Waiting decision"),
-            ("decision_received", "Decision received"),
-            ("closed", "Closed"),
+            ("draft", _("Draft")),
+            ("client_filling", _("Client filling")),
+            ("client_completed", _("Client completed")),
+            ("staff_review", _("Staff review")),
+            ("needs_correction", _("Needs correction")),
+            ("approved_by_staff", _("Approved by staff")),
+            ("mos_package_ready", _("MOS package ready")),
+            ("submitted_in_mos", _("Submitted in MOS")),
+            ("fingerprints", _("Fingerprints")),
+            ("waiting_decision", _("Waiting decision")),
+            ("decision_received", _("Decision received")),
+            ("closed", _("Closed")),
         ],
         default="draft",
     )

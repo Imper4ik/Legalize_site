@@ -116,4 +116,64 @@ def test_get_health_alerts_legal_stay_logic(db):
     assert not any(str(a["title"]) in [expected_title, expected_title_expired] for a in alerts_submitted)
 
 
+def test_send_legal_stay_email_critical_interval(db):
+    from unittest.mock import patch
+    from django.contrib.auth import get_user_model
+    from clients.services.notifications import send_legal_stay_email
+
+    User = get_user_model()
+    staff = User.objects.create_user(username="staff_user", email="staff@example.com", is_staff=True)
+
+    client = Client.objects.create(
+        first_name="John",
+        last_name="Doe",
+        email="client@example.com",
+        assigned_staff=staff,
+    )
+
+    # Case 1: Legal stay expiring in 20 days (>14 days) -> sent only to client, once
+    with patch("clients.services.notifications._send_email", return_value=1) as mock_send:
+        with patch("django.utils.timezone.localdate", return_value=date(2026, 5, 30)):
+            res = send_legal_stay_email(client, date(2026, 6, 19), date(2026, 6, 19))
+            assert res == 1
+            mock_send.assert_called_once()
+            args, kwargs = mock_send.call_args
+            assert args[2] == ["client@example.com"]
+            assert len(kwargs["idempotency_key"]) == 64
+
+    # Case 2: Legal stay expiring in 10 days (<=14 days) on date(2026, 5, 30)
+    with patch("clients.services.notifications._send_email", return_value=1) as mock_send:
+        with patch("django.utils.timezone.localdate", return_value=date(2026, 5, 30)):
+            res = send_legal_stay_email(client, date(2026, 6, 9), date(2026, 6, 9))
+            assert res == 1
+            mock_send.assert_called_once()
+            args, kwargs = mock_send.call_args
+            assert args[2] == ["client@example.com", "staff@example.com"]
+            key_first = kwargs["idempotency_key"]
+
+    # Case 3: Same day, should generate same key
+    with patch("clients.services.notifications._send_email", return_value=1) as mock_send:
+        with patch("django.utils.timezone.localdate", return_value=date(2026, 5, 30)):
+            send_legal_stay_email(client, date(2026, 6, 9), date(2026, 6, 9))
+            args, kwargs = mock_send.call_args
+            assert kwargs["idempotency_key"] == key_first
+
+    # Case 4: Day before (same interval)
+    with patch("clients.services.notifications._send_email", return_value=1) as mock_send:
+        with patch("django.utils.timezone.localdate", return_value=date(2026, 5, 29)):
+            send_legal_stay_email(client, date(2026, 6, 9), date(2026, 6, 9))
+            args, kwargs = mock_send.call_args
+            key_day_before = kwargs["idempotency_key"]
+            assert key_day_before == key_first
+
+    # Case 5: Day after (different interval)
+    with patch("clients.services.notifications._send_email", return_value=1) as mock_send:
+        with patch("django.utils.timezone.localdate", return_value=date(2026, 5, 31)):
+            send_legal_stay_email(client, date(2026, 6, 9), date(2026, 6, 9))
+            args, kwargs = mock_send.call_args
+            key_day_after = kwargs["idempotency_key"]
+            assert key_day_after != key_first
+
+
+
 
