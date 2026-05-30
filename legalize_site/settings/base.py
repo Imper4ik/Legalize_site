@@ -325,7 +325,6 @@ LANGUAGES = [
     ("ru", _("Русский")),
     ("pl", _("Polski")),
     ("en", _("English")),
-    ("uk", _("Українська")),
 ]
 LOCALE_PATHS = [os.path.join(BASE_DIR, "locale")]
 LANGUAGE_CODE = "pl"
