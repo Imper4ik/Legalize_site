@@ -44,7 +44,48 @@
         </div>
     </div>
 
-    <div class="row mb-4">
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="gender" class="form-label fw-bold">{% trans "Пол" %}</label>
+            <select class="form-select" id="gender" name="gender" required>
+                <option value="">{% trans "Выберите..." %}</option>
+                <option value="M" {% if mos_data.personal_data.gender == 'M' %}selected{% endif %}>{% trans "Мужской (M)" %}</option>
+                <option value="K" {% if mos_data.personal_data.gender == 'K' %}selected{% endif %}>{% trans "Женский (K)" %}</option>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label for="maiden_name" class="form-label fw-bold">{% trans "Фамилия при рождении (родовая)" %}</label>
+            <input type="text" class="form-control" id="maiden_name" name="maiden_name" value="{{ mos_data.personal_data.maiden_name|default:'' }}">
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="previous_surnames" class="form-label fw-bold">{% trans "Предыдущие фамилии" %}</label>
+            <input type="text" class="form-control" id="previous_surnames" name="previous_surnames" value="{{ mos_data.personal_data.previous_surnames|default:'' }}" placeholder="{% trans 'Если менялись, через запятую. Если нет — оставьте пустым.' %}">
+        </div>
+        <div class="col-md-6">
+            <label for="previous_first_names" class="form-label fw-bold">{% trans "Предыдущие имена" %}</label>
+            <input type="text" class="form-control" id="previous_first_names" name="previous_first_names" value="{{ mos_data.personal_data.previous_first_names|default:'' }}" placeholder="{% trans 'Если менялись, через запятую.' %}">
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label for="birth_place" class="form-label fw-bold">{% trans "Место рождения (город)" %}</label>
+            <input type="text" class="form-control" id="birth_place" name="birth_place" value="{{ mos_data.personal_data.birth_place|default:'' }}" required>
+        </div>
+        <div class="col-md-4">
+            <label for="birth_country" class="form-label fw-bold">{% trans "Страна рождения" %}</label>
+            <input type="text" class="form-control" id="birth_country" name="birth_country" value="{{ mos_data.personal_data.birth_country|default:'' }}" required>
+        </div>
+        <div class="col-md-4">
+            <label for="origin_country" class="form-label fw-bold">{% trans "Страна происхождения" %}</label>
+            <input type="text" class="form-control" id="origin_country" name="origin_country" value="{{ mos_data.personal_data.origin_country|default:'' }}" required>
+        </div>
+    </div>
+
+    <div class="row mb-3">
         <div class="col-md-6">
             <label for="document_number" class="form-label fw-bold">{% trans "Номер паспорта" %}</label>
             <input type="text" class="form-control" id="document_number" name="document_number" value="{{ mos_data.passport_data.document_number|default:'' }}" required>
@@ -52,6 +93,17 @@
         <div class="col-md-6">
             <label for="expiry_date" class="form-label fw-bold">{% trans "Годен до" %}</label>
             <input type="date" class="form-control" id="expiry_date" name="expiry_date" value="{{ mos_data.passport_data.expiry_date|default:'' }}" required>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <label for="issue_date" class="form-label fw-bold">{% trans "Дата выдачи" %}</label>
+            <input type="date" class="form-control" id="issue_date" name="issue_date" value="{{ mos_data.passport_data.issue_date|default:'' }}" required>
+        </div>
+        <div class="col-md-6">
+            <label for="issuing_authority" class="form-label fw-bold">{% trans "Орган выдачи" %}</label>
+            <input type="text" class="form-control" id="issuing_authority" name="issuing_authority" value="{{ mos_data.passport_data.issuing_authority|default:'' }}" required placeholder="{% trans 'Например: MVS 8080 или орган власти' %}">
         </div>
     </div>
 

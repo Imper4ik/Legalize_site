@@ -62,6 +62,18 @@
         </div>
     </div>
 
+    <div class="mb-4">
+        <h5>{% trans "Деятельность и особенности" %}</h5>
+        <div class="mb-3">
+            <label class="form-label fw-bold">{% trans "Выполняемая профессия / род занятий" %}</label>
+            <input type="text" name="profession" class="form-control" value="{{ mos_data.personal_data.profession|default:'' }}" required placeholder="{% trans 'Например: Программист, Студент, Домохозяйка' %}">
+        </div>
+        <div class="mb-3">
+            <label class="form-label fw-bold">{% trans "Особые приметы" %}</label>
+            <input type="text" name="special_marks" class="form-control" value="{{ mos_data.personal_data.special_marks|default:'' }}" placeholder="{% trans 'Например: Шрамы, татуировки. Если примет нет, напишите Brak.' %}">
+        </div>
+    </div>
+
     <div class="d-flex justify-content-between mt-4">
         <a href="{% url 'clients:onboarding_passport' session.token_hash %}" class="btn btn-outline-secondary">{% trans "Назад" %}</a>
         <button type="submit" class="btn btn-primary">{% trans "Далее: Адрес" %}</button>

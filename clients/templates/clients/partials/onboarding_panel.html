@@ -40,23 +40,30 @@
             <i class="bi bi-file-earmark-text"></i> Проверить анкету MOS
         </a>
 
-        
         <h6 class="mt-4">Доступ для клиента (Onboarding Link)</h6>
+        <div id="onboarding-alerts" class="mb-2"></div>
         {% with session=client.onboarding_sessions.last %}
-            {% if session %}
-                <p>Текущая сессия: <strong>{{ session.get_status_display }}</strong> (истекает: {{ session.expires_at|date:"d.m.Y H:i" }})</p>
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control" value="{{ request.scheme }}://{{ request.get_host }}{% url 'clients:onboarding_start' token=session.token_hash %}" id="onboardingLink" readonly>
-                    <button class="btn btn-outline-secondary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('onboardingLink').value)">Копировать ссылку</button>
-                </div>
-            {% else %}
-                <p class="text-muted">Ссылка для онбординга еще не создана.</p>
-            {% endif %}
+            <div id="onboarding-session-container">
+                {% if session %}
+                    <p id="onboarding-session-info">Текущая сессия: <strong>{{ session.get_status_display }}</strong> (истекает: {{ session.expires_at|date:"d.m.Y H:i" }})</p>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" value="" id="onboardingLink" placeholder="{% translate 'Сгенерируйте или скопируйте ссылку' %}" readonly>
+                        <button class="btn btn-outline-secondary" type="button" id="btn-copy-onboarding-link" onclick="const val=document.getElementById('onboardingLink').value; if(val) { navigator.clipboard.writeText(val); }" disabled>Копировать ссылку</button>
+                    </div>
+                {% else %}
+                    <p class="text-muted" id="onboarding-session-info">Ссылка для онбординга еще не создана.</p>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" value="" id="onboardingLink" placeholder="{% translate 'Сгенерируйте ссылку для получения доступа' %}" readonly>
+                        <button class="btn btn-outline-secondary" type="button" id="btn-copy-onboarding-link" onclick="const val=document.getElementById('onboardingLink').value; if(val) { navigator.clipboard.writeText(val); }" disabled>Копировать ссылку</button>
+                    </div>
+                {% endif %}
+            </div>
             
-            <form action="{% url 'clients:generate_onboarding_link' client.id %}" method="POST" class="mt-2">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-primary btn-sm">Сгенерировать новую ссылку</button>
-            </form>
+            <button type="button" class="btn btn-primary btn-sm btn-generate-onboarding-link"
+                    id="btn-generate-detail-onboarding"
+                    data-generate-url="{% url 'clients:generate_onboarding_link' client.id %}">
+                Сгенерировать новую ссылку
+            </button>
         {% endwith %}
     </div>
 </div>

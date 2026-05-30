@@ -243,6 +243,13 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         citizenship = request.POST.get("citizenship", "").strip()
         doc_num = request.POST.get("document_number", "").strip()
         expiry_date = request.POST.get("expiry_date", "").strip()
+        gender = request.POST.get("gender", "").strip()
+        maiden_name = request.POST.get("maiden_name", "").strip()
+        previous_surnames = request.POST.get("previous_surnames", "").strip()
+        previous_first_names = request.POST.get("previous_first_names", "").strip()
+        birth_place = request.POST.get("birth_place", "").strip()
+        birth_country = request.POST.get("birth_country", "").strip()
+        origin_country = request.POST.get("origin_country", "").strip()
 
         personal_data = mos_data.personal_data or {}
         personal_data["first_name"] = first_name
@@ -251,11 +258,20 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         personal_data["email"] = email
         personal_data["birth_date"] = birth_date_str
         personal_data["citizenship"] = citizenship
+        personal_data["gender"] = gender
+        personal_data["maiden_name"] = maiden_name
+        personal_data["previous_surnames"] = previous_surnames
+        personal_data["previous_first_names"] = previous_first_names
+        personal_data["birth_place"] = birth_place
+        personal_data["birth_country"] = birth_country
+        personal_data["origin_country"] = origin_country
         mos_data.personal_data = personal_data
 
         passport_data = mos_data.passport_data or {}
         passport_data["document_number"] = doc_num
         passport_data["expiry_date"] = expiry_date
+        passport_data["issue_date"] = request.POST.get("issue_date", "").strip()
+        passport_data["issuing_authority"] = request.POST.get("issuing_authority", "").strip()
         mos_data.passport_data = passport_data
 
         mos_data.save()
@@ -290,6 +306,8 @@ def onboarding_personal_extra(request: HttpRequest, token: str) -> HttpResponse:
         personal_data["eye_color"] = request.POST.get("eye_color", "")
         personal_data["education"] = request.POST.get("education", "")
         personal_data["marital_status"] = request.POST.get("marital_status", "")
+        personal_data["profession"] = request.POST.get("profession", "").strip()
+        personal_data["special_marks"] = request.POST.get("special_marks", "").strip()
         mos_data.personal_data = personal_data
         mos_data.save()
         return redirect("clients:onboarding_address", token=token)
@@ -315,6 +333,11 @@ def onboarding_address(request: HttpRequest, token: str) -> HttpResponse:
         address_data["home_country"] = request.POST.get("home_country", "")
         address_data["home_city"] = request.POST.get("home_city", "")
         address_data["home_street"] = request.POST.get("home_street", "")
+        address_data["voivodeship"] = request.POST.get("voivodeship", "").strip()
+        address_data["powiat"] = request.POST.get("powiat", "").strip()
+        address_data["gmina"] = request.POST.get("gmina", "").strip()
+        address_data["house_number"] = request.POST.get("house_number", "").strip()
+        address_data["apartment_number"] = request.POST.get("apartment_number", "").strip()
         mos_data.address_data = address_data
         mos_data.save()
         return redirect("clients:onboarding_travel", token=token)
@@ -342,7 +365,17 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
         stay_data["last_entry_date"] = request.POST.get("last_entry_date", "")
         stay_data["stay_basis"] = request.POST.get("stay_basis", "")
         stay_data["was_in_poland_before"] = request.POST.get("was_in_poland_before") == "yes"
+        stay_data["has_insurance"] = request.POST.get("has_insurance") == "yes"
+        stay_data["has_stable_income"] = request.POST.get("has_stable_income") == "yes"
         mos_data.stay_data = stay_data
+        
+        personal_data = mos_data.personal_data or {}
+        personal_data["employer_email"] = request.POST.get("employer_email", "").strip()
+        personal_data["university_email"] = request.POST.get("university_email", "").strip()
+        mos_data.personal_data = personal_data
+
+        previous_stays_detail = request.POST.get("previous_stays", "").strip()
+        mos_data.previous_stays = [previous_stays_detail]
         
         mos_data.travel_history = [request.POST.get("travel_history", "")]
         mos_data.save()
@@ -570,8 +603,18 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         passport_data["expiry_date"] = val
         passport_dirty = True
 
+    for field in ["gender", "maiden_name", "previous_surnames", "previous_first_names", "birth_place", "birth_country", "origin_country"]:
+        if field in request.POST:
+            personal_data[field] = request.POST.get(field, "").strip()
+            personal_dirty = True
+
+    for field in ["issue_date", "issuing_authority"]:
+        if field in request.POST:
+            passport_data[field] = request.POST.get(field, "").strip()
+            passport_dirty = True
+
     # Process personal_extra fields (Step 2 of extra data)
-    for field in ["father_name", "mother_name", "mother_maiden_name", "height", "eye_color", "education", "marital_status"]:
+    for field in ["father_name", "mother_name", "mother_maiden_name", "height", "eye_color", "education", "marital_status", "profession", "special_marks"]:
         if field in request.POST:
             personal_data[field] = request.POST.get(field, "")
             personal_dirty = True
@@ -584,7 +627,7 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
     # Process address fields
     address_dirty = False
     address_data = mos_data.address_data or {}
-    for field in ["street", "city", "postal_code", "home_country", "home_city", "home_street"]:
+    for field in ["street", "city", "postal_code", "home_country", "home_city", "home_street", "voivodeship", "powiat", "gmina", "house_number", "apartment_number"]:
         if field in request.POST:
             address_data[field] = request.POST.get(field, "")
             address_dirty = True
@@ -616,9 +659,24 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
     if "was_in_poland_before" in request.POST:
         stay_data["was_in_poland_before"] = request.POST.get("was_in_poland_before") == "yes"
         stay_dirty = True
+    if "has_insurance" in request.POST:
+        stay_data["has_insurance"] = request.POST.get("has_insurance") == "yes"
+        stay_dirty = True
+    if "has_stable_income" in request.POST:
+        stay_data["has_stable_income"] = request.POST.get("has_stable_income") == "yes"
+        stay_dirty = True
         
     if stay_dirty:
         mos_data.stay_data = stay_data
+
+    if "employer_email" in request.POST:
+        personal_data["employer_email"] = request.POST.get("employer_email", "").strip()
+        mos_data.personal_data = personal_data
+    if "university_email" in request.POST:
+        personal_data["university_email"] = request.POST.get("university_email", "").strip()
+        mos_data.personal_data = personal_data
+    if "previous_stays" in request.POST:
+        mos_data.previous_stays = [request.POST.get("previous_stays", "").strip()]
 
     if "travel_history" in request.POST:
         mos_data.travel_history = [request.POST.get("travel_history", "")]

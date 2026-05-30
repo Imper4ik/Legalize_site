@@ -12,7 +12,7 @@ class SentryConfigTests(SimpleTestCase):
         event = {
             "request": {
                 "method": "POST",
-                "data": {"email": "person@example.com"},
+                "data": {"email": "person@example.com", "safe_field": "hello"},
                 "headers": {"X-Contact": "+48123123123"},
                 "query_string": "email=person@example.com",
                 "cookies": {"sessionid": "abc"},
@@ -23,7 +23,8 @@ class SentryConfigTests(SimpleTestCase):
 
         scrubbed = _sentry_before_send(event, hint={})
 
-        self.assertEqual(scrubbed["request"]["data"], "[REDACTED]")
+        self.assertEqual(scrubbed["request"]["data"]["email"], "[REDACTED]")
+        self.assertEqual(scrubbed["request"]["data"]["safe_field"], "hello")
         self.assertNotIn("cookies", scrubbed["request"])
         self.assertIn("[REDACTED]", scrubbed["request"]["query_string"])
         self.assertEqual(scrubbed["user"]["email"], "[REDACTED]")

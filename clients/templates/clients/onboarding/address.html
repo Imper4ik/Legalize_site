@@ -7,19 +7,44 @@
 <form method="post">
     {% csrf_token %}
     
-    <div class="mb-3">
-        <label for="street" class="form-label fw-bold">{% trans "Улица, номер дома и квартиры (В Польше)" %}</label>
-        <input type="text" class="form-control" id="street" name="street" value="{{ mos_data.address_data.street|default:'' }}" required>
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label for="voivodeship" class="form-label fw-bold">{% trans "Воеводство (Województwo)" %}</label>
+            <input type="text" class="form-control" id="voivodeship" name="voivodeship" value="{{ mos_data.address_data.voivodeship|default:'' }}" required placeholder="{% trans 'Например: Mazowieckie' %}">
+        </div>
+        <div class="col-md-4">
+            <label for="powiat" class="form-label fw-bold">{% trans "Повят (Powiat)" %}</label>
+            <input type="text" class="form-control" id="powiat" name="powiat" value="{{ mos_data.address_data.powiat|default:'' }}" required placeholder="{% trans 'Например: m. st. Warszawa или piaseczyński' %}">
+        </div>
+        <div class="col-md-4">
+            <label for="gmina" class="form-label fw-bold">{% trans "Гмина (Gmina)" %}</label>
+            <input type="text" class="form-control" id="gmina" name="gmina" value="{{ mos_data.address_data.gmina|default:'' }}" required placeholder="{% trans 'Например: Śródmieście или Piaseczno' %}">
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label for="street" class="form-label fw-bold">{% trans "Улица (Ulica)" %}</label>
+            <input type="text" class="form-control" id="street" name="street" value="{{ mos_data.address_data.street|default:'' }}" required placeholder="{% trans 'Например: Marszałkowska' %}">
+        </div>
+        <div class="col-md-3">
+            <label for="house_number" class="form-label fw-bold">{% trans "Номер дома" %}</label>
+            <input type="text" class="form-control" id="house_number" name="house_number" value="{{ mos_data.address_data.house_number|default:'' }}" required>
+        </div>
+        <div class="col-md-3">
+            <label for="apartment_number" class="form-label fw-bold">{% trans "Квартира" %}</label>
+            <input type="text" class="form-control" id="apartment_number" name="apartment_number" value="{{ mos_data.address_data.apartment_number|default:'' }}">
+        </div>
     </div>
     
     <div class="row mb-4">
         <div class="col-md-6">
-            <label for="city" class="form-label fw-bold">{% trans "Город (В Польше)" %}</label>
+            <label for="city" class="form-label fw-bold">{% trans "Город (Miejscowość)" %}</label>
             <input type="text" class="form-control" id="city" name="city" value="{{ mos_data.address_data.city|default:'' }}" required>
         </div>
         <div class="col-md-6">
             <label for="postal_code" class="form-label fw-bold">{% trans "Почтовый индекс (kod pocztowy)" %}</label>
-            <input type="text" class="form-control" id="postal_code" name="postal_code" value="{{ mos_data.address_data.postal_code|default:'' }}" required>
+            <input type="text" class="form-control" id="postal_code" name="postal_code" value="{{ mos_data.address_data.postal_code|default:'' }}" required placeholder="00-001">
         </div>
     </div>
 

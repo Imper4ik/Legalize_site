@@ -141,10 +141,7 @@ def _sentry_before_send(event: Any, hint: Any) -> Any:
     if "request" in event:
         request_data = dict(event["request"])
         request_data.pop("cookies", None)
-        if request_data.get("method", "").upper() == "POST":
-            request_data["data"] = REDACTION_TOKEN
-        else:
-            request_data["data"] = _sanitize_sentry_value(request_data.get("data"))
+        request_data["data"] = _sanitize_sentry_value(request_data.get("data"))
         request_data["headers"] = _sanitize_sentry_value(request_data.get("headers"))
         request_data["query_string"] = _sanitize_sentry_value(request_data.get("query_string"))
         request_data["env"] = _sanitize_sentry_value(request_data.get("env"))
@@ -588,7 +585,7 @@ RATE_LIMITS = {
 }
 RATE_LIMIT_CACHE_FAILURE_MODE = os.environ.get(
     "RATE_LIMIT_CACHE_FAILURE_MODE",
-    "closed" if IS_PRODUCTION else "open",
+    "open",
 ).lower()
 CRON_FAILURE_EMAIL_ALERTS = env_flag("CRON_FAILURE_EMAIL_ALERTS", "True" if IS_PRODUCTION else "False")
 

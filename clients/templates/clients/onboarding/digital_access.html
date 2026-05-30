@@ -10,11 +10,11 @@
         <label class="form-label fw-bold">{% trans "У вас есть номер PESEL?" %}</label>
         <div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="has_pesel" id="pesel_yes" value="yes" required>
+                <input class="form-check-input" type="radio" name="has_pesel" id="pesel_yes" value="yes" {% if digital_access.has_pesel %}checked{% endif %} required>
                 <label class="form-check-label" for="pesel_yes">{% trans "Да" %}</label>
             </div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="has_pesel" id="pesel_no" value="no">
+                <input class="form-check-input" type="radio" name="has_pesel" id="pesel_no" value="no" {% if not digital_access.has_pesel %}checked{% endif %}>
                 <label class="form-check-label" for="pesel_no">{% trans "Нет" %}</label>
             </div>
         </div>
@@ -27,11 +27,11 @@
         <label class="form-label fw-bold">{% trans "У вас есть Profil Zaufany?" %}</label>
         <div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="has_trusted_profile" id="pz_yes" value="yes" required>
+                <input class="form-check-input" type="radio" name="has_trusted_profile" id="pz_yes" value="yes" {% if digital_access.has_trusted_profile %}checked{% endif %} required>
                 <label class="form-check-label" for="pz_yes">{% trans "Да" %}</label>
             </div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="has_trusted_profile" id="pz_no" value="no">
+                <input class="form-check-input" type="radio" name="has_trusted_profile" id="pz_no" value="no" {% if not digital_access.has_trusted_profile %}checked{% endif %}>
                 <label class="form-check-label" for="pz_no">{% trans "Нет" %}</label>
             </div>
         </div>
@@ -44,11 +44,11 @@
         <label class="form-label fw-bold">{% trans "У вас есть аккаунт MOS 2.0?" %}</label>
         <div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="has_mos_account" id="mos_yes" value="yes" required>
+                <input class="form-check-input" type="radio" name="has_mos_account" id="mos_yes" value="yes" {% if digital_access.has_mos_account %}checked{% endif %} required>
                 <label class="form-check-label" for="mos_yes">{% trans "Да" %}</label>
             </div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="has_mos_account" id="mos_no" value="no">
+                <input class="form-check-input" type="radio" name="has_mos_account" id="mos_no" value="no" {% if not digital_access.has_mos_account %}checked{% endif %}>
                 <label class="form-check-label" for="mos_no">{% trans "Нет" %}</label>
             </div>
         </div>

@@ -24,8 +24,36 @@
                         <span class="fw-bold">{{ mos_data.personal_data.last_name|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Пол</span>
+                        <span class="fw-bold">{% if mos_data.personal_data.gender == 'M' %}Мужской (M){% elif mos_data.personal_data.gender == 'K' %}Женский (K){% else %}-{% endif %}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Фамилия при рождении (родовая)</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.maiden_name|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Предыдущие фамилии</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.previous_surnames|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Предыдущие имена</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.previous_first_names|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
                         <span class="text-muted">Дата рождения</span>
                         <span class="fw-bold">{{ mos_data.personal_data.birth_date|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Место рождения (город)</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.birth_place|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Страна рождения</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.birth_country|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Страна происхождения</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.origin_country|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <span class="text-muted">Гражданство</span>
@@ -52,23 +80,39 @@
                         <span class="fw-bold">{{ mos_data.personal_data.eye_color|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Особые приметы</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.special_marks|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
                         <span class="text-muted">Образование</span>
                         <span class="fw-bold">{{ mos_data.personal_data.education|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Выполняемая профессия</span>
+                        <span class="fw-bold">{{ mos_data.personal_data.profession|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <span class="text-muted">Семейное положение</span>
                         <span class="fw-bold">{{ mos_data.personal_data.marital_status|default:"-" }}</span>
                     </li>
                 </ul>
-                <h5>Паспорт</h5>
+                 <h5>Паспорт</h5>
                 <ul class="list-group list-group-flush mb-3">
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <span class="text-muted">Номер паспорта</span>
                         <span class="fw-bold">{{ mos_data.passport_data.document_number|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Дата выдачи</span>
+                        <span class="fw-bold">{{ mos_data.passport_data.issue_date|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
                         <span class="text-muted">Годен до</span>
                         <span class="fw-bold">{{ mos_data.passport_data.expiry_date|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Орган выдачи</span>
+                        <span class="fw-bold">{{ mos_data.passport_data.issuing_authority|default:"-" }}</span>
                     </li>
                 </ul>
             </div>
@@ -79,19 +123,39 @@
             <div class="card-body">
                 <ul class="list-group list-group-flush mb-3">
                     <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Воеводство</span>
+                        <span class="fw-bold">{{ mos_data.address_data.voivodeship|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Повят</span>
+                        <span class="fw-bold">{{ mos_data.address_data.powiat|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Гмина</span>
+                        <span class="fw-bold">{{ mos_data.address_data.gmina|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
                         <span class="text-muted">Город (Польша)</span>
                         <span class="fw-bold">{{ mos_data.address_data.city|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Улица, дом, квартира</span>
+                        <span class="text-muted">Улица</span>
                         <span class="fw-bold">{{ mos_data.address_data.street|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Номер дома</span>
+                        <span class="fw-bold">{{ mos_data.address_data.house_number|default:"-" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Квартира</span>
+                        <span class="fw-bold">{{ mos_data.address_data.apartment_number|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
                         <span class="text-muted">Почтовый индекс</span>
                         <span class="fw-bold">{{ mos_data.address_data.postal_code|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Есть мельдунек?</span>
+                        <span class="text-muted">Есть мельduнек?</span>
                         <span class="fw-bold">{% if mos_data.address_data.meldunek %}Да{% else %}Нет{% endif %}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -114,6 +178,12 @@
             <div class="card-header fw-bold">Декларации, Пребывание и Поездки</div>
             <div class="card-body">
                 <p><strong>Цель подачи:</strong> {{ mos_data.mos_purpose|default:"-" }}</p>
+                {% if mos_data.personal_data.employer_email %}
+                    <p><strong>Email работодателя:</strong> {{ mos_data.personal_data.employer_email }}</p>
+                {% endif %}
+                {% if mos_data.personal_data.university_email %}
+                    <p><strong>Email университета:</strong> {{ mos_data.personal_data.university_email }}</p>
+                {% endif %}
                 <p><strong>Легальное пребывание до:</strong> {{ mos_data.legal_stay_until|date:"d.m.Y"|default:"-" }}</p>
                 
                 <h5>Пребывание и въезды</h5>
@@ -131,9 +201,23 @@
                         <span class="fw-bold">{{ mos_data.stay_data.stay_basis|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Есть мед. страховка?</span>
+                        <span class="fw-bold">{% if mos_data.stay_data.has_insurance %}Да{% else %}Нет{% endif %}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Есть стабильный доход?</span>
+                        <span class="fw-bold">{% if mos_data.stay_data.has_stable_income %}Да{% else %}Нет{% endif %}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
                         <span class="text-muted">Был в Польше раньше?</span>
                         <span class="fw-bold">{% if mos_data.stay_data.was_in_poland_before %}Да{% else %}Нет{% endif %}</span>
                     </li>
+                    {% if mos_data.previous_stays.0 %}
+                    <li class="list-group-item d-flex flex-column align-items-start">
+                        <span class="text-muted">Предыдущие пребывания:</span>
+                        <span class="fw-bold mt-1 text-wrap">{{ mos_data.previous_stays.0 }}</span>
+                    </li>
+                    {% endif %}
                 </ul>
 
                 <h5>История поездок за последние 5 лет</h5>

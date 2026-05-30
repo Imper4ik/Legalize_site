@@ -12,7 +12,7 @@
         
         <div class="mb-3">
             <label class="form-label fw-bold">{% trans "Цель подачи (Основание для ВНЖ)" %}</label>
-            <select name="mos_purpose" class="form-select" required>
+            <select name="mos_purpose" id="mos_purpose" class="form-select" required>
                 <option value="">{% trans "Выберите основание..." %}</option>
                 <option value="Работа" {% if mos_data.mos_purpose == 'Работа' %}selected{% endif %}>{% trans "Работа (Zezwolenie na pobyt i pracę)" %}</option>
                 <option value="Учеба" {% if mos_data.mos_purpose == 'Учеба' %}selected{% endif %}>{% trans "Учеба (Studia)" %}</option>
@@ -23,6 +23,18 @@
             <div class="form-text text-muted">{% trans "Выбор цели влияет на перечень документов, которые мы у вас запросим." %}</div>
         </div>
 
+        <div class="mb-3" id="employerEmailContainer" style="display: none;">
+            <label for="employer_email" class="form-label fw-bold">{% trans "Email работодателя" %}</label>
+            <input type="email" class="form-control" id="employer_email" name="employer_email" value="{{ mos_data.personal_data.employer_email|default:'' }}" placeholder="{% trans 'email@employer.com' %}">
+            <div class="form-text text-muted">{% trans "Укажите контактный email отдела кадров или вашего работодателя." %}</div>
+        </div>
+
+        <div class="mb-3" id="universityEmailContainer" style="display: none;">
+            <label for="university_email" class="form-label fw-bold">{% trans "Email университета" %}</label>
+            <input type="email" class="form-control" id="university_email" name="university_email" value="{{ mos_data.personal_data.university_email|default:'' }}" placeholder="{% trans 'email@university.edu.pl' %}">
+            <div class="form-text text-muted">{% trans "Укажите email деканата или отдела по работе с иностранными студентами." %}</div>
+        </div>
+
         <div class="mb-3">
             <label class="form-label fw-bold">{% trans "Вы сейчас находитесь в Польше?" %}</label>
             <div>
@@ -31,7 +43,7 @@
                     <label class="form-check-label" for="inPolYes">{% trans "Да" %}</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="is_in_poland" value="no" id="inPolNo" {% if mos_data.stay_data and not mos_data.stay_data.is_in_poland %}checked{% endif %}>
+                    <input class="form-check-input" type="radio" name="is_in_poland" value="no" id="inPolNo" {% if mos_data.stay_data and mos_data.stay_data.is_in_poland == False %}checked{% endif %}>
                     <label class="form-check-label" for="inPolNo">{% trans "Нет" %}</label>
                 </div>
             </div>
@@ -60,6 +72,34 @@
             <input type="date" name="legal_stay_until" class="form-control" value="{{ mos_data.legal_stay_until|date:'Y-m-d' }}">
             <div class="form-text text-muted">{% trans "Дата окончания срока действия вашей текущей визы, карты или 90 дней безвизового режима." %}</div>
         </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">{% trans "Есть ли у вас государственная или частная медицинская страховка?" %}</label>
+            <div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="has_insurance" value="yes" id="insYes" {% if mos_data.stay_data.has_insurance %}checked{% endif %} required>
+                    <label class="form-check-label" for="insYes">{% trans "Да" %}</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="has_insurance" value="no" id="insNo" {% if mos_data.stay_data and mos_data.stay_data.has_insurance == False %}checked{% endif %}>
+                    <label class="form-check-label" for="insNo">{% trans "Нет" %}</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">{% trans "Имеете ли вы источник стабильного и регулярного дохода в Польше?" %}</label>
+            <div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="has_stable_income" value="yes" id="incYes" {% if mos_data.stay_data.has_stable_income %}checked{% endif %} required>
+                    <label class="form-check-label" for="incYes">{% trans "Да" %}</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="has_stable_income" value="no" id="incNo" {% if mos_data.stay_data and mos_data.stay_data.has_stable_income == False %}checked{% endif %}>
+                    <label class="form-check-label" for="incNo">{% trans "Нет" %}</label>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="mb-4">
@@ -73,11 +113,16 @@
                     <label class="form-check-label" for="wasPolYes">{% trans "Да" %}</label>
                 </div>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="radio" name="was_in_poland_before" value="no" id="wasPolNo" {% if mos_data.stay_data and not mos_data.stay_data.was_in_poland_before %}checked{% endif %}>
+                    <input class="form-check-input" type="radio" name="was_in_poland_before" value="no" id="wasPolNo" {% if mos_data.stay_data and mos_data.stay_data.was_in_poland_before == False %}checked{% endif %}>
                     <label class="form-check-label" for="wasPolNo">{% trans "Нет" %}</label>
                 </div>
             </div>
             <div class="form-text text-muted">{% trans "Учитываются любые более ранние въезды в Польшу (туризм, работа, учеба)." %}</div>
+        </div>
+
+        <div class="mb-3" id="previousStaysContainer" style="display: none;">
+            <label class="form-label fw-bold">{% trans "Даты и основания предыдущих пребываний в Польше" %}</label>
+            <textarea name="previous_stays" id="previous_stays" class="form-control" rows="3" placeholder="{% trans 'Укажите даты и цели предыдущих въездов. Например: 15.06.2023 - 15.09.2023, работа / безвиз.' %}">{% if mos_data.previous_stays %}{{ mos_data.previous_stays.0 }}{% endif %}</textarea>
         </div>
 
         <div class="mb-3">
@@ -92,4 +137,35 @@
         <button type="submit" class="btn btn-primary">{% trans "Далее: Декларации" %}</button>
     </div>
 </form>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const purposeSelect = document.getElementById("mos_purpose");
+        const empContainer = document.getElementById("employerEmailContainer");
+        const univContainer = document.getElementById("universityEmailContainer");
+
+        function togglePurposeEmails() {
+            const val = purposeSelect.value;
+            empContainer.style.display = (val === "Работа") ? "block" : "none";
+            univContainer.style.display = (val === "Учеба") ? "block" : "none";
+        }
+        purposeSelect.addEventListener("change", togglePurposeEmails);
+        togglePurposeEmails();
+
+        const wasPolYes = document.getElementById("wasPolYes");
+        const wasPolNo = document.getElementById("wasPolNo");
+        const prevStaysContainer = document.getElementById("previousStaysContainer");
+
+        function togglePreviousStays() {
+            if (wasPolYes.checked) {
+                prevStaysContainer.style.display = "block";
+            } else {
+                prevStaysContainer.style.display = "none";
+            }
+        }
+        wasPolYes.addEventListener("change", togglePreviousStays);
+        wasPolNo.addEventListener("change", togglePreviousStays);
+        togglePreviousStays();
+    });
+</script>
 {% endblock %}
