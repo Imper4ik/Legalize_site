@@ -637,7 +637,7 @@ class Client(SoftDeleteModel):
                 {
                     "level": "info",
                     "title": _("Не все документы собраны"),
-                    "message": _("Отсутствует обязательных документов: %(count)s.")
+                    "message": _("Не хватает обязательных документов: %(count)s.")
                     % {"count": missing_documents_count},
                     "count": missing_documents_count,
                     "action_label": _("Открыть чеклист"),

@@ -138,4 +138,5 @@ urlpatterns = [
     path('onboarding/<str:token>/auto-save/', views.onboarding_auto_save, name='onboarding_auto_save'),
     
     path('<int:client_id>/mos-review/', views.admin_mos_review, name='admin_mos_review'),
+    path('api/client-autocomplete/', views.client_autocomplete_api, name='client_autocomplete_api'),
 ]

@@ -788,7 +788,7 @@ msgstr "Nie wszystkie dokumenty są zebrane"
 
 #: .\clients\models\client.py:598 .\clients\views\family.py:69
 #, python-format
-msgid "Отсутствует обязательных документов: %(count)s."
+msgid "Не хватает обязательных документов: %(count)s."
 msgstr "Brakuje wymaganych dokumentów: %(count)s."
 
 #: .\clients\models\client.py:619
@@ -798,7 +798,7 @@ msgstr "ZUS RCA — brakujące miesiące"
 #: .\clients\models\client.py:620 .\clients\services\notifications.py:540
 #, python-format
 msgid "Нет ZUS RCA за месяцы: %(months)s."
-msgstr "Nie ZUS RCA przez miesiące: %(months)s."
+msgstr "Brak ZUS RCA za miesiące: %(months)s."
 
 #: .\clients\models\client.py:648
 #: .\clients\templates\clients\partials\client_overview.html:123
@@ -4373,7 +4373,7 @@ msgstr "Następna"
 
 #: .\clients\templates\clients\partials\reminder_item.html:42
 #, python-format
-msgid "К дата: %(due)s"
+msgid "Срок: %(due)s"
 msgstr "Termin: %(due)s"
 
 #: .\clients\templates\clients\partials\reminder_item.html:44
@@ -7741,3 +7741,54 @@ msgstr "Kwestionariusz wysłany do MOS, kliknij aby sprawdzić"
 
 #~ msgid "Дата создания счёта"
 #~ msgstr "Data utworzenia rachunku"
+
+msgid "Клиенты с OCR на подтверждении"
+msgstr "Klienci z OCR do weryfikacji"
+
+msgid "Клиенты с OCR предупреждениями"
+msgstr "Klienci z ostrzeżeniami OCR"
+
+msgid "Клиенты с OCR в обработке"
+msgstr "Klienci z OCR w przetwarzaniu"
+
+msgid "Отфильтрованные события клиентов"
+msgstr "Filtrowane zdarzenia klientów"
+
+msgid "Откройте карточку клиента, чтобы проверить документ и следующее действие."
+msgstr "Otwórz kartę klienta, aby sprawdzić dokument i kolejne działanie."
+
+msgid "Показать всех клиентов"
+msgstr "Pokaż wszystkich klientów"
+
+msgid "Клиент %(name)s заполнил анкету онбординга"
+msgstr "Klient %(name)s wypełnił ankietę onboardingową"
+
+msgid "Клиент %(name)s завершил заполнение анкеты онбординга.\n\nДанные клиента:\nИмя: %(first_name)s\nФамилия: %(last_name)s\nПочта: %(email)s\nТелефон: %(phone)s\n\nПросмотреть анкету и утвердить ее вы можете в панели управления по ссылке:\n%(review_url)s\n"
+msgstr "Klient %(name)s zakończył wypełnianie ankiety onboardingowej.\n\nDane klienta:\nImię: %(first_name)s\nNazwisko: %(last_name)s\nE-mail: %(email)s\nTelefon: %(phone)s\n\nMożesz przejrzeć i zatwierdzić ankietę w panelu administracyjnym pod linkiem:\n%(review_url)s\n"
+
+msgid "не указана"
+msgstr "nie podano"
+
+msgid "не указан"
+msgstr "nie podano"
+
+msgid "Нужно предоставить документ: %(name)s"
+msgstr "Należy dostarczyć dokument: %(name)s"
+
+msgid "Истекает срок действия документа: %(name)s"
+msgstr "Wygasa ważność dokumentu: %(name)s"
+
+msgid "Просрочен платеж: %(service)s"
+msgstr "Zaległa płatność: %(service)s"
+
+msgid "Сумма к оплате: %(total)s; долг: %(due)s; клиент: %(client)s."
+msgstr "Kwota do zapłaty: %(total)s; zaległość: %(due)s; klient: %(client)s."
+
+msgid "Истекает легальное пребывание: %(date)s"
+msgstr "Wygasa legalny pobyt: %(date)s"
+
+msgid "По срокам: %(stay_until)s. Сдвиг дедлайна с учетом выходных: %(due_date)s."
+msgstr "Zgodnie z terminem: %(stay_until)s. Zmiana terminu z uwzględnieniem weekendów: %(due_date)s."
+
+msgid "Документ для клиента %(client)s истекает %(date)s."
+msgstr "Dokument dla klienta %(client)s wygasa %(date)s."

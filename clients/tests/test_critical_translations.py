@@ -74,3 +74,97 @@ class CriticalTranslationsTest(SimpleTestCase):
                 preceding_blocks = preceding_text.split('\n\n')
                 comments_block = preceding_blocks[-1] if preceding_blocks else preceding_text
                 self.assertNotIn('#, fuzzy', comments_block, f"msgid '{msgid}' in {lang} is still marked as fuzzy")
+
+
+from django.test import TestCase
+
+class ReminderTranslationsTest(TestCase):
+    def test_reminder_properties_dynamic_translations(self):
+        from django.utils.translation import override
+        from clients.models import Client, Reminder, Document, Payment
+        from clients.constants import DocumentType
+        from datetime import date
+        
+        client = Client.objects.create(
+            first_name="John",
+            last_name="Doe",
+            email="john@example.com",
+            phone="+48111222333",
+            citizenship="US",
+            application_purpose="work"
+        )
+        
+        doc = Document.objects.create(
+            client=client,
+            document_type=DocumentType.PASSPORT.value,
+            expiry_date=date(2026, 12, 31)
+        )
+        
+        payment = Payment.objects.create(
+            client=client,
+            service_description="consultation",
+            total_amount=100.00,
+            due_date=date(2026, 6, 15)
+        )
+        
+        # Test document reminder
+        doc_reminder = Reminder.objects.create(
+            client=client,
+            document=doc,
+            due_date=date(2026, 12, 31),
+            reminder_type="document",
+            title="Document expires: Passport",
+            notes="Document for client John Doe expires on 31.12.2026."
+        )
+        
+        # Test payment reminder
+        payment_reminder = Reminder.objects.create(
+            client=client,
+            payment=payment,
+            due_date=date(2026, 6, 15),
+            reminder_type="payment",
+            title="Payment overdue: Consultation",
+            notes="Total payment: 100.00; amount due: 100.00; client: John Doe."
+        )
+        
+        # Test legal stay reminder
+        mos_data = client.mos_application_data
+        mos_data.legal_stay_until = date(2026, 7, 31)
+        mos_data.save()
+        client.refresh_from_db()
+        
+        stay_reminder = Reminder.objects.create(
+            client=client,
+            due_date=date(2026, 7, 30),
+            reminder_type="legal_stay",
+            title="Legal stay expires: 30.07.2026",
+            notes="Original deadline: 31.07.2026. Adjusted deadline (considering weekends): 30.07.2026."
+        )
+        
+        # English assertions
+        with override("en"):
+            self.assertEqual(doc_reminder.display_title, "Document expires: Paszport")
+            self.assertEqual(doc_reminder.display_notes, "Document for client John Doe expires on 31.12.2026.")
+            self.assertEqual(payment_reminder.display_title, "Payment overdue: Consultation")
+            self.assertEqual(payment_reminder.display_notes, "Total payment: 100.00; amount due: 100.00; client: John Doe.")
+            self.assertEqual(stay_reminder.display_title, "Legal stay expires: 30.07.2026")
+            self.assertEqual(stay_reminder.display_notes, "Original deadline: 31.07.2026. Adjusted deadline (considering weekends): 30.07.2026.")
+
+        # Polish assertions
+        with override("pl"):
+            self.assertEqual(doc_reminder.display_title, "Wygasa ważność dokumentu: Paszport")
+            self.assertEqual(doc_reminder.display_notes, "Dokument dla klienta John Doe wygasa 31.12.2026.")
+            self.assertEqual(payment_reminder.display_title, "Zaległa płatność: Konsultacja")
+            self.assertEqual(payment_reminder.display_notes, "Kwota do zapłaty: 100.00; zaległość: 100.00; klient: John Doe.")
+            self.assertEqual(stay_reminder.display_title, "Wygasa legalny pobyt: 30.07.2026")
+            self.assertEqual(stay_reminder.display_notes, "Zgodnie z terminem: 31.07.2026. Zmiana terminu z uwzględnieniem weekendów: 30.07.2026.")
+
+        # Russian assertions
+        with override("ru"):
+            self.assertEqual(doc_reminder.display_title, "\u0418\u0441\u0442\u0435\u043a\u0430\u0435\u0442 \u0441\u0440\u043e\u043a \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044f \u0434\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u0430: \u041f\u0430\u0441\u043f\u043e\u0440\u0442")
+            self.assertEqual(doc_reminder.display_notes, "\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442 \u0434\u043b\u044f \u043a\u043b\u0438\u0435\u043d\u0442\u0430 John Doe \u0438\u0441\u0442\u0435\u043a\u0430\u0435\u0442 31.12.2026.")
+            self.assertEqual(payment_reminder.display_title, "\u041f\u0440\u043e\u0441\u0440\u043e\u0447\u0435\u043d \u043f\u043b\u0430\u0442\u0435\u0436: \u041a\u043e\u043d\u0441\u0443\u043b\u044c\u0442\u0430\u0446\u0438\u044f")
+            self.assertEqual(payment_reminder.display_notes, "\u0421\u0443\u043c\u043c\u0430 \u043a \u043e\u043f\u043b\u0430\u0442\u0435: 100.00; \u0434\u043e\u043b\u0433: 100.00; \u043a\u043b\u0438\u0435\u043d\u0442: John Doe.")
+            self.assertEqual(stay_reminder.display_title, "\u0418\u0441\u0442\u0435\u043a\u0430\u0435\u0442 \u043b\u0435\u0433\u0430\u043b\u044c\u043d\u043e\u0435 \u043f\u0440\u0435\u0431\u044b\u0432\u0430\u043d\u0438\u0435: 30.07.2026")
+            self.assertEqual(stay_reminder.display_notes, "\u041f\u043e \u0441\u0440\u043e\u043a\u0430\u043c: 31.07.2026. \u0421\u0434\u0432\u0438\u0433 \u0434\u0435\u0434\u043b\u0430\u0439\u043d\u0430 \u0441 \u0443\u0447\u0435\u0442\u043e\u043c \u0432\u044b\u0445\u043e\u0434\u043d\u044b\u0445: 30.07.2026.")
+            

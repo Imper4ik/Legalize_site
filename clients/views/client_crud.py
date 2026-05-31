@@ -34,7 +34,7 @@ from clients.use_cases.client_records import (
     finalize_client_update,
     snapshot_client_update_state,
 )
-from clients.views.base import RoleOrFeatureRequiredMixin, RoleRequiredMixin, StaffRequiredMixin
+from clients.views.base import RoleOrFeatureRequiredMixin, RoleRequiredMixin, StaffRequiredMixin, role_required_view
 from clients.services.activity import log_client_view
 from clients.services.access import accessible_clients_queryset
 
@@ -371,3 +371,42 @@ def calculator_view(request: HttpRequest) -> HttpResponseBase:
 
     response = render(request, "clients/calculator.html", context)
     return apply_no_store(response)
+
+
+@role_required_view("Admin", "Manager", "Staff")
+def client_autocomplete_api(request: HttpRequest) -> HttpResponse:
+    from django.http import JsonResponse
+    from django.db.models import Q
+    from clients.models import Client
+    from clients.services.access import accessible_clients_queryset
+
+    query = request.GET.get("q", "").strip()
+    if not query or len(query) < 2:
+        return JsonResponse({"results": []})
+
+    queryset = accessible_clients_queryset(
+        request.user,
+        Client.objects.filter(Q(user__is_staff=False) | Q(user__isnull=True))
+    )
+
+    case_number_hash = Client.hash_case_number(query)
+    queryset = queryset.filter(
+        Q(first_name__icontains=query)
+        | Q(last_name__icontains=query)
+        | Q(email__icontains=query)
+        | Q(phone__icontains=query)
+        | Q(case_number_hash=case_number_hash)
+    )
+
+    results = []
+    for client in queryset.distinct()[:8]:
+        results.append({
+            "id": client.id,
+            "first_name": client.first_name,
+            "last_name": client.last_name,
+            "email": client.email or "",
+            "phone": client.phone or "",
+            "url": reverse("clients:client_detail", kwargs={"pk": client.id})
+        })
+
+    return JsonResponse({"results": results})

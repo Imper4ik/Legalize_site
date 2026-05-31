@@ -7,6 +7,7 @@ from clients.views.client_crud import (
     ClientUpdateView,
     calculator_view,
     dashboard_redirect_view,
+    client_autocomplete_api,
 )
 from clients.views.print_views import (
     client_print_view,
@@ -185,4 +186,5 @@ __all__ = [
     'quick_create_client_onboarding',
     'onboarding_auto_save',
     'admin_mos_review',
+    'client_autocomplete_api',
 ]

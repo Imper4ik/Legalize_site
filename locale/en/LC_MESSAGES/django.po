@@ -788,7 +788,7 @@ msgstr "Not all documents collected"
 
 #: .\clients\models\client.py:598 .\clients\views\family.py:69
 #, python-format
-msgid "Отсутствует обязательных документов: %(count)s."
+msgid "Не хватает обязательных документов: %(count)s."
 msgstr "Missing required documents: %(count)s."
 
 #: .\clients\models\client.py:619
@@ -4362,7 +4362,7 @@ msgstr "Next"
 
 #: .\clients\templates\clients\partials\reminder_item.html:42
 #, python-format
-msgid "К дата: %(due)s"
+msgid "Срок: %(due)s"
 msgstr "Due date: %(due)s"
 
 #: .\clients\templates\clients\partials\reminder_item.html:44
@@ -7704,3 +7704,54 @@ msgstr "Questionnaire submitted to MOS, click to check"
 
 #~ msgid "Дата создания счёта"
 #~ msgstr "Invoice creation date"
+
+msgid "Клиенты с OCR на подтверждении"
+msgstr "Clients with OCR pending approval"
+
+msgid "Клиенты с OCR предупреждениями"
+msgstr "Clients with OCR warnings"
+
+msgid "Клиенты с OCR в обработке"
+msgstr "Clients with OCR processing"
+
+msgid "Отфильтрованные события клиентов"
+msgstr "Filtered client events"
+
+msgid "Откройте карточку клиента, чтобы проверить документ и следующее действие."
+msgstr "Open the client profile to check the document and next actions."
+
+msgid "Показать всех клиентов"
+msgstr "Show all clients"
+
+msgid "Клиент %(name)s заполнил анкету онбординга"
+msgstr "Client %(name)s completed onboarding"
+
+msgid "Клиент %(name)s завершил заполнение анкеты онбординга.\n\nДанные клиента:\nИмя: %(first_name)s\nФамилия: %(last_name)s\nПочта: %(email)s\nТелефон: %(phone)s\n\nПросмотреть анкету и утвердить ее вы можете в панели управления по ссылке:\n%(review_url)s\n"
+msgstr "Client %(name)s completed onboarding questionnaire.\n\nClient data:\nName: %(first_name)s\nSurname: %(last_name)s\nEmail: %(email)s\nPhone: %(phone)s\n\nYou can review and approve the questionnaire in the control panel via this link:\n%(review_url)s\n"
+
+msgid "не указана"
+msgstr "not specified"
+
+msgid "не указан"
+msgstr "not specified"
+
+msgid "Нужно предоставить документ: %(name)s"
+msgstr "Required document: %(name)s"
+
+msgid "Истекает срок действия документа: %(name)s"
+msgstr "Document expires: %(name)s"
+
+msgid "Просрочен платеж: %(service)s"
+msgstr "Payment overdue: %(service)s"
+
+msgid "Сумма к оплате: %(total)s; долг: %(due)s; клиент: %(client)s."
+msgstr "Total payment: %(total)s; amount due: %(due)s; client: %(client)s."
+
+msgid "Истекает легальное пребывание: %(date)s"
+msgstr "Legal stay expires: %(date)s"
+
+msgid "По срокам: %(stay_until)s. Сдвиг дедлайна с учетом выходных: %(due_date)s."
+msgstr "Original deadline: %(stay_until)s. Adjusted deadline (considering weekends): %(due_date)s."
+
+msgid "Документ для клиента %(client)s истекает %(date)s."
+msgstr "Document for client %(client)s expires on %(date)s."

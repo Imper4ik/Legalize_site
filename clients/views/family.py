@@ -66,7 +66,7 @@ class FamilyDashboardView(StaffRequiredMixin, View):
             family_risks.append(
                 {
                     "title": _("Не все документы собраны"),
-                    "message": _("Отсутствует обязательных документов: %(count)s.")
+                    "message": _("Не хватает обязательных документов: %(count)s.")
                     % {"count": total_missing_documents},
                 }
             )

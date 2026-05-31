@@ -27,8 +27,24 @@ def _mos_data_is_editable(mos_data: MOSApplicationData | None) -> bool:
     return mos_data is None or mos_data.status in EDITABLE_MOS_STATUSES
 
 
-def _locked_response() -> HttpResponseForbidden:
-    return HttpResponseForbidden("This onboarding form is locked for editing.")
+def _locked_response(request: HttpRequest, session: ClientOnboardingSession) -> HttpResponse:
+    client = session.client
+    mos_data = getattr(client, "mos_application_data", None)
+    status_display = mos_data.get_status_display() if mos_data else ""
+
+    if (
+        request_is_ajax(request)
+        or request.headers.get("x-requested-with") == "XMLHttpRequest"
+        or "application/json" in request.headers.get("Accept", "")
+    ):
+        return JsonResponse({"status": "locked", "message": "This onboarding form is locked."}, status=403)
+
+    response = render(request, "clients/onboarding/locked.html", {
+        "session": session,
+        "status_display": status_display,
+    })
+    response.status_code = 403
+    return response
 
 
 def _sync_contact_fields_to_client(client: Client, **values: str) -> None:
@@ -65,7 +81,7 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
 
     if request.method == "POST":
         if not _mos_data_is_editable(mos_data):
-            return _locked_response()
+            return _locked_response(request, session)
         return redirect("clients:onboarding_digital_access", token=token)
 
     purpose = client.get_document_requirement_purpose()
@@ -121,7 +137,7 @@ def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) 
 
     mos_data = getattr(session.client, "mos_application_data", None)
     if not _mos_data_is_editable(mos_data):
-        return _locked_response()
+        return _locked_response(request, session)
 
     if request.method == "POST" and request.FILES.get("file"):
         form = DocumentUploadForm(request.POST, request.FILES, doc_type=doc_type, client=session.client)
@@ -156,7 +172,7 @@ def onboarding_document_delete(request: HttpRequest, token: str, doc_id: int) ->
     mos_data = getattr(client, "mos_application_data", None)
     
     if not _mos_data_is_editable(mos_data):
-        return HttpResponseForbidden("Document changes are locked.")
+        return _locked_response(request, session)
         
     doc = get_object_or_404(Document, id=doc_id, client=client)
     if not doc.verified:
@@ -169,13 +185,13 @@ def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
     if not session:
         return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
 
+    mos_data, created = MOSApplicationData.objects.get_or_create(client=session.client)
+    if not _mos_data_is_editable(mos_data):
+        return _locked_response(request, session)
+
     digital_access, _ = ClientDigitalAccess.objects.get_or_create(client=session.client)
 
     if request.method == "POST":
-        mos_data, created = MOSApplicationData.objects.get_or_create(client=session.client)
-        if not _mos_data_is_editable(mos_data):
-            return _locked_response()
-
         digital_access.has_pesel = request.POST.get("has_pesel") == "yes"
         digital_access.has_trusted_profile = request.POST.get("has_trusted_profile") == "yes"
         digital_access.has_mos_account = request.POST.get("has_mos_account") == "yes"
@@ -198,6 +214,9 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
 
     client = session.client
     mos_data = get_object_or_404(MOSApplicationData, client=client)
+
+    if not _mos_data_is_editable(mos_data):
+        return _locked_response(request, session)
 
     dirty = False
     personal_data = mos_data.personal_data or {}
@@ -229,8 +248,6 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         mos_data.save()
 
     if request.method == "POST":
-        if not _mos_data_is_editable(mos_data):
-            return _locked_response()
 
         mos_data.status = "client_filling"
 
@@ -293,9 +310,10 @@ def onboarding_personal_extra(request: HttpRequest, token: str) -> HttpResponse:
 
     mos_data = get_object_or_404(MOSApplicationData, client=session.client)
 
+    if not _mos_data_is_editable(mos_data):
+        return _locked_response(request, session)
+
     if request.method == "POST":
-        if not _mos_data_is_editable(mos_data):
-            return _locked_response()
 
         personal_data = mos_data.personal_data or {}
         personal_data["father_name"] = request.POST.get("father_name", "")
@@ -320,9 +338,10 @@ def onboarding_address(request: HttpRequest, token: str) -> HttpResponse:
 
     mos_data = get_object_or_404(MOSApplicationData, client=session.client)
 
+    if not _mos_data_is_editable(mos_data):
+        return _locked_response(request, session)
+
     if request.method == "POST":
-        if not _mos_data_is_editable(mos_data):
-            return _locked_response()
 
         address_data = mos_data.address_data or {}
         address_data["street"] = request.POST.get("street", "")
@@ -350,9 +369,10 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
 
     mos_data = get_object_or_404(MOSApplicationData, client=session.client)
 
+    if not _mos_data_is_editable(mos_data):
+        return _locked_response(request, session)
+
     if request.method == "POST":
-        if not _mos_data_is_editable(mos_data):
-            return _locked_response()
 
         mos_data.mos_purpose = request.POST.get("mos_purpose", "")
         legal_stay_str = request.POST.get("legal_stay_until")
@@ -389,9 +409,10 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
 
     mos_data = get_object_or_404(MOSApplicationData, client=session.client)
 
+    if not _mos_data_is_editable(mos_data):
+        return _locked_response(request, session)
+
     if request.method == "POST":
-        if not _mos_data_is_editable(mos_data):
-            return _locked_response()
 
         declarations = mos_data.legal_declarations or {}
         declarations["criminal_record"] = request.POST.get("criminal_record") == "yes"

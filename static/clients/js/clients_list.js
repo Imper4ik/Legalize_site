@@ -382,9 +382,92 @@
     });
   }
 
+  function initAutocompleteSearch(root) {
+    const input = root.getElementById('client-search-input');
+    const suggestions = root.getElementById('autocomplete-suggestions');
+    if (!input || !suggestions) return;
+
+    let debounceTimer;
+
+    input.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      const query = input.value.trim();
+      if (query.length < 2) {
+        suggestions.style.display = 'none';
+        suggestions.innerHTML = '';
+        return;
+      }
+
+      debounceTimer = setTimeout(async () => {
+        const baseUrl = input.dataset.autocompleteUrl;
+        if (!baseUrl) return;
+        
+        try {
+          const response = await fetch(`${baseUrl}?q=${encodeURIComponent(query)}`, {
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              'Accept': 'application/json'
+            }
+          });
+          if (!response.ok) throw new Error('Network error');
+          
+          const data = await response.json();
+          renderSuggestions(data.results);
+        } catch (err) {
+          console.error('Autocomplete error:', err);
+        }
+      }, 250);
+    });
+
+    // Close suggestions when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+        suggestions.style.display = 'none';
+      }
+    });
+
+    // Show suggestions when clicking back in input if it has results
+    input.addEventListener('focus', () => {
+      if (suggestions.children.length > 0) {
+        suggestions.style.display = 'block';
+      }
+    });
+
+    function renderSuggestions(results) {
+      suggestions.innerHTML = '';
+      if (!results || results.length === 0) {
+        suggestions.style.display = 'none';
+        return;
+      }
+
+      results.forEach((client) => {
+        const item = document.createElement('a');
+        item.href = client.url;
+        item.className = 'dropdown-item d-flex flex-column py-2 border-bottom';
+        
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'fw-semibold text-primary';
+        nameSpan.textContent = `${client.first_name} ${client.last_name}`;
+        item.appendChild(nameSpan);
+
+        if (client.email || client.phone) {
+          const detailSpan = document.createElement('span');
+          detailSpan.className = 'small text-muted';
+          detailSpan.textContent = [client.email, client.phone].filter(Boolean).join(' | ');
+          item.appendChild(detailSpan);
+        }
+
+        suggestions.appendChild(item);
+      });
+
+      suggestions.style.display = 'block';
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     enhanceEditors(document);
     initOnboardingLinkGenerator(document);
     initQuickOnboardingLink(document);
+    initAutocompleteSearch(document);
   });
 })();

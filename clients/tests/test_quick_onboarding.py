@@ -366,3 +366,43 @@ class QuickOnboardingTests(TestCase):
         self.assertEqual(response.status_code, 423)
         client.refresh_from_db()
         self.assertEqual(client.first_name, "Locked")
+
+    def test_locked_onboarding_renders_premium_lock_screen(self):
+        client = Client.objects.create(
+            first_name="Locked",
+            last_name="Client",
+            assigned_staff=self.manager,
+        )
+        token = uuid.uuid4().hex
+        ClientOnboardingSession.objects.create(
+            client=client,
+            token_hash=hash_onboarding_token(token),
+            status="created",
+            expires_at=timezone.now() + timedelta(days=7),
+        )
+        mos_data = MOSApplicationData.objects.get(client=client)
+        mos_data.status = "client_completed"
+        mos_data.save(update_fields=["status"])
+
+        # GET request to step 1 (passport)
+        response = self.client_agent.get(reverse("clients:onboarding_passport", kwargs={"token": token}))
+        self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, "clients/onboarding/locked.html")
+        self.assertContains(response, "Редактирование недоступно", status_code=403)
+        self.assertContains(response, "Анкета заполнена иностранцем", status_code=403)
+
+        # POST request to step 1 (passport)
+        response = self.client_agent.post(reverse("clients:onboarding_passport", kwargs={"token": token}), {
+            "first_name": "NewName"
+        })
+        self.assertEqual(response.status_code, 403)
+        self.assertTemplateUsed(response, "clients/onboarding/locked.html")
+
+        # Ajax request to step 1 (passport)
+        response = self.client_agent.post(
+            reverse("clients:onboarding_passport", kwargs={"token": token}),
+            {"first_name": "NewName"},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json()["status"], "locked")

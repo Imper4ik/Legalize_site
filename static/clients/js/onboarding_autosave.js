@@ -23,20 +23,41 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     const csrfToken = getCookie('csrftoken') || form.querySelector('[name=csrfmiddlewaretoken]')?.value;
-    const statusEl = document.createElement("div");
-    statusEl.className = "small text-muted mb-3";
-    statusEl.setAttribute("aria-live", "polite");
-    form.prepend(statusEl);
+    const statusEl = document.getElementById("autosave-pill");
+    const statusDot = document.getElementById("autosave-dot");
+    const statusText = document.getElementById("autosave-text");
 
-    function setStatus(message, className) {
-        statusEl.textContent = message || "";
-        statusEl.className = className || "small text-muted mb-3";
+    const textSaving = statusEl ? (statusEl.getAttribute("data-text-saving") || "Saving...") : "Saving...";
+    const textSaved = statusEl ? (statusEl.getAttribute("data-text-saved") || "Saved") : "Saved";
+    const textFailed = statusEl ? (statusEl.getAttribute("data-text-failed") || "Save failed. Check your connection.") : "Save failed. Check your connection.";
+
+    let hideTimeout = null;
+
+    function setStatus(message, state) {
+        if (!statusEl || !statusDot || !statusText) return;
+        
+        clearTimeout(hideTimeout);
+        
+        if (!message) {
+            statusEl.classList.remove("visible");
+            return;
+        }
+
+        statusText.textContent = message;
+        statusDot.className = "autosave-dot " + (state || "success");
+        statusEl.classList.add("visible");
+
+        if (state === "success") {
+            hideTimeout = setTimeout(() => {
+                statusEl.classList.remove("visible");
+            }, 3000);
+        }
     }
 
     function saveDraft(options = {}) {
         const formData = new FormData(form);
         if (!options.silent) {
-            setStatus("Saving...", "small text-muted mb-3");
+            setStatus(textSaving, "saving");
         }
 
         return fetch(window.ONBOARDING_AUTO_SAVE_URL, {
@@ -57,13 +78,13 @@ document.addEventListener("DOMContentLoaded", function() {
         .then(data => {
             if (!options.silent) {
                 const savedAt = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-                setStatus("Saved " + savedAt, "small text-success mb-3");
+                setStatus(textSaved + " " + savedAt, "success");
             }
             return data;
         })
         .catch(error => {
             if (!options.silent) {
-                setStatus("Save failed. Check your connection.", "small text-danger mb-3");
+                setStatus(textFailed, "danger");
             }
             console.error("Error auto-saving draft:", error);
         });

@@ -731,19 +731,26 @@ def send_onboarding_completed_email(client: Client) -> int:
     if not recipients:
         return 0
         
-    subject = f"Клиент {client.get_full_name()} заполнил анкету онбординга"
+    subject = _("Клиент %(name)s заполнил анкету онбординга") % {"name": client.get_full_name()}
     review_path = reverse("clients:admin_mos_review", kwargs={"client_id": client.id})
     base_url = getattr(settings, "PUBLIC_BASE_URL", "") or getattr(settings, "SITE_URL", "")
     review_url = f"{base_url.rstrip('/')}{review_path}" if base_url else review_path
     body = (
-        f"Клиент {client.get_full_name()} завершил заполнение анкеты онбординга.\n\n"
-        f"Данные клиента:\n"
-        f"Имя: {client.first_name}\n"
-        f"Фамилия: {client.last_name}\n"
-        f"Почта: {client.email or 'не указана'}\n"
-        f"Телефон: {client.phone or 'не указан'}\n\n"
-        f"Просмотреть анкету и утвердить ее вы можете в панели управления по ссылке:\n"
-        f"{review_url}\n"
+        _("Клиент %(name)s завершил заполнение анкеты онбординга.\n\n"
+          "Данные клиента:\n"
+          "Имя: %(first_name)s\n"
+          "Фамилия: %(last_name)s\n"
+          "Почта: %(email)s\n"
+          "Телефон: %(phone)s\n\n"
+          "Просмотреть анкету и утвердить ее вы можете в панели управления по ссылке:\n"
+          "%(review_url)s\n") % {
+              "name": client.get_full_name(),
+              "first_name": client.first_name,
+              "last_name": client.last_name,
+              "email": client.email or _("не указана"),
+              "phone": client.phone or _("не указан"),
+              "review_url": review_url,
+          }
     )
     try:
         return _send_email(

@@ -60,11 +60,19 @@
 <div class="alert alert-info d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
   <div>
     <strong>
-      {% if document_filter == "ocr_review" %}Клиенты с OCR на подтверждении{% elif document_filter == "ocr_warning" %}Клиенты с OCR предупреждениями{% elif document_filter == "ocr_pending" %}Клиенты с OCR в обработке{% else %}Отфильтрованные события клиентов{% endif %}
+      {% if document_filter == "ocr_review" %}
+        {% translate "Клиенты с OCR на подтверждении" %}
+      {% elif document_filter == "ocr_warning" %}
+        {% translate "Клиенты с OCR предупреждениями" %}
+      {% elif document_filter == "ocr_pending" %}
+        {% translate "Клиенты с OCR в обработке" %}
+      {% else %}
+        {% translate "Отфильтрованные события клиентов" %}
+      {% endif %}
     </strong>
-    <div class="small mb-0">Откройте карточку клиента, чтобы проверить документ и следующее действие.</div>
+    <div class="small mb-0">{% translate "Откройте карточку клиента, чтобы проверить документ и следующее действие." %}</div>
   </div>
-  <a href="{% url 'clients:client_list' %}" class="btn btn-sm btn-outline-secondary">Показать всех клиентов</a>
+  <a href="{% url 'clients:client_list' %}" class="btn btn-sm btn-outline-secondary">{% translate "Показать всех клиентов" %}</a>
 </div>
 {% endif %}
 
@@ -82,12 +90,17 @@
       {% endfor %}
     </select>
     </div>
-    <div class="col-12 col-md">
+    <div class="col-12 col-md position-relative">
     <input type="text"
            name="q"
+           id="client-search-input"
            class="form-control"
            placeholder="{% translate 'Поиск по имени, почте, телефону или номеру дела...' %}"
-           value="{{ query }}">
+           value="{{ query }}"
+           autocomplete="off"
+           data-autocomplete-url="{% url 'clients:client_autocomplete_api' %}">
+    <div id="autocomplete-suggestions" class="dropdown-menu w-100 shadow-sm" style="display: none; position: absolute; top: 100%; left: 0; z-index: 1000; max-height: 300px; overflow-y: auto;">
+    </div>
     </div>
     <div class="col-12 col-md-auto">
     <button class="btn btn-soft w-100" type="submit">

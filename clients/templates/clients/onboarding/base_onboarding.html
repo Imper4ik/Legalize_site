@@ -37,6 +37,95 @@
         .lang-active { color: var(--bs-body-color); font-weight: bold; text-decoration: none; cursor: default; }
         .lang-active:hover { text-decoration: none; }
         body { min-height: 100vh; background-color: var(--bs-body-bg); }
+
+        /* Onboarding Stepper styling */
+        .onboarding-stepper .stepper-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: var(--surface);
+            border: 2px solid var(--border);
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-1);
+        }
+        .onboarding-stepper .stepper-item.active .stepper-circle {
+            background-color: var(--brand-1);
+            border-color: var(--brand-1);
+            color: #fff;
+            transform: scale(1.15);
+            box-shadow: 0 4px 10px rgba(29, 78, 216, 0.3);
+        }
+        .onboarding-stepper .stepper-item.active .stepper-label {
+            color: var(--fg) !important;
+            font-weight: 600;
+        }
+        .onboarding-stepper .stepper-item.completed .stepper-circle {
+            background-color: var(--brand-2);
+            border-color: var(--brand-2);
+            color: #fff;
+        }
+        .onboarding-stepper .stepper-item.completed .stepper-label {
+            color: var(--brand-2) !important;
+        }
+        .onboarding-stepper .stepper-label {
+            font-size: 0.75rem;
+            transition: color 0.3s ease;
+            white-space: nowrap;
+        }
+        
+        /* Floating Premium Autosave Pill */
+        .autosave-pill {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1050;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            box-shadow: var(--shadow-2);
+            padding: 8px 16px;
+            border-radius: 99px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+        }
+        .autosave-pill.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .autosave-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .autosave-dot.saving {
+            background-color: #ff9800;
+            animation: autosave-pulse 1s infinite alternate;
+        }
+        .autosave-dot.success {
+            background-color: #4caf50;
+        }
+        .autosave-dot.danger {
+            background-color: #f44336;
+        }
+        @keyframes autosave-pulse {
+            from { opacity: 0.4; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1.1); }
+        }
     </style>
 </head>
 <body>
@@ -72,15 +161,53 @@
         <div class="row justify-content-center">
             <div class="col-md-8">
                 {% if onboarding_step_num %}
-                <!-- Premium Progress Indicator -->
-                <div class="mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
+                <!-- Premium Progress Stepper -->
+                <div class="stepper-wrapper mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3 d-md-none">
                         <span class="small text-muted fw-bold">{% trans "Прогресс заполнения" %}</span>
                         <span class="badge bg-primary rounded-pill">
                             {% blocktrans with current=onboarding_step_num total=onboarding_step_total %}Шаг {{ current }} из {{ total }}{% endblocktrans %}
                         </span>
                     </div>
-                    <div class="progress" style="height: 8px; border-radius: 4px; background-color: var(--bs-secondary-bg);">
+                    
+                    <!-- Stepper for Desktop/Tablet -->
+                    <div class="onboarding-stepper d-none d-md-flex align-items-center justify-content-between position-relative mb-4" style="padding: 0 10px;">
+                        <div class="stepper-line" style="position: absolute; top: 16px; left: 0; right: 0; height: 3px; background-color: var(--border); z-index: 1; border-radius: 4px;">
+                            <div class="stepper-line-progress" style="width: {% widthratio onboarding_step_num|add:'-1' onboarding_step_total|add:'-1' 100 %}%; height: 100%; background-color: var(--brand-1); transition: width 0.4s ease; border-radius: 4px;"></div>
+                        </div>
+                        
+                        <div class="stepper-item d-flex flex-column align-items-center position-relative {% if onboarding_step_num == 1 %}active{% elif onboarding_step_num > 1 %}completed{% endif %}" style="z-index: 2; width: 12%;">
+                            <div class="stepper-circle">1</div>
+                            <div class="stepper-label text-center mt-2 small text-muted">{% trans "Доступ" %}</div>
+                        </div>
+                        <div class="stepper-item d-flex flex-column align-items-center position-relative {% if onboarding_step_num == 2 %}active{% elif onboarding_step_num > 2 %}completed{% endif %}" style="z-index: 2; width: 12%;">
+                            <div class="stepper-circle">2</div>
+                            <div class="stepper-label text-center mt-2 small text-muted">{% trans "Паспорт" %}</div>
+                        </div>
+                        <div class="stepper-item d-flex flex-column align-items-center position-relative {% if onboarding_step_num == 3 %}active{% elif onboarding_step_num > 3 %}completed{% endif %}" style="z-index: 2; width: 12%;">
+                            <div class="stepper-circle">3</div>
+                            <div class="stepper-label text-center mt-2 small text-muted">{% trans "Анкета" %}</div>
+                        </div>
+                        <div class="stepper-item d-flex flex-column align-items-center position-relative {% if onboarding_step_num == 4 %}active{% elif onboarding_step_num > 4 %}completed{% endif %}" style="z-index: 2; width: 12%;">
+                            <div class="stepper-circle">4</div>
+                            <div class="stepper-label text-center mt-2 small text-muted">{% trans "Адрес" %}</div>
+                        </div>
+                        <div class="stepper-item d-flex flex-column align-items-center position-relative {% if onboarding_step_num == 5 %}active{% elif onboarding_step_num > 5 %}completed{% endif %}" style="z-index: 2; width: 12%;">
+                            <div class="stepper-circle">5</div>
+                            <div class="stepper-label text-center mt-2 small text-muted">{% trans "Поездки" %}</div>
+                        </div>
+                        <div class="stepper-item d-flex flex-column align-items-center position-relative {% if onboarding_step_num == 6 %}active{% elif onboarding_step_num > 6 %}completed{% endif %}" style="z-index: 2; width: 12%;">
+                            <div class="stepper-circle">6</div>
+                            <div class="stepper-label text-center mt-2 small text-muted">{% trans "Согласие" %}</div>
+                        </div>
+                        <div class="stepper-item d-flex flex-column align-items-center position-relative {% if onboarding_step_num == 7 %}active{% elif onboarding_step_num > 7 %}completed{% endif %}" style="z-index: 2; width: 12%;">
+                            <div class="stepper-circle">7</div>
+                            <div class="stepper-label text-center mt-2 small text-muted">{% trans "Проверка" %}</div>
+                        </div>
+                    </div>
+            
+                    <!-- Mobile progress bar fallback -->
+                    <div class="progress d-md-none" style="height: 6px; border-radius: 3px; background-color: var(--bs-secondary-bg);">
                         <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
                              role="progressbar" 
                              style="width: {{ onboarding_step_percent }}%; transition: width 0.6s ease;" 
@@ -108,6 +235,15 @@
       window.ONBOARDING_AUTO_SAVE_URL = "{% url 'clients:onboarding_auto_save' session.token_hash %}";
     </script>
     <script src="{% static 'clients/js/onboarding_autosave.js' %}" defer></script>
+
+    <!-- Floating Premium Autosave Pill -->
+    <div id="autosave-pill" class="autosave-pill" 
+         data-text-saving="{% translate 'Сохранение...' %}"
+         data-text-saved="{% translate 'Сохранено' %}"
+         data-text-failed="{% translate 'Ошибка сохранения. Проверьте сеть.' %}">
+        <span id="autosave-dot" class="autosave-dot"></span>
+        <span id="autosave-text" class="autosave-text"></span>
+    </div>
     {% endif %}
 </body>
 </html>

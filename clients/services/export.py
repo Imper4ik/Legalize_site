@@ -106,7 +106,7 @@ def generate_client_summary_text(client: Client) -> str:
     reminders = client.reminders.filter(is_active=True).order_by("due_date")
     lines.append(f"ACTIVE REMINDERS ({reminders.count()})")
     for reminder in reminders:
-        lines.append(f"  [{reminder.due_date}] {reminder.title}")
+        lines.append(f"  [{reminder.due_date}] {reminder.display_title}")
     lines.append("")
 
     # Activity log (last 30)
