@@ -10,6 +10,7 @@ from clients.models import Client, MOSApplicationData
 from clients.services.access import accessible_clients_queryset
 from clients.services.workflow_transitions import transition_client_workflow
 from django.core.exceptions import ValidationError
+from clients.security.encrypted import safe_encrypted_attr
 from clients.services.activity import log_client_activity
 from clients.views.base import role_required_view
 
@@ -62,7 +63,7 @@ def _build_review_diffs(client: Client, mos_data: MOSApplicationData) -> list[di
     for field_name in APPLY_TO_CLIENT_FIELDS:
         if field_name not in values:
             continue
-        old_value = getattr(client, field_name)
+        old_value = safe_encrypted_attr(client, field_name) if field_name == "passport_num" else getattr(client, field_name)
         new_value = values[field_name]
         if old_value != new_value:
             diffs.append(
@@ -82,7 +83,8 @@ def _apply_mos_data_to_client(*, client: Client, mos_data: MOSApplicationData, a
         if field_name not in values:
             continue
         new_value = values[field_name]
-        if getattr(client, field_name) != new_value:
+        old_value = safe_encrypted_attr(client, field_name) if field_name == "passport_num" else getattr(client, field_name)
+        if old_value != new_value:
             setattr(client, field_name, new_value)
             changed_fields.append(field_name)
 
@@ -100,7 +102,7 @@ def _apply_mos_data_to_client(*, client: Client, mos_data: MOSApplicationData, a
 
 @role_required_view("Admin", "Manager", "Staff")
 def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
-    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), id=client_id)
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.defer("passport_num", "case_number")), id=client_id)
     mos_data = get_object_or_404(MOSApplicationData, client=client)
 
     if request.method == "POST":

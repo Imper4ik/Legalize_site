@@ -78,7 +78,7 @@ def compress_image(
         original_size = img.size
         if img.width > max_width or img.height > max_height:
             img.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
-            logger.info(f"Resized image from {original_size} to {img.size}")
+            logger.info("Resized image from %s to %s", original_size, img.size)
 
         # Compress to buffer
         buffer = BytesIO()
@@ -111,7 +111,7 @@ def compress_image(
         return buffer, new_ext
 
     except Exception as e:
-        logger.exception(f"Failed to compress image: {e}")
+        logger.exception("Failed to compress image: error_type=%s", type(e).__name__)
         raise
 
 

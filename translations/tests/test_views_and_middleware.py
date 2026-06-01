@@ -125,6 +125,13 @@ class TranslationViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
+    def test_toggle_studio_mode_get_does_not_change_session(self):
+        self.client.login(email="super@example.com", password="pass")
+        response = self.client.get(reverse("translations:toggle_studio"), HTTP_REFERER="/staff/")
+
+        self.assertEqual(response.status_code, 405)
+        self.assertNotIn("studio_mode", self.client.session)
+
     def test_toggle_studio_mode_flips_session_flag(self):
         self.client.login(email="super@example.com", password="pass")
         url = reverse("translations:toggle_studio")
@@ -132,13 +139,13 @@ class TranslationViewsTests(TestCase):
         from unittest.mock import patch
 
         with patch("translations.views.logger.info") as info_mock:
-            response_1 = self.client.get(url, HTTP_REFERER="/staff/")
+            response_1 = self.client.post(url, HTTP_REFERER="/staff/")
         self.assertEqual(response_1.status_code, 302)
         self.assertTrue(self.client.session.get("studio_mode"))
         self.assertIn("ENABLED", info_mock.call_args_list[0].args)
 
         with patch("translations.views.logger.info") as info_mock:
-            response_2 = self.client.get(url, HTTP_REFERER="/staff/")
+            response_2 = self.client.post(url, HTTP_REFERER="/staff/")
         self.assertEqual(response_2.status_code, 302)
         self.assertFalse(self.client.session.get("studio_mode"))
         self.assertIn("DISABLED", info_mock.call_args_list[0].args)

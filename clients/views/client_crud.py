@@ -34,7 +34,7 @@ from clients.use_cases.client_records import (
     finalize_client_update,
     snapshot_client_update_state,
 )
-from clients.views.base import RoleOrFeatureRequiredMixin, RoleRequiredMixin, StaffRequiredMixin, role_required_view
+from clients.views.base import RoleOrFeatureRequiredMixin, RoleRequiredMixin, StaffRequiredMixin, role_required_view, staff_required_view
 from clients.services.activity import log_client_view
 from clients.services.access import accessible_clients_queryset
 
@@ -340,6 +340,7 @@ def dashboard_redirect_view(request: HttpRequest) -> HttpResponseBase:
     return render(request, "403.html", context=context, status=403)
 
 
+@staff_required_view
 def calculator_view(request: HttpRequest) -> HttpResponseBase:
     from clients.forms import CalculatorForm
     from clients.services.calculator import (

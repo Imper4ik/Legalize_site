@@ -5,13 +5,14 @@ import logging
 from decimal import Decimal
 from typing import Any, cast, TYPE_CHECKING
 
-import bleach
 from django import forms
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.models import Group
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 
+from clients.security.sanitizer import sanitize_user_html
 from clients.services.access import accessible_clients_queryset
 from clients.services.calculator import CURRENCY_EUR, CURRENCY_PLN
 from clients.services.roles import user_has_any_role
@@ -156,8 +157,17 @@ class StaffUserCreateForm(forms.ModelForm):
 
     def clean(self) -> dict[str, Any]:
         cleaned = super().clean()
-        if cleaned and cleaned.get("password1") != cleaned.get("password2"):
+        password1 = cleaned.get("password1") if cleaned else None
+        password2 = cleaned.get("password2") if cleaned else None
+        if cleaned and password1 != password2:
             self.add_error("password2", "Passwords do not match.")
+        if password1 and password1 == password2:
+            user = self.instance or self.Meta.model(
+                email=cleaned.get("email"),
+                first_name=cleaned.get("first_name", ""),
+                last_name=cleaned.get("last_name", ""),
+            )
+            validate_password(password1, user=user)
         return cleaned or {}
 
     def save(self, commit: bool = True) -> Any:
@@ -356,8 +366,7 @@ class ClientForm(forms.ModelForm):
         notes = self.cleaned_data.get('notes')
         if not notes:
             return notes
-        allowed_tags = ["b", "strong", "i", "em", "br", "ul", "ol", "li", "p"]
-        return str(bleach.clean(notes, tags=allowed_tags, attributes={}, strip=True))
+        return sanitize_user_html(notes)
 
     def clean(self) -> dict[str, Any]:
         cleaned_data = super().clean()

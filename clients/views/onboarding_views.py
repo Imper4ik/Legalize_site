@@ -13,6 +13,7 @@ from typing import cast
 from clients.forms import DocumentUploadForm
 from clients.models import ClientOnboardingSession, ClientDigitalAccess, MOSApplicationData, Client, Document, DocumentRequirement
 from clients.services.intake_extraction import pre_fill_mos_data_from_ocr
+from clients.security.encrypted import safe_encrypted_attr
 from clients.services.document_workflow import upload_client_document
 from clients.services.access import accessible_clients_queryset
 from clients.views.base import role_required_view
@@ -69,6 +70,7 @@ def check_onboarding_session(token: str) -> ClientOnboardingSession | None:
     # We expose the raw token in-memory only (not persisted), so links remain functional
     # while the database stores only hashed values.
     session.token_hash = token
+    session.client = Client.objects.defer("case_number", "passport_num").get(pk=session.client_id)
     return session
 
 def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
@@ -189,7 +191,7 @@ def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
     if not _mos_data_is_editable(mos_data):
         return _locked_response(request, session)
 
-    digital_access, _ = ClientDigitalAccess.objects.get_or_create(client=session.client)
+    digital_access, _ = ClientDigitalAccess.objects.defer("pesel").get_or_create(client=session.client)
 
     if request.method == "POST":
         digital_access.has_pesel = request.POST.get("has_pesel") == "yes"
@@ -238,8 +240,9 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
     mos_data.personal_data = personal_data
 
     passport_data = mos_data.passport_data or {}
-    if client.passport_num and ("document_number" not in passport_data or not passport_data["document_number"]):
-        passport_data["document_number"] = client.passport_num
+    passport_num = safe_encrypted_attr(client, "passport_num")
+    if passport_num and ("document_number" not in passport_data or not passport_data["document_number"]):
+        passport_data["document_number"] = passport_num
         dirty = True
 
     mos_data.passport_data = passport_data
@@ -550,7 +553,7 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
     # Process digital access fields if any
     digital_access_updated = False
     if any(k in request.POST for k in ["has_pesel", "has_trusted_profile", "has_mos_account"]):
-        digital_access, _ = ClientDigitalAccess.objects.get_or_create(client=client)
+        digital_access, _ = ClientDigitalAccess.objects.defer("pesel").get_or_create(client=client)
         if "has_pesel" in request.POST:
             digital_access.has_pesel = request.POST.get("has_pesel") == "yes"
             digital_access_updated = True

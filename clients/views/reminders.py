@@ -5,6 +5,7 @@ from datetime import timedelta
 from typing import Any, TYPE_CHECKING
 
 from django.contrib import messages
+from django.db.models import Count, Prefetch
 from django.core.management import call_command
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect
@@ -14,7 +15,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _, gettext_lazy as _lazy
 from django.views.generic import ListView
 
-from clients.models import Client, Reminder
+from clients.models import Client, ClientDocumentRequirement, Document, Reminder
 from clients.services.access import accessible_clients_queryset, accessible_reminders_queryset
 from clients.services.notifications import send_expiring_documents_email
 from clients.use_cases.reminders import (
@@ -92,6 +93,25 @@ class DocumentReminderListView(ReminderListView):
     client_param = "doc_client"
     start_date_param = "doc_start_date"
     end_date_param = "doc_end_date"
+
+
+    def get_queryset(self) -> Any:
+        return (
+            super()
+            .get_queryset()
+            .select_related("document")
+            .prefetch_related(
+                Prefetch(
+                    "client__documents",
+                    queryset=Document.objects.annotate(preloaded_version_count=Count("versions")).order_by("-uploaded_at"),
+                ),
+                Prefetch(
+                    "client__custom_document_requirements",
+                    queryset=ClientDocumentRequirement.objects.filter(is_active=True).order_by("due_date", "created_at"),
+                ),
+                "client__wniosek_submissions__attachments",
+            )
+        )
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)

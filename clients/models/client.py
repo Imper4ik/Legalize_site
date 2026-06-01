@@ -5,6 +5,7 @@ from datetime import date, timedelta
 from typing import Any, cast, Self, TYPE_CHECKING
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Count, Q
 from django.urls import reverse
@@ -305,13 +306,34 @@ class Client(SoftDeleteModel):
         normalized = cls.normalize_case_number(case_number)
         return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
 
-    def save(self, *args: Any, **kwargs: Any) -> None:
-        if self.case_number:
-            self.case_number_hash = self.hash_case_number(cast(str, self.case_number))
-        else:
-            self.case_number_hash = None
 
+    def clean(self) -> None:
+        super().clean()
+        if not self.sponsor_client_id:
+            return
+        if self.pk and self.sponsor_client_id == self.pk:
+            raise ValidationError({"sponsor_client": _("A client cannot sponsor themselves.")})
+
+        visited: set[int] = set()
+        current = self.sponsor_client
+        while current is not None and current.pk:
+            if self.pk and current.pk == self.pk:
+                raise ValidationError({"sponsor_client": _("Sponsor relationship cannot create a cycle.")})
+            if current.pk in visited:
+                break
+            visited.add(current.pk)
+            current = current.sponsor_client
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
         update_fields = kwargs.get("update_fields")
+        should_refresh_case_hash = update_fields is None or "case_number" in update_fields
+
+        if should_refresh_case_hash:
+            if self.case_number:
+                self.case_number_hash = self.hash_case_number(cast(str, self.case_number))
+            else:
+                self.case_number_hash = None
+
         if update_fields is not None and "case_number" in update_fields:
             update_fields = set(update_fields)
             update_fields.add("case_number_hash")
@@ -457,10 +479,21 @@ class Client(SoftDeleteModel):
             )
             seen_codes.add(code)
 
-        for requirement in self.custom_document_requirements.filter(is_active=True).order_by("due_date", "created_at"):
-            documents = list(
-                self.documents.filter(document_type=requirement.document_type, archived_at__isnull=True).order_by("-uploaded_at")
+        prefetched_requirements = getattr(self, "_prefetched_objects_cache", {}).get("custom_document_requirements")
+        if prefetched_requirements is None:
+            custom_requirements = self.custom_document_requirements.filter(is_active=True).order_by("due_date", "created_at")
+        else:
+            custom_requirements = sorted(
+                [requirement for requirement in prefetched_requirements if requirement.is_active],
+                key=lambda requirement: (requirement.due_date or date.max, requirement.created_at),
             )
+
+        for requirement in custom_requirements:
+            documents = [
+                document
+                for document in docs_map.get(requirement.document_type, [])
+                if getattr(document, "archived_at", None) is None
+            ]
             status_list.append(
                 {
                     "code": requirement.document_type,

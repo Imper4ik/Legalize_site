@@ -48,13 +48,19 @@ class FamilyIncomeResult:
 
 
 def family_sponsor_for(client: Client) -> Client:
-    if client.sponsor_client_id:
-        return cast(Client, client.sponsor_client)
-    return client
+    visited: set[int] = set()
+    current = client
+    while current.sponsor_client_id:
+        if current.pk in visited:
+            logger.warning("Detected sponsor cycle while resolving family sponsor: client_id=%s", client.pk)
+            return client
+        visited.add(current.pk)
+        current = cast(Client, current.sponsor_client)
+    return current
 
 
 def get_family_members(sponsor: Client) -> Any:
-    return sponsor.sponsored_family_members.all().order_by("family_role", "last_name", "first_name")
+    return sponsor.sponsored_family_members.exclude(pk=sponsor.pk).order_by("family_role", "last_name", "first_name")
 
 
 def get_existing_family_group(sponsor: Client) -> FamilyGroup | None:

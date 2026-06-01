@@ -24,7 +24,7 @@ def get_service_price(service_value: str) -> float:
         sp = ServicePrice.objects.filter(service_code=service_value).first()
         if sp:
             return float(sp.price)
-    except Exception as e:
-        logger.warning(f"Could not fetch ServicePrice for {service_value}: {e}")
+    except Exception as exc:
+        logger.warning("Could not fetch ServicePrice for %s: %s", service_value, type(exc).__name__)
 
     return SERVICE_PRICES.get(service_value, 0.00)

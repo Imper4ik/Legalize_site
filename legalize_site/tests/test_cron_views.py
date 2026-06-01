@@ -317,3 +317,29 @@ class CronViewsTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         call_command_mock.assert_called_once_with("update_reminders")
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret", "CRON_ALLOWED_IPS": "203.0.113.10"}, clear=False)
+    @patch("legalize_site.cron_views.process_pending_email_campaigns")
+    def test_cron_ip_allowlist_ignores_spoofed_x_forwarded_for(self, process_mock):
+        response = self.client.post(
+            reverse("process_email_campaigns_cron"),
+            HTTP_X_CRON_TOKEN="secret",
+            HTTP_X_FORWARDED_FOR="203.0.113.10",
+            REMOTE_ADDR="198.51.100.44",
+        )
+
+        self.assertEqual(response.status_code, 403)
+        process_mock.assert_not_called()
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret", "CRON_ALLOWED_IPS": "203.0.113.10"}, clear=False)
+    @patch("legalize_site.cron_views.process_pending_email_campaigns", return_value=[])
+    def test_cron_ip_allowlist_uses_remote_addr(self, process_mock):
+        response = self.client.post(
+            reverse("process_email_campaigns_cron"),
+            HTTP_X_CRON_TOKEN="secret",
+            HTTP_X_FORWARDED_FOR="198.51.100.44",
+            REMOTE_ADDR="203.0.113.10",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        process_mock.assert_called_once()
