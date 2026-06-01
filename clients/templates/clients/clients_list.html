@@ -193,7 +193,7 @@
               {% endif %}
             </div>
           </td>
-          <td data-label="{% translate 'Номер дела' %}"><strong>{{ client.case_number|default:"—" }}</strong></td>
+          <td data-label="{% translate 'Номер дела' %}"><strong>{{ client.safe_case_number|default:"—" }}</strong></td>
           <td data-label="{% translate 'Основание' %}">
             {{ client.basis_of_stay|default:"—" }}
             {% if client.legal_basis_end_date %}

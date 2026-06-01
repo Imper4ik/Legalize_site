@@ -7,6 +7,7 @@ from typing import Any, Iterable, TYPE_CHECKING, cast
 
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db.models import Q
 from django.utils import timezone
 
 from clients.models import Client, EmailCampaign, EmailLog
@@ -97,19 +98,49 @@ def queue_mass_email_campaign(
 
 def _claim_pending_campaign(campaign_id: int) -> EmailCampaign | None:
     started_at = timezone.now()
-    updated = EmailCampaign.objects.filter(
-        pk=campaign_id,
-        status=EmailCampaign.STATUS_PENDING,
-    ).update(
-        status=EmailCampaign.STATUS_RUNNING,
-        started_at=started_at,
-        completed_at=None,
-        sent_count=0,
-        failed_count=0,
-        error_details="",
+    stale_after_minutes = int(getattr(settings, "EMAIL_CAMPAIGN_STALE_AFTER_MINUTES", 30))
+    stale_cutoff = started_at - timedelta(minutes=stale_after_minutes)
+
+    candidate = (
+        EmailCampaign.objects.filter(pk=campaign_id)
+        .filter(
+            Q(status=EmailCampaign.STATUS_PENDING)
+            | Q(status=EmailCampaign.STATUS_RUNNING, started_at__lt=stale_cutoff)
+            | Q(status=EmailCampaign.STATUS_RUNNING, started_at__isnull=True)
+        )
+        .values("status", "started_at")
+        .first()
+    )
+    if candidate is None:
+        return None
+
+    was_stale = candidate["status"] == EmailCampaign.STATUS_RUNNING
+    updated = (
+        EmailCampaign.objects.filter(pk=campaign_id)
+        .filter(
+            Q(status=EmailCampaign.STATUS_PENDING)
+            | Q(status=EmailCampaign.STATUS_RUNNING, started_at__lt=stale_cutoff)
+            | Q(status=EmailCampaign.STATUS_RUNNING, started_at__isnull=True)
+        )
+        .update(
+            status=EmailCampaign.STATUS_RUNNING,
+            started_at=started_at,
+            completed_at=None,
+            error_details="",
+        )
     )
     if not updated:
         return None
+
+    if was_stale:
+        logger.warning(
+            "Reclaimed stale email campaign: campaign_id=%s previous_started_at=%s stale_after_minutes=%s",
+            campaign_id,
+            candidate["started_at"],
+            stale_after_minutes,
+        )
+    else:
+        logger.info("Claimed pending email campaign: campaign_id=%s", campaign_id)
 
     return EmailCampaign.objects.select_related("created_by").get(pk=campaign_id)
 
@@ -134,7 +165,17 @@ def process_campaign(campaign_id: int) -> CampaignProcessingResult | None:
             processed=True,
         )
 
-    sent = 0
+    sent_idempotency_keys = {
+        build_email_idempotency_key("mass_email", campaign.pk, email_addr)
+        for email_addr in recipients
+    }
+    already_sent_keys = set(
+        EmailLog.objects.filter(
+            idempotency_key__in=sent_idempotency_keys,
+            delivery_status=EmailLog.DELIVERY_STATUS_SENT,
+        ).values_list("idempotency_key", flat=True)
+    )
+    sent = len(already_sent_keys)
     failed = 0
     errors: list[str] = []
     clients_by_email = {
@@ -143,9 +184,10 @@ def process_campaign(campaign_id: int) -> CampaignProcessingResult | None:
     }
 
     logger.info(
-        "Processing email campaign %s with %s recipient(s)",
+        "Processing email campaign %s with %s recipient(s); already_sent=%s",
         campaign.id,
         len(recipients),
+        sent,
     )
 
     batch_size = max(1, int(getattr(settings, "EMAIL_CAMPAIGN_BATCH_SIZE", 50)))
@@ -257,8 +299,14 @@ def process_campaign(campaign_id: int) -> CampaignProcessingResult | None:
 
 
 def process_pending_email_campaigns(*, limit: int | None = None) -> list[CampaignProcessingResult]:
+    stale_after_minutes = int(getattr(settings, "EMAIL_CAMPAIGN_STALE_AFTER_MINUTES", 30))
+    stale_cutoff = timezone.now() - timedelta(minutes=stale_after_minutes)
     pending_ids = list(
-        EmailCampaign.objects.filter(status=EmailCampaign.STATUS_PENDING)
+        EmailCampaign.objects.filter(
+            Q(status=EmailCampaign.STATUS_PENDING)
+            | Q(status=EmailCampaign.STATUS_RUNNING, started_at__lt=stale_cutoff)
+            | Q(status=EmailCampaign.STATUS_RUNNING, started_at__isnull=True)
+        )
         .order_by("created_at")
         .values_list("id", flat=True)[:limit]
     )
