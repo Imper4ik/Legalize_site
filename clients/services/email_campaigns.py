@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import time
+from datetime import timedelta
 from dataclasses import dataclass
 from typing import Any, Iterable, TYPE_CHECKING, cast
 
@@ -195,8 +196,7 @@ def process_campaign(campaign_id: int) -> CampaignProcessingResult | None:
 
     for index, email_addr in enumerate(recipients, start=1):
         idempotency_key = build_email_idempotency_key("mass_email", campaign.pk, email_addr)
-        if idempotency_key and EmailLog.objects.filter(idempotency_key=idempotency_key, delivery_status="sent").exists():
-            sent += 1
+        if idempotency_key in already_sent_keys:
             continue
 
         try:
