@@ -271,24 +271,36 @@ class Command(BaseCommand):
             elif due_date.weekday() == 6:  # Sunday
                 due_date = due_date - timedelta(days=2)
 
-            exists = Reminder.objects.filter(
+            defaults = {
+                "title": f"Истекает легальное пребывание: {due_date.strftime('%d.%m.%Y')}",
+                "notes": (
+                    f"По срокам: {mos.legal_stay_until.strftime('%d.%m.%Y')}. "
+                    f"Сдвиг дедлайна с учетом выходных: {due_date.strftime('%d.%m.%Y')}."
+                ),
+                "due_date": cast(Any, due_date),
+                "is_active": True,
+            }
+
+            existing = Reminder.objects.filter(
                 client=mos.client,
                 reminder_type="legal_stay",
-                is_active=True
-            ).exists()
+                is_active=True,
+            ).first()
+            if dry_run:
+                if existing is None or any(getattr(existing, key) != value for key, value in defaults.items()):
+                    count += 1
+                continue
 
-            if not exists:
+            _reminder, created = Reminder.objects.update_or_create(
+                client=mos.client,
+                reminder_type="legal_stay",
+                is_active=True,
+                defaults=defaults,
+            )
+            if created or existing is None or any(getattr(existing, key) != value for key, value in defaults.items()):
                 count += 1
-                if not dry_run:
-                    Reminder.objects.create(
-                        client=mos.client,
-                        title=f"Истекает легальное пребывание: {due_date.strftime('%d.%m.%Y')}",
-                        notes=f"По срокам: {mos.legal_stay_until.strftime('%d.%m.%Y')}. Сдвиг дедлайна с учетом выходных: {due_date.strftime('%d.%m.%Y')}.",
-                        due_date=cast(Any, due_date),
-                        reminder_type="legal_stay",
-                    )
 
-        prefix = "DRY RUN: would create" if dry_run else "Created"
+        prefix = "DRY RUN: would upsert" if dry_run else "Upserted"
         self.stdout.write(self.style.SUCCESS(f"{prefix} {count} legal stay reminders."))
 
     def sync_custom_document_requirement_reminders(self, *, dry_run: bool = False) -> None:

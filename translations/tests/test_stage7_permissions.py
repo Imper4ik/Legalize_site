@@ -67,7 +67,7 @@ class TranslationStage7PermissionTests(TestCase):
     def test_non_superuser_cannot_toggle_studio(self):
         self.client.login(email="staff2@example.com", password="pass")
 
-        response = self.client.get(reverse("translations:toggle_studio"), HTTP_REFERER="/staff/")
+        response = self.client.post(reverse("translations:toggle_studio"), HTTP_REFERER="/staff/")
 
         self.assertEqual(response.status_code, 302)
         # denied by user_passes_test, should not set flag

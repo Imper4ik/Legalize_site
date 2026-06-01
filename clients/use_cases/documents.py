@@ -5,9 +5,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-import bleach
 from django.db import transaction
 
+from clients.security.sanitizer import sanitize_user_html
 from clients.models import Client, Document, WniosekAttachment
 from clients.services.activity import log_client_activity
 from clients.services.notifications import send_missing_documents_email
@@ -64,8 +64,7 @@ def _safe_send_missing_documents_email(
 
 
 def update_client_notes_for_client(*, client: Client, actor: AbstractBaseUser | AnonymousUser | None, notes: str) -> ClientNoteScenarioResult:
-    allowed_tags = ["b", "strong", "i", "em", "br", "ul", "ol", "li", "p"]
-    cleaned_notes = bleach.clean(notes, tags=allowed_tags, attributes={}, strip=True)
+    cleaned_notes = sanitize_user_html(notes)
     with transaction.atomic():
         client.notes = cleaned_notes
         client.save(update_fields=["notes"])

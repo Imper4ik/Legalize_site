@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+from datetime import timedelta
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from clients.models import Client, Company, EmailCampaign, EmailLog
@@ -271,6 +273,116 @@ class EmailViewsStage9Tests(TestCase):
         self.assertIn("recipient #1: RuntimeError", campaign.error_details)
         self.assertNotIn("email-user@example.com", campaign.error_details)
         self.assertNotIn("smtp failure", campaign.error_details)
+
+
+    @override_settings(EMAIL_CAMPAIGN_STALE_AFTER_MINUTES=30)
+    @patch("clients.services.email_campaigns._send_confirmation_email")
+    @patch("clients.services.email_campaigns.send_mail", return_value=1)
+    def test_stale_running_campaign_can_be_reclaimed(self, send_mail_mock, _confirm_mock):
+        campaign = EmailCampaign.objects.create(
+            subject="Stale",
+            message="Body",
+            total_recipients=1,
+            recipient_emails=["email-user@example.com"],
+            created_by=self.staff,
+            status=EmailCampaign.STATUS_RUNNING,
+            started_at=timezone.now() - timedelta(minutes=45),
+        )
+
+        from clients.services.email_campaigns import process_campaign
+
+        result = process_campaign(campaign.pk)
+
+        self.assertIsNotNone(result)
+        campaign.refresh_from_db()
+        self.assertEqual(campaign.status, EmailCampaign.STATUS_COMPLETED)
+        self.assertEqual(campaign.sent_count, 1)
+        send_mail_mock.assert_called_once()
+
+    @override_settings(EMAIL_CAMPAIGN_STALE_AFTER_MINUTES=30)
+    @patch("clients.services.email_campaigns.send_mail", return_value=1)
+    def test_fresh_running_campaign_is_not_claimed(self, send_mail_mock):
+        campaign = EmailCampaign.objects.create(
+            subject="Fresh",
+            message="Body",
+            total_recipients=1,
+            recipient_emails=["email-user@example.com"],
+            created_by=self.staff,
+            status=EmailCampaign.STATUS_RUNNING,
+            started_at=timezone.now(),
+        )
+
+        from clients.services.email_campaigns import process_campaign
+
+        result = process_campaign(campaign.pk)
+
+        self.assertIsNone(result)
+        send_mail_mock.assert_not_called()
+
+    @override_settings(EMAIL_CAMPAIGN_STALE_AFTER_MINUTES=30)
+    @patch("clients.services.email_campaigns._send_confirmation_email")
+    @patch("clients.services.email_campaigns.send_mail", return_value=1)
+    def test_stale_reclaim_does_not_duplicate_already_sent_recipient(self, send_mail_mock, _confirm_mock):
+        recipients = ["sent@example.com", "pending@example.com"]
+        campaign = EmailCampaign.objects.create(
+            subject="Resume",
+            message="Body",
+            total_recipients=2,
+            recipient_emails=recipients,
+            created_by=self.staff,
+            status=EmailCampaign.STATUS_RUNNING,
+            started_at=timezone.now() - timedelta(minutes=45),
+        )
+        EmailLog.objects.create(
+            subject="Resume",
+            body="Body",
+            recipients="sent@example.com",
+            template_type="mass_email",
+            delivery_status=EmailLog.DELIVERY_STATUS_SENT,
+            idempotency_key=build_email_idempotency_key("mass_email", campaign.pk, "sent@example.com"),
+        )
+
+        from clients.services.email_campaigns import process_campaign
+
+        result = process_campaign(campaign.pk)
+
+        self.assertIsNotNone(result)
+        self.assertEqual(send_mail_mock.call_count, 1)
+        self.assertEqual(send_mail_mock.call_args.args[3], ["pending@example.com"])
+        campaign.refresh_from_db()
+        self.assertEqual(campaign.sent_count, 2)
+
+    @override_settings(EMAIL_CAMPAIGN_STALE_AFTER_MINUTES=30)
+    @patch("clients.services.email_campaigns._send_confirmation_email")
+    @patch("clients.services.email_campaigns.send_mail", return_value=1)
+    def test_failed_recipient_is_retried_on_stale_reclaim(self, send_mail_mock, _confirm_mock):
+        campaign = EmailCampaign.objects.create(
+            subject="Retry",
+            message="Body",
+            total_recipients=1,
+            recipient_emails=["retry@example.com"],
+            created_by=self.staff,
+            status=EmailCampaign.STATUS_RUNNING,
+            started_at=timezone.now() - timedelta(minutes=45),
+        )
+        EmailLog.objects.create(
+            subject="Retry",
+            body="Body",
+            recipients="retry@example.com",
+            template_type="mass_email",
+            delivery_status=EmailLog.DELIVERY_STATUS_FAILED,
+            idempotency_key=build_email_idempotency_key("mass_email", campaign.pk, "retry@example.com"),
+        )
+
+        from clients.services.email_campaigns import process_campaign
+
+        result = process_campaign(campaign.pk)
+
+        self.assertIsNotNone(result)
+        send_mail_mock.assert_called_once()
+        campaign.refresh_from_db()
+        self.assertEqual(campaign.status, EmailCampaign.STATUS_COMPLETED)
+        self.assertEqual(campaign.sent_count, 1)
 
     def test_campaign_status_api_returns_no_store_payload(self):
         campaign = EmailCampaign.objects.create(

@@ -16,6 +16,7 @@ from clients.services.roles import DOCUMENT_EDIT_ROLES
 from clients.services.wniosek import record_wniosek_submission
 from clients.views.base import StaffRequiredMixin, role_required_view
 from clients.services.access import accessible_clients_queryset
+from clients.security.encrypted import safe_encrypted_attr
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import User
@@ -25,15 +26,25 @@ class ClientPrintBaseView(StaffRequiredMixin, DetailView):
     context_object_name = "client"
 
     def get_queryset(self) -> Any:
-        return accessible_clients_queryset(self.request.user, Client.objects.all())
+        return accessible_clients_queryset(self.request.user, Client.objects.defer("case_number", "passport_num"))
 
 
 class ClientPrintView(ClientPrintBaseView):
     template_name = "clients/client_printable.html"
 
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context["safe_case_number"] = safe_encrypted_attr(context["client"], "case_number")
+        return context
+
 
 class ClientWSCPrintView(ClientPrintBaseView):
     template_name = "clients/client_wsc_print.html"
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context["safe_case_number"] = safe_encrypted_attr(context["client"], "case_number")
+        return context
 
 
 class ClientDocumentPrintView(ClientPrintBaseView):
@@ -89,7 +100,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                     "application_date": application_date,
                     "full_name": f"{client.first_name} {client.last_name}",
                     "citizenship": client.citizenship or "",
-                    "case_number": client.case_number or "",
+                    "case_number": safe_encrypted_attr(client, "case_number"),
                     "mos_id": getattr(client, "mos_id", "") or "",
                     "inpol_id": getattr(client, "inpol_id", "") or "",
                     "birth_date": getattr(client, "birth_date", ""),
@@ -163,7 +174,7 @@ def client_document_print_confirm_view(request: HttpRequest, pk: int, doc_type: 
     if doc_type != WniosekSubmission.DocumentKind.MAZOWIECKI_APPLICATION:
         raise Http404("Confirmation is only available for this document type")
 
-    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.defer("case_number", "passport_num")), pk=pk)
     
     # Cast user to User for record_wniosek_submission
     confirmed_by = cast('User', request.user) if request.user.is_authenticated else None

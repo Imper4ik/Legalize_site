@@ -202,7 +202,7 @@
 
             <div class="case-number-right">
                 <span class="case-num-label-small upper">Sygnatura akt (Numer sprawy)</span>
-                <span class="case-num-value-large">{{ client.case_number|default_if_none:"" }}</span>
+                <span class="case-num-value-large">{{ safe_case_number|default_if_none:"" }}</span>
             </div>
 
             <div class="status-section">
