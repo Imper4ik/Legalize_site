@@ -19,6 +19,7 @@ from clients.forms import (
     StaffTaskForm,
 )
 from clients.models import Client, ClientActivity, Document, EmailLog, Payment, StaffTask, WniosekSubmission
+from clients.security.encrypted import safe_encrypted_attr
 from clients.services.notifications import (
     send_expired_documents_email,
     send_required_documents_email,
@@ -34,7 +35,7 @@ from clients.use_cases.client_records import (
     finalize_client_update,
     snapshot_client_update_state,
 )
-from clients.views.base import RoleOrFeatureRequiredMixin, RoleRequiredMixin, StaffRequiredMixin, role_required_view
+from clients.views.base import RoleOrFeatureRequiredMixin, RoleRequiredMixin, StaffRequiredMixin, role_required_view, staff_required_view
 from clients.services.activity import log_client_view
 from clients.services.access import accessible_clients_queryset
 
@@ -60,7 +61,12 @@ class ClientListView(StaffRequiredMixin, ListView):
     def get_queryset(self) -> Any:
         queryset = accessible_clients_queryset(
             self.request.user,
-            Client.objects.filter(Q(user__is_staff=False) | Q(user__isnull=True)),
+            Client.objects.filter(Q(user__is_staff=False) | Q(user__isnull=True)).defer(
+                "case_number",
+                "passport_num",
+                "sponsor_client__case_number",
+                "sponsor_client__passport_num",
+            ),
         ).select_related("sponsor_client", "mos_application_data").annotate(
             family_members_count=Count("sponsored_family_members")
         )
@@ -122,6 +128,8 @@ class ClientListView(StaffRequiredMixin, ListView):
         context["selected_company"] = self.request.GET.get("company", "")
         context["onboarding_filter"] = self.request.GET.get("onboarding", "")
         context["document_filter"] = self.request.GET.get("document", "")
+        for client in context.get("clients", []):
+            client.safe_case_number = safe_encrypted_attr(client, "case_number", default="—")
         context["companies"] = Company.objects.all()
         return context
 
@@ -133,7 +141,12 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
     def get_queryset(self) -> Any:
         return accessible_clients_queryset(
             self.request.user,
-            Client.objects.select_related("user", "sponsor_client", "company", "assigned_staff").prefetch_related(
+            Client.objects.select_related("user", "sponsor_client", "company", "assigned_staff").defer(
+                "case_number",
+                "passport_num",
+                "sponsor_client__case_number",
+                "sponsor_client__passport_num",
+            ).prefetch_related(
                 Prefetch("payments", queryset=Payment.objects.order_by("-created_at")),
                 Prefetch(
                     "documents",
@@ -175,6 +188,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         context["payment_form"] = PaymentForm()
         context["document_upload_form"] = DocumentUploadForm()
         context["document_status_list"] = document_status_list
+        context["safe_case_number"] = safe_encrypted_attr(client, "case_number", default=_("Не указан"))
         context["missing_zus_months_for_upload"] = missing_zus_month_upload_options(client)
         prefetched = getattr(client, "_prefetched_objects_cache", {})
         email_logs = prefetched.get("email_logs")
@@ -340,6 +354,7 @@ def dashboard_redirect_view(request: HttpRequest) -> HttpResponseBase:
     return render(request, "403.html", context=context, status=403)
 
 
+@staff_required_view
 def calculator_view(request: HttpRequest) -> HttpResponseBase:
     from clients.forms import CalculatorForm
     from clients.services.calculator import (

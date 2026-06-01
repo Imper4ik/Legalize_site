@@ -54,3 +54,7 @@ python manage.py import_po_to_db --overwrite
 - **Настройки фирмы**: Редактируются через `AppSettings`.
 
 Эти данные хранятся **исключительно в базе данных** и никогда не сбрасываются при деплое. Для них не нужно использовать Студию Перевода.
+
+## Translation Studio UI language
+
+Translation Studio is an internal staff/developer tool. Its management UI may remain English-only unless a product requirement explicitly asks for localized staff tooling. Public/customer-facing strings should still use Django i18n and translation overrides.

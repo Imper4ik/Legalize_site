@@ -84,6 +84,6 @@ class Command(BaseCommand):
 
                 client.save()
                 anonymized_count += 1
-                logger.info(f"Anonymized client ID {client_id} and deleted {docs_deleted} documents (GDPR).")
+                logger.info("Anonymized client ID %s and deleted %s documents (GDPR).", client_id, docs_deleted)
 
         self.stdout.write(self.style.SUCCESS(f'Successfully anonymized {anonymized_count} clients.'))

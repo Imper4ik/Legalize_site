@@ -52,7 +52,7 @@
                                 <a href="{{ client.get_absolute_url }}" class="fw-bold text-decoration-none">
                                     {{ client.first_name }} {{ client.last_name }}
                                 </a>
-                                <div class="small text-muted">{{ client.case_number|default:"-" }}</div>
+                                <div class="small text-muted">{{ client.safe_case_number|default:"-" }}</div>
                             </td>
                             <td>
                                 <span class="badge {% if client.application_purpose == 'work' %}bg-success{% elif client.application_purpose == 'study' %}bg-primary{% else %}bg-secondary{% endif %}">

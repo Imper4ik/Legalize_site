@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 from django.conf import settings
 from django.utils import timezone
 
+from clients.security.encrypted import safe_encrypted_attr
 from clients.services.document_helpers import document_file_exists
 
 if TYPE_CHECKING:
@@ -48,7 +49,7 @@ def generate_client_summary_text(client: Client) -> str:
     lines.append(f"  Citizenship:       {client.citizenship or '—'}")
     lines.append(f"  Application:       {client.get_application_purpose_display()}")
     lines.append(f"  Workflow Stage:    {client.get_workflow_stage_display()}")
-    lines.append(f"  Case Number:       {client.case_number or '—'}")
+    lines.append(f"  Case Number:       {safe_encrypted_attr(client, 'case_number', default='—')}")
     if hasattr(client, "fingerprints_date"):
         lines.append(f"  Fingerprints Date: {client.fingerprints_date or '—'}")
     if hasattr(client, "decision_date"):

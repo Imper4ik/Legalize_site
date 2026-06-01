@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import hashlib
+import time
 from datetime import timedelta
 from io import BytesIO
 from pathlib import Path
@@ -124,6 +125,33 @@ def _reserve_idempotent_email_send(
         return False
 
 
+def _send_mail_with_retry(
+    subject: str,
+    body: str,
+    recipient_list: list[str],
+    *,
+    max_attempts: int | None = None,
+    backoff_seconds: float | None = None,
+) -> int:
+    attempts = max(1, int(max_attempts or getattr(settings, "EMAIL_SEND_RETRY_ATTEMPTS", 3)))
+    backoff = float(backoff_seconds if backoff_seconds is not None else getattr(settings, "EMAIL_SEND_RETRY_BACKOFF_SECONDS", 0.25))
+    last_error_type = ""
+    for attempt in range(1, attempts + 1):
+        try:
+            return send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, recipient_list)
+        except Exception as exc:
+            last_error_type = type(exc).__name__
+            logger.warning(
+                "Notification email attempt failed: attempt=%s max_attempts=%s error_type=%s",
+                attempt,
+                attempts,
+                last_error_type,
+            )
+            if attempt < attempts and backoff > 0:
+                time.sleep(backoff * attempt)
+    raise RuntimeError(f"send_mail failed after {attempts} attempt(s): {last_error_type}")
+
+
 def _send_email(
     subject: str,
     body: str,
@@ -153,7 +181,7 @@ def _send_email(
         """Run SMTP I/O and record the final delivery status."""
 
         try:
-            sent_count = send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, recipient_list)
+            sent_count = _send_mail_with_retry(subject, body, recipient_list)
             result["sent_count"] = sent_count
             if sent_count:
                 try:

@@ -7,7 +7,7 @@
       <div class="client-title-row">
         <h1>{{ client.first_name }} {{ client.last_name }}</h1>
         <span class="client-case-pill">
-          {% translate "Дело" %}: {{ client.case_number|default:_("Не указан") }}
+          {% translate "Дело" %}: {{ safe_case_number|default:_("Не указан") }}
         </span>
       </div>
       <div class="client-meta-row">

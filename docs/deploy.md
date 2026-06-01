@@ -43,3 +43,20 @@ Ensure the following variables are set in production:
 
 ## Media Storage
 `DatabaseMediaStorage` is acceptable for MVP and small volume file handling, but should be replaced with `USE_S3_MEDIA_STORAGE=true` (e.g., Cloudflare R2 or AWS S3) for proper production deployment handling large case files.
+
+## Production readiness gate
+
+Before promoting staging/preview to production, verify the runtime environment has:
+
+- a unique `SECRET_KEY` (never the development fallback),
+- explicit `FERNET_KEYS`,
+- real email provider credentials (`SENDGRID_API_KEY`, `BREVO_API_KEY`, or SMTP settings),
+- PostgreSQL client tools available for `pg_dump`,
+- OCR binaries (`tesseract`, `pdftoppm`) if document OCR is enabled.
+
+Recommended gate:
+
+```bash
+python manage.py check --deploy
+python manage.py migrate --check
+```

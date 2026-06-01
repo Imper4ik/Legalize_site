@@ -5,6 +5,7 @@ import json
 import logging
 from typing import Any, TYPE_CHECKING
 
+from django.views.decorators.http import require_POST
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpRequest, HttpResponse, JsonResponse
@@ -87,6 +88,7 @@ def update_translation_api(request: HttpRequest) -> JsonResponse:
 
 
 @user_passes_test(can_use_translation_studio)
+@require_POST
 def toggle_studio_mode(request: HttpRequest) -> HttpResponse:
     """Turn on/off the in-context editing spans."""
     current = request.session.get('studio_mode', False)

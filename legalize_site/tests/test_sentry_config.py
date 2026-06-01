@@ -30,6 +30,50 @@ class SentryConfigTests(SimpleTestCase):
         self.assertEqual(scrubbed["user"]["email"], "[REDACTED]")
         self.assertEqual(scrubbed["extra"]["passport_num"], "[REDACTED]")
 
+    def test_before_send_redacts_exception_frame_vars(self):
+        event = {
+            "exception": {
+                "values": [
+                    {
+                        "type": "ValueError",
+                        "stacktrace": {
+                            "frames": [
+                                {
+                                    "filename": "views.py",
+                                    "vars": {
+                                        "passport_num": "AB1234567",
+                                        "safe_count": 3,
+                                        "payload": {
+                                            "client": {"email": "person@example.com"},
+                                            "labels": ["safe"],
+                                            "metadata": {"email": "person@example.com", "count": 5},
+                                        },
+                                    },
+                                }
+                            ]
+                        },
+                    }
+                ]
+            }
+        }
+
+        scrubbed = _sentry_before_send(event, hint={})
+
+        frame_vars = scrubbed["exception"]["values"][0]["stacktrace"]["frames"][0]["vars"]
+        self.assertEqual(frame_vars["passport_num"], "[REDACTED]")
+        self.assertEqual(frame_vars["payload"]["client"], "[REDACTED]")
+        self.assertEqual(frame_vars["safe_count"], 3)
+        self.assertEqual(frame_vars["payload"]["labels"], ["safe"])
+        self.assertEqual(frame_vars["payload"]["metadata"]["email"], "[REDACTED]")
+        self.assertEqual(frame_vars["payload"]["metadata"]["count"], 5)
+
+    def test_before_send_tolerates_partial_exception_structure(self):
+        event = {"exception": {"values": [{"stacktrace": {"frames": [None, {"vars": None}]}}]}}
+
+        scrubbed = _sentry_before_send(event, hint={})
+
+        self.assertIsNone(scrubbed["exception"]["values"][0]["stacktrace"]["frames"][1]["vars"])
+
     def test_production_settings_raise_when_debug_enabled(self):
         with patch.dict(
             "os.environ",

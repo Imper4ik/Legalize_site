@@ -32,7 +32,7 @@
             </div>
             <div class="col-sm-6">
                 <div class="text-muted small">{% translate "Case Number" %}</div>
-                <div class="fw-semibold">{{ client.case_number|default:"—" }}</div>
+                <div class="fw-semibold">{{ safe_case_number|default:"—" }}</div>
             </div>
             <div class="col-sm-6">
                 <div class="text-muted small">{% translate "Email" %} / {% translate "Phone" %}</div>

@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import logging
+import time
+from datetime import timedelta
 from dataclasses import dataclass
 from typing import Any, Iterable, TYPE_CHECKING, cast
 
 from django.conf import settings
 from django.core.mail import send_mail
+from django.db.models import Q
 from django.utils import timezone
 
-from clients.models import Client, EmailCampaign
+from clients.models import Client, EmailCampaign, EmailLog
 from clients.services.notifications import _log_email, _send_confirmation_email, build_email_idempotency_key
 
 if TYPE_CHECKING:
@@ -24,6 +27,33 @@ class CampaignProcessingResult:
     sent_count: int
     failed_count: int
     processed: bool
+
+
+def _send_campaign_mail_with_retry(subject: str, message: str, recipient: str) -> int:
+    attempts = max(
+        1,
+        int(getattr(settings, "EMAIL_CAMPAIGN_RETRY_ATTEMPTS", getattr(settings, "EMAIL_SEND_RETRY_ATTEMPTS", 3))),
+    )
+    backoff = float(
+        getattr(
+            settings,
+            "EMAIL_CAMPAIGN_RETRY_BACKOFF_SECONDS",
+            getattr(settings, "EMAIL_SEND_RETRY_BACKOFF_SECONDS", 0.25),
+        )
+    )
+    for attempt in range(1, attempts + 1):
+        try:
+            return send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [recipient])
+        except Exception as exc:
+            logger.warning(
+                "Mass email attempt failed: attempt=%s max_attempts=%s error_type=%s",
+                attempt,
+                attempts,
+                type(exc).__name__,
+            )
+            if attempt < attempts and backoff > 0:
+                time.sleep(backoff * attempt)
+    raise RuntimeError(f"campaign send_mail failed after {attempts} attempt(s)")
 
 
 def normalize_recipient_emails(recipient_emails: Iterable[str]) -> list[str]:
@@ -69,19 +99,49 @@ def queue_mass_email_campaign(
 
 def _claim_pending_campaign(campaign_id: int) -> EmailCampaign | None:
     started_at = timezone.now()
-    updated = EmailCampaign.objects.filter(
-        pk=campaign_id,
-        status=EmailCampaign.STATUS_PENDING,
-    ).update(
-        status=EmailCampaign.STATUS_RUNNING,
-        started_at=started_at,
-        completed_at=None,
-        sent_count=0,
-        failed_count=0,
-        error_details="",
+    stale_after_minutes = int(getattr(settings, "EMAIL_CAMPAIGN_STALE_AFTER_MINUTES", 30))
+    stale_cutoff = started_at - timedelta(minutes=stale_after_minutes)
+
+    candidate = (
+        EmailCampaign.objects.filter(pk=campaign_id)
+        .filter(
+            Q(status=EmailCampaign.STATUS_PENDING)
+            | Q(status=EmailCampaign.STATUS_RUNNING, started_at__lt=stale_cutoff)
+            | Q(status=EmailCampaign.STATUS_RUNNING, started_at__isnull=True)
+        )
+        .values("status", "started_at")
+        .first()
+    )
+    if candidate is None:
+        return None
+
+    was_stale = candidate["status"] == EmailCampaign.STATUS_RUNNING
+    updated = (
+        EmailCampaign.objects.filter(pk=campaign_id)
+        .filter(
+            Q(status=EmailCampaign.STATUS_PENDING)
+            | Q(status=EmailCampaign.STATUS_RUNNING, started_at__lt=stale_cutoff)
+            | Q(status=EmailCampaign.STATUS_RUNNING, started_at__isnull=True)
+        )
+        .update(
+            status=EmailCampaign.STATUS_RUNNING,
+            started_at=started_at,
+            completed_at=None,
+            error_details="",
+        )
     )
     if not updated:
         return None
+
+    if was_stale:
+        logger.warning(
+            "Reclaimed stale email campaign: campaign_id=%s previous_started_at=%s stale_after_minutes=%s",
+            campaign_id,
+            candidate["started_at"],
+            stale_after_minutes,
+        )
+    else:
+        logger.info("Claimed pending email campaign: campaign_id=%s", campaign_id)
 
     return EmailCampaign.objects.select_related("created_by").get(pk=campaign_id)
 
@@ -106,7 +166,17 @@ def process_campaign(campaign_id: int) -> CampaignProcessingResult | None:
             processed=True,
         )
 
-    sent = 0
+    sent_idempotency_keys = {
+        build_email_idempotency_key("mass_email", campaign.pk, email_addr)
+        for email_addr in recipients
+    }
+    already_sent_keys = set(
+        EmailLog.objects.filter(
+            idempotency_key__in=sent_idempotency_keys,
+            delivery_status=EmailLog.DELIVERY_STATUS_SENT,
+        ).values_list("idempotency_key", flat=True)
+    )
+    sent = len(already_sent_keys)
     failed = 0
     errors: list[str] = []
     clients_by_email = {
@@ -115,19 +185,22 @@ def process_campaign(campaign_id: int) -> CampaignProcessingResult | None:
     }
 
     logger.info(
-        "Processing email campaign %s with %s recipient(s)",
+        "Processing email campaign %s with %s recipient(s); already_sent=%s",
         campaign.id,
         len(recipients),
+        sent,
     )
 
+    batch_size = max(1, int(getattr(settings, "EMAIL_CAMPAIGN_BATCH_SIZE", 50)))
+    batch_delay = max(0.0, float(getattr(settings, "EMAIL_CAMPAIGN_BATCH_DELAY_SECONDS", 0)))
+
     for index, email_addr in enumerate(recipients, start=1):
+        idempotency_key = build_email_idempotency_key("mass_email", campaign.pk, email_addr)
+        if idempotency_key in already_sent_keys:
+            continue
+
         try:
-            result = send_mail(
-                campaign.subject,
-                campaign.message,
-                settings.DEFAULT_FROM_EMAIL,
-                [email_addr],
-            )
+            result = _send_campaign_mail_with_retry(campaign.subject, campaign.message, email_addr)
             if result:
                 sent += 1
                 _log_email(
@@ -137,11 +210,22 @@ def process_campaign(campaign_id: int) -> CampaignProcessingResult | None:
                     client=clients_by_email.get(email_addr),
                     template_type="mass_email",
                     sent_by=campaign.created_by,
-                    idempotency_key=build_email_idempotency_key("mass_email", campaign.pk, email_addr),
+                    idempotency_key=idempotency_key,
                 )
             else:
                 failed += 1
                 errors.append(f"recipient #{index}: send_mail returned 0")
+                _log_email(
+                    campaign.subject,
+                    campaign.message,
+                    [email_addr],
+                    client=clients_by_email.get(email_addr),
+                    template_type="mass_email",
+                    sent_by=campaign.created_by,
+                    idempotency_key=idempotency_key,
+                    delivery_status="failed",
+                    error_message="send returned 0",
+                )
         except Exception as exc:  # pragma: no cover - defensive safeguard
             failed += 1
             errors.append(f"recipient #{index}: {type(exc).__name__}")
@@ -151,11 +235,24 @@ def process_campaign(campaign_id: int) -> CampaignProcessingResult | None:
                 index,
                 type(exc).__name__,
             )
+            _log_email(
+                campaign.subject,
+                campaign.message,
+                [email_addr],
+                client=clients_by_email.get(email_addr),
+                template_type="mass_email",
+                sent_by=campaign.created_by,
+                idempotency_key=idempotency_key,
+                delivery_status="failed",
+                error_message=type(exc).__name__,
+            )
 
         EmailCampaign.objects.filter(pk=campaign.pk).update(
             sent_count=sent,
             failed_count=failed,
         )
+        if batch_delay and index % batch_size == 0 and index < len(recipients):
+            time.sleep(batch_delay)
 
     try:
         _send_confirmation_email(
@@ -202,8 +299,14 @@ def process_campaign(campaign_id: int) -> CampaignProcessingResult | None:
 
 
 def process_pending_email_campaigns(*, limit: int | None = None) -> list[CampaignProcessingResult]:
+    stale_after_minutes = int(getattr(settings, "EMAIL_CAMPAIGN_STALE_AFTER_MINUTES", 30))
+    stale_cutoff = timezone.now() - timedelta(minutes=stale_after_minutes)
     pending_ids = list(
-        EmailCampaign.objects.filter(status=EmailCampaign.STATUS_PENDING)
+        EmailCampaign.objects.filter(
+            Q(status=EmailCampaign.STATUS_PENDING)
+            | Q(status=EmailCampaign.STATUS_RUNNING, started_at__lt=stale_cutoff)
+            | Q(status=EmailCampaign.STATUS_RUNNING, started_at__isnull=True)
+        )
         .order_by("created_at")
         .values_list("id", flat=True)[:limit]
     )
