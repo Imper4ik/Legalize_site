@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fernet_fields import EncryptedFieldDecryptionError
+from fernet_fields import EncryptedFieldDecryptionError, EncryptedValueUnavailable
 
 ENCRYPTED_VALUE_UNAVAILABLE = "[encrypted value unavailable]"
 
@@ -22,6 +22,9 @@ def safe_encrypted_attr(instance: Any, field_name: str, *, default: str = "") ->
     try:
         value = getattr(instance, field_name)
     except EncryptedFieldDecryptionError:
+        value = ENCRYPTED_VALUE_UNAVAILABLE
+
+    if isinstance(value, EncryptedValueUnavailable) or value == ENCRYPTED_VALUE_UNAVAILABLE:
         meta = getattr(instance, "_meta", None)
         model_label = getattr(meta, "label", instance.__class__.__name__)
         logger.warning(

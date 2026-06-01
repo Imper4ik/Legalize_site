@@ -4,21 +4,18 @@ from __future__ import annotations
 
 from typing import Any
 
-import bleach
+import nh3
 
-# TODO: replace bleach with nh3 or another maintained sanitizer after parity tests.
-ALLOWED_TAGS = ["b", "strong", "i", "em", "br", "ul", "ol", "li", "p"]
-ALLOWED_ATTRIBUTES: dict[str, list[str]] = {}
-ALLOWED_PROTOCOLS = ["http", "https", "mailto"]
+ALLOWED_TAGS = {"b", "strong", "i", "em", "br", "ul", "ol", "li", "p"}
+ALLOWED_ATTRIBUTES: dict[str, set[str]] = {}
 
 
 def sanitize_user_html(value: Any) -> str:
     if not value:
         return ""
-    return bleach.clean(
+    return nh3.clean(
         str(value),
         tags=ALLOWED_TAGS,
         attributes=ALLOWED_ATTRIBUTES,
-        protocols=ALLOWED_PROTOCOLS,
-        strip=True,
+        link_rel="noopener noreferrer",
     )

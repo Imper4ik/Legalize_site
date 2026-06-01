@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from cryptography.fernet import Fernet, InvalidToken, MultiFernet
@@ -11,8 +12,21 @@ from django.utils.encoding import force_str
 from django.utils.functional import cached_property
 
 
+logger = logging.getLogger(__name__)
+ENCRYPTED_VALUE_UNAVAILABLE = "[encrypted value unavailable]"
+
+
 class EncryptedFieldDecryptionError(ValueError):
     """Raised when an encrypted database value cannot be decrypted."""
+
+
+class EncryptedValueUnavailable(str):
+    """Safe placeholder for an unreadable encrypted database value."""
+
+    def __new__(cls, raw_value: str) -> "EncryptedValueUnavailable":
+        obj = str.__new__(cls, ENCRYPTED_VALUE_UNAVAILABLE)
+        obj.raw_value = raw_value
+        return obj
 
 
 def _build_fernet() -> Fernet | MultiFernet:
@@ -33,6 +47,8 @@ class EncryptedTextField(models.TextField):
         return _build_fernet()
 
     def get_prep_value(self, value: Any) -> Any:
+        if isinstance(value, EncryptedValueUnavailable):
+            return value.raw_value
         value = super().get_prep_value(value)
         if value is None or value == "":
             return value
@@ -42,14 +58,28 @@ class EncryptedTextField(models.TextField):
     def from_db_value(self, value: Any, expression: Any, connection: Any) -> Any:
         if value is None or value == "":
             return value
-        return self._decrypt(value, fail_closed=True)
+        try:
+            return self._decrypt(value, fail_closed=True)
+        except EncryptedFieldDecryptionError:
+            logger.warning(
+                "Encrypted field value could not be decrypted; returning unavailable marker"
+            )
+            return EncryptedValueUnavailable(force_str(value))
 
     def to_python(self, value: Any) -> Any:
         if value is None or value == "":
             return value
         if not self._looks_like_fernet_token(value):
             return value
-        return self._decrypt(value, fail_closed=True)
+        try:
+            return self._decrypt(value, fail_closed=True)
+        except EncryptedFieldDecryptionError:
+            logger.warning(
+                "Encrypted field to_python decryption failed for %s.%s",
+                getattr(self, "model", None).__name__ if getattr(self, "model", None) else "?",
+                getattr(self, "attname", "?"),
+            )
+            return EncryptedValueUnavailable(force_str(value))
 
     @staticmethod
     def _looks_like_fernet_token(value: Any) -> bool:

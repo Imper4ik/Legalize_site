@@ -279,6 +279,12 @@ class Client(SoftDeleteModel):
             models.Index(fields=["phone"], name="client_phone_idx"),
             models.Index(fields=["last_name", "first_name"], name="client_name_idx"),
         ]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(sponsor_client__isnull=True) | ~models.Q(id=models.F("sponsor_client_id")),
+                name="client_no_self_sponsor",
+            ),
+        ]
 
     def __str__(self) -> str:
         return self.get_full_name()

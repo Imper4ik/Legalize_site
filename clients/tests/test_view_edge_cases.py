@@ -83,6 +83,8 @@ class RolePolicyTests(TestCase):
 @override_settings(LANGUAGE_CODE="ru")
 class ClientViewEdgeCaseTests(TestCase):
     def setUp(self):
+        from django.core.cache import cache
+        cache.clear()
         user_model = get_user_model()
         self.staff = user_model.objects.create_user(email="staff@example.com", password="pass", is_staff=True)
         ensure_predefined_roles()

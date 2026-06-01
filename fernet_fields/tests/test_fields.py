@@ -3,7 +3,13 @@ from __future__ import annotations
 from cryptography.fernet import Fernet, InvalidToken, MultiFernet
 from django.test import SimpleTestCase, override_settings
 
-from fernet_fields.fields import EncryptedFieldDecryptionError, EncryptedTextField, _build_fernet
+from fernet_fields.fields import (
+    ENCRYPTED_VALUE_UNAVAILABLE,
+    EncryptedFieldDecryptionError,
+    EncryptedTextField,
+    EncryptedValueUnavailable,
+    _build_fernet,
+)
 
 
 class BuildFernetTests(SimpleTestCase):
@@ -47,14 +53,19 @@ class EncryptedTextFieldTests(SimpleTestCase):
             self.assertEqual(field.to_python(value), value)
 
     @override_settings(FERNET_KEYS=["dummy"])
-    def test_corrupted_fernet_token_fails_closed(self):
+    def test_corrupted_fernet_token_returns_unavailable_marker(self):
         key = Fernet.generate_key().decode()
+        raw_value = "gAAAA-corrupted-token"
         with override_settings(FERNET_KEYS=[key]):
             field = EncryptedTextField()
-            with self.assertRaises(EncryptedFieldDecryptionError):
-                field.from_db_value("gAAAA-corrupted-token", None, None)
-            with self.assertRaises(EncryptedFieldDecryptionError):
-                field.to_python("gAAAA-corrupted-token")
+            value = field.from_db_value(raw_value, None, None)
+            self.assertIsInstance(value, EncryptedValueUnavailable)
+            self.assertEqual(str(value), ENCRYPTED_VALUE_UNAVAILABLE)
+            self.assertEqual(field.get_prep_value(value), raw_value)
+
+            py_val = field.to_python(raw_value)
+            self.assertIsInstance(py_val, EncryptedValueUnavailable)
+            self.assertEqual(str(py_val), ENCRYPTED_VALUE_UNAVAILABLE)
 
     @override_settings(FERNET_KEYS=["dummy"])
     def test_fernet_key_rotation_reads_old_key_and_writes_primary_key(self):
