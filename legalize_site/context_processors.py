@@ -3,8 +3,10 @@ from __future__ import annotations
 from typing import Any
 
 from django.conf import settings
+from django.core.cache import cache
 from django.http import HttpRequest
 from django.urls import get_resolver, reverse
+from django.utils import translation
 from django.utils.translation import gettext as _
 
 
@@ -31,6 +33,12 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
     from django.db.models import Q
     from clients.models import Client
     from clients.services.access import accessible_clients_queryset
+
+    language = translation.get_language() or getattr(settings, "LANGUAGE_CODE", "")
+    cache_key = f"onboarding_notifications:v2:user:{request.user.pk}:lang:{language}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
 
     try:
         qs = accessible_clients_queryset(
@@ -104,11 +112,13 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
                 "level": "info",
             })
 
-        return {
+        context = {
             "completed_onboarding_count": completed_onboarding_count,
             "client_attention_count": sum(item["count"] for item in items),
             "client_attention_items": items,
         }
+        cache.set(cache_key, context, int(getattr(settings, "ONBOARDING_NOTIFICATIONS_CACHE_SECONDS", 45)))
+        return context
     except Exception:
         return {}
 

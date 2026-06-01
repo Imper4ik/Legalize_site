@@ -63,9 +63,12 @@ def _alert_cron_failure(command: str, exc: BaseException, *, details: dict | Non
 
 
 def _get_request_ip(request: HttpRequest) -> str:
-    forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR", "")
-    if forwarded_for:
-        return forwarded_for.split(",")[0].strip()
+    """Return the direct peer IP for cron allowlist checks.
+
+    Cron authentication is token-first.  The IP allowlist is only a secondary
+    control and must not trust client-supplied X-Forwarded-For values.
+    """
+
     return (request.META.get("REMOTE_ADDR") or "").strip()
 
 

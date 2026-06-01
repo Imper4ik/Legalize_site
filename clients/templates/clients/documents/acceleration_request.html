@@ -143,8 +143,8 @@
       </div>
 
       <div class="recipient">
-        Pełnomocnik Pana {{ client.first_name }} {{ client.last_name }}{% if client.case_number %}<br>
-        Nr. Sprawy: {{ client.case_number }}{% endif %}
+        Pełnomocnik Pana {{ client.first_name }} {{ client.last_name }}{% if case_number %}<br>
+        Nr. Sprawy: {{ case_number }}{% endif %}
       </div>
 
       <div class="recipient">
@@ -160,7 +160,7 @@
       <div class="highlight-box">
         Uprzejmie proszę o niezwłoczne podpisanie decyzji zgodnie z żądaniem strony. Wniosek dotyczy
         obywatela {% if client.citizenship %}{{ client.citizenship }}{% else %}...................................{% endif %}, Pana
-        {{ client.first_name }} {{ client.last_name }}.{% if client.case_number %} Numer sprawy: {{ client.case_number }}.{% endif %}
+        {{ client.first_name }} {{ client.last_name }}.{% if case_number %} Numer sprawy: {{ case_number }}.{% endif %}
       </div>
 
       <div class="details">

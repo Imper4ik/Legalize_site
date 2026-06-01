@@ -95,24 +95,29 @@ def _is_sensitive_key(key: str | None) -> bool:
         return False
     normalized = key.lower()
     sensitive_fragments = (
-        "email",
-        "phone",
-        "passport",
+        "address",
+        "authorization",
         "case_number",
         "case-number",
-        "raw_text",
-        "ocr",
-        "fingerprint",
+        "client",
         "decision_date",
-        "full_name",
+        "document",
+        "email",
+        "fingerprint",
         "first_name",
+        "full_name",
+        "key",
         "last_name",
-        "authorization",
-        "token",
-        "secret",
+        "ocr",
+        "passport",
+        "passport_num",
+        "passport_number",
         "password",
-        "api_key",
-        "api-key",
+        "pesel",
+        "phone",
+        "raw_text",
+        "secret",
+        "token",
     )
     return any(fragment in normalized for fragment in sensitive_fragments)
 
@@ -136,6 +141,43 @@ def _sanitize_sentry_value(value: Any, *, key_hint: str | None = None) -> Any:
     return value
 
 
+def _sanitize_sentry_exception(exception: Any) -> Any:
+    if not isinstance(exception, dict):
+        return exception
+    exception_data = dict(exception)
+    values = exception_data.get("values")
+    if not isinstance(values, list):
+        return exception_data
+
+    sanitized_values = []
+    for exception_value in values:
+        if not isinstance(exception_value, dict):
+            sanitized_values.append(exception_value)
+            continue
+
+        exception_value_data = dict(exception_value)
+        stacktrace = exception_value_data.get("stacktrace")
+        if isinstance(stacktrace, dict):
+            stacktrace_data = dict(stacktrace)
+            frames = stacktrace_data.get("frames")
+            if isinstance(frames, list):
+                sanitized_frames = []
+                for frame in frames:
+                    if not isinstance(frame, dict):
+                        sanitized_frames.append(frame)
+                        continue
+                    frame_data = dict(frame)
+                    if "vars" in frame_data:
+                        frame_data["vars"] = _sanitize_sentry_value(frame_data.get("vars"))
+                    sanitized_frames.append(frame_data)
+                stacktrace_data["frames"] = sanitized_frames
+            exception_value_data["stacktrace"] = stacktrace_data
+        sanitized_values.append(exception_value_data)
+
+    exception_data["values"] = sanitized_values
+    return exception_data
+
+
 def _sentry_before_send(event: Any, hint: Any) -> Any:
     event = dict(event)
     if "request" in event:
@@ -155,6 +197,8 @@ def _sentry_before_send(event: Any, hint: Any) -> Any:
         event["contexts"] = _sanitize_sentry_value(event["contexts"])
     if "breadcrumbs" in event:
         event["breadcrumbs"] = _sanitize_sentry_value(event["breadcrumbs"])
+    if "exception" in event:
+        event["exception"] = _sanitize_sentry_exception(event["exception"])
     return event
 
 

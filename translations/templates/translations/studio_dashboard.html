@@ -179,13 +179,16 @@
     <div class="studio-header">
         <h1>{% trans "Translation Studio" %}</h1>
         <div class="toolbar">
-            <a href="{% url 'translations:toggle_studio' %}" class="btn glass">
-                {% if request.session.studio_mode %}
-                    🟢 {% trans "Studio Mode: ON" %}
-                {% else %}
-                    ⚪ {% trans "Studio Mode: OFF" %}
-                {% endif %}
-            </a>
+            <form method="post" action="{% url 'translations:toggle_studio' %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn glass">
+                    {% if request.session.studio_mode %}
+                        🟢 {% trans "Studio Mode: ON" %}
+                    {% else %}
+                        ⚪ {% trans "Studio Mode: OFF" %}
+                    {% endif %}
+                </button>
+            </form>
             <button onclick="saveAll()" class="btn btn-primary">{% trans "Save All Changes" %}</button>
         </div>
     </div>

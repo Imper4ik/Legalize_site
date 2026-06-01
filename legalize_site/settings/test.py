@@ -29,3 +29,22 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 # Static files configuration for tests
 STATIC_URL = "/static/"
 STORAGES["staticfiles"] = {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}  # noqa: F405
+
+# Keep test-generated files in writable, disposable directories.
+TEST_ARTIFACTS_DIR = BASE_DIR / "tmp" / "test-artifacts"  # noqa: F405
+MEDIA_ROOT = TEST_ARTIFACTS_DIR / "media"
+STATIC_ROOT = TEST_ARTIFACTS_DIR / "staticfiles"
+FILE_UPLOAD_TEMP_DIR = TEST_ARTIFACTS_DIR / "uploads"
+for _path in (MEDIA_ROOT, STATIC_ROOT, FILE_UPLOAD_TEMP_DIR):
+    os.makedirs(_path, exist_ok=True)
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "legalize-tests",
+    }
+}
+
+EMAIL_SEND_RETRY_BACKOFF_SECONDS = 0
+EMAIL_CAMPAIGN_RETRY_BACKOFF_SECONDS = 0
+EMAIL_CAMPAIGN_BATCH_DELAY_SECONDS = 0

@@ -1,6 +1,8 @@
+from datetime import datetime, time, timedelta
 from typing import Any
 
 from django.db.models import Q
+from django.utils import timezone
 from django.views.generic import ListView
 
 from clients.forms import EmailLogFilterForm, StaffActivityFilterForm
@@ -30,11 +32,16 @@ class EmailLogsView(BaseLogView):
                 
             date_start = form.cleaned_data.get("date_start")
             if date_start:
-                qs = qs.filter(sent_at__date__gte=date_start)
+                start_dt = timezone.make_aware(datetime.combine(date_start, time.min), timezone.get_current_timezone())
+                qs = qs.filter(sent_at__gte=start_dt)
                 
             date_end = form.cleaned_data.get("date_end")
             if date_end:
-                qs = qs.filter(sent_at__date__lte=date_end)
+                end_dt = timezone.make_aware(
+                    datetime.combine(date_end + timedelta(days=1), time.min),
+                    timezone.get_current_timezone(),
+                )
+                qs = qs.filter(sent_at__lt=end_dt)
                 
             search = form.cleaned_data.get("search")
             if search:

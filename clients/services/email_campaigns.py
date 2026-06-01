@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from dataclasses import dataclass
 from typing import Any, Iterable, TYPE_CHECKING, cast
 
@@ -8,7 +9,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from django.utils import timezone
 
-from clients.models import Client, EmailCampaign
+from clients.models import Client, EmailCampaign, EmailLog
 from clients.services.notifications import _log_email, _send_confirmation_email, build_email_idempotency_key
 
 if TYPE_CHECKING:
@@ -24,6 +25,33 @@ class CampaignProcessingResult:
     sent_count: int
     failed_count: int
     processed: bool
+
+
+def _send_campaign_mail_with_retry(subject: str, message: str, recipient: str) -> int:
+    attempts = max(
+        1,
+        int(getattr(settings, "EMAIL_CAMPAIGN_RETRY_ATTEMPTS", getattr(settings, "EMAIL_SEND_RETRY_ATTEMPTS", 3))),
+    )
+    backoff = float(
+        getattr(
+            settings,
+            "EMAIL_CAMPAIGN_RETRY_BACKOFF_SECONDS",
+            getattr(settings, "EMAIL_SEND_RETRY_BACKOFF_SECONDS", 0.25),
+        )
+    )
+    for attempt in range(1, attempts + 1):
+        try:
+            return send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [recipient])
+        except Exception as exc:
+            logger.warning(
+                "Mass email attempt failed: attempt=%s max_attempts=%s error_type=%s",
+                attempt,
+                attempts,
+                type(exc).__name__,
+            )
+            if attempt < attempts and backoff > 0:
+                time.sleep(backoff * attempt)
+    raise RuntimeError(f"campaign send_mail failed after {attempts} attempt(s)")
 
 
 def normalize_recipient_emails(recipient_emails: Iterable[str]) -> list[str]:
@@ -120,14 +148,17 @@ def process_campaign(campaign_id: int) -> CampaignProcessingResult | None:
         len(recipients),
     )
 
+    batch_size = max(1, int(getattr(settings, "EMAIL_CAMPAIGN_BATCH_SIZE", 50)))
+    batch_delay = max(0.0, float(getattr(settings, "EMAIL_CAMPAIGN_BATCH_DELAY_SECONDS", 0)))
+
     for index, email_addr in enumerate(recipients, start=1):
+        idempotency_key = build_email_idempotency_key("mass_email", campaign.pk, email_addr)
+        if idempotency_key and EmailLog.objects.filter(idempotency_key=idempotency_key, delivery_status="sent").exists():
+            sent += 1
+            continue
+
         try:
-            result = send_mail(
-                campaign.subject,
-                campaign.message,
-                settings.DEFAULT_FROM_EMAIL,
-                [email_addr],
-            )
+            result = _send_campaign_mail_with_retry(campaign.subject, campaign.message, email_addr)
             if result:
                 sent += 1
                 _log_email(
@@ -137,11 +168,22 @@ def process_campaign(campaign_id: int) -> CampaignProcessingResult | None:
                     client=clients_by_email.get(email_addr),
                     template_type="mass_email",
                     sent_by=campaign.created_by,
-                    idempotency_key=build_email_idempotency_key("mass_email", campaign.pk, email_addr),
+                    idempotency_key=idempotency_key,
                 )
             else:
                 failed += 1
                 errors.append(f"recipient #{index}: send_mail returned 0")
+                _log_email(
+                    campaign.subject,
+                    campaign.message,
+                    [email_addr],
+                    client=clients_by_email.get(email_addr),
+                    template_type="mass_email",
+                    sent_by=campaign.created_by,
+                    idempotency_key=idempotency_key,
+                    delivery_status="failed",
+                    error_message="send returned 0",
+                )
         except Exception as exc:  # pragma: no cover - defensive safeguard
             failed += 1
             errors.append(f"recipient #{index}: {type(exc).__name__}")
@@ -151,11 +193,24 @@ def process_campaign(campaign_id: int) -> CampaignProcessingResult | None:
                 index,
                 type(exc).__name__,
             )
+            _log_email(
+                campaign.subject,
+                campaign.message,
+                [email_addr],
+                client=clients_by_email.get(email_addr),
+                template_type="mass_email",
+                sent_by=campaign.created_by,
+                idempotency_key=idempotency_key,
+                delivery_status="failed",
+                error_message=type(exc).__name__,
+            )
 
         EmailCampaign.objects.filter(pk=campaign.pk).update(
             sent_count=sent,
             failed_count=failed,
         )
+        if batch_delay and index % batch_size == 0 and index < len(recipients):
+            time.sleep(batch_delay)
 
     try:
         _send_confirmation_email(

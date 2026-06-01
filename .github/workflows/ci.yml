@@ -40,6 +40,9 @@ jobs:
       - name: Migration drift check
         run: python manage.py makemigrations --check --dry-run
 
+      - name: Django migrate check
+        run: python manage.py migrate --check
+
       - name: Django test
         run: python manage.py test --noinput
 
