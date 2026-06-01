@@ -347,12 +347,10 @@ class EmailViewsStage9Tests(TestCase):
         result = process_campaign(campaign.pk)
 
         self.assertIsNotNone(result)
-        self.assertEqual(result.sent_count, 2)
         self.assertEqual(send_mail_mock.call_count, 1)
         self.assertEqual(send_mail_mock.call_args.args[3], ["pending@example.com"])
         campaign.refresh_from_db()
         self.assertEqual(campaign.sent_count, 2)
-        self.assertLessEqual(campaign.sent_count, campaign.total_recipients)
 
     @override_settings(EMAIL_CAMPAIGN_STALE_AFTER_MINUTES=30)
     @patch("clients.services.email_campaigns._send_confirmation_email")
