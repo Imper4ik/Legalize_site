@@ -99,6 +99,7 @@ from clients.views.onboarding_views import (
     generate_onboarding_link,
     quick_create_client_onboarding,
     onboarding_auto_save,
+    onboarding_set_password,
 )
 
 __all__ = [
@@ -187,6 +188,7 @@ __all__ = [
     'generate_onboarding_link',
     'quick_create_client_onboarding',
     'onboarding_auto_save',
+    'onboarding_set_password',
     'admin_mos_review',
     'client_autocomplete_api',
 ]

@@ -434,7 +434,7 @@ def _send_confirmation_email(subject: str, body: str, recipients: list[str]) -> 
 def _get_required_documents_context(client: Client, language: str | None = None) -> dict[str, Any] | None:
     if language is None:
         language = _get_preferred_language(client)
-    from clients.models import DocumentRequirement
+    from clients.models import ClientDocumentRequirement, DocumentRequirement
     purpose = client.get_document_requirement_purpose()
     catalog = DocumentRequirement.catalog_for(
         purpose,
@@ -442,11 +442,18 @@ def _get_required_documents_context(client: Client, language: str | None = None)
         include_optional=False,
         include_fallback=True,
     )
-    if not catalog:
+    documents = [item.get("label") for item in catalog] if catalog else []
+    # Append case-specific custom requirements
+    custom_reqs = ClientDocumentRequirement.objects.filter(
+        client=client, is_active=True, is_required=True,
+    ).order_by("due_date", "created_at")
+    for req in custom_reqs:
+        documents.append(req.name)
+    if not documents:
         return None
     return {
         "client": client,
-        "documents": [item.get("label") for item in catalog],
+        "documents": documents,
     }
 
 
@@ -522,7 +529,7 @@ def send_expired_documents_email(client: Client, *, sent_by: AbstractBaseUser | 
 def _get_missing_documents_context(client: Client, language: str | None = None) -> dict[str, Any] | None:
     if language is None:
         language = _get_preferred_language(client)
-    from clients.models import DocumentRequirement
+    from clients.models import ClientDocumentRequirement, DocumentRequirement
     purpose = client.get_document_requirement_purpose()
     has_db_records = DocumentRequirement.objects.filter(
         application_purpose=purpose
@@ -562,6 +569,19 @@ def _get_missing_documents_context(client: Client, language: str | None = None) 
                 "expiry_date": None,
             }
         )
+
+    # Append case-specific custom requirements that are still missing
+    custom_reqs = ClientDocumentRequirement.objects.filter(
+        client=client, is_active=True, is_required=True,
+    ).order_by("due_date", "created_at")
+    for req in custom_reqs:
+        if req.document_type not in uploaded_codes and req.document_type not in submitted_codes:
+            missing.append(
+                {
+                    "name": req.name,
+                    "expiry_date": req.due_date,
+                }
+            )
 
     if missing_zus:
         with override(language):

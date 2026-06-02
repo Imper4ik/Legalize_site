@@ -625,6 +625,13 @@ RATE_LIMITS = {
         "window_seconds": int(os.environ.get("RATE_LIMIT_SEND_CUSTOM_EMAIL_WINDOW", "3600")),
         "message": _("Too many email sends. Try again later."),
     },
+    "clients:onboarding_set_password": {
+        "limit": int(os.environ.get("RATE_LIMIT_SET_PASSWORD", "5")),
+        "window_seconds": int(os.environ.get("RATE_LIMIT_SET_PASSWORD_WINDOW", "300")),
+        "by_user": False,
+        "by_ip": True,
+        "message": _("Too many account creation attempts. Try again later."),
+    },
 }
 RATE_LIMIT_CACHE_FAILURE_MODE = os.environ.get(
     "RATE_LIMIT_CACHE_FAILURE_MODE",

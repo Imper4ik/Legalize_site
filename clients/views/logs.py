@@ -75,11 +75,16 @@ class StaffActivityLogsView(BaseLogView):
                 
             date_start = form.cleaned_data.get("date_start")
             if date_start:
-                qs = qs.filter(created_at__date__gte=date_start)
+                start_dt = timezone.make_aware(datetime.combine(date_start, time.min), timezone.get_current_timezone())
+                qs = qs.filter(created_at__gte=start_dt)
                 
             date_end = form.cleaned_data.get("date_end")
             if date_end:
-                qs = qs.filter(created_at__date__lte=date_end)
+                end_dt = timezone.make_aware(
+                    datetime.combine(date_end + timedelta(days=1), time.min),
+                    timezone.get_current_timezone(),
+                )
+                qs = qs.filter(created_at__lt=end_dt)
                 
         return qs
 

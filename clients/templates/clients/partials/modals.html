@@ -317,3 +317,47 @@
         </div>
     </div>
 </div>
+
+<!-- Modal: Add custom document requirement for this specific client -->
+<div class="modal fade" id="addClientRequirementModal" tabindex="-1" aria-labelledby="addClientRequirementLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addClientRequirementLabel">{% translate "Добавить индивидуальный документ" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
+            </div>
+            <form method="post" action="{% url 'clients:client_document_requirement_add' client_id=client.pk %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">
+                        {% translate "Этот документ будет запрошен только у данного клиента и будет отслеживаться в его чеклисте наравне с остальными." %}
+                    </p>
+                    <div class="mb-3">
+                        <label for="id_custom_req_name" class="form-label">{% translate "Название документа" %}</label>
+                        <input type="text" name="name" class="form-control" id="id_custom_req_name" required
+                               placeholder="{% translate 'Например: справка из банка' %}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_custom_req_description" class="form-label">{% translate "Описание (необязательно)" %}</label>
+                        <textarea name="description" class="form-control" id="id_custom_req_description" rows="3"
+                                  placeholder="{% translate 'Дополнительные пояснения для клиента...' %}"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_custom_req_due_date" class="form-label">{% translate "Срок предоставления" %}</label>
+                        <input type="date" name="due_date" class="form-control" id="id_custom_req_due_date">
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" name="is_required" class="form-check-input" id="id_custom_req_required" checked>
+                        <label class="form-check-label" for="id_custom_req_required">{% translate "Обязательный документ" %}</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-1"></i>{% translate "Добавить" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

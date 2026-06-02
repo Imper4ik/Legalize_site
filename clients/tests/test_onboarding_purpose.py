@@ -36,6 +36,12 @@ class OnboardingPurposeTests(TestCase):
             language="ru",
             assigned_staff=self.manager,
         )
+        User = get_user_model()
+        user = User.objects.create_user(email=client.email, password="password123")
+        client.user = user
+        client.save()
+        self.client.force_login(user)
+
         token = uuid.uuid4().hex
         ClientOnboardingSession.objects.create(
             client=client,

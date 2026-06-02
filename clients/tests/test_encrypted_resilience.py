@@ -57,7 +57,14 @@ class EncryptedFieldResilienceTests(TestCase):
         self.assertNotIn("SECRET-CASE", summary)
 
     def test_corrupted_passport_num_does_not_break_onboarding_passport(self):
-        client = Client.objects.create(first_name="Onboard", last_name="Client", passport_num="PP123456")
+        client = Client.objects.create(first_name="Onboard", last_name="Client", email="onboard@example.com", passport_num="PP123456")
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        user = User.objects.create_user(email="onboard@example.com", password="password123")
+        client.user = user
+        client.save()
+        self.client.force_login(user)
+
         token = "onboarding-token"
         ClientOnboardingSession.objects.create(
             client=client,

@@ -668,6 +668,19 @@ class Client(SoftDeleteModel):
                 }
             )
 
+        failed_emails_count = self.email_logs.filter(delivery_status="failed").count()
+        if failed_emails_count:
+            alerts.append(
+                {
+                    "level": "danger",
+                    "title": _("Ошибка отправки писем клиенту"),
+                    "message": _("Не удалось отправить писем клиенту: %(count)s. Проверьте правильность email-адреса.")
+                    % {"count": failed_emails_count},
+                    "action_label": _("Открыть историю писем"),
+                    "action_url": "#history",
+                }
+            )
+
         if document_status_list is None:
             document_status_list = self.get_document_checklist()
         missing_documents_count = sum(1 for item in document_status_list if not item["is_complete"])
@@ -763,6 +776,7 @@ class Client(SoftDeleteModel):
                 setattr(self, key, value)
 
         checks = []
+        edit_url = reverse("clients:client_edit", kwargs={"pk": self.pk})
 
         # 1. Stay Validity
         legal_stay_date = self.legal_basis_end_date
@@ -779,6 +793,7 @@ class Client(SoftDeleteModel):
                 "status": "warning",
                 "message": _("Дата не указана"),
                 "tooltip": _("Проверка срока законного нахождения в стране. Дата окончания пребывания не задана."),
+                "action_url": edit_url,
             })
         elif legal_stay_date < today:
             checks.append({
@@ -786,6 +801,7 @@ class Client(SoftDeleteModel):
                 "status": "danger",
                 "message": _("Истекло %s") % legal_stay_date.strftime("%d.%m.%Y"),
                 "tooltip": _("Основание пребывания клиента истекло. Требуется срочное продление или связь с клиентом."),
+                "action_url": edit_url,
             })
         elif legal_stay_date <= today + timedelta(days=30):
             checks.append({
@@ -793,6 +809,7 @@ class Client(SoftDeleteModel):
                 "status": "warning",
                 "message": _("Истекает %s") % legal_stay_date.strftime("%d.%m.%Y"),
                 "tooltip": _("Основание пребывания истекает менее чем через 30 дней."),
+                "action_url": edit_url,
             })
         else:
             checks.append({
@@ -800,6 +817,7 @@ class Client(SoftDeleteModel):
                 "status": "success",
                 "message": _("Действительно до %s") % legal_stay_date.strftime("%d.%m.%Y"),
                 "tooltip": _("Основание пребывания действительно (более 30 дней)."),
+                "action_url": edit_url,
             })
 
         # 2. Documents completion
@@ -812,6 +830,7 @@ class Client(SoftDeleteModel):
                 "status": "warning",
                 "message": _("Не хватает: %s") % missing_count,
                 "tooltip": _("В чеклисте присутствуют незагруженные обязательные документы для выбранного основания."),
+                "action_url": "#documentAccordion",
             })
         else:
             checks.append({
@@ -819,6 +838,7 @@ class Client(SoftDeleteModel):
                 "status": "success",
                 "message": _("Собрано"),
                 "tooltip": _("Все обязательные документы по чеклисту успешно загружены."),
+                "action_url": "#documentAccordion",
             })
 
         # 3. Expired documents
@@ -828,6 +848,7 @@ class Client(SoftDeleteModel):
                 "status": "danger",
                 "message": _("Просрочено: %s") % self.health_expired_documents_count,
                 "tooltip": _("Среди загруженных документов есть просроченные файлы."),
+                "action_url": "#documentAccordion",
             })
         elif getattr(self, "health_expiring_documents_count", 0):
             checks.append({
@@ -835,6 +856,7 @@ class Client(SoftDeleteModel):
                 "status": "warning",
                 "message": _("Истекает: %s") % self.health_expiring_documents_count,
                 "tooltip": _("Среди загруженных документов есть те, которые истекают в течение 7 дней."),
+                "action_url": "#documentAccordion",
             })
         else:
             checks.append({
@@ -842,6 +864,7 @@ class Client(SoftDeleteModel):
                 "status": "success",
                 "message": _("OK"),
                 "tooltip": _("Все загруженные документы действительны."),
+                "action_url": "#documentAccordion",
             })
 
         # 4. OCR confirmation
@@ -851,6 +874,7 @@ class Client(SoftDeleteModel):
                 "status": "warning",
                 "message": _("Ожидает: %s") % self.health_awaiting_confirmation_count,
                 "tooltip": _("Есть документы с автоматическим распознаванием текста, которые сотрудник ещё не подтвердил."),
+                "action_url": "#documentAccordion",
             })
         else:
             checks.append({
@@ -858,6 +882,7 @@ class Client(SoftDeleteModel):
                 "status": "success",
                 "message": _("Подтверждено"),
                 "tooltip": _("Нет документов, ожидающих проверки распознанных данных."),
+                "action_url": "#documentAccordion",
             })
 
         # 5. Case Number
@@ -867,6 +892,7 @@ class Client(SoftDeleteModel):
                 "status": "warning",
                 "message": _("Не указан"),
                 "tooltip": _("Загружен документ Wezwanie, но номер дела (Case number) в системе не заполнен."),
+                "action_url": edit_url,
             })
         else:
             checks.append({
@@ -874,6 +900,7 @@ class Client(SoftDeleteModel):
                 "status": "success",
                 "message": self.case_number or _("OK (нет wezwanie)"),
                 "tooltip": _("Номер дела заполнен или нет документов Wezwanie, требующих его наличия."),
+                "action_url": edit_url,
             })
 
         # 6. Payments
@@ -883,6 +910,7 @@ class Client(SoftDeleteModel):
                 "status": "warning",
                 "message": _("Просрочено платежей: %s") % self.health_overdue_payments_count,
                 "tooltip": _("Есть выставленные платежи с наступившим сроком оплаты, которые не оплачены."),
+                "action_url": "#payment-list-container",
             })
         else:
             checks.append({
@@ -890,6 +918,7 @@ class Client(SoftDeleteModel):
                 "status": "success",
                 "message": _("Оплачено"),
                 "tooltip": _("Нет просроченных платежей по договору."),
+                "action_url": "#payment-list-container",
             })
 
         # 7. Fingerprints letter
@@ -899,6 +928,7 @@ class Client(SoftDeleteModel):
                 "status": "warning",
                 "message": _("Не отправлено"),
                 "tooltip": _("Указана дата сдачи отпечатков, но письмо-напоминание клиенту ещё не было отправлено."),
+                "action_url": edit_url,
             })
         else:
             checks.append({
@@ -906,6 +936,7 @@ class Client(SoftDeleteModel):
                 "status": "success",
                 "message": _("OK"),
                 "tooltip": _("Письмо об отпечатках отправлено, либо дата отпечатков не назначена."),
+                "action_url": edit_url,
             })
 
         # 8. ZUS RCA months
@@ -923,6 +954,7 @@ class Client(SoftDeleteModel):
                     "status": "warning",
                     "message": _("Пропущено месяцев: %s") % len(missing_zus),
                     "tooltip": _("В системе отсутствуют отчёты ZUS RCA за некоторые месяцы после сдачи отпечатков."),
+                    "action_url": "#documentAccordion",
                 })
             else:
                 checks.append({
@@ -930,6 +962,7 @@ class Client(SoftDeleteModel):
                     "status": "success",
                     "message": _("OK"),
                     "tooltip": _("Все необходимые ежемесячные отчёты ZUS RCA загружены."),
+                    "action_url": "#documentAccordion",
                 })
         else:
             checks.append({
@@ -937,6 +970,7 @@ class Client(SoftDeleteModel):
                 "status": "success",
                 "message": _("Не требуется"),
                 "tooltip": _("Проверка ZUS RCA активна только на этапе ожидания решения после отпечатков."),
+                "action_url": "#documentAccordion",
             })
 
         # 9. Staff Tasks
@@ -946,6 +980,7 @@ class Client(SoftDeleteModel):
                 "status": "danger",
                 "message": _("Просрочено: %s") % self.health_overdue_tasks_count,
                 "tooltip": _("Среди задач по этому клиенту есть просроченные сотрудником задачи."),
+                "action_url": "#overview",
             })
         else:
             checks.append({
@@ -953,6 +988,7 @@ class Client(SoftDeleteModel):
                 "status": "success",
                 "message": _("OK"),
                 "tooltip": _("Нет просроченных задач по делу клиента."),
+                "action_url": "#overview",
             })
 
         # 10. Family Income
@@ -970,12 +1006,14 @@ class Client(SoftDeleteModel):
         if family_group is not None:
             from clients.services.family import calculate_family_income
             family_income = calculate_family_income(family_group)
+            family_url = reverse("clients:family_dashboard", kwargs={"pk": self.pk})
             if family_income.risks:
                 checks.append({
                     "label": _("Доходы семьи"),
                     "status": "warning",
                     "message": _("Недостаточно"),
                     "tooltip": _("Доходы семьи не соответствуют требованиям законодательства о прожиточном минимуме."),
+                    "action_url": family_url,
                 })
             else:
                 checks.append({
@@ -983,6 +1021,7 @@ class Client(SoftDeleteModel):
                     "status": "success",
                     "message": _("Достаточно"),
                     "tooltip": _("Расчёт доходов подтверждает финансовую достаточность для семьи."),
+                    "action_url": family_url,
                 })
         else:
             checks.append({

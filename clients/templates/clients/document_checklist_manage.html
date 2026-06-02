@@ -2,6 +2,55 @@
 {% load i18n form_filters %}
 
 {% block title %}{% translate "Настройка чеклистов" %}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .draggable-item {
+    transition: transform 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease;
+  }
+  .draggable-item.dragging {
+    opacity: 0.35;
+    transform: scale(0.97);
+    box-shadow: 0 4px 16px rgba(var(--bs-primary-rgb), 0.18);
+    z-index: 10;
+  }
+  .drag-handle {
+    cursor: grab;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 4px;
+    color: var(--bs-secondary) !important;
+    transition: color 0.15s;
+  }
+  .drag-handle:hover {
+    color: var(--bs-primary) !important;
+  }
+  .drag-handle:active {
+    cursor: grabbing;
+  }
+  .drag-placeholder {
+    border: 2px dashed var(--bs-primary) !important;
+    background: rgba(var(--bs-primary-rgb), 0.06) !important;
+    border-radius: var(--bs-border-radius) !important;
+    min-height: 48px;
+    transition: all 0.15s ease;
+  }
+  .draggable-item .position-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border-radius: 50%;
+    background: var(--bs-primary);
+    color: white;
+    margin-right: 4px;
+  }
+</style>
+{% endblock %}
+
 {% block page_title %}{% translate "Настройка чеклистов" %}{% endblock %}
 {% block page_subtitle %}{% translate "Управляйте списком обязательных документов для каждой цели подачи." %}{% endblock %}
 {% block page_actions %}
@@ -74,17 +123,20 @@
           {% translate "Плашка «Стандартный документ» означает базовый список для выбранной цели. Такие позиции берутся из типовых документов и появляются, пока для них нет отдельной настройки. Их можно включать или отключать чекбоксом, а чтобы отредактировать название или обязательность — добавьте собственный вариант через кнопку «Добавить документ»." %}
         </p>
         {{ form.required_documents.errors }}
-        <div class="row row-cols-1 row-cols-md-2 g-2">
+        <div class="row row-cols-1 row-cols-md-2 g-2" id="draggableChecklistContainer">
           {% for checkbox in form.required_documents %}
             {% with requirement_pair=requirement_lookup|get_item:checkbox.data.value %}
               {% if requirement_pair %}
                 {% with requirement=requirement_pair.0 edit_form=requirement_pair.1 %}
-                  <div class="col">
-                    <div class="border rounded px-3 py-2 h-100">
+                  <div class="col draggable-item" draggable="true">
+                    <div class="border rounded px-3 py-2 h-100 bg-body">
                       <div class="d-flex align-items-center gap-2 justify-content-between h-100">
-                        <div class="form-check flex-grow-1 mb-0">
-                          {{ checkbox.tag }}
-                          <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                        <div class="d-flex align-items-center flex-grow-1 mb-0">
+                          <i class="bi bi-grip-vertical text-muted drag-handle fs-5 me-2" title="{% translate 'Перетащите для изменения порядка' %}"></i>
+                          <div class="form-check mb-0">
+                            {{ checkbox.tag }}
+                            <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                          </div>
                         </div>
                         <div class="btn-group btn-group-sm" role="group" aria-label="{% translate 'Действия с документом' %}">
                           <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#editRequirementModal{{ requirement.id }}" title="{% translate 'Редактировать документ' %}">
@@ -101,12 +153,15 @@
                   </div>
                 {% endwith %}
               {% else %}
-                <div class="col">
-                  <div class="border rounded px-3 py-2 h-100">
+                <div class="col draggable-item" draggable="true">
+                  <div class="border rounded px-3 py-2 h-100 bg-body-tertiary opacity-75">
                     <div class="d-flex align-items-center gap-2 justify-content-between h-100">
-                      <div class="form-check flex-grow-1 mb-0">
-                        {{ checkbox.tag }}
-                        <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                      <div class="d-flex align-items-center flex-grow-1 mb-0">
+                        <i class="bi bi-grip-vertical text-muted drag-handle fs-5 me-2" title="{% translate 'Перетащите для изменения порядка' %}"></i>
+                        <div class="form-check mb-0">
+                          {{ checkbox.tag }}
+                          <label class="form-check-label" for="{{ checkbox.id_for_label }}">{{ checkbox.choice_label }}</label>
+                        </div>
                       </div>
                       <div class="text-muted small text-nowrap">
                         {% translate "Стандартный документ" %}
@@ -254,6 +309,11 @@
                 {{ edit_form.is_required }}
                 <label class="form-check-label" for="{{ edit_form.is_required.id_for_label }}">{% translate "Обязательный документ" %}</label>
               </div>
+              <div class="mb-3 mt-3">
+                <label for="{{ edit_form.position.id_for_label }}" class="form-label">{% translate "Позиция в чеклисте" %}</label>
+                {{ edit_form.position }}
+                <div class="form-text">{% translate "Число задаёт порядок отображения документа (меньше = выше)." %}</div>
+              </div>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
@@ -264,4 +324,165 @@
       </div>
     </div>
   {% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+  'use strict';
+
+  const container = document.getElementById('draggableChecklistContainer');
+  if (!container) return;
+
+  let draggedEl = null;
+  let placeholder = null;
+
+  function createPlaceholder() {
+    const ph = document.createElement('div');
+    ph.className = 'col drag-placeholder';
+    ph.style.pointerEvents = 'none';
+    return ph;
+  }
+
+  function getClosestAfter(container, y) {
+    const items = [...container.querySelectorAll('.draggable-item:not(.dragging)')];
+    let closest = null;
+    let closestOffset = Number.NEGATIVE_INFINITY;
+    items.forEach(item => {
+      const box = item.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      if (offset < 0 && offset > closestOffset) {
+        closestOffset = offset;
+        closest = item;
+      }
+    });
+    return closest;
+  }
+
+  function updatePositionBadges() {
+    const items = container.querySelectorAll('.draggable-item');
+    items.forEach((item, idx) => {
+      let badge = item.querySelector('.position-badge');
+      if (!badge) {
+        badge = document.createElement('span');
+        badge.className = 'position-badge';
+        const flex = item.querySelector('.d-flex.align-items-center.flex-grow-1');
+        if (flex) flex.insertBefore(badge, flex.firstChild);
+      }
+      badge.textContent = idx + 1;
+    });
+  }
+
+  function syncHiddenOrderInputs() {
+    const existing = container.closest('form').querySelectorAll('input[name="doc_order"]');
+    existing.forEach(el => el.remove());
+    const items = container.querySelectorAll('.draggable-item');
+    const form = container.closest('form');
+    items.forEach((item, idx) => {
+      const checkbox = item.querySelector('input[type="checkbox"]');
+      if (checkbox) {
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'doc_order';
+        hidden.value = checkbox.value;
+        form.appendChild(hidden);
+      }
+    });
+  }
+
+  // Touch support variables
+  let touchItem = null;
+  let touchClone = null;
+  let touchStartY = 0;
+  let touchStartX = 0;
+
+  // --- Mouse/Pointer Drag & Drop ---
+  container.addEventListener('dragstart', function(e) {
+    const item = e.target.closest('.draggable-item');
+    if (!item) return;
+    draggedEl = item;
+    item.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', '');
+    placeholder = createPlaceholder();
+  });
+
+  container.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (!draggedEl) return;
+    const afterEl = getClosestAfter(container, e.clientY);
+    if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+    if (afterEl) {
+      container.insertBefore(placeholder, afterEl);
+    } else {
+      container.appendChild(placeholder);
+    }
+  });
+
+  container.addEventListener('drop', function(e) {
+    e.preventDefault();
+    if (!draggedEl || !placeholder) return;
+    container.insertBefore(draggedEl, placeholder);
+    if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+    draggedEl.classList.remove('dragging');
+    updatePositionBadges();
+    syncHiddenOrderInputs();
+    draggedEl = null;
+    placeholder = null;
+  });
+
+  container.addEventListener('dragend', function(e) {
+    if (draggedEl) draggedEl.classList.remove('dragging');
+    if (placeholder && placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+    draggedEl = null;
+    placeholder = null;
+  });
+
+  // --- Touch Drag & Drop ---
+  container.addEventListener('touchstart', function(e) {
+    const handle = e.target.closest('.drag-handle');
+    if (!handle) return;
+    const item = handle.closest('.draggable-item');
+    if (!item) return;
+    touchItem = item;
+    const touch = e.touches[0];
+    touchStartY = touch.clientY;
+    touchStartX = touch.clientX;
+    item.classList.add('dragging');
+    placeholder = createPlaceholder();
+    container.insertBefore(placeholder, item.nextSibling);
+  }, { passive: true });
+
+  container.addEventListener('touchmove', function(e) {
+    if (!touchItem) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const afterEl = getClosestAfter(container, touch.clientY);
+    if (placeholder.parentNode) placeholder.parentNode.removeChild(placeholder);
+    if (afterEl) {
+      container.insertBefore(placeholder, afterEl);
+    } else {
+      container.appendChild(placeholder);
+    }
+  }, { passive: false });
+
+  container.addEventListener('touchend', function(e) {
+    if (!touchItem) return;
+    if (placeholder && placeholder.parentNode) {
+      container.insertBefore(touchItem, placeholder);
+      placeholder.parentNode.removeChild(placeholder);
+    }
+    touchItem.classList.remove('dragging');
+    updatePositionBadges();
+    syncHiddenOrderInputs();
+    touchItem = null;
+    placeholder = null;
+  });
+
+  // Initial setup
+  updatePositionBadges();
+  syncHiddenOrderInputs();
+})();
+</script>
 {% endblock %}

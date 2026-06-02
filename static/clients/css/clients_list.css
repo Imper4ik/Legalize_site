@@ -253,3 +253,38 @@ html[data-theme="dark"] .editor-toolbar .btn {
     border-top-color: rgba(45, 212, 191, 0.13);
   }
 }
+
+/* Clickable client cells */
+.client-cell-link {
+  display: block;
+  color: inherit;
+  transition: opacity 0.15s ease-in-out;
+}
+.client-cell-link:hover {
+  opacity: 0.85;
+}
+.client-cell-link:hover .fw-semibold,
+.client-cell-link:hover strong,
+.client-cell-link:hover span {
+  color: #0f766e !important;
+}
+html[data-theme="dark"] .client-cell-link:hover .fw-semibold,
+html[data-theme="dark"] .client-cell-link:hover strong,
+html[data-theme="dark"] .client-cell-link:hover span {
+  color: #2dd4bf !important;
+}
+
+/* Share modal styling */
+#share-message-preview {
+  background-color: rgba(15, 118, 110, 0.04) !important;
+  color: var(--fg) !important;
+  border-color: rgba(15, 118, 110, 0.16) !important;
+  font-family: inherit !important;
+  max-height: 150px;
+  overflow-y: auto;
+}
+html[data-theme="dark"] #share-message-preview {
+  background-color: rgba(45, 212, 191, 0.05) !important;
+  border-color: rgba(45, 212, 191, 0.20) !important;
+}
+

@@ -630,12 +630,13 @@ class DocumentRequirementEditForm(forms.ModelForm):
 
     class Meta:
         model = DocumentRequirement
-        fields = ['custom_name', 'custom_name_pl', 'custom_name_en', 'custom_name_ru', 'is_required']
+        fields = ['custom_name', 'custom_name_pl', 'custom_name_en', 'custom_name_ru', 'position', 'is_required']
         widgets = {
             'custom_name': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
             'custom_name_pl': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
             'custom_name_en': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
             'custom_name_ru': forms.TextInput(attrs={'class': 'form-control form-control-sm'}),
+            'position': forms.NumberInput(attrs={'class': 'form-control form-control-sm'}),
             'is_required': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
@@ -747,10 +748,16 @@ class DocumentChecklistForm(forms.Form):
             return [str(code) for code, _ in fallback_docs if code not in INTERNAL_DOCS]
         return []
 
-    def save(self) -> int:
+    def save(self, *, doc_order: list[str] | None = None) -> int:
+        selected_codes = list(self.cleaned_data.get('required_documents', []))
+        if doc_order:
+            # Re-order selected codes according to the D&D ordering.
+            ordered = [code for code in doc_order if code in selected_codes]
+            remaining = [code for code in selected_codes if code not in ordered]
+            selected_codes = ordered + remaining
         result = sync_document_checklist_for_purpose(
             purpose=self.purpose or "",
-            selected_codes=self.cleaned_data.get('required_documents', []),
+            selected_codes=selected_codes,
         )
         return result.updated_count
 

@@ -80,9 +80,15 @@
               <span class="small fw-medium">{{ check.label }}</span>
               <i class="bi bi-question-circle text-muted small cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ check.tooltip }}"></i>
             </div>
-            <span class="badge bg-{{ check.status }}-subtle text-{{ check.status }} border border-{{ check.status }} text-wrap text-start small font-monospace" style="max-width: 55%; font-size: 0.75rem;">
-              {{ check.message }}
-            </span>
+            {% if check.action_url %}
+              <a href="{{ check.action_url }}" class="badge bg-{{ check.status }}-subtle text-{{ check.status }} border border-{{ check.status }} text-decoration-none hover-shadow font-monospace" style="max-width: 55%; font-size: 0.75rem;">
+                {{ check.message }} <i class="bi bi-arrow-right-short ms-1"></i>
+              </a>
+            {% else %}
+              <span class="badge bg-{{ check.status }}-subtle text-{{ check.status }} border border-{{ check.status }} text-wrap text-start small font-monospace" style="max-width: 55%; font-size: 0.75rem;">
+                {{ check.message }}
+              </span>
+            {% endif %}
           </div>
         {% endfor %}
       </div>

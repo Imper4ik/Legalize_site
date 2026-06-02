@@ -4,7 +4,7 @@ import logging
 from typing import Any, TYPE_CHECKING
 
 from django.contrib.auth import get_user_model
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save, pre_save, post_delete, pre_delete
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -196,3 +196,28 @@ def create_activity_for_email_log(sender: Any, instance: EmailLog, created: bool
                 "recipients_count": len([item for item in (instance.recipients or "").split(",") if item.strip()]),
             },
         )
+
+
+@receiver(post_save, sender=Document)
+def clear_cache_on_document_save(sender: Any, instance: Document, **kwargs: Any) -> None:
+    from clients.services.onboarding_purposes import clear_onboarding_notifications_cache
+    if instance.client_id:
+        try:
+            client = Client.objects.filter(pk=instance.client_id).first()
+            if client:
+                clear_onboarding_notifications_cache(client)
+        except Exception:
+            logger.warning("Failed to clear onboarding notifications cache on document save")
+
+
+@receiver(pre_delete, sender=Document)
+def clear_cache_on_document_delete(sender: Any, instance: Document, **kwargs: Any) -> None:
+    from clients.services.onboarding_purposes import clear_onboarding_notifications_cache
+    if instance.client_id:
+        try:
+            client = instance.client or Client.objects.filter(pk=instance.client_id).first()
+            if client:
+                clear_onboarding_notifications_cache(client)
+        except Exception:
+            logger.warning("Failed to clear onboarding notifications cache on document delete")
+

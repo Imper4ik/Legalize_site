@@ -355,6 +355,9 @@ def dashboard_redirect_view(request: HttpRequest) -> HttpResponseBase:
     if user_has_any_role(request.user, "Translator") and getattr(settings, "ENABLE_TRANSLATION_TOOLING", False):
         return redirect("translations:dashboard")
 
+    if hasattr(request.user, "client_profile") and request.user.client_profile:
+        return redirect("clients:onboarding_start", token="me")
+
     support_email = str(getattr(settings, "DEFAULT_FROM_EMAIL", "support@example.com"))
     context = {
         "support_email": support_email,

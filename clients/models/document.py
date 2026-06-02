@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+import logging
 from pathlib import Path
 from typing import Any, cast, TYPE_CHECKING
 from uuid import uuid4
@@ -13,6 +14,8 @@ from django.utils.translation import gettext_lazy as _
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.validators import validate_uploaded_document
 from legalize_site.soft_delete import SoftDeleteModel
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     pass
@@ -219,6 +222,26 @@ class Document(SoftDeleteModel):
         else:
             self.zus_period_month = None
         super().save(*args, **kwargs)
+
+    def on_archive(self) -> None:
+        from clients.services.onboarding_purposes import clear_onboarding_notifications_cache
+        if self.client_id:
+            try:
+                client = self.client or Client.objects.filter(pk=self.client_id).first()
+                if client:
+                    clear_onboarding_notifications_cache(client)
+            except Exception:
+                logger.warning("Failed to clear onboarding notifications cache on document archive")
+
+    def on_restore(self) -> None:
+        from clients.services.onboarding_purposes import clear_onboarding_notifications_cache
+        if self.client_id:
+            try:
+                client = self.client or Client.objects.filter(pk=self.client_id).first()
+                if client:
+                    clear_onboarding_notifications_cache(client)
+            except Exception:
+                logger.warning("Failed to clear onboarding notifications cache on document restore")
 
     @property
     def display_name(self) -> str:

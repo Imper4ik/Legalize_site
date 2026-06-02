@@ -54,6 +54,14 @@
         </ul>
       </div>
     </div>
+  <div class="col-12 col-lg-6">
+    <div class="card shadow-sm h-100 border-primary">
+      <div class="card-body">
+        <h5 class="card-title"><i class="bi bi-list-check me-1"></i>{% translate "Настройка чеклистов" %}</h5>
+        <p class="text-muted">{% translate "Настройте список обязательных документов для каждой цели подачи. Перетаскивайте документы для изменения порядка." %}</p>
+        <a href="{% url 'clients:document_checklist_manage' %}" class="btn btn-primary">{% translate "Открыть чеклисты" %}</a>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

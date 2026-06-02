@@ -56,7 +56,7 @@ def update_document_requirement_record(
     requirement: DocumentRequirement,
     cleaned_data: Mapping[str, object],
 ) -> DocumentRequirementScenarioResult:
-    for field_name in ("custom_name", "custom_name_pl", "custom_name_en", "custom_name_ru", "is_required"):
+    for field_name in ("custom_name", "custom_name_pl", "custom_name_en", "custom_name_ru", "position", "is_required"):
         if field_name in cleaned_data:
             setattr(requirement, field_name, cleaned_data[field_name])
 

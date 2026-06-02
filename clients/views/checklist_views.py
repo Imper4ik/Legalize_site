@@ -108,7 +108,8 @@ class DocumentChecklistManageView(RoleOrFeatureRequiredMixin, FormView):
         return kwargs
 
     def form_valid(self, form: DocumentChecklistForm) -> HttpResponse:
-        updated = form.save()
+        doc_order = self.request.POST.getlist("doc_order")
+        updated = form.save(doc_order=doc_order)
         messages.success(
             self.request,
             _("Чеклист обновлён. Выбрано документов: %(count)s") % {"count": updated},

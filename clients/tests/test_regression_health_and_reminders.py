@@ -200,6 +200,28 @@ def test_get_automatic_checks_compilation(db):
     assert tasks_check["status"] == "success"
 
 
+def test_document_save_and_delete_clears_onboarding_cache(db):
+    from unittest.mock import patch
+    client = Client.objects.create(
+        first_name="Cache",
+        last_name="Clearer",
+        application_purpose="work",
+    )
+    
+    with patch("clients.services.onboarding_purposes.clear_onboarding_notifications_cache") as mock_clear:
+        doc = Document.objects.create(
+            client=client,
+            document_type=DocumentType.PASSPORT.value,
+            file="documents/test_cache.pdf",
+        )
+        mock_clear.assert_called_with(client)
+        
+        mock_clear.reset_mock()
+        doc.delete()
+        mock_clear.assert_called_with(client)
+
+
+
 
 
 

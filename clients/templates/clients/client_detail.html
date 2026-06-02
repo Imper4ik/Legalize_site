@@ -65,6 +65,14 @@
       <div class="client-section-header">
         <h3 class="h4 mb-0">{% translate "Чеклист документов" %}</h3>
         <div class="client-section-actions">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal"
+            data-bs-target="#addClientRequirementModal" title="{% translate 'Добавить документ только для этого клиента' %}">
+            <i class="bi bi-plus-lg me-1"></i>{% translate "Доп. документ" %}
+          </button>
+          <a href="{% url 'clients:document_checklist_manage' %}" class="btn btn-outline-secondary btn-sm"
+             title="{% translate 'Настройка шаблонов чеклистов' %}">
+            <i class="bi bi-gear me-1"></i>{% translate "Шаблоны" %}
+          </a>
           <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
             data-bs-target="#sendEmailModal">
             <i class="bi bi-envelope"></i> {% translate "Email" %}

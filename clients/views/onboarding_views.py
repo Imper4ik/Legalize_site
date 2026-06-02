@@ -98,7 +98,32 @@ def _save_onboarding_purpose(mos_data: MOSApplicationData, selected_purpose: str
 def check_onboarding_session(
     token: str,
     allowed_statuses: tuple[str, ...] = ("created", "active"),
+    request: HttpRequest | None = None,
 ) -> ClientOnboardingSession | None:
+    if token == "me":
+        if request and request.user.is_authenticated and hasattr(request.user, "client_profile"):
+            client = request.user.client_profile
+            session = ClientOnboardingSession.objects.filter(
+                client=client,
+                expires_at__gt=timezone.now()
+            ).exclude(status__in=["revoked", "expired"]).first()
+            if not session:
+                from clients.services.onboarding_tokens import generate_onboarding_token
+                _, token_hash = generate_onboarding_token()
+                session = ClientOnboardingSession.objects.create(
+                    client=client,
+                    token_hash=token_hash,
+                    status="active",
+                    expires_at=timezone.now() + timedelta(days=7),
+                )
+            elif session.status == "created" and "active" in allowed_statuses:
+                session.status = "active"
+                session.save(update_fields=["status"])
+            session.token_hash = "me"
+            session.client = client
+            return session
+        return None
+
     token_h = hash_onboarding_token(token)
     session = ClientOnboardingSession.objects.filter(token_hash=token_h, expires_at__gt=timezone.now()).first()
     if not session or session.status not in allowed_statuses:
@@ -113,10 +138,135 @@ def check_onboarding_session(
     session.client = Client.objects.defer("case_number", "passport_num").get(pk=session.client_id)
     return session
 
-def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
-    session = check_onboarding_session(token)
+def _should_bypass_client_auth(request: HttpRequest) -> bool:
+    if not request.user.is_authenticated:
+        return False
+    if request.user.is_staff:
+        return True
+    from clients.services.roles import user_has_any_role
+    return user_has_any_role(request.user, "Admin", "Manager", "Staff")
+
+def check_client_auth(request: HttpRequest, session: ClientOnboardingSession, token: str) -> HttpResponse | None:
+    if _should_bypass_client_auth(request):
+        return None
+
+    client = session.client
+    if not client.user or not client.user.has_usable_password():
+        return redirect("clients:onboarding_set_password", token=token)
+
+    if not request.user.is_authenticated or request.user != client.user:
+        from django.contrib import messages
+        messages.info(request, "Пожалуйста, войдите в свой аккаунт для продолжения.")
+        login_url = reverse("account_login")
+        return redirect(f"{login_url}?email={client.email}")
+
+    return None
+
+def _validate_email_domain_dns(email: str) -> bool:
+    import socket
+    from django.conf import settings
+    if getattr(settings, "TESTING", False):
+        return True
+    if "@" not in email:
+        return False
+    domain = email.split("@")[-1].strip()
+    try:
+        socket.getaddrinfo(domain, None)
+        return True
+    except Exception:
+        return False
+
+def onboarding_set_password(request: HttpRequest, token: str) -> HttpResponse:
+    session = check_onboarding_session(token, request=request)
     if not session:
         return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
+
+    client = session.client
+    
+    if client.user and client.user.has_usable_password():
+        if request.user.is_authenticated and request.user == client.user:
+            return redirect("clients:onboarding_start", token=token)
+        from django.contrib import messages
+        messages.info(request, "У вас уже есть аккаунт. Пожалуйста, войдите в систему.")
+        login_url = reverse("account_login")
+        return redirect(f"{login_url}?email={client.email}")
+
+    error_message = None
+    email_val = client.email or ""
+
+    if request.method == "POST":
+        email = request.POST.get("email", "").strip().lower()
+        password = request.POST.get("password", "")
+        password_confirm = request.POST.get("password_confirm", "")
+
+        if not email:
+            error_message = "Пожалуйста, укажите адрес электронной почты."
+        elif not _validate_email_domain_dns(email):
+            error_message = "Не удалось подтвердить существование домена почты. Пожалуйста, проверьте адрес на опечатки."
+        elif password != password_confirm:
+            error_message = "Пароли не совпадают."
+        elif len(password) < 8:
+            error_message = "Пароль должен быть не менее 8 символов."
+        else:
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            
+            existing_user = User.objects.filter(email__iexact=email).first()
+            user = None
+            
+            try:
+                with transaction.atomic():
+                    if existing_user:
+                        linked_client = Client.all_objects.filter(user=existing_user).first()
+                        if linked_client:
+                            if linked_client.pk == client.pk:
+                                user = existing_user
+                                user.set_password(password)
+                                user.is_active = True
+                                user.save()
+                            elif linked_client.archived_at is not None:
+                                Client.all_objects.filter(pk=linked_client.pk).update(user=None)
+                                user = existing_user
+                                user.set_password(password)
+                                user.is_active = True
+                                user.save()
+                            else:
+                                error_message = "Этот адрес электронной почты уже используется в системе другим активным клиентом."
+                        else:
+                            user = existing_user
+                            user.set_password(password)
+                            user.is_active = True
+                            user.save()
+                    else:
+                        user = User.objects.create_user(email=email, password=password)
+
+                    if not error_message and user:
+                        client.email = email
+                        client.user = user
+                        client.save(update_fields=["email", "user"])
+                        
+                        from django.contrib.auth import login
+                        login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+                        
+                        from django.contrib import messages
+                        messages.success(request, "Аккаунт успешно создан! Добро пожаловать в личный кабинет.")
+                        return redirect("clients:onboarding_start", token=token)
+            except Exception as e:
+                error_message = f"Произошла ошибка при сохранении аккаунта: {str(e)}"
+
+    return render(request, "clients/onboarding/set_password.html", {
+        "session": session,
+        "email": email_val,
+        "error_message": error_message,
+    })
+
+def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
+    session = check_onboarding_session(token, request=request)
+    if not session:
+        return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
+    auth_redirect = check_client_auth(request, session, token)
+    if auth_redirect:
+        return auth_redirect
 
     client = session.client
     mos_data = getattr(client, "mos_application_data", None)
@@ -191,9 +341,12 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
 
 
 def onboarding_purpose(request: HttpRequest, token: str) -> HttpResponse:
-    session = check_onboarding_session(token)
+    session = check_onboarding_session(token, request=request)
     if not session:
         return HttpResponseForbidden("Invalid or expired onboarding link.")
+    auth_redirect = check_client_auth(request, session, token)
+    if auth_redirect:
+        return auth_redirect
 
     client = session.client
     mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
@@ -222,9 +375,12 @@ def onboarding_purpose(request: HttpRequest, token: str) -> HttpResponse:
 
 
 def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) -> HttpResponse:
-    session = check_onboarding_session(token)
+    session = check_onboarding_session(token, request=request)
     if not session:
         return HttpResponseForbidden("Invalid or expired onboarding link.")
+    auth_redirect = check_client_auth(request, session, token)
+    if auth_redirect:
+        return auth_redirect
 
     mos_data = getattr(session.client, "mos_application_data", None)
     if not _mos_data_is_editable(mos_data):
@@ -237,7 +393,7 @@ def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) 
                 client=session.client,
                 doc_type=doc_type,
                 uploaded_document=form.save(commit=False),
-                actor=None,
+                actor=request.user if request.user.is_authenticated else None,
                 parse_requested=False,
             )
         else:
@@ -246,18 +402,24 @@ def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) 
 
 
 def onboarding_document_preview(request: HttpRequest, token: str, doc_id: int) -> HttpResponse:
-    session = check_onboarding_session(token)
+    session = check_onboarding_session(token, request=request)
     if not session:
         return HttpResponseForbidden("Invalid or expired onboarding link.")
+    auth_redirect = check_client_auth(request, session, token)
+    if auth_redirect:
+        return auth_redirect
 
     document = get_object_or_404(Document, id=doc_id, client=session.client)
     return cast(HttpResponse, build_protected_file_response(document.file, as_attachment=False))
 
 
 def onboarding_document_delete(request: HttpRequest, token: str, doc_id: int) -> HttpResponse:
-    session = check_onboarding_session(token)
+    session = check_onboarding_session(token, request=request)
     if not session:
         return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
+    auth_redirect = check_client_auth(request, session, token)
+    if auth_redirect:
+        return auth_redirect
         
     client = session.client
     mos_data = getattr(client, "mos_application_data", None)
@@ -267,14 +429,21 @@ def onboarding_document_delete(request: HttpRequest, token: str, doc_id: int) ->
         
     doc = get_object_or_404(Document, id=doc_id, client=client)
     if not doc.verified:
-        doc.delete()
+        from clients.use_cases.documents import delete_client_document
+        delete_client_document(
+            document=doc,
+            actor=request.user if request.user.is_authenticated else None
+        )
         
     return redirect("clients:onboarding_start", token=token)
 
 def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
-    session = check_onboarding_session(token)
+    session = check_onboarding_session(token, request=request)
     if not session:
         return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
+    auth_redirect = check_client_auth(request, session, token)
+    if auth_redirect:
+        return auth_redirect
 
     mos_data, created = MOSApplicationData.objects.get_or_create(client=session.client)
     if not _mos_data_is_editable(mos_data):
@@ -299,9 +468,12 @@ def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
     })
 
 def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
-    session = check_onboarding_session(token)
+    session = check_onboarding_session(token, request=request)
     if not session:
         return HttpResponseForbidden("Invalid or expired onboarding link.")
+    auth_redirect = check_client_auth(request, session, token)
+    if auth_redirect:
+        return auth_redirect
 
     client = session.client
     mos_data = get_object_or_404(MOSApplicationData, client=client)
@@ -396,9 +568,12 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
     return render(request, "clients/onboarding/passport.html", {"session": session, "mos_data": mos_data})
 
 def onboarding_personal_extra(request: HttpRequest, token: str) -> HttpResponse:
-    session = check_onboarding_session(token)
+    session = check_onboarding_session(token, request=request)
     if not session:
         return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
+    auth_redirect = check_client_auth(request, session, token)
+    if auth_redirect:
+        return auth_redirect
 
     mos_data = get_object_or_404(MOSApplicationData, client=session.client)
 
@@ -424,9 +599,12 @@ def onboarding_personal_extra(request: HttpRequest, token: str) -> HttpResponse:
     return render(request, "clients/onboarding/personal_extra.html", {"session": session, "mos_data": mos_data})
 
 def onboarding_address(request: HttpRequest, token: str) -> HttpResponse:
-    session = check_onboarding_session(token)
+    session = check_onboarding_session(token, request=request)
     if not session:
         return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
+    auth_redirect = check_client_auth(request, session, token)
+    if auth_redirect:
+        return auth_redirect
 
     mos_data = get_object_or_404(MOSApplicationData, client=session.client)
 
@@ -455,9 +633,12 @@ def onboarding_address(request: HttpRequest, token: str) -> HttpResponse:
     return render(request, "clients/onboarding/address.html", {"session": session, "mos_data": mos_data})
 
 def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
-    session = check_onboarding_session(token)
+    session = check_onboarding_session(token, request=request)
     if not session:
         return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
+    auth_redirect = check_client_auth(request, session, token)
+    if auth_redirect:
+        return auth_redirect
 
     mos_data = get_object_or_404(MOSApplicationData, client=session.client)
 
@@ -510,9 +691,12 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
     })
 
 def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
-    session = check_onboarding_session(token)
+    session = check_onboarding_session(token, request=request)
     if not session:
         return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
+    auth_redirect = check_client_auth(request, session, token)
+    if auth_redirect:
+        return auth_redirect
 
     mos_data = get_object_or_404(MOSApplicationData, client=session.client)
 
@@ -547,9 +731,12 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
     return render(request, "clients/onboarding/declarations.html", {"session": session, "mos_data": mos_data})
 
 def onboarding_review(request: HttpRequest, token: str) -> HttpResponse:
-    session = check_onboarding_session(token, allowed_statuses=("created", "active", "completed"))
+    session = check_onboarding_session(token, allowed_statuses=("created", "active", "completed"), request=request)
     if not session:
         return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
+    auth_redirect = check_client_auth(request, session, token)
+    if auth_redirect:
+        return auth_redirect
 
     mos_data = get_object_or_404(MOSApplicationData, client=session.client)
     
@@ -677,9 +864,12 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
     if request.method != "POST":
         return JsonResponse({"status": "error", "message": "Method not allowed"}, status=405)
 
-    session = check_onboarding_session(token)
+    session = check_onboarding_session(token, request=request)
     if not session:
         return JsonResponse({"status": "error", "message": "Invalid token"}, status=403)
+    auth_redirect = check_client_auth(request, session, token)
+    if auth_redirect:
+        return JsonResponse({"status": "error", "message": "Authentication required"}, status=401)
         
     client = session.client
     mos_data, _ = MOSApplicationData.objects.get_or_create(client=client)

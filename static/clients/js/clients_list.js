@@ -142,6 +142,138 @@
     });
   }
 
+  async function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return await navigator.clipboard.writeText(text);
+    }
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    try {
+      document.execCommand('copy');
+    } catch (err) {
+      console.error('Fallback copy failed', err);
+    }
+    document.body.removeChild(textarea);
+  }
+
+  let activeLink = '';
+
+  function openShareModal(link) {
+    activeLink = link;
+    const modalEl = document.getElementById('onboardingShareModal');
+    if (!modalEl) return;
+
+    // QR Code URL
+    const qrImg = document.getElementById('share-qr-image');
+    const qrSpinner = document.getElementById('share-qr-spinner');
+    if (qrImg && qrSpinner) {
+      qrImg.style.display = 'none';
+      qrSpinner.style.display = 'block';
+      const qrData = encodeURIComponent(link);
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrData}`;
+      qrImg.onload = () => {
+        qrSpinner.style.display = 'none';
+        qrImg.style.display = 'block';
+      };
+    }
+
+    // Default language is RU
+    updateShareMessage('ru');
+
+    // Make sure RU tab is active in the UI
+    const ruTab = document.getElementById('share-lang-ru-tab');
+    if (ruTab && window.bootstrap) {
+      const tab = bootstrap.Tab.getOrCreateInstance(ruTab);
+      tab.show();
+    }
+
+    if (window.bootstrap) {
+      const shareModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      shareModal.show();
+    }
+  }
+
+  function updateShareMessage(lang) {
+    const previewEl = document.getElementById('share-message-preview');
+    if (!previewEl) return;
+
+    let template = '';
+    if (lang === 'ru') {
+      template = `Здравствуйте! Пожалуйста, перейдите по ссылке, чтобы создать пароль и загрузить документы для дела: ${activeLink}`;
+    } else if (lang === 'pl') {
+      template = `Dzień dobry! Proszę kliknąć w link, aby utworzyć hasło i przesłać dokumenty do sprawy: ${activeLink}`;
+    } else if (lang === 'en') {
+      template = `Hello! Please follow the link to set up your password and upload documents for your case: ${activeLink}`;
+    }
+
+    previewEl.textContent = template;
+  }
+
+  function initShareModalListeners() {
+    const modalEl = document.getElementById('onboardingShareModal');
+    if (!modalEl) return;
+
+    // Language pills
+    const tabs = modalEl.querySelectorAll('#share-lang-tabs button[data-bs-toggle="pill"]');
+    tabs.forEach((tab) => {
+      tab.addEventListener('shown.bs.tab', (e) => {
+        const lang = e.target.dataset.lang;
+        updateShareMessage(lang);
+      });
+    });
+
+    // Copy Message Button
+    const copyMsgBtn = document.getElementById('btn-copy-share-msg');
+    if (copyMsgBtn) {
+      copyMsgBtn.addEventListener('click', async () => {
+        const text = document.getElementById('share-message-preview')?.textContent || '';
+        if (text) {
+          await copyToClipboard(text);
+          const originalText = copyMsgBtn.innerHTML;
+          const lang = document.documentElement.lang || 'en';
+          let copiedLabel = 'Copied!';
+          if (lang.startsWith('ru')) copiedLabel = 'Скопировано!';
+          else if (lang.startsWith('pl')) copiedLabel = 'Skopiowano!';
+          copyMsgBtn.innerHTML = `<i class="bi bi-check-lg me-1"></i>${copiedLabel}`;
+          copyMsgBtn.classList.remove('btn-outline-primary');
+          copyMsgBtn.classList.add('btn-success');
+          setTimeout(() => {
+            copyMsgBtn.innerHTML = originalText;
+            copyMsgBtn.classList.remove('btn-success');
+            copyMsgBtn.classList.add('btn-outline-primary');
+          }, 2000);
+        }
+      });
+    }
+
+    // Copy Link Button
+    const copyLinkBtn = document.getElementById('btn-copy-share-link');
+    if (copyLinkBtn) {
+      copyLinkBtn.addEventListener('click', async () => {
+        if (activeLink) {
+          await copyToClipboard(activeLink);
+          const originalText = copyLinkBtn.innerHTML;
+          const lang = document.documentElement.lang || 'en';
+          let copiedLabel = 'Copied!';
+          if (lang.startsWith('ru')) copiedLabel = 'Скопировано!';
+          else if (lang.startsWith('pl')) copiedLabel = 'Skopiowano!';
+          copyLinkBtn.innerHTML = `<i class="bi bi-check-lg me-1"></i>${copiedLabel}`;
+          copyLinkBtn.classList.remove('btn-outline-secondary');
+          copyLinkBtn.classList.add('btn-success');
+          setTimeout(() => {
+            copyLinkBtn.innerHTML = originalText;
+            copyLinkBtn.classList.remove('btn-success');
+            copyLinkBtn.classList.add('btn-outline-secondary');
+          }, 2000);
+        }
+      });
+    }
+  }
+
   function initOnboardingLinkGenerator(root) {
     const buttons = root.querySelectorAll('.btn-generate-onboarding-link');
     const alertContainer = document.getElementById('ajax-alert-container');
@@ -175,24 +307,6 @@
       }, 3500);
     }
 
-    async function copyToClipboard(text) {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        return await navigator.clipboard.writeText(text);
-      }
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed';
-      document.body.appendChild(textarea);
-      textarea.focus();
-      textarea.select();
-      try {
-        document.execCommand('copy');
-      } catch (err) {
-        console.error('Fallback copy failed', err);
-      }
-      document.body.removeChild(textarea);
-    }
-
     buttons.forEach((btn) => {
       btn.addEventListener('click', async (e) => {
         e.preventDefault();
@@ -222,16 +336,13 @@
 
           const data = await response.json();
           if (data.status === 'ok') {
-            await copyToClipboard(data.link);
-            
             if (icon) {
               icon.className = 'bi bi-check-lg';
               btn.classList.remove('btn-outline-success');
               btn.classList.add('btn-success');
             }
             
-            const msg = data.message || 'Onboarding link copied!';
-            showAlert(msg, 'success');
+            openShareModal(data.link);
 
             setTimeout(() => {
               if (icon) {
@@ -299,24 +410,6 @@
       }, 3500);
     }
 
-    async function copyToClipboard(text) {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        return await navigator.clipboard.writeText(text);
-      }
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed';
-      document.body.appendChild(textarea);
-      textarea.focus();
-      textarea.select();
-      try {
-        document.execCommand('copy');
-      } catch (err) {
-        console.error('Fallback copy failed', err);
-      }
-      document.body.removeChild(textarea);
-    }
-
     btn.addEventListener('click', async (e) => {
       e.preventDefault();
       const url = btn.dataset.generateUrl;
@@ -350,19 +443,17 @@
 
         const data = await response.json();
         if (data.status === 'ok') {
-          await copyToClipboard(data.link);
-          
           if (icon) {
             icon.className = 'bi bi-check-lg';
             btn.classList.remove('btn-outline-primary');
             btn.classList.add('btn-success');
           }
           
-          const msg = data.message || 'Onboarding link copied!';
           if (modal) {
             modal.hide();
           }
-          showAlert(msg, 'success');
+
+          openShareModal(data.link);
 
           setTimeout(() => {
             if (icon) {
@@ -371,7 +462,15 @@
               btn.classList.add('btn-outline-primary');
             }
             btn.disabled = false;
-            window.location.reload();
+
+            const shareModalEl = document.getElementById('onboardingShareModal');
+            if (shareModalEl) {
+              shareModalEl.addEventListener('hidden.bs.modal', () => {
+                window.location.reload();
+              }, { once: true });
+            } else {
+              window.location.reload();
+            }
           }, 1500);
         } else {
           throw new Error(data.message || 'Generation failed');
@@ -480,5 +579,7 @@
     initOnboardingLinkGenerator(document);
     initQuickOnboardingLink(document);
     initAutocompleteSearch(document);
+    initShareModalListeners();
   });
 })();
+
