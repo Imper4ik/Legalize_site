@@ -177,7 +177,20 @@
         <div class="card mb-3">
             <div class="card-header fw-bold">Декларации, Пребывание и Поездки</div>
             <div class="card-body">
-                <p><strong>Цель подачи:</strong> {{ mos_data.mos_purpose|default:"-" }}</p>
+                <div class="alert {% if purpose_mismatch %}alert-warning{% else %}alert-light{% endif %} border">
+                    <p class="mb-1"><strong>Цель в карточке клиента:</strong> {{ client_card_purpose_label }}</p>
+                    <p class="mb-1"><strong>Цель, выбранная клиентом:</strong> {{ client_selected_purpose_label }}</p>
+                    {% if purpose_mismatch %}
+                        <p class="mb-2 fw-bold">Клиент выбрал другую цель подачи. Проверьте перед отправкой.</p>
+                        {% if client_selected_purpose == 'study' or client_selected_purpose == 'work' %}
+                            <form method="post" class="mt-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="accept_client_purpose">
+                                <button type="submit" class="btn btn-sm btn-outline-primary">Принять цель клиента</button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
+                </div>
                 {% if mos_data.personal_data.employer_email %}
                     <p><strong>Email работодателя:</strong> {{ mos_data.personal_data.employer_email }}</p>
                 {% endif %}

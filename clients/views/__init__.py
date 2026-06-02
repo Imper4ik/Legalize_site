@@ -84,6 +84,7 @@ from clients.views.admin_mos_review import admin_mos_review
 from clients.views.onboarding_views import (
     check_onboarding_session,
     onboarding_start,
+    onboarding_purpose,
     onboarding_document_upload,
     onboarding_document_preview,
     onboarding_document_delete,
@@ -171,6 +172,7 @@ __all__ = [
     'StaffActivityLogsView',
     'check_onboarding_session',
     'onboarding_start',
+    'onboarding_purpose',
     'onboarding_document_upload',
     'onboarding_document_preview',
     'onboarding_document_delete',
