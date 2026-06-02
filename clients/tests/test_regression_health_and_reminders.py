@@ -175,5 +175,31 @@ def test_send_legal_stay_email_critical_interval(db):
             assert key_day_after != key_first
 
 
+def test_get_automatic_checks_compilation(db):
+    client = Client.objects.create(
+        first_name="Check",
+        last_name="Tester",
+        application_purpose="work",
+        workflow_stage="new_client",
+    )
+    checks = client.get_automatic_checks()
+    # Expecting exactly 10 checks to be compiled
+    assert len(checks) == 10
+
+    # Legal stay check
+    stay_check = next(c for c in checks if c["label"] == "Легальность пребывания")
+    assert stay_check["status"] == "warning"
+    assert "не указана" in stay_check["message"].lower()
+
+    # Checklist completion check
+    checklist_check = next(c for c in checks if c["label"] == "Комплект документов")
+    assert checklist_check["status"] == "warning"
+
+    # Staff tasks check
+    tasks_check = next(c for c in checks if c["label"] == "Задачи по делу")
+    assert tasks_check["status"] == "success"
+
+
+
 
 

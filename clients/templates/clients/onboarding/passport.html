@@ -10,12 +10,18 @@
     
     <div class="row mb-3">
         <div class="col-md-6">
-            <label for="first_name" class="form-label fw-bold">{% trans "Имя (лат.)" %}</label>
+            <label for="first_name" class="form-label fw-bold">
+                {% trans "Имя (лат.)" %}
+                <i class="bi bi-question-circle text-muted ms-1 small" data-bs-toggle="tooltip" data-bs-placement="top" title="{% trans 'Имя латиницей строго как в заграничном паспорте.' %}"></i>
+            </label>
             <input type="text" class="form-control" id="first_name" name="first_name" value="{{ mos_data.personal_data.first_name|default:'' }}" required>
             <div class="form-text text-muted">{% trans "Укажите имя латиницей строго как в заграничном паспорте." %}</div>
         </div>
         <div class="col-md-6">
-            <label for="last_name" class="form-label fw-bold">{% trans "Фамилия (лат.)" %}</label>
+            <label for="last_name" class="form-label fw-bold">
+                {% trans "Фамилия (лат.)" %}
+                <i class="bi bi-question-circle text-muted ms-1 small" data-bs-toggle="tooltip" data-bs-placement="top" title="{% trans 'Фамилия латиницей строго как в заграничном паспорте.' %}"></i>
+            </label>
             <input type="text" class="form-control" id="last_name" name="last_name" value="{{ mos_data.personal_data.last_name|default:'' }}" required>
             <div class="form-text text-muted">{% trans "Укажите фамилию латиницей строго как в заграничном паспорте." %}</div>
         </div>
@@ -38,7 +44,10 @@
             <input type="date" class="form-control" id="birth_date" name="birth_date" value="{{ mos_data.personal_data.birth_date|default:'' }}" required>
         </div>
         <div class="col-md-6">
-            <label for="citizenship" class="form-label fw-bold">{% trans "Гражданство" %}</label>
+            <label for="citizenship" class="form-label fw-bold">
+                {% trans "Гражданство" %}
+                <i class="bi bi-question-circle text-muted ms-1 small" data-bs-toggle="tooltip" data-bs-placement="top" title="{% trans 'Страна вашего гражданства. Например, Украина, Беларусь, Казахстан.' %}"></i>
+            </label>
             <input type="text" class="form-control" id="citizenship" name="citizenship" value="{{ mos_data.personal_data.citizenship|default:'' }}" required>
             <div class="form-text text-muted">{% trans "Страна вашего гражданства (например, Украина, Беларусь, Казахстан)." %}</div>
         </div>
@@ -54,7 +63,10 @@
             </select>
         </div>
         <div class="col-md-6">
-            <label for="maiden_name" class="form-label fw-bold">{% trans "Фамилия при рождении (родовая)" %}</label>
+            <label for="maiden_name" class="form-label fw-bold">
+                {% trans "Фамилия при рождении (родовая)" %}
+                <i class="bi bi-question-circle text-muted ms-1 small" data-bs-toggle="tooltip" data-bs-placement="top" title="{% trans 'Ваша фамилия при рождении (девичья фамилия для женщин).' %}"></i>
+            </label>
             <input type="text" class="form-control" id="maiden_name" name="maiden_name" value="{{ mos_data.personal_data.maiden_name|default:'' }}">
         </div>
     </div>
@@ -102,7 +114,10 @@
             <input type="date" class="form-control" id="issue_date" name="issue_date" value="{{ mos_data.passport_data.issue_date|default:'' }}" required>
         </div>
         <div class="col-md-6">
-            <label for="issuing_authority" class="form-label fw-bold">{% trans "Орган выдачи" %}</label>
+            <label for="issuing_authority" class="form-label fw-bold">
+                {% trans "Орган выдачи" %}
+                <i class="bi bi-question-circle text-muted ms-1 small" data-bs-toggle="tooltip" data-bs-placement="top" title="{% trans 'Орган, выдавший документ. Запишите точно так же, как написано латинскими буквами/цифрами в паспорте.' %}"></i>
+            </label>
             <input type="text" class="form-control" id="issuing_authority" name="issuing_authority" value="{{ mos_data.passport_data.issuing_authority|default:'' }}" required placeholder="{% trans 'Например: MVS 8080 или орган власти' %}">
         </div>
     </div>

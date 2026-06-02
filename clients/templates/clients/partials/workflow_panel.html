@@ -57,5 +57,35 @@
         {% translate "Критичных автоматических сигналов по делу сейчас нет." %}
       </div>
     {% endif %}
+
+    <hr class="my-3">
+    <div class="mb-1">
+      <button class="btn btn-link btn-sm p-0 text-decoration-none d-flex align-items-center justify-content-between w-100" type="button" data-bs-toggle="collapse" data-bs-target="#automaticChecksCollapse" aria-expanded="false" aria-controls="automaticChecksCollapse">
+        <span class="fw-semibold text-muted small text-uppercase">{% translate "Автоматические проверки" %}</span>
+        <i class="bi bi-chevron-down small text-muted"></i>
+      </button>
+    </div>
+    <div class="collapse" id="automaticChecksCollapse">
+      <div class="d-flex flex-column gap-2 mt-2">
+        {% for check in workflow_summary.automatic_checks %}
+          <div class="d-flex align-items-center justify-content-between border rounded p-2 bg-light-subtle">
+            <div class="d-flex align-items-center gap-2">
+              {% if check.status == 'success' %}
+                <i class="bi bi-check-circle-fill text-success" title="{% translate 'Всё в порядке' %}"></i>
+              {% elif check.status == 'danger' %}
+                <i class="bi bi-x-circle-fill text-danger" title="{% translate 'Критическая проблема' %}"></i>
+              {% else %}
+                <i class="bi bi-exclamation-circle-fill text-warning" title="{% translate 'Есть замечания' %}"></i>
+              {% endif %}
+              <span class="small fw-medium">{{ check.label }}</span>
+              <i class="bi bi-question-circle text-muted small cursor-pointer" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ check.tooltip }}"></i>
+            </div>
+            <span class="badge bg-{{ check.status }}-subtle text-{{ check.status }} border border-{{ check.status }} text-wrap text-start small font-monospace" style="max-width: 55%; font-size: 0.75rem;">
+              {{ check.message }}
+            </span>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
   </div>
 </div>

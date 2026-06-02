@@ -742,6 +742,258 @@ class Client(SoftDeleteModel):
 
         return alerts
 
+    def get_automatic_checks(self, document_status_list: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+        today = timezone.localdate()
+        if not hasattr(self, "health_awaiting_confirmation_count"):
+            stats = (
+                self.__class__.objects.filter(pk=self.pk)
+                .with_health_stats(today=today)
+                .values(
+                    "health_awaiting_confirmation_count",
+                    "health_expired_documents_count",
+                    "health_expiring_documents_count",
+                    "health_wezwanie_count",
+                    "health_appointment_email_sent_count",
+                    "health_overdue_payments_count",
+                    "health_overdue_tasks_count",
+                )
+                .get()
+            )
+            for key, value in stats.items():
+                setattr(self, key, value)
+
+        checks = []
+
+        # 1. Stay Validity
+        legal_stay_date = self.legal_basis_end_date
+        if not legal_stay_date:
+            try:
+                if hasattr(self, "mos_application_data") and self.mos_application_data.legal_stay_until:
+                    legal_stay_date = self.mos_application_data.legal_stay_until
+            except Exception:
+                pass
+
+        if not legal_stay_date:
+            checks.append({
+                "label": _("Легальность пребывания"),
+                "status": "warning",
+                "message": _("Дата не указана"),
+                "tooltip": _("Проверка срока законного нахождения в стране. Дата окончания пребывания не задана."),
+            })
+        elif legal_stay_date < today:
+            checks.append({
+                "label": _("Легальность пребывания"),
+                "status": "danger",
+                "message": _("Истекло %s") % legal_stay_date.strftime("%d.%m.%Y"),
+                "tooltip": _("Основание пребывания клиента истекло. Требуется срочное продление или связь с клиентом."),
+            })
+        elif legal_stay_date <= today + timedelta(days=30):
+            checks.append({
+                "label": _("Легальность пребывания"),
+                "status": "warning",
+                "message": _("Истекает %s") % legal_stay_date.strftime("%d.%m.%Y"),
+                "tooltip": _("Основание пребывания истекает менее чем через 30 дней."),
+            })
+        else:
+            checks.append({
+                "label": _("Легальность пребывания"),
+                "status": "success",
+                "message": _("Действительно до %s") % legal_stay_date.strftime("%d.%m.%Y"),
+                "tooltip": _("Основание пребывания действительно (более 30 дней)."),
+            })
+
+        # 2. Documents completion
+        if document_status_list is None:
+            document_status_list = self.get_document_checklist()
+        missing_count = sum(1 for item in document_status_list if not item["is_complete"])
+        if missing_count:
+            checks.append({
+                "label": _("Комплект документов"),
+                "status": "warning",
+                "message": _("Не хватает: %s") % missing_count,
+                "tooltip": _("В чеклисте присутствуют незагруженные обязательные документы для выбранного основания."),
+            })
+        else:
+            checks.append({
+                "label": _("Комплект документов"),
+                "status": "success",
+                "message": _("Собрано"),
+                "tooltip": _("Все обязательные документы по чеклисту успешно загружены."),
+            })
+
+        # 3. Expired documents
+        if getattr(self, "health_expired_documents_count", 0):
+            checks.append({
+                "label": _("Срок действия документов"),
+                "status": "danger",
+                "message": _("Просрочено: %s") % self.health_expired_documents_count,
+                "tooltip": _("Среди загруженных документов есть просроченные файлы."),
+            })
+        elif getattr(self, "health_expiring_documents_count", 0):
+            checks.append({
+                "label": _("Срок действия документов"),
+                "status": "warning",
+                "message": _("Истекает: %s") % self.health_expiring_documents_count,
+                "tooltip": _("Среди загруженных документов есть те, которые истекают в течение 7 дней."),
+            })
+        else:
+            checks.append({
+                "label": _("Срок действия документов"),
+                "status": "success",
+                "message": _("OK"),
+                "tooltip": _("Все загруженные документы действительны."),
+            })
+
+        # 4. OCR confirmation
+        if getattr(self, "health_awaiting_confirmation_count", 0):
+            checks.append({
+                "label": _("Подтверждение OCR"),
+                "status": "warning",
+                "message": _("Ожидает: %s") % self.health_awaiting_confirmation_count,
+                "tooltip": _("Есть документы с автоматическим распознаванием текста, которые сотрудник ещё не подтвердил."),
+            })
+        else:
+            checks.append({
+                "label": _("Подтверждение OCR"),
+                "status": "success",
+                "message": _("Подтверждено"),
+                "tooltip": _("Нет документов, ожидающих проверки распознанных данных."),
+            })
+
+        # 5. Case Number
+        if getattr(self, "health_wezwanie_count", 0) > 0 and not self.case_number:
+            checks.append({
+                "label": _("Номер дела"),
+                "status": "warning",
+                "message": _("Не указан"),
+                "tooltip": _("Загружен документ Wezwanie, но номер дела (Case number) в системе не заполнен."),
+            })
+        else:
+            checks.append({
+                "label": _("Номер дела"),
+                "status": "success",
+                "message": self.case_number or _("OK (нет wezwanie)"),
+                "tooltip": _("Номер дела заполнен или нет документов Wezwanie, требующих его наличия."),
+            })
+
+        # 6. Payments
+        if getattr(self, "health_overdue_payments_count", 0):
+            checks.append({
+                "label": _("Оплата по договору"),
+                "status": "warning",
+                "message": _("Просрочено платежей: %s") % self.health_overdue_payments_count,
+                "tooltip": _("Есть выставленные платежи с наступившим сроком оплаты, которые не оплачены."),
+            })
+        else:
+            checks.append({
+                "label": _("Оплата по договору"),
+                "status": "success",
+                "message": _("Оплачено"),
+                "tooltip": _("Нет просроченных платежей по договору."),
+            })
+
+        # 7. Fingerprints letter
+        if self.fingerprints_date and not getattr(self, "health_appointment_email_sent_count", 0):
+            checks.append({
+                "label": _("Письмо об отпечатках"),
+                "status": "warning",
+                "message": _("Не отправлено"),
+                "tooltip": _("Указана дата сдачи отпечатков, но письмо-напоминание клиенту ещё не было отправлено."),
+            })
+        else:
+            checks.append({
+                "label": _("Письмо об отпечатках"),
+                "status": "success",
+                "message": _("OK"),
+                "tooltip": _("Письмо об отпечатках отправлено, либо дата отпечатков не назначена."),
+            })
+
+        # 8. ZUS RCA months
+        if (
+            self.workflow_stage == "waiting_decision"
+            and self.fingerprints_date
+            and self.fingerprints_date <= today
+            and not self.decision_date
+        ):
+            from clients.services.zus import missing_zus_months
+            missing_zus = missing_zus_months(self, today=today)
+            if missing_zus:
+                checks.append({
+                    "label": _("Отчёты ZUS RCA"),
+                    "status": "warning",
+                    "message": _("Пропущено месяцев: %s") % len(missing_zus),
+                    "tooltip": _("В системе отсутствуют отчёты ZUS RCA за некоторые месяцы после сдачи отпечатков."),
+                })
+            else:
+                checks.append({
+                    "label": _("Отчёты ZUS RCA"),
+                    "status": "success",
+                    "message": _("OK"),
+                    "tooltip": _("Все необходимые ежемесячные отчёты ZUS RCA загружены."),
+                })
+        else:
+            checks.append({
+                "label": _("Отчёты ZUS RCA"),
+                "status": "success",
+                "message": _("Не требуется"),
+                "tooltip": _("Проверка ZUS RCA активна только на этапе ожидания решения после отпечатков."),
+            })
+
+        # 9. Staff Tasks
+        if getattr(self, "health_overdue_tasks_count", 0):
+            checks.append({
+                "label": _("Задачи по делу"),
+                "status": "danger",
+                "message": _("Просрочено: %s") % self.health_overdue_tasks_count,
+                "tooltip": _("Среди задач по этому клиенту есть просроченные сотрудником задачи."),
+            })
+        else:
+            checks.append({
+                "label": _("Задачи по делу"),
+                "status": "success",
+                "message": _("OK"),
+                "tooltip": _("Нет просроченных задач по делу клиента."),
+            })
+
+        # 10. Family Income
+        family_group = None
+        try:
+            family_group = getattr(self, 'family_group', None)
+        except Exception:
+            pass
+        if family_group is None and self.sponsor_client_id:
+            try:
+                family_group = getattr(self.sponsor_client, 'family_group', None)
+            except Exception:
+                pass
+
+        if family_group is not None:
+            from clients.services.family import calculate_family_income
+            family_income = calculate_family_income(family_group)
+            if family_income.risks:
+                checks.append({
+                    "label": _("Доходы семьи"),
+                    "status": "warning",
+                    "message": _("Недостаточно"),
+                    "tooltip": _("Доходы семьи не соответствуют требованиям законодательства о прожиточном минимуме."),
+                })
+            else:
+                checks.append({
+                    "label": _("Доходы семьи"),
+                    "status": "success",
+                    "message": _("Достаточно"),
+                    "tooltip": _("Расчёт доходов подтверждает финансовую достаточность для семьи."),
+                })
+        else:
+            checks.append({
+                "label": _("Доходы семьи"),
+                "status": "success",
+                "message": _("Не применимо"),
+                "tooltip": _("Проверка доходов активна только для членов семейных групп."),
+            })
+
+        return checks
+
     def get_workflow_summary(self, document_status_list: list[dict[str, Any]] | None = None) -> dict[str, Any]:
         alerts = self.get_health_alerts(document_status_list=document_status_list)
         prefetched_staff_tasks = getattr(self, "_prefetched_objects_cache", {}).get("staff_tasks")
@@ -762,4 +1014,5 @@ class Client(SoftDeleteModel):
             "alerts_count": len(alerts),
             "open_tasks_count": open_tasks_count,
             "overdue_tasks_count": overdue_tasks,
+            "automatic_checks": self.get_automatic_checks(document_status_list=document_status_list),
         }

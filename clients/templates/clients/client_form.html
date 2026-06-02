@@ -78,7 +78,10 @@
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label">{{ form.case_number.label }}</label>
+                        <label class="form-label">
+                            {{ form.case_number.label }}
+                            <i class="bi bi-question-circle text-muted ms-1 small" data-bs-toggle="tooltip" data-bs-placement="top" title="{% translate 'Официальный номер дела в ужонде (например, WA-II-12345...).' %}"></i>
+                        </label>
                         {{ form.case_number }}
                         {% for error in form.case_number.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
@@ -97,7 +100,10 @@
                     </div>
                     {% endif %}
                     <div class="col-md-6">
-                        <label class="form-label">{{ form.application_purpose.label }}</label>
+                        <label class="form-label">
+                            {{ form.application_purpose.label }}
+                            <i class="bi bi-question-circle text-muted ms-1 small" data-bs-toggle="tooltip" data-bs-placement="top" title="{% translate 'Основание для подачи на карту побыту.' %}"></i>
+                        </label>
                         {{ form.application_purpose }}
                         {% for error in form.application_purpose.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
@@ -132,7 +138,10 @@
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <label class="form-label">{{ form.legal_basis_end_date.label }}</label>
+                        <label class="form-label">
+                            {{ form.legal_basis_end_date.label }}
+                            <i class="bi bi-question-circle text-muted ms-1 small" data-bs-toggle="tooltip" data-bs-placement="top" title="{% translate 'Срок действия визы, безвизового режима или текущей карты побыту.' %}"></i>
+                        </label>
                         <div class="input-group">
                             {{ form.legal_basis_end_date }}
                             <button class="btn btn-outline-secondary" type="button" id="toggle_legal_basis_end_date"><i class="bi bi-calendar3"></i></button>
@@ -140,7 +149,10 @@
                         {% for error in form.legal_basis_end_date.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">{{ form.submission_date.label }}</label>
+                        <label class="form-label">
+                            {{ form.submission_date.label }}
+                            <i class="bi bi-question-circle text-muted ms-1 small" data-bs-toggle="tooltip" data-bs-placement="top" title="{% translate 'Дата подачи заявления в ужонд (лично, почтой или через MOS).' %}"></i>
+                        </label>
                         <div class="input-group">
                             {{ form.submission_date }}
                             <button class="btn btn-outline-secondary" type="button" id="toggle_submission_date"><i class="bi bi-calendar3"></i></button>
@@ -148,7 +160,10 @@
                         {% for error in form.submission_date.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label">{{ form.fingerprints_date.label }}</label>
+                        <label class="form-label">
+                            {{ form.fingerprints_date.label }}
+                            <i class="bi bi-question-circle text-muted ms-1 small" data-bs-toggle="tooltip" data-bs-placement="top" title="{% translate 'Дата визита для сдачи отпечатков пальцев.' %}"></i>
+                        </label>
                         <div class="input-group">
                             {{ form.fingerprints_date }}
                             <button class="btn btn-outline-secondary" type="button" id="toggle_fingerprints_date"><i class="bi bi-calendar3"></i></button>
