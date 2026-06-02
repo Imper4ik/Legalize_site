@@ -67,8 +67,6 @@ def _sync_contact_fields_to_client(client: Client, **values: str) -> None:
 
 
 def _get_effective_document_purpose(client: Client, mos_data: MOSApplicationData | None = None) -> str:
-    if mos_data and mos_data.mos_purpose:
-        return mos_data.mos_purpose
     return client.get_document_requirement_purpose()
 
 

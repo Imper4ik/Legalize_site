@@ -73,9 +73,9 @@ class OnboardingPurposeTests(TestCase):
 
         response = self.client.get(start_url)
         codes = self._checklist_codes(response)
-        self.assertEqual(response.context["effective_purpose"], "work")
-        self.assertIn(DocumentType.EMPLOYMENT_CONTRACT.value, codes)
-        self.assertNotIn(DocumentType.ENROLLMENT_CERTIFICATE.value, codes)
+        self.assertEqual(response.context["effective_purpose"], "study")
+        self.assertIn(DocumentType.ENROLLMENT_CERTIFICATE.value, codes)
+        self.assertNotIn(DocumentType.EMPLOYMENT_CONTRACT.value, codes)
         self.assertContains(response, "Вы выбрали другую цель подачи")
 
     def test_already_sent_link_does_not_need_regeneration_to_change_purpose(self):
@@ -108,7 +108,7 @@ class OnboardingPurposeTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Document.objects.filter(pk=document.pk).exists())
         response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
-        self.assertContains(response, "Загруженные дополнительные документы")
+        self.assertContains(response, "Загружено")
         self.assertContains(response, reverse("clients:onboarding_document_preview", kwargs={"token": token, "doc_id": document.pk}))
 
     def test_locked_onboarding_cannot_change_purpose(self):
