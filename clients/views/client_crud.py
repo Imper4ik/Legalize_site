@@ -24,6 +24,10 @@ from clients.services.notifications import (
     send_expired_documents_email,
     send_required_documents_email,
 )
+from clients.services.onboarding_purposes import (
+    attach_onboarding_purpose_review_state,
+    onboarding_purpose_mismatch_q,
+)
 from clients.services.zus import missing_zus_month_upload_options
 from clients.services.responses import apply_no_store
 from clients.services.roles import (
@@ -76,6 +80,9 @@ class ClientListView(StaffRequiredMixin, ListView):
         if self.onboarding_filter:
             if self.onboarding_filter == "completed":
                 queryset = queryset.filter(mos_application_data__status="client_completed")
+                list_ordering = ["-mos_application_data__updated_at", "-created_at"]
+            elif self.onboarding_filter == "purpose_change":
+                queryset = queryset.filter(onboarding_purpose_mismatch_q())
                 list_ordering = ["-mos_application_data__updated_at", "-created_at"]
             elif self.onboarding_filter in ["staff_review", "submitted_in_mos"]:
                 queryset = queryset.filter(mos_application_data__status=self.onboarding_filter)
@@ -130,6 +137,7 @@ class ClientListView(StaffRequiredMixin, ListView):
         context["document_filter"] = self.request.GET.get("document", "")
         for client in context.get("clients", []):
             client.safe_case_number = safe_encrypted_attr(client, "case_number", default="—")
+            attach_onboarding_purpose_review_state(client)
         context["companies"] = Company.objects.all()
         return context
 
@@ -208,6 +216,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         context["recent_activities"] = client.activities.all()[:25]
         context["workflow_summary"] = client.get_workflow_summary(document_status_list=document_status_list)
         context["workflow_alerts"] = context["workflow_summary"]["alerts"]
+        attach_onboarding_purpose_review_state(client)
         context["show_family_dashboard_link"] = _show_family_dashboard_link(client)
         context["family_dashboard_url"] = reverse("clients:family_dashboard", kwargs={"pk": client.pk})
         return context

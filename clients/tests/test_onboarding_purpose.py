@@ -3,6 +3,7 @@ from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -163,3 +164,105 @@ class OnboardingPurposeTests(TestCase):
         self.assertContains(response, "Цель в карточке клиента")
         self.assertContains(response, "Цель, выбранная клиентом")
         self.assertContains(response, "Клиент выбрал другую цель подачи")
+
+    def test_staff_can_generate_existing_client_link_with_family_purpose(self):
+        client = Client.objects.create(
+            first_name="Existing",
+            last_name="Client",
+            email="existing-purpose@example.com",
+            application_purpose="study",
+            language="ru",
+            assigned_staff=self.manager,
+        )
+
+        self.client.login(email="manager-purpose@example.com", password="securepassword")
+        response = self.client.post(
+            reverse("clients:generate_onboarding_link", kwargs={"client_id": client.pk}),
+            {"application_purpose": "family_spouse"},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        raw_token = response.json()["link"].rstrip("/").split("/")[-1]
+        client.refresh_from_db()
+        self.assertEqual(client.application_purpose, "family")
+        self.assertEqual(client.family_role, "family_spouse")
+        self.assertEqual(client.get_document_requirement_purpose(), "family_spouse")
+        self.assertTrue(ClientOnboardingSession.objects.filter(client=client, token_hash=hash_onboarding_token(raw_token)).exists())
+        self.assertEqual(MOSApplicationData.objects.get(client=client).mos_purpose, "")
+
+    def test_travel_step_preserves_canonical_purpose_when_not_changed(self):
+        client, token = self._client_with_session(application_purpose="study")
+        mos_data = MOSApplicationData.objects.get(client=client)
+        mos_data.mos_purpose = "work"
+        mos_data.save(update_fields=["mos_purpose"])
+
+        response = self.client.post(
+            reverse("clients:onboarding_travel", kwargs={"token": token}),
+            {
+                "is_in_poland": "yes",
+                "last_entry_date": "2026-01-01",
+                "stay_basis": "visa",
+                "was_in_poland_before": "no",
+                "has_insurance": "yes",
+                "has_stable_income": "yes",
+                "previous_stays": "",
+                "travel_history": "No trips",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        mos_data.refresh_from_db()
+        self.assertEqual(mos_data.mos_purpose, "work")
+
+    def test_staff_can_accept_client_selected_family_purpose(self):
+        client, _token = self._client_with_session(application_purpose="study")
+        mos_data = MOSApplicationData.objects.get(client=client)
+        mos_data.mos_purpose = "family_child"
+        mos_data.status = "staff_review"
+        mos_data.save(update_fields=["mos_purpose", "status"])
+
+        self.client.login(email="manager-purpose@example.com", password="securepassword")
+        response = self.client.post(
+            reverse("clients:admin_mos_review", kwargs={"client_id": client.pk}),
+            {"action": "accept_client_purpose"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        client.refresh_from_db()
+        self.assertEqual(client.application_purpose, "family")
+        self.assertEqual(client.family_role, "family_child")
+        self.assertEqual(client.get_document_requirement_purpose(), "family_child")
+
+    def test_staff_gets_attention_notification_for_client_purpose_change(self):
+        cache.clear()
+        client, _token = self._client_with_session(application_purpose="study")
+        other_client, _other_token = self._client_with_session(application_purpose="study")
+        other_client.first_name = "NoChange"
+        other_client.email = "no-change-purpose@example.com"
+        other_client.save(update_fields=["first_name", "email"])
+        mos_data = MOSApplicationData.objects.get(client=client)
+        mos_data.mos_purpose = "work"
+        mos_data.status = "client_filling"
+        mos_data.save(update_fields=["mos_purpose", "status"])
+
+        self.client.login(email="manager-purpose@example.com", password="securepassword")
+        list_url = reverse("clients:client_list")
+        response = self.client.get(list_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["purpose_change_count"], 1)
+        self.assertContains(response, f"{list_url}?onboarding=purpose_change")
+        self.assertContains(response, "Смена основания")
+        self.assertContains(response, reverse("clients:admin_mos_review", kwargs={"client_id": client.pk}))
+
+        filtered_response = self.client.get(list_url, {"onboarding": "purpose_change"})
+        self.assertEqual(filtered_response.status_code, 200)
+        self.assertContains(filtered_response, "Показаны клиенты, где клиент изменил основание подачи")
+        self.assertContains(filtered_response, "Purpose")
+        self.assertNotContains(filtered_response, "NoChange")
+
+        detail_response = self.client.get(reverse("clients:client_detail", kwargs={"pk": client.pk}))
+        self.assertEqual(detail_response.status_code, 200)
+        self.assertContains(detail_response, "Клиент изменил основание подачи")
+        self.assertContains(detail_response, "Подтвердить или проверить")

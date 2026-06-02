@@ -36,6 +36,21 @@
         <p><strong>Статус:</strong> {{ client.mos_application_data.get_status_display|default:"Не начато" }}</p>
         <p><strong>Легальное пребывание:</strong> {{ client.mos_application_data.legal_stay_until|date:"d.m.Y"|default:"Не указано" }}</p>
         
+        {% if client.onboarding_purpose_requires_review %}
+            <div class="alert alert-warning border d-flex flex-column gap-2 mb-3">
+                <div>
+                    <strong>{% translate "Клиент изменил основание подачи" %}</strong><br>
+                    {% translate "В карточке:" %} {{ client.onboarding_card_purpose_label }}.<br>
+                    {% translate "Клиент выбрал:" %} {{ client.onboarding_selected_purpose_label }}.
+                </div>
+                <div>
+                    <a href="{% url 'clients:admin_mos_review' client.id %}" class="btn btn-sm btn-warning">
+                        <i class="bi bi-check2-circle me-1"></i>{% translate "Подтвердить или проверить" %}
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+
         <a href="{% url 'clients:admin_mos_review' client.id %}" class="btn btn-outline-primary mb-3">
             <i class="bi bi-file-earmark-text"></i> Проверить анкету MOS
         </a>
@@ -65,6 +80,17 @@
                 {% endif %}
             </div>
             
+            {% with current_purpose=client.get_document_requirement_purpose %}
+                <div class="mb-2">
+                    <label for="detail-onboarding-purpose" class="form-label small text-muted mb-1">{% translate 'Основание подачи для новой ссылки' %}</label>
+                    <select id="detail-onboarding-purpose" class="form-select form-select-sm">
+                        <option value="study" {% if current_purpose == 'study' %}selected{% endif %}>{% translate "Учёба" %}</option>
+                        <option value="work" {% if current_purpose == 'work' %}selected{% endif %}>{% translate "Работа" %}</option>
+                        <option value="family_spouse" {% if current_purpose == 'family_spouse' %}selected{% endif %}>{% translate "Воссоединение с супругом" %}</option>
+                        <option value="family_child" {% if current_purpose == 'family_child' %}selected{% endif %}>{% translate "Воссоединение с ребёнком" %}</option>
+                    </select>
+                </div>
+            {% endwith %}
             <button type="button" class="btn btn-primary btn-sm btn-generate-onboarding-link"
                     id="btn-generate-detail-onboarding"
                     data-text-generating-ru="Генерация..."

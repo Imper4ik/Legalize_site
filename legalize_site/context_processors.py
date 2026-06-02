@@ -33,9 +33,10 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
     from django.db.models import Q
     from clients.models import Client
     from clients.services.access import accessible_clients_queryset
+    from clients.services.onboarding_purposes import onboarding_purpose_mismatch_q
 
     language = translation.get_language() or getattr(settings, "LANGUAGE_CODE", "")
-    cache_key = f"onboarding_notifications:v2:user:{request.user.pk}:lang:{language}"
+    cache_key = f"onboarding_notifications:v3:user:{request.user.pk}:lang:{language}"
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
@@ -46,6 +47,7 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
             Client.objects.filter(Q(user__is_staff=False) | Q(user__isnull=True)),
         )
         completed_onboarding_count = qs.filter(mos_application_data__status="client_completed").count()
+        purpose_change_count = qs.filter(onboarding_purpose_mismatch_q()).count()
         staff_review_count = qs.filter(mos_application_data__status="staff_review").count()
         submitted_in_mos_count = qs.filter(mos_application_data__status="submitted_in_mos").count()
         ocr_review_count = qs.filter(
@@ -63,6 +65,14 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
 
         client_list_url = reverse("clients:client_list")
         items = []
+        if purpose_change_count:
+            items.append({
+                "label": _("Смена основания"),
+                "count": purpose_change_count,
+                "url": f"{client_list_url}?onboarding=purpose_change",
+                "icon": "bi-exclamation-diamond",
+                "level": "warning",
+            })
         if completed_onboarding_count:
             items.append({
                 "label": _("Client completed"),
@@ -114,6 +124,7 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
 
         context = {
             "completed_onboarding_count": completed_onboarding_count,
+            "purpose_change_count": purpose_change_count,
             "client_attention_count": sum(item["count"] for item in items),
             "client_attention_items": items,
         }

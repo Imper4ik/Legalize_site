@@ -21,8 +21,7 @@
     </a>
     {% endif %}
     {% if user|has_any_role:"Admin,Manager,Staff" %}
-    <button type="button" class="btn btn-outline-primary" id="btn-quick-onboarding-link"
-            data-generate-url="{% url 'clients:quick_create_client_onboarding' %}">
+    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#quickOnboardingModal">
       <i class="bi bi-link-45deg me-1"></i>{% translate "Быстрая ссылка" %}
     </button>
     <a href="{% url 'clients:client_add' %}" class="btn btn-gradient">
@@ -36,6 +35,35 @@
 {% block content %}
 <div id="ajax-alert-container"></div>
 
+{% if user|has_any_role:"Admin,Manager,Staff" %}
+<div class="modal fade" id="quickOnboardingModal" tabindex="-1" aria-labelledby="quickOnboardingModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="quickOnboardingModalLabel">{% translate "Основание подачи" %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
+      </div>
+      <div class="modal-body">
+        <label for="quick-onboarding-purpose" class="form-label">{% translate "Выберите основание для ссылки" %}</label>
+        <select id="quick-onboarding-purpose" class="form-select">
+          <option value="study">{% translate "Учёба" %}</option>
+          <option value="work">{% translate "Работа" %}</option>
+          <option value="family_spouse">{% translate "Воссоединение с супругом" %}</option>
+          <option value="family_child">{% translate "Воссоединение с ребёнком" %}</option>
+        </select>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+        <button type="button" class="btn btn-primary" id="btn-quick-onboarding-link"
+                data-generate-url="{% url 'clients:quick_create_client_onboarding' %}">
+          <i class="bi bi-link-45deg me-1"></i>{% translate "Сгенерировать ссылку" %}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {% if onboarding_filter %}
 <div class="alert alert-warning d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
   <div>
@@ -44,6 +72,8 @@
         {% translate "Показаны клиенты со статусом:" %} {% translate "Client completed" %}
       {% elif onboarding_filter == "staff_review" %}
         {% translate "Показаны клиенты со статусом:" %} {% translate "Staff review" %}
+      {% elif onboarding_filter == "purpose_change" %}
+        {% translate "Показаны клиенты, где клиент изменил основание подачи" %}
       {% elif onboarding_filter == "submitted_in_mos" %}
         {% translate "Показаны клиенты со статусом:" %} {% translate "Submitted in MOS" %}
       {% else %}
@@ -168,6 +198,11 @@
                     {{ client.mos_application_data.updated_at|date:"d.m.Y H:i" }}
                   </span>
                 {% endif %}
+              {% endif %}
+              {% if client.onboarding_purpose_requires_review %}
+                <a href="{% url 'clients:admin_mos_review' client.id %}" class="badge bg-danger text-decoration-none" title="{% translate 'Клиент изменил основание подачи. Нажмите, чтобы подтвердить или проверить.' %}">
+                  <i class="bi bi-exclamation-diamond me-1"></i>{% translate "Смена основания" %}: {{ client.onboarding_selected_purpose_label }}
+                </a>
               {% endif %}
               {% if client.family_members_count > 0 %}
                 <span class="badge bg-primary bg-opacity-75" title="{% translate 'Спонсор семьи' %}">

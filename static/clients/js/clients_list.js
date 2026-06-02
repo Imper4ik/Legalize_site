@@ -268,6 +268,9 @@
     
     const alertContainer = document.getElementById('ajax-alert-container');
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const purposeSelect = root.getElementById('quick-onboarding-purpose');
+    const modalEl = root.getElementById('quickOnboardingModal');
+    const modal = modalEl && window.bootstrap ? bootstrap.Modal.getOrCreateInstance(modalEl) : null;
 
     function showAlert(message, type = 'success') {
       if (!alertContainer) return;
@@ -327,6 +330,10 @@
       }
 
       try {
+        const formData = new FormData();
+        if (purposeSelect && purposeSelect.value) {
+          formData.append('application_purpose', purposeSelect.value);
+        }
         const response = await fetch(url, {
           method: 'POST',
           headers: {
@@ -334,6 +341,7 @@
             'Accept': 'application/json',
             'X-CSRFToken': csrfToken,
           },
+          body: formData,
         });
 
         if (!response.ok) {
@@ -351,6 +359,9 @@
           }
           
           const msg = data.message || 'Onboarding link copied!';
+          if (modal) {
+            modal.hide();
+          }
           showAlert(msg, 'success');
 
           setTimeout(() => {

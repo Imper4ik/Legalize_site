@@ -13,6 +13,12 @@ from django.core.exceptions import ValidationError
 from clients.security.encrypted import safe_encrypted_attr
 from clients.services.activity import log_client_activity
 from clients.views.base import role_required_view
+from clients.services.onboarding_purposes import (
+    ALLOWED_ONBOARDING_PURPOSES,
+    apply_onboarding_purpose_to_client,
+    clear_onboarding_notifications_cache,
+    purpose_label,
+)
 
 
 APPLY_TO_CLIENT_FIELDS = (
@@ -26,30 +32,16 @@ APPLY_TO_CLIENT_FIELDS = (
     "basis_of_stay",
     "legal_basis_end_date",
 )
-ONBOARDING_PURPOSE_LABELS = {
-    "study": "Учёба",
-    "work": "Работа",
-    "family_spouse": "Воссоединение с супругом",
-    "family_child": "Воссоединение с ребёнком",
-    "family": "Воссоединение с семьёй",
-}
-
-
-def _purpose_label(purpose: str | None) -> str:
-    if not purpose:
-        return "не выбрана"
-    return ONBOARDING_PURPOSE_LABELS.get(purpose, str(purpose))
-
-
 def _purpose_review_context(client: Client, mos_data: MOSApplicationData) -> dict[str, object]:
     client_requirement_purpose = client.get_document_requirement_purpose()
     client_selected_purpose = mos_data.mos_purpose
     return {
         "client_card_purpose": client.application_purpose,
-        "client_card_purpose_label": _purpose_label(client_requirement_purpose),
+        "client_card_purpose_label": purpose_label(client_requirement_purpose),
         "client_selected_purpose": client_selected_purpose,
-        "client_selected_purpose_label": _purpose_label(client_selected_purpose),
+        "client_selected_purpose_label": purpose_label(client_selected_purpose),
         "purpose_mismatch": bool(client_selected_purpose and client_selected_purpose != client_requirement_purpose),
+        "can_accept_client_purpose": client_selected_purpose in ALLOWED_ONBOARDING_PURPOSES,
     }
 
 
@@ -145,17 +137,17 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
             return redirect("clients:client_detail", pk=client.id)
         elif action == "accept_client_purpose":
             selected_purpose = mos_data.mos_purpose
-            if selected_purpose not in {"study", "work"}:
-                messages.error(request, "Cannot apply this purpose directly to the client card.")
+            if selected_purpose not in ALLOWED_ONBOARDING_PURPOSES:
+                messages.error(request, "Cannot apply this purpose to the client card.")
                 return redirect("clients:admin_mos_review", client_id=client.id)
-            client.application_purpose = selected_purpose
-            client.save(update_fields=["application_purpose"])
+            changed_fields = apply_onboarding_purpose_to_client(client, selected_purpose)
+            clear_onboarding_notifications_cache(client)
             log_client_activity(
                 client=client,
                 actor=request.user,
                 event_type="mos_purpose_applied",
                 summary="Client-selected MOS purpose applied to client card",
-                metadata={"application_purpose": selected_purpose},
+                metadata={"selected_purpose": selected_purpose, "changed_fields": changed_fields},
             )
             messages.success(request, "Client-selected purpose applied to the client card.")
             return redirect("clients:admin_mos_review", client_id=client.id)

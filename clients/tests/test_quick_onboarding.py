@@ -79,6 +79,38 @@ class QuickOnboardingTests(TestCase):
         raw_token = data["link"].rstrip('/').split('/')[-1]
         self.assertEqual(hash_onboarding_token(raw_token), session.token_hash)
 
+    def test_quick_create_maps_family_purpose_to_family_role(self):
+        url = reverse("clients:quick_create_client_onboarding")
+        response = self.client_agent.post(url, {
+            "email": "quick-family@example.com",
+            "application_purpose": "family_child",
+        })
+
+        self.assertEqual(response.status_code, 200)
+        client = Client.objects.get(email="quick-family@example.com")
+        self.assertEqual(client.application_purpose, "family")
+        self.assertEqual(client.family_role, "family_child")
+        self.assertEqual(client.get_document_requirement_purpose(), "family_child")
+
+    def test_quick_create_rejects_invalid_purpose(self):
+        response = self.client_agent.post(
+            reverse("clients:quick_create_client_onboarding"),
+            {"application_purpose": "hacked"},
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["status"], "error")
+
+    def test_client_list_quick_link_asks_for_purpose(self):
+        response = self.client_agent.get(reverse("clients:client_list"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'data-bs-target="#quickOnboardingModal"')
+        self.assertContains(response, 'id="quickOnboardingModal"')
+        self.assertContains(response, 'id="quick-onboarding-purpose"')
+        self.assertContains(response, 'value="family_spouse"')
+        self.assertContains(response, 'value="family_child"')
+
     def test_onboarding_start_post_redirects_to_first_step(self):
         """Verify that a POST request to onboarding_start redirects to onboarding_digital_access."""
         client = Client.objects.create(
@@ -212,6 +244,8 @@ class QuickOnboardingTests(TestCase):
             "tax_arrears": "no",
         })
         self.assertEqual(response.status_code, 302) # Redirect to review
+        review_response = self.client_agent.get(response["Location"])
+        self.assertEqual(review_response.status_code, 200)
         
         # Verify status
         mos_data.refresh_from_db()

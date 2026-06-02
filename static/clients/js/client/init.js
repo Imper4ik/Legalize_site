@@ -46,6 +46,7 @@ function initTabAnchorLinks() {
 function initOnboardingPanelLinkGenerator() {
   const btn = document.getElementById('btn-generate-detail-onboarding');
   if (!btn) return;
+  const purposeSelect = document.getElementById('detail-onboarding-purpose');
 
   btn.addEventListener('click', async (e) => {
     e.preventDefault();
@@ -68,6 +69,10 @@ function initOnboardingPanelLinkGenerator() {
                       document.querySelector('[name=csrfmiddlewaretoken]')?.value;
 
     try {
+      const formData = new FormData();
+      if (purposeSelect && purposeSelect.value) {
+        formData.append('application_purpose', purposeSelect.value);
+      }
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -75,6 +80,7 @@ function initOnboardingPanelLinkGenerator() {
           'Accept': 'application/json',
           'X-CSRFToken': csrfToken,
         },
+        body: formData,
       });
 
       if (!response.ok) {

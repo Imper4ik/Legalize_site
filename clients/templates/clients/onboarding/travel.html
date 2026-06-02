@@ -10,26 +10,21 @@
     <div class="mb-4">
         <h5>{% trans "Текущее пребывание в Польше" %}</h5>
         
-        <div class="mb-3">
-            <label class="form-label fw-bold">{% trans "Цель подачи (Основание для ВНЖ)" %}</label>
-            <select name="mos_purpose" id="mos_purpose" class="form-select" required>
-                <option value="">{% trans "Выберите основание..." %}</option>
-                <option value="Работа" {% if mos_data.mos_purpose == 'Работа' %}selected{% endif %}>{% trans "Работа (Zezwolenie na pobyt i pracę)" %}</option>
-                <option value="Учеба" {% if mos_data.mos_purpose == 'Учеба' %}selected{% endif %}>{% trans "Учеба (Studia)" %}</option>
-                <option value="Воссоединение семьи" {% if mos_data.mos_purpose == 'Воссоединение семьи' %}selected{% endif %}>{% trans "Воссоединение семьи (Pobyt z rodziną)" %}</option>
-                <option value="Бизнес" {% if mos_data.mos_purpose == 'Бизнес' %}selected{% endif %}>{% trans "Бизнес (Działalność gospodarcza)" %}</option>
-                <option value="Иное" {% if mos_data.mos_purpose == 'Иное' %}selected{% endif %}>{% trans "Иное (Inne)" %}</option>
-            </select>
-            <div class="form-text text-muted">{% trans "Выбор цели влияет на перечень документов, которые мы у вас запросим." %}</div>
+        <div class="alert alert-light border mb-3">
+            <div class="small text-muted">{% trans "Основание подачи" %}</div>
+            <div class="fw-bold">{{ effective_purpose_label }}</div>
+            {% if can_change_purpose %}
+                <a class="small" href="{% url 'clients:onboarding_purpose' session.token_hash %}">{% trans "Изменить цель подачи" %}</a>
+            {% endif %}
         </div>
 
-        <div class="mb-3" id="employerEmailContainer" style="display: none;">
+        <div class="mb-3" id="employerEmailContainer" {% if effective_purpose != 'work' %}style="display: none;"{% endif %}>
             <label for="employer_email" class="form-label fw-bold">{% trans "Email работодателя" %}</label>
             <input type="email" class="form-control" id="employer_email" name="employer_email" value="{{ mos_data.personal_data.employer_email|default:'' }}" placeholder="{% trans 'email@employer.com' %}">
             <div class="form-text text-muted">{% trans "Укажите контактный email отдела кадров или вашего работодателя." %}</div>
         </div>
 
-        <div class="mb-3" id="universityEmailContainer" style="display: none;">
+        <div class="mb-3" id="universityEmailContainer" {% if effective_purpose != 'study' %}style="display: none;"{% endif %}>
             <label for="university_email" class="form-label fw-bold">{% trans "Email университета" %}</label>
             <input type="email" class="form-control" id="university_email" name="university_email" value="{{ mos_data.personal_data.university_email|default:'' }}" placeholder="{% trans 'email@university.edu.pl' %}">
             <div class="form-text text-muted">{% trans "Укажите email деканата или отдела по работе с иностранными студентами." %}</div>
@@ -140,18 +135,6 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        const purposeSelect = document.getElementById("mos_purpose");
-        const empContainer = document.getElementById("employerEmailContainer");
-        const univContainer = document.getElementById("universityEmailContainer");
-
-        function togglePurposeEmails() {
-            const val = purposeSelect.value;
-            empContainer.style.display = (val === "Работа") ? "block" : "none";
-            univContainer.style.display = (val === "Учеба") ? "block" : "none";
-        }
-        purposeSelect.addEventListener("change", togglePurposeEmails);
-        togglePurposeEmails();
-
         const wasPolYes = document.getElementById("wasPolYes");
         const wasPolNo = document.getElementById("wasPolNo");
         const prevStaysContainer = document.getElementById("previousStaysContainer");

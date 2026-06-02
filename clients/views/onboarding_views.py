@@ -19,17 +19,16 @@ from clients.services.access import accessible_clients_queryset
 from clients.views.base import role_required_view
 from clients.services.onboarding_tokens import generate_onboarding_token, hash_onboarding_token
 from clients.use_cases.client_records import finalize_client_creation
+from clients.services.onboarding_purposes import (
+    ONBOARDING_PURPOSE_CHOICES,
+    apply_onboarding_purpose_to_client,
+    clear_onboarding_notifications_cache,
+    normalize_onboarding_purpose,
+    purpose_label,
+)
 
 EDITABLE_MOS_STATUSES = {"draft", "client_filling", "needs_correction"}
 CONTACT_SYNC_FIELDS = ("first_name", "last_name", "phone", "email")
-ONBOARDING_PURPOSE_CHOICES = (
-    ("study", "Учёба"),
-    ("work", "Работа"),
-    ("family_spouse", "Воссоединение с супругом"),
-    ("family_child", "Воссоединение с ребёнком"),
-)
-ALLOWED_ONBOARDING_PURPOSES = {value for value, _label in ONBOARDING_PURPOSE_CHOICES}
-ONBOARDING_PURPOSE_LABELS = dict(ONBOARDING_PURPOSE_CHOICES)
 
 
 def _mos_data_is_editable(mos_data: MOSApplicationData | None) -> bool:
@@ -73,12 +72,6 @@ def _get_effective_document_purpose(client: Client, mos_data: MOSApplicationData
     return client.get_document_requirement_purpose()
 
 
-def _purpose_label(purpose: str | None) -> str:
-    if not purpose:
-        return "не выбрана"
-    return ONBOARDING_PURPOSE_LABELS.get(purpose, str(purpose))
-
-
 def _purpose_context(client: Client, mos_data: MOSApplicationData | None) -> dict[str, str | bool]:
     effective_purpose = _get_effective_document_purpose(client, mos_data)
     client_selected_purpose = mos_data.mos_purpose if mos_data else ""
@@ -87,9 +80,9 @@ def _purpose_context(client: Client, mos_data: MOSApplicationData | None) -> dic
         "effective_purpose": effective_purpose,
         "client_selected_purpose": client_selected_purpose,
         "original_client_purpose": original_client_purpose,
-        "effective_purpose_label": _purpose_label(effective_purpose),
-        "client_selected_purpose_label": _purpose_label(client_selected_purpose),
-        "original_client_purpose_label": _purpose_label(client.get_document_requirement_purpose()),
+        "effective_purpose_label": purpose_label(effective_purpose),
+        "client_selected_purpose_label": purpose_label(client_selected_purpose),
+        "original_client_purpose_label": purpose_label(client.get_document_requirement_purpose()),
         "purpose_mismatch": bool(client_selected_purpose and client_selected_purpose != client.get_document_requirement_purpose()),
     }
 
@@ -101,14 +94,18 @@ def _save_onboarding_purpose(mos_data: MOSApplicationData, selected_purpose: str
         mos_data.status = "client_filling"
         update_fields.append("status")
     mos_data.save(update_fields=update_fields)
+    clear_onboarding_notifications_cache(mos_data.client)
 
 
-def check_onboarding_session(token: str) -> ClientOnboardingSession | None:
+def check_onboarding_session(
+    token: str,
+    allowed_statuses: tuple[str, ...] = ("created", "active"),
+) -> ClientOnboardingSession | None:
     token_h = hash_onboarding_token(token)
     session = ClientOnboardingSession.objects.filter(token_hash=token_h, expires_at__gt=timezone.now()).first()
-    if not session or session.status not in ["created", "active"]:
+    if not session or session.status not in allowed_statuses:
         return None
-    if session.status == "created":
+    if session.status == "created" and "active" in allowed_statuses:
         session.status = "active"
         session.save(update_fields=["status"])
     # Keep templates backward-compatible: they still reference `session.token_hash` in URLs.
@@ -209,8 +206,9 @@ def onboarding_purpose(request: HttpRequest, token: str) -> HttpResponse:
     current_purpose = mos_data.mos_purpose or client.get_document_requirement_purpose()
 
     if request.method == "POST":
-        selected_purpose = request.POST.get("mos_purpose", "").strip()
-        if selected_purpose not in ALLOWED_ONBOARDING_PURPOSES:
+        try:
+            selected_purpose = normalize_onboarding_purpose(request.POST.get("mos_purpose"))
+        except ValueError:
             return HttpResponseBadRequest("Invalid application purpose.")
         _save_onboarding_purpose(mos_data, selected_purpose)
         return redirect("clients:onboarding_start", token=token)
@@ -221,7 +219,7 @@ def onboarding_purpose(request: HttpRequest, token: str) -> HttpResponse:
         "purpose_choices": ONBOARDING_PURPOSE_CHOICES,
         "current_purpose": current_purpose,
         "original_client_purpose": client.application_purpose,
-        "original_client_purpose_label": _purpose_label(client.get_document_requirement_purpose()),
+        "original_client_purpose_label": purpose_label(client.get_document_requirement_purpose()),
     })
 
 
@@ -469,8 +467,16 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
         return _locked_response(request, session)
 
     if request.method == "POST":
+        purpose_updated = False
 
-        mos_data.mos_purpose = request.POST.get("mos_purpose", "")
+        if "mos_purpose" in request.POST:
+            try:
+                selected_purpose = normalize_onboarding_purpose(request.POST.get("mos_purpose"))
+            except ValueError:
+                return HttpResponseBadRequest("Invalid application purpose.")
+            if mos_data.mos_purpose != selected_purpose:
+                mos_data.mos_purpose = selected_purpose
+                purpose_updated = True
         legal_stay_str = request.POST.get("legal_stay_until")
         if legal_stay_str:
             mos_data.legal_stay_until = legal_stay_str
@@ -494,9 +500,16 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
         
         mos_data.travel_history = [request.POST.get("travel_history", "")]
         mos_data.save()
+        if purpose_updated:
+            clear_onboarding_notifications_cache(session.client)
         return redirect("clients:onboarding_declarations", token=token)
 
-    return render(request, "clients/onboarding/travel.html", {"session": session, "mos_data": mos_data})
+    return render(request, "clients/onboarding/travel.html", {
+        "session": session,
+        "mos_data": mos_data,
+        "can_change_purpose": True,
+        **_purpose_context(session.client, mos_data),
+    })
 
 def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
     session = check_onboarding_session(token)
@@ -536,7 +549,7 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
     return render(request, "clients/onboarding/declarations.html", {"session": session, "mos_data": mos_data})
 
 def onboarding_review(request: HttpRequest, token: str) -> HttpResponse:
-    session = check_onboarding_session(token)
+    session = check_onboarding_session(token, allowed_statuses=("created", "active", "completed"))
     if not session:
         return HttpResponseForbidden("Срок действия ссылки истёк или она недействительна.")
 
@@ -547,18 +560,44 @@ def onboarding_review(request: HttpRequest, token: str) -> HttpResponse:
 @role_required_view("Admin", "Manager", "Staff")
 def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpResponse:
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), id=client_id)
+    selected_purpose = (request.POST.get("application_purpose", "").strip() or None) if request.method == "POST" else None
+    if selected_purpose:
+        try:
+            selected_purpose = normalize_onboarding_purpose(selected_purpose)
+        except ValueError:
+            if request_is_ajax(request):
+                return JsonResponse({"status": "error", "message": "Invalid application purpose"}, status=400)
+            return HttpResponseBadRequest("Invalid application purpose.")
+
     token, token_hash = generate_onboarding_token()
-    
     payment = client.payments.filter(status__in=["paid", "partial"]).first()
-    
-    ClientOnboardingSession.objects.create(
-        client=client,
-        payment=payment,
-        token_hash=token_hash,
-        status="created",
-        expires_at=timezone.now() + timedelta(days=7)
-    )
-    
+
+    with transaction.atomic():
+        if selected_purpose:
+            changed_fields = apply_onboarding_purpose_to_client(client, selected_purpose)
+            mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
+            if mos_data.mos_purpose:
+                mos_data.mos_purpose = ""
+                mos_data.save(update_fields=["mos_purpose", "updated_at"])
+            clear_onboarding_notifications_cache(client)
+            if changed_fields:
+                from clients.services.activity import log_client_activity
+                log_client_activity(
+                    client=client,
+                    actor=request.user,
+                    event_type="onboarding_link_purpose_set",
+                    summary="Onboarding link purpose set by staff",
+                    metadata={"selected_purpose": selected_purpose, "changed_fields": changed_fields},
+                )
+
+        ClientOnboardingSession.objects.create(
+            client=client,
+            payment=payment,
+            token_hash=token_hash,
+            status="created",
+            expires_at=timezone.now() + timedelta(days=7),
+        )
+
     if request_is_ajax(request):
         link = request.build_absolute_uri(
             reverse("clients:onboarding_start", kwargs={"token": token})
@@ -568,7 +607,7 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
             "link": link,
             "message": "Ссылка на онбординг скопирована!"
         })
-    
+
     messages.success(request, "Ссылка на онбординг успешно создана.")
     return redirect("clients:client_detail", pk=client.id)
 
@@ -586,7 +625,12 @@ def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
     email = request.POST.get("email", "").strip()
     phone = request.POST.get("phone", "").strip()
     language = request.POST.get("language", "pl").strip()
-    application_purpose = request.POST.get("application_purpose", "study").strip()
+    try:
+        selected_purpose = normalize_onboarding_purpose(request.POST.get("application_purpose", "study") or "study")
+    except ValueError:
+        return JsonResponse({"status": "error", "message": "Invalid application purpose"}, status=400)
+    application_purpose = "family" if selected_purpose in {"family_spouse", "family_child"} else selected_purpose
+    family_role = selected_purpose if application_purpose == "family" else ""
 
     try:
         with transaction.atomic():
@@ -598,6 +642,7 @@ def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
                 citizenship="",
                 language=language,
                 application_purpose=application_purpose,
+                family_role=family_role,
                 assigned_staff=request.user,
                 status="new",
                 workflow_stage="new_client",
@@ -754,11 +799,15 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         mos_data.address_data = address_data
         
     # Process travel fields
+    purpose_updated = False
     if "mos_purpose" in request.POST:
-        selected_purpose = request.POST.get("mos_purpose", "").strip()
-        if selected_purpose not in ALLOWED_ONBOARDING_PURPOSES:
+        try:
+            selected_purpose = normalize_onboarding_purpose(request.POST.get("mos_purpose"))
+        except ValueError:
             return JsonResponse({"status": "error", "message": "Invalid application purpose"}, status=400)
-        mos_data.mos_purpose = selected_purpose
+        if mos_data.mos_purpose != selected_purpose:
+            mos_data.mos_purpose = selected_purpose
+            purpose_updated = True
     if "legal_stay_until" in request.POST:
         val = request.POST.get("legal_stay_until", "").strip()
         if val:
@@ -817,6 +866,8 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         mos_data.status = "client_filling"
 
     mos_data.save()
+    if purpose_updated:
+        clear_onboarding_notifications_cache(client)
     if client_dirty:
         client.save()
         
