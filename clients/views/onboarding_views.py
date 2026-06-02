@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction
 from django.utils import timezone, translation
-from django.http import HttpRequest, HttpResponse, HttpResponseForbidden, JsonResponse
+from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
 from django.urls import reverse
 from legalize_site.utils.http import request_is_ajax
 from legalize_site.utils.files import build_protected_file_response
@@ -22,6 +22,14 @@ from clients.use_cases.client_records import finalize_client_creation
 
 EDITABLE_MOS_STATUSES = {"draft", "client_filling", "needs_correction"}
 CONTACT_SYNC_FIELDS = ("first_name", "last_name", "phone", "email")
+ONBOARDING_PURPOSE_CHOICES = (
+    ("study", "Учёба"),
+    ("work", "Работа"),
+    ("family_spouse", "Воссоединение с супругом"),
+    ("family_child", "Воссоединение с ребёнком"),
+)
+ALLOWED_ONBOARDING_PURPOSES = {value for value, _label in ONBOARDING_PURPOSE_CHOICES}
+ONBOARDING_PURPOSE_LABELS = dict(ONBOARDING_PURPOSE_CHOICES)
 
 
 def _mos_data_is_editable(mos_data: MOSApplicationData | None) -> bool:
@@ -58,6 +66,43 @@ def _sync_contact_fields_to_client(client: Client, **values: str) -> None:
     if update_fields:
         client.save(update_fields=update_fields)
 
+
+def _get_effective_document_purpose(client: Client, mos_data: MOSApplicationData | None = None) -> str:
+    if mos_data and mos_data.mos_purpose:
+        return mos_data.mos_purpose
+    return client.get_document_requirement_purpose()
+
+
+def _purpose_label(purpose: str | None) -> str:
+    if not purpose:
+        return "не выбрана"
+    return ONBOARDING_PURPOSE_LABELS.get(purpose, str(purpose))
+
+
+def _purpose_context(client: Client, mos_data: MOSApplicationData | None) -> dict[str, str | bool]:
+    effective_purpose = _get_effective_document_purpose(client, mos_data)
+    client_selected_purpose = mos_data.mos_purpose if mos_data else ""
+    original_client_purpose = client.application_purpose
+    return {
+        "effective_purpose": effective_purpose,
+        "client_selected_purpose": client_selected_purpose,
+        "original_client_purpose": original_client_purpose,
+        "effective_purpose_label": _purpose_label(effective_purpose),
+        "client_selected_purpose_label": _purpose_label(client_selected_purpose),
+        "original_client_purpose_label": _purpose_label(client.get_document_requirement_purpose()),
+        "purpose_mismatch": bool(client_selected_purpose and client_selected_purpose != client.get_document_requirement_purpose()),
+    }
+
+
+def _save_onboarding_purpose(mos_data: MOSApplicationData, selected_purpose: str) -> None:
+    mos_data.mos_purpose = selected_purpose
+    update_fields = ["mos_purpose", "updated_at"]
+    if mos_data.status == "draft":
+        mos_data.status = "client_filling"
+        update_fields.append("status")
+    mos_data.save(update_fields=update_fields)
+
+
 def check_onboarding_session(token: str) -> ClientOnboardingSession | None:
     token_h = hash_onboarding_token(token)
     session = ClientOnboardingSession.objects.filter(token_hash=token_h, expires_at__gt=timezone.now()).first()
@@ -86,15 +131,19 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
             return _locked_response(request, session)
         return redirect("clients:onboarding_digital_access", token=token)
 
-    purpose = client.get_document_requirement_purpose()
-    required_docs_catalog = DocumentRequirement.catalog_for(purpose=purpose, language=translation.get_language() or client.language)
-    
-    existing_docs = Document.objects.filter(client=client).values_list('document_type', 'id')
-    existing_map = {doc_type: doc_id for doc_type, doc_id in existing_docs}
+    purpose_ctx = _purpose_context(client, mos_data)
+    effective_purpose = str(purpose_ctx["effective_purpose"])
+    language = translation.get_language() or client.language
+    required_docs_catalog = DocumentRequirement.catalog_for(purpose=effective_purpose, language=language)
+
+    existing_documents = list(Document.objects.filter(client=client).order_by("document_type", "-uploaded_at"))
+    existing_map = {document.document_type: document.id for document in existing_documents}
 
     checklist = []
+    checklist_codes = set()
     for item in required_docs_catalog:
         doc_type = item["code"]
+        checklist_codes.add(doc_type)
         is_uploaded = doc_type in existing_map
         checklist.append({
             "code": doc_type,
@@ -103,6 +152,16 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
             "is_uploaded": is_uploaded,
             "doc_id": existing_map.get(doc_type),
         })
+
+    additional_documents = [
+        {
+            "id": document.id,
+            "code": document.document_type,
+            "label": document.display_name,
+        }
+        for document in existing_documents
+        if document.document_type not in checklist_codes
+    ]
 
     allow_edit = _mos_data_is_editable(mos_data)
     allow_delete = bool(mos_data and allow_edit)
@@ -130,7 +189,41 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
         "allow_edit": allow_edit,
         "allow_delete": allow_delete,
         "case_step": case_step,
+        "additional_documents": additional_documents,
+        "can_change_purpose": allow_edit,
+        **purpose_ctx,
     })
+
+
+def onboarding_purpose(request: HttpRequest, token: str) -> HttpResponse:
+    session = check_onboarding_session(token)
+    if not session:
+        return HttpResponseForbidden("Invalid or expired onboarding link.")
+
+    client = session.client
+    mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
+
+    if not _mos_data_is_editable(mos_data):
+        return _locked_response(request, session)
+
+    current_purpose = mos_data.mos_purpose or client.get_document_requirement_purpose()
+
+    if request.method == "POST":
+        selected_purpose = request.POST.get("mos_purpose", "").strip()
+        if selected_purpose not in ALLOWED_ONBOARDING_PURPOSES:
+            return HttpResponseBadRequest("Invalid application purpose.")
+        _save_onboarding_purpose(mos_data, selected_purpose)
+        return redirect("clients:onboarding_start", token=token)
+
+    return render(request, "clients/onboarding/purpose.html", {
+        "session": session,
+        "mos_data": mos_data,
+        "purpose_choices": ONBOARDING_PURPOSE_CHOICES,
+        "current_purpose": current_purpose,
+        "original_client_purpose": client.application_purpose,
+        "original_client_purpose_label": _purpose_label(client.get_document_requirement_purpose()),
+    })
+
 
 def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) -> HttpResponse:
     session = check_onboarding_session(token)
@@ -662,7 +755,10 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         
     # Process travel fields
     if "mos_purpose" in request.POST:
-        mos_data.mos_purpose = request.POST.get("mos_purpose", "")
+        selected_purpose = request.POST.get("mos_purpose", "").strip()
+        if selected_purpose not in ALLOWED_ONBOARDING_PURPOSES:
+            return JsonResponse({"status": "error", "message": "Invalid application purpose"}, status=400)
+        mos_data.mos_purpose = selected_purpose
     if "legal_stay_until" in request.POST:
         val = request.POST.get("legal_stay_until", "").strip()
         if val:
