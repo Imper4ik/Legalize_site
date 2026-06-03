@@ -627,6 +627,7 @@ class DocumentRequirementEditForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if not self.instance.custom_name:
             self.initial.setdefault('custom_name', _label_for_document_type(self.instance.document_type))
+        self.fields['position'].required = False
 
     class Meta:
         model = DocumentRequirement

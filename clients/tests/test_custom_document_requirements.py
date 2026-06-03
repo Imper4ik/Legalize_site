@@ -33,3 +33,23 @@ def test_update_reminders_only_custom_documents(db):
     req = ClientDocumentRequirement.objects.create(client=client, name="Doc", is_required=True, due_date=date(2026, 6, 1))
     call_command("update_reminders", "--only", "custom-documents")
     assert Reminder.objects.filter(custom_document_requirement=req, is_active=True).exists()
+
+
+def test_document_requirement_edit_form_position_optional(db):
+    from clients.forms import DocumentRequirementEditForm
+    from clients.models import DocumentRequirement
+
+    req = DocumentRequirement.objects.create(
+        application_purpose="work",
+        document_type="passport",
+        position=5,
+    )
+    form = DocumentRequirementEditForm(
+        data={"custom_name": "New Passport Name", "is_required": False},
+        instance=req,
+    )
+    assert form.is_valid()
+    updated = form.save()
+    assert updated.position == 5
+    assert updated.custom_name == "New Passport Name"
+
