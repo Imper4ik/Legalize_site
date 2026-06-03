@@ -78,13 +78,15 @@ def _count_missing_document_items() -> int | str:
 
     clients = active_qs.prefetch_related(
         "documents",
-        "wniosek_submissions",
+        "custom_document_requirements",
+        "wniosek_submissions__confirmed_by",
         "wniosek_submissions__attachments",
     )
+    requirements_cache = {}
     return sum(
         1
         for client in clients
-        for item in client.get_document_checklist()
+        for item in client.get_document_checklist(requirements_cache=requirements_cache)
         if not item.get("is_complete")
     )
 

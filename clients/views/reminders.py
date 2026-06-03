@@ -109,6 +109,7 @@ class DocumentReminderListView(ReminderListView):
                     "client__custom_document_requirements",
                     queryset=ClientDocumentRequirement.objects.filter(is_active=True).order_by("due_date", "created_at"),
                 ),
+                "client__wniosek_submissions__confirmed_by",
                 "client__wniosek_submissions__attachments",
             )
         )
@@ -145,8 +146,9 @@ class DocumentReminderListView(ReminderListView):
                 else:
                     group["ok_count"] += 1
 
+        requirements_cache = {}
         for group in grouped.values():
-            checklist = group["client"].get_document_checklist() or []
+            checklist = group["client"].get_document_checklist(requirements_cache=requirements_cache) or []
             group["missing_documents"] = [
                 {
                     "name": item.get("name"),

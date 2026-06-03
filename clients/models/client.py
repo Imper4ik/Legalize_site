@@ -395,13 +395,28 @@ class Client(SoftDeleteModel):
         summary = self.get_submitted_document_summary()
         return set(summary.get("codes", {}).keys())
 
-    def get_document_checklist(self, check_file_existence: bool = False) -> list[dict[str, Any]]:
+    def get_document_checklist(
+        self,
+        check_file_existence: bool = False,
+        requirements_cache: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
         from .document import DocumentRequirement, resolve_document_label
         from clients.services.document_helpers import document_file_exists
 
         current_language = translation.get_language() or self.language
         purpose = self.get_document_requirement_purpose()
-        required_docs = DocumentRequirement.required_for(purpose, current_language)
+
+        if requirements_cache is not None:
+            cache_key = f"{purpose}:{current_language}"
+            if cache_key not in requirements_cache:
+                required_docs = DocumentRequirement.required_for(purpose, current_language)
+                reqs = list(DocumentRequirement.objects.filter(application_purpose=purpose))
+                requirements_cache[cache_key] = (required_docs, reqs)
+            required_docs, reqs = requirements_cache[cache_key]
+        else:
+            required_docs = DocumentRequirement.required_for(purpose, current_language)
+            reqs = DocumentRequirement.objects.filter(application_purpose=purpose)
+
         prefetched_documents = getattr(self, "_prefetched_objects_cache", {}).get("documents")
         
         uploaded_docs: list[Document] | models.QuerySet[Document]
@@ -416,7 +431,6 @@ class Client(SoftDeleteModel):
                 reverse=True,
             )
 
-        reqs = DocumentRequirement.objects.filter(application_purpose=purpose)
         req_map = {r.document_type: r for r in reqs}
 
         docs_map: dict[str, list[Document]] = {}

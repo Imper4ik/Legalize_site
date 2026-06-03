@@ -57,6 +57,8 @@ def uploaded_zus_months(client: Client) -> set[date]:
         for value in client.documents.filter(
             document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
             zus_period_month__isnull=False,
+            verified=True,
+            archived_at__isnull=True,
         ).values_list("zus_period_month", flat=True)
         if value
     }

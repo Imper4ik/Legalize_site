@@ -71,7 +71,11 @@ class Command(BaseCommand):
             timeout=interval_seconds,
             task=lambda: call_command("process_email_campaigns", "--limit", str(email_campaign_limit)),
         )
-        call_command("run_weekly_document_reminders")
+        self._run_locked(
+            "weekly-document-reminders",
+            timeout=interval_seconds,
+            task=lambda: call_command("run_weekly_document_reminders"),
+        )
 
     def _run_locked(self, name: str, *, timeout: int, task: Callable[[], Any]) -> bool:
         cache_key = f"background_automation_loop:{name}"

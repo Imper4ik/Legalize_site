@@ -211,9 +211,23 @@ def _submitted_record(attachment: WniosekAttachment, document_type: str = "") ->
 
 def build_submitted_document_summary(client: Client) -> dict[str, Any]:
     """Build a summary of all submitted documents for the client."""
-    attachments = WniosekAttachment.objects.filter(
-        submission__client=client
-    ).select_related("submission", "submission__confirmed_by")
+    prefetched_subs = getattr(client, "_prefetched_objects_cache", {}).get("wniosek_submissions")
+    if prefetched_subs is not None:
+        attachments = []
+        for sub in prefetched_subs:
+            prefetched_atts = getattr(sub, "_prefetched_objects_cache", {}).get("attachments")
+            if prefetched_atts is not None:
+                for att in prefetched_atts:
+                    att.submission = sub
+                    attachments.append(att)
+            else:
+                attachments.extend(sub.attachments.all())
+    else:
+        attachments = list(
+            WniosekAttachment.objects.filter(
+                submission__client=client
+            ).select_related("submission", "submission__confirmed_by")
+        )
     
     codes: dict[str, list[dict[str, Any]]] = {}
     custom: list[dict[str, Any]] = []
