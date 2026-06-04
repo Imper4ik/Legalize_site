@@ -10,11 +10,15 @@ from clients.services.onboarding_tokens import hash_onboarding_token
 
 class OnboardingStartContactTests(TestCase):
     def _client_with_session(self):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        user = User.objects.create_user(email="test_contact_onb@example.com", password="secure_pwd_123")
         client = Client.objects.create(
             first_name="",
             last_name="",
             email="",
             phone="",
+            user=user,
             application_purpose="study",
             language="ru",
         )
@@ -25,6 +29,7 @@ class OnboardingStartContactTests(TestCase):
             status="created",
             expires_at=timezone.now() + timedelta(days=7),
         )
+        self.client.force_login(user)
         return client, token
 
     def test_get_start_page_shows_profile_indicator_and_required_contact_fields(self):
