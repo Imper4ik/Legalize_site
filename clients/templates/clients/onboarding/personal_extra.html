@@ -74,9 +74,12 @@
         </div>
     </div>
 
-    <div class="d-flex justify-content-between mt-4">
+    <div class="d-flex justify-content-between gap-2 flex-wrap mt-4">
         <a href="{% url 'clients:onboarding_passport' session.token_hash %}" class="btn btn-outline-secondary">{% trans "Назад" %}</a>
-        <button type="submit" class="btn btn-primary">{% trans "Далее: Адрес" %}</button>
+        <div class="d-flex gap-2 flex-wrap">
+            <button type="submit" name="action" value="save_return" class="btn btn-outline-primary">{% trans "Сохранить и вернуться в кабинет" %}</button>
+            <button type="submit" class="btn btn-primary">{% trans "Далее: Адрес" %}</button>
+        </div>
     </div>
 </form>
 {% endblock %}
