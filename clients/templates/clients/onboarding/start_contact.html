@@ -174,7 +174,7 @@
           
           <ul class="list-group list-group-flush border-top">
             {% for doc in checklist %}
-              <li class="list-group-item py-3">
+              <li class="list-group-item py-3" id="doc-{{ doc.code|slugify }}">
                 <div class="d-flex justify-content-between gap-3 flex-wrap align-items-center">
                   <div class="min-w-0 flex-grow-1">
                     <div class="d-flex align-items-center gap-2 flex-wrap">

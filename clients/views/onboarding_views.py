@@ -504,7 +504,8 @@ def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) 
             else:
                 error_text = " ".join(str(error) for errors in form.errors.values() for error in errors)
                 messages.error(request, _("Не удалось загрузить файл: %(errors)s") % {"errors": error_text})
-    return redirect(reverse("clients:onboarding_start", kwargs={"token": token}) + "#documents")
+    from django.utils.text import slugify
+    return redirect(reverse("clients:onboarding_start", kwargs={"token": token}) + f"#doc-{slugify(doc_type)}")
 
 
 def onboarding_document_preview(request: HttpRequest, token: str, doc_id: int) -> HttpResponse:
@@ -541,7 +542,8 @@ def onboarding_document_delete(request: HttpRequest, token: str, doc_id: int) ->
             actor=request.user if request.user.is_authenticated else None
         )
         
-    return redirect(reverse("clients:onboarding_start", kwargs={"token": token}) + "#documents")
+    from django.utils.text import slugify
+    return redirect(reverse("clients:onboarding_start", kwargs={"token": token}) + f"#doc-{slugify(doc.document_type)}")
 
 def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
     session = check_onboarding_session(token, request=request)

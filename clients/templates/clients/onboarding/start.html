@@ -119,7 +119,7 @@
                 
                 <ul class="list-group list-group-flush">
                     {% for doc in checklist %}
-                        <li class="list-group-item onboarding-document-item py-3">
+                        <li class="list-group-item onboarding-document-item py-3" id="doc-{{ doc.code|slugify }}">
                             <div class="onboarding-document-main pe-sm-3">
                                 <div class="onboarding-document-title">
                                     <strong>{{ doc.label }}</strong>
