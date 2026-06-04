@@ -241,8 +241,6 @@ def onboarding_set_password(request: HttpRequest, token: str) -> HttpResponse:
             error_message = _("Пожалуйста, укажите адрес электронной почты.")
         elif not _validate_email_domain_dns(email_val):
             error_message = _("Не удалось подтвердить существование домена почты. Пожалуйста, проверьте адрес на опечатки.")
-        elif not phone_val:
-            error_message = _("Пожалуйста, укажите номер телефона.")
         elif password != password_confirm:
             error_message = _("Пароли не совпадают.")
         elif len(password) < 8:
