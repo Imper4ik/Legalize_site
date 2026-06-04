@@ -230,6 +230,14 @@
     <div class="container py-5">
         
         <div class="d-flex justify-content-end align-items-center mb-3 gap-3">
+            <!-- Logout Button -->
+            {% if request.user.is_authenticated %}
+                <a href="{% url 'account_logout' %}" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 py-1 px-3 rounded-pill fw-bold">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span>{% trans "Выйти" %}</span>
+                </a>
+            {% endif %}
+
             <!-- Theme Toggle -->
             <button class="btn btn-sm theme-toggle" type="button" aria-pressed="false"
               aria-label="{% translate 'Переключить тему' %}" data-theme-toggle
