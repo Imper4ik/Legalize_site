@@ -122,9 +122,12 @@
         </div>
     </div>
 
-    <div class="d-flex justify-content-between">
+    <div class="d-flex justify-content-between gap-2 flex-wrap">
         <a href="{% url 'clients:onboarding_digital_access' session.token_hash %}" class="btn btn-secondary">{% trans "Назад" %}</a>
-        <button type="submit" class="btn btn-primary">{% trans "Далее: Доп. данные" %}</button>
+        <div class="d-flex gap-2 flex-wrap">
+            <button type="submit" name="action" value="save_return" class="btn btn-outline-primary">{% trans "Сохранить и вернуться в кабинет" %}</button>
+            <button type="submit" class="btn btn-primary">{% trans "Далее: Доп. данные" %}</button>
+        </div>
     </div>
 </form>
 {% endblock %}
