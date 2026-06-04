@@ -470,11 +470,14 @@
             btn.classList.add('btn-success');
           }
           
-          if (modal) {
+          if (modal && modalEl.classList.contains('show')) {
+            modalEl.addEventListener('hidden.bs.modal', () => {
+              openShareModal(data.link);
+            }, { once: true });
             modal.hide();
+          } else {
+            openShareModal(data.link);
           }
-
-          openShareModal(data.link);
 
           setTimeout(() => {
             if (icon) {
