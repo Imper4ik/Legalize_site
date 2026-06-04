@@ -20,14 +20,24 @@ from clients.views.onboarding_views import (
 )
 
 CONTACT_REQUIRED_FIELDS = ("first_name", "last_name", "email", "phone")
+CONTACT_PLACEHOLDER_PAIRS = {("новый", "клиент"), ("new", "client")}
 START_TEMPLATE = "clients/onboarding/start_contact.html"
+
+
+def _clean_placeholder_contact_value(field_name: str, value: str, *, first_name: str, last_name: str) -> str:
+    if (first_name.strip().lower(), last_name.strip().lower()) in CONTACT_PLACEHOLDER_PAIRS:
+        if field_name in {"first_name", "last_name"}:
+            return ""
+    return value.strip()
 
 
 def _contact_values_from_client(client: Client, mos_data: MOSApplicationData | None) -> dict[str, str]:
     personal_data = mos_data.personal_data if mos_data and isinstance(mos_data.personal_data, dict) else {}
+    raw_first_name = str(client.first_name or personal_data.get("first_name") or "").strip()
+    raw_last_name = str(client.last_name or personal_data.get("last_name") or "").strip()
     return {
-        "first_name": str(client.first_name or personal_data.get("first_name") or "").strip(),
-        "last_name": str(client.last_name or personal_data.get("last_name") or "").strip(),
+        "first_name": _clean_placeholder_contact_value("first_name", raw_first_name, first_name=raw_first_name, last_name=raw_last_name),
+        "last_name": _clean_placeholder_contact_value("last_name", raw_last_name, first_name=raw_first_name, last_name=raw_last_name),
         "email": str(client.email or personal_data.get("email") or "").strip(),
         "phone": str(client.phone or personal_data.get("phone") or "").strip(),
     }
@@ -180,6 +190,6 @@ def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
             )
 
         _save_contact_values(client, mos_data, contact_values)
-        return redirect("clients:onboarding_digital_access", token=token)
+        return redirect("clients:onboarding_start", token=token)
 
     return render(request, START_TEMPLATE, _build_start_context(session=session))
