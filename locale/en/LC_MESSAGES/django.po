@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-04 13:19+0200\n"
+"POT-Creation-Date: 2026-06-04 20:59+0200\n"
 "Language: en\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -123,7 +123,7 @@ msgstr "Letter text"
 msgid "Фильтр по Компании"
 msgstr "Filter by Company"
 
-#: .\clients\forms.py:453 .\clients\templates\clients\clients_list.html:168
+#: .\clients\forms.py:453 .\clients\templates\clients\clients_list.html:88
 msgid "Все компании"
 msgstr "All companies"
 
@@ -311,8 +311,8 @@ msgstr "Note updated"
 #: .\clients\models\activity.py:40 .\clients\models\document.py:155
 #: .\clients\models\email.py:30 .\clients\models\payment.py:31
 #: .\clients\models\reminder.py:14 .\clients\models\task.py:28
-#: .\clients\templates\clients\clients_list.html:200
-#: .\clients\templates\clients\clients_list.html:220
+#: .\clients\templates\clients\clients_list.html:120
+#: .\clients\templates\clients\clients_list.html:140
 #: .\clients\templates\clients\document_reminder_list.html:116
 #: .\clients\templates\clients\fingerprints_schedule.html:35
 #: .\clients\templates\clients\fingerprints_schedule.html:114
@@ -495,15 +495,15 @@ msgid "Email-кампании"
 msgstr "Email campaigns"
 
 #: .\clients\models\client.py:97 .\clients\models\client.py:103
-#: .\clients\models\payment.py:27
-#: .\clients\templates\clients\clients_list.html:49
+#: .\clients\models\payment.py:27 .\clients\services\onboarding_purposes.py:15
+#: .\clients\templates\clients\clients_list.html:327
 #: .\clients\templates\clients\partials\onboarding_panel.html:90
 msgid "Учёба"
 msgstr "Studies"
 
 #: .\clients\models\client.py:98 .\clients\models\client.py:104
-#: .\clients\models\payment.py:26
-#: .\clients\templates\clients\clients_list.html:50
+#: .\clients\models\payment.py:26 .\clients\services\onboarding_purposes.py:16
+#: .\clients\templates\clients\clients_list.html:328
 #: .\clients\templates\clients\partials\onboarding_panel.html:91
 msgid "Работа"
 msgstr "Work"
@@ -514,13 +514,13 @@ msgid "Воссоединение с семьёй"
 msgstr "Family reunification"
 
 #: .\clients\models\client.py:105 .\clients\models\client.py:111
-#: .\clients\templates\clients\clients_list.html:270
+#: .\clients\templates\clients\clients_list.html:190
 #: .\clients\templates\clients\family_dashboard.html:144
 msgid "Супруг/супруга"
 msgstr "Spouse"
 
 #: .\clients\models\client.py:106 .\clients\models\client.py:112
-#: .\clients\templates\clients\clients_list.html:274
+#: .\clients\templates\clients\clients_list.html:194
 #: .\clients\templates\clients\family_dashboard.html:148
 msgid "Ребёнок"
 msgstr "Child"
@@ -610,6 +610,8 @@ msgstr "Closed"
 
 #: .\clients\models\client.py:139
 #: .\clients\templates\clients\mos_review.html:20
+#: .\clients\templates\clients\onboarding\start_contact.html:29
+#: .\clients\templates\clients\onboarding\start_contact.html:208
 #: .\clients\templates\clients\partials\modals.html:193
 #: .\clients\templates\clients\staff_manage.html:26
 #: .\clients\templates\clients\staff_manage.html:66
@@ -618,6 +620,8 @@ msgstr "First Name"
 
 #: .\clients\models\client.py:140
 #: .\clients\templates\clients\mos_review.html:24
+#: .\clients\templates\clients\onboarding\start_contact.html:34
+#: .\clients\templates\clients\onboarding\start_contact.html:212
 #: .\clients\templates\clients\partials\modals.html:197
 #: .\clients\templates\clients\staff_manage.html:30
 #: .\clients\templates\clients\staff_manage.html:67
@@ -631,6 +635,8 @@ msgid "Гражданство"
 msgstr "Citizenship"
 
 #: .\clients\models\client.py:143
+#: .\clients\templates\clients\onboarding\start_contact.html:44
+#: .\clients\templates\clients\onboarding\start_contact.html:220
 msgid "Телефон"
 msgstr "Phone"
 
@@ -642,8 +648,8 @@ msgstr "Passport number"
 
 #: .\clients\models\client.py:146 .\clients\models\client.py:905
 #: .\clients\models\client.py:913
-#: .\clients\templates\clients\clients_list.html:201
-#: .\clients\templates\clients\clients_list.html:286
+#: .\clients\templates\clients\clients_list.html:121
+#: .\clients\templates\clients\clients_list.html:206
 #: .\clients\templates\clients\partials\modals.html:201
 msgid "Номер дела"
 msgstr "Case number"
@@ -716,7 +722,7 @@ msgid "Assigned staff"
 msgstr "Assigned staff"
 
 #: .\clients\models\client.py:607
-#: .\clients\tests\test_regression_health_and_reminders.py:115
+#: .\clients\tests\test_regression_health_and_reminders.py:116
 msgid "Основание пребывания уже истекло"
 msgstr "The reason for your stay has already expired"
 
@@ -725,7 +731,7 @@ msgid "Проверьте основание пребывания и срочн�
 msgstr "Check the basis of the stay and contact the client urgently."
 
 #: .\clients\models\client.py:615
-#: .\clients\tests\test_regression_health_and_reminders.py:100
+#: .\clients\tests\test_regression_health_and_reminders.py:101
 msgid "Основание пребывания скоро истекает"
 msgstr "Your stay will expire soon"
 
@@ -1238,7 +1244,7 @@ msgstr "Name"
 
 #: .\clients\models\document.py:316
 #: .\clients\templates\clients\document_checklist_manage.html:310
-#: .\clients\templates\clients\onboarding\start.html:125
+#: .\clients\templates\clients\onboarding\start.html:126
 #: .\clients\templates\clients\partials\modals.html:351
 msgid "Обязательный документ"
 msgstr "Required Document"
@@ -1475,13 +1481,13 @@ msgid "Client filling"
 msgstr "Client filling"
 
 #: .\clients\models\onboarding.py:74
-#: .\clients\templates\clients\clients_list.html:125
+#: .\clients\templates\clients\clients_list.html:45
 #: .\legalize_site\context_processors.py:78
 msgid "Client completed"
 msgstr "Client completed"
 
 #: .\clients\models\onboarding.py:75
-#: .\clients\templates\clients\clients_list.html:127
+#: .\clients\templates\clients\clients_list.html:47
 #: .\legalize_site\context_processors.py:86
 msgid "Staff review"
 msgstr "Staff review"
@@ -1499,7 +1505,7 @@ msgid "MOS package ready"
 msgstr "MOS package ready"
 
 #: .\clients\models\onboarding.py:79
-#: .\clients\templates\clients\clients_list.html:131
+#: .\clients\templates\clients\clients_list.html:51
 #: .\legalize_site\context_processors.py:94
 msgid "Submitted in MOS"
 msgstr "Submitted in MOS"
@@ -1706,7 +1712,7 @@ msgid "Низкий"
 msgstr "Short"
 
 #: .\clients\models\task.py:19
-#: .\clients\templates\clients\onboarding\set_password.html:223
+#: .\clients\templates\clients\onboarding\set_password.html:233
 msgid "Средний"
 msgstr "Average"
 
@@ -2309,6 +2315,22 @@ msgstr "not specified"
 msgid "не указан"
 msgstr "not specified"
 
+#: .\clients\services\onboarding_purposes.py:17
+#: .\clients\templates\clients\clients_list.html:329
+#: .\clients\templates\clients\partials\onboarding_panel.html:92
+msgid "Воссоединение с супругом"
+msgstr "Reunification with spouse"
+
+#: .\clients\services\onboarding_purposes.py:18
+#: .\clients\templates\clients\clients_list.html:330
+#: .\clients\templates\clients\partials\onboarding_panel.html:93
+msgid "Воссоединение с ребёнком"
+msgstr "Reunification with child"
+
+#: .\clients\services\onboarding_purposes.py:35
+msgid "не выбрана"
+msgstr "not selected"
+
 #: .\clients\services\permissions.py:72 .\clients\services\responses.py:64
 #: .\clients\views\base.py:34 .\clients\views\base.py:84
 #: .\clients\views\client_crud.py:364 .\templates\403.html:4
@@ -2427,13 +2449,14 @@ msgstr "Upload and save"
 #: .\clients\templates\clients\client_confirm_delete.html:31
 #: .\clients\templates\clients\client_edit.html:99
 #: .\clients\templates\clients\client_form.html:196
-#: .\clients\templates\clients\clients_list.html:56
+#: .\clients\templates\clients\clients_list.html:334
 #: .\clients\templates\clients\document_checklist_manage.html:211
 #: .\clients\templates\clients\document_checklist_manage.html:239
 #: .\clients\templates\clients\document_checklist_manage.html:268
 #: .\clients\templates\clients\document_checklist_manage.html:319
 #: .\clients\templates\clients\document_confirm_delete.html:25
-#: .\clients\templates\clients\onboarding\start.html:219
+#: .\clients\templates\clients\onboarding\start.html:222
+#: .\clients\templates\clients\onboarding\start_contact.html:331
 #: .\clients\templates\clients\partials\modals.html:57
 #: .\clients\templates\clients\partials\modals.html:127
 #: .\clients\templates\clients\partials\modals.html:310
@@ -2882,7 +2905,7 @@ msgstr "You can leave blank lines or clear the block entirely."
 #: .\clients\templates\clients\client_form.html:201
 #: .\clients\templates\clients\client_form.html:202
 #: .\clients\templates\clients\client_form.html:205
-#: .\clients\templates\clients\clients_list.html:316
+#: .\clients\templates\clients\clients_list.html:236
 #: .\clients\templates\clients\document_checklist_manage.html:269
 #: .\clients\templates\clients\family_dashboard.html:130
 #: .\clients\templates\clients\partials\modals.html:58
@@ -3090,14 +3113,14 @@ msgstr "Select date"
 
 #: .\clients\templates\clients\client_add.html:80
 #: .\clients\templates\clients\client_edit.html:81
-#: .\clients\templates\clients\clients_list.html:205
-#: .\clients\templates\clients\clients_list.html:302
+#: .\clients\templates\clients\clients_list.html:125
+#: .\clients\templates\clients\clients_list.html:222
 msgid "Заметки"
 msgstr "Notes"
 
 #: .\clients\templates\clients\client_add.html:84
 #: .\clients\templates\clients\client_edit.html:85
-#: .\clients\templates\clients\clients_list.html:207
+#: .\clients\templates\clients\clients_list.html:127
 msgid "Жирный"
 msgstr "Bold"
 
@@ -3253,6 +3276,7 @@ msgstr "Edit: %(client.first_name)s %(client.last_name)s"
 
 #: .\clients\templates\clients\client_edit.html:98
 #: .\clients\templates\clients\document_checklist_manage.html:320
+#: .\clients\templates\clients\onboarding\start_contact.html:225
 msgid "Сохранить изменения"
 msgstr "Save changes"
 
@@ -3462,123 +3486,64 @@ msgstr "Mass Email"
 msgid "Быстрая ссылка"
 msgstr "Quick link"
 
-#: .\clients\templates\clients\clients_list.html:43
-#: .\clients\templates\clients\onboarding\travel.html:14
-#: .\submissions\models.py:33 .\submissions\models.py:77
-#: .\submissions\templates\submissions\submission_detail.html:10
-msgid "Основание подачи"
-msgstr "Create submission purpose"
-
-#: .\clients\templates\clients\clients_list.html:44
-#: .\clients\templates\clients\clients_list.html:71
-#: .\clients\templates\clients\clients_list.html:113
-#: .\clients\templates\clients\document_checklist_manage.html:198
-#: .\clients\templates\clients\document_checklist_manage.html:224
-#: .\clients\templates\clients\document_checklist_manage.html:253
-#: .\clients\templates\clients\document_checklist_manage.html:287
-#: .\clients\templates\clients\onboarding\start.html:181
-#: .\clients\templates\clients\partials\modals.html:242
-#: .\clients\templates\clients\partials\modals.html:327
-#: .\templates\base.html:256
-msgid "Закрыть"
-msgstr "Close"
-
+#: .\clients\templates\clients\clients_list.html:45
 #: .\clients\templates\clients\clients_list.html:47
-msgid "Выберите основание для ссылки"
-msgstr "Select link purpose"
-
 #: .\clients\templates\clients\clients_list.html:51
-#: .\clients\templates\clients\partials\onboarding_panel.html:92
-msgid "Воссоединение с супругом"
-msgstr "Reunification with spouse"
-
-#: .\clients\templates\clients\clients_list.html:52
-#: .\clients\templates\clients\partials\onboarding_panel.html:93
-msgid "Воссоединение с ребёнком"
-msgstr "Reunification with child"
-
-#: .\clients\templates\clients\clients_list.html:59
-msgid "Сгенерировать ссылку"
-msgstr "Generate link"
-
-#: .\clients\templates\clients\clients_list.html:70
-msgid "Поделиться ссылкой на онбординг"
-msgstr "Share onboarding link"
-
-#: .\clients\templates\clients\clients_list.html:87
-msgid "Сообщение для отправки"
-msgstr "Sent date"
-
-#: .\clients\templates\clients\clients_list.html:93
-msgid "Копировать сообщение"
-msgstr "Edit Document"
-
-#: .\clients\templates\clients\clients_list.html:96
-msgid "Только ссылку"
-msgstr "Request a new link"
-
-#: .\clients\templates\clients\clients_list.html:101
-msgid "Сканировать QR-код на смартфоне"
-msgstr "Edit data"
-
-#: .\clients\templates\clients\clients_list.html:125
-#: .\clients\templates\clients\clients_list.html:127
-#: .\clients\templates\clients\clients_list.html:131
 msgid "Показаны клиенты со статусом:"
 msgstr "Showing clients with status:"
 
-#: .\clients\templates\clients\clients_list.html:129
+#: .\clients\templates\clients\clients_list.html:49
 msgid "Показаны клиенты, где клиент изменил основание подачи"
 msgstr "Create submission purpose"
 
-#: .\clients\templates\clients\clients_list.html:133
+#: .\clients\templates\clients\clients_list.html:53
 msgid "Показаны отфильтрованные клиенты"
 msgstr "Showing filtered clients"
 
-#: .\clients\templates\clients\clients_list.html:136
+#: .\clients\templates\clients\clients_list.html:56
 msgid "Откройте карточку клиента или бейдж анкеты, чтобы проверить данные."
 msgstr "Open the client profile to check the document and next actions."
 
-#: .\clients\templates\clients\clients_list.html:138
-#: .\clients\templates\clients\clients_list.html:158
+#: .\clients\templates\clients\clients_list.html:58
+#: .\clients\templates\clients\clients_list.html:78
 msgid "Показать всех клиентов"
 msgstr "Show all clients"
 
-#: .\clients\templates\clients\clients_list.html:147
+#: .\clients\templates\clients\clients_list.html:67
 msgid "Клиенты с OCR на подтверждении"
 msgstr "Clients with OCR pending approval"
 
-#: .\clients\templates\clients\clients_list.html:149
+#: .\clients\templates\clients\clients_list.html:69
 msgid "Клиенты с OCR предупреждениями"
 msgstr "Clients with OCR warnings"
 
-#: .\clients\templates\clients\clients_list.html:151
+#: .\clients\templates\clients\clients_list.html:71
 msgid "Клиенты с OCR в обработке"
 msgstr "Clients with OCR processing"
 
-#: .\clients\templates\clients\clients_list.html:153
+#: .\clients\templates\clients\clients_list.html:73
 msgid "Отфильтрованные события клиентов"
 msgstr "Filtered client events"
 
-#: .\clients\templates\clients\clients_list.html:156
+#: .\clients\templates\clients\clients_list.html:76
 msgid ""
 "Откройте карточку клиента, чтобы проверить документ и следующее действие."
 msgstr "Open the client profile to check the document and next actions."
 
-#: .\clients\templates\clients\clients_list.html:181
+#: .\clients\templates\clients\clients_list.html:101
 msgid "Поиск по имени, почте, телефону или номеру дела..."
 msgstr "Search by name, email, or case number..."
 
-#: .\clients\templates\clients\clients_list.html:190
+#: .\clients\templates\clients\clients_list.html:110
 msgid "Найти"
 msgstr "Find"
 
-#: .\clients\templates\clients\clients_list.html:202
+#: .\clients\templates\clients\clients_list.html:122
 msgid "Основание и дата окончания"
 msgstr "Basis and end date"
 
-#: .\clients\templates\clients\clients_list.html:214
-#: .\clients\templates\clients\clients_list.html:320
+#: .\clients\templates\clients\clients_list.html:134
+#: .\clients\templates\clients\clients_list.html:240
 #: .\clients\templates\clients\document_checklist_manage.html:85
 #: .\clients\templates\clients\fingerprints_schedule.html:39
 #: .\clients\templates\clients\mos_review.html:267
@@ -3589,80 +3554,80 @@ msgstr "Basis and end date"
 msgid "Действия"
 msgstr "Actions"
 
-#: .\clients\templates\clients\clients_list.html:227
+#: .\clients\templates\clients\clients_list.html:147
 msgid "Клиент завершил онбординг, нажать для проверки"
 msgstr "Questionnaire submitted to MOS, click to check"
 
-#: .\clients\templates\clients\clients_list.html:230
+#: .\clients\templates\clients\clients_list.html:150
 msgid "Ждет проверки сотрудником"
 msgstr "Staff Logs"
 
-#: .\clients\templates\clients\clients_list.html:231
+#: .\clients\templates\clients\clients_list.html:151
 msgid "Ждет проверки"
 msgstr "Pending verification"
 
-#: .\clients\templates\clients\clients_list.html:234
-#: .\clients\templates\clients\clients_list.html:243
-#: .\clients\templates\clients\clients_list.html:252
+#: .\clients\templates\clients\clients_list.html:154
+#: .\clients\templates\clients\clients_list.html:163
+#: .\clients\templates\clients\clients_list.html:172
 msgid "Когда анкета была обновлена"
 msgstr "Note updated"
 
-#: .\clients\templates\clients\clients_list.html:239
+#: .\clients\templates\clients\clients_list.html:159
 msgid "Анкета на рассмотрении, нажать для проверки"
 msgstr "Questionnaire under review, click to check"
 
-#: .\clients\templates\clients\clients_list.html:248
+#: .\clients\templates\clients\clients_list.html:168
 msgid "Анкета выслана в ужонд, нажать для проверки"
 msgstr "Questionnaire submitted to MOS, click to check"
 
-#: .\clients\templates\clients\clients_list.html:258
+#: .\clients\templates\clients\clients_list.html:178
 msgid ""
 "Клиент изменил основание подачи. Нажмите, чтобы подтвердить или проверить."
 msgstr ""
 "The client has changed the basis for filing. Click to confirm or check."
 
-#: .\clients\templates\clients\clients_list.html:259
+#: .\clients\templates\clients\clients_list.html:179
 #: .\legalize_site\context_processors.py:70
 msgid "Смена основания"
 msgstr "Creation date"
 
-#: .\clients\templates\clients\clients_list.html:263
+#: .\clients\templates\clients\clients_list.html:183
 #: .\clients\templates\clients\partials\client_overview.html:19
 #: .\clients\templates\clients\partials\client_overview.html:147
 msgid "Спонсор семьи"
 msgstr "Family Sponsor"
 
-#: .\clients\templates\clients\clients_list.html:264
+#: .\clients\templates\clients\clients_list.html:184
 #, python-format
 msgid "Спонсор: %(count)s"
 msgstr "Sponsor: %(count)s"
 
-#: .\clients\templates\clients\clients_list.html:291
+#: .\clients\templates\clients\clients_list.html:211
 msgid "Основание"
 msgstr "Basis"
 
-#: .\clients\templates\clients\clients_list.html:297
+#: .\clients\templates\clients\clients_list.html:217
 #, python-format
 msgid "до %(date)s"
 msgstr "until %(date)s"
 
-#: .\clients\templates\clients\clients_list.html:315
+#: .\clients\templates\clients\clients_list.html:235
 msgid "Сохранить заметку"
 msgstr "Save note"
 
-#: .\clients\templates\clients\clients_list.html:323
-#: .\clients\templates\clients\clients_list.html:325
+#: .\clients\templates\clients\clients_list.html:243
+#: .\clients\templates\clients\clients_list.html:245
 msgid "Подробнее"
 msgstr "Details"
 
-#: .\clients\templates\clients\clients_list.html:331
+#: .\clients\templates\clients\clients_list.html:251
 msgid "Скопировать ссылку на онбординг"
 msgstr "Send email"
 
-#: .\clients\templates\clients\clients_list.html:337
-#: .\clients\templates\clients\clients_list.html:339
+#: .\clients\templates\clients\clients_list.html:257
+#: .\clients\templates\clients\clients_list.html:259
 #: .\clients\templates\clients\document_checklist_manage.html:99
-#: .\clients\templates\clients\onboarding\start.html:135
+#: .\clients\templates\clients\onboarding\start.html:143
 #: .\clients\templates\clients\partials\document_checklist.html:368
 #: .\clients\templates\clients\partials\document_checklist.html:404
 #: .\clients\templates\clients\partials\reminder_item.html:95
@@ -3671,15 +3636,15 @@ msgstr "Send email"
 msgid "Удалить"
 msgstr "Delete"
 
-#: .\clients\templates\clients\clients_list.html:348
+#: .\clients\templates\clients\clients_list.html:268
 msgid "Клиенты не найдены."
 msgstr "No clients found."
 
-#: .\clients\templates\clients\clients_list.html:362
+#: .\clients\templates\clients\clients_list.html:282
 msgid "Первая"
 msgstr "First"
 
-#: .\clients\templates\clients\clients_list.html:367
+#: .\clients\templates\clients\clients_list.html:287
 #: .\clients\templates\clients\documents\acceleration_request.html:129
 #: .\clients\templates\clients\documents\mazowiecki_application.html:270
 #: .\clients\templates\clients\mass_email.html:13
@@ -3693,21 +3658,70 @@ msgstr "First"
 msgid "Назад"
 msgstr "Back"
 
-#: .\clients\templates\clients\clients_list.html:374
+#: .\clients\templates\clients\clients_list.html:294
 msgid "Страница"
 msgstr "Page"
 
-#: .\clients\templates\clients\clients_list.html:374
+#: .\clients\templates\clients\clients_list.html:294
 msgid "из"
 msgstr "of"
 
-#: .\clients\templates\clients\clients_list.html:381
+#: .\clients\templates\clients\clients_list.html:301
 msgid "Вперед"
 msgstr "Next"
 
-#: .\clients\templates\clients\clients_list.html:386
+#: .\clients\templates\clients\clients_list.html:306
 msgid "Последняя"
 msgstr "Last"
+
+#: .\clients\templates\clients\clients_list.html:321
+#: .\clients\templates\clients\onboarding\travel.html:14
+#: .\submissions\models.py:33 .\submissions\models.py:77
+#: .\submissions\templates\submissions\submission_detail.html:10
+msgid "Основание подачи"
+msgstr "Create submission purpose"
+
+#: .\clients\templates\clients\clients_list.html:322
+#: .\clients\templates\clients\clients_list.html:349
+#: .\clients\templates\clients\clients_list.html:391
+#: .\clients\templates\clients\document_checklist_manage.html:198
+#: .\clients\templates\clients\document_checklist_manage.html:224
+#: .\clients\templates\clients\document_checklist_manage.html:253
+#: .\clients\templates\clients\document_checklist_manage.html:287
+#: .\clients\templates\clients\onboarding\start.html:199
+#: .\clients\templates\clients\partials\modals.html:242
+#: .\clients\templates\clients\partials\modals.html:327
+#: .\templates\base.html:256
+msgid "Закрыть"
+msgstr "Close"
+
+#: .\clients\templates\clients\clients_list.html:325
+msgid "Выберите основание для ссылки"
+msgstr "Select link purpose"
+
+#: .\clients\templates\clients\clients_list.html:337
+msgid "Сгенерировать ссылку"
+msgstr "Generate link"
+
+#: .\clients\templates\clients\clients_list.html:348
+msgid "Поделиться ссылкой на онбординг"
+msgstr "Share onboarding link"
+
+#: .\clients\templates\clients\clients_list.html:365
+msgid "Сообщение для отправки"
+msgstr "Sent date"
+
+#: .\clients\templates\clients\clients_list.html:371
+msgid "Копировать сообщение"
+msgstr "Edit Document"
+
+#: .\clients\templates\clients\clients_list.html:374
+msgid "Только ссылку"
+msgstr "Request a new link"
+
+#: .\clients\templates\clients\clients_list.html:379
+msgid "Сканировать QR-код на смартфоне"
+msgstr "Edit data"
 
 #: .\clients\templates\clients\document_checklist_manage.html:4
 #: .\clients\templates\clients\document_checklist_manage.html:54
@@ -3853,7 +3867,7 @@ msgid "Подтверждение удаления документа"
 msgstr "Confirm document deletion"
 
 #: .\clients\templates\clients\document_confirm_delete.html:15
-#: .\clients\templates\clients\onboarding\start.html:133
+#: .\clients\templates\clients\onboarding\start.html:141
 msgid "Вы уверены, что хотите удалить этот документ?"
 msgstr "Are you sure you want to delete this document?"
 
@@ -4328,13 +4342,13 @@ msgid "ИЛИ"
 msgstr "OR"
 
 #: .\clients\templates\clients\login.html:27
-#: .\clients\templates\clients\onboarding\set_password.html:97
+#: .\clients\templates\clients\onboarding\set_password.html:106
 #: .\clients\templates\clients\register.html:32
 msgid "Адрес электронной почты"
 msgstr "Email address"
 
 #: .\clients\templates\clients\login.html:31
-#: .\clients\templates\clients\onboarding\set_password.html:106
+#: .\clients\templates\clients\onboarding\set_password.html:116
 #: .\clients\templates\clients\register.html:38
 #: .\clients\templates\clients\staff_manage.html:34
 msgid "Пароль"
@@ -4615,7 +4629,7 @@ msgid "Семейное положение"
 msgstr "Monthly maintenance"
 
 #: .\clients\templates\clients\mos_review.html:100
-#: .\clients\templates\clients\onboarding\base_onboarding.html:185
+#: .\clients\templates\clients\onboarding\base_onboarding.html:283
 msgid "Паспорт"
 msgstr "Export"
 
@@ -4635,7 +4649,7 @@ msgid "Орган выдачи"
 msgstr "Submission types"
 
 #: .\clients\templates\clients\mos_review.html:123
-#: .\clients\templates\clients\onboarding\base_onboarding.html:193
+#: .\clients\templates\clients\onboarding\base_onboarding.html:291
 msgid "Адрес"
 msgstr "Office address"
 
@@ -4925,21 +4939,30 @@ msgstr "City"
 msgid "Улица, дом, квартира"
 msgstr "Street, house, apartment"
 
-#: .\clients\templates\clients\onboarding\address.html:86
+#: .\clients\templates\clients\onboarding\address.html:87
+#: .\clients\templates\clients\onboarding\declarations.html:51
+#: .\clients\templates\clients\onboarding\digital_access.html:70
+#: .\clients\templates\clients\onboarding\passport.html:128
+#: .\clients\templates\clients\onboarding\personal_extra.html:80
+#: .\clients\templates\clients\onboarding\travel.html:133
+msgid "Сохранить и вернуться в кабинет"
+msgstr "Document reminders"
+
+#: .\clients\templates\clients\onboarding\address.html:88
 msgid "Далее: Пребывание и Поездки"
 msgstr "The reason for your stay has already expired"
 
-#: .\clients\templates\clients\onboarding\base_onboarding.html:30
+#: .\clients\templates\clients\onboarding\base_onboarding.html:31
 msgid "Онбординг"
 msgstr "Onboarding"
 
-#: .\clients\templates\clients\onboarding\base_onboarding.html:137
+#: .\clients\templates\clients\onboarding\base_onboarding.html:235
 #: .\templates\account\auth_base.html:740 .\templates\base.html:154
 #: .\templates\includes\theme_toggle.html:5
 msgid "Переключить тему"
 msgstr "Toggle theme"
 
-#: .\clients\templates\clients\onboarding\base_onboarding.html:138
+#: .\clients\templates\clients\onboarding\base_onboarding.html:236
 #: .\templates\account\auth_base.html:741
 #: .\templates\account\auth_base.html:749 .\templates\base.html:155
 #: .\templates\includes\theme_toggle.html:7
@@ -4947,52 +4970,56 @@ msgstr "Toggle theme"
 msgid "Светлая тема"
 msgstr "Light theme"
 
-#: .\clients\templates\clients\onboarding\base_onboarding.html:139
+#: .\clients\templates\clients\onboarding\base_onboarding.html:237
 #: .\templates\account\auth_base.html:742 .\templates\base.html:156
 #: .\templates\includes\theme_toggle.html:8
 msgid "Тёмная тема"
 msgstr "Dark theme"
 
-#: .\clients\templates\clients\onboarding\base_onboarding.html:167
+#: .\clients\templates\clients\onboarding\base_onboarding.html:265
 msgid "Прогресс заполнения"
 msgstr "Edit data"
 
-#: .\clients\templates\clients\onboarding\base_onboarding.html:169
+#: .\clients\templates\clients\onboarding\base_onboarding.html:267
 #, python-format
 msgid "Шаг %(current)s из %(total)s"
 msgstr "Page %(current)s of %(total)s"
 
-#: .\clients\templates\clients\onboarding\base_onboarding.html:181
+#: .\clients\templates\clients\onboarding\base_onboarding.html:279
 msgid "Доступ"
 msgstr "Access to OCR review"
 
-#: .\clients\templates\clients\onboarding\base_onboarding.html:189
+#: .\clients\templates\clients\onboarding\base_onboarding.html:287
 #: .\clients\templates\clients\onboarding\start.html:19
 msgid "Анкета"
 msgstr "Questionnaire"
 
-#: .\clients\templates\clients\onboarding\base_onboarding.html:197
+#: .\clients\templates\clients\onboarding\base_onboarding.html:295
 msgid "Поездки"
 msgstr "Trips"
 
-#: .\clients\templates\clients\onboarding\base_onboarding.html:201
+#: .\clients\templates\clients\onboarding\base_onboarding.html:299
 msgid "Согласие"
 msgstr "Agreement"
 
-#: .\clients\templates\clients\onboarding\base_onboarding.html:205
+#: .\clients\templates\clients\onboarding\base_onboarding.html:303
 #: .\clients\templates\clients\onboarding\start.html:24
 msgid "Проверка"
 msgstr "Verified"
 
-#: .\clients\templates\clients\onboarding\base_onboarding.html:249
+#: .\clients\templates\clients\onboarding\base_onboarding.html:324
+msgid "Личный кабинет"
+msgstr "Add client"
+
+#: .\clients\templates\clients\onboarding\base_onboarding.html:372
 msgid "Сохранение..."
 msgstr "Save"
 
-#: .\clients\templates\clients\onboarding\base_onboarding.html:250
+#: .\clients\templates\clients\onboarding\base_onboarding.html:373
 msgid "Сохранено"
 msgstr "Save"
 
-#: .\clients\templates\clients\onboarding\base_onboarding.html:251
+#: .\clients\templates\clients\onboarding\base_onboarding.html:374
 msgid "Ошибка сохранения. Проверьте сеть."
 msgstr "Failed to save changes. Check the form."
 
@@ -5048,7 +5075,7 @@ msgstr ""
 "By clicking Complete questionnaire, you confirm the correctness of the "
 "entered data. Our staff will check them shortly."
 
-#: .\clients\templates\clients\onboarding\declarations.html:50
+#: .\clients\templates\clients\onboarding\declarations.html:52
 msgid "Завершить заполнение"
 msgstr "Edit data"
 
@@ -5122,7 +5149,7 @@ msgstr ""
 "Poland (mos.gov.pl) for filling out applications for a residence card. If "
 "you don't have an account yet, we will help you create one."
 
-#: .\clients\templates\clients\onboarding\digital_access.html:70
+#: .\clients\templates\clients\onboarding\digital_access.html:71
 #: .\clients\templates\clients\onboarding\personal_data.html:18
 #: .\templates\socialaccount\login.html:31
 msgid "Продолжить"
@@ -5228,7 +5255,7 @@ msgstr ""
 msgid "Например: MVS 8080 или орган власти"
 msgstr "For example: Important update"
 
-#: .\clients\templates\clients\onboarding\passport.html:127
+#: .\clients\templates\clients\onboarding\passport.html:129
 msgid "Далее: Доп. данные"
 msgstr "General data"
 
@@ -5351,7 +5378,7 @@ msgid "Например: Шрамы, татуировки. Если примет
 msgstr ""
 "Example: Turkey (2022), Germany (2023). If there was no travel, write No."
 
-#: .\clients\templates\clients\onboarding\personal_extra.html:79
+#: .\clients\templates\clients\onboarding\personal_extra.html:81
 msgid "Далее: Адрес"
 msgstr "Next: Address"
 
@@ -5412,47 +5439,56 @@ msgstr ""
 "Please set a password so that you can access your personal account from any "
 "device via email."
 
+#: .\clients\templates\clients\onboarding\set_password.html:97
+msgid "ФИО"
+msgstr "Full name"
+
 #: .\clients\templates\clients\onboarding\set_password.html:102
+msgid "Введите фамилию и имя как в паспорте."
+msgstr "Enter your surname and given name as in your passport."
+
+#: .\clients\templates\clients\onboarding\set_password.html:111
 msgid ""
 "Этот адрес электронной почты будет использоваться в качестве вашего логина."
 msgstr "This email address will be used as your login."
 
-#: .\clients\templates\clients\onboarding\set_password.html:120
-#: .\clients\templates\clients\onboarding\set_password.html:201
+#: .\clients\templates\clients\onboarding\set_password.html:130
+#: .\clients\templates\clients\onboarding\set_password.html:211
 msgid "Слишком короткий"
 msgstr "The file is too large."
 
-#: .\clients\templates\clients\onboarding\set_password.html:121
+#: .\clients\templates\clients\onboarding\set_password.html:131
 msgid "мин. 8 символов"
 msgstr "min. 8 characters"
 
-#: .\clients\templates\clients\onboarding\set_password.html:127
+#: .\clients\templates\clients\onboarding\set_password.html:137
 #: .\clients\templates\clients\register.html:44
 msgid "Подтвердите пароль"
 msgstr "Confirm deletion"
 
-#: .\clients\templates\clients\onboarding\set_password.html:136
+#: .\clients\templates\clients\onboarding\set_password.html:146
 msgid "Пароли не совпадают"
 msgstr "Basis of stay"
 
-#: .\clients\templates\clients\onboarding\set_password.html:141
+#: .\clients\templates\clients\onboarding\set_password.html:151
 #: .\templates\socialaccount\signup.html:47
 msgid "Создать аккаунт и войти"
 msgstr "Create submission purpose"
 
-#: .\clients\templates\clients\onboarding\set_password.html:194
+#: .\clients\templates\clients\onboarding\set_password.html:204
 msgid "Пустой"
 msgstr "Empty"
 
-#: .\clients\templates\clients\onboarding\set_password.html:219
+#: .\clients\templates\clients\onboarding\set_password.html:229
 msgid "Слабый"
 msgstr "Weak"
 
-#: .\clients\templates\clients\onboarding\set_password.html:227
+#: .\clients\templates\clients\onboarding\set_password.html:237
 msgid "Надежный"
 msgstr "Reliable"
 
 #: .\clients\templates\clients\onboarding\start.html:4
+#: .\clients\templates\clients\onboarding\start_contact.html:4
 msgid "Личный кабинет клиента"
 msgstr "Add client"
 
@@ -5469,10 +5505,12 @@ msgid "Подано"
 msgstr "Create"
 
 #: .\clients\templates\clients\onboarding\start.html:55
+#: .\clients\templates\clients\onboarding\start_contact.html:63
 msgid "Текущая выбранная цель"
 msgstr "Basis end date"
 
 #: .\clients\templates\clients\onboarding\start.html:59
+#: .\clients\templates\clients\onboarding\start_contact.html:66
 msgid "Вы выбрали другую цель подачи. Сотрудник проверит это перед отправкой."
 msgstr ""
 "You have selected a different submission target. A staff member will check "
@@ -5487,6 +5525,7 @@ msgid "Вы выбрали:"
 msgstr "You have selected:"
 
 #: .\clients\templates\clients\onboarding\start.html:67
+#: .\clients\templates\clients\onboarding\start_contact.html:70
 #: .\clients\templates\clients\onboarding\travel.html:17
 msgid "Изменить цель подачи"
 msgstr "Purpose of application"
@@ -5496,6 +5535,7 @@ msgid "Цель подачи заблокирована"
 msgstr "Edit Submission Purpose"
 
 #: .\clients\templates\clients\onboarding\start.html:80
+#: .\clients\templates\clients\onboarding\start_contact.html:84
 msgid "Анкета для ВНЖ (MOS)"
 msgstr "Residence permit application (MOS)"
 
@@ -5519,8 +5559,9 @@ msgid "Статус: Требуются исправления"
 msgstr "Status: Corrections required"
 
 #: .\clients\templates\clients\onboarding\start.html:95
+#: .\clients\templates\clients\onboarding\start_contact.html:124
 msgid "Внести исправления"
-msgstr "Date sent"
+msgstr "Make corrections"
 
 #: .\clients\templates\clients\onboarding\start.html:99
 msgid "Статус: Ожидает заполнения"
@@ -5535,6 +5576,7 @@ msgid "Начать / Продолжить заполнение"
 msgstr "Purpose Actions"
 
 #: .\clients\templates\clients\onboarding\start.html:114
+#: .\clients\templates\clients\onboarding\start_contact.html:153
 msgid "Ваши документы"
 msgstr "Document version"
 
@@ -5543,34 +5585,36 @@ msgid ""
 "Пожалуйста, загрузите сканы или качественные фото требуемых документов."
 msgstr "Please upload scans or high-quality photos of the required documents."
 
-#: .\clients\templates\clients\onboarding\start.html:130
+#: .\clients\templates\clients\onboarding\start.html:138
+#: .\clients\templates\clients\onboarding\start_contact.html:174
 msgid "Загружено"
 msgstr "Loaded"
 
-#: .\clients\templates\clients\onboarding\start.html:131
-#: .\clients\templates\clients\onboarding\start.html:158
+#: .\clients\templates\clients\onboarding\start.html:139
+#: .\clients\templates\clients\onboarding\start.html:175
 msgid "Preview"
 msgstr "Previous"
 
-#: .\clients\templates\clients\onboarding\start.html:139
+#: .\clients\templates\clients\onboarding\start.html:147
+#: .\clients\templates\clients\onboarding\start_contact.html:179
 msgid "Ожидается"
 msgstr "Waiting"
 
-#: .\clients\templates\clients\onboarding\start.html:141
+#: .\clients\templates\clients\onboarding\start.html:149
 #: .\clients\templates\clients\partials\modals.html:141
 #: .\clients\templates\clients\partials\modals.html:245
 msgid "Загрузить"
 msgstr "Upload Wezwanie"
 
-#: .\clients\templates\clients\onboarding\start.html:143
+#: .\clients\templates\clients\onboarding\start.html:151
 msgid "Locked"
 msgstr "Locked"
 
-#: .\clients\templates\clients\onboarding\start.html:152
+#: .\clients\templates\clients\onboarding\start.html:160
 msgid "Загруженные дополнительные документы"
 msgstr "All uploaded documents have already been verified."
 
-#: .\clients\templates\clients\onboarding\start.html:153
+#: .\clients\templates\clients\onboarding\start.html:161
 msgid ""
 "Эти документы остаются в деле, но не входят в текущий список для выбранной "
 "цели."
@@ -5578,60 +5622,151 @@ msgstr ""
 "These documents remain on file, but are not included in the current list for"
 " the selected purpose."
 
-#: .\clients\templates\clients\onboarding\start.html:180
+#: .\clients\templates\clients\onboarding\start.html:198
+#: .\clients\templates\clients\onboarding\start_contact.html:315
 msgid "Загрузка:"
 msgstr "Upload date"
 
-#: .\clients\templates\clients\onboarding\start.html:187
+#: .\clients\templates\clients\onboarding\start.html:208
 msgid ""
-"Это ежемесячная декларация о взносах. Вы можете скачать её в личном кабинете"
-" ZUS PUE (вкладка Ubezpieczony -> Raporty -> Informacja dla ubezpieczonego) "
-"или запросить у бухгалтера вашего работодателя."
+"PDF, JPG, JPEG, PNG или WebP. Если фото с телефона не отправляется, "
+"сохраните его как JPG/PNG или загрузите PDF."
 msgstr ""
-"This is a monthly contribution declaration. You can download it in your ZUS "
-"PUE personal account (Ubezpieczony tab -> Reporty -> Informacja dla "
-"ubezpieczonego) or request it from your employer’s accountant."
+"PDF, JPG, JPEG, PNG or WebP. If a phone photo does not upload, save it as "
+"JPG/PNG or upload a PDF."
 
-#: .\clients\templates\clients\onboarding\start.html:192
-msgid ""
-"Свою налоговую декларацию (например, PIT-37 или PIT-11) за прошлый год можно"
-" скачать на государственном портале podatki.gov.pl (e-Urząd Skarbowy) с "
-"помощью Profil Zaufany или получить у работодателя."
-msgstr ""
-"You can download your tax return (for example, PIT-37 or PIT-11) for the "
-"previous year on the state portal podatki.gov.pl (e-Urząd Skarbowy) using "
-"Profil Zaufany or obtain it from your employer."
-
-#: .\clients\templates\clients\onboarding\start.html:197
-msgid ""
-"Подтверждение активного медицинского страхования (например, декларация ZUS "
-"ZUA вместе с подтверждением оплаты взноса за последний месяц, либо частный "
-"страховой полис с квитанцией об оплате)."
-msgstr ""
-"Proof of active health insurance (for example, a ZUS ZUA declaration "
-"together with proof of payment of the last month's premium, or a private "
-"insurance policy with a payment receipt)."
-
-#: .\clients\templates\clients\onboarding\start.html:202
-msgid ""
-"Договор аренды жилья (Umowa najmu) со всеми страницами и подписями обеих "
-"сторон, либо подтверждение права собственности или подтверждение оплаты "
-"аренды."
-msgstr ""
-"Housing rental agreement (Umowa najmu) with all pages and signatures of both"
-" parties, or confirmation of ownership or confirmation of rental payment."
-
-#: .\clients\templates\clients\onboarding\start.html:205
-msgid "Поддерживаются форматы: PDF, JPG, PNG."
-msgstr "Supported formats: PDF, JPG, PNG."
-
-#: .\clients\templates\clients\onboarding\start.html:215
+#: .\clients\templates\clients\onboarding\start.html:218
 msgid "I checked the preview and confirm this is the correct file."
 msgstr "I checked the preview and confirm this is the correct file."
 
-#: .\clients\templates\clients\onboarding\start.html:220
+#: .\clients\templates\clients\onboarding\start.html:223
+#: .\clients\templates\clients\onboarding\start_contact.html:331
+#: .\clients\templates\clients\partials\modals.html:266
+msgid "Отправка..."
+msgstr "Uploading..."
+
+#: .\clients\templates\clients\onboarding\start.html:223
+#: .\clients\templates\clients\onboarding\start_contact.html:331
 msgid "Загрузить файл"
 msgstr "Upload Wezwanie"
+
+#: .\clients\templates\clients\onboarding\start_contact.html:11
+msgid "Вы находитесь в своём личном кабинете клиента."
+msgstr "Account created. You are signed in to the client cabinet."
+
+#: .\clients\templates\clients\onboarding\start_contact.html:12
+msgid "Профиль клиента активен"
+msgstr "Customer card is open"
+
+#: .\clients\templates\clients\onboarding\start_contact.html:13
+msgid "Доступ открыт по индивидуальной ссылке."
+msgstr "Add New Document"
+
+#: .\clients\templates\clients\onboarding\start_contact.html:20
+msgid "Ваши контактные данные"
+msgstr "Recognized data"
+
+#: .\clients\templates\clients\onboarding\start_contact.html:22
+msgid "Проверьте обязательные поля."
+msgstr "Verify checklist"
+
+#: .\clients\templates\clients\onboarding\start_contact.html:50
+msgid "Сохранить и продолжить"
+msgstr "Save changes"
+
+#: .\clients\templates\clients\onboarding\start_contact.html:52
+#: .\clients\templates\clients\onboarding\start_contact.html:227
+msgid "Профиль заблокирован для изменений"
+msgstr "Get reminders about deadlines and changes."
+
+#: .\clients\templates\clients\onboarding\start_contact.html:88
+msgid ""
+"Заполните персональные данные, адрес проживания, историю поездок и загрузите"
+" необходимые документы для автоматической подготовки пакета документов."
+msgstr ""
+"Fill in your personal details, address, travel history, and upload the "
+"required documents to automatically prepare the application package."
+
+#: .\clients\templates\clients\onboarding\start_contact.html:92
+msgid "Шаги анкеты"
+msgstr "Application Steps"
+
+#: .\clients\templates\clients\onboarding\start_contact.html:96
+msgid "Контактные данные"
+msgstr "Contact details"
+
+#: .\clients\templates\clients\onboarding\start_contact.html:100
+msgid "Паспортные данные и адрес"
+msgstr "Passport details and address"
+
+#: .\clients\templates\clients\onboarding\start_contact.html:104
+msgid "История въездов и поездок"
+msgstr "Entry and travel history"
+
+#: .\clients\templates\clients\onboarding\start_contact.html:114
+msgid "Анкета заполнена"
+msgstr "Questionnaire completed"
+
+#: .\clients\templates\clients\onboarding\start_contact.html:115
+msgid "Наши специалисты уже проверяют ваши данные."
+msgstr "Our specialists are already checking your data."
+
+#: .\clients\templates\clients\onboarding\start_contact.html:120
+msgid "Требуются исправления"
+msgstr "Corrections required"
+
+#: .\clients\templates\clients\onboarding\start_contact.html:129
+msgid "Перейдите к следующему шагу анкеты. Контактные данные уже сохранены."
+msgstr ""
+"Proceed to the next step of the questionnaire. Contact details are already "
+"saved."
+
+#: .\clients\templates\clients\onboarding\start_contact.html:131
+#: .\clients\templates\clients\onboarding\start_contact.html:136
+msgid "Продолжить анкету"
+msgstr "Check OCR"
+
+#: .\clients\templates\clients\onboarding\start_contact.html:135
+msgid "Сначала сохраните ФИО, email и телефон."
+msgstr "Save full name, email, and phone first."
+
+#: .\clients\templates\clients\onboarding\start_contact.html:156
+msgid ""
+"Загрузите необходимые документы по списку ниже для проверки сотрудником."
+msgstr ""
+"Upload the required documents from the list below for review by our staff."
+
+#: .\clients\templates\clients\onboarding\start_contact.html:167
+msgid "Обязательно"
+msgstr "Required"
+
+#: .\clients\templates\clients\onboarding\start_contact.html:198
+msgid "Изменить контактные данные"
+msgstr "Recognized data"
+
+#: .\clients\templates\clients\onboarding\start_contact.html:202
+msgid "Редактирование контактных данных"
+msgstr "Access confirmation"
+
+#: .\clients\templates\clients\onboarding\start_contact.html:318
+msgid "PDF, JPG, JPEG, PNG или WebP. Проверьте предпросмотр перед отправкой."
+msgstr "PDF, JPG, JPEG, PNG or WebP. Verify the preview before submitting."
+
+#: .\clients\templates\clients\onboarding\start_contact.html:322
+msgid "Предпросмотр выбранного файла"
+msgstr "Return ticket cost"
+
+#: .\clients\templates\clients\onboarding\start_contact.html:324
+msgid ""
+"Предпросмотр недоступен для этого типа файла. Проверьте имя файла перед "
+"отправкой."
+msgstr ""
+"The client has chosen a different submission purpose. Please check before "
+"sending."
+
+#: .\clients\templates\clients\onboarding\start_contact.html:328
+msgid "Я проверил предпросмотр и подтверждаю, что это правильный файл."
+msgstr "I have checked the preview and confirm this is the correct file."
 
 #: .\clients\templates\clients\onboarding\travel.html:4
 msgid "Шаг 4: Пребывание и Поездки"
@@ -5764,7 +5899,7 @@ msgid ""
 "Укажите страны (не включая вашу родину и Польшу) и примерный год поездки."
 msgstr "Indicate the country and approximate year of the trip."
 
-#: .\clients\templates\clients\onboarding\travel.html:132
+#: .\clients\templates\clients\onboarding\travel.html:134
 msgid "Далее: Декларации"
 msgstr "Appointment notification"
 
@@ -5856,8 +5991,8 @@ msgstr "family member(s)"
 #: .\clients\templates\clients\partials\workflow_panel.html:30
 msgid "тип проблемы"
 msgid_plural "типов проблем"
-msgstr[0] "type of problem"
-msgstr[1] "types of problems"
+msgstr[0] "issue type"
+msgstr[1] "issue types"
 
 #: .\clients\templates\clients\partials\client_overview.html:174
 msgid "Основание до"
@@ -6317,10 +6452,6 @@ msgstr "Loading template..."
 msgid "Ошибка загрузки шаблона."
 msgstr "Error loading template."
 
-#: .\clients\templates\clients\partials\modals.html:266
-msgid "Отправка..."
-msgstr "Uploading..."
-
 #: .\clients\templates\clients\partials\modals.html:270
 msgid "Отправить email клиенту"
 msgstr "Send email"
@@ -6510,8 +6641,8 @@ msgstr "Open tasks"
 #, python-format
 msgid "Риски: %(count)s тип проблемы"
 msgid_plural "Риски: %(count)s типов проблем"
-msgstr[0] "Risks: %(count)s problem type"
-msgstr[1] "Risks: %(count)s types of problems"
+msgstr[0] "Risks: %(count)s issue type"
+msgstr[1] "Risks: %(count)s issue types"
 
 #: .\clients\templates\clients\partials\workflow_panel.html:57
 msgid "Критичных автоматических сигналов по делу сейчас нет."
@@ -6756,76 +6887,76 @@ msgstr "Open"
 msgid "Print"
 msgstr "Print"
 
-#: .\clients\validators.py:47 .\clients\validators.py:55
+#: .\clients\validators.py:48 .\clients\validators.py:56
 msgid "Имя файла не должно содержать пути или вложенные каталоги."
 msgstr "The file name must not contain paths or subdirectories."
 
-#: .\clients\validators.py:52
+#: .\clients\validators.py:53
 msgid "У файла должно быть имя."
 msgstr "The file must have a name."
 
-#: .\clients\validators.py:60
+#: .\clients\validators.py:61
 #, python-format
 msgid "Имя файла слишком длинное. Максимум: %(length)s символов."
 msgstr "The file name is too long. Maximum: %(length)s characters."
 
-#: .\clients\validators.py:64
+#: .\clients\validators.py:65
 msgid "Имя файла содержит недопустимые управляющие символы."
 msgstr "The file name contains invalid control characters."
 
-#: .\clients\validators.py:86
+#: .\clients\validators.py:87
 msgid "Загрузите корректный PDF-файл."
 msgstr "Load the correct PDF file."
 
-#: .\clients\validators.py:88 .\clients\validators.py:105
+#: .\clients\validators.py:89 .\clients\validators.py:106
 msgid "PDF-файл повреждён или не читается."
 msgstr "The PDF file is damaged or unreadable."
 
-#: .\clients\validators.py:90 .\clients\validators.py:99
+#: .\clients\validators.py:91 .\clients\validators.py:100
 msgid "PDF-файлы, защищённые паролем, не поддерживаются."
 msgstr "Password-protected PDF files are not supported."
 
-#: .\clients\validators.py:101
+#: .\clients\validators.py:102
 msgid "PDF-файл повреждён или пуст."
 msgstr "The PDF file is damaged or empty."
 
-#: .\clients\validators.py:115
+#: .\clients\validators.py:117
 msgid "Проверка изображений сейчас недоступна."
 msgstr "Image verification is currently unavailable."
 
-#: .\clients\validators.py:125
+#: .\clients\validators.py:127
 #, python-format
 msgid "Разрешение изображения слишком большое. Максимум: %(pixels)s пикселей."
 msgstr "Image resolution is too high. Maximum: %(pixels)s pixels."
 
-#: .\clients\validators.py:130
+#: .\clients\validators.py:132
 #, python-format
 msgid "Загрузите корректный файл %(label)s."
 msgstr "Load the correct %(label)s file."
 
-#: .\clients\validators.py:134
+#: .\clients\validators.py:136
 #, python-format
 msgid "Загрузите корректное изображение %(label)s."
 msgstr "Upload the correct %(label)s image."
 
-#: .\clients\validators.py:136
+#: .\clients\validators.py:138
 msgid "Файл изображения повреждён или не читается."
 msgstr "The image file is damaged or unreadable."
 
-#: .\clients\validators.py:143
+#: .\clients\validators.py:145 .\clients\views\onboarding_views.py:492
 msgid "Выберите файл для загрузки."
 msgstr "Choose a file to upload."
 
-#: .\clients\validators.py:150
+#: .\clients\validators.py:152
 #, python-format
 msgid "Файл слишком большой. Максимальный размер: %(size)s МБ."
 msgstr "The file is too large. Maximum size: %(size)s MB."
 
-#: .\clients\validators.py:157
+#: .\clients\validators.py:159
 msgid "Разрешены только PDF, JPG, JPEG, PNG и WebP файлы."
 msgstr "Only PDF, JPG, JPEG, PNG and WebP files are allowed."
 
-#: .\clients\validators.py:161
+#: .\clients\validators.py:163
 #, python-format
 msgid "Недопустимый MIME-тип файла: %(type)s."
 msgstr "Invalid MIME file type: %(type)s."
@@ -7186,114 +7317,468 @@ msgstr "Financial adequacy updated."
 msgid "Бесплатное жильё требует подтверждения."
 msgstr "Free housing requires confirmation."
 
-#: .\clients\views\onboarding_views.py:49
-#: .\clients\views\onboarding_views.py:878
-msgid "This onboarding form is locked."
-msgstr "This onboarding form is locked."
+#: .\clients\views\onboarding_start_contact.py:60
+msgid "Укажите имя."
+msgstr "Full name"
 
-#: .\clients\views\onboarding_views.py:160
-msgid "Пожалуйста, войдите в свой аккаунт для продолжения."
-msgstr "Please log in to your account to continue."
+#: .\clients\views\onboarding_start_contact.py:62
+msgid "Укажите фамилию."
+msgstr "Upcoming visits"
 
-#: .\clients\views\onboarding_views.py:183
-#: .\clients\views\onboarding_views.py:267
-#: .\clients\views\onboarding_views.py:420
-#: .\clients\views\onboarding_views.py:444
-#: .\clients\views\onboarding_views.py:574
-#: .\clients\views\onboarding_views.py:605
-#: .\clients\views\onboarding_views.py:639
-#: .\clients\views\onboarding_views.py:697
-#: .\clients\views\onboarding_views.py:737
+#: .\clients\views\onboarding_start_contact.py:64
+msgid "Укажите email."
+msgstr "Send email"
+
+#: .\clients\views\onboarding_start_contact.py:69
+msgid "Введите корректный email."
+msgstr "Load the correct PDF file."
+
+#: .\clients\views\onboarding_start_contact.py:71
+msgid "Укажите телефон."
+msgstr "Contact phone number"
+
+#: .\clients\views\onboarding_start_contact.py:73
+msgid "Телефон должен содержать минимум 6 символов."
+msgstr "Password must be at least 8 characters long."
+
+#: .\clients\views\onboarding_start_contact.py:174
+#: .\clients\views\onboarding_step_return.py:31
+#: .\clients\views\onboarding_step_return.py:162
+#: .\clients\views\onboarding_step_return.py:193
+#: .\clients\views\onboarding_step_return.py:227
+#: .\clients\views\onboarding_step_return.py:285
+#: .\clients\views\onboarding_views.py:216
+#: .\clients\views\onboarding_views.py:363
+#: .\clients\views\onboarding_views.py:525
+#: .\clients\views\onboarding_views.py:549
+#: .\clients\views\onboarding_views.py:679
+#: .\clients\views\onboarding_views.py:710
+#: .\clients\views\onboarding_views.py:744
+#: .\clients\views\onboarding_views.py:802
+#: .\clients\views\onboarding_views.py:842
 msgid "Срок действия ссылки истёк или она недействительна."
 msgstr "The link has expired or is invalid."
 
-#: .\clients\views\onboarding_views.py:191
+#: .\clients\views\onboarding_step_return.py:62
+#: .\clients\views\onboarding_views.py:447
+#: .\clients\views\onboarding_views.py:481
+#: .\clients\views\onboarding_views.py:513
+#: .\clients\views\onboarding_views.py:579
+msgid "Invalid or expired onboarding link."
+msgstr "Invalid or expired onboarding link."
+
+#: .\clients\views\onboarding_step_return.py:244
+#: .\clients\views\onboarding_views.py:464
+#: .\clients\views\onboarding_views.py:761
+#: .\clients\views\onboarding_views.py:861
+msgid "Invalid application purpose."
+msgstr "Invalid application purpose."
+
+#: .\clients\views\onboarding_views.py:54
+#: .\clients\views\onboarding_views.py:983
+msgid "This onboarding form is locked."
+msgstr "This onboarding form is locked."
+
+#: .\clients\views\onboarding_views.py:165
+msgid "Пожалуйста, войдите в свой аккаунт для продолжения."
+msgstr "Please log in to your account to continue."
+
+#: .\clients\views\onboarding_views.py:223
 msgid "У вас уже есть аккаунт. Пожалуйста, войдите в систему."
 msgstr "You already have an account. Please log in."
 
-#: .\clients\views\onboarding_views.py:204
+#: .\clients\views\onboarding_views.py:241
+msgid "Пожалуйста, укажите ФИО."
+msgstr "Please enter your full name."
+
+#: .\clients\views\onboarding_views.py:243
+msgid "Введите ФИО полностью: фамилия и имя."
+msgstr "Enter your full name: surname and given name."
+
+#: .\clients\views\onboarding_views.py:245
 msgid "Пожалуйста, укажите адрес электронной почты."
 msgstr "Please enter your email address."
 
-#: .\clients\views\onboarding_views.py:206
+#: .\clients\views\onboarding_views.py:247
 msgid ""
 "Не удалось подтвердить существование домена почты. Пожалуйста, проверьте "
 "адрес на опечатки."
 msgstr ""
 "Could not verify the email domain. Please check the address for typos."
 
-#: .\clients\views\onboarding_views.py:208
+#: .\clients\views\onboarding_views.py:249
 msgid "Пароли не совпадают."
 msgstr "Passwords do not match."
 
-#: .\clients\views\onboarding_views.py:210
+#: .\clients\views\onboarding_views.py:251
 msgid "Пароль должен быть не менее 8 символов."
 msgstr "Password must be at least 8 characters long."
 
-#: .\clients\views\onboarding_views.py:235
+#: .\clients\views\onboarding_views.py:270
 msgid ""
 "Этот адрес электронной почты уже используется в системе другим активным "
 "клиентом."
 msgstr "This email address is already in use by another active client."
 
-#: .\clients\views\onboarding_views.py:253
-msgid "Аккаунт успешно создан! Добро пожаловать в личный кабинет."
-msgstr "Account successfully created! Welcome to your client area."
+#: .\clients\views\onboarding_views.py:301
+msgid "Аккаунт успешно создан. Вы вошли в личный кабинет клиента."
+msgstr "Account created. You are signed in to the client cabinet."
 
-#: .\clients\views\onboarding_views.py:256
+#: .\clients\views\onboarding_views.py:304
 #, python-brace-format
 msgid "Произошла ошибка при сохранении аккаунта: {error}"
 msgstr "An error occurred while saving the account: {error}"
 
+#: .\clients\views\onboarding_views.py:317
+msgid ""
+"Фото 45x35 мм можно сделать в фотоателье или фотокабине. Попросите формат do"
+" karty pobytu."
+msgstr ""
+"You can take 45x35 mm photos at a photo studio or photo booth. Ask for the "
+"karta pobytu format."
+
+#: .\clients\views\onboarding_views.py:318
+msgid ""
+"Сделайте оплату банковским переводом или в кассе, затем загрузите "
+"подтверждение платежа."
+msgstr ""
+"Pay by bank transfer or at the office cash desk, then upload the payment "
+"confirmation."
+
+#: .\clients\views\onboarding_views.py:319
+msgid ""
+"Оплату можно сделать банковским переводом на счёт ужонда; сохраните "
+"подтверждение из банка."
+msgstr ""
+"Pay by bank transfer to the office account, then save the bank confirmation."
+
+#: .\clients\views\onboarding_views.py:320
+msgid ""
+"Оплату можно сделать банковским переводом на счёт ужонда; сохраните "
+"подтверждение 440 zł и 17 zł за доверенность, если она нужна."
+msgstr ""
+"Pay by bank transfer to the office account; save confirmations for 440 zł "
+"and 17 zł for the power of attorney if needed."
+
+#: .\clients\views\onboarding_views.py:321
+msgid ""
+"Оплату можно сделать банковским переводом на счёт ужонда; сохраните "
+"подтверждение платежа и доверенности, если она нужна."
+msgstr ""
+"Pay by bank transfer to the office account; save the payment and power-of-"
+"attorney confirmation if needed."
+
+#: .\clients\views\onboarding_views.py:322
+msgid ""
+"Отсканируйте или сфотографируйте действующий паспорт. Если паспорт нужно "
+"оформить заново, обратитесь в консульство или орган вашей страны."
+msgstr ""
+"Scan or photograph your valid passport. If you need a new passport, contact "
+"your consulate or your country's authority."
+
+#: .\clients\views\onboarding_views.py:323
+msgid ""
+"Отсканируйте или сфотографируйте текущую карту побыту с двух сторон, если "
+"она у вас есть."
+msgstr ""
+"Scan or photograph both sides of your current residence card, if you have "
+"one."
+
+#: .\clients\views\onboarding_views.py:324
+msgid ""
+"Закажите справку в деканате, student office или личном кабинете вашей учёбы."
+msgstr ""
+"Order the certificate from the dean's office, student office, or your "
+"school's online account."
+
+#: .\clients\views\onboarding_views.py:325
+msgid ""
+"Запросите справку о стоимости обучения в деканате, student office или "
+"бухгалтерии учебного заведения."
+msgstr ""
+"Request the tuition fee certificate from the dean's office, student office, "
+"or the school's accounting office."
+
+#: .\clients\views\onboarding_views.py:326
+msgid ""
+"Возьмите подтверждение оплаты обучения в банковском приложении или в "
+"бухгалтерии учебного заведения."
+msgstr ""
+"Take the tuition payment confirmation from your banking app or the school's "
+"accounting office."
+
+#: .\clients\views\onboarding_views.py:327
+msgid ""
+"Оценки или свидетельства можно получить в деканате, student office, школе "
+"или в электронном кабинете ученика/студента."
+msgstr ""
+"You can get grades or certificates from the dean's office, student office, "
+"school, or student portal."
+
+#: .\clients\views\onboarding_views.py:328
+msgid ""
+"Полис можно получить у страховщика, работодателя, в ZUS/eZUS или NFZ. "
+"Подойдёт документ с подтверждением активной страховки."
+msgstr ""
+"You can get the policy from your insurer, employer, ZUS/eZUS, or NFZ. Upload"
+" a document confirming active insurance."
+
+#: .\clients\views\onboarding_views.py:329
+msgid ""
+"Обычно это договор аренды от владельца жилья, подтверждение meldunek из "
+"ужонда или документы об оплате проживания."
+msgstr ""
+"Usually this is a lease agreement from the owner, a meldunek confirmation "
+"from the office, or documents confirming housing payments."
+
+#: .\clients\views\onboarding_views.py:330
+msgid ""
+"Подготовьте выписку из банка, справку о доходах, документы спонсора или "
+"другое подтверждение средств на проживание."
+msgstr ""
+"Prepare a bank statement, income certificate, sponsor documents, or another "
+"proof of funds for living expenses."
+
+#: .\clients\views\onboarding_views.py:331
+msgid ""
+"Załącznik nr 1 заполняет и подписывает работодатель. Обратитесь в отдел "
+"кадров, HR или бухгалтерию."
+msgstr ""
+"Załącznik nr 1 is completed and signed by the employer. Ask HR, payroll, or "
+"accounting."
+
+#: .\clients\views\onboarding_views.py:332
+msgid ""
+"Копию договора о работе или zlecenie можно получить у работодателя, в HR или"
+" бухгалтерии."
+msgstr ""
+"You can get a copy of your employment or zlecenie contract from your "
+"employer, HR, or accounting."
+
+#: .\clients\views\onboarding_views.py:333
+msgid ""
+"Oświadczenie или zezwolenie na pracę выдаёт работодатель. Если у вас "
+"польский диплом, загрузите диплом и suplement."
+msgstr ""
+"Oświadczenie or zezwolenie na pracę is issued by the employer. If you have a"
+" Polish diploma, upload the diploma and supplement."
+
+#: .\clients\views\onboarding_views.py:334
+msgid ""
+"PIT-37 с подтверждением подачи можно скачать в e-Urząd Skarbowy на "
+"podatki.gov.pl или получить у бухгалтера."
+msgstr ""
+"PIT-37 with submission confirmation can be downloaded from e-Urząd Skarbowy "
+"at podatki.gov.pl or requested from accounting."
+
+#: .\clients\views\onboarding_views.py:335
+msgid ""
+"Этот документ работодатель получает в ZUS/eZUS. Попросите HR или бухгалтерию"
+" подготовить справку."
+msgstr ""
+"The employer obtains this certificate in ZUS/eZUS. Ask HR or accounting to "
+"prepare it."
+
+#: .\clients\views\onboarding_views.py:336
+msgid ""
+"Справку о взносах можно получить в ZUS/eZUS или запросить у "
+"работодателя/бухгалтерии."
+msgstr ""
+"You can get the contribution certificate from ZUS/eZUS or ask your "
+"employer/accounting."
+
+#: .\clients\views\onboarding_views.py:337
+msgid ""
+"Справку об отсутствии налоговой задолженности можно получить в e-Urząd "
+"Skarbowy или в налоговом ужонде."
+msgstr ""
+"The tax clearance certificate can be obtained in e-Urząd Skarbowy or at the "
+"tax office."
+
+#: .\clients\views\onboarding_views.py:338
+msgid ""
+"ZUS RCA можно скачать в ZUS PUE/eZUS в разделе Ubezpieczony -> Raporty или "
+"запросить у бухгалтера работодателя."
+msgstr ""
+"ZUS RCA can be downloaded from ZUS PUE/eZUS under Ubezpieczony -> Raporty or"
+" requested from your employer's accounting."
+
+#: .\clients\views\onboarding_views.py:339
+msgid ""
+"Справку о przebiegu ubezpieczenia можно заказать в ZUS/eZUS или в отделении "
+"ZUS."
+msgstr ""
+"The przebieg ubezpieczenia certificate can be ordered in ZUS/eZUS or at a "
+"ZUS office."
+
+#: .\clients\views\onboarding_views.py:340
+msgid "CIT/PIT работодателя подготовит бухгалтерия работодателя."
+msgstr "Employer CIT/PIT is prepared by the employer's accounting office."
+
+#: .\clients\views\onboarding_views.py:341
+msgid ""
+"Справку о количестве сотрудников и взносах работодатель получает в ZUS/eZUS."
+" Обратитесь в HR или бухгалтерию."
+msgstr ""
+"The employer obtains the employee-count and contribution certificate in "
+"ZUS/eZUS. Ask HR or accounting."
+
+#: .\clients\views\onboarding_views.py:342
+msgid ""
+"Шаблон заявления выдаёт менеджер или юрист. Заполните и подпишите его после "
+"проверки данных."
+msgstr ""
+"The statement template is provided by your manager or lawyer. Fill it in and"
+" sign it after checking the data."
+
+#: .\clients\views\onboarding_views.py:343
+msgid ""
+"Заявление об обеспечении заполняет и подписывает человек, который будет вас "
+"содержать. Шаблон можно получить у менеджера."
+msgstr ""
+"The maintenance statement is completed and signed by the person who will "
+"support you. Ask your manager for the template."
+
+#: .\clients\views\onboarding_views.py:344
+msgid ""
+"Загрузите письмо wezwanie, которое пришло из ужонда по почте, ePUAP или MOS."
+msgstr ""
+"Upload the wezwanie letter that came from the office by post, ePUAP, or MOS."
+
+#: .\clients\views\onboarding_views.py:345
+msgid "Подтверждение выдаёт ужонд после сдачи отпечатков пальцев."
+msgstr "The office issues this confirmation after fingerprint submission."
+
+#: .\clients\views\onboarding_views.py:346
+msgid ""
+"Спонсор должен отсканировать свою карту побыту, решение о побыте или другой "
+"документ, подтверждающий легальное пребывание."
+msgstr ""
+"The sponsor should scan their residence card, residence decision, or another"
+" document confirming legal stay."
+
 #: .\clients\views\onboarding_views.py:347
-#: .\clients\views\onboarding_views.py:381
-#: .\clients\views\onboarding_views.py:408
-#: .\clients\views\onboarding_views.py:474
-msgid "Invalid or expired onboarding link."
-msgstr "Invalid or expired onboarding link."
+msgid ""
+"Документы о доходе спонсора можно получить у работодателя, в бухгалтерии, "
+"банке, ZUS или налоговом ужонде."
+msgstr ""
+"Sponsor income documents can be obtained from the employer, accounting "
+"office, bank, ZUS, or tax office."
 
-#: .\clients\views\onboarding_views.py:364
-#: .\clients\views\onboarding_views.py:656
-#: .\clients\views\onboarding_views.py:756
-msgid "Invalid application purpose."
-msgstr "Invalid application purpose."
+#: .\clients\views\onboarding_views.py:348
+msgid ""
+"Свидетельство о браке получите в ЗАГСе/USC страны регистрации брака; для "
+"Польши обычно нужен присяжный перевод."
+msgstr ""
+"Get the marriage certificate from the civil registry office in the country "
+"where the marriage was registered; for use in Poland it usually needs a "
+"sworn translation."
 
-#: .\clients\views\onboarding_views.py:401
-msgid "File upload failed. Please check the selected file."
-msgstr "File upload failed. Please check the selected file."
+#: .\clients\views\onboarding_views.py:349
+msgid ""
+"Подойдут договор аренды, счета, совместные документы, фото или другие "
+"доказательства совместной семейной жизни."
+msgstr ""
+"Use lease agreements, bills, joint documents, photos, or other proof of "
+"shared family life."
 
-#: .\clients\views\onboarding_views.py:755
-#: .\clients\views\onboarding_views.py:817
-#: .\clients\views\onboarding_views.py:996
+#: .\clients\views\onboarding_views.py:350
+msgid ""
+"Согласие можно оформить у нотариуса или в консульстве; при необходимости "
+"добавьте присяжный перевод."
+msgstr ""
+"Consent can be prepared by a notary or at a consulate; add a sworn "
+"translation if needed."
+
+#: .\clients\views\onboarding_views.py:351
+msgid ""
+"Свидетельство о рождении получите в ЗАГСе/USC страны рождения; для Польши "
+"обычно нужен присяжный перевод."
+msgstr ""
+"Get the birth certificate from the civil registry office in the country of "
+"birth; for use in Poland it usually needs a sworn translation."
+
+#: .\clients\views\onboarding_views.py:352
+msgid ""
+"Документы об опеке или родительских правах можно получить в суде, ЗАГСе/USC "
+"или у нотариуса; при необходимости добавьте перевод."
+msgstr ""
+"Documents confirming custody or parental authority can be obtained from a "
+"court, civil registry office, or notary; add a translation if needed."
+
+#: .\clients\views\onboarding_views.py:353
+msgid ""
+"Согласие второго родителя оформляется у нотариуса или в консульстве. Решение"
+" суда также подойдёт, если оно заменяет согласие."
+msgstr ""
+"The second parent's consent is prepared by a notary or at a consulate. A "
+"court decision also works if it replaces consent."
+
+#: .\clients\views\onboarding_views.py:354
+msgid ""
+"Справку из школы можно получить в секретариате школы или электронном "
+"кабинете."
+msgstr ""
+"The school certificate can be obtained from the school office or electronic "
+"school portal."
+
+#: .\clients\views\onboarding_views.py:355
+msgid ""
+"Согласие законного представителя можно оформить у нотариуса или в "
+"консульстве; при необходимости добавьте перевод."
+msgstr ""
+"Legal representative consent can be prepared by a notary or at a consulate; "
+"add a translation if needed."
+
+#: .\clients\views\onboarding_views.py:357
+msgid ""
+"Если не знаете, где получить этот документ, напишите менеджеру, и мы "
+"подскажем точное место."
+msgstr ""
+"If you are not sure where to get this document, write to your manager and we"
+" will point you to the exact place."
+
+#: .\clients\views\onboarding_views.py:503
+msgid "Файл загружен. Мы сохранили его в вашем кабинете."
+msgstr "File uploaded. We saved it in your client cabinet."
+
+#: .\clients\views\onboarding_views.py:506
+#, python-format
+msgid "Не удалось загрузить файл: %(errors)s"
+msgstr "File upload failed: %(errors)s"
+
+#: .\clients\views\onboarding_views.py:860
+#: .\clients\views\onboarding_views.py:922
+#: .\clients\views\onboarding_views.py:1101
 msgid "Invalid application purpose"
 msgstr "Invalid application purpose"
 
-#: .\clients\views\onboarding_views.py:794
+#: .\clients\views\onboarding_views.py:899
 msgid "Ссылка на онбординг скопирована!"
 msgstr "Onboarding link copied!"
 
-#: .\clients\views\onboarding_views.py:797
+#: .\clients\views\onboarding_views.py:902
 msgid "Ссылка на онбординг успешно создана."
 msgstr "Onboarding link successfully created."
 
-#: .\clients\views\onboarding_views.py:807
-#: .\clients\views\onboarding_views.py:866
+#: .\clients\views\onboarding_views.py:912
+#: .\clients\views\onboarding_views.py:971
 msgid "Method not allowed"
 msgstr "Method not allowed"
 
-#: .\clients\views\onboarding_views.py:855
+#: .\clients\views\onboarding_views.py:960
 msgid "Клиент добавлен и ссылка скопирована!"
 msgstr "Client added and link copied!"
 
-#: .\clients\views\onboarding_views.py:870
+#: .\clients\views\onboarding_views.py:975
 msgid "Invalid token"
 msgstr "Invalid token"
 
-#: .\clients\views\onboarding_views.py:873
+#: .\clients\views\onboarding_views.py:978
 msgid "Authentication required"
 msgstr "Authentication required"
 
-#: .\clients\views\onboarding_views.py:1063
+#: .\clients\views\onboarding_views.py:1168
 msgid "Draft auto-saved"
 msgstr "Draft auto-saved"
 
@@ -8587,354 +9072,52 @@ msgstr "user"
 msgid "users"
 msgstr "users"
 
-#: clients/views/onboarding_views.py
-msgid ""
-"Фото 45x35 мм можно сделать в фотоателье или фотокабине. Попросите формат do"
-" karty pobytu."
-msgstr ""
-"You can take 45x35 mm photos at a photo studio or photo booth. Ask for the "
-"karta pobytu format."
+#~ msgid ""
+#~ "Это ежемесячная декларация о взносах. Вы можете скачать её в личном кабинете"
+#~ " ZUS PUE (вкладка Ubezpieczony -> Raporty -> Informacja dla ubezpieczonego) "
+#~ "или запросить у бухгалтера вашего работодателя."
+#~ msgstr ""
+#~ "This is a monthly contribution declaration. You can download it in your ZUS "
+#~ "PUE personal account (Ubezpieczony tab -> Reporty -> Informacja dla "
+#~ "ubezpieczonego) or request it from your employer’s accountant."
 
-#: clients/views/onboarding_views.py
-msgid ""
-"Сделайте оплату банковским переводом или в кассе, затем загрузите "
-"подтверждение платежа."
-msgstr ""
-"Pay by bank transfer or at the office cash desk, then upload the payment "
-"confirmation."
+#~ msgid ""
+#~ "Свою налоговую декларацию (например, PIT-37 или PIT-11) за прошлый год можно"
+#~ " скачать на государственном портале podatki.gov.pl (e-Urząd Skarbowy) с "
+#~ "помощью Profil Zaufany или получить у работодателя."
+#~ msgstr ""
+#~ "You can download your tax return (for example, PIT-37 or PIT-11) for the "
+#~ "previous year on the state portal podatki.gov.pl (e-Urząd Skarbowy) using "
+#~ "Profil Zaufany or obtain it from your employer."
 
-#: clients/views/onboarding_views.py
-msgid ""
-"Оплату можно сделать банковским переводом на счёт ужонда; сохраните "
-"подтверждение из банка."
-msgstr ""
-"Pay by bank transfer to the office account, then save the bank confirmation."
+#~ msgid ""
+#~ "Подтверждение активного медицинского страхования (например, декларация ZUS "
+#~ "ZUA вместе с подтверждением оплаты взноса за последний месяц, либо частный "
+#~ "страховой полис с квитанцией об оплате)."
+#~ msgstr ""
+#~ "Proof of active health insurance (for example, a ZUS ZUA declaration "
+#~ "together with proof of payment of the last month's premium, or a private "
+#~ "insurance policy with a payment receipt)."
 
-#: clients/views/onboarding_views.py
-msgid ""
-"Оплату можно сделать банковским переводом на счёт ужонда; сохраните "
-"подтверждение 440 zł и 17 zł за доверенность, если она нужна."
-msgstr ""
-"Pay by bank transfer to the office account; save confirmations for 440 zł "
-"and 17 zł for the power of attorney if needed."
+#~ msgid ""
+#~ "Договор аренды жилья (Umowa najmu) со всеми страницами и подписями обеих "
+#~ "сторон, либо подтверждение права собственности или подтверждение оплаты "
+#~ "аренды."
+#~ msgstr ""
+#~ "Housing rental agreement (Umowa najmu) with all pages and signatures of both"
+#~ " parties, or confirmation of ownership or confirmation of rental payment."
 
-#: clients/views/onboarding_views.py
-msgid ""
-"Оплату можно сделать банковским переводом на счёт ужонда; сохраните "
-"подтверждение платежа и доверенности, если она нужна."
-msgstr ""
-"Pay by bank transfer to the office account; save the payment and power-of-"
-"attorney confirmation if needed."
+#~ msgid "Поддерживаются форматы: PDF, JPG, PNG."
+#~ msgstr "Supported formats: PDF, JPG, PNG."
 
-#: clients/views/onboarding_views.py
-msgid ""
-"Отсканируйте или сфотографируйте действующий паспорт. Если паспорт нужно "
-"оформить заново, обратитесь в консульство или орган вашей страны."
-msgstr ""
-"Scan or photograph your valid passport. If you need a new passport, contact "
-"your consulate or your country's authority."
+#~ msgid "Аккаунт успешно создан! Добро пожаловать в личный кабинет."
+#~ msgstr "Account successfully created! Welcome to your client area."
 
-#: clients/views/onboarding_views.py
-msgid ""
-"Отсканируйте или сфотографируйте текущую карту побыту с двух сторон, если "
-"она у вас есть."
-msgstr ""
-"Scan or photograph both sides of your current residence card, if you have "
-"one."
+#~ msgid "File upload failed. Please check the selected file."
+#~ msgstr "File upload failed. Please check the selected file."
 
-#: clients/views/onboarding_views.py
-msgid ""
-"Закажите справку в деканате, student office или личном кабинете вашей учёбы."
-msgstr ""
-"Order the certificate from the dean's office, student office, or your "
-"school's online account."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Запросите справку о стоимости обучения в деканате, student office или "
-"бухгалтерии учебного заведения."
-msgstr ""
-"Request the tuition fee certificate from the dean's office, student office, "
-"or the school's accounting office."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Возьмите подтверждение оплаты обучения в банковском приложении или в "
-"бухгалтерии учебного заведения."
-msgstr ""
-"Take the tuition payment confirmation from your banking app or the school's "
-"accounting office."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Оценки или свидетельства можно получить в деканате, student office, школе "
-"или в электронном кабинете ученика/студента."
-msgstr ""
-"You can get grades or certificates from the dean's office, student office, "
-"school, or student portal."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Полис можно получить у страховщика, работодателя, в ZUS/eZUS или NFZ. "
-"Подойдёт документ с подтверждением активной страховки."
-msgstr ""
-"You can get the policy from your insurer, employer, ZUS/eZUS, or NFZ. Upload"
-" a document confirming active insurance."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Обычно это договор аренды от владельца жилья, подтверждение meldunek из "
-"ужонда или документы об оплате проживания."
-msgstr ""
-"Usually this is a lease agreement from the owner, a meldunek confirmation "
-"from the office, or documents confirming housing payments."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Подготовьте выписку из банка, справку о доходах, документы спонсора или "
-"другое подтверждение средств на проживание."
-msgstr ""
-"Prepare a bank statement, income certificate, sponsor documents, or another "
-"proof of funds for living expenses."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Załącznik nr 1 заполняет и подписывает работодатель. Обратитесь в отдел "
-"кадров, HR или бухгалтерию."
-msgstr ""
-"Załącznik nr 1 is completed and signed by the employer. Ask HR, payroll, or "
-"accounting."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Копию договора о работе или zlecenie можно получить у работодателя, в HR или"
-" бухгалтерии."
-msgstr ""
-"You can get a copy of your employment or zlecenie contract from your "
-"employer, HR, or accounting."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Oświadczenie или zezwolenie na pracę выдаёт работодатель. Если у вас "
-"польский диплом, загрузите диплом и suplement."
-msgstr ""
-"Oświadczenie or zezwolenie na pracę is issued by the employer. If you have a"
-" Polish diploma, upload the diploma and supplement."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"PIT-37 с подтверждением подачи можно скачать в e-Urząd Skarbowy на "
-"podatki.gov.pl или получить у бухгалтера."
-msgstr ""
-"PIT-37 with submission confirmation can be downloaded from e-Urząd Skarbowy "
-"at podatki.gov.pl or requested from accounting."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Этот документ работодатель получает в ZUS/eZUS. Попросите HR или бухгалтерию"
-" подготовить справку."
-msgstr ""
-"The employer obtains this certificate in ZUS/eZUS. Ask HR or accounting to "
-"prepare it."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Справку о взносах можно получить в ZUS/eZUS или запросить у "
-"работодателя/бухгалтерии."
-msgstr ""
-"You can get the contribution certificate from ZUS/eZUS or ask your "
-"employer/accounting."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Справку об отсутствии налоговой задолженности можно получить в e-Urząd "
-"Skarbowy или в налоговом ужонде."
-msgstr ""
-"The tax clearance certificate can be obtained in e-Urząd Skarbowy or at the "
-"tax office."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"ZUS RCA можно скачать в ZUS PUE/eZUS в разделе Ubezpieczony -> Raporty или "
-"запросить у бухгалтера работодателя."
-msgstr ""
-"ZUS RCA can be downloaded from ZUS PUE/eZUS under Ubezpieczony -> Raporty or"
-" requested from your employer's accounting."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Справку о przebiegu ubezpieczenia можно заказать в ZUS/eZUS или в отделении "
-"ZUS."
-msgstr ""
-"The przebieg ubezpieczenia certificate can be ordered in ZUS/eZUS or at a "
-"ZUS office."
-
-#: clients/views/onboarding_views.py
-msgid "CIT/PIT работодателя подготовит бухгалтерия работодателя."
-msgstr "Employer CIT/PIT is prepared by the employer's accounting office."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Справку о количестве сотрудников и взносах работодатель получает в ZUS/eZUS."
-" Обратитесь в HR или бухгалтерию."
-msgstr ""
-"The employer obtains the employee-count and contribution certificate in "
-"ZUS/eZUS. Ask HR or accounting."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Шаблон заявления выдаёт менеджер или юрист. Заполните и подпишите его после "
-"проверки данных."
-msgstr ""
-"The statement template is provided by your manager or lawyer. Fill it in and"
-" sign it after checking the data."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Заявление об обеспечении заполняет и подписывает человек, который будет вас "
-"содержать. Шаблон можно получить у менеджера."
-msgstr ""
-"The maintenance statement is completed and signed by the person who will "
-"support you. Ask your manager for the template."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Загрузите письмо wezwanie, которое пришло из ужонда по почте, ePUAP или MOS."
-msgstr ""
-"Upload the wezwanie letter that came from the office by post, ePUAP, or MOS."
-
-#: clients/views/onboarding_views.py
-msgid "Подтверждение выдаёт ужонд после сдачи отпечатков пальцев."
-msgstr "The office issues this confirmation after fingerprint submission."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Спонсор должен отсканировать свою карту побыту, решение о побыте или другой "
-"документ, подтверждающий легальное пребывание."
-msgstr ""
-"The sponsor should scan their residence card, residence decision, or another"
-" document confirming legal stay."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Документы о доходе спонсора можно получить у работодателя, в бухгалтерии, "
-"банке, ZUS или налоговом ужонде."
-msgstr ""
-"Sponsor income documents can be obtained from the employer, accounting "
-"office, bank, ZUS, or tax office."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Свидетельство о браке получите в ЗАГСе/USC страны регистрации брака; для "
-"Польши обычно нужен присяжный перевод."
-msgstr ""
-"Get the marriage certificate from the civil registry office in the country "
-"where the marriage was registered; for use in Poland it usually needs a "
-"sworn translation."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Подойдут договор аренды, счета, совместные документы, фото или другие "
-"доказательства совместной семейной жизни."
-msgstr ""
-"Use lease agreements, bills, joint documents, photos, or other proof of "
-"shared family life."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Согласие можно оформить у нотариуса или в консульстве; при необходимости "
-"добавьте присяжный перевод."
-msgstr ""
-"Consent can be prepared by a notary or at a consulate; add a sworn "
-"translation if needed."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Свидетельство о рождении получите в ЗАГСе/USC страны рождения; для Польши "
-"обычно нужен присяжный перевод."
-msgstr ""
-"Get the birth certificate from the civil registry office in the country of "
-"birth; for use in Poland it usually needs a sworn translation."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Документы об опеке или родительских правах можно получить в суде, ЗАГСе/USC "
-"или у нотариуса; при необходимости добавьте перевод."
-msgstr ""
-"Documents confirming custody or parental authority can be obtained from a "
-"court, civil registry office, or notary; add a translation if needed."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Согласие второго родителя оформляется у нотариуса или в консульстве. Решение"
-" суда также подойдёт, если оно заменяет согласие."
-msgstr ""
-"The second parent's consent is prepared by a notary or at a consulate. A "
-"court decision also works if it replaces consent."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Справку из школы можно получить в секретариате школы или электронном "
-"кабинете."
-msgstr ""
-"The school certificate can be obtained from the school office or electronic "
-"school portal."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Согласие законного представителя можно оформить у нотариуса или в "
-"консульстве; при необходимости добавьте перевод."
-msgstr ""
-"Legal representative consent can be prepared by a notary or at a consulate; "
-"add a translation if needed."
-
-#: clients/views/onboarding_views.py
-msgid ""
-"Если не знаете, где получить этот документ, напишите менеджеру, и мы "
-"подскажем точное место."
-msgstr ""
-"If you are not sure where to get this document, write to your manager and we"
-" will point you to the exact place."
-
-#: clients/onboarding:0
-msgid "Клиентский аккаунт"
-msgstr "Client account"
-
-#: clients/onboarding:0
-msgid "ФИО"
-msgstr "Full name"
-
-#: clients/onboarding:0
-msgid "Введите фамилию и имя как в паспорте."
-msgstr "Enter your surname and given name as in your passport."
-
-#: clients/onboarding:0
-msgid "Пожалуйста, укажите ФИО."
-msgstr "Please enter your full name."
-
-#: clients/onboarding:0
-msgid "Введите ФИО полностью: фамилия и имя."
-msgstr "Enter your full name: surname and given name."
-
-#: clients/onboarding:0
-msgid "Аккаунт успешно создан. Вы вошли в личный кабинет клиента."
-msgstr "Account created. You are signed in to the client cabinet."
-
-#: clients/onboarding:0
-msgid "Файл загружен. Мы сохранили его в вашем кабинете."
-msgstr "File uploaded. We saved it in your client cabinet."
-
-#: clients/onboarding:0
-msgid "Не удалось загрузить файл: %(errors)s"
-msgstr "File upload failed: %(errors)s"
-
-#: clients/onboarding:0
-msgid ""
-"PDF, JPG, JPEG, PNG или WebP. Если фото с телефона не отправляется, "
-"сохраните его как JPG/PNG или загрузите PDF."
-msgstr ""
-"PDF, JPG, JPEG, PNG or WebP. If a phone photo does not upload, save it as "
-"JPG/PNG or upload a PDF."
+#~ msgid "Клиентский аккаунт"
+#~ msgstr "Client account"
 
 #~ msgid "Глобальные значения для печатных документов текущей базы."
 #~ msgstr "Global values for printable documents of the current database."
@@ -10315,9 +10498,6 @@ msgstr ""
 
 #~ msgid "Проверить все загруженные"
 #~ msgstr "Verify checklist"
-
-#~ msgid "Полное имя"
-#~ msgstr "Full name"
 
 #~ msgid "Печать обложки"
 #~ msgstr "Print Cover"
