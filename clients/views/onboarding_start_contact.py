@@ -151,6 +151,25 @@ def _build_start_context(
     allow_edit = _mos_data_is_editable(mos_data)
     allow_doc_edit = _mos_documents_are_editable(mos_data)
 
+    status_completed = mos_data is not None and mos_data.status in {
+        "client_completed",
+        "mos_package_ready",
+        "submitted_in_mos",
+        "approved_by_staff",
+    }
+    passport_complete = status_completed or bool(
+        mos_data
+        and isinstance(mos_data.passport_data, dict)
+        and mos_data.passport_data.get("document_number")
+        and isinstance(mos_data.address_data, dict)
+        and mos_data.address_data.get("city")
+    )
+    travel_complete = status_completed or bool(
+        mos_data
+        and isinstance(mos_data.stay_data, dict)
+        and mos_data.stay_data.get("stay_basis")
+    )
+
     return {
         "session": session,
         "mos_data": mos_data,
@@ -164,6 +183,8 @@ def _build_start_context(
         "contact_values": contact_values,
         "contact_errors": contact_errors or {},
         "contact_complete": contact_complete,
+        "passport_complete": passport_complete,
+        "travel_complete": travel_complete,
         **purpose_ctx,
     }
 

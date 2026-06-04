@@ -92,16 +92,31 @@
             <div class="small fw-semibold text-uppercase text-muted mb-2" style="font-size: 0.75rem; letter-spacing: 0.5px;">{% trans "Шаги анкеты" %}</div>
             <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
               <li class="d-flex align-items-center gap-2 small">
-                <i class="bi bi-check-circle-fill text-success"></i>
-                <span class="text-muted">{% trans "Контактные данные" %}</span>
+                {% if contact_complete %}
+                  <i class="bi bi-check-circle-fill text-success"></i>
+                  <span class="text-muted">{% trans "Контактные данные" %}</span>
+                {% else %}
+                  <i class="bi bi-circle text-muted" style="opacity: 0.6;"></i>
+                  <span>{% trans "Контактные данные" %}</span>
+                {% endif %}
               </li>
               <li class="d-flex align-items-center gap-2 small">
-                <i class="bi bi-circle text-muted" style="opacity: 0.6;"></i>
-                <span>{% trans "Паспортные данные и адрес" %}</span>
+                {% if passport_complete %}
+                  <i class="bi bi-check-circle-fill text-success"></i>
+                  <span class="text-muted">{% trans "Паспортные данные и адрес" %}</span>
+                {% else %}
+                  <i class="bi bi-circle text-muted" style="opacity: 0.6;"></i>
+                  <span>{% trans "Паспортные данные и адрес" %}</span>
+                {% endif %}
               </li>
               <li class="d-flex align-items-center gap-2 small">
-                <i class="bi bi-circle text-muted" style="opacity: 0.6;"></i>
-                <span>{% trans "История въездов и поездок" %}</span>
+                {% if travel_complete %}
+                  <i class="bi bi-check-circle-fill text-success"></i>
+                  <span class="text-muted">{% trans "История въездов и поездок" %}</span>
+                {% else %}
+                  <i class="bi bi-circle text-muted" style="opacity: 0.6;"></i>
+                  <span>{% trans "История въездов и поездок" %}</span>
+                {% endif %}
               </li>
             </ul>
           </div>
