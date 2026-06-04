@@ -20,6 +20,7 @@ from clients.views.onboarding_views import (
 )
 
 CONTACT_REQUIRED_FIELDS = ("first_name", "last_name", "email", "phone")
+START_TEMPLATE = "clients/onboarding/start_contact.html"
 
 
 def _contact_values_from_client(client: Client, mos_data: MOSApplicationData | None) -> dict[str, str]:
@@ -170,7 +171,7 @@ def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
         if contact_errors:
             return render(
                 request,
-                "clients/onboarding/start.html",
+                START_TEMPLATE,
                 _build_start_context(
                     session=session,
                     contact_values=contact_values,
@@ -181,4 +182,4 @@ def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
         _save_contact_values(client, mos_data, contact_values)
         return redirect("clients:onboarding_purpose", token=token)
 
-    return render(request, "clients/onboarding/start.html", _build_start_context(session=session))
+    return render(request, START_TEMPLATE, _build_start_context(session=session))
