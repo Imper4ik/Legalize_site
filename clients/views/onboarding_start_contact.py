@@ -17,6 +17,7 @@ from clients.views.onboarding_views import (
     _purpose_context,
     _sync_contact_fields_to_client,
     check_onboarding_session,
+    check_client_auth,
 )
 
 CONTACT_REQUIRED_FIELDS = ("first_name", "last_name", "email", "phone")
@@ -168,6 +169,10 @@ def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
     session = check_onboarding_session(token, request=request)
     if not session:
         return HttpResponseForbidden(_("Срок действия ссылки истёк или она недействительна."))
+
+    auth_redirect = check_client_auth(request, session, token)
+    if auth_redirect:
+        return auth_redirect
 
     client = session.client
     mos_data, _ = MOSApplicationData.objects.get_or_create(client=client)

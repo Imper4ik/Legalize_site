@@ -94,8 +94,7 @@ class OnboardingStartContactTests(TestCase):
         self.assertContains(response, "Jan Kowalski")
         self.assertContains(response, "jan@example.com")
         self.assertContains(response, "+48600111222")
-        self.assertContains(response, "Изменить")
-        self.assertContains(response, 'class="collapse mt-3" id="contactEditForm"')
+        self.assertContains(response, 'id="contactEditFormBottom"')
         self.assertContains(response, reverse("clients:onboarding_digital_access", kwargs={"token": token}))
         self.assertContains(response, "Продолжить анкету")
 

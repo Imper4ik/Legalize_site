@@ -121,8 +121,7 @@ def _validate_image_file(uploaded_file: Any, *, allowed_formats: set[str], label
         with Image.open(uploaded_file) as image:
             image_format = (image.format or "").upper()
             width, height = image.size
-            configured_max = int(getattr(settings, "MAX_IMAGE_PIXELS", DEFAULT_MAX_IMAGE_PIXELS))
-            max_pixels = max(configured_max, DEFAULT_MAX_IMAGE_PIXELS)
+            max_pixels = int(getattr(settings, "MAX_IMAGE_PIXELS", DEFAULT_MAX_IMAGE_PIXELS))
             if width * height > max_pixels:
                 raise ValidationError(
                     _("Разрешение изображения слишком большое. Максимум: %(pixels)s пикселей.")

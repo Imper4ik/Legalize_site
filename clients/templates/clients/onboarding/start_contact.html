@@ -218,6 +218,11 @@ document.addEventListener("DOMContentLoaded", function () {
         confirmBox.focus();
         return;
       }
+      if (submit) {
+        submit.disabled = true;
+        submit.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>' + (submit.dataset.loadingText || 'Uploading...');
+        submit.setAttribute("aria-label", submit.dataset.loadingText || "Uploading...");
+      }
     });
   });
 });
@@ -248,7 +253,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 <label class="form-check-label" for="confirmUpload{{ doc.code|slugify }}">{% trans "Я проверил предпросмотр и подтверждаю, что это правильный файл." %}</label>
               </div>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Отмена" %}</button><button type="submit" class="btn btn-primary onboarding-upload-submit" disabled>{% trans "Загрузить файл" %}</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Отмена" %}</button><button type="submit" class="btn btn-primary onboarding-upload-submit" data-loading-text="{% trans 'Отправка...' %}" disabled>{% trans "Загрузить файл" %}</button></div>
           </form>
         </div>
       </div>

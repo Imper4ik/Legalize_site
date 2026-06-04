@@ -127,7 +127,12 @@ class QuickOnboardingTests(TestCase):
         )
         
         url = reverse("clients:onboarding_start", kwargs={"token": token})
-        response = self.client_agent.post(url)
+        response = self.client_agent.post(url, {
+            "first_name": "Новый",
+            "last_name": "Клиент",
+            "email": "noviy.klient@example.com",
+            "phone": "+48123456789",
+        })
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse("clients:onboarding_digital_access", kwargs={"token": token}))
 
