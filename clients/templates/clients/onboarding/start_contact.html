@@ -10,7 +10,7 @@
     <div>
       <strong>{% trans "Вы находитесь в своём личном кабинете клиента." %}</strong>
       <span class="badge bg-success ms-2">{% trans "Профиль клиента активен" %}</span>
-      <div class="small mt-1">{% trans "Доступ открыт по индивидуальной ссылке. Авторизация не требуется для этого первого шага." %}</div>
+      <div class="small mt-1">{% trans "Доступ открыт по индивидуальной ссылке." %}</div>
     </div>
   </div>
 </div>
@@ -19,36 +19,54 @@
   <div class="card-header bg-primary text-white fw-bold">{% trans "Ваши контактные данные" %}</div>
   <div class="card-body">
     {% if contact_errors %}<div class="alert alert-danger">{% trans "Проверьте обязательные поля." %}</div>{% endif %}
-    <form method="post" data-no-autosave="true" novalidate>
-      {% csrf_token %}
-      <div class="row g-3">
-        <div class="col-md-6">
-          <label class="form-label" for="id_first_name">{% trans "Имя" %} *</label>
-          <input class="form-control {% if contact_errors.first_name %}is-invalid{% endif %}" id="id_first_name" name="first_name" value="{{ contact_values.first_name }}" required autocomplete="given-name">
-          {% if contact_errors.first_name %}<div class="invalid-feedback">{{ contact_errors.first_name }}</div>{% endif %}
+
+    {% if contact_complete and not contact_errors %}
+      <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+        <div>
+          <div class="fw-bold">{{ contact_values.first_name }} {{ contact_values.last_name }}</div>
+          <div class="text-muted small">{{ contact_values.email }} · {{ contact_values.phone }}</div>
         </div>
-        <div class="col-md-6">
-          <label class="form-label" for="id_last_name">{% trans "Фамилия" %} *</label>
-          <input class="form-control {% if contact_errors.last_name %}is-invalid{% endif %}" id="id_last_name" name="last_name" value="{{ contact_values.last_name }}" required autocomplete="family-name">
-          {% if contact_errors.last_name %}<div class="invalid-feedback">{{ contact_errors.last_name }}</div>{% endif %}
-        </div>
-        <div class="col-md-6">
-          <label class="form-label" for="id_email">Email *</label>
-          <input type="email" class="form-control {% if contact_errors.email %}is-invalid{% endif %}" id="id_email" name="email" value="{{ contact_values.email }}" required autocomplete="email">
-          {% if contact_errors.email %}<div class="invalid-feedback">{{ contact_errors.email }}</div>{% endif %}
-        </div>
-        <div class="col-md-6">
-          <label class="form-label" for="id_phone">{% trans "Телефон" %} *</label>
-          <input type="tel" class="form-control {% if contact_errors.phone %}is-invalid{% endif %}" id="id_phone" name="phone" value="{{ contact_values.phone }}" required minlength="6" autocomplete="tel">
-          {% if contact_errors.phone %}<div class="invalid-feedback">{{ contact_errors.phone }}</div>{% endif %}
-        </div>
+        {% if allow_edit %}
+          <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#contactEditForm" aria-expanded="false" aria-controls="contactEditForm">
+            {% trans "Изменить" %}
+          </button>
+        {% endif %}
       </div>
-      {% if allow_edit %}
-        <button class="btn btn-primary mt-3" type="submit">{% trans "Сохранить и продолжить" %}</button>
-      {% else %}
-        <span class="badge bg-secondary mt-3">{% trans "Профиль заблокирован для изменений" %}</span>
-      {% endif %}
-    </form>
+      <div class="collapse mt-3" id="contactEditForm">
+    {% else %}
+      <div id="contactEditForm">
+    {% endif %}
+        <form method="post" data-no-autosave="true" novalidate>
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="id_first_name">{% trans "Имя" %} *</label>
+              <input class="form-control {% if contact_errors.first_name %}is-invalid{% endif %}" id="id_first_name" name="first_name" value="{{ contact_values.first_name }}" required autocomplete="given-name">
+              {% if contact_errors.first_name %}<div class="invalid-feedback">{{ contact_errors.first_name }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="id_last_name">{% trans "Фамилия" %} *</label>
+              <input class="form-control {% if contact_errors.last_name %}is-invalid{% endif %}" id="id_last_name" name="last_name" value="{{ contact_values.last_name }}" required autocomplete="family-name">
+              {% if contact_errors.last_name %}<div class="invalid-feedback">{{ contact_errors.last_name }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="id_email">Email *</label>
+              <input type="email" class="form-control {% if contact_errors.email %}is-invalid{% endif %}" id="id_email" name="email" value="{{ contact_values.email }}" required autocomplete="email">
+              {% if contact_errors.email %}<div class="invalid-feedback">{{ contact_errors.email }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="id_phone">{% trans "Телефон" %} *</label>
+              <input type="tel" class="form-control {% if contact_errors.phone %}is-invalid{% endif %}" id="id_phone" name="phone" value="{{ contact_values.phone }}" required minlength="6" autocomplete="tel">
+              {% if contact_errors.phone %}<div class="invalid-feedback">{{ contact_errors.phone }}</div>{% endif %}
+            </div>
+          </div>
+          {% if allow_edit %}
+            <button class="btn btn-primary mt-3" type="submit">{% trans "Сохранить и продолжить" %}</button>
+          {% else %}
+            <span class="badge bg-secondary mt-3">{% trans "Профиль заблокирован для изменений" %}</span>
+          {% endif %}
+        </form>
+      </div>
   </div>
 </div>
 
@@ -58,9 +76,7 @@
       <div class="text-muted small">{% trans "Текущая выбранная цель" %}</div>
       <div class="h5 mb-1">{{ effective_purpose_label }}</div>
       {% if purpose_mismatch %}
-        <div class="alert alert-warning py-2 px-3 mt-3 mb-0">
-          {% trans "Вы выбрали другую цель подачи. Сотрудник проверит это перед отправкой." %}
-        </div>
+        <div class="alert alert-warning py-2 px-3 mt-3 mb-0">{% trans "Вы выбрали другую цель подачи. Сотрудник проверит это перед отправкой." %}</div>
       {% endif %}
     </div>
     {% if can_change_purpose %}
@@ -75,11 +91,11 @@
       <div class="card-header bg-primary text-white fw-bold">{% trans "Анкета для ВНЖ (MOS)" %}</div>
       <div class="card-body">
         {% if contact_complete %}
-          <div class="alert alert-success">{% trans "Контактные данные сохранены. Можно продолжить заполнение анкеты." %}</div>
-          <a class="btn btn-primary w-100 fw-bold" href="{% url 'clients:onboarding_purpose' session.token_hash %}">{% trans "Начать / Продолжить заполнение" %}</a>
+          <p class="text-muted small">{% trans "Перейдите к следующему шагу анкеты. Контактные данные уже сохранены." %}</p>
+          <a class="btn btn-primary w-100 fw-bold" href="{% url 'clients:onboarding_digital_access' session.token_hash %}">{% trans "Продолжить анкету" %}</a>
         {% else %}
           <div class="alert alert-warning">{% trans "Сначала сохраните ФИО, email и телефон." %}</div>
-          <button class="btn btn-secondary w-100 fw-bold" type="button" disabled>{% trans "Начать / Продолжить заполнение" %}</button>
+          <button class="btn btn-secondary w-100 fw-bold" type="button" disabled>{% trans "Продолжить анкету" %}</button>
         {% endif %}
       </div>
     </div>
