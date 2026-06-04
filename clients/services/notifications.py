@@ -183,7 +183,7 @@ def _send_email(
         try:
             sent_count = _send_mail_with_retry(subject, body, recipient_list)
             result["sent_count"] = sent_count
-            if sent_count:
+            if sent_count and template_type != "onboarding_completed":
                 try:
                     _send_confirmation_email(subject, body, recipient_list)
                 except Exception as exc:
