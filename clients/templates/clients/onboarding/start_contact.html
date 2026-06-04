@@ -1,0 +1,134 @@
+{% extends "clients/onboarding/base_onboarding.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Личный кабинет клиента" %}{% endblock %}
+
+{% block content %}
+<div class="alert alert-success mb-4" role="status">
+  <div class="d-flex align-items-start gap-3">
+    <i class="bi bi-person-check-fill fs-3" aria-hidden="true"></i>
+    <div>
+      <strong>{% trans "Вы находитесь в своём личном кабинете клиента." %}</strong>
+      <span class="badge bg-success ms-2">{% trans "Профиль клиента активен" %}</span>
+      <div class="small mt-1">{% trans "Доступ открыт по индивидуальной ссылке. Авторизация не требуется для этого первого шага." %}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+  <div class="card-header bg-primary text-white fw-bold">{% trans "Ваши контактные данные" %}</div>
+  <div class="card-body">
+    {% if contact_errors %}<div class="alert alert-danger">{% trans "Проверьте обязательные поля." %}</div>{% endif %}
+    <form method="post" data-no-autosave="true" novalidate>
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label" for="id_first_name">{% trans "Имя" %} *</label>
+          <input class="form-control {% if contact_errors.first_name %}is-invalid{% endif %}" id="id_first_name" name="first_name" value="{{ contact_values.first_name }}" required autocomplete="given-name">
+          {% if contact_errors.first_name %}<div class="invalid-feedback">{{ contact_errors.first_name }}</div>{% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="id_last_name">{% trans "Фамилия" %} *</label>
+          <input class="form-control {% if contact_errors.last_name %}is-invalid{% endif %}" id="id_last_name" name="last_name" value="{{ contact_values.last_name }}" required autocomplete="family-name">
+          {% if contact_errors.last_name %}<div class="invalid-feedback">{{ contact_errors.last_name }}</div>{% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="id_email">Email *</label>
+          <input type="email" class="form-control {% if contact_errors.email %}is-invalid{% endif %}" id="id_email" name="email" value="{{ contact_values.email }}" required autocomplete="email">
+          {% if contact_errors.email %}<div class="invalid-feedback">{{ contact_errors.email }}</div>{% endif %}
+        </div>
+        <div class="col-md-6">
+          <label class="form-label" for="id_phone">{% trans "Телефон" %} *</label>
+          <input type="tel" class="form-control {% if contact_errors.phone %}is-invalid{% endif %}" id="id_phone" name="phone" value="{{ contact_values.phone }}" required minlength="6" autocomplete="tel">
+          {% if contact_errors.phone %}<div class="invalid-feedback">{{ contact_errors.phone }}</div>{% endif %}
+        </div>
+      </div>
+      {% if allow_edit %}
+        <button class="btn btn-primary mt-3" type="submit">{% trans "Сохранить и продолжить" %}</button>
+      {% else %}
+        <span class="badge bg-secondary mt-3">{% trans "Профиль заблокирован для изменений" %}</span>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+  <div class="card-body d-flex flex-column flex-md-row justify-content-between gap-3">
+    <div>
+      <div class="text-muted small">{% trans "Текущая выбранная цель" %}</div>
+      <div class="h5 mb-1">{{ effective_purpose_label }}</div>
+      {% if purpose_mismatch %}
+        <div class="alert alert-warning py-2 px-3 mt-3 mb-0">
+          {% trans "Вы выбрали другую цель подачи. Сотрудник проверит это перед отправкой." %}
+        </div>
+      {% endif %}
+    </div>
+    {% if can_change_purpose %}
+      <a class="btn btn-outline-primary align-self-start" href="{% url 'clients:onboarding_purpose' session.token_hash %}">{% trans "Изменить цель подачи" %}</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6 mb-4">
+    <div class="card h-100 shadow-sm border-0">
+      <div class="card-header bg-primary text-white fw-bold">{% trans "Анкета для ВНЖ (MOS)" %}</div>
+      <div class="card-body">
+        {% if contact_complete %}
+          <div class="alert alert-success">{% trans "Контактные данные сохранены. Можно продолжить заполнение анкеты." %}</div>
+          <a class="btn btn-primary w-100 fw-bold" href="{% url 'clients:onboarding_purpose' session.token_hash %}">{% trans "Начать / Продолжить заполнение" %}</a>
+        {% else %}
+          <div class="alert alert-warning">{% trans "Сначала сохраните ФИО, email и телефон." %}</div>
+          <button class="btn btn-secondary w-100 fw-bold" type="button" disabled>{% trans "Начать / Продолжить заполнение" %}</button>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-6 mb-4">
+    <div class="card h-100 shadow-sm border-0">
+      <div class="card-header bg-secondary text-white fw-bold">{% trans "Ваши документы" %}</div>
+      <ul class="list-group list-group-flush">
+        {% for doc in checklist %}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between gap-3 flex-wrap">
+              <div>
+                <strong>{{ doc.label }}</strong>{% if doc.is_required %}<span class="text-danger">*</span>{% endif %}
+                {% if doc.source_hint %}<div class="small text-muted mt-1">{{ doc.source_hint }}</div>{% endif %}
+              </div>
+              <div class="text-end">
+                {% if doc.is_uploaded %}
+                  <span class="badge bg-success">{% trans "Загружено" %}</span>
+                  <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" target="_blank" rel="noopener">{% trans "Preview" %}</a>
+                {% else %}
+                  <span class="badge bg-warning text-dark">{% trans "Ожидается" %}</span>
+                  {% if allow_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">{% trans "Загрузить" %}</button>{% endif %}
+                {% endif %}
+              </div>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+{% for doc in checklist %}
+  {% if not doc.is_uploaded and allow_edit %}
+    <div class="modal fade" id="uploadModal{{ doc.code|slugify }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <form action="{% url 'clients:onboarding_document_upload' session.token_hash doc.code %}" method="post" enctype="multipart/form-data" data-no-autosave="true">
+            {% csrf_token %}
+            <div class="modal-header"><h5 class="modal-title">{% trans "Загрузка:" %} {{ doc.label }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body"><input type="file" name="file" class="form-control" accept="application/pdf,image/jpeg,image/png,image/webp" required></div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Отмена" %}</button><button type="submit" class="btn btn-primary">{% trans "Загрузить файл" %}</button></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endfor %}
+{% endblock %}
