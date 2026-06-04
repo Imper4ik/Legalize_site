@@ -17,6 +17,7 @@ from clients.views.archive import restore_client_view, restore_document_view, re
 from clients.views.export import client_export_pdf_view, client_export_zip, document_version_download, document_versions_view, document_version_restore
 from clients.views.logs import EmailLogsView, StaffActivityLogsView
 from clients.views.admin_mos_review import admin_mos_review
+from clients.views.onboarding_token_access import enable_token_link_access
 from clients.views.onboarding_start_contact import onboarding_start_contact as onboarding_start
 from clients.views.onboarding_views import (
     check_onboarding_session,
@@ -37,5 +38,7 @@ from clients.views.onboarding_views import (
     onboarding_auto_save,
     onboarding_set_password,
 )
+
+enable_token_link_access()
 
 __all__ = [name for name in globals() if not name.startswith('_')]
