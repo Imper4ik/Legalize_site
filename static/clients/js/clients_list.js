@@ -174,31 +174,46 @@
       qrImg.style.display = 'none';
       qrSpinner.style.display = 'block';
       
+      qrImg.onload = null;
+      qrImg.onerror = null;
+      
       if (typeof QRious !== 'undefined') {
         try {
           const qr = new QRious({
             value: link,
             size: 150
           });
-          qrImg.src = qr.toDataURL();
-          qrSpinner.style.display = 'none';
-          qrImg.style.display = 'block';
-        } catch (err) {
-          console.error('QRious error, using fallback API', err);
-          const qrData = encodeURIComponent(link);
-          qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrData}`;
           qrImg.onload = () => {
             qrSpinner.style.display = 'none';
             qrImg.style.display = 'block';
           };
+          qrImg.onerror = () => {
+            qrSpinner.style.display = 'none';
+            qrImg.style.display = 'block';
+          };
+          qrImg.src = qr.toDataURL();
+        } catch (err) {
+          console.error('QRious error, using fallback API', err);
+          const qrData = encodeURIComponent(link);
+          qrImg.onload = () => {
+            qrSpinner.style.display = 'none';
+            qrImg.style.display = 'block';
+          };
+          qrImg.onerror = () => {
+            qrSpinner.style.display = 'none';
+          };
+          qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrData}`;
         }
       } else {
         const qrData = encodeURIComponent(link);
-        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrData}`;
         qrImg.onload = () => {
           qrSpinner.style.display = 'none';
           qrImg.style.display = 'block';
         };
+        qrImg.onerror = () => {
+          qrSpinner.style.display = 'none';
+        };
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrData}`;
       }
     }
 
