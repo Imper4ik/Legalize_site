@@ -5604,7 +5604,7 @@ msgstr "Waiting"
 #: .\clients\templates\clients\partials\modals.html:141
 #: .\clients\templates\clients\partials\modals.html:245
 msgid "Загрузить"
-msgstr "Upload Wezwanie"
+msgstr "Upload"
 
 #: .\clients\templates\clients\onboarding\start.html:151
 msgid "Locked"
@@ -5648,7 +5648,7 @@ msgstr "Uploading..."
 #: .\clients\templates\clients\onboarding\start.html:223
 #: .\clients\templates\clients\onboarding\start_contact.html:331
 msgid "Загрузить файл"
-msgstr "Upload Wezwanie"
+msgstr "Upload file"
 
 #: .\clients\templates\clients\onboarding\start_contact.html:11
 msgid "Вы находитесь в своём личном кабинете клиента."
