@@ -8,6 +8,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import override
 
 from clients.constants import DocumentType
 from clients.models import Client, ClientOnboardingSession, Document, MOSApplicationData
@@ -116,6 +117,39 @@ class OnboardingPurposeTests(TestCase):
         response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
         self.assertContains(response, "Загружено")
         self.assertContains(response, reverse("clients:onboarding_document_preview", kwargs={"token": token, "doc_id": document.pk}))
+
+    def test_onboarding_document_source_hints_are_translated_for_client_page(self):
+        _client, token = self._client_with_session(application_purpose="work")
+        expectations = {
+            "en": (
+                "Scan or photograph your valid passport.",
+                "ZUS RCA can be downloaded from ZUS PUE/eZUS",
+                "Отсканируйте или сфотографируйте действующий паспорт.",
+            ),
+            "pl": (
+                "Zeskanuj albo sfotografuj ważny paszport.",
+                "ZUS RCA można pobrać w ZUS PUE/eZUS",
+                "Отсканируйте или сфотографируйте действующий паспорт.",
+            ),
+            "ru": (
+                "Отсканируйте или сфотографируйте действующий паспорт.",
+                "ZUS RCA можно скачать в ZUS PUE/eZUS",
+                "Scan or photograph your valid passport.",
+            ),
+        }
+
+        for language, (passport_hint, zus_hint, absent_text) in expectations.items():
+            with self.subTest(language=language), override(language):
+                response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
+
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, passport_hint)
+                self.assertContains(response, zus_hint)
+                self.assertNotContains(response, absent_text)
+                if language == "ru":
+                    self.assertContains(response, "Карта побыту")
+                    self.assertNotContains(response, "Карта пребывания")
+                    self.assertNotContains(response, "Карта проживания")
 
     def test_locked_onboarding_cannot_change_purpose(self):
         client, token = self._client_with_session(application_purpose="study")

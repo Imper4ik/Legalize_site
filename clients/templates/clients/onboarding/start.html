@@ -119,13 +119,21 @@
                 
                 <ul class="list-group list-group-flush">
                     {% for doc in checklist %}
-                        <li class="list-group-item d-flex justify-content-between align-items-center py-3">
-                            <div class="pe-3">
-                                <strong>{{ doc.label }}</strong>
-                                {% if doc.is_required %}<span class="text-danger" title="{% trans 'Обязательный документ' %}">*</span>{% endif %}
+                        <li class="list-group-item onboarding-document-item py-3">
+                            <div class="onboarding-document-main pe-sm-3">
+                                <div class="onboarding-document-title">
+                                    <strong>{{ doc.label }}</strong>
+                                    {% if doc.is_required %}<span class="text-danger" title="{% trans 'Обязательный документ' %}">*</span>{% endif %}
+                                </div>
+                                {% if doc.source_hint %}
+                                    <div class="onboarding-document-source">
+                                        <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                        <span>{{ doc.source_hint }}</span>
+                                    </div>
+                                {% endif %}
                             </div>
                             
-                            <div class="d-flex align-items-center gap-2">
+                            <div class="onboarding-document-actions">
                                 {% if doc.is_uploaded %}
                                     <span class="badge bg-success">{% trans "Загружено" %}</span>
                                     <a href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener">{% trans "Preview" %}</a>
@@ -153,9 +161,19 @@
                         <p class="text-muted small mb-2">{% trans "Эти документы остаются в деле, но не входят в текущий список для выбранной цели." %}</p>
                         <ul class="list-group list-group-flush">
                             {% for doc in additional_documents %}
-                                <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                    <span>{{ doc.label }}</span>
-                                    <a href="{% url 'clients:onboarding_document_preview' session.token_hash doc.id %}" class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener">{% trans "Preview" %}</a>
+                                <li class="list-group-item px-0 onboarding-document-item">
+                                    <div class="onboarding-document-main pe-sm-3">
+                                        <div class="onboarding-document-title">{{ doc.label }}</div>
+                                        {% if doc.source_hint %}
+                                            <div class="onboarding-document-source">
+                                                <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                                <span>{{ doc.source_hint }}</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="onboarding-document-actions">
+                                        <a href="{% url 'clients:onboarding_document_preview' session.token_hash doc.id %}" class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener">{% trans "Preview" %}</a>
+                                    </div>
                                 </li>
                             {% endfor %}
                         </ul>
@@ -181,28 +199,13 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Закрыть' %}"></button>
                   </div>
                   <div class="modal-body">
-                    {% if doc.code == "zus_rca_or_insurance" %}
+                    {% if doc.source_hint %}
                         <div class="alert alert-info py-2 px-3 small mb-3">
                             <i class="bi bi-info-circle-fill me-2"></i>
-                            {% trans "Это ежемесячная декларация о взносах. Вы можете скачать её в личном кабинете ZUS PUE (вкладка Ubezpieczony -> Raporty -> Informacja dla ubezpieczonego) или запросить у бухгалтера вашего работодателя." %}
-                        </div>
-                    {% elif doc.code == "pit_proof" %}
-                        <div class="alert alert-info py-2 px-3 small mb-3">
-                            <i class="bi bi-info-circle-fill me-2"></i>
-                            {% trans "Свою налоговую декларацию (например, PIT-37 или PIT-11) за прошлый год можно скачать на государственном портале podatki.gov.pl (e-Urząd Skarbowy) с помощью Profil Zaufany или получить у работодателя." %}
-                        </div>
-                    {% elif doc.code == "health_insurance" %}
-                        <div class="alert alert-info py-2 px-3 small mb-3">
-                            <i class="bi bi-info-circle-fill me-2"></i>
-                            {% trans "Подтверждение активного медицинского страхования (например, декларация ZUS ZUA вместе с подтверждением оплаты взноса за последний месяц, либо частный страховой полис с квитанцией об оплате)." %}
-                        </div>
-                    {% elif doc.code == "address_proof" %}
-                        <div class="alert alert-info py-2 px-3 small mb-3">
-                            <i class="bi bi-info-circle-fill me-2"></i>
-                            {% trans "Договор аренды жилья (Umowa najmu) со всеми страницами и подписями обеих сторон, либо подтверждение права собственности или подтверждение оплаты аренды." %}
+                            {{ doc.source_hint }}
                         </div>
                     {% endif %}
-                    <p class="text-muted small">{% trans "Поддерживаются форматы: PDF, JPG, PNG." %}</p>
+                    <p class="text-muted small">{% trans "PDF, JPG, JPEG, PNG или WebP. Если фото с телефона не отправляется, сохраните его как JPG/PNG или загрузите PDF." %}</p>
                     <input type="file" name="file" class="form-control onboarding-upload-input" accept="application/pdf,image/jpeg,image/png,image/webp" required>
                     <div class="onboarding-upload-preview d-none mt-3 border rounded p-2">
                       <div class="small fw-bold mb-2" data-file-name></div>
@@ -217,7 +220,7 @@
                   </div>
                   <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Отмена" %}</button>
-                    <button type="submit" class="btn btn-primary onboarding-upload-submit" disabled>{% trans "Загрузить файл" %}</button>
+                    <button type="submit" class="btn btn-primary onboarding-upload-submit" data-loading-text="{% trans 'Отправка...' %}" disabled>{% trans "Загрузить файл" %}</button>
                   </div>
               </form>
             </div>
@@ -274,9 +277,20 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     form.addEventListener("submit", function (event) {
+      if (!input.files || !input.files[0]) {
+        event.preventDefault();
+        input.focus();
+        return;
+      }
       if (confirmBox && !confirmBox.checked) {
         event.preventDefault();
         confirmBox.focus();
+        return;
+      }
+      if (submit) {
+        submit.disabled = true;
+        submit.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>' + (submit.dataset.loadingText || 'Uploading...');
+        submit.setAttribute("aria-label", submit.dataset.loadingText || "Uploading...");
       }
     });
   });

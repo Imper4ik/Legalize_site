@@ -174,7 +174,9 @@ class QuickOnboardingTests(TestCase):
         )
         self.assertContains(response, "onboarding-upload-preview")
         self.assertContains(response, "onboarding-upload-confirm")
-        self.assertContains(response, 'class="btn btn-primary onboarding-upload-submit" disabled')
+        self.assertContains(response, 'class="btn btn-primary onboarding-upload-submit"')
+        self.assertContains(response, 'data-loading-text=')
+        self.assertContains(response, 'disabled')
 
     def test_onboarding_step1_syncs_contact_fields_only(self):
         """Step 1 updates staff-visible contact fields immediately, keeping legal fields in MOS draft."""

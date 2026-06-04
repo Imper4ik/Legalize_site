@@ -6331,7 +6331,7 @@ msgstr "Błąd ładowania szablonu."
 
 #: .\clients\templates\clients\partials\modals.html:266
 msgid "Отправка..."
-msgstr "Przesyłka..."
+msgstr "Przesyłanie..."
 
 #: .\clients\templates\clients\partials\modals.html:270
 msgid "Отправить email клиенту"
@@ -8611,6 +8611,354 @@ msgstr "użytkownik"
 #: .\users\models.py:86
 msgid "users"
 msgstr "użytkownicy"
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Фото 45x35 мм можно сделать в фотоателье или фотокабине. Попросите формат do"
+" karty pobytu."
+msgstr ""
+"Zdjęcia 45x35 mm można zrobić u fotografa lub w fotobudce. Poproś o format "
+"do karty pobytu."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Сделайте оплату банковским переводом или в кассе, затем загрузите "
+"подтверждение платежа."
+msgstr ""
+"Opłatę można zrobić przelewem bankowym lub w kasie urzędu, a następnie wgrać"
+" potwierdzenie płatności."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Оплату можно сделать банковским переводом на счёт ужонда; сохраните "
+"подтверждение из банка."
+msgstr ""
+"Opłatę można zrobić przelewem na konto urzędu; zachowaj potwierdzenie z "
+"banku."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Оплату можно сделать банковским переводом на счёт ужонда; сохраните "
+"подтверждение 440 zł и 17 zł за доверенность, если она нужна."
+msgstr ""
+"Opłatę można zrobić przelewem na konto urzędu; zachowaj potwierdzenia 440 zł"
+" i 17 zł za pełnomocnictwo, jeśli jest potrzebne."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Оплату можно сделать банковским переводом на счёт ужонда; сохраните "
+"подтверждение платежа и доверенности, если она нужна."
+msgstr ""
+"Opłatę można zrobić przelewem na konto urzędu; zachowaj potwierdzenie "
+"płatności i pełnomocnictwa, jeśli jest potrzebne."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Отсканируйте или сфотографируйте действующий паспорт. Если паспорт нужно "
+"оформить заново, обратитесь в консульство или орган вашей страны."
+msgstr ""
+"Zeskanuj albo sfotografuj ważny paszport. Jeśli trzeba wyrobić nowy "
+"paszport, skontaktuj się z konsulatem lub właściwym urzędem swojego kraju."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Отсканируйте или сфотографируйте текущую карту побыту с двух сторон, если "
+"она у вас есть."
+msgstr ""
+"Zeskanuj albo sfotografuj aktualną kartę pobytu z obu stron, jeśli ją masz."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Закажите справку в деканате, student office или личном кабинете вашей учёбы."
+msgstr ""
+"Zaświadczenie zamów w dziekanacie, student office albo w systemie online "
+"uczelni."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Запросите справку о стоимости обучения в деканате, student office или "
+"бухгалтерии учебного заведения."
+msgstr ""
+"Zaświadczenie o wysokości opłat za naukę zamów w dziekanacie, student office"
+" albo księgowości uczelni."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Возьмите подтверждение оплаты обучения в банковском приложении или в "
+"бухгалтерии учебного заведения."
+msgstr ""
+"Potwierdzenie opłaty za naukę pobierz z aplikacji bankowej albo z "
+"księgowości uczelni."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Оценки или свидетельства можно получить в деканате, student office, школе "
+"или в электронном кабинете ученика/студента."
+msgstr ""
+"Oceny lub świadectwa można uzyskać w dziekanacie, student office, szkole "
+"albo elektronicznym koncie ucznia/studenta."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Полис можно получить у страховщика, работодателя, в ZUS/eZUS или NFZ. "
+"Подойдёт документ с подтверждением активной страховки."
+msgstr ""
+"Polisę można uzyskać u ubezpieczyciela, pracodawcy, w ZUS/eZUS albo NFZ. "
+"Wgraj dokument potwierdzający aktywne ubezpieczenie."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Обычно это договор аренды от владельца жилья, подтверждение meldunek из "
+"ужонда или документы об оплате проживания."
+msgstr ""
+"Najczęściej jest to umowa najmu od właściciela, potwierdzenie meldunku z "
+"urzędu albo dokumenty potwierdzające opłaty za mieszkanie."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Подготовьте выписку из банка, справку о доходах, документы спонсора или "
+"другое подтверждение средств на проживание."
+msgstr ""
+"Przygotuj wyciąg z banku, zaświadczenie o dochodach, dokumenty sponsora albo"
+" inne potwierdzenie środków na utrzymanie."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Załącznik nr 1 заполняет и подписывает работодатель. Обратитесь в отдел "
+"кадров, HR или бухгалтерию."
+msgstr ""
+"Załącznik nr 1 wypełnia i podpisuje pracodawca. Poproś dział kadr, HR albo "
+"księgowość."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Копию договора о работе или zlecenie можно получить у работодателя, в HR или"
+" бухгалтерии."
+msgstr ""
+"Kopię umowy o pracę albo zlecenia możesz otrzymać od pracodawcy, w HR albo "
+"księgowości."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Oświadczenie или zezwolenie na pracę выдаёт работодатель. Если у вас "
+"польский диплом, загрузите диплом и suplement."
+msgstr ""
+"Oświadczenie albo zezwolenie na pracę wydaje pracodawca. Jeśli masz polski "
+"dyplom, wgraj dyplom i suplement."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"PIT-37 с подтверждением подачи можно скачать в e-Urząd Skarbowy на "
+"podatki.gov.pl или получить у бухгалтера."
+msgstr ""
+"PIT-37 z potwierdzeniem złożenia można pobrać w e-Urzędzie Skarbowym na "
+"podatki.gov.pl albo otrzymać od księgowości."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Этот документ работодатель получает в ZUS/eZUS. Попросите HR или бухгалтерию"
+" подготовить справку."
+msgstr ""
+"Ten dokument pracodawca uzyskuje w ZUS/eZUS. Poproś HR albo księgowość o "
+"przygotowanie zaświadczenia."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Справку о взносах можно получить в ZUS/eZUS или запросить у "
+"работодателя/бухгалтерии."
+msgstr ""
+"Zaświadczenie o składkach można uzyskać w ZUS/eZUS albo poprosić "
+"pracodawcę/księgowość."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Справку об отсутствии налоговой задолженности можно получить в e-Urząd "
+"Skarbowy или в налоговом ужонде."
+msgstr ""
+"Zaświadczenie o niezaleganiu w podatkach można uzyskać w e-Urzędzie "
+"Skarbowym albo w urzędzie skarbowym."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"ZUS RCA можно скачать в ZUS PUE/eZUS в разделе Ubezpieczony -> Raporty или "
+"запросить у бухгалтера работодателя."
+msgstr ""
+"ZUS RCA można pobrać w ZUS PUE/eZUS w sekcji Ubezpieczony -> Raporty albo "
+"poprosić księgowość pracodawcy."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Справку о przebiegu ubezpieczenia можно заказать в ZUS/eZUS или в отделении "
+"ZUS."
+msgstr ""
+"Zaświadczenie o przebiegu ubezpieczenia można zamówić w ZUS/eZUS albo w "
+"placówce ZUS."
+
+#: clients/views/onboarding_views.py
+msgid "CIT/PIT работодателя подготовит бухгалтерия работодателя."
+msgstr "CIT/PIT pracodawcy przygotowuje księgowość pracodawcy."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Справку о количестве сотрудников и взносах работодатель получает в ZUS/eZUS."
+" Обратитесь в HR или бухгалтерию."
+msgstr ""
+"Zaświadczenie o liczbie pracowników i składkach pracodawca uzyskuje w "
+"ZUS/eZUS. Poproś HR albo księgowość."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Шаблон заявления выдаёт менеджер или юрист. Заполните и подпишите его после "
+"проверки данных."
+msgstr ""
+"Wzór oświadczenia przekazuje manager albo prawnik. Wypełnij i podpisz po "
+"sprawdzeniu danych."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Заявление об обеспечении заполняет и подписывает человек, который будет вас "
+"содержать. Шаблон можно получить у менеджера."
+msgstr ""
+"Oświadczenie o utrzymaniu wypełnia i podpisuje osoba, która będzie Cię "
+"utrzymywać. Wzór możesz otrzymać od managera."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Загрузите письмо wezwanie, которое пришло из ужонда по почте, ePUAP или MOS."
+msgstr ""
+"Wgraj pismo wezwanie, które przyszło z urzędu pocztą, przez ePUAP albo MOS."
+
+#: clients/views/onboarding_views.py
+msgid "Подтверждение выдаёт ужонд после сдачи отпечатков пальцев."
+msgstr "Potwierdzenie wydaje urząd po złożeniu odcisków palców."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Спонсор должен отсканировать свою карту побыту, решение о побыте или другой "
+"документ, подтверждающий легальное пребывание."
+msgstr ""
+"Sponsor powinien zeskanować swoją kartę pobytu, decyzję pobytową albo inny "
+"dokument potwierdzający legalny pobyt."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Документы о доходе спонсора можно получить у работодателя, в бухгалтерии, "
+"банке, ZUS или налоговом ужонде."
+msgstr ""
+"Dokumenty dochodu sponsora można uzyskać od pracodawcy, w księgowości, "
+"banku, ZUS albo urzędzie skarbowym."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Свидетельство о браке получите в ЗАГСе/USC страны регистрации брака; для "
+"Польши обычно нужен присяжный перевод."
+msgstr ""
+"Akt małżeństwa uzyskaj w USC/urzędzie stanu cywilnego kraju rejestracji "
+"małżeństwa; do użycia w Polsce zwykle potrzebne jest tłumaczenie przysięgłe."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Подойдут договор аренды, счета, совместные документы, фото или другие "
+"доказательства совместной семейной жизни."
+msgstr ""
+"Mogą to być umowa najmu, rachunki, wspólne dokumenty, zdjęcia albo inne "
+"dowody wspólnego życia rodzinnego."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Согласие можно оформить у нотариуса или в консульстве; при необходимости "
+"добавьте присяжный перевод."
+msgstr ""
+"Zgodę można sporządzić u notariusza albo w konsulacie; w razie potrzeby "
+"dodaj tłumaczenie przysięgłe."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Свидетельство о рождении получите в ЗАГСе/USC страны рождения; для Польши "
+"обычно нужен присяжный перевод."
+msgstr ""
+"Akt urodzenia uzyskaj w USC/urzędzie stanu cywilnego kraju urodzenia; do "
+"użycia w Polsce zwykle potrzebne jest tłumaczenie przysięgłe."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Документы об опеке или родительских правах можно получить в суде, ЗАГСе/USC "
+"или у нотариуса; при необходимости добавьте перевод."
+msgstr ""
+"Dokumenty dotyczące opieki lub władzy rodzicielskiej można uzyskać w sądzie,"
+" USC albo u notariusza; w razie potrzeby dodaj tłumaczenie."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Согласие второго родителя оформляется у нотариуса или в консульстве. Решение"
+" суда также подойдёт, если оно заменяет согласие."
+msgstr ""
+"Zgodę drugiego rodzica sporządza się u notariusza albo w konsulacie. "
+"Orzeczenie sądu też wystarczy, jeśli zastępuje zgodę."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Справку из школы можно получить в секретариате школы или электронном "
+"кабинете."
+msgstr ""
+"Zaświadczenie ze szkoły można uzyskać w sekretariacie szkoły albo w "
+"dzienniku elektronicznym."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Согласие законного представителя можно оформить у нотариуса или в "
+"консульстве; при необходимости добавьте перевод."
+msgstr ""
+"Zgodę przedstawiciela ustawowego można sporządzić u notariusza albo w "
+"konsulacie; w razie potrzeby dodaj tłumaczenie."
+
+#: clients/views/onboarding_views.py
+msgid ""
+"Если не знаете, где получить этот документ, напишите менеджеру, и мы "
+"подскажем точное место."
+msgstr ""
+"Jeśli nie wiesz, gdzie uzyskać ten dokument, napisz do managera, a wskażemy "
+"dokładne miejsce."
+
+#: clients/onboarding:0
+msgid "Клиентский аккаунт"
+msgstr "Konto klienta"
+
+#: clients/onboarding:0
+msgid "ФИО"
+msgstr "Imię i nazwisko"
+
+#: clients/onboarding:0
+msgid "Введите фамилию и имя как в паспорте."
+msgstr "Wpisz nazwisko i imię tak jak w paszporcie."
+
+#: clients/onboarding:0
+msgid "Пожалуйста, укажите ФИО."
+msgstr "Podaj imię i nazwisko."
+
+#: clients/onboarding:0
+msgid "Введите ФИО полностью: фамилия и имя."
+msgstr "Wpisz pełne imię i nazwisko: nazwisko i imię."
+
+#: clients/onboarding:0
+msgid "Аккаунт успешно создан. Вы вошли в личный кабинет клиента."
+msgstr "Konto zostało utworzone. Jesteś zalogowany do panelu klienta."
+
+#: clients/onboarding:0
+msgid "Файл загружен. Мы сохранили его в вашем кабинете."
+msgstr "Plik został przesłany. Zapisaliśmy go w panelu klienta."
+
+#: clients/onboarding:0
+msgid "Не удалось загрузить файл: %(errors)s"
+msgstr "Nie udało się przesłać pliku: %(errors)s"
+
+#: clients/onboarding:0
+msgid ""
+"PDF, JPG, JPEG, PNG или WebP. Если фото с телефона не отправляется, "
+"сохраните его как JPG/PNG или загрузите PDF."
+msgstr ""
+"PDF, JPG, JPEG, PNG lub WebP. Jeśli zdjęcie z telefonu się nie przesyła, "
+"zapisz je jako JPG/PNG albo prześlij PDF."
 
 #~ msgid "Глобальные значения для печатных документов текущей базы."
 #~ msgstr "Globalne wartości dla dokumentów do druku obecnej bazy."

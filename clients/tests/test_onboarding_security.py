@@ -1,7 +1,9 @@
 from datetime import timedelta
 from django.test import TestCase, override_settings
+from allauth.account.models import EmailAddress
 from django.utils import timezone
 from django.urls import reverse
+from django.utils.translation import override
 from django.contrib.auth import get_user_model
 from clients.models import Client, ClientOnboardingSession
 from clients.services.onboarding_tokens import generate_onboarding_token
@@ -60,6 +62,7 @@ class OnboardingSecurityTests(TestCase):
         # POST to set-password
         url = reverse("clients:onboarding_set_password", kwargs={"token": raw})
         response = self.client.post(url, {
+            "full_name": "Kowalska Anna Maria",
             "email": "test_pwd@example.com",
             "password": "supersecurepassword123",
             "password_confirm": "supersecurepassword123"
@@ -69,9 +72,38 @@ class OnboardingSecurityTests(TestCase):
         # Verify user creation
         client.refresh_from_db()
         self.assertIsNotNone(client.user)
+        self.assertEqual(client.first_name, "Anna Maria")
+        self.assertEqual(client.last_name, "Kowalska")
         self.assertEqual(client.user.email, "test_pwd@example.com")
+        self.assertEqual(client.user.first_name, "Anna Maria")
+        self.assertEqual(client.user.last_name, "Kowalska")
         self.assertTrue(client.user.is_active)
         self.assertTrue(client.user.has_usable_password())
+        email_address = EmailAddress.objects.get(user=client.user, email="test_pwd@example.com")
+        self.assertTrue(email_address.primary)
+        self.assertTrue(email_address.verified)
+
+    def test_onboarding_set_password_requires_full_name(self):
+        client = Client.objects.create(first_name="A", last_name="B", email="missing_name@example.com", application_purpose="work")
+        raw, hashed = generate_onboarding_token()
+        ClientOnboardingSession.objects.create(
+            client=client,
+            token_hash=hashed,
+            status="created",
+            expires_at=timezone.now() + timedelta(days=1),
+        )
+
+        with override("ru"):
+            response = self.client.post(reverse("clients:onboarding_set_password", kwargs={"token": raw}), {
+                "email": "missing_name@example.com",
+                "password": "supersecurepassword123",
+                "password_confirm": "supersecurepassword123",
+            })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Пожалуйста, укажите ФИО.")
+        client.refresh_from_db()
+        self.assertIsNone(client.user)
 
     def test_onboarding_me_token_resolves_logged_in_client(self):
         User = get_user_model()
@@ -142,6 +174,7 @@ class OnboardingSecurityTests(TestCase):
         # Accessing set-password for new client
         url = reverse("clients:onboarding_set_password", kwargs={"token": raw})
         response = self.client.post(url, {
+            "full_name": "Nowak Nina",
             "email": "returning@example.com",
             "password": "newpassword123",
             "password_confirm": "newpassword123"
@@ -154,8 +187,13 @@ class OnboardingSecurityTests(TestCase):
         user.refresh_from_db()
         self.assertIsNone(old_client.user)
         self.assertEqual(new_client.user, user)
+        self.assertEqual(new_client.first_name, "Nina")
+        self.assertEqual(new_client.last_name, "Nowak")
+        self.assertEqual(user.first_name, "Nina")
+        self.assertEqual(user.last_name, "Nowak")
         self.assertTrue(user.is_active)
         self.assertTrue(user.check_password("newpassword123"))
+        self.assertTrue(EmailAddress.objects.get(user=user, email="returning@example.com").verified)
 
     def _minimal_pdf_bytes(self):
         return (
@@ -172,6 +210,51 @@ class OnboardingSecurityTests(TestCase):
             b"startxref\n183\n"
             b"%%EOF\n"
         )
+
+    def test_onboarding_upload_feedback_is_visible_when_file_missing(self):
+        User = get_user_model()
+        user = User.objects.create_user(email="upload_missing@example.com", password="password123")
+        client = Client.objects.create(first_name="Upload", last_name="Missing", email="upload_missing@example.com", user=user, application_purpose="work")
+        raw, hashed = generate_onboarding_token()
+        ClientOnboardingSession.objects.create(
+            client=client,
+            token_hash=hashed,
+            status="created",
+            expires_at=timezone.now() + timedelta(days=1),
+        )
+        self.client.force_login(user)
+
+        upload_url = reverse("clients:onboarding_document_upload", kwargs={"token": raw, "doc_type": "payment_confirmation"})
+        with override("ru"):
+            response = self.client.post(upload_url, {}, follow=True)
+
+        self.assertContains(response, "onboarding-messages")
+        self.assertContains(response, "alert-danger")
+        self.assertEqual(client.documents.count(), 0)
+
+    def test_onboarding_upload_success_feedback_is_visible(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        User = get_user_model()
+        user = User.objects.create_user(email="upload_success@example.com", password="password123")
+        client = Client.objects.create(first_name="Upload", last_name="Success", email="upload_success@example.com", user=user, application_purpose="work")
+        raw, hashed = generate_onboarding_token()
+        ClientOnboardingSession.objects.create(
+            client=client,
+            token_hash=hashed,
+            status="created",
+            expires_at=timezone.now() + timedelta(days=1),
+        )
+        self.client.force_login(user)
+
+        upload_url = reverse("clients:onboarding_document_upload", kwargs={"token": raw, "doc_type": "payment_confirmation"})
+        uploaded_file = SimpleUploadedFile("payment.pdf", self._minimal_pdf_bytes(), content_type="application/pdf")
+        with override("ru"):
+            response = self.client.post(upload_url, {"file": uploaded_file}, follow=True)
+
+        self.assertContains(response, "onboarding-messages")
+        self.assertContains(response, "alert-success")
+        self.assertEqual(client.documents.filter(document_type="payment_confirmation").count(), 1)
 
     def test_onboarding_actions_log_activity_with_actor(self):
         from django.core.files.uploadedfile import SimpleUploadedFile

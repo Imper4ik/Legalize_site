@@ -3,6 +3,7 @@
 <html lang="{{ LANGUAGE_CODE }}">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">
     <script>
       (function () {
@@ -122,9 +123,106 @@
         .autosave-dot.danger {
             background-color: #f44336;
         }
+        .onboarding-document-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+        .onboarding-document-main {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .onboarding-document-title {
+            overflow-wrap: anywhere;
+        }
+        .onboarding-document-source {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.35rem;
+            margin-top: 0.35rem;
+            color: var(--muted);
+            font-size: 0.82rem;
+            line-height: 1.35;
+        }
+        .onboarding-document-source i {
+            flex: 0 0 auto;
+            margin-top: 0.1rem;
+            color: var(--brand-2);
+        }
+        .onboarding-document-actions {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .client-account-banner {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--surface);
+            box-shadow: var(--shadow-1);
+        }
+        .client-account-banner i {
+            color: var(--brand-1);
+            font-size: 1.25rem;
+        }
+        .client-account-label {
+            display: block;
+            color: var(--muted);
+            font-size: 0.78rem;
+            line-height: 1.2;
+        }
+        .client-account-name {
+            display: block;
+            font-weight: 700;
+            color: var(--fg);
+            line-height: 1.25;
+            overflow-wrap: anywhere;
+        }
+        .client-account-email {
+            display: block;
+            color: var(--muted);
+            font-size: 0.85rem;
+            overflow-wrap: anywhere;
+        }
         @keyframes autosave-pulse {
             from { opacity: 0.4; transform: scale(0.9); }
             to { opacity: 1; transform: scale(1.1); }
+        }
+        @media (max-width: 575.98px) {
+            .container.py-5 {
+                padding-top: 1rem !important;
+                padding-bottom: 1.5rem !important;
+            }
+            .page-surface {
+                padding: 1rem;
+                border-radius: 10px;
+            }
+            .page-surface h2 {
+                font-size: 1.35rem;
+            }
+            .onboarding-document-item {
+                display: block;
+            }
+            .onboarding-document-actions {
+                justify-content: flex-start;
+                width: 100%;
+                margin-top: 0.75rem;
+            }
+            .onboarding-document-actions .btn {
+                min-height: 2rem;
+            }
+            .autosave-pill {
+                right: 12px;
+                bottom: 12px;
+                max-width: calc(100% - 24px);
+            }
         }
     </style>
 </head>
@@ -219,6 +317,25 @@
                 {% endif %}
 
                 <div class="page-surface mt-0 mb-4">
+                    {% if session and request.user.is_authenticated and not request.user.is_staff %}
+                        <div class="client-account-banner mb-3">
+                            <i class="bi bi-person-circle" aria-hidden="true"></i>
+                            <div class="min-w-0">
+                                <span class="client-account-label">{% trans "Клиентский аккаунт" %}</span>
+                                <span class="client-account-name">{{ session.client.first_name }} {{ session.client.last_name }}</span>
+                                <span class="client-account-email">{{ request.user.email }}</span>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if messages %}
+                        <div class="onboarding-messages mb-3">
+                            {% for message in messages %}
+                                <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} mb-2" role="alert">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                     <h2 class="text-center mb-4">{% block title %}{% endblock %}</h2>
                     {% block content %}{% endblock %}
                 </div>

@@ -21,7 +21,7 @@ def populate_document_translations(apps, schema_editor):
         },
         'residence_card': {
             'pl': 'Karta pobytu',
-            'ru': 'Карта пребывания',
+            'ru': 'Карта побыту',
             'en': 'Residence card'
         },
         'payment_confirmation': {

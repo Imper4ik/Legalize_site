@@ -12,6 +12,7 @@ from typing import cast
 
 
 from clients.forms import DocumentUploadForm
+from clients.constants import DocumentType
 from clients.models import ClientOnboardingSession, ClientDigitalAccess, MOSApplicationData, Client, Document, DocumentRequirement
 from clients.services.intake_extraction import pre_fill_mos_data_from_ocr
 from clients.security.encrypted import safe_encrypted_attr
@@ -177,32 +178,66 @@ def _validate_email_domain_dns(email: str) -> bool:
     except Exception:
         return False
 
+
+def _split_onboarding_full_name(full_name: str) -> tuple[str, str] | None:
+    parts = full_name.split()
+    if len(parts) < 2:
+        return None
+    return " ".join(parts[1:]), parts[0]
+
+
+def _mark_user_email_verified(user, email: str) -> None:
+    from allauth.account.models import EmailAddress
+
+    email_address = EmailAddress.objects.filter(user=user, email__iexact=email).first()
+    if email_address is None:
+        email_address = EmailAddress.objects.create(
+            user=user,
+            email=email,
+            primary=True,
+            verified=True,
+        )
+    else:
+        email_address.email = email
+        email_address.primary = True
+        email_address.verified = True
+        email_address.save(update_fields=["email", "primary", "verified"])
+
+    EmailAddress.objects.filter(user=user).exclude(pk=email_address.pk).update(primary=False)
+
+
 def onboarding_set_password(request: HttpRequest, token: str) -> HttpResponse:
     session = check_onboarding_session(token, request=request)
     if not session:
         return HttpResponseForbidden(_("Срок действия ссылки истёк или она недействительна."))
 
     client = session.client
-    
+
     if client.user and client.user.has_usable_password():
         if request.user.is_authenticated and request.user == client.user:
             return redirect("clients:onboarding_start", token=token)
-        from django.contrib import messages
         messages.info(request, _("У вас уже есть аккаунт. Пожалуйста, войдите в систему."))
         login_url = reverse("account_login")
         return redirect(f"{login_url}?email={client.email}")
 
     error_message = None
+    full_name_val = " ".join(part for part in [client.last_name, client.first_name] if part).strip()
     email_val = client.email or ""
 
     if request.method == "POST":
-        email = request.POST.get("email", "").strip().lower()
+        full_name_val = " ".join(request.POST.get("full_name", "").split())
+        email_val = request.POST.get("email", "").strip().lower()
         password = request.POST.get("password", "")
         password_confirm = request.POST.get("password_confirm", "")
+        parsed_name = _split_onboarding_full_name(full_name_val)
 
-        if not email:
+        if not full_name_val:
+            error_message = _("Пожалуйста, укажите ФИО.")
+        elif parsed_name is None:
+            error_message = _("Введите ФИО полностью: фамилия и имя.")
+        elif not email_val:
             error_message = _("Пожалуйста, укажите адрес электронной почты.")
-        elif not _validate_email_domain_dns(email):
+        elif not _validate_email_domain_dns(email_val):
             error_message = _("Не удалось подтвердить существование домена почты. Пожалуйста, проверьте адрес на опечатки.")
         elif password != password_confirm:
             error_message = _("Пароли не совпадают.")
@@ -211,10 +246,10 @@ def onboarding_set_password(request: HttpRequest, token: str) -> HttpResponse:
         else:
             from django.contrib.auth import get_user_model
             User = get_user_model()
-            
-            existing_user = User.objects.filter(email__iexact=email).first()
+            first_name, last_name = parsed_name
+            existing_user = User.objects.filter(email__iexact=email_val).first()
             user = None
-            
+
             try:
                 with transaction.atomic():
                     if existing_user:
@@ -222,35 +257,41 @@ def onboarding_set_password(request: HttpRequest, token: str) -> HttpResponse:
                         if linked_client:
                             if linked_client.pk == client.pk:
                                 user = existing_user
-                                user.set_password(password)
-                                user.is_active = True
-                                user.save()
                             elif linked_client.archived_at is not None:
                                 Client.all_objects.filter(pk=linked_client.pk).update(user=None)
                                 user = existing_user
-                                user.set_password(password)
-                                user.is_active = True
-                                user.save()
                             else:
                                 error_message = _("Этот адрес электронной почты уже используется в системе другим активным клиентом.")
                         else:
                             user = existing_user
+
+                        if not error_message and user:
+                            user.email = email_val
+                            user.first_name = first_name
+                            user.last_name = last_name
                             user.set_password(password)
                             user.is_active = True
                             user.save()
                     else:
-                        user = User.objects.create_user(email=email, password=password)
+                        user = User.objects.create_user(
+                            email=email_val,
+                            password=password,
+                            first_name=first_name,
+                            last_name=last_name,
+                        )
 
                     if not error_message and user:
-                        client.email = email
+                        client.email = email_val
+                        client.first_name = first_name
+                        client.last_name = last_name
                         client.user = user
-                        client.save(update_fields=["email", "user"])
-                        
+                        client.save(update_fields=["email", "first_name", "last_name", "user"])
+                        _mark_user_email_verified(user, email_val)
+
                         from django.contrib.auth import login
                         login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-                        
-                        from django.contrib import messages
-                        messages.success(request, _("Аккаунт успешно создан! Добро пожаловать в личный кабинет."))
+
+                        messages.success(request, _("Аккаунт успешно создан. Вы вошли в личный кабинет клиента."))
                         return redirect("clients:onboarding_start", token=token)
             except Exception as e:
                 error_message = _("Произошла ошибка при сохранении аккаунта: {error}").format(error=str(e))
@@ -258,8 +299,55 @@ def onboarding_set_password(request: HttpRequest, token: str) -> HttpResponse:
     return render(request, "clients/onboarding/set_password.html", {
         "session": session,
         "email": email_val,
+        "full_name": full_name_val,
         "error_message": error_message,
     })
+
+
+def _document_source_hint(doc_type: str) -> str:
+    hints = {
+        DocumentType.PHOTOS.value: _("Фото 45x35 мм можно сделать в фотоателье или фотокабине. Попросите формат do karty pobytu."),
+        DocumentType.PAYMENT_CONFIRMATION.value: _("Сделайте оплату банковским переводом или в кассе, затем загрузите подтверждение платежа."),
+        DocumentType.STUDY_APPLICATION_FEE.value: _("Оплату можно сделать банковским переводом на счёт ужонда; сохраните подтверждение из банка."),
+        DocumentType.WORK_PERMIT_FEE.value: _("Оплату можно сделать банковским переводом на счёт ужонда; сохраните подтверждение 440 zł и 17 zł за доверенность, если она нужна."),
+        "family_reunification_fee": _("Оплату можно сделать банковским переводом на счёт ужонда; сохраните подтверждение платежа и доверенности, если она нужна."),
+        DocumentType.PASSPORT.value: _("Отсканируйте или сфотографируйте действующий паспорт. Если паспорт нужно оформить заново, обратитесь в консульство или орган вашей страны."),
+        DocumentType.RESIDENCE_CARD.value: _("Отсканируйте или сфотографируйте текущую карту побыту с двух сторон, если она у вас есть."),
+        DocumentType.ENROLLMENT_CERTIFICATE.value: _("Закажите справку в деканате, student office или личном кабинете вашей учёбы."),
+        DocumentType.TUITION_FEE_STATEMENT.value: _("Запросите справку о стоимости обучения в деканате, student office или бухгалтерии учебного заведения."),
+        DocumentType.TUITION_FEE_PROOF.value: _("Возьмите подтверждение оплаты обучения в банковском приложении или в бухгалтерии учебного заведения."),
+        DocumentType.GRADES.value: _("Оценки или свидетельства можно получить в деканате, student office, школе или в электронном кабинете ученика/студента."),
+        DocumentType.HEALTH_INSURANCE.value: _("Полис можно получить у страховщика, работодателя, в ZUS/eZUS или NFZ. Подойдёт документ с подтверждением активной страховки."),
+        DocumentType.ADDRESS_PROOF.value: _("Обычно это договор аренды от владельца жилья, подтверждение meldunek из ужонда или документы об оплате проживания."),
+        DocumentType.FINANCIAL_PROOF.value: _("Подготовьте выписку из банка, справку о доходах, документы спонсора или другое подтверждение средств на проживание."),
+        DocumentType.ZALACZNIK_NR_1.value: _("Załącznik nr 1 заполняет и подписывает работодатель. Обратитесь в отдел кадров, HR или бухгалтерию."),
+        DocumentType.EMPLOYMENT_CONTRACT.value: _("Копию договора о работе или zlecenie можно получить у работодателя, в HR или бухгалтерии."),
+        DocumentType.WORK_PERMISSION.value: _("Oświadczenie или zezwolenie na pracę выдаёт работодатель. Если у вас польский диплом, загрузите диплом и suplement."),
+        DocumentType.PIT_PROOF.value: _("PIT-37 с подтверждением подачи можно скачать в e-Urząd Skarbowy на podatki.gov.pl или получить у бухгалтера."),
+        DocumentType.TAX_CLEARANCE_EMPLOYER.value: _("Этот документ работодатель получает в ZUS/eZUS. Попросите HR или бухгалтерию подготовить справку."),
+        DocumentType.TAX_CLEARANCE_FOREIGNER.value: _("Справку о взносах можно получить в ZUS/eZUS или запросить у работодателя/бухгалтерии."),
+        DocumentType.NO_DEPENDENTS_STATEMENT.value: _("Справку об отсутствии налоговой задолженности можно получить в e-Urząd Skarbowy или в налоговом ужонде."),
+        DocumentType.ZUS_RCA_OR_INSURANCE.value: _("ZUS RCA можно скачать в ZUS PUE/eZUS в разделе Ubezpieczony -> Raporty или запросить у бухгалтера работодателя."),
+        DocumentType.ZUS_CONTRIBUTION_HISTORY.value: _("Справку о przebiegu ubezpieczenia можно заказать в ZUS/eZUS или в отделении ZUS."),
+        DocumentType.EMPLOYER_TAX_RETURN.value: _("CIT/PIT работодателя подготовит бухгалтерия работодателя."),
+        DocumentType.ZUS_EMPLOYEE_COUNT.value: _("Справку о количестве сотрудников и взносах работодатель получает в ZUS/eZUS. Обратитесь в HR или бухгалтерию."),
+        DocumentType.STATEMENT_X.value: _("Шаблон заявления выдаёт менеджер или юрист. Заполните и подпишите его после проверки данных."),
+        DocumentType.MAINTENANCE_STATEMENT.value: _("Заявление об обеспечении заполняет и подписывает человек, который будет вас содержать. Шаблон можно получить у менеджера."),
+        DocumentType.WEZWANIE.value: _("Загрузите письмо wezwanie, которое пришло из ужонда по почте, ePUAP или MOS."),
+        DocumentType.FINGERPRINT_CONFIRMATION.value: _("Подтверждение выдаёт ужонд после сдачи отпечатков пальцев."),
+        "sponsor_residence_decision_or_card": _("Спонсор должен отсканировать свою карту побыту, решение о побыте или другой документ, подтверждающий легальное пребывание."),
+        "sponsor_income_proof": _("Документы о доходе спонсора можно получить у работодателя, в бухгалтерии, банке, ZUS или налоговом ужонде."),
+        "marriage_certificate": _("Свидетельство о браке получите в ЗАГСе/USC страны регистрации брака; для Польши обычно нужен присяжный перевод."),
+        "joint_family_life_evidence": _("Подойдут договор аренды, счета, совместные документы, фото или другие доказательства совместной семейной жизни."),
+        "outside_poland_consent": _("Согласие можно оформить у нотариуса или в консульстве; при необходимости добавьте присяжный перевод."),
+        "birth_certificate": _("Свидетельство о рождении получите в ЗАГСе/USC страны рождения; для Польши обычно нужен присяжный перевод."),
+        "parental_authority_docs": _("Документы об опеке или родительских правах можно получить в суде, ЗАГСе/USC или у нотариуса; при необходимости добавьте перевод."),
+        "second_parent_consent": _("Согласие второго родителя оформляется у нотариуса или в консульстве. Решение суда также подойдёт, если оно заменяет согласие."),
+        "school_certificate": _("Справку из школы можно получить в секретариате школы или электронном кабинете."),
+        "outside_poland_child_consent": _("Согласие законного представителя можно оформить у нотариуса или в консульстве; при необходимости добавьте перевод."),
+    }
+    return hints.get(doc_type, _("Если не знаете, где получить этот документ, напишите менеджеру, и мы подскажем точное место."))
+
 
 def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
     session = check_onboarding_session(token, request=request)
@@ -297,6 +385,7 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
             "is_required": item["is_required"],
             "is_uploaded": is_uploaded,
             "doc_id": existing_map.get(doc_type),
+            "source_hint": _document_source_hint(doc_type),
         })
 
     additional_documents = [
@@ -304,6 +393,7 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
             "id": document.id,
             "code": document.document_type,
             "label": document.display_name,
+            "source_hint": _document_source_hint(document.document_type),
         }
         for document in existing_documents
         if document.document_type not in checklist_codes
@@ -387,18 +477,23 @@ def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) 
     if not _mos_data_is_editable(mos_data):
         return _locked_response(request, session)
 
-    if request.method == "POST" and request.FILES.get("file"):
-        form = DocumentUploadForm(request.POST, request.FILES, doc_type=doc_type, client=session.client)
-        if form.is_valid():
-            upload_client_document(
-                client=session.client,
-                doc_type=doc_type,
-                uploaded_document=form.save(commit=False),
-                actor=request.user if request.user.is_authenticated else None,
-                parse_requested=False,
-            )
+    if request.method == "POST":
+        if not request.FILES.get("file"):
+            messages.error(request, _("Выберите файл для загрузки."))
         else:
-            messages.error(request, _("File upload failed. Please check the selected file."))
+            form = DocumentUploadForm(request.POST, request.FILES, doc_type=doc_type, client=session.client)
+            if form.is_valid():
+                upload_client_document(
+                    client=session.client,
+                    doc_type=doc_type,
+                    uploaded_document=form.save(commit=False),
+                    actor=request.user if request.user.is_authenticated else None,
+                    parse_requested=False,
+                )
+                messages.success(request, _("Файл загружен. Мы сохранили его в вашем кабинете."))
+            else:
+                error_text = " ".join(str(error) for errors in form.errors.values() for error in errors)
+                messages.error(request, _("Не удалось загрузить файл: %(errors)s") % {"errors": error_text})
     return redirect("clients:onboarding_start", token=token)
 
 
