@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from django.views.generic import ListView
 
 from clients.forms import StaffTaskForm
@@ -64,9 +65,9 @@ def add_task(request: HttpRequest, client_id: int) -> HttpResponseBase:
             actor=request.user,
             cleaned_data=form.cleaned_data,
         )
-        messages.success(request, "Задача создана.")
+        messages.success(request, _("Задача создана."))
     else:
-        messages.error(request, "Не удалось создать задачу. Проверьте форму.")
+        messages.error(request, _("Не удалось создать задачу. Проверьте форму."))
     return redirect("clients:client_detail", pk=client.pk)
 
 
@@ -80,6 +81,6 @@ def complete_task(request: HttpRequest, task_id: int) -> HttpResponseBase:
     if request.method == "POST":
         result = complete_task_for_client(task=task, actor=request.user)
         if result.completed:
-            messages.success(request, "Задача отмечена как выполненная.")
+            messages.success(request, _("Задача отмечена как выполненная."))
 
     return redirect("clients:client_detail", pk=task.client.pk)

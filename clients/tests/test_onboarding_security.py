@@ -1,5 +1,5 @@
 from datetime import timedelta
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 from django.urls import reverse
 from django.contrib.auth import get_user_model
@@ -216,6 +216,7 @@ class OnboardingSecurityTests(TestCase):
         self.assertIsNotNone(activity_delete)
         self.assertEqual(activity_delete.actor, user)
 
+    @override_settings(LANGUAGE_CODE="ru")
     def test_failed_email_health_alert(self):
         from clients.models.email import EmailLog
         client = Client.objects.create(first_name="Alert", last_name="Email", email="alert@example.com", application_purpose="work")

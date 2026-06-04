@@ -7,7 +7,7 @@ from pathlib import Path
 from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
-from django.test import Client as DjangoClient, RequestFactory, TestCase
+from django.test import Client as DjangoClient, RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
 from clients.services.roles import ensure_predefined_roles
@@ -197,6 +197,7 @@ class TranslationViewsTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse("translations:dashboard"))
 
+    @override_settings(LANGUAGE_CODE="en")
     def test_studio_menu_item_is_visible_only_for_superusers(self):
         self.client.login(email="staff@example.com", password="pass")
         staff_response = self.client.get(reverse("clients:client_list"))

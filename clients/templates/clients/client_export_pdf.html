@@ -114,7 +114,7 @@
             {% for activity in activities %}
             <li class="mb-2 pb-2 border-bottom">
                 <div class="d-flex justify-content-between">
-                    <strong>{{ activity.summary }}</strong>
+                    <strong>{% translate activity.summary %}</strong>
                     <span class="text-muted small">{{ activity.created_at|date:"d.m.Y H:i" }}</span>
                 </div>
                 <div class="text-muted small">{{ activity.actor_display }}</div>

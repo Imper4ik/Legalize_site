@@ -1,29 +1,30 @@
+{% load i18n %}
 <div class="card mt-3">
     <div class="card-body">
-        <h5 class="card-title">Цифровой доступ</h5>
+        <h5 class="card-title">{% translate "Цифровой доступ" %}</h5>
         <div class="row">
             <div class="col-md-4">
                 <strong>PESEL:</strong> 
                 {% if client.digital_access.has_pesel %}
-                    <span class="text-success"><i class="bi bi-check-circle-fill"></i> Есть</span>
+                    <span class="text-success"><i class="bi bi-check-circle-fill"></i> {% translate "Есть" %}</span>
                 {% else %}
-                    <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Нет</span>
+                    <span class="text-danger"><i class="bi bi-x-circle-fill"></i> {% translate "Нет" %}</span>
                 {% endif %}
             </div>
             <div class="col-md-4">
                 <strong>Profil Zaufany:</strong>
                 {% if client.digital_access.has_trusted_profile %}
-                    <span class="text-success"><i class="bi bi-check-circle-fill"></i> Есть</span>
+                    <span class="text-success"><i class="bi bi-check-circle-fill"></i> {% translate "Есть" %}</span>
                 {% else %}
-                    <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Нет</span>
+                    <span class="text-danger"><i class="bi bi-x-circle-fill"></i> {% translate "Нет" %}</span>
                 {% endif %}
             </div>
             <div class="col-md-4">
                 <strong>MOS 2.0 Account:</strong>
                 {% if client.digital_access.has_mos_account %}
-                    <span class="text-success"><i class="bi bi-check-circle-fill"></i> Есть</span>
+                    <span class="text-success"><i class="bi bi-check-circle-fill"></i> {% translate "Есть" %}</span>
                 {% else %}
-                    <span class="text-danger"><i class="bi bi-x-circle-fill"></i> Нет</span>
+                    <span class="text-danger"><i class="bi bi-x-circle-fill"></i> {% translate "Нет" %}</span>
                 {% endif %}
             </div>
         </div>
@@ -32,9 +33,9 @@
 
 <div class="card mt-3">
     <div class="card-body">
-        <h5 class="card-title">Анкета MOS 2.0</h5>
-        <p><strong>Статус:</strong> {{ client.mos_application_data.get_status_display|default:"Не начато" }}</p>
-        <p><strong>Легальное пребывание:</strong> {{ client.mos_application_data.legal_stay_until|date:"d.m.Y"|default:"Не указано" }}</p>
+        <h5 class="card-title">{% translate "Анкета MOS 2.0" %}</h5>
+        <p><strong>{% translate "Статус" %}:</strong> {% if client.mos_application_data.status %}{{ client.mos_application_data.get_status_display }}{% else %}{% translate "Не начато" %}{% endif %}</p>
+        <p><strong>{% translate "Легальное пребывание" %}:</strong> {% if client.mos_application_data.legal_stay_until %}{{ client.mos_application_data.legal_stay_until|date:"d.m.Y" }}{% else %}{% translate "Не указано" %}{% endif %}</p>
         
         {% if client.onboarding_purpose_requires_review %}
             <div class="alert alert-warning border d-flex flex-column gap-2 mb-3">
@@ -52,10 +53,10 @@
         {% endif %}
 
         <a href="{% url 'clients:admin_mos_review' client.id %}" class="btn btn-outline-primary mb-3">
-            <i class="bi bi-file-earmark-text"></i> Проверить анкету MOS
+            <i class="bi bi-file-earmark-text"></i> {% translate "Проверить анкету MOS" %}
         </a>
 
-        <h6 class="mt-4">Доступ для клиента (Onboarding Link)</h6>
+        <h6 class="mt-4">{% translate "Доступ для клиента (Onboarding Link)" %}</h6>
         <div id="onboarding-alerts" class="mb-2"></div>
         {% with session=client.onboarding_sessions.last %}
             <div id="onboarding-session-container">
@@ -63,19 +64,21 @@
                     <p id="onboarding-session-info"
                        data-label-ru="Текущая сессия: <strong>Создана</strong> (истекает: {date})"
                        data-label-pl="Bieżąca sesja: <strong>Utworzona</strong> (wygasa: {date})"
-                       data-label-en="Current session: <strong>Created</strong> (expires: {date})">Текущая сессия: <strong>{{ session.get_status_display }}</strong> (истекает: {{ session.expires_at|date:"d.m.Y H:i" }})</p>
+                       data-label-en="Current session: <strong>Created</strong> (expires: {date})">
+                       {% blocktranslate with status=session.get_status_display expires=session.expires_at|date:"d.m.Y H:i" %}Текущая сессия: <strong>{{ status }}</strong> (истекает: {{ expires }}){% endblocktranslate %}
+                    </p>
                     <div class="input-group mb-3">
                         <input type="text" class="form-control" value="" id="onboardingLink" placeholder="{% translate 'Сгенерируйте или скопируйте ссылку' %}" readonly>
-                        <button class="btn btn-outline-secondary" type="button" id="btn-copy-onboarding-link" onclick="const val=document.getElementById('onboardingLink').value; if(val) { navigator.clipboard.writeText(val); }" disabled>Копировать ссылку</button>
+                        <button class="btn btn-outline-secondary" type="button" id="btn-copy-onboarding-link" onclick="const val=document.getElementById('onboardingLink').value; if(val) { navigator.clipboard.writeText(val); }" disabled>{% translate "Копировать ссылку" %}</button>
                     </div>
                 {% else %}
                     <p class="text-muted" id="onboarding-session-info"
                        data-label-ru="Текущая сессия: <strong>Создана</strong> (истекает: {date})"
                        data-label-pl="Bieżąca sesja: <strong>Utworzona</strong> (wygasa: {date})"
-                       data-label-en="Current session: <strong>Created</strong> (expires: {date})">Ссылка для онбординга еще не создана.</p>
+                       data-label-en="Current session: <strong>Created</strong> (expires: {date})">{% translate "Ссылка для онбординга еще не создана." %}</p>
                     <div class="input-group mb-3">
                         <input type="text" class="form-control" value="" id="onboardingLink" placeholder="{% translate 'Сгенерируйте ссылку для получения доступа' %}" readonly>
-                        <button class="btn btn-outline-secondary" type="button" id="btn-copy-onboarding-link" onclick="const val=document.getElementById('onboardingLink').value; if(val) { navigator.clipboard.writeText(val); }" disabled>Копировать ссылку</button>
+                        <button class="btn btn-outline-secondary" type="button" id="btn-copy-onboarding-link" onclick="const val=document.getElementById('onboardingLink').value; if(val) { navigator.clipboard.writeText(val); }" disabled>{% translate "Копировать ссылку" %}</button>
                     </div>
                 {% endif %}
             </div>
@@ -100,7 +103,7 @@
                     data-error-pl="Nie udało się wygenerować linku. Spróbuj ponownie."
                     data-error-en="Failed to generate link. Please try again."
                     data-generate-url="{% url 'clients:generate_onboarding_link' client.id %}">
-                Сгенерировать новую ссылку
+                {% translate "Сгенерировать новую ссылку" %}
             </button>
         {% endwith %}
     </div>

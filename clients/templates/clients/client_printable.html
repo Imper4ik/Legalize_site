@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Obłożka sprawy - {{ client.first_name }} {{ client.last_name }}</title>
+{% load i18n %}
+    <title>{% translate "Obłożka sprawy" %} - {{ client.first_name }} {{ client.last_name }}</title>
     <style>
         /* Используем современный шрифт без засечек */
         body {
@@ -237,7 +238,7 @@
             </div>
 
             <div class="case-number-right">
-                <span class="case-num-label-small upper">Sygnatura akt (Numer sprawy)</span>
+                <span class="case-num-label-small upper">{% translate "Sygnatura akt (Numer sprawy)" %}</span>
                 <span class="case-num-value-large">{{ safe_case_number|default:"" }}</span>
             </div>
 
@@ -252,7 +253,7 @@
                         <td class="value-col">{{ client.birth_date|date:"d.m.Y"|default:"" }}</td>
                     </tr>
                     <tr>
-                        <td class="label-col">E-mail</td>
+                        <td class="label-col">{% translate "E-mail" %}</td>
                         <td class="value-col">{{ client.email|default:"" }}</td>
                     </tr>
                     <tr>

@@ -320,6 +320,7 @@ class TestClientDetailZusUploadMonths:
         assert "ZUS 04.2026" in content
 
     @pytest.mark.django_db
+    @override_settings(LANGUAGE_CODE="ru")
     def test_uploaded_zus_document_shows_saved_report_month(self):
         admin = create_admin_user()
         client = _make_client(None)

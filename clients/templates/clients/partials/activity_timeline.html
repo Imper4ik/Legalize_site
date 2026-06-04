@@ -16,7 +16,7 @@
                 <div>
                   <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="badge {{ activity.badge_class }}">{{ activity.get_event_type_display }}</span>
-                    <span class="fw-semibold">{{ activity.summary }}</span>
+                    <span class="fw-semibold">{% translate activity.summary %}</span>
                   </div>
                   <div class="small text-muted mt-1">
                     {{ activity.created_at|date:"d.m.Y H:i" }} · {{ activity.actor_display }}

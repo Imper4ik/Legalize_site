@@ -380,6 +380,7 @@ def test_zus_rca_uploaded_period_closes_month_and_duplicates_are_blocked(sample_
         document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
         file=SimpleUploadedFile("zus-feb.pdf", b"x", content_type="application/pdf"),
         zus_period_month=date(2026, 2, 20),
+        verified=True,
     )
 
     assert missing_zus_months(sample_client, today=date(2026, 4, 16)) == [date(2026, 3, 1)]

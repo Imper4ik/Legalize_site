@@ -132,7 +132,7 @@
     <div class="card shadow-sm h-100">
       <div class="card-body">
         <h5 class="card-title">{% translate "Шаблоны" %}</h5>
-        <p class="text-muted">{% translate "Глобальные значения для печатных документов текущей базы." %}</p>
+        <p class="text-muted">{% translate "Настройка контактных данных офиса, юриста (полномочника) и общих данных, которые автоматически подставляются в бланки заявлений (Wniosek Mazowiecki) и другие печатные документы." %}</p>
         <a href="{% url 'clients:document_template_hub' %}" class="btn btn-primary">{% translate "Открыть" %}</a>
       </div>
     </div>
@@ -144,7 +144,7 @@
     <div class="card shadow-sm h-100">
       <div class="card-body">
         <h5 class="card-title">{% translate "Чеклисты" %}</h5>
-        <p class="text-muted">{% translate "Обязательные документы и структура checklist по типу подачи." %}</p>
+        <p class="text-muted">{% translate "Настройка списка документов, которые клиент должен загрузить для каждого типа подачи (учёба, работа и др.). Здесь можно менять порядок перетаскиванием и добавлять новые требования." %}</p>
         <a href="{% url 'clients:document_checklist_manage' %}" class="btn btn-primary">{% translate "Открыть" %}</a>
       </div>
     </div>
@@ -156,7 +156,7 @@
     <div class="card shadow-sm h-100">
       <div class="card-body">
         <h5 class="card-title">{% translate "Основания подачи" %}</h5>
-        <p class="text-muted">{% translate "Список submission types, статусы и локализованные названия в рабочем интерфейсе." %}</p>
+        <p class="text-muted">{% translate "Управление типами подачи заявлений (учёба, работа, воссоединение) в системе. Позволяет добавлять новые основания и задавать их названия на разных языках." %}</p>
         <a href="{% url 'clients:submission_manage' %}" class="btn btn-primary">{% translate "Открыть" %}</a>
       </div>
     </div>
@@ -168,7 +168,7 @@
     <div class="card shadow-sm h-100">
       <div class="card-body">
         <h5 class="card-title">{% translate "Цены и услуги" %}</h5>
-        <p class="text-muted mb-2">{% translate "Рабочий прайс без Django admin." %}</p>
+        <p class="text-muted mb-2">{% translate "Просмотр и редактирование стоимости услуг компании для выставления счетов клиентам (например, пошлины, переводы, сопровождение)." %}</p>
         <div class="small text-muted mb-3">{% translate "Записей:" %} {{ total_service_prices }}. {% translate "Сумма прайса:" %} {{ total_price_sum }} PLN</div>
         <a href="{% url 'clients:service_price_manage' %}" class="btn btn-primary">{% translate "Открыть" %}</a>
       </div>
@@ -181,7 +181,7 @@
     <div class="card shadow-sm h-100">
       <div class="card-body">
         <h5 class="card-title">{% translate "Сотрудники" %}</h5>
-        <p class="text-muted">{% translate "Управление staff-аккаунтами, доступом и рабочими ролями." %}</p>
+        <p class="text-muted">{% translate "Управление учетными записями сотрудников компании, назначение им ролей (Администратор, Менеджер, Переводчик) и разграничение прав доступа." %}</p>
         <a href="{% url 'clients:staff_manage' %}" class="btn btn-primary">{% translate "Открыть" %}</a>
         <a href="{% url 'clients:role_manage' %}" class="btn btn-outline-secondary ms-2">{% translate "Роли" %}</a>
       </div>
@@ -193,7 +193,7 @@
     <div class="card shadow-sm h-100">
       <div class="card-body">
         <h5 class="card-title">{% translate "Система" %}</h5>
-        <p class="text-muted">{% translate "Техническое состояние, runtime checks и health dashboard." %}</p>
+        <p class="text-muted">{% translate "Мониторинг работоспособности сервера, проверка подключения к базе данных, фоновых задач и технического состояния системы." %}</p>
         <a href="{% url 'clients:admin_dashboard' %}" class="btn btn-outline-secondary">{% translate "Здоровье системы" %}</a>
       </div>
     </div>
@@ -203,7 +203,7 @@
     <div class="card shadow-sm h-100">
       <div class="card-body">
         <h5 class="card-title">{% translate "Метрики" %}</h5>
-        <p class="text-muted">{% translate "Быстрый переход к аналитике и воронке." %}</p>
+        <p class="text-muted">{% translate "Анализ эффективности работы компании: воронка онбординга клиентов, статистика оплат, количество закрытых и активных дел." %}</p>
         <a href="{% url 'clients:metrics_dashboard' %}" class="btn btn-outline-secondary">{% translate "Метрики" %}</a>
       </div>
     </div>
@@ -212,7 +212,7 @@
     <div class="card shadow-sm h-100">
       <div class="card-body">
         <h5 class="card-title">{% translate "Журналы системы" %}</h5>
-        <p class="text-muted">{% translate "Просмотр отправленных писем и действий сотрудников (логи аудита)." %}</p>
+        <p class="text-muted">{% translate "История отправки писем клиентам и подробный лог действий сотрудников в системе (аудит безопасности и действий с клиентами)." %}</p>
         <a href="{% url 'clients:staff_activity_logs' %}" class="btn btn-outline-secondary">{% translate "Логи сотрудников" %}</a>
         <a href="{% url 'clients:email_logs' %}" class="btn btn-outline-secondary ms-2">{% translate "Логи писем" %}</a>
       </div>

@@ -19,7 +19,7 @@ from clients.services.zus_parser import ZusDocData, parse_zus_doc
 from clients.services.insurance_parser import InsuranceDocData
 
 
-@override_settings(ASYNC_OCR_PROCESSING=True)
+@override_settings(ASYNC_OCR_PROCESSING=True, LANGUAGE_CODE="en")
 class NewOcrWorkflowsTests(TestCase):
     def setUp(self):
         user_model = get_user_model()

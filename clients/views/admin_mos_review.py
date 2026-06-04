@@ -5,6 +5,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.dateparse import parse_date
+from django.utils.translation import gettext as _
 
 from clients.models import Client, MOSApplicationData
 from clients.services.access import accessible_clients_queryset
@@ -131,14 +132,14 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
             mos_data.staff_reviewed_by = cast(Any, request.user)
             mos_data.save(update_fields=["status", "staff_reviewed_at", "staff_reviewed_by"])
             if changed_fields:
-                messages.success(request, "Questionnaire approved and client card updated.")
+                messages.success(request, _("Questionnaire approved and client card updated."))
             else:
-                messages.success(request, "Questionnaire approved. No client card fields changed.")
+                messages.success(request, _("Questionnaire approved. No client card fields changed."))
             return redirect("clients:client_detail", pk=client.id)
         elif action == "accept_client_purpose":
             selected_purpose = mos_data.mos_purpose
             if selected_purpose not in ALLOWED_ONBOARDING_PURPOSES:
-                messages.error(request, "Cannot apply this purpose to the client card.")
+                messages.error(request, _("Cannot apply this purpose to the client card."))
                 return redirect("clients:admin_mos_review", client_id=client.id)
             changed_fields = apply_onboarding_purpose_to_client(client, selected_purpose)
             clear_onboarding_notifications_cache(client)
@@ -149,13 +150,13 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
                 summary="Client-selected MOS purpose applied to client card",
                 metadata={"selected_purpose": selected_purpose, "changed_fields": changed_fields},
             )
-            messages.success(request, "Client-selected purpose applied to the client card.")
+            messages.success(request, _("Client-selected purpose applied to the client card."))
             return redirect("clients:admin_mos_review", client_id=client.id)
         elif action == "request_correction":
             mos_data.status = "needs_correction"
             mos_data.correction_message = request.POST.get("correction_message", "")
             mos_data.save(update_fields=["status", "correction_message"])
-            messages.warning(request, "Correction requested from client.")
+            messages.warning(request, _("Correction requested from client."))
             return redirect("clients:client_detail", pk=client.id)
         elif action == "mark_submitted":
             mos_data.status = "submitted_in_mos"
@@ -165,7 +166,7 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
             except ValidationError as exc:
                 messages.error(request, str(exc))
                 return redirect("clients:admin_mos_review", client_id=client.id)
-            messages.success(request, "Status: submitted in MOS.")
+            messages.success(request, _("Status: submitted in MOS."))
             return redirect("clients:admin_mos_review", client_id=client.id)
         elif action == "mark_fingerprints":
             mos_data.status = "fingerprints"
@@ -176,11 +177,11 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
             except ValidationError as exc:
                 messages.error(request, str(exc))
                 return redirect("clients:admin_mos_review", client_id=client.id)
-            messages.success(request, "Status: fingerprints completed.")
+            messages.success(request, _("Status: fingerprints completed."))
             return redirect("clients:admin_mos_review", client_id=client.id)
         elif action == "mark_waiting":
             if not client.fingerprints_date:
-                messages.error(request, "Cannot mark waiting decision without fingerprints date.")
+                messages.error(request, _("Cannot mark waiting decision without fingerprints date."))
                 return redirect("clients:admin_mos_review", client_id=client.id)
             mos_data.status = "waiting_decision"
             mos_data.save(update_fields=["status"])
@@ -189,11 +190,11 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
             except ValidationError as exc:
                 messages.error(request, str(exc))
                 return redirect("clients:admin_mos_review", client_id=client.id)
-            messages.success(request, "Status: waiting for decision.")
+            messages.success(request, _("Status: waiting for decision."))
             return redirect("clients:admin_mos_review", client_id=client.id)
         elif action == "mark_decision":
             if not client.decision_date:
-                messages.error(request, "Cannot mark decision received without decision date.")
+                messages.error(request, _("Cannot mark decision received without decision date."))
                 return redirect("clients:admin_mos_review", client_id=client.id)
             mos_data.status = "decision_received"
             mos_data.save(update_fields=["status"])
@@ -202,7 +203,7 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
             except ValidationError as exc:
                 messages.error(request, str(exc))
                 return redirect("clients:admin_mos_review", client_id=client.id)
-            messages.success(request, "Status: decision received.")
+            messages.success(request, _("Status: decision received."))
             return redirect("clients:admin_mos_review", client_id=client.id)
 
     return render(

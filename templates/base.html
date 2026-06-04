@@ -107,19 +107,19 @@
               </a>
               <ul class="dropdown-menu">
                 <li>
-                  <a class="dropdown-item" href="{% url 'clients:calculator' %}">
+                  <a class="dropdown-item" href="{% url 'clients:calculator' %}" title="{% translate 'Расчет сроков пребывания, дат подачи и визитов' %}">
                     <i class="bi bi-calculator me-2"></i>{% translate "Калькулятор" %}
                   </a>
                 </li>
                 {% if user|has_any_role:"Admin,Manager" %}
                 <li>
-                  <a class="dropdown-item" href="{% url 'clients:document_checklist_manage' %}">
+                  <a class="dropdown-item" href="{% url 'clients:document_checklist_manage' %}" title="{% translate 'Настройка списка обязательных документов для целей подачи' %}">
                     <i class="bi bi-card-checklist me-2"></i>{% translate "Чеклисты" %}
                   </a>
                 </li>
                 {% endif %}
                 <li>
-                  <a class="dropdown-item" href="{% url 'clients:fingerprints_schedule' %}">
+                  <a class="dropdown-item" href="{% url 'clients:fingerprints_schedule' %}" title="{% translate 'Расписание визитов клиентов в Ужонд для сдачи отпечатков пальцев' %}">
                     <i class="bi bi-fingerprint me-2"></i>{% translate "Отпечатки" %}
                   </a>
                 </li>
@@ -132,12 +132,12 @@
               </a>
               <ul class="dropdown-menu">
                 <li>
-                  <a class="dropdown-item" href="{% url 'clients:document_reminder_list' %}">
+                  <a class="dropdown-item" href="{% url 'clients:document_reminder_list' %}" title="{% translate 'Список документов с истекающим сроком или недостающих документов у клиентов' %}">
                     <i class="bi bi-file-earmark-text me-2"></i>{% translate "По документам" %}
                   </a>
                 </li>
                 <li>
-                  <a class="dropdown-item" href="{% url 'clients:payment_reminder_list' %}">
+                  <a class="dropdown-item" href="{% url 'clients:payment_reminder_list' %}" title="{% translate 'Контроль задолженностей и отправка напоминаний о неоплаченных счетах' %}">
                     <i class="bi bi-credit-card me-2"></i>{% translate "По оплатам" %}
                   </a>
                 </li>
@@ -214,7 +214,7 @@
                 {% if user|has_any_role:"Admin,Translator" and translation_studio_available %}
                 <li>
                   <a class="dropdown-item" href="{% url 'translations:dashboard' %}">
-                    <i class="bi bi-translate me-2 text-muted"></i>Translation Studio
+                    <i class="bi bi-translate me-2 text-muted"></i>{% translate "Translation Studio" %}
                   </a>
                 </li>
                 {% endif %}

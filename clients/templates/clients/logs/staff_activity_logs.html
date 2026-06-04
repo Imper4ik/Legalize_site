@@ -52,7 +52,7 @@
               </td>
               <td data-label="{% translate 'Действие' %}">
                 <span class="badge {{ activity.badge_class }} mb-1">{{ activity.get_event_type_display }}</span>
-                <div class="small">{{ activity.summary }}</div>
+                <div class="small">{% translate activity.summary %}</div>
                 {% if activity.details %}
                   <div class="text-muted small mt-1"><i class="bi bi-info-circle me-1"></i>{{ activity.details }}</div>
                 {% endif %}

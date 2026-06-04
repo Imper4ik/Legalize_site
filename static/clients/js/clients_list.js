@@ -173,12 +173,33 @@
     if (qrImg && qrSpinner) {
       qrImg.style.display = 'none';
       qrSpinner.style.display = 'block';
-      const qrData = encodeURIComponent(link);
-      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrData}`;
-      qrImg.onload = () => {
-        qrSpinner.style.display = 'none';
-        qrImg.style.display = 'block';
-      };
+      
+      if (typeof QRious !== 'undefined') {
+        try {
+          const qr = new QRious({
+            value: link,
+            size: 150
+          });
+          qrImg.src = qr.toDataURL();
+          qrSpinner.style.display = 'none';
+          qrImg.style.display = 'block';
+        } catch (err) {
+          console.error('QRious error, using fallback API', err);
+          const qrData = encodeURIComponent(link);
+          qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrData}`;
+          qrImg.onload = () => {
+            qrSpinner.style.display = 'none';
+            qrImg.style.display = 'block';
+          };
+        }
+      } else {
+        const qrData = encodeURIComponent(link);
+        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrData}`;
+        qrImg.onload = () => {
+          qrSpinner.style.display = 'none';
+          qrImg.style.display = 'block';
+        };
+      }
     }
 
     // Default language is RU

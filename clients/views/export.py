@@ -49,7 +49,7 @@ class ClientExportPDFView(RoleOrFeatureRequiredMixin, DetailView):
             client=self.object,
             actor=request.user,
             export_type="pdf_preview",
-            summary="Экспорт кейса (PDF preview)",
+            summary=_("Экспорт кейса (PDF preview)"),
         )
         response = self.render_to_response(context)
         return apply_no_store(response)
@@ -92,7 +92,7 @@ def client_export_zip(request: HttpRequest, pk: int) -> HttpResponse:
         client=client,
         actor=request.user,
         export_type="zip",
-        summary="Экспорт кейса (ZIP)",
+        summary=_("Экспорт кейса (ZIP)"),
         metadata={
             "document_count": client.documents.count(),
             "payment_count": client.payments.count(),
@@ -134,7 +134,7 @@ def document_version_download(request: HttpRequest, version_id: int) -> HttpResp
         client=version.document.client,
         actor=request.user,
         export_type="document_version_download",
-        summary="Скачана версия документа",
+        summary=_("Скачана версия документа"),
         metadata={
             "document_id": version.document_id,
             "document_version_id": version.pk,

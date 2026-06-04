@@ -26,7 +26,7 @@ def build_pdf_upload(name: str, text: str = "NIP: 525-23-44-078") -> SimpleUploa
     return SimpleUploadedFile(name, buffer.getvalue(), content_type="application/pdf")
 
 
-@override_settings(ASYNC_OCR_PROCESSING=True)
+@override_settings(ASYNC_OCR_PROCESSING=True, LANGUAGE_CODE="en")
 class CompanyDocWorkflowTests(TestCase):
     def setUp(self):
         user_model = get_user_model()

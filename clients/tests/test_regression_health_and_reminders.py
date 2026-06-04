@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 from django.core.management import call_command
+from django.test import override_settings
 
 from clients.constants import DocumentType
 from clients.models import Client, Document, EmailLog, Payment, Reminder, StaffTask
@@ -175,6 +176,7 @@ def test_send_legal_stay_email_critical_interval(db):
             assert key_day_after != key_first
 
 
+@override_settings(LANGUAGE_CODE="ru")
 def test_get_automatic_checks_compilation(db):
     client = Client.objects.create(
         first_name="Check",

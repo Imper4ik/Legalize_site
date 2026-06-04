@@ -84,7 +84,7 @@ class AppSettingsForm(forms.ModelForm):
         ]
         widgets = {
             "organization_name": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "Legalize / Expowiza / название вашей организации"}
+                attrs={"class": "form-control", "placeholder": _("Legalize / Expowiza / название вашей организации")}
             ),
             "contact_email": forms.EmailInput(
                 attrs={"class": "form-control", "placeholder": "office@example.com"}

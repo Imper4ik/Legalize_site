@@ -76,7 +76,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
         doc_type = self.kwargs.get("doc_type")
         document = self.documents.get(str(doc_type))
         if not document:
-            raise Http404("Документ не найден")
+            raise Http404(_("Документ не найден"))
         return [document["template"]]
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
@@ -135,7 +135,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
             days_overdue = (today - client.decision_date).days
             reminder_text = (
                 f"Prośba o przyspieszenie wydania decyzji "
-                f"(termin был {client.decision_date.strftime('%d.%m.%Y')}, {days_overdue} dni temu)"
+                f"(termin był {client.decision_date.strftime('%d.%m.%Y')}, {days_overdue} dni temu)"
             )
             if not any("przyspieszenie" in att.lower() for att in attachments):
                 attachments.insert(0, reminder_text)

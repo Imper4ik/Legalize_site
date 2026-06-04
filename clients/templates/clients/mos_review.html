@@ -1,117 +1,118 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Проверка анкеты MOS 2.0: {{ client.first_name }} {{ client.last_name }}{% endblock %}
+{% block title %}{% translate "Проверка анкеты MOS 2.0" %}: {{ client.first_name }} {{ client.last_name }}{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Анкета MOS 2.0: {{ client.first_name }} {{ client.last_name }}</h2>
-    <a href="{% url 'clients:client_detail' client.id %}" class="btn btn-outline-secondary">Вернуться к клиенту</a>
+    <h2>{% translate "Анкета MOS 2.0" %}: {{ client.first_name }} {{ client.last_name }}</h2>
+    <a href="{% url 'clients:client_detail' client.id %}" class="btn btn-outline-secondary">{% translate "Вернуться к клиенту" %}</a>
 </div>
 
 <div class="row">
     <div class="col-md-8">
         <div class="card mb-3">
-            <div class="card-header fw-bold">Паспортные и личные данные</div>
+            <div class="card-header fw-bold">{% translate "Паспортные и личные данные" %}</div>
             <div class="card-body">
-                <h5>Личные данные</h5>
+                <h5>{% translate "Личные данные" %}</h5>
                 <ul class="list-group list-group-flush mb-3">
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Имя</span>
+                        <span class="text-muted">{% translate "Имя" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.first_name|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Фамилия</span>
+                        <span class="text-muted">{% translate "Фамилия" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.last_name|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Пол</span>
-                        <span class="fw-bold">{% if mos_data.personal_data.gender == 'M' %}Мужской (M){% elif mos_data.personal_data.gender == 'K' %}Женский (K){% else %}-{% endif %}</span>
+                        <span class="text-muted">{% translate "Пол" %}</span>
+                        <span class="fw-bold">{% if mos_data.personal_data.gender == 'M' %}{% translate "Мужской (M)" %}{% elif mos_data.personal_data.gender == 'K' %}{% translate "Женский (K)" %}{% else %}-{% endif %}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Фамилия при рождении (родовая)</span>
+                        <span class="text-muted">{% translate "Фамилия при рождении (родовая)" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.maiden_name|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Предыдущие фамилии</span>
+                        <span class="text-muted">{% translate "Предыдущие фамилии" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.previous_surnames|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Предыдущие имена</span>
+                        <span class="text-muted">{% translate "Предыдущие имена" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.previous_first_names|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Дата рождения</span>
+                        <span class="text-muted">{% translate "Дата рождения" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.birth_date|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Место рождения (город)</span>
+                        <span class="text-muted">{% translate "Место рождения (город)" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.birth_place|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Страна рождения</span>
+                        <span class="text-muted">{% translate "Страна рождения" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.birth_country|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Страна происхождения</span>
+                        <span class="text-muted">{% translate "Страна происхождения" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.origin_country|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Гражданство</span>
+                        <span class="text-muted">{% translate "Гражданство" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.citizenship|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Имя отца</span>
+                        <span class="text-muted">{% translate "Имя отца" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.father_name|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Имя матери</span>
+                        <span class="text-muted">{% translate "Имя матери" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.mother_name|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Девичья фамилия матери</span>
+                        <span class="text-muted">{% translate "Девичья фамилия матери" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.mother_maiden_name|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Рост</span>
+                        <span class="text-muted">{% translate "Рост" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.height|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Цвет глаз</span>
+                        <span class="text-muted">{% translate "Цвет глаз" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.eye_color|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Особые приметы</span>
+                        <span class="text-muted">{% translate "Особые приметы" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.special_marks|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Образование</span>
+                        <span class="text-muted">{% translate "Образование" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.education|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Выполняемая профессия</span>
+                        <span class="text-muted">{% translate "Выполняемая профессия" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.profession|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Семейное положение</span>
+                        <span class="text-muted">{% translate "Семейное положение" %}</span>
                         <span class="fw-bold">{{ mos_data.personal_data.marital_status|default:"-" }}</span>
                     </li>
                 </ul>
-                 <h5>Паспорт</h5>
+                 <h5>{% translate "Паспорт" %}</h5>
                 <ul class="list-group list-group-flush mb-3">
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Номер паспорта</span>
+                        <span class="text-muted">{% translate "Номер паспорта" %}</span>
                         <span class="fw-bold">{{ mos_data.passport_data.document_number|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Дата выдачи</span>
+                        <span class="text-muted">{% translate "Дата выдачи" %}</span>
                         <span class="fw-bold">{{ mos_data.passport_data.issue_date|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Годен до</span>
+                        <span class="text-muted">{% translate "Годен до" %}</span>
                         <span class="fw-bold">{{ mos_data.passport_data.expiry_date|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Орган выдачи</span>
+                        <span class="text-muted">{% translate "Орган выдачи" %}</span>
                         <span class="fw-bold">{{ mos_data.passport_data.issuing_authority|default:"-" }}</span>
                     </li>
                 </ul>
@@ -119,55 +120,55 @@
         </div>
 
         <div class="card mb-3">
-            <div class="card-header fw-bold">Адрес</div>
+            <div class="card-header fw-bold">{% translate "Адрес" %}</div>
             <div class="card-body">
                 <ul class="list-group list-group-flush mb-3">
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Воеводство</span>
+                        <span class="text-muted">{% translate "Воеводство" %}</span>
                         <span class="fw-bold">{{ mos_data.address_data.voivodeship|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Повят</span>
+                        <span class="text-muted">{% translate "Повят" %}</span>
                         <span class="fw-bold">{{ mos_data.address_data.powiat|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Гмина</span>
+                        <span class="text-muted">{% translate "Гмина" %}</span>
                         <span class="fw-bold">{{ mos_data.address_data.gmina|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Город (Польша)</span>
+                        <span class="text-muted">{% translate "Город (Польша)" %}</span>
                         <span class="fw-bold">{{ mos_data.address_data.city|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Улица</span>
+                        <span class="text-muted">{% translate "Улица" %}</span>
                         <span class="fw-bold">{{ mos_data.address_data.street|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Номер дома</span>
+                        <span class="text-muted">{% translate "Номер дома" %}</span>
                         <span class="fw-bold">{{ mos_data.address_data.house_number|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Квартира</span>
+                        <span class="text-muted">{% translate "Квартира" %}</span>
                         <span class="fw-bold">{{ mos_data.address_data.apartment_number|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Почтовый индекс</span>
+                        <span class="text-muted">{% translate "Почтовый индекс" %}</span>
                         <span class="fw-bold">{{ mos_data.address_data.postal_code|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Есть мельduнек?</span>
-                        <span class="fw-bold">{% if mos_data.address_data.meldunek %}Да{% else %}Нет{% endif %}</span>
+                        <span class="text-muted">{% translate "Есть мельдунек?" %}</span>
+                        <span class="fw-bold">{% if mos_data.address_data.meldunek %}{% translate "Да" %}{% else %}{% translate "Нет" %}{% endif %}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Страна происхождения</span>
+                        <span class="text-muted">{% translate "Страна происхождения" %}</span>
                         <span class="fw-bold">{{ mos_data.address_data.home_country|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Город на родине</span>
+                        <span class="text-muted">{% translate "Город на родине" %}</span>
                         <span class="fw-bold">{{ mos_data.address_data.home_city|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Улица на родине</span>
+                        <span class="text-muted">{% translate "Улица на родине" %}</span>
                         <span class="fw-bold">{{ mos_data.address_data.home_street|default:"-" }}</span>
                     </li>
                 </ul>
@@ -175,65 +176,65 @@
         </div>
 
         <div class="card mb-3">
-            <div class="card-header fw-bold">Декларации, Пребывание и Поездки</div>
+            <div class="card-header fw-bold">{% translate "Декларации, Пребывание и Поездки" %}</div>
             <div class="card-body">
                 <div class="alert {% if purpose_mismatch %}alert-warning{% else %}alert-light{% endif %} border">
-                    <p class="mb-1"><strong>Цель в карточке клиента:</strong> {{ client_card_purpose_label }}</p>
-                    <p class="mb-1"><strong>Цель, выбранная клиентом:</strong> {{ client_selected_purpose_label }}</p>
+                    <p class="mb-1"><strong>{% translate "Цель в карточке клиента" %}:</strong> {{ client_card_purpose_label }}</p>
+                    <p class="mb-1"><strong>{% translate "Цель, выбранная клиентом" %}:</strong> {{ client_selected_purpose_label }}</p>
                     {% if purpose_mismatch %}
-                        <p class="mb-2 fw-bold">Клиент выбрал другую цель подачи. Проверьте перед отправкой.</p>
+                        <p class="mb-2 fw-bold">{% translate "Клиент выбрал другую цель подачи. Проверьте перед отправкой." %}</p>
                         {% if can_accept_client_purpose %}
                             <form method="post" class="mt-2">
                                 {% csrf_token %}
                                 <input type="hidden" name="action" value="accept_client_purpose">
-                                <button type="submit" class="btn btn-sm btn-outline-primary">Принять цель клиента</button>
+                                <button type="submit" class="btn btn-sm btn-outline-primary">{% translate "Принять цель клиента" %}</button>
                             </form>
                         {% endif %}
                     {% endif %}
                 </div>
                 {% if mos_data.personal_data.employer_email %}
-                    <p><strong>Email работодателя:</strong> {{ mos_data.personal_data.employer_email }}</p>
+                    <p><strong>{% translate "Email работодателя" %}:</strong> {{ mos_data.personal_data.employer_email }}</p>
                 {% endif %}
                 {% if mos_data.personal_data.university_email %}
-                    <p><strong>Email университета:</strong> {{ mos_data.personal_data.university_email }}</p>
+                    <p><strong>{% translate "Email университета" %}:</strong> {{ mos_data.personal_data.university_email }}</p>
                 {% endif %}
-                <p><strong>Легальное пребывание до:</strong> {{ mos_data.legal_stay_until|date:"d.m.Y"|default:"-" }}</p>
+                <p><strong>{% translate "Легальное пребывание до" %}:</strong> {{ mos_data.legal_stay_until|date:"d.m.Y"|default:"-" }}</p>
                 
-                <h5>Пребывание и въезды</h5>
+                <h5>{% translate "Пребывание и въезды" %}</h5>
                 <ul class="list-group list-group-flush mb-3">
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Находится в Польше сейчас?</span>
-                        <span class="fw-bold">{% if mos_data.stay_data.is_in_poland %}Да{% else %}Нет{% endif %}</span>
+                        <span class="text-muted">{% translate "Находится в Польше сейчас?" %}</span>
+                        <span class="fw-bold">{% if mos_data.stay_data.is_in_poland %}{% translate "Да" %}{% else %}{% translate "Нет" %}{% endif %}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Дата последнего въезда</span>
+                        <span class="text-muted">{% translate "Дата последнего въезда" %}</span>
                         <span class="fw-bold">{{ mos_data.stay_data.last_entry_date|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Основание для въезда (виза, безвиз)</span>
+                        <span class="text-muted">{% translate "Основание для въезда (виза, безвиз)" %}</span>
                         <span class="fw-bold">{{ mos_data.stay_data.stay_basis|default:"-" }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Есть мед. страховка?</span>
-                        <span class="fw-bold">{% if mos_data.stay_data.has_insurance %}Да{% else %}Нет{% endif %}</span>
+                        <span class="text-muted">{% translate "Есть мед. страховка?" %}</span>
+                        <span class="fw-bold">{% if mos_data.stay_data.has_insurance %}{% translate "Да" %}{% else %}{% translate "Нет" %}{% endif %}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Есть стабильный доход?</span>
-                        <span class="fw-bold">{% if mos_data.stay_data.has_stable_income %}Да{% else %}Нет{% endif %}</span>
+                        <span class="text-muted">{% translate "Есть стабильный доход?" %}</span>
+                        <span class="fw-bold">{% if mos_data.stay_data.has_stable_income %}{% translate "Да" %}{% else %}{% translate "Нет" %}{% endif %}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Был в Польше раньше?</span>
-                        <span class="fw-bold">{% if mos_data.stay_data.was_in_poland_before %}Да{% else %}Нет{% endif %}</span>
+                        <span class="text-muted">{% translate "Был в Польше раньше?" %}</span>
+                        <span class="fw-bold">{% if mos_data.stay_data.was_in_poland_before %}{% translate "Да" %}{% else %}{% translate "Нет" %}{% endif %}</span>
                     </li>
                     {% if mos_data.previous_stays.0 %}
                     <li class="list-group-item d-flex flex-column align-items-start">
-                        <span class="text-muted">Предыдущие пребывания:</span>
+                        <span class="text-muted">{% translate "Предыдущие пребывания" %}:</span>
                         <span class="fw-bold mt-1 text-wrap">{{ mos_data.previous_stays.0 }}</span>
                     </li>
                     {% endif %}
                 </ul>
 
-                <h5>История поездок за последние 5 лет</h5>
+                <h5>{% translate "История поездок за последние 5 лет" %}</h5>
                 <ul class="list-group list-group-flush mb-3">
                     {% for item in mos_data.travel_history %}
                         {% if item %}
@@ -242,19 +243,19 @@
                         </li>
                         {% endif %}
                     {% empty %}
-                        <li class="list-group-item"><span class="text-muted">Нет записей о поездках</span></li>
+                        <li class="list-group-item"><span class="text-muted">{% translate "Нет записей о поездках" %}</span></li>
                     {% endfor %}
                 </ul>
 
-                <h5>Декларации</h5>
+                <h5>{% translate "Декларации" %}</h5>
                 <ul class="list-group list-group-flush mb-3">
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Были ли судимости?</span>
-                        <span class="fw-bold">{% if mos_data.legal_declarations.criminal_record %}Да{% else %}Нет{% endif %}</span>
+                        <span class="text-muted">{% translate "Были ли судимости?" %}</span>
+                        <span class="fw-bold">{% if mos_data.legal_declarations.criminal_record %}{% translate "Да" %}{% else %}{% translate "Нет" %}{% endif %}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Есть ли задолженности по налогам?</span>
-                        <span class="fw-bold">{% if mos_data.legal_declarations.tax_arrears %}Да{% else %}Нет{% endif %}</span>
+                        <span class="text-muted">{% translate "Есть ли задолженности по налогам?" %}</span>
+                        <span class="fw-bold">{% if mos_data.legal_declarations.tax_arrears %}{% translate "Да" %}{% else %}{% translate "Нет" %}{% endif %}</span>
                     </li>
                 </ul>
             </div>
@@ -263,13 +264,13 @@
 
     <div class="col-md-4">
         <div class="card sticky-top" style="top: 20px;">
-            <div class="card-header fw-bold">Действия</div>
+            <div class="card-header fw-bold">{% translate "Действия" %}</div>
             <div class="card-body">
-                <p><strong>Текущий статус:</strong> <span class="badge bg-primary">{{ mos_data.get_status_display }}</span></p>
+                <p><strong>{% translate "Текущий статус" %}:</strong> <span class="badge bg-primary">{{ mos_data.get_status_display }}</span></p>
 
                 {% if review_diffs %}
                     <div class="alert alert-info small">
-                        <strong>Поля, которые будут обновлены в карточке клиента</strong>
+                        <strong>{% translate "Поля, которые будут обновлены в карточке клиента" %}</strong>
                         <ul class="mb-0 mt-2 ps-3">
                             {% for diff in review_diffs %}
                                 <li><strong>{{ diff.field }}</strong>: {{ diff.old }} -> {{ diff.new }}</li>
@@ -277,40 +278,40 @@
                         </ul>
                     </div>
                 {% else %}
-                    <div class="alert alert-secondary small mb-3">Изменений для карточки клиента нет.</div>
+                    <div class="alert alert-secondary small mb-3">{% translate "Изменений для карточки клиента нет." %}</div>
                 {% endif %}
                 
                 <form method="post" class="mb-3">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="approve">
                     <button type="submit" class="btn btn-success w-100" {% if mos_data.status == 'mos_package_ready' or mos_data.status == 'submitted_in_mos' or mos_data.status == 'fingerprints' or mos_data.status == 'waiting_decision' or mos_data.status == 'decision_received' %}disabled{% endif %}>
-                        Утвердить (Пакет MOS готов)
+                        {% translate "Утвердить (Пакет MOS готов)" %}
                     </button>
                 </form>
 
                 <hr>
                 
-                <h6>Дальнейшие шаги в MOS:</h6>
+                <h6>{% translate "Дальнейшие шаги в MOS" %}:</h6>
                 <div class="d-flex flex-column gap-2 mb-3">
                     <form method="post">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="mark_submitted">
-                        <button type="submit" class="btn btn-outline-primary w-100">Подано в MOS</button>
+                        <button type="submit" class="btn btn-outline-primary w-100">{% translate "Подано в MOS" %}</button>
                     </form>
                     <form method="post">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="mark_fingerprints">
-                        <button type="submit" class="btn btn-outline-primary w-100">Отпечатки сданы</button>
+                        <button type="submit" class="btn btn-outline-primary w-100">{% translate "Отпечатки сданы" %}</button>
                     </form>
                     <form method="post">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="mark_waiting">
-                        <button type="submit" class="btn btn-outline-primary w-100">Ожидание решения</button>
+                        <button type="submit" class="btn btn-outline-primary w-100">{% translate "Ожидание решения" %}</button>
                     </form>
                     <form method="post">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="mark_decision">
-                        <button type="submit" class="btn btn-outline-success w-100">Децизия получена</button>
+                        <button type="submit" class="btn btn-outline-success w-100">{% translate "Децизия получена" %}</button>
                     </form>
                 </div>
 
@@ -320,10 +321,10 @@
                     {% csrf_token %}
                     <input type="hidden" name="action" value="request_correction">
                     <div class="mb-2">
-                        <label class="form-label">Комментарий для клиента</label>
+                        <label class="form-label">{% translate "Комментарий для клиента" %}</label>
                         <textarea class="form-control" name="correction_message" rows="3" required></textarea>
                     </div>
-                    <button type="submit" class="btn btn-warning w-100">Запросить исправления</button>
+                    <button type="submit" class="btn btn-warning w-100">{% translate "Запросить исправления" %}</button>
                 </form>
             </div>
         </div>
