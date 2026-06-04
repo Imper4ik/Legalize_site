@@ -67,7 +67,7 @@ class OnboardingStartContactTests(TestCase):
             },
         )
 
-        self.assertRedirects(response, reverse("clients:onboarding_purpose", kwargs={"token": token}))
+        self.assertRedirects(response, reverse("clients:onboarding_digital_access", kwargs={"token": token}))
         client.refresh_from_db()
         self.assertEqual(client.first_name, "Anna")
         self.assertEqual(client.last_name, "Nowak")
@@ -80,7 +80,7 @@ class OnboardingStartContactTests(TestCase):
         self.assertEqual(mos_data.personal_data["email"], "anna.nowak@example.com")
         self.assertEqual(mos_data.personal_data["phone"], "+48123456789")
 
-    def test_existing_contact_values_are_prefilled(self):
+    def test_existing_contact_values_are_compact_and_editable(self):
         client, token = self._client_with_session()
         client.first_name = "Jan"
         client.last_name = "Kowalski"
@@ -91,10 +91,13 @@ class OnboardingStartContactTests(TestCase):
         response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'value="Jan"')
-        self.assertContains(response, 'value="Kowalski"')
-        self.assertContains(response, 'value="jan@example.com"')
-        self.assertContains(response, 'value="+48600111222"')
+        self.assertContains(response, "Jan Kowalski")
+        self.assertContains(response, "jan@example.com")
+        self.assertContains(response, "+48600111222")
+        self.assertContains(response, "Изменить")
+        self.assertContains(response, 'class="collapse mt-3" id="contactEditForm"')
+        self.assertContains(response, reverse("clients:onboarding_digital_access", kwargs={"token": token}))
+        self.assertContains(response, "Продолжить анкету")
 
     def test_locked_start_page_does_not_change_contact_data(self):
         client, token = self._client_with_session()
