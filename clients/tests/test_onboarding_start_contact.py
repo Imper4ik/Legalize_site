@@ -35,23 +35,27 @@ class OnboardingStartContactTests(TestCase):
     def test_get_start_page_shows_profile_indicator_and_required_contact_fields(self):
         _client, token = self._client_with_session()
 
-        response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
+        from django.utils import translation
+        with translation.override('ru'):
+            response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
 
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Личный кабинет")
-        self.assertContains(response, "Профиль клиента активен")
-        self.assertContains(response, 'name="first_name"')
-        self.assertContains(response, 'name="last_name"')
-        self.assertContains(response, 'name="email"')
-        self.assertContains(response, 'name="phone"')
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, "Личный кабинет")
+            self.assertContains(response, "Профиль клиента активен")
+            self.assertContains(response, 'name="first_name"')
+            self.assertContains(response, 'name="last_name"')
+            self.assertContains(response, 'name="email"')
+            self.assertContains(response, 'name="phone"')
 
     def test_post_start_without_required_fields_returns_errors_and_does_not_update_client(self):
         client, token = self._client_with_session()
 
-        response = self.client.post(reverse("clients:onboarding_start", kwargs={"token": token}), {})
+        from django.utils import translation
+        with translation.override('ru'):
+            response = self.client.post(reverse("clients:onboarding_start", kwargs={"token": token}), {})
 
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Проверьте обязательные поля")
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, "Проверьте обязательные поля")
         client.refresh_from_db()
         self.assertEqual(client.first_name, "")
         self.assertEqual(client.last_name, "")
@@ -93,15 +97,17 @@ class OnboardingStartContactTests(TestCase):
         client.phone = "+48600111222"
         client.save(update_fields=["first_name", "last_name", "email", "phone"])
 
-        response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
+        from django.utils import translation
+        with translation.override('ru'):
+            response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
 
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Jan Kowalski")
-        self.assertContains(response, "jan@example.com")
-        self.assertContains(response, "+48600111222")
-        self.assertContains(response, 'id="contactEditFormBottom"')
-        self.assertContains(response, reverse("clients:onboarding_digital_access", kwargs={"token": token}))
-        self.assertContains(response, "Продолжить анкету")
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, "Jan Kowalski")
+            self.assertContains(response, "jan@example.com")
+            self.assertContains(response, "+48600111222")
+            self.assertContains(response, 'id="contactEditFormBottom"')
+            self.assertContains(response, reverse("clients:onboarding_digital_access", kwargs={"token": token}))
+            self.assertContains(response, "Продолжить анкету")
 
     def test_locked_start_page_does_not_change_contact_data(self):
         client, token = self._client_with_session()

@@ -145,7 +145,7 @@
                                     {% endif %}
                                 {% else %}
                                     <span class="badge bg-warning text-dark">{% trans "Ожидается" %}</span>
-                                    {% if allow_edit %}
+                                    {% if allow_doc_edit %}
                                         <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">{% trans "Загрузить" %}</button>
                                     {% else %}
                                         <span class="small text-muted">{% trans "Locked" %}</span>
@@ -187,7 +187,7 @@
 
 {% block modals %}
 {% for doc in checklist %}
-    {% if not doc.is_uploaded and allow_edit %}
+    {% if not doc.is_uploaded and allow_doc_edit %}
         <!-- Модальное окно загрузки для конкретного документа -->
         <div class="modal fade" id="uploadModal{{ doc.code|slugify }}" tabindex="-1" aria-hidden="true">
           <div class="modal-dialog modal-dialog-centered">

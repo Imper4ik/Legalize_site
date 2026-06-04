@@ -37,6 +37,10 @@ def _mos_data_is_editable(mos_data: MOSApplicationData | None) -> bool:
     return mos_data is None or mos_data.status in EDITABLE_MOS_STATUSES
 
 
+def _mos_documents_are_editable(mos_data: MOSApplicationData | None) -> bool:
+    return mos_data is None or mos_data.status in {"draft", "client_filling", "client_completed", "staff_review", "needs_correction"}
+
+
 def _locked_response(request: HttpRequest, session: ClientOnboardingSession) -> HttpResponse:
     client = session.client
     mos_data = getattr(client, "mos_application_data", None)
@@ -404,7 +408,8 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
     ]
 
     allow_edit = _mos_data_is_editable(mos_data)
-    allow_delete = bool(mos_data and allow_edit)
+    allow_doc_edit = _mos_documents_are_editable(mos_data)
+    allow_delete = bool(mos_data and allow_doc_edit)
 
     status = mos_data.status if mos_data else 'draft'
     if status in ['draft', 'client_filling', 'client_completed', 'needs_correction']:
@@ -427,6 +432,7 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
         "mos_data": mos_data,
         "checklist": checklist,
         "allow_edit": allow_edit,
+        "allow_doc_edit": allow_doc_edit,
         "allow_delete": allow_delete,
         "case_step": case_step,
         "additional_documents": additional_documents,
@@ -478,7 +484,7 @@ def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) 
         return auth_redirect
 
     mos_data = getattr(session.client, "mos_application_data", None)
-    if not _mos_data_is_editable(mos_data):
+    if not _mos_documents_are_editable(mos_data):
         return _locked_response(request, session)
 
     if request.method == "POST":
@@ -524,7 +530,7 @@ def onboarding_document_delete(request: HttpRequest, token: str, doc_id: int) ->
     client = session.client
     mos_data = getattr(client, "mos_application_data", None)
     
-    if not _mos_data_is_editable(mos_data):
+    if not _mos_documents_are_editable(mos_data):
         return _locked_response(request, session)
         
     doc = get_object_or_404(Document, id=doc_id, client=client)

@@ -7,13 +7,15 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.db.models import F, Q
 
+from django.utils.translation import gettext_lazy as _
+
 from clients.models import Client
 
 ONBOARDING_PURPOSE_CHOICES = (
-    ("study", "Учёба"),
-    ("work", "Работа"),
-    ("family_spouse", "Воссоединение с супругом"),
-    ("family_child", "Воссоединение с ребёнком"),
+    ("study", _("Учёба")),
+    ("work", _("Работа")),
+    ("family_spouse", _("Воссоединение с супругом")),
+    ("family_child", _("Воссоединение с ребёнком")),
 )
 ALLOWED_ONBOARDING_PURPOSES = {value for value, _label in ONBOARDING_PURPOSE_CHOICES}
 ONBOARDING_PURPOSE_LABELS = dict(ONBOARDING_PURPOSE_CHOICES)
@@ -30,7 +32,7 @@ def normalize_onboarding_purpose(value: str | None) -> str:
 
 def purpose_label(purpose: str | None) -> str:
     if not purpose:
-        return "не выбрана"
+        return _("не выбрана")
     return ONBOARDING_PURPOSE_LABELS.get(purpose, str(purpose))
 
 

@@ -14,6 +14,7 @@ from clients.views.onboarding_views import (
     _document_source_hint,
     _locked_response,
     _mos_data_is_editable,
+    _mos_documents_are_editable,
     _purpose_context,
     _sync_contact_fields_to_client,
     check_onboarding_session,
@@ -148,13 +149,15 @@ def _build_start_context(
     contact_values = contact_values or _contact_values_from_client(client, mos_data)
     contact_complete = all(contact_values.get(field_name) for field_name in CONTACT_REQUIRED_FIELDS)
     allow_edit = _mos_data_is_editable(mos_data)
+    allow_doc_edit = _mos_documents_are_editable(mos_data)
 
     return {
         "session": session,
         "mos_data": mos_data,
         "checklist": checklist,
         "allow_edit": allow_edit,
-        "allow_delete": bool(mos_data and allow_edit),
+        "allow_doc_edit": allow_doc_edit,
+        "allow_delete": bool(mos_data and allow_doc_edit),
         "case_step": _case_step_for_status(mos_data.status if mos_data else "draft"),
         "additional_documents": additional_documents,
         "can_change_purpose": allow_edit,
@@ -175,7 +178,7 @@ def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
         return auth_redirect
 
     client = session.client
-    mos_data, _ = MOSApplicationData.objects.get_or_create(client=client)
+    mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
 
     if request.method == "POST":
         if not _mos_data_is_editable(mos_data):
