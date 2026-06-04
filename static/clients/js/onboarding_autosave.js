@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function() {
-    const form = document.querySelector("form[data-onboarding-autosave]") || document.querySelector(".page-surface form");
+    const form = document.querySelector("form[data-onboarding-autosave]") || document.querySelector(".page-surface form:not([data-no-autosave])");
     if (!form || !window.ONBOARDING_AUTO_SAVE_URL) return;
 
     const controls = Array.from(form.querySelectorAll("input, select, textarea")).filter(input => {
