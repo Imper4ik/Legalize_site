@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import importlib
+
 from django.http import HttpRequest, HttpResponse
 
 from clients.models import ClientOnboardingSession
-from clients.views import onboarding_views
 
+onboarding_views = importlib.import_module("clients.views.onboarding_views")
 _ORIGINAL_CHECK_CLIENT_AUTH = onboarding_views.check_client_auth
 
 
