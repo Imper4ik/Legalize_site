@@ -115,7 +115,7 @@
               <div class="text-end">
                 {% if doc.is_uploaded %}
                   <span class="badge bg-success">{% trans "Загружено" %}</span>
-                  <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" target="_blank" rel="noopener">{% trans "Preview" %}</a>
+                  <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" target="_blank" rel="noopener">{% trans "Просмотреть" %}</a>
                 {% else %}
                   <span class="badge bg-warning text-dark">{% trans "Ожидается" %}</span>
                   {% if allow_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">{% trans "Загрузить" %}</button>{% endif %}
@@ -128,6 +128,70 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll(".onboarding-upload-form").forEach(function (form) {
+    const input = form.querySelector(".onboarding-upload-input");
+    const confirmBox = form.querySelector(".onboarding-upload-confirm");
+    const submit = form.querySelector(".onboarding-upload-submit");
+    const box = form.querySelector(".onboarding-upload-preview");
+    const nameEl = form.querySelector("[data-file-name]");
+    const img = form.querySelector("[data-image-preview]");
+    const pdf = form.querySelector("[data-pdf-preview]");
+    const generic = form.querySelector("[data-generic-preview]");
+    let objectUrl = null;
+
+    function resetPreview() {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrl = null;
+      [img, pdf, generic].forEach(function (el) { if (el) el.classList.add("d-none"); });
+      if (box) box.classList.add("d-none");
+      if (confirmBox) { confirmBox.checked = false; confirmBox.disabled = true; }
+      if (submit) submit.disabled = true;
+    }
+
+    if (!input) return;
+    input.addEventListener("change", function () {
+      resetPreview();
+      const file = input.files && input.files[0];
+      if (!file) return;
+      objectUrl = URL.createObjectURL(file);
+      if (box) box.classList.remove("d-none");
+      if (nameEl) nameEl.textContent = file.name + " (" + Math.ceil(file.size / 1024) + " KB)";
+      if (file.type.indexOf("image/") === 0 && img) {
+        img.src = objectUrl;
+        img.classList.remove("d-none");
+      } else if (file.type === "application/pdf" && pdf) {
+        pdf.data = objectUrl;
+        pdf.classList.remove("d-none");
+      } else if (generic) {
+        generic.classList.remove("d-none");
+      }
+      if (confirmBox) confirmBox.disabled = false;
+    });
+
+    if (confirmBox) {
+      confirmBox.addEventListener("change", function () {
+        if (submit) submit.disabled = !confirmBox.checked;
+      });
+    }
+
+    form.addEventListener("submit", function (event) {
+      if (!input.files || !input.files[0]) {
+        event.preventDefault();
+        input.focus();
+        return;
+      }
+      if (confirmBox && !confirmBox.checked) {
+        event.preventDefault();
+        confirmBox.focus();
+        return;
+      }
+    });
+  });
+});
+</script>
 {% endblock %}
 
 {% block modals %}
@@ -136,11 +200,25 @@
     <div class="modal fade" id="uploadModal{{ doc.code|slugify }}" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-          <form action="{% url 'clients:onboarding_document_upload' session.token_hash doc.code %}" method="post" enctype="multipart/form-data" data-no-autosave="true">
+          <form action="{% url 'clients:onboarding_document_upload' session.token_hash doc.code %}" method="post" enctype="multipart/form-data" class="onboarding-upload-form" data-no-autosave="true">
             {% csrf_token %}
             <div class="modal-header"><h5 class="modal-title">{% trans "Загрузка:" %} {{ doc.label }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-            <div class="modal-body"><input type="file" name="file" class="form-control" accept="application/pdf,image/jpeg,image/png,image/webp" required></div>
-            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Отмена" %}</button><button type="submit" class="btn btn-primary">{% trans "Загрузить файл" %}</button></div>
+            <div class="modal-body">
+              {% if doc.source_hint %}<div class="alert alert-info py-2 px-3 small mb-3"><i class="bi bi-info-circle-fill me-2"></i>{{ doc.source_hint }}</div>{% endif %}
+              <p class="text-muted small">{% trans "PDF, JPG, JPEG, PNG или WebP. Проверьте предпросмотр перед отправкой." %}</p>
+              <input type="file" name="file" class="form-control onboarding-upload-input" accept="application/pdf,image/jpeg,image/png,image/webp" required>
+              <div class="onboarding-upload-preview d-none mt-3 border rounded p-2">
+                <div class="small fw-bold mb-2" data-file-name></div>
+                <img class="img-fluid rounded d-none" data-image-preview alt="{% trans 'Предпросмотр выбранного файла' %}">
+                <object class="w-100 d-none" style="height: 360px;" type="application/pdf" data-pdf-preview></object>
+                <div class="small text-muted d-none" data-generic-preview>{% trans "Предпросмотр недоступен для этого типа файла. Проверьте имя файла перед отправкой." %}</div>
+              </div>
+              <div class="form-check mt-3">
+                <input class="form-check-input onboarding-upload-confirm" type="checkbox" value="1" id="confirmUpload{{ doc.code|slugify }}" disabled required>
+                <label class="form-check-label" for="confirmUpload{{ doc.code|slugify }}">{% trans "Я проверил предпросмотр и подтверждаю, что это правильный файл." %}</label>
+              </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Отмена" %}</button><button type="submit" class="btn btn-primary onboarding-upload-submit" disabled>{% trans "Загрузить файл" %}</button></div>
           </form>
         </div>
       </div>
