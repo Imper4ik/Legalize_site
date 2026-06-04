@@ -34,7 +34,7 @@
         </div>
         <div class="col-md-6">
             <label for="email" class="form-label fw-bold">{% trans "Email" %}</label>
-            <input type="email" class="form-control" id="email" name="email" value="{{ mos_data.personal_data.email|default:'' }}">
+            <input type="email" class="form-control" id="email" name="email" value="{{ mos_data.personal_data.email|default:'' }}" required>
         </div>
     </div>
     

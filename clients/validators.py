@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     pass
 
 FILE_INPUT_ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp"
-DEFAULT_MAX_IMAGE_PIXELS = 100_000_000
+DEFAULT_MAX_IMAGE_PIXELS = 300_000_000
 
 ALLOWED_DOCUMENTS = {
     ".pdf": {
@@ -112,6 +112,7 @@ def _validate_image_file(uploaded_file: Any, *, allowed_formats: set[str], label
     start_position = uploaded_file.tell()
     try:
         from PIL import Image, UnidentifiedImageError
+        Image.MAX_IMAGE_PIXELS = None
     except ImportError as exc:  # pragma: no cover - dependency is installed in app/runtime
         raise ValidationError(_("Проверка изображений сейчас недоступна.")) from exc
 

@@ -7,8 +7,7 @@ from django.utils.translation import gettext as _
 
 from clients.models import ClientDigitalAccess, MOSApplicationData
 from clients.security.encrypted import safe_encrypted_attr
-from clients.services.onboarding_purposes import normalize_onboarding_purpose
-from clients.services.onboarding_reminders import clear_onboarding_notifications_cache
+from clients.services.onboarding_purposes import clear_onboarding_notifications_cache, normalize_onboarding_purpose
 from clients.views import onboarding_views
 
 

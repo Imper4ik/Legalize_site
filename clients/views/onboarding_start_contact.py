@@ -190,6 +190,6 @@ def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
             )
 
         _save_contact_values(client, mos_data, contact_values)
-        return redirect("clients:onboarding_start", token=token)
+        return redirect("clients:onboarding_digital_access", token=token)
 
     return render(request, START_TEMPLATE, _build_start_context(session=session))

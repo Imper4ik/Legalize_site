@@ -223,10 +223,12 @@ def onboarding_set_password(request: HttpRequest, token: str) -> HttpResponse:
     error_message = None
     full_name_val = " ".join(part for part in [client.last_name, client.first_name] if part).strip()
     email_val = client.email or ""
+    phone_val = client.phone or ""
 
     if request.method == "POST":
         full_name_val = " ".join(request.POST.get("full_name", "").split())
         email_val = request.POST.get("email", "").strip().lower()
+        phone_val = request.POST.get("phone", "").strip()
         password = request.POST.get("password", "")
         password_confirm = request.POST.get("password_confirm", "")
         parsed_name = _split_onboarding_full_name(full_name_val)
@@ -239,6 +241,8 @@ def onboarding_set_password(request: HttpRequest, token: str) -> HttpResponse:
             error_message = _("Пожалуйста, укажите адрес электронной почты.")
         elif not _validate_email_domain_dns(email_val):
             error_message = _("Не удалось подтвердить существование домена почты. Пожалуйста, проверьте адрес на опечатки.")
+        elif not phone_val:
+            error_message = _("Пожалуйста, укажите номер телефона.")
         elif password != password_confirm:
             error_message = _("Пароли не совпадают.")
         elif len(password) < 8:
@@ -284,8 +288,9 @@ def onboarding_set_password(request: HttpRequest, token: str) -> HttpResponse:
                         client.email = email_val
                         client.first_name = first_name
                         client.last_name = last_name
+                        client.phone = phone_val
                         client.user = user
-                        client.save(update_fields=["email", "first_name", "last_name", "user"])
+                        client.save(update_fields=["email", "first_name", "last_name", "phone", "user"])
                         _mark_user_email_verified(user, email_val)
 
                         from django.contrib.auth import login
@@ -299,6 +304,7 @@ def onboarding_set_password(request: HttpRequest, token: str) -> HttpResponse:
     return render(request, "clients/onboarding/set_password.html", {
         "session": session,
         "email": email_val,
+        "phone": phone_val,
         "full_name": full_name_val,
         "error_message": error_message,
     })

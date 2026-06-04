@@ -317,15 +317,21 @@
                 {% endif %}
 
                 <div class="page-surface mt-0 mb-4">
-                    {% if session and request.user.is_authenticated and not request.user.is_staff %}
-                        <div class="client-account-banner mb-3">
+                    {% if session %}
+                        <a href="{% url 'clients:onboarding_start' session.token_hash %}" class="client-account-banner mb-3 text-decoration-none">
                             <i class="bi bi-person-circle" aria-hidden="true"></i>
-                            <div class="min-w-0">
-                                <span class="client-account-label">{% trans "Клиентский аккаунт" %}</span>
+                            <div class="min-w-0 flex-grow-1">
+                                <span class="client-account-label">{% trans "Личный кабинет" %}</span>
                                 <span class="client-account-name">{{ session.client.first_name }} {{ session.client.last_name }}</span>
-                                <span class="client-account-email">{{ request.user.email }}</span>
+                                {% if session.client.email %}
+                                    <span class="client-account-email">{{ session.client.email }}</span>
+                                {% endif %}
+                                {% if session.client.phone %}
+                                    <span class="client-account-email">{{ session.client.phone }}</span>
+                                {% endif %}
                             </div>
-                        </div>
+                            <i class="bi bi-house-door ms-auto" style="font-size: 1.1rem; color: var(--brand-1);" aria-hidden="true"></i>
+                        </a>
                     {% endif %}
                     {% if messages %}
                         <div class="onboarding-messages mb-3">

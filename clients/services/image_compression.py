@@ -9,6 +9,7 @@ from typing import BinaryIO, Any
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from PIL import Image
+Image.MAX_IMAGE_PIXELS = None
 
 logger = logging.getLogger(__name__)
 
