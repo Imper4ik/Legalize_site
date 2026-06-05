@@ -17,6 +17,7 @@ from clients.models import ClientOnboardingSession, ClientDigitalAccess, MOSAppl
 from clients.services.intake_extraction import pre_fill_mos_data_from_ocr
 from clients.security.encrypted import safe_encrypted_attr
 from clients.services.document_workflow import upload_client_document
+from clients.services.notifications import notify_staff_about_fingerprint_invitation_upload
 from clients.services.access import accessible_clients_queryset
 from clients.views.base import role_required_view
 from clients.services.onboarding_tokens import generate_onboarding_token, hash_onboarding_token
@@ -377,6 +378,7 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
     effective_purpose = str(purpose_ctx["effective_purpose"])
     language = translation.get_language() or client.language
     required_docs_catalog = DocumentRequirement.catalog_for(purpose=effective_purpose, language=language)
+    fingerprint_invitation_doc_type = DocumentType.WEZWANIE.value
 
     existing_documents = list(Document.objects.filter(client=client).order_by("document_type", "-uploaded_at"))
     existing_map = {document.document_type: document.id for document in existing_documents}
@@ -396,6 +398,11 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
             "source_hint": _document_source_hint(doc_type),
         })
 
+    fingerprint_invitation_document = next(
+        (document for document in existing_documents if document.document_type == fingerprint_invitation_doc_type),
+        None,
+    )
+
     additional_documents = [
         {
             "id": document.id,
@@ -404,7 +411,7 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
             "source_hint": _document_source_hint(document.document_type),
         }
         for document in existing_documents
-        if document.document_type not in checklist_codes
+        if document.document_type not in checklist_codes and document.document_type != fingerprint_invitation_doc_type
     ]
 
     allow_edit = _mos_data_is_editable(mos_data)
@@ -436,6 +443,9 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
         "allow_delete": allow_delete,
         "case_step": case_step,
         "additional_documents": additional_documents,
+        "fingerprint_invitation_doc_type": fingerprint_invitation_doc_type,
+        "fingerprint_invitation_document": fingerprint_invitation_document,
+        "fingerprint_invitation_label": client.get_document_name_by_code(fingerprint_invitation_doc_type),
         "can_change_purpose": allow_edit,
         **purpose_ctx,
     })
@@ -493,14 +503,22 @@ def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) 
         else:
             form = DocumentUploadForm(request.POST, request.FILES, doc_type=doc_type, client=session.client)
             if form.is_valid():
-                upload_client_document(
+                result = upload_client_document(
                     client=session.client,
                     doc_type=doc_type,
                     uploaded_document=form.save(commit=False),
                     actor=request.user if request.user.is_authenticated else None,
                     parse_requested=False,
                 )
-                messages.success(request, _("Файл загружен. Мы сохранили его в вашем кабинете."))
+                if doc_type == DocumentType.WEZWANIE.value:
+                    notify_staff_about_fingerprint_invitation_upload(
+                        client=session.client,
+                        document=result.document,
+                        actor=request.user if request.user.is_authenticated else None,
+                    )
+                    messages.success(request, _("Файл загружен. Сотрудник получил уведомление."))
+                else:
+                    messages.success(request, _("Файл загружен. Мы сохранили его в вашем кабинете."))
             else:
                 error_text = " ".join(str(error) for errors in form.errors.values() for error in errors)
                 messages.error(request, _("Не удалось загрузить файл: %(errors)s") % {"errors": error_text})
