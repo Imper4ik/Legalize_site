@@ -12,7 +12,14 @@ from django.utils import timezone
 from django.utils.translation import override
 
 from clients.constants import DocumentType
-from clients.models import Client, ClientOnboardingSession, Document, MOSApplicationData, StaffTask
+from clients.models import (
+    Client,
+    ClientOnboardingSession,
+    Document,
+    DocumentProcessingJob,
+    MOSApplicationData,
+    StaffTask,
+)
 from clients.services.onboarding_tokens import hash_onboarding_token
 from clients.services.roles import ensure_predefined_roles
 
@@ -138,7 +145,24 @@ class OnboardingPurposeTests(TestCase):
         self.assertEqual(task.assignee, self.manager)
         self.assertEqual(task.priority, "high")
         self.assertIn("отпечатки", task.title.lower())
+        self.assertIn("Откройте документ", task.description)
+        self.assertIn("вручную внесите дату, время и место", task.description)
+        self.assertIn(reverse("clients:document_preview", kwargs={"doc_id": document.pk}), task.description)
+        self.assertIn(reverse("clients:client_edit", kwargs={"pk": client.pk}), task.description)
+        self.assertFalse(DocumentProcessingJob.objects.filter(document=document).exists())
 
+        client.refresh_from_db()
+        self.assertIsNone(client.fingerprints_date)
+        self.assertIsNone(client.fingerprints_time)
+        self.assertIn(client.fingerprints_location, (None, ""))
+
+        self.client.force_login(self.manager)
+        schedule_response = self.client.get(reverse("clients:fingerprints_schedule"))
+
+        self.assertEqual(schedule_response.status_code, 200)
+        self.assertNotIn(client, schedule_response.context["upcoming_appointments"])
+
+        self.client.force_login(client.user)
         response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
 
         self.assertEqual(response.status_code, 200)

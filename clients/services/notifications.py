@@ -305,6 +305,10 @@ def notify_staff_about_fingerprint_invitation_upload(
 ) -> StaffTask:
     """Create a staff-facing notification when a client uploads a fingerprints wezwanie."""
 
+    client_detail_url = reverse("clients:client_detail", kwargs={"pk": client.pk})
+    client_edit_url = reverse("clients:client_edit", kwargs={"pk": client.pk})
+    document_preview_url = reverse("clients:document_preview", kwargs={"doc_id": document.pk})
+
     task = StaffTask.objects.create(
         client=client,
         document=document,
@@ -314,9 +318,17 @@ def notify_staff_about_fingerprint_invitation_upload(
         description=str(
             _(
                 "Клиент %(client)s загрузил документ wezwanie / приглашение на отпечатки пальцев. "
-                "Проверьте файл и обновите дату, время и место визита при необходимости."
+                "Откройте документ, проверьте приглашение и вручную внесите дату, время и место "
+                "сдачи отпечатков в карточке клиента. "
+                "Документ: %(document_url)s. Карточка клиента: %(client_url)s. "
+                "Быстрое редактирование клиента: %(edit_url)s."
             )
-            % {"client": client}
+            % {
+                "client": client,
+                "document_url": document_preview_url,
+                "client_url": client_detail_url,
+                "edit_url": client_edit_url,
+            }
         ),
         priority="high",
         status="open",
@@ -331,7 +343,10 @@ def notify_staff_about_fingerprint_invitation_upload(
                 str(_("Клиент: %(client)s") % {"client": client}),
                 str(_("ID клиента: %(client_id)s") % {"client_id": client.pk}),
                 str(_("ID документа: %(document_id)s") % {"document_id": document.pk}),
-                str(_("Проверьте документ в карточке клиента и обновите данные визита.")),
+                str(_("Откройте документ и вручную внесите дату, время и место отпечатков в карточке клиента.")),
+                str(_("Карточка клиента: %(client_url)s") % {"client_url": client_detail_url}),
+                str(_("Редактировать клиента: %(edit_url)s") % {"edit_url": client_edit_url}),
+                str(_("Документ: %(document_url)s") % {"document_url": document_preview_url}),
             ]
         )
         try:
