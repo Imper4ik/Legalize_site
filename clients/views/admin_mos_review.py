@@ -76,6 +76,17 @@ def _mos_client_update_values(mos_data: MOSApplicationData) -> dict[str, object]
 
 
 def _build_review_diffs(client: Client, mos_data: MOSApplicationData) -> list[dict[str, object]]:
+    field_labels = {
+        "first_name": _("Имя"),
+        "last_name": _("Фамилия"),
+        "email": _("Email"),
+        "phone": _("Телефон"),
+        "birth_date": _("Дата рождения"),
+        "citizenship": _("Гражданство"),
+        "passport_num": _("Номер паспорта"),
+        "basis_of_stay": _("Основание пребывания"),
+        "legal_basis_end_date": _("Легальное пребывание до"),
+    }
     values = _mos_client_update_values(mos_data)
     diffs = []
     for field_name in APPLY_TO_CLIENT_FIELDS:
@@ -87,11 +98,13 @@ def _build_review_diffs(client: Client, mos_data: MOSApplicationData) -> list[di
             diffs.append(
                 {
                     "field": field_name,
+                    "label": field_labels.get(field_name, field_name),
                     "old": old_value or "-",
                     "new": new_value or "-",
                 }
             )
     return diffs
+
 
 
 def _apply_mos_data_to_client(*, client: Client, mos_data: MOSApplicationData, actor: Any) -> list[str]:
@@ -206,6 +219,7 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
             messages.success(request, _("Status: decision received."))
             return redirect("clients:admin_mos_review", client_id=client.id)
 
+    passport_doc = client.documents.filter(document_type="passport").order_by("-uploaded_at").first()
     return render(
         request,
         "clients/mos_review.html",
@@ -213,6 +227,8 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
             "client": client,
             "mos_data": mos_data,
             "review_diffs": _build_review_diffs(client, mos_data),
+            "passport_doc": passport_doc,
             **_purpose_review_context(client, mos_data),
         },
     )
+
