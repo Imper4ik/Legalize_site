@@ -9226,36 +9226,33 @@ msgid "users"
 msgstr "użytkownicy"
 
 #, python-format
-#~ msgid "Нужно предоставить документ: %(name)s"
-#~ msgstr "Należy dostarczyć dokument: %(name)s"
+msgid "Нужно предоставить документ: %(name)s"
+msgstr "Należy dostarczyć dokument: %(name)s"
 
 #, python-format
-#~ msgid "Истекает срок действия документа: %(name)s"
-#~ msgstr "Wygasa ważność dokumentu: %(name)s"
+msgid "Истекает срок действия документа: %(name)s"
+msgstr "Wygasa ważność dokumentu: %(name)s"
 
 #, python-format
-#~ msgid "Просрочен платеж: %(service)s"
-#~ msgstr "Zaległa płatność: %(service)s"
+msgid "Просрочен платеж: %(service)s"
+msgstr "Zaległa płatność: %(service)s"
 
 #, python-format
-#~ msgid "Истекает легальное пребывание: %(date)s"
-#~ msgstr "Wygasa legalny pobyt: %(date)s"
+msgid "Истекает легальное пребывание: %(date)s"
+msgstr "Wygasa legalny pobyt: %(date)s"
 
 #, python-format
-#~ msgid "Документ для клиента %(client)s истекает %(date)s."
-#~ msgstr "Dokument dla klienta %(client)s wygasa %(date)s."
+msgid "Документ для клиента %(client)s истекает %(date)s."
+msgstr "Dokument dla klienta %(client)s wygasa %(date)s."
 
 #, python-format
-#~ msgid "Сумма к оплате: %(total)s; долг: %(due)s; клиент: %(client)s."
-#~ msgstr ""
-#~ "Kwota do zapłaty: %(total)s; zaległość: %(due)s; klient: %(client)s."
+msgid "Сумма к оплате: %(total)s; долг: %(due)s; клиент: %(client)s."
+msgstr "Kwota do zapłaty: %(total)s; zaległość: %(due)s; klient: %(client)s."
 
 #, python-format
-#~ msgid ""
-#~ "По срокам: %(stay_until)s. Сдвиг дедлайна с учетом выходных: %(due_date)s."
-#~ msgstr ""
-#~ "Zgodnie z terminem: %(stay_until)s. Zmiana terminu z uwzględnieniem "
-#~ "weekendów: %(due_date)s."
+msgid ""
+"По срокам: %(stay_until)s. Сдвиг дедлайна с учетом выходных: %(due_date)s."
+msgstr "Zgodnie z terminem: %(stay_until)s. Zmiana terminu z uwzględnieniem weekendów: %(due_date)s."
 
 #~ msgid "Проверьте документ в карточке клиента и обновите данные визита."
 #~ msgstr "Sprawdź dokument w karcie klienta i zaktualizuj dane wizyty."
