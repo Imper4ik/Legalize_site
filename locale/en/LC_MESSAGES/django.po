@@ -7643,7 +7643,8 @@ msgstr ""
 msgid ""
 "Загрузите письмо wezwanie, которое пришло из ужонда по почте, ePUAP или MOS."
 msgstr ""
-"Upload the wezwanie letter that came from the office by post, ePUAP, or MOS."
+"Upload the fingerprints summons / wezwanie that came from the office by "
+"post, ePUAP, or MOS."
 
 #: .\clients\views\onboarding_views.py:345
 msgid "Подтверждение выдаёт ужонд после сдачи отпечатков пальцев."
@@ -9071,6 +9072,91 @@ msgstr "user"
 #: .\users\models.py:86
 msgid "users"
 msgstr "users"
+
+#: clients/services/notifications.py:313
+msgid "Клиент загрузил вызов на отпечатки пальцев"
+msgstr "Client uploaded a fingerprints summons"
+
+#: clients/services/notifications.py:316
+#, python-format
+msgid ""
+"Клиент %(client)s загрузил документ wezwanie / приглашение на отпечатки "
+"пальцев. Проверьте файл и обновите дату, время и место визита при "
+"необходимости."
+msgstr ""
+"Client %(client)s uploaded a wezwanie / fingerprints invitation. Check the "
+"file and update the appointment date, time, and location if needed."
+
+#: clients/services/notifications.py:327
+msgid "Клиент загрузил wezwanie на отпечатки"
+msgstr "Client uploaded a fingerprints wezwanie"
+
+#: clients/services/notifications.py:330
+msgid "Клиент загрузил приглашение на отпечатки пальцев."
+msgstr "Client uploaded a fingerprints invitation / summons."
+
+#: clients/services/notifications.py:331
+#, python-format
+msgid "Клиент: %(client)s"
+msgstr "Client: %(client)s"
+
+#: clients/services/notifications.py:332
+#, python-format
+msgid "ID клиента: %(client_id)s"
+msgstr "Client ID: %(client_id)s"
+
+#: clients/services/notifications.py:333
+#, python-format
+msgid "ID документа: %(document_id)s"
+msgstr "Document ID: %(document_id)s"
+
+#: clients/services/notifications.py:334
+msgid "Проверьте документ в карточке клиента и обновите данные визита."
+msgstr ""
+"Check the document in the client card and update the appointment details."
+
+#: clients/templates/clients/onboarding/start.html:124
+#: clients/templates/clients/onboarding/start_contact.html:180
+msgid "Приглашение на отпечатки пальцев (wezwanie)"
+msgstr "Fingerprints invitation / summons"
+
+#: clients/templates/clients/onboarding/start.html:128
+#: clients/templates/clients/onboarding/start_contact.html:182
+msgid ""
+"Если urząd прислал вызов на сдачу отпечатков, загрузите его здесь. После "
+"загрузки сотрудник получит уведомление."
+msgstr ""
+"If the office sent a summons for fingerprints, upload it here. After upload,"
+" a staff member will receive a notification."
+
+#: clients/templates/clients/onboarding/start.html:136
+#: clients/templates/clients/onboarding/start_contact.html:189
+msgid "Загрузить новый"
+msgstr "Upload new"
+
+#: clients/templates/clients/onboarding/start.html:139
+#: clients/templates/clients/onboarding/start_contact.html:193
+msgid "Если получили"
+msgstr "If received"
+
+#: clients/templates/clients/onboarding/start.html:223
+#: clients/templates/clients/onboarding/start_contact.html:353
+msgid "Загрузка приглашения на отпечатки"
+msgstr "Upload fingerprints invitation"
+
+#: clients/templates/clients/onboarding/start.html:229
+#: clients/templates/clients/onboarding/start_contact.html:355
+msgid ""
+"Загрузите wezwanie / вызов из ужонда с датой или информацией о сдаче "
+"отпечатков пальцев. После отправки сотрудник получит уведомление."
+msgstr ""
+"Upload the wezwanie / summons from the office with the date or information "
+"about fingerprints. After sending it, a staff member will receive a "
+"notification."
+
+#: clients/views/onboarding_views.py:519
+msgid "Файл загружен. Сотрудник получил уведомление."
+msgstr "File uploaded. A staff member received a notification."
 
 #~ msgid ""
 #~ "Это ежемесячная декларация о взносах. Вы можете скачать её в личном кабинете"
