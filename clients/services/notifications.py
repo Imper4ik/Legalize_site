@@ -318,8 +318,8 @@ def notify_staff_about_fingerprint_invitation_upload(
         description=str(
             _(
                 "Клиент %(client)s загрузил документ wezwanie / приглашение на отпечатки пальцев. "
-                "Откройте документ, проверьте приглашение и вручную внесите дату, время и место "
-                "сдачи отпечатков в карточке клиента. "
+                "Откройте файл, проверьте приглашение и вручную заполните в карточке клиента "
+                "поля отпечатков: дата, время и место сдачи. "
                 "Документ: %(document_url)s. Карточка клиента: %(client_url)s. "
                 "Быстрое редактирование клиента: %(edit_url)s."
             )
@@ -343,7 +343,7 @@ def notify_staff_about_fingerprint_invitation_upload(
                 str(_("Клиент: %(client)s") % {"client": client}),
                 str(_("ID клиента: %(client_id)s") % {"client_id": client.pk}),
                 str(_("ID документа: %(document_id)s") % {"document_id": document.pk}),
-                str(_("Откройте документ и вручную внесите дату, время и место отпечатков в карточке клиента.")),
+                str(_("Откройте файл и вручную заполните дату, время и место отпечатков в карточке клиента.")),
                 str(_("Карточка клиента: %(client_url)s") % {"client_url": client_detail_url}),
                 str(_("Редактировать клиента: %(edit_url)s") % {"edit_url": client_edit_url}),
                 str(_("Документ: %(document_url)s") % {"document_url": document_preview_url}),
