@@ -503,14 +503,17 @@ def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) 
         else:
             form = DocumentUploadForm(request.POST, request.FILES, doc_type=doc_type, client=session.client)
             if form.is_valid():
+                is_fingerprint_invitation = doc_type == DocumentType.WEZWANIE.value
                 result = upload_client_document(
                     client=session.client,
                     doc_type=doc_type,
                     uploaded_document=form.save(commit=False),
                     actor=request.user if request.user.is_authenticated else None,
+                    # Client-side wezwanie uploads use the manual scenario: do not queue OCR here,
+                    # because staff must open the original file and enter fingerprints details.
                     parse_requested=False,
                 )
-                if doc_type == DocumentType.WEZWANIE.value:
+                if is_fingerprint_invitation:
                     notify_staff_about_fingerprint_invitation_upload(
                         client=session.client,
                         document=result.document,
