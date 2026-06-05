@@ -15,6 +15,94 @@
   </div>
 </div>
 
+<div class="card shadow-sm border-0 mb-4 premium-case-status-card">
+  <div class="card-body p-4">
+    <h5 class="text-center mb-4 fw-bold text-uppercase tracking-wider fs-6 text-primary">
+      <i class="bi bi-clock-history me-2"></i>{% trans "Статус вашего дела" %}
+    </h5>
+    
+    <div class="case-timeline-wrapper">
+      <div class="case-timeline-progress-track">
+        <div class="case-timeline-progress-fill" style="width: {% widthratio case_step|add:'-1' 5 100 %}%;"></div>
+      </div>
+      
+      <div class="case-timeline-steps">
+        <!-- Step 1: Анкета -->
+        <div class="case-timeline-step-item {% if case_step == 1 %}active{% elif case_step > 1 %}completed{% endif %}">
+          <div class="case-timeline-node">
+            {% if case_step > 1 %}
+              <i class="bi bi-check-lg"></i>
+            {% else %}
+              <i class="bi bi-file-earmark-text"></i>
+            {% endif %}
+          </div>
+          <div class="case-timeline-label">{% trans "Анкета" %}</div>
+        </div>
+        
+        <!-- Step 2: Проверка -->
+        <div class="case-timeline-step-item {% if case_step == 2 %}active{% elif case_step > 2 %}completed{% endif %}">
+          <div class="case-timeline-node">
+            {% if case_step > 2 %}
+              <i class="bi bi-check-lg"></i>
+            {% else %}
+              <i class="bi bi-clipboard2-check"></i>
+            {% endif %}
+          </div>
+          <div class="case-timeline-label">{% trans "Проверка" %}</div>
+        </div>
+        
+        <!-- Step 3: Пакет готов -->
+        <div class="case-timeline-step-item {% if case_step == 3 %}active{% elif case_step > 3 %}completed{% endif %}">
+          <div class="case-timeline-node">
+            {% if case_step > 3 %}
+              <i class="bi bi-check-lg"></i>
+            {% else %}
+              <i class="bi bi-folder-check"></i>
+            {% endif %}
+          </div>
+          <div class="case-timeline-label">{% trans "Пакет готов" %}</div>
+        </div>
+        
+        <!-- Step 4: Подано -->
+        <div class="case-timeline-step-item {% if case_step == 4 %}active{% elif case_step > 4 %}completed{% endif %}">
+          <div class="case-timeline-node">
+            {% if case_step > 4 %}
+              <i class="bi bi-check-lg"></i>
+            {% else %}
+              <i class="bi bi-send-check"></i>
+            {% endif %}
+          </div>
+          <div class="case-timeline-label">{% trans "Подано" %}</div>
+        </div>
+        
+        <!-- Step 5: Отпечатки -->
+        <div class="case-timeline-step-item {% if case_step == 5 %}active{% elif case_step > 5 %}completed{% endif %}">
+          <div class="case-timeline-node">
+            {% if case_step > 5 %}
+              <i class="bi bi-check-lg"></i>
+            {% else %}
+              <i class="bi bi-fingerprint"></i>
+            {% endif %}
+          </div>
+          <div class="case-timeline-label">{% trans "Отпечатки" %}</div>
+        </div>
+        
+        <!-- Step 6: Децизия -->
+        <div class="case-timeline-step-item {% if case_step == 6 %}active{% elif case_step > 6 %}completed{% endif %}">
+          <div class="case-timeline-node">
+            {% if case_step > 6 %}
+              <i class="bi bi-award-fill"></i>
+            {% else %}
+              <i class="bi bi-award"></i>
+            {% endif %}
+          </div>
+          <div class="case-timeline-label">{% trans "Децизия" %}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 {% if not contact_complete or contact_errors %}
 <div class="card shadow-sm border-0 mb-4">
   <div class="card-header bg-primary text-white fw-bold">{% trans "Ваши контактные данные" %}</div>

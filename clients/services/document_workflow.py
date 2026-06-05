@@ -643,6 +643,15 @@ def _finalize_successful_ocr_job(
         document.ocr_name_mismatch = bool(warnings)
         document.save(update_fields=["parsed_data", "ocr_status", "ocr_name_mismatch"])
 
+    if job.job_type == DocumentProcessingJob.JOB_TYPE_PASSPORT_OCR:
+        try:
+            from clients.services.intake_extraction import pre_fill_mos_data_from_ocr
+            mos_data = getattr(document.client, "mos_application_data", None)
+            if mos_data:
+                pre_fill_mos_data_from_ocr(mos_data)
+        except Exception as exc:
+            logger.warning("Failed to auto-fill mos data from parsed passport: %s", exc)
+
     msg = (
         _("%(doc_type)s verified with %(warning_count)s warnings.") % {
             "doc_type": doc_type_display,

@@ -9,40 +9,51 @@ def pre_fill_mos_data_from_ocr(mos_data: MOSApplicationData) -> bool:
     updated = False
     client = mos_data.client
 
-    # Pre-fill Passport & Personal Data
-    if not mos_data.passport_data and not mos_data.personal_data:
-        # Find a completed passport document
-        passport_doc = client.documents.filter(
-            document_type="passport",
-            ocr_status="success",
-            parsed_data__isnull=False
-        ).first()
+    # Find a completed passport document
+    passport_doc = client.documents.filter(
+        document_type="passport",
+        ocr_status="success",
+        parsed_data__isnull=False
+    ).first()
 
-        if passport_doc and passport_doc.parsed_data:
-            parsed = passport_doc.parsed_data
-            
-            personal_data = {}
-            if "first_name" in parsed:
+    if passport_doc and passport_doc.parsed_data:
+        parsed = passport_doc.parsed_data
+        
+        personal_data = dict(mos_data.personal_data or {})
+        passport_data = dict(mos_data.passport_data or {})
+
+        # Fill missing personal data fields if empty
+        if "first_name" in parsed and parsed["first_name"]:
+            if not personal_data.get("first_name"):
                 personal_data["first_name"] = parsed["first_name"]
-            if "last_name" in parsed:
+                updated = True
+        if "last_name" in parsed and parsed["last_name"]:
+            if not personal_data.get("last_name"):
                 personal_data["last_name"] = parsed["last_name"]
-            
-            passport_data = {}
-            if "document_number" in parsed or "passport_number" in parsed:
-                passport_data["document_number"] = parsed.get("passport_number") or parsed.get("document_number")
-            if "expiry_date" in parsed:
-                passport_data["expiry_date"] = parsed["expiry_date"]
-
-            if personal_data:
-                mos_data.personal_data = personal_data
                 updated = True
-            if passport_data:
-                mos_data.passport_data = passport_data
+        if "date_of_birth" in parsed and parsed["date_of_birth"]:
+            if not personal_data.get("birth_date"):
+                personal_data["birth_date"] = parsed["date_of_birth"]
+                updated = True
+        if "country" in parsed and parsed["country"]:
+            if not personal_data.get("citizenship"):
+                personal_data["citizenship"] = parsed["country"]
                 updated = True
 
-    # Similarly, we can look for "meldunek" for address_data etc.
+        # Fill missing passport data fields if empty
+        passport_number = parsed.get("passport_number") or parsed.get("document_number")
+        if passport_number:
+            if not passport_data.get("document_number"):
+                passport_data["document_number"] = passport_number
+                updated = True
+        if "valid_until" in parsed and parsed["valid_until"]:
+            if not passport_data.get("expiry_date"):
+                passport_data["expiry_date"] = parsed["valid_until"]
+                updated = True
 
-    if updated:
-        mos_data.save(update_fields=["personal_data", "passport_data", "updated_at"])
+        if updated:
+            mos_data.personal_data = personal_data
+            mos_data.passport_data = passport_data
+            mos_data.save(update_fields=["personal_data", "passport_data", "updated_at"])
     
     return updated

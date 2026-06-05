@@ -610,6 +610,8 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
     if not _mos_data_is_editable(mos_data):
         return _locked_response(request, session)
 
+    pre_fill_mos_data_from_ocr(mos_data)
+
     dirty = False
     personal_data = mos_data.personal_data or {}
     for key, val in [

@@ -224,6 +224,143 @@
                 max-width: calc(100% - 24px);
             }
         }
+
+        /* Premium Case Status Timeline */
+        .premium-case-status-card {
+            background: var(--surface);
+            border: 1px solid var(--border) !important;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+        }
+        .case-timeline-wrapper {
+            position: relative;
+            padding: 20px 10px 40px 10px;
+        }
+        .case-timeline-progress-track {
+            position: absolute;
+            top: 38px;
+            left: 40px;
+            right: 40px;
+            height: 4px;
+            background-color: var(--bs-secondary-bg);
+            border-radius: 10px;
+            z-index: 1;
+        }
+        .case-timeline-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--brand-1), var(--brand-2, #3b82f6));
+            border-radius: 10px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .case-timeline-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+            width: 100%;
+        }
+        .case-timeline-step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 60px;
+            text-align: center;
+        }
+        .case-timeline-node {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--surface);
+            border: 2px solid var(--border);
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .case-timeline-step-item.completed .case-timeline-node {
+            background-color: var(--brand-1);
+            border-color: var(--brand-1);
+            color: #fff;
+            box-shadow: 0 0 10px rgba(13, 110, 253, 0.2);
+        }
+        .case-timeline-step-item.active .case-timeline-node {
+            background-color: var(--surface);
+            border-color: var(--brand-1);
+            color: var(--brand-1);
+            box-shadow: 0 0 15px rgba(13, 110, 253, 0.3);
+            transform: scale(1.15);
+            animation: timeline-pulse 2s infinite;
+        }
+        .case-timeline-label {
+            position: absolute;
+            margin-top: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--muted);
+            white-space: nowrap;
+            transition: color 0.3s ease;
+        }
+        .case-timeline-step-item.active .case-timeline-label {
+            color: var(--fg);
+            font-weight: 700;
+        }
+        .case-timeline-step-item.completed .case-timeline-label {
+            color: var(--brand-1);
+        }
+
+        @keyframes timeline-pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.4);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(13, 110, 253, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(13, 110, 253, 0);
+            }
+        }
+
+        @media (max-width: 576px) {
+            .case-timeline-progress-track {
+                display: none;
+            }
+            .case-timeline-steps {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+                padding-left: 20px;
+            }
+            .case-timeline-steps::before {
+                content: '';
+                position: absolute;
+                left: 38px;
+                top: 10px;
+                bottom: 10px;
+                width: 4px;
+                background-color: var(--bs-secondary-bg);
+                border-radius: 10px;
+                z-index: 1;
+            }
+            .case-timeline-step-item {
+                flex-direction: row;
+                width: 100%;
+                text-align: left;
+                gap: 15px;
+                position: relative;
+                z-index: 2;
+            }
+            .case-timeline-label {
+                position: static;
+                margin-top: 0;
+            }
+            .case-timeline-step-item.active .case-timeline-node {
+                transform: scale(1.1);
+            }
+        }
     </style>
 </head>
 <body>
