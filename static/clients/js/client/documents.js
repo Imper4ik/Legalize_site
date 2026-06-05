@@ -1,3 +1,27 @@
+async function refreshAndScrollToChecklist(docType) {
+  if (typeof refreshChecklist === 'function') {
+    await refreshChecklist({ force: true });
+    if (docType) {
+      const targetHeader = document.getElementById('heading' + docType);
+      if (targetHeader) {
+        const collapseEl = document.getElementById('collapse' + docType);
+        if (collapseEl) {
+          const instance = bootstrap.Collapse.getOrCreateInstance(collapseEl, { toggle: false });
+          instance.show();
+        }
+        setTimeout(() => {
+          targetHeader.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 200);
+      }
+    }
+  } else {
+    if (docType) {
+      window.location.hash = 'heading' + docType;
+    }
+    window.location.reload();
+  }
+}
+
 function initDocumentUploadModal() {
   const modal = document.getElementById('uploadDocumentModal');
   if (!modal) {
@@ -6,6 +30,7 @@ function initDocumentUploadModal() {
 
   const description = modal.querySelector('#uploadDocumentDescription');
   const form = modal.querySelector('form');
+  let currentDocType = '';
   const actionTemplate = modal.dataset.actionTemplate;
   const confirmTemplate = modal.dataset.confirmUrlTemplate;
   const parseInput = modal.querySelector('#uploadDocumentParseWezwanie');
@@ -82,6 +107,7 @@ function initDocumentUploadModal() {
     const defaultZusPeriodMonth = button.getAttribute('data-zus-period-month') || '';
 
     if (docType) {
+      currentDocType = docType;
       form.setAttribute('action', actionTemplate.replace('__doc_type__', encodeURIComponent(docType)));
     }
 
@@ -210,11 +236,7 @@ function initDocumentUploadModal() {
 
         bootstrap.Modal.getOrCreateInstance(modal).hide();
         showDocumentAlert(data.message || modal.dataset.uploadSuccessText || 'Document uploaded successfully.');
-        if (typeof refreshChecklist === 'function') {
-          await refreshChecklist({ force: true });
-        } else {
-          window.location.reload();
-        }
+        await refreshAndScrollToChecklist(currentDocType);
         return;
       }
 
@@ -276,11 +298,7 @@ function initDocumentUploadModal() {
       if (response.ok && data.status === 'success') {
         bootstrap.Modal.getOrCreateInstance(modal).hide();
         showDocumentAlert(data.message || modal.dataset.wezwanieConfirmed || 'Wezwanie data confirmed.');
-        if (typeof refreshChecklist === 'function') {
-          await refreshChecklist({ force: true });
-        } else {
-          window.location.reload();
-        }
+        await refreshAndScrollToChecklist(currentDocType);
         return;
       }
 
@@ -377,6 +395,15 @@ function initDocumentDeletion() {
     pauseChecklistRefresh();
     const modal = document.getElementById('uploadDocumentModal');
 
+    const accordionItem = button.closest('.accordion-item');
+    let docType = '';
+    if (accordionItem) {
+      const header = accordionItem.querySelector('.accordion-header');
+      if (header && header.id) {
+        docType = header.id.replace('heading', '');
+      }
+    }
+
     try {
       const { response, data } = await fetchJson(form.action, {
         method: 'POST',
@@ -385,11 +412,7 @@ function initDocumentDeletion() {
 
       if (response.ok && data.status === 'success') {
         showDocumentAlert(data.message || modal?.dataset.documentDeleted || 'Document deleted.');
-        if (typeof refreshChecklist === 'function') {
-          await refreshChecklist({ force: true });
-        } else {
-          window.location.reload();
-        }
+        await refreshAndScrollToChecklist(docType);
         return;
       }
 
@@ -424,6 +447,15 @@ function initDocumentVerification() {
     pauseChecklistRefresh();
     const modal = document.getElementById('uploadDocumentModal');
 
+    const accordionItem = form.closest('.accordion-item');
+    let docType = '';
+    if (accordionItem) {
+      const header = accordionItem.querySelector('.accordion-header');
+      if (header && header.id) {
+        docType = header.id.replace('heading', '');
+      }
+    }
+
     try {
       const { response, data } = await fetchJson(form.action, {
         method: 'POST',
@@ -435,11 +467,7 @@ function initDocumentVerification() {
           ? (modal?.dataset.statusUpdatedEmailSent || 'Document status updated. Email with missing documents sent.')
           : (modal?.dataset.statusUpdated || 'Document status updated.');
         showDocumentAlert(data.message || successMessage);
-        if (typeof refreshChecklist === 'function') {
-          await refreshChecklist({ force: true });
-        } else {
-          window.location.reload();
-        }
+        await refreshAndScrollToChecklist(docType);
         return;
       }
 
