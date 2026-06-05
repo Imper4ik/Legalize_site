@@ -9203,35 +9203,33 @@ msgid "users"
 msgstr "users"
 
 #, python-format
-#~ msgid "Нужно предоставить документ: %(name)s"
-#~ msgstr "Required document: %(name)s"
+msgid "Нужно предоставить документ: %(name)s"
+msgstr "Document required: %(name)s"
 
 #, python-format
-#~ msgid "Истекает срок действия документа: %(name)s"
-#~ msgstr "Document expires: %(name)s"
+msgid "Истекает срок действия документа: %(name)s"
+msgstr "Document expires: %(name)s"
 
 #, python-format
-#~ msgid "Просрочен платеж: %(service)s"
-#~ msgstr "Payment overdue: %(service)s"
+msgid "Просрочен платеж: %(service)s"
+msgstr "Payment overdue: %(service)s"
 
 #, python-format
-#~ msgid "Истекает легальное пребывание: %(date)s"
-#~ msgstr "Legal stay expires: %(date)s"
+msgid "Истекает легальное пребывание: %(date)s"
+msgstr "Legal stay expires: %(date)s"
 
 #, python-format
-#~ msgid "Документ для клиента %(client)s истекает %(date)s."
-#~ msgstr "Document for client %(client)s expires on %(date)s."
+msgid "Документ для клиента %(client)s истекает %(date)s."
+msgstr "Document for client %(client)s expires on %(date)s."
 
 #, python-format
-#~ msgid "Сумма к оплате: %(total)s; долг: %(due)s; клиент: %(client)s."
-#~ msgstr "Total payment: %(total)s; amount due: %(due)s; client: %(client)s."
+msgid "Сумма к оплате: %(total)s; долг: %(due)s; клиент: %(client)s."
+msgstr "Total payment: %(total)s; amount due: %(due)s; client: %(client)s."
 
 #, python-format
-#~ msgid ""
-#~ "По срокам: %(stay_until)s. Сдвиг дедлайна с учетом выходных: %(due_date)s."
-#~ msgstr ""
-#~ "Original deadline: %(stay_until)s. Adjusted deadline (considering "
-#~ "weekends): %(due_date)s."
+msgid ""
+"По срокам: %(stay_until)s. Сдвиг дедлайна с учетом выходных: %(due_date)s."
+msgstr "Original deadline: %(stay_until)s. Adjusted deadline (considering weekends): %(due_date)s."
 
 #~ msgid "Проверьте документ в карточке клиента и обновите данные визита."
 #~ msgstr ""

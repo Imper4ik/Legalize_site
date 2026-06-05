@@ -7,6 +7,7 @@ if not os.environ.get("FERNET_KEYS"):
 from .base import *  # noqa: F403
 
 ENABLE_TRANSLATION_TOOLING = True
+TESTING = True
 
 if "translations" not in INSTALLED_APPS:  # noqa: F405
     INSTALLED_APPS.append("translations")  # noqa: F405
