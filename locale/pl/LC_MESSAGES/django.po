@@ -7656,7 +7656,8 @@ msgstr ""
 msgid ""
 "Загрузите письмо wezwanie, которое пришло из ужонда по почте, ePUAP или MOS."
 msgstr ""
-"Wgraj pismo wezwanie, które przyszło z urzędu pocztą, przez ePUAP albo MOS."
+"Prześlij wezwanie na odciski palców, które przyszło z urzędu pocztą, przez "
+"ePUAP albo MOS."
 
 #: .\clients\views\onboarding_views.py:345
 msgid "Подтверждение выдаёт ужонд после сдачи отпечатков пальцев."
@@ -9093,6 +9094,90 @@ msgstr "użytkownik"
 #: .\users\models.py:86
 msgid "users"
 msgstr "użytkownicy"
+
+#: clients/services/notifications.py:313
+msgid "Клиент загрузил вызов на отпечатки пальцев"
+msgstr "Klient przesłał wezwanie na odciski palców"
+
+#: clients/services/notifications.py:316
+#, python-format
+msgid ""
+"Клиент %(client)s загрузил документ wezwanie / приглашение на отпечатки "
+"пальцев. Проверьте файл и обновите дату, время и место визита при "
+"необходимости."
+msgstr ""
+"Klient %(client)s przesłał dokument wezwanie / zaproszenie na odciski "
+"palców. Sprawdź plik i w razie potrzeby zaktualizuj datę, godzinę oraz "
+"miejsce wizyty."
+
+#: clients/services/notifications.py:327
+msgid "Клиент загрузил wezwanie на отпечатки"
+msgstr "Klient przesłał wezwanie na odciski palców"
+
+#: clients/services/notifications.py:330
+msgid "Клиент загрузил приглашение на отпечатки пальцев."
+msgstr "Klient przesłał zaproszenie / wezwanie na odciski palców."
+
+#: clients/services/notifications.py:331
+#, python-format
+msgid "Клиент: %(client)s"
+msgstr "Klient: %(client)s"
+
+#: clients/services/notifications.py:332
+#, python-format
+msgid "ID клиента: %(client_id)s"
+msgstr "ID klienta: %(client_id)s"
+
+#: clients/services/notifications.py:333
+#, python-format
+msgid "ID документа: %(document_id)s"
+msgstr "ID dokumentu: %(document_id)s"
+
+#: clients/services/notifications.py:334
+msgid "Проверьте документ в карточке клиента и обновите данные визита."
+msgstr "Sprawdź dokument w karcie klienta i zaktualizuj dane wizyty."
+
+#: clients/templates/clients/onboarding/start.html:124
+#: clients/templates/clients/onboarding/start_contact.html:180
+msgid "Приглашение на отпечатки пальцев (wezwanie)"
+msgstr "Zaproszenie / wezwanie na odciski palców"
+
+#: clients/templates/clients/onboarding/start.html:128
+#: clients/templates/clients/onboarding/start_contact.html:182
+msgid ""
+"Если urząd прислал вызов на сдачу отпечатков, загрузите его здесь. После "
+"загрузки сотрудник получит уведомление."
+msgstr ""
+"Jeśli urząd przysłał wezwanie na pobranie odcisków palców, prześlij je "
+"tutaj. Po przesłaniu pracownik otrzyma powiadomienie."
+
+#: clients/templates/clients/onboarding/start.html:136
+#: clients/templates/clients/onboarding/start_contact.html:189
+msgid "Загрузить новый"
+msgstr "Prześlij nowy"
+
+#: clients/templates/clients/onboarding/start.html:139
+#: clients/templates/clients/onboarding/start_contact.html:193
+msgid "Если получили"
+msgstr "Jeśli otrzymano"
+
+#: clients/templates/clients/onboarding/start.html:223
+#: clients/templates/clients/onboarding/start_contact.html:353
+msgid "Загрузка приглашения на отпечатки"
+msgstr "Przesyłanie zaproszenia / wezwania na odciski palców"
+
+#: clients/templates/clients/onboarding/start.html:229
+#: clients/templates/clients/onboarding/start_contact.html:355
+msgid ""
+"Загрузите wezwanie / вызов из ужонда с датой или информацией о сдаче "
+"отпечатков пальцев. После отправки сотрудник получит уведомление."
+msgstr ""
+"Prześlij wezwanie / zaproszenie z urzędu z datą lub informacją o pobraniu "
+"odcisków palców. Po wysłaniu pracownik otrzyma powiadomienie."
+
+#: clients/views/onboarding_views.py:519
+msgid "Файл загружен. Сотрудник получил уведомление."
+msgstr "Plik został przesłany. Pracownik otrzymał powiadomienie."
 
 #~ msgid ""
 #~ "Это ежемесячная декларация о взносах. Вы можете скачать её в личном кабинете"
