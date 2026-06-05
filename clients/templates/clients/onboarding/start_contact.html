@@ -173,6 +173,30 @@
           </div>
           
           <ul class="list-group list-group-flush border-top">
+            <li class="list-group-item py-3 border-start border-4 border-primary" id="doc-fingerprint-invitation">
+              <div class="d-flex justify-content-between gap-3 flex-wrap align-items-center">
+                <div class="min-w-0 flex-grow-1">
+                  <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <strong class="text-truncate" style="max-width: 220px;">{% trans "Приглашение на отпечатки пальцев (wezwanie)" %}</strong>
+                  </div>
+                  <div class="small text-muted mt-1" style="font-size: 0.8rem;">{% trans "Если urząd прислал вызов на сдачу отпечатков, загрузите его здесь. После загрузки сотрудник получит уведомление." %}</div>
+                </div>
+                <div class="text-end flex-shrink-0">
+                  {% if fingerprint_invitation_document %}
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.75rem;">{% trans "Загружено" %}</span>
+                      <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash fingerprint_invitation_document.id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
+                      {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFingerprintInvitationModal">{% trans "Загрузить новый" %}</button>{% endif %}
+                    </div>
+                  {% else %}
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Если получили" %}</span>
+                      {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFingerprintInvitationModal"><i class="bi bi-upload"></i></button>{% endif %}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </li>
             {% for doc in checklist %}
               <li class="list-group-item py-3" id="doc-{{ doc.code|slugify }}">
                 <div class="d-flex justify-content-between gap-3 flex-wrap align-items-center">
@@ -320,6 +344,34 @@ document.addEventListener("DOMContentLoaded", function () {
 {% endblock %}
 
 {% block modals %}
+{% if allow_doc_edit %}
+<div class="modal fade" id="uploadFingerprintInvitationModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form action="{% url 'clients:onboarding_document_upload' session.token_hash fingerprint_invitation_doc_type %}" method="post" enctype="multipart/form-data" class="onboarding-upload-form" data-no-autosave="true">
+        {% csrf_token %}
+        <div class="modal-header"><h5 class="modal-title">{% trans "Загрузка приглашения на отпечатки" %}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <div class="alert alert-info py-2 px-3 small mb-3"><i class="bi bi-info-circle-fill me-2"></i>{% trans "Загрузите wezwanie / вызов из ужонда с датой или информацией о сдаче отпечатков пальцев. После отправки сотрудник получит уведомление." %}</div>
+          <p class="text-muted small">{% trans "PDF, JPG, JPEG, PNG или WebP. Проверьте предпросмотр перед отправкой." %}</p>
+          <input type="file" name="file" class="form-control onboarding-upload-input" accept="application/pdf,image/jpeg,image/png,image/webp" required>
+          <div class="onboarding-upload-preview d-none mt-3 border rounded p-2">
+            <div class="small fw-bold mb-2" data-file-name></div>
+            <img class="img-fluid rounded d-none" data-image-preview alt="{% trans 'Предпросмотр выбранного файла' %}">
+            <object class="w-100 d-none" style="height: 360px;" type="application/pdf" data-pdf-preview></object>
+            <div class="small text-muted d-none" data-generic-preview>{% trans "Предпросмотр недоступен для этого типа файла. Проверьте имя файла перед отправкой." %}</div>
+          </div>
+          <div class="form-check mt-3">
+            <input class="form-check-input onboarding-upload-confirm" type="checkbox" value="1" id="confirmFingerprintInvitationUpload" disabled required>
+            <label class="form-check-label" for="confirmFingerprintInvitationUpload">{% trans "Я проверил предпросмотр и подтверждаю, что это правильный файл." %}</label>
+          </div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Отмена" %}</button><button type="submit" class="btn btn-primary onboarding-upload-submit" data-loading-text="{% trans 'Отправка...' %}" disabled>{% trans "Загрузить файл" %}</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
 {% for doc in checklist %}
   {% if not doc.is_uploaded and allow_doc_edit %}
     <div class="modal fade" id="uploadModal{{ doc.code|slugify }}" tabindex="-1" aria-hidden="true">

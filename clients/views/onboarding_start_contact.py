@@ -9,6 +9,7 @@ from django.shortcuts import redirect, render
 from django.utils import translation
 from django.utils.translation import gettext as _
 
+from clients.constants import DocumentType
 from clients.models import Client, ClientOnboardingSession, Document, DocumentRequirement, MOSApplicationData
 from clients.views.onboarding_views import (
     _document_source_hint,
@@ -117,6 +118,7 @@ def _build_start_context(
     effective_purpose = str(purpose_ctx["effective_purpose"])
     language = translation.get_language() or client.language
     required_docs_catalog = DocumentRequirement.catalog_for(purpose=effective_purpose, language=language)
+    fingerprint_invitation_doc_type = DocumentType.WEZWANIE.value
 
     existing_documents = list(Document.objects.filter(client=client).order_by("document_type", "-uploaded_at"))
     existing_map = {document.document_type: document.id for document in existing_documents}
@@ -135,6 +137,11 @@ def _build_start_context(
             "source_hint": _document_source_hint(doc_type),
         })
 
+    fingerprint_invitation_document = next(
+        (document for document in existing_documents if document.document_type == fingerprint_invitation_doc_type),
+        None,
+    )
+
     additional_documents = [
         {
             "id": document.id,
@@ -143,7 +150,7 @@ def _build_start_context(
             "source_hint": _document_source_hint(document.document_type),
         }
         for document in existing_documents
-        if document.document_type not in checklist_codes
+        if document.document_type not in checklist_codes and document.document_type != fingerprint_invitation_doc_type
     ]
 
     contact_values = contact_values or _contact_values_from_client(client, mos_data)
@@ -179,6 +186,8 @@ def _build_start_context(
         "allow_delete": bool(mos_data and allow_doc_edit),
         "case_step": _case_step_for_status(mos_data.status if mos_data else "draft"),
         "additional_documents": additional_documents,
+        "fingerprint_invitation_doc_type": fingerprint_invitation_doc_type,
+        "fingerprint_invitation_document": fingerprint_invitation_document,
         "can_change_purpose": allow_edit,
         "contact_values": contact_values,
         "contact_errors": contact_errors or {},

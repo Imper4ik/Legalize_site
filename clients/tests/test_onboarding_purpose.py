@@ -1,3 +1,4 @@
+import base64
 import uuid
 from datetime import timedelta
 
@@ -11,7 +12,7 @@ from django.utils import timezone
 from django.utils.translation import override
 
 from clients.constants import DocumentType
-from clients.models import Client, ClientOnboardingSession, Document, MOSApplicationData
+from clients.models import Client, ClientOnboardingSession, Document, MOSApplicationData, StaffTask
 from clients.services.onboarding_tokens import hash_onboarding_token
 from clients.services.roles import ensure_predefined_roles
 
@@ -116,6 +117,33 @@ class OnboardingPurposeTests(TestCase):
         self.assertTrue(Document.objects.filter(pk=document.pk).exists())
         response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
         self.assertContains(response, "Загружено")
+        self.assertContains(response, reverse("clients:onboarding_document_preview", kwargs={"token": token, "doc_id": document.pk}))
+
+
+    def test_client_can_upload_fingerprint_invitation_and_staff_gets_task(self):
+        client, token = self._client_with_session(application_purpose="study")
+        upload_url = reverse(
+            "clients:onboarding_document_upload",
+            kwargs={"token": token, "doc_type": DocumentType.WEZWANIE.value},
+        )
+
+        response = self.client.post(
+            upload_url,
+            {"file": SimpleUploadedFile("wezwanie.png", base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC"), content_type="image/png")},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        document = Document.objects.get(client=client, document_type=DocumentType.WEZWANIE.value)
+        task = StaffTask.objects.get(client=client, document=document)
+        self.assertEqual(task.assignee, self.manager)
+        self.assertEqual(task.priority, "high")
+        self.assertIn("отпечатки", task.title.lower())
+
+        response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Приглашение на отпечатки пальцев")
+        self.assertContains(response, "Загрузить новый")
         self.assertContains(response, reverse("clients:onboarding_document_preview", kwargs={"token": token, "doc_id": document.pk}))
 
     def test_onboarding_document_source_hints_are_translated_for_client_page(self):

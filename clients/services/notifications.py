@@ -20,7 +20,7 @@ from django.utils.translation import override
 from PIL import Image, ImageDraw, ImageFont
 
 from clients.constants import DocumentType
-from clients.models import Client, Document
+from clients.models import Client, Document, StaffTask
 from clients.services.wniosek import get_submitted_document_codes
 from clients.services.zus import format_zus_months, missing_zus_months
 
@@ -285,6 +285,66 @@ def _get_staff_recipients() -> list[str]:
     default_from = str(getattr(settings, "DEFAULT_FROM_EMAIL", ""))
     recipients = [email for email in (reply_to, default_from) if email]
     return list(dict.fromkeys(recipients))
+
+
+def _staff_notification_recipients_for_client(client: Client) -> list[str]:
+    recipients: list[str] = []
+    assigned_staff = getattr(client, "assigned_staff", None)
+    assigned_email = str(getattr(assigned_staff, "email", "") or "").strip()
+    if assigned_email:
+        recipients.append(assigned_email)
+    recipients.extend(_get_staff_recipients())
+    return list(dict.fromkeys(email for email in recipients if email))
+
+
+def notify_staff_about_fingerprint_invitation_upload(
+    *,
+    client: Client,
+    document: Document,
+    actor: AbstractBaseUser | AnonymousUser | None = None,
+) -> StaffTask:
+    """Create a staff-facing notification when a client uploads a fingerprints wezwanie."""
+
+    task = StaffTask.objects.create(
+        client=client,
+        document=document,
+        assignee=client.assigned_staff,
+        created_by=actor if actor and actor.is_authenticated and getattr(actor, "is_staff", False) else None,
+        title=str(_("Клиент загрузил вызов на отпечатки пальцев")),
+        description=str(
+            _(
+                "Клиент %(client)s загрузил документ wezwanie / приглашение на отпечатки пальцев. "
+                "Проверьте файл и обновите дату, время и место визита при необходимости."
+            )
+            % {"client": client}
+        ),
+        priority="high",
+        status="open",
+    )
+
+    recipients = _staff_notification_recipients_for_client(client)
+    if recipients:
+        subject = str(_("Клиент загрузил wezwanie на отпечатки"))
+        body = "\n".join(
+            [
+                str(_("Клиент загрузил приглашение на отпечатки пальцев.")),
+                str(_("Клиент: %(client)s") % {"client": client}),
+                str(_("ID клиента: %(client_id)s") % {"client_id": client.pk}),
+                str(_("ID документа: %(document_id)s") % {"document_id": document.pk}),
+                str(_("Проверьте документ в карточке клиента и обновите данные визита.")),
+            ]
+        )
+        try:
+            _send_mail_with_retry(subject, body, recipients)
+        except Exception as exc:  # pragma: no cover - email delivery is best-effort here
+            logger.warning(
+                "Failed to send fingerprint invitation staff notification: client_id=%s document_id=%s error_type=%s",
+                client.pk,
+                document.pk,
+                type(exc).__name__,
+            )
+
+    return task
 
 
 PDF_FONT_TEST_TEXT = "Привет"
