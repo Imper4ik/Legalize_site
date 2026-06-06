@@ -40,15 +40,30 @@
       <div class="d-flex flex-column gap-2">
         {% for alert in workflow_alerts %}
           <div class="alert alert-{{ alert.level }} mb-0 py-2 px-3">
-            <div class="d-flex flex-wrap justify-content-between gap-2">
+            <div class="d-flex flex-wrap justify-content-between gap-2 align-items-center">
               <div class="fw-semibold">{{ alert.title }}</div>
-              {% if alert.action_label and alert.action_url %}
+              {% if alert.actions %}
+                <div class="d-flex flex-wrap gap-1">
+                  {% for action in alert.actions %}
+                    {% if action.is_ocr_review %}
+                      <button type="button" class="btn btn-sm btn-outline-dark review-ocr-data-btn"
+                              data-doc-id="{{ action.doc_id }}" data-doc-type="{{ action.doc_type }}">
+                        {{ action.label }}
+                      </button>
+                    {% else %}
+                      <a href="{{ action.url }}" class="btn btn-sm btn-outline-dark"{% if action.target %} target="{{ action.target }}"{% endif %}>
+                        {{ action.label }}
+                      </a>
+                    {% endif %}
+                  {% endfor %}
+                </div>
+              {% elif alert.action_label and alert.action_url %}
                 <a href="{{ alert.action_url }}" class="btn btn-sm btn-outline-dark">
                   {{ alert.action_label }}
                 </a>
               {% endif %}
             </div>
-            <div class="small">{{ alert.message }}</div>
+            <div class="small mt-1">{{ alert.message }}</div>
           </div>
         {% endfor %}
       </div>

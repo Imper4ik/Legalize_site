@@ -4,6 +4,7 @@ from datetime import date, timedelta
 
 from django.core.management import call_command
 from django.test import override_settings
+from django.urls import reverse
 
 from clients.constants import DocumentType
 from clients.models import Client, Document, EmailLog, Payment, Reminder, StaffTask
@@ -221,6 +222,53 @@ def test_document_save_and_delete_clears_onboarding_cache(db):
         mock_clear.reset_mock()
         doc.delete()
         mock_clear.assert_called_with(client)
+
+
+@override_settings(LANGUAGE_CODE="ru")
+def test_health_alert_ocr_and_wezwanie_actions(db):
+    client = Client.objects.create(
+        first_name="OCR",
+        last_name="Tester",
+        application_purpose="work",
+        case_number="",
+    )
+    
+    doc_passport = Document.objects.create(
+        client=client,
+        document_type=DocumentType.PASSPORT.value,
+        file="documents/passport_ocr.pdf",
+        awaiting_confirmation=True,
+    )
+    
+    doc_wezwanie = Document.objects.create(
+        client=client,
+        document_type=DocumentType.WEZWANIE.value,
+        file="documents/wezwanie_ocr.pdf",
+        awaiting_confirmation=True,
+    )
+    
+    alerts = client.get_health_alerts()
+    
+    ocr_alert = next(a for a in alerts if a["title"] == "Есть OCR-данные без подтверждения")
+    assert "actions" in ocr_alert
+    assert len(ocr_alert["actions"]) == 2
+    assert any(act["doc_id"] == doc_passport.id and act["is_ocr_review"] for act in ocr_alert["actions"])
+    assert any(act["doc_id"] == doc_wezwanie.id and act["is_ocr_review"] for act in ocr_alert["actions"])
+    
+    wezwanie_alert = next(a for a in alerts if a["title"] == "Есть wezwanie без номера дела")
+    assert "actions" in wezwanie_alert
+    assert len(wezwanie_alert["actions"]) == 1
+    assert wezwanie_alert["actions"][0]["doc_id"] == doc_wezwanie.id
+    assert wezwanie_alert["actions"][0]["is_ocr_review"] is True
+    
+    doc_wezwanie.awaiting_confirmation = False
+    doc_wezwanie.save()
+    
+    alerts = client.get_health_alerts()
+    wezwanie_alert = next(a for a in alerts if a["title"] == "Есть wezwanie без номера дела")
+    assert "actions" in wezwanie_alert
+    assert wezwanie_alert["actions"][0]["url"] == reverse("clients:document_preview", kwargs={"doc_id": doc_wezwanie.id})
+    assert wezwanie_alert["actions"][0].get("is_ocr_review") is not True
 
 
 

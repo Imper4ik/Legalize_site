@@ -618,6 +618,17 @@ class Client(SoftDeleteModel):
                     )
 
         if getattr(self, "health_awaiting_confirmation_count", 0):
+            from django.utils.translation import gettext
+            awaiting_docs = list(self.documents.filter(awaiting_confirmation=True, archived_at__isnull=True))
+            actions = []
+            for doc in awaiting_docs:
+                doc_name = self.get_document_name_by_code(doc.document_type)
+                actions.append({
+                    "label": f"{gettext('Проверить')} {doc_name}",
+                    "is_ocr_review": True,
+                    "doc_id": doc.id,
+                    "doc_type": doc.document_type,
+                })
             alerts.append(
                 {
                     "level": "warning",
@@ -626,6 +637,7 @@ class Client(SoftDeleteModel):
                     % {"count": self.health_awaiting_confirmation_count},
                     "action_label": _("Проверить OCR"),
                     "action_url": "#documentAccordion",
+                    "actions": actions,
                 }
             )
 
@@ -653,11 +665,31 @@ class Client(SoftDeleteModel):
             )
 
         if getattr(self, "health_wezwanie_count", 0) > 0 and not self.case_number:
+            from django.utils.translation import gettext
+            wezwanie_types = {DocumentType.WEZWANIE.value, DocumentType.WEZWANIE}
+            wezwanie_docs = list(self.documents.filter(document_type__in=wezwanie_types, archived_at__isnull=True).order_by("-uploaded_at"))
+            actions = []
+            for doc in wezwanie_docs:
+                doc_label = gettext("wezwanie")
+                if doc.awaiting_confirmation:
+                    actions.append({
+                        "label": f"{gettext('Проверить OCR')} ({doc_label})",
+                        "is_ocr_review": True,
+                        "doc_id": doc.id,
+                        "doc_type": doc.document_type,
+                    })
+                else:
+                    actions.append({
+                        "label": f"{gettext('Открыть')} {doc_label}",
+                        "url": reverse("clients:document_preview", kwargs={"doc_id": doc.id}),
+                        "target": "_blank",
+                    })
             alerts.append(
                 {
                     "level": "warning",
                     "title": _("Есть wezwanie без номера дела"),
                     "message": _("Проверьте распознавание или заполните case number вручную."),
+                    "actions": actions,
                 }
             )
 
