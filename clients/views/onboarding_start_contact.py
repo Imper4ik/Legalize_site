@@ -75,6 +75,14 @@ def _validate_contact_values(values: dict[str, str]) -> dict[str, str]:
     return errors
 
 
+def _contact_is_complete(values: dict[str, str]) -> bool:
+    return all(values.get(field_name) for field_name in CONTACT_REQUIRED_FIELDS)
+
+
+def _contact_form_is_editable(mos_data: MOSApplicationData | None, contact_values: dict[str, str]) -> bool:
+    return _mos_data_is_editable(mos_data) or not _contact_is_complete(contact_values)
+
+
 def _save_contact_values(client: Client, mos_data: MOSApplicationData, values: dict[str, str]) -> None:
     _sync_contact_fields_to_client(client, **values)
 
@@ -178,8 +186,9 @@ def _build_start_context(
     ]
 
     contact_values = contact_values or _contact_values_from_client(client, mos_data)
-    contact_complete = all(contact_values.get(field_name) for field_name in CONTACT_REQUIRED_FIELDS)
+    contact_complete = _contact_is_complete(contact_values)
     allow_edit = _mos_data_is_editable(mos_data)
+    contact_form_editable = _contact_form_is_editable(mos_data, contact_values)
     allow_doc_edit = _mos_documents_are_editable(mos_data)
 
     status_completed = mos_data is not None and mos_data.status in {
@@ -208,6 +217,7 @@ def _build_start_context(
         "mos_data": mos_data,
         "checklist": checklist,
         "allow_edit": allow_edit,
+        "contact_form_editable": contact_form_editable,
         "allow_doc_edit": allow_doc_edit,
         "allow_delete": bool(mos_data and allow_doc_edit),
         "case_step": case_step,
@@ -240,7 +250,8 @@ def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
     mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
 
     if request.method == "POST":
-        if not _mos_data_is_editable(mos_data):
+        existing_contact_values = _contact_values_from_client(client, mos_data)
+        if not _contact_form_is_editable(mos_data, existing_contact_values):
             return _locked_response(request, session)
 
         contact_values = _contact_values_from_post(request)
@@ -257,6 +268,8 @@ def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
             )
 
         _save_contact_values(client, mos_data, contact_values)
+        if not _mos_data_is_editable(mos_data):
+            return redirect("clients:onboarding_start", token=token)
         return redirect("clients:onboarding_digital_access", token=token)
 
     return render(request, START_TEMPLATE, _build_start_context(session=session))

@@ -125,9 +125,50 @@ class OnboardingStartContactTests(TestCase):
             self.assertContains(response, 'class="accordion-collapse collapse show"')
             self.assertContains(response, "onboarding-documents-card")
             self.assertContains(response, "documents-stage-note")
+            self.assertContains(response, "Сохранить контактные данные")
+
+    def test_locked_post_fingerprints_contact_gap_can_be_completed(self):
+        client, token = self._client_with_session()
+        mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
+        mos_data.status = "fingerprints"
+        mos_data.save(update_fields=["status"])
+
+        response = self.client.post(
+            reverse("clients:onboarding_start", kwargs={"token": token}),
+            {
+                "first_name": "Darya",
+                "last_name": "Afanasenka",
+                "email": "afanasenko860@gmail.com",
+                "phone": "571 381 041",
+            },
+        )
+
+        self.assertRedirects(response, reverse("clients:onboarding_start", kwargs={"token": token}))
+        client.refresh_from_db()
+        self.assertEqual(client.first_name, "Darya")
+        self.assertEqual(client.last_name, "Afanasenka")
+        self.assertEqual(client.email, "afanasenko860@gmail.com")
+        self.assertEqual(client.phone, "571 381 041")
+
+        mos_data.refresh_from_db()
+        self.assertEqual(mos_data.status, "fingerprints")
+        self.assertEqual(mos_data.personal_data["first_name"], "Darya")
+        self.assertEqual(mos_data.personal_data["last_name"], "Afanasenka")
+        self.assertEqual(mos_data.personal_data["email"], "afanasenko860@gmail.com")
+        self.assertEqual(mos_data.personal_data["phone"], "571 381 041")
+
+        response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
+        self.assertContains(response, "Контактные данные сохранены")
+        self.assertNotContains(response, "Внимание: Заполните контактные данные")
 
     def test_locked_start_page_does_not_change_contact_data(self):
         client, token = self._client_with_session()
+        client.first_name = "Existing"
+        client.last_name = "Client"
+        client.email = "existing@example.com"
+        client.phone = "+48111111111"
+        client.save(update_fields=["first_name", "last_name", "email", "phone"])
+
         mos_data = MOSApplicationData.objects.get(client=client)
         mos_data.status = "staff_review"
         mos_data.save(update_fields=["status"])
@@ -144,5 +185,5 @@ class OnboardingStartContactTests(TestCase):
 
         self.assertEqual(response.status_code, 403)
         client.refresh_from_db()
-        self.assertEqual(client.first_name, "")
-        self.assertEqual(client.email, "")
+        self.assertEqual(client.first_name, "Existing")
+        self.assertEqual(client.email, "existing@example.com")

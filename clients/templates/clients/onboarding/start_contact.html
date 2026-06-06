@@ -134,8 +134,8 @@
               {% if contact_errors.phone %}<div class="invalid-feedback">{{ contact_errors.phone }}</div>{% endif %}
             </div>
           </div>
-          {% if allow_edit %}
-            <button class="btn btn-primary mt-3" type="submit">{% trans "Сохранить и продолжить" %}</button>
+          {% if contact_form_editable %}
+            <button class="btn btn-primary mt-3" type="submit">{% if allow_edit %}{% trans "Сохранить и продолжить" %}{% else %}{% trans "Сохранить контактные данные" %}{% endif %}</button>
           {% else %}
             <span class="badge bg-secondary mt-3">{% trans "Профиль заблокирован для изменений" %}</span>
           {% endif %}
@@ -227,6 +227,12 @@
               <span>{% trans "Внести исправления" %}</span>
               <i class="bi bi-arrow-right"></i>
             </a>
+          {% elif not allow_edit and contact_complete %}
+            <div class="alert alert-info py-2 px-3 small mb-0">
+              <i class="bi bi-lock-fill me-2"></i>
+              <strong>{% trans "Контактные данные сохранены" %}</strong><br>
+              <span class="text-muted">{% trans "Анкета уже передана в работу. Если нужно исправить данные, свяжитесь с менеджером." %}</span>
+            </div>
           {% else %}
             {% if contact_complete %}
               <p class="text-muted small mb-2">{% trans "Перейдите к следующему шагу анкеты. Контактные данные уже сохранены." %}</p>
