@@ -101,6 +101,36 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         mos_data.save()
 
     if request.method == "POST":
+        action = request.POST.get("action", "")
+        if action == "upload_passport" or request.FILES.get("passport_file"):
+            passport_file = request.FILES.get("passport_file")
+            if passport_file:
+                from clients.forms import DocumentUploadForm
+                from clients.services.document_workflow import upload_client_document
+                from django.contrib import messages
+                
+                # Copy request.FILES to map passport_file to file for the form validation
+                files_dict = request.FILES.copy()
+                files_dict["file"] = files_dict["passport_file"]
+                
+                form = DocumentUploadForm(request.POST, files_dict, doc_type="passport", client=client)
+                if form.is_valid():
+                    upload_client_document(
+                        client=client,
+                        doc_type="passport",
+                        uploaded_document=form.save(commit=False),
+                        actor=request.user if request.user.is_authenticated else None,
+                        parse_requested=True,
+                    )
+                    messages.success(request, _("Скан паспорта успешно загружен. Данные распознаются."))
+                else:
+                    error_text = " ".join(str(error) for errors in form.errors.values() for error in errors)
+                    messages.error(request, _("Не удалось загрузить файл: %(errors)s") % {"errors": error_text})
+            else:
+                from django.contrib import messages
+                messages.error(request, _("Выберите файл для загрузки."))
+            return redirect("clients:onboarding_passport", token=token)
+
         mos_data.status = "client_filling"
 
         first_name = request.POST.get("first_name", "").strip()
@@ -153,7 +183,16 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
 
         return _next_or_dashboard(request, token, "clients:onboarding_personal_extra")
 
-    return render(request, "clients/onboarding/passport.html", {"session": session, "mos_data": mos_data})
+    passport_doc = client.documents.filter(document_type="passport").order_by("-uploaded_at").first()
+    return render(
+        request,
+        "clients/onboarding/passport.html",
+        {
+            "session": session,
+            "mos_data": mos_data,
+            "passport_doc": passport_doc,
+        },
+    )
 
 
 def onboarding_personal_extra(request: HttpRequest, token: str) -> HttpResponse:

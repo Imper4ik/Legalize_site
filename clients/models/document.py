@@ -315,6 +315,12 @@ class DocumentRequirement(models.Model):
     custom_name_ru = models.CharField(max_length=255, blank=True, verbose_name=_("Название (RU)"))
     is_required = models.BooleanField(default=True, verbose_name=_("Обязательный документ"))
     position = models.PositiveIntegerField(default=0, verbose_name=_("Порядок отображения"))
+    sample_image = models.ImageField(
+        upload_to="document_samples/",
+        null=True,
+        blank=True,
+        verbose_name=_("Образец документа"),
+    )
 
     class Meta:
         ordering = ["position", "id"]
@@ -351,6 +357,7 @@ class DocumentRequirement(models.Model):
                 "code": record.document_type,
                 "label": label,
                 "is_required": record.is_required,
+                "sample_image_url": record.sample_image.url if record.sample_image else None,
             })
             seen.add(record.document_type)
 

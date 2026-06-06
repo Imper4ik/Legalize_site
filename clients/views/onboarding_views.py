@@ -511,7 +511,8 @@ def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) 
                     actor=request.user if request.user.is_authenticated else None,
                     # Client-side wezwanie uploads use the manual scenario: do not queue OCR here,
                     # because staff must open the original file and enter fingerprints details.
-                    parse_requested=False,
+                    # For passport uploads, we trigger OCR to extract details.
+                    parse_requested=(doc_type == "passport"),
                 )
                 if is_fingerprint_invitation:
                     notify_staff_about_fingerprint_invitation_upload(

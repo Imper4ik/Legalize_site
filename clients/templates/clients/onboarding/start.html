@@ -158,84 +158,57 @@
         <div class="card h-100 shadow-sm border-0">
             <div class="card-header bg-secondary text-white fw-bold">{% trans "Ваши документы" %}</div>
             <div class="card-body p-0">
-                <div class="p-3">
-                    <p class="mb-0">{% trans "Пожалуйста, загрузите сканы или качественные фото требуемых документов." %}</p>
-                </div>
-                
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item onboarding-document-item py-3 border-start border-4 border-primary" id="doc-fingerprint-invitation">
-                        <div class="onboarding-document-main pe-sm-3">
-                            <div class="onboarding-document-title">
-                                <strong>{% trans "Приглашение на отпечатки пальцев (wezwanie)" %}</strong>
-                            </div>
-                            <div class="onboarding-document-source">
-                                <i class="bi bi-fingerprint" aria-hidden="true"></i>
-                                <span>{% trans "Если ужонд прислал вызов на сдачу отпечатков, загрузите его здесь. После загрузки сотрудник получит уведомление." %}</span>
-                            </div>
-                        </div>
-                        <div class="onboarding-document-actions">
-                            {% if fingerprint_invitation_document %}
-                                <span class="badge bg-success">{% trans "Загружено" %}</span>
-                                <a href="{% url 'clients:onboarding_document_preview' session.token_hash fingerprint_invitation_document.id %}" class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener">{% trans "Preview" %}</a>
-                                {% if allow_doc_edit %}
-                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFingerprintInvitationModal">{% trans "Загрузить новый" %}</button>
-                                {% endif %}
-                            {% else %}
-                                <span class="badge bg-info text-dark">{% trans "Если получили" %}</span>
-                                {% if allow_doc_edit %}
-                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFingerprintInvitationModal">{% trans "Загрузить" %}</button>
-                                {% else %}
-                                    <span class="small text-muted">{% trans "Locked" %}</span>
-                                {% endif %}
-                            {% endif %}
-                        </div>
-                    </li>
-                    {% for doc in checklist %}
-                        <li class="list-group-item onboarding-document-item py-3" id="doc-{{ doc.code|slugify }}">
+                {% if is_post_fingerprints %}
+                    <!-- ACTIVE / URGENT DOCUMENTS FOR STAGE AFTER FINGERPRINTS -->
+                    <div class="p-3 bg-light border-bottom">
+                        <h6 class="fw-bold text-primary mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>{% trans "Ежемесячные отчеты и срочные требования" %}</h6>
+                        <p class="text-muted small mb-0">{% trans "На данном этапе необходимо регулярно загружать ежемесячные отчеты ZUS RCA и карточки срочных требований (Wezwanie) при их получении." %}</p>
+                    </div>
+                    
+                    <ul class="list-group list-group-flush">
+                        <!-- Wezwanie (Always active) -->
+                        <li class="list-group-item onboarding-document-item py-3 border-start border-4 border-danger" id="doc-fingerprint-invitation">
                             <div class="onboarding-document-main pe-sm-3">
                                 <div class="onboarding-document-title">
-                                    <strong>{{ doc.label }}</strong>
-                                    {% if doc.is_required %}<span class="text-danger" title="{% trans 'Обязательный документ' %}">*</span>{% endif %}
+                                    <strong>{% trans "Приглашение на отпечатки пальцев (wezwanie)" %}</strong>
                                 </div>
-                                {% if doc.source_hint %}
-                                    <div class="onboarding-document-source">
-                                        <i class="bi bi-info-circle" aria-hidden="true"></i>
-                                        <span>{{ doc.source_hint }}</span>
-                                    </div>
-                                {% endif %}
+                                <div class="onboarding-document-source">
+                                    <i class="bi bi-fingerprint" aria-hidden="true"></i>
+                                    <span>{% trans "Если ужонд прислал вызов на сдачу отпечатков, загрузите его здесь. После загрузки сотрудник получит уведомление." %}</span>
+                                </div>
                             </div>
-                            
                             <div class="onboarding-document-actions">
-                                {% if doc.is_uploaded %}
+                                {% if fingerprint_invitation_sample_url %}
+                                    <button type="button" class="btn btn-sm btn-outline-info me-1" data-bs-toggle="modal" data-bs-target="#sampleModalFingerprint">
+                                        <i class="bi bi-file-image me-1"></i>{% trans "Образец" %}
+                                    </button>
+                                {% endif %}
+                                {% if fingerprint_invitation_document %}
                                     <span class="badge bg-success">{% trans "Загружено" %}</span>
-                                    <a href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener">{% trans "Preview" %}</a>
-                                    {% if allow_delete %}
-                                        <form action="{% url 'clients:onboarding_document_delete' session.token_hash doc.doc_id %}" method="post" class="m-0" onsubmit="return confirm('{% trans "Вы уверены, что хотите удалить этот документ?" %}');">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="{% trans 'Удалить' %}"><i class="bi bi-trash"></i></button>
-                                        </form>
+                                    <a href="{% url 'clients:onboarding_document_preview' session.token_hash fingerprint_invitation_document.id %}" class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener">{% trans "Preview" %}</a>
+                                    {% if allow_doc_edit %}
+                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFingerprintInvitationModal">{% trans "Загрузить новый" %}</button>
                                     {% endif %}
                                 {% else %}
-                                    <span class="badge bg-warning text-dark">{% trans "Ожидается" %}</span>
+                                    <span class="badge bg-info text-dark">{% trans "Если получили" %}</span>
                                     {% if allow_doc_edit %}
-                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">{% trans "Загрузить" %}</button>
+                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFingerprintInvitationModal">{% trans "Загрузить" %}</button>
                                     {% else %}
                                         <span class="small text-muted">{% trans "Locked" %}</span>
                                     {% endif %}
                                 {% endif %}
                             </div>
                         </li>
-                    {% endfor %}
-                </ul>
-                {% if additional_documents %}
-                    <div class="border-top p-3">
-                        <h6 class="mb-2">{% trans "Загруженные дополнительные документы" %}</h6>
-                        <p class="text-muted small mb-2">{% trans "Эти документы остаются в деле, но не входят в текущий список для выбранной цели." %}</p>
-                        <ul class="list-group list-group-flush">
-                            {% for doc in additional_documents %}
-                                <li class="list-group-item px-0 onboarding-document-item">
+                        
+                        <!-- ZUS RCA (Active for fingerprints stage if exists in purpose checklist) -->
+                        {% for doc in checklist %}
+                            {% if doc.code == 'zus_rca_or_insurance' %}
+                                <li class="list-group-item onboarding-document-item py-3 border-start border-4 border-danger" id="doc-{{ doc.code|slugify }}">
                                     <div class="onboarding-document-main pe-sm-3">
-                                        <div class="onboarding-document-title">{{ doc.label }}</div>
+                                        <div class="onboarding-document-title">
+                                            <strong>{{ doc.label }}</strong>
+                                            {% if doc.is_required %}<span class="text-danger" title="{% trans 'Обязательный документ' %}">*</span>{% endif %}
+                                        </div>
                                         {% if doc.source_hint %}
                                             <div class="onboarding-document-source">
                                                 <i class="bi bi-info-circle" aria-hidden="true"></i>
@@ -244,12 +217,277 @@
                                         {% endif %}
                                     </div>
                                     <div class="onboarding-document-actions">
-                                        <a href="{% url 'clients:onboarding_document_preview' session.token_hash doc.id %}" class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener">{% trans "Preview" %}</a>
+                                        {% if doc.sample_image_url %}
+                                            <button type="button" class="btn btn-sm btn-outline-info me-1" data-bs-toggle="modal" data-bs-target="#sampleModal{{ doc.code|slugify }}">
+                                                <i class="bi bi-file-image me-1"></i>{% trans "Образец" %}
+                                            </button>
+                                        {% endif %}
+                                        {% if doc.is_uploaded %}
+                                            <span class="badge bg-success">{% trans "Загружено" %}</span>
+                                            {% if doc.ocr_status %}
+                                                {% if doc.ocr_status == 'pending' %}
+                                                    <span class="badge bg-warning text-dark">{% trans "Распознавание..." %}</span>
+                                                {% elif doc.ocr_status == 'success' %}
+                                                    <span class="badge bg-info text-dark">{% trans "Распознано" %}</span>
+                                                {% elif doc.ocr_status == 'failed' %}
+                                                    <span class="badge bg-danger">{% trans "Ошибка OCR" %}</span>
+                                                {% endif %}
+                                            {% endif %}
+                                            <a href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener">{% trans "Preview" %}</a>
+                                            {% if allow_delete %}
+                                                <form action="{% url 'clients:onboarding_document_delete' session.token_hash doc.doc_id %}" method="post" class="m-0 d-inline" onsubmit="return confirm('{% trans "Вы уверены, что хотите удалить этот документ?" %}');">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="{% trans 'Удалить' %}"><i class="bi bi-trash"></i></button>
+                                                </form>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">{% trans "Ожидается" %}</span>
+                                            {% if allow_doc_edit %}
+                                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">{% trans "Загрузить" %}</button>
+                                            {% else %}
+                                                <span class="small text-muted">{% trans "Locked" %}</span>
+                                            {% endif %}
+                                        {% endif %}
                                     </div>
                                 </li>
-                            {% endfor %}
-                        </ul>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+
+                    <!-- COLLAPSIBLE PREVIOUSLY SUBMITTED DOCUMENTS accordion -->
+                    <div class="accordion border-top" id="archiveAccordion">
+                        <div class="accordion-item border-0 rounded-0">
+                            <h2 class="accordion-header" id="archiveHeading">
+                                <button class="accordion-button collapsed fw-bold bg-light text-dark py-3" type="button" data-bs-toggle="collapse" data-bs-target="#archiveCollapse" aria-expanded="false" aria-controls="archiveCollapse">
+                                    <i class="bi bi-archive-fill me-2 text-secondary"></i>{% trans "Ранее сданные документы" %}
+                                </button>
+                            </h2>
+                            <div id="archiveCollapse" class="accordion-collapse collapse" aria-labelledby="archiveHeading">
+                                <div class="accordion-body p-0">
+                                    <ul class="list-group list-group-flush">
+                                        {% for doc in checklist %}
+                                            {% if doc.code != 'zus_rca_or_insurance' %}
+                                                <li class="list-group-item onboarding-document-item py-3" id="doc-{{ doc.code|slugify }}">
+                                                    <div class="onboarding-document-main pe-sm-3">
+                                                        <div class="onboarding-document-title">
+                                                            <strong>{{ doc.label }}</strong>
+                                                            {% if doc.is_required %}<span class="text-danger" title="{% trans 'Обязательный документ' %}">*</span>{% endif %}
+                                                        </div>
+                                                        {% if doc.source_hint %}
+                                                            <div class="onboarding-document-source">
+                                                                <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                                                <span>{{ doc.source_hint }}</span>
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="onboarding-document-actions">
+                                                        {% if doc.sample_image_url %}
+                                                            <button type="button" class="btn btn-sm btn-outline-info me-1" data-bs-toggle="modal" data-bs-target="#sampleModal{{ doc.code|slugify }}">
+                                                                <i class="bi bi-file-image me-1"></i>{% trans "Образец" %}
+                                                            </button>
+                                                        {% endif %}
+                                                        {% if doc.is_uploaded %}
+                                                            <span class="badge bg-success">{% trans "Загружено" %}</span>
+                                                            {% if doc.ocr_status %}
+                                                                {% if doc.ocr_status == 'pending' %}
+                                                                    <span class="badge bg-warning text-dark">{% trans "Распознавание..." %}</span>
+                                                                {% elif doc.ocr_status == 'success' %}
+                                                                    <span class="badge bg-info text-dark">{% trans "Распознано" %}</span>
+                                                                {% elif doc.ocr_status == 'failed' %}
+                                                                    <span class="badge bg-danger">{% trans "Ошибка OCR" %}</span>
+                                                                {% endif %}
+                                                            {% endif %}
+                                                            <a href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener">{% trans "Preview" %}</a>
+                                                            {% if doc.code == 'passport' %}
+                                                                <a href="{% url 'clients:onboarding_passport' session.token_hash %}" class="btn btn-sm btn-outline-primary ms-1">
+                                                                    <i class="bi bi-pencil-square"></i> {% trans "Проверить данные" %}
+                                                                </a>
+                                                            {% endif %}
+                                                            {% if allow_delete %}
+                                                                <form action="{% url 'clients:onboarding_document_delete' session.token_hash doc.doc_id %}" method="post" class="m-0 d-inline" onsubmit="return confirm('{% trans "Вы уверены, что хотите удалить этот документ?" %}');">
+                                                                    {% csrf_token %}
+                                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="{% trans 'Удалить' %}"><i class="bi bi-trash"></i></button>
+                                                                </form>
+                                                            {% endif %}
+                                                        {% else %}
+                                                            <span class="badge bg-warning text-dark">{% trans "Ожидается" %}</span>
+                                                            {% if allow_doc_edit %}
+                                                                {% if doc.code == 'passport' %}
+                                                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">
+                                                                        <i class="bi bi-upload me-1"></i>{% trans "Загрузить скан" %}
+                                                                    </button>
+                                                                    <a href="{% url 'clients:onboarding_passport' session.token_hash %}" class="btn btn-sm btn-outline-primary ms-1">
+                                                                        <i class="bi bi-pencil-square me-1"></i>{% trans "Ввести данные вручную" %}
+                                                                    </a>
+                                                                {% else %}
+                                                                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">
+                                                                        {% if doc.code == 'photos' %}<i class="bi bi-camera me-1"></i>{% else %}<i class="bi bi-upload me-1"></i>{% endif %}{% trans "Загрузить" %}
+                                                                    </button>
+                                                                {% endif %}
+                                                            {% else %}
+                                                                <span class="small text-muted">{% trans "Locked" %}</span>
+                                                            {% endif %}
+                                                        {% endif %}
+                                                    </div>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        {% if additional_documents %}
+                                            {% for doc in additional_documents %}
+                                                <li class="list-group-item onboarding-document-item py-3">
+                                                    <div class="onboarding-document-main pe-sm-3">
+                                                        <div class="onboarding-document-title">
+                                                            <strong>{{ doc.label }}</strong>
+                                                        </div>
+                                                        {% if doc.source_hint %}
+                                                            <div class="onboarding-document-source">
+                                                                <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                                                <span>{{ doc.source_hint }}</span>
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="onboarding-document-actions">
+                                                        <span class="badge bg-success">{% trans "Загружено" %}</span>
+                                                        <a href="{% url 'clients:onboarding_document_preview' session.token_hash doc.id %}" class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener">{% trans "Preview" %}</a>
+                                                    </div>
+                                                </li>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                {% else %}
+                    <!-- REGULAR FLOW BEFORE/DURING SUBMISSION -->
+                    <ul class="list-group list-group-flush">
+                        <!-- Wezwanie -->
+                        <li class="list-group-item onboarding-document-item py-3 border-start border-4 border-primary" id="doc-fingerprint-invitation">
+                            <div class="onboarding-document-main pe-sm-3">
+                                <div class="onboarding-document-title">
+                                    <strong>{% trans "Приглашение на отпечатки пальцев (wezwanie)" %}</strong>
+                                </div>
+                                <div class="onboarding-document-source">
+                                    <i class="bi bi-fingerprint" aria-hidden="true"></i>
+                                    <span>{% trans "Если ужонд прислал вызов на сдачу отпечатков, загрузите его здесь. После загрузки сотрудник получит уведомление." %}</span>
+                                </div>
+                            </div>
+                            <div class="onboarding-document-actions">
+                                {% if fingerprint_invitation_sample_url %}
+                                    <button type="button" class="btn btn-sm btn-outline-info me-1" data-bs-toggle="modal" data-bs-target="#sampleModalFingerprint">
+                                        <i class="bi bi-file-image me-1"></i>{% trans "Образец" %}
+                                    </button>
+                                {% endif %}
+                                {% if fingerprint_invitation_document %}
+                                    <span class="badge bg-success">{% trans "Загружено" %}</span>
+                                    <a href="{% url 'clients:onboarding_document_preview' session.token_hash fingerprint_invitation_document.id %}" class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener">{% trans "Preview" %}</a>
+                                    {% if allow_doc_edit %}
+                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFingerprintInvitationModal">{% trans "Загрузить новый" %}</button>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-info text-dark">{% trans "Если получили" %}</span>
+                                    {% if allow_doc_edit %}
+                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFingerprintInvitationModal">{% trans "Загрузить" %}</button>
+                                    {% else %}
+                                        <span class="small text-muted">{% trans "Locked" %}</span>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </li>
+                        
+                        <!-- Checklist Documents -->
+                        {% for doc in checklist %}
+                            <li class="list-group-item onboarding-document-item py-3" id="doc-{{ doc.code|slugify }}">
+                                <div class="onboarding-document-main pe-sm-3">
+                                    <div class="onboarding-document-title">
+                                        <strong>{{ doc.label }}</strong>
+                                        {% if doc.is_required %}<span class="text-danger" title="{% trans 'Обязательный документ' %}">*</span>{% endif %}
+                                    </div>
+                                    {% if doc.source_hint %}
+                                        <div class="onboarding-document-source">
+                                            <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                            <span>{{ doc.source_hint }}</span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="onboarding-document-actions">
+                                    {% if doc.sample_image_url %}
+                                        <button type="button" class="btn btn-sm btn-outline-info me-1" data-bs-toggle="modal" data-bs-target="#sampleModal{{ doc.code|slugify }}">
+                                            <i class="bi bi-file-image me-1"></i>{% trans "Образец" %}
+                                        </button>
+                                    {% endif %}
+                                    {% if doc.is_uploaded %}
+                                        <span class="badge bg-success">{% trans "Загружено" %}</span>
+                                        {% if doc.ocr_status %}
+                                            {% if doc.ocr_status == 'pending' %}
+                                                <span class="badge bg-warning text-dark">{% trans "Распознавание..." %}</span>
+                                            {% elif doc.ocr_status == 'success' %}
+                                                <span class="badge bg-info text-dark">{% trans "Распознано" %}</span>
+                                            {% elif doc.ocr_status == 'failed' %}
+                                                <span class="badge bg-danger">{% trans "Ошибка OCR" %}</span>
+                                            {% endif %}
+                                        {% endif %}
+                                        <a href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener">{% trans "Preview" %}</a>
+                                        {% if doc.code == 'passport' %}
+                                            <a href="{% url 'clients:onboarding_passport' session.token_hash %}" class="btn btn-sm btn-outline-primary ms-1">
+                                                <i class="bi bi-pencil-square"></i> {% trans "Проверить данные" %}
+                                            </a>
+                                        {% endif %}
+                                        {% if allow_delete %}
+                                            <form action="{% url 'clients:onboarding_document_delete' session.token_hash doc.doc_id %}" method="post" class="m-0 d-inline" onsubmit="return confirm('{% trans "Вы уверены, что хотите удалить этот документ?" %}');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="{% trans 'Удалить' %}"><i class="bi bi-trash"></i></button>
+                                            </form>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">{% trans "Ожидается" %}</span>
+                                        {% if allow_doc_edit %}
+                                            {% if doc.code == 'passport' %}
+                                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">
+                                                    <i class="bi bi-upload me-1"></i>{% trans "Загрузить скан" %}
+                                                </button>
+                                                <a href="{% url 'clients:onboarding_passport' session.token_hash %}" class="btn btn-sm btn-outline-primary ms-1">
+                                                    <i class="bi bi-pencil-square me-1"></i>{% trans "Ввести данные вручную" %}
+                                                </a>
+                                            {% else %}
+                                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">
+                                                    {% if doc.code == 'photos' %}<i class="bi bi-camera me-1"></i>{% else %}<i class="bi bi-upload me-1"></i>{% endif %}{% trans "Загрузить" %}
+                                                </button>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="small text-muted">{% trans "Locked" %}</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    
+                    {% if additional_documents %}
+                        <div class="border-top p-3">
+                            <h6 class="mb-2">{% trans "Загруженные дополнительные документы" %}</h6>
+                            <p class="text-muted small mb-2">{% trans "Эти документы остаются в деле, но не входят в текущий список для выбранной цели." %}</p>
+                            <ul class="list-group list-group-flush">
+                                {% for doc in additional_documents %}
+                                    <li class="list-group-item px-0 onboarding-document-item">
+                                        <div class="onboarding-document-main pe-sm-3">
+                                            <div class="onboarding-document-title">{{ doc.label }}</div>
+                                            {% if doc.source_hint %}
+                                                <div class="onboarding-document-source">
+                                                    <i class="bi bi-info-circle" aria-hidden="true"></i>
+                                                    <span>{{ doc.source_hint }}</span>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="onboarding-document-actions">
+                                            <a href="{% url 'clients:onboarding_document_preview' session.token_hash doc.id %}" class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener">{% trans "Preview" %}</a>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -337,6 +575,38 @@
         </div>
     {% endif %}
 {% endfor %}
+{% for doc in checklist %}
+    {% if doc.sample_image_url %}
+        <div class="modal fade" id="sampleModal{{ doc.code|slugify }}" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">{% trans "Образец документа:" %} {{ doc.label }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Закрыть' %}"></button>
+              </div>
+              <div class="modal-body text-center p-3">
+                <img src="{{ doc.sample_image_url }}" class="img-fluid rounded shadow-sm" alt="{% trans 'Образец документа' %}">
+              </div>
+            </div>
+          </div>
+        </div>
+    {% endif %}
+{% endfor %}
+{% if fingerprint_invitation_sample_url %}
+<div class="modal fade" id="sampleModalFingerprint" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{% trans "Образец документа: Приглашение на отпечатки пальцев" %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Закрыть' %}"></button>
+      </div>
+      <div class="modal-body text-center p-3">
+        <img src="{{ fingerprint_invitation_sample_url }}" class="img-fluid rounded shadow-sm" alt="{% trans 'Образец документа' %}">
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll(".onboarding-upload-form").forEach(function (form) {

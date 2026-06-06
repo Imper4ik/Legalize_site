@@ -4,9 +4,58 @@
 {% block title %}{% trans "Шаг 1: Паспортные и личные данные" %}{% endblock %}
 
 {% block content %}
-<form method="post">
+<form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    <p>{% trans "Если мы смогли распознать ваш паспорт, данные уже заполнены. Пожалуйста, проверьте их." %}</p>
+    
+    <div class="card mb-4 border-primary bg-light shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title fw-bold text-primary mb-2">
+                <i class="bi bi-file-earmark-arrow-up-fill me-1"></i>{% trans "Загрузить скан загранпаспорта" %}
+            </h5>
+            <p class="card-text text-muted small mb-3">
+                {% trans "Вы можете загрузить скан или качественное фото первой страницы паспорта (разворот с фотографией) для автоматического заполнения полей. Если файла нет, просто введите данные вручную ниже." %}
+            </p>
+            
+            {% if passport_doc %}
+                <div class="alert alert-success py-2 px-3 small d-flex align-items-center justify-content-between mb-3 border-success-subtle shadow-sm">
+                    <div>
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                        <strong>{% trans "Скан загранпаспорта загружен" %}</strong>
+                        {% if passport_doc.ocr_status %}
+                            {% if passport_doc.ocr_status == 'pending' %}
+                                <span class="badge bg-warning text-dark ms-2">{% trans "Распознавание..." %}</span>
+                            {% elif passport_doc.ocr_status == 'success' %}
+                                <span class="badge bg-info text-dark ms-2">{% trans "Распознано" %}</span>
+                            {% elif passport_doc.ocr_status == 'failed' %}
+                                <span class="badge bg-danger ms-2">{% trans "Ошибка OCR" %}</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <a href="{% url 'clients:onboarding_document_preview' session.token_hash passport_doc.id %}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-success">
+                            <i class="bi bi-eye"></i> {% trans "Открыть файл" %}
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="row align-items-end g-2">
+                <div class="col-md-8">
+                    <label for="passport_file" class="form-label fw-bold mb-1" style="font-size: 0.85rem;">
+                        {% if passport_doc %}{% trans "Загрузить новый файл паспорта" %}{% else %}{% trans "Выберите файл скана паспорта" %}{% endif %}
+                    </label>
+                    <input type="file" class="form-control form-control-sm" id="passport_file" name="passport_file" accept="application/pdf,image/jpeg,image/png,image/webp">
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" name="action" value="upload_passport" class="btn btn-sm btn-primary w-100 py-2">
+                        <i class="bi bi-cloud-upload me-1"></i>{% trans "Загрузить и распознать" %}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <p class="text-muted small">{% trans "Если мы смогли распознать ваш паспорт, данные уже заполнены. Пожалуйста, проверьте их." %}</p>
     
     <div class="row mb-3">
         <div class="col-md-6">

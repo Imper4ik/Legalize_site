@@ -25,6 +25,7 @@ from .models import (
     MOSApplicationData,
     PeselApplication,
     ClientFamilyMemberMOS,
+    DocumentRequirement,
 )
 
 if TYPE_CHECKING:
@@ -360,4 +361,11 @@ class ClientFamilyMemberMOSAdmin(admin.ModelAdmin):
     list_display = ("client", "full_name", "relationship", "citizenship", "applies_for_temporary_residence")
     search_fields = ("full_name", "client__first_name", "client__last_name")
     autocomplete_fields = ("client",)
+
+
+@admin.register(DocumentRequirement)
+class DocumentRequirementAdmin(admin.ModelAdmin):
+    list_display = ("application_purpose", "document_type", "custom_name", "is_required", "position")
+    list_filter = ("application_purpose", "is_required")
+    search_fields = ("document_type", "custom_name")
 

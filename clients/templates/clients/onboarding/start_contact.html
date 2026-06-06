@@ -235,7 +235,15 @@
                 <i class="bi bi-arrow-right"></i>
               </a>
             {% else %}
-              <div class="alert alert-warning py-2 px-3 small mb-2"><i class="bi bi-exclamation-triangle-fill me-2"></i>{% trans "Сначала сохраните ФИО, email и телефон." %}</div>
+              <div class="alert alert-warning py-3 px-3 mb-2 shadow-sm">
+                <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+                <strong>{% trans "Внимание: Заполните контактные данные" %}</strong>
+                <div class="small mt-1">{% trans "Чтобы продолжить заполнение анкеты, пожалуйста, заполните форму 'Ваши контактные данные' вверху страницы." %}</div>
+                <a href="#contactEditForm" class="btn btn-warning btn-sm mt-2 fw-bold text-dark w-100 d-flex align-items-center justify-content-center gap-2">
+                  <i class="bi bi-arrow-up-circle-fill"></i>
+                  <span>{% trans "Заполнить контактные данные" %}</span>
+                </a>
+              </div>
               <button class="btn btn-secondary w-100 fw-bold py-2" type="button" disabled>{% trans "Продолжить анкету" %}</button>
             {% endif %}
           {% endif %}
@@ -260,58 +268,251 @@
             </p>
           </div>
           
-          <ul class="list-group list-group-flush border-top">
-            <li class="list-group-item py-3 border-start border-4 border-primary" id="doc-fingerprint-invitation">
-              <div class="d-flex justify-content-between gap-3 flex-wrap align-items-center">
-                <div class="min-w-0 flex-grow-1">
-                  <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <strong class="text-truncate" style="max-width: 220px;">{% trans "Приглашение на отпечатки пальцев (wezwanie)" %}</strong>
-                  </div>
-                  <div class="small text-muted mt-1" style="font-size: 0.8rem;">{% trans "Если ужонд прислал вызов на сдачу отпечатков, загрузите его здесь. После загрузки сотрудник получит уведомление." %}</div>
-                </div>
-                <div class="text-end flex-shrink-0">
-                  {% if fingerprint_invitation_document %}
-                    <div class="d-flex align-items-center gap-2">
-                      <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.75rem;">{% trans "Загружено" %}</span>
-                      <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash fingerprint_invitation_document.id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
-                      {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFingerprintInvitationModal">{% trans "Загрузить новый" %}</button>{% endif %}
-                    </div>
-                  {% else %}
-                    <div class="d-flex align-items-center gap-2">
-                      <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Если получили" %}</span>
-                      {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFingerprintInvitationModal"><i class="bi bi-upload"></i></button>{% endif %}
-                    </div>
-                  {% endif %}
-                </div>
-              </div>
-            </li>
-            {% for doc in checklist %}
-              <li class="list-group-item py-3" id="doc-{{ doc.code|slugify }}">
+          {% if is_post_fingerprints %}
+            <!-- ACTIVE / URGENT DOCUMENTS FOR STAGE AFTER FINGERPRINTS -->
+            <div class="p-3 bg-light border-bottom">
+              <h6 class="fw-bold text-primary mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>{% trans "Ежемесячные отчеты и срочные требования" %}</h6>
+              <p class="text-muted small mb-0">{% trans "На данном этапе необходимо регулярно загружать ежемесячные отчеты ZUS RCA и карточки срочных требований (Wezwanie) при их получении." %}</p>
+            </div>
+            
+            <ul class="list-group list-group-flush border-top">
+              <!-- Wezwanie (Always active) -->
+              <li class="list-group-item py-3 border-start border-4 border-danger" id="doc-fingerprint-invitation">
                 <div class="d-flex justify-content-between gap-3 flex-wrap align-items-center">
                   <div class="min-w-0 flex-grow-1">
                     <div class="d-flex align-items-center gap-2 flex-wrap">
-                      <strong class="text-truncate" style="max-width: 220px;">{{ doc.label }}</strong>
-                      {% if doc.is_required %}<span class="badge bg-danger-subtle text-danger font-monospace" style="font-size: 0.65rem; border: 1px solid rgba(220,53,69,0.15)">{% trans "Обязательно" %}</span>{% endif %}
+                      <strong class="text-truncate" style="max-width: 220px;">{% trans "Приглашение на отпечатки пальцев (wezwanie)" %}</strong>
                     </div>
-                    {% if doc.source_hint %}<div class="small text-muted mt-1" style="font-size: 0.8rem;">{{ doc.source_hint }}</div>{% endif %}
+                    <div class="small text-muted mt-1" style="font-size: 0.8rem;">{% trans "Если ужонд прислал вызов на сдачу отпечатков, загрузите его здесь. После загрузки сотрудник получит уведомление." %}</div>
                   </div>
                   <div class="text-end flex-shrink-0">
-                    {% if doc.is_uploaded %}
-                      <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex align-items-center gap-2 justify-content-end">
+                      {% if fingerprint_invitation_sample_url %}
+                        <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#sampleModalFingerprint">
+                          <i class="bi bi-file-image"></i> {% trans "Образец" %}
+                        </button>
+                      {% endif %}
+                      {% if fingerprint_invitation_document %}
                         <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.75rem;">{% trans "Загружено" %}</span>
-                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
-                      </div>
-                    {% else %}
-                      <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Ожидается" %}</span>
-                        {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}"><i class="bi bi-upload"></i></button>{% endif %}
-                      </div>
-                    {% endif %}
+                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash fingerprint_invitation_document.id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
+                        {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFingerprintInvitationModal"><i class="bi bi-upload"></i> {% trans "Загрузить новый" %}</button>{% endif %}
+                      {% else %}
+                        <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Если получили" %}</span>
+                        {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFingerprintInvitationModal"><i class="bi bi-upload"></i> {% trans "Загрузить" %}</button>{% endif %}
+                      {% endif %}
+                    </div>
                   </div>
                 </div>
               </li>
-            {% endfor %}
-          </ul>
+              
+              <!-- ZUS RCA (Active for fingerprints stage if exists in purpose checklist) -->
+              {% for doc in checklist %}
+                {% if doc.code == 'zus_rca_or_insurance' %}
+                  <li class="list-group-item py-3 border-start border-4 border-danger" id="doc-{{ doc.code|slugify }}">
+                    <div class="d-flex justify-content-between gap-3 flex-wrap align-items-center">
+                      <div class="min-w-0 flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                          <strong class="text-truncate" style="max-width: 220px;">{{ doc.label }}</strong>
+                          {% if doc.is_required %}<span class="badge bg-danger-subtle text-danger font-monospace" style="font-size: 0.65rem; border: 1px solid rgba(220,53,69,0.15)">{% trans "Обязательно" %}</span>{% endif %}
+                        </div>
+                        {% if doc.source_hint %}<div class="small text-muted mt-1" style="font-size: 0.8rem;">{{ doc.source_hint }}</div>{% endif %}
+                      </div>
+                      <div class="text-end flex-shrink-0">
+                        <div class="d-flex align-items-center gap-2 justify-content-end">
+                          {% if doc.sample_image_url %}
+                            <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#sampleModal{{ doc.code|slugify }}">
+                              <i class="bi bi-file-image"></i> {% trans "Образец" %}
+                            </button>
+                          {% endif %}
+                          {% if doc.is_uploaded %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.75rem;">{% trans "Загружено" %}</span>
+                            {% if doc.ocr_status %}
+                              {% if doc.ocr_status == 'pending' %}
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Распознавание..." %}</span>
+                              {% elif doc.ocr_status == 'success' %}
+                                <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Распознано" %}</span>
+                              {% elif doc.ocr_status == 'failed' %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.75rem;">{% trans "Ошибка OCR" %}</span>
+                              {% endif %}
+                            {% endif %}
+                            <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
+                          {% else %}
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Ожидается" %}</span>
+                            {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}"><i class="bi bi-upload"></i></button>{% endif %}
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                {% endif %}
+              {% endfor %}
+            </ul>
+
+            <!-- COLLAPSIBLE PREVIOUSLY SUBMITTED DOCUMENTS accordion -->
+            <div class="accordion border-top" id="archiveAccordion">
+              <div class="accordion-item border-0 rounded-0">
+                <h2 class="accordion-header" id="archiveHeading">
+                  <button class="accordion-button collapsed fw-bold bg-light text-dark py-3" type="button" data-bs-toggle="collapse" data-bs-target="#archiveCollapse" aria-expanded="false" aria-controls="archiveCollapse">
+                    <i class="bi bi-archive-fill me-2 text-secondary"></i>{% trans "Ранее сданные документы" %}
+                  </button>
+                </h2>
+                <div id="archiveCollapse" class="accordion-collapse collapse" aria-labelledby="archiveHeading">
+                  <div class="accordion-body p-0">
+                    <ul class="list-group list-group-flush">
+                      {% for doc in checklist %}
+                        {% if doc.code != 'zus_rca_or_insurance' %}
+                          <li class="list-group-item py-3" id="doc-{{ doc.code|slugify }}">
+                            <div class="d-flex justify-content-between gap-3 flex-wrap align-items-center">
+                              <div class="min-w-0 flex-grow-1">
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                  <strong class="text-truncate" style="max-width: 220px;">{{ doc.label }}</strong>
+                                  {% if doc.is_required %}<span class="badge bg-danger-subtle text-danger font-monospace" style="font-size: 0.65rem; border: 1px solid rgba(220,53,69,0.15)">{% trans "Обязательно" %}</span>{% endif %}
+                                </div>
+                                {% if doc.source_hint %}<div class="small text-muted mt-1" style="font-size: 0.8rem;">{{ doc.source_hint }}</div>{% endif %}
+                              </div>
+                              <div class="text-end flex-shrink-0">
+                                <div class="d-flex align-items-center gap-2 justify-content-end">
+                                  {% if doc.sample_image_url %}
+                                    <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#sampleModal{{ doc.code|slugify }}">
+                                      <i class="bi bi-file-image"></i> {% trans "Образец" %}
+                                    </button>
+                                  {% endif %}
+                                  {% if doc.is_uploaded %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.75rem;">{% trans "Загружено" %}</span>
+                                    {% if doc.ocr_status %}
+                                      {% if doc.ocr_status == 'pending' %}
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Распознавание..." %}</span>
+                                      {% elif doc.ocr_status == 'success' %}
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Распознано" %}</span>
+                                      {% elif doc.ocr_status == 'failed' %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.75rem;">{% trans "Ошибка OCR" %}</span>
+                                      {%   endif %}
+                                    {% endif %}
+                                    <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
+                                    {% if doc.code == 'passport' %}
+                                      <a href="{% url 'clients:onboarding_passport' session.token_hash %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil-square"></i> {% trans "Данные" %}
+                                      </a>
+                                    {% endif %}
+                                  {% else %}
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Ожидается" %}</span>
+                                    {% if allow_doc_edit %}
+                                      {% if doc.code == 'passport' %}
+                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">
+                                          <i class="bi bi-upload"></i> {% trans "Загрузить скан" %}
+                                        </button>
+                                        <a href="{% url 'clients:onboarding_passport' session.token_hash %}" class="btn btn-sm btn-outline-primary">
+                                          <i class="bi bi-pencil-square"></i> {% trans "Ввести данные" %}
+                                        </a>
+                                      {% else %}
+                                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">
+                                          <i class="bi bi-upload"></i> {% trans "Загрузить" %}
+                                        </button>
+                                      {% endif %}
+                                    {% endif %}
+                                  {% endif %}
+                                </div>
+                              </div>
+                            </div>
+                          </li>
+                        {% endif %}
+                      {% endfor %}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% else %}
+            <!-- REGULAR FLOW BEFORE/DURING SUBMISSION -->
+            <ul class="list-group list-group-flush border-top">
+              <!-- Wezwanie -->
+              <li class="list-group-item py-3 border-start border-4 border-primary" id="doc-fingerprint-invitation">
+                <div class="d-flex justify-content-between gap-3 flex-wrap align-items-center">
+                  <div class="min-w-0 flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                      <strong class="text-truncate" style="max-width: 220px;">{% trans "Приглашение на отпечатки пальцев (wezwanie)" %}</strong>
+                    </div>
+                    <div class="small text-muted mt-1" style="font-size: 0.8rem;">{% trans "Если ужонд прислал вызов на сдачу отпечатков, загрузите его здесь. После загрузки сотрудник получит уведомление." %}</div>
+                  </div>
+                  <div class="text-end flex-shrink-0">
+                    <div class="d-flex align-items-center gap-2 justify-content-end">
+                      {% if fingerprint_invitation_sample_url %}
+                        <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#sampleModalFingerprint">
+                          <i class="bi bi-file-image"></i> {% trans "Образец" %}
+                        </button>
+                      {% endif %}
+                      {% if fingerprint_invitation_document %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.75rem;">{% trans "Загружено" %}</span>
+                        <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash fingerprint_invitation_document.id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
+                        {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFingerprintInvitationModal"><i class="bi bi-upload"></i> {% trans "Загрузить новый" %}</button>{% endif %}
+                      {% else %}
+                        <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Если получили" %}</span>
+                        {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFingerprintInvitationModal"><i class="bi bi-upload"></i> {% trans "Загрузить" %}</button>{% endif %}
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+              </li>
+              
+              <!-- Checklist -->
+              {% for doc in checklist %}
+                <li class="list-group-item py-3" id="doc-{{ doc.code|slugify }}">
+                  <div class="d-flex justify-content-between gap-3 flex-wrap align-items-center">
+                    <div class="min-w-0 flex-grow-1">
+                      <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <strong class="text-truncate" style="max-width: 220px;">{{ doc.label }}</strong>
+                        {% if doc.is_required %}<span class="badge bg-danger-subtle text-danger font-monospace" style="font-size: 0.65rem; border: 1px solid rgba(220,53,69,0.15)">{% trans "Обязательно" %}</span>{% endif %}
+                      </div>
+                      {% if doc.source_hint %}<div class="small text-muted mt-1" style="font-size: 0.8rem;">{{ doc.source_hint }}</div>{% endif %}
+                    </div>
+                    <div class="text-end flex-shrink-0">
+                      <div class="d-flex align-items-center gap-2 justify-content-end">
+                        {% if doc.sample_image_url %}
+                          <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#sampleModal{{ doc.code|slugify }}">
+                            <i class="bi bi-file-image"></i> {% trans "Образец" %}
+                          </button>
+                        {% endif %}
+                        {% if doc.is_uploaded %}
+                          <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.75rem;">{% trans "Загружено" %}</span>
+                          {% if doc.ocr_status %}
+                            {% if doc.ocr_status == 'pending' %}
+                              <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Распознавание..." %}</span>
+                            {% elif doc.ocr_status == 'success' %}
+                              <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Распознано" %}</span>
+                            {% elif doc.ocr_status == 'failed' %}
+                              <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.75rem;">{% trans "Ошибка OCR" %}</span>
+                            {% endif %}
+                          {% endif %}
+                          <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
+                          {% if doc.code == 'passport' %}
+                            <a href="{% url 'clients:onboarding_passport' session.token_hash %}" class="btn btn-sm btn-outline-primary">
+                              <i class="bi bi-pencil-square"></i> {% trans "Данные" %}
+                            </a>
+                          {% endif %}
+                        {% else %}
+                          <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Ожидается" %}</span>
+                          {% if allow_doc_edit %}
+                            {% if doc.code == 'passport' %}
+                              <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">
+                                <i class="bi bi-upload"></i> {% trans "Загрузить скан" %}
+                              </button>
+                              <a href="{% url 'clients:onboarding_passport' session.token_hash %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-pencil-square"></i> {% trans "Ввести данные" %}
+                              </a>
+                            {% else %}
+                              <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">
+                                <i class="bi bi-upload"></i> {% trans "Загрузить" %}
+                              </button>
+                            {% endif %}
+                          {% endif %}
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -490,4 +691,36 @@ document.addEventListener("DOMContentLoaded", function () {
     </div>
   {% endif %}
 {% endfor %}
+{% for doc in checklist %}
+  {% if doc.sample_image_url %}
+    <div class="modal fade" id="sampleModal{{ doc.code|slugify }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">{% trans "Образец документа:" %} {{ doc.label }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Закрыть' %}"></button>
+          </div>
+          <div class="modal-body text-center p-3">
+            <img src="{{ doc.sample_image_url }}" class="img-fluid rounded shadow-sm" alt="{% trans 'Образец документа' %}">
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endfor %}
+{% if fingerprint_invitation_sample_url %}
+<div class="modal fade" id="sampleModalFingerprint" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{% trans "Образец документа: Приглашение на отпечатки пальцев" %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Закрыть' %}"></button>
+      </div>
+      <div class="modal-body text-center p-3">
+        <img src="{{ fingerprint_invitation_sample_url }}" class="img-fluid rounded shadow-sm" alt="{% trans 'Образец документа' %}">
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
 {% endblock %}

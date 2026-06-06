@@ -117,30 +117,54 @@ def _build_start_context(
     purpose_ctx = _purpose_context(client, mos_data)
     effective_purpose = str(purpose_ctx["effective_purpose"])
     language = translation.get_language() or client.language
-    required_docs_catalog = DocumentRequirement.catalog_for(purpose=effective_purpose, language=language)
-    fingerprint_invitation_doc_type = DocumentType.WEZWANIE.value
 
+    fingerprint_invitation_doc_type = DocumentType.WEZWANIE.value
     existing_documents = list(Document.objects.filter(client=client).order_by("document_type", "-uploaded_at"))
     existing_map = {document.document_type: document.id for document in existing_documents}
+
+    required_docs_catalog = DocumentRequirement.catalog_for(purpose=effective_purpose, language=language)
+
+    import os
+    from django.conf import settings
 
     checklist = []
     checklist_codes = set()
     for item in required_docs_catalog:
         doc_type = item["code"]
         checklist_codes.add(doc_type)
+        is_uploaded = doc_type in existing_map
+        
+        doc_obj = next((d for d in existing_documents if d.document_type == doc_type), None)
+        
+        sample_image_url = item.get("sample_image_url")
+        if not sample_image_url:
+            static_filename = f"clients/images/samples/{doc_type}.png"
+            static_filepath = os.path.join(settings.BASE_DIR, "static", static_filename)
+            if os.path.exists(static_filepath):
+                sample_image_url = settings.STATIC_URL + static_filename
+
         checklist.append({
             "code": doc_type,
             "label": item["label"],
             "is_required": item["is_required"],
-            "is_uploaded": doc_type in existing_map,
-            "doc_id": existing_map.get(doc_type),
+            "is_uploaded": is_uploaded,
+            "doc_id": doc_obj.id if doc_obj else None,
+            "ocr_status": doc_obj.ocr_status if doc_obj else None,
+            "ocr_status_badge": doc_obj.ocr_status_badge if doc_obj else "",
             "source_hint": _document_source_hint(doc_type),
+            "sample_image_url": sample_image_url,
         })
 
     fingerprint_invitation_document = next(
         (document for document in existing_documents if document.document_type == fingerprint_invitation_doc_type),
         None,
     )
+
+    fingerprint_invitation_sample_url = None
+    static_wezwanie_filename = "clients/images/samples/wezwanie.png"
+    static_wezwanie_filepath = os.path.join(settings.BASE_DIR, "static", static_wezwanie_filename)
+    if os.path.exists(static_wezwanie_filepath):
+        fingerprint_invitation_sample_url = settings.STATIC_URL + static_wezwanie_filename
 
     additional_documents = [
         {
@@ -177,6 +201,8 @@ def _build_start_context(
         and mos_data.stay_data.get("stay_basis")
     )
 
+    case_step = _case_step_for_status(mos_data.status if mos_data else "draft")
+
     return {
         "session": session,
         "mos_data": mos_data,
@@ -184,10 +210,13 @@ def _build_start_context(
         "allow_edit": allow_edit,
         "allow_doc_edit": allow_doc_edit,
         "allow_delete": bool(mos_data and allow_doc_edit),
-        "case_step": _case_step_for_status(mos_data.status if mos_data else "draft"),
+        "case_step": case_step,
+        "is_post_fingerprints": case_step >= 5,
         "additional_documents": additional_documents,
         "fingerprint_invitation_doc_type": fingerprint_invitation_doc_type,
         "fingerprint_invitation_document": fingerprint_invitation_document,
+        "fingerprint_invitation_label": client.get_document_name_by_code(fingerprint_invitation_doc_type),
+        "fingerprint_invitation_sample_url": fingerprint_invitation_sample_url,
         "can_change_purpose": allow_edit,
         "contact_values": contact_values,
         "contact_errors": contact_errors or {},
