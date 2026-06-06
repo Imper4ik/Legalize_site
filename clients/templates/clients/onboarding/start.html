@@ -155,12 +155,12 @@
 
     <!-- Блок документов -->
     <div class="col-md-6 mb-4" id="documents">
-        <div class="card h-100 shadow-sm border-0">
+        <div class="card h-100 shadow-sm border-0 onboarding-documents-card">
             <div class="card-header bg-secondary text-white fw-bold">{% trans "Ваши документы" %}</div>
             <div class="card-body p-0">
                 {% if is_post_fingerprints %}
                     <!-- ACTIVE / URGENT DOCUMENTS FOR STAGE AFTER FINGERPRINTS -->
-                    <div class="p-3 bg-light border-bottom">
+                    <div class="p-3 border-bottom documents-stage-note">
                         <h6 class="fw-bold text-primary mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>{% trans "Ежемесячные отчеты и срочные требования" %}</h6>
                         <p class="text-muted small mb-0">{% trans "На данном этапе необходимо регулярно загружать ежемесячные отчеты ZUS RCA и карточки срочных требований (Wezwanie) при их получении." %}</p>
                     </div>
@@ -254,15 +254,15 @@
                         {% endfor %}
                     </ul>
 
-                    <!-- COLLAPSIBLE PREVIOUSLY SUBMITTED DOCUMENTS accordion -->
+                    <!-- MAIN DOCUMENT LIST accordion -->
                     <div class="accordion border-top" id="archiveAccordion">
                         <div class="accordion-item border-0 rounded-0">
                             <h2 class="accordion-header" id="archiveHeading">
-                                <button class="accordion-button collapsed fw-bold bg-light text-dark py-3" type="button" data-bs-toggle="collapse" data-bs-target="#archiveCollapse" aria-expanded="false" aria-controls="archiveCollapse">
-                                    <i class="bi bi-archive-fill me-2 text-secondary"></i>{% trans "Ранее сданные документы" %}
+                                <button class="accordion-button fw-bold py-3" type="button" data-bs-toggle="collapse" data-bs-target="#archiveCollapse" aria-expanded="true" aria-controls="archiveCollapse">
+                                    <i class="bi bi-card-checklist me-2 text-secondary"></i>{% trans "Основной список документов" %}
                                 </button>
                             </h2>
-                            <div id="archiveCollapse" class="accordion-collapse collapse" aria-labelledby="archiveHeading">
+                            <div id="archiveCollapse" class="accordion-collapse collapse show" aria-labelledby="archiveHeading">
                                 <div class="accordion-body p-0">
                                     <ul class="list-group list-group-flush">
                                         {% for doc in checklist %}

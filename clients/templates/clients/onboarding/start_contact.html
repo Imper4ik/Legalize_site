@@ -20,12 +20,12 @@
     <h5 class="text-center mb-4 fw-bold text-uppercase tracking-wider fs-6 text-primary">
       <i class="bi bi-clock-history me-2"></i>{% trans "Статус вашего дела" %}
     </h5>
-    
+
     <div class="case-timeline-wrapper">
       <div class="case-timeline-progress-track">
         <div class="case-timeline-progress-fill" style="width: {% widthratio case_step|add:'-1' 5 100 %}%;"></div>
       </div>
-      
+
       <div class="case-timeline-steps">
         <!-- Step 1: Анкета -->
         <div class="case-timeline-step-item {% if case_step == 1 %}active{% elif case_step > 1 %}completed{% endif %}">
@@ -38,7 +38,7 @@
           </div>
           <div class="case-timeline-label">{% trans "Анкета" %}</div>
         </div>
-        
+
         <!-- Step 2: Проверка -->
         <div class="case-timeline-step-item {% if case_step == 2 %}active{% elif case_step > 2 %}completed{% endif %}">
           <div class="case-timeline-node">
@@ -50,7 +50,7 @@
           </div>
           <div class="case-timeline-label">{% trans "Проверка" %}</div>
         </div>
-        
+
         <!-- Step 3: Пакет готов -->
         <div class="case-timeline-step-item {% if case_step == 3 %}active{% elif case_step > 3 %}completed{% endif %}">
           <div class="case-timeline-node">
@@ -62,7 +62,7 @@
           </div>
           <div class="case-timeline-label">{% trans "Пакет готов" %}</div>
         </div>
-        
+
         <!-- Step 4: Подано -->
         <div class="case-timeline-step-item {% if case_step == 4 %}active{% elif case_step > 4 %}completed{% endif %}">
           <div class="case-timeline-node">
@@ -74,7 +74,7 @@
           </div>
           <div class="case-timeline-label">{% trans "Подано" %}</div>
         </div>
-        
+
         <!-- Step 5: Отпечатки -->
         <div class="case-timeline-step-item {% if case_step == 5 %}active{% elif case_step > 5 %}completed{% endif %}">
           <div class="case-timeline-node">
@@ -86,7 +86,7 @@
           </div>
           <div class="case-timeline-label">{% trans "Отпечатки" %}</div>
         </div>
-        
+
         <!-- Step 6: Децизия -->
         <div class="case-timeline-step-item {% if case_step == 6 %}active{% elif case_step > 6 %}completed{% endif %}">
           <div class="case-timeline-node">
@@ -171,11 +171,11 @@
             </div>
             <h5 class="card-title fw-bold mb-0">{% trans "Анкета для ВНЖ (MOS)" %}</h5>
           </div>
-          
+
           <p class="text-muted small mb-4">
             {% trans "Заполните персональные данные, адрес проживания, историю поездок и загрузите необходимые документы для автоматической подготовки пакета документов." %}
           </p>
-          
+
           <div class="mb-4">
             <div class="small fw-semibold text-uppercase text-muted mb-2" style="font-size: 0.75rem; letter-spacing: 0.5px;">{% trans "Шаги анкеты" %}</div>
             <ul class="list-unstyled d-flex flex-column gap-2 mb-0">
@@ -209,7 +209,7 @@
             </ul>
           </div>
         </div>
-        
+
         <div>
           {% if mos_data.status == 'client_completed' or mos_data.status == 'mos_package_ready' or mos_data.status == 'submitted_in_mos' or mos_data.status == 'approved_by_staff' %}
             <div class="alert alert-success py-2 px-3 small mb-0">
@@ -253,7 +253,7 @@
   </div>
 
   <div class="col-md-6 mb-4" id="documents">
-    <div class="card h-100 shadow-sm border-0 border-top border-4 border-secondary">
+    <div class="card h-100 shadow-sm border-0 border-top border-4 border-secondary onboarding-documents-card">
       <div class="card-body p-0 d-flex flex-column justify-content-between h-100">
         <div>
           <div class="p-3 pb-2">
@@ -267,14 +267,14 @@
               {% trans "Загрузите необходимые документы по списку ниже для проверки сотрудником." %}
             </p>
           </div>
-          
+
           {% if is_post_fingerprints %}
             <!-- ACTIVE / URGENT DOCUMENTS FOR STAGE AFTER FINGERPRINTS -->
-            <div class="p-3 bg-light border-bottom">
+            <div class="p-3 border-bottom documents-stage-note">
               <h6 class="fw-bold text-primary mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>{% trans "Ежемесячные отчеты и срочные требования" %}</h6>
               <p class="text-muted small mb-0">{% trans "На данном этапе необходимо регулярно загружать ежемесячные отчеты ZUS RCA и карточки срочных требований (Wezwanie) при их получении." %}</p>
             </div>
-            
+
             <ul class="list-group list-group-flush border-top">
               <!-- Wezwanie (Always active) -->
               <li class="list-group-item py-3 border-start border-4 border-danger" id="doc-fingerprint-invitation">
@@ -304,7 +304,7 @@
                   </div>
                 </div>
               </li>
-              
+
               <!-- ZUS RCA (Active for fingerprints stage if exists in purpose checklist) -->
               {% for doc in checklist %}
                 {% if doc.code == 'zus_rca_or_insurance' %}
@@ -348,15 +348,15 @@
               {% endfor %}
             </ul>
 
-            <!-- COLLAPSIBLE PREVIOUSLY SUBMITTED DOCUMENTS accordion -->
+            <!-- MAIN DOCUMENT LIST accordion -->
             <div class="accordion border-top" id="archiveAccordion">
               <div class="accordion-item border-0 rounded-0">
                 <h2 class="accordion-header" id="archiveHeading">
-                  <button class="accordion-button collapsed fw-bold bg-light text-dark py-3" type="button" data-bs-toggle="collapse" data-bs-target="#archiveCollapse" aria-expanded="false" aria-controls="archiveCollapse">
-                    <i class="bi bi-archive-fill me-2 text-secondary"></i>{% trans "Ранее сданные документы" %}
+                  <button class="accordion-button fw-bold py-3" type="button" data-bs-toggle="collapse" data-bs-target="#archiveCollapse" aria-expanded="true" aria-controls="archiveCollapse">
+                    <i class="bi bi-card-checklist me-2 text-secondary"></i>{% trans "Основной список документов" %}
                   </button>
                 </h2>
-                <div id="archiveCollapse" class="accordion-collapse collapse" aria-labelledby="archiveHeading">
+                <div id="archiveCollapse" class="accordion-collapse collapse show" aria-labelledby="archiveHeading">
                   <div class="accordion-body p-0">
                     <ul class="list-group list-group-flush">
                       {% for doc in checklist %}
@@ -417,6 +417,25 @@
                           </li>
                         {% endif %}
                       {% endfor %}
+
+                      {% if additional_documents %}
+                        {% for doc in additional_documents %}
+                          <li class="list-group-item py-3">
+                            <div class="d-flex justify-content-between gap-3 flex-wrap align-items-center">
+                              <div class="min-w-0 flex-grow-1">
+                                <strong class="text-truncate" style="max-width: 220px;">{{ doc.label }}</strong>
+                                {% if doc.source_hint %}<div class="small text-muted mt-1" style="font-size: 0.8rem;">{{ doc.source_hint }}</div>{% endif %}
+                              </div>
+                              <div class="text-end flex-shrink-0">
+                                <div class="d-flex align-items-center gap-2 justify-content-end">
+                                  <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.75rem;">{% trans "Загружено" %}</span>
+                                  <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash doc.id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
+                                </div>
+                              </div>
+                            </div>
+                          </li>
+                        {% endfor %}
+                      {% endif %}
                     </ul>
                   </div>
                 </div>
@@ -453,7 +472,7 @@
                   </div>
                 </div>
               </li>
-              
+
               <!-- Checklist -->
               {% for doc in checklist %}
                 <li class="list-group-item py-3" id="doc-{{ doc.code|slugify }}">
@@ -512,6 +531,31 @@
                 </li>
               {% endfor %}
             </ul>
+
+            {% if additional_documents %}
+              <div class="border-top p-3" style="background-color: rgba(255, 255, 255, 0.01);">
+                <h6 class="mb-2 fw-bold text-primary">{% trans "Загруженные дополнительные документы" %}</h6>
+                <p class="text-muted small mb-2">{% trans "Эти документы остаются в деле, но не входят в текущий список для выбранной цели." %}</p>
+                <ul class="list-group list-group-flush border-top">
+                  {% for doc in additional_documents %}
+                    <li class="list-group-item py-3 px-0">
+                      <div class="d-flex justify-content-between gap-3 flex-wrap align-items-center">
+                        <div class="min-w-0 flex-grow-1">
+                          <strong class="text-truncate" style="max-width: 220px;">{{ doc.label }}</strong>
+                          {% if doc.source_hint %}<div class="small text-muted mt-1" style="font-size: 0.8rem;">{{ doc.source_hint }}</div>{% endif %}
+                        </div>
+                        <div class="text-end flex-shrink-0">
+                          <div class="d-flex align-items-center gap-2 justify-content-end">
+                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.75rem;">{% trans "Загружено" %}</span>
+                            <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash doc.id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
           {% endif %}
         </div>
       </div>

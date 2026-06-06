@@ -109,6 +109,23 @@ class OnboardingStartContactTests(TestCase):
             self.assertContains(response, reverse("clients:onboarding_digital_access", kwargs={"token": token}))
             self.assertContains(response, "Продолжить анкету")
 
+    def test_post_fingerprints_page_shows_main_document_list_open(self):
+        client, token = self._client_with_session()
+        mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
+        mos_data.status = "fingerprints"
+        mos_data.save(update_fields=["status"])
+
+        from django.utils import translation
+        with translation.override('ru'):
+            response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
+
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, "Ежемесячные отчеты и срочные требования")
+            self.assertContains(response, "Основной список документов")
+            self.assertContains(response, 'class="accordion-collapse collapse show"')
+            self.assertContains(response, "onboarding-documents-card")
+            self.assertContains(response, "documents-stage-note")
+
     def test_locked_start_page_does_not_change_contact_data(self):
         client, token = self._client_with_session()
         mos_data = MOSApplicationData.objects.get(client=client)

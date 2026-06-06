@@ -158,6 +158,59 @@
             gap: 0.5rem;
             flex-wrap: wrap;
         }
+        .onboarding-documents-card .list-group-item,
+        .onboarding-documents-card .accordion-item,
+        .onboarding-documents-card .accordion-button,
+        .onboarding-documents-card .accordion-body {
+            background-color: var(--surface);
+            border-color: var(--border);
+            color: var(--fg);
+        }
+        .onboarding-documents-card .accordion-button {
+            box-shadow: none;
+        }
+        .onboarding-documents-card .accordion-button:not(.collapsed) {
+            background-color: rgba(29, 78, 216, 0.08);
+            color: var(--fg);
+        }
+        .onboarding-documents-card .text-truncate {
+            max-width: 100% !important;
+            overflow: visible;
+            text-overflow: clip;
+            white-space: normal;
+        }
+        .onboarding-documents-card .documents-stage-note {
+            background: rgba(29, 78, 216, 0.06);
+        }
+        html[data-theme="dark"] .onboarding-documents-card .list-group-item,
+        html[data-theme="dark"] .onboarding-documents-card .accordion-item,
+        html[data-theme="dark"] .onboarding-documents-card .accordion-button,
+        html[data-theme="dark"] .onboarding-documents-card .accordion-body {
+            background-color: rgba(15, 23, 42, 0.72);
+            color: var(--fg);
+        }
+        html[data-theme="dark"] .onboarding-documents-card .list-group-item {
+            border-color: rgba(148, 163, 184, 0.24);
+        }
+        html[data-theme="dark"] .onboarding-documents-card .accordion-button:not(.collapsed),
+        html[data-theme="dark"] .onboarding-documents-card .documents-stage-note {
+            background: rgba(59, 130, 246, 0.12);
+        }
+        html[data-theme="dark"] .onboarding-documents-card .text-muted {
+            color: #cbd5e1 !important;
+        }
+        @media (max-width: 575.98px) {
+            .onboarding-documents-card .list-group-item > .d-flex {
+                display: block !important;
+            }
+            .onboarding-documents-card .text-end {
+                margin-top: 0.75rem;
+                text-align: left !important;
+            }
+            .onboarding-documents-card .justify-content-end {
+                justify-content: flex-start !important;
+            }
+        }
         .client-account-banner {
             display: flex;
             align-items: center;
