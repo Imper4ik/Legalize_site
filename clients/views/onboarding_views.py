@@ -39,7 +39,16 @@ def _mos_data_is_editable(mos_data: MOSApplicationData | None) -> bool:
 
 
 def _mos_documents_are_editable(mos_data: MOSApplicationData | None) -> bool:
-    return mos_data is None or mos_data.status in {"draft", "client_filling", "client_completed", "staff_review", "needs_correction"}
+    return mos_data is None or mos_data.status in {
+        "draft",
+        "client_filling",
+        "client_completed",
+        "staff_review",
+        "needs_correction",
+        "submitted_in_mos",
+        "fingerprints",
+        "waiting_decision",
+    }
 
 
 def _locked_response(request: HttpRequest, session: ClientOnboardingSession) -> HttpResponse:

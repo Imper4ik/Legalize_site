@@ -158,6 +158,96 @@
             gap: 0.5rem;
             flex-wrap: wrap;
         }
+        .client-access-strip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.35rem 0.7rem;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            color: var(--muted);
+            background: var(--surface);
+            font-size: 0.82rem;
+            margin-bottom: 0.9rem;
+        }
+        .client-access-strip i {
+            color: var(--brand-2);
+        }
+        .client-next-action {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            box-shadow: var(--shadow-1);
+        }
+        .client-next-action-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            font-size: 1.25rem;
+            background: rgba(29, 78, 216, 0.12);
+            color: var(--brand-1);
+        }
+        .client-next-action.is-warning .client-next-action-icon {
+            background: rgba(245, 158, 11, 0.14);
+            color: #b45309;
+        }
+        .client-next-action-eyebrow {
+            color: var(--muted);
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        .client-next-action-title {
+            margin: 0.1rem 0 0.25rem;
+            color: var(--fg);
+            font-size: 1.05rem;
+            font-weight: 800;
+        }
+        .client-next-action-text {
+            color: var(--muted);
+            margin: 0;
+            font-size: 0.92rem;
+            line-height: 1.45;
+        }
+        .document-summary-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            margin-top: 0.75rem;
+        }
+        .document-summary-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.32rem 0.58rem;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            color: var(--muted);
+            font-size: 0.76rem;
+            font-weight: 600;
+        }
+        html[data-theme="dark"] .client-next-action,
+        html[data-theme="dark"] .client-access-strip,
+        html[data-theme="dark"] .document-summary-pill {
+            background: rgba(15, 23, 42, 0.72);
+        }
+        @media (max-width: 575.98px) {
+            .client-next-action {
+                display: block;
+            }
+            .client-next-action-icon {
+                margin-bottom: 0.75rem;
+            }
+        }
         .onboarding-documents-card .list-group-item,
         .onboarding-documents-card .accordion-item,
         .onboarding-documents-card .accordion-button,

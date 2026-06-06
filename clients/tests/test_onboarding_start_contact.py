@@ -41,7 +41,8 @@ class OnboardingStartContactTests(TestCase):
 
             self.assertEqual(response.status_code, 200)
             self.assertContains(response, "Личный кабинет")
-            self.assertContains(response, "Профиль клиента активен")
+            self.assertContains(response, "Сейчас от вас нужно")
+            self.assertContains(response, "Личный кабинет активен")
             self.assertContains(response, 'name="first_name"')
             self.assertContains(response, 'name="last_name"')
             self.assertContains(response, 'name="email"')
@@ -120,11 +121,12 @@ class OnboardingStartContactTests(TestCase):
             response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
 
             self.assertEqual(response.status_code, 200)
-            self.assertContains(response, "Ежемесячные отчеты и срочные требования")
-            self.assertContains(response, "Основной список документов")
+            self.assertContains(response, "Что нужно дослать сейчас")
+            self.assertContains(response, "Остальные документы по делу")
             self.assertContains(response, 'class="accordion-collapse collapse show"')
             self.assertContains(response, "onboarding-documents-card")
             self.assertContains(response, "documents-stage-note")
+            self.assertContains(response, "uploadFingerprintInvitationModal")
             self.assertContains(response, "Сохранить контактные данные")
 
     def test_locked_post_fingerprints_contact_gap_can_be_completed(self):

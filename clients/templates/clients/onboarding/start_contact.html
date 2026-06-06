@@ -4,14 +4,49 @@
 {% block title %}{% trans "Личный кабинет клиента" %}{% endblock %}
 
 {% block content %}
-<div class="alert alert-success mb-4" role="status">
-  <div class="d-flex align-items-start gap-3">
-    <i class="bi bi-person-check-fill fs-3" aria-hidden="true"></i>
-    <div>
-      <strong>{% trans "Вы находитесь в своём личном кабинете клиента." %}</strong>
-      <span class="badge bg-success ms-2">{% trans "Профиль клиента активен" %}</span>
-      <div class="small mt-1">{% trans "Доступ открыт по индивидуальной ссылке." %}</div>
-    </div>
+<div class="client-access-strip" role="status">
+  <i class="bi bi-person-check-fill" aria-hidden="true"></i>
+  <span>{% trans "Личный кабинет активен" %}</span>
+  <span class="text-muted">{% trans "Доступ по индивидуальной ссылке" %}</span>
+</div>
+
+<div class="client-next-action mb-4 {% if not contact_complete or contact_errors or mos_data.status == 'needs_correction' %}is-warning{% endif %}">
+  <div class="client-next-action-icon">
+    {% if not contact_complete or contact_errors %}
+      <i class="bi bi-person-lines-fill" aria-hidden="true"></i>
+    {% elif mos_data.status == 'needs_correction' %}
+      <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
+    {% elif allow_edit %}
+      <i class="bi bi-pencil-square" aria-hidden="true"></i>
+    {% elif is_post_fingerprints %}
+      <i class="bi bi-folder2-open" aria-hidden="true"></i>
+    {% else %}
+      <i class="bi bi-clock-history" aria-hidden="true"></i>
+    {% endif %}
+  </div>
+  <div class="flex-grow-1">
+    <div class="client-next-action-eyebrow">{% trans "Сейчас от вас нужно" %}</div>
+    {% if not contact_complete or contact_errors %}
+      <h3 class="client-next-action-title">{% trans "Заполнить контактные данные" %}</h3>
+      <p class="client-next-action-text">{% trans "После сохранения контактов вы сможете продолжить анкету или спокойно дослать документы." %}</p>
+      <a href="#contactEditForm" class="btn btn-warning btn-sm fw-bold text-dark mt-3"><i class="bi bi-arrow-down-circle me-1"></i>{% trans "Перейти к контактам" %}</a>
+    {% elif mos_data.status == 'needs_correction' %}
+      <h3 class="client-next-action-title">{% trans "Внести исправления в анкету" %}</h3>
+      <p class="client-next-action-text">{% if mos_data.correction_message %}{{ mos_data.correction_message }}{% else %}{% trans "Сотрудник отметил данные, которые нужно уточнить перед продолжением дела." %}{% endif %}</p>
+      <a href="{% url 'clients:onboarding_digital_access' session.token_hash %}" class="btn btn-warning btn-sm fw-bold text-dark mt-3"><i class="bi bi-pencil-square me-1"></i>{% trans "Открыть анкету" %}</a>
+    {% elif allow_edit %}
+      <h3 class="client-next-action-title">{% trans "Продолжить анкету на карту побыту" %}</h3>
+      <p class="client-next-action-text">{% trans "Заполните оставшиеся данные. Можно сохранить шаг и вернуться в кабинет в любой момент." %}</p>
+      <a href="{% url 'clients:onboarding_digital_access' session.token_hash %}" class="btn btn-primary btn-sm fw-bold mt-3"><i class="bi bi-arrow-right-circle me-1"></i>{% trans "Продолжить анкету" %}</a>
+    {% elif is_post_fingerprints %}
+      <h3 class="client-next-action-title">{% trans "Дослать документы после отпечатков" %}</h3>
+      <p class="client-next-action-text">{% trans "Если получили письмо из ужонда или новый ежемесячный отчёт ZUS RCA, загрузите его в блоке документов." %}</p>
+      <a href="#documents" class="btn btn-primary btn-sm fw-bold mt-3"><i class="bi bi-folder2-open me-1"></i>{% trans "Перейти к документам" %}</a>
+    {% else %}
+      <h3 class="client-next-action-title">{% trans "Следите за статусом дела" %}</h3>
+      <p class="client-next-action-text">{% trans "Анкета уже в работе. Если сотрудник попросит документ, вы сможете загрузить его здесь." %}</p>
+      <a href="#documents" class="btn btn-outline-primary btn-sm fw-bold mt-3"><i class="bi bi-folder2-open me-1"></i>{% trans "Посмотреть документы" %}</a>
+    {% endif %}
   </div>
 </div>
 
@@ -96,7 +131,7 @@
               <i class="bi bi-award"></i>
             {% endif %}
           </div>
-          <div class="case-timeline-label">{% trans "Децизия" %}</div>
+          <div class="case-timeline-label">{% trans "Решение" %}</div>
         </div>
       </div>
     </div>
@@ -137,7 +172,7 @@
           {% if contact_form_editable %}
             <button class="btn btn-primary mt-3" type="submit">{% if allow_edit %}{% trans "Сохранить и продолжить" %}{% else %}{% trans "Сохранить контактные данные" %}{% endif %}</button>
           {% else %}
-            <span class="badge bg-secondary mt-3">{% trans "Профиль заблокирован для изменений" %}</span>
+            <span class="badge bg-secondary mt-3">{% trans "Изменения через менеджера" %}</span>
           {% endif %}
         </form>
       </div>
@@ -169,11 +204,11 @@
             <div class="bg-primary bg-opacity-10 text-primary rounded p-2 d-inline-flex">
               <i class="bi bi-file-earmark-person fs-4"></i>
             </div>
-            <h5 class="card-title fw-bold mb-0">{% trans "Анкета для ВНЖ (MOS)" %}</h5>
+            <h5 class="card-title fw-bold mb-0">{% trans "Анкета на карту побыту" %}</h5>
           </div>
 
           <p class="text-muted small mb-4">
-            {% trans "Заполните персональные данные, адрес проживания, историю поездок и загрузите необходимые документы для автоматической подготовки пакета документов." %}
+            {% trans "Это данные для заявления в MOS. Заполните шаги анкеты, а сотрудник проверит их перед подачей." %}
           </p>
 
           <div class="mb-4">
@@ -231,7 +266,7 @@
             <div class="alert alert-info py-2 px-3 small mb-0">
               <i class="bi bi-lock-fill me-2"></i>
               <strong>{% trans "Контактные данные сохранены" %}</strong><br>
-              <span class="text-muted">{% trans "Анкета уже передана в работу. Если нужно исправить данные, свяжитесь с менеджером." %}</span>
+              <span class="text-muted">{% trans "Анкета уже передана в работу. Сейчас вы можете отслеживать статус и загружать документы, если сотрудник попросит." %}</span>
             </div>
           {% else %}
             {% if contact_complete %}
@@ -270,15 +305,23 @@
               <h5 class="card-title fw-bold mb-0">{% trans "Ваши документы" %}</h5>
             </div>
             <p class="text-muted small mb-0">
-              {% trans "Загрузите необходимые документы по списку ниже для проверки сотрудником." %}
+              {% trans "Здесь видно, какие файлы уже загружены и что ещё нужно дослать." %}
             </p>
+            <div class="document-summary-pills">
+              <span class="document-summary-pill"><i class="bi bi-check-circle text-success"></i>{% blocktrans with uploaded=docs_uploaded_count total=docs_total_count %}{{ uploaded }} из {{ total }} загружено{% endblocktrans %}</span>
+              {% if docs_required_pending_count %}
+                <span class="document-summary-pill"><i class="bi bi-exclamation-circle text-warning"></i>{% blocktrans with count=docs_required_pending_count %}{{ count }} нужно дослать{% endblocktrans %}</span>
+              {% else %}
+                <span class="document-summary-pill"><i class="bi bi-shield-check text-success"></i>{% trans "Обязательные закрыты" %}</span>
+              {% endif %}
+            </div>
           </div>
 
           {% if is_post_fingerprints %}
             <!-- ACTIVE / URGENT DOCUMENTS FOR STAGE AFTER FINGERPRINTS -->
             <div class="p-3 border-bottom documents-stage-note">
-              <h6 class="fw-bold text-primary mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>{% trans "Ежемесячные отчеты и срочные требования" %}</h6>
-              <p class="text-muted small mb-0">{% trans "На данном этапе необходимо регулярно загружать ежемесячные отчеты ZUS RCA и карточки срочных требований (Wezwanie) при их получении." %}</p>
+              <h6 class="fw-bold text-primary mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>{% trans "Что нужно дослать сейчас" %}</h6>
+              <p class="text-muted small mb-0">{% trans "После отпечатков обычно нужно досылать ежемесячные отчёты ZUS RCA. Если ужонд прислал письмо/wezwanie, загрузите его здесь сразу." %}</p>
             </div>
 
             <ul class="list-group list-group-flush border-top">
@@ -287,9 +330,9 @@
                 <div class="d-flex justify-content-between gap-3 flex-wrap align-items-center">
                   <div class="min-w-0 flex-grow-1">
                     <div class="d-flex align-items-center gap-2 flex-wrap">
-                      <strong class="text-truncate" style="max-width: 220px;">{% trans "Приглашение на отпечатки пальцев (wezwanie)" %}</strong>
+                      <strong class="text-truncate" style="max-width: 220px;">{% trans "Письмо из ужонда / вызов на отпечатки" %}</strong>
                     </div>
-                    <div class="small text-muted mt-1" style="font-size: 0.8rem;">{% trans "Если ужонд прислал вызов на сдачу отпечатков, загрузите его здесь. После загрузки сотрудник получит уведомление." %}</div>
+                    <div class="small text-muted mt-1" style="font-size: 0.8rem;">{% trans "Если получили письмо из ужонда с датой отпечатков или дополнительными требованиями, загрузите его здесь." %}</div>
                   </div>
                   <div class="text-end flex-shrink-0">
                     <div class="d-flex align-items-center gap-2 justify-content-end">
@@ -303,7 +346,7 @@
                         <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash fingerprint_invitation_document.id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
                         {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFingerprintInvitationModal"><i class="bi bi-upload"></i> {% trans "Загрузить новый" %}</button>{% endif %}
                       {% else %}
-                        <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Если получили" %}</span>
+                        <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Загрузите, если получили" %}</span>
                         {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFingerprintInvitationModal"><i class="bi bi-upload"></i> {% trans "Загрузить" %}</button>{% endif %}
                       {% endif %}
                     </div>
@@ -319,7 +362,7 @@
                       <div class="min-w-0 flex-grow-1">
                         <div class="d-flex align-items-center gap-2 flex-wrap">
                           <strong class="text-truncate" style="max-width: 220px;">{{ doc.label }}</strong>
-                          {% if doc.is_required %}<span class="badge bg-danger-subtle text-danger font-monospace" style="font-size: 0.65rem; border: 1px solid rgba(220,53,69,0.15)">{% trans "Обязательно" %}</span>{% endif %}
+                          {% if doc.is_required %}<span class="badge bg-danger-subtle text-danger font-monospace" style="font-size: 0.65rem; border: 1px solid rgba(220,53,69,0.15)">{% trans "Нужно" %}</span>{% endif %}
                         </div>
                         {% if doc.source_hint %}<div class="small text-muted mt-1" style="font-size: 0.8rem;">{{ doc.source_hint }}</div>{% endif %}
                       </div>
@@ -334,17 +377,17 @@
                             <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.75rem;">{% trans "Загружено" %}</span>
                             {% if doc.ocr_status %}
                               {% if doc.ocr_status == 'pending' %}
-                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Распознавание..." %}</span>
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Проверяем файл..." %}</span>
                               {% elif doc.ocr_status == 'success' %}
-                                <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Распознано" %}</span>
+                                <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Данные считаны" %}</span>
                               {% elif doc.ocr_status == 'failed' %}
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.75rem;">{% trans "Ошибка OCR" %}</span>
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.75rem;">{% trans "Проверим вручную" %}</span>
                               {% endif %}
                             {% endif %}
                             <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
                           {% else %}
-                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Ожидается" %}</span>
-                            {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}"><i class="bi bi-upload"></i></button>{% endif %}
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Нужно загрузить" %}</span>
+                            {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}"><i class="bi bi-upload"></i> {% trans "Загрузить" %}</button>{% endif %}
                           {% endif %}
                         </div>
                       </div>
@@ -359,7 +402,7 @@
               <div class="accordion-item border-0 rounded-0">
                 <h2 class="accordion-header" id="archiveHeading">
                   <button class="accordion-button fw-bold py-3" type="button" data-bs-toggle="collapse" data-bs-target="#archiveCollapse" aria-expanded="true" aria-controls="archiveCollapse">
-                    <i class="bi bi-card-checklist me-2 text-secondary"></i>{% trans "Основной список документов" %}
+                    <i class="bi bi-card-checklist me-2 text-secondary"></i>{% trans "Остальные документы по делу" %}
                   </button>
                 </h2>
                 <div id="archiveCollapse" class="accordion-collapse collapse show" aria-labelledby="archiveHeading">
@@ -372,7 +415,7 @@
                               <div class="min-w-0 flex-grow-1">
                                 <div class="d-flex align-items-center gap-2 flex-wrap">
                                   <strong class="text-truncate" style="max-width: 220px;">{{ doc.label }}</strong>
-                                  {% if doc.is_required %}<span class="badge bg-danger-subtle text-danger font-monospace" style="font-size: 0.65rem; border: 1px solid rgba(220,53,69,0.15)">{% trans "Обязательно" %}</span>{% endif %}
+                                  {% if doc.is_required %}<span class="badge bg-danger-subtle text-danger font-monospace" style="font-size: 0.65rem; border: 1px solid rgba(220,53,69,0.15)">{% trans "Нужно" %}</span>{% endif %}
                                 </div>
                                 {% if doc.source_hint %}<div class="small text-muted mt-1" style="font-size: 0.8rem;">{{ doc.source_hint }}</div>{% endif %}
                               </div>
@@ -387,11 +430,11 @@
                                     <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.75rem;">{% trans "Загружено" %}</span>
                                     {% if doc.ocr_status %}
                                       {% if doc.ocr_status == 'pending' %}
-                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Распознавание..." %}</span>
+                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Проверяем файл..." %}</span>
                                       {% elif doc.ocr_status == 'success' %}
-                                        <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Распознано" %}</span>
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Данные считаны" %}</span>
                                       {% elif doc.ocr_status == 'failed' %}
-                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.75rem;">{% trans "Ошибка OCR" %}</span>
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.75rem;">{% trans "Проверим вручную" %}</span>
                                       {%   endif %}
                                     {% endif %}
                                     <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
@@ -401,7 +444,7 @@
                                       </a>
                                     {% endif %}
                                   {% else %}
-                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Ожидается" %}</span>
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Нужно загрузить" %}</span>
                                     {% if allow_doc_edit %}
                                       {% if doc.code == 'passport' %}
                                         <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">
@@ -455,9 +498,9 @@
                 <div class="d-flex justify-content-between gap-3 flex-wrap align-items-center">
                   <div class="min-w-0 flex-grow-1">
                     <div class="d-flex align-items-center gap-2 flex-wrap">
-                      <strong class="text-truncate" style="max-width: 220px;">{% trans "Приглашение на отпечатки пальцев (wezwanie)" %}</strong>
+                      <strong class="text-truncate" style="max-width: 220px;">{% trans "Письмо из ужонда / вызов на отпечатки" %}</strong>
                     </div>
-                    <div class="small text-muted mt-1" style="font-size: 0.8rem;">{% trans "Если ужонд прислал вызов на сдачу отпечатков, загрузите его здесь. После загрузки сотрудник получит уведомление." %}</div>
+                    <div class="small text-muted mt-1" style="font-size: 0.8rem;">{% trans "Если получили письмо из ужонда с датой отпечатков или дополнительными требованиями, загрузите его здесь." %}</div>
                   </div>
                   <div class="text-end flex-shrink-0">
                     <div class="d-flex align-items-center gap-2 justify-content-end">
@@ -471,7 +514,7 @@
                         <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash fingerprint_invitation_document.id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
                         {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFingerprintInvitationModal"><i class="bi bi-upload"></i> {% trans "Загрузить новый" %}</button>{% endif %}
                       {% else %}
-                        <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Если получили" %}</span>
+                        <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Загрузите, если получили" %}</span>
                         {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadFingerprintInvitationModal"><i class="bi bi-upload"></i> {% trans "Загрузить" %}</button>{% endif %}
                       {% endif %}
                     </div>
@@ -486,7 +529,7 @@
                     <div class="min-w-0 flex-grow-1">
                       <div class="d-flex align-items-center gap-2 flex-wrap">
                         <strong class="text-truncate" style="max-width: 220px;">{{ doc.label }}</strong>
-                        {% if doc.is_required %}<span class="badge bg-danger-subtle text-danger font-monospace" style="font-size: 0.65rem; border: 1px solid rgba(220,53,69,0.15)">{% trans "Обязательно" %}</span>{% endif %}
+                        {% if doc.is_required %}<span class="badge bg-danger-subtle text-danger font-monospace" style="font-size: 0.65rem; border: 1px solid rgba(220,53,69,0.15)">{% trans "Нужно" %}</span>{% endif %}
                       </div>
                       {% if doc.source_hint %}<div class="small text-muted mt-1" style="font-size: 0.8rem;">{{ doc.source_hint }}</div>{% endif %}
                     </div>
@@ -501,11 +544,11 @@
                           <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.75rem;">{% trans "Загружено" %}</span>
                           {% if doc.ocr_status %}
                             {% if doc.ocr_status == 'pending' %}
-                              <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Распознавание..." %}</span>
+                              <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Проверяем файл..." %}</span>
                             {% elif doc.ocr_status == 'success' %}
-                              <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Распознано" %}</span>
+                              <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Данные считаны" %}</span>
                             {% elif doc.ocr_status == 'failed' %}
-                              <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.75rem;">{% trans "Ошибка OCR" %}</span>
+                              <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.75rem;">{% trans "Проверим вручную" %}</span>
                             {% endif %}
                           {% endif %}
                           <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
@@ -515,7 +558,7 @@
                             </a>
                           {% endif %}
                         {% else %}
-                          <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Ожидается" %}</span>
+                          <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Нужно загрузить" %}</span>
                           {% if allow_doc_edit %}
                             {% if doc.code == 'passport' %}
                               <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">
@@ -602,7 +645,7 @@
             {% if allow_edit %}
               <button class="btn btn-primary mt-3" type="submit">{% trans "Сохранить изменения" %}</button>
             {% else %}
-              <span class="badge bg-secondary mt-3">{% trans "Профиль заблокирован для изменений" %}</span>
+              <span class="badge bg-secondary mt-3">{% trans "Изменения через менеджера" %}</span>
             {% endif %}
           </form>
         </div>
@@ -689,20 +732,20 @@ document.addEventListener("DOMContentLoaded", function () {
     <div class="modal-content">
       <form action="{% url 'clients:onboarding_document_upload' session.token_hash fingerprint_invitation_doc_type %}" method="post" enctype="multipart/form-data" class="onboarding-upload-form" data-no-autosave="true">
         {% csrf_token %}
-        <div class="modal-header"><h5 class="modal-title">{% trans "Загрузка приглашения на отпечатки" %}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-header"><h5 class="modal-title">{% trans "Загрузка письма из ужонда" %}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
         <div class="modal-body">
-          <div class="alert alert-info py-2 px-3 small mb-3"><i class="bi bi-info-circle-fill me-2"></i>{% trans "Загрузите wezwanie / вызов из ужонда с датой или информацией о сдаче отпечатков пальцев. После отправки сотрудник получит уведомление." %}</div>
-          <p class="text-muted small">{% trans "PDF, JPG, JPEG, PNG или WebP. Проверьте предпросмотр перед отправкой." %}</p>
+          <div class="alert alert-info py-2 px-3 small mb-3"><i class="bi bi-info-circle-fill me-2"></i>{% trans "Загрузите письмо/wezwanie из ужонда. Проверьте, что видны дата, номер дела и страницы с требованиями." %}</div>
+          <p class="text-muted small">{% trans "PDF, JPG, JPEG, PNG или WebP. Перед отправкой проверьте предпросмотр: документ должен быть читаемым и относиться к этому пункту." %}</p>
           <input type="file" name="file" class="form-control onboarding-upload-input" accept="application/pdf,image/jpeg,image/png,image/webp" required>
           <div class="onboarding-upload-preview d-none mt-3 border rounded p-2">
             <div class="small fw-bold mb-2" data-file-name></div>
             <img class="img-fluid rounded d-none" data-image-preview alt="{% trans 'Предпросмотр выбранного файла' %}">
             <object class="w-100 d-none" style="height: 360px;" type="application/pdf" data-pdf-preview></object>
-            <div class="small text-muted d-none" data-generic-preview>{% trans "Предпросмотр недоступен для этого типа файла. Проверьте имя файла перед отправкой." %}</div>
+            <div class="small text-muted d-none" data-generic-preview>{% trans "Предпросмотр недоступен для этого типа файла. Проверьте название файла и убедитесь, что выбрали правильный документ." %}</div>
           </div>
           <div class="form-check mt-3">
             <input class="form-check-input onboarding-upload-confirm" type="checkbox" value="1" id="confirmFingerprintInvitationUpload" disabled required>
-            <label class="form-check-label" for="confirmFingerprintInvitationUpload">{% trans "Я проверил предпросмотр и подтверждаю, что это правильный файл." %}</label>
+            <label class="form-check-label" for="confirmFingerprintInvitationUpload">{% trans "Я проверил(а) файл и подтверждаю, что это нужный документ." %}</label>
           </div>
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Отмена" %}</button><button type="submit" class="btn btn-primary onboarding-upload-submit" data-loading-text="{% trans 'Отправка...' %}" disabled>{% trans "Загрузить файл" %}</button></div>
@@ -721,17 +764,17 @@ document.addEventListener("DOMContentLoaded", function () {
             <div class="modal-header"><h5 class="modal-title">{% trans "Загрузка:" %} {{ doc.label }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
               {% if doc.source_hint %}<div class="alert alert-info py-2 px-3 small mb-3"><i class="bi bi-info-circle-fill me-2"></i>{{ doc.source_hint }}</div>{% endif %}
-              <p class="text-muted small">{% trans "PDF, JPG, JPEG, PNG или WebP. Проверьте предпросмотр перед отправкой." %}</p>
+              <p class="text-muted small">{% trans "PDF, JPG, JPEG, PNG или WebP. Перед отправкой проверьте предпросмотр: документ должен быть читаемым и относиться к этому пункту." %}</p>
               <input type="file" name="file" class="form-control onboarding-upload-input" accept="application/pdf,image/jpeg,image/png,image/webp" required>
               <div class="onboarding-upload-preview d-none mt-3 border rounded p-2">
                 <div class="small fw-bold mb-2" data-file-name></div>
                 <img class="img-fluid rounded d-none" data-image-preview alt="{% trans 'Предпросмотр выбранного файла' %}">
                 <object class="w-100 d-none" style="height: 360px;" type="application/pdf" data-pdf-preview></object>
-                <div class="small text-muted d-none" data-generic-preview>{% trans "Предпросмотр недоступен для этого типа файла. Проверьте имя файла перед отправкой." %}</div>
+                <div class="small text-muted d-none" data-generic-preview>{% trans "Предпросмотр недоступен для этого типа файла. Проверьте название файла и убедитесь, что выбрали правильный документ." %}</div>
               </div>
               <div class="form-check mt-3">
                 <input class="form-check-input onboarding-upload-confirm" type="checkbox" value="1" id="confirmUpload{{ doc.code|slugify }}" disabled required>
-                <label class="form-check-label" for="confirmUpload{{ doc.code|slugify }}">{% trans "Я проверил предпросмотр и подтверждаю, что это правильный файл." %}</label>
+                <label class="form-check-label" for="confirmUpload{{ doc.code|slugify }}">{% trans "Я проверил(а) файл и подтверждаю, что это нужный документ." %}</label>
               </div>
             </div>
             <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Отмена" %}</button><button type="submit" class="btn btn-primary onboarding-upload-submit" data-loading-text="{% trans 'Отправка...' %}" disabled>{% trans "Загрузить файл" %}</button></div>
@@ -763,7 +806,7 @@ document.addEventListener("DOMContentLoaded", function () {
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">{% trans "Образец документа: Приглашение на отпечатки пальцев" %}</h5>
+        <h5 class="modal-title">{% trans "Образец документа: письмо из ужонда / вызов на отпечатки" %}</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Закрыть' %}"></button>
       </div>
       <div class="modal-body text-center p-3">

@@ -190,6 +190,9 @@ def _build_start_context(
     allow_edit = _mos_data_is_editable(mos_data)
     contact_form_editable = _contact_form_is_editable(mos_data, contact_values)
     allow_doc_edit = _mos_documents_are_editable(mos_data)
+    docs_total_count = len(checklist)
+    docs_uploaded_count = sum(1 for doc in checklist if doc["is_uploaded"])
+    docs_required_pending_count = sum(1 for doc in checklist if doc["is_required"] and not doc["is_uploaded"])
 
     status_completed = mos_data is not None and mos_data.status in {
         "client_completed",
@@ -231,6 +234,9 @@ def _build_start_context(
         "contact_values": contact_values,
         "contact_errors": contact_errors or {},
         "contact_complete": contact_complete,
+        "docs_total_count": docs_total_count,
+        "docs_uploaded_count": docs_uploaded_count,
+        "docs_required_pending_count": docs_required_pending_count,
         "passport_complete": passport_complete,
         "travel_complete": travel_complete,
         **purpose_ctx,
