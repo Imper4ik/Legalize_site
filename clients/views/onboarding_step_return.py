@@ -33,13 +33,23 @@ def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
     if auth_redirect:
         return auth_redirect
 
-    mos_data, created = MOSApplicationData.objects.get_or_create(client=session.client)
-    if not onboarding_views._mos_data_is_editable(mos_data):
+    try:
+        mos_data = MOSApplicationData.objects.get(client=session.client)
+    except MOSApplicationData.DoesNotExist:
+        mos_data = MOSApplicationData(client=session.client)
+
+    if mos_data.pk and not onboarding_views._mos_data_is_editable(mos_data):
         return onboarding_views._locked_response(request, session)
 
-    digital_access, created_access = ClientDigitalAccess.objects.defer("pesel").get_or_create(client=session.client)
+    try:
+        digital_access = ClientDigitalAccess.objects.defer("pesel").get(client=session.client)
+    except ClientDigitalAccess.DoesNotExist:
+        digital_access = ClientDigitalAccess(client=session.client)
 
     if request.method == "POST":
+        mos_data, created = MOSApplicationData.objects.get_or_create(client=session.client)
+        digital_access, created_access = ClientDigitalAccess.objects.get_or_create(client=session.client)
+
         digital_access.has_pesel = request.POST.get("has_pesel") == "yes"
         digital_access.has_trusted_profile = request.POST.get("has_trusted_profile") == "yes"
         digital_access.has_mos_account = request.POST.get("has_mos_account") == "yes"
@@ -65,13 +75,16 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         return auth_redirect
 
     client = session.client
-    mos_data = get_object_or_404(MOSApplicationData, client=client)
+    try:
+        mos_data = MOSApplicationData.objects.get(client=client)
+    except MOSApplicationData.DoesNotExist:
+        mos_data = MOSApplicationData(client=client)
 
-    if not onboarding_views._mos_data_is_editable(mos_data):
+    if mos_data.pk and not onboarding_views._mos_data_is_editable(mos_data):
         return onboarding_views._locked_response(request, session)
 
-    dirty = False
-    personal_data = mos_data.personal_data or {}
+    # Prefill in-memory only (without saving) for rendering form
+    personal_data = dict(mos_data.personal_data or {})
     for key, val in [
         ("first_name", client.first_name),
         ("last_name", client.last_name),
@@ -81,26 +94,15 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
     ]:
         if val and (key not in personal_data or not personal_data[key]):
             personal_data[key] = val
-            dirty = True
 
     if client.birth_date and ("birth_date" not in personal_data or not personal_data["birth_date"]):
         personal_data["birth_date"] = client.birth_date.isoformat()
-        dirty = True
 
     mos_data.personal_data = personal_data
 
-    passport_data = mos_data.passport_data or {}
-    passport_num = safe_encrypted_attr(client, "passport_num")
-    if passport_num and ("document_number" not in passport_data or not passport_data["document_number"]):
-        passport_data["document_number"] = passport_num
-        dirty = True
-
-    mos_data.passport_data = passport_data
-
-    if dirty:
-        mos_data.save()
-
     if request.method == "POST":
+        # Ensure mos_data is saved to DB
+        mos_data, _ = MOSApplicationData.objects.get_or_create(client=client)
         action = request.POST.get("action", "")
         if action == "upload_passport" or request.FILES.get("passport_file"):
             passport_file = request.FILES.get("passport_file")
@@ -284,9 +286,16 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
             if mos_data.mos_purpose != selected_purpose:
                 mos_data.mos_purpose = selected_purpose
                 purpose_updated = True
-        legal_stay_str = request.POST.get("legal_stay_until")
+        legal_stay_str = request.POST.get("legal_stay_until", "").strip()
         if legal_stay_str:
-            mos_data.legal_stay_until = legal_stay_str
+            from django.utils.dateparse import parse_date
+            parsed_date = parse_date(legal_stay_str)
+            if parsed_date:
+                mos_data.legal_stay_until = parsed_date
+            else:
+                return HttpResponseBadRequest(_("Invalid date format for legal stay. Expected YYYY-MM-DD."))
+        else:
+            mos_data.legal_stay_until = None
 
         stay_data = mos_data.stay_data or {}
         stay_data["is_in_poland"] = request.POST.get("is_in_poland") == "yes"

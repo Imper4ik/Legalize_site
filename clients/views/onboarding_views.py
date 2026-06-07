@@ -2,7 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.db import transaction
 from django.utils import timezone, translation
 from django.utils.translation import gettext as _
-from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
+from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse, HttpResponseNotAllowed
 from django.urls import reverse
 from legalize_site.utils.http import request_is_ajax
 from legalize_site.utils.files import build_protected_file_response
@@ -132,9 +132,13 @@ def check_onboarding_session(
                     status="active",
                     expires_at=timezone.now() + timedelta(days=7),
                 )
+                MOSApplicationData.objects.get_or_create(client=client)
+                ClientDigitalAccess.objects.get_or_create(client=client)
             elif session.status == "created" and "active" in allowed_statuses:
                 session.status = "active"
                 session.save(update_fields=["status"])
+                MOSApplicationData.objects.get_or_create(client=client)
+                ClientDigitalAccess.objects.get_or_create(client=client)
             session.token_hash = "me"
             session.client = client
             return session
@@ -552,6 +556,8 @@ def onboarding_document_preview(request: HttpRequest, token: str, doc_id: int) -
 
 
 def onboarding_document_delete(request: HttpRequest, token: str, doc_id: int) -> HttpResponse:
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
     session = check_onboarding_session(token, request=request)
     if not session:
         return HttpResponseForbidden(_("Срок действия ссылки истёк или она недействительна."))
@@ -615,15 +621,16 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         return auth_redirect
 
     client = session.client
-    mos_data = get_object_or_404(MOSApplicationData, client=client)
+    try:
+        mos_data = MOSApplicationData.objects.get(client=client)
+    except MOSApplicationData.DoesNotExist:
+        mos_data = MOSApplicationData(client=client)
 
-    if not _mos_data_is_editable(mos_data):
+    if mos_data.pk and not _mos_data_is_editable(mos_data):
         return _locked_response(request, session)
 
-    pre_fill_mos_data_from_ocr(mos_data)
-
-    dirty = False
-    personal_data = mos_data.personal_data or {}
+    # Prefill in-memory only (without saving) for rendering form
+    personal_data = dict(mos_data.personal_data or {})
     for key, val in [
         ("first_name", client.first_name),
         ("last_name", client.last_name),
@@ -633,26 +640,14 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
     ]:
         if val and (key not in personal_data or not personal_data[key]):
             personal_data[key] = val
-            dirty = True
 
     if client.birth_date and ("birth_date" not in personal_data or not personal_data["birth_date"]):
         personal_data["birth_date"] = client.birth_date.isoformat()
-        dirty = True
 
     mos_data.personal_data = personal_data
 
-    passport_data = mos_data.passport_data or {}
-    passport_num = safe_encrypted_attr(client, "passport_num")
-    if passport_num and ("document_number" not in passport_data or not passport_data["document_number"]):
-        passport_data["document_number"] = passport_num
-        dirty = True
-
-    mos_data.passport_data = passport_data
-
-    if dirty:
-        mos_data.save()
-
     if request.method == "POST":
+        mos_data, _ = MOSApplicationData.objects.get_or_create(client=client)
 
         mos_data.status = "client_filling"
 
@@ -899,9 +894,10 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
     payment = client.payments.filter(status__in=["paid", "partial"]).first()
 
     with transaction.atomic():
+        mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
+        ClientDigitalAccess.objects.get_or_create(client=client)
         if selected_purpose:
             changed_fields = apply_onboarding_purpose_to_client(client, selected_purpose)
-            mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
             if mos_data.mos_purpose:
                 mos_data.mos_purpose = ""
                 mos_data.save(update_fields=["mos_purpose", "updated_at"])

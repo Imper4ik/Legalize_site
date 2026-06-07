@@ -270,6 +270,9 @@ class Client(SoftDeleteModel):
         family_group: Any
 
     class Meta:
+        permissions = [
+            ("view_sensitive_data", "Can view sensitive and encrypted PII data"),
+        ]
         indexes = [
             models.Index(fields=["assigned_staff", "status"], name="client_staff_status_idx"),
             models.Index(fields=["workflow_stage", "status"], name="client_workflow_status_idx"),

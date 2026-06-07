@@ -156,6 +156,95 @@ class ClientAdmin(admin.ModelAdmin):
     readonly_fields = ("archived_at",)
     actions = [archive_selected, restore_selected]
 
+    def case_number_masked(self, obj):
+        if not obj.case_number:
+            return "-"
+        val = str(obj.case_number)
+        if "-" in val:
+            parts = val.split("-")
+            return parts[0] + "-***-" + parts[-1]
+        return val[:3] + "***" + val[-4:] if len(val) > 7 else "***"
+    case_number_masked.short_description = "Номер дела (Masked)"
+
+    def passport_num_masked(self, obj):
+        from clients.security.encrypted import safe_encrypted_attr
+        val = safe_encrypted_attr(obj, "passport_num")
+        if not val:
+            return "-"
+        return val[:2] + "*" * (len(val) - 4) + val[-2:] if len(val) > 4 else "***"
+    passport_num_masked.short_description = "Номер паспорта (Masked)"
+
+    def phone_masked(self, obj):
+        if not obj.phone:
+            return "-"
+        val = str(obj.phone)
+        return val[:3] + "*" * (len(val) - 6) + val[-2:] if len(val) > 5 else "***"
+    phone_masked.short_description = "Телефон (Masked)"
+
+    def email_masked(self, obj):
+        if not obj.email:
+            return "-"
+        val = str(obj.email)
+        if "@" in val:
+            parts = val.split("@")
+            name, domain = parts[0], parts[1]
+            return name[:1] + "***@" + domain
+        return "***"
+    email_masked.short_description = "Email (Masked)"
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if not request.user.has_perm("clients.view_sensitive_data"):
+            for f in ["case_number_masked", "passport_num_masked", "phone_masked", "email_masked"]:
+                if f not in readonly:
+                    readonly.append(f)
+        return readonly
+
+    def get_list_display(self, request):
+        list_display = list(super().get_list_display(request))
+        if not request.user.has_perm("clients.view_sensitive_data"):
+            new_list_display = []
+            for f in list_display:
+                if f in ["case_number", "passport_num", "phone", "email"]:
+                    new_list_display.append(f"{f}_masked")
+                else:
+                    new_list_display.append(f)
+            return new_list_display
+        return list_display
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if not request.user.has_perm("clients.view_sensitive_data"):
+            new_fieldsets = []
+            for label, opts in fieldsets:
+                fields = list(opts.get("fields", []))
+                new_fields = []
+                for f in fields:
+                    if f in ["case_number", "passport_num", "phone", "email"]:
+                        new_fields.append(f"{f}_masked")
+                    else:
+                        new_fields.append(f)
+                new_opts = dict(opts)
+                new_opts["fields"] = new_fields
+                new_fieldsets.append((label, new_opts))
+            return new_fieldsets
+        return fieldsets
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        response = super().change_view(request, object_id, form_url, extra_context)
+        if object_id and request.user.has_perm("clients.view_sensitive_data"):
+            client = self.get_object(request, object_id)
+            if client:
+                from clients.services.activity import log_client_activity
+                log_client_activity(
+                    client=client,
+                    actor=request.user,
+                    event_type="client_viewed",
+                    summary=f"Staff viewed sensitive data for client {client.get_full_name()}",
+                    details="Viewed Client detail page in admin interface."
+                )
+        return response
+
     def get_queryset(self, request: HttpRequest) -> QuerySet[Client]:
         return Client.all_objects.select_related("company")
 
@@ -215,6 +304,56 @@ class EmailLogAdmin(admin.ModelAdmin):
         "error_message",
         "sent_by",
     )
+
+    def body_masked(self, obj):
+        return "*** MASKED ***"
+    body_masked.short_description = "Текст письма"
+
+    def recipients_masked(self, obj):
+        return "*** MASKED ***"
+    recipients_masked.short_description = "Получатели"
+
+    def error_message_masked(self, obj):
+        return "*** MASKED ***" if obj.error_message else ""
+    error_message_masked.short_description = "Ошибка доставки"
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if not request.user.has_perm("clients.view_sensitive_data"):
+            for f in ["body", "recipients", "error_message"]:
+                if f in readonly:
+                    readonly.remove(f)
+                masked_f = f"{f}_masked"
+                if masked_f not in readonly:
+                    readonly.append(masked_f)
+        return readonly
+
+    def get_fields(self, request, obj=None):
+        fields = list(super().get_fields(request, obj))
+        if not request.user.has_perm("clients.view_sensitive_data"):
+            new_fields = []
+            for f in fields:
+                if f in ["body", "recipients", "error_message"]:
+                    new_fields.append(f"{f}_masked")
+                else:
+                    new_fields.append(f)
+            return new_fields
+        return fields
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        response = super().change_view(request, object_id, form_url, extra_context)
+        if object_id and request.user.has_perm("clients.view_sensitive_data"):
+            log_obj = self.get_object(request, object_id)
+            if log_obj and log_obj.client:
+                from clients.services.activity import log_client_activity
+                log_client_activity(
+                    client=log_obj.client,
+                    actor=request.user,
+                    event_type="client_viewed",
+                    summary=f"Staff viewed sensitive email log (ID: {log_obj.id}) for client {log_obj.client.get_full_name()}",
+                    details=f"Viewed email with subject: {log_obj.subject}"
+                )
+        return response
 
     def has_add_permission(self, request: HttpRequest) -> bool:
         return False
@@ -282,6 +421,41 @@ class EmailCampaignAdmin(admin.ModelAdmin):
         "completed_at",
     )
 
+    def message_masked(self, obj):
+        return "*** MASKED ***"
+    message_masked.short_description = "Текст письма"
+
+    def recipient_emails_masked(self, obj):
+        return "*** MASKED ***"
+    recipient_emails_masked.short_description = "Получатели"
+
+    def error_details_masked(self, obj):
+        return "*** MASKED ***" if obj.error_details else ""
+    error_details_masked.short_description = "Детали ошибок"
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if not request.user.has_perm("clients.view_sensitive_data"):
+            for f in ["message", "recipient_emails", "error_details"]:
+                if f in readonly:
+                    readonly.remove(f)
+                masked_f = f"{f}_masked"
+                if masked_f not in readonly:
+                    readonly.append(masked_f)
+        return readonly
+
+    def get_fields(self, request, obj=None):
+        fields = list(super().get_fields(request, obj))
+        if not request.user.has_perm("clients.view_sensitive_data"):
+            new_fields = []
+            for f in fields:
+                if f in ["message", "recipient_emails", "error_details"]:
+                    new_fields.append(f"{f}_masked")
+                else:
+                    new_fields.append(f)
+            return new_fields
+        return fields
+
     def has_add_permission(self, request: HttpRequest) -> bool:
         return False
 
@@ -333,11 +507,66 @@ class ClientOnboardingSessionAdmin(admin.ModelAdmin):
     autocomplete_fields = ("client", "payment")
 
 
+def mask_json_pii(data, keys_to_mask):
+    if not isinstance(data, dict):
+        return data
+    masked = dict(data)
+    for k in keys_to_mask:
+        if k in masked and masked[k]:
+            val = str(masked[k])
+            if len(val) > 4:
+                masked[k] = val[:2] + "*" * (len(val) - 4) + val[-2:]
+            else:
+                masked[k] = "***"
+    return masked
+
 @admin.register(ClientDigitalAccess)
 class ClientDigitalAccessAdmin(admin.ModelAdmin):
     list_display = ("client", "has_pesel", "pesel_verified", "has_trusted_profile", "has_mos_account")
     search_fields = ("client__first_name", "client__last_name")
     autocomplete_fields = ("client",)
+
+    def pesel_masked(self, obj):
+        from clients.security.encrypted import safe_encrypted_attr
+        val = safe_encrypted_attr(obj, "pesel")
+        if not val:
+            return "-"
+        return val[:2] + "*" * (len(val) - 4) + val[-2:] if len(val) > 4 else "***"
+    pesel_masked.short_description = "PESEL"
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if not request.user.has_perm("clients.view_sensitive_data"):
+            if "pesel_masked" not in readonly:
+                readonly.append("pesel_masked")
+        return readonly
+
+    def get_fields(self, request, obj=None):
+        fields = list(super().get_fields(request, obj))
+        if not request.user.has_perm("clients.view_sensitive_data"):
+            new_fields = []
+            for f in fields:
+                if f == "pesel":
+                    new_fields.append("pesel_masked")
+                else:
+                    new_fields.append(f)
+            return new_fields
+        return fields
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        response = super().change_view(request, object_id, form_url, extra_context)
+        if object_id and request.user.has_perm("clients.view_sensitive_data"):
+            access = self.get_object(request, object_id)
+            if access and access.client:
+                from clients.services.activity import log_client_activity
+                log_client_activity(
+                    client=access.client,
+                    actor=request.user,
+                    event_type="client_viewed",
+                    summary=f"Staff viewed sensitive digital access details for client {access.client.get_full_name()}",
+                    details="Viewed ClientDigitalAccess detail page in admin interface."
+                )
+        return response
 
 
 @admin.register(MOSApplicationData)
@@ -347,6 +576,92 @@ class MOSApplicationDataAdmin(admin.ModelAdmin):
     search_fields = ("client__first_name", "client__last_name")
     autocomplete_fields = ("client", "staff_reviewed_by")
 
+    def _render_json_masked(self, data, mask_keys=None):
+        import json
+        from django.utils.safestring import mark_safe
+        if not data:
+            return "-"
+        if mask_keys:
+            data = mask_json_pii(data, mask_keys)
+        formatted = json.dumps(data, indent=2, ensure_ascii=False)
+        return mark_safe(f"<pre>{formatted}</pre>")
+
+    def personal_data_masked(self, obj):
+        return self._render_json_masked(obj.personal_data, ["first_name", "last_name", "phone", "email", "birth_date"])
+    personal_data_masked.short_description = "Personal data (Masked)"
+
+    def passport_data_masked(self, obj):
+        return self._render_json_masked(obj.passport_data, ["document_number"])
+    passport_data_masked.short_description = "Passport data (Masked)"
+
+    def address_data_masked(self, obj):
+        return self._render_json_masked(obj.address_data, ["street", "house_number", "apartment_number", "home_street", "home_city"])
+    address_data_masked.short_description = "Address data (Masked)"
+
+    def stay_data_masked(self, obj):
+        return self._render_json_masked(obj.stay_data)
+    stay_data_masked.short_description = "Stay data"
+
+    def previous_stays_masked(self, obj):
+        import json
+        from django.utils.safestring import mark_safe
+        return mark_safe(f"<pre>{json.dumps(obj.previous_stays, indent=2, ensure_ascii=False)}</pre>") if obj.previous_stays else "-"
+    previous_stays_masked.short_description = "Previous stays"
+
+    def travel_history_masked(self, obj):
+        import json
+        from django.utils.safestring import mark_safe
+        return mark_safe(f"<pre>{json.dumps(obj.travel_history, indent=2, ensure_ascii=False)}</pre>") if obj.travel_history else "-"
+    travel_history_masked.short_description = "Travel history"
+
+    def insurance_data_masked(self, obj):
+        return self._render_json_masked(obj.insurance_data)
+    insurance_data_masked.short_description = "Insurance data"
+
+    def financial_data_masked(self, obj):
+        return self._render_json_masked(obj.financial_data)
+    financial_data_masked.short_description = "Financial data"
+
+    def legal_declarations_masked(self, obj):
+        return self._render_json_masked(obj.legal_declarations)
+    legal_declarations_masked.short_description = "Legal declarations"
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if not request.user.has_perm("clients.view_sensitive_data"):
+            for f in ["personal_data", "passport_data", "address_data", "stay_data", "previous_stays", "travel_history", "insurance_data", "financial_data", "legal_declarations"]:
+                masked_f = f"{f}_masked"
+                if masked_f not in readonly:
+                    readonly.append(masked_f)
+        return readonly
+
+    def get_fields(self, request, obj=None):
+        fields = list(super().get_fields(request, obj))
+        if not request.user.has_perm("clients.view_sensitive_data"):
+            new_fields = []
+            for f in fields:
+                if f in ["personal_data", "passport_data", "address_data", "stay_data", "previous_stays", "travel_history", "insurance_data", "financial_data", "legal_declarations"]:
+                    new_fields.append(f"{f}_masked")
+                else:
+                    new_fields.append(f)
+            return new_fields
+        return fields
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        response = super().change_view(request, object_id, form_url, extra_context)
+        if object_id and request.user.has_perm("clients.view_sensitive_data"):
+            mos_data = self.get_object(request, object_id)
+            if mos_data and mos_data.client:
+                from clients.services.activity import log_client_activity
+                log_client_activity(
+                    client=mos_data.client,
+                    actor=request.user,
+                    event_type="client_viewed",
+                    summary=f"Staff viewed sensitive MOS application data for client {mos_data.client.get_full_name()}",
+                    details="Viewed MOSApplicationData detail page in admin interface."
+                )
+        return response
+
 
 @admin.register(PeselApplication)
 class PeselApplicationAdmin(admin.ModelAdmin):
@@ -354,6 +669,63 @@ class PeselApplicationAdmin(admin.ModelAdmin):
     list_filter = ("status",)
     search_fields = ("client__first_name", "client__last_name")
     autocomplete_fields = ("client", "staff_checked_by")
+
+    def _render_json_masked(self, data, mask_keys=None):
+        import json
+        from django.utils.safestring import mark_safe
+        if not data:
+            return "-"
+        if mask_keys:
+            data = mask_json_pii(data, mask_keys)
+        formatted = json.dumps(data, indent=2, ensure_ascii=False)
+        return mark_safe(f"<pre>{formatted}</pre>")
+
+    def pesel_form_data_masked(self, obj):
+        return self._render_json_masked(obj.pesel_form_data, ["first_name", "last_name", "phone", "email", "birth_date", "pesel"])
+    pesel_form_data_masked.short_description = "Form data (Masked)"
+
+    def generated_pdf_masked(self, obj):
+        return "[Protected]" if obj.generated_pdf else "-"
+    generated_pdf_masked.short_description = "Generated PDF"
+
+    def signed_scan_masked(self, obj):
+        return "[Protected]" if obj.signed_scan else "-"
+    signed_scan_masked.short_description = "Signed Scan"
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if not request.user.has_perm("clients.view_sensitive_data"):
+            for f in ["pesel_form_data_masked", "generated_pdf_masked", "signed_scan_masked"]:
+                if f not in readonly:
+                    readonly.append(f)
+        return readonly
+
+    def get_fields(self, request, obj=None):
+        fields = list(super().get_fields(request, obj))
+        if not request.user.has_perm("clients.view_sensitive_data"):
+            new_fields = []
+            for f in fields:
+                if f in ["pesel_form_data", "generated_pdf", "signed_scan"]:
+                    new_fields.append(f"{f}_masked")
+                else:
+                    new_fields.append(f)
+            return new_fields
+        return fields
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        response = super().change_view(request, object_id, form_url, extra_context)
+        if object_id and request.user.has_perm("clients.view_sensitive_data"):
+            pesel_app = self.get_object(request, object_id)
+            if pesel_app and pesel_app.client:
+                from clients.services.activity import log_client_activity
+                log_client_activity(
+                    client=pesel_app.client,
+                    actor=request.user,
+                    event_type="client_viewed",
+                    summary=f"Staff viewed sensitive PESEL application for client {pesel_app.client.get_full_name()}",
+                    details="Viewed PeselApplication detail page in admin interface."
+                )
+        return response
 
 
 @admin.register(ClientFamilyMemberMOS)

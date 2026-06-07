@@ -121,7 +121,10 @@ def _build_start_context(
     contact_errors: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     client = session.client
-    mos_data, _ = MOSApplicationData.objects.get_or_create(client=client)
+    try:
+        mos_data = MOSApplicationData.objects.get(client=client)
+    except MOSApplicationData.DoesNotExist:
+        mos_data = MOSApplicationData(client=client)
     purpose_ctx = _purpose_context(client, mos_data)
     effective_purpose = str(purpose_ctx["effective_purpose"])
     language = translation.get_language() or client.language
@@ -253,9 +256,13 @@ def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
         return auth_redirect
 
     client = session.client
-    mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
+    try:
+        mos_data = MOSApplicationData.objects.get(client=client)
+    except MOSApplicationData.DoesNotExist:
+        mos_data = MOSApplicationData(client=client)
 
     if request.method == "POST":
+        mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
         existing_contact_values = _contact_values_from_client(client, mos_data)
         if not _contact_form_is_editable(mos_data, existing_contact_values):
             return _locked_response(request, session)

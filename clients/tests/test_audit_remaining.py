@@ -162,3 +162,136 @@ class RemainingAuditHardeningTests(TestCase):
         self.assertIn("<strong>yes</strong>", cleaned)
         self.assertNotIn("onclick", cleaned)
         self.assertNotIn("<script", cleaned)
+
+    def test_onboarding_travel_validates_legal_stay_until(self):
+        from clients.models import ClientOnboardingSession, MOSApplicationData
+        from clients.services.onboarding_tokens import hash_onboarding_token
+        import uuid
+
+        client = Client.objects.create(first_name="Test", last_name="User", email="test-travel@example.com")
+        User = get_user_model()
+        user = User.objects.create_user(email=client.email, password="password123")
+        client.user = user
+        client.save()
+        self.client.force_login(user)
+
+        token = uuid.uuid4().hex
+        session = ClientOnboardingSession.objects.create(
+            client=client,
+            token_hash=hash_onboarding_token(token),
+            expires_at=timezone.now() + timedelta(days=1),
+        )
+
+        mos_data = client.mos_application_data
+        mos_data.status = "client_filling"
+        mos_data.save()
+
+        # Test valid date format
+        url = reverse("clients:onboarding_travel", kwargs={"token": token})
+        response = self.client.post(
+            url,
+            {
+                "legal_stay_until": "2026-12-31",
+                "is_in_poland": "yes",
+                "last_entry_date": "2026-01-01",
+                "stay_basis": "visa",
+                "was_in_poland_before": "no",
+                "has_insurance": "yes",
+                "has_stable_income": "yes",
+            }
+        )
+        self.assertEqual(response.status_code, 302)
+        mos_data.refresh_from_db()
+        self.assertEqual(mos_data.legal_stay_until.strftime("%Y-%m-%d"), "2026-12-31")
+
+        # Test invalid date format
+        response = self.client.post(
+            url,
+            {
+                "legal_stay_until": "not-a-date",
+                "is_in_poland": "yes",
+                "last_entry_date": "2026-01-01",
+                "stay_basis": "visa",
+                "was_in_poland_before": "no",
+                "has_insurance": "yes",
+                "has_stable_income": "yes",
+            }
+        )
+        self.assertEqual(response.status_code, 400)
+
+        # Test empty legal_stay_until (should clear/set to None)
+        response = self.client.post(
+            url,
+            {
+                "legal_stay_until": "",
+                "is_in_poland": "yes",
+                "last_entry_date": "2026-01-01",
+                "stay_basis": "visa",
+                "was_in_poland_before": "no",
+                "has_insurance": "yes",
+                "has_stable_income": "yes",
+            }
+        )
+        self.assertEqual(response.status_code, 302)
+        mos_data.refresh_from_db()
+        self.assertIsNone(mos_data.legal_stay_until)
+
+    def test_onboarding_document_delete_requires_post(self):
+        from clients.models import ClientOnboardingSession
+        from clients.services.onboarding_tokens import hash_onboarding_token
+        import uuid
+
+        client = Client.objects.create(first_name="Test", last_name="User", email="test-doc-del@example.com")
+        User = get_user_model()
+        user = User.objects.create_user(email=client.email, password="password123")
+        client.user = user
+        client.save()
+        self.client.force_login(user)
+
+        token = uuid.uuid4().hex
+        session = ClientOnboardingSession.objects.create(
+            client=client,
+            token_hash=hash_onboarding_token(token),
+            expires_at=timezone.now() + timedelta(days=1),
+        )
+        doc = Document.objects.create(
+            client=client,
+            document_type=DocumentType.PASSPORT.value,
+        )
+
+        # Test GET method is rejected
+        url = reverse("clients:onboarding_document_delete", kwargs={"token": token, "doc_id": doc.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 405) # Method Not Allowed
+
+        # Test POST method is accepted
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Document.objects.filter(pk=doc.pk).exists())
+
+    def test_document_pii_scrubbing_masks_nip_and_clears_detected_names(self):
+        client = Client.objects.create(first_name="Test", last_name="User", email="test@example.com")
+        doc = Document.objects.create(
+            client=client,
+            document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+            parsed_data={
+                "employer_nip": "1234567890",
+                "detected_names": ["Test User", "Employer Name"],
+                "full_name": "Test User",
+                "text": "Raw OCR text of ZUS document",
+            }
+        )
+
+        # Trigger scrub_parsed_pii
+        doc.scrub_parsed_pii()
+
+        # Check that PII keys are removed/scrubbed
+        self.assertNotIn("full_name", doc.parsed_data)
+        self.assertNotIn("text", doc.parsed_data)
+
+        # Check that NIP is masked keeping first 2 and last 2 characters
+        self.assertEqual(doc.parsed_data["employer_nip"], "12******90")
+
+        # Check that detected_names is cleared (empty list)
+        self.assertEqual(doc.parsed_data["detected_names"], [])
+        self.assertTrue(doc.parsed_data.get("pii_scrubbed"))

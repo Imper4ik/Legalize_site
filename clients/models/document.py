@@ -300,6 +300,20 @@ class Document(SoftDeleteModel):
                 scrubbed = True
                 removed_raw_text = removed_raw_text or key in PARSED_DATA_RAW_TEXT_KEYS
 
+        if "employer_nip" in self.parsed_data:
+            val = str(self.parsed_data["employer_nip"])
+            if val:
+                val_clean = "".join(c for c in val if c.isdigit())
+                if len(val_clean) > 4:
+                    self.parsed_data["employer_nip"] = val_clean[:2] + "*" * (len(val_clean) - 4) + val_clean[-2:]
+                else:
+                    self.parsed_data["employer_nip"] = "***"
+                scrubbed = True
+
+        if "detected_names" in self.parsed_data:
+            self.parsed_data["detected_names"] = []
+            scrubbed = True
+
         self.parsed_data["pii_scrubbed"] = True
         if removed_raw_text:
             self.parsed_data["raw_text_removed"] = True
