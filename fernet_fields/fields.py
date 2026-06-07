@@ -46,6 +46,15 @@ class EncryptedTextField(models.TextField):
     def _fernet(self) -> Fernet | MultiFernet:
         return _build_fernet()
 
+    def clean(self, value: Any, model_instance: models.Model) -> Any:
+        if value == ENCRYPTED_VALUE_UNAVAILABLE:
+            from django.core.exceptions import ValidationError
+            raise ValidationError(
+                "This value is currently unavailable due to decryption failure. "
+                "Saving it would permanently overwrite and lose the original data."
+            )
+        return super().clean(value, model_instance)
+
     def get_prep_value(self, value: Any) -> Any:
         if isinstance(value, EncryptedValueUnavailable):
             return value.raw_value

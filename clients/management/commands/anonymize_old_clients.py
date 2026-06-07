@@ -79,7 +79,7 @@ class Command(BaseCommand):
                 for doc in documents:
                     if doc.file:
                         doc.file.delete(save=False) # Physical file deletion
-                    doc.delete() # Database record deletion
+                    doc.delete(hard=True) # Database record deletion
                     docs_deleted += 1
 
                 client.save()

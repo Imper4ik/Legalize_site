@@ -100,9 +100,15 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
 
     mos_data.personal_data = personal_data
 
+    passport_data = dict(mos_data.passport_data or {})
+    passport_num_val = safe_encrypted_attr(client, "passport_num")
+    if passport_num_val and ("document_number" not in passport_data or not passport_data["document_number"]):
+        passport_data["document_number"] = passport_num_val
+    mos_data.passport_data = passport_data
+
     if request.method == "POST":
         # Ensure mos_data is saved to DB
-        mos_data, _ = MOSApplicationData.objects.get_or_create(client=client)
+        mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
         action = request.POST.get("action", "")
         if action == "upload_passport" or request.FILES.get("passport_file"):
             passport_file = request.FILES.get("passport_file")
