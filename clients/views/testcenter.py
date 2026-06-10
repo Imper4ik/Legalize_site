@@ -60,7 +60,8 @@ def testcenter_view(request: HttpRequest) -> HttpResponse:
             messages.error(request, f"Unknown Test Center mode: {mode}")
             return redirect("clients:test_center")
 
-        test_run = run_e2e_scenarios(mode=mode, started_by=request.user, cleanup=True)
+        keep_data = request.POST.get("keep_data") == "yes"
+        test_run = run_e2e_scenarios(mode=mode, started_by=request.user, cleanup=not keep_data)
         _audit_event(
             request,
             StaffAuditEvent.EVENT_TEST_CENTER_RUN,
@@ -71,9 +72,16 @@ def testcenter_view(request: HttpRequest) -> HttpResponse:
                 "status": test_run.status,
                 "total_checks": test_run.total_checks,
                 "failed_checks": test_run.failed_checks,
+                "keep_data": keep_data,
             },
         )
-        messages.success(request, f"Test Run #{test_run.pk} completed with status {test_run.status}.")
+        if keep_data:
+            messages.success(
+                request,
+                f"Test Run #{test_run.pk} completed ({test_run.status}). Test data preserved in database. Use links below to inspect."
+            )
+        else:
+            messages.success(request, f"Test Run #{test_run.pk} completed with status {test_run.status}.")
         return redirect(f"{request.path}?run_id={test_run.pk}")
 
     selected_run = None

@@ -11,11 +11,18 @@
       <h2 class="h5 mb-3">Run Scenarios</h2>
       <div class="d-grid gap-2">
         {% for mode in modes %}
-        <form method="post">
+        <form method="post" class="border rounded p-3 mb-2">
           {% csrf_token %}
           <input type="hidden" name="mode" value="{{ mode }}">
-          <button type="submit" class="btn btn-primary w-100 text-start">
-            Run {{ mode }} test
+          <h3 class="h6 mb-2">Mode: {{ mode|title }}</h3>
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="keep_data" value="yes" id="keepData{{ mode }}">
+            <label class="form-check-label small" for="keepData{{ mode }}">
+              Keep data in DB for manual review
+            </label>
+          </div>
+          <button type="submit" class="btn btn-primary w-100">
+            Run {{ mode }} scenarios
           </button>
         </form>
         {% endfor %}
@@ -260,6 +267,7 @@
               <th>Status</th>
               <th>Expected</th>
               <th>Actual</th>
+              <th>Related Object</th>
             </tr>
           </thead>
           <tbody>
@@ -278,10 +286,23 @@
               </td>
               <td class="small">{{ result.expected_result|truncatechars:160 }}</td>
               <td class="small">{{ result.actual_result|truncatechars:160 }}</td>
+              <td>
+                {% if result.related_client %}
+                <a href="{% url 'clients:client_detail' pk=result.related_client.id %}" target="_blank" class="btn btn-xs btn-outline-primary py-0 px-1" style="font-size: 0.75rem;">
+                  Client: {{ result.related_client.get_full_name }}
+                </a>
+                {% endif %}
+                {% if result.related_document %}
+                {% if result.related_client %}<br>{% endif %}
+                <a href="{% url 'clients:document_preview' doc_id=result.related_document.id %}" target="_blank" class="btn btn-xs btn-outline-secondary py-0 px-1" style="font-size: 0.75rem;">
+                  Doc: {{ result.related_document.document_type }}
+                </a>
+                {% endif %}
+              </td>
             </tr>
             {% empty %}
             <tr>
-              <td colspan="4" class="text-muted">No scenario results yet.</td>
+              <td colspan="5" class="text-muted">No scenario results yet.</td>
             </tr>
             {% endfor %}
           </tbody>
