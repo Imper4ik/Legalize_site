@@ -63,6 +63,8 @@ class EmailLog(models.Model):
         verbose_name=_("Отправитель"),
     )
 
+    is_test_data = models.BooleanField(default=False, db_index=True)
+
     class Meta:
         ordering = ["-sent_at"]
         verbose_name = _("Журнал email")

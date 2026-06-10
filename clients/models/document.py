@@ -182,6 +182,8 @@ class Document(SoftDeleteModel):
         verbose_name=_("Распознанные данные"),
     )
 
+    is_test_data = models.BooleanField(default=False, db_index=True)
+
     if TYPE_CHECKING:
         _preloaded_version_count: int
         _preloaded_requirement: DocumentRequirement | None

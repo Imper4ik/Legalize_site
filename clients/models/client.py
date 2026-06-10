@@ -258,6 +258,7 @@ class Client(SoftDeleteModel):
         null=True,
         blank=True,
     )
+    is_test_data = models.BooleanField(default=False, db_index=True)
 
     if TYPE_CHECKING:
         health_awaiting_confirmation_count: int

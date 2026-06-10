@@ -93,6 +93,7 @@ def _reserve_idempotent_email_send(
         "sent_by": real_sent_by,
         "delivery_status": EmailLog.DELIVERY_STATUS_QUEUED,
         "error_message": "",
+        "is_test_data": bool(getattr(client, "is_test_data", False)),
     }
     blocking_statuses = {
         EmailLog.DELIVERY_STATUS_QUEUED,
@@ -262,6 +263,7 @@ def _log_email(
             "sent_by": real_sent_by,
             "delivery_status": delivery_status,
             "error_message": error_message,
+            "is_test_data": bool(getattr(client, "is_test_data", False)),
         }
         if idempotency_key:
             with transaction.atomic():

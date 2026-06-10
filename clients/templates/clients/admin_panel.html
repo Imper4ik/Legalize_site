@@ -195,6 +195,9 @@
         <h5 class="card-title">{% translate "Система" %}</h5>
         <p class="text-muted">{% translate "Мониторинг работоспособности сервера, проверка подключения к базе данных, фоновых задач и технического состояния системы." %}</p>
         <a href="{% url 'clients:admin_dashboard' %}" class="btn btn-outline-secondary">{% translate "Здоровье системы" %}</a>
+        {% if test_center_available %}
+        <a href="{% url 'clients:test_center' %}" class="btn btn-outline-danger ms-2">Test Center</a>
+        {% endif %}
       </div>
     </div>
   </div>

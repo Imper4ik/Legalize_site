@@ -26,6 +26,8 @@ from .models import (
     PeselApplication,
     ClientFamilyMemberMOS,
     DocumentRequirement,
+    TestRun,
+    TestScenarioResult,
 )
 
 if TYPE_CHECKING:
@@ -114,7 +116,7 @@ class PaymentInline(admin.TabularInline):
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
     list_display = ("client", "service_description", "total_amount", "status", "due_date", "archived_at", "created_at")
-    list_filter = ("status", "service_description", "due_date", "archived_at")
+    list_filter = ("status", "service_description", "due_date", "is_test_data", "archived_at")
     search_fields = ("client__first_name", "client__last_name", "transaction_id")
     actions = [archive_selected, restore_selected]
 
@@ -139,7 +141,7 @@ class ClientAdmin(admin.ModelAdmin):
         "archived_at",
         "created_at",
     )
-    list_filter = ("company", "status", "workflow_stage", "application_purpose", "family_role", "language", "archived_at")
+    list_filter = ("company", "status", "workflow_stage", "application_purpose", "family_role", "language", "is_test_data", "archived_at")
     search_fields = ("first_name", "last_name", "email", "phone", "notes", "company__name")
     fieldsets = (
         (
@@ -259,6 +261,7 @@ class DocumentAdmin(admin.ModelAdmin):
         "ocr_status",
         "zus_period_month",
         "uploaded_at",
+        "is_test_data",
         "archived_at",
     )
     list_filter = (
@@ -267,6 +270,7 @@ class DocumentAdmin(admin.ModelAdmin):
         "awaiting_confirmation",
         "ocr_status",
         "zus_period_month",
+        "is_test_data",
         "archived_at",
     )
     search_fields = ("client__first_name", "client__last_name")
@@ -289,7 +293,7 @@ class ReminderAdmin(admin.ModelAdmin):
 @admin.register(EmailLog)
 class EmailLogAdmin(admin.ModelAdmin):
     list_display = ("sent_at", "client", "template_type", "delivery_status", "subject", "sent_by")
-    list_filter = ("delivery_status", "template_type", "sent_at")
+    list_filter = ("delivery_status", "template_type", "is_test_data", "sent_at")
     search_fields = ("subject", "client__first_name", "client__last_name", "client__email", "sent_by__email")
     autocomplete_fields = ("client", "sent_by")
     readonly_fields = (
@@ -740,4 +744,68 @@ class DocumentRequirementAdmin(admin.ModelAdmin):
     list_display = ("application_purpose", "document_type", "custom_name", "is_required", "position")
     list_filter = ("application_purpose", "is_required")
     search_fields = ("document_type", "custom_name")
+
+
+@admin.register(TestRun)
+class TestRunAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "mode",
+        "status",
+        "started_by",
+        "started_at",
+        "finished_at",
+        "total_checks",
+        "passed_checks",
+        "failed_checks",
+        "skipped_checks",
+    )
+    list_filter = ("mode", "status", "is_test_data", "started_at")
+    search_fields = ("id", "started_by__email")
+    readonly_fields = (
+        "mode",
+        "status",
+        "started_by",
+        "started_at",
+        "finished_at",
+        "total_checks",
+        "passed_checks",
+        "failed_checks",
+        "skipped_checks",
+        "report_json",
+        "is_test_data",
+    )
+
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        return False
+
+    def has_change_permission(self, request: HttpRequest, obj: Any = None) -> bool:
+        return False
+
+
+@admin.register(TestScenarioResult)
+class TestScenarioResultAdmin(admin.ModelAdmin):
+    list_display = ("created_at", "test_run", "scenario_name", "status", "related_client", "related_document")
+    list_filter = ("status", "is_test_data", "created_at")
+    search_fields = ("scenario_name", "expected_result", "actual_result", "error_message")
+    autocomplete_fields = ("test_run", "related_client", "related_document")
+    readonly_fields = (
+        "test_run",
+        "scenario_name",
+        "status",
+        "expected_result",
+        "actual_result",
+        "error_message",
+        "related_client",
+        "related_case_identifier",
+        "related_document",
+        "created_at",
+        "is_test_data",
+    )
+
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        return False
+
+    def has_change_permission(self, request: HttpRequest, obj: Any = None) -> bool:
+        return False
 

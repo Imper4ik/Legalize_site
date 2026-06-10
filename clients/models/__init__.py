@@ -20,6 +20,7 @@ from .permissions import EmployeePermission, StaffAuditEvent
 from .wniosek import WniosekAttachment, WniosekSubmission
 from .onboarding import ClientOnboardingSession, ClientDigitalAccess, MOSApplicationData, PeselApplication
 from .family_mos import ClientFamilyMemberMOS
+from .testing import TestRun, TestScenarioResult
 
 
 __all__ = [
@@ -53,4 +54,6 @@ __all__ = [
     'MOSApplicationData',
     'PeselApplication',
     'ClientFamilyMemberMOS',
+    'TestRun',
+    'TestScenarioResult',
 ]

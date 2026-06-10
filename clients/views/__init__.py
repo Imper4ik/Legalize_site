@@ -40,6 +40,7 @@ from clients.views.onboarding_step_return import (
     onboarding_travel,
     onboarding_declarations,
 )
+from clients.views.testcenter import testcenter_view
 
 enable_token_link_access()
 

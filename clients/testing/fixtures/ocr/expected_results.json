@@ -1,0 +1,27 @@
+{
+  "wezwanie_clean.pdf": {
+    "document_type": "wezwanie",
+    "client_name": "Test Client",
+    "office": "Mazowiecki Urzad Wojewodzki",
+    "letter_date": "2026-06-01",
+    "deadline": "2026-06-15",
+    "required_documents": [
+      "ZUS RCA",
+      "umowa",
+      "potwierdzenie oplaty"
+    ]
+  },
+  "zus_rca_good.pdf": {
+    "document_type": "zus_rca",
+    "period_month": "2026-04-01",
+    "status": "valid"
+  },
+  "zus_rca_wrong_month.pdf": {
+    "document_type": "zus_rca",
+    "period_month": "2026-03-01",
+    "status": "wrong_period"
+  },
+  "unreadable_scan.jpg": {
+    "status": "needs_review"
+  }
+}

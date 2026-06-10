@@ -40,6 +40,8 @@ class Payment(SoftDeleteModel):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Создано"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Обновлено"))
 
+    is_test_data = models.BooleanField(default=False, db_index=True)
+
     @property
     def amount_due(self) -> Decimal:
         total = Decimal(str(self.total_amount)) if self.total_amount is not None else Decimal("0.00")

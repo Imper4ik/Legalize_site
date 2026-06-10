@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
+from django.conf import settings
 from django.contrib import messages
 from django.db.models import Sum
 from django.http import HttpRequest, HttpResponse
@@ -65,6 +66,10 @@ class AdminPanelView(RoleRequiredMixin, TemplateView):
         context["decisions_received"] = Client.objects.filter(decision_date__isnull=False).count()
         context["active_reminders"] = Reminder.objects.filter(is_active=True).count()
         context["total_price_sum"] = ServicePrice.objects.aggregate(total=Sum("price")).get("total") or 0
+        context["test_center_available"] = bool(
+            getattr(self.request.user, "is_superuser", False)
+            and getattr(settings, "ENABLE_TEST_CENTER", False)
+        )
         return context
 
 

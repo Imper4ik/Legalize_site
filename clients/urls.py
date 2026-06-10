@@ -119,6 +119,7 @@ urlpatterns = [
     path('settings/submissions/', views.submission_manage_view, name='submission_manage'),
     path('settings/staff/', views.staff_manage_view, name='staff_manage'),
     path('settings/roles/', views.role_manage_view, name='role_manage'),
+    path('test-center/', views.testcenter_view, name='test_center'),
 
     # Onboarding / MOS Intake
     path('client/<int:client_id>/generate-onboarding-link/', views.generate_onboarding_link, name='generate_onboarding_link'),
