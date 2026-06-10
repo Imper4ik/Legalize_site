@@ -12,6 +12,7 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.test import override_settings
+from django.utils.translation import gettext as _
 
 from clients.models import TestRun
 from clients.testing.assertions import ScenarioRecorder
@@ -25,9 +26,9 @@ TEST_CENTER_LOCK_KEY = "test_center:run_or_cleanup"
 
 def ensure_test_center_enabled(*, user: Any | None = None) -> None:
     if not getattr(settings, "ENABLE_TEST_CENTER", False):
-        raise PermissionDenied("Test Center is disabled.")
+        raise PermissionDenied(_("Test Center is disabled."))
     if user is not None and not getattr(user, "is_superuser", False):
-        raise PermissionDenied("Test Center requires a superuser.")
+        raise PermissionDenied(_("Test Center requires a superuser."))
 
 
 def available_modes() -> list[str]:
@@ -38,7 +39,7 @@ def available_modes() -> list[str]:
 def testcenter_lock() -> Any:
     acquired = cache.add(TEST_CENTER_LOCK_KEY, "1", timeout=60 * 60)
     if not acquired:
-        raise RuntimeError("Another Test Center run or cleanup is already in progress.")
+        raise RuntimeError(_("Another Test Center run or cleanup is already in progress."))
     try:
         yield
     finally:
@@ -53,7 +54,7 @@ def run_e2e_scenarios(
 ) -> TestRun:
     ensure_test_center_enabled(user=started_by if started_by is not None else None)
     if mode not in SCENARIO_GROUPS:
-        raise ValueError(f"Unknown Test Center mode: {mode}")
+        raise ValueError(_("Unknown Test Center mode: %(mode)s") % {"mode": mode})
 
     with testcenter_lock():
         test_run = TestRun.objects.create(

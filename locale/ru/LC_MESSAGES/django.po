@@ -9429,6 +9429,200 @@ msgstr "пользователь"
 msgid "users"
 msgstr "пользователи"
 
+msgid "Test Center"
+msgstr "Тест-центр"
+
+msgid "Protected E2E regression checks for test data only."
+msgstr ""
+"Защищенные сквозные регрессионные проверки только для тестовых данных."
+
+msgid "Run Scenarios"
+msgstr "Запуск сценариев"
+
+msgid "Mode"
+msgstr "Режим"
+
+msgid "Smoke"
+msgstr "Smoke"
+
+msgid "Full"
+msgstr "Полный"
+
+msgid "OCR"
+msgstr "OCR"
+
+msgid "ZUS"
+msgstr "ZUS"
+
+msgid "Permissions"
+msgstr "Разрешения"
+
+msgid "Security"
+msgstr "Безопасность"
+
+msgid "Workflow"
+msgstr "Процесс"
+
+msgid "Keep data in DB for manual review"
+msgstr "Сохранять данные в БД для ручной проверки"
+
+msgid "Run smoke scenarios"
+msgstr "Запустить smoke-сценарии"
+
+msgid "Run full scenarios"
+msgstr "Запустить полные сценарии"
+
+msgid "Run ocr scenarios"
+msgstr "Запустить OCR-сценарии"
+
+msgid "Run email scenarios"
+msgstr "Запустить сценарии почты"
+
+msgid "Run zus scenarios"
+msgstr "Запустить сценарии ZUS"
+
+msgid "Run documents scenarios"
+msgstr "Запустить сценарии документов"
+
+msgid "Run permissions scenarios"
+msgstr "Запустить сценарии разрешений"
+
+msgid "Run security scenarios"
+msgstr "Запустить сценарии безопасности"
+
+msgid "Run workflow scenarios"
+msgstr "Запустить сценарии процессов"
+
+msgid "Run %(mode)s scenarios"
+msgstr "Запустить сценарии %(mode)s"
+
+msgid "Clean Test Data"
+msgstr "Очистка тестовых данных"
+
+msgid "Delete only records marked as test data"
+msgstr "Удалять только записи, помеченные как тестовые данные"
+
+msgid "Clean test data"
+msgstr "Очистить тестовые данные"
+
+msgid "Test Run"
+msgstr "Тестовый запуск"
+
+msgid "passed"
+msgstr "успешно"
+
+msgid "failed"
+msgstr "провалено"
+
+msgid "Total"
+msgstr "Всего"
+
+msgid "Passed"
+msgstr "Успешно"
+
+msgid "Workflow E2E Progress Journey"
+msgstr "Путь выполнения сквозного процесса"
+
+msgid "Onboarding"
+msgstr "Онбординг"
+
+msgid "Invite & Intake"
+msgstr "Приглашение и сбор данных"
+
+msgid "Docs & OCR"
+msgstr "Документы и OCR"
+
+msgid "Upload & Extract"
+msgstr "Загрузка и извлечение"
+
+msgid "ZUS & Insurance"
+msgstr "ZUS и страхование"
+
+msgid "Audits & Expiry"
+msgstr "Аудит и сроки"
+
+msgid "Security & Access"
+msgstr "Безопасность и доступ"
+
+msgid "State & Audit log"
+msgstr "Состояние и журнал аудита"
+
+msgid "Scenario"
+msgstr "Сценарий"
+
+msgid "Expected"
+msgstr "Ожидалось"
+
+msgid "Actual"
+msgstr "Фактически"
+
+msgid "Related Object"
+msgstr "Связанный объект"
+
+msgid "Doc"
+msgstr "Документ"
+
+msgid "No scenario results yet."
+msgstr "Результатов сценариев пока нет."
+
+msgid "No Test Center runs yet."
+msgstr "Запусков Тест-центра пока не было."
+
+msgid "Recent Runs"
+msgstr "Недавние запуски"
+
+msgid "No runs."
+msgstr "Запусков нет."
+
+msgid "Test Center is disabled."
+msgstr "Тест-центр отключен."
+
+msgid "Test Center requires a superuser."
+msgstr "Для использования Тест-центра требуются права суперпользователя."
+
+msgid "Another Test Center run or cleanup is already in progress."
+msgstr "Другой запуск или очистка Тест-центра уже выполняется."
+
+msgid "Unknown Test Center mode: %(mode)s"
+msgstr "Неизвестный режим Тест-центра: %(mode)s"
+
+msgid "Test Center is not available."
+msgstr "Тест-центр недоступен."
+
+msgid "Confirm cleanup before deleting test data."
+msgstr "Подтвердите очистку перед удалением тестовых данных."
+
+msgid "Test data cleanup completed."
+msgstr "Очистка тестовых данных завершена."
+
+msgid ""
+"Test Run #%(run_id)s completed (%(status)s). Test data preserved in "
+"database. Use links below to inspect."
+msgstr ""
+"Тестовый запуск #%(run_id)s завершен (%(status)s). Тестовые данные сохранены"
+" в базе данных. Используйте ссылки ниже для проверки."
+
+msgid "Test Run #%(run_id)s completed with status %(status)s."
+msgstr "Тестовый запуск #%(run_id)s завершен со статусом %(status)s."
+
+msgid "Back to Admin Panel"
+msgstr "Вернуться в админ-панель"
+
+msgid "Expand All Logs"
+msgstr "Развернуть все логи"
+
+msgid "Collapse All Logs"
+msgstr "Свернуть все логи"
+
+msgid "View details"
+msgstr "Показать детали"
+
+msgid "Error"
+msgstr "Ошибка"
+
+msgid "Details"
+msgstr "Детали"
+
 #~ msgid ""
 #~ "Пожалуйста, загрузите сканы или качественные фото требуемых документов."
 #~ msgstr ""

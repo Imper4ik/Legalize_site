@@ -9444,6 +9444,200 @@ msgstr "użytkownik"
 msgid "users"
 msgstr "użytkownicy"
 
+msgid "Test Center"
+msgstr "Test Center"
+
+msgid "Protected E2E regression checks for test data only."
+msgstr "Chronione testy regresyjne E2E tylko dla danych testowych."
+
+msgid "Run Scenarios"
+msgstr "Uruchom scenariusze"
+
+msgid "Mode"
+msgstr "Tryb"
+
+msgid "Smoke"
+msgstr "Smoke"
+
+msgid "Full"
+msgstr "Pełny"
+
+msgid "OCR"
+msgstr "OCR"
+
+msgid "ZUS"
+msgstr "ZUS"
+
+msgid "Permissions"
+msgstr "Uprawnienia"
+
+msgid "Security"
+msgstr "Bezpieczeństwo"
+
+msgid "Workflow"
+msgstr "Przebieg"
+
+msgid "Keep data in DB for manual review"
+msgstr "Zachowaj dane w bazie do ręcznej weryfikacji"
+
+msgid "Run smoke scenarios"
+msgstr "Uruchom scenariusze smoke"
+
+msgid "Run full scenarios"
+msgstr "Uruchom pełne scenariusze"
+
+msgid "Run ocr scenarios"
+msgstr "Uruchom scenariusze ocr"
+
+msgid "Run email scenarios"
+msgstr "Uruchom scenariusze email"
+
+msgid "Run zus scenarios"
+msgstr "Uruchom scenariusze zus"
+
+msgid "Run documents scenarios"
+msgstr "Uruchom scenariusze dokumentów"
+
+msgid "Run permissions scenarios"
+msgstr "Uruchom scenariusze uprawnień"
+
+msgid "Run security scenarios"
+msgstr "Uruchom scenariusze bezpieczeństwa"
+
+msgid "Run workflow scenarios"
+msgstr "Uruchom scenariusze przebiegu"
+
+msgid "Run %(mode)s scenarios"
+msgstr "Uruchom scenariusze %(mode)s"
+
+msgid "Clean Test Data"
+msgstr "Wyczyść dane testowe"
+
+msgid "Delete only records marked as test data"
+msgstr "Usuń tylko rekordy oznaczone jako dane testowe"
+
+msgid "Clean test data"
+msgstr "Wyczyść dane testowe"
+
+msgid "Test Run"
+msgstr "Uruchomienie testowe"
+
+msgid "passed"
+msgstr "zaliczony"
+
+msgid "failed"
+msgstr "niezaliczony"
+
+msgid "Total"
+msgstr "Razem"
+
+msgid "Passed"
+msgstr "Zaliczono"
+
+msgid "Workflow E2E Progress Journey"
+msgstr "Przebieg procesu E2E"
+
+msgid "Onboarding"
+msgstr "Wdrażanie"
+
+msgid "Invite & Intake"
+msgstr "Zaproszenie i przyjęcie"
+
+msgid "Docs & OCR"
+msgstr "Dokumenty i OCR"
+
+msgid "Upload & Extract"
+msgstr "Przesyłanie i odczyt"
+
+msgid "ZUS & Insurance"
+msgstr "ZUS i ubezpieczenie"
+
+msgid "Audits & Expiry"
+msgstr "Audyty i ważność"
+
+msgid "Security & Access"
+msgstr "Bezpieczeństwo i dostęp"
+
+msgid "State & Audit log"
+msgstr "Stan i dziennik audytu"
+
+msgid "Scenario"
+msgstr "Scenariusz"
+
+msgid "Expected"
+msgstr "Oczekiwany"
+
+msgid "Actual"
+msgstr "Rzeczywisty"
+
+msgid "Related Object"
+msgstr "Powiązany obiekt"
+
+msgid "Doc"
+msgstr "Dokument"
+
+msgid "No scenario results yet."
+msgstr "Brak wyników scenariuszy."
+
+msgid "No Test Center runs yet."
+msgstr "Brak dotychczasowych uruchomień Test Center."
+
+msgid "Recent Runs"
+msgstr "Ostatnie uruchomienia"
+
+msgid "No runs."
+msgstr "Brak uruchomień."
+
+msgid "Test Center is disabled."
+msgstr "Test Center jest wyłączone."
+
+msgid "Test Center requires a superuser."
+msgstr "Test Center wymaga konta superużytkownika."
+
+msgid "Another Test Center run or cleanup is already in progress."
+msgstr "Inne uruchomienie lub czyszczenie Test Center jest już w toku."
+
+msgid "Unknown Test Center mode: %(mode)s"
+msgstr "Nieznany tryb Test Center: %(mode)s"
+
+msgid "Test Center is not available."
+msgstr "Test Center jest niedostępne."
+
+msgid "Confirm cleanup before deleting test data."
+msgstr "Potwierdź czyszczenie przed usunięciem danych testowych."
+
+msgid "Test data cleanup completed."
+msgstr "Czyszczenie danych testowych zakończone."
+
+msgid ""
+"Test Run #%(run_id)s completed (%(status)s). Test data preserved in "
+"database. Use links below to inspect."
+msgstr ""
+"Uruchomienie testowe #%(run_id)s zakończone (%(status)s). Dane testowe "
+"zostały zachowane w bazie danych. Użyj poniższych linków, aby je "
+"zweryfikować."
+
+msgid "Test Run #%(run_id)s completed with status %(status)s."
+msgstr "Uruchomienie testowe #%(run_id)s zakończone ze statusem %(status)s."
+
+msgid "Back to Admin Panel"
+msgstr "Powrót do panelu administratora"
+
+msgid "Expand All Logs"
+msgstr "Rozwiń wszystkie logi"
+
+msgid "Collapse All Logs"
+msgstr "Zwiń wszystkie logi"
+
+msgid "View details"
+msgstr "Pokaż szczegóły"
+
+msgid "Error"
+msgstr "Błąd"
+
+msgid "Details"
+msgstr "Szczegóły"
+
 #~ msgid ""
 #~ "Пожалуйста, загрузите сканы или качественные фото требуемых документов."
 #~ msgstr ""

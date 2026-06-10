@@ -9425,6 +9425,199 @@ msgstr "user"
 msgid "users"
 msgstr "users"
 
+msgid "Test Center"
+msgstr "Test Center"
+
+msgid "Protected E2E regression checks for test data only."
+msgstr "Protected E2E regression checks for test data only."
+
+msgid "Run Scenarios"
+msgstr "Run Scenarios"
+
+msgid "Mode"
+msgstr "Mode"
+
+msgid "Smoke"
+msgstr "Smoke"
+
+msgid "Full"
+msgstr "Full"
+
+msgid "OCR"
+msgstr "OCR"
+
+msgid "ZUS"
+msgstr "ZUS"
+
+msgid "Permissions"
+msgstr "Permissions"
+
+msgid "Security"
+msgstr "Security"
+
+msgid "Workflow"
+msgstr "Workflow"
+
+msgid "Keep data in DB for manual review"
+msgstr "Keep data in DB for manual review"
+
+msgid "Run smoke scenarios"
+msgstr "Run smoke scenarios"
+
+msgid "Run full scenarios"
+msgstr "Run full scenarios"
+
+msgid "Run ocr scenarios"
+msgstr "Run ocr scenarios"
+
+msgid "Run email scenarios"
+msgstr "Run email scenarios"
+
+msgid "Run zus scenarios"
+msgstr "Run zus scenarios"
+
+msgid "Run documents scenarios"
+msgstr "Run documents scenarios"
+
+msgid "Run permissions scenarios"
+msgstr "Run permissions scenarios"
+
+msgid "Run security scenarios"
+msgstr "Run security scenarios"
+
+msgid "Run workflow scenarios"
+msgstr "Run workflow scenarios"
+
+msgid "Run %(mode)s scenarios"
+msgstr "Run %(mode)s scenarios"
+
+msgid "Clean Test Data"
+msgstr "Clean Test Data"
+
+msgid "Delete only records marked as test data"
+msgstr "Delete only records marked as test data"
+
+msgid "Clean test data"
+msgstr "Clean test data"
+
+msgid "Test Run"
+msgstr "Test Run"
+
+msgid "passed"
+msgstr "passed"
+
+msgid "failed"
+msgstr "failed"
+
+msgid "Total"
+msgstr "Total"
+
+msgid "Passed"
+msgstr "Passed"
+
+msgid "Workflow E2E Progress Journey"
+msgstr "Workflow E2E Progress Journey"
+
+msgid "Onboarding"
+msgstr "Onboarding"
+
+msgid "Invite & Intake"
+msgstr "Invite & Intake"
+
+msgid "Docs & OCR"
+msgstr "Docs & OCR"
+
+msgid "Upload & Extract"
+msgstr "Upload & Extract"
+
+msgid "ZUS & Insurance"
+msgstr "ZUS & Insurance"
+
+msgid "Audits & Expiry"
+msgstr "Audits & Expiry"
+
+msgid "Security & Access"
+msgstr "Security & Access"
+
+msgid "State & Audit log"
+msgstr "State & Audit log"
+
+msgid "Scenario"
+msgstr "Scenario"
+
+msgid "Expected"
+msgstr "Expected"
+
+msgid "Actual"
+msgstr "Actual"
+
+msgid "Related Object"
+msgstr "Related Object"
+
+msgid "Doc"
+msgstr "Doc"
+
+msgid "No scenario results yet."
+msgstr "No scenario results yet."
+
+msgid "No Test Center runs yet."
+msgstr "No Test Center runs yet."
+
+msgid "Recent Runs"
+msgstr "Recent Runs"
+
+msgid "No runs."
+msgstr "No runs."
+
+msgid "Test Center is disabled."
+msgstr "Test Center is disabled."
+
+msgid "Test Center requires a superuser."
+msgstr "Test Center requires a superuser."
+
+msgid "Another Test Center run or cleanup is already in progress."
+msgstr "Another Test Center run or cleanup is already in progress."
+
+msgid "Unknown Test Center mode: %(mode)s"
+msgstr "Unknown Test Center mode: %(mode)s"
+
+msgid "Test Center is not available."
+msgstr "Test Center is not available."
+
+msgid "Confirm cleanup before deleting test data."
+msgstr "Confirm cleanup before deleting test data."
+
+msgid "Test data cleanup completed."
+msgstr "Test data cleanup completed."
+
+msgid ""
+"Test Run #%(run_id)s completed (%(status)s). Test data preserved in "
+"database. Use links below to inspect."
+msgstr ""
+"Test Run #%(run_id)s completed (%(status)s). Test data preserved in "
+"database. Use links below to inspect."
+
+msgid "Test Run #%(run_id)s completed with status %(status)s."
+msgstr "Test Run #%(run_id)s completed with status %(status)s."
+
+msgid "Back to Admin Panel"
+msgstr "Back to Admin Panel"
+
+msgid "Expand All Logs"
+msgstr "Expand All Logs"
+
+msgid "Collapse All Logs"
+msgstr "Collapse All Logs"
+
+msgid "View details"
+msgstr "View details"
+
+msgid "Error"
+msgstr "Error"
+
+msgid "Details"
+msgstr "Details"
+
 #~ msgid ""
 #~ "Пожалуйста, загрузите сканы или качественные фото требуемых документов."
 #~ msgstr "Please upload scans or high-quality photos of the required documents."

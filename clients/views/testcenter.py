@@ -7,13 +7,16 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
 from django.shortcuts import redirect, render
+from django.utils.translation import gettext as _
 
 from clients.models import StaffAuditEvent, TestRun
 from clients.testing.cleanup import cleanup_test_data
 from clients.testing.e2e_runner import available_modes, ensure_test_center_enabled, run_e2e_scenarios, testcenter_lock
 
 
-def _forbidden(message: str = "Test Center is not available.") -> HttpResponseForbidden:
+def _forbidden(message: str = None) -> HttpResponseForbidden:
+    if message is None:
+        message = _("Test Center is not available.")
     return HttpResponseForbidden(message)
 
 
@@ -38,7 +41,7 @@ def testcenter_view(request: HttpRequest) -> HttpResponse:
         action = request.POST.get("action", "")
         if action == "clean":
             if request.POST.get("confirm_clean") != "yes":
-                messages.error(request, "Confirm cleanup before deleting test data.")
+                messages.error(request, _("Confirm cleanup before deleting test data."))
                 return redirect("clients:test_center")
             try:
                 with testcenter_lock():
@@ -52,12 +55,12 @@ def testcenter_view(request: HttpRequest) -> HttpResponse:
                 "Test Center data cleanup executed",
                 report.as_dict(),
             )
-            messages.success(request, "Test data cleanup completed.")
+            messages.success(request, _("Test data cleanup completed."))
             return redirect("clients:test_center")
 
         mode = request.POST.get("mode", "smoke")
         if mode not in available_modes():
-            messages.error(request, f"Unknown Test Center mode: {mode}")
+            messages.error(request, _("Unknown Test Center mode: %(mode)s") % {"mode": mode})
             return redirect("clients:test_center")
 
         keep_data = request.POST.get("keep_data") == "yes"
@@ -78,10 +81,15 @@ def testcenter_view(request: HttpRequest) -> HttpResponse:
         if keep_data:
             messages.success(
                 request,
-                f"Test Run #{test_run.pk} completed ({test_run.status}). Test data preserved in database. Use links below to inspect."
+                _("Test Run #%(run_id)s completed (%(status)s). Test data preserved in database. Use links below to inspect.")
+                % {"run_id": test_run.pk, "status": test_run.status}
             )
         else:
-            messages.success(request, f"Test Run #{test_run.pk} completed with status {test_run.status}.")
+            messages.success(
+                request,
+                _("Test Run #%(run_id)s completed with status %(status)s.")
+                % {"run_id": test_run.pk, "status": test_run.status}
+            )
         return redirect(f"{request.path}?run_id={test_run.pk}")
 
     selected_run = None
