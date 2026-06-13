@@ -94,6 +94,51 @@ class DocumentReminderListView(ReminderListView):
     start_date_param = "doc_start_date"
     end_date_param = "doc_end_date"
 
+    @staticmethod
+    def _empty_group(client: Client) -> dict[str, Any]:
+        return {
+            "client": client,
+            "reminders": [],
+            "documents": [],
+            "missing_documents": [],
+            "expired_count": 0,
+            "soon_count": 0,
+            "ok_count": 0,
+            "status_class": "success",
+        }
+
+    def _missing_document_clients_queryset(self) -> Any:
+        queryset = Client.objects.exclude(workflow_stage__in=["closed", "decision_received"]).order_by(
+            "last_name",
+            "first_name",
+        )
+        queryset = accessible_clients_queryset(self.request.user, queryset)
+        if getattr(self, "client_filter_id", None):
+            queryset = queryset.filter(pk=self.client_filter_id)
+        return queryset.prefetch_related(
+            Prefetch(
+                "documents",
+                queryset=Document.objects.annotate(preloaded_version_count=Count("versions")).order_by("-uploaded_at"),
+            ),
+            Prefetch(
+                "custom_document_requirements",
+                queryset=ClientDocumentRequirement.objects.filter(is_active=True).order_by("due_date", "created_at"),
+            ),
+            "wniosek_submissions__confirmed_by",
+            "wniosek_submissions__attachments",
+        )
+
+    @staticmethod
+    def _missing_documents_for_client(client: Client, requirements_cache: dict[str, Any]) -> list[dict[str, Any]]:
+        checklist = client.get_document_checklist(requirements_cache=requirements_cache) or []
+        return [
+            {
+                "name": item.get("name"),
+                "expiry_date": getattr((item.get("documents") or [None])[0], "expiry_date", None),
+            }
+            for item in checklist
+            if not item.get("is_complete")
+        ]
 
     def get_queryset(self) -> Any:
         return (
@@ -117,24 +162,13 @@ class DocumentReminderListView(ReminderListView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         reminders = list(context["reminders"])
+        missing_only = self.request.GET.get("view") == "missing"
         grouped: OrderedDict[int, dict[str, Any]] = OrderedDict()
         today = timezone.localdate()
         soon_cutoff = today + timedelta(days=3)
         for reminder in reminders:
             client = reminder.client
-            group = grouped.setdefault(
-                client.id,
-                {
-                    "client": client,
-                    "reminders": [],
-                    "documents": [],
-                    "missing_documents": [],
-                    "expired_count": 0,
-                    "soon_count": 0,
-                    "ok_count": 0,
-                    "status_class": "success",
-                },
-            )
+            group = grouped.setdefault(client.id, self._empty_group(client))
             group["reminders"].append(reminder)
             if reminder.document and reminder.document.expiry_date:
                 group["documents"].append(reminder.document)
@@ -148,15 +182,16 @@ class DocumentReminderListView(ReminderListView):
 
         requirements_cache = {}
         for group in grouped.values():
-            checklist = group["client"].get_document_checklist(requirements_cache=requirements_cache) or []
-            group["missing_documents"] = [
-                {
-                    "name": item.get("name"),
-                    "expiry_date": getattr((item.get("documents") or [None])[0], "expiry_date", None),
-                }
-                for item in checklist
-                if not item.get("is_complete")
-            ]
+            group["missing_documents"] = self._missing_documents_for_client(group["client"], requirements_cache)
+
+        if missing_only:
+            for client in self._missing_document_clients_queryset():
+                group = grouped.setdefault(client.id, self._empty_group(client))
+                if group["missing_documents"]:
+                    continue
+                group["missing_documents"] = self._missing_documents_for_client(client, requirements_cache)
+
+        for group in grouped.values():
             if group["expired_count"]:
                 group["status_class"] = "danger"
             elif group["soon_count"]:
@@ -166,11 +201,21 @@ class DocumentReminderListView(ReminderListView):
             else:
                 group["status_class"] = "success"
 
+        grouped_reminders = list(grouped.values())
+        total_missing_documents_count = sum(len(group["missing_documents"]) for group in grouped_reminders)
+        missing_clients_count = sum(1 for group in grouped_reminders if group["missing_documents"])
+        if missing_only:
+            grouped_reminders = [group for group in grouped_reminders if group["missing_documents"]]
+        display_count = total_missing_documents_count if missing_only else len(grouped_reminders)
+
         context.update(
             {
-                "grouped_reminders": list(grouped.values()),
-                "reminders_count": len(grouped),
+                "grouped_reminders": grouped_reminders,
+                "missing_only": missing_only,
+                "reminders_count": display_count,
                 "total_reminders_count": len(reminders),
+                "total_missing_documents_count": total_missing_documents_count,
+                "missing_clients_count": missing_clients_count,
             }
         )
         return context

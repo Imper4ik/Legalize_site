@@ -296,7 +296,7 @@
       {% translate "Что требует внимания" %}
     </h2>
     <div class="ops-risk-grid">
-      <a href="{% url 'clients:document_reminder_list' %}" class="ops-risk">
+      <a href="{% url 'clients:document_reminder_list' %}?view=missing#documents-section" class="ops-risk">
         <span>
           <span class="d-block fw-semibold">{% translate "Недостающие документы" %}</span>
           <span class="ops-risk-label">{% translate "По активным делам" %}</span>

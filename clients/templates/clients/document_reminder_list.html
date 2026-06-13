@@ -90,9 +90,35 @@
   <div class="reminders-title">
     <i class="fas fa-file-alt text-info"></i>
     <h4 class="mb-0">
-      {% translate "Напоминания по документам" %}
+      {% if missing_only %}
+        {% translate "Недостающие документы" %}
+      {% else %}
+        {% translate "Напоминания по документам" %}
+      {% endif %}
       <span class="count-badge">{{ reminders_count }}</span>
     </h4>
+  </div>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+    <div class="btn-group" role="group" aria-label="{% translate 'Режим просмотра документов' %}">
+      <a href="{% url 'clients:document_reminder_list' %}#documents-section"
+         class="btn btn-sm {% if missing_only %}btn-outline-primary{% else %}btn-primary{% endif %}">
+        <i class="fas fa-bell me-1"></i>{% translate "Напоминания" %}
+      </a>
+      <a href="{% url 'clients:document_reminder_list' %}?view=missing#documents-section"
+         class="btn btn-sm {% if missing_only %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        <i class="fas fa-ban me-1"></i>{% translate "Недостающие" %}
+      </a>
+    </div>
+    {% if missing_only %}
+      <div class="d-flex flex-wrap align-items-center gap-2 text-muted">
+        <span>
+          {% translate "Клиентов с недостающими" %}: <strong>{{ missing_clients_count }}</strong>
+        </span>
+        <span>
+          {% translate "Недостающих документов" %}: <strong>{{ total_missing_documents_count }}</strong>
+        </span>
+      </div>
+    {% endif %}
   </div>
   <div class="d-flex flex-wrap align-items-center gap-3 text-muted mb-3">
     <span class="d-inline-flex align-items-center gap-1">
@@ -112,6 +138,9 @@
 
   <div class="card filters-card card-body mb-4">
     <form method="get" action="#documents-section" class="row g-3 align-items-end">
+      {% if missing_only %}
+        <input type="hidden" name="view" value="missing">
+      {% endif %}
       <div class="col-md-4">
         <label for="doc_client" class="form-label"><strong>{% translate "Клиент" %}</strong></label>
         <select name="doc_client" id="doc_client" class="form-select">
@@ -144,7 +173,7 @@
         <button type="submit" class="btn btn-soft w-100">
           <i class="bi bi-funnel me-1"></i>{% translate "Фильтровать" %}
         </button>
-        <a href="{% url 'clients:document_reminder_list' %}#documents-section" class="btn btn-outline-secondary w-100 mt-2">
+        <a href="{% url 'clients:document_reminder_list' %}{% if missing_only %}?view=missing{% endif %}#documents-section" class="btn btn-outline-secondary w-100 mt-2">
           {% translate "Сбросить" %}
         </a>
       </div>
@@ -256,7 +285,11 @@
         </div>
       </div>
     {% empty %}
-      <p class="text-muted mb-0">{% translate "Нет напоминаний по документам, соответствующих фильтрам." %}</p>
+      {% if missing_only %}
+        <p class="text-muted mb-0">{% translate "Нет недостающих документов по текущим фильтрам." %}</p>
+      {% else %}
+        <p class="text-muted mb-0">{% translate "Нет напоминаний по документам, соответствующих фильтрам." %}</p>
+      {% endif %}
     {% endfor %}
   </div>
 </section>
