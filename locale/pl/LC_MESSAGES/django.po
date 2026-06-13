@@ -10191,3 +10191,9 @@ msgstr "użytkownik"
 #: .\users\models.py:86
 msgid "users"
 msgstr "użytkownicy"
+
+msgid "Демо-центр (Demo)"
+msgstr "Centrum demonstracyjne"
+
+msgid "Тест-центр (Tests)"
+msgstr "Centrum testowe"
