@@ -10197,3 +10197,18 @@ msgstr "Centrum demonstracyjne"
 
 msgid "Тест-центр (Tests)"
 msgstr "Centrum testowe"
+
+msgid "Система и Тестирование"
+msgstr "System i testowanie"
+
+msgid "Доступные инструменты:"
+msgstr "Dostępne narzędzia:"
+
+msgid "Test Center (Тест-центр)"
+msgstr "Centrum testowe"
+
+msgid "Demo Center (Демо-центр)"
+msgstr "Centrum demonstracyjne"
+
+msgid "Сценарии:"
+msgstr "Scenariusze:"

@@ -192,14 +192,54 @@
   <div class="col-12 col-lg-6">
     <div class="card shadow-sm h-100">
       <div class="card-body">
-        <h5 class="card-title">{% translate "Система" %}</h5>
+        <h5 class="card-title">{% translate "Система и Тестирование" %}</h5>
         <p class="text-muted">{% translate "Мониторинг работоспособности сервера, проверка подключения к базе данных, фоновых задач и технического состояния системы." %}</p>
-        <a href="{% url 'clients:admin_dashboard' %}" class="btn btn-outline-secondary">{% translate "Здоровье системы" %}</a>
-        {% if test_center_available %}
-        <a href="{% url 'clients:test_center' %}" class="btn btn-outline-danger ms-2">{% translate "Test Center" %}</a>
-        {% endif %}
-        {% if demo_center_available %}
-        <a href="{% url 'clients:demo_center' %}" class="btn btn-outline-primary ms-2">{% translate "Demo Center" %}</a>
+        
+        <div class="mb-3">
+          <a href="{% url 'clients:admin_dashboard' %}" class="btn btn-outline-secondary btn-sm">{% translate "Здоровье системы" %}</a>
+        </div>
+
+        {% if test_center_available or demo_center_available %}
+        <div class="border-top pt-3 mt-2">
+          <h6 class="small fw-bold text-uppercase text-muted mb-2">{% translate "Доступные инструменты:" %}</h6>
+          <div class="row g-2">
+            {% if test_center_available %}
+            <div class="col-12">
+              <div class="p-2 border rounded bg-light">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="fw-semibold text-danger small">
+                    <i class="bi bi-shield-check"></i> {% translate "Test Center (Тест-центр)" %}
+                  </span>
+                  <a href="{% url 'clients:test_center' %}" class="btn btn-danger btn-sm py-0 px-2" style="font-size: 0.75rem;">
+                    {% translate "Открыть" %}
+                  </a>
+                </div>
+                <div class="text-muted small" style="font-size: 0.75rem; line-height: 1.3;">
+                  <strong>{% translate "Сценарии:" %}</strong> Smoke, Full, OCR, ZUS, Email, Documents, Permissions, Security, Workflow
+                </div>
+              </div>
+            </div>
+            {% endif %}
+
+            {% if demo_center_available %}
+            <div class="col-12">
+              <div class="p-2 border rounded bg-light">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <span class="fw-semibold text-primary small">
+                    <i class="bi bi-play-circle-fill"></i> {% translate "Demo Center (Демо-центр)" %}
+                  </span>
+                  <a href="{% url 'clients:demo_center' %}" class="btn btn-primary btn-sm py-0 px-2" style="font-size: 0.75rem;">
+                    {% translate "Открыть" %}
+                  </a>
+                </div>
+                <div class="text-muted small" style="font-size: 0.75rem; line-height: 1.3;">
+                  <strong>{% translate "Сценарии:" %}</strong> Jan Kowalski, Anna Nowak, Daria Testowa, Ivan Demo, Maria Student
+                </div>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
         {% endif %}
       </div>
     </div>

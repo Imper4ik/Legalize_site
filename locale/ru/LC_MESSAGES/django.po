@@ -10176,3 +10176,18 @@ msgstr "Демо-центр (Demo)"
 
 msgid "Тест-центр (Tests)"
 msgstr "Тест-центр (Tests)"
+
+msgid "Система и Тестирование"
+msgstr "Система и Тестирование"
+
+msgid "Доступные инструменты:"
+msgstr "Доступные инструменты:"
+
+msgid "Test Center (Тест-центр)"
+msgstr "Test Center (Тест-центр)"
+
+msgid "Demo Center (Демо-центр)"
+msgstr "Demo Center (Демо-центр)"
+
+msgid "Сценарии:"
+msgstr "Сценарии:"
