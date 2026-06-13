@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from django.conf import settings
+
 from django.core.management.base import BaseCommand, CommandError
 
 from clients.demo.demo_cleanup import cleanup_demo_data
@@ -20,8 +20,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args: Any, **options: Any) -> None:
-        if not getattr(settings, "DEMO_MODE_ENABLED", False):
-            raise CommandError("Demo Center is disabled.")
         if not options["confirm"]:
             raise CommandError("Refusing cleanup without --confirm.")
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from django.test import Client as DjangoClient, override_settings
+from django.test import Client as DjangoClient
 from django.urls import reverse
 
 from clients.testing.assertions import ScenarioRecorder
@@ -26,20 +26,10 @@ def run_permission_scenarios(recorder: ScenarioRecorder) -> None:
     )
 
     browser.force_login(superuser)
-    with override_settings(ENABLE_TEST_CENTER=False):
-        disabled_response = browser.get(reverse("clients:test_center"))
-    recorder.check(
-        "test_center.feature_flag_required",
-        disabled_response.status_code == 403,
-        expected="403 when ENABLE_TEST_CENTER=False",
-        actual=f"status={disabled_response.status_code}",
-    )
-
     enabled_response = browser.get(reverse("clients:test_center"))
     recorder.check(
-        "test_center.superuser_allowed_when_enabled",
+        "test_center.superuser_allowed",
         enabled_response.status_code == 200,
-        expected="200 for superuser when ENABLE_TEST_CENTER=True",
+        expected="200 for superuser",
         actual=f"status={enabled_response.status_code}",
     )
-

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -98,6 +97,6 @@ def democenter_view(request: HttpRequest) -> HttpResponse:
             "demo_clients": demo_clients,
             "demo_emails": demo_emails,
             "demo_jobs": demo_jobs,
-            "demo_mode_enabled": settings.DEMO_MODE_ENABLED,
+
         },
     )

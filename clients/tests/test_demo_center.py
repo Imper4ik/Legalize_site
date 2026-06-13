@@ -37,26 +37,17 @@ class DemoCenterTests(TestCase):
         )
         self.browser = DjangoClient()
 
-    @override_settings(DEMO_MODE_ENABLED=True)
     def test_ordinary_staff_cannot_open_demo_center(self) -> None:
         self.browser.force_login(self.staff_user)
         response = self.browser.get(reverse("clients:demo_center"))
         self.assertEqual(response.status_code, 403)
 
-    @override_settings(DEMO_MODE_ENABLED=True)
-    def test_superuser_can_open_demo_center_when_enabled(self) -> None:
+    def test_superuser_can_open_demo_center(self) -> None:
         self.browser.force_login(self.superuser)
         response = self.browser.get(reverse("clients:demo_center"))
         self.assertEqual(response.status_code, 200)
 
-    @override_settings(DEMO_MODE_ENABLED=False)
-    def test_superuser_denied_when_disabled(self) -> None:
-        self.browser.force_login(self.superuser)
-        response = self.browser.get(reverse("clients:demo_center"))
-        self.assertEqual(response.status_code, 403)
-
     @override_settings(
-        DEMO_MODE_ENABLED=True,
         STORAGES={
             "default": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
             "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
@@ -93,7 +84,6 @@ class DemoCenterTests(TestCase):
         self.assertTrue(DocumentProcessingJob.objects.filter(is_demo_data=True).exists())
 
     @override_settings(
-        DEMO_MODE_ENABLED=True,
         STORAGES={
             "default": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
             "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
@@ -123,7 +113,6 @@ class DemoCenterTests(TestCase):
         self.assertEqual(Client.objects.filter(is_demo_data=False).count(), 1)
         self.assertEqual(Client.objects.get(pk=non_demo_client.pk).first_name, "Real")
 
-    @override_settings(DEMO_MODE_ENABLED=True)
     def test_onboarding_session_portal_links(self) -> None:
         client = Client.objects.create(
             first_name="Test",
@@ -134,12 +123,6 @@ class DemoCenterTests(TestCase):
         token = get_demo_token_for_client(client)
         self.assertIn("demo-token-", token)
 
-    @override_settings(DEMO_MODE_ENABLED=True)
     def test_clean_demo_command_requires_confirm(self) -> None:
         with self.assertRaises(CommandError):
             call_command("clean_demo_data", stdout=StringIO())
-
-    @override_settings(DEMO_MODE_ENABLED=False)
-    def test_clean_demo_command_disabled(self) -> None:
-        with self.assertRaises(CommandError):
-            call_command("clean_demo_data", "--confirm", stdout=StringIO())
