@@ -10212,3 +10212,12 @@ msgstr "Centrum demonstracyjne"
 
 msgid "Сценарии:"
 msgstr "Scenariusze:"
+
+msgid "Демо-центр (Demo Center)"
+msgstr "Centrum demonstracyjne"
+
+msgid "Тест-центр (Test Center)"
+msgstr "Centrum testowe"
+
+msgid "Панель управления (Admin Panel)"
+msgstr "Panel administracyjny"

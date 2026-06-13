@@ -10191,3 +10191,12 @@ msgstr "Demo Center (Демо-центр)"
 
 msgid "Сценарии:"
 msgstr "Сценарии:"
+
+msgid "Демо-центр (Demo Center)"
+msgstr "Демо-центр (Demo Center)"
+
+msgid "Тест-центр (Test Center)"
+msgstr "Тест-центр (Test Center)"
+
+msgid "Панель управления (Admin Panel)"
+msgstr "Панель управления (Admin Panel)"
