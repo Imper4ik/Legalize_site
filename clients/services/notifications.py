@@ -29,6 +29,12 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+EMAIL_TYPE_MISSING_DOCUMENTS = "missing_documents"
+EMAIL_TYPE_ZUS_RCA_MISSING = "zus_rca_missing"
+EMAIL_TYPE_ZUS_RCA_INVALID = "zus_rca_invalid"
+EMAIL_TYPE_ZUS_RCA_WRONG_PERIOD = "zus_rca_wrong_period"
+EMAIL_TYPE_ZUS_RCA_REJECTED = "zus_rca_rejected"
+
 EMAIL_SUBJECTS = {
     "required_documents": gettext_lazy("Список необходимых документов"),
     "expired_documents": gettext_lazy("Истекшие документы после сдачи отпечатков"),
@@ -36,6 +42,10 @@ EMAIL_SUBJECTS = {
     "expiring_documents": gettext_lazy("Документы скоро истекают"),
     "appointment_notification": gettext_lazy("Уведомление о встрече"),
     "legal_stay_expiring": gettext_lazy("Истекает легальное пребывание"),
+    EMAIL_TYPE_ZUS_RCA_MISSING: gettext_lazy("Отсутствует ZUS RCA или действующая страховка"),
+    EMAIL_TYPE_ZUS_RCA_INVALID: gettext_lazy("Некорректный документ ZUS RCA"),
+    EMAIL_TYPE_ZUS_RCA_WRONG_PERIOD: gettext_lazy("ZUS RCA за неверный период"),
+    EMAIL_TYPE_ZUS_RCA_REJECTED: gettext_lazy("ZUS RCA или страховка отклонены сотрудником"),
 }
 
 
@@ -94,6 +104,7 @@ def _reserve_idempotent_email_send(
         "delivery_status": EmailLog.DELIVERY_STATUS_QUEUED,
         "error_message": "",
         "is_test_data": bool(getattr(client, "is_test_data", False)),
+        "is_demo_data": bool(getattr(client, "is_demo_data", False)),
     }
     blocking_statuses = {
         EmailLog.DELIVERY_STATUS_QUEUED,
@@ -264,6 +275,7 @@ def _log_email(
             "delivery_status": delivery_status,
             "error_message": error_message,
             "is_test_data": bool(getattr(client, "is_test_data", False)),
+            "is_demo_data": bool(getattr(client, "is_demo_data", False)),
         }
         if idempotency_key:
             with transaction.atomic():

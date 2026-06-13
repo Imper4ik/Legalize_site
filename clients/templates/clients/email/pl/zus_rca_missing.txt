@@ -1,0 +1,6 @@
+Dzień dobry {{ client.first_name }} {{ client.last_name }},
+
+w przesłanych dokumentach brakuje prawidłowego dokumentu ZUS RCA za wymagany okres.
+Prosimy o przesłanie poprawnego dokumentu przez portal klienta.
+
+[Otwórz portal klienta]

@@ -1,0 +1,6 @@
+Dear {{ client.first_name }} {{ client.last_name }},
+
+the submitted ZUS RCA document is for an incorrect period (month).
+Please upload the document for the correct month through the client portal.
+
+[Open client portal]

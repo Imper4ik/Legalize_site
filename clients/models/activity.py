@@ -75,6 +75,7 @@ class ClientActivity(models.Model):
         related_name="activities",
         verbose_name=_("Задача"),
     )
+    is_demo_data = models.BooleanField(default=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Создано"))
 
     class Meta:

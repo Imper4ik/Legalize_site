@@ -1,0 +1,6 @@
+Dzień dobry {{ client.first_name }} {{ client.last_name }},
+
+przesłany dokument ZUS RCA dotyczy nieprawidłowego okresu (miesiąca).
+Prosimy o przesłanie dokumentu za właściwy miesiąc przez portal klienta.
+
+[Otwórz portal klienta]

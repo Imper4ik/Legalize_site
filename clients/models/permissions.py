@@ -58,6 +58,7 @@ class StaffAuditEvent(models.Model):
     event_type = models.CharField(max_length=64, choices=EVENT_TYPE_CHOICES)
     summary = models.CharField(max_length=255)
     metadata = models.JSONField(default=dict, blank=True)
+    is_demo_data = models.BooleanField(default=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

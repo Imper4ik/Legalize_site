@@ -1,0 +1,6 @@
+Dzień dobry {{ client.first_name }} {{ client.last_name }},
+
+przesłany dokument ZUS RCA jest niepoprawny lub nie zawiera wymaganych składek.
+Prosimy o przesłanie prawidłowego dokumentu przez portal klienta.
+
+[Otwórz portal klienta]

@@ -198,6 +198,9 @@
         {% if test_center_available %}
         <a href="{% url 'clients:test_center' %}" class="btn btn-outline-danger ms-2">{% translate "Test Center" %}</a>
         {% endif %}
+        {% if demo_center_available %}
+        <a href="{% url 'clients:demo_center' %}" class="btn btn-outline-primary ms-2">{% translate "Demo Center" %}</a>
+        {% endif %}
       </div>
     </div>
   </div>

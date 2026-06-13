@@ -41,6 +41,7 @@ class Payment(SoftDeleteModel):
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Обновлено"))
 
     is_test_data = models.BooleanField(default=False, db_index=True)
+    is_demo_data = models.BooleanField(default=False, db_index=True)
 
     @property
     def amount_due(self) -> Decimal:

@@ -4,7 +4,10 @@ from typing import Any, TYPE_CHECKING
 
 from django.contrib import admin
 from django.db.models import QuerySet
+from django.urls import reverse
+from django.utils.html import format_html, format_html_join
 
+from clients.constants import DocumentType
 from .models import (
     AppSettings,
     Client,
@@ -152,10 +155,18 @@ class ClientAdmin(admin.ModelAdmin):
             "Детали подачи",
             {"fields": ("application_purpose", "basis_of_stay", "language", "legal_basis_end_date", "workflow_stage")},
         ),
+        (
+            "Nowy wniosek o kartę pobytu / Новое заявление на карту побыту",
+            {"fields": ("new_residence_card_application_summary",)},
+        ),
         ("Семья", {"fields": ("family_role", "sponsor_client")}),
         ("Статус и заметки", {"fields": ("status", "notes", "archived_at")}),
     )
-    readonly_fields = ("archived_at",)
+    readonly_fields = (
+        "archived_at",
+        "new_residence_card_application_summary",
+        "new_residence_card_application_summary_masked",
+    )
     actions = [archive_selected, restore_selected]
 
     def case_number_masked(self, obj):
@@ -194,6 +205,66 @@ class ClientAdmin(admin.ModelAdmin):
         return "***"
     email_masked.short_description = "Email (Masked)"
 
+    def _mask_case_number_value(self, value):
+        if not value:
+            return "-"
+        val = str(value)
+        if "-" in val:
+            parts = val.split("-")
+            return parts[0] + "-***-" + parts[-1]
+        return val[:3] + "***" + val[-4:] if len(val) > 7 else "***"
+
+    def _new_residence_card_application_summary(self, obj, *, masked: bool):
+        mos_data = getattr(obj, "mos_application_data", None)
+        if not mos_data or not mos_data.new_residence_card_application_status:
+            return "-"
+
+        status = mos_data.get_new_residence_card_application_status_display()
+        rows = [("Status:", status)]
+        if mos_data.new_residence_card_application_status == MOSApplicationData.NEW_CARD_STATUS_YES:
+            case_number = mos_data.new_residence_card_case_number or ""
+            rows.append(("Numer sprawy / Номер дела:", self._mask_case_number_value(case_number) if masked else (case_number or "-")))
+            rows.append((
+                "Data złożenia / Дата подачи:",
+                mos_data.new_residence_card_submitted_at.strftime("%Y-%m-%d") if mos_data.new_residence_card_submitted_at else "-",
+            ))
+
+        confirmation = (
+            obj.documents.filter(document_type=DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION.value)
+            .order_by("-uploaded_at", "-id")
+            .first()
+        )
+        if confirmation:
+            if masked:
+                rows.append(("Potwierdzenie / Подтверждение:", "Uploaded"))
+            else:
+                rows.append((
+                    "Potwierdzenie / Подтверждение:",
+                    format_html(
+                        '<a href="{}">{}</a>',
+                        reverse("admin:clients_document_change", args=[confirmation.pk]),
+                        confirmation.display_name,
+                    ),
+                ))
+        else:
+            rows.append(("Potwierdzenie / Подтверждение:", "-"))
+
+        if mos_data.new_residence_card_comment:
+            rows.append(("Komentarz / Комментарий:", "[Protected]" if masked else mos_data.new_residence_card_comment))
+        rows.append((
+            "Ostatnia aktualizacja / Последнее обновление:",
+            mos_data.new_residence_card_updated_at.strftime("%Y-%m-%d %H:%M") if mos_data.new_residence_card_updated_at else "-",
+        ))
+        return format_html_join("", "<div><strong>{}</strong> {}</div>", rows)
+
+    def new_residence_card_application_summary(self, obj):
+        return self._new_residence_card_application_summary(obj, masked=False)
+    new_residence_card_application_summary.short_description = "Nowy wniosek o kartę pobytu"
+
+    def new_residence_card_application_summary_masked(self, obj):
+        return self._new_residence_card_application_summary(obj, masked=True)
+    new_residence_card_application_summary_masked.short_description = "Nowy wniosek o kartę pobytu (Masked)"
+
     def get_readonly_fields(self, request, obj=None):
         readonly = list(super().get_readonly_fields(request, obj))
         if not request.user.has_perm("clients.view_sensitive_data"):
@@ -224,6 +295,8 @@ class ClientAdmin(admin.ModelAdmin):
                 for f in fields:
                     if f in ["case_number", "passport_num", "phone", "email"]:
                         new_fields.append(f"{f}_masked")
+                    elif f == "new_residence_card_application_summary":
+                        new_fields.append("new_residence_card_application_summary_masked")
                     else:
                         new_fields.append(f)
                 new_opts = dict(opts)
@@ -575,8 +648,8 @@ class ClientDigitalAccessAdmin(admin.ModelAdmin):
 
 @admin.register(MOSApplicationData)
 class MOSApplicationDataAdmin(admin.ModelAdmin):
-    list_display = ("client", "status", "mos_purpose", "legal_stay_until", "created_at")
-    list_filter = ("status", "mos_purpose")
+    list_display = ("client", "status", "mos_purpose", "legal_stay_until", "new_residence_card_application_status", "created_at")
+    list_filter = ("status", "mos_purpose", "new_residence_card_application_status")
     search_fields = ("client__first_name", "client__last_name")
     autocomplete_fields = ("client", "staff_reviewed_by")
 
@@ -630,6 +703,17 @@ class MOSApplicationDataAdmin(admin.ModelAdmin):
         return self._render_json_masked(obj.legal_declarations)
     legal_declarations_masked.short_description = "Legal declarations"
 
+    def new_residence_card_case_number_masked(self, obj):
+        value = obj.new_residence_card_case_number
+        if not value:
+            return "-"
+        value = str(value)
+        if "-" in value:
+            parts = value.split("-")
+            return parts[0] + "-***-" + parts[-1]
+        return value[:3] + "***" + value[-4:] if len(value) > 7 else "***"
+    new_residence_card_case_number_masked.short_description = "New residence card case number (Masked)"
+
     def get_readonly_fields(self, request, obj=None):
         readonly = list(super().get_readonly_fields(request, obj))
         if not request.user.has_perm("clients.view_sensitive_data"):
@@ -637,17 +721,36 @@ class MOSApplicationDataAdmin(admin.ModelAdmin):
                 masked_f = f"{f}_masked"
                 if masked_f not in readonly:
                     readonly.append(masked_f)
+            if "new_residence_card_case_number_masked" not in readonly:
+                readonly.append("new_residence_card_case_number_masked")
         return readonly
 
     def get_fields(self, request, obj=None):
         fields = list(super().get_fields(request, obj))
         if not request.user.has_perm("clients.view_sensitive_data"):
             new_fields = []
+            seen = set()
+            sensitive_json_fields = [
+                "personal_data",
+                "passport_data",
+                "address_data",
+                "stay_data",
+                "previous_stays",
+                "travel_history",
+                "insurance_data",
+                "financial_data",
+                "legal_declarations",
+            ]
             for f in fields:
-                if f in ["personal_data", "passport_data", "address_data", "stay_data", "previous_stays", "travel_history", "insurance_data", "financial_data", "legal_declarations"]:
-                    new_fields.append(f"{f}_masked")
+                if f in sensitive_json_fields:
+                    field_name = f"{f}_masked"
+                elif f == "new_residence_card_case_number":
+                    field_name = "new_residence_card_case_number_masked"
                 else:
-                    new_fields.append(f)
+                    field_name = f
+                if field_name not in seen:
+                    new_fields.append(field_name)
+                    seen.add(field_name)
             return new_fields
         return fields
 

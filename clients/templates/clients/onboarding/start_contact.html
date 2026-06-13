@@ -195,6 +195,108 @@
   </div>
 </div>
 
+<div class="card shadow-sm border-0 mb-4" id="new-card-application">
+  <div class="card-header bg-light d-flex align-items-center justify-content-between gap-2 flex-wrap">
+    <div class="fw-bold">
+      <i class="bi bi-journal-check me-2 text-primary"></i>
+      {% trans "Nowy wniosek o kartę pobytu / Новое заявление на карту побыту" %}
+    </div>
+    {% if new_card_values.status == 'yes' %}
+      <span class="badge bg-success-subtle text-success border border-success-subtle">Tak / Да</span>
+    {% elif new_card_values.status == 'no' %}
+      <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Nie / Нет</span>
+    {% elif new_card_values.status == 'unknown' %}
+      <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Nie wiem / Не знаю</span>
+    {% else %}
+      <span class="badge bg-light text-muted border">{% trans "Nie uzupełniono / Не заполнено" %}</span>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    {% if new_card_errors %}
+      <div class="alert alert-danger py-2 px-3 small">
+        {% trans "Проверьте данные в блоке нового заявления." %}
+      </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" data-no-autosave="true" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="action" value="new_card_application">
+
+      <fieldset {% if not allow_doc_edit %}disabled{% endif %}>
+        <legend class="form-label fw-semibold fs-6 mb-3">
+          {% trans "Czy został już złożony nowy wniosek o kartę pobytu? / Было ли уже подано новое заявление на карту побыту?" %}
+        </legend>
+        <div class="d-flex flex-column flex-md-row gap-2 mb-2">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="new_card_application_status" id="newCardStatusYes" value="yes" data-new-card-status {% if new_card_values.status == 'yes' %}checked{% endif %}>
+            <label class="form-check-label" for="newCardStatusYes">Tak / Да</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="new_card_application_status" id="newCardStatusNo" value="no" data-new-card-status {% if new_card_values.status == 'no' %}checked{% endif %}>
+            <label class="form-check-label" for="newCardStatusNo">Nie / Нет</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="new_card_application_status" id="newCardStatusUnknown" value="unknown" data-new-card-status {% if new_card_values.status == 'unknown' %}checked{% endif %}>
+            <label class="form-check-label" for="newCardStatusUnknown">Nie wiem / Не знаю</label>
+          </div>
+        </div>
+        {% if new_card_errors.status %}<div class="text-danger small mb-3">{{ new_card_errors.status }}</div>{% endif %}
+
+        <div class="alert alert-info py-2 px-3 small {% if new_card_values.status != 'unknown' %}d-none{% endif %}" data-new-card-unknown-hint>
+          {% trans "Jeśli masz pieczątkę w paszporcie, potwierdzenie nadania lub wiadomość z urzędu, załaduj je tutaj. / Если у вас есть печать в паспорте, подтверждение отправки или письмо из уженда — загрузите его здесь." %}
+        </div>
+
+        <div class="{% if new_card_values.status != 'yes' %}d-none{% endif %}" data-new-card-known-details>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="new_card_case_number">{% trans "Numer sprawy / Номер дела" %}</label>
+              <input class="form-control" id="new_card_case_number" name="new_card_case_number" value="{{ new_card_values.case_number }}" placeholder="например: WSC-III.XXXX.XXXX.2026">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="new_card_submitted_at">{% trans "Data złożenia wniosku / Дата подачи заявления" %}</label>
+              <input type="date" class="form-control {% if new_card_errors.submitted_at %}is-invalid{% endif %}" id="new_card_submitted_at" name="new_card_submitted_at" value="{{ new_card_values.submitted_at }}">
+              {% if new_card_errors.submitted_at %}<div class="invalid-feedback">{{ new_card_errors.submitted_at }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-3 {% if new_card_values.status != 'yes' and new_card_values.status != 'unknown' %}d-none{% endif %}" data-new-card-upload-details>
+          <label class="form-label" for="new_card_confirmation_file">{% trans "Potwierdzenie złożenia wniosku / Подтверждение подачи заявления" %}</label>
+          {% if new_card_confirmation_document %}
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+              <span class="badge bg-success-subtle text-success border border-success-subtle">{% trans "Файл загружен" %}</span>
+              <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash new_card_confirmation_document.id %}" target="_blank" rel="noopener">
+                <i class="bi bi-eye"></i> {% trans "Preview" %}
+              </a>
+            </div>
+          {% endif %}
+          <input type="file" class="form-control {% if new_card_errors.confirmation_file %}is-invalid{% endif %}" id="new_card_confirmation_file" name="new_card_confirmation_file" accept="application/pdf,image/jpeg,image/png,image/webp">
+          {% if new_card_errors.confirmation_file %}<div class="invalid-feedback">{{ new_card_errors.confirmation_file }}</div>{% endif %}
+          <div class="form-text">{% trans "PDF, JPG, PNG, WEBP. Możesz załadować pieczątkę w paszporcie, UPP, e-mail lub inne potwierdzenie. / PDF, JPG, PNG, WEBP. Можно загрузить печать в паспорте, UPP, e-mail или другое подтверждение." %}</div>
+        </div>
+
+        <div class="mt-3">
+          <label class="form-label" for="new_card_comment">{% trans "Komentarz / Комментарий" %}</label>
+          <textarea class="form-control" id="new_card_comment" name="new_card_comment" rows="2" placeholder="{% trans 'например: Подался через почту, жду номер дела, есть только печать в паспорте' %}">{{ new_card_values.comment }}</textarea>
+        </div>
+      </fieldset>
+
+      <div class="d-flex align-items-center justify-content-between gap-3 flex-wrap mt-3">
+        <div class="text-muted small">
+          {% if mos_data.new_residence_card_updated_at %}
+            {% trans "Последнее обновление:" %} {{ mos_data.new_residence_card_updated_at|date:"Y-m-d H:i" }}
+          {% endif %}
+        </div>
+        {% if allow_doc_edit %}
+          <button class="btn btn-primary" type="submit">{% trans "Сохранить статус нового заявления" %}</button>
+        {% else %}
+          <span class="badge bg-secondary">{% trans "Изменения через менеджера" %}</span>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
 <div class="row">
   <div class="col-md-6 mb-4">
     <div class="card h-100 shadow-sm border-0 border-top border-4 border-primary">
@@ -657,6 +759,24 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+  const newCardStatusInputs = document.querySelectorAll("[data-new-card-status]");
+  const newCardKnownDetails = document.querySelector("[data-new-card-known-details]");
+  const newCardUploadDetails = document.querySelector("[data-new-card-upload-details]");
+  const newCardUnknownHint = document.querySelector("[data-new-card-unknown-hint]");
+
+  function syncNewCardApplicationFields() {
+    const selected = document.querySelector("[data-new-card-status]:checked");
+    const value = selected ? selected.value : "";
+    if (newCardKnownDetails) newCardKnownDetails.classList.toggle("d-none", value !== "yes");
+    if (newCardUploadDetails) newCardUploadDetails.classList.toggle("d-none", value !== "yes" && value !== "unknown");
+    if (newCardUnknownHint) newCardUnknownHint.classList.toggle("d-none", value !== "unknown");
+  }
+
+  newCardStatusInputs.forEach(function (input) {
+    input.addEventListener("change", syncNewCardApplicationFields);
+  });
+  syncNewCardApplicationFields();
+
   document.querySelectorAll(".onboarding-upload-form").forEach(function (form) {
     const input = form.querySelector(".onboarding-upload-input");
     const confirmBox = form.querySelector(".onboarding-upload-confirm");

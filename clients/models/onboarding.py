@@ -29,6 +29,7 @@ class ClientOnboardingSession(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True)
     revoked_at = models.DateTimeField(null=True, blank=True)
 
+    is_demo_data = models.BooleanField(default=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -64,6 +65,16 @@ class ClientDigitalAccess(models.Model):
 
 
 class MOSApplicationData(models.Model):
+    NEW_CARD_STATUS_YES = "yes"
+    NEW_CARD_STATUS_NO = "no"
+    NEW_CARD_STATUS_UNKNOWN = "unknown"
+    NEW_CARD_STATUS_CHOICES = [
+        ("", _("Not provided")),
+        (NEW_CARD_STATUS_YES, _("Tak / Да")),
+        (NEW_CARD_STATUS_NO, _("Nie / Нет")),
+        (NEW_CARD_STATUS_UNKNOWN, _("Nie wiem / Не знаю")),
+    ]
+
     client = models.OneToOneField("clients.Client", on_delete=models.CASCADE, related_name="mos_application_data")
 
     status = models.CharField(
@@ -98,6 +109,17 @@ class MOSApplicationData(models.Model):
     insurance_data = models.JSONField(default=dict, blank=True)
     financial_data = models.JSONField(default=dict, blank=True)
     legal_declarations = models.JSONField(default=dict, blank=True)
+
+    new_residence_card_application_status = models.CharField(
+        max_length=16,
+        choices=NEW_CARD_STATUS_CHOICES,
+        blank=True,
+        default="",
+    )
+    new_residence_card_case_number = EncryptedTextField(blank=True, default="")
+    new_residence_card_submitted_at = models.DateField(null=True, blank=True)
+    new_residence_card_comment = models.TextField(blank=True)
+    new_residence_card_updated_at = models.DateTimeField(null=True, blank=True)
 
     justification = models.TextField(blank=True)
 

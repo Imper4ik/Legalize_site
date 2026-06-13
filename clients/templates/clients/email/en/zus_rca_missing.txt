@@ -1,0 +1,6 @@
+Dear {{ client.first_name }} {{ client.last_name }},
+
+the correct ZUS RCA document for the required period is missing from your submitted documents.
+Please upload the correct document through the client portal.
+
+[Open client portal]

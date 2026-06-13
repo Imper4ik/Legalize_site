@@ -1,0 +1,6 @@
+Dear {{ client.first_name }} {{ client.last_name }},
+
+your ZUS RCA document (or insurance) has been rejected by the reviewer.
+Please log in to the client portal to check the reason for rejection and upload a correct document.
+
+[Open client portal]

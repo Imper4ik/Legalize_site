@@ -70,6 +70,7 @@ class DocumentProcessingJob(models.Model):
     error_message = models.TextField(blank=True, default="", verbose_name=_("Error message"))
     next_attempt_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Next attempt at"))
     lease_expires_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Lease expires at"))
+    is_demo_data = models.BooleanField(default=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Created at"))
     started_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Started at"))
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Completed at"))

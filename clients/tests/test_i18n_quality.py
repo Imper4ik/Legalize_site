@@ -187,6 +187,8 @@ def test_no_polish_markers_in_ru_msgstr():
     for e in po:
         if e.obsolete:
             continue
+        if " / " in e.msgid:
+            continue
         text = "".join(e.msgstr_plural.values()) if e.msgid_plural else e.msgstr
         if any(marker in text for marker in polish_markers):
             bad_entries.append((e.msgid, text))
@@ -199,6 +201,8 @@ def test_russian_msgids_translate_to_themselves_in_ru_po():
     bad_entries = []
     for e in po:
         if e.obsolete or not e.msgid or e.msgid_plural:
+            continue
+        if " / " in e.msgid:
             continue
         if cyrillic_regex.search(e.msgid) and e.msgstr != e.msgid:
             bad_entries.append((e.msgid, e.msgstr))

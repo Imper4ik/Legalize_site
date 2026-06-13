@@ -2,15 +2,19 @@ from __future__ import annotations
 
 from typing import Any
 
+from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
 from django.shortcuts import redirect, render
-from django.utils import translation
+from django.utils import timezone, translation
+from django.utils.dateparse import parse_date
 from django.utils.translation import gettext as _
 
 from clients.constants import DocumentType
+from clients.forms import DocumentUploadForm
 from clients.models import Client, ClientOnboardingSession, Document, DocumentRequirement, MOSApplicationData
+from clients.services.document_workflow import upload_client_document
 from clients.views.onboarding_views import (
     _document_source_hint,
     _locked_response,
@@ -25,6 +29,16 @@ from clients.views.onboarding_views import (
 CONTACT_REQUIRED_FIELDS = ("first_name", "last_name", "email", "phone")
 CONTACT_PLACEHOLDER_PAIRS = {("новый", "клиент"), ("new", "client")}
 START_TEMPLATE = "clients/onboarding/start_contact.html"
+NEW_CARD_CONFIRMATION_DOC_TYPE = DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION.value
+NEW_CARD_ALLOWED_STATUSES = {
+    MOSApplicationData.NEW_CARD_STATUS_YES,
+    MOSApplicationData.NEW_CARD_STATUS_NO,
+    MOSApplicationData.NEW_CARD_STATUS_UNKNOWN,
+}
+NEW_CARD_CONFIRMATION_UPLOAD_STATUSES = {
+    MOSApplicationData.NEW_CARD_STATUS_YES,
+    MOSApplicationData.NEW_CARD_STATUS_UNKNOWN,
+}
 
 
 def _clean_placeholder_contact_value(field_name: str, value: str, *, first_name: str, last_name: str) -> str:
@@ -98,6 +112,151 @@ def _save_contact_values(client: Client, mos_data: MOSApplicationData, values: d
     mos_data.save(update_fields=update_fields)
 
 
+def _latest_new_card_confirmation_document(client: Client) -> Document | None:
+    return (
+        Document.objects.filter(client=client, document_type=NEW_CARD_CONFIRMATION_DOC_TYPE)
+        .order_by("-uploaded_at", "-id")
+        .first()
+    )
+
+
+def _new_card_values_from_mos(mos_data: MOSApplicationData | None) -> dict[str, str]:
+    if mos_data is None:
+        return {
+            "status": "",
+            "case_number": "",
+            "submitted_at": "",
+            "comment": "",
+        }
+    return {
+        "status": mos_data.new_residence_card_application_status or "",
+        "case_number": str(mos_data.new_residence_card_case_number or ""),
+        "submitted_at": mos_data.new_residence_card_submitted_at.isoformat()
+        if mos_data.new_residence_card_submitted_at
+        else "",
+        "comment": mos_data.new_residence_card_comment or "",
+    }
+
+
+def _new_card_values_from_post(request: HttpRequest) -> dict[str, str]:
+    return {
+        "status": request.POST.get("new_card_application_status", "").strip(),
+        "case_number": request.POST.get("new_card_case_number", "").strip(),
+        "submitted_at": request.POST.get("new_card_submitted_at", "").strip(),
+        "comment": request.POST.get("new_card_comment", "").strip(),
+    }
+
+
+def _validate_new_card_values(values: dict[str, str]) -> dict[str, str]:
+    errors: dict[str, str] = {}
+    status = values.get("status", "")
+    if status not in NEW_CARD_ALLOWED_STATUSES:
+        errors["status"] = str(_("Wybierz odpowiedź / Выберите ответ."))
+
+    submitted_at = values.get("submitted_at", "")
+    if submitted_at and parse_date(submitted_at) is None:
+        errors["submitted_at"] = str(_("Podaj poprawną datę / Укажите корректную дату."))
+    return errors
+
+
+def _save_new_card_values(mos_data: MOSApplicationData, values: dict[str, str]) -> None:
+    status = values["status"]
+    mos_data.new_residence_card_application_status = status
+    if status == MOSApplicationData.NEW_CARD_STATUS_YES:
+        mos_data.new_residence_card_case_number = values.get("case_number", "")
+        submitted_at = values.get("submitted_at", "")
+        mos_data.new_residence_card_submitted_at = parse_date(submitted_at) if submitted_at else None
+    else:
+        mos_data.new_residence_card_case_number = ""
+        mos_data.new_residence_card_submitted_at = None
+    mos_data.new_residence_card_comment = values.get("comment", "")
+    mos_data.new_residence_card_updated_at = timezone.now()
+    mos_data.save(
+        update_fields=[
+            "new_residence_card_application_status",
+            "new_residence_card_case_number",
+            "new_residence_card_submitted_at",
+            "new_residence_card_comment",
+            "new_residence_card_updated_at",
+            "updated_at",
+        ]
+    )
+
+
+def _new_card_missing_warnings(mos_data: MOSApplicationData, confirmation_document: Document | None) -> list[str]:
+    if mos_data.new_residence_card_application_status == MOSApplicationData.NEW_CARD_STATUS_YES:
+        warnings = []
+        if not mos_data.new_residence_card_case_number:
+            warnings.append(str(_("Prosimy o uzupełnienie numeru sprawy, jeśli jest już dostępny. / Пожалуйста, добавьте номер дела, если он уже доступен.")))
+        if not confirmation_document:
+            warnings.append(str(_("Prosimy o załadowanie potwierdzenia złożenia wniosku o kartę pobytu. / Пожалуйста, загрузите подтверждение подачи заявления на карту побыту.")))
+        if not mos_data.new_residence_card_submitted_at:
+            warnings.append(str(_("Jeśli znasz datę złożenia wniosku, dodaj ją w tym bloku. / Если знаете дату подачи заявления, добавьте её в этом блоке.")))
+        return warnings
+    if mos_data.new_residence_card_application_status == MOSApplicationData.NEW_CARD_STATUS_UNKNOWN:
+        return [
+            str(_("Prosimy o sprawdzenie, czy posiada Pan/Pani potwierdzenie złożenia wniosku, pieczątkę w paszporcie lub wiadomość z urzędu. / Пожалуйста, проверьте, есть ли у вас подтверждение подачи заявления, печать в паспорте или сообщение из уженда."))
+        ]
+    return []
+
+
+def _handle_new_card_application_post(
+    request: HttpRequest,
+    *,
+    session: ClientOnboardingSession,
+    mos_data: MOSApplicationData,
+    token: str,
+) -> HttpResponse:
+    if not _mos_documents_are_editable(mos_data):
+        return _locked_response(request, session)
+
+    values = _new_card_values_from_post(request)
+    errors = _validate_new_card_values(values)
+    upload_form: DocumentUploadForm | None = None
+    confirmation_file = request.FILES.get("new_card_confirmation_file")
+    if confirmation_file and values.get("status") in NEW_CARD_CONFIRMATION_UPLOAD_STATUSES:
+        files_dict = request.FILES.copy()
+        files_dict["file"] = files_dict["new_card_confirmation_file"]
+        upload_form = DocumentUploadForm(
+            request.POST,
+            files_dict,
+            doc_type=NEW_CARD_CONFIRMATION_DOC_TYPE,
+            client=session.client,
+        )
+        if not upload_form.is_valid():
+            errors["confirmation_file"] = " ".join(
+                str(error) for field_errors in upload_form.errors.values() for error in field_errors
+            )
+
+    if errors:
+        return render(
+            request,
+            START_TEMPLATE,
+            _build_start_context(
+                session=session,
+                new_card_values=values,
+                new_card_errors=errors,
+            ),
+        )
+
+    _save_new_card_values(mos_data, values)
+    if upload_form is not None:
+        upload_client_document(
+            client=session.client,
+            doc_type=NEW_CARD_CONFIRMATION_DOC_TYPE,
+            uploaded_document=upload_form.save(commit=False),
+            actor=request.user if request.user.is_authenticated else None,
+            parse_requested=False,
+        )
+
+    mos_data.refresh_from_db()
+    confirmation_document = _latest_new_card_confirmation_document(session.client)
+    messages.success(request, _("Informacja o nowym wniosku została zapisana. / Информация о новом заявлении сохранена."))
+    for warning in _new_card_missing_warnings(mos_data, confirmation_document):
+        messages.warning(request, warning)
+    return redirect("clients:onboarding_start", token=token)
+
+
 def _case_step_for_status(status: str) -> int:
     if status in ["draft", "client_filling", "client_completed", "needs_correction"]:
         return 1
@@ -119,6 +278,8 @@ def _build_start_context(
     session: ClientOnboardingSession,
     contact_values: dict[str, str] | None = None,
     contact_errors: dict[str, str] | None = None,
+    new_card_values: dict[str, str] | None = None,
+    new_card_errors: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     client = session.client
     try:
@@ -132,6 +293,10 @@ def _build_start_context(
     fingerprint_invitation_doc_type = DocumentType.WEZWANIE.value
     existing_documents = list(Document.objects.filter(client=client).order_by("document_type", "-uploaded_at"))
     existing_map = {document.document_type: document.id for document in existing_documents}
+    new_card_confirmation_document = next(
+        (document for document in existing_documents if document.document_type == NEW_CARD_CONFIRMATION_DOC_TYPE),
+        None,
+    )
 
     required_docs_catalog = DocumentRequirement.catalog_for(purpose=effective_purpose, language=language)
 
@@ -185,7 +350,8 @@ def _build_start_context(
             "source_hint": _document_source_hint(document.document_type),
         }
         for document in existing_documents
-        if document.document_type not in checklist_codes and document.document_type != fingerprint_invitation_doc_type
+        if document.document_type not in checklist_codes
+        and document.document_type not in {fingerprint_invitation_doc_type, NEW_CARD_CONFIRMATION_DOC_TYPE}
     ]
 
     contact_values = contact_values or _contact_values_from_client(client, mos_data)
@@ -237,6 +403,10 @@ def _build_start_context(
         "contact_values": contact_values,
         "contact_errors": contact_errors or {},
         "contact_complete": contact_complete,
+        "new_card_confirmation_doc_type": NEW_CARD_CONFIRMATION_DOC_TYPE,
+        "new_card_confirmation_document": new_card_confirmation_document,
+        "new_card_values": new_card_values or _new_card_values_from_mos(mos_data),
+        "new_card_errors": new_card_errors or {},
         "docs_total_count": docs_total_count,
         "docs_uploaded_count": docs_uploaded_count,
         "docs_required_pending_count": docs_required_pending_count,
@@ -263,6 +433,9 @@ def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
 
     if request.method == "POST":
         mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
+        if request.POST.get("action") == "new_card_application":
+            return _handle_new_card_application_post(request, session=session, mos_data=mos_data, token=token)
+
         existing_contact_values = _contact_values_from_client(client, mos_data)
         if not _contact_form_is_editable(mos_data, existing_contact_values):
             return _locked_response(request, session)

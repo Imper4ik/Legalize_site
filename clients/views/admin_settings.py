@@ -70,6 +70,10 @@ class AdminPanelView(RoleRequiredMixin, TemplateView):
             getattr(self.request.user, "is_superuser", False)
             and getattr(settings, "ENABLE_TEST_CENTER", False)
         )
+        context["demo_center_available"] = bool(
+            getattr(self.request.user, "is_superuser", False)
+            and getattr(settings, "DEMO_MODE_ENABLED", False)
+        )
         return context
 
 

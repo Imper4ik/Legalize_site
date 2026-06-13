@@ -1,0 +1,6 @@
+Dzień dobry {{ client.first_name }} {{ client.last_name }},
+
+Twój dokument ZUS RCA (lub ubezpieczenie) został odrzucony przez weryfikatora.
+Prosimy o zalogowanie się do portalu klienta, sprawdzenie przyczyny odrzucenia i przesłanie poprawnego dokumentu.
+
+[Otwórz portal klienta]

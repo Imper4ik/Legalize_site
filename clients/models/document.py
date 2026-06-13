@@ -183,6 +183,7 @@ class Document(SoftDeleteModel):
     )
 
     is_test_data = models.BooleanField(default=False, db_index=True)
+    is_demo_data = models.BooleanField(default=False, db_index=True)
 
     if TYPE_CHECKING:
         _preloaded_version_count: int

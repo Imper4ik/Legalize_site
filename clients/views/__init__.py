@@ -41,6 +41,7 @@ from clients.views.onboarding_step_return import (
     onboarding_declarations,
 )
 from clients.views.testcenter import testcenter_view
+from clients.views.demo_center import democenter_view
 
 enable_token_link_access()
 

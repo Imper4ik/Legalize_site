@@ -1,10 +1,14 @@
 from datetime import timedelta
+from io import BytesIO
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
+from PIL import Image
 
-from clients.models import Client, ClientOnboardingSession, MOSApplicationData
+from clients.constants import DocumentType
+from clients.models import Client, ClientOnboardingSession, Document, MOSApplicationData
 from clients.services.onboarding_tokens import hash_onboarding_token
 
 
@@ -47,6 +51,8 @@ class OnboardingStartContactTests(TestCase):
             self.assertContains(response, 'name="last_name"')
             self.assertContains(response, 'name="email"')
             self.assertContains(response, 'name="phone"')
+            self.assertContains(response, "Новое заявление на карту побыту")
+            self.assertContains(response, 'name="new_card_application_status"')
 
     def test_post_start_without_required_fields_returns_errors_and_does_not_update_client(self):
         client, token = self._client_with_session()
@@ -89,6 +95,91 @@ class OnboardingStartContactTests(TestCase):
         self.assertEqual(mos_data.personal_data["last_name"], "Nowak")
         self.assertEqual(mos_data.personal_data["email"], "anna.nowak@example.com")
         self.assertEqual(mos_data.personal_data["phone"], "+48123456789")
+
+    def test_post_new_card_application_status_saves_details_and_confirmation_file(self):
+        client, token = self._client_with_session()
+        url = reverse("clients:onboarding_start", kwargs={"token": token})
+        image_bytes = BytesIO()
+        Image.new("RGB", (1, 1), color=(255, 255, 255)).save(image_bytes, format="PNG")
+        upload = SimpleUploadedFile("potwierdzenie.png", image_bytes.getvalue(), content_type="image/png")
+
+        response = self.client.post(
+            url,
+            {
+                "action": "new_card_application",
+                "new_card_application_status": "yes",
+                "new_card_case_number": "WSC-III.1234.5678.2026",
+                "new_card_submitted_at": "2026-06-01",
+                "new_card_comment": "Podany osobiscie",
+                "new_card_confirmation_file": upload,
+            },
+        )
+
+        self.assertRedirects(response, url)
+        mos_data = MOSApplicationData.objects.get(client=client)
+        self.assertEqual(mos_data.new_residence_card_application_status, MOSApplicationData.NEW_CARD_STATUS_YES)
+        self.assertEqual(mos_data.new_residence_card_case_number, "WSC-III.1234.5678.2026")
+        self.assertEqual(mos_data.new_residence_card_submitted_at.isoformat(), "2026-06-01")
+        self.assertEqual(mos_data.new_residence_card_comment, "Podany osobiscie")
+        self.assertIsNotNone(mos_data.new_residence_card_updated_at)
+        self.assertTrue(
+            Document.objects.filter(
+                client=client,
+                document_type=DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION.value,
+            ).exists()
+        )
+
+    def test_post_new_card_application_rejects_invalid_date_without_saving(self):
+        client, token = self._client_with_session()
+
+        from django.utils import translation
+        with translation.override('ru'):
+            url = reverse("clients:onboarding_start", kwargs={"token": token})
+            response = self.client.post(
+                url,
+                {
+                    "action": "new_card_application",
+                    "new_card_application_status": "yes",
+                    "new_card_submitted_at": "bad-date",
+                },
+            )
+
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, "Укажите корректную дату")
+        mos_data = MOSApplicationData.objects.get(client=client)
+        self.assertEqual(mos_data.new_residence_card_application_status, "")
+        self.assertFalse(
+            Document.objects.filter(
+                client=client,
+                document_type=DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION.value,
+            ).exists()
+        )
+
+    def test_post_new_card_application_no_status_ignores_confirmation_upload(self):
+        client, token = self._client_with_session()
+        url = reverse("clients:onboarding_start", kwargs={"token": token})
+        image_bytes = BytesIO()
+        Image.new("RGB", (1, 1), color=(255, 255, 255)).save(image_bytes, format="PNG")
+        upload = SimpleUploadedFile("potwierdzenie.png", image_bytes.getvalue(), content_type="image/png")
+
+        response = self.client.post(
+            url,
+            {
+                "action": "new_card_application",
+                "new_card_application_status": "no",
+                "new_card_confirmation_file": upload,
+            },
+        )
+
+        self.assertRedirects(response, url)
+        mos_data = MOSApplicationData.objects.get(client=client)
+        self.assertEqual(mos_data.new_residence_card_application_status, MOSApplicationData.NEW_CARD_STATUS_NO)
+        self.assertFalse(
+            Document.objects.filter(
+                client=client,
+                document_type=DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION.value,
+            ).exists()
+        )
 
     def test_existing_contact_values_are_compact_and_editable(self):
         client, token = self._client_with_session()
@@ -159,9 +250,11 @@ class OnboardingStartContactTests(TestCase):
         self.assertEqual(mos_data.personal_data["email"], "afanasenko860@gmail.com")
         self.assertEqual(mos_data.personal_data["phone"], "571 381 041")
 
-        response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
-        self.assertContains(response, "Контактные данные сохранены")
-        self.assertNotContains(response, "Внимание: Заполните контактные данные")
+        from django.utils import translation
+        with translation.override('ru'):
+            response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
+            self.assertContains(response, "Контактные данные сохранены")
+            self.assertNotContains(response, "Внимание: Заполните контактные данные")
 
     def test_locked_start_page_does_not_change_contact_data(self):
         client, token = self._client_with_session()

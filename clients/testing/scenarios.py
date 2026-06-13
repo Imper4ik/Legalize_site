@@ -5,7 +5,7 @@ from datetime import date
 from django.utils import timezone
 
 from clients.constants import DocumentType
-from clients.models import ClientActivity, ClientOnboardingSession, EmailLog
+from clients.models import ClientActivity, ClientOnboardingSession, EmailLog, MOSApplicationData
 from clients.services.notifications import send_missing_documents_email
 from clients.services.onboarding_tokens import hash_onboarding_token
 from clients.services.workflow_transitions import transition_client_workflow
@@ -59,6 +59,42 @@ def run_smoke_scenario(recorder: ScenarioRecorder) -> None:
         verified=True,
         filename="passport.pdf",
     )
+    mos_data = client.mos_application_data
+    mos_data.new_residence_card_application_status = MOSApplicationData.NEW_CARD_STATUS_YES
+    mos_data.new_residence_card_case_number = "WSC-III.TEST.2026"
+    mos_data.new_residence_card_submitted_at = date(2026, 6, 2)
+    mos_data.new_residence_card_comment = "Test Center confirmation"
+    mos_data.new_residence_card_updated_at = timezone.now()
+    mos_data.save(
+        update_fields=[
+            "new_residence_card_application_status",
+            "new_residence_card_case_number",
+            "new_residence_card_submitted_at",
+            "new_residence_card_comment",
+            "new_residence_card_updated_at",
+        ]
+    )
+    new_card_confirmation = create_test_document(
+        client,
+        doc_type=DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION.value,
+        verified=False,
+        filename="new-card-confirmation.pdf",
+    )
+    recorder.check(
+        "smoke.new_residence_card_application_status_and_confirmation_saved",
+        (
+            mos_data.new_residence_card_application_status == MOSApplicationData.NEW_CARD_STATUS_YES
+            and bool(mos_data.new_residence_card_case_number)
+            and new_card_confirmation.document_type == DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION.value
+        ),
+        expected="new card application status yes with case number and confirmation document",
+        actual=(
+            f"status={mos_data.new_residence_card_application_status}, "
+            f"case={bool(mos_data.new_residence_card_case_number)}, "
+            f"doc_type={new_card_confirmation.document_type}"
+        ),
+        related=RelatedObjects(client=client, document=new_card_confirmation),
+    )
     missing_email_sent = send_missing_documents_email(client, weekly_key=f"{client.pk}:smoke:missing")
     email_log = EmailLog.objects.filter(client=client, template_type="missing_documents").first()
     recorder.check(
@@ -94,11 +130,177 @@ def run_smoke_scenario(recorder: ScenarioRecorder) -> None:
     )
 
 
+def run_real_ocr_fixture_scenarios(recorder: ScenarioRecorder) -> None:
+    from unittest.mock import patch
+    from clients.services.document_workflow import (
+        process_document_processing_job,
+        enqueue_document_processing_job,
+    )
+    from clients.testing.factories import create_test_client, create_test_document
+    from clients.constants import DocumentType
+    from clients.models import DocumentProcessingJob
+    from datetime import date
+
+    # Custom mock function for extract_text
+    def mock_extract_text(path_or_str):
+        path_str = str(path_or_str)
+        if "wezwanie_clean.pdf" in path_str:
+            return (
+                "WEZWANIE\n"
+                "Urząd Wojewódzki Mazowiecki Urzad Wojewodzki\n"
+                "Do: Pan/i Test Client\n"
+                "Numer sprawy: WSC-II-S.6151.97770.2026\n"
+                "Warszawa, dnia 01.06.2026\n"
+                "Wzywa się do stawienia w celu złożenia odcisków palców w dniu 15.06.2026.\n"
+                "Należy donieść brakujące dokumenty:\n"
+                "- zus rca\n"
+                "- umowa najmu\n"
+                "- opłata skarbowa\n"
+            )
+        elif "zus_rca_good.pdf" in path_str:
+            return (
+                "ZAKŁAD UBEZPIECZEŃ SPOŁECZNYCH\n"
+                "ZUS RCA IMIENNY RAPORT MIESIĘCZNY za miesiąc 04/2026\n"
+                "Płatnik NIP: 5250000007\n"
+                "Ubezpieczony: Test Client\n"
+                "kod tytułu ubezpieczenia 011000\n"
+            )
+        elif "zus_rca_wrong_month.pdf" in path_str:
+            return (
+                "ZAKŁAD UBEZPIECZEŃ SPOŁECZNYCH\n"
+                "ZUS RCA IMIENNY RAPORT MIESIĘCZNY za okres rozliczeniowy 03.2026\n"
+                "Płatnik NIP: 5250000007\n"
+                "Ubezpieczony: Test Client\n"
+                "kod tytułu ubezpieczenia 011000\n"
+            )
+        elif "unreadable_scan.jpg" in path_str:
+            return ""
+        return ""
+
+    with patch("clients.services.wezwanie_parser.extract_text", side_effect=mock_extract_text):
+        client = create_test_client(
+            email="ocr_fixture_client@example.test",
+            first_name="Test",
+            last_name="Client",
+            purpose="work",
+        )
+
+        # 1. wezwanie_clean.pdf
+        doc_wezwanie = create_test_document(
+            client,
+            doc_type=DocumentType.WEZWANIE.value,
+            filename="wezwanie_clean.pdf",
+        )
+        job_wezwanie = enqueue_document_processing_job(
+            document=doc_wezwanie,
+            actor=None,
+            requires_confirmation=True,
+            job_type=DocumentProcessingJob.JOB_TYPE_WEZWANIE_OCR,
+        )
+        res_wezwanie = process_document_processing_job(job_id=job_wezwanie.pk)
+        doc_wezwanie.refresh_from_db()
+
+        recorder.check(
+            "ocr_fixtures.wezwanie_clean_status",
+            res_wezwanie.status == DocumentProcessingJob.STATUS_COMPLETED and doc_wezwanie.ocr_status == "success",
+            expected="completed and success",
+            actual=f"job={res_wezwanie.status}, doc={doc_wezwanie.ocr_status}",
+            related=RelatedObjects(client=client, document=doc_wezwanie),
+        )
+        # Check parsed fields
+        has_case_number = doc_wezwanie.parsed_data.get("case_number") == "WSC-II-S.6151.97770.2026" if doc_wezwanie.parsed_data else False
+        has_fingerprints_date = doc_wezwanie.parsed_data.get("fingerprints_date") == "2026-06-15" if doc_wezwanie.parsed_data else False
+        required_docs = doc_wezwanie.parsed_data.get("required_documents", []) if doc_wezwanie.parsed_data else []
+        has_zus = "zus_rca_or_insurance" in required_docs
+        has_address = "address_proof" in required_docs
+        has_payment = "payment_confirmation" in required_docs
+
+        recorder.check(
+            "ocr_fixtures.wezwanie_clean_parsed_fields",
+            has_case_number and has_fingerprints_date and has_zus and has_address and has_payment,
+            expected="case=WSC-II-S.6151.97770.2026, date=2026-06-15, docs has zus, address, payment",
+            actual=f"has_case={has_case_number}, has_date={has_fingerprints_date}, required={required_docs}",
+            related=RelatedObjects(client=client, document=doc_wezwanie),
+        )
+
+        # 2. zus_rca_good.pdf
+        doc_zus_good = create_test_document(
+            client,
+            doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+            zus_period_month=date(2026, 4, 1),
+            filename="zus_rca_good.pdf",
+        )
+        job_zus_good = enqueue_document_processing_job(
+            document=doc_zus_good,
+            actor=None,
+            requires_confirmation=False,
+            job_type=DocumentProcessingJob.JOB_TYPE_ZUS_OCR,
+        )
+        res_zus_good = process_document_processing_job(job_id=job_zus_good.pk)
+        doc_zus_good.refresh_from_db()
+
+        recorder.check(
+            "ocr_fixtures.zus_rca_good_matched",
+            res_zus_good.status == DocumentProcessingJob.STATUS_COMPLETED and not doc_zus_good.ocr_name_mismatch,
+            expected="completed and no mismatch",
+            actual=f"job={res_zus_good.status}, mismatch={doc_zus_good.ocr_name_mismatch}",
+            related=RelatedObjects(client=client, document=doc_zus_good),
+        )
+
+        # 3. zus_rca_wrong_month.pdf
+        doc_zus_wrong = create_test_document(
+            client,
+            doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+            zus_period_month=date(2026, 4, 1),
+            filename="zus_rca_wrong_month.pdf",
+        )
+        job_zus_wrong = enqueue_document_processing_job(
+            document=doc_zus_wrong,
+            actor=None,
+            requires_confirmation=False,
+            job_type=DocumentProcessingJob.JOB_TYPE_ZUS_OCR,
+        )
+        res_zus_wrong = process_document_processing_job(job_id=job_zus_wrong.pk)
+        doc_zus_wrong.refresh_from_db()
+
+        recorder.check(
+            "ocr_fixtures.zus_rca_wrong_month_mismatch",
+            res_zus_wrong.status == DocumentProcessingJob.STATUS_COMPLETED and doc_zus_wrong.ocr_name_mismatch,
+            expected="completed and has mismatch warning",
+            actual=f"job={res_zus_wrong.status}, mismatch={doc_zus_wrong.ocr_name_mismatch}",
+            related=RelatedObjects(client=client, document=doc_zus_wrong),
+        )
+
+        # 4. unreadable_scan.jpg
+        doc_unreadable = create_test_document(
+            client,
+            doc_type=DocumentType.PASSPORT.value,
+            filename="unreadable_scan.jpg",
+        )
+        job_unreadable = enqueue_document_processing_job(
+            document=doc_unreadable,
+            actor=None,
+            requires_confirmation=False,
+            job_type=DocumentProcessingJob.JOB_TYPE_PASSPORT_OCR,
+        )
+        res_unreadable = process_document_processing_job(job_id=job_unreadable.pk)
+        doc_unreadable.refresh_from_db()
+
+        recorder.check(
+            "ocr_fixtures.unreadable_scan_failed",
+            res_unreadable.status == DocumentProcessingJob.STATUS_FAILED and doc_unreadable.ocr_status == "failed",
+            expected="job failed and doc status failed",
+            actual=f"job={res_unreadable.status}, doc={doc_unreadable.ocr_status}",
+            related=RelatedObjects(client=client, document=doc_unreadable),
+        )
+
+
 SCENARIO_GROUPS = {
     "smoke": [run_smoke_scenario],
     "email": [run_email_scenarios],
     "zus": [run_zus_scenarios],
     "ocr": [run_ocr_scenarios],
+    "ocr-fixtures": [run_real_ocr_fixture_scenarios],
     "documents": [run_document_access_scenarios],
     "permissions": [run_permission_scenarios],
     "security": [run_permission_scenarios, run_document_access_scenarios],
@@ -110,6 +312,7 @@ SCENARIO_GROUPS = {
         run_email_scenarios,
         run_zus_scenarios,
         run_ocr_scenarios,
+        run_real_ocr_fixture_scenarios,
         run_workflow_scenarios,
     ],
 }

@@ -27,7 +27,7 @@ class DocumentType(models.TextChoices):
     TAX_CLEARANCE_EMPLOYER = 'tax_clearance_employer', _('Zaświadczenie ZUS dot. braku zaległości pracodawcy')
     TAX_CLEARANCE_FOREIGNER = 'tax_clearance_foreigner', _('Zaświadczenie o niezaleganiu opłacania składek cudzoziemca')
     NO_DEPENDENTS_STATEMENT = 'no_dependents_statement', _('Zaświadczenie o niezaleganiu w podatkach')
-    ZUS_RCA_OR_INSURANCE = 'zus_rca_or_insurance', _('ZUS RCA')
+    ZUS_RCA_OR_INSURANCE = 'zus_rca_or_insurance', _('ZUS RCA или действующая страховка')
     ZUS_CONTRIBUTION_HISTORY = 'zus_contribution_history', _('Zaświadczenie z ZUS o przebiegu ubezpieczenia cudzoziemca')
     EMPLOYER_TAX_RETURN = 'employer_tax_return', _('CIT lub PIT pracodawcy')
     ZUS_EMPLOYEE_COUNT = 'zus_employee_count', _('Zaświadczenie z ZUS o liczbie zgłoszonych pracowników i składkach')
@@ -35,6 +35,7 @@ class DocumentType(models.TextChoices):
     MAINTENANCE_STATEMENT = 'maintenance_statement', _('Oświadczenie o utrzymaniu')
     WEZWANIE = 'wezwanie', _('Wezwanie')
     FINGERPRINT_CONFIRMATION = 'fingerprint_confirmation', _('Potwierdzenie złożenia odcisków palców')
+    NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION = 'new_residence_card_application_confirmation', _('Potwierdzenie złożenia nowego wniosku o kartę pobytu')
 
 
 def doc_entry(doc_type: DocumentType) -> tuple[str, Any]:

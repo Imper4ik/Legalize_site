@@ -1,0 +1,6 @@
+Dear {{ client.first_name }} {{ client.last_name }},
+
+the submitted ZUS RCA document is incorrect or does not contain the required contributions.
+Please upload the correct document through the client portal.
+
+[Open client portal]
