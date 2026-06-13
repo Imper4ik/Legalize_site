@@ -3,411 +3,624 @@
 
 {% block title %}{% translate "Test Center" %}{% endblock %}
 {% block page_title %}{% translate "Test Center" %}{% endblock %}
-{% block page_subtitle %}{% translate "Protected E2E regression checks for test data only." %}{% endblock %}
+{% block page_subtitle %}{% translate "Общие E2E проверки на безопасных тестовых данных." %}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .test-workbench {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .tc-topbar,
+  .tc-panel,
+  .tc-card,
+  .tc-table-wrap {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    background: var(--bs-body-bg);
+  }
+
+  .tc-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .tc-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .tc-title-icon,
+  .tc-mode-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.65rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+
+  .tc-title-icon {
+    color: #dc2626;
+    background: rgba(220, 38, 38, 0.1);
+  }
+
+  .tc-layout {
+    display: grid;
+    gap: 1rem;
+  }
+
+  @media (min-width: 1200px) {
+    .tc-layout {
+      grid-template-columns: 23rem minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .tc-left {
+      position: sticky;
+      top: 1rem;
+    }
+  }
+
+  .tc-panel,
+  .tc-card {
+    padding: 1rem;
+  }
+
+  .tc-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0 0 0.85rem;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .tc-section-title i {
+    color: #2563eb;
+  }
+
+  .tc-muted {
+    color: var(--bs-secondary-color);
+    font-size: 0.82rem;
+    line-height: 1.42;
+  }
+
+  .tc-mode-list {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .tc-mode-card {
+    padding: 0.85rem;
+    border: 1px solid var(--bs-border-color);
+    border-left: 4px solid var(--tc-accent, #2563eb);
+    border-radius: 0.75rem;
+    background: var(--bs-body-bg);
+  }
+
+  .tc-mode-card:hover {
+    border-color: color-mix(in srgb, var(--tc-accent, #2563eb) 45%, var(--bs-border-color));
+  }
+
+  .tc-mode-smoke { --tc-accent: #d97706; }
+  .tc-mode-full { --tc-accent: #2563eb; }
+  .tc-mode-ocr { --tc-accent: #0891b2; }
+  .tc-mode-email { --tc-accent: #16a34a; }
+  .tc-mode-zus { --tc-accent: #ea580c; }
+  .tc-mode-documents { --tc-accent: #7c3aed; }
+  .tc-mode-permissions { --tc-accent: #dc2626; }
+  .tc-mode-security { --tc-accent: #b91c1c; }
+  .tc-mode-workflow { --tc-accent: #0f766e; }
+
+  .tc-mode-icon {
+    width: 2.15rem;
+    height: 2.15rem;
+    color: var(--tc-accent, #2563eb);
+    background: color-mix(in srgb, var(--tc-accent, #2563eb) 12%, transparent);
+  }
+
+  .tc-mode-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  .tc-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  @media (min-width: 768px) {
+    .tc-kpi-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .tc-kpi {
+    padding: 0.85rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+  }
+
+  .tc-kpi-label {
+    color: var(--bs-secondary-color);
+    font-size: 0.76rem;
+    font-weight: 600;
+  }
+
+  .tc-kpi-value {
+    margin-top: 0.35rem;
+    font-size: 1.45rem;
+    font-weight: 750;
+    line-height: 1.1;
+  }
+
+  .tc-status-pill,
+  .tc-result-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 650;
+  }
+
+  .tc-pill-passed {
+    color: #166534;
+    background: rgba(22, 163, 74, 0.12);
+  }
+
+  .tc-pill-failed {
+    color: #991b1b;
+    background: rgba(220, 38, 38, 0.12);
+  }
+
+  .tc-pill-other {
+    color: #92400e;
+    background: rgba(217, 119, 6, 0.12);
+  }
+
+  [data-bs-theme="dark"] .tc-pill-passed { color: #86efac; }
+  [data-bs-theme="dark"] .tc-pill-failed { color: #fca5a5; }
+  [data-bs-theme="dark"] .tc-pill-other { color: #fcd34d; }
+
+  .tc-journey {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  @media (max-width: 767.98px) {
+    .tc-journey {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .tc-step {
+    padding: 0.75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    min-height: 5.25rem;
+  }
+
+  .tc-step-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.45rem;
+    color: var(--bs-secondary-color);
+    background: var(--bs-tertiary-bg);
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .step-passed {
+    border-color: rgba(22, 163, 74, 0.4);
+    background: rgba(22, 163, 74, 0.05);
+  }
+
+  .step-passed .tc-step-icon {
+    color: #fff;
+    background: #16a34a;
+  }
+
+  .step-failed {
+    border-color: rgba(220, 38, 38, 0.45);
+    background: rgba(220, 38, 38, 0.06);
+  }
+
+  .step-failed .tc-step-icon {
+    color: #fff;
+    background: #dc2626;
+  }
+
+  .tc-table-wrap {
+    overflow: hidden;
+  }
+
+  .tc-table th {
+    color: var(--bs-secondary-color);
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    background: var(--bs-tertiary-bg);
+  }
+
+  .tc-table td {
+    vertical-align: top;
+  }
+
+  .tc-object-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: 12rem;
+    padding: 0.2rem 0.45rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 999px;
+    color: inherit;
+    font-size: 0.76rem;
+    text-decoration: none;
+  }
+
+  .tc-object-chip:hover {
+    border-color: rgba(37, 99, 235, 0.4);
+  }
+
+  .tc-details summary {
+    cursor: pointer;
+    color: #2563eb;
+    font-size: 0.82rem;
+    font-weight: 650;
+  }
+
+  .tc-log {
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    border-radius: 0.65rem;
+    background: var(--bs-tertiary-bg);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.76rem;
+    white-space: pre-wrap;
+  }
+
+  .tc-run-list {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .tc-run-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.65rem;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .tc-run-item:hover {
+    color: inherit;
+    border-color: rgba(37, 99, 235, 0.4);
+  }
+
+  .tc-empty {
+    padding: 2rem 1rem;
+    border: 1px dashed var(--bs-border-color);
+    border-radius: 0.75rem;
+    color: var(--bs-secondary-color);
+    text-align: center;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <div></div>
-  <a href="{% url 'clients:admin_panel' %}" class="btn btn-outline-secondary">
-    <i class="bi bi-arrow-left"></i> {% translate "Back to Admin Panel" %}
-  </a>
-</div>
+<div class="test-workbench">
+  <div class="tc-topbar">
+    <div class="tc-title">
+      <span class="tc-title-icon"><i class="bi bi-shield-check"></i></span>
+      <div>
+        <div class="fw-bold">{% translate "Общие тесты и регрессии" %}</div>
+        <div class="tc-muted">{% translate "Запуск сценариев, просмотр связанных объектов и очистка только тестовых данных." %}</div>
+      </div>
+    </div>
+    <a href="{% url 'clients:admin_panel' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i>{% translate "Back to Admin Panel" %}
+    </a>
+  </div>
 
-<div class="row g-4">
-  <div class="col-12 col-xl-4">
-    <section class="mb-4">
-      <h2 class="h5 mb-3">{% translate "Run Scenarios" %}</h2>
-      <div class="d-grid gap-2">
-        {% for mode in modes %}
-        <form method="post" class="border rounded p-3 mb-2">
+  <div class="tc-layout">
+    <aside class="tc-left">
+      <section class="tc-panel mb-3">
+        <h2 class="tc-section-title"><i class="bi bi-play-circle"></i>{% translate "Run Scenarios" %}</h2>
+        <div class="tc-mode-list">
+          {% for mode in modes %}
+          <form method="post" class="tc-mode-card tc-mode-{{ mode }}">
+            {% csrf_token %}
+            <input type="hidden" name="mode" value="{{ mode }}">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="tc-mode-icon">
+                {% if mode == 'smoke' %}<i class="bi bi-lightning-charge-fill"></i>
+                {% elif mode == 'full' %}<i class="bi bi-collection-fill"></i>
+                {% elif mode == 'ocr' %}<i class="bi bi-file-earmark-binary"></i>
+                {% elif mode == 'email' %}<i class="bi bi-envelope-check"></i>
+                {% elif mode == 'zus' %}<i class="bi bi-shield-check"></i>
+                {% elif mode == 'documents' %}<i class="bi bi-folder2-open"></i>
+                {% elif mode == 'permissions' %}<i class="bi bi-lock"></i>
+                {% elif mode == 'security' %}<i class="bi bi-shield-lock"></i>
+                {% elif mode == 'workflow' %}<i class="bi bi-diagram-3"></i>
+                {% else %}<i class="bi bi-gear"></i>{% endif %}
+              </span>
+              <div class="min-w-0">
+                <h3 class="tc-mode-title">
+                  {% if mode == 'smoke' %}{% translate "Smoke" %}
+                  {% elif mode == 'full' %}{% translate "Full" %}
+                  {% elif mode == 'ocr' %}{% translate "OCR" %}
+                  {% elif mode == 'email' %}{% translate "Email" %}
+                  {% elif mode == 'zus' %}{% translate "ZUS" %}
+                  {% elif mode == 'documents' %}{% translate "Documents" %}
+                  {% elif mode == 'permissions' %}{% translate "Permissions" %}
+                  {% elif mode == 'security' %}{% translate "Security" %}
+                  {% elif mode == 'workflow' %}{% translate "Workflow" %}
+                  {% else %}{{ mode|title }}{% endif %}
+                </h3>
+                <div class="tc-muted">{{ mode }}</div>
+              </div>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" name="keep_data" value="yes" id="keepData{{ mode }}">
+              <label class="form-check-label small" for="keepData{{ mode }}">
+                {% translate "Keep data for manual review" %}
+              </label>
+            </div>
+            <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+              <i class="bi bi-play-fill me-1"></i>{% translate "Run" %}
+            </button>
+          </form>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="tc-panel">
+        <h2 class="tc-section-title text-danger"><i class="bi bi-trash3"></i>{% translate "Clean Test Data" %}</h2>
+        <p class="tc-muted">{% translate "Удаляет только записи Test Center, помеченные как test data." %}</p>
+        <form method="post">
           {% csrf_token %}
-          <input type="hidden" name="mode" value="{{ mode }}">
-          <h3 class="h6 mb-2">{% translate "Mode" %}: 
-            {% if mode == 'smoke' %}{% translate "Smoke" %}
-            {% elif mode == 'full' %}{% translate "Full" %}
-            {% elif mode == 'ocr' %}{% translate "OCR" %}
-            {% elif mode == 'email' %}{% translate "Email" %}
-            {% elif mode == 'zus' %}{% translate "ZUS" %}
-            {% elif mode == 'documents' %}{% translate "Documents" %}
-            {% elif mode == 'permissions' %}{% translate "Permissions" %}
-            {% elif mode == 'security' %}{% translate "Security" %}
-            {% elif mode == 'workflow' %}{% translate "Workflow" %}
-            {% else %}{{ mode|title }}{% endif %}
-          </h3>
+          <input type="hidden" name="action" value="clean">
           <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" name="keep_data" value="yes" id="keepData{{ mode }}">
-            <label class="form-check-label small" for="keepData{{ mode }}">
-              {% translate "Keep data in DB for manual review" %}
+            <input class="form-check-input" type="checkbox" value="yes" name="confirm_clean" id="confirmClean" required>
+            <label class="form-check-label small" for="confirmClean">
+              {% translate "Подтверждаю очистку тестовых данных" %}
             </label>
           </div>
-          <button type="submit" class="btn btn-primary w-100">
-            {% if mode == 'smoke' %}{% translate "Run smoke scenarios" %}
-            {% elif mode == 'full' %}{% translate "Run full scenarios" %}
-            {% elif mode == 'ocr' %}{% translate "Run ocr scenarios" %}
-            {% elif mode == 'email' %}{% translate "Run email scenarios" %}
-            {% elif mode == 'zus' %}{% translate "Run zus scenarios" %}
-            {% elif mode == 'documents' %}{% translate "Run documents scenarios" %}
-            {% elif mode == 'permissions' %}{% translate "Run permissions scenarios" %}
-            {% elif mode == 'security' %}{% translate "Run security scenarios" %}
-            {% elif mode == 'workflow' %}{% translate "Run workflow scenarios" %}
-            {% else %}{% blocktranslate %}Run {{ mode }} scenarios{% endblocktranslate %}{% endif %}
+          <button type="submit" class="btn btn-outline-danger w-100">
+            <i class="bi bi-trash3 me-1"></i>{% translate "Clean test data" %}
           </button>
         </form>
-        {% endfor %}
-      </div>
-    </section>
+      </section>
+    </aside>
 
-    <section>
-      <h2 class="h5 mb-3">{% translate "Clean Test Data" %}</h2>
-      <form method="post" class="border rounded p-3">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="clean">
-        <div class="form-check mb-3">
-          <input class="form-check-input" type="checkbox" value="yes" name="confirm_clean" id="confirmClean">
-          <label class="form-check-label" for="confirmClean">
-            {% translate "Delete only records marked as test data" %}
-          </label>
-        </div>
-        <button type="submit" class="btn btn-outline-danger w-100">{% translate "Clean test data" %}</button>
-      </form>
-    </section>
-  </div>
-
-  <div class="col-12 col-xl-8">
-    {% if selected_run %}
-    <section class="mb-4">
-      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-        <h2 class="h5 mb-0">{% translate "Test Run" %} #{{ selected_run.id }}</h2>
-        <div class="d-flex flex-wrap gap-2 align-items-center">
-          <button type="button" id="btnExpandAll" class="btn btn-xs btn-outline-secondary py-1 px-2" style="font-size: 0.75rem;">
-            <i class="bi bi-chevron-expand"></i> {% translate "Expand All Logs" %}
-          </button>
-          <button type="button" id="btnCollapseAll" class="btn btn-xs btn-outline-secondary py-1 px-2" style="font-size: 0.75rem;">
-            <i class="bi bi-chevron-contract"></i> {% translate "Collapse All Logs" %}
-          </button>
-          <span class="badge {% if selected_run.status == 'passed' %}bg-success{% elif selected_run.status == 'failed' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
-            {% if selected_run.status == 'passed' %}{% translate "passed" %}{% elif selected_run.status == 'failed' %}{% translate "failed" %}{% else %}{{ selected_run.status }}{% endif %}
-          </span>
-        </div>
-      </div>
-
-      <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
-          <div class="border rounded p-3 h-100">
-            <div class="text-muted small">{% translate "Mode" %}</div>
-            <div class="fw-semibold">
-              {% if selected_run.mode == 'smoke' %}{% translate "Smoke" %}
-              {% elif selected_run.mode == 'full' %}{% translate "Full" %}
-              {% elif selected_run.mode == 'ocr' %}{% translate "OCR" %}
-              {% elif selected_run.mode == 'email' %}{% translate "Email" %}
-              {% elif selected_run.mode == 'zus' %}{% translate "ZUS" %}
-              {% elif selected_run.mode == 'documents' %}{% translate "Documents" %}
-              {% elif selected_run.mode == 'permissions' %}{% translate "Permissions" %}
-              {% elif selected_run.mode == 'security' %}{% translate "Security" %}
-              {% elif selected_run.mode == 'workflow' %}{% translate "Workflow" %}
-              {% else %}{{ selected_run.mode|title }}{% endif %}
-            </div>
+    <main>
+      {% if selected_run %}
+      <section class="tc-card mb-3">
+        <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap mb-3">
+          <div>
+            <h2 class="h5 mb-1">{% translate "Test Run" %} #{{ selected_run.id }}</h2>
+            <div class="tc-muted">{{ selected_run.started_at|date:"Y-m-d H:i" }}</div>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            <button type="button" id="btnExpandAll" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-chevron-expand me-1"></i>{% translate "Expand logs" %}
+            </button>
+            <button type="button" id="btnCollapseAll" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-chevron-contract me-1"></i>{% translate "Collapse logs" %}
+            </button>
+            <span class="tc-status-pill {% if selected_run.status == 'passed' %}tc-pill-passed{% elif selected_run.status == 'failed' %}tc-pill-failed{% else %}tc-pill-other{% endif %}">
+              {% if selected_run.status == 'passed' %}<i class="bi bi-check-circle-fill"></i>{% translate "passed" %}
+              {% elif selected_run.status == 'failed' %}<i class="bi bi-x-circle-fill"></i>{% translate "failed" %}
+              {% else %}<i class="bi bi-hourglass-split"></i>{{ selected_run.status }}{% endif %}
+            </span>
           </div>
         </div>
-        <div class="col-6 col-md-3">
-          <div class="border rounded p-3 h-100">
-            <div class="text-muted small">{% translate "Total" %}</div>
-            <div class="fw-semibold">{{ selected_run.total_checks }}</div>
+
+        <div class="tc-kpi-grid">
+          <div class="tc-kpi">
+            <div class="tc-kpi-label">{% translate "Mode" %}</div>
+            <div class="tc-kpi-value">{{ selected_run.mode|title }}</div>
+          </div>
+          <div class="tc-kpi">
+            <div class="tc-kpi-label">{% translate "Total" %}</div>
+            <div class="tc-kpi-value">{{ selected_run.total_checks }}</div>
+          </div>
+          <div class="tc-kpi">
+            <div class="tc-kpi-label">{% translate "Passed" %}</div>
+            <div class="tc-kpi-value text-success">{{ selected_run.passed_checks }}</div>
+          </div>
+          <div class="tc-kpi">
+            <div class="tc-kpi-label">{% translate "Failed" %}</div>
+            <div class="tc-kpi-value text-danger">{{ selected_run.failed_checks }}</div>
           </div>
         </div>
-        <div class="col-6 col-md-3">
-          <div class="border rounded p-3 h-100">
-            <div class="text-muted small">{% translate "Passed" %}</div>
-            <div class="fw-semibold text-success">{{ selected_run.passed_checks }}</div>
+      </section>
+
+      <section class="tc-card mb-3">
+        <h2 class="tc-section-title"><i class="bi bi-signpost-split"></i>{% translate "Workflow E2E Progress Journey" %}</h2>
+        <div class="tc-journey">
+          <div class="tc-step" id="step-onboarding">
+            <span class="tc-step-icon">1</span>
+            <div class="fw-semibold small">{% translate "Onboarding" %}</div>
+            <div class="tc-muted">{% translate "Invite and intake" %}</div>
+          </div>
+          <div class="tc-step" id="step-documents">
+            <span class="tc-step-icon">2</span>
+            <div class="fw-semibold small">{% translate "Docs and OCR" %}</div>
+            <div class="tc-muted">{% translate "Files and parsing" %}</div>
+          </div>
+          <div class="tc-step" id="step-zus">
+            <span class="tc-step-icon">3</span>
+            <div class="fw-semibold small">{% translate "ZUS" %}</div>
+            <div class="tc-muted">{% translate "Insurance checks" %}</div>
+          </div>
+          <div class="tc-step" id="step-security">
+            <span class="tc-step-icon">4</span>
+            <div class="fw-semibold small">{% translate "Permissions" %}</div>
+            <div class="tc-muted">{% translate "Access rules" %}</div>
+          </div>
+          <div class="tc-step" id="step-workflow">
+            <span class="tc-step-icon">5</span>
+            <div class="fw-semibold small">{% translate "Workflow" %}</div>
+            <div class="tc-muted">{% translate "State and audit" %}</div>
           </div>
         </div>
-        <div class="col-6 col-md-3">
-          <div class="border rounded p-3 h-100">
-            <div class="text-muted small">{% translate "Failed" %}</div>
-            <div class="fw-semibold text-danger">{{ selected_run.failed_checks }}</div>
-          </div>
-        </div>
-      </div>
+      </section>
 
-      <style>
-        .timeline-container {
-          background: rgba(255, 255, 255, 0.05);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          border-radius: 12px;
-          padding: 24px;
-          margin-bottom: 24px;
-        }
-        .timeline-steps {
-          display: flex;
-          justify-content: space-between;
-          position: relative;
-          margin-bottom: 12px;
-        }
-        .timeline-line {
-          position: absolute;
-          top: 24px;
-          left: 40px;
-          right: 40px;
-          height: 4px;
-          background: #e0e0e0;
-          z-index: 1;
-        }
-        .timeline-progress {
-          position: absolute;
-          top: 24px;
-          left: 40px;
-          width: 0%;
-          height: 4px;
-          background: #0d6efd;
-          transition: width 0.5s ease-in-out;
-          z-index: 1;
-        }
-        .timeline-step {
-          text-align: center;
-          position: relative;
-          z-index: 2;
-          flex: 1;
-        }
-        .step-icon {
-          width: 48px;
-          height: 48px;
-          border-radius: 50%;
-          background: #f8f9fa;
-          border: 3px solid #e0e0e0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin: 0 auto 10px;
-          font-weight: bold;
-          color: #6c757d;
-          transition: all 0.3s ease;
-        }
-        .step-label {
-          font-size: 0.85rem;
-          font-weight: 600;
-          color: #495057;
-        }
-        .step-desc {
-          font-size: 0.75rem;
-          color: #6c757d;
-        }
-        
-        .step-passed .step-icon {
-          background: #d1e7dd;
-          border-color: #198754;
-          color: #198754;
-          box-shadow: 0 0 10px rgba(25, 135, 84, 0.2);
-        }
-        .step-failed .step-icon {
-          background: #f8d7da;
-          border-color: #dc3545;
-          color: #dc3545;
-          box-shadow: 0 0 10px rgba(220, 53, 69, 0.2);
-        }
-        .step-skipped .step-icon {
-          background: #e2e3e5;
-          border-color: #6c757d;
-          color: #6c757d;
-        }
-      </style>
+      <section class="tc-table-wrap mb-3">
+        <div class="table-responsive">
+          <table class="table tc-table align-middle mb-0">
+            <thead>
+              <tr>
+                <th>{% translate "Scenario" %}</th>
+                <th>{% translate "Status" %}</th>
+                <th>{% translate "Related Object" %}</th>
+                <th>{% translate "Details" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for result in selected_run.results.all %}
+              <tr>
+                <td>
+                  <div class="fw-semibold small text-break">{{ result.scenario_name }}</div>
+                </td>
+                <td>
+                  <span class="tc-result-pill {% if result.status == 'passed' %}tc-pill-passed{% elif result.status == 'failed' %}tc-pill-failed{% else %}tc-pill-other{% endif %}">
+                    {% if result.status == 'passed' %}<i class="bi bi-check-circle-fill"></i>{% translate "passed" %}
+                    {% elif result.status == 'failed' %}<i class="bi bi-x-circle-fill"></i>{% translate "failed" %}
+                    {% else %}{{ result.status }}{% endif %}
+                  </span>
+                </td>
+                <td>
+                  {% if result.related_client %}
+                  <a href="{% url 'clients:client_detail' pk=result.related_client.id %}" target="_blank" rel="noopener" class="tc-object-chip text-truncate">
+                    <i class="bi bi-person"></i>{% translate "Client" %}: {{ result.related_client.get_full_name }}
+                  </a>
+                  {% endif %}
+                  {% if result.related_document %}
+                  {% if result.related_client %}<br>{% endif %}
+                  <a href="{% url 'clients:document_preview' doc_id=result.related_document.id %}" target="_blank" rel="noopener" class="tc-object-chip text-truncate mt-1">
+                    <i class="bi bi-file-earmark-text"></i>{% translate "Doc" %}: {{ result.related_document.document_type }}
+                  </a>
+                  {% endif %}
+                </td>
+                <td>
+                  <details class="scenario-details tc-details">
+                    <summary>{% translate "View details" %}</summary>
+                    <div class="tc-log">
+                      <strong>{% translate "Expected" %}:</strong> {{ result.expected_result }}
 
-      <div class="timeline-container">
-        <h3 class="h6 mb-4">{% translate "Workflow E2E Progress Journey" %}</h3>
-        <div class="position-relative">
-          <div class="timeline-line"></div>
-          <div class="timeline-progress" id="timelineProgress"></div>
-          <div class="timeline-steps">
-            <div class="timeline-step" id="step-onboarding">
-              <div class="step-icon">1</div>
-              <div class="step-label">{% translate "Onboarding" %}</div>
-              <div class="step-desc">{% translate "Invite & Intake" %}</div>
-            </div>
-            <div class="timeline-step" id="step-documents">
-              <div class="step-icon">2</div>
-              <div class="step-label">{% translate "Docs & OCR" %}</div>
-              <div class="step-desc">{% translate "Upload & Extract" %}</div>
-            </div>
-            <div class="timeline-step" id="step-zus">
-              <div class="step-icon">3</div>
-              <div class="step-label">{% translate "ZUS & Insurance" %}</div>
-              <div class="step-desc">{% translate "Audits & Expiry" %}</div>
-            </div>
-            <div class="timeline-step" id="step-security">
-              <div class="step-icon">4</div>
-              <div class="step-label">{% translate "Permissions" %}</div>
-              <div class="step-desc">{% translate "Security & Access" %}</div>
-            </div>
-            <div class="timeline-step" id="step-workflow">
-              <div class="step-icon">5</div>
-              <div class="step-label">{% translate "Workflow" %}</div>
-              <div class="step-desc">{% translate "State & Audit log" %}</div>
-            </div>
-          </div>
-        </div>
-      </div>
+                      <strong>{% translate "Actual" %}:</strong> {{ result.actual_result }}
+                      {% if result.error_message %}
 
-      <script>
-        document.addEventListener('DOMContentLoaded', function() {
-          const results = [];
-          {% for result in selected_run.results.all %}
-          results.push({
-            name: "{{ result.scenario_name }}",
-            status: "{{ result.status }}"
-          });
-          {% endfor %}
-          
-          const steps = {
-            onboarding: { pattern: /^(smoke\.invite|smoke\.test_data|smoke\.invite_session)/, el: document.getElementById('step-onboarding'), status: 'skipped' },
-            documents: { pattern: /^(documents\.|ocr\.)/, el: document.getElementById('step-documents'), status: 'skipped' },
-            zus: { pattern: /^zus\./, el: document.getElementById('step-zus'), status: 'skipped' },
-            security: { pattern: /^permissions\./, el: document.getElementById('step-security'), status: 'skipped' },
-            workflow: { pattern: /^(smoke\.workflow|workflow\.|payments\.)/, el: document.getElementById('step-workflow'), status: 'skipped' }
-          };
-          
-          Object.keys(steps).forEach(stepKey => {
-            const step = steps[stepKey];
-            const matched = results.filter(r => step.pattern.test(r.name));
-            if (matched.length > 0) {
-              const hasFailed = matched.some(r => r.status === 'failed');
-              step.status = hasFailed ? 'failed' : 'passed';
-            }
-          });
-          
-          let passedCount = 0;
-          let activeSteps = 0;
-          Object.keys(steps).forEach(stepKey => {
-            const step = steps[stepKey];
-            step.el.classList.add('step-' + step.status);
-            const iconEl = step.el.querySelector('.step-icon');
-            if (step.status === 'passed') {
-              iconEl.innerHTML = '✓';
-              passedCount++;
-              activeSteps++;
-            } else if (step.status === 'failed') {
-              iconEl.innerHTML = '✗';
-              activeSteps++;
-            } else {
-              iconEl.innerHTML = '—';
-            }
-          });
-          
-          const progressEl = document.getElementById('timelineProgress');
-          const totalSteps = Object.keys(steps).length;
-          if (activeSteps > 0) {
-            const percent = ((passedCount / totalSteps) * 100);
-            progressEl.style.width = percent + '%';
-            if (passedCount === totalSteps) {
-              progressEl.style.backgroundColor = '#198754';
-            } else if (passedCount < activeSteps) {
-              progressEl.style.backgroundColor = '#dc3545';
-            }
-          }
-
-          // Expand / Collapse details
-          const btnExpand = document.getElementById('btnExpandAll');
-          const btnCollapse = document.getElementById('btnCollapseAll');
-          btnExpand?.addEventListener('click', function() {
-            document.querySelectorAll('details.scenario-details').forEach(el => el.open = true);
-          });
-          btnCollapse?.addEventListener('click', function() {
-            document.querySelectorAll('details.scenario-details').forEach(el => el.open = false);
-          });
-        });
-      </script>
-
-      <div class="table-responsive">
-        <table class="table table-hover align-middle">
-          <thead>
-            <tr>
-              <th>{% translate "Scenario" %}</th>
-              <th>{% translate "Status" %}</th>
-              <th>{% translate "Related Object" %}</th>
-              <th>{% translate "Details" %}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for result in selected_run.results.all %}
-            <tr>
-              <td>
-                <div class="fw-semibold text-wrap" style="max-width: 320px; word-break: break-all;">
-                  {{ result.scenario_name }}
-                </div>
-              </td>
-              <td>
-                <span class="badge {% if result.status == 'passed' %}bg-success{% elif result.status == 'failed' %}bg-danger{% else %}bg-secondary{% endif %}">
-                  {% if result.status == 'passed' %}{% translate "passed" %}{% elif result.status == 'failed' %}{% translate "failed" %}{% else %}{{ result.status }}{% endif %}
-                </span>
-              </td>
-              <td>
-                {% if result.related_client %}
-                <a href="{% url 'clients:client_detail' pk=result.related_client.id %}" target="_blank" class="btn btn-xs btn-outline-primary py-0 px-1 d-inline-block text-truncate" style="font-size: 0.75rem; max-width: 180px;">
-                  {% translate "Client" %}: {{ result.related_client.get_full_name }}
-                </a>
-                {% endif %}
-                {% if result.related_document %}
-                {% if result.related_client %}<br>{% endif %}
-                <a href="{% url 'clients:document_preview' doc_id=result.related_document.id %}" target="_blank" class="btn btn-xs btn-outline-secondary py-0 px-1 d-inline-block text-truncate" style="font-size: 0.75rem; max-width: 180px;">
-                  {% translate "Doc" %}: {{ result.related_document.document_type }}
-                </a>
-                {% endif %}
-              </td>
-              <td>
-                <details class="scenario-details">
-                  <summary class="text-primary small cursor-pointer" style="user-select: none;">
-                    {% translate "View details" %}
-                  </summary>
-                  <div class="mt-2 p-3 bg-dark text-light rounded font-monospace small" style="min-width: 300px; max-width: 600px; overflow-x: auto; white-space: pre-wrap; word-break: break-word;">
-                    <div><strong>{% translate "Expected" %}:</strong> {{ result.expected_result }}</div>
-                    <div class="mt-2 border-top border-secondary pt-2"><strong>{% translate "Actual" %}:</strong> {{ result.actual_result }}</div>
-                    {% if result.error_message %}
-                    <div class="mt-2 border-top border-danger pt-2 text-danger">
-                      <strong>{% translate "Error" %}:</strong> {{ result.error_message }}
+                      <strong class="text-danger">{% translate "Error" %}:</strong> {{ result.error_message }}
+                      {% endif %}
                     </div>
-                    {% endif %}
-                  </div>
-                </details>
-              </td>
-            </tr>
-            {% empty %}
-            <tr>
-              <td colspan="4" class="text-muted text-center py-3">{% translate "No scenario results yet." %}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+                  </details>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4">
+                  <div class="tc-empty">{% translate "No scenario results yet." %}</div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      {% else %}
+      <div class="tc-empty mb-3">
+        <i class="bi bi-terminal d-block mb-2 fs-3"></i>
+        {% translate "No Test Center runs yet. Choose a scenario on the left." %}
       </div>
-    </section>
-    {% else %}
-    <div class="border rounded p-4 text-muted">{% translate "No Test Center runs yet." %}</div>
-    {% endif %}
+      {% endif %}
 
-    <section>
-      <h2 class="h5 mb-3">{% translate "Recent Runs" %}</h2>
-      <div class="list-group">
-        {% for run in latest_runs %}
-        <a href="?run_id={{ run.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-          <span>#{{ run.id }} 
-            {% if run.mode == 'smoke' %}{% translate "Smoke" %}
-            {% elif run.mode == 'full' %}{% translate "Full" %}
-            {% elif run.mode == 'ocr' %}{% translate "OCR" %}
-            {% elif run.mode == 'email' %}{% translate "Email" %}
-            {% elif run.mode == 'zus' %}{% translate "ZUS" %}
-            {% elif run.mode == 'documents' %}{% translate "Documents" %}
-            {% elif run.mode == 'permissions' %}{% translate "Permissions" %}
-            {% elif run.mode == 'security' %}{% translate "Security" %}
-            {% elif run.mode == 'workflow' %}{% translate "Workflow" %}
-            {% else %}{{ run.mode|title }}{% endif %}
-            - {{ run.started_at|date:"Y-m-d H:i" }}</span>
-          <span class="badge {% if run.status == 'passed' %}bg-success{% elif run.status == 'failed' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
-            {% if run.status == 'passed' %}{% translate "passed" %}{% elif run.status == 'failed' %}{% translate "failed" %}{% else %}{{ run.status }}{% endif %}
-          </span>
-        </a>
-        {% empty %}
-        <div class="list-group-item text-muted">{% translate "No runs." %}</div>
-        {% endfor %}
-      </div>
-    </section>
+      <section class="tc-card">
+        <h2 class="tc-section-title"><i class="bi bi-clock-history"></i>{% translate "Recent Runs" %}</h2>
+        <div class="tc-run-list">
+          {% for run in latest_runs %}
+          <a href="?run_id={{ run.id }}" class="tc-run-item">
+            <span class="fw-semibold">#{{ run.id }}</span>
+            <span class="min-w-0">
+              <span class="d-block text-truncate">{{ run.mode|title }}</span>
+              <span class="tc-muted">{{ run.started_at|date:"Y-m-d H:i" }}</span>
+            </span>
+            <span class="tc-status-pill {% if run.status == 'passed' %}tc-pill-passed{% elif run.status == 'failed' %}tc-pill-failed{% else %}tc-pill-other{% endif %}">
+              {% if run.status == 'passed' %}{% translate "passed" %}{% elif run.status == 'failed' %}{% translate "failed" %}{% else %}{{ run.status }}{% endif %}
+            </span>
+          </a>
+          {% empty %}
+          <div class="tc-empty">{% translate "No runs." %}</div>
+          {% endfor %}
+        </div>
+      </section>
+    </main>
   </div>
 </div>
+
+{% if selected_run %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const results = [
+      {% for result in selected_run.results.all %}
+      { name: "{{ result.scenario_name|escapejs }}", status: "{{ result.status|escapejs }}" }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ];
+
+    const steps = {
+      onboarding: { pattern: /^(smoke\.invite|smoke\.test_data|smoke\.invite_session)/, el: document.getElementById("step-onboarding"), status: "skipped" },
+      documents: { pattern: /^(documents\.|ocr\.|smoke\.new_residence_card)/, el: document.getElementById("step-documents"), status: "skipped" },
+      zus: { pattern: /^zus\./, el: document.getElementById("step-zus"), status: "skipped" },
+      security: { pattern: /^(permissions\.|security\.)/, el: document.getElementById("step-security"), status: "skipped" },
+      workflow: { pattern: /^(smoke\.workflow|workflow\.|payments\.)/, el: document.getElementById("step-workflow"), status: "skipped" }
+    };
+
+    Object.keys(steps).forEach(function (key) {
+      const step = steps[key];
+      const matched = results.filter(function (result) { return step.pattern.test(result.name); });
+      if (matched.length) {
+        step.status = matched.some(function (result) { return result.status === "failed"; }) ? "failed" : "passed";
+      }
+      if (step.el) {
+        step.el.classList.add("step-" + step.status);
+        const icon = step.el.querySelector(".tc-step-icon");
+        if (icon && step.status === "passed") icon.innerHTML = '<i class="bi bi-check-lg"></i>';
+        if (icon && step.status === "failed") icon.innerHTML = '<i class="bi bi-x-lg"></i>';
+      }
+    });
+
+    document.getElementById("btnExpandAll")?.addEventListener("click", function () {
+      document.querySelectorAll("details.scenario-details").forEach(function (el) { el.open = true; });
+    });
+    document.getElementById("btnCollapseAll")?.addEventListener("click", function () {
+      document.querySelectorAll("details.scenario-details").forEach(function (el) { el.open = false; });
+    });
+  });
+</script>
+{% endif %}
 {% endblock %}

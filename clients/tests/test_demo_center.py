@@ -13,7 +13,6 @@ from clients.models import (
     EmailLog,
     ClientOnboardingSession,
     ClientActivity,
-    StaffAuditEvent,
     DocumentProcessingJob,
 )
 from clients.demo.demo_factory import get_demo_token_for_client
@@ -60,14 +59,8 @@ class DemoCenterTests(TestCase):
         response = self.browser.post(reverse("clients:demo_center"), {"action": "prepare"})
         self.assertEqual(response.status_code, 302)
 
-        # Print messages from context/cookies if any
-        from django.contrib.messages import get_messages
-        messages = list(get_messages(response.wsgi_request))
-        print("MESSAGES:", [m.message for m in messages])
-
         # Assert 5 clients are created with is_demo_data=True
         demo_clients = Client.all_objects.filter(is_demo_data=True)
-        print("DEMO CLIENTS IN DB:", [(c.first_name, c.last_name, c.is_demo_data) for c in demo_clients])
         self.assertEqual(demo_clients.count(), 5)
         
         # Check specific names

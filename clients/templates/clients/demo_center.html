@@ -3,395 +3,529 @@
 
 {% block title %}{% translate "Demo Center" %}{% endblock %}
 {% block page_title %}{% translate "Demo Center" %}{% endblock %}
-{% block page_subtitle %}{% translate "Премиальный режим для проведения 5-минутных демонстраций клиентам." %}{% endblock %}
+{% block page_subtitle %}{% translate "Безопасная демо-среда для презентации CRM и клиентского портала." %}{% endblock %}
 
-{% block content %}
+{% block extra_head %}
 <style>
-  :root {
-    --demo-bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-    --demo-card-bg: rgba(30, 41, 59, 0.7);
-    --demo-border: rgba(99, 102, 241, 0.2);
-    --demo-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    --demo-neon-blue: #38bdf8;
-    --demo-neon-indigo: #818cf8;
-    --demo-neon-purple: #c084fc;
+  .demo-workbench {
+    display: grid;
+    gap: 1rem;
   }
 
-  .demo-container {
-    background: var(--demo-bg-gradient);
-    border-radius: 16px;
-    padding: 2rem;
-    border: 1px solid var(--demo-border);
-    box-shadow: var(--demo-shadow);
-    color: #e2e8f0;
-    font-family: 'Outfit', 'Inter', sans-serif;
+  .demo-topbar,
+  .demo-panel,
+  .demo-card,
+  .demo-table-wrap {
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    background: var(--bs-body-bg);
+  }
+
+  .demo-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .demo-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .demo-title-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.65rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #2563eb;
+    background: rgba(37, 99, 235, 0.1);
+  }
+
+  .demo-stat-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .demo-stat {
+    padding: 0.85rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    background: var(--bs-body-bg);
+  }
+
+  .demo-stat-label {
+    color: var(--bs-secondary-color);
+    font-size: 0.78rem;
+  }
+
+  .demo-stat-value {
+    font-size: 1.45rem;
+    font-weight: 750;
+    line-height: 1.1;
+  }
+
+  .demo-layout {
+    display: grid;
+    gap: 1rem;
+  }
+
+  @media (min-width: 1200px) {
+    .demo-layout {
+      grid-template-columns: 22rem minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .demo-left {
+      position: sticky;
+      top: 1rem;
+    }
+  }
+
+  .demo-panel {
+    padding: 1rem;
+  }
+
+  .demo-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0 0 0.85rem;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .demo-section-title i {
+    color: #2563eb;
+  }
+
+  .demo-route {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .demo-route-step {
+    display: grid;
+    grid-template-columns: 4.2rem minmax(0, 1fr);
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.65rem;
+  }
+
+  .demo-route-time {
+    color: #2563eb;
+    font-weight: 700;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+
+  .demo-route-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+  }
+
+  .demo-route-text,
+  .demo-muted {
+    color: var(--bs-secondary-color);
+    font-size: 0.82rem;
+    line-height: 1.42;
+  }
+
+  .demo-client-list {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .demo-client-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.85rem;
+    padding: 1rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    background: var(--bs-body-bg);
+  }
+
+  @media (max-width: 575.98px) {
+    .demo-client-card {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .demo-stat-strip {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .demo-avatar {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: #2563eb;
+    font-weight: 750;
+  }
+
+  .demo-avatar-jan { background: #16a34a; }
+  .demo-avatar-anna { background: #d97706; }
+  .demo-avatar-daria { background: #ea580c; }
+  .demo-avatar-ivan { background: #0891b2; }
+  .demo-avatar-maria { background: #7c3aed; }
+
+  .demo-client-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0.35rem 0 0.6rem;
+  }
+
+  .demo-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    max-width: 100%;
+    padding: 0.2rem 0.45rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 999px;
+    color: var(--bs-secondary-color);
+    font-size: 0.75rem;
+  }
+
+  .demo-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
   }
 
   .demo-card {
-    background: var(--demo-card-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--demo-border);
-    border-radius: 12px;
-    box-shadow: var(--demo-shadow);
-    transition: transform 0.2s, box-shadow 0.2s;
+    padding: 1rem;
   }
 
-  .demo-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 40px 0 rgba(99, 102, 241, 0.15);
+  .demo-log-list {
+    display: grid;
+    gap: 0.65rem;
   }
 
-  .text-neon-cyan {
-    color: var(--demo-neon-blue);
-    text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+  .demo-log-row {
+    padding: 0.75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.65rem;
   }
 
-  .text-neon-indigo {
-    color: var(--demo-neon-indigo);
-    text-shadow: 0 0 10px rgba(129, 140, 248, 0.5);
+  .demo-empty {
+    padding: 2rem 1rem;
+    border: 1px dashed var(--bs-border-color);
+    border-radius: 0.75rem;
+    color: var(--bs-secondary-color);
+    text-align: center;
   }
 
-  .btn-demo-primary {
-    background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%);
-    border: none;
-    color: white;
-    font-weight: 600;
-    transition: all 0.3s;
-  }
-
-  .btn-demo-primary:hover {
-    background: linear-gradient(90deg, #4f46e5 0%, #4338ca 100%);
-    box-shadow: 0 0 15px rgba(99, 102, 241, 0.6);
-  }
-
-  .btn-demo-secondary {
-    background: rgba(30, 41, 59, 0.9);
-    border: 1px solid var(--demo-border);
-    color: #e2e8f0;
-    font-weight: 500;
-    transition: all 0.3s;
-  }
-
-  .btn-demo-secondary:hover {
-    background: rgba(51, 65, 85, 0.9);
-    border-color: var(--demo-neon-blue);
-    color: white;
-  }
-
-  .timeline-step {
-    border-left: 2px solid var(--demo-border);
-    padding-left: 1.5rem;
-    position: relative;
-    padding-bottom: 1.5rem;
-  }
-
-  .timeline-step::before {
-    content: '';
-    position: absolute;
-    left: -7px;
-    top: 4px;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: var(--demo-neon-blue);
-    box-shadow: 0 0 8px var(--demo-neon-blue);
-  }
-
-  .timeline-time {
-    font-weight: bold;
-    color: var(--demo-neon-blue);
-    font-size: 0.9rem;
-  }
-
-  .badge-verified {
-    background-color: rgba(16, 185, 129, 0.2);
-    color: #34d399;
-    border: 1px solid rgba(16, 185, 129, 0.4);
-  }
-
-  .badge-warning-custom {
-    background-color: rgba(245, 158, 11, 0.2);
-    color: #fbbf24;
-    border: 1px solid rgba(245, 158, 11, 0.4);
+  .demo-modal-pre {
+    padding: 0.85rem;
+    border-radius: 0.65rem;
+    color: var(--bs-body-color);
+    background: var(--bs-tertiary-bg);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.8rem;
+    white-space: pre-wrap;
   }
 </style>
+{% endblock %}
 
-<div class="demo-container">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0 text-neon-indigo"><i class="bi bi-display"></i> {% translate "Demo Presentation Center" %}</h1>
-    <a href="{% url 'clients:admin_panel' %}" class="btn btn-demo-secondary">
-      <i class="bi bi-arrow-left"></i> {% translate "Back to Admin Panel" %}
+{% block content %}
+<div class="demo-workbench">
+  <div class="demo-topbar">
+    <div class="demo-title">
+      <span class="demo-title-icon"><i class="bi bi-display"></i></span>
+      <div>
+        <div class="fw-bold">{% translate "Demo workbench" %}</div>
+        <div class="demo-muted">{% translate "Подготовка, ссылки и маршрут презентации без реальных клиентских данных." %}</div>
+      </div>
+    </div>
+    <a href="{% url 'clients:admin_panel' %}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i>{% translate "Back to Admin Panel" %}
     </a>
   </div>
 
-  <div class="row g-4">
-    <!-- Левая панель управления -->
-    <div class="col-12 col-xl-4">
-      <div class="card demo-card p-4 mb-4">
-        <h2 class="h5 mb-3 text-neon-cyan"><i class="bi bi-gear-fill"></i> {% translate "Control Board" %}</h2>
-        <p class="small text-muted mb-4">
-          Подготовьте среду демонстрации в 1 клик. Создается 5 уникальных профилей с подготовленными документами, платежами, ссылками на портал, OCR задачами и рендерами писем.
-        </p>
-        
-        <div class="d-grid gap-3">
+  <div class="demo-stat-strip">
+    <div class="demo-stat">
+      <div class="demo-stat-label">{% translate "Демо-клиенты" %}</div>
+      <div class="demo-stat-value">{{ demo_clients|length }}</div>
+    </div>
+    <div class="demo-stat">
+      <div class="demo-stat-label">{% translate "OCR задачи" %}</div>
+      <div class="demo-stat-value">{{ demo_jobs|length }}</div>
+    </div>
+    <div class="demo-stat">
+      <div class="demo-stat-label">{% translate "Email логи" %}</div>
+      <div class="demo-stat-value">{{ demo_emails|length }}</div>
+    </div>
+  </div>
+
+  <div class="demo-layout">
+    <div class="demo-left">
+      <div class="demo-panel mb-3">
+        <h2 class="demo-section-title"><i class="bi bi-play-circle"></i>{% translate "Управление демо" %}</h2>
+        <p class="demo-muted mb-3">{% translate "Кнопка подготовки пересоздаёт безопасные демо-кейсы и ссылки на клиентский портал." %}</p>
+        <div class="d-grid gap-2">
           <form method="post" action="{% url 'clients:demo_center' %}">
             {% csrf_token %}
             <input type="hidden" name="action" value="prepare">
-            <button type="submit" class="btn btn-demo-primary w-100 py-2.5">
-              <i class="bi bi-play-circle-fill"></i> {% translate "Prepare 5-minute demo" %}
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="bi bi-play-circle-fill me-1"></i>{% translate "Prepare 5-minute demo" %}
             </button>
           </form>
-
-          <button type="button" class="btn btn-demo-secondary w-100 py-2.5" data-bs-toggle="modal" data-bs-target="#emailPreviewModal">
-            <i class="bi bi-envelope-open-fill"></i> {% translate "Show email preview" %}
+          <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#emailPreviewModal">
+            <i class="bi bi-envelope-open me-1"></i>{% translate "Email preview" %}
           </button>
-
-          <button type="button" class="btn btn-demo-secondary w-100 py-2.5" data-bs-toggle="modal" data-bs-target="#ocrResultModal">
-            <i class="bi bi-file-earmark-binary-fill"></i> {% translate "Show OCR result" %}
+          <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#ocrResultModal">
+            <i class="bi bi-file-earmark-binary me-1"></i>{% translate "OCR preview" %}
           </button>
         </div>
+      </div>
 
-        <hr class="my-4" style="border-color: var(--demo-border)">
+      <div class="demo-panel mb-3">
+        <h2 class="demo-section-title"><i class="bi bi-signpost-split"></i>{% translate "Маршрут на 5 минут" %}</h2>
+        <div class="demo-route">
+          <div class="demo-route-step">
+            <div class="demo-route-time">0:00</div>
+            <div>
+              <div class="demo-route-title">Staff dashboard</div>
+              <div class="demo-route-text">{% translate "Покажите дела, риски, документы и платежи." %}</div>
+            </div>
+          </div>
+          <div class="demo-route-step">
+            <div class="demo-route-time">0:45</div>
+            <div>
+              <div class="demo-route-title">Jan Kowalski</div>
+              <div class="demo-route-text">{% translate "Идеальный кейс: документы, платежи, аудит." %}</div>
+            </div>
+          </div>
+          <div class="demo-route-step">
+            <div class="demo-route-time">1:30</div>
+            <div>
+              <div class="demo-route-title">Anna Nowak</div>
+              <div class="demo-route-text">{% translate "Клиентский портал и недостающие документы." %}</div>
+            </div>
+          </div>
+          <div class="demo-route-step">
+            <div class="demo-route-time">2:30</div>
+            <div>
+              <div class="demo-route-title">Ivan Demo</div>
+              <div class="demo-route-text">{% translate "OCR wezwanie, дедлайн и подтверждение сотрудником." %}</div>
+            </div>
+          </div>
+          <div class="demo-route-step">
+            <div class="demo-route-time">3:45</div>
+            <div>
+              <div class="demo-route-title">Daria + ZUS</div>
+              <div class="demo-route-text">{% translate "Неверный период ZUS RCA и email-напоминание." %}</div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-        <h3 class="h6 mb-3 text-danger"><i class="bi bi-trash-fill"></i> {% translate "Reset Demo Environment" %}</h3>
+      <div class="demo-panel">
+        <h2 class="demo-section-title text-danger"><i class="bi bi-trash3"></i>{% translate "Сброс демо" %}</h2>
         <form method="post" action="{% url 'clients:demo_center' %}">
           {% csrf_token %}
           <input type="hidden" name="action" value="clean">
           <div class="form-check mb-3">
             <input class="form-check-input" type="checkbox" value="yes" name="confirm_clean" id="confirmClean" required>
-            <label class="form-check-label small text-muted" for="confirmClean">
-              {% translate "Подтверждаю удаление только демонстрационных данных (is_demo_data=True)" %}
+            <label class="form-check-label small" for="confirmClean">
+              {% translate "Удалить только записи с is_demo_data=True" %}
             </label>
           </div>
-          <button type="submit" class="btn btn-outline-danger w-100 py-2">{% translate "Reset demo data" %}</button>
+          <button type="submit" class="btn btn-outline-danger w-100">
+            <i class="bi bi-trash3 me-1"></i>{% translate "Reset demo data" %}
+          </button>
         </form>
-      </div>
-
-      <!-- Презентационный таймлайн -->
-      <div class="card demo-card p-4">
-        <h2 class="h5 mb-3 text-neon-cyan"><i class="bi bi-alarm"></i> {% translate "5-Minute Scenario Timeline" %}</h2>
-        <div class="timeline mt-3">
-          <div class="timeline-step">
-            <div class="timeline-time">0:00–0:30</div>
-            <div class="fw-semibold">Staff Dashboard</div>
-            <p class="small text-muted mb-0">Покажите список дел, дедлайны по wezwanie, отсутствующие документы ZUS и предупреждения по рискам.</p>
-          </div>
-          <div class="timeline-step">
-            <div class="timeline-time">0:30–1:15</div>
-            <div class="fw-semibold">Карточка клиента (Staff View)</div>
-            <p class="small text-muted mb-0">Откройте карточку <b>Jan Kowalski</b>: основание легализации, чек-лист документов, платежи и историю аудита действий.</p>
-          </div>
-          <div class="timeline-step">
-            <div class="timeline-time">1:15–2:00</div>
-            <div class="fw-semibold">Client Portal (Личный кабинет)</div>
-            <p class="small text-muted mb-0">Откройте демо-портал для <b>Anna Nowak</b>: чек-лист, недостающие документы, загрузка нового файла клиентом.</p>
-          </div>
-          <div class="timeline-step">
-            <div class="timeline-time">2:00–2:45</div>
-            <div class="fw-semibold">Document Review & Verification</div>
-            <p class="small text-muted mb-0">Со стороны сотрудника: просмотр в браузере, отклонение с указанием причины, загрузка версий.</p>
-          </div>
-          <div class="timeline-step">
-            <div class="timeline-time">2:45–3:30</div>
-            <div class="fw-semibold">OCR / Summons (Wezwanie)</div>
-            <p class="small text-muted mb-0">Покажите карточку <b>Ivan Demo</b>: распознанный OCR текст, дедлайн, статус подтверждения и генерацию напоминаний.</p>
-          </div>
-          <div class="timeline-step" style="padding-bottom: 0;">
-            <div class="timeline-time">3:30–5:00</div>
-            <div class="fw-semibold">ZUS RCA & Reminders</div>
-            <p class="small text-muted mb-0">Проблема с неверным периодом ZUS RCA у <b>Daria Testowa</b>, просмотр email и итоговый дашборд.</p>
-          </div>
-        </div>
       </div>
     </div>
 
-    <!-- Правая панель с демо-клиентами и логами -->
-    <div class="col-12 col-xl-8">
-      <div class="card demo-card p-4 mb-4">
-        <h2 class="h5 mb-4 text-neon-cyan"><i class="bi bi-people-fill"></i> {% translate "Demo Client Profiles" %}</h2>
-        
+    <div>
+      <section class="demo-card mb-3">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+          <h2 class="demo-section-title mb-0"><i class="bi bi-people"></i>{% translate "Demo Client Profiles" %}</h2>
+          {% if demo_clients %}
+          <span class="badge text-bg-light border">{{ demo_clients|length }} {% translate "profiles" %}</span>
+          {% endif %}
+        </div>
+
         {% if demo_clients %}
-        <div class="row g-3">
+        <div class="demo-client-list">
           {% for client in demo_clients %}
-          <div class="col-12">
-            <div class="border rounded p-3 bg-dark bg-opacity-25 border-opacity-25 border-primary">
-              <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+          <article class="demo-client-card">
+            <div class="demo-avatar {% if client.first_name == 'Jan' %}demo-avatar-jan{% elif client.first_name == 'Anna' %}demo-avatar-anna{% elif client.first_name == 'Daria' %}demo-avatar-daria{% elif client.first_name == 'Ivan' %}demo-avatar-ivan{% elif client.first_name == 'Maria' %}demo-avatar-maria{% endif %}">
+              {{ client.first_name|slice:":1" }}{{ client.last_name|slice:":1" }}
+            </div>
+            <div class="min-w-0">
+              <div class="d-flex align-items-start justify-content-between gap-2 flex-wrap">
                 <div>
-                  <h3 class="h6 mb-1 text-white">
-                    <span class="text-neon-indigo">#{{ forloop.counter }}</span> {{ client.first_name }} {{ client.last_name }}
-                  </h3>
-                  <div class="small text-muted">
-                    Email: <span class="text-white">{{ client.email }}</span> | 
-                    Цель: <span class="badge bg-secondary">{{ client.get_application_purpose_display }}</span> | 
-                    Этап: <span class="badge bg-primary">{{ client.get_workflow_stage_display }}</span>
-                  </div>
+                  <h3 class="h6 mb-0">{{ client.first_name }} {{ client.last_name }}</h3>
+                  <div class="demo-muted">{{ client.email }}</div>
                 </div>
-                <div class="d-flex gap-2">
-                  <a href="{% url 'clients:client_detail' client.pk %}" class="btn btn-xs btn-outline-info py-1 px-2.5" style="font-size: 0.8rem;" target="_blank">
-                    <i class="bi bi-person-workspace"></i> {% translate "Staff View" %}
+                <div class="demo-actions">
+                  <a href="{% url 'clients:client_detail' client.pk %}" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener">
+                    <i class="bi bi-person-workspace me-1"></i>{% translate "Staff View" %}
                   </a>
                   {% if client.portal_url %}
-                  <a href="{{ client.portal_url }}" class="btn btn-xs btn-demo-primary py-1 px-2.5" style="font-size: 0.8rem;" target="_blank">
-                    <i class="bi bi-door-open-fill"></i> {% translate "Client Portal" %}
+                  <a href="{{ client.portal_url }}" class="btn btn-sm btn-primary" target="_blank" rel="noopener">
+                    <i class="bi bi-door-open me-1"></i>{% translate "Client Portal" %}
                   </a>
                   {% endif %}
                 </div>
               </div>
-
-              <!-- Особенности сценария -->
-              <div class="p-2.5 rounded small" style="background: rgba(0,0,0,0.2);">
-                <strong>Сценарий:</strong>
+              <div class="demo-client-meta">
+                <span class="demo-chip"><i class="bi bi-briefcase"></i>{{ client.get_application_purpose_display }}</span>
+                <span class="demo-chip"><i class="bi bi-diagram-3"></i>{{ client.get_workflow_stage_display }}</span>
+              </div>
+              <div class="demo-muted">
                 {% if client.first_name == 'Jan' %}
-                  <span class="text-success">Все документы загружены и одобрены. Демонстрация идеального прохождения дела (Study/Work card).</span>
+                  {% translate "Все документы и платежи готовы. Используйте как эталонный кейс." %}
                 {% elif client.first_name == 'Anna' %}
-                  <span class="text-warning-custom">Недостающие документы. Демонстрация клиентского чек-листа с требованиями, загрузка файла.</span>
+                  {% translate "Недостающие документы и клиентский портал для загрузки файлов." %}
                 {% elif client.first_name == 'Daria' %}
-                  <span class="text-warning-custom">ZUS RCA за неверный месяц. Загружен январь 2026 вместо марта/апреля. Система выводит ошибку и email-предупреждение.</span>
+                  {% translate "Неверный месяц ZUS RCA, предупреждение и email-коммуникация." %}
                 {% elif client.first_name == 'Ivan' %}
-                  <span class="text-info">Распознавание везвания (OCR). В базе лежит wezwanie_scan.pdf с распознанным кейсом и дедлайном, ожидает аппрува сотрудника.</span>
+                  {% translate "Wezwanie, OCR результат, дедлайн и ручное подтверждение." %}
                 {% elif client.first_name == 'Maria' %}
-                  <span class="text-success">Сданы отпечатки пальцев. Стадия дела waiting_decision, ожидание ответа по делу.</span>
+                  {% translate "Отпечатки уже сданы, дело ожидает решение." %}
                 {% endif %}
               </div>
             </div>
-          </div>
+          </article>
           {% endfor %}
         </div>
         {% else %}
-        <div class="text-center py-5 text-muted">
-          <i class="bi bi-database-dash display-4 d-block mb-3"></i>
-          {% translate "Демо-клиенты еще не сгенерированы. Нажмите кнопку «Prepare 5-minute demo»." %}
+        <div class="demo-empty">
+          <i class="bi bi-database-dash d-block mb-2 fs-3"></i>
+          {% translate "Демо-клиенты ещё не созданы. Нажмите Prepare 5-minute demo." %}
         </div>
         {% endif %}
-      </div>
+      </section>
 
-      <!-- Вспомогательные данные (OCR задачи и Email логи) -->
-      <div class="row g-4">
-        <div class="col-12 col-md-6">
-          <div class="card demo-card p-4 h-100">
-            <h3 class="h6 mb-3 text-neon-indigo"><i class="bi bi-cpu-fill"></i> {% translate "Demo OCR Jobs" %}</h3>
+      <div class="row g-3">
+        <div class="col-12 col-lg-6">
+          <section class="demo-card h-100">
+            <h2 class="demo-section-title"><i class="bi bi-cpu"></i>{% translate "Demo OCR Jobs" %}</h2>
             {% if demo_jobs %}
-            <div class="list-group list-group-flush bg-transparent">
+            <div class="demo-log-list">
               {% for job in demo_jobs %}
-              <div class="list-group-item bg-transparent text-white border-opacity-10 border-indigo px-0 py-2.5">
-                <div class="d-flex justify-content-between align-items-center">
-                  <span class="small fw-semibold">{{ job.source_file_name }}</span>
-                  <span class="badge {% if job.status == 'completed' %}bg-success{% else %}bg-warning{% endif %}">{{ job.status }}</span>
+              <div class="demo-log-row">
+                <div class="d-flex justify-content-between gap-2">
+                  <strong class="small text-truncate">{{ job.source_file_name }}</strong>
+                  <span class="badge {% if job.status == 'completed' %}text-bg-success{% elif job.status == 'failed' %}text-bg-danger{% else %}text-bg-warning{% endif %}">{{ job.status }}</span>
                 </div>
-                <div class="text-muted small">Тип: {{ job.get_job_type_display }} | confirmation: {{ job.requires_confirmation }}</div>
+                <div class="demo-muted">{{ job.get_job_type_display }} · confirmation: {{ job.requires_confirmation }}</div>
               </div>
               {% endfor %}
             </div>
             {% else %}
-            <div class="text-center py-4 small text-muted">OCR задачи отсутствуют.</div>
+            <div class="demo-empty">{% translate "OCR задачи отсутствуют." %}</div>
             {% endif %}
-          </div>
+          </section>
         </div>
 
-        <div class="col-12 col-md-6">
-          <div class="card demo-card p-4 h-100">
-            <h3 class="h6 mb-3 text-neon-indigo"><i class="bi bi-envelope-check-fill"></i> {% translate "Demo Email Logs" %}</h3>
+        <div class="col-12 col-lg-6">
+          <section class="demo-card h-100">
+            <h2 class="demo-section-title"><i class="bi bi-envelope-check"></i>{% translate "Demo Email Logs" %}</h2>
             {% if demo_emails %}
-            <div class="list-group list-group-flush bg-transparent">
+            <div class="demo-log-list">
               {% for email in demo_emails %}
-              <div class="list-group-item bg-transparent text-white border-opacity-10 border-indigo px-0 py-2.5">
-                <div class="d-flex justify-content-between align-items-center">
-                  <span class="small fw-semibold">{{ email.subject }}</span>
-                  <span class="badge bg-info text-dark">{{ email.template_type }}</span>
+              <div class="demo-log-row">
+                <div class="d-flex justify-content-between gap-2">
+                  <strong class="small text-truncate">{{ email.subject }}</strong>
+                  <span class="badge text-bg-light border">{{ email.template_type }}</span>
                 </div>
-                <div class="text-muted small">Получатель: {{ email.recipients }} | Отправлено: {{ email.sent_at|date:"d.m H:i" }}</div>
+                <div class="demo-muted">{{ email.sent_at|date:"Y-m-d H:i" }}</div>
               </div>
               {% endfor %}
             </div>
             {% else %}
-            <div class="text-center py-4 small text-muted">Журнал отправленных писем пуст.</div>
+            <div class="demo-empty">{% translate "Журнал писем пуст." %}</div>
             {% endif %}
-          </div>
+          </section>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Модальное окно: Превью письма -->
 <div class="modal fade" id="emailPreviewModal" tabindex="-1" aria-labelledby="emailPreviewModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content text-white border-0" style="background: #1e293b; border: 1px solid var(--demo-border) !important;">
-      <div class="modal-header border-bottom-0">
-        <h5 class="modal-title text-neon-indigo" id="emailPreviewModalLabel"><i class="bi bi-envelope-paper-fill"></i> {% translate "Show email preview" %}</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="emailPreviewModalLabel">
+          <i class="bi bi-envelope-paper me-2"></i>{% translate "Email preview" %}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
       </div>
-      <div class="modal-body p-4 bg-dark bg-opacity-50">
-        <div class="mb-3 small">
-          <div><strong>{% translate "Кому" %}:</strong> <span class="text-info">daria.testowa@example.demo</span></div>
-          <div><strong>{% translate "Тема" %}:</strong> <span class="text-info">Brakujący dokument ZUS RCA</span></div>
-        </div>
-        <hr style="border-color: var(--demo-border)">
-        <div class="p-3 border rounded font-monospace small bg-dark text-success-light" style="border-color: var(--demo-border) !important; white-space: pre-wrap; line-height: 1.5; color: #a7f3d0;">Dzień dobry Daria Testowa,
+      <div class="modal-body">
+        <div class="small text-muted mb-2">daria.testowa@example.demo · Brakujący dokument ZUS RCA</div>
+        <div class="demo-modal-pre">Dzień dobry Daria Testowa,
 
 w przesłanych dokumentach brakuje prawidłowego dokumentu ZUS RCA za wymagany okres.
 Prosimy o przesłanie poprawnego dokumentu przez portal klienta.
 
 [Otwórz portal klienta]</div>
       </div>
-      <div class="modal-footer border-top-0">
-        <button type="button" class="btn btn-demo-secondary" data-bs-dismiss="modal">{% translate "Закрыть" %}</button>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% translate "Закрыть" %}</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Модальное окно: OCR Result -->
 <div class="modal fade" id="ocrResultModal" tabindex="-1" aria-labelledby="ocrResultModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content text-white border-0" style="background: #1e293b; border: 1px solid var(--demo-border) !important;">
-      <div class="modal-header border-bottom-0">
-        <h5 class="modal-title text-neon-indigo" id="ocrResultModalLabel"><i class="bi bi-file-earmark-binary-fill"></i> {% translate "OCR Extracted Result for Ivan Demo" %}</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="ocrResultModalLabel">
+          <i class="bi bi-file-earmark-binary me-2"></i>{% translate "OCR preview for Ivan Demo" %}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
       </div>
-      <div class="modal-body p-4 bg-dark bg-opacity-50">
+      <div class="modal-body">
         <div class="row g-3">
           <div class="col-12 col-md-5">
-            <div class="border rounded p-3 h-100" style="border-color: var(--demo-border) !important;">
-              <h6 class="text-neon-cyan">Извлеченные метаданные</h6>
-              <div class="small mt-3">
-                <div class="mb-2"><strong>Case Number:</strong> <span class="text-info font-monospace">WSC-IV-S.12345.DEMO.2026</span></div>
-                <div class="mb-2"><strong>Deadline:</strong> <span class="text-info font-monospace">2026-06-28</span></div>
-                <div class="mb-2"><strong>Confidence:</strong> <span class="text-success font-monospace">85% (Needs confirmation)</span></div>
-                <div><strong>Требуемые документы:</strong></div>
-                <ul class="ps-3 mb-0">
-                  <li>ZUS RCA</li>
-                  <li>Employment Contract</li>
-                </ul>
-              </div>
+            <div class="border rounded p-3 h-100">
+              <h6>{% translate "Извлечённые поля" %}</h6>
+              <dl class="small mb-0">
+                <dt>Case number</dt>
+                <dd>WSC-IV-S.12345.DEMO.2026</dd>
+                <dt>Deadline</dt>
+                <dd>2026-06-28</dd>
+                <dt>Confidence</dt>
+                <dd>85% - needs confirmation</dd>
+              </dl>
             </div>
           </div>
           <div class="col-12 col-md-7">
-            <div class="border rounded p-3 h-100" style="border-color: var(--demo-border) !important;">
-              <h6 class="text-neon-cyan">Extracted Plain Text Output</h6>
-              <div class="font-monospace p-2 mt-2 rounded small text-muted" style="background: rgba(0,0,0,0.3); height: 160px; overflow-y: auto;">
-                MAZOWIECKI URZAD WOJEWODZKI W WARSZAWIE
-                Wydzial Spraw Cudzoziemcow
-                
-                Warszawa, 01.06.2026
-                Case reference: WSC-IV-S.12345.DEMO.2026
-                
-                WEZWANIE
-                Do cudzoziemca: Ivan Demo
-                
-                Na podstawie art. 77 KPA wzywa sie do uzupelnienia brakow materialnych w terminie 14 dni od doręczenia (tj. do 28.06.2026):
-                1. Zalaczenie raportu miesiecznego ZUS RCA za ubiegly miesiac.
-                2. Oryginal umowy o prace (employment contract).
-                
-                Niedopelnienie powyzszego skutkuje pozostawieniem wniosku bez rozpoznania.
-              </div>
-            </div>
+            <div class="demo-modal-pre">MAZOWIECKI URZAD WOJEWODZKI W WARSZAWIE
+Warszawa, 01.06.2026
+Case reference: WSC-IV-S.12345.DEMO.2026
+
+WEZWANIE
+Do cudzoziemca: Ivan Demo
+
+Na podstawie art. 77 KPA wzywa sie do uzupelnienia brakow materialnych w terminie 14 dni od doręczenia:
+1. ZUS RCA za ubiegly miesiac.
+2. Oryginal umowy o prace.</div>
           </div>
         </div>
       </div>
-      <div class="modal-footer border-top-0">
-        <button type="button" class="btn btn-demo-secondary" data-bs-dismiss="modal">{% translate "Закрыть" %}</button>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% translate "Закрыть" %}</button>
       </div>
     </div>
   </div>

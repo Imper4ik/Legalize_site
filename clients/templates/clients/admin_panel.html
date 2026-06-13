@@ -4,265 +4,448 @@
 
 {% block title %}{% translate "Админ панель" %}{% endblock %}
 {% block page_title %}{% translate "Админ панель" %}{% endblock %}
-{% block page_subtitle %}{% translate "Управление рабочими настройками базы без Django admin." %}{% endblock %}
+{% block page_subtitle %}{% translate "Рабочий центр для настроек, контроля рисков, демо и тестов." %}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .ops-shell {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .ops-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    background: var(--bs-body-bg);
+  }
+
+  .ops-toolbar-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .ops-toolbar-icon,
+  .ops-card-icon,
+  .ops-section-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.65rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+
+  .ops-toolbar-icon {
+    color: #1d4ed8;
+    background: rgba(29, 78, 216, 0.1);
+  }
+
+  .ops-toolbar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .ops-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  @media (min-width: 992px) {
+    .ops-kpi-grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+  }
+
+  .ops-kpi {
+    min-height: 6.25rem;
+    padding: 0.85rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    background: var(--bs-body-bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .ops-kpi-label {
+    color: var(--bs-secondary-color);
+    font-size: 0.76rem;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  .ops-kpi-value {
+    margin-top: 0.45rem;
+    font-size: 1.65rem;
+    font-weight: 750;
+    line-height: 1;
+  }
+
+  .ops-kpi-accent-blue { border-left: 4px solid #2563eb; }
+  .ops-kpi-accent-green { border-left: 4px solid #16a34a; }
+  .ops-kpi-accent-amber { border-left: 4px solid #d97706; }
+  .ops-kpi-accent-red { border-left: 4px solid #dc2626; }
+  .ops-kpi-accent-cyan { border-left: 4px solid #0891b2; }
+  .ops-kpi-accent-violet { border-left: 4px solid #7c3aed; }
+
+  .ops-section {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .ops-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+
+  .ops-section-icon {
+    width: 2rem;
+    height: 2rem;
+    color: #334155;
+    background: rgba(100, 116, 139, 0.12);
+  }
+
+  [data-bs-theme="dark"] .ops-section-icon {
+    color: #cbd5e1;
+    background: rgba(148, 163, 184, 0.14);
+  }
+
+  .ops-action-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+
+  @media (min-width: 768px) {
+    .ops-action-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .ops-action-grid.ops-action-grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .ops-card {
+    height: 100%;
+    padding: 1rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    background: var(--bs-body-bg);
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-start;
+  }
+
+  .ops-card:hover {
+    border-color: rgba(37, 99, 235, 0.35);
+    box-shadow: 0 0.65rem 1.4rem rgba(15, 23, 42, 0.08);
+  }
+
+  [data-bs-theme="dark"] .ops-card:hover {
+    box-shadow: 0 0.65rem 1.4rem rgba(0, 0, 0, 0.22);
+  }
+
+  .ops-card-icon {
+    color: var(--ops-icon-color, #2563eb);
+    background: var(--ops-icon-bg, rgba(37, 99, 235, 0.1));
+  }
+
+  .ops-card-body {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .ops-card-title {
+    margin: 0 0 0.25rem;
+    font-size: 0.98rem;
+    font-weight: 700;
+  }
+
+  .ops-card-text {
+    margin: 0 0 0.75rem;
+    color: var(--bs-secondary-color);
+    font-size: 0.84rem;
+    line-height: 1.45;
+  }
+
+  .ops-risk-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+
+  @media (min-width: 992px) {
+    .ops-risk-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .ops-risk {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.75rem;
+    color: inherit;
+    background: var(--bs-body-bg);
+    text-decoration: none;
+  }
+
+  .ops-risk:hover {
+    color: inherit;
+    border-color: rgba(37, 99, 235, 0.35);
+  }
+
+  .ops-risk-label {
+    color: var(--bs-secondary-color);
+    font-size: 0.82rem;
+  }
+
+  .ops-risk-value {
+    font-weight: 750;
+    font-size: 1.15rem;
+  }
+
+  .ops-muted-note {
+    color: var(--bs-secondary-color);
+    font-size: 0.82rem;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row g-4 mb-4">
-  <div class="col-12 col-md-6 col-xl-3">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <div class="text-muted small mb-2">{% translate "Клиенты" %}</div>
-        <div class="display-6 fw-semibold">{{ active_clients }}</div>
+<div class="ops-shell">
+  <div class="ops-toolbar">
+    <div class="ops-toolbar-title">
+      <span class="ops-toolbar-icon"><i class="bi bi-grid-1x2-fill"></i></span>
+      <div>
+        <div class="fw-bold">{% translate "Рабочая сводка" %}</div>
+        <div class="ops-muted-note">{% translate "Самые важные настройки, проверки и демо-сценарии в одном месте." %}</div>
       </div>
     </div>
-  </div>
-  <div class="col-12 col-md-6 col-xl-3">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <div class="text-muted small mb-2">{% translate "Основания подачи" %}</div>
-        <div class="display-6 fw-semibold">{{ total_submissions }}</div>
-      </div>
+    <div class="ops-toolbar-actions">
+      <a href="{% url 'clients:client_list' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-people me-1"></i>{% translate "Клиенты" %}
+      </a>
+      <a href="{% url 'clients:admin_dashboard' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-heart-pulse me-1"></i>{% translate "Здоровье" %}
+      </a>
+      {% if test_center_available %}
+      <a href="{% url 'clients:test_center' %}" class="btn btn-outline-danger btn-sm">
+        <i class="bi bi-shield-check me-1"></i>{% translate "Test Center" %}
+      </a>
+      {% endif %}
+      {% if demo_center_available %}
+      <a href="{% url 'clients:demo_center' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-play-circle me-1"></i>{% translate "Demo Center" %}
+      </a>
+      {% endif %}
     </div>
   </div>
-  <div class="col-12 col-md-6 col-xl-3">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <div class="text-muted small mb-2">{% translate "Открытые задачи" %}</div>
-        <div class="display-6 fw-semibold">{{ open_tasks }}</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-12 col-md-6 col-xl-3">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <div class="text-muted small mb-2">{% translate "Ожидают оплаты" %}</div>
-        <div class="display-6 fw-semibold">{{ pending_payments }}</div>
-      </div>
-    </div>
-  </div>
-</div>
 
-<div class="row g-4 mb-4">
-  <div class="col-12 col-md-6 col-xl-3">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <div class="text-muted small mb-2">{% translate "Active cases" %}</div>
-        <div class="display-6 fw-semibold">{{ active_cases }}</div>
-      </div>
+  <div class="ops-kpi-grid">
+    <div class="ops-kpi ops-kpi-accent-blue">
+      <div class="ops-kpi-label"><i class="bi bi-people me-1"></i>{% translate "Клиенты" %}</div>
+      <div class="ops-kpi-value">{{ active_clients }}</div>
+    </div>
+    <div class="ops-kpi ops-kpi-accent-green">
+      <div class="ops-kpi-label"><i class="bi bi-briefcase me-1"></i>{% translate "Активные дела" %}</div>
+      <div class="ops-kpi-value">{{ active_cases }}</div>
+    </div>
+    <div class="ops-kpi ops-kpi-accent-amber">
+      <div class="ops-kpi-label"><i class="bi bi-list-check me-1"></i>{% translate "Открытые задачи" %}</div>
+      <div class="ops-kpi-value">{{ open_tasks }}</div>
+    </div>
+    <div class="ops-kpi ops-kpi-accent-red">
+      <div class="ops-kpi-label"><i class="bi bi-credit-card me-1"></i>{% translate "Ожидают оплаты" %}</div>
+      <div class="ops-kpi-value">{{ pending_payments }}</div>
+    </div>
+    <div class="ops-kpi ops-kpi-accent-cyan">
+      <div class="ops-kpi-label"><i class="bi bi-file-earmark-check me-1"></i>{% translate "Документы на проверке" %}</div>
+      <div class="ops-kpi-value">{{ documents_awaiting_verification }}</div>
+    </div>
+    <div class="ops-kpi ops-kpi-accent-violet">
+      <div class="ops-kpi-label"><i class="bi bi-bell me-1"></i>{% translate "Активные напоминания" %}</div>
+      <div class="ops-kpi-value">{{ active_reminders }}</div>
     </div>
   </div>
-  <div class="col-12 col-md-6 col-xl-3">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <div class="text-muted small mb-2">{% translate "OCR awaiting review" %}</div>
-        <div class="display-6 fw-semibold">{{ ocr_awaiting_review }}</div>
-        {% if not ocr_awaiting_review %}
-        <div class="small text-muted">{% translate "No documents awaiting OCR" %}</div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-  <div class="col-12 col-md-6 col-xl-3">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <div class="text-muted small mb-2">{% translate "Documents awaiting verification" %}</div>
-        <div class="display-6 fw-semibold">{{ documents_awaiting_verification }}</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-12 col-md-6 col-xl-3">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <div class="text-muted small mb-2">{% translate "Missing documents" %}</div>
-        <div class="display-6 fw-semibold">{{ missing_documents }}</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-12 col-md-6 col-xl-3">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <div class="text-muted small mb-2">{% translate "Expired documents" %}</div>
-        <div class="display-6 fw-semibold">{{ expired_documents }}</div>
-        {% if not expired_documents %}
-        <div class="small text-muted">{% translate "No expired documents" %}</div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-  <div class="col-12 col-md-6 col-xl-3">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <div class="text-muted small mb-2">{% translate "Upcoming fingerprints" %}</div>
-        <div class="display-6 fw-semibold">{{ upcoming_fingerprints }}</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-12 col-md-6 col-xl-3">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <div class="text-muted small mb-2">{% translate "Waiting after fingerprints" %}</div>
-        <div class="display-6 fw-semibold">{{ waiting_after_fingerprints }}</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-12 col-md-6 col-xl-3">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <div class="text-muted small mb-2">{% translate "Decisions" %}</div>
-        <div class="display-6 fw-semibold">{{ decisions_received }}</div>
-      </div>
-    </div>
-  </div>
-  <div class="col-12 col-md-6 col-xl-3">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <div class="text-muted small mb-2">{% translate "Active reminders" %}</div>
-        <div class="display-6 fw-semibold">{{ active_reminders }}</div>
-        {% if not active_reminders %}
-        <div class="small text-muted">{% translate "No active reminders" %}</div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-</div>
 
-<div class="row g-4">
-  {% if user|has_any_role:"Admin,Manager" %}
-  <div class="col-12 col-lg-6">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <h5 class="card-title">{% translate "Шаблоны" %}</h5>
-        <p class="text-muted">{% translate "Настройка контактных данных офиса, юриста (полномочника) и общих данных, которые автоматически подставляются в бланки заявлений (Wniosek Mazowiecki) и другие печатные документы." %}</p>
-        <a href="{% url 'clients:document_template_hub' %}" class="btn btn-primary">{% translate "Открыть" %}</a>
-      </div>
+  <section class="ops-section">
+    <h2 class="ops-section-title">
+      <span class="ops-section-icon"><i class="bi bi-exclamation-diamond"></i></span>
+      {% translate "Что требует внимания" %}
+    </h2>
+    <div class="ops-risk-grid">
+      <a href="{% url 'clients:document_reminder_list' %}" class="ops-risk">
+        <span>
+          <span class="d-block fw-semibold">{% translate "Недостающие документы" %}</span>
+          <span class="ops-risk-label">{% translate "По активным делам" %}</span>
+        </span>
+        <span class="ops-risk-value text-warning">{{ missing_documents }}</span>
+      </a>
+      <a href="{% url 'clients:client_list' %}?ocr=awaiting" class="ops-risk">
+        <span>
+          <span class="d-block fw-semibold">{% translate "OCR ждёт проверки" %}</span>
+          <span class="ops-risk-label">{% translate "Требуется сотрудник" %}</span>
+        </span>
+        <span class="ops-risk-value text-info">{{ ocr_awaiting_review }}</span>
+      </a>
+      <a href="{% url 'clients:document_reminder_list' %}" class="ops-risk">
+        <span>
+          <span class="d-block fw-semibold">{% translate "Просроченные документы" %}</span>
+          <span class="ops-risk-label">{% translate "Нужно обновить" %}</span>
+        </span>
+        <span class="ops-risk-value text-danger">{{ expired_documents }}</span>
+      </a>
+      <a href="{% url 'clients:fingerprints_schedule' %}" class="ops-risk">
+        <span>
+          <span class="d-block fw-semibold">{% translate "Отпечатки 30 дней" %}</span>
+          <span class="ops-risk-label">{% translate "Ближайшие визиты" %}</span>
+        </span>
+        <span class="ops-risk-value text-primary">{{ upcoming_fingerprints }}</span>
+      </a>
     </div>
-  </div>
-  {% endif %}
+  </section>
 
   {% if user|has_any_role:"Admin,Manager" %}
-  <div class="col-12 col-lg-6">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <h5 class="card-title">{% translate "Чеклисты" %}</h5>
-        <p class="text-muted">{% translate "Настройка списка документов, которые клиент должен загрузить для каждого типа подачи (учёба, работа и др.). Здесь можно менять порядок перетаскиванием и добавлять новые требования." %}</p>
-        <a href="{% url 'clients:document_checklist_manage' %}" class="btn btn-primary">{% translate "Открыть" %}</a>
-      </div>
-    </div>
-  </div>
-  {% endif %}
-
-  {% if user|has_any_role:"Admin,Manager" %}
-  <div class="col-12 col-lg-6">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <h5 class="card-title">{% translate "Основания подачи" %}</h5>
-        <p class="text-muted">{% translate "Управление типами подачи заявлений (учёба, работа, воссоединение) в системе. Позволяет добавлять новые основания и задавать их названия на разных языках." %}</p>
-        <a href="{% url 'clients:submission_manage' %}" class="btn btn-primary">{% translate "Открыть" %}</a>
-      </div>
-    </div>
-  </div>
-  {% endif %}
-
-  {% if user|has_any_role:"Admin,Manager" %}
-  <div class="col-12 col-lg-6">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <h5 class="card-title">{% translate "Цены и услуги" %}</h5>
-        <p class="text-muted mb-2">{% translate "Просмотр и редактирование стоимости услуг компании для выставления счетов клиентам (например, пошлины, переводы, сопровождение)." %}</p>
-        <div class="small text-muted mb-3">{% translate "Записей:" %} {{ total_service_prices }}. {% translate "Сумма прайса:" %} {{ total_price_sum }} PLN</div>
-        <a href="{% url 'clients:service_price_manage' %}" class="btn btn-primary">{% translate "Открыть" %}</a>
-      </div>
-    </div>
-  </div>
-  {% endif %}
-
-  {% if user|has_any_role:"Admin" %}
-  <div class="col-12 col-lg-6">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <h5 class="card-title">{% translate "Сотрудники" %}</h5>
-        <p class="text-muted">{% translate "Управление учетными записями сотрудников компании, назначение им ролей (Администратор, Менеджер, Переводчик) и разграничение прав доступа." %}</p>
-        <a href="{% url 'clients:staff_manage' %}" class="btn btn-primary">{% translate "Открыть" %}</a>
-        <a href="{% url 'clients:role_manage' %}" class="btn btn-outline-secondary ms-2">{% translate "Роли" %}</a>
-      </div>
-    </div>
-  </div>
-  {% endif %}
-
-  <div class="col-12 col-lg-6">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <h5 class="card-title">{% translate "Система и Тестирование" %}</h5>
-        <p class="text-muted">{% translate "Мониторинг работоспособности сервера, проверка подключения к базе данных, фоновых задач и технического состояния системы." %}</p>
-        
-        <div class="mb-3">
-          <a href="{% url 'clients:admin_dashboard' %}" class="btn btn-outline-secondary btn-sm">{% translate "Здоровье системы" %}</a>
+  <section class="ops-section">
+    <h2 class="ops-section-title">
+      <span class="ops-section-icon"><i class="bi bi-sliders"></i></span>
+      {% translate "Настройки работы офиса" %}
+    </h2>
+    <div class="ops-action-grid ops-action-grid-3">
+      <div class="ops-card">
+        <span class="ops-card-icon"><i class="bi bi-file-earmark-ruled"></i></span>
+        <div class="ops-card-body">
+          <h3 class="ops-card-title">{% translate "Шаблоны" %}</h3>
+          <p class="ops-card-text">{% translate "Данные офиса и печатные документы для wniosek и внутренних бланков." %}</p>
+          <a href="{% url 'clients:document_template_hub' %}" class="btn btn-sm btn-outline-primary">{% translate "Открыть" %}</a>
         </div>
-
-        {% if test_center_available or demo_center_available %}
-        <div class="border-top pt-3 mt-2">
-          <h6 class="small fw-bold text-uppercase text-muted mb-2">{% translate "Доступные инструменты:" %}</h6>
-          <div class="row g-2">
-            {% if test_center_available %}
-            <div class="col-12">
-              <div class="p-2 border rounded bg-light">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                  <span class="fw-semibold text-danger small">
-                    <i class="bi bi-shield-check"></i> {% translate "Test Center (Тест-центр)" %}
-                  </span>
-                  <a href="{% url 'clients:test_center' %}" class="btn btn-danger btn-sm py-0 px-2" style="font-size: 0.75rem;">
-                    {% translate "Открыть" %}
-                  </a>
-                </div>
-                <div class="text-muted small" style="font-size: 0.75rem; line-height: 1.3;">
-                  <strong>{% translate "Сценарии:" %}</strong> Smoke, Full, OCR, ZUS, Email, Documents, Permissions, Security, Workflow
-                </div>
-              </div>
-            </div>
-            {% endif %}
-
-            {% if demo_center_available %}
-            <div class="col-12">
-              <div class="p-2 border rounded bg-light">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                  <span class="fw-semibold text-primary small">
-                    <i class="bi bi-play-circle-fill"></i> {% translate "Demo Center (Демо-центр)" %}
-                  </span>
-                  <a href="{% url 'clients:demo_center' %}" class="btn btn-primary btn-sm py-0 px-2" style="font-size: 0.75rem;">
-                    {% translate "Открыть" %}
-                  </a>
-                </div>
-                <div class="text-muted small" style="font-size: 0.75rem; line-height: 1.3;">
-                  <strong>{% translate "Сценарии:" %}</strong> Jan Kowalski, Anna Nowak, Daria Testowa, Ivan Demo, Maria Student
-                </div>
-              </div>
-            </div>
-            {% endif %}
+      </div>
+      <div class="ops-card">
+        <span class="ops-card-icon" style="--ops-icon-color:#16a34a;--ops-icon-bg:rgba(22,163,74,.1);"><i class="bi bi-card-checklist"></i></span>
+        <div class="ops-card-body">
+          <h3 class="ops-card-title">{% translate "Чеклисты" %}</h3>
+          <p class="ops-card-text">{% translate "Требования по документам для разных оснований подачи." %}</p>
+          <a href="{% url 'clients:document_checklist_manage' %}" class="btn btn-sm btn-outline-primary">{% translate "Открыть" %}</a>
+        </div>
+      </div>
+      <div class="ops-card">
+        <span class="ops-card-icon" style="--ops-icon-color:#7c3aed;--ops-icon-bg:rgba(124,58,237,.1);"><i class="bi bi-stack"></i></span>
+        <div class="ops-card-body">
+          <h3 class="ops-card-title">{% translate "Основания подачи" %}</h3>
+          <p class="ops-card-text">{% translate "Список типов дел и их названия на языках системы." %}</p>
+          <a href="{% url 'clients:submission_manage' %}" class="btn btn-sm btn-outline-primary">{% translate "Открыть" %}</a>
+        </div>
+      </div>
+      <div class="ops-card">
+        <span class="ops-card-icon" style="--ops-icon-color:#d97706;--ops-icon-bg:rgba(217,119,6,.1);"><i class="bi bi-currency-exchange"></i></span>
+        <div class="ops-card-body">
+          <h3 class="ops-card-title">{% translate "Цены и услуги" %}</h3>
+          <p class="ops-card-text">{% translate "Прайс для счетов клиентам." %} {{ total_service_prices }} {% translate "записей" %}, {{ total_price_sum }} PLN.</p>
+          <a href="{% url 'clients:service_price_manage' %}" class="btn btn-sm btn-outline-primary">{% translate "Открыть" %}</a>
+        </div>
+      </div>
+      {% if user|has_any_role:"Admin" %}
+      <div class="ops-card">
+        <span class="ops-card-icon" style="--ops-icon-color:#0891b2;--ops-icon-bg:rgba(8,145,178,.1);"><i class="bi bi-person-badge"></i></span>
+        <div class="ops-card-body">
+          <h3 class="ops-card-title">{% translate "Сотрудники и роли" %}</h3>
+          <p class="ops-card-text">{% translate "Команда, роли и права доступа." %}</p>
+          <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'clients:staff_manage' %}" class="btn btn-sm btn-outline-primary">{% translate "Сотрудники" %}</a>
+            <a href="{% url 'clients:role_manage' %}" class="btn btn-sm btn-outline-secondary">{% translate "Роли" %}</a>
           </div>
         </div>
-        {% endif %}
       </div>
+      {% endif %}
     </div>
-  </div>
+  </section>
+  {% endif %}
 
-  <div class="col-12 col-lg-6">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <h5 class="card-title">{% translate "Метрики" %}</h5>
-        <p class="text-muted">{% translate "Анализ эффективности работы компании: воронка онбординга клиентов, статистика оплат, количество закрытых и активных дел." %}</p>
-        <a href="{% url 'clients:metrics_dashboard' %}" class="btn btn-outline-secondary">{% translate "Метрики" %}</a>
+  <section class="ops-section">
+    <h2 class="ops-section-title">
+      <span class="ops-section-icon"><i class="bi bi-tools"></i></span>
+      {% translate "Проверка, демо и контроль" %}
+    </h2>
+    <div class="ops-action-grid ops-action-grid-3">
+      <div class="ops-card">
+        <span class="ops-card-icon" style="--ops-icon-color:#0891b2;--ops-icon-bg:rgba(8,145,178,.1);"><i class="bi bi-heart-pulse"></i></span>
+        <div class="ops-card-body">
+          <h3 class="ops-card-title">{% translate "Здоровье системы" %}</h3>
+          <p class="ops-card-text">{% translate "База, фоновые задачи, OCR и технические проверки." %}</p>
+          <a href="{% url 'clients:admin_dashboard' %}" class="btn btn-sm btn-outline-secondary">{% translate "Открыть" %}</a>
+        </div>
+      </div>
+      {% if test_center_available %}
+      <div class="ops-card">
+        <span class="ops-card-icon" style="--ops-icon-color:#dc2626;--ops-icon-bg:rgba(220,38,38,.1);"><i class="bi bi-shield-check"></i></span>
+        <div class="ops-card-body">
+          <h3 class="ops-card-title">{% translate "Test Center" %}</h3>
+          <p class="ops-card-text">{% translate "Smoke, OCR, ZUS, documents, permissions, security и workflow проверки." %}</p>
+          <a href="{% url 'clients:test_center' %}" class="btn btn-sm btn-outline-danger">{% translate "Запустить тесты" %}</a>
+        </div>
+      </div>
+      {% endif %}
+      {% if demo_center_available %}
+      <div class="ops-card">
+        <span class="ops-card-icon" style="--ops-icon-color:#2563eb;--ops-icon-bg:rgba(37,99,235,.1);"><i class="bi bi-display"></i></span>
+        <div class="ops-card-body">
+          <h3 class="ops-card-title">{% translate "Demo Center" %}</h3>
+          <p class="ops-card-text">{% translate "Пять безопасных демо-кейсов для презентации офиса и клиентского портала." %}</p>
+          <a href="{% url 'clients:demo_center' %}" class="btn btn-sm btn-primary">{% translate "Открыть демо" %}</a>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="ops-section">
+    <h2 class="ops-section-title">
+      <span class="ops-section-icon"><i class="bi bi-graph-up-arrow"></i></span>
+      {% translate "Аналитика и журналы" %}
+    </h2>
+    <div class="ops-action-grid">
+      <div class="ops-card">
+        <span class="ops-card-icon" style="--ops-icon-color:#16a34a;--ops-icon-bg:rgba(22,163,74,.1);"><i class="bi bi-bar-chart-line"></i></span>
+        <div class="ops-card-body">
+          <h3 class="ops-card-title">{% translate "Метрики" %}</h3>
+          <p class="ops-card-text">{% translate "Воронка, оплаты, активные дела и эффективность процесса." %}</p>
+          <a href="{% url 'clients:metrics_dashboard' %}" class="btn btn-sm btn-outline-success">{% translate "Открыть" %}</a>
+        </div>
+      </div>
+      <div class="ops-card">
+        <span class="ops-card-icon" style="--ops-icon-color:#475569;--ops-icon-bg:rgba(71,85,105,.12);"><i class="bi bi-journal-text"></i></span>
+        <div class="ops-card-body">
+          <h3 class="ops-card-title">{% translate "Журналы" %}</h3>
+          <p class="ops-card-text">{% translate "Email history и действия сотрудников по клиентам." %}</p>
+          <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'clients:staff_activity_logs' %}" class="btn btn-sm btn-outline-secondary">{% translate "Действия" %}</a>
+            <a href="{% url 'clients:email_logs' %}" class="btn btn-sm btn-outline-secondary">{% translate "Письма" %}</a>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="col-12 col-lg-6">
-    <div class="card shadow-sm h-100">
-      <div class="card-body">
-        <h5 class="card-title">{% translate "Журналы системы" %}</h5>
-        <p class="text-muted">{% translate "История отправки писем клиентам и подробный лог действий сотрудников в системе (аудит безопасности и действий с клиентами)." %}</p>
-        <a href="{% url 'clients:staff_activity_logs' %}" class="btn btn-outline-secondary">{% translate "Логи сотрудников" %}</a>
-        <a href="{% url 'clients:email_logs' %}" class="btn btn-outline-secondary ms-2">{% translate "Логи писем" %}</a>
-      </div>
-    </div>
-  </div>
+  </section>
 </div>
 {% endblock %}
