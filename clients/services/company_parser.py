@@ -56,14 +56,14 @@ def validate_nip(nip: str) -> bool:
 def _find_nip(text: str) -> str | None:
     """Find valid NIP in the text."""
     # 1. Search for "NIP" label within 30 characters of a digit sequence
-    pattern = re.compile(r"\b(?:NIP|N\.I\.P\.)\b[^\d\n]{0,30}(\d[\d\-\s]{8,16}\d)\b", re.IGNORECASE)
+    pattern = re.compile(r"\b(?:NIP|N\.I\.P\.)\b[^\d\n]{0,30}(\d[\d\-\t ]{8,16}\d)\b", re.IGNORECASE)
     for match in pattern.finditer(text):
         cleaned = re.sub(r"[^\d]", "", match.group(1))
         if len(cleaned) == 10 and validate_nip(cleaned):
             return cleaned
 
     # 2. General fallback: scan any digit sequence in the text
-    candidates = re.findall(r"\b\d[\d\-\s]{8,16}\d\b", text)
+    candidates = re.findall(r"\b\d[\d\-\t ]{8,16}\d\b", text)
     for c in candidates:
         cleaned = re.sub(r"[^\d]", "", c)
         if len(cleaned) == 10 and validate_nip(cleaned):
