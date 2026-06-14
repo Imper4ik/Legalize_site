@@ -67,6 +67,12 @@ class DemoCenterTests(TestCase):
         first_names = set(demo_clients.values_list("first_name", flat=True))
         expected_names = {"Jan", "Anna", "Daria", "Ivan", "Maria"}
         self.assertEqual(first_names, expected_names)
+        self.assertEqual(
+            set(demo_clients.values_list("application_purpose", flat=True)),
+            {"work", "study", "family"},
+        )
+        anna = demo_clients.get(first_name="Anna")
+        self.assertEqual(anna.family_role, "family_spouse")
 
         # Assert related models are populated
         self.assertTrue(Document.all_objects.filter(is_demo_data=True).exists())

@@ -33,6 +33,10 @@ class AdminToolsUiTests(TestCase):
         self.assertContains(response, "Prepare 5-minute demo")
         self.assertContains(response, "demo-route")
         self.assertContains(response, "demo-card")
+        self.assertContains(response, "demo-purpose-strip")
+        self.assertContains(response, "Open OCR review")
+        html = response.content.decode()
+        self.assertLess(html.index("</main>"), html.index('id="emailPreviewModal"'))
 
     def test_test_center_uses_test_workbench_layout(self) -> None:
         response = self.browser.get(reverse("clients:test_center"))

@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from datetime import date, timedelta
-from decimal import Decimal
-from django.utils import timezone
+from datetime import date
 from typing import Any
 
 from clients.constants import DocumentType
 from clients.models import DocumentProcessingJob, EmailLog, Reminder
-from clients.services.zus import missing_zus_months
 from clients.demo.demo_factory import (
     create_demo_client,
     create_demo_payment,
@@ -65,16 +62,18 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
 
     results.append({"client": jan, "token": token_jan, "scenario": "Jan Kowalski (All Documents OK)"})
 
-    # 2. Anna Nowak — missing documents
+    # 2. Anna Nowak — family reunification with missing documents
     anna = create_demo_client(
         email="anna.nowak@example.demo",
         first_name="Anna",
         last_name="Nowak",
-        purpose="work",
+        purpose="family",
         workflow_stage="document_collection",
         language="pl",
         assigned_staff=staff_user,
     )
+    anna.family_role = "family_spouse"
+    anna.save(update_fields=["family_role"])
     create_demo_payment(anna, status="paid")
     token_anna, _ = create_demo_onboarding_session(anna)
 
@@ -85,7 +84,7 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
     create_demo_activity(anna, event_type="client_created", summary="Демо-клиент создан", actor=staff_user)
     create_demo_activity(anna, event_type="document_uploaded", summary="Загружен паспорт и фотографии", actor=staff_user)
 
-    results.append({"client": anna, "token": token_anna, "scenario": "Anna Nowak (Missing Documents)"})
+    results.append({"client": anna, "token": token_anna, "scenario": "Anna Nowak (Family Missing Documents)"})
 
     # 3. Daria Testowa — ZUS RCA wrong month
     daria = create_demo_client(

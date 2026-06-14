@@ -53,6 +53,42 @@
     gap: 0.75rem;
   }
 
+  .demo-guide-grid {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  @media (min-width: 992px) {
+    .demo-guide-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  .demo-guide-item {
+    min-height: 100%;
+  }
+
+  .demo-purpose-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .demo-purpose {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.55rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.65rem;
+    font-size: 0.82rem;
+  }
+
+  .demo-purpose-empty {
+    color: var(--bs-secondary-color);
+    border-style: dashed;
+  }
+
   .demo-stat {
     padding: 0.85rem;
     border: 1px solid var(--bs-border-color);
@@ -206,6 +242,15 @@
     flex-wrap: wrap;
   }
 
+  .demo-next-step {
+    margin-top: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 0.65rem;
+    color: var(--bs-secondary-color);
+    background: var(--bs-tertiary-bg);
+    font-size: 0.82rem;
+  }
+
   .demo-card {
     padding: 1rem;
   }
@@ -237,6 +282,12 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.8rem;
     white-space: pre-wrap;
+  }
+
+  .demo-modal-action-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 </style>
 {% endblock %}
@@ -271,6 +322,39 @@
     </div>
   </div>
 
+  {% if demo_needs_refresh %}
+    <div class="alert alert-warning mb-0">
+      <i class="bi bi-exclamation-triangle me-1"></i>
+      {% translate "Демо-данные созданы старой версией и не покрывают все основания подачи. Нажмите Prepare 5-minute demo, чтобы пересоздать безопасные демо-кейсы." %}
+    </div>
+  {% endif %}
+
+  <div class="demo-guide-grid">
+    <section class="demo-panel demo-guide-item">
+      <h2 class="demo-section-title"><i class="bi bi-compass"></i>{% translate "Что смотреть" %}</h2>
+      <div class="demo-muted">
+        {% translate "Сначала подготовьте демо, затем открывайте Staff View и Client Portal у карточек. Каждый профиль показывает отдельный рабочий сценарий." %}
+      </div>
+    </section>
+    <section class="demo-panel demo-guide-item">
+      <h2 class="demo-section-title"><i class="bi bi-ui-checks"></i>{% translate "Быстрые проверки" %}</h2>
+      <div class="demo-muted">
+        {% translate "Email preview показывает письмо клиенту, OCR preview показывает распознанное wezwanie, а OCR review ведёт к реальному списку документов на проверку." %}
+      </div>
+    </section>
+    <section class="demo-panel demo-guide-item">
+      <h2 class="demo-section-title"><i class="bi bi-diagram-3"></i>{% translate "Основания подачи" %}</h2>
+      <div class="demo-purpose-strip">
+        {% for purpose in demo_purposes %}
+          <span class="demo-purpose {% if not purpose.count %}demo-purpose-empty{% endif %}">
+            <i class="bi {% if purpose.count %}bi-check-circle text-success{% else %}bi-dash-circle{% endif %}"></i>
+            {{ purpose.label }}: {{ purpose.count }}
+          </span>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
   <div class="demo-layout">
     <div class="demo-left">
       <div class="demo-panel mb-3">
@@ -284,12 +368,30 @@
               <i class="bi bi-play-circle-fill me-1"></i>{% translate "Prepare 5-minute demo" %}
             </button>
           </form>
-          <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#emailPreviewModal">
-            <i class="bi bi-envelope-open me-1"></i>{% translate "Email preview" %}
+          <button type="button"
+                  class="btn btn-outline-secondary"
+                  data-bs-toggle="modal"
+                  data-bs-target="#emailPreviewModal"
+                  {% if not demo_daria %}disabled{% endif %}>
+            <i class="bi bi-envelope-open me-1"></i>{% translate "Email preview: Daria" %}
           </button>
-          <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#ocrResultModal">
-            <i class="bi bi-file-earmark-binary me-1"></i>{% translate "OCR preview" %}
+          <button type="button"
+                  class="btn btn-outline-secondary"
+                  data-bs-toggle="modal"
+                  data-bs-target="#ocrResultModal"
+                  {% if not demo_ivan %}disabled{% endif %}>
+            <i class="bi bi-file-earmark-binary me-1"></i>{% translate "OCR preview: Ivan" %}
           </button>
+          <a href="{% url 'clients:client_list' %}?ocr=awaiting"
+             class="btn btn-outline-secondary {% if not demo_ocr_document %}disabled{% endif %}"
+             {% if not demo_ocr_document %}aria-disabled="true" tabindex="-1"{% endif %}>
+            <i class="bi bi-search me-1"></i>{% translate "Open OCR review" %}
+          </a>
+          {% if not demo_clients %}
+            <div class="demo-muted">
+              {% translate "Preview и OCR review станут активны после подготовки демо-данных." %}
+            </div>
+          {% endif %}
         </div>
       </div>
 
@@ -314,7 +416,7 @@
             <div class="demo-route-time">1:30</div>
             <div>
               <div class="demo-route-title">Anna Nowak</div>
-              <div class="demo-route-text">{% translate "Клиентский портал и недостающие документы." %}</div>
+              <div class="demo-route-text">{% translate "Family reunification: клиентский портал и недостающие документы." %}</div>
             </div>
           </div>
           <div class="demo-route-step">
@@ -387,19 +489,36 @@
               </div>
               <div class="demo-client-meta">
                 <span class="demo-chip"><i class="bi bi-briefcase"></i>{{ client.get_application_purpose_display }}</span>
+                {% if client.application_purpose == "family" %}
+                  <span class="demo-chip"><i class="bi bi-people"></i>{{ client.get_family_role_display }}</span>
+                {% endif %}
                 <span class="demo-chip"><i class="bi bi-diagram-3"></i>{{ client.get_workflow_stage_display }}</span>
               </div>
               <div class="demo-muted">
                 {% if client.first_name == 'Jan' %}
                   {% translate "Все документы и платежи готовы. Используйте как эталонный кейс." %}
                 {% elif client.first_name == 'Anna' %}
-                  {% translate "Недостающие документы и клиентский портал для загрузки файлов." %}
+                  {% translate "Family reunification: недостающие документы и клиентский портал для загрузки файлов." %}
                 {% elif client.first_name == 'Daria' %}
                   {% translate "Неверный месяц ZUS RCA, предупреждение и email-коммуникация." %}
                 {% elif client.first_name == 'Ivan' %}
                   {% translate "Wezwanie, OCR результат, дедлайн и ручное подтверждение." %}
                 {% elif client.first_name == 'Maria' %}
                   {% translate "Отпечатки уже сданы, дело ожидает решение." %}
+                {% endif %}
+              </div>
+              <div class="demo-next-step">
+                <strong>{% translate "Следующий клик" %}:</strong>
+                {% if client.first_name == 'Jan' %}
+                  {% translate "Staff View — проверить, что документы и платёж закрыты." %}
+                {% elif client.first_name == 'Anna' %}
+                  {% translate "Client Portal — показать загрузку недостающих family-документов." %}
+                {% elif client.first_name == 'Daria' %}
+                  {% translate "Email preview — показать письмо о неверном периоде ZUS RCA." %}
+                {% elif client.first_name == 'Ivan' %}
+                  {% translate "OCR preview или Staff View — показать wezwanie и подтверждение OCR." %}
+                {% elif client.first_name == 'Maria' %}
+                  {% translate "Staff View — показать ожидание решения после отпечатков." %}
                 {% endif %}
               </div>
             </div>
@@ -426,7 +545,12 @@
                   <strong class="small text-truncate">{{ job.source_file_name }}</strong>
                   <span class="badge {% if job.status == 'completed' %}text-bg-success{% elif job.status == 'failed' %}text-bg-danger{% else %}text-bg-warning{% endif %}">{{ job.status }}</span>
                 </div>
-                <div class="demo-muted">{{ job.get_job_type_display }} · confirmation: {{ job.requires_confirmation }}</div>
+                <div class="demo-muted mb-2">{{ job.get_job_type_display }} · confirmation: {{ job.requires_confirmation }}</div>
+                {% if job.document_id %}
+                  <a href="{% url 'clients:document_preview' job.document_id %}" class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener">
+                    <i class="bi bi-file-earmark-text me-1"></i>{% translate "Open document preview" %}
+                  </a>
+                {% endif %}
               </div>
               {% endfor %}
             </div>
@@ -461,8 +585,11 @@
   </div>
 </div>
 
+{% endblock %}
+
+{% block modals %}
 <div class="modal fade" id="emailPreviewModal" tabindex="-1" aria-labelledby="emailPreviewModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="emailPreviewModalLabel">
@@ -480,6 +607,18 @@ Prosimy o przesłanie poprawnego dokumentu przez portal klienta.
 [Otwórz portal klienta]</div>
       </div>
       <div class="modal-footer">
+        <div class="demo-modal-action-grid me-auto">
+          {% if demo_daria %}
+            <a href="{% url 'clients:client_detail' demo_daria.pk %}" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-person-workspace me-1"></i>{% translate "Open Daria" %}
+            </a>
+            {% if demo_daria.portal_url %}
+              <a href="{{ demo_daria.portal_url }}" class="btn btn-sm btn-primary" target="_blank" rel="noopener">
+                <i class="bi bi-door-open me-1"></i>{% translate "Open portal" %}
+              </a>
+            {% endif %}
+          {% endif %}
+        </div>
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% translate "Закрыть" %}</button>
       </div>
     </div>
@@ -487,7 +626,7 @@ Prosimy o przesłanie poprawnego dokumentu przez portal klienta.
 </div>
 
 <div class="modal fade" id="ocrResultModal" tabindex="-1" aria-labelledby="ocrResultModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="ocrResultModalLabel">
@@ -525,6 +664,21 @@ Na podstawie art. 77 KPA wzywa sie do uzupelnienia brakow materialnych w termini
         </div>
       </div>
       <div class="modal-footer">
+        <div class="demo-modal-action-grid me-auto">
+          {% if demo_ivan %}
+            <a href="{% url 'clients:client_detail' demo_ivan.pk %}" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-person-workspace me-1"></i>{% translate "Open Ivan" %}
+            </a>
+          {% endif %}
+          {% if demo_ocr_document %}
+            <a href="{% url 'clients:document_preview' demo_ocr_document.pk %}" class="btn btn-sm btn-primary" target="_blank" rel="noopener">
+              <i class="bi bi-file-earmark-text me-1"></i>{% translate "Open document" %}
+            </a>
+          {% endif %}
+          <a href="{% url 'clients:client_list' %}?ocr=awaiting" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-search me-1"></i>{% translate "OCR review list" %}
+          </a>
+        </div>
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% translate "Закрыть" %}</button>
       </div>
     </div>
