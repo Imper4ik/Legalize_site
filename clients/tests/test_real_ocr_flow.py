@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from datetime import date
+from unittest.mock import patch
 from django.test import TestCase, override_settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
@@ -42,7 +43,9 @@ class RealOCRFlowTests(TestCase):
         filepath = os.path.join(self.fixtures_dir, filename)
         with open(filepath, "rb") as f:
             content = f.read()
-        return SimpleUploadedFile(filename, content, content_type="application/pdf")
+        return SimpleUploadedFile(filename, content, content_type="application/pdf" if filename.endswith(".pdf") else "image/png")
+
+    # --- Digital PDF Parsing Tests (pypdf engine) ---
 
     def test_real_company_doc_ceidg_parsing(self):
         filepath = os.path.join(self.fixtures_dir, "ceidg_real.pdf")
@@ -108,6 +111,52 @@ class RealOCRFlowTests(TestCase):
         self.assertIn("photos", parsed.required_documents)
         self.assertIn("passport", parsed.required_documents)
         self.assertIn("address_proof", parsed.required_documents)
+
+    # --- Raster Image (PNG/Scan) OCR Parsing Tests ---
+
+    def test_raster_image_passport_ocr(self):
+        filepath = os.path.join(self.fixtures_dir, "passport_scan.png")
+        
+        mocked_text = (
+            "PASZPORT / PASSPORT / PASSEPORT\n"
+            "RZECZPOSPOLITA POLSKA / REPUBLIC OF POLAND\n"
+            "Type: P, Code: POL, Passport No: EE1234567\n"
+            "Surname / Nazwisko: Kowalski\n"
+            "Given names / Imiona: Jan\n"
+            "Nationality / Obywatelstwo: POLSKIE / POLISH\n"
+            "Date of birth / Data urodzenia: 15.05.1990\n"
+            "Date of expiry / Data uplywu waznosci: 30.12.2030\n"
+            "P<POLKOWALSKI<<JAN<<<<<<<<<<<<<<<<<<<<<<<<<<\n"
+            "EE12345674POL9005151M3012301<<<<<<<<<<<<<<02\n"
+        )
+        # We always patch pytesseract to isolate test logic from local Tesseract models inaccuracies,
+        # but we load the actual image file to ensure the Pillow opening/preprocessing runs natively.
+        with patch("pytesseract.image_to_string", return_value=mocked_text):
+            parsed = parse_passport_doc(filepath)
+
+        self.assertEqual(parsed.passport_number, "EE1234567")
+        self.assertEqual(parsed.first_name, "Jan")
+        self.assertEqual(parsed.last_name, "Kowalski")
+        self.assertEqual(parsed.date_of_birth, date(1990, 5, 15))
+        self.assertEqual(parsed.valid_until, date(2030, 12, 30))
+
+    def test_raster_image_rental_agreement_ocr(self):
+        filepath = os.path.join(self.fixtures_dir, "rental_scan.png")
+        
+        mocked_text = (
+            "UMOWA NAJMU LOKALU MIESZKALNEGO\n"
+            "Wynajmujacy: Jan Kowalski, zamieszkaly w Warszawie\n"
+            "Najemca: Anna Nowak, legitymujaca sie paszportem EE1234567\n"
+            "Przedmiotem najmu jest lokal polozony w Warszawie, ul. Marszalkowska 10/12, 00-590 Warszawa\n"
+            "Najemca zobowiazuje sie placic Wynajmujacemu miesieczny czynsz najmu w kwocie 3 000 PLN\n"
+            "Umowa zostaje zawarta na czas okreslony do dnia 01.01.2028 r.\n"
+        )
+        with patch("pytesseract.image_to_string", return_value=mocked_text):
+            parsed = parse_rental_doc(filepath)
+
+        self.assertEqual(parsed.address, "ul. Marszalkowska 10/12, 00-590 Warszawa")
+        self.assertEqual(parsed.monthly_cost, 3000.0)
+        self.assertEqual(parsed.valid_until, date(2028, 1, 1))
 
     # --- End-To-End Job Integration Tests ---
 
