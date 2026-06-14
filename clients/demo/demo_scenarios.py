@@ -4,15 +4,15 @@ from datetime import date
 from typing import Any
 
 from clients.constants import DocumentType
-from clients.models import DocumentProcessingJob, EmailLog, Reminder
 from clients.demo.demo_factory import (
+    create_demo_activity,
     create_demo_client,
-    create_demo_payment,
     create_demo_document,
     create_demo_onboarding_session,
-    create_demo_activity,
+    create_demo_payment,
     create_demo_staff_audit,
 )
+from clients.models import DocumentProcessingJob, EmailLog, Reminder
 
 
 def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:

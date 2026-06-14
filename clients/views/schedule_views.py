@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+from django.db.models import Q
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.utils import timezone
-from django.db.models import Q
 
 from clients.models import Client
 from clients.security.encrypted import safe_encrypted_attr

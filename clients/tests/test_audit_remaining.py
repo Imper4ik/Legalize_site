@@ -164,9 +164,10 @@ class RemainingAuditHardeningTests(TestCase):
         self.assertNotIn("<script", cleaned)
 
     def test_onboarding_travel_validates_legal_stay_until(self):
-        from clients.models import ClientOnboardingSession, MOSApplicationData
-        from clients.services.onboarding_tokens import hash_onboarding_token
         import uuid
+
+        from clients.models import ClientOnboardingSession
+        from clients.services.onboarding_tokens import hash_onboarding_token
 
         client = Client.objects.create(first_name="Test", last_name="User", email="test-travel@example.com")
         User = get_user_model()
@@ -176,7 +177,7 @@ class RemainingAuditHardeningTests(TestCase):
         self.client.force_login(user)
 
         token = uuid.uuid4().hex
-        session = ClientOnboardingSession.objects.create(
+        ClientOnboardingSession.objects.create(
             client=client,
             token_hash=hash_onboarding_token(token),
             expires_at=timezone.now() + timedelta(days=1),
@@ -237,9 +238,10 @@ class RemainingAuditHardeningTests(TestCase):
         self.assertIsNone(mos_data.legal_stay_until)
 
     def test_onboarding_document_delete_requires_post(self):
+        import uuid
+
         from clients.models import ClientOnboardingSession
         from clients.services.onboarding_tokens import hash_onboarding_token
-        import uuid
 
         client = Client.objects.create(first_name="Test", last_name="User", email="test-doc-del@example.com")
         User = get_user_model()
@@ -249,7 +251,7 @@ class RemainingAuditHardeningTests(TestCase):
         self.client.force_login(user)
 
         token = uuid.uuid4().hex
-        session = ClientOnboardingSession.objects.create(
+        ClientOnboardingSession.objects.create(
             client=client,
             token_hash=hash_onboarding_token(token),
             expires_at=timezone.now() + timedelta(days=1),

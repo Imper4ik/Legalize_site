@@ -1,8 +1,9 @@
 from clients.models import MOSApplicationData
 
+
 def pre_fill_mos_data_from_ocr(mos_data: MOSApplicationData) -> bool:
     """
-    Attempts to pre-fill MOSApplicationData fields based on parsed_data 
+    Attempts to pre-fill MOSApplicationData fields based on parsed_data
     from the client's documents (e.g., passport) if they are currently empty.
     Returns True if any data was updated.
     """
@@ -18,7 +19,7 @@ def pre_fill_mos_data_from_ocr(mos_data: MOSApplicationData) -> bool:
 
     if passport_doc and passport_doc.parsed_data:
         parsed = passport_doc.parsed_data
-        
+
         personal_data = dict(mos_data.personal_data or {})
         passport_data = dict(mos_data.passport_data or {})
 
@@ -55,5 +56,5 @@ def pre_fill_mos_data_from_ocr(mos_data: MOSApplicationData) -> bool:
             mos_data.personal_data = personal_data
             mos_data.passport_data = passport_data
             mos_data.save(update_fields=["personal_data", "passport_data", "updated_at"])
-    
+
     return updated

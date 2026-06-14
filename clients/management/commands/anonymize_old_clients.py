@@ -3,8 +3,8 @@ from datetime import timedelta
 from typing import Any
 
 from django.core.management.base import BaseCommand
-from django.utils import timezone
 from django.db import transaction
+from django.utils import timezone
 
 from clients.models import Client
 
@@ -29,14 +29,14 @@ class Command(BaseCommand):
     def handle(self, *args: Any, **options: Any) -> None:
         years = options['years']
         dry_run = options['dry_run']
-        
+
         cutoff_date = timezone.now().date() - timedelta(days=years * 365)
-        
-        # We consider a client 'old' if their legal_basis_end_date is before the cutoff date, 
+
+        # We consider a client 'old' if their legal_basis_end_date is before the cutoff date,
         # or if legal_basis_end_date is None, their created_at date.
         # But for simplicity, we will query based on created_at for absolute age,
         # and ensure legal_basis_end_date (if exists) is also past the cutoff.
-        
+
         clients_to_anonymize = Client.objects.filter(
             created_at__date__lte=cutoff_date
         ).exclude(
@@ -46,7 +46,7 @@ class Command(BaseCommand):
         )
 
         count = clients_to_anonymize.count()
-        
+
         if count == 0:
             self.stdout.write(self.style.SUCCESS('No old clients found to anonymize.'))
             return
@@ -63,7 +63,7 @@ class Command(BaseCommand):
         with transaction.atomic():
             for client in clients_to_anonymize:
                 client_id = client.id
-                
+
                 # Anonymize PII
                 client.first_name = f'Anonymized_{client_id}'
                 client.last_name = 'User'
@@ -71,7 +71,7 @@ class Command(BaseCommand):
                 client.phone = '000000000'
                 client.case_number = f'DELETED-{client_id}'
                 client.company = None
-                
+
                 # We do not delete financial records to keep aggregate statistics intact,
                 # but we should delete any uploaded documents.
                 documents = client.documents.all()

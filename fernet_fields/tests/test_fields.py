@@ -5,7 +5,6 @@ from django.test import SimpleTestCase, override_settings
 
 from fernet_fields.fields import (
     ENCRYPTED_VALUE_UNAVAILABLE,
-    EncryptedFieldDecryptionError,
     EncryptedTextField,
     EncryptedValueUnavailable,
     _build_fernet,

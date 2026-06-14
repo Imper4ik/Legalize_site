@@ -10,7 +10,6 @@ from django.utils.translation import gettext as _
 
 from legalize_site.utils.http import request_is_ajax
 
-
 NO_STORE_HEADER = "no-store, no-cache, must-revalidate"
 
 

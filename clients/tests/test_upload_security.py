@@ -9,7 +9,6 @@ from django.test import SimpleTestCase, override_settings
 from clients.models.document import document_upload_path
 from clients.validators import validate_uploaded_document
 
-
 VALID_MINIMAL_PDF = b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF"
 
 

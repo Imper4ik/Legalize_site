@@ -53,7 +53,20 @@ CODE_REVIEW.md
 tmp/
 scratch/
 
-
 /legalize_site/media/
 /tmp/db_backups/
 /database_backups/
+
+# Cache directories
+.mypy_cache/
+
+# Development / Temporary scripts & files
+/create_test_clients_production.py
+/db_stress_test.py
+/fix_case_numbers.py
+/run_zus_script.py
+/locustfile.py
+/audit_results.md
+/implementation_plan.md
+/walkthrough.md
+/task.md

@@ -4,11 +4,12 @@ from __future__ import annotations
 import logging
 from io import BytesIO
 from pathlib import Path
-from typing import BinaryIO, Any
+from typing import Any, BinaryIO
 
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from PIL import Image
+
 Image.MAX_IMAGE_PIXELS = None
 
 logger = logging.getLogger(__name__)

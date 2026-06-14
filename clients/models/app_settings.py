@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import cast, Self
+from typing import Self, cast
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _

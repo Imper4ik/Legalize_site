@@ -1,8 +1,11 @@
+from datetime import timedelta
+
 import pytest
 from django.urls import reverse
 from django.utils import timezone
+
 from clients.models import Client, EmailLog
-from datetime import timedelta
+
 
 @pytest.mark.django_db
 def test_email_history_visibility(admin_client):

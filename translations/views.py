@@ -3,15 +3,16 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from django.views.decorators.http import require_POST
-from django.shortcuts import render, redirect
+from django.conf import settings
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpRequest, HttpResponse, JsonResponse
-from django.conf import settings
+from django.shortcuts import redirect, render
+from django.views.decorators.http import require_POST
 
 from clients.services.roles import user_has_any_role
+
 from .utils import load_all_translations, save_translation_entry
 
 if TYPE_CHECKING:

@@ -21,35 +21,41 @@ class AdminToolsUiTests(TestCase):
         self.browser.force_login(self.superuser)
 
     def test_admin_panel_uses_operational_workbench_layout(self) -> None:
-        response = self.browser.get(reverse("clients:admin_panel"))
+        from django.utils import translation
+        with translation.override("en"):
+            response = self.browser.get(reverse("clients:admin_panel"))
 
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "ops-shell")
-        self.assertContains(response, "ops-risk-grid")
-        self.assertContains(response, "Test Center")
-        self.assertContains(response, "Demo Center")
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, "ops-shell")
+            self.assertContains(response, "ops-risk-grid")
+            self.assertContains(response, "Test Center")
+            self.assertContains(response, "Demo Center")
 
     def test_demo_center_uses_demo_workbench_layout(self) -> None:
-        response = self.browser.get(reverse("clients:demo_center"))
+        from django.utils import translation
+        with translation.override("en"):
+            response = self.browser.get(reverse("clients:demo_center"))
 
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "demo-workbench")
-        self.assertContains(response, "Prepare 5-minute demo")
-        self.assertContains(response, "demo-route")
-        self.assertContains(response, "demo-card")
-        self.assertContains(response, "demo-purpose-strip")
-        self.assertContains(response, "Open OCR review")
-        html = response.content.decode()
-        self.assertLess(html.index("</main>"), html.index('id="emailPreviewModal"'))
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, "demo-workbench")
+            self.assertContains(response, "Prepare 5-minute demo")
+            self.assertContains(response, "demo-route")
+            self.assertContains(response, "demo-card")
+            self.assertContains(response, "demo-purpose-strip")
+            self.assertContains(response, "Open OCR review")
+            html = response.content.decode()
+            self.assertLess(html.index("</main>"), html.index('id="emailPreviewModal"'))
 
     def test_test_center_uses_test_workbench_layout(self) -> None:
-        response = self.browser.get(reverse("clients:test_center"))
+        from django.utils import translation
+        with translation.override("en"):
+            response = self.browser.get(reverse("clients:test_center"))
 
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "test-workbench")
-        self.assertContains(response, "tc-mode-list")
-        self.assertContains(response, "tc-mode-card")
-        self.assertContains(response, "Smoke")
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, "test-workbench")
+            self.assertContains(response, "tc-mode-list")
+            self.assertContains(response, "tc-mode-card")
+            self.assertContains(response, "Smoke")
 
     def test_test_center_kept_smoke_run_links_to_valid_client_portal(self) -> None:
         test_run = run_e2e_scenarios(mode="smoke", started_by=self.superuser, cleanup=False)

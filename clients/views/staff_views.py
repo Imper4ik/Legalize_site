@@ -18,7 +18,6 @@ from clients.services.roles import (
 )
 from clients.views.base import role_required_view
 
-
 STAFF_AUDIT_PROFILE_FIELDS = ("email", "first_name", "last_name", "is_staff", "is_active")
 
 

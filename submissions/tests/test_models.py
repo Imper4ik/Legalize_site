@@ -1,5 +1,7 @@
 from django.test import TestCase
-from submissions.models import Submission, Document
+
+from submissions.models import Document, Submission
+
 
 class SubmissionModelTest(TestCase):
     def setUp(self):

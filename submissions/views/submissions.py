@@ -1,19 +1,22 @@
 from __future__ import annotations
-from django.shortcuts import redirect
-from django.urls import reverse_lazy
-from django.contrib import messages
-from django.utils.translation import gettext_lazy as _
-from django.http import HttpRequest, HttpResponse, HttpResponseNotAllowed
-from django.shortcuts import get_object_or_404, render
-from django.utils.http import url_has_allowed_host_and_scheme
-from django.views import View
-from django.views.generic import ListView, DetailView
+
 from typing import Any
 
+from django.contrib import messages
+from django.http import HttpRequest, HttpResponse, HttpResponseNotAllowed
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse_lazy
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.translation import gettext_lazy as _
+from django.views import View
+from django.views.generic import DetailView, ListView
+
 from clients.services.roles import SUBMISSION_DELETE_ROLES, SUBMISSION_EDIT_ROLES
-from clients.views.base import RoleRequiredMixin, role_required_view, StaffRequiredMixin
+from clients.views.base import RoleRequiredMixin, StaffRequiredMixin, role_required_view
+
+from ..forms import DocumentForm, SubmissionForm
 from ..models import Submission
-from ..forms import SubmissionForm, DocumentForm
+
 
 class SubmissionListView(StaffRequiredMixin, ListView):
     model = Submission

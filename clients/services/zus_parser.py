@@ -7,8 +7,8 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
+from clients.services.company_parser import _find_detected_names, _find_nip
 from clients.services.wezwanie_parser import extract_text
-from clients.services.company_parser import _find_nip, _find_detected_names
 
 logger = logging.getLogger(__name__)
 
@@ -95,13 +95,13 @@ def _detect_zus_form_type(text: str) -> str | None:
         pattern = rf"\bZUS\s*[.\-\s]*\s*{re.escape(form_type)}\b"
         if re.search(pattern, upper):
             return form_type
-            
+
     # 3. Fallback: if text contains 'ZUS' anywhere, search for standalone form types
     if "ZUS" in upper or "ZAKLAD UBEZPIECZEN" in upper:
         for form_type in _ZUS_FORM_TYPES:
             if re.search(rf"\b{re.escape(form_type)}\b", upper):
                 return form_type
-                
+
     return None
 
 

@@ -1,11 +1,10 @@
 from __future__ import annotations
 
+import logging
 from contextlib import suppress
 from datetime import date
-from typing import Any, TYPE_CHECKING, cast
-
-import logging
 from pathlib import Path
+from typing import TYPE_CHECKING, Any, cast
 
 from django.core.files.base import ContentFile
 from django.db import transaction

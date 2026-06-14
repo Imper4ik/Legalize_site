@@ -23,7 +23,7 @@ class TranslationStudioMiddleware:
         # Visible to superusers or dedicated translation roles with session flag or 'studio' in GET.
         user = getattr(request, "user", None)
         session = getattr(request, "session", {})
-        
+
         can_use_studio = user and getattr(user, "is_authenticated", False) and (
             getattr(user, "is_superuser", False) or user_has_any_role(user, "Admin", "Translator")
         )

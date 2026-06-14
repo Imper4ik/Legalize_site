@@ -6,7 +6,6 @@ from django import template
 
 from clients.services.roles import user_has_any_role
 
-
 register = template.Library()
 
 

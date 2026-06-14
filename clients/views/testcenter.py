@@ -16,7 +16,6 @@ from clients.services.onboarding_tokens import hash_onboarding_token
 from clients.testing.cleanup import cleanup_test_data
 from clients.testing.e2e_runner import available_modes, ensure_test_center_enabled, run_e2e_scenarios, testcenter_lock
 
-
 ONBOARDING_CASE_PREFIX = "onboarding:"
 
 

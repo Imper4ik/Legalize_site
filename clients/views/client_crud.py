@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from django.conf import settings
 from django.contrib import messages
@@ -20,6 +20,8 @@ from clients.forms import (
 )
 from clients.models import Client, ClientActivity, Document, EmailLog, Payment, StaffTask, WniosekSubmission
 from clients.security.encrypted import safe_encrypted_attr
+from clients.services.access import accessible_clients_queryset
+from clients.services.activity import log_client_view
 from clients.services.notifications import (
     send_expired_documents_email,
     send_required_documents_email,
@@ -28,20 +30,24 @@ from clients.services.onboarding_purposes import (
     attach_onboarding_purpose_review_state,
     onboarding_purpose_mismatch_q,
 )
-from clients.services.zus import missing_zus_month_upload_options
 from clients.services.responses import apply_no_store
 from clients.services.roles import (
     CLIENT_DELETE_ROLES,
     user_has_any_role,
 )
+from clients.services.zus import missing_zus_month_upload_options
 from clients.use_cases.client_records import (
     finalize_client_creation,
     finalize_client_update,
     snapshot_client_update_state,
 )
-from clients.views.base import RoleOrFeatureRequiredMixin, RoleRequiredMixin, StaffRequiredMixin, role_required_view, staff_required_view
-from clients.services.activity import log_client_view
-from clients.services.access import accessible_clients_queryset
+from clients.views.base import (
+    RoleOrFeatureRequiredMixin,
+    RoleRequiredMixin,
+    StaffRequiredMixin,
+    role_required_view,
+    staff_required_view,
+)
 
 if TYPE_CHECKING:
     from django.http.response import HttpResponseBase
@@ -402,8 +408,9 @@ def calculator_view(request: HttpRequest) -> HttpResponseBase:
 
 @role_required_view("Admin", "Manager", "Staff")
 def client_autocomplete_api(request: HttpRequest) -> HttpResponse:
-    from django.http import JsonResponse
     from django.db.models import Q
+    from django.http import JsonResponse
+
     from clients.models import Client
     from clients.services.access import accessible_clients_queryset
 

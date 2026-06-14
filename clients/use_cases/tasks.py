@@ -30,16 +30,16 @@ def create_task_for_client(
     with transaction.atomic():
         # AnonymousUser cannot be assigned to ForeignKey
         creator = actor if actor and actor.is_authenticated else None
-        
+
         task = StaffTask(client=client, created_by=cast(Any, creator))
         for field in ("title", "description", "due_date", "priority", "status", "assignee", "document", "payment"):
             if field in cleaned_data:
                 setattr(task, field, cleaned_data[field])
-        
+
         if task.assignee_id is None and actor and actor.is_authenticated:
             # Cast to Any to satisfy mypy for ForeignKey assignment
             task.assignee = cast(Any, actor)
-        
+
         task.save()
 
         log_client_activity(

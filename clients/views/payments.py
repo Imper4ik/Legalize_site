@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from django.contrib import messages
 from django.http import HttpRequest
@@ -13,12 +13,12 @@ from clients.models import Client, Payment
 from clients.services.access import accessible_clients_queryset, accessible_payments_queryset
 from clients.services.pricing import get_service_price
 from clients.services.responses import ResponseHelper
+from clients.services.roles import PAYMENT_MUTATION_ROLES
 from clients.use_cases.payments import (
     create_payment_for_client,
     delete_payment_for_client,
     update_payment_for_client,
 )
-from clients.services.roles import PAYMENT_MUTATION_ROLES
 from clients.views.base import role_or_feature_required_view
 
 if TYPE_CHECKING:

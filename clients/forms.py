@@ -3,12 +3,12 @@ from __future__ import annotations
 import copy
 import logging
 from decimal import Decimal
-from typing import Any, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from django import forms
 from django.contrib.auth import get_user_model
-from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth.models import Group
+from django.contrib.auth.password_validation import validate_password
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 
@@ -24,20 +24,21 @@ from clients.use_cases.document_requirements import (
     update_document_requirement_record,
 )
 from clients.validators import FILE_INPUT_ACCEPT, validate_uploaded_document
-from .constants import DocumentType, INTERNAL_DOCS
 from submissions.models import Submission
+
+from .constants import INTERNAL_DOCS, DocumentType
 from .models import (
     AppSettings,
     Client,
     Company,
     Document,
     DocumentRequirement,
+    EmailLog,
+    EmployeePermission,
     FamilyGroup,
     Payment,
     ServicePrice,
     StaffTask,
-    EmailLog,
-    EmployeePermission,
     get_fallback_document_checklist,
     resolve_document_label,
 )
@@ -303,7 +304,7 @@ class ClientForm(forms.ModelForm):
             choices.append((str(current_value), str(current_value)))
 
         cast(forms.ChoiceField, self.fields['application_purpose']).choices = choices
-        
+
         # Fixed typing for queryset assignment
         staff_qs = get_user_model().objects.filter(
             is_staff=True,
@@ -317,7 +318,7 @@ class ClientForm(forms.ModelForm):
             sponsor_queryset = cast(Any, accessible_clients_queryset(self.user, sponsor_queryset))
         else:
             sponsor_queryset = Client.objects.none()
-        
+
         if hasattr(self.fields['sponsor_client'], 'queryset'):
             setattr(self.fields['sponsor_client'], 'queryset', sponsor_queryset.order_by('last_name', 'first_name'))
 

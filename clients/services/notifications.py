@@ -1,22 +1,22 @@
 """Email notification helpers for client lifecycle events."""
 from __future__ import annotations
 
-import logging
 import hashlib
+import logging
 import time
 from datetime import timedelta
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Iterable, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Iterable
 
 from django.conf import settings
-from django.urls import reverse
-from django.db import IntegrityError, transaction
 from django.core.mail import send_mail
+from django.db import IntegrityError, transaction
 from django.template.loader import select_template
+from django.urls import reverse
 from django.utils import timezone
-from django.utils.translation import gettext as _, gettext_lazy
-from django.utils.translation import override
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy, override
 from PIL import Image, ImageDraw, ImageFont
 
 from clients.constants import DocumentType
@@ -261,9 +261,9 @@ def _log_email(
     error_message: str = "",
 ) -> None:
     from clients.models import EmailLog
-    
+
     real_sent_by = sent_by if sent_by and sent_by.is_authenticated else None
-    
+
     try:
         payload = {
             "client": client,
@@ -455,7 +455,7 @@ def _render_email_pdf(text: str) -> bytes:
     draw = ImageDraw.Draw(temp_image)
     max_width = page_width - (margin * 2)
     lines = _wrap_text_lines(text, draw, font, max_width)
-    
+
     # Calculate line height
     if hasattr(font, "getbbox"):
         bbox = font.getbbox("Hg")
@@ -463,7 +463,7 @@ def _render_email_pdf(text: str) -> bytes:
     else:
         # Fallback for old PIL versions or default font
         line_height = 30
-        
+
     max_lines_per_page = max(1, (page_height - (margin * 2)) // line_height)
 
     pages: list[Image.Image] = []
@@ -864,10 +864,10 @@ def send_onboarding_completed_email(client: Client) -> int:
         recipients.append(client.assigned_staff.email)
     else:
         recipients = _get_staff_recipients()
-        
+
     if not recipients:
         return 0
-        
+
     subject = _("Клиент %(name)s заполнил анкету онбординга") % {"name": client.get_full_name()}
     review_path = reverse("clients:admin_mos_review", kwargs={"client_id": client.id})
     base_url = getattr(settings, "PUBLIC_BASE_URL", "") or getattr(settings, "SITE_URL", "")
@@ -915,6 +915,7 @@ def send_legal_stay_email(
         return 0
 
     from datetime import date
+
     from django.utils import timezone
 
     today = timezone.localdate()

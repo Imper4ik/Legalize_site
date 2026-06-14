@@ -8,7 +8,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
-from clients.services.wezwanie_parser import extract_text, _parse_date
+from clients.services.wezwanie_parser import _parse_date, extract_text
 
 logger = logging.getLogger(__name__)
 
@@ -42,13 +42,13 @@ def _parse_mrz(text: str) -> dict[str, Any] | None:
 
     # Sometimes MRZ is read with typos, let's fix common ones
     line1 = line1.replace("0", "O").replace("1", "I")
-    
+
     # Check if first line starts with P
     p_idx = line1.find("P<")
     if p_idx == -1:
         return None
     line1 = line1[p_idx:]
-    
+
     if len(line1) < 30 or len(line2) < 30:
         return None
 

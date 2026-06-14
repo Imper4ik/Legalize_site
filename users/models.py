@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import hashlib
-from typing import Any, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
-from django.contrib.auth.models import AbstractUser, Group, Permission, UserManager as DjangoUserManager
+from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.contrib.auth.models import UserManager as DjangoUserManager
 from django.db import models
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
@@ -56,7 +57,7 @@ class EmailUserManager(DjangoUserManager["User"]):
 class User(AbstractUser):
     username = models.CharField(_("technical username"), max_length=150, unique=True, blank=True)
     email = models.EmailField(_("email address"), unique=True)
-    
+
     groups: models.ManyToManyField[Group, User] = models.ManyToManyField(  # type: ignore[assignment]
         Group,
         verbose_name=_("groups"),

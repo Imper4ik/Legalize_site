@@ -3,8 +3,8 @@ from __future__ import annotations
 import shutil
 from contextlib import contextmanager
 from pathlib import Path
-from uuid import uuid4
 from unittest.mock import patch
+from uuid import uuid4
 
 from django.conf import settings
 from django.test import SimpleTestCase, override_settings

@@ -16,7 +16,6 @@ from clients.models import Client, ClientActivity, Document, DocumentVersion, Em
 from clients.services.responses import NO_STORE_HEADER
 from clients.services.roles import ensure_predefined_roles
 
-
 TEST_MEDIA_ROOT = Path(__file__).resolve().parents[2] / "generated_media_test" / "workflow_audit"
 TEST_MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
 

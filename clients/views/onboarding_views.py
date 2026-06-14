@@ -1,27 +1,35 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.db import transaction
-from django.utils import timezone, translation
-from django.utils.translation import gettext as _
-from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse, HttpResponseNotAllowed
-from django.urls import reverse
-from legalize_site.utils.http import request_is_ajax
-from legalize_site.utils.files import build_protected_file_response
-from django.contrib import messages
 from datetime import timedelta
 from typing import cast
 
+from django.contrib import messages
+from django.db import transaction
+from django.http import (
+    HttpRequest,
+    HttpResponse,
+    HttpResponseBadRequest,
+    HttpResponseForbidden,
+    HttpResponseNotAllowed,
+    JsonResponse,
+)
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils import timezone, translation
+from django.utils.translation import gettext as _
 
-from clients.forms import DocumentUploadForm
 from clients.constants import DocumentType
-from clients.models import ClientOnboardingSession, ClientDigitalAccess, MOSApplicationData, Client, Document, DocumentRequirement
-from clients.services.intake_extraction import pre_fill_mos_data_from_ocr
-from clients.security.encrypted import safe_encrypted_attr
-from clients.services.document_workflow import upload_client_document
-from clients.services.notifications import notify_staff_about_fingerprint_invitation_upload
+from clients.forms import DocumentUploadForm
+from clients.models import (
+    Client,
+    ClientDigitalAccess,
+    ClientOnboardingSession,
+    Document,
+    DocumentRequirement,
+    MOSApplicationData,
+)
 from clients.services.access import accessible_clients_queryset
-from clients.views.base import role_required_view
-from clients.services.onboarding_tokens import generate_onboarding_token, hash_onboarding_token
-from clients.use_cases.client_records import finalize_client_creation
+from clients.services.document_workflow import upload_client_document
+from clients.services.intake_extraction import pre_fill_mos_data_from_ocr
+from clients.services.notifications import notify_staff_about_fingerprint_invitation_upload
 from clients.services.onboarding_purposes import (
     ONBOARDING_PURPOSE_CHOICES,
     apply_onboarding_purpose_to_client,
@@ -29,6 +37,11 @@ from clients.services.onboarding_purposes import (
     normalize_onboarding_purpose,
     purpose_label,
 )
+from clients.services.onboarding_tokens import generate_onboarding_token, hash_onboarding_token
+from clients.use_cases.client_records import finalize_client_creation
+from clients.views.base import role_required_view
+from legalize_site.utils.files import build_protected_file_response
+from legalize_site.utils.http import request_is_ajax
 
 EDITABLE_MOS_STATUSES = {"draft", "client_filling", "needs_correction"}
 CONTACT_SYNC_FIELDS = ("first_name", "last_name", "phone", "email")
@@ -184,6 +197,7 @@ def check_client_auth(request: HttpRequest, session: ClientOnboardingSession, to
 
 def _validate_email_domain_dns(email: str) -> bool:
     import socket
+
     from django.conf import settings
     if getattr(settings, "TESTING", False):
         return True
@@ -564,13 +578,13 @@ def onboarding_document_delete(request: HttpRequest, token: str, doc_id: int) ->
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
-        
+
     client = session.client
     mos_data = getattr(client, "mos_application_data", None)
-    
+
     if not _mos_documents_are_editable(mos_data):
         return _locked_response(request, session)
-        
+
     doc = get_object_or_404(Document, id=doc_id, client=client)
     if not doc.verified:
         from clients.use_cases.documents import delete_client_document
@@ -578,7 +592,7 @@ def onboarding_document_delete(request: HttpRequest, token: str, doc_id: int) ->
             document=doc,
             actor=request.user if request.user.is_authenticated else None
         )
-        
+
     from django.utils.text import slugify
     return redirect(reverse("clients:onboarding_start", kwargs={"token": token}) + f"#doc-{slugify(doc.document_type)}")
 
@@ -647,7 +661,7 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
     mos_data.personal_data = personal_data
 
     if request.method == "POST":
-        mos_data, _ = MOSApplicationData.objects.get_or_create(client=client)
+        mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
 
         mos_data.status = "client_filling"
 
@@ -795,7 +809,7 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
         legal_stay_str = request.POST.get("legal_stay_until")
         if legal_stay_str:
             mos_data.legal_stay_until = legal_stay_str
-            
+
         stay_data = mos_data.stay_data or {}
         stay_data["is_in_poland"] = request.POST.get("is_in_poland") == "yes"
         stay_data["last_entry_date"] = request.POST.get("last_entry_date", "")
@@ -804,7 +818,7 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
         stay_data["has_insurance"] = request.POST.get("has_insurance") == "yes"
         stay_data["has_stable_income"] = request.POST.get("has_stable_income") == "yes"
         mos_data.stay_data = stay_data
-        
+
         personal_data = mos_data.personal_data or {}
         personal_data["employer_email"] = request.POST.get("employer_email", "").strip()
         personal_data["university_email"] = request.POST.get("university_email", "").strip()
@@ -812,7 +826,7 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
 
         previous_stays_detail = request.POST.get("previous_stays", "").strip()
         mos_data.previous_stays = [previous_stays_detail]
-        
+
         mos_data.travel_history = [request.POST.get("travel_history", "")]
         mos_data.save()
         if purpose_updated:
@@ -845,7 +859,7 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
         declarations["criminal_record"] = request.POST.get("criminal_record") == "yes"
         declarations["tax_arrears"] = request.POST.get("tax_arrears") == "yes"
         mos_data.legal_declarations = declarations
-        
+
         mos_data.status = "client_completed"
         mos_data.client_confirmed_at = timezone.now()
         mos_data.save()
@@ -875,7 +889,7 @@ def onboarding_review(request: HttpRequest, token: str) -> HttpResponse:
         return auth_redirect
 
     mos_data = get_object_or_404(MOSApplicationData, client=session.client)
-    
+
     return render(request, "clients/onboarding/review.html", {"session": session, "mos_data": mos_data})
 
 @role_required_view("Admin", "Manager", "Staff")
@@ -941,7 +955,7 @@ def onboarding_personal_data(request: HttpRequest, token: str) -> HttpResponse:
 def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
     if request.method != "POST":
         return JsonResponse({"status": "error", "message": _("Method not allowed")}, status=405)
-    
+
     first_name = request.POST.get("first_name", "").strip() or "Новый"
     last_name = request.POST.get("last_name", "").strip() or "Клиент"
     email = request.POST.get("email", "").strip()
@@ -973,7 +987,7 @@ def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
                 client=client,
                 actor=request.user,
             )
-            
+
             token, token_hash = generate_onboarding_token()
             ClientOnboardingSession.objects.create(
                 client=client,
@@ -1007,12 +1021,12 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return JsonResponse({"status": "error", "message": _("Authentication required")}, status=401)
-        
+
     client = session.client
     mos_data, created_mos = MOSApplicationData.objects.get_or_create(client=client)
     if not _mos_data_is_editable(mos_data):
         return JsonResponse({"status": "locked", "message": _("This onboarding form is locked.")}, status=423)
-    
+
     # Process digital access fields if any
     digital_access_updated = False
     if any(k in request.POST for k in ["has_pesel", "has_trusted_profile", "has_mos_account"]):
@@ -1028,15 +1042,15 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
             digital_access_updated = True
         if digital_access_updated:
             digital_access.save()
-            
+
     # Process passport/personal fields (Step 1)
     personal_dirty = False
     passport_dirty = False
     client_dirty = False
-    
+
     personal_data = mos_data.personal_data or {}
     passport_data = mos_data.passport_data or {}
-    
+
     if "first_name" in request.POST:
         val = request.POST.get("first_name", "").strip()
         personal_data["first_name"] = val
@@ -1044,7 +1058,7 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         if val and client.first_name != val:
             client.first_name = val
             client_dirty = True
-            
+
     if "last_name" in request.POST:
         val = request.POST.get("last_name", "").strip()
         personal_data["last_name"] = val
@@ -1068,22 +1082,22 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         if val and client.email != val:
             client.email = val
             client_dirty = True
-            
+
     if "birth_date" in request.POST:
         val = request.POST.get("birth_date", "").strip()
         personal_data["birth_date"] = val
         personal_dirty = True
-                
+
     if "citizenship" in request.POST:
         val = request.POST.get("citizenship", "").strip()
         personal_data["citizenship"] = val
         personal_dirty = True
-            
+
     if "document_number" in request.POST:
         val = request.POST.get("document_number", "").strip()
         passport_data["document_number"] = val
         passport_dirty = True
-            
+
     if "expiry_date" in request.POST:
         val = request.POST.get("expiry_date", "").strip()
         passport_data["expiry_date"] = val
@@ -1104,12 +1118,12 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         if field in request.POST:
             personal_data[field] = request.POST.get(field, "")
             personal_dirty = True
-            
+
     if personal_dirty:
         mos_data.personal_data = personal_data
     if passport_dirty:
         mos_data.passport_data = passport_data
-        
+
     # Process address fields
     address_dirty = False
     address_data = mos_data.address_data or {}
@@ -1122,7 +1136,7 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         address_dirty = True
     if address_dirty:
         mos_data.address_data = address_data
-        
+
     # Process travel fields
     purpose_updated = False
     if "mos_purpose" in request.POST:
@@ -1137,7 +1151,7 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         val = request.POST.get("legal_stay_until", "").strip()
         if val:
             mos_data.legal_stay_until = val
-            
+
     stay_data = mos_data.stay_data or {}
     stay_dirty = False
     if "is_in_poland" in request.POST:
@@ -1158,7 +1172,7 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
     if "has_stable_income" in request.POST:
         stay_data["has_stable_income"] = request.POST.get("has_stable_income") == "yes"
         stay_dirty = True
-        
+
     if stay_dirty:
         mos_data.stay_data = stay_data
 
@@ -1195,5 +1209,5 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         clear_onboarding_notifications_cache(client)
     if client_dirty:
         client.save()
-        
+
     return JsonResponse({"status": "ok", "message": _("Draft auto-saved")})

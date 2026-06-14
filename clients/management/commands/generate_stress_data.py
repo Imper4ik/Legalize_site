@@ -2,8 +2,9 @@ import time
 from typing import Any
 
 from django.core.management.base import BaseCommand
-from clients.models import Client
 from faker import Faker
+
+from clients.models import Client
 
 fake = Faker()
 
@@ -19,14 +20,14 @@ class Command(BaseCommand):
         batch_size = options["batch_size"]
 
         self.stdout.write(self.style.WARNING(f"Начинаем генерацию {total_clients} клиентов..."))
-        
+
         start_time = time.time()
         clients_created = 0
 
         while clients_created < total_clients:
             batch = []
             limit = min(batch_size, total_clients - clients_created)
-            
+
             for _ in range(limit):
                 batch.append(
                     Client(
@@ -40,11 +41,11 @@ class Command(BaseCommand):
                         workflow_stage=fake.random_element(["new_client", "document_collection", "waiting_decision"]),
                     )
                 )
-            
+
             # bulk_create is much faster and does not trigger save() signals (which is good for pure DB load test)
             Client.objects.bulk_create(batch)
             clients_created += limit
-            
+
             self.stdout.write(f"Создано {clients_created}/{total_clients}...")
 
         elapsed = time.time() - start_time

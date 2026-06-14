@@ -202,11 +202,11 @@
       {% trans "Nowy wniosek o kartę pobytu / Новое заявление на карту побыту" %}
     </div>
     {% if new_card_values.status == 'yes' %}
-      <span class="badge bg-success-subtle text-success border border-success-subtle">Tak / Да</span>
+      <span class="badge bg-success-subtle text-success border border-success-subtle">{% trans "Tak / Да" %}</span>
     {% elif new_card_values.status == 'no' %}
-      <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Nie / Нет</span>
+      <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">{% trans "Nie / Нет" %}</span>
     {% elif new_card_values.status == 'unknown' %}
-      <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Nie wiem / Не знаю</span>
+      <span class="badge bg-warning-subtle text-warning border border-warning-subtle">{% trans "Nie wiem / Не знаю" %}</span>
     {% else %}
       <span class="badge bg-light text-muted border">{% trans "Nie uzupełniono / Не заполнено" %}</span>
     {% endif %}
@@ -229,15 +229,15 @@
         <div class="d-flex flex-column flex-md-row gap-2 mb-2">
           <div class="form-check">
             <input class="form-check-input" type="radio" name="new_card_application_status" id="newCardStatusYes" value="yes" data-new-card-status {% if new_card_values.status == 'yes' %}checked{% endif %}>
-            <label class="form-check-label" for="newCardStatusYes">Tak / Да</label>
+            <label class="form-check-label" for="newCardStatusYes">{% trans "Tak / Да" %}</label>
           </div>
           <div class="form-check">
             <input class="form-check-input" type="radio" name="new_card_application_status" id="newCardStatusNo" value="no" data-new-card-status {% if new_card_values.status == 'no' %}checked{% endif %}>
-            <label class="form-check-label" for="newCardStatusNo">Nie / Нет</label>
+            <label class="form-check-label" for="newCardStatusNo">{% trans "Nie / Нет" %}</label>
           </div>
           <div class="form-check">
             <input class="form-check-input" type="radio" name="new_card_application_status" id="newCardStatusUnknown" value="unknown" data-new-card-status {% if new_card_values.status == 'unknown' %}checked{% endif %}>
-            <label class="form-check-label" for="newCardStatusUnknown">Nie wiem / Не знаю</label>
+            <label class="form-check-label" for="newCardStatusUnknown">{% trans "Nie wiem / Не знаю" %}</label>
           </div>
         </div>
         {% if new_card_errors.status %}<div class="text-danger small mb-3">{{ new_card_errors.status }}</div>{% endif %}

@@ -9,7 +9,8 @@ from io import StringIO
 from unittest.mock import patch
 
 import pytest
-from django.test import Client as DjangoClient, override_settings
+from django.test import Client as DjangoClient
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -18,7 +19,6 @@ from clients.tests.factories import (
     create_admin_user,
     create_readonly_user,
 )
-
 
 # ───────────────────────────────────────────────────────────────────
 # Helpers

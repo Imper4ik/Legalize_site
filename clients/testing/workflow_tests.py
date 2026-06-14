@@ -8,7 +8,12 @@ from clients.constants import DocumentType
 from clients.models import ClientActivity
 from clients.services.workflow_transitions import transition_client_workflow
 from clients.testing.assertions import RelatedObjects, ScenarioRecorder
-from clients.testing.factories import create_paid_payment, create_pending_payment, create_test_client, create_test_document
+from clients.testing.factories import (
+    create_paid_payment,
+    create_pending_payment,
+    create_test_client,
+    create_test_document,
+)
 
 
 def run_workflow_scenarios(recorder: ScenarioRecorder) -> None:

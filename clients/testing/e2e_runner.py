@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import shutil
+import tempfile
 from collections.abc import Callable
 from contextlib import contextmanager
 from pathlib import Path
-import shutil
-import tempfile
 from typing import Any
 from uuid import uuid4
 
@@ -18,7 +18,6 @@ from clients.models import TestRun
 from clients.testing.assertions import ScenarioRecorder
 from clients.testing.cleanup import cleanup_test_data
 from clients.testing.scenarios import SCENARIO_GROUPS
-
 
 SAFE_TEST_EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 TEST_CENTER_LOCK_KEY = "test_center:run_or_cleanup"

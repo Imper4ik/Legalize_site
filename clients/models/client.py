@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from datetime import date, timedelta
-from typing import Any, cast, Self, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Self, cast
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -11,9 +11,9 @@ from django.db.models import Count, Q
 from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.translation import gettext_lazy as _
-from fernet_fields import EncryptedTextField
 
 from clients.constants import DocumentType
+from fernet_fields import EncryptedTextField
 from legalize_site.soft_delete import SoftDeleteModel, SoftDeleteQuerySet
 
 if TYPE_CHECKING:
@@ -405,8 +405,9 @@ class Client(SoftDeleteModel):
         check_file_existence: bool = False,
         requirements_cache: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
-        from .document import DocumentRequirement, resolve_document_label
         from clients.services.document_helpers import document_file_exists
+
+        from .document import DocumentRequirement, resolve_document_label
 
         current_language = translation.get_language() or self.language
         purpose = self.get_document_requirement_purpose()
@@ -423,7 +424,7 @@ class Client(SoftDeleteModel):
             reqs = DocumentRequirement.objects.filter(application_purpose=purpose)
 
         prefetched_documents = getattr(self, "_prefetched_objects_cache", {}).get("documents")
-        
+
         uploaded_docs: list[Document] | models.QuerySet[Document]
         if prefetched_documents is None:
             uploaded_docs = self.documents.all().annotate(

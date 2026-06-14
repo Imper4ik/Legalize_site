@@ -7,8 +7,8 @@ from urllib.parse import urlparse
 
 from django.core.exceptions import ImproperlyConfigured
 
-from .base import env_flag
 from .base import *  # noqa: F403
+from .base import env_flag
 
 DEBUG = env_flag("DEBUG", "False")
 if DEBUG:

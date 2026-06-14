@@ -1,22 +1,23 @@
 # legalize_site/urls.py
 
 from django.conf import settings
+from django.conf.urls.i18n import i18n_patterns
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path, include
-from django.conf.urls.i18n import i18n_patterns
+from django.urls import include, path
+
 from clients import views
 from clients.views.admin_views import update_translations_view
+from legalize_site.views import healthcheck, readiness
 from users.security_views import SignupDisabledView
 from users.views import ResendVerificationEmailView
+
 from .cron_views import (
     db_backup,
-    process_email_campaigns_cron,
     process_document_jobs_cron,
+    process_email_campaigns_cron,
     update_reminders_cron,
 )
-
-from legalize_site.views import healthcheck, readiness
 
 urlpatterns = [
     path('healthz/', healthcheck, name='healthcheck'),

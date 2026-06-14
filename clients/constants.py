@@ -1,9 +1,9 @@
 from legalize_site.constants import (
     DOCUMENT_CHECKLIST,
-    STUDY_DOCS,
-    WORK_DOCS,
     FAMILY_CHILD_DOCS,
     FAMILY_SPOUSE_DOCS,
+    STUDY_DOCS,
+    WORK_DOCS,
     DocumentType,
     doc_entry,
 )

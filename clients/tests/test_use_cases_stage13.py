@@ -3,8 +3,7 @@ from __future__ import annotations
 import shutil
 from datetime import timedelta
 from pathlib import Path
-from unittest.mock import Mock
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -26,7 +25,6 @@ from clients.use_cases.exports import (
     restore_document_version_for_client,
 )
 from clients.use_cases.tasks import complete_task_for_client, create_task_for_client
-
 
 TEST_MEDIA_ROOT = Path(__file__).resolve().parents[2] / "generated_media_test" / "use_cases_stage13"
 TEST_MEDIA_ROOT.mkdir(parents=True, exist_ok=True)

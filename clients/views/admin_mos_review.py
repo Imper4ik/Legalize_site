@@ -1,6 +1,7 @@
 from typing import Any, cast
 
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -8,19 +9,17 @@ from django.utils.dateparse import parse_date
 from django.utils.translation import gettext as _
 
 from clients.models import Client, MOSApplicationData
-from clients.services.access import accessible_clients_queryset
-from clients.services.workflow_transitions import transition_client_workflow
-from django.core.exceptions import ValidationError
 from clients.security.encrypted import safe_encrypted_attr
+from clients.services.access import accessible_clients_queryset
 from clients.services.activity import log_client_activity
-from clients.views.base import role_required_view
 from clients.services.onboarding_purposes import (
     ALLOWED_ONBOARDING_PURPOSES,
     apply_onboarding_purpose_to_client,
     clear_onboarding_notifications_cache,
     purpose_label,
 )
-
+from clients.services.workflow_transitions import transition_client_workflow
+from clients.views.base import role_required_view
 
 APPLY_TO_CLIENT_FIELDS = (
     "first_name",

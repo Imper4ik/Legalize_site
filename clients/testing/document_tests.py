@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from pathlib import Path
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client as DjangoClient
 from django.urls import reverse
-from django.core.files.uploadedfile import SimpleUploadedFile
 
 from clients.constants import DocumentType
-from clients.models import Document, DocumentVersion
+from clients.models import Document
 from clients.testing.assertions import RelatedObjects, ScenarioRecorder
 from clients.testing.factories import (
     create_client_user,
@@ -193,7 +192,7 @@ def run_document_access_scenarios(recorder: ScenarioRecorder) -> None:
     from clients.services.document_versions import archive_document_version, replace_document_file
     doc_versioned = create_test_document(client_1, doc_type=DocumentType.PASSPORT.value, filename="versioned.pdf")
     version = archive_document_version(doc_versioned, uploaded_by=staff_1, comment="V1 archive")
-    
+
     recorder.check(
         "documents.version_archived",
         version is not None and version.version_number == 1 and doc_versioned.versions.count() == 1,

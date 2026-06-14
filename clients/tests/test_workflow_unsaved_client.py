@@ -27,24 +27,28 @@ def client_form_data(**overrides):
 
 @pytest.mark.django_db
 def test_unsaved_client_cannot_move_to_application_submitted_without_500():
-    form = ClientForm(data=client_form_data())
+    from django.utils import translation
+    with translation.override("ru"):
+        form = ClientForm(data=client_form_data())
 
-    assert not form.is_valid()
-    assert "workflow_stage" in form.errors
-    assert "Сначала сохраните клиента" in str(form.errors["workflow_stage"])
+        assert not form.is_valid()
+        assert "workflow_stage" in form.errors
+        assert "Сначала сохраните клиента" in str(form.errors["workflow_stage"])
 
 
 @pytest.mark.django_db
 def test_workflow_validation_rejects_unsaved_application_submitted_client():
-    form = ClientForm(data=client_form_data(workflow_stage="new_client"))
-    assert form.is_valid(), form.errors
-    client = form.save(commit=False)
+    from django.utils import translation
+    with translation.override("ru"):
+        form = ClientForm(data=client_form_data(workflow_stage="new_client"))
+        assert form.is_valid(), form.errors
+        client = form.save(commit=False)
 
-    result = validate_client_workflow_transition(
-        client=client,
-        previous_stage="document_collection",
-        next_stage="application_submitted",
-    )
+        result = validate_client_workflow_transition(
+            client=client,
+            previous_stage="document_collection",
+            next_stage="application_submitted",
+        )
 
-    assert not result.allowed
-    assert "Сначала сохраните клиента" in result.message
+        assert not result.allowed
+        assert "Сначала сохраните клиента" in result.message

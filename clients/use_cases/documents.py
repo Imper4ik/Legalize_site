@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 
 from django.db import transaction
 
-from clients.security.sanitizer import sanitize_user_html
 from clients.models import Client, Document, WniosekAttachment
+from clients.security.sanitizer import sanitize_user_html
 from clients.services.activity import log_client_activity
 from clients.services.notifications import send_missing_documents_email
 

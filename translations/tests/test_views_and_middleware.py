@@ -4,10 +4,11 @@ import hashlib
 import json
 from pathlib import Path
 
-from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.http import HttpResponse
-from django.test import Client as DjangoClient, RequestFactory, TestCase, override_settings
+from django.test import Client as DjangoClient
+from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
 
 from clients.services.roles import ensure_predefined_roles
@@ -73,11 +74,11 @@ class TranslationViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "ok")
         save_mock.assert_called_once_with(
-            "hello", 
-            ru="\u043f\u0440\u0438\u0432\u0435\u0442", 
-            en="hello", 
-            pl="cze\u015b\u0107", 
-            updated_by=self.superuser, 
+            "hello",
+            ru="\u043f\u0440\u0438\u0432\u0435\u0442",
+            en="hello",
+            pl="cze\u015b\u0107",
+            updated_by=self.superuser,
             storage='database'
         )
 

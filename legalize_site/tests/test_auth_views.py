@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from allauth.account.models import EmailAddress
 from django.contrib.auth import get_user_model
-from django.core.cache import cache
 from django.core import mail
+from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.urls import reverse
 

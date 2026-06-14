@@ -10,10 +10,10 @@ from django.test import RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from clients.models import Client, Document, Payment
-from clients.services.roles import ensure_predefined_roles
-from clients.services.responses import NO_STORE_HEADER, ResponseHelper, apply_no_store
 from clients.constants import DocumentType
+from clients.models import Client, Document, Payment
+from clients.services.responses import NO_STORE_HEADER, ResponseHelper, apply_no_store
+from clients.services.roles import ensure_predefined_roles
 
 
 class ResponseHelpersStage8Tests(TestCase):

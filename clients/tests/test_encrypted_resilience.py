@@ -13,7 +13,6 @@ from clients.security.encrypted import ENCRYPTED_VALUE_UNAVAILABLE, safe_encrypt
 from clients.services.export import generate_client_zip
 from clients.services.onboarding_tokens import hash_onboarding_token
 
-
 CORRUPTED_FERNET_TOKEN = "gAAAA-corrupted-token"
 
 

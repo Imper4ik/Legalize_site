@@ -1,21 +1,23 @@
 from __future__ import annotations
 
 from io import StringIO
+
 from django.contrib.auth import get_user_model
 from django.core.management import CommandError, call_command
-from django.test import TestCase, Client as DjangoClient, override_settings
+from django.test import Client as DjangoClient
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from clients.demo.demo_factory import get_demo_token_for_client
 from clients.models import (
     Client,
-    Document,
-    Payment,
-    EmailLog,
-    ClientOnboardingSession,
     ClientActivity,
+    ClientOnboardingSession,
+    Document,
     DocumentProcessingJob,
+    EmailLog,
+    Payment,
 )
-from clients.demo.demo_factory import get_demo_token_for_client
 
 
 class DemoCenterTests(TestCase):
@@ -54,7 +56,7 @@ class DemoCenterTests(TestCase):
     )
     def test_prepare_demo_scenarios(self) -> None:
         self.browser.force_login(self.superuser)
-        
+
         # Prepare demo via POST
         response = self.browser.post(reverse("clients:demo_center"), {"action": "prepare"})
         self.assertEqual(response.status_code, 302)
@@ -62,7 +64,7 @@ class DemoCenterTests(TestCase):
         # Assert 5 clients are created with is_demo_data=True
         demo_clients = Client.all_objects.filter(is_demo_data=True)
         self.assertEqual(demo_clients.count(), 5)
-        
+
         # Check specific names
         first_names = set(demo_clients.values_list("first_name", flat=True))
         expected_names = {"Jan", "Anna", "Daria", "Ivan", "Maria"}
@@ -90,7 +92,7 @@ class DemoCenterTests(TestCase):
     )
     def test_reset_demo_data(self) -> None:
         self.browser.force_login(self.superuser)
-        
+
         # Prepare first
         self.browser.post(reverse("clients:demo_center"), {"action": "prepare"})
         self.assertEqual(Client.all_objects.filter(is_demo_data=True).count(), 5)

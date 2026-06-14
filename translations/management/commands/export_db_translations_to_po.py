@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-import polib
 from typing import Any
 
+import polib
 from django.core.management.base import BaseCommand
+
 from translations.models import TranslationOverride
 from translations.utils import get_po_files
+
 
 class Command(BaseCommand):
     help = 'Export DB translation overrides to PO files'
@@ -20,14 +22,14 @@ class Command(BaseCommand):
         dry_run = options['dry_run']
 
         overrides = TranslationOverride.objects.filter(is_active=True)
-        
+
         if not overrides.exists():
             self.stdout.write(self.style.WARNING("No active DB overrides found to export."))
             return
 
         for lang, path in po_files.items():
             self.stdout.write(f"Updating {lang} PO file at {path}...")
-            
+
             try:
                 po = polib.pofile(path)
             except Exception as e:
@@ -36,7 +38,7 @@ class Command(BaseCommand):
 
             lang_overrides = overrides.filter(language=lang)
             updated_count = 0
-            
+
             for override in lang_overrides:
                 entry = po.find(override.msgid)
                 if entry:
@@ -59,7 +61,7 @@ class Command(BaseCommand):
                         )
                         po.append(new_entry)
                         updated_count += 1
-            
+
             if not dry_run and updated_count > 0:
                 po.save()
                 self.stdout.write(self.style.SUCCESS(f"Saved {updated_count} updates to {lang} PO file."))

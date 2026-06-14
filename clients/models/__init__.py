@@ -1,27 +1,31 @@
-from .client import Client
-from .app_settings import AppSettings
-from .company import Company
 from .activity import ClientActivity
+from .app_settings import AppSettings
+from .campaign import EmailCampaign
+from .client import Client
+from .company import Company
 from .document import (
-    Document, DocumentRequirement, get_fallback_document_checklist,
-    ClientDocumentRequirement, resolve_document_label, get_available_document_types,
-    translate_document_name, is_default_document_label
+    ClientDocumentRequirement,
+    Document,
+    DocumentRequirement,
+    get_available_document_types,
+    get_fallback_document_checklist,
+    is_default_document_label,
+    resolve_document_label,
+    translate_document_name,
 )
 from .document_processing import DocumentProcessingJob
 from .document_version import DocumentVersion
-from .payment import Payment
-from .reminder import Reminder
 from .email import EmailLog
 from .family import FamilyGroup
-from .campaign import EmailCampaign
-from .pricing import ServicePrice
-from .task import StaffTask
-from .permissions import EmployeePermission, StaffAuditEvent
-from .wniosek import WniosekAttachment, WniosekSubmission
-from .onboarding import ClientOnboardingSession, ClientDigitalAccess, MOSApplicationData, PeselApplication
 from .family_mos import ClientFamilyMemberMOS
+from .onboarding import ClientDigitalAccess, ClientOnboardingSession, MOSApplicationData, PeselApplication
+from .payment import Payment
+from .permissions import EmployeePermission, StaffAuditEvent
+from .pricing import ServicePrice
+from .reminder import Reminder
+from .task import StaffTask
 from .testing import TestRun, TestScenarioResult
-
+from .wniosek import WniosekAttachment, WniosekSubmission
 
 __all__ = [
     'Client',

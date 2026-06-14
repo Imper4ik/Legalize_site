@@ -8,7 +8,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from hashlib import sha256
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from django.conf import settings
 from django.db import IntegrityError, models, transaction
@@ -19,13 +19,13 @@ from django.utils.translation import gettext as _
 from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentProcessingJob
 from clients.services.activity import changed_field_labels, log_client_activity
+from clients.services.company_parser import parse_company_doc
 from clients.services.notifications import (
     send_appointment_notification_email,
     send_missing_documents_email,
 )
+from clients.services.registry_api import match_names, normalize_string, verify_employer
 from clients.services.wezwanie_parser import WezwanieData, parse_wezwanie
-from clients.services.company_parser import parse_company_doc
-from clients.services.registry_api import verify_employer, normalize_string, match_names
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
@@ -109,12 +109,12 @@ def upload_client_document(
 
     document_type_display = client.get_document_name_by_code(doc_type)
     from clients.constants import (
-        is_wezwanie_document_type,
         is_company_document_type,
+        is_insurance_document_type,
         is_passport_document_type,
         is_rental_document_type,
+        is_wezwanie_document_type,
         is_zus_document_type,
-        is_insurance_document_type,
     )
     is_wezwanie = is_wezwanie_document_type(doc_type)
     is_company = is_company_document_type(doc_type)
@@ -177,7 +177,7 @@ def upload_client_document(
                     send_missing_email=send_missing_email,
                     send_appointment_email=send_appointment_email,
                 )
-        
+
         msg = (
             _("Document uploaded. OCR and automatic verification were queued; review details after processing completes.")
             if not requires_confirmation
@@ -215,7 +215,7 @@ def confirm_wezwanie_document(
         )
 
     payload = _build_confirmed_wezwanie_payload(confirmation_data)
-    
+
     with transaction.atomic():
         document.awaiting_confirmation = False
         document.parsed_data = payload
@@ -431,7 +431,7 @@ def _process_company_upload_job_inline(
 ) -> DocumentUploadResult:
     result = process_document_processing_job(job_id=job_id)
     document.refresh_from_db()
-    
+
     manual_review_required = result.manual_review_required or document.ocr_status == "failed"
     return DocumentUploadResult(
         document=document,
@@ -680,7 +680,7 @@ def _check_client_name_in_document(client: Client, detected_names: list[str], te
         matched = match_names(detected_names, [client_full_name])
         if matched:
             return True
-            
+
     # Fallback check on raw text
     norm_text = normalize_string(text)
     norm_first = normalize_string(client.first_name)
@@ -697,7 +697,7 @@ def _process_passport_doc_job_internal(
     document_file: Any,
 ) -> DocumentProcessingRunResult:
     from clients.services.passport_parser import parse_passport_doc
-    
+
     try:
         with document_file.open("rb") as src:
             ext = os.path.splitext(document_file.name or "")[1]
@@ -737,7 +737,7 @@ def _process_passport_doc_job_internal(
     passport_names = []
     if parsed.first_name and parsed.last_name:
         passport_names.append(f"{parsed.first_name} {parsed.last_name}")
-    
+
     name_matched = _check_client_name_in_document(client, passport_names, parsed.text)
     if not name_matched:
         warnings.append(str(_("Client name not matched in the passport.")))
@@ -809,7 +809,7 @@ def _process_rental_doc_job_internal(
     document_file: Any,
 ) -> DocumentProcessingRunResult:
     from clients.services.rental_parser import parse_rental_doc
-    
+
     try:
         with document_file.open("rb") as src:
             ext = os.path.splitext(document_file.name or "")[1]
@@ -855,18 +855,18 @@ def _process_rental_doc_job_internal(
         street = mos_data.address_data.get("street", "").strip()
         city = mos_data.address_data.get("city", "").strip()
         postal_code = mos_data.address_data.get("postal_code", "").strip()
-        
+
         if street or city or postal_code:
             norm_parsed_addr = normalize_string(parsed.address or "")
             norm_street = normalize_string(street)
             norm_city = normalize_string(city)
             norm_postcode = re.sub(r"\D", "", postal_code)
             norm_parsed_postcode = re.sub(r"\D", "", parsed.address or "")
-            
+
             has_street = norm_street in norm_parsed_addr if norm_street else True
             has_city = norm_city in norm_parsed_addr if norm_city else True
             has_postcode = norm_postcode in norm_parsed_postcode if norm_postcode else True
-            
+
             if not (has_street and has_city and has_postcode):
                 warnings.append(
                     str(_("Agreement address does not match onboarding address: %(onboarding_addr)s.") % {
@@ -1003,7 +1003,7 @@ def _process_zus_doc_job_internal(
     document_file: Any,
 ) -> DocumentProcessingRunResult:
     from clients.services.zus_parser import parse_zus_doc
-    
+
     try:
         with document_file.open("rb") as src:
             ext = os.path.splitext(document_file.name or "")[1]
@@ -1170,7 +1170,7 @@ def _process_insurance_doc_job_internal(
     document_file: Any,
 ) -> DocumentProcessingRunResult:
     from clients.services.insurance_parser import parse_insurance_doc
-    
+
     try:
         with document_file.open("rb") as src:
             ext = os.path.splitext(document_file.name or "")[1]

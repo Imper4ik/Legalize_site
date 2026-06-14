@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from django.contrib import admin
 from django.db.models import QuerySet
@@ -8,27 +8,28 @@ from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 
 from clients.constants import DocumentType
+
 from .models import (
     AppSettings,
     Client,
     ClientActivity,
+    ClientDigitalAccess,
+    ClientFamilyMemberMOS,
+    ClientOnboardingSession,
     Company,
     Document,
     DocumentProcessingJob,
+    DocumentRequirement,
     EmailCampaign,
     EmailLog,
     FamilyGroup,
+    MOSApplicationData,
     Payment,
+    PeselApplication,
     Reminder,
     ServicePrice,
     StaffAuditEvent,
     StaffTask,
-    ClientOnboardingSession,
-    ClientDigitalAccess,
-    MOSApplicationData,
-    PeselApplication,
-    ClientFamilyMemberMOS,
-    DocumentRequirement,
     TestRun,
     TestScenarioResult,
 )
@@ -655,6 +656,7 @@ class MOSApplicationDataAdmin(admin.ModelAdmin):
 
     def _render_json_masked(self, data, mask_keys=None):
         import json
+
         from django.utils.safestring import mark_safe
         if not data:
             return "-"
@@ -681,12 +683,14 @@ class MOSApplicationDataAdmin(admin.ModelAdmin):
 
     def previous_stays_masked(self, obj):
         import json
+
         from django.utils.safestring import mark_safe
         return mark_safe(f"<pre>{json.dumps(obj.previous_stays, indent=2, ensure_ascii=False)}</pre>") if obj.previous_stays else "-"
     previous_stays_masked.short_description = "Previous stays"
 
     def travel_history_masked(self, obj):
         import json
+
         from django.utils.safestring import mark_safe
         return mark_safe(f"<pre>{json.dumps(obj.travel_history, indent=2, ensure_ascii=False)}</pre>") if obj.travel_history else "-"
     travel_history_masked.short_description = "Travel history"
@@ -779,6 +783,7 @@ class PeselApplicationAdmin(admin.ModelAdmin):
 
     def _render_json_masked(self, data, mask_keys=None):
         import json
+
         from django.utils.safestring import mark_safe
         if not data:
             return "-"

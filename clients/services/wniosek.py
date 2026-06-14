@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import re
 import unicodedata
-from typing import Any, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from django.conf import settings
 from django.db import transaction
@@ -123,10 +123,10 @@ def create_wniosek_submission(
     language: str | None = None,
 ) -> WniosekSubmission:
     cleaned_names = clean_attachment_names(attachment_names)
-    
+
     # AnonymousUser cannot be assigned to ForeignKey
     creator = confirmed_by if confirmed_by and confirmed_by.is_authenticated else None
-    
+
     with transaction.atomic():
         submission = WniosekSubmission.objects.create(
             client=client,
@@ -159,7 +159,7 @@ def get_wniosek_context(submission: WniosekSubmission, language: str | None = No
         translation.activate(language)
 
     attachments = submission.attachments.all().order_by("position")
-    
+
     return {
         "submission": submission,
         "client": submission.client,
@@ -176,7 +176,7 @@ def find_matching_attachments(client: Client, submission: WniosekSubmission) -> 
     """
     matches: dict[int, Any] = {}
     docs = list(client.documents.filter(verified=True))
-    
+
     for attachment in submission.attachments.all():
         best_match = None
         # Simple heuristic: if the document name is contained in the entered name or vice versa
@@ -187,7 +187,7 @@ def find_matching_attachments(client: Client, submission: WniosekSubmission) -> 
                 best_match = doc
                 break
         matches[attachment.pk] = best_match
-        
+
     return matches
 
 
@@ -228,7 +228,7 @@ def build_submitted_document_summary(client: Client) -> dict[str, Any]:
                 submission__client=client
             ).select_related("submission", "submission__confirmed_by")
         )
-    
+
     codes: dict[str, list[dict[str, Any]]] = {}
     custom: list[dict[str, Any]] = []
     for att in attachments:
@@ -247,7 +247,7 @@ def build_submitted_document_summary(client: Client) -> dict[str, Any]:
                     "records": [record],
                 }
             )
-        
+
     return {
         "count": sum(len(records) for records in codes.values()) + len(custom),
         "codes": codes,

@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import posixpath
 from pathlib import Path
-from typing import Any, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urljoin
 
 from django.conf import settings

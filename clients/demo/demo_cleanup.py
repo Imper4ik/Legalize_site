@@ -2,20 +2,19 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any
 
 from django.conf import settings
 from django.db import transaction
 
 from clients.models import (
     Client,
+    ClientActivity,
+    ClientOnboardingSession,
     Document,
+    DocumentProcessingJob,
     EmailLog,
     Payment,
-    ClientOnboardingSession,
-    ClientActivity,
     StaffAuditEvent,
-    DocumentProcessingJob,
 )
 
 logger = logging.getLogger(__name__)
@@ -62,7 +61,7 @@ def delete_demo_document_files(extra_media_roots: list[str] | None = None) -> in
 
 def cleanup_demo_data(extra_media_roots: list[str] | None = None) -> dict[str, int]:
     report = {}
-    
+
     # 1. Delete media files first
     files_deleted = delete_demo_document_files(extra_media_roots=extra_media_roots)
     report["files_deleted"] = files_deleted

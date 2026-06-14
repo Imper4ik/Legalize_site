@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -13,15 +13,15 @@ from django.utils.translation import gettext as _
 from django.views.generic import DetailView
 
 from clients.models import Client, Document, DocumentVersion
+from clients.security.encrypted import safe_encrypted_attr
 from clients.services.access import accessible_clients_queryset, accessible_documents_queryset
 from clients.services.export import ExportSizeLimitExceeded, generate_client_zip
-from clients.security.encrypted import safe_encrypted_attr
 from clients.services.responses import apply_no_store
+from clients.services.roles import EXPORT_MUTATION_ROLES
 from clients.use_cases.exports import (
     record_client_export,
     restore_document_version_for_client,
 )
-from clients.services.roles import EXPORT_MUTATION_ROLES
 from clients.views.base import RoleOrFeatureRequiredMixin, role_or_feature_required_view
 from legalize_site.utils.files import build_protected_file_response
 
@@ -141,7 +141,7 @@ def document_version_download(request: HttpRequest, version_id: int) -> HttpResp
             "version_number": version.version_number,
         },
     )
-    
+
     file_name = str(version.file.name)
     extension = Path(file_name).suffix or ".bin"
     filename = f"document-version-{version.pk}{extension}"

@@ -9,14 +9,14 @@ from django.test import TestCase, override_settings
 
 from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentProcessingJob, MOSApplicationData
-from clients.tests.test_company_doc_workflow import build_pdf_upload
 from clients.services.document_workflow import upload_client_document
+from clients.services.insurance_parser import InsuranceDocData
 
 # Import parsers directly to test parser logic
 from clients.services.passport_parser import PassportDocData
 from clients.services.rental_parser import RentalDocData
 from clients.services.zus_parser import ZusDocData, parse_zus_doc
-from clients.services.insurance_parser import InsuranceDocData
+from clients.tests.test_company_doc_workflow import build_pdf_upload
 
 
 @override_settings(ASYNC_OCR_PROCESSING=True, LANGUAGE_CODE="en")
@@ -68,7 +68,7 @@ class NewOcrWorkflowsTests(TestCase):
 
         self.assertEqual(doc.ocr_status, "success")
         self.assertFalse(doc.ocr_name_mismatch) # No warnings
-        
+
         # Verify autoupdate of passport_num
         self.assertEqual(self.client_obj.passport_num, "EE1234567")
         self.assertIn("Updated missing client passport number", doc.parsed_data["auto_updates"][0])
@@ -104,7 +104,7 @@ class NewOcrWorkflowsTests(TestCase):
         doc.refresh_from_db()
         self.assertEqual(doc.ocr_status, "success")
         self.assertTrue(doc.ocr_name_mismatch) # Yes, warnings
-        
+
         warnings = doc.parsed_data["warnings"]
         self.assertTrue(any("Client name not matched" in w for w in warnings))
         self.assertTrue(any("Date of Birth" in w for w in warnings))

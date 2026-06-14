@@ -7,8 +7,8 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
+from clients.services.company_parser import _clean_number, _find_detected_names, _find_valid_until_date
 from clients.services.wezwanie_parser import extract_text
-from clients.services.company_parser import _find_detected_names, _clean_number, _find_valid_until_date
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ def _find_coverage(text: str) -> tuple[float | None, str | None]:
             re.IGNORECASE
         )
     ]
-    
+
     for pattern in patterns:
         for match in pattern.finditer(text):
             val = _clean_number(match.group(1))
@@ -46,11 +46,11 @@ def _find_coverage(text: str) -> tuple[float | None, str | None]:
                 curr = "PLN"
             elif curr == "EURO":
                 curr = "EUR"
-                
+
             # Valid coverage amounts are usually high (>= 1000)
             if val and val >= 1000:
                 return val, curr
-                
+
     return None, None
 
 

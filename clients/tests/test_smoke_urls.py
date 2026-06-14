@@ -8,7 +8,6 @@ from django.urls import reverse
 from clients.models import Client
 from clients.tests.factories import create_staff_user
 
-
 # URLs that only need a logged-in staff user (no object PKs).
 SIMPLE_URLS = [
     "clients:client_list",

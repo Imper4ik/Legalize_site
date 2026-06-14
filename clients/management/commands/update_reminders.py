@@ -9,8 +9,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
-from clients.models import Client, Document, Payment, Reminder
-from clients.models import ClientDocumentRequirement
+from clients.models import Client, ClientDocumentRequirement, Document, Payment, Reminder
 from clients.services.custom_document_requirements import sync_custom_document_requirement_reminder
 from clients.services.notifications import (
     _get_missing_documents_context,
@@ -19,7 +18,6 @@ from clients.services.notifications import (
     send_missing_documents_email,
 )
 from clients.services.zus import format_zus_months, missing_zus_months
-
 
 logger = logging.getLogger(__name__)
 

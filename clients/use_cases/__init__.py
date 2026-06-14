@@ -1,16 +1,5 @@
 """Explicit application use cases for the clients domain."""
 
-from clients.use_cases.documents import (
-    ClientNoteScenarioResult,
-    DocumentScenarioResult,
-    WniosekAttachmentScenarioResult,
-    delete_client_document,
-    delete_wniosek_attachment,
-    record_document_download,
-    toggle_client_document_verification,
-    update_client_notes_for_client,
-    verify_all_client_documents,
-)
 from clients.use_cases.client_records import (
     CLIENT_UPDATE_TRACKED_FIELDS,
     ClientRecordScenarioResult,
@@ -25,6 +14,17 @@ from clients.use_cases.document_requirements import (
     delete_document_requirement_record,
     sync_document_checklist_for_purpose,
     update_document_requirement_record,
+)
+from clients.use_cases.documents import (
+    ClientNoteScenarioResult,
+    DocumentScenarioResult,
+    WniosekAttachmentScenarioResult,
+    delete_client_document,
+    delete_wniosek_attachment,
+    record_document_download,
+    toggle_client_document_verification,
+    update_client_notes_for_client,
+    verify_all_client_documents,
 )
 from clients.use_cases.exports import (
     ExportScenarioResult,

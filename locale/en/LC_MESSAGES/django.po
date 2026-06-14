@@ -6,149 +6,145 @@
 msgid ""
 msgstr ""
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-13 16:17+0200\n"
+"POT-Creation-Date: 2026-06-14 13:57+0200\n"
 "Language: en\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: .\clients\demo\demo_runner.py:24
-msgid "Demo Center is disabled."
-msgstr "Demo Center is disabled."
-
-#: .\clients\demo\demo_runner.py:26
+#: .\clients\demo\demo_runner.py:23
 msgid "Demo Center requires a superuser."
 msgstr "Demo Center requires a superuser."
 
-#: .\clients\demo\demo_runner.py:33
+#: .\clients\demo\demo_runner.py:30
 msgid "Another Demo Center run or cleanup is already in progress."
 msgstr "Another Demo Center run or cleanup is already in progress."
 
-#: .\clients\forms.py:53
+#: .\clients\forms.py:54
 msgid "Управление платежами"
 msgstr "Payment management"
 
-#: .\clients\forms.py:54
+#: .\clients\forms.py:55
 msgid "Отправка custom email"
 msgstr "Sending custom email"
 
-#: .\clients\forms.py:55
+#: .\clients\forms.py:56
 msgid "Массовые рассылки"
 msgstr "Mass mailings"
 
-#: .\clients\forms.py:56
+#: .\clients\forms.py:57
 msgid "Экспорт клиентов"
 msgstr "Export clients"
 
-#: .\clients\forms.py:57
+#: .\clients\forms.py:58
 msgid "Удаление клиентов"
 msgstr "Removing clients"
 
-#: .\clients\forms.py:58
+#: .\clients\forms.py:59
 msgid "Удаление документов"
 msgstr "Deleting documents"
 
-#: .\clients\forms.py:59
+#: .\clients\forms.py:60
 msgid "Управление чеклистами"
 msgstr "Checklist management"
 
-#: .\clients\forms.py:60
+#: .\clients\forms.py:61
 msgid "Просмотр отчётов"
 msgstr "Viewing reports"
 
-#: .\clients\forms.py:61
+#: .\clients\forms.py:62
 msgid "Управление задачами"
 msgstr "Task management"
 
-#: .\clients\forms.py:62
+#: .\clients\forms.py:63
 msgid "Доступ к OCR review"
 msgstr "Access to OCR review"
 
-#: .\clients\forms.py:87
+#: .\clients\forms.py:88
 msgid "Legalize / Expowiza / название вашей организации"
 msgstr "Legalize / Expowiza / name of your organization"
 
-#: .\clients\forms.py:239 .\clients\models\client.py:151
-#: .\clients\models\document.py:327
+#: .\clients\forms.py:240 .\clients\models\client.py:151
+#: .\clients\models\document.py:330
 #: .\clients\templates\clients\document_checklist_manage.html:71
 msgid "Цель подачи"
 msgstr "Purpose of application"
 
-#: .\clients\forms.py:247 .\clients\models\client.py:173
+#: .\clients\forms.py:248 .\clients\models\client.py:173
 msgid "Дата окончания основания"
 msgstr "Basis end date"
 
-#: .\clients\forms.py:250 .\clients\forms.py:256 .\clients\forms.py:262
-#: .\clients\forms.py:268 .\clients\forms.py:350
+#: .\clients\forms.py:251 .\clients\forms.py:257 .\clients\forms.py:263
+#: .\clients\forms.py:269 .\clients\forms.py:351
 msgid "дд.мм.гггг"
 msgstr "dd.mm.yyyy"
 
-#: .\clients\forms.py:253 .\clients\models\client.py:142
+#: .\clients\forms.py:254 .\clients\models\client.py:142
 #: .\clients\templates\clients\mos_review.html:44
 #: .\clients\templates\clients\onboarding\passport.html:92
 #: .\clients\templates\clients\partials\client_overview.html:198
-#: .\clients\views\admin_mos_review.py:84
+#: .\clients\views\admin_mos_review.py:83
 msgid "Дата рождения"
 msgstr "Date of birth"
 
-#: .\clients\forms.py:259 .\clients\models\client.py:174
+#: .\clients\forms.py:260 .\clients\models\client.py:174
 msgid "Дата подачи (Złożone)"
 msgstr "Submission date (Złożone)"
 
-#: .\clients\forms.py:265 .\clients\models\client.py:184
+#: .\clients\forms.py:266 .\clients\models\client.py:184
 msgid "Дата сдачи отпечатков"
 msgstr "Date of fingerprints submission"
 
-#: .\clients\forms.py:383
+#: .\clients\forms.py:384
 msgid "Select a family role."
 msgstr "Select a family role."
 
-#: .\clients\forms.py:388
+#: .\clients\forms.py:389
 msgid "Select a sponsor."
 msgstr "Select a sponsor."
 
-#: .\clients\forms.py:392
+#: .\clients\forms.py:393
 msgid "Family members must be spouse or child."
 msgstr "Family members must be spouse or child."
 
-#: .\clients\forms.py:422 .\clients\models\client.py:326
+#: .\clients\forms.py:423 .\clients\models\client.py:326
 msgid "A client cannot sponsor themselves."
 msgstr "A client cannot sponsor themselves."
 
-#: .\clients\forms.py:432 .\clients\models\client.py:332
+#: .\clients\forms.py:433 .\clients\models\client.py:332
 msgid "Sponsor relationship cannot create a cycle."
 msgstr "Sponsor relationship cannot create a cycle."
 
-#: .\clients\forms.py:442 .\clients\templates\clients\partials\modals.html:299
+#: .\clients\forms.py:443 .\clients\templates\clients\partials\modals.html:299
 msgid "Тема письма"
 msgstr "Email subject"
 
-#: .\clients\forms.py:443
+#: .\clients\forms.py:444
 msgid "Например: Важное обновление"
 msgstr "For example: Important update"
 
-#: .\clients\forms.py:446 .\clients\models\campaign.py:31
-#: .\clients\models\email.py:35
+#: .\clients\forms.py:447 .\clients\models\campaign.py:31
+#: .\clients\models\email.py:34
 #: .\clients\templates\clients\partials\modals.html:304
 msgid "Текст письма"
 msgstr "Letter text"
 
-#: .\clients\forms.py:451
+#: .\clients\forms.py:452
 msgid "Фильтр по Компании"
 msgstr "Filter by Company"
 
-#: .\clients\forms.py:453 .\clients\templates\clients\clients_list.html:88
+#: .\clients\forms.py:454 .\clients\templates\clients\clients_list.html:88
 msgid "Все компании"
 msgstr "All companies"
 
-#: .\clients\forms.py:457
+#: .\clients\forms.py:458
 msgid "Фильтр по Статусу"
 msgstr "Filter by status"
 
-#: .\clients\forms.py:459 .\clients\forms.py:794
+#: .\clients\forms.py:460 .\clients\forms.py:795
 msgid "Все статусы"
 msgstr "All statuses"
 
-#: .\clients\forms.py:470
+#: .\clients\forms.py:471
 msgid ""
 "Для ZUS RCA укажите месяц отчёта. Если загружаете страховой полис, добавьте "
 "его как отдельный документ «Polisa ubezpieczeniowa / Health insurance»."
@@ -157,11 +153,11 @@ msgstr ""
 "insurance policy, add it as a separate document “Polisa ubezpieczeniowa / "
 "Health insurance”."
 
-#: .\clients\forms.py:491
+#: .\clients\forms.py:492
 msgid "ZUS RCA for this month is already uploaded."
 msgstr "ZUS RCA for this month is already uploaded."
 
-#: .\clients\forms.py:657
+#: .\clients\forms.py:658
 #: .\clients\templates\clients\document_checklist_manage.html:205
 #: .\clients\templates\clients\document_checklist_manage.html:293
 #: .\clients\templates\clients\partials\modals.html:336
@@ -169,24 +165,24 @@ msgstr "ZUS RCA for this month is already uploaded."
 msgid "Название документа"
 msgstr "Document Name"
 
-#: .\clients\forms.py:689
+#: .\clients\forms.py:690
 msgid "Необходимые документы"
 msgstr "Missing documents"
 
-#: .\clients\forms.py:769 .\clients\templates\clients\calculator.html:25
+#: .\clients\forms.py:770 .\clients\templates\clients\calculator.html:25
 msgid "дд-мм-гггг"
 msgstr "dd-mm-yyyy"
 
-#: .\clients\forms.py:783 .\clients\templates\clients\calculator.html:32
+#: .\clients\forms.py:784 .\clients\templates\clients\calculator.html:32
 msgid "Студент"
 msgstr "Student"
 
-#: .\clients\forms.py:783 .\clients\templates\clients\calculator.html:33
+#: .\clients\forms.py:784 .\clients\templates\clients\calculator.html:33
 msgid "Воссоединение семьи"
 msgstr "Family reunification"
 
-#: .\clients\forms.py:796 .\clients\models\campaign.py:36
-#: .\clients\models\client.py:165 .\clients\models\task.py:43
+#: .\clients\forms.py:797 .\clients\models\campaign.py:36
+#: .\clients\models\client.py:165 .\clients\models\task.py:42
 #: .\clients\templates\clients\document_checklist_manage.html:234
 #: .\clients\templates\clients\document_checklist_manage.html:263
 #: .\clients\templates\clients\fingerprints_schedule.html:116
@@ -206,27 +202,27 @@ msgstr "Family reunification"
 msgid "Статус"
 msgstr "Status"
 
-#: .\clients\forms.py:801 .\clients\forms.py:831
+#: .\clients\forms.py:802 .\clients\forms.py:832
 msgid "С даты"
 msgstr "From date"
 
-#: .\clients\forms.py:806 .\clients\forms.py:836
+#: .\clients\forms.py:807 .\clients\forms.py:837
 msgid "По дату"
 msgstr "To date"
 
-#: .\clients\forms.py:811
+#: .\clients\forms.py:812
 msgid "Поиск"
 msgstr "Search"
 
-#: .\clients\forms.py:815
+#: .\clients\forms.py:816
 msgid "Тема или имя клиента..."
 msgstr "Subject or client name..."
 
-#: .\clients\forms.py:825
+#: .\clients\forms.py:826
 msgid "Все сотрудники"
 msgstr "All staff"
 
-#: .\clients\forms.py:826 .\clients\models\activity.py:48
+#: .\clients\forms.py:827 .\clients\models\activity.py:48
 #: .\clients\templates\clients\logs\staff_activity_logs.html:41
 #: .\clients\templates\clients\logs\staff_activity_logs.html:50
 msgid "Сотрудник"
@@ -264,8 +260,8 @@ msgstr "Document uploaded"
 msgid "Документ открыт"
 msgstr "The document is open"
 
-#: .\clients\models\activity.py:20 .\submissions\views\api.py:150
-#: .\submissions\views\documents.py:80
+#: .\clients\models\activity.py:20 .\submissions\views\api.py:151
+#: .\submissions\views\documents.py:82
 msgid "Документ удалён"
 msgstr "Documents"
 
@@ -322,11 +318,11 @@ msgid "Заметка обновлена"
 msgstr "Note updated"
 
 #: .\clients\models\activity.py:40 .\clients\models\document.py:155
-#: .\clients\models\email.py:30 .\clients\models\payment.py:31
-#: .\clients\models\reminder.py:14 .\clients\models\task.py:28
+#: .\clients\models\email.py:29 .\clients\models\payment.py:31
+#: .\clients\models\reminder.py:16 .\clients\models\task.py:27
 #: .\clients\templates\clients\clients_list.html:120
 #: .\clients\templates\clients\clients_list.html:140
-#: .\clients\templates\clients\document_reminder_list.html:116
+#: .\clients\templates\clients\document_reminder_list.html:145
 #: .\clients\templates\clients\fingerprints_schedule.html:35
 #: .\clients\templates\clients\fingerprints_schedule.html:114
 #: .\clients\templates\clients\logs\email_logs.html:45
@@ -344,7 +340,7 @@ msgstr "Event type"
 msgid "Краткое описание"
 msgstr "Brief description"
 
-#: .\clients\models\activity.py:52 .\clients\models\reminder.py:27
+#: .\clients\models\activity.py:52 .\clients\models\reminder.py:29
 msgid "Детали"
 msgstr "Details"
 
@@ -353,24 +349,24 @@ msgid "Метаданные"
 msgstr "Metadata"
 
 #: .\clients\models\activity.py:60 .\clients\models\document.py:194
-#: .\clients\models\document_version.py:18 .\clients\models\reminder.py:9
-#: .\clients\models\task.py:67
+#: .\clients\models\document_version.py:17 .\clients\models\reminder.py:11
+#: .\clients\models\task.py:66
 msgid "Документ"
 msgstr "Document"
 
 #: .\clients\models\activity.py:68 .\clients\models\payment.py:148
-#: .\clients\models\task.py:75
+#: .\clients\models\task.py:74
 msgid "Платёж"
 msgstr "Payment"
 
-#: .\clients\models\activity.py:76 .\clients\models\task.py:30
+#: .\clients\models\activity.py:76 .\clients\models\task.py:29
 #: .\clients\templates\clients\partials\client_tasks.html:16
 #: .\clients\templates\clients\tasks_list.html:33
 msgid "Задача"
 msgstr "Task"
 
 #: .\clients\models\activity.py:79 .\clients\models\campaign.py:44
-#: .\clients\models\document_version.py:52 .\clients\models\family.py:39
+#: .\clients\models\document_version.py:51 .\clients\models\family.py:39
 #: .\clients\models\payment.py:40
 msgid "Создано"
 msgstr "Create"
@@ -383,8 +379,7 @@ msgstr "Client event"
 msgid "События клиентов"
 msgstr "Customer Events"
 
-#: .\clients\models\activity.py:97 .\clients\models\document_version.py:70
-#: .\clients\templates\clients\admin_panel.html:195
+#: .\clients\models\activity.py:97 .\clients\models\document_version.py:69
 #: .\clients\templates\clients\logs\email_logs.html:90
 msgid "Система"
 msgstr "System"
@@ -437,7 +432,7 @@ msgstr "Mazowiecki: pelnomocnik"
 msgid "Настройки приложения"
 msgstr "Application Settings"
 
-#: .\clients\models\campaign.py:24 .\clients\models\email.py:20
+#: .\clients\models\campaign.py:24 .\clients\models\email.py:19
 #: .\clients\templates\clients\logs\email_logs.html:74
 msgid "В очереди"
 msgstr "Queued"
@@ -453,13 +448,12 @@ msgid "Завершено"
 msgstr "Completed"
 
 #: .\clients\models\campaign.py:27 .\clients\models\document.py:151
-#: .\clients\models\email.py:23
+#: .\clients\models\email.py:22
 #: .\clients\templates\clients\logs\email_logs.html:78
 msgid "Ошибка"
 msgstr "Error"
 
-#: .\clients\models\campaign.py:30 .\clients\models\email.py:34
-#: .\clients\templates\clients\demo_center.html:328
+#: .\clients\models\campaign.py:30 .\clients\models\email.py:33
 #: .\clients\templates\clients\logs\email_logs.html:46
 #: .\clients\templates\clients\logs\email_logs.html:64
 #: .\clients\templates\clients\partials\email_history.html:17
@@ -470,7 +464,7 @@ msgstr "Subject"
 msgid "Всего получателей"
 msgstr "Total recipients"
 
-#: .\clients\models\campaign.py:39 .\clients\models\email.py:21
+#: .\clients\models\campaign.py:39 .\clients\models\email.py:20
 #: .\clients\templates\clients\logs\email_logs.html:72
 msgid "Отправлено"
 msgstr "Sent"
@@ -479,7 +473,7 @@ msgstr "Sent"
 msgid "Ошибок"
 msgstr "Errors"
 
-#: .\clients\models\campaign.py:41 .\clients\models\email.py:36
+#: .\clients\models\campaign.py:41 .\clients\models\email.py:35
 #: .\clients\templates\clients\partials\email_history.html:18
 msgid "Получатели"
 msgstr "Recipients"
@@ -509,14 +503,14 @@ msgid "Email-кампании"
 msgstr "Email campaigns"
 
 #: .\clients\models\client.py:97 .\clients\models\client.py:103
-#: .\clients\models\payment.py:27 .\clients\services\onboarding_purposes.py:15
+#: .\clients\models\payment.py:27 .\clients\services\onboarding_purposes.py:12
 #: .\clients\templates\clients\clients_list.html:327
 #: .\clients\templates\clients\partials\onboarding_panel.html:90
 msgid "Учёба"
 msgstr "Studies"
 
 #: .\clients\models\client.py:98 .\clients\models\client.py:104
-#: .\clients\models\payment.py:26 .\clients\services\onboarding_purposes.py:16
+#: .\clients\models\payment.py:26 .\clients\services\onboarding_purposes.py:13
 #: .\clients\templates\clients\clients_list.html:328
 #: .\clients\templates\clients\partials\onboarding_panel.html:91
 msgid "Работа"
@@ -589,7 +583,7 @@ msgstr "Rejected"
 
 #: .\clients\models\client.py:130
 #: .\clients\templates\clients\clients_list.html:28
-#: .\clients\tests\test_i18n_quality.py:234 .\templates\base.html:100
+#: .\clients\tests\test_i18n_quality.py:240 .\templates\base.html:100
 msgid "Новый клиент"
 msgstr "New client"
 
@@ -630,7 +624,7 @@ msgstr "Closed"
 #: .\clients\templates\clients\partials\modals.html:193
 #: .\clients\templates\clients\staff_manage.html:26
 #: .\clients\templates\clients\staff_manage.html:66
-#: .\clients\views\admin_mos_review.py:80
+#: .\clients\views\admin_mos_review.py:79
 msgid "Имя"
 msgstr "First Name"
 
@@ -641,33 +635,33 @@ msgstr "First Name"
 #: .\clients\templates\clients\partials\modals.html:197
 #: .\clients\templates\clients\staff_manage.html:30
 #: .\clients\templates\clients\staff_manage.html:67
-#: .\clients\views\admin_mos_review.py:81
+#: .\clients\views\admin_mos_review.py:80
 msgid "Фамилия"
 msgstr "Last Name"
 
 #: .\clients\models\client.py:141
 #: .\clients\templates\clients\mos_review.html:60
 #: .\clients\templates\clients\onboarding\passport.html:97
-#: .\clients\views\admin_mos_review.py:85
+#: .\clients\views\admin_mos_review.py:84
 msgid "Гражданство"
 msgstr "Citizenship"
 
 #: .\clients\models\client.py:143
 #: .\clients\templates\clients\onboarding\start_contact.html:167
 #: .\clients\templates\clients\onboarding\start_contact.html:743
-#: .\clients\views\admin_mos_review.py:83
+#: .\clients\views\admin_mos_review.py:82
 msgid "Телефон"
 msgstr "Phone"
 
 #: .\clients\models\client.py:145
 #: .\clients\templates\clients\mos_review.html:115
 #: .\clients\templates\clients\onboarding\passport.html:151
-#: .\clients\views\admin_mos_review.py:86
+#: .\clients\views\admin_mos_review.py:85
 msgid "Номер паспорта"
 msgstr "Passport number"
 
-#: .\clients\models\client.py:146 .\clients\models\client.py:942
-#: .\clients\models\client.py:950
+#: .\clients\models\client.py:146 .\clients\models\client.py:943
+#: .\clients\models\client.py:951
 #: .\clients\templates\clients\clients_list.html:121
 #: .\clients\templates\clients\clients_list.html:206
 #: .\clients\templates\clients\partials\modals.html:201
@@ -741,81 +735,83 @@ msgstr "Company / Employer"
 msgid "Assigned staff"
 msgstr "Assigned staff"
 
-#: .\clients\models\client.py:612
+#: .\clients\models\client.py:613
 #: .\clients\tests\test_regression_health_and_reminders.py:117
 msgid "Основание пребывания уже истекло"
 msgstr "The reason for your stay has already expired"
 
-#: .\clients\models\client.py:613
+#: .\clients\models\client.py:614
 msgid "Проверьте основание пребывания и срочно свяжитесь с клиентом."
 msgstr "Check the basis of the stay and contact the client urgently."
 
-#: .\clients\models\client.py:620
+#: .\clients\models\client.py:621
 #: .\clients\tests\test_regression_health_and_reminders.py:102
 msgid "Основание пребывания скоро истекает"
 msgstr "Your stay will expire soon"
 
-#: .\clients\models\client.py:621
+#: .\clients\models\client.py:622
 msgid "До окончания основания пребывания осталось меньше 30 дней."
 msgstr "There are less than 30 days left until the end of your stay."
 
-#: .\clients\models\client.py:632
+#: .\clients\models\client.py:633
 #: .\clients\templates\clients\partials\document_checklist.html:354
 #: .\clients\templates\clients\partials\document_checklist.html:357
 #: .\clients\views\documents.py:336
 msgid "Проверить"
 msgstr "Verify"
 
-#: .\clients\models\client.py:640
+#: .\clients\models\client.py:641
 msgid "Есть OCR-данные без подтверждения"
 msgstr "There is OCR data awaiting confirmation"
 
-#: .\clients\models\client.py:641
+#: .\clients\models\client.py:642
 #, python-format
 msgid ""
 "Документов с распознанными данными, ожидающими подтверждения: %(count)s."
 msgstr "Documents with recognized data awaiting confirmation: %(count)s."
 
-#: .\clients\models\client.py:643 .\clients\models\client.py:681
+#: .\clients\models\client.py:644 .\clients\models\client.py:682
 #: .\clients\templates\clients\partials\document_checklist.html:101
 msgid "Проверить OCR"
 msgstr "Check OCR"
 
-#: .\clients\models\client.py:653
+#: .\clients\models\client.py:654
+#: .\clients\templates\clients\admin_panel.html:315
 msgid "Просроченные документы"
 msgstr "Expired documents"
 
-#: .\clients\models\client.py:654
+#: .\clients\models\client.py:655
 #, python-format
 msgid "Просроченных документов: %(count)s."
 msgstr "Overdue documents: %(count)s."
 
-#: .\clients\models\client.py:655 .\clients\models\client.py:667
-#: .\clients\models\client.py:746 .\clients\models\client.py:768
+#: .\clients\models\client.py:656 .\clients\models\client.py:668
+#: .\clients\models\client.py:747 .\clients\models\client.py:769
 msgid "Открыть чеклист"
 msgstr "Open checklist"
 
-#: .\clients\models\client.py:664
-#: .\clients\templates\clients\document_reminder_list.html:248
+#: .\clients\models\client.py:665
+#: .\clients\templates\clients\document_reminder_list.html:277
 #: .\clients\templates\clients\partials\modals.html:283
 msgid "Истекающие документы"
 msgstr "Expiring documents"
 
-#: .\clients\models\client.py:665
+#: .\clients\models\client.py:666
 #, python-format
 msgid "Документов истекает в течение 7 дней: %(count)s."
 msgstr "Documents expire within 7 days: %(count)s."
 
-#: .\clients\models\client.py:678
+#: .\clients\models\client.py:679
 msgid "wezwanie"
 msgstr "summons"
 
-#: .\clients\models\client.py:688
-#: .\clients\templates\clients\admin_panel.html:136
-#: .\clients\templates\clients\admin_panel.html:148
-#: .\clients\templates\clients\admin_panel.html:160
-#: .\clients\templates\clients\admin_panel.html:173
-#: .\clients\templates\clients\admin_panel.html:185
+#: .\clients\models\client.py:689
+#: .\clients\templates\clients\admin_panel.html:342
+#: .\clients\templates\clients\admin_panel.html:350
+#: .\clients\templates\clients\admin_panel.html:358
+#: .\clients\templates\clients\admin_panel.html:366
+#: .\clients\templates\clients\admin_panel.html:397
+#: .\clients\templates\clients\admin_panel.html:434
 #: .\clients\templates\clients\document_versions.html:33
 #: .\clients\templates\clients\partials\document_checklist.html:340
 #: .\clients\templates\clients\partials\document_checklist.html:342
@@ -824,43 +820,43 @@ msgstr "summons"
 msgid "Открыть"
 msgstr "Open"
 
-#: .\clients\models\client.py:695
+#: .\clients\models\client.py:696
 msgid "Есть wezwanie без номера дела"
 msgstr "There is wezwanie without a case number"
 
-#: .\clients\models\client.py:696
+#: .\clients\models\client.py:697
 msgid "Проверьте распознавание или заполните case number вручную."
 msgstr "Check recognition or fill in the case number manually."
 
-#: .\clients\models\client.py:705
+#: .\clients\models\client.py:706
 msgid "Не отправлено письмо по отпечаткам"
 msgstr "Fingerprint email not sent"
 
-#: .\clients\models\client.py:706
+#: .\clients\models\client.py:707
 msgid "Дата fingerprints есть, но в истории нет appointment notification."
 msgstr ""
 "There is a date fingerprints, but there is no appointment notification in "
 "the history."
 
-#: .\clients\models\client.py:714
+#: .\clients\models\client.py:715
 #: .\clients\tests\test_priority_12_13_workflow.py:316
 msgid "Просроченные оплаты"
 msgstr "Overdue payments"
 
-#: .\clients\models\client.py:715
+#: .\clients\models\client.py:716
 #, python-format
 msgid "Оплат с due date сегодня или раньше: %(count)s."
 msgstr "Payment due date today or earlier: %(count)s."
 
-#: .\clients\models\client.py:717
+#: .\clients\models\client.py:718
 msgid "Открыть финансы"
 msgstr "Open finances"
 
-#: .\clients\models\client.py:727
+#: .\clients\models\client.py:728
 msgid "Ошибка отправки писем клиенту"
 msgstr "Confirmation of email sent to the client"
 
-#: .\clients\models\client.py:728
+#: .\clients\models\client.py:729
 #, python-format
 msgid ""
 "Не удалось отправить писем клиенту: %(count)s. Проверьте правильность email-"
@@ -869,54 +865,54 @@ msgstr ""
 "Failed to send emails to client: %(count)s . Please check that your email "
 "address is correct."
 
-#: .\clients\models\client.py:730
+#: .\clients\models\client.py:731
 msgid "Открыть историю писем"
 msgstr "Email history"
 
-#: .\clients\models\client.py:742
+#: .\clients\models\client.py:743
 #: .\clients\tests\test_priority_12_13_workflow.py:315
 #: .\clients\views\family.py:68
 msgid "Не все документы собраны"
 msgstr "Not all documents collected"
 
-#: .\clients\models\client.py:743 .\clients\views\family.py:69
+#: .\clients\models\client.py:744 .\clients\views\family.py:69
 #, python-format
 msgid "Не хватает обязательных документов: %(count)s."
 msgstr "Missing required documents: %(count)s."
 
-#: .\clients\models\client.py:764
+#: .\clients\models\client.py:765
 msgid "ZUS RCA — пропущены месяцы"
 msgstr "ZUS RCA — missing months"
 
-#: .\clients\models\client.py:765 .\clients\services\notifications.py:679
+#: .\clients\models\client.py:766 .\clients\services\notifications.py:679
 #, python-format
 msgid "Нет ZUS RCA за месяцы: %(months)s."
 msgstr "No ZUS RCA for months: %(months)s."
 
-#: .\clients\models\client.py:793
+#: .\clients\models\client.py:794
 #: .\clients\templates\clients\partials\client_overview.html:123
 msgid "Открыть семейную группу"
 msgstr "Open family group"
 
-#: .\clients\models\client.py:802
+#: .\clients\models\client.py:803
 msgid "Есть просроченные задачи"
 msgstr "There are overdue tasks"
 
-#: .\clients\models\client.py:803
+#: .\clients\models\client.py:804
 #, python-format
 msgid "Просроченных задач: %(count)s."
 msgstr "Overdue tasks: %(count)s."
 
-#: .\clients\models\client.py:843 .\clients\models\client.py:851
-#: .\clients\models\client.py:859 .\clients\models\client.py:867
+#: .\clients\models\client.py:844 .\clients\models\client.py:852
+#: .\clients\models\client.py:860 .\clients\models\client.py:868
 msgid "Легальность пребывания"
 msgstr "Reason for stay"
 
-#: .\clients\models\client.py:845
+#: .\clients\models\client.py:846
 msgid "Дата не указана"
 msgstr "not specified"
 
-#: .\clients\models\client.py:846
+#: .\clients\models\client.py:847
 msgid ""
 "Проверка срока законного нахождения в стране. Дата окончания пребывания не "
 "задана."
@@ -924,102 +920,102 @@ msgstr ""
 "Checking the period of legal stay in the country. The end date of the stay "
 "has not been specified."
 
-#: .\clients\models\client.py:853
+#: .\clients\models\client.py:854
 #, python-format
 msgid "Истекло %s"
 msgstr "Expired %s"
 
-#: .\clients\models\client.py:854
+#: .\clients\models\client.py:855
 msgid ""
 "Основание пребывания клиента истекло. Требуется срочное продление или связь "
 "с клиентом."
 msgstr "Check the basis of the stay and contact the client urgently."
 
-#: .\clients\models\client.py:861
+#: .\clients\models\client.py:862
 #, python-format
 msgid "Истекает %s"
 msgstr "Expires %s"
 
-#: .\clients\models\client.py:862
+#: .\clients\models\client.py:863
 msgid "Основание пребывания истекает менее чем через 30 дней."
 msgstr "Your stay will expire soon"
 
-#: .\clients\models\client.py:869
+#: .\clients\models\client.py:870
 #, python-format
 msgid "Действительно до %s"
 msgstr "Valid until %s"
 
-#: .\clients\models\client.py:870
+#: .\clients\models\client.py:871
 msgid "Основание пребывания действительно (более 30 дней)."
 msgstr "The reason for your stay has already expired"
 
-#: .\clients\models\client.py:880 .\clients\models\client.py:888
+#: .\clients\models\client.py:881 .\clients\models\client.py:889
 msgid "Комплект документов"
 msgstr "Document Checklist"
 
-#: .\clients\models\client.py:882
+#: .\clients\models\client.py:883
 #, python-format
 msgid "Не хватает: %s"
 msgstr "Missing: %s"
 
-#: .\clients\models\client.py:883
+#: .\clients\models\client.py:884
 msgid ""
 "В чеклисте присутствуют незагруженные обязательные документы для выбранного "
 "основания."
 msgstr "Manage the list of required documents for each application purpose."
 
-#: .\clients\models\client.py:890
+#: .\clients\models\client.py:891
 msgid "Собрано"
 msgstr "Collected"
 
-#: .\clients\models\client.py:891
+#: .\clients\models\client.py:892
 msgid "Все обязательные документы по чеклисту успешно загружены."
 msgstr "All uploaded documents have already been verified."
 
-#: .\clients\models\client.py:898 .\clients\models\client.py:906
-#: .\clients\models\client.py:914
+#: .\clients\models\client.py:899 .\clients\models\client.py:907
+#: .\clients\models\client.py:915
 msgid "Срок действия документов"
 msgstr "Document Actions"
 
-#: .\clients\models\client.py:900 .\clients\models\client.py:1032
+#: .\clients\models\client.py:901 .\clients\models\client.py:1033
 #, python-format
 msgid "Просрочено: %s"
 msgstr "Overdue: %s"
 
-#: .\clients\models\client.py:901
+#: .\clients\models\client.py:902
 msgid "Среди загруженных документов есть просроченные файлы."
 msgstr "All uploaded documents have already been verified."
 
-#: .\clients\models\client.py:908
+#: .\clients\models\client.py:909
 #, python-format
 msgid "Истекает: %s"
 msgstr "Expires: %s"
 
-#: .\clients\models\client.py:909
+#: .\clients\models\client.py:910
 msgid ""
 "Среди загруженных документов есть те, которые истекают в течение 7 дней."
 msgstr ""
 "Among the uploaded documents there are those that expire within 7 days."
 
-#: .\clients\models\client.py:916 .\clients\models\client.py:988
-#: .\clients\models\client.py:1014 .\clients\models\client.py:1040
+#: .\clients\models\client.py:917 .\clients\models\client.py:989
+#: .\clients\models\client.py:1015 .\clients\models\client.py:1041
 msgid "OK"
 msgstr "OK"
 
-#: .\clients\models\client.py:917
+#: .\clients\models\client.py:918
 msgid "Все загруженные документы действительны."
 msgstr "All uploaded documents have already been verified."
 
-#: .\clients\models\client.py:924 .\clients\models\client.py:932
+#: .\clients\models\client.py:925 .\clients\models\client.py:933
 msgid "Подтверждение OCR"
 msgstr "Confirm deletion"
 
-#: .\clients\models\client.py:926
+#: .\clients\models\client.py:927
 #, python-format
 msgid "Ожидает: %s"
 msgstr "Expects: %s"
 
-#: .\clients\models\client.py:927
+#: .\clients\models\client.py:928
 msgid ""
 "Есть документы с автоматическим распознаванием текста, которые сотрудник ещё"
 " не подтвердил."
@@ -1027,21 +1023,21 @@ msgstr ""
 "There are documents with automatic text recognition that the employee has "
 "not yet confirmed."
 
-#: .\clients\models\client.py:934
+#: .\clients\models\client.py:935
 msgid "Подтверждено"
 msgstr "Confirm deletion"
 
-#: .\clients\models\client.py:935
+#: .\clients\models\client.py:936
 msgid "Нет документов, ожидающих проверки распознанных данных."
 msgstr "There are no documents waiting for recognition data to be verified."
 
-#: .\clients\models\client.py:944
+#: .\clients\models\client.py:945
 #: .\clients\templates\clients\partials\client_overview.html:10
-#: .\clients\views\client_crud.py:199
+#: .\clients\views\client_crud.py:205
 msgid "Не указан"
 msgstr "Not specified"
 
-#: .\clients\models\client.py:945
+#: .\clients\models\client.py:946
 msgid ""
 "Загружен документ Wezwanie, но номер дела (Case number) в системе не "
 "заполнен."
@@ -1049,47 +1045,47 @@ msgstr ""
 "The Wezwanie document has been uploaded, but the Case number is not filled "
 "in the system."
 
-#: .\clients\models\client.py:952
+#: .\clients\models\client.py:953
 msgid "OK (нет wezwanie)"
 msgstr "OK (no wezwanie)"
 
-#: .\clients\models\client.py:953
+#: .\clients\models\client.py:954
 msgid ""
 "Номер дела заполнен или нет документов Wezwanie, требующих его наличия."
 msgstr "Global values for printable documents of the current database."
 
-#: .\clients\models\client.py:960 .\clients\models\client.py:968
+#: .\clients\models\client.py:961 .\clients\models\client.py:969
 msgid "Оплата по договору"
 msgstr "Tuition Fee"
 
-#: .\clients\models\client.py:962
+#: .\clients\models\client.py:963
 #, python-format
 msgid "Просрочено платежей: %s"
 msgstr "Overdue payments: %s"
 
-#: .\clients\models\client.py:963
+#: .\clients\models\client.py:964
 msgid ""
 "Есть выставленные платежи с наступившим сроком оплаты, которые не оплачены."
 msgstr "There are outstanding payments that are due and have not been paid."
 
-#: .\clients\models\client.py:970
+#: .\clients\models\client.py:971
 #: .\templates\clients\partials\payment_item.html:15
 msgid "Оплачено"
 msgstr "Payment"
 
-#: .\clients\models\client.py:971
+#: .\clients\models\client.py:972
 msgid "Нет просроченных платежей по договору."
 msgstr "There are no upcoming print appointments."
 
-#: .\clients\models\client.py:978 .\clients\models\client.py:986
+#: .\clients\models\client.py:979 .\clients\models\client.py:987
 msgid "Письмо об отпечатках"
 msgstr "Fingerprint submission location"
 
-#: .\clients\models\client.py:980
+#: .\clients\models\client.py:981
 msgid "Не отправлено"
 msgstr "Sent"
 
-#: .\clients\models\client.py:981
+#: .\clients\models\client.py:982
 msgid ""
 "Указана дата сдачи отпечатков, но письмо-напоминание клиенту ещё не было "
 "отправлено."
@@ -1097,64 +1093,64 @@ msgstr ""
 "The date for submitting fingerprints has been indicated, but a reminder "
 "letter has not yet been sent to the client."
 
-#: .\clients\models\client.py:989
+#: .\clients\models\client.py:990
 msgid "Письмо об отпечатках отправлено, либо дата отпечатков не назначена."
 msgstr "Such a letter has already been sent. Resend missed."
 
-#: .\clients\models\client.py:1004 .\clients\models\client.py:1012
-#: .\clients\models\client.py:1020
+#: .\clients\models\client.py:1005 .\clients\models\client.py:1013
+#: .\clients\models\client.py:1021
 msgid "Отчёты ZUS RCA"
 msgstr "ZUS RCA reports"
 
-#: .\clients\models\client.py:1006
+#: .\clients\models\client.py:1007
 #, python-format
 msgid "Пропущено месяцев: %s"
 msgstr "Missing months: %s"
 
-#: .\clients\models\client.py:1007
+#: .\clients\models\client.py:1008
 msgid ""
 "В системе отсутствуют отчёты ZUS RCA за некоторые месяцы после сдачи "
 "отпечатков."
 msgstr "Expired documents after fingerprints"
 
-#: .\clients\models\client.py:1015
+#: .\clients\models\client.py:1016
 msgid "Все необходимые ежемесячные отчёты ZUS RCA загружены."
 msgstr "All necessary monthly ZUS RCA reports have been downloaded."
 
-#: .\clients\models\client.py:1022
+#: .\clients\models\client.py:1023
 msgid "Не требуется"
 msgstr "Total required"
 
-#: .\clients\models\client.py:1023
+#: .\clients\models\client.py:1024
 msgid ""
 "Проверка ZUS RCA активна только на этапе ожидания решения после отпечатков."
 msgstr ""
 "The ZUS RCA check is only active during the waiting phase after prints."
 
-#: .\clients\models\client.py:1030 .\clients\models\client.py:1038
+#: .\clients\models\client.py:1031 .\clients\models\client.py:1039
 msgid "Задачи по делу"
 msgstr "Client tasks"
 
-#: .\clients\models\client.py:1033
+#: .\clients\models\client.py:1034
 msgid "Среди задач по этому клиенту есть просроченные сотрудником задачи."
 msgstr ""
 "Among the tasks for this client there are tasks that were overdue by the "
 "employee."
 
-#: .\clients\models\client.py:1041
+#: .\clients\models\client.py:1042
 msgid "Нет просроченных задач по делу клиента."
 msgstr "There are no open issues for this client yet."
 
-#: .\clients\models\client.py:1063 .\clients\models\client.py:1071
-#: .\clients\models\client.py:1079
+#: .\clients\models\client.py:1064 .\clients\models\client.py:1072
+#: .\clients\models\client.py:1080
 msgid "Доходы семьи"
 msgstr "Family members"
 
-#: .\clients\models\client.py:1065
+#: .\clients\models\client.py:1066
 msgid "Недостаточно"
 msgstr "Income sufficient"
 
-#: .\clients\models\client.py:1066
+#: .\clients\models\client.py:1067
 msgid ""
 "Доходы семьи не соответствуют требованиям законодательства о прожиточном "
 "минимуме."
@@ -1162,19 +1158,19 @@ msgstr ""
 "Family income does not meet the requirements of the legislation on the "
 "minimum subsistence level."
 
-#: .\clients\models\client.py:1073
+#: .\clients\models\client.py:1074
 msgid "Достаточно"
 msgstr "Income sufficient"
 
-#: .\clients\models\client.py:1074
+#: .\clients\models\client.py:1075
 msgid "Расчёт доходов подтверждает финансовую достаточность для семьи."
 msgstr "Calculation of income confirms financial sufficiency for the family."
 
-#: .\clients\models\client.py:1081
+#: .\clients\models\client.py:1082
 msgid "Не применимо"
 msgstr "Rename"
 
-#: .\clients\models\client.py:1082
+#: .\clients\models\client.py:1083
 msgid "Проверка доходов активна только для членов семейных групп."
 msgstr "Income verification is only active for members of family groups."
 
@@ -1190,7 +1186,7 @@ msgstr "Company"
 msgid "Компании"
 msgstr "Companies"
 
-#: .\clients\models\document.py:149 .\clients\models\email.py:22
+#: .\clients\models\document.py:149 .\clients\models\email.py:21
 #: .\clients\templates\clients\logs\email_logs.html:76
 msgid "Пропущено"
 msgstr "Skipped"
@@ -1203,7 +1199,7 @@ msgstr "Successfully"
 msgid "Ожидает"
 msgstr "Waiting"
 
-#: .\clients\models\document.py:156 .\clients\models\document.py:328
+#: .\clients\models\document.py:156 .\clients\models\document.py:331
 msgid "Тип документа"
 msgstr "Document type"
 
@@ -1262,7 +1258,14 @@ msgstr "Recognized data"
 msgid "Документы"
 msgstr "Documents"
 
-#: .\clients\models\document.py:329
+#: .\clients\models\document.py:221
+#: .\clients\tests\test_critical_translations.py:184
+#: .\clients\tests\test_critical_translations.py:186
+#: .\clients\tests\test_critical_translations.py:188
+msgid "for"
+msgstr "for"
+
+#: .\clients\models\document.py:332
 #: .\clients\templates\clients\document_checklist_manage.html:230
 #: .\clients\templates\clients\document_checklist_manage.html:259
 #: .\clients\templates\clients\submission_manage.html:22
@@ -1275,19 +1278,19 @@ msgstr "Documents"
 msgid "Название"
 msgstr "Name"
 
-#: .\clients\models\document.py:330
+#: .\clients\models\document.py:333
 msgid "Название (PL)"
 msgstr "Name"
 
-#: .\clients\models\document.py:331
+#: .\clients\models\document.py:334
 msgid "Название (EN)"
 msgstr "Name"
 
-#: .\clients\models\document.py:332
+#: .\clients\models\document.py:335
 msgid "Название (RU)"
 msgstr "Name"
 
-#: .\clients\models\document.py:333
+#: .\clients\models\document.py:336
 #: .\clients\templates\clients\document_checklist_manage.html:310
 #: .\clients\templates\clients\onboarding\start.html:210
 #: .\clients\templates\clients\onboarding\start.html:274
@@ -1296,11 +1299,11 @@ msgstr "Name"
 msgid "Обязательный документ"
 msgstr "Required Document"
 
-#: .\clients\models\document.py:334
+#: .\clients\models\document.py:337
 msgid "Порядок отображения"
 msgstr "Display order"
 
-#: .\clients\models\document.py:339
+#: .\clients\models\document.py:342
 #: .\clients\templates\clients\onboarding\start.html:588
 #: .\clients\templates\clients\onboarding\start.html:604
 #: .\clients\templates\clients\onboarding\start_contact.html:917
@@ -1308,11 +1311,11 @@ msgstr "Display order"
 msgid "Образец документа"
 msgstr "Document version"
 
-#: .\clients\models\document.py:345
+#: .\clients\models\document.py:348
 msgid "Требование к документу"
 msgstr "Document requirement"
 
-#: .\clients\models\document.py:346
+#: .\clients\models\document.py:349
 msgid "Требования к документам"
 msgstr "Document requirements"
 
@@ -1354,8 +1357,8 @@ msgid "Completed"
 msgstr "Completed"
 
 #: .\clients\models\document_processing.py:33
-#: .\clients\templates\clients\admin_dashboard.html:194
-#: .\clients\templates\clients\test_center.html:126
+#: .\clients\templates\clients\admin_dashboard.html:209
+#: .\clients\templates\clients\test_center.html:456
 msgid "Failed"
 msgstr "Failed"
 
@@ -1373,10 +1376,10 @@ msgid "Job type"
 msgstr "Job type"
 
 #: .\clients\models\document_processing.py:60
-#: .\clients\templates\clients\admin_dashboard.html:151
+#: .\clients\templates\clients\admin_dashboard.html:166
 #: .\clients\templates\clients\client_export_pdf.html:59
 #: .\clients\templates\clients\client_export_pdf.html:93
-#: .\clients\templates\clients\test_center.html:324
+#: .\clients\templates\clients\test_center.html:499
 msgid "Status"
 msgstr "Status"
 
@@ -1432,67 +1435,67 @@ msgstr "Document Versions"
 msgid "Document processing jobs"
 msgstr "Document Versions"
 
-#: .\clients\models\document_version.py:22
+#: .\clients\models\document_version.py:21
 msgid "Файл версии"
 msgstr "Version file"
 
-#: .\clients\models\document_version.py:25
+#: .\clients\models\document_version.py:24
 msgid "Номер версии"
 msgstr "Version number"
 
-#: .\clients\models\document_version.py:32
+#: .\clients\models\document_version.py:31
 msgid "Загрузил"
 msgstr "Uploaded"
 
-#: .\clients\models\document_version.py:38
+#: .\clients\models\document_version.py:37
 msgid "Комментарий"
 msgstr "Comment"
 
-#: .\clients\models\document_version.py:44
+#: .\clients\models\document_version.py:43
 msgid "Имя файла"
 msgstr "File name"
 
-#: .\clients\models\document_version.py:48
+#: .\clients\models\document_version.py:47
 msgid "Размер файла (байт)"
 msgstr "File size (bytes)"
 
-#: .\clients\models\document_version.py:58
+#: .\clients\models\document_version.py:57
 msgid "Версия документа"
 msgstr "Document version"
 
-#: .\clients\models\document_version.py:59
+#: .\clients\models\document_version.py:58
 msgid "Версии документов"
 msgstr "Document versions"
 
-#: .\clients\models\email.py:41
+#: .\clients\models\email.py:40
 msgid "Тип шаблона"
 msgstr "Template type"
 
-#: .\clients\models\email.py:43
+#: .\clients\models\email.py:42
 #: .\clients\templates\clients\logs\email_logs.html:44
 #: .\clients\templates\clients\logs\email_logs.html:54
 msgid "Дата отправки"
 msgstr "Sent date"
 
-#: .\clients\models\email.py:48
+#: .\clients\models\email.py:47
 msgid "Статус доставки"
 msgstr "Delivery status"
 
-#: .\clients\models\email.py:55
+#: .\clients\models\email.py:54
 msgid "Ключ идемпотентности"
 msgstr "Idempotency key"
 
-#: .\clients\models\email.py:57
+#: .\clients\models\email.py:56
 msgid "Ошибка доставки"
 msgstr "Delivery error"
 
-#: .\clients\models\email.py:63
+#: .\clients\models\email.py:62
 #: .\clients\templates\clients\logs\email_logs.html:48
 #: .\clients\templates\clients\logs\email_logs.html:86
 msgid "Отправитель"
 msgstr "Sender"
 
-#: .\clients\models\email.py:71 .\clients\models\email.py:72
+#: .\clients\models\email.py:70 .\clients\models\email.py:71
 msgid "Журнал email"
 msgstr "Email log"
 
@@ -1529,73 +1532,79 @@ msgstr "Family group"
 msgid "Семейные группы"
 msgstr "Family groups"
 
-#: .\clients\models\onboarding.py:72
+#: .\clients\models\onboarding.py:74
 msgid "Not provided"
 msgstr "Not provided"
 
-#: .\clients\models\onboarding.py:73
+#: .\clients\models\onboarding.py:75
+#: .\clients\templates\clients\onboarding\start_contact.html:205
+#: .\clients\templates\clients\onboarding\start_contact.html:232
 msgid "Tak / Да"
 msgstr "Yes"
 
-#: .\clients\models\onboarding.py:74
+#: .\clients\models\onboarding.py:76
+#: .\clients\templates\clients\onboarding\start_contact.html:207
+#: .\clients\templates\clients\onboarding\start_contact.html:236
 msgid "Nie / Нет"
 msgstr "No"
 
-#: .\clients\models\onboarding.py:75
+#: .\clients\models\onboarding.py:77
+#: .\clients\templates\clients\onboarding\start_contact.html:209
+#: .\clients\templates\clients\onboarding\start_contact.html:240
 msgid "Nie wiem / Не знаю"
 msgstr "I don't know"
 
-#: .\clients\models\onboarding.py:83
+#: .\clients\models\onboarding.py:85
 msgid "Draft"
 msgstr "Draft"
 
-#: .\clients\models\onboarding.py:84
+#: .\clients\models\onboarding.py:86
 msgid "Client filling"
 msgstr "Client filling"
 
-#: .\clients\models\onboarding.py:85
+#: .\clients\models\onboarding.py:87
 #: .\clients\templates\clients\clients_list.html:45
-#: .\legalize_site\context_processors.py:78
+#: .\legalize_site\context_processors.py:79
 msgid "Client completed"
 msgstr "Client completed"
 
-#: .\clients\models\onboarding.py:86
+#: .\clients\models\onboarding.py:88
 #: .\clients\templates\clients\clients_list.html:47
-#: .\legalize_site\context_processors.py:86
+#: .\legalize_site\context_processors.py:87
 msgid "Staff review"
 msgstr "Staff review"
 
-#: .\clients\models\onboarding.py:87
+#: .\clients\models\onboarding.py:89
 msgid "Needs correction"
 msgstr "Needs correction"
 
-#: .\clients\models\onboarding.py:88
+#: .\clients\models\onboarding.py:90
 msgid "Approved by staff"
 msgstr "Approved by staff"
 
-#: .\clients\models\onboarding.py:89
+#: .\clients\models\onboarding.py:91
 msgid "MOS package ready"
 msgstr "MOS package ready"
 
-#: .\clients\models\onboarding.py:90
+#: .\clients\models\onboarding.py:92
 #: .\clients\templates\clients\clients_list.html:51
-#: .\legalize_site\context_processors.py:94
+#: .\legalize_site\context_processors.py:95
 msgid "Submitted in MOS"
 msgstr "Submitted in MOS"
 
-#: .\clients\models\onboarding.py:91
+#: .\clients\models\onboarding.py:93
 msgid "Fingerprints"
 msgstr "Fingerprints"
 
-#: .\clients\models\onboarding.py:92
+#: .\clients\models\onboarding.py:94
 msgid "Waiting decision"
 msgstr "Waiting decision"
 
-#: .\clients\models\onboarding.py:93
+#: .\clients\models\onboarding.py:95
 msgid "Decision received"
 msgstr "Decision received"
 
-#: .\clients\models\onboarding.py:94
+#: .\clients\models\onboarding.py:96
 msgid "Closed"
 msgstr "Closed"
 
@@ -1681,82 +1690,82 @@ msgstr "Transaction ID (if any)"
 msgid "Платежи"
 msgstr "Payments"
 
-#: .\clients\models\pricing.py:12
+#: .\clients\models\pricing.py:14
 msgid "Код услуги"
 msgstr "Service description"
 
-#: .\clients\models\pricing.py:18
+#: .\clients\models\pricing.py:20
 msgid "Цена (PLN)"
 msgstr "Price (PLN)"
 
-#: .\clients\models\pricing.py:22
+#: .\clients\models\pricing.py:24
 msgid "Цена на услугу"
 msgstr "Service description"
 
-#: .\clients\models\pricing.py:23
+#: .\clients\models\pricing.py:25
 msgid "Цены на услуги"
 msgstr "Service description"
 
-#: .\clients\models\reminder.py:8
+#: .\clients\models\reminder.py:10
 msgid "Оплата"
 msgstr "Payment"
 
-#: .\clients\models\reminder.py:10
+#: .\clients\models\reminder.py:12
 #: .\clients\templates\clients\partials\onboarding_panel.html:38
 msgid "Легальное пребывание"
 msgstr "Reason for stay"
 
-#: .\clients\models\reminder.py:11
+#: .\clients\models\reminder.py:13
 msgid "Другое"
 msgstr "Other"
 
-#: .\clients\models\reminder.py:25
+#: .\clients\models\reminder.py:27
 msgid "Тип напоминания"
 msgstr "Reminder type"
 
-#: .\clients\models\reminder.py:26
+#: .\clients\models\reminder.py:28
 msgid "Заголовок напоминания"
 msgstr "Reminder title"
 
-#: .\clients\models\reminder.py:28
+#: .\clients\models\reminder.py:30
 msgid "Ключевая дата"
 msgstr "Key date"
 
-#: .\clients\models\reminder.py:29
+#: .\clients\models\reminder.py:31
 msgid "Активно"
 msgstr "Active"
 
-#: .\clients\models\reminder.py:35
+#: .\clients\models\reminder.py:37
 #, python-format
 msgid "Нужно предоставить документ: %(name)s"
 msgstr "Document required: %(name)s"
 
-#: .\clients\models\reminder.py:39
+#: .\clients\models\reminder.py:41
 #, python-format
 msgid "Истекает срок действия документа: %(name)s"
 msgstr "Document expires: %(name)s"
 
-#: .\clients\models\reminder.py:43
+#: .\clients\models\reminder.py:45
 #, python-format
 msgid "Просрочен платеж: %(service)s"
 msgstr "Payment overdue: %(service)s"
 
-#: .\clients\models\reminder.py:48
+#: .\clients\models\reminder.py:50
 #, python-format
 msgid "Истекает легальное пребывание: %(date)s"
 msgstr "Legal stay expires: %(date)s"
 
-#: .\clients\models\reminder.py:59
+#: .\clients\models\reminder.py:61
 #, python-format
 msgid "Документ для клиента %(client)s истекает %(date)s."
 msgstr "Document for client %(client)s expires on %(date)s."
 
-#: .\clients\models\reminder.py:66
+#: .\clients\models\reminder.py:68
 #, python-format
 msgid "Сумма к оплате: %(total)s; долг: %(due)s; клиент: %(client)s."
 msgstr "Total payment: %(total)s; amount due: %(due)s; client: %(client)s."
 
-#: .\clients\models\reminder.py:77
+#: .\clients\models\reminder.py:79
 #, python-format
 msgid ""
 "По срокам: %(stay_until)s. Сдвиг дедлайна с учетом выходных: %(due_date)s."
@@ -1764,85 +1773,85 @@ msgstr ""
 "Original deadline: %(stay_until)s. Adjusted deadline (considering weekends):"
 " %(due_date)s."
 
-#: .\clients\models\task.py:12
+#: .\clients\models\task.py:11
 msgid "Открыта"
 msgstr "Open"
 
-#: .\clients\models\task.py:13 .\submissions\models.py:17
+#: .\clients\models\task.py:12 .\submissions\models.py:17
 msgid "В работе"
 msgstr "Work"
 
-#: .\clients\models\task.py:14 .\clients\models\task.py:77
+#: .\clients\models\task.py:13 .\clients\models\task.py:76
 msgid "Завершена"
 msgstr "Completed"
 
-#: .\clients\models\task.py:15
+#: .\clients\models\task.py:14
 msgid "Отменена"
 msgstr "Canceled"
 
-#: .\clients\models\task.py:18
+#: .\clients\models\task.py:17
 msgid "Низкий"
 msgstr "Short"
 
-#: .\clients\models\task.py:19
+#: .\clients\models\task.py:18
 #: .\clients\templates\clients\onboarding\set_password.html:233
 msgid "Средний"
 msgstr "Average"
 
-#: .\clients\models\task.py:20
+#: .\clients\models\task.py:19
 msgid "Высокий"
 msgstr "High"
 
-#: .\clients\models\task.py:21
+#: .\clients\models\task.py:20
 msgid "Срочный"
 msgstr "Urgent"
 
-#: .\clients\models\task.py:31
+#: .\clients\models\task.py:30
 #: .\clients\templates\clients\partials\client_tasks.html:20
 msgid "Описание"
 msgstr "Description"
 
-#: .\clients\models\task.py:32
+#: .\clients\models\task.py:31
 #: .\clients\templates\clients\partials\client_tasks.html:33
 #: .\clients\templates\clients\partials\client_tasks.html:57
 #: .\clients\templates\clients\tasks_list.html:37
 msgid "Срок"
 msgstr "Term"
 
-#: .\clients\models\task.py:37
+#: .\clients\models\task.py:36
 #: .\clients\templates\clients\partials\client_tasks.html:25
 #: .\clients\templates\clients\tasks_list.html:36
 msgid "Приоритет"
 msgstr "Priority"
 
-#: .\clients\models\task.py:51
+#: .\clients\models\task.py:50
 #: .\clients\templates\clients\partials\client_tasks.html:29
 #: .\clients\templates\clients\partials\client_tasks.html:56
 #: .\clients\templates\clients\tasks_list.html:35
 msgid "Ответственный"
 msgstr "Responsible"
 
-#: .\clients\models\task.py:59
+#: .\clients\models\task.py:58
 msgid "Создал"
 msgstr "Created"
 
-#: .\clients\models\task.py:78
+#: .\clients\models\task.py:77
 msgid "Создана"
 msgstr "Created"
 
-#: .\clients\models\task.py:79
+#: .\clients\models\task.py:78
 msgid "Обновлена"
 msgstr "Updated"
 
-#: .\clients\models\task.py:83
+#: .\clients\models\task.py:82
 msgid "Задача сотрудника"
 msgstr "Employee task"
 
-#: .\clients\models\task.py:84
+#: .\clients\models\task.py:83
 msgid "Задачи сотрудников"
 msgstr "Employee tasks"
 
-#: .\clients\models\task.py:101
+#: .\clients\models\task.py:100
 msgid "Не назначен"
 msgstr "Not assigned"
 
@@ -1851,7 +1860,7 @@ msgid "Mazowiecki application"
 msgstr "Mazowiecki application"
 
 #: .\clients\models\wniosek.py:16
-#: .\clients\templates\clients\test_center.html:345
+#: .\clients\templates\clients\test_center.html:520
 msgid "Client"
 msgstr "Client"
 
@@ -1903,7 +1912,7 @@ msgstr "Wniosek attachment"
 msgid "Wniosek attachments"
 msgstr "Wniosek attachments"
 
-#: .\clients\services\document_versions.py:109
+#: .\clients\services\document_versions.py:108
 #, python-format
 msgid "Automatic archive before restoring version %(num)s"
 msgstr "Automatic archive before restoring version %(num)s"
@@ -2505,34 +2514,65 @@ msgstr "not specified"
 msgid "не указан"
 msgstr "not specified"
 
-#: .\clients\services\onboarding_purposes.py:17
+#: .\clients\services\onboarding_purposes.py:14
 #: .\clients\templates\clients\clients_list.html:329
 #: .\clients\templates\clients\partials\onboarding_panel.html:92
 msgid "Воссоединение с супругом"
 msgstr "Reunification with spouse"
 
-#: .\clients\services\onboarding_purposes.py:18
+#: .\clients\services\onboarding_purposes.py:15
 #: .\clients\templates\clients\clients_list.html:330
 #: .\clients\templates\clients\partials\onboarding_panel.html:93
 msgid "Воссоединение с ребёнком"
 msgstr "Reunification with child"
 
-#: .\clients\services\onboarding_purposes.py:35
+#: .\clients\services\onboarding_purposes.py:32
 msgid "не выбрана"
 msgstr "not selected"
 
-#: .\clients\services\permissions.py:72 .\clients\services\responses.py:64
+#: .\clients\services\permissions.py:72 .\clients\services\responses.py:63
 #: .\clients\views\base.py:34 .\clients\views\base.py:84
-#: .\clients\views\client_crud.py:364 .\templates\403.html:4
+#: .\clients\views\client_crud.py:370 .\templates\403.html:4
 msgid "Доступ запрещен"
 msgstr "Access denied"
 
-#: .\clients\signals.py:57
+#: .\clients\services\workflow.py:47
+msgid ""
+"Сначала сохраните клиента, затем загрузите обязательные документы и "
+"переведите его к этапу подачи."
+msgstr ""
+"Save the client first, then upload the required documents and move them to "
+"the submission stage."
+
+#: .\clients\services\workflow.py:67
+msgid "Нельзя перейти к подаче, пока не собраны обязательные документы."
+msgstr ""
+"Cannot proceed to submission stage until all required documents are "
+"collected."
+
+#: .\clients\services\workflow.py:73
+msgid "Нельзя перейти к этапу отпечатков без даты подачи."
+msgstr "Cannot proceed to fingerprint stage without a submission date."
+
+#: .\clients\services\workflow.py:79
+msgid "Нельзя перейти к ожиданию решения без даты отпечатков."
+msgstr ""
+"Cannot proceed to waiting for decision stage without a fingerprint date."
+
+#: .\clients\services\workflow.py:85
+msgid "Нельзя перейти к решению без даты решения."
+msgstr "Cannot proceed to decision stage without a decision date."
+
+#: .\clients\services\workflow.py:93
+msgid "Cannot close a case while pending or partial payments exist."
+msgstr "Cannot close a case while pending or partial payments exist."
+
+#: .\clients\signals.py:58
 #, python-format
 msgid "Просроченная оплата: %(service)s"
 msgstr "Overdue payment: %(service)s"
 
-#: .\clients\signals.py:60
+#: .\clients\signals.py:61
 #, python-format
 msgid "Осталось оплатить: %(amount)s zł. Счёт №%(number)s"
 msgstr "Remaining payment: %(amount)s zł. Account No.%(number)s"
@@ -2614,156 +2654,161 @@ msgstr "Cancel"
 msgid "Admin Dashboard - System Health"
 msgstr "Admin Dashboard — System Health"
 
-#: .\clients\templates\clients\admin_dashboard.html:11
+#: .\clients\templates\clients\admin_dashboard.html:12
 msgid "Admin Dashboard"
 msgstr "Admin Dashboard"
 
-#: .\clients\templates\clients\admin_dashboard.html:13
+#: .\clients\templates\clients\admin_dashboard.html:16
+msgid "Демо-центр (Demo Center)"
+msgstr "Demo Center"
+
+#: .\clients\templates\clients\admin_dashboard.html:19
+msgid "Тест-центр (Test Center)"
+msgstr "Test Center"
+
+#: .\clients\templates\clients\admin_dashboard.html:22
+msgid "Панель управления (Admin Panel)"
+msgstr "Admin Panel"
+
+#: .\clients\templates\clients\admin_dashboard.html:28
 #: .\clients\templates\clients\client_export_pdf.html:13
 msgid "Generated:"
 msgstr "Generated:"
 
-#: .\clients\templates\clients\admin_dashboard.html:21
+#: .\clients\templates\clients\admin_dashboard.html:36
 msgid "Email Backend"
 msgstr "Email Backend"
 
-#: .\clients\templates\clients\admin_dashboard.html:31
+#: .\clients\templates\clients\admin_dashboard.html:46
 msgid "OCR Engine"
 msgstr "OCR Engine"
 
-#: .\clients\templates\clients\admin_dashboard.html:41
+#: .\clients\templates\clients\admin_dashboard.html:56
 msgid "Storage Usage"
 msgstr "Storage Usage"
 
-#: .\clients\templates\clients\admin_dashboard.html:43
+#: .\clients\templates\clients\admin_dashboard.html:58
 msgid "files"
 msgstr "files"
 
-#: .\clients\templates\clients\admin_dashboard.html:50
+#: .\clients\templates\clients\admin_dashboard.html:65
 msgid "Runtime Dependencies"
 msgstr "Runtime Dependencies"
 
-#: .\clients\templates\clients\admin_dashboard.html:53
-#: .\clients\tests\test_misc_legacy.py:80
+#: .\clients\templates\clients\admin_dashboard.html:68
+#: .\clients\tests\test_misc_legacy.py:85
 msgid "missing"
 msgstr "missing"
 
-#: .\clients\templates\clients\admin_dashboard.html:55
+#: .\clients\templates\clients\admin_dashboard.html:70
 msgid "All available"
 msgstr "All available"
 
-#: .\clients\templates\clients\admin_dashboard.html:67
+#: .\clients\templates\clients\admin_dashboard.html:82
 msgid "Operational Queues"
 msgstr "Operational Queues"
 
-#: .\clients\templates\clients\admin_dashboard.html:73
+#: .\clients\templates\clients\admin_dashboard.html:88
 msgid "Pending OCR"
 msgstr "Pending OCR"
 
-#: .\clients\templates\clients\admin_dashboard.html:77
+#: .\clients\templates\clients\admin_dashboard.html:92
 msgid "Running OCR"
 msgstr "Running OCR"
 
-#: .\clients\templates\clients\admin_dashboard.html:81
+#: .\clients\templates\clients\admin_dashboard.html:96
 msgid "Failed OCR"
 msgstr "Failed"
 
-#: .\clients\templates\clients\admin_dashboard.html:85
+#: .\clients\templates\clients\admin_dashboard.html:100
 msgid "Queued Emails"
 msgstr "Queued Emails"
 
-#: .\clients\templates\clients\admin_dashboard.html:89
+#: .\clients\templates\clients\admin_dashboard.html:104
 msgid "Running Emails"
 msgstr "Running Emails"
 
-#: .\clients\templates\clients\admin_dashboard.html:93
+#: .\clients\templates\clients\admin_dashboard.html:108
 msgid "Failed Emails"
 msgstr "Failed"
 
-#: .\clients\templates\clients\admin_dashboard.html:102
-#: .\clients\templates\clients\admin_panel.html:57
+#: .\clients\templates\clients\admin_dashboard.html:117
 msgid "OCR awaiting review"
 msgstr "OCR awaiting review"
 
-#: .\clients\templates\clients\admin_dashboard.html:104
-#: .\clients\templates\clients\admin_panel.html:60
+#: .\clients\templates\clients\admin_dashboard.html:119
 msgid "No documents awaiting OCR"
 msgstr "No documents awaiting OCR"
 
-#: .\clients\templates\clients\admin_dashboard.html:109
-#: .\clients\templates\clients\admin_panel.html:68
+#: .\clients\templates\clients\admin_dashboard.html:124
 msgid "Documents awaiting verification"
 msgstr "Documents awaiting verification"
 
-#: .\clients\templates\clients\admin_dashboard.html:113
+#: .\clients\templates\clients\admin_dashboard.html:128
 msgid "Overdue Tasks"
 msgstr "Overdue Tasks"
 
-#: .\clients\templates\clients\admin_dashboard.html:117
+#: .\clients\templates\clients\admin_dashboard.html:132
 msgid "OCR Mismatches"
 msgstr "OCR Mismatches"
 
-#: .\clients\templates\clients\admin_dashboard.html:121
-#: .\clients\templates\clients\admin_panel.html:84
+#: .\clients\templates\clients\admin_dashboard.html:136
 msgid "Expired documents"
 msgstr "Expired documents"
 
-#: .\clients\templates\clients\admin_dashboard.html:123
-#: .\clients\templates\clients\admin_panel.html:87
+#: .\clients\templates\clients\admin_dashboard.html:138
 msgid "No expired documents"
 msgstr "No expired documents"
 
-#: .\clients\templates\clients\admin_dashboard.html:128
-#: .\clients\templates\clients\admin_panel.html:119
+#: .\clients\templates\clients\admin_dashboard.html:143
 msgid "Active reminders"
 msgstr "Active reminders"
 
-#: .\clients\templates\clients\admin_dashboard.html:130
-#: .\clients\templates\clients\admin_panel.html:122
+#: .\clients\templates\clients\admin_dashboard.html:145
 msgid "No active reminders"
 msgstr "No active reminders"
 
-#: .\clients\templates\clients\admin_dashboard.html:141
+#: .\clients\templates\clients\admin_dashboard.html:156
 msgid "Runtime Checks"
 msgstr "Runtime Checks"
 
-#: .\clients\templates\clients\admin_dashboard.html:148
+#: .\clients\templates\clients\admin_dashboard.html:163
 msgid "Dependency"
 msgstr "Dependency"
 
-#: .\clients\templates\clients\admin_dashboard.html:149
+#: .\clients\templates\clients\admin_dashboard.html:164
 msgid "Type"
 msgstr "Type"
 
-#: .\clients\templates\clients\admin_dashboard.html:150
+#: .\clients\templates\clients\admin_dashboard.html:165
 msgid "Required For"
 msgstr "Required For"
 
-#: .\clients\templates\clients\admin_dashboard.html:162
+#: .\clients\templates\clients\admin_dashboard.html:177
 msgid "Available"
 msgstr "Available"
 
-#: .\clients\templates\clients\admin_dashboard.html:164
+#: .\clients\templates\clients\admin_dashboard.html:179
 msgid "Missing"
 msgstr "Missing Keys"
 
-#: .\clients\templates\clients\admin_dashboard.html:179
+#: .\clients\templates\clients\admin_dashboard.html:194
 msgid "Recent Email Campaigns"
 msgstr "No recent campaigns."
 
-#: .\clients\templates\clients\admin_dashboard.html:192
+#: .\clients\templates\clients\admin_dashboard.html:207
 msgid "Done"
 msgstr "Done"
 
-#: .\clients\templates\clients\admin_dashboard.html:196
+#: .\clients\templates\clients\admin_dashboard.html:211
 msgid "Running"
 msgstr "Running"
 
-#: .\clients\templates\clients\admin_dashboard.html:198
+#: .\clients\templates\clients\admin_dashboard.html:213
 msgid "Queued"
 msgstr "Queued"
 
-#: .\clients\templates\clients\admin_dashboard.html:207
+#: .\clients\templates\clients\admin_dashboard.html:222
 msgid "No recent campaigns."
 msgstr "No recent campaigns."
 
@@ -2780,16 +2825,120 @@ msgid "Админ панель"
 msgstr "Admin panel"
 
 #: .\clients\templates\clients\admin_panel.html:7
-msgid "Управление рабочими настройками базы без Django admin."
-msgstr "Manage database settings without Django admin."
+msgid "Рабочий центр для настроек, контроля рисков, демо и тестов."
+msgstr "Working center for settings, risk control, demo and tests."
 
-#: .\clients\templates\clients\admin_panel.html:14 .\templates\base.html:74
+#: .\clients\templates\clients\admin_panel.html:242
+msgid "Рабочая сводка"
+msgstr "Total amount"
+
+#: .\clients\templates\clients\admin_panel.html:243
+msgid "Самые важные настройки, проверки и демо-сценарии в одном месте."
+msgstr "Track clients, deadlines, and payments from a single interface."
+
+#: .\clients\templates\clients\admin_panel.html:248
+#: .\clients\templates\clients\admin_panel.html:268 .\templates\base.html:74
 #: .\templates\base.html:291
 msgid "Клиенты"
 msgstr "Clients"
 
-#: .\clients\templates\clients\admin_panel.html:22
-#: .\clients\templates\clients\admin_panel.html:158
+#: .\clients\templates\clients\admin_panel.html:251
+msgid "Здоровье"
+msgstr "System health"
+
+#: .\clients\templates\clients\admin_panel.html:255
+#: .\clients\templates\clients\admin_panel.html:404
+#: .\clients\templates\clients\test_center.html:4
+#: .\clients\templates\clients\test_center.html:5
+msgid "Test Center"
+msgstr "Test Center"
+
+#: .\clients\templates\clients\admin_panel.html:260
+#: .\clients\templates\clients\admin_panel.html:414
+#: .\clients\templates\clients\demo_center.html:4
+#: .\clients\templates\clients\demo_center.html:5
+msgid "Demo Center"
+msgstr "Demo Center"
+
+#: .\clients\templates\clients\admin_panel.html:272
+msgid "Активные дела"
+msgstr "Case Details"
+
+#: .\clients\templates\clients\admin_panel.html:276
+#: .\clients\templates\clients\partials\client_overview.html:158
+msgid "Открытые задачи"
+msgstr "Open tasks"
+
+#: .\clients\templates\clients\admin_panel.html:280
+msgid "Ожидают оплаты"
+msgstr "Awaiting payment"
+
+#: .\clients\templates\clients\admin_panel.html:284
+msgid "Документы на проверке"
+msgstr "Document uploaded"
+
+#: .\clients\templates\clients\admin_panel.html:288
+msgid "Активные напоминания"
+msgstr "Live reminders"
+
+#: .\clients\templates\clients\admin_panel.html:296
+msgid "Что требует внимания"
+msgstr "Customer Events"
+
+#: .\clients\templates\clients\admin_panel.html:301
+#: .\clients\templates\clients\document_reminder_list.html:94
+#: .\clients\templates\clients\document_reminder_list.html:257
+#: .\clients\templates\clients\partials\modals.html:282
+msgid "Недостающие документы"
+msgstr "Missing documents"
+
+#: .\clients\templates\clients\admin_panel.html:302
+msgid "По активным делам"
+msgstr "No activity logs found."
+
+#: .\clients\templates\clients\admin_panel.html:308
+msgid "OCR ждёт проверки"
+msgstr "Pending verification"
+
+#: .\clients\templates\clients\admin_panel.html:309
+msgid "Требуется сотрудник"
+msgstr "All staff"
+
+#: .\clients\templates\clients\admin_panel.html:316
+msgid "Нужно обновить"
+msgstr "Needs to be uploaded"
+
+#: .\clients\templates\clients\admin_panel.html:322
+msgid "Отпечатки 30 дней"
+msgstr "Fingerprints"
+
+#: .\clients\templates\clients\admin_panel.html:323
+msgid "Ближайшие визиты"
+msgstr "Upcoming visits"
+
+#: .\clients\templates\clients\admin_panel.html:334
+msgid "Настройки работы офиса"
+msgstr "Template settings"
+
+#: .\clients\templates\clients\admin_panel.html:340
+#: .\clients\templates\clients\client_detail.html:74
+msgid "Шаблоны"
+msgstr "Templates"
+
+#: .\clients\templates\clients\admin_panel.html:341
+msgid "Данные офиса и печатные документы для wniosek и внутренних бланков."
+msgstr "Office data and printed documents for wniosek and internal forms."
+
+#: .\clients\templates\clients\admin_panel.html:348 .\templates\base.html:117
+msgid "Чеклисты"
+msgstr "Checklists"
+
+#: .\clients\templates\clients\admin_panel.html:349
+msgid "Требования по документам для разных оснований подачи."
+msgstr "Create submission purpose"
+
+#: .\clients\templates\clients\admin_panel.html:356
+#: .\clients\templates\clients\demo_center.html:350
 #: .\clients\templates\clients\submission_manage.html:4
 #: .\clients\templates\clients\submission_manage.html:5
 #: .\submissions\models.py:34
@@ -2798,177 +2947,111 @@ msgstr "Clients"
 msgid "Основания подачи"
 msgstr "Submission types"
 
-#: .\clients\templates\clients\admin_panel.html:30
-#: .\clients\templates\clients\partials\client_overview.html:158
-msgid "Открытые задачи"
-msgstr "Open tasks"
+#: .\clients\templates\clients\admin_panel.html:357
+msgid "Список типов дел и их названия на языках системы."
+msgstr "List of case types and their names in system languages."
 
-#: .\clients\templates\clients\admin_panel.html:38
-msgid "Ожидают оплаты"
-msgstr "Awaiting payment"
-
-#: .\clients\templates\clients\admin_panel.html:49
-msgid "Active cases"
-msgstr "Active cases"
-
-#: .\clients\templates\clients\admin_panel.html:76
-msgid "Missing documents"
-msgstr "Missing documents"
-
-#: .\clients\templates\clients\admin_panel.html:95
-msgid "Upcoming fingerprints"
-msgstr "Upcoming fingerprints"
-
-#: .\clients\templates\clients\admin_panel.html:103
-msgid "Waiting after fingerprints"
-msgstr "Waiting after fingerprints"
-
-#: .\clients\templates\clients\admin_panel.html:111
-msgid "Decisions"
-msgstr "Decisions"
-
-#: .\clients\templates\clients\admin_panel.html:134
-#: .\clients\templates\clients\client_detail.html:74
-msgid "Шаблоны"
-msgstr "Templates"
-
-#: .\clients\templates\clients\admin_panel.html:135
-msgid ""
-"Настройка контактных данных офиса, юриста (полномочника) и общих данных, "
-"которые автоматически подставляются в бланки заявлений (Wniosek Mazowiecki) "
-"и другие печатные документы."
-msgstr ""
-"These fields will be automatically inserted for all clients in this "
-"database."
-
-#: .\clients\templates\clients\admin_panel.html:146 .\templates\base.html:117
-msgid "Чеклисты"
-msgstr "Checklists"
-
-#: .\clients\templates\clients\admin_panel.html:147
-msgid ""
-"Настройка списка документов, которые клиент должен загрузить для каждого "
-"типа подачи (учёба, работа и др.). Здесь можно менять порядок "
-"перетаскиванием и добавлять новые требования."
-msgstr ""
-"Setting up a list of documents that the client must upload for each type of "
-"submission (study, work, etc.). Here you can change the order by dragging "
-"and dropping and adding new requirements."
-
-#: .\clients\templates\clients\admin_panel.html:159
-msgid ""
-"Управление типами подачи заявлений (учёба, работа, воссоединение) в системе."
-" Позволяет добавлять новые основания и задавать их названия на разных "
-"языках."
-msgstr ""
-"Management of application types (study, work, reunion) in the system. Allows"
-" you to add new bases and set their names in different languages."
-
-#: .\clients\templates\clients\admin_panel.html:170
+#: .\clients\templates\clients\admin_panel.html:364
 #: .\clients\templates\clients\service_price_manage.html:4
 #: .\clients\templates\clients\service_price_manage.html:5
 msgid "Цены и услуги"
 msgstr "Prices and services"
 
-#: .\clients\templates\clients\admin_panel.html:171
-msgid ""
-"Просмотр и редактирование стоимости услуг компании для выставления счетов "
-"клиентам (например, пошлины, переводы, сопровождение)."
-msgstr ""
-"View and edit the cost of company services for invoicing clients (for "
-"example, duties, transfers, support)."
+#: .\clients\templates\clients\admin_panel.html:365
+msgid "Прайс для счетов клиентам."
+msgstr "Mass Email to Clients"
 
-#: .\clients\templates\clients\admin_panel.html:172
-msgid "Записей:"
+#: .\clients\templates\clients\admin_panel.html:365
+msgid "записей"
 msgstr "Records:"
 
-#: .\clients\templates\clients\admin_panel.html:172
-msgid "Сумма прайса:"
-msgstr "Total price:"
+#: .\clients\templates\clients\admin_panel.html:373
+msgid "Сотрудники и роли"
+msgstr "Staff"
 
-#: .\clients\templates\clients\admin_panel.html:183
+#: .\clients\templates\clients\admin_panel.html:374
+msgid "Команда, роли и права доступа."
+msgstr "Access confirmation"
+
+#: .\clients\templates\clients\admin_panel.html:376
 #: .\clients\templates\clients\staff_manage.html:4
 #: .\clients\templates\clients\staff_manage.html:5
-#: .\clients\tests\test_view_edge_cases.py:401
+#: .\clients\tests\test_view_edge_cases.py:411
 msgid "Сотрудники"
 msgstr "Staff"
 
-#: .\clients\templates\clients\admin_panel.html:184
-msgid ""
-"Управление учетными записями сотрудников компании, назначение им ролей "
-"(Администратор, Менеджер, Переводчик) и разграничение прав доступа."
-msgstr ""
-"Managing company employee accounts, assigning roles to them (Administrator, "
-"Manager, Translator) and delineating access rights."
-
-#: .\clients\templates\clients\admin_panel.html:186
+#: .\clients\templates\clients\admin_panel.html:377
 #: .\clients\templates\clients\staff_manage.html:68
 msgid "Роли"
 msgstr "Roles"
 
-#: .\clients\templates\clients\admin_panel.html:196
-msgid ""
-"Мониторинг работоспособности сервера, проверка подключения к базе данных, "
-"фоновых задач и технического состояния системы."
-msgstr ""
-"Monitoring the performance of the server, checking the connection to the "
-"database, background tasks and the technical condition of the system."
+#: .\clients\templates\clients\admin_panel.html:389
+msgid "Проверка, демо и контроль"
+msgstr "Confirm deletion"
 
-#: .\clients\templates\clients\admin_panel.html:197 .\templates\base.html:224
+#: .\clients\templates\clients\admin_panel.html:395 .\templates\base.html:224
 msgid "Здоровье системы"
 msgstr "System health"
 
-#: .\clients\templates\clients\admin_panel.html:199
-#: .\clients\templates\clients\test_center.html:4
-#: .\clients\templates\clients\test_center.html:5
-msgid "Test Center"
-msgstr "Test Center"
+#: .\clients\templates\clients\admin_panel.html:396
+msgid "База, фоновые задачи, OCR и технические проверки."
+msgstr "Current stage, open tasks and automatic checks on the case."
 
-#: .\clients\templates\clients\admin_panel.html:202
-#: .\clients\templates\clients\demo_center.html:4
-#: .\clients\templates\clients\demo_center.html:5
-msgid "Demo Center"
-msgstr "Demo Center"
+#: .\clients\templates\clients\admin_panel.html:405
+msgid "Smoke, OCR, ZUS, documents, permissions, security и workflow проверки."
+msgstr ""
+"Smoke, OCR, ZUS, documents, permissions, security and workflow checks."
 
-#: .\clients\templates\clients\admin_panel.html:211
-#: .\clients\templates\clients\admin_panel.html:213 .\templates\base.html:193
+#: .\clients\templates\clients\admin_panel.html:406
+msgid "Запустить тесты"
+msgstr "Request a new link"
+
+#: .\clients\templates\clients\admin_panel.html:415
+msgid ""
+"Пять безопасных демо-кейсов для презентации офиса и клиентского портала."
+msgstr "Five safe demo cases for office presentation and client portal."
+
+#: .\clients\templates\clients\admin_panel.html:416
+msgid "Открыть демо"
+msgstr "Open file"
+
+#: .\clients\templates\clients\admin_panel.html:426
+msgid "Аналитика и журналы"
+msgstr "Analytics and logs"
+
+#: .\clients\templates\clients\admin_panel.html:432 .\templates\base.html:193
 #: .\templates\base.html:320
 msgid "Метрики"
 msgstr "Metrics"
 
-#: .\clients\templates\clients\admin_panel.html:212
-msgid ""
-"Анализ эффективности работы компании: воронка онбординга клиентов, "
-"статистика оплат, количество закрытых и активных дел."
-msgstr ""
-"Analysis of the company’s performance: customer onboarding funnel, payment "
-"statistics, number of closed and active cases."
+#: .\clients\templates\clients\admin_panel.html:433
+msgid "Воронка, оплаты, активные дела и эффективность процесса."
+msgstr "Funnel, payments, active cases and process efficiency."
 
-#: .\clients\templates\clients\admin_panel.html:220
-msgid "Журналы системы"
-msgstr "System Logs"
+#: .\clients\templates\clients\admin_panel.html:440
+msgid "Журналы"
+msgstr "Email log"
 
-#: .\clients\templates\clients\admin_panel.html:221
-msgid ""
-"История отправки писем клиентам и подробный лог действий сотрудников в "
-"системе (аудит безопасности и действий с клиентами)."
-msgstr ""
-"The history of sending letters to clients and a detailed log of employee "
-"actions in the system (audit of security and actions with clients)."
+#: .\clients\templates\clients\admin_panel.html:441
+msgid "Email history и действия сотрудников по клиентам."
+msgstr "Email history and staff actions on clients."
 
-#: .\clients\templates\clients\admin_panel.html:222
-#: .\clients\templates\clients\logs\staff_activity_logs.html:9
-#: .\clients\templates\clients\logs\staff_activity_logs.html:10
-#: .\templates\base.html:210
-msgid "Логи сотрудников"
-msgstr "Staff Logs"
+#: .\clients\templates\clients\admin_panel.html:443
+#: .\clients\templates\clients\clients_list.html:134
+#: .\clients\templates\clients\clients_list.html:240
+#: .\clients\templates\clients\document_checklist_manage.html:85
+#: .\clients\templates\clients\fingerprints_schedule.html:39
+#: .\clients\templates\clients\mos_review.html:279
+#: .\clients\templates\clients\staff_manage.html:70
+#: .\clients\templates\clients\submission_manage.html:61
+#: .\submissions\templates\submissions\submission_detail.html:32
+#: .\submissions\templates\submissions\submission_list.html:22
+msgid "Действия"
+msgstr "Actions"
 
-#: .\clients\templates\clients\admin_panel.html:223
-#: .\clients\templates\clients\logs\email_logs.html:9
-#: .\clients\templates\clients\logs\email_logs.html:10
-#: .\templates\base.html:205
-msgid "Логи писем"
-msgstr "Email Logs"
+#: .\clients\templates\clients\admin_panel.html:444
+msgid "Письма"
+msgstr "Email"
 
 #: .\clients\templates\clients\app_settings_form.html:4
 #: .\clients\templates\clients\app_settings_form.html:5
@@ -3086,7 +3169,7 @@ msgstr "When does the basis of stay end?"
 
 #: .\clients\templates\clients\calculator.html:30
 #: .\clients\templates\clients\partials\client_overview.html:169
-#: .\clients\views\admin_mos_review.py:87
+#: .\clients\views\admin_mos_review.py:86
 msgid "Основание пребывания"
 msgstr "Reason for stay"
 
@@ -3231,7 +3314,7 @@ msgid "Создание новой карточки клиента"
 msgstr "Create new client card"
 
 #: .\clients\templates\clients\client_add.html:15
-#: .\clients\views\client_crud.py:263
+#: .\clients\views\client_crud.py:269
 msgid "Добавить нового клиента"
 msgstr "Add new client"
 
@@ -3342,10 +3425,8 @@ msgstr "Checklists Settings"
 #: .\clients\templates\clients\client_detail.html:78
 #: .\clients\templates\clients\client_export_pdf.html:38
 #: .\clients\templates\clients\onboarding\passport.html:85
-#: .\clients\templates\clients\test_center.html:29
-#: .\clients\templates\clients\test_center.html:102
-#: .\clients\templates\clients\test_center.html:394
-#: .\clients\views\admin_mos_review.py:82 .\users\forms.py:22
+#: .\clients\templates\clients\test_center.html:375
+#: .\clients\views\admin_mos_review.py:81 .\users\forms.py:22
 #: .\users\forms.py:26
 msgid "Email"
 msgstr "Email"
@@ -3467,9 +3548,7 @@ msgid "Application & Stage"
 msgstr "Application & Stage"
 
 #: .\clients\templates\clients\client_export_pdf.html:53
-#: .\clients\templates\clients\test_center.html:31
-#: .\clients\templates\clients\test_center.html:104
-#: .\clients\templates\clients\test_center.html:396
+#: .\clients\templates\clients\test_center.html:377
 msgid "Documents"
 msgstr "Document Versions"
 
@@ -3694,18 +3773,6 @@ msgstr "Find"
 msgid "Основание и дата окончания"
 msgstr "Basis and end date"
 
-#: .\clients\templates\clients\clients_list.html:134
-#: .\clients\templates\clients\clients_list.html:240
-#: .\clients\templates\clients\document_checklist_manage.html:85
-#: .\clients\templates\clients\fingerprints_schedule.html:39
-#: .\clients\templates\clients\mos_review.html:279
-#: .\clients\templates\clients\staff_manage.html:70
-#: .\clients\templates\clients\submission_manage.html:61
-#: .\submissions\templates\submissions\submission_detail.html:32
-#: .\submissions\templates\submissions\submission_list.html:22
-msgid "Действия"
-msgstr "Actions"
-
 #: .\clients\templates\clients\clients_list.html:147
 msgid "Клиент завершил онбординг, нажать для проверки"
 msgstr "Questionnaire submitted to MOS, click to check"
@@ -3739,7 +3806,7 @@ msgstr ""
 "The client has changed the basis for filing. Click to confirm or check."
 
 #: .\clients\templates\clients\clients_list.html:179
-#: .\legalize_site\context_processors.py:70
+#: .\legalize_site\context_processors.py:71
 msgid "Смена основания"
 msgstr "Creation date"
 
@@ -3838,8 +3905,10 @@ msgstr "Create submission purpose"
 #: .\clients\templates\clients\clients_list.html:322
 #: .\clients\templates\clients\clients_list.html:349
 #: .\clients\templates\clients\clients_list.html:391
-#: .\clients\templates\clients\demo_center.html:339
-#: .\clients\templates\clients\demo_center.html:394
+#: .\clients\templates\clients\demo_center.html:606
+#: .\clients\templates\clients\demo_center.html:630
+#: .\clients\templates\clients\demo_center.html:643
+#: .\clients\templates\clients\demo_center.html:690
 #: .\clients\templates\clients\document_checklist_manage.html:198
 #: .\clients\templates\clients\document_checklist_manage.html:224
 #: .\clients\templates\clients\document_checklist_manage.html:253
@@ -3885,86 +3954,270 @@ msgid "Сканировать QR-код на смартфоне"
 msgstr "Edit data"
 
 #: .\clients\templates\clients\demo_center.html:6
-msgid "Премиальный режим для проведения 5-минутных демонстраций клиентам."
-msgstr "Premium mode for conducting 5-minute client demonstrations."
+msgid "Безопасная демо-среда для презентации CRM и клиентского портала."
+msgstr "Safe demo environment for CRM and client portal presentation."
 
-#: .\clients\templates\clients\demo_center.html:122
-msgid "Demo Presentation Center"
-msgstr "Demo Presentation Center"
+#: .\clients\templates\clients\demo_center.html:301
+msgid "Demo workbench"
+msgstr "Demo workbench"
 
-#: .\clients\templates\clients\demo_center.html:124
-#: .\clients\templates\clients\test_center.html:12
+#: .\clients\templates\clients\demo_center.html:302
+msgid ""
+"Подготовка, ссылки и маршрут презентации без реальных клиентских данных."
+msgstr "Preparation, links and presentation route without real client data."
+
+#: .\clients\templates\clients\demo_center.html:306
+#: .\clients\templates\clients\test_center.html:344
 msgid "Back to Admin Panel"
 msgstr "Back to Admin Panel"
 
-#: .\clients\templates\clients\demo_center.html:132
-msgid "Control Board"
-msgstr "Control Board"
+#: .\clients\templates\clients\demo_center.html:312
+msgid "Демо-клиенты"
+msgstr "All clients"
 
-#: .\clients\templates\clients\demo_center.html:142
+#: .\clients\templates\clients\demo_center.html:316
+msgid "OCR задачи"
+msgstr "All tasks"
+
+#: .\clients\templates\clients\demo_center.html:320
+msgid "Email логи"
+msgstr "Email logs"
+
+#: .\clients\templates\clients\demo_center.html:329
+msgid ""
+"Некоторые ссылки клиентского портала устарели. Нажмите Prepare 5-minute "
+"demo, чтобы пересоздать безопасные демо-кейсы и рабочие portal links."
+msgstr ""
+"Some client portal links have expired. Click Prepare 5-minute demo to "
+"recreate safe demo cases and active portal links."
+
+#: .\clients\templates\clients\demo_center.html:331
+msgid ""
+"Демо-данные созданы старой версией и не покрывают все основания подачи. "
+"Нажмите Prepare 5-minute demo, чтобы пересоздать безопасные демо-кейсы."
+msgstr ""
+"Demo data was created by an older version and does not cover all application"
+" purposes. Click Prepare 5-minute demo to recreate safe demo cases."
+
+#: .\clients\templates\clients\demo_center.html:338
+msgid "Что смотреть"
+msgstr "Viewing reports"
+
+#: .\clients\templates\clients\demo_center.html:340
+msgid ""
+"Сначала подготовьте демо, затем открывайте Staff View и Client Portal у "
+"карточек. Каждый профиль показывает отдельный рабочий сценарий."
+msgstr ""
+"First prepare the demo, then open Staff View and Client Portal for cards. "
+"Each profile shows a separate workflow scenario."
+
+#: .\clients\templates\clients\demo_center.html:344
+msgid "Быстрые проверки"
+msgstr "Pending verification"
+
+#: .\clients\templates\clients\demo_center.html:346
+msgid ""
+"Email preview показывает письмо клиенту, OCR preview показывает распознанное"
+" wezwanie, а OCR review ведёт к реальному списку документов на проверку."
+msgstr ""
+"Email preview shows the email to the client, OCR preview shows the parsed "
+"wezwanie, and OCR review leads to the real list of documents for "
+"verification."
+
+#: .\clients\templates\clients\demo_center.html:365
+msgid "Управление демо"
+msgstr "Task management"
+
+#: .\clients\templates\clients\demo_center.html:366
+msgid ""
+"Кнопка подготовки пересоздаёт безопасные демо-кейсы и ссылки на клиентский "
+"портал."
+msgstr ""
+"The prepare button recreates safe demo cases and links to the client portal."
+
+#: .\clients\templates\clients\demo_center.html:372
 msgid "Prepare 5-minute demo"
 msgstr "Prepare 5-minute demo"
 
-#: .\clients\templates\clients\demo_center.html:147
-#: .\clients\templates\clients\demo_center.html:322
-msgid "Show email preview"
+#: .\clients\templates\clients\demo_center.html:380
+msgid "Email preview: Daria"
 msgstr "Show email preview"
 
-#: .\clients\templates\clients\demo_center.html:151
-msgid "Show OCR result"
-msgstr "Show OCR result"
+#: .\clients\templates\clients\demo_center.html:387
+msgid "OCR preview: Ivan"
+msgstr "OCR preview: Ivan"
 
-#: .\clients\templates\clients\demo_center.html:157
-msgid "Reset Demo Environment"
-msgstr "Reset Demo Environment"
+#: .\clients\templates\clients\demo_center.html:392
+msgid "Open OCR review"
+msgstr "Open OCR review"
 
-#: .\clients\templates\clients\demo_center.html:164
-msgid ""
-"Подтверждаю удаление только демонстрационных данных (is_demo_data=True)"
-msgstr "I confirm deletion of demo data only (is_demo_data=True)"
+#: .\clients\templates\clients\demo_center.html:396
+msgid "Preview и OCR review станут активны после подготовки демо-данных."
+msgstr "Preview and OCR review will become active after preparing demo data."
 
-#: .\clients\templates\clients\demo_center.html:167
+#: .\clients\templates\clients\demo_center.html:403
+msgid "Маршрут на 5 минут"
+msgstr "5-minute route"
+
+#: .\clients\templates\clients\demo_center.html:409
+msgid "Покажите дела, риски, документы и платежи."
+msgstr "Document Name"
+
+#: .\clients\templates\clients\demo_center.html:416
+msgid "Идеальный кейс: документы, платежи, аудит."
+msgstr "Other documents for the case"
+
+#: .\clients\templates\clients\demo_center.html:423
+msgid "Family reunification: клиентский портал и недостающие документы."
+msgstr "Family reunification: client portal and missing documents."
+
+#: .\clients\templates\clients\demo_center.html:430
+msgid "OCR wezwanie, дедлайн и подтверждение сотрудником."
+msgstr "Staff Logs"
+
+#: .\clients\templates\clients\demo_center.html:437
+msgid "Неверный период ZUS RCA и email-напоминание."
+msgstr "Invalid ZUS RCA period and email reminder."
+
+#: .\clients\templates\clients\demo_center.html:444
+msgid "Сброс демо"
+msgstr "Reset"
+
+#: .\clients\templates\clients\demo_center.html:451
+msgid "Удалить только записи с is_demo_data=True"
+msgstr "Delete only records with is_demo_data=True"
+
+#: .\clients\templates\clients\demo_center.html:455
 msgid "Reset demo data"
 msgstr "Reset demo data"
 
-#: .\clients\templates\clients\demo_center.html:173
-msgid "5-Minute Scenario Timeline"
-msgstr "5-Minute Scenario Timeline"
-
-#: .\clients\templates\clients\demo_center.html:212
+#: .\clients\templates\clients\demo_center.html:464
 msgid "Demo Client Profiles"
 msgstr "Demo Client Profiles"
 
-#: .\clients\templates\clients\demo_center.html:232
+#: .\clients\templates\clients\demo_center.html:466
+msgid "profiles"
+msgstr "files"
+
+#: .\clients\templates\clients\demo_center.html:485
 msgid "Staff View"
 msgstr "Staff View"
 
-#: .\clients\templates\clients\demo_center.html:236
+#: .\clients\templates\clients\demo_center.html:489
+#: .\clients\templates\clients\test_center.html:532
 msgid "Client Portal"
 msgstr "Client Portal"
 
-#: .\clients\templates\clients\demo_center.html:264
+#: .\clients\templates\clients\demo_center.html:493
+msgid "Portal link needs Prepare"
+msgstr "Portal link needs Prepare"
+
+#: .\clients\templates\clients\demo_center.html:507
+msgid "Все документы и платежи готовы. Используйте как эталонный кейс."
+msgstr "All documents and payments are ready. Use as a reference case."
+
+#: .\clients\templates\clients\demo_center.html:509
 msgid ""
-"Демо-клиенты еще не сгенерированы. Нажмите кнопку «Prepare 5-minute demo»."
+"Family reunification: недостающие документы и клиентский портал для загрузки"
+" файлов."
+msgstr ""
+"Family reunification: missing documents and client portal for uploading "
+"files."
+
+#: .\clients\templates\clients\demo_center.html:511
+msgid "Неверный месяц ZUS RCA, предупреждение и email-коммуникация."
+msgstr "Invalid ZUS RCA month, warning and email communication."
+
+#: .\clients\templates\clients\demo_center.html:513
+msgid "Wezwanie, OCR результат, дедлайн и ручное подтверждение."
+msgstr "Pending verification"
+
+#: .\clients\templates\clients\demo_center.html:515
+msgid "Отпечатки уже сданы, дело ожидает решение."
+msgstr "Waiting for decision"
+
+#: .\clients\templates\clients\demo_center.html:519
+msgid "Следующий клик"
+msgstr "Client event"
+
+#: .\clients\templates\clients\demo_center.html:521
+msgid "Staff View — проверить, что документы и платёж закрыты."
+msgstr "Staff View — verify that documents and payment are closed."
+
+#: .\clients\templates\clients\demo_center.html:523
+msgid "Client Portal — показать загрузку недостающих family-документов."
+msgstr "Missing documents checklist"
+
+#: .\clients\templates\clients\demo_center.html:525
+msgid "Email preview — показать письмо о неверном периоде ZUS RCA."
+msgstr "Email preview — show email about invalid ZUS RCA period."
+
+#: .\clients\templates\clients\demo_center.html:527
+msgid "OCR preview или Staff View — показать wezwanie и подтверждение OCR."
+msgstr "OCR preview or Staff View — show wezwanie and OCR confirmation."
+
+#: .\clients\templates\clients\demo_center.html:529
+msgid "Staff View — показать ожидание решения после отпечатков."
+msgstr ""
+"The ZUS RCA check is only active during the waiting phase after prints."
+
+#: .\clients\templates\clients\demo_center.html:539
+msgid "Демо-клиенты ещё не созданы. Нажмите Prepare 5-minute demo."
 msgstr ""
 "Demo clients have not been generated yet. Click the \"Prepare 5-minute "
 "demo\" button."
 
-#: .\clients\templates\clients\demo_center.html:273
+#: .\clients\templates\clients\demo_center.html:547
 msgid "Demo OCR Jobs"
 msgstr "Demo OCR Jobs"
 
-#: .\clients\templates\clients\demo_center.html:294
+#: .\clients\templates\clients\demo_center.html:559
+msgid "Open document preview"
+msgstr "Current document file"
+
+#: .\clients\templates\clients\demo_center.html:566
+msgid "OCR задачи отсутствуют."
+msgstr "File missing"
+
+#: .\clients\templates\clients\demo_center.html:573
 msgid "Demo Email Logs"
 msgstr "Demo Email Logs"
 
-#: .\clients\templates\clients\demo_center.html:327
-msgid "Кому"
-msgstr "To"
+#: .\clients\templates\clients\demo_center.html:587
+msgid "Журнал писем пуст."
+msgstr "System Logs"
 
-#: .\clients\templates\clients\demo_center.html:350
-msgid "OCR Extracted Result for Ivan Demo"
+#: .\clients\templates\clients\demo_center.html:604
+msgid "Email preview"
+msgstr "Show email preview"
+
+#: .\clients\templates\clients\demo_center.html:621
+msgid "Open Daria"
+msgstr "Open Daria"
+
+#: .\clients\templates\clients\demo_center.html:625
+msgid "Open portal"
+msgstr "Client Portal"
+
+#: .\clients\templates\clients\demo_center.html:641
+msgid "OCR preview for Ivan Demo"
 msgstr "OCR Extracted Result for Ivan Demo"
+
+#: .\clients\templates\clients\demo_center.html:649
+msgid "Извлечённые поля"
+msgstr "Extracted fields"
+
+#: .\clients\templates\clients\demo_center.html:678
+msgid "Open Ivan"
+msgstr "Open"
+
+#: .\clients\templates\clients\demo_center.html:683
+msgid "Open document"
+msgstr "Expired documents"
+
+#: .\clients\templates\clients\demo_center.html:687
+msgid "OCR review list"
+msgstr "OCR review list"
 
 #: .\clients\templates\clients\document_checklist_manage.html:4
 #: .\clients\templates\clients\document_checklist_manage.html:54
@@ -4136,8 +4389,8 @@ msgstr "Yes, delete"
 
 #: .\clients\templates\clients\document_reminder_list.html:6
 #: .\clients\templates\clients\document_reminder_list.html:14
-#: .\clients\templates\clients\document_reminder_list.html:93
-#: .\clients\tests\test_i18n_quality.py:238
+#: .\clients\templates\clients\document_reminder_list.html:96
+#: .\clients\tests\test_i18n_quality.py:244
 msgid "Напоминания по документам"
 msgstr "Document reminders"
 
@@ -4154,101 +4407,121 @@ msgstr ""
 msgid "Проверить и создать новые"
 msgstr "Verify checklist"
 
-#: .\clients\templates\clients\document_reminder_list.html:99
+#: .\clients\templates\clients\document_reminder_list.html:102
+msgid "Режим просмотра документов"
+msgstr "Document Checklist"
+
+#: .\clients\templates\clients\document_reminder_list.html:105
+#: .\templates\base.html:131 .\templates\base.html:303
+msgid "Напоминания"
+msgstr "Reminders"
+
+#: .\clients\templates\clients\document_reminder_list.html:109
+msgid "Недостающие"
+msgstr "Income sufficient"
+
+#: .\clients\templates\clients\document_reminder_list.html:115
+msgid "Клиентов с недостающими"
+msgstr "Missing documents checklist"
+
+#: .\clients\templates\clients\document_reminder_list.html:118
+msgid "Недостающих документов"
+msgstr "No missing documents."
+
+#: .\clients\templates\clients\document_reminder_list.html:125
 msgid "Все хорошо"
 msgstr "All good"
 
-#: .\clients\templates\clients\document_reminder_list.html:103
+#: .\clients\templates\clients\document_reminder_list.html:129
 msgid "Скоро истекает (в течение 3 дней)"
 msgstr "Expiring soon (within 3 days)"
 
-#: .\clients\templates\clients\document_reminder_list.html:106
-#: .\clients\templates\clients\document_reminder_list.html:174
+#: .\clients\templates\clients\document_reminder_list.html:132
+#: .\clients\templates\clients\document_reminder_list.html:203
 msgid "Истекло"
 msgstr "Expired"
 
-#: .\clients\templates\clients\document_reminder_list.html:109
+#: .\clients\templates\clients\document_reminder_list.html:135
 msgid "Не донесены документы"
 msgstr "Missing documents"
 
-#: .\clients\templates\clients\document_reminder_list.html:118
+#: .\clients\templates\clients\document_reminder_list.html:147
 #: .\clients\templates\clients\payment_reminder_list.html:54
 msgid "Все клиенты"
 msgstr "All clients"
 
-#: .\clients\templates\clients\document_reminder_list.html:126
+#: .\clients\templates\clients\document_reminder_list.html:155
 #: .\clients\templates\clients\payment_reminder_list.html:61
 msgid "Дата от"
 msgstr "Date from"
 
-#: .\clients\templates\clients\document_reminder_list.html:135
+#: .\clients\templates\clients\document_reminder_list.html:164
 #: .\clients\templates\clients\payment_reminder_list.html:65
 msgid "Дата до"
 msgstr "Date to"
 
-#: .\clients\templates\clients\document_reminder_list.html:145
+#: .\clients\templates\clients\document_reminder_list.html:174
 #: .\clients\templates\clients\payment_reminder_list.html:69
-#: .\clients\tests\test_i18n_quality.py:236
+#: .\clients\tests\test_i18n_quality.py:242
 msgid "Фильтровать"
 msgstr "Filter"
 
-#: .\clients\templates\clients\document_reminder_list.html:148
+#: .\clients\templates\clients\document_reminder_list.html:177
 #: .\clients\templates\clients\payment_reminder_list.html:70
 msgid "Сбросить"
 msgstr "Reset"
 
-#: .\clients\templates\clients\document_reminder_list.html:157
+#: .\clients\templates\clients\document_reminder_list.html:186
 msgid "Всего напоминаний"
 msgstr "Total reminders"
 
-#: .\clients\templates\clients\document_reminder_list.html:163
+#: .\clients\templates\clients\document_reminder_list.html:192
 msgid "Статусы"
 msgstr "Statuses"
 
-#: .\clients\templates\clients\document_reminder_list.html:166
+#: .\clients\templates\clients\document_reminder_list.html:195
 msgid "Всё хорошо"
 msgstr "All good"
 
-#: .\clients\templates\clients\document_reminder_list.html:170
+#: .\clients\templates\clients\document_reminder_list.html:199
 msgid "Скоро истекает"
 msgstr "Expiring soon"
 
-#: .\clients\templates\clients\document_reminder_list.html:201
+#: .\clients\templates\clients\document_reminder_list.html:230
 #, python-format
 msgid "Истекающих: %(count)s"
 msgstr "Expiring: %(count)s"
 
-#: .\clients\templates\clients\document_reminder_list.html:204
+#: .\clients\templates\clients\document_reminder_list.html:233
 #: .\clients\templates\clients\partials\family_person_card.html:11
 #, python-format
 msgid "Недостающих: %(count)s"
 msgstr "Missing: %(count)s"
 
-#: .\clients\templates\clients\document_reminder_list.html:216
+#: .\clients\templates\clients\document_reminder_list.html:245
 #: .\clients\templates\clients\family_dashboard.html:19
 #: .\clients\templates\clients\partials\family_person_card.html:16
 msgid "Открыть клиента"
 msgstr "Open client"
 
-#: .\clients\templates\clients\document_reminder_list.html:222
+#: .\clients\templates\clients\document_reminder_list.html:251
 msgid "Отправить письмо"
 msgstr "Send email"
 
-#: .\clients\templates\clients\document_reminder_list.html:228
-#: .\clients\templates\clients\partials\modals.html:282
-msgid "Недостающие документы"
-msgstr "Missing documents"
-
-#: .\clients\templates\clients\document_reminder_list.html:236
+#: .\clients\templates\clients\document_reminder_list.html:265
 #, python-format
 msgid "Последнее истечение: %(due)s"
 msgstr "Last expiration: %(due)s"
 
-#: .\clients\templates\clients\document_reminder_list.html:243
+#: .\clients\templates\clients\document_reminder_list.html:272
 msgid "Нет недостающих документов."
 msgstr "No missing documents."
 
-#: .\clients\templates\clients\document_reminder_list.html:259
+#: .\clients\templates\clients\document_reminder_list.html:289
+msgid "Нет недостающих документов по текущим фильтрам."
+msgstr "No missing documents."
+
+#: .\clients\templates\clients\document_reminder_list.html:291
 msgid "Нет напоминаний по документам, соответствующих фильтрам."
 msgstr "No document reminders matching the filters."
 
@@ -4634,6 +4907,12 @@ msgstr "We hope to see you again soon!"
 msgid "Войти снова"
 msgstr "Log in again"
 
+#: .\clients\templates\clients\logs\email_logs.html:9
+#: .\clients\templates\clients\logs\email_logs.html:10
+#: .\templates\base.html:205
+msgid "Логи писем"
+msgstr "Email Logs"
+
 #: .\clients\templates\clients\logs\email_logs.html:11
 msgid "Журнал отправленных писем клиентам."
 msgstr "Log of sent emails to clients."
@@ -4641,6 +4920,12 @@ msgstr "Log of sent emails to clients."
 #: .\clients\templates\clients\logs\email_logs.html:97
 msgid "Логи писем не найдены."
 msgstr "No email logs found."
+
+#: .\clients\templates\clients\logs\staff_activity_logs.html:9
+#: .\clients\templates\clients\logs\staff_activity_logs.html:10
+#: .\templates\base.html:210
+msgid "Логи сотрудников"
+msgstr "Staff Logs"
 
 #: .\clients\templates\clients\logs\staff_activity_logs.html:11
 msgid ""
@@ -5024,7 +5309,7 @@ msgid "Email университета"
 msgstr "Higher (University)"
 
 #: .\clients\templates\clients\mos_review.html:213
-#: .\clients\views\admin_mos_review.py:88
+#: .\clients\views\admin_mos_review.py:87
 msgid "Легальное пребывание до"
 msgstr "Legal stay until"
 
@@ -7592,253 +7877,209 @@ msgid "Открытых задач сейчас нет."
 msgstr "There are no open tasks at the moment."
 
 #: .\clients\templates\clients\test_center.html:6
-msgid "Protected E2E regression checks for test data only."
-msgstr "Protected E2E regression checks for test data only."
+msgid "Общие E2E проверки на безопасных тестовых данных."
+msgstr "Edit contact details"
 
-#: .\clients\templates\clients\test_center.html:19
+#: .\clients\templates\clients\test_center.html:339
+msgid "Общие тесты и регрессии"
+msgstr "General tests and regressions"
+
+#: .\clients\templates\clients\test_center.html:340
+msgid ""
+"Запуск сценариев, просмотр связанных объектов и очистка только тестовых "
+"данных."
+msgstr ""
+"Running scenarios, viewing related objects and cleaning only test data."
+
+#: .\clients\templates\clients\test_center.html:351
 msgid "Run Scenarios"
 msgstr "Run Scenarios"
 
-#: .\clients\templates\clients\test_center.html:25
-#: .\clients\templates\clients\test_center.html:97
-msgid "Mode"
-msgstr "Mode"
-
-#: .\clients\templates\clients\test_center.html:26
-#: .\clients\templates\clients\test_center.html:99
-#: .\clients\templates\clients\test_center.html:391
+#: .\clients\templates\clients\test_center.html:372
 msgid "Smoke"
 msgstr "Smoke"
 
-#: .\clients\templates\clients\test_center.html:27
-#: .\clients\templates\clients\test_center.html:100
-#: .\clients\templates\clients\test_center.html:392
+#: .\clients\templates\clients\test_center.html:373
 msgid "Full"
 msgstr "Full"
 
-#: .\clients\templates\clients\test_center.html:28
-#: .\clients\templates\clients\test_center.html:101
-#: .\clients\templates\clients\test_center.html:393
+#: .\clients\templates\clients\test_center.html:374
 msgid "OCR"
 msgstr "OCR"
 
-#: .\clients\templates\clients\test_center.html:30
-#: .\clients\templates\clients\test_center.html:103
-#: .\clients\templates\clients\test_center.html:395
+#: .\clients\templates\clients\test_center.html:376
+#: .\clients\templates\clients\test_center.html:477
 msgid "ZUS"
 msgstr "ZUS"
 
-#: .\clients\templates\clients\test_center.html:32
-#: .\clients\templates\clients\test_center.html:105
-#: .\clients\templates\clients\test_center.html:238
-#: .\clients\templates\clients\test_center.html:397
+#: .\clients\templates\clients\test_center.html:378
+#: .\clients\templates\clients\test_center.html:482
 msgid "Permissions"
 msgstr "Permissions"
 
-#: .\clients\templates\clients\test_center.html:33
-#: .\clients\templates\clients\test_center.html:106
-#: .\clients\templates\clients\test_center.html:398
+#: .\clients\templates\clients\test_center.html:379
 msgid "Security"
 msgstr "Security"
 
-#: .\clients\templates\clients\test_center.html:34
-#: .\clients\templates\clients\test_center.html:107
-#: .\clients\templates\clients\test_center.html:243
-#: .\clients\templates\clients\test_center.html:399
+#: .\clients\templates\clients\test_center.html:380
+#: .\clients\templates\clients\test_center.html:487
 msgid "Workflow"
 msgstr "Workflow"
 
-#: .\clients\templates\clients\test_center.html:40
-msgid "Keep data in DB for manual review"
+#: .\clients\templates\clients\test_center.html:389
+msgid "Keep data for manual review"
 msgstr "Keep data in DB for manual review"
 
-#: .\clients\templates\clients\test_center.html:44
-msgid "Run smoke scenarios"
-msgstr "Run smoke scenarios"
+#: .\clients\templates\clients\test_center.html:393
+msgid "Run"
+msgstr "Running"
 
-#: .\clients\templates\clients\test_center.html:45
-msgid "Run full scenarios"
-msgstr "Run full scenarios"
-
-#: .\clients\templates\clients\test_center.html:46
-msgid "Run ocr scenarios"
-msgstr "Run ocr scenarios"
-
-#: .\clients\templates\clients\test_center.html:47
-msgid "Run email scenarios"
-msgstr "Run email scenarios"
-
-#: .\clients\templates\clients\test_center.html:48
-msgid "Run zus scenarios"
-msgstr "Run zus scenarios"
-
-#: .\clients\templates\clients\test_center.html:49
-msgid "Run documents scenarios"
-msgstr "Run documents scenarios"
-
-#: .\clients\templates\clients\test_center.html:50
-msgid "Run permissions scenarios"
-msgstr "Run permissions scenarios"
-
-#: .\clients\templates\clients\test_center.html:51
-msgid "Run security scenarios"
-msgstr "Run security scenarios"
-
-#: .\clients\templates\clients\test_center.html:52
-msgid "Run workflow scenarios"
-msgstr "Run workflow scenarios"
-
-#: .\clients\templates\clients\test_center.html:53
-#, python-format
-msgid "Run %(mode)s scenarios"
-msgstr "Run %(mode)s scenarios"
-
-#: .\clients\templates\clients\test_center.html:61
+#: .\clients\templates\clients\test_center.html:401
 msgid "Clean Test Data"
 msgstr "Clean Test Data"
 
-#: .\clients\templates\clients\test_center.html:68
-msgid "Delete only records marked as test data"
-msgstr "Delete only records marked as test data"
+#: .\clients\templates\clients\test_center.html:402
+msgid "Удаляет только записи Test Center, помеченные как test data."
+msgstr "Deletes only Test Center records marked as test data."
 
-#: .\clients\templates\clients\test_center.html:71
+#: .\clients\templates\clients\test_center.html:409
+msgid "Подтверждаю очистку тестовых данных"
+msgstr "Edit contact details"
+
+#: .\clients\templates\clients\test_center.html:413
 msgid "Clean test data"
 msgstr "Clean test data"
 
-#: .\clients\templates\clients\test_center.html:80
+#: .\clients\templates\clients\test_center.html:424
 msgid "Test Run"
 msgstr "Test Run"
 
-#: .\clients\templates\clients\test_center.html:83
-msgid "Expand All Logs"
+#: .\clients\templates\clients\test_center.html:429
+msgid "Expand logs"
 msgstr "Expand All Logs"
 
-#: .\clients\templates\clients\test_center.html:86
-msgid "Collapse All Logs"
+#: .\clients\templates\clients\test_center.html:432
+msgid "Collapse logs"
 msgstr "Collapse All Logs"
 
-#: .\clients\templates\clients\test_center.html:89
-#: .\clients\templates\clients\test_center.html:339
-#: .\clients\templates\clients\test_center.html:403
+#: .\clients\templates\clients\test_center.html:435
+#: .\clients\templates\clients\test_center.html:512
+#: .\clients\templates\clients\test_center.html:580
 msgid "passed"
 msgstr "passed"
 
-#: .\clients\templates\clients\test_center.html:89
-#: .\clients\templates\clients\test_center.html:339
-#: .\clients\templates\clients\test_center.html:403
+#: .\clients\templates\clients\test_center.html:436
+#: .\clients\templates\clients\test_center.html:513
+#: .\clients\templates\clients\test_center.html:580
 msgid "failed"
 msgstr "failed"
 
-#: .\clients\templates\clients\test_center.html:114
+#: .\clients\templates\clients\test_center.html:444
+msgid "Mode"
+msgstr "Mode"
+
+#: .\clients\templates\clients\test_center.html:448
 msgid "Total"
 msgstr "Total"
 
-#: .\clients\templates\clients\test_center.html:120
+#: .\clients\templates\clients\test_center.html:452
 msgid "Passed"
 msgstr "Passed"
 
-#: .\clients\templates\clients\test_center.html:216
+#: .\clients\templates\clients\test_center.html:463
 msgid "Workflow E2E Progress Journey"
 msgstr "Workflow E2E Progress Journey"
 
-#: .\clients\templates\clients\test_center.html:223
+#: .\clients\templates\clients\test_center.html:467
 msgid "Onboarding"
 msgstr "Onboarding"
 
-#: .\clients\templates\clients\test_center.html:224
-msgid "Invite & Intake"
+#: .\clients\templates\clients\test_center.html:468
+msgid "Invite and intake"
 msgstr "Invite & Intake"
 
-#: .\clients\templates\clients\test_center.html:228
-msgid "Docs & OCR"
+#: .\clients\templates\clients\test_center.html:472
+msgid "Docs and OCR"
 msgstr "Docs & OCR"
 
-#: .\clients\templates\clients\test_center.html:229
-msgid "Upload & Extract"
-msgstr "Upload & Extract"
+#: .\clients\templates\clients\test_center.html:473
+msgid "Files and parsing"
+msgstr "File missing"
 
-#: .\clients\templates\clients\test_center.html:233
-msgid "ZUS & Insurance"
-msgstr "ZUS & Insurance"
+#: .\clients\templates\clients\test_center.html:478
+msgid "Insurance checks"
+msgstr "Insurance Policy OCR"
 
-#: .\clients\templates\clients\test_center.html:234
-msgid "Audits & Expiry"
-msgstr "Audits & Expiry"
+#: .\clients\templates\clients\test_center.html:483
+msgid "Access rules"
+msgstr "Access rules"
 
-#: .\clients\templates\clients\test_center.html:239
-msgid "Security & Access"
-msgstr "Security & Access"
-
-#: .\clients\templates\clients\test_center.html:244
-msgid "State & Audit log"
+#: .\clients\templates\clients\test_center.html:488
+msgid "State and audit"
 msgstr "State & Audit log"
 
-#: .\clients\templates\clients\test_center.html:323
+#: .\clients\templates\clients\test_center.html:498
 msgid "Scenario"
 msgstr "Scenario"
 
-#: .\clients\templates\clients\test_center.html:325
+#: .\clients\templates\clients\test_center.html:500
 msgid "Related Object"
 msgstr "Related Object"
 
-#: .\clients\templates\clients\test_center.html:326
+#: .\clients\templates\clients\test_center.html:501
 msgid "Details"
 msgstr "Details"
 
-#: .\clients\templates\clients\test_center.html:351
+#: .\clients\templates\clients\test_center.html:526
 msgid "Doc"
 msgstr "Doc"
 
-#: .\clients\templates\clients\test_center.html:358
+#: .\clients\templates\clients\test_center.html:538
 msgid "View details"
 msgstr "View details"
 
-#: .\clients\templates\clients\test_center.html:361
+#: .\clients\templates\clients\test_center.html:540
 msgid "Expected"
 msgstr "Expected"
 
-#: .\clients\templates\clients\test_center.html:362
+#: .\clients\templates\clients\test_center.html:542
 msgid "Actual"
 msgstr "Actual"
 
-#: .\clients\templates\clients\test_center.html:365
+#: .\clients\templates\clients\test_center.html:545
 msgid "Error"
 msgstr "Error"
 
-#: .\clients\templates\clients\test_center.html:374
+#: .\clients\templates\clients\test_center.html:554
 msgid "No scenario results yet."
 msgstr "No scenario results yet."
 
-#: .\clients\templates\clients\test_center.html:382
-msgid "No Test Center runs yet."
+#: .\clients\templates\clients\test_center.html:565
+msgid "No Test Center runs yet. Choose a scenario on the left."
 msgstr "No Test Center runs yet."
 
-#: .\clients\templates\clients\test_center.html:386
+#: .\clients\templates\clients\test_center.html:570
 msgid "Recent Runs"
 msgstr "Recent Runs"
 
-#: .\clients\templates\clients\test_center.html:407
+#: .\clients\templates\clients\test_center.html:584
 msgid "No runs."
 msgstr "No runs."
 
 #: .\clients\testing\e2e_runner.py:29
-msgid "Test Center is disabled."
-msgstr "Test Center is disabled."
-
-#: .\clients\testing\e2e_runner.py:31
 msgid "Test Center requires a superuser."
 msgstr "Test Center requires a superuser."
 
-#: .\clients\testing\e2e_runner.py:42
+#: .\clients\testing\e2e_runner.py:40
 msgid "Another Test Center run or cleanup is already in progress."
 msgstr "Another Test Center run or cleanup is already in progress."
 
-#: .\clients\testing\e2e_runner.py:57 .\clients\views\testcenter.py:63
+#: .\clients\testing\e2e_runner.py:55 .\clients\views\testcenter.py:95
 #, python-format
 msgid "Unknown Test Center mode: %(mode)s"
 msgstr "Unknown Test Center mode: %(mode)s"
 
-#: .\clients\tests\test_document_resilience.py:68
+#: .\clients\tests\test_document_resilience.py:71
 #: .\clients\views\documents.py:399
 msgid "Файл отсутствует в хранилище. Загрузите файл заново."
 msgstr "The file is missing from storage. Upload the file again."
@@ -7851,28 +8092,28 @@ msgstr ""
 "The client does not have enough data for this template (for example, there "
 "is no date of prints or list of documents)."
 
-#: .\clients\tests\test_i18n_quality.py:235
+#: .\clients\tests\test_i18n_quality.py:241
 msgid "Редактировать данные"
 msgstr "Edit data"
 
-#: .\clients\tests\test_i18n_quality.py:237
+#: .\clients\tests\test_i18n_quality.py:243
 msgid "Отпечатки пальцев"
 msgstr "Fingerprints"
 
-#: .\clients\tests\test_misc_legacy.py:79
+#: .\clients\tests\test_misc_legacy.py:84
 msgid "hello"
 msgstr "hello"
 
-#: .\clients\tests\test_misc_legacy.py:120
+#: .\clients\tests\test_misc_legacy.py:125
 msgctxt "menu"
 msgid "Open"
 msgstr "Open"
 
-#: .\clients\tests\test_misc_legacy.py:121
+#: .\clients\tests\test_misc_legacy.py:126
 msgid "Open"
 msgstr "Open"
 
-#: .\clients\tests\test_misc_legacy.py:122
+#: .\clients\tests\test_misc_legacy.py:127
 msgid "Print"
 msgstr "Print"
 
@@ -7932,8 +8173,8 @@ msgstr "Upload the correct %(label)s image."
 msgid "Файл изображения повреждён или не читается."
 msgstr "The image file is damaged or unreadable."
 
-#: .\clients\validators.py:145 .\clients\views\onboarding_step_return.py:139
-#: .\clients\views\onboarding_views.py:515
+#: .\clients\validators.py:145 .\clients\views\onboarding_step_return.py:140
+#: .\clients\views\onboarding_views.py:529
 msgid "Выберите файл для загрузки."
 msgstr "Choose a file to upload."
 
@@ -7951,80 +8192,80 @@ msgstr "Only PDF, JPG, JPEG, PNG and WebP files are allowed."
 msgid "Недопустимый MIME-тип файла: %(type)s."
 msgstr "Invalid MIME file type: %(type)s."
 
-#: .\clients\views\admin_mos_review.py:148
+#: .\clients\views\admin_mos_review.py:147
 msgid "Questionnaire approved and client card updated."
 msgstr "Questionnaire approved and client card updated."
 
-#: .\clients\views\admin_mos_review.py:150
+#: .\clients\views\admin_mos_review.py:149
 msgid "Questionnaire approved. No client card fields changed."
 msgstr "Questionnaire approved. No client card fields changed."
 
-#: .\clients\views\admin_mos_review.py:155
+#: .\clients\views\admin_mos_review.py:154
 msgid "Cannot apply this purpose to the client card."
 msgstr "Cannot apply this purpose to the client card."
 
-#: .\clients\views\admin_mos_review.py:166
+#: .\clients\views\admin_mos_review.py:165
 msgid "Client-selected purpose applied to the client card."
 msgstr "Client-selected purpose applied to the client card."
 
-#: .\clients\views\admin_mos_review.py:172
+#: .\clients\views\admin_mos_review.py:171
 msgid "Correction requested from client."
 msgstr "Correction requested from client."
 
-#: .\clients\views\admin_mos_review.py:182
+#: .\clients\views\admin_mos_review.py:181
 msgid "Status: submitted in MOS."
 msgstr "Status: submitted in MOS."
 
-#: .\clients\views\admin_mos_review.py:193
+#: .\clients\views\admin_mos_review.py:192
 msgid "Status: fingerprints completed."
 msgstr "Status: fingerprints completed."
 
-#: .\clients\views\admin_mos_review.py:197
+#: .\clients\views\admin_mos_review.py:196
 msgid "Cannot mark waiting decision without fingerprints date."
 msgstr "Cannot mark waiting decision without fingerprints date."
 
-#: .\clients\views\admin_mos_review.py:206
+#: .\clients\views\admin_mos_review.py:205
 msgid "Status: waiting for decision."
 msgstr "Status: waiting for decision."
 
-#: .\clients\views\admin_mos_review.py:210
+#: .\clients\views\admin_mos_review.py:209
 msgid "Cannot mark decision received without decision date."
 msgstr "Cannot mark decision received without decision date."
 
-#: .\clients\views\admin_mos_review.py:219
+#: .\clients\views\admin_mos_review.py:218
 msgid "Status: decision received."
 msgstr "Status: decision received."
 
-#: .\clients\views\admin_settings.py:114
+#: .\clients\views\admin_settings.py:111
 msgid "Настройки шаблона wniosek сохранены."
 msgstr "Template wniosek settings are saved."
 
-#: .\clients\views\admin_settings.py:153
+#: .\clients\views\admin_settings.py:150
 #, python-format
 msgid "Цены и услуги сохранены. Обновлено записей: %(count)s."
 msgstr "Prices and services have been preserved. Updated records: %(count)s."
 
-#: .\clients\views\admin_settings.py:156
+#: .\clients\views\admin_settings.py:153
 msgid "Не удалось сохранить часть цен. Проверьте форму."
 msgstr "It was not possible to save some prices. Check the form."
 
-#: .\clients\views\admin_settings.py:191
+#: .\clients\views\admin_settings.py:188
 msgid "Основание подачи создано."
 msgstr "The feed basis has been created."
 
-#: .\clients\views\admin_settings.py:193
+#: .\clients\views\admin_settings.py:190
 msgid "Не удалось создать основание подачи. Проверьте форму."
 msgstr "Failed to create feed base. Check the form."
 
-#: .\clients\views\admin_settings.py:201
+#: .\clients\views\admin_settings.py:198
 msgid "Основание подачи обновлено."
 msgstr "Feed basis has been updated."
 
-#: .\clients\views\admin_settings.py:203
+#: .\clients\views\admin_settings.py:200
 msgid "Не удалось обновить основание подачи. Проверьте форму."
 msgstr "Failed to update feed base. Check the form."
 
-#: .\clients\views\admin_settings.py:213
+#: .\clients\views\admin_settings.py:210
 msgid "Основание подачи удалено."
 msgstr "The feed base has been removed."
 
@@ -8106,49 +8347,49 @@ msgstr "Document deleted: %(name)s."
 msgid "Удаление доступно только через POST-запрос."
 msgstr "Removal is only available via a POST request."
 
-#: .\clients\views\client_crud.py:269
+#: .\clients\views\client_crud.py:275
 msgid "Клиент успешно добавлен!"
 msgstr "No clients found."
 
-#: .\clients\views\client_crud.py:282 .\clients\views\client_crud.py:328
+#: .\clients\views\client_crud.py:288 .\clients\views\client_crud.py:334
 msgid ""
 "Не удалось сохранить клиента. Проверьте выделенные поля и попробуйте снова."
 msgstr "Failed to save client. Check the highlighted fields and try again."
 
-#: .\clients\views\client_crud.py:306
+#: .\clients\views\client_crud.py:312
 msgid "Редактировать данные клиента"
 msgstr "Edit data"
 
-#: .\clients\views\client_crud.py:312
+#: .\clients\views\client_crud.py:318
 msgid "Данные клиента успешно обновлены!"
 msgstr "Last update date"
 
-#: .\clients\views\client_crud.py:345
+#: .\clients\views\client_crud.py:351
 #, python-format
 msgid "Клиент %(name)s был успешно удалён."
 msgstr "Client %(name)s was successfully deleted."
 
-#: .\clients\views\client_crud.py:388
+#: .\clients\views\client_crud.py:394
 msgid "Ошибка. Пожалуйста, заполните все поля корректными значениями."
 msgstr "Error. Please fill in all fields with correct values."
 
-#: .\clients\views\demo_center.py:22
+#: .\clients\views\demo_center.py:23
 msgid "Demo Center is not available."
 msgstr "Demo Center is not available."
 
-#: .\clients\views\demo_center.py:48
+#: .\clients\views\demo_center.py:49
 msgid "Confirm cleanup before deleting demo data."
 msgstr "Confirm cleanup before deleting demo data."
 
-#: .\clients\views\demo_center.py:62
+#: .\clients\views\demo_center.py:63
 msgid "Demo data cleanup completed."
 msgstr "Demo data cleanup completed."
 
-#: .\clients\views\demo_center.py:74
+#: .\clients\views\demo_center.py:75
 msgid "5-minute demo environment prepared successfully."
 msgstr "5-minute demo environment prepared successfully."
 
-#: .\clients\views\demo_center.py:76
+#: .\clients\views\demo_center.py:77
 msgid "Failed to prepare demo environment: "
 msgstr "Failed to prepare demo environment: "
 
@@ -8394,109 +8635,109 @@ msgid ""
 "сохранена."
 msgstr "Information about the new application has been saved."
 
-#: .\clients\views\onboarding_start_contact.py:422
+#: .\clients\views\onboarding_start_contact.py:423
 #: .\clients\views\onboarding_step_return.py:31
-#: .\clients\views\onboarding_step_return.py:209
-#: .\clients\views\onboarding_step_return.py:240
-#: .\clients\views\onboarding_step_return.py:274
-#: .\clients\views\onboarding_step_return.py:339
-#: .\clients\views\onboarding_views.py:230
-#: .\clients\views\onboarding_views.py:377
-#: .\clients\views\onboarding_views.py:563
-#: .\clients\views\onboarding_views.py:588
-#: .\clients\views\onboarding_views.py:709
-#: .\clients\views\onboarding_views.py:740
-#: .\clients\views\onboarding_views.py:774
-#: .\clients\views\onboarding_views.py:832
-#: .\clients\views\onboarding_views.py:872
+#: .\clients\views\onboarding_step_return.py:210
+#: .\clients\views\onboarding_step_return.py:241
+#: .\clients\views\onboarding_step_return.py:275
+#: .\clients\views\onboarding_step_return.py:340
+#: .\clients\views\onboarding_views.py:244
+#: .\clients\views\onboarding_views.py:391
+#: .\clients\views\onboarding_views.py:577
+#: .\clients\views\onboarding_views.py:602
+#: .\clients\views\onboarding_views.py:723
+#: .\clients\views\onboarding_views.py:754
+#: .\clients\views\onboarding_views.py:788
+#: .\clients\views\onboarding_views.py:846
+#: .\clients\views\onboarding_views.py:886
 msgid "Срок действия ссылки истёк или она недействительна."
 msgstr "The link has expired or is invalid."
 
 #: .\clients\views\onboarding_step_return.py:72
-#: .\clients\views\onboarding_views.py:470
-#: .\clients\views\onboarding_views.py:504
-#: .\clients\views\onboarding_views.py:549
-#: .\clients\views\onboarding_views.py:618
+#: .\clients\views\onboarding_views.py:484
+#: .\clients\views\onboarding_views.py:518
+#: .\clients\views\onboarding_views.py:563
+#: .\clients\views\onboarding_views.py:632
 msgid "Invalid or expired onboarding link."
 msgstr "Invalid or expired onboarding link."
 
-#: .\clients\views\onboarding_step_return.py:133
+#: .\clients\views\onboarding_step_return.py:134
 msgid "Скан паспорта успешно загружен. Данные распознаются."
 msgstr "Passport scan uploaded successfully. Data is being recognized."
 
-#: .\clients\views\onboarding_step_return.py:136
-#: .\clients\views\onboarding_views.py:541
+#: .\clients\views\onboarding_step_return.py:137
+#: .\clients\views\onboarding_views.py:555
 #, python-format
 msgid "Не удалось загрузить файл: %(errors)s"
 msgstr "File upload failed: %(errors)s"
 
-#: .\clients\views\onboarding_step_return.py:291
-#: .\clients\views\onboarding_views.py:487
-#: .\clients\views\onboarding_views.py:791
-#: .\clients\views\onboarding_views.py:891
+#: .\clients\views\onboarding_step_return.py:292
+#: .\clients\views\onboarding_views.py:501
+#: .\clients\views\onboarding_views.py:805
+#: .\clients\views\onboarding_views.py:905
 msgid "Invalid application purpose."
 msgstr "Invalid application purpose."
 
-#: .\clients\views\onboarding_step_return.py:302
+#: .\clients\views\onboarding_step_return.py:303
 msgid "Invalid date format for legal stay. Expected YYYY-MM-DD."
 msgstr "Invalid date format for legal stay. Expected YYYY-MM-DD."
 
-#: .\clients\views\onboarding_views.py:64
-#: .\clients\views\onboarding_views.py:1014
+#: .\clients\views\onboarding_views.py:77
+#: .\clients\views\onboarding_views.py:1028
 msgid "This onboarding form is locked."
 msgstr "This onboarding form is locked."
 
-#: .\clients\views\onboarding_views.py:179
+#: .\clients\views\onboarding_views.py:192
 msgid "Пожалуйста, войдите в свой аккаунт для продолжения."
 msgstr "Please log in to your account to continue."
 
-#: .\clients\views\onboarding_views.py:237
+#: .\clients\views\onboarding_views.py:251
 msgid "У вас уже есть аккаунт. Пожалуйста, войдите в систему."
 msgstr "You already have an account. Please log in."
 
-#: .\clients\views\onboarding_views.py:255
+#: .\clients\views\onboarding_views.py:269
 msgid "Пожалуйста, укажите ФИО."
 msgstr "Please enter your full name."
 
-#: .\clients\views\onboarding_views.py:257
+#: .\clients\views\onboarding_views.py:271
 msgid "Введите ФИО полностью: фамилия и имя."
 msgstr "Enter your full name: surname and given name."
 
-#: .\clients\views\onboarding_views.py:259
+#: .\clients\views\onboarding_views.py:273
 msgid "Пожалуйста, укажите адрес электронной почты."
 msgstr "Please enter your email address."
 
-#: .\clients\views\onboarding_views.py:261
+#: .\clients\views\onboarding_views.py:275
 msgid ""
 "Не удалось подтвердить существование домена почты. Пожалуйста, проверьте "
 "адрес на опечатки."
 msgstr ""
 "Could not verify the email domain. Please check the address for typos."
 
-#: .\clients\views\onboarding_views.py:263
+#: .\clients\views\onboarding_views.py:277
 msgid "Пароли не совпадают."
 msgstr "Passwords do not match."
 
-#: .\clients\views\onboarding_views.py:265
+#: .\clients\views\onboarding_views.py:279
 msgid "Пароль должен быть не менее 8 символов."
 msgstr "Password must be at least 8 characters long."
 
-#: .\clients\views\onboarding_views.py:284
+#: .\clients\views\onboarding_views.py:298
 msgid ""
 "Этот адрес электронной почты уже используется в системе другим активным "
 "клиентом."
 msgstr "This email address is already in use by another active client."
 
-#: .\clients\views\onboarding_views.py:315
+#: .\clients\views\onboarding_views.py:329
 msgid "Аккаунт успешно создан. Вы вошли в личный кабинет клиента."
 msgstr "Account created. You are signed in to the client cabinet."
 
-#: .\clients\views\onboarding_views.py:318
+#: .\clients\views\onboarding_views.py:332
 #, python-brace-format
 msgid "Произошла ошибка при сохранении аккаунта: {error}"
 msgstr "An error occurred while saving the account: {error}"
 
-#: .\clients\views\onboarding_views.py:331
+#: .\clients\views\onboarding_views.py:345
 msgid ""
 "Фото 45x35 мм можно сделать в фотоателье или фотокабине. Попросите формат do"
 " karty pobytu."
@@ -8504,7 +8745,7 @@ msgstr ""
 "You can take 45x35 mm photos at a photo studio or photo booth. Ask for the "
 "karta pobytu format."
 
-#: .\clients\views\onboarding_views.py:332
+#: .\clients\views\onboarding_views.py:346
 msgid ""
 "Сделайте оплату банковским переводом или в кассе, затем загрузите "
 "подтверждение платежа."
@@ -8512,14 +8753,14 @@ msgstr ""
 "Pay by bank transfer or at the office cash desk, then upload the payment "
 "confirmation."
 
-#: .\clients\views\onboarding_views.py:333
+#: .\clients\views\onboarding_views.py:347
 msgid ""
 "Оплату можно сделать банковским переводом на счёт ужонда; сохраните "
 "подтверждение из банка."
 msgstr ""
 "Pay by bank transfer to the office account, then save the bank confirmation."
 
-#: .\clients\views\onboarding_views.py:334
+#: .\clients\views\onboarding_views.py:348
 msgid ""
 "Оплату можно сделать банковским переводом на счёт ужонда; сохраните "
 "подтверждение 440 zł и 17 zł за доверенность, если она нужна."
@@ -8527,7 +8768,7 @@ msgstr ""
 "Pay by bank transfer to the office account; save confirmations for 440 zł "
 "and 17 zł for the power of attorney if needed."
 
-#: .\clients\views\onboarding_views.py:335
+#: .\clients\views\onboarding_views.py:349
 msgid ""
 "Оплату можно сделать банковским переводом на счёт ужонда; сохраните "
 "подтверждение платежа и доверенности, если она нужна."
@@ -8535,7 +8776,7 @@ msgstr ""
 "Pay by bank transfer to the office account; save the payment and power-of-"
 "attorney confirmation if needed."
 
-#: .\clients\views\onboarding_views.py:336
+#: .\clients\views\onboarding_views.py:350
 msgid ""
 "Отсканируйте или сфотографируйте действующий паспорт. Если паспорт нужно "
 "оформить заново, обратитесь в консульство или орган вашей страны."
@@ -8543,7 +8784,7 @@ msgstr ""
 "Scan or photograph your valid passport. If you need a new passport, contact "
 "your consulate or your country's authority."
 
-#: .\clients\views\onboarding_views.py:337
+#: .\clients\views\onboarding_views.py:351
 msgid ""
 "Отсканируйте или сфотографируйте текущую карту побыту с двух сторон, если "
 "она у вас есть."
@@ -8551,14 +8792,14 @@ msgstr ""
 "Scan or photograph both sides of your current residence card, if you have "
 "one."
 
-#: .\clients\views\onboarding_views.py:338
+#: .\clients\views\onboarding_views.py:352
 msgid ""
 "Закажите справку в деканате, student office или личном кабинете вашей учёбы."
 msgstr ""
 "Order the certificate from the dean's office, student office, or your "
 "school's online account."
 
-#: .\clients\views\onboarding_views.py:339
+#: .\clients\views\onboarding_views.py:353
 msgid ""
 "Запросите справку о стоимости обучения в деканате, student office или "
 "бухгалтерии учебного заведения."
@@ -8566,7 +8807,7 @@ msgstr ""
 "Request the tuition fee certificate from the dean's office, student office, "
 "or the school's accounting office."
 
-#: .\clients\views\onboarding_views.py:340
+#: .\clients\views\onboarding_views.py:354
 msgid ""
 "Возьмите подтверждение оплаты обучения в банковском приложении или в "
 "бухгалтерии учебного заведения."
@@ -8574,7 +8815,7 @@ msgstr ""
 "Take the tuition payment confirmation from your banking app or the school's "
 "accounting office."
 
-#: .\clients\views\onboarding_views.py:341
+#: .\clients\views\onboarding_views.py:355
 msgid ""
 "Оценки или свидетельства можно получить в деканате, student office, школе "
 "или в электронном кабинете ученика/студента."
@@ -8582,7 +8823,7 @@ msgstr ""
 "You can get grades or certificates from the dean's office, student office, "
 "school, or student portal."
 
-#: .\clients\views\onboarding_views.py:342
+#: .\clients\views\onboarding_views.py:356
 msgid ""
 "Полис можно получить у страховщика, работодателя, в ZUS/eZUS или NFZ. "
 "Подойдёт документ с подтверждением активной страховки."
@@ -8590,7 +8831,7 @@ msgstr ""
 "You can get the policy from your insurer, employer, ZUS/eZUS, or NFZ. Upload"
 " a document confirming active insurance."
 
-#: .\clients\views\onboarding_views.py:343
+#: .\clients\views\onboarding_views.py:357
 msgid ""
 "Обычно это договор аренды от владельца жилья, подтверждение meldunek из "
 "ужонда или документы об оплате проживания."
@@ -8598,7 +8839,7 @@ msgstr ""
 "Usually this is a lease agreement from the owner, a meldunek confirmation "
 "from the office, or documents confirming housing payments."
 
-#: .\clients\views\onboarding_views.py:344
+#: .\clients\views\onboarding_views.py:358
 msgid ""
 "Подготовьте выписку из банка, справку о доходах, документы спонсора или "
 "другое подтверждение средств на проживание."
@@ -8606,7 +8847,7 @@ msgstr ""
 "Prepare a bank statement, income certificate, sponsor documents, or another "
 "proof of funds for living expenses."
 
-#: .\clients\views\onboarding_views.py:345
+#: .\clients\views\onboarding_views.py:359
 msgid ""
 "Załącznik nr 1 заполняет и подписывает работодатель. Обратитесь в отдел "
 "кадров, HR или бухгалтерию."
@@ -8614,7 +8855,7 @@ msgstr ""
 "Załącznik nr 1 is completed and signed by the employer. Ask HR, payroll, or "
 "accounting."
 
-#: .\clients\views\onboarding_views.py:346
+#: .\clients\views\onboarding_views.py:360
 msgid ""
 "Копию договора о работе или zlecenie можно получить у работодателя, в HR или"
 " бухгалтерии."
@@ -8622,7 +8863,7 @@ msgstr ""
 "You can get a copy of your employment or zlecenie contract from your "
 "employer, HR, or accounting."
 
-#: .\clients\views\onboarding_views.py:347
+#: .\clients\views\onboarding_views.py:361
 msgid ""
 "Oświadczenie или zezwolenie na pracę выдаёт работодатель. Если у вас "
 "польский диплом, загрузите диплом и suplement."
@@ -8630,7 +8871,7 @@ msgstr ""
 "Oświadczenie or zezwolenie na pracę is issued by the employer. If you have a"
 " Polish diploma, upload the diploma and supplement."
 
-#: .\clients\views\onboarding_views.py:348
+#: .\clients\views\onboarding_views.py:362
 msgid ""
 "PIT-37 с подтверждением подачи можно скачать в e-Urząd Skarbowy на "
 "podatki.gov.pl или получить у бухгалтера."
@@ -8638,7 +8879,7 @@ msgstr ""
 "PIT-37 with submission confirmation can be downloaded from e-Urząd Skarbowy "
 "at podatki.gov.pl or requested from accounting."
 
-#: .\clients\views\onboarding_views.py:349
+#: .\clients\views\onboarding_views.py:363
 msgid ""
 "Этот документ работодатель получает в ZUS/eZUS. Попросите HR или бухгалтерию"
 " подготовить справку."
@@ -8646,7 +8887,7 @@ msgstr ""
 "The employer obtains this certificate in ZUS/eZUS. Ask HR or accounting to "
 "prepare it."
 
-#: .\clients\views\onboarding_views.py:350
+#: .\clients\views\onboarding_views.py:364
 msgid ""
 "Справку о взносах можно получить в ZUS/eZUS или запросить у "
 "работодателя/бухгалтерии."
@@ -8654,7 +8895,7 @@ msgstr ""
 "You can get the contribution certificate from ZUS/eZUS or ask your "
 "employer/accounting."
 
-#: .\clients\views\onboarding_views.py:351
+#: .\clients\views\onboarding_views.py:365
 msgid ""
 "Справку об отсутствии налоговой задолженности можно получить в e-Urząd "
 "Skarbowy или в налоговом ужонде."
@@ -8662,7 +8903,7 @@ msgstr ""
 "The tax clearance certificate can be obtained in e-Urząd Skarbowy or at the "
 "tax office."
 
-#: .\clients\views\onboarding_views.py:352
+#: .\clients\views\onboarding_views.py:366
 msgid ""
 "ZUS RCA можно скачать в ZUS PUE/eZUS в разделе Ubezpieczony -> Raporty или "
 "запросить у бухгалтера работодателя."
@@ -8670,7 +8911,7 @@ msgstr ""
 "ZUS RCA can be downloaded from ZUS PUE/eZUS under Ubezpieczony -> Raporty or"
 " requested from your employer's accounting."
 
-#: .\clients\views\onboarding_views.py:353
+#: .\clients\views\onboarding_views.py:367
 msgid ""
 "Справку о przebiegu ubezpieczenia можно заказать в ZUS/eZUS или в отделении "
 "ZUS."
@@ -8678,11 +8919,11 @@ msgstr ""
 "The przebieg ubezpieczenia certificate can be ordered in ZUS/eZUS or at a "
 "ZUS office."
 
-#: .\clients\views\onboarding_views.py:354
+#: .\clients\views\onboarding_views.py:368
 msgid "CIT/PIT работодателя подготовит бухгалтерия работодателя."
 msgstr "Employer CIT/PIT is prepared by the employer's accounting office."
 
-#: .\clients\views\onboarding_views.py:355
+#: .\clients\views\onboarding_views.py:369
 msgid ""
 "Справку о количестве сотрудников и взносах работодатель получает в ZUS/eZUS."
 " Обратитесь в HR или бухгалтерию."
@@ -8690,7 +8931,7 @@ msgstr ""
 "The employer obtains the employee-count and contribution certificate in "
 "ZUS/eZUS. Ask HR or accounting."
 
-#: .\clients\views\onboarding_views.py:356
+#: .\clients\views\onboarding_views.py:370
 msgid ""
 "Шаблон заявления выдаёт менеджер или юрист. Заполните и подпишите его после "
 "проверки данных."
@@ -8698,7 +8939,7 @@ msgstr ""
 "The statement template is provided by your manager or lawyer. Fill it in and"
 " sign it after checking the data."
 
-#: .\clients\views\onboarding_views.py:357
+#: .\clients\views\onboarding_views.py:371
 msgid ""
 "Заявление об обеспечении заполняет и подписывает человек, который будет вас "
 "содержать. Шаблон можно получить у менеджера."
@@ -8706,7 +8947,7 @@ msgstr ""
 "The maintenance statement is completed and signed by the person who will "
 "support you. Ask your manager for the template."
 
-#: .\clients\views\onboarding_views.py:358
+#: .\clients\views\onboarding_views.py:372
 msgid ""
 "Загрузите письмо wezwanie / вызов на отпечатки, которое пришло из ужонда по "
 "почте, ePUAP или MOS."
@@ -8714,11 +8955,11 @@ msgstr ""
 "Upload the fingerprints summons / wezwanie that came from the office by "
 "post, ePUAP, or MOS."
 
-#: .\clients\views\onboarding_views.py:359
+#: .\clients\views\onboarding_views.py:373
 msgid "Подтверждение выдаёт ужонд после сдачи отпечатков пальцев."
 msgstr "The office issues this confirmation after fingerprint submission."
 
-#: .\clients\views\onboarding_views.py:360
+#: .\clients\views\onboarding_views.py:374
 msgid ""
 "Спонсор должен отсканировать свою карту побыту, решение о побыте или другой "
 "документ, подтверждающий легальное пребывание."
@@ -8726,7 +8967,7 @@ msgstr ""
 "The sponsor should scan their residence card, residence decision, or another"
 " document confirming legal stay."
 
-#: .\clients\views\onboarding_views.py:361
+#: .\clients\views\onboarding_views.py:375
 msgid ""
 "Документы о доходе спонсора можно получить у работодателя, в бухгалтерии, "
 "банке, ZUS или налоговом ужонде."
@@ -8734,7 +8975,7 @@ msgstr ""
 "Sponsor income documents can be obtained from the employer, accounting "
 "office, bank, ZUS, or tax office."
 
-#: .\clients\views\onboarding_views.py:362
+#: .\clients\views\onboarding_views.py:376
 msgid ""
 "Свидетельство о браке получите в ЗАГСе/USC страны регистрации брака; для "
 "Польши обычно нужен присяжный перевод."
@@ -8743,7 +8984,7 @@ msgstr ""
 "where the marriage was registered; for use in Poland it usually needs a "
 "sworn translation."
 
-#: .\clients\views\onboarding_views.py:363
+#: .\clients\views\onboarding_views.py:377
 msgid ""
 "Подойдут договор аренды, счета, совместные документы, фото или другие "
 "доказательства совместной семейной жизни."
@@ -8751,7 +8992,7 @@ msgstr ""
 "Use lease agreements, bills, joint documents, photos, or other proof of "
 "shared family life."
 
-#: .\clients\views\onboarding_views.py:364
+#: .\clients\views\onboarding_views.py:378
 msgid ""
 "Согласие можно оформить у нотариуса или в консульстве; при необходимости "
 "добавьте присяжный перевод."
@@ -8759,7 +9000,7 @@ msgstr ""
 "Consent can be prepared by a notary or at a consulate; add a sworn "
 "translation if needed."
 
-#: .\clients\views\onboarding_views.py:365
+#: .\clients\views\onboarding_views.py:379
 msgid ""
 "Свидетельство о рождении получите в ЗАГСе/USC страны рождения; для Польши "
 "обычно нужен присяжный перевод."
@@ -8767,7 +9008,7 @@ msgstr ""
 "Get the birth certificate from the civil registry office in the country of "
 "birth; for use in Poland it usually needs a sworn translation."
 
-#: .\clients\views\onboarding_views.py:366
+#: .\clients\views\onboarding_views.py:380
 msgid ""
 "Документы об опеке или родительских правах можно получить в суде, ЗАГСе/USC "
 "или у нотариуса; при необходимости добавьте перевод."
@@ -8775,7 +9016,7 @@ msgstr ""
 "Documents confirming custody or parental authority can be obtained from a "
 "court, civil registry office, or notary; add a translation if needed."
 
-#: .\clients\views\onboarding_views.py:367
+#: .\clients\views\onboarding_views.py:381
 msgid ""
 "Согласие второго родителя оформляется у нотариуса или в консульстве. Решение"
 " суда также подойдёт, если оно заменяет согласие."
@@ -8783,7 +9024,7 @@ msgstr ""
 "The second parent's consent is prepared by a notary or at a consulate. A "
 "court decision also works if it replaces consent."
 
-#: .\clients\views\onboarding_views.py:368
+#: .\clients\views\onboarding_views.py:382
 msgid ""
 "Справку из школы можно получить в секретариате школы или электронном "
 "кабинете."
@@ -8791,7 +9032,7 @@ msgstr ""
 "The school certificate can be obtained from the school office or electronic "
 "school portal."
 
-#: .\clients\views\onboarding_views.py:369
+#: .\clients\views\onboarding_views.py:383
 msgid ""
 "Согласие законного представителя можно оформить у нотариуса или в "
 "консульстве; при необходимости добавьте перевод."
@@ -8799,7 +9040,7 @@ msgstr ""
 "Legal representative consent can be prepared by a notary or at a consulate; "
 "add a translation if needed."
 
-#: .\clients\views\onboarding_views.py:371
+#: .\clients\views\onboarding_views.py:385
 msgid ""
 "Если не знаете, где получить этот документ, напишите менеджеру, и мы "
 "подскажем точное место."
@@ -8807,46 +9048,46 @@ msgstr ""
 "If you are not sure where to get this document, write to your manager and we"
 " will point you to the exact place."
 
-#: .\clients\views\onboarding_views.py:536
+#: .\clients\views\onboarding_views.py:550
 msgid "Файл загружен. Сотрудник получил уведомление."
 msgstr "File uploaded. A staff member received a notification."
 
-#: .\clients\views\onboarding_views.py:538
+#: .\clients\views\onboarding_views.py:552
 msgid "Файл загружен. Мы сохранили его в вашем кабинете."
 msgstr "File uploaded. We saved it in your client cabinet."
 
-#: .\clients\views\onboarding_views.py:890
-#: .\clients\views\onboarding_views.py:953
-#: .\clients\views\onboarding_views.py:1132
+#: .\clients\views\onboarding_views.py:904
+#: .\clients\views\onboarding_views.py:967
+#: .\clients\views\onboarding_views.py:1146
 msgid "Invalid application purpose"
 msgstr "Invalid application purpose"
 
-#: .\clients\views\onboarding_views.py:930
+#: .\clients\views\onboarding_views.py:944
 msgid "Ссылка на онбординг скопирована!"
 msgstr "Onboarding link copied!"
 
-#: .\clients\views\onboarding_views.py:933
+#: .\clients\views\onboarding_views.py:947
 msgid "Ссылка на онбординг успешно создана."
 msgstr "Onboarding link successfully created."
 
-#: .\clients\views\onboarding_views.py:943
-#: .\clients\views\onboarding_views.py:1002
+#: .\clients\views\onboarding_views.py:957
+#: .\clients\views\onboarding_views.py:1016
 msgid "Method not allowed"
 msgstr "Method not allowed"
 
-#: .\clients\views\onboarding_views.py:991
+#: .\clients\views\onboarding_views.py:1005
 msgid "Клиент добавлен и ссылка скопирована!"
 msgstr "Client added and link copied!"
 
-#: .\clients\views\onboarding_views.py:1006
+#: .\clients\views\onboarding_views.py:1020
 msgid "Invalid token"
 msgstr "Invalid token"
 
-#: .\clients\views\onboarding_views.py:1009
+#: .\clients\views\onboarding_views.py:1023
 msgid "Authentication required"
 msgstr "Authentication required"
 
-#: .\clients\views\onboarding_views.py:1199
+#: .\clients\views\onboarding_views.py:1213
 msgid "Draft auto-saved"
 msgstr "Draft auto-saved"
 
@@ -8860,71 +9101,71 @@ msgid ""
 msgstr ""
 "Wniosek confirmed. Submitted attachments were saved to the client checklist."
 
-#: .\clients\views\reminders.py:190
+#: .\clients\views\reminders.py:236
 msgid ""
 "Проверка завершена. Новые напоминания, если были найдены, успешно созданы!"
 msgstr ""
 "Review and generate up-to-date reminders, filter by client and timeframe"
 
-#: .\clients\views\reminders.py:192
+#: .\clients\views\reminders.py:238
 #, python-format
 msgid "Произошла ошибка при создании напоминаний: %(err)s"
 msgstr "An error occurred while creating reminders: %(err)s"
 
-#: .\clients\views\reminders.py:198
+#: .\clients\views\reminders.py:244
 msgid "Эту операцию можно выполнить только через специальную кнопку."
 msgstr "This operation can only be performed through a special button."
 
-#: .\clients\views\reminders.py:209
+#: .\clients\views\reminders.py:255
 msgid "Напоминание удалено."
 msgstr "Document reminders"
 
-#: .\clients\views\reminders.py:212
+#: .\clients\views\reminders.py:258
 msgid "Напоминание отмечено как выполненное."
 msgstr "Document reminders"
 
-#: .\clients\views\reminders.py:220
+#: .\clients\views\reminders.py:266
 msgid "Отправили письмо клиенту об истекающем документе."
 msgstr "Missing documents checklist"
 
-#: .\clients\views\reminders.py:222
+#: .\clients\views\reminders.py:268
 msgid "Не удалось отправить письмо: нет email или даты истечения."
 msgstr "Failed to send email: no email or expiration date."
 
-#: .\clients\views\reminders.py:240
+#: .\clients\views\reminders.py:286
 msgid "Отправили письмо клиенту по документам."
 msgstr "Document reminders"
 
-#: .\clients\views\reminders.py:242
+#: .\clients\views\reminders.py:288
 msgid ""
 "Не удалось отправить письмо: нет email или документов с датой истечения."
 msgstr "Failed to send email: no email or documents with expiration date."
 
-#: .\clients\views\reminders.py:248
+#: .\clients\views\reminders.py:294
 msgid "Эту операцию можно выполнить только через кнопку отправки."
 msgstr "This operation can only be performed through the submit button."
 
-#: .\clients\views\staff_views.py:105
+#: .\clients\views\staff_views.py:104
 msgid "Сотрудник создан."
 msgstr "The employee has been created."
 
-#: .\clients\views\staff_views.py:107
+#: .\clients\views\staff_views.py:106
 msgid "Не удалось создать сотрудника. Проверьте форму."
 msgstr "Failed to create employee. Check the form."
 
-#: .\clients\views\staff_views.py:117
+#: .\clients\views\staff_views.py:116
 msgid "Сотрудник обновлён."
 msgstr "The employee has been updated."
 
-#: .\clients\views\staff_views.py:119
+#: .\clients\views\staff_views.py:118
 msgid "Не удалось обновить сотрудника. Проверьте форму."
 msgstr "Failed to update employee. Check the form."
 
-#: .\clients\views\staff_views.py:142
+#: .\clients\views\staff_views.py:141
 msgid "Статус сотрудника обновлён."
 msgstr "The employee's status has been updated."
 
-#: .\clients\views\staff_views.py:159
+#: .\clients\views\staff_views.py:158
 msgid "Роли и права синхронизированы."
 msgstr "Roles and rights are synchronized."
 
@@ -8940,19 +9181,19 @@ msgstr "Failed to create task. Check the form."
 msgid "Задача отмечена как выполненная."
 msgstr "Task marked as completed."
 
-#: .\clients\views\testcenter.py:19
+#: .\clients\views\testcenter.py:24
 msgid "Test Center is not available."
 msgstr "Test Center is not available."
 
-#: .\clients\views\testcenter.py:44
+#: .\clients\views\testcenter.py:76
 msgid "Confirm cleanup before deleting test data."
 msgstr "Confirm cleanup before deleting test data."
 
-#: .\clients\views\testcenter.py:58
+#: .\clients\views\testcenter.py:90
 msgid "Test data cleanup completed."
 msgstr "Test data cleanup completed."
 
-#: .\clients\views\testcenter.py:84
+#: .\clients\views\testcenter.py:116
 #, python-format
 msgid ""
 "Test Run #%(run_id)s completed (%(status)s). Test data preserved in "
@@ -8961,7 +9202,7 @@ msgstr ""
 "Test Run #%(run_id)s completed (%(status)s). Test data preserved in "
 "database. Use links below to inspect."
 
-#: .\clients\views\testcenter.py:90
+#: .\clients\views\testcenter.py:122
 #, python-format
 msgid "Test Run #%(run_id)s completed with status %(status)s."
 msgstr "Test Run #%(run_id)s completed with status %(status)s."
@@ -9152,15 +9393,15 @@ msgstr ""
 "Zgoda przedstawiciela ustawowego na złożenie wniosku przez sponsora, jeśli "
 "dziecko przebywa poza Polską"
 
-#: .\legalize_site\context_processors.py:102
+#: .\legalize_site\context_processors.py:103
 msgid "OCR требует подтверждения"
 msgstr "Pending verification"
 
-#: .\legalize_site\context_processors.py:110
+#: .\legalize_site\context_processors.py:111
 msgid "OCR предупреждения"
 msgstr "Clients with OCR warnings"
 
-#: .\legalize_site\context_processors.py:118
+#: .\legalize_site\context_processors.py:119
 msgid "OCR обрабатывается"
 msgstr "OCR is processed"
 
@@ -9172,7 +9413,7 @@ msgstr "Too many requests. Please try again later."
 msgid "Polski"
 msgstr "Polski"
 
-#: .\legalize_site\settings\base.py:375 .\translations\models.py:21
+#: .\legalize_site\settings\base.py:375 .\translations\models.py:22
 msgid "English"
 msgstr "English"
 
@@ -9304,44 +9545,44 @@ msgstr "Documents of this type have not been uploaded yet."
 msgid "Быстрое создание документа"
 msgstr "Document Name"
 
-#: .\submissions\views\api.py:39
+#: .\submissions\views\api.py:40
 msgid "Основание создано"
 msgstr "Basis of stay"
 
-#: .\submissions\views\api.py:42 .\submissions\views\api.py:123
-#: .\submissions\views\api.py:186
+#: .\submissions\views\api.py:43 .\submissions\views\api.py:124
+#: .\submissions\views\api.py:187
 msgid "Ошибка валидации"
 msgstr "Validation error"
 
-#: .\submissions\views\api.py:74
+#: .\submissions\views\api.py:75
 msgid "Основание удалено"
 msgstr "Basis of stay"
 
-#: .\submissions\views\api.py:120 .\submissions\views\documents.py:39
+#: .\submissions\views\api.py:121 .\submissions\views\documents.py:41
 msgid "Документ создан"
 msgstr "Documents"
 
-#: .\submissions\views\api.py:176 .\submissions\views\documents.py:65
+#: .\submissions\views\api.py:177 .\submissions\views\documents.py:67
 msgid "Документ обновлён"
 msgstr "Documents"
 
-#: .\submissions\views\submissions.py:36 .\submissions\views\submissions.py:49
+#: .\submissions\views\submissions.py:39 .\submissions\views\submissions.py:52
 msgid "Основание подачи создано"
 msgstr "Basis and end date"
 
-#: .\submissions\views\submissions.py:55
+#: .\submissions\views\submissions.py:58
 msgid "Не удалось создать основание"
 msgstr "Edit Submission Purpose"
 
-#: .\submissions\views\submissions.py:77
+#: .\submissions\views\submissions.py:80
 msgid "Основание подачи обновлено"
 msgstr "Basis and end date"
 
-#: .\submissions\views\submissions.py:80
+#: .\submissions\views\submissions.py:83
 msgid "Не удалось обновить основание"
 msgstr "Purpose Actions"
 
-#: .\submissions\views\submissions.py:94
+#: .\submissions\views\submissions.py:97
 msgid "Основание подачи удалено"
 msgstr "Basis and end date"
 
@@ -9864,11 +10105,19 @@ msgstr "Contact our support if you still haven't received the email."
 msgid "Администрирование Legalize"
 msgstr "Administration Legalize"
 
-#: .\templates\admin\base_site.html:305
+#: .\templates\admin\base_site.html:306
+msgid "Демо-центр (Demo)"
+msgstr "Demo Center"
+
+#: .\templates\admin\base_site.html:310
+msgid "Тест-центр (Tests)"
+msgstr "Test Center"
+
+#: .\templates\admin\base_site.html:315
 msgid "&#x21bb; Обновить переводы"
 msgstr "Bank transfer"
 
-#: .\templates\admin\base_site.html:311
+#: .\templates\admin\base_site.html:321
 msgid "Центр управления Legalize"
 msgstr "Control center Legalize"
 
@@ -9952,10 +10201,6 @@ msgstr "Configuring the list of required documents for application purposes"
 msgid "Расписание визитов клиентов в Ужонд для сдачи отпечатков пальцев"
 msgstr "Schedule of client visits to Uzhond for fingerprinting"
 
-#: .\templates\base.html:131 .\templates\base.html:303
-msgid "Напоминания"
-msgstr "Reminders"
-
 #: .\templates\base.html:135
 msgid ""
 "Список документов с истекающим сроком или недостающих документов у клиентов"
@@ -9976,7 +10221,7 @@ msgstr ""
 msgid "По оплатам"
 msgstr "Payments"
 
-#: .\templates\base.html:217 .\translations\models.py:13
+#: .\templates\base.html:217 .\translations\models.py:14
 #: .\translations\templates\translations\studio_dashboard.html:180
 msgid "Translation Studio"
 msgstr "Translation Studio"
@@ -10060,39 +10305,39 @@ msgstr "Add a purpose to configure the checklist."
 msgid "Пожалуйста, заполните недостающие поля:"
 msgstr "Please fix the errors:"
 
-#: .\translations\models.py:14
+#: .\translations\models.py:15
 msgid "Imported from PO"
 msgstr "Imported from PO"
 
-#: .\translations\models.py:15
+#: .\translations\models.py:16
 msgid "Manual"
 msgstr "Manual"
 
-#: .\translations\models.py:19
+#: .\translations\models.py:20
 msgid "Russian"
 msgstr "Russian"
 
-#: .\translations\models.py:20
+#: .\translations\models.py:21
 msgid "Polish"
 msgstr "English"
 
-#: .\translations\models.py:24
+#: .\translations\models.py:25
 msgid "Original text (msgid)"
 msgstr "Original text (msgid)"
 
-#: .\translations\models.py:26
+#: .\translations\models.py:27
 msgid "Translated text"
 msgstr "Translated text"
 
-#: .\translations\models.py:28
+#: .\translations\models.py:29
 msgid "Is active"
 msgstr "Active"
 
-#: .\translations\models.py:52
+#: .\translations\models.py:53
 msgid "Translation Override"
 msgstr "Translation Override"
 
-#: .\translations\models.py:53
+#: .\translations\models.py:54
 msgid "Translation Overrides"
 msgstr "Translation Overrides"
 
@@ -10134,19 +10379,19 @@ msgstr "Error saving translation"
 msgid "No changes to save"
 msgstr "No changes to save"
 
-#: .\users\models.py:57
+#: .\users\models.py:58
 msgid "technical username"
 msgstr "technical username"
 
-#: .\users\models.py:58
+#: .\users\models.py:59
 msgid "email address"
 msgstr "email address"
 
-#: .\users\models.py:62
+#: .\users\models.py:63
 msgid "groups"
 msgstr "groups"
 
-#: .\users\models.py:64
+#: .\users\models.py:65
 msgid ""
 "The groups this user belongs to. A user will get all permissions granted to "
 "each of their groups."
@@ -10154,48 +10399,200 @@ msgstr ""
 "The groups this user belongs to. A user will get all permissions granted to "
 "each of their groups."
 
-#: .\users\models.py:71
+#: .\users\models.py:72
 msgid "user permissions"
 msgstr "Document Versions"
 
-#: .\users\models.py:73
+#: .\users\models.py:74
 msgid "Specific permissions for this user."
 msgstr "No previous versions found for this document."
 
-#: .\users\models.py:85
+#: .\users\models.py:86
 msgid "user"
 msgstr "user"
 
-#: .\users\models.py:86
+#: .\users\models.py:87
 msgid "users"
 msgstr "users"
 
-msgid "Демо-центр (Demo)"
-msgstr "Demo Center"
+#~ msgid "Вы уверены, что хотите разослать это сообщение?"
+#~ msgstr "Are you sure you want to send this message?"
 
-msgid "Тест-центр (Tests)"
-msgstr "Test Center"
+#~ msgid "Удалить это основание подачи?"
+#~ msgstr "Delete this application purpose?"
 
-msgid "Система и Тестирование"
-msgstr "System and Testing"
+#~ msgid "Demo Center is disabled."
+#~ msgstr "Demo Center is disabled."
 
-msgid "Доступные инструменты:"
-msgstr "Available Tools:"
+#~ msgid "Управление рабочими настройками базы без Django admin."
+#~ msgstr "Manage database settings without Django admin."
 
-msgid "Test Center (Тест-центр)"
-msgstr "Test Center"
+#~ msgid "Active cases"
+#~ msgstr "Active cases"
 
-msgid "Demo Center (Демо-центр)"
-msgstr "Demo Center"
+#~ msgid "Missing documents"
+#~ msgstr "Missing documents"
 
-msgid "Сценарии:"
-msgstr "Scenarios:"
+#~ msgid "Upcoming fingerprints"
+#~ msgstr "Upcoming fingerprints"
 
-msgid "Демо-центр (Demo Center)"
-msgstr "Demo Center"
+#~ msgid "Waiting after fingerprints"
+#~ msgstr "Waiting after fingerprints"
 
-msgid "Тест-центр (Test Center)"
-msgstr "Test Center"
+#~ msgid "Decisions"
+#~ msgstr "Decisions"
 
-msgid "Панель управления (Admin Panel)"
-msgstr "Admin Panel"
+#~ msgid ""
+#~ "Настройка контактных данных офиса, юриста (полномочника) и общих данных, "
+#~ "которые автоматически подставляются в бланки заявлений (Wniosek Mazowiecki) "
+#~ "и другие печатные документы."
+#~ msgstr ""
+#~ "These fields will be automatically inserted for all clients in this "
+#~ "database."
+
+#~ msgid ""
+#~ "Настройка списка документов, которые клиент должен загрузить для каждого "
+#~ "типа подачи (учёба, работа и др.). Здесь можно менять порядок "
+#~ "перетаскиванием и добавлять новые требования."
+#~ msgstr ""
+#~ "Setting up a list of documents that the client must upload for each type of "
+#~ "submission (study, work, etc.). Here you can change the order by dragging "
+#~ "and dropping and adding new requirements."
+
+#~ msgid ""
+#~ "Управление типами подачи заявлений (учёба, работа, воссоединение) в системе."
+#~ " Позволяет добавлять новые основания и задавать их названия на разных "
+#~ "языках."
+#~ msgstr ""
+#~ "Management of application types (study, work, reunion) in the system. Allows"
+#~ " you to add new bases and set their names in different languages."
+
+#~ msgid ""
+#~ "Просмотр и редактирование стоимости услуг компании для выставления счетов "
+#~ "клиентам (например, пошлины, переводы, сопровождение)."
+#~ msgstr ""
+#~ "View and edit the cost of company services for invoicing clients (for "
+#~ "example, duties, transfers, support)."
+
+#~ msgid "Сумма прайса:"
+#~ msgstr "Total price:"
+
+#~ msgid ""
+#~ "Управление учетными записями сотрудников компании, назначение им ролей "
+#~ "(Администратор, Менеджер, Переводчик) и разграничение прав доступа."
+#~ msgstr ""
+#~ "Managing company employee accounts, assigning roles to them (Administrator, "
+#~ "Manager, Translator) and delineating access rights."
+
+#~ msgid ""
+#~ "Мониторинг работоспособности сервера, проверка подключения к базе данных, "
+#~ "фоновых задач и технического состояния системы."
+#~ msgstr ""
+#~ "Monitoring the performance of the server, checking the connection to the "
+#~ "database, background tasks and the technical condition of the system."
+
+#~ msgid ""
+#~ "Анализ эффективности работы компании: воронка онбординга клиентов, "
+#~ "статистика оплат, количество закрытых и активных дел."
+#~ msgstr ""
+#~ "Analysis of the company’s performance: customer onboarding funnel, payment "
+#~ "statistics, number of closed and active cases."
+
+#~ msgid ""
+#~ "История отправки писем клиентам и подробный лог действий сотрудников в "
+#~ "системе (аудит безопасности и действий с клиентами)."
+#~ msgstr ""
+#~ "The history of sending letters to clients and a detailed log of employee "
+#~ "actions in the system (audit of security and actions with clients)."
+
+#~ msgid "Премиальный режим для проведения 5-минутных демонстраций клиентам."
+#~ msgstr "Premium mode for conducting 5-minute client demonstrations."
+
+#~ msgid "Demo Presentation Center"
+#~ msgstr "Demo Presentation Center"
+
+#~ msgid "Control Board"
+#~ msgstr "Control Board"
+
+#~ msgid "Show OCR result"
+#~ msgstr "Show OCR result"
+
+#~ msgid "Reset Demo Environment"
+#~ msgstr "Reset Demo Environment"
+
+#~ msgid ""
+#~ "Подтверждаю удаление только демонстрационных данных (is_demo_data=True)"
+#~ msgstr "I confirm deletion of demo data only (is_demo_data=True)"
+
+#~ msgid "5-Minute Scenario Timeline"
+#~ msgstr "5-Minute Scenario Timeline"
+
+#~ msgid "Кому"
+#~ msgstr "To"
+
+#~ msgid "Protected E2E regression checks for test data only."
+#~ msgstr "Protected E2E regression checks for test data only."
+
+#~ msgid "Run smoke scenarios"
+#~ msgstr "Run smoke scenarios"
+
+#~ msgid "Run full scenarios"
+#~ msgstr "Run full scenarios"
+
+#~ msgid "Run ocr scenarios"
+#~ msgstr "Run ocr scenarios"
+
+#~ msgid "Run email scenarios"
+#~ msgstr "Run email scenarios"
+
+#~ msgid "Run zus scenarios"
+#~ msgstr "Run zus scenarios"
+
+#~ msgid "Run documents scenarios"
+#~ msgstr "Run documents scenarios"
+
+#~ msgid "Run permissions scenarios"
+#~ msgstr "Run permissions scenarios"
+
+#~ msgid "Run security scenarios"
+#~ msgstr "Run security scenarios"
+
+#~ msgid "Run workflow scenarios"
+#~ msgstr "Run workflow scenarios"
+
+#, python-format
+#~ msgid "Run %(mode)s scenarios"
+#~ msgstr "Run %(mode)s scenarios"
+
+#~ msgid "Delete only records marked as test data"
+#~ msgstr "Delete only records marked as test data"
+
+#~ msgid "Upload & Extract"
+#~ msgstr "Upload & Extract"
+
+#~ msgid "ZUS & Insurance"
+#~ msgstr "ZUS & Insurance"
+
+#~ msgid "Audits & Expiry"
+#~ msgstr "Audits & Expiry"
+
+#~ msgid "Security & Access"
+#~ msgstr "Security & Access"
+
+#~ msgid "Test Center is disabled."
+#~ msgstr "Test Center is disabled."
+
+#~ msgid "Система и Тестирование"
+#~ msgstr "System and Testing"
+
+#~ msgid "Доступные инструменты:"
+#~ msgstr "Available Tools:"
+
+#~ msgid "Test Center (Тест-центр)"
+#~ msgstr "Test Center"
+
+#~ msgid "Demo Center (Демо-центр)"
+#~ msgstr "Demo Center"
+
+#~ msgid "Сценарии:"
+#~ msgstr "Scenarios:"

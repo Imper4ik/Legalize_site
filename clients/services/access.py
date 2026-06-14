@@ -24,7 +24,7 @@ def is_internal_staff_user(user: AbstractBaseUser | AnonymousUser | None) -> boo
         return False
     if getattr(user, "is_superuser", False):
         return True
-    
+
     # Check groups if it's a real user object
     groups = getattr(user, "groups", None)
     if groups:
@@ -41,7 +41,7 @@ def user_has_internal_role(user: AbstractBaseUser | AnonymousUser | None, *role_
         return False
     if not role_names:
         return True
-        
+
     groups = getattr(user, "groups", None)
     if groups:
         return bool(groups.filter(name__in=role_names).exists())

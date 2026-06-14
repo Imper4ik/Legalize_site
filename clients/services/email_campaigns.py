@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import logging
 import time
-from datetime import timedelta
 from dataclasses import dataclass
-from typing import Any, Iterable, TYPE_CHECKING, cast
+from datetime import timedelta
+from typing import TYPE_CHECKING, Any, Iterable, cast
 
 from django.conf import settings
 from django.core.mail import send_mail

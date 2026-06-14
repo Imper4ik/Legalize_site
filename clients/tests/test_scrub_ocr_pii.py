@@ -1,7 +1,10 @@
+from io import StringIO
+
 from django.core.management import call_command
 from django.test import TestCase
+
 from clients.models import Client, Document
-from io import StringIO
+
 
 class ScrubOcrPiiCommandTests(TestCase):
     def setUp(self):

@@ -425,7 +425,7 @@ def check_database_schema(app_configs: Any = None, **kwargs: Any) -> list[Error 
     This prevents running with missing database columns/tables after schema desync.
     """
     from django.apps import apps
-    from django.db import connection, ProgrammingError, OperationalError
+    from django.db import OperationalError, ProgrammingError, connection
 
     messages: list[Error | Warning] = []
 

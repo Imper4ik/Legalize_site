@@ -6,7 +6,8 @@ from unittest.mock import patch
 
 import pytest
 from django.core.management import call_command
-from django.test import Client as DjangoClient, override_settings
+from django.test import Client as DjangoClient
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -22,7 +23,6 @@ from clients.models import (
 )
 from clients.services.zus import expected_zus_months, missing_zus_months
 from clients.tests.factories import create_admin_user, create_staff_user
-
 
 # ---------------------------------------------------------------------------
 # Helpers

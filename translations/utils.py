@@ -38,8 +38,8 @@ def load_all_translations() -> List[Dict[str, Any]]:
     Returns a unified list of translations.
     Format: [
         {
-            'msgid': '...', 
-            'ru': '...', 'en': '...', 'pl': '...', 
+            'msgid': '...',
+            'ru': '...', 'en': '...', 'pl': '...',
             'occurrences': [...],
             'source_ru': 'po', 'source_en': 'po', 'source_pl': 'po'
         },
@@ -71,8 +71,9 @@ def load_all_translations() -> List[Dict[str, Any]]:
             data[entry.msgid][f'source_{lang}'] = 'po'
 
     # 2. Overlay DB overrides
+    from django.db.utils import OperationalError, ProgrammingError
+
     from .models import TranslationOverride
-    from django.db.utils import ProgrammingError, OperationalError
 
     try:
         overrides = TranslationOverride.objects.filter(is_active=True)
@@ -113,7 +114,7 @@ def save_translation_entry(
 
     po_files = get_po_files()
     updates = {'ru': ru, 'en': en, 'pl': pl}
-    
+
     # Determine canonical msgid (keep existing logic for PO files)
     canonical = msgid
     normalized_input = normalize_text(msgid)
@@ -157,14 +158,15 @@ def save_translation_entry(
 
     # 1. Save to DB
     if storage in ('database', 'both'):
+        from django.db.utils import OperationalError, ProgrammingError
+
         from .models import TranslationOverride
         from .runtime import clear_translation_override_cache
-        from django.db.utils import ProgrammingError, OperationalError
 
         for lang, value in updates.items():
             if value is None:
                 continue
-            
+
             try:
                 _override, _created = TranslationOverride.objects.update_or_create(
                     msgid=canonical,

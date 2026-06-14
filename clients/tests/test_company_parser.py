@@ -3,13 +3,14 @@ from __future__ import annotations
 from datetime import date
 
 from clients.services.company_parser import (
-    validate_nip,
-    _find_nip,
+    _find_detected_names,
     _find_krs,
+    _find_nip,
     _find_salary,
     _find_valid_until_date,
-    _find_detected_names,
+    validate_nip,
 )
+
 
 def test_validate_nip():
     # Valid Polish NIP (Google Poland Sp. z o.o.)

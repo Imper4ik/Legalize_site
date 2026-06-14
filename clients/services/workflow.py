@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from django.utils.translation import gettext as _
+
 from clients.models import DocumentRequirement
 
 if TYPE_CHECKING:
@@ -42,7 +44,7 @@ def validate_client_workflow_transition(*, client: Client, previous_stage: str |
         if not getattr(client, "pk", None):
             return WorkflowValidationResult(
                 False,
-                "Сначала сохраните клиента, затем загрузите обязательные документы и переведите его к этапу подачи.",
+                _("Сначала сохраните клиента, затем загрузите обязательные документы и переведите его к этапу подачи."),
             )
 
         purpose = client.get_document_requirement_purpose()
@@ -62,25 +64,25 @@ def validate_client_workflow_transition(*, client: Client, previous_stage: str |
         if missing_required:
             return WorkflowValidationResult(
                 False,
-                "Нельзя перейти к подаче, пока не собраны обязательные документы.",
+                _("Нельзя перейти к подаче, пока не собраны обязательные документы."),
             )
 
     if next_stage == "fingerprints" and not client.submission_date:
         return WorkflowValidationResult(
             False,
-            "Нельзя перейти к этапу отпечатков без даты подачи.",
+            _("Нельзя перейти к этапу отпечатков без даты подачи."),
         )
 
     if next_stage == "waiting_decision" and not client.fingerprints_date:
         return WorkflowValidationResult(
             False,
-            "Нельзя перейти к ожиданию решения без даты отпечатков.",
+            _("Нельзя перейти к ожиданию решения без даты отпечатков."),
         )
 
     if next_stage in {"decision_received", "closed"} and not client.decision_date:
         return WorkflowValidationResult(
             False,
-            "Нельзя завершить этап решения без даты решения.",
+            _("Нельзя перейти к решению без даты решения."),
         )
 
     if next_stage == "closed" and getattr(client, "pk", None):
@@ -88,7 +90,7 @@ def validate_client_workflow_transition(*, client: Client, previous_stage: str |
         if has_open_payments:
             return WorkflowValidationResult(
                 False,
-                "Cannot close a case while pending or partial payments exist.",
+                _("Cannot close a case while pending or partial payments exist."),
             )
 
     return WorkflowValidationResult(True)

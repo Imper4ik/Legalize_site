@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from django.contrib import messages
 from django.http import HttpRequest
@@ -12,8 +12,8 @@ from django.views.generic import ListView
 from clients.forms import StaffTaskForm
 from clients.models import Client, StaffTask
 from clients.services.access import accessible_clients_queryset, accessible_tasks_queryset
-from clients.use_cases.tasks import complete_task_for_client, create_task_for_client
 from clients.services.roles import TASK_MUTATION_ROLES
+from clients.use_cases.tasks import complete_task_for_client, create_task_for_client
 from clients.views.base import RoleOrFeatureRequiredMixin, role_or_feature_required_view
 
 if TYPE_CHECKING:

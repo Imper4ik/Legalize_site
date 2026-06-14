@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from datetime import date
 import logging
+from datetime import date
 from pathlib import Path
-from typing import Any, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
 from django.conf import settings
@@ -217,7 +217,8 @@ class Document(SoftDeleteModel):
         ]
 
     def __str__(self) -> str:
-        return f"{self.display_name} для {self.client}"
+        from django.utils.translation import gettext
+        return f"{self.display_name} {gettext('for')} {self.client}"
 
     def save(self, *args: Any, **kwargs: Any) -> None:
         if self.document_type == DocumentType.ZUS_RCA_OR_INSURANCE.value:
@@ -227,6 +228,7 @@ class Document(SoftDeleteModel):
         super().save(*args, **kwargs)
 
     def on_archive(self) -> None:
+        from clients.models.client import Client
         from clients.services.onboarding_purposes import clear_onboarding_notifications_cache
         if self.client_id:
             try:
@@ -237,6 +239,7 @@ class Document(SoftDeleteModel):
                 logger.warning("Failed to clear onboarding notifications cache on document archive")
 
     def on_restore(self) -> None:
+        from clients.models.client import Client
         from clients.services.onboarding_purposes import clear_onboarding_notifications_cache
         if self.client_id:
             try:

@@ -1,23 +1,25 @@
 from __future__ import annotations
- 
+
 import os
 from datetime import date
-from django.test import TestCase, override_settings
+
+from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
-from django.contrib.auth import get_user_model
- 
+from django.test import TestCase, override_settings
+
 # Models
 from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentProcessingJob, MOSApplicationData
- 
+
 # Import parsers directly to test actual file parsing
 from clients.services.company_parser import parse_company_doc
 from clients.services.passport_parser import parse_passport_doc
 from clients.services.rental_parser import parse_rental_doc
-from clients.services.zus_parser import parse_zus_doc
 from clients.services.wezwanie_parser import parse_wezwanie
- 
+from clients.services.zus_parser import parse_zus_doc
+
+
 @override_settings(ASYNC_OCR_PROCESSING=True)
 class RealOCRFlowTests(TestCase):
     def setUp(self):
@@ -37,65 +39,65 @@ class RealOCRFlowTests(TestCase):
             email="jan-kowalski-real-ocr@example.com",
             passport_num="",
         )
- 
+
     def _get_uploaded_file(self, filename: str) -> SimpleUploadedFile:
         filepath = os.path.join(self.fixtures_dir, filename)
         with open(filepath, "rb") as f:
             content = f.read()
         return SimpleUploadedFile(filename, content, content_type="application/pdf" if filename.endswith(".pdf") else "image/png")
- 
+
     # --- Digital PDF Parsing Tests (pypdf engine) ---
- 
+
     def test_real_company_doc_ceidg_parsing(self):
         filepath = os.path.join(self.fixtures_dir, "ceidg_real.pdf")
         parsed = parse_company_doc(filepath)
-        
+
         self.assertIsNone(parsed.error)
         self.assertIsNone(parsed.nip)
         self.assertIsNone(parsed.krs)
         self.assertIsNone(parsed.salary)
         self.assertIsNone(parsed.valid_until)
- 
+
     def test_real_company_doc_krs_parsing(self):
         filepath = os.path.join(self.fixtures_dir, "krs_real.pdf")
         parsed = parse_company_doc(filepath)
-        
+
         self.assertIsNone(parsed.error)
         self.assertEqual(parsed.nip, "5260250481")
         self.assertEqual(parsed.krs, "0000225587")
- 
+
     def test_real_zus_rca_parsing(self):
         filepath = os.path.join(self.fixtures_dir, "zus_rca_real.pdf")
         parsed = parse_zus_doc(filepath)
-        
+
         self.assertIsNone(parsed.error)
         self.assertIsNone(parsed.employer_nip)
         self.assertIsNone(parsed.insurance_code)
         self.assertIsNone(parsed.period_month)
         self.assertEqual(parsed.zus_form_type, "RCA")
- 
+
     def test_real_rental_agreement_parsing(self):
         filepath = os.path.join(self.fixtures_dir, "rental_real.pdf")
         parsed = parse_rental_doc(filepath)
-        
+
         self.assertIsNone(parsed.error)
         self.assertIn("Przeskok 2", parsed.address)
         self.assertIsNone(parsed.monthly_cost)
         self.assertIsNone(parsed.valid_until)
- 
+
     def test_real_passport_parsing(self):
         filepath = os.path.join(self.fixtures_dir, "passport_real.pdf")
         parsed = parse_passport_doc(filepath)
-        
+
         self.assertIsNone(parsed.error)
         self.assertIsNone(parsed.passport_number)
         self.assertEqual(parsed.first_name, "Republic")
         self.assertEqual(parsed.last_name, "Of")
- 
+
     def test_real_wezwanie_parsing(self):
         filepath = os.path.join(self.fixtures_dir, "wezwanie_real.pdf")
         parsed = parse_wezwanie(filepath)
-        
+
         self.assertEqual(parsed.case_number, "WSC-II-S.6151.97770.2026")
         self.assertEqual(parsed.fingerprints_date, date(2026, 8, 15))
         self.assertEqual(parsed.fingerprints_time, "10:30")
@@ -103,19 +105,19 @@ class RealOCRFlowTests(TestCase):
         self.assertIn("address_proof", parsed.required_documents)
         self.assertIn("passport", parsed.required_documents)
         self.assertIn("photos", parsed.required_documents)
- 
+
     # --- Raster Image (PNG/Scan) OCR Parsing Tests ---
- 
+
     def test_raster_image_passport_ocr(self):
         filepath = os.path.join(self.fixtures_dir, "passport_scan_specimen.png")
         parsed = parse_passport_doc(filepath)
-        
+
         self.assertIsNone(parsed.error)
         self.assertIsNotNone(parsed.text)
         self.assertTrue(len(parsed.text) > 100)
- 
+
     # --- End-To-End Job Integration Tests ---
- 
+
     def test_e2e_passport_job_processing(self):
         doc = Document.objects.create(
             client=self.client_obj,
@@ -129,16 +131,16 @@ class RealOCRFlowTests(TestCase):
             status=DocumentProcessingJob.STATUS_PENDING,
             job_type=DocumentProcessingJob.JOB_TYPE_PASSPORT_OCR,
         )
- 
+
         call_command("process_document_jobs")
- 
+
         doc.refresh_from_db()
         self.client_obj.refresh_from_db()
- 
+
         self.assertEqual(doc.ocr_status, "success")
         self.assertEqual(self.client_obj.passport_num, "")
         self.assertTrue(doc.ocr_name_mismatch)
- 
+
     def test_e2e_rental_agreement_job_processing(self):
         mos_data, _ = MOSApplicationData.objects.get_or_create(client=self.client_obj)
         mos_data.address_data = {
@@ -147,7 +149,7 @@ class RealOCRFlowTests(TestCase):
             "postal_code": "00-032",
         }
         mos_data.save()
- 
+
         doc = Document.objects.create(
             client=self.client_obj,
             document_type=DocumentType.ADDRESS_PROOF.value,
@@ -160,13 +162,13 @@ class RealOCRFlowTests(TestCase):
             status=DocumentProcessingJob.STATUS_PENDING,
             job_type=DocumentProcessingJob.JOB_TYPE_RENTAL_OCR,
         )
- 
+
         call_command("process_document_jobs")
- 
+
         doc.refresh_from_db()
         self.assertEqual(doc.ocr_status, "success")
         self.assertTrue(doc.ocr_name_mismatch)
- 
+
     def test_e2e_company_doc_job_processing(self):
         doc = Document.objects.create(
             client=self.client_obj,
@@ -180,14 +182,14 @@ class RealOCRFlowTests(TestCase):
             status=DocumentProcessingJob.STATUS_PENDING,
             job_type=DocumentProcessingJob.JOB_TYPE_COMPANY_DOC_OCR,
         )
- 
+
         call_command("process_document_jobs")
- 
+
         doc.refresh_from_db()
         self.assertEqual(doc.ocr_status, "success")
         self.assertEqual(doc.parsed_data["nip"], "5260250481")
         self.assertEqual(doc.parsed_data["krs"], "0000225587")
- 
+
     def test_e2e_zus_rca_job_processing(self):
         # Create a contract company doc first so we have the same NIP
         Document.objects.create(
@@ -196,7 +198,7 @@ class RealOCRFlowTests(TestCase):
             ocr_status="success",
             parsed_data={"nip": "5260250481"}
         )
- 
+
         doc = Document.objects.create(
             client=self.client_obj,
             document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
@@ -209,9 +211,9 @@ class RealOCRFlowTests(TestCase):
             status=DocumentProcessingJob.STATUS_PENDING,
             job_type=DocumentProcessingJob.JOB_TYPE_ZUS_OCR,
         )
- 
+
         call_command("process_document_jobs")
- 
+
         doc.refresh_from_db()
         self.assertEqual(doc.ocr_status, "success")
         self.assertIsNone(doc.zus_period_month)

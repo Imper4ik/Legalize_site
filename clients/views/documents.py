@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from django.contrib import messages
 from django.http import HttpRequest, JsonResponse
@@ -19,18 +19,18 @@ from clients.services.access import (
     accessible_documents_queryset,
     user_has_internal_role,
 )
+from clients.services.custom_document_requirements import sync_custom_document_requirement_reminder
 from clients.services.document_helpers import document_file_exists
 from clients.services.document_workflow import confirm_wezwanie_document, upload_client_document
 from clients.services.notifications import (
     send_appointment_notification_email,
     send_missing_documents_email,
 )
-from clients.services.zus import missing_zus_month_upload_options
-from clients.services.custom_document_requirements import sync_custom_document_requirement_reminder
 from clients.services.permissions import has_employee_permission
 from clients.services.responses import ResponseHelper, apply_no_store
 from clients.services.roles import DOCUMENT_DELETE_ROLES, DOCUMENT_EDIT_ROLES
 from clients.services.wezwanie_parser import parse_wezwanie
+from clients.services.zus import missing_zus_month_upload_options
 from clients.use_cases.documents import (
     delete_client_document,
     delete_wniosek_attachment,
@@ -43,8 +43,8 @@ from clients.views.base import role_or_feature_required_view, role_required_view
 from legalize_site.utils.files import build_protected_file_response
 
 if TYPE_CHECKING:
-    from django.http.response import HttpResponseBase
     from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
+    from django.http.response import HttpResponseBase
 
 logger = logging.getLogger(__name__)
 
@@ -181,9 +181,9 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
                     }
                     for item in upload_results
                 ]
-                
+
                 msg = str(_("Загружено документов: %(count)s") % {"count": success_count}) if success_count > 1 else last_result.message
-                
+
                 return helper.success(
                     message=msg,
                     doc_id=primary_result.document.id,
@@ -382,7 +382,7 @@ def verify_all_documents(request: HttpRequest, client_id: int) -> HttpResponseBa
 def _serve_document_file(request: HttpRequest, doc_id: int, *, as_attachment: bool) -> HttpResponseBase:
     action = "download" if as_attachment else "preview"
     logger.info("Document %s requested: doc_id=%s, user_id=%s", action, doc_id, getattr(request.user, 'pk', 'None'))
-    
+
     document = get_object_or_404(
         accessible_documents_queryset(request.user, Document.objects.select_related("client")),
         pk=doc_id,

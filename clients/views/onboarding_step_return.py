@@ -113,14 +113,15 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         if action == "upload_passport" or request.FILES.get("passport_file"):
             passport_file = request.FILES.get("passport_file")
             if passport_file:
+                from django.contrib import messages
+
                 from clients.forms import DocumentUploadForm
                 from clients.services.document_workflow import upload_client_document
-                from django.contrib import messages
-                
+
                 # Copy request.FILES to map passport_file to file for the form validation
                 files_dict = request.FILES.copy()
                 files_dict["file"] = files_dict["passport_file"]
-                
+
                 form = DocumentUploadForm(request.POST, files_dict, doc_type="passport", client=client)
                 if form.is_valid():
                     upload_client_document(

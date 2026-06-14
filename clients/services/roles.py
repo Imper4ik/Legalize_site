@@ -50,7 +50,7 @@ def user_has_any_role(user: AbstractBaseUser | AnonymousUser | None, *role_names
         return False
     if not role_names:
         return bool(getattr(user, "is_staff", False))
-    
+
     groups = getattr(user, "groups", None)
     if groups:
         return bool(groups.filter(name__in=role_names).exists())

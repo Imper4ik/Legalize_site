@@ -11,7 +11,6 @@ from django.db import models
 from django.utils.encoding import force_str
 from django.utils.functional import cached_property
 
-
 logger = logging.getLogger(__name__)
 ENCRYPTED_VALUE_UNAVAILABLE = "[encrypted value unavailable]"
 

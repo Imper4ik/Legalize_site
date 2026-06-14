@@ -1,18 +1,16 @@
 from __future__ import annotations
 
-from pathlib import Path
 import shutil
+from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase
-from django.test import override_settings
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from clients.services.roles import ensure_predefined_roles
 from submissions.models import Document, Submission
-
 
 TEST_MEDIA_ROOT = Path(__file__).resolve().parents[2] / "generated_media_test" / "submissions_web"
 TEST_MEDIA_ROOT.mkdir(parents=True, exist_ok=True)

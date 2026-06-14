@@ -1,9 +1,11 @@
 import os
 import re
 from pathlib import Path
+
 import polib
 import pytest
-from django.utils.translation import override, gettext as _
+from django.utils.translation import gettext as _
+from django.utils.translation import override
 
 PLACEHOLDER_REGEX = re.compile(r'%\([^)]+\)[#0 +\-]*(?:\d+)?(?:\.\d+)?[a-zA-Z]|%s')
 
@@ -81,10 +83,10 @@ def test_no_cyrillic_in_en_pl_msgstr():
                 text = "".join(e.msgstr_plural.values())
             else:
                 text = e.msgstr
-            
+
             if cyrillic_regex.search(text):
                 cyrillic_entries.append((e.msgid, text))
-        
+
         assert not cyrillic_entries, f"Found Cyrillic in {lang} translations: {cyrillic_entries[:5]}"
 
 def test_cyrillic_msgids_exist_in_en_pl_catalogs():
@@ -162,10 +164,10 @@ def test_no_cyrillic_in_js_files():
     cyrillic_regex = re.compile(r'[\u0410-\u044F\u0401\u0451]')
     js_dir = "static/clients/js/client/"
     cyrillic_found = []
-    
+
     if not os.path.exists(js_dir):
         pytest.skip(f"JS directory not found: {js_dir}")
-        
+
     for root, dirs, files in os.walk(js_dir):
         for file in files:
             if file.endswith('.js'):
@@ -177,7 +179,7 @@ def test_no_cyrillic_in_js_files():
                         if match:
                             cyrillic_found.append(path)
                             break
-                        
+
     assert not cyrillic_found, f"Found Cyrillic in JS files: {cyrillic_found}"
 
 def test_no_polish_markers_in_ru_msgstr():
@@ -192,7 +194,7 @@ def test_no_polish_markers_in_ru_msgstr():
         text = "".join(e.msgstr_plural.values()) if e.msgid_plural else e.msgstr
         if any(marker in text for marker in polish_markers):
             bad_entries.append((e.msgid, text))
-                
+
     assert not bad_entries, f"Found Polish markers in RU translations: {bad_entries[:5]}"
 
 def test_russian_msgids_translate_to_themselves_in_ru_po():

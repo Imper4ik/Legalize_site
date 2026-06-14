@@ -7,8 +7,8 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
+from clients.services.company_parser import _clean_number, _find_detected_names
 from clients.services.wezwanie_parser import extract_text
-from clients.services.company_parser import _find_detected_names, _clean_number
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ def _find_address(text: str) -> str | None:
         start = max(0, pos - 60)
         end = min(len(text), pos + 80)
         context = text[start:end].replace("\n", " ").strip()
-        
+
         # Try to isolate address around postcode:
         # e.g., "ul. Marszałkowska 10/12 m. 5, 00-590 Warszawa"
         address_pattern = re.compile(
@@ -42,7 +42,7 @@ def _find_address(text: str) -> str | None:
         match = address_pattern.search(context)
         if match:
             return match.group(1).strip()
-            
+
         # Fallback: return a chunk around the postcode
         return context
 
@@ -73,7 +73,7 @@ def _find_rental_cost(text: str) -> float | None:
             # Rental cost is usually between 200 and 15000 PLN
             if val and 200 <= val <= 15000:
                 candidates.append(val)
-                
+
     if candidates:
         # Return the most likely rental amount (often the first one or highest near keywords)
         return candidates[0]
@@ -91,11 +91,11 @@ def parse_rental_doc(file_path: str | Path) -> RentalDocData:
         return RentalDocData(text="", error="no_text")
 
     address = _find_address(cleaned_text)
-    
+
     # Expiry Date: look for "do" followed by a date, or oznaczony "do dnia"
     from clients.services.company_parser import _find_valid_until_date
     valid_until = _find_valid_until_date(cleaned_text)
-    
+
     monthly_cost = _find_rental_cost(cleaned_text)
     detected_names = _find_detected_names(cleaned_text)
 

@@ -8,14 +8,14 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.test import TestCase, override_settings
-from reportlab.pdfgen import canvas # type: ignore[import-untyped]
+from reportlab.pdfgen import canvas  # type: ignore[import-untyped]
 
 from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentProcessingJob
+from clients.services.company_parser import CompanyDocData
 from clients.services.document_workflow import (
     upload_client_document,
 )
-from clients.services.company_parser import CompanyDocData
 
 
 def build_pdf_upload(name: str, text: str = "NIP: 525-23-44-078") -> SimpleUploadedFile:
@@ -46,7 +46,7 @@ class CompanyDocWorkflowTests(TestCase):
             document_type=DocumentType.ZALACZNIK_NR_1.value,
             file=build_pdf_upload("z1.pdf"),
         )
-        
+
         result = upload_client_document(
             client=self.client_obj,
             doc_type=DocumentType.ZALACZNIK_NR_1.value,
@@ -54,10 +54,10 @@ class CompanyDocWorkflowTests(TestCase):
             actor=self.staff,
             parse_requested=True,
         )
-        
+
         self.assertTrue(result.ocr_processing_queued)
         self.assertEqual(doc.ocr_status, "pending")
-        
+
         # Verify job was created with correct type
         job = DocumentProcessingJob.objects.get(document=doc)
         self.assertEqual(job.job_type, DocumentProcessingJob.JOB_TYPE_COMPANY_DOC_OCR)
@@ -107,13 +107,13 @@ class CompanyDocWorkflowTests(TestCase):
         doc.refresh_from_db()
         self.assertEqual(doc.ocr_status, "success")
         self.assertIsNotNone(doc.parsed_data)
-        
+
         data = doc.parsed_data
         self.assertEqual(data["nip"], "5252344078")
         self.assertEqual(data["krs"], "0000240611")
         self.assertEqual(data["salary"], 5000.0)
         self.assertEqual(data["valid_until"], "2026-12-31")
-        
+
         registry = data["registry_verification"]
         self.assertEqual(registry["registry_source"], "KRS")
         self.assertTrue(registry["is_employer_active"])
@@ -199,7 +199,7 @@ class CompanyDocWorkflowTests(TestCase):
 
         doc.refresh_from_db()
         registry = doc.parsed_data["registry_verification"]
-        
+
         # Verify low salary warning
         self.assertTrue(doc.ocr_name_mismatch) # Indicates warnings
         self.assertTrue(any("below the statutory minimum" in w for w in registry["warnings"]))

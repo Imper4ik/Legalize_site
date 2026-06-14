@@ -3,7 +3,6 @@
 from django import template
 from django.templatetags.i18n import do_block_translate, do_translate
 
-
 register = template.Library()
 
 # Support legacy `{% blocktranslate %}` usage by mapping it to Django's

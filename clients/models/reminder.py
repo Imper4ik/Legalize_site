@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from django.db import models
-from django.utils.translation import gettext_lazy as _, gettext
+from django.utils.translation import gettext
+from django.utils.translation import gettext_lazy as _
+
 
 class Reminder(models.Model):
     REMINDER_TYPE_CHOICES = [

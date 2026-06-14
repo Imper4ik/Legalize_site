@@ -1,4 +1,5 @@
 import json
+import shutil
 import tempfile
 import uuid
 from datetime import date, datetime, timedelta
@@ -8,6 +9,7 @@ from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
+from allauth.account.models import EmailAddress
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core import mail
@@ -15,15 +17,18 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from django.utils import translation
-from reportlab.pdfgen import canvas # type: ignore[import-untyped]
+from reportlab.pdfgen import canvas  # type: ignore[import-untyped]
 
-import shutil
-
-from allauth.account.models import EmailAddress
-
-from clients.forms import DocumentChecklistForm, DocumentRequirementAddForm, DocumentRequirementEditForm
-from clients.models import Client, Document, DocumentProcessingJob, DocumentRequirement, EmployeePermission, translate_document_name
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
+from clients.forms import DocumentChecklistForm, DocumentRequirementAddForm, DocumentRequirementEditForm
+from clients.models import (
+    Client,
+    Document,
+    DocumentProcessingJob,
+    DocumentRequirement,
+    EmployeePermission,
+    translate_document_name,
+)
 from clients.services.notifications import send_missing_documents_email
 from clients.services.responses import NO_STORE_HEADER, ResponseHelper
 from clients.services.roles import ensure_predefined_roles

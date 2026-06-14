@@ -28,11 +28,11 @@ class Command(BaseCommand):
         for requirement in queryset.iterator():
             if requirement.document_type not in doc_type_values:
                 continue
-            
+
             # requirement.custom_name is str | None in model, but we excluded None in queryset.
             # is_default_document_label expects str.
             custom_name = cast(str, requirement.custom_name)
-            
+
             if not is_default_document_label(custom_name, requirement.document_type):
                 continue
             updated += 1

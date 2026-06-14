@@ -13,8 +13,7 @@ from PIL import Image
 
 from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentRequirement
-from clients.services import notifications
-from clients.services import wezwanie_parser
+from clients.services import notifications, wezwanie_parser
 from clients.services.wezwanie_parser import (
     _detect_wezwanie_type,
     _extract_required_documents,

@@ -1,21 +1,22 @@
 from __future__ import annotations
 
 from datetime import date
-from unittest.mock import patch
 from io import BytesIO
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.core.management import call_command
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
-from reportlab.pdfgen import canvas # type: ignore[import-untyped]
+from reportlab.pdfgen import canvas  # type: ignore[import-untyped]
 
-from clients.constants import DocumentType, WEZWANIE_DOCUMENT_TYPES
+from clients.constants import WEZWANIE_DOCUMENT_TYPES, DocumentType
 from clients.models import Client, Document, DocumentProcessingJob
 from clients.services.document_workflow import enqueue_document_processing_job, process_document_processing_job
-from clients.services.wezwanie_parser import WezwanieData, parse_wezwanie
 from clients.services.roles import ensure_predefined_roles
+from clients.services.wezwanie_parser import WezwanieData, parse_wezwanie
+
 
 def build_pdf_upload(name: str, text: str = "wezwanie test") -> SimpleUploadedFile:
     buffer = BytesIO()

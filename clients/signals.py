@@ -1,15 +1,16 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from django.contrib.auth import get_user_model
-from django.db.models.signals import post_save, pre_save, post_delete, pre_delete
+from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from clients.services.activity import log_client_activity
+
 from .models import Client, Document, EmailLog, EmployeePermission, Payment, Reminder
 
 if TYPE_CHECKING:

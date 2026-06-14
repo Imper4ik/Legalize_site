@@ -2,23 +2,21 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 from decimal import Decimal
-from uuid import uuid4
 from typing import Any
+from uuid import uuid4
 
-from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 
 from clients.constants import DocumentType
 from clients.models import (
     Client,
+    ClientActivity,
     ClientOnboardingSession,
     Document,
     Payment,
-    ClientActivity,
     StaffAuditEvent,
 )
-from clients.services.onboarding_tokens import generate_onboarding_token
 
 DEMO_EMAIL_DOMAIN = "@example.demo"
 
@@ -110,8 +108,9 @@ def create_demo_document(
 
 
 def get_demo_token_for_client(client: Client) -> str:
-    from django.conf import settings
     import hashlib
+
+    from django.conf import settings
     h = hashlib.sha256(f"{client.pk}-{settings.SECRET_KEY}".encode()).hexdigest()[:16]
     return f"demo-token-{client.pk}-{h}"
 

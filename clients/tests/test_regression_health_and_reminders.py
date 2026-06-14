@@ -120,7 +120,9 @@ def test_get_health_alerts_legal_stay_logic(db):
 
 def test_send_legal_stay_email_critical_interval(db):
     from unittest.mock import patch
+
     from django.contrib.auth import get_user_model
+
     from clients.services.notifications import send_legal_stay_email
 
     User = get_user_model()
@@ -210,7 +212,7 @@ def test_document_save_and_delete_clears_onboarding_cache(db):
         last_name="Clearer",
         application_purpose="work",
     )
-    
+
     with patch("clients.services.onboarding_purposes.clear_onboarding_notifications_cache") as mock_clear:
         doc = Document.objects.create(
             client=client,
@@ -218,7 +220,7 @@ def test_document_save_and_delete_clears_onboarding_cache(db):
             file="documents/test_cache.pdf",
         )
         mock_clear.assert_called_with(client)
-        
+
         mock_clear.reset_mock()
         doc.delete()
         mock_clear.assert_called_with(client)
@@ -232,38 +234,38 @@ def test_health_alert_ocr_and_wezwanie_actions(db):
         application_purpose="work",
         case_number="",
     )
-    
+
     doc_passport = Document.objects.create(
         client=client,
         document_type=DocumentType.PASSPORT.value,
         file="documents/passport_ocr.pdf",
         awaiting_confirmation=True,
     )
-    
+
     doc_wezwanie = Document.objects.create(
         client=client,
         document_type=DocumentType.WEZWANIE.value,
         file="documents/wezwanie_ocr.pdf",
         awaiting_confirmation=True,
     )
-    
+
     alerts = client.get_health_alerts()
-    
+
     ocr_alert = next(a for a in alerts if a["title"] == "Есть OCR-данные без подтверждения")
     assert "actions" in ocr_alert
     assert len(ocr_alert["actions"]) == 2
     assert any(act["doc_id"] == doc_passport.id and act["is_ocr_review"] for act in ocr_alert["actions"])
     assert any(act["doc_id"] == doc_wezwanie.id and act["is_ocr_review"] for act in ocr_alert["actions"])
-    
+
     wezwanie_alert = next(a for a in alerts if a["title"] == "Есть wezwanie без номера дела")
     assert "actions" in wezwanie_alert
     assert len(wezwanie_alert["actions"]) == 1
     assert wezwanie_alert["actions"][0]["doc_id"] == doc_wezwanie.id
     assert wezwanie_alert["actions"][0]["is_ocr_review"] is True
-    
+
     doc_wezwanie.awaiting_confirmation = False
     doc_wezwanie.save()
-    
+
     alerts = client.get_health_alerts()
     wezwanie_alert = next(a for a in alerts if a["title"] == "Есть wezwanie без номера дела")
     assert "actions" in wezwanie_alert

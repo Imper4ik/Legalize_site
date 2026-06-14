@@ -44,11 +44,11 @@ class TranslationStage7PermissionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "ok")
         save_mock.assert_called_once_with(
-            None, 
-            ru=None, 
-            en=None, 
-            pl=None, 
-            updated_by=self.superuser, 
+            None,
+            ru=None,
+            en=None,
+            pl=None,
+            updated_by=self.superuser,
             storage='database'
         )
 

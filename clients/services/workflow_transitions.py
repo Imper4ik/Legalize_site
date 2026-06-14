@@ -7,8 +7,8 @@ from typing import Any
 from django.core.exceptions import ValidationError
 
 from clients.models import Client
-from clients.services.workflow import validate_client_workflow_transition
 from clients.services.activity import log_client_activity
+from clients.services.workflow import validate_client_workflow_transition
 
 
 @dataclass

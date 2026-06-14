@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+
 from .payment import Payment
+
 
 class ServicePrice(models.Model):
     service_code = models.CharField(

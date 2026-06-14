@@ -138,8 +138,8 @@ def _extract_pdf_text(path: Path) -> str:
 
     if not text_content or len(text_content.strip()) < 50:
         try:
-            from pdf2image import convert_from_path
             import pytesseract
+            from pdf2image import convert_from_path
 
             if not _tesseract_binary_available():
                 logger.warning("Tesseract binary is not available; skipping PDF OCR for %s", path)
@@ -198,7 +198,7 @@ def _preprocess_for_ocr(img: Any) -> Any:
     5. Denoise
     6. Convert back to PIL
     """
-    from PIL import Image, ImageOps, ImageFilter
+    from PIL import Image, ImageFilter, ImageOps
 
     def _pil_fallback(prepared_img: Any) -> Any:
         prepared_img = prepared_img.convert("L")
@@ -280,8 +280,8 @@ def _preprocess_for_ocr(img: Any) -> Any:
 
 def _extract_image_text(path: Path) -> str:
     try:
-        from PIL import Image
         import pytesseract
+        from PIL import Image
 
 
         if not _tesseract_binary_available():

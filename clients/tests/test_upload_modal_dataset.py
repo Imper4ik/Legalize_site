@@ -1,6 +1,8 @@
-from django.test import TestCase
 from django.template.loader import render_to_string
+from django.test import TestCase
+
 from clients.models import Client
+
 
 class UploadModalDatasetTest(TestCase):
     def test_upload_modal_dataset_attributes(self):

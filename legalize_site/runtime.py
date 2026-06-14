@@ -7,7 +7,6 @@ from typing import Any
 
 from django.conf import settings
 
-
 WINDOWS_TESSERACT_PATH = Path(r"C:\Program Files\Tesseract-OCR\tesseract.exe")
 
 

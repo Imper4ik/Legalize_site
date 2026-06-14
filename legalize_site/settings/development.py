@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import os
 
-from .base import env_flag
 from .base import *  # noqa: F403
+from .base import env_flag
 
 DEBUG = env_flag("DEBUG", "True")
 ENABLE_TRANSLATION_TOOLING = env_flag("ENABLE_TRANSLATION_TOOLING", "True")

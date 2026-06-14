@@ -1,17 +1,19 @@
 import uuid
 from datetime import timedelta
-from django.test import TestCase, override_settings
-from django.urls import reverse
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.utils import timezone
 from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import TestCase, override_settings
+from django.urls import reverse
+from django.utils import timezone
 
-from clients.models import Client, ClientOnboardingSession, Document, DocumentRequirement, MOSApplicationData
 from clients.forms import ClientForm
-from clients.services.roles import ensure_predefined_roles
+from clients.models import Client, ClientOnboardingSession, Document, DocumentRequirement, MOSApplicationData
 from clients.services.onboarding_tokens import hash_onboarding_token
+from clients.services.roles import ensure_predefined_roles
+
 
 @override_settings(LANGUAGE_CODE="ru")
 class QuickOnboardingTests(TestCase):
@@ -125,7 +127,7 @@ class QuickOnboardingTests(TestCase):
             status="created",
             expires_at=timezone.now() + timedelta(days=7)
         )
-        
+
         url = reverse("clients:onboarding_start", kwargs={"token": token})
         response = self.client_agent.post(url, {
             "first_name": "Новый",
@@ -244,7 +246,7 @@ class QuickOnboardingTests(TestCase):
         mos_data = MOSApplicationData.objects.get(client=client)
 
         declarations_url = reverse("clients:onboarding_declarations", kwargs={"token": token})
-        
+
         mail.outbox.clear()
         response = self.client_agent.post(declarations_url, {
             "criminal_record": "no",
@@ -253,7 +255,7 @@ class QuickOnboardingTests(TestCase):
         self.assertEqual(response.status_code, 302) # Redirect to review
         review_response = self.client_agent.get(response["Location"])
         self.assertEqual(review_response.status_code, 200)
-        
+
         # Verify status
         mos_data.refresh_from_db()
         self.assertEqual(mos_data.status, "client_completed")
@@ -279,14 +281,14 @@ class QuickOnboardingTests(TestCase):
             status="created",
             expires_at=timezone.now() + timedelta(days=7)
         )
-        
+
         # Test step 1: digital access
         url = reverse("clients:onboarding_digital_access", kwargs={"token": token})
         response = self.client_agent.get(url)
         self.assertEqual(response.context["onboarding_step_num"], 1)
         self.assertEqual(response.context["onboarding_step_total"], 7)
         self.assertEqual(response.context["onboarding_step_percent"], 14)
-        
+
         # Test step 4: address
         url = reverse("clients:onboarding_address", kwargs={"token": token})
         response = self.client_agent.get(url)

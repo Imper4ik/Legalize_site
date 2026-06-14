@@ -8,7 +8,6 @@ from unittest.mock import patch
 from django.core.exceptions import ImproperlyConfigured
 from django.test import SimpleTestCase
 
-
 BASE_PRODUCTION_ENV = {
     "DJANGO_SETTINGS_MODULE": "legalize_site.settings.production",
     "APP_ENV": "production",

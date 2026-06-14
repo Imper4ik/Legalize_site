@@ -1,6 +1,8 @@
 import os
 import subprocess
+
 import pytest
+
 
 def test_migration_safety():
     """
@@ -40,7 +42,7 @@ def test_migration_safety():
         pytest.skip(f"Failed to run git diff: {e}")
 
     modified_migrations = []
-    
+
     for line in diff_output.splitlines():
         if not line.strip():
             continue
@@ -48,7 +50,7 @@ def test_migration_safety():
         if len(parts) < 2:
             continue
         status, filepath = parts[0], parts[1]
-        
+
         # Check if the file is a migration file (excluding initial and __init__.py if needed,
         # but generally no migration file should ever be modified or deleted)
         if "migrations/" in filepath and filepath.endswith(".py") and not filepath.endswith("__init__.py"):

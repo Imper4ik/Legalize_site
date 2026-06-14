@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from django.db import models
 from django.utils import timezone
@@ -11,6 +11,7 @@ from clients.models import ClientActivity
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
     from django.http import HttpRequest
+
     from clients.models import Client, Document, Payment, StaffTask
 
 
@@ -28,7 +29,7 @@ def log_client_activity(
 ) -> ClientActivity:
     # AnonymousUser cannot be assigned to ForeignKey
     real_actor = actor if actor and actor.is_authenticated else None
-    
+
     return ClientActivity.objects.create(
         client=client,
         actor=cast(Any, real_actor),

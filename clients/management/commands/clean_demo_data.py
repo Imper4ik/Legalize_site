@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 from django.core.management.base import BaseCommand, CommandError
 
 from clients.demo.demo_cleanup import cleanup_demo_data
@@ -28,7 +27,7 @@ class Command(BaseCommand):
                 report = cleanup_demo_data()
         except RuntimeError as exc:
             raise CommandError(str(exc)) from exc
-            
+
         self.stdout.write(self.style.SUCCESS("Demo data cleanup completed."))
         for key, val in sorted(report.items()):
             self.stdout.write(f"{key}: {val}")

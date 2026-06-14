@@ -2,29 +2,30 @@ from __future__ import annotations
 
 from collections import OrderedDict
 from datetime import timedelta
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from django.contrib import messages
-from django.db.models import Count, Prefetch
 from django.core.management import call_command
+from django.db.models import Count, Prefetch
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from django.utils.functional import Promise
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.utils.translation import gettext as _, gettext_lazy as _lazy
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _lazy
 from django.views.generic import ListView
 
 from clients.models import Client, ClientDocumentRequirement, Document, Reminder
 from clients.services.access import accessible_clients_queryset, accessible_reminders_queryset
 from clients.services.notifications import send_expiring_documents_email
+from clients.services.roles import REPORT_MUTATION_ROLES
 from clients.use_cases.reminders import (
     deactivate_reminder,
     delete_reminder,
     send_document_reminder_for_client,
     send_document_reminder_for_reminder,
 )
-from clients.services.roles import REPORT_MUTATION_ROLES
 from clients.views.base import StaffRequiredMixin, role_required_view
 
 if TYPE_CHECKING:

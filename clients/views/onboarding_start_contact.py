@@ -22,8 +22,8 @@ from clients.views.onboarding_views import (
     _mos_documents_are_editable,
     _purpose_context,
     _sync_contact_fields_to_client,
-    check_onboarding_session,
     check_client_auth,
+    check_onboarding_session,
 )
 
 CONTACT_REQUIRED_FIELDS = ("first_name", "last_name", "email", "phone")
@@ -301,6 +301,7 @@ def _build_start_context(
     required_docs_catalog = DocumentRequirement.catalog_for(purpose=effective_purpose, language=language)
 
     import os
+
     from django.conf import settings
 
     checklist = []
@@ -309,9 +310,9 @@ def _build_start_context(
         doc_type = item["code"]
         checklist_codes.add(doc_type)
         is_uploaded = doc_type in existing_map
-        
+
         doc_obj = next((d for d in existing_documents if d.document_type == doc_type), None)
-        
+
         sample_image_url = item.get("sample_image_url")
         if not sample_image_url:
             static_filename = f"clients/images/samples/{doc_type}.png"

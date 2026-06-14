@@ -132,15 +132,16 @@ def run_smoke_scenario(recorder: ScenarioRecorder) -> None:
 
 def run_real_ocr_fixture_scenarios(recorder: ScenarioRecorder) -> None:
     import os
-    from clients.services.document_workflow import (
-        process_document_processing_job,
-        enqueue_document_processing_job,
-    )
-    from clients.testing.factories import create_test_client
+
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
     from clients.constants import DocumentType
     from clients.models import Document, DocumentProcessingJob
-    from django.core.files.uploadedfile import SimpleUploadedFile
-    from datetime import date
+    from clients.services.document_workflow import (
+        enqueue_document_processing_job,
+        process_document_processing_job,
+    )
+    from clients.testing.factories import create_test_client
 
     # Locate real fixtures directory
     fixtures_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tests", "fixtures")

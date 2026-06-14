@@ -1,11 +1,9 @@
 from __future__ import annotations
 
+import tempfile
 from contextlib import contextmanager
 from pathlib import Path
-import shutil
-import tempfile
 from typing import Any
-from uuid import uuid4
 
 from django.conf import settings
 from django.core.cache import cache
@@ -41,7 +39,6 @@ def prepare_demo(started_by: Any) -> list[dict[str, Any]]:
 
     with democenter_lock():
         media_root: str | None = None
-        remove_media_root = False
 
         configured_media_root = str(getattr(settings, "DEMO_CENTER_MEDIA_ROOT", "") or "").strip()
         if configured_media_root:

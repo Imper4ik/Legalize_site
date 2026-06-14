@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+
 class TranslationOverride(models.Model):
     SOURCE_STUDIO = "studio"
     SOURCE_IMPORT = "import"
@@ -26,7 +27,7 @@ class TranslationOverride(models.Model):
     text = models.TextField(blank=True, verbose_name=_("Translated text"))
     source = models.CharField(max_length=32, choices=SOURCE_CHOICES, default=SOURCE_STUDIO)
     is_active = models.BooleanField(default=True, verbose_name=_("Is active"))
-    
+
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

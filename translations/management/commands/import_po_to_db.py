@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-import polib
 from typing import Any
 
+import polib
 from django.core.management.base import BaseCommand, CommandError
 
 from translations.models import TranslationOverride
 from translations.runtime import clear_translation_override_cache
 from translations.utils import get_po_files
-
 
 ALLOWED_OVERWRITE_SOURCES = {
     TranslationOverride.SOURCE_IMPORT,

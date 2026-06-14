@@ -1,6 +1,8 @@
 import os
-from django.test import SimpleTestCase
+
 from django.conf import settings
+from django.test import SimpleTestCase, TestCase
+
 
 class CriticalTranslationsTest(SimpleTestCase):
     def test_critical_translations_not_fuzzy_and_correct(self):
@@ -76,15 +78,18 @@ class CriticalTranslationsTest(SimpleTestCase):
                 self.assertNotIn('#, fuzzy', comments_block, f"msgid '{msgid}' in {lang} is still marked as fuzzy")
 
 
-from django.test import TestCase
+
+
 
 class ReminderTranslationsTest(TestCase):
     def test_reminder_properties_dynamic_translations(self):
-        from django.utils.translation import override
-        from clients.models import Client, Reminder, Document, Payment
-        from clients.constants import DocumentType
         from datetime import date
-        
+
+        from django.utils.translation import override
+
+        from clients.constants import DocumentType
+        from clients.models import Client, Document, Payment, Reminder
+
         client = Client.objects.create(
             first_name="John",
             last_name="Doe",
@@ -93,20 +98,20 @@ class ReminderTranslationsTest(TestCase):
             citizenship="US",
             application_purpose="work"
         )
-        
+
         doc = Document.objects.create(
             client=client,
             document_type=DocumentType.PASSPORT.value,
             expiry_date=date(2026, 12, 31)
         )
-        
+
         payment = Payment.objects.create(
             client=client,
             service_description="consultation",
             total_amount=100.00,
             due_date=date(2026, 6, 15)
         )
-        
+
         # Test document reminder
         doc_reminder = Reminder.objects.create(
             client=client,
@@ -116,7 +121,7 @@ class ReminderTranslationsTest(TestCase):
             title="Document expires: Passport",
             notes="Document for client John Doe expires on 31.12.2026."
         )
-        
+
         # Test payment reminder
         payment_reminder = Reminder.objects.create(
             client=client,
@@ -126,13 +131,13 @@ class ReminderTranslationsTest(TestCase):
             title="Payment overdue: Consultation",
             notes="Total payment: 100.00; amount due: 100.00; client: John Doe."
         )
-        
+
         # Test legal stay reminder
         mos_data = client.mos_application_data
         mos_data.legal_stay_until = date(2026, 7, 31)
         mos_data.save()
         client.refresh_from_db()
-        
+
         stay_reminder = Reminder.objects.create(
             client=client,
             due_date=date(2026, 7, 30),
@@ -140,7 +145,7 @@ class ReminderTranslationsTest(TestCase):
             title="Legal stay expires: 30.07.2026",
             notes="Original deadline: 31.07.2026. Adjusted deadline (considering weekends): 30.07.2026."
         )
-        
+
         # English assertions
         with override("en"):
             self.assertEqual(doc_reminder.display_title, "Document expires: Paszport")
@@ -167,4 +172,28 @@ class ReminderTranslationsTest(TestCase):
             self.assertEqual(payment_reminder.display_notes, "\u0421\u0443\u043c\u043c\u0430 \u043a \u043e\u043f\u043b\u0430\u0442\u0435: 100.00; \u0434\u043e\u043b\u0433: 100.00; \u043a\u043b\u0438\u0435\u043d\u0442: John Doe.")
             self.assertEqual(stay_reminder.display_title, "\u0418\u0441\u0442\u0435\u043a\u0430\u0435\u0442 \u043b\u0435\u0433\u0430\u043b\u044c\u043d\u043e\u0435 \u043f\u0440\u0435\u0431\u044b\u0432\u0430\u043d\u0438\u0435: 30.07.2026")
             self.assertEqual(stay_reminder.display_notes, "\u041f\u043e \u0441\u0440\u043e\u043a\u0430\u043c: 31.07.2026. \u0421\u0434\u0432\u0438\u0433 \u0434\u0435\u0434\u043b\u0430\u0439\u043d\u0430 \u0441 \u0443\u0447\u0435\u0442\u043e\u043c \u0432\u044b\u0445\u043e\u0434\u043d\u044b\u0445: 30.07.2026.")
-            
+
+
+class NewTranslationsTest(TestCase):
+    def test_new_translations_resolve(self):
+        from django.utils.translation import gettext as _
+        from django.utils.translation import override
+
+        # Check 'for'
+        with override("en"):
+            self.assertEqual(_("for"), "for")
+        with override("pl"):
+            self.assertEqual(_("for"), "dla")
+        with override("ru"):
+            self.assertEqual(_("for"), "для")
+
+        # Check workflow validation error
+        msg = "Нельзя перейти к ожиданию решения без даты отпечатков."
+        with override("en"):
+            self.assertEqual(_(msg), "Cannot proceed to waiting for decision stage without a fingerprint date.")
+        with override("pl"):
+            self.assertEqual(_(msg), "Nie można przejść do etapu oczekiwania na decyzję bez daty odciski palców.")
+        with override("ru"):
+            self.assertEqual(_(msg), "Нельзя перейти к ожиданию решения без даты отпечатков.")
+
+

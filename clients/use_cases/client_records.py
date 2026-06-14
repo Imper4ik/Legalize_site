@@ -142,13 +142,13 @@ def finalize_client_update(
                 continue
             old_val = previous_values.get(field_name)
             new_val = getattr(client, field_name)
-            
+
             old_val_iso = ""
             if old_val and hasattr(old_val, "isoformat"):
                 old_val_iso = old_val.isoformat()
             else:
                 old_val_iso = str(old_val or "")
-                
+
             new_val_iso = ""
             if new_val and hasattr(new_val, "isoformat"):
                 new_val_iso = new_val.isoformat()

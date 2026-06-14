@@ -6,12 +6,22 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.http import HttpResponse
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
-from django.http import HttpResponse
 from django.utils.translation import gettext as _
 
-from clients.models import AppSettings, Client, ClientActivity, Document, MOSApplicationData, Payment, Reminder, ServicePrice, StaffAuditEvent
+from clients.models import (
+    AppSettings,
+    Client,
+    ClientActivity,
+    Document,
+    MOSApplicationData,
+    Payment,
+    Reminder,
+    ServicePrice,
+    StaffAuditEvent,
+)
 from clients.services.access import user_has_internal_role
 from clients.services.roles import ensure_predefined_roles
 from clients.views.base import staff_required_view

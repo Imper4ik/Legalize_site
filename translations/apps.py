@@ -104,6 +104,7 @@ def patch_translations() -> None:
 def patch_db_override() -> None:
     """Patch Django's trans_real.gettext to apply DB overrides."""
     from django.utils.translation import trans_real
+
     from .runtime import apply_db_override
 
     if hasattr(trans_real, '_db_patched'):
@@ -126,7 +127,7 @@ class TranslationsConfig(AppConfig):
 
     def ready(self) -> None:
         from django.conf import settings
-        
+
         if getattr(settings, 'TRANSLATION_DB_OVERRIDES_ENABLED', True):
             patch_db_override()
 

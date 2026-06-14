@@ -4,6 +4,7 @@ from typing import Any
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
+
 from clients.models import Document
 from clients.models.document import PARSED_DATA_PII_KEYS
 

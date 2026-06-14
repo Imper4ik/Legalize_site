@@ -31,6 +31,7 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
         return {}
 
     from django.db.models import Q
+
     from clients.models import Client
     from clients.services.access import accessible_clients_queryset
     from clients.services.onboarding_purposes import onboarding_purpose_mismatch_q
@@ -137,7 +138,7 @@ def onboarding_progress(request: HttpRequest) -> dict[str, Any]:
     resolver_match = getattr(request, "resolver_match", None)
     if not resolver_match:
         return {}
-    
+
     url_name = resolver_match.url_name
     steps = {
         "onboarding_digital_access": 1,
@@ -148,7 +149,7 @@ def onboarding_progress(request: HttpRequest) -> dict[str, Any]:
         "onboarding_declarations": 6,
         "onboarding_review": 7,
     }
-    
+
     if url_name in steps:
         step_num = steps[url_name]
         total_steps = 7

@@ -16,7 +16,6 @@ from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentProcessingJob, EmailLog, Payment, Reminder
 from clients.services.roles import ensure_predefined_roles
 
-
 DEMO_PDF_BYTES = b"%PDF-1.4\n% Legalize demo placeholder\n1 0 obj<<>>endobj\n%%EOF\n"
 
 

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 from django.core.management.base import BaseCommand, CommandError
 
 from clients.testing.cleanup import cleanup_test_data

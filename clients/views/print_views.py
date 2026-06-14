@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlencode
 
-from django.http import Http404, HttpRequest, HttpResponse
 from django.contrib import messages
+from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -12,11 +12,11 @@ from django.utils.translation import gettext as _
 from django.views.generic import DetailView
 
 from clients.models import AppSettings, Client, WniosekSubmission
+from clients.security.encrypted import safe_encrypted_attr
+from clients.services.access import accessible_clients_queryset
 from clients.services.roles import DOCUMENT_EDIT_ROLES
 from clients.services.wniosek import record_wniosek_submission
 from clients.views.base import StaffRequiredMixin, role_required_view
-from clients.services.access import accessible_clients_queryset
-from clients.security.encrypted import safe_encrypted_attr
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import User
@@ -86,13 +86,13 @@ class ClientDocumentPrintView(ClientPrintBaseView):
             client = context["client"]
             application_date = client.submission_date or client.created_at.date()
             attachment_names = self._get_attachment_names(client)
-            
+
             # Ensure attachment_count is str or int as expected by templates
             attachment_count: str | int = self.request.GET.get("attachment_count") or ""
             if not attachment_count:
                 filled_attachments = [name for name in attachment_names if name]
                 attachment_count = len(filled_attachments) if filled_attachments else ""
-                
+
             context.update(
                 {
                     "current_date": timezone.localdate(),
@@ -175,10 +175,10 @@ def client_document_print_confirm_view(request: HttpRequest, pk: int, doc_type: 
         raise Http404("Confirmation is only available for this document type")
 
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.defer("case_number", "passport_num")), pk=pk)
-    
+
     # Cast user to User for record_wniosek_submission
     confirmed_by = cast('User', request.user) if request.user.is_authenticated else None
-    
+
     submission = record_wniosek_submission(
         client=client,
         document_kind=doc_type,

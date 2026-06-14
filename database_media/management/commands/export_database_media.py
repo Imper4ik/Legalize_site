@@ -36,7 +36,7 @@ class Command(BaseCommand):
 
         for db_file in db_files.iterator():
             name = db_file.name
-            
+
             # Check if target file already exists
             if target_storage.exists(name) and not overwrite:
                 skipped += 1
@@ -52,7 +52,7 @@ class Command(BaseCommand):
             file_data = bytes(db_file.content)
             if overwrite and target_storage.exists(name):
                 target_storage.delete(name)
-                
+
             target_storage.save(name, ContentFile(file_data, name=name))
             exported += 1
             self.stdout.write(self.style.SUCCESS(f"exported: {name}"))

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import cast, TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from django.conf import settings
 from django.contrib import messages
@@ -9,8 +9,8 @@ from django.core.cache import cache
 from django.core.mail import send_mail
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_GET, require_POST
 from django.utils.translation import gettext as _
+from django.views.decorators.http import require_GET, require_POST
 
 from clients.models import Client, EmailCampaign
 from clients.services.access import accessible_campaigns_queryset, accessible_clients_queryset
@@ -121,7 +121,7 @@ def send_custom_email(request: HttpRequest, pk: int) -> HttpResponseBase:
             body,
         )
         from clients.models import EmailLog
-        
+
         # Actor for service functions must be authenticated User or None
         actor = request.user if request.user.is_authenticated else None
 

@@ -1,4 +1,7 @@
 from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from django.contrib import messages
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -12,7 +15,6 @@ from legalize_site.utils.files import build_protected_file_response
 from ..forms import DocumentForm
 from ..models import Document, Submission
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from django.http.response import HttpResponseBase
 
@@ -87,10 +89,10 @@ class DocumentDownloadView(StaffRequiredMixin, View):
 
     def get(self, request: HttpRequest, pk: int) -> HttpResponseBase:
         document = self.get_object(pk)
-        
+
         file_path_name = ""
         if document.file_path and hasattr(document.file_path, "name") and document.file_path.name:
             file_path_name = str(document.file_path.name)
-            
+
         filename = file_path_name.rsplit("/", 1)[-1] if file_path_name else document.title
         return build_protected_file_response(document.file_path, filename=filename, as_attachment=True)

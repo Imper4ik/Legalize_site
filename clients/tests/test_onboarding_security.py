@@ -1,10 +1,12 @@
 from datetime import timedelta
-from django.test import TestCase, override_settings
+
 from allauth.account.models import EmailAddress
-from django.utils import timezone
-from django.urls import reverse
-from django.utils.translation import override
 from django.contrib.auth import get_user_model
+from django.test import TestCase, override_settings
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.translation import override
+
 from clients.models import Client, ClientOnboardingSession
 from clients.services.onboarding_tokens import generate_onboarding_token
 from clients.views.onboarding_views import check_onboarding_session
@@ -43,7 +45,7 @@ class OnboardingSecurityTests(TestCase):
             status="created",
             expires_at=timezone.now() + timedelta(days=1),
         )
-        
+
         # Accessing start should redirect to set-password
         url = reverse("clients:onboarding_start", kwargs={"token": raw})
         response = self.client.get(url)
@@ -58,7 +60,7 @@ class OnboardingSecurityTests(TestCase):
             status="created",
             expires_at=timezone.now() + timedelta(days=1),
         )
-        
+
         # POST to set-password
         url = reverse("clients:onboarding_set_password", kwargs={"token": raw})
         response = self.client.post(url, {
@@ -68,7 +70,7 @@ class OnboardingSecurityTests(TestCase):
             "password_confirm": "supersecurepassword123"
         })
         self.assertRedirects(response, reverse("clients:onboarding_start", kwargs={"token": raw}))
-        
+
         # Verify user creation
         client.refresh_from_db()
         self.assertIsNotNone(client.user)
@@ -109,7 +111,7 @@ class OnboardingSecurityTests(TestCase):
         User = get_user_model()
         user = User.objects.create_user(email="client_me@example.com", password="password123")
         client = Client.objects.create(first_name="A", last_name="B", email="client_me@example.com", user=user, application_purpose="work")
-        
+
         raw, hashed = generate_onboarding_token()
         ClientOnboardingSession.objects.create(
             client=client,
@@ -117,10 +119,10 @@ class OnboardingSecurityTests(TestCase):
             status="created",
             expires_at=timezone.now() + timedelta(days=1),
         )
-        
+
         # Log user in
         self.client.force_login(user)
-        
+
         # Try accessing with "me" token
         url = reverse("clients:onboarding_start", kwargs={"token": "me"})
         response = self.client.get(url)
@@ -130,7 +132,7 @@ class OnboardingSecurityTests(TestCase):
         User = get_user_model()
         user = User.objects.create_user(email="client_redirect@example.com", password="password123")
         client = Client.objects.create(first_name="A", last_name="B", email="client_redirect@example.com", user=user, application_purpose="work")
-        
+
         raw, hashed = generate_onboarding_token()
         ClientOnboardingSession.objects.create(
             client=client,
@@ -138,7 +140,7 @@ class OnboardingSecurityTests(TestCase):
             status="created",
             expires_at=timezone.now() + timedelta(days=1),
         )
-        
+
         self.client.force_login(user)
         url = reverse("root_dashboard")
         response = self.client.get(url)
@@ -155,7 +157,7 @@ class OnboardingSecurityTests(TestCase):
             user=user,
             archived_at=timezone.now()
         )
-        
+
         # 2. New client
         new_client = Client.objects.create(
             first_name="New",
@@ -170,7 +172,7 @@ class OnboardingSecurityTests(TestCase):
             status="created",
             expires_at=timezone.now() + timedelta(days=1),
         )
-        
+
         # Accessing set-password for new client
         url = reverse("clients:onboarding_set_password", kwargs={"token": raw})
         response = self.client.post(url, {
@@ -180,7 +182,7 @@ class OnboardingSecurityTests(TestCase):
             "password_confirm": "newpassword123"
         })
         self.assertRedirects(response, reverse("clients:onboarding_start", kwargs={"token": raw}))
-        
+
         # Refresh and assert
         old_client = Client.all_objects.get(pk=old_client.pk)
         new_client.refresh_from_db()
@@ -258,12 +260,13 @@ class OnboardingSecurityTests(TestCase):
 
     def test_onboarding_actions_log_activity_with_actor(self):
         from django.core.files.uploadedfile import SimpleUploadedFile
+
         from clients.models import ClientActivity
-        
+
         User = get_user_model()
         user = User.objects.create_user(email="logger@example.com", password="password123")
         client = Client.objects.create(first_name="Log", last_name="Actor", email="logger@example.com", user=user, application_purpose="work")
-        
+
         raw, hashed = generate_onboarding_token()
         ClientOnboardingSession.objects.create(
             client=client,
@@ -271,29 +274,29 @@ class OnboardingSecurityTests(TestCase):
             status="created",
             expires_at=timezone.now() + timedelta(days=1),
         )
-        
+
         self.client.force_login(user)
-        
+
         # 1. Upload document
         upload_url = reverse("clients:onboarding_document_upload", kwargs={"token": raw, "doc_type": "address_proof"})
         uploaded_file = SimpleUploadedFile("contract.pdf", self._minimal_pdf_bytes(), content_type="application/pdf")
-        
+
         response = self.client.post(upload_url, {"file": uploaded_file})
         self.assertEqual(response.status_code, 302)
-        
+
         # Verify activity log
         activity_upload = ClientActivity.objects.filter(client=client, event_type="document_uploaded").first()
         self.assertIsNotNone(activity_upload)
         self.assertEqual(activity_upload.actor, user)
-        
+
         # 2. Delete document
         document = activity_upload.document
         self.assertIsNotNone(document)
         delete_url = reverse("clients:onboarding_document_delete", kwargs={"token": raw, "doc_id": document.id})
-        
+
         response = self.client.post(delete_url)
         self.assertEqual(response.status_code, 302)
-        
+
         # Verify activity log
         activity_delete = ClientActivity.objects.filter(client=client, event_type="document_deleted").first()
         self.assertIsNotNone(activity_delete)
@@ -303,10 +306,10 @@ class OnboardingSecurityTests(TestCase):
     def test_failed_email_health_alert(self):
         from clients.models.email import EmailLog
         client = Client.objects.create(first_name="Alert", last_name="Email", email="alert@example.com", application_purpose="work")
-        
+
         # Initially no alerts for failed emails
         self.assertFalse(any(a["title"] == "Ошибка отправки писем клиенту" for a in client.get_health_alerts()))
-        
+
         # Create a failed email log
         EmailLog.objects.create(
             client=client,
@@ -315,7 +318,7 @@ class OnboardingSecurityTests(TestCase):
             recipients="alert@example.com",
             delivery_status="failed"
         )
-        
+
         # Should now have the danger health alert
         alerts = client.get_health_alerts()
         failed_alert = next((a for a in alerts if a["title"] == "Ошибка отправки писем клиенту"), None)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from importlib.util import find_spec
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render

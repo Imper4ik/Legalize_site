@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 from decimal import Decimal
-from unittest.mock import Mock
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
