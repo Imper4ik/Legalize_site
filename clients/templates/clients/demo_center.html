@@ -325,7 +325,11 @@
   {% if demo_needs_refresh %}
     <div class="alert alert-warning mb-0">
       <i class="bi bi-exclamation-triangle me-1"></i>
-      {% translate "Демо-данные созданы старой версией и не покрывают все основания подачи. Нажмите Prepare 5-minute demo, чтобы пересоздать безопасные демо-кейсы." %}
+      {% if stale_portal_links %}
+        {% translate "Некоторые ссылки клиентского портала устарели. Нажмите Prepare 5-minute demo, чтобы пересоздать безопасные демо-кейсы и рабочие portal links." %}
+      {% else %}
+        {% translate "Демо-данные созданы старой версией и не покрывают все основания подачи. Нажмите Prepare 5-minute demo, чтобы пересоздать безопасные демо-кейсы." %}
+      {% endif %}
     </div>
   {% endif %}
 
@@ -484,6 +488,10 @@
                   <a href="{{ client.portal_url }}" class="btn btn-sm btn-primary" target="_blank" rel="noopener">
                     <i class="bi bi-door-open me-1"></i>{% translate "Client Portal" %}
                   </a>
+                  {% else %}
+                  <span class="btn btn-sm btn-outline-secondary disabled" aria-disabled="true">
+                    <i class="bi bi-door-closed me-1"></i>{% translate "Portal link needs Prepare" %}
+                  </span>
                   {% endif %}
                 </div>
               </div>

@@ -7,11 +7,17 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
 from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from clients.models import StaffAuditEvent, TestRun
+from clients.models import ClientOnboardingSession, StaffAuditEvent, TestRun, TestScenarioResult
+from clients.services.onboarding_tokens import hash_onboarding_token
 from clients.testing.cleanup import cleanup_test_data
 from clients.testing.e2e_runner import available_modes, ensure_test_center_enabled, run_e2e_scenarios, testcenter_lock
+
+
+ONBOARDING_CASE_PREFIX = "onboarding:"
 
 
 def _forbidden(message: str = None) -> HttpResponseForbidden:
@@ -28,6 +34,33 @@ def _audit_event(request: HttpRequest, event_type: str, summary: str, metadata: 
         summary=summary,
         metadata=metadata,
     )
+
+
+def _attach_test_portal_urls(results: list[TestScenarioResult]) -> None:
+    """Expose raw onboarding URLs only for still-valid Test Center sessions."""
+    now = timezone.now()
+    for result in results:
+        result.onboarding_url = ""
+        if not result.related_case_identifier.startswith(ONBOARDING_CASE_PREFIX):
+            continue
+        if not result.related_client_id or not result.related_client or not result.related_client.is_test_data:
+            continue
+
+        token = result.related_case_identifier.removeprefix(ONBOARDING_CASE_PREFIX).strip()
+        if not token:
+            continue
+
+        session_exists = (
+            ClientOnboardingSession.objects.filter(
+                client_id=result.related_client_id,
+                token_hash=hash_onboarding_token(token),
+                expires_at__gt=now,
+            )
+            .exclude(status__in=["revoked", "expired"])
+            .exists()
+        )
+        if session_exists:
+            result.onboarding_url = reverse("clients:onboarding_start", kwargs={"token": token})
 
 
 @login_required
@@ -99,6 +132,13 @@ def testcenter_view(request: HttpRequest) -> HttpResponse:
     if selected_run is None:
         selected_run = TestRun.objects.filter(is_test_data=True).order_by("-started_at").first()
 
+    selected_results: list[TestScenarioResult] = []
+    if selected_run:
+        selected_results = list(
+            selected_run.results.select_related("related_client", "related_document").order_by("created_at", "id")
+        )
+        _attach_test_portal_urls(selected_results)
+
     latest_runs = TestRun.objects.filter(is_test_data=True).order_by("-started_at")[:10]
     return render(
         request,
@@ -107,5 +147,6 @@ def testcenter_view(request: HttpRequest) -> HttpResponse:
             "modes": available_modes(),
             "latest_runs": latest_runs,
             "selected_run": selected_run,
+            "selected_results": selected_results,
         },
     )

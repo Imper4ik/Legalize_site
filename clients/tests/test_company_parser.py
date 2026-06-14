@@ -41,6 +41,16 @@ def test_find_krs():
     assert _find_krs(text_fallback) == "0000987654"
 
 
+def test_ceidg_attachment_can_have_nip_without_krs():
+    text = (
+        "Centralna Ewidencja i Informacja o Dzialalnosci Gospodarczej. "
+        "NIP: 525-23-44-078. REGON 012345678."
+    )
+
+    assert _find_nip(text) == "5252344078"
+    assert _find_krs(text) is None
+
+
 def test_find_salary():
     # In Polish Załącznik context
     text1 = "wysokość wynagrodzenia: 4 300,00 PLN brutto"

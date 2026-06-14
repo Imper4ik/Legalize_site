@@ -8,12 +8,14 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from clients.models import Client, Document, EmailLog, DocumentProcessingJob, StaffAuditEvent
 from clients.demo.demo_runner import ensure_demo_center_enabled, prepare_demo, democenter_lock
 from clients.demo.demo_cleanup import cleanup_demo_data
 from clients.demo.demo_factory import get_demo_token_for_client
+from clients.services.onboarding_tokens import hash_onboarding_token
 
 
 def _forbidden(message: str = None) -> HttpResponseForbidden:
@@ -79,17 +81,27 @@ def democenter_view(request: HttpRequest) -> HttpResponse:
     demo_clients = list(Client.all_objects.filter(is_demo_data=True).order_by("id"))
     demo_clients_by_first_name: dict[str, Client] = {}
     purpose_counts = {value: 0 for value, _label in Client.APPLICATION_PURPOSE_CHOICES}
+    stale_portal_links = 0
     for client in demo_clients:
         demo_clients_by_first_name[client.first_name.lower()] = client
         purpose_counts[client.application_purpose] = purpose_counts.get(client.application_purpose, 0) + 1
-        session = client.onboarding_sessions.first()
+        token = get_demo_token_for_client(client)
+        session = (
+            client.onboarding_sessions.filter(
+                token_hash=hash_onboarding_token(token),
+                expires_at__gt=timezone.now(),
+            )
+            .exclude(status__in=["revoked", "expired"])
+            .first()
+        )
         if session:
-            token = get_demo_token_for_client(client)
             client.portal_url = request.build_absolute_uri(
                 reverse("clients:onboarding_start", kwargs={"token": token})
             )
         else:
             client.portal_url = None
+            if client.onboarding_sessions.exists():
+                stale_portal_links += 1
 
     demo_emails = EmailLog.objects.filter(is_demo_data=True).order_by("-sent_at")[:10]
     demo_jobs = DocumentProcessingJob.objects.filter(is_demo_data=True).order_by("-created_at")[:10]
@@ -107,7 +119,7 @@ def democenter_view(request: HttpRequest) -> HttpResponse:
         }
         for value, label in Client.APPLICATION_PURPOSE_CHOICES
     ]
-    demo_needs_refresh = bool(demo_clients) and not purpose_counts.get("family")
+    demo_needs_refresh = bool(demo_clients) and (not purpose_counts.get("family") or stale_portal_links > 0)
 
     return render(
         request,
@@ -122,6 +134,7 @@ def democenter_view(request: HttpRequest) -> HttpResponse:
             "demo_ocr_document": demo_ocr_document,
             "demo_purposes": demo_purposes,
             "demo_needs_refresh": demo_needs_refresh,
+            "stale_portal_links": stale_portal_links,
 
         },
     )

@@ -502,7 +502,7 @@
               </tr>
             </thead>
             <tbody>
-              {% for result in selected_run.results.all %}
+              {% for result in selected_results %}
               <tr>
                 <td>
                   <div class="fw-semibold small text-break">{{ result.scenario_name }}</div>
@@ -524,6 +524,12 @@
                   {% if result.related_client %}<br>{% endif %}
                   <a href="{% url 'clients:document_preview' doc_id=result.related_document.id %}" target="_blank" rel="noopener" class="tc-object-chip text-truncate mt-1">
                     <i class="bi bi-file-earmark-text"></i>{% translate "Doc" %}: {{ result.related_document.document_type }}
+                  </a>
+                  {% endif %}
+                  {% if result.onboarding_url %}
+                  {% if result.related_client or result.related_document %}<br>{% endif %}
+                  <a href="{{ result.onboarding_url }}" target="_blank" rel="noopener" class="tc-object-chip text-truncate mt-1">
+                    <i class="bi bi-door-open"></i>{% translate "Client Portal" %}
                   </a>
                   {% endif %}
                 </td>
@@ -587,7 +593,7 @@
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const results = [
-      {% for result in selected_run.results.all %}
+      {% for result in selected_results %}
       { name: "{{ result.scenario_name|escapejs }}", status: "{{ result.status|escapejs }}" }{% if not forloop.last %},{% endif %}
       {% endfor %}
     ];

@@ -11,6 +11,7 @@ class RelatedObjects:
     client: Client | None = None
     document: Document | None = None
     case_identifier: str = ""
+    onboarding_token: str = ""
 
 
 class ScenarioRecorder:
@@ -28,6 +29,10 @@ class ScenarioRecorder:
         related: RelatedObjects | None = None,
     ) -> TestScenarioResult:
         related = related or RelatedObjects()
+        related_case_identifier = related.case_identifier
+        if related.onboarding_token and related.client and related.client.is_test_data:
+            related_case_identifier = f"onboarding:{related.onboarding_token}"
+
         return TestScenarioResult.objects.create(
             test_run=self.test_run,
             scenario_name=scenario_name,
@@ -40,7 +45,7 @@ class ScenarioRecorder:
             actual_result=str(actual),
             error_message="" if passed else str(error_message or actual),
             related_client=related.client,
-            related_case_identifier=related.case_identifier,
+            related_case_identifier=related_case_identifier,
             related_document=related.document,
             is_test_data=True,
         )
@@ -55,6 +60,10 @@ class ScenarioRecorder:
         related: RelatedObjects | None = None,
     ) -> TestScenarioResult:
         related = related or RelatedObjects()
+        related_case_identifier = related.case_identifier
+        if related.onboarding_token and related.client and related.client.is_test_data:
+            related_case_identifier = f"onboarding:{related.onboarding_token}"
+
         return TestScenarioResult.objects.create(
             test_run=self.test_run,
             scenario_name=scenario_name,
@@ -63,8 +72,7 @@ class ScenarioRecorder:
             actual_result=str(actual),
             error_message=str(reason),
             related_client=related.client,
-            related_case_identifier=related.case_identifier,
+            related_case_identifier=related_case_identifier,
             related_document=related.document,
             is_test_data=True,
         )
-

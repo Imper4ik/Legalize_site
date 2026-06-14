@@ -121,6 +121,44 @@ class CompanyDocWorkflowTests(TestCase):
         self.assertTrue(doc.ocr_name_mismatch)
         self.assertTrue(any("Signer not found" in w for w in registry["warnings"]))
 
+    @patch("clients.services.document_workflow.parse_company_doc")
+    def test_company_document_without_krs_verifies_employer_with_ceidg_nip(self, parse_mock):
+        parse_mock.return_value = CompanyDocData(
+            text="CEIDG employer document, NIP 525-23-44-078, salary 5000 PLN",
+            nip="5252344078",
+            krs=None,
+            salary=5000.0,
+            valid_until=date(2026, 12, 31),
+            detected_names=["Jan Kowalski"],
+        )
+
+        doc = Document.objects.create(
+            client=self.client_obj,
+            document_type=DocumentType.ZALACZNIK_NR_1.value,
+            file=build_pdf_upload("ceidg-z1.pdf"),
+            ocr_status="pending",
+        )
+        DocumentProcessingJob.objects.create(
+            document=doc,
+            created_by=self.staff,
+            status=DocumentProcessingJob.STATUS_PENDING,
+            job_type=DocumentProcessingJob.JOB_TYPE_COMPANY_DOC_OCR,
+        )
+
+        call_command("process_document_jobs")
+
+        doc.refresh_from_db()
+        registry = doc.parsed_data["registry_verification"]
+        self.assertEqual(doc.ocr_status, "success")
+        self.assertEqual(doc.parsed_data["nip"], "5252344078")
+        self.assertIsNone(doc.parsed_data["krs"])
+        self.assertEqual(registry["registry_source"], "CEIDG")
+        self.assertEqual(registry["nip"], "5252344078")
+        self.assertTrue(registry["is_employer_active"])
+        self.assertTrue(registry["signer_authorized"])
+        self.assertEqual(registry["matched_signer"], "Jan Kowalski")
+        self.assertFalse(doc.ocr_name_mismatch)
+
     @patch("clients.services.document_workflow.verify_employer")
     @patch("clients.services.document_workflow.parse_company_doc")
     def test_company_document_processing_low_salary_warning(self, parse_mock, verify_mock):

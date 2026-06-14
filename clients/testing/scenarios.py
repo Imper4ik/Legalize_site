@@ -43,7 +43,7 @@ def run_smoke_scenario(recorder: ScenarioRecorder) -> None:
         resolved_session is not None and resolved_session.client_id == client.pk,
         expected=f"client_id={client.pk}",
         actual=f"client_id={getattr(resolved_session, 'client_id', None)}",
-        related=RelatedObjects(client=client),
+        related=RelatedObjects(client=client, onboarding_token=token),
     )
     recorder.check(
         "smoke.test_data_flags_set",
@@ -126,7 +126,7 @@ def run_smoke_scenario(recorder: ScenarioRecorder) -> None:
         session.expires_at is not None and session.client_id == client.pk,
         expected="active session for smoke client",
         actual=f"status={session.status}, client_id={session.client_id}",
-        related=RelatedObjects(client=client),
+        related=RelatedObjects(client=client, onboarding_token=token),
     )
 
 

@@ -5,6 +5,10 @@ from django.test import Client as DjangoClient
 from django.test import TestCase
 from django.urls import reverse
 
+from clients.models import ClientOnboardingSession
+from clients.services.onboarding_tokens import hash_onboarding_token
+from clients.testing.e2e_runner import run_e2e_scenarios
+
 
 class AdminToolsUiTests(TestCase):
     def setUp(self) -> None:
@@ -46,3 +50,26 @@ class AdminToolsUiTests(TestCase):
         self.assertContains(response, "tc-mode-list")
         self.assertContains(response, "tc-mode-card")
         self.assertContains(response, "Smoke")
+
+    def test_test_center_kept_smoke_run_links_to_valid_client_portal(self) -> None:
+        test_run = run_e2e_scenarios(mode="smoke", started_by=self.superuser, cleanup=False)
+        result = test_run.results.get(scenario_name="smoke.invite_link_resolves_expected_client")
+        token = result.related_case_identifier.removeprefix("onboarding:")
+
+        self.assertTrue(token)
+        self.assertTrue(
+            ClientOnboardingSession.objects.filter(
+                client=result.related_client,
+                token_hash=hash_onboarding_token(token),
+            )
+            .exclude(status__in=["revoked", "expired"])
+            .exists()
+        )
+
+        response = self.browser.get(f"{reverse('clients:test_center')}?run_id={test_run.pk}")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "bi-door-open")
+        self.assertContains(response, reverse("clients:onboarding_start", kwargs={"token": token}))
+
+        portal_response = self.browser.get(reverse("clients:onboarding_start", kwargs={"token": token}))
+        self.assertEqual(portal_response.status_code, 200)
