@@ -117,6 +117,7 @@ def test_missing_documents_weekly_email_sends_once_for_waiting_decision_client()
 @pytest.mark.django_db
 def test_missing_documents_weekly_email_skips_without_missing_docs_or_email():
     require_passport()
+    today = date(2026, 5, 18)
     with_doc = make_client(
         email="with-doc@example.com",
         workflow_stage="waiting_decision",
@@ -127,6 +128,14 @@ def test_missing_documents_weekly_email_skips_without_missing_docs_or_email():
         document_type=DocumentType.PASSPORT.value,
         file=SimpleUploadedFile("passport.pdf", b"x", content_type="application/pdf"),
     )
+    for month in (date(2026, 2, 1), date(2026, 3, 1), date(2026, 4, 1)):
+        Document.objects.create(
+            client=with_doc,
+            document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+            file=SimpleUploadedFile(f"zus-{month:%Y-%m}.pdf", b"x", content_type="application/pdf"),
+            zus_period_month=month,
+            verified=True,
+        )
     make_client(
         email="",
         workflow_stage="waiting_decision",
@@ -134,8 +143,10 @@ def test_missing_documents_weekly_email_skips_without_missing_docs_or_email():
     )
     mail.outbox = []
 
-    with patch("clients.services.notifications._send_confirmation_email"):
-        call_command("update_reminders")
+    with patch("clients.management.commands.update_reminders.timezone.localdate", return_value=today):
+        with patch("clients.services.zus.timezone.localdate", return_value=today):
+            with patch("clients.services.notifications._send_confirmation_email"):
+                call_command("update_reminders")
 
     assert mail.outbox == []
     assert EmailLog.objects.filter(template_type="missing_documents").count() == 0
@@ -285,19 +296,19 @@ def test_weekly_document_reminder_loop_command_runs_document_sections():
 
 
 @pytest.mark.django_db
-def test_weekly_document_reminder_loop_allows_one_pm_retry_slot():
+def test_weekly_document_reminder_loop_allows_1710_retry_slot():
     morning = timezone.make_aware(datetime(2026, 6, 15, 8, 5))
-    one_pm = timezone.make_aware(datetime(2026, 6, 15, 13, 5))
+    retry_time = timezone.make_aware(datetime(2026, 6, 15, 17, 10))
 
-    with patch("clients.management.commands.run_weekly_document_reminders.timezone.localtime", side_effect=[morning, one_pm]):
+    with patch("clients.management.commands.run_weekly_document_reminders.timezone.localtime", side_effect=[morning, retry_time]):
         with patch("clients.management.commands.run_weekly_document_reminders.cache.add", return_value=True) as cache_add:
             with patch("clients.management.commands.run_weekly_document_reminders.call_command") as call_mock:
                 call_command("run_weekly_document_reminders")
                 call_command("run_weekly_document_reminders")
 
     assert call_mock.call_count == 2
-    assert cache_add.call_args_list[0].args[0] == "daily_document_reminders:2026-06-15:08"
-    assert cache_add.call_args_list[1].args[0] == "daily_document_reminders:2026-06-15:13"
+    assert cache_add.call_args_list[0].args[0] == "daily_document_reminders:2026-06-15:0800"
+    assert cache_add.call_args_list[1].args[0] == "daily_document_reminders:2026-06-15:1710"
 
 
 @pytest.mark.django_db
@@ -372,15 +383,26 @@ def test_fingerprints_date_change_does_not_send_expired_email_and_appointment_is
     assert len(mail.outbox) == 1
 
 
-def test_expected_zus_months_respects_15th_day_cutoff():
+def test_expected_zus_months_respects_17th_day_cutoff_and_prefingerprint_months():
     fingerprints = date(2026, 1, 20)
 
-    assert expected_zus_months(fingerprints, today=date(2026, 4, 10)) == [date(2026, 2, 1)]
-    assert expected_zus_months(fingerprints, today=date(2026, 4, 15)) == [
+    expected_until_february = [
+        date(2025, 11, 1),
+        date(2025, 12, 1),
+        date(2026, 1, 1),
         date(2026, 2, 1),
-        date(2026, 3, 1),
     ]
+    assert expected_zus_months(fingerprints, today=date(2026, 4, 10)) == expected_until_february
     assert expected_zus_months(fingerprints, today=date(2026, 4, 16)) == [
+        date(2025, 11, 1),
+        date(2025, 12, 1),
+        date(2026, 1, 1),
+        date(2026, 2, 1),
+    ]
+    assert expected_zus_months(fingerprints, today=date(2026, 4, 17)) == [
+        date(2025, 11, 1),
+        date(2025, 12, 1),
+        date(2026, 1, 1),
         date(2026, 2, 1),
         date(2026, 3, 1),
     ]
@@ -391,15 +413,17 @@ def test_zus_rca_uploaded_period_closes_month_and_duplicates_are_blocked(sample_
     sample_client.fingerprints_date = date(2026, 1, 20)
     sample_client.workflow_stage = "waiting_decision"
     sample_client.save(update_fields=["fingerprints_date", "workflow_stage"])
-    Document.objects.create(
-        client=sample_client,
-        document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
-        file=SimpleUploadedFile("zus-feb.pdf", b"x", content_type="application/pdf"),
-        zus_period_month=date(2026, 2, 20),
-        verified=True,
-    )
+    for month in (date(2025, 11, 1), date(2025, 12, 1), date(2026, 1, 1), date(2026, 2, 20)):
+        Document.objects.create(
+            client=sample_client,
+            document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+            file=SimpleUploadedFile(f"zus-{month:%Y-%m}.pdf", b"x", content_type="application/pdf"),
+            zus_period_month=month,
+            verified=True,
+        )
 
-    assert missing_zus_months(sample_client, today=date(2026, 4, 16)) == [date(2026, 3, 1)]
+    assert missing_zus_months(sample_client, today=date(2026, 4, 16)) == []
+    assert missing_zus_months(sample_client, today=date(2026, 4, 17)) == [date(2026, 3, 1)]
 
     with pytest.raises(IntegrityError):
         with transaction.atomic():

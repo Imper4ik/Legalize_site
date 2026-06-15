@@ -5,7 +5,7 @@
 ```bash
 python manage.py check
 python manage.py makemigrations --check --dry-run
-python manage.py migrate --check
+python manage.py migrate --noinput
 python manage.py test --noinput
 pytest --maxfail=1 -q --cov-fail-under=70
 ruff check .
@@ -49,4 +49,4 @@ For manual verification or demonstration, you can use:
 
 ## CI
 
-GitHub Actions installs system OCR/gettext/backup dependencies, runs Django checks, deploy checks, migration drift check, Django tests, pytest with 70% coverage gate, Ruff, mypy, Bandit, pip-audit, compilemessages, collectstatic, committed pycache detection, and shell script syntax checks. Production secrets are not required because CI uses `legalize_site.settings.test`.
+GitHub Actions installs system OCR/gettext/backup dependencies, runs Django checks, deploy checks, migration drift check, applies migrations, Django tests, pytest with 70% coverage gate, Ruff, mypy, Bandit, pip-audit, compilemessages, collectstatic, committed pycache detection, and shell script syntax checks. Production secrets are not required because CI uses `legalize_site.settings.test`.
