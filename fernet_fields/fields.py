@@ -22,6 +22,8 @@ class EncryptedFieldDecryptionError(ValueError):
 class EncryptedValueUnavailable(str):
     """Safe placeholder for an unreadable encrypted database value."""
 
+    raw_value: str
+
     def __new__(cls, raw_value: str) -> "EncryptedValueUnavailable":
         obj = str.__new__(cls, ENCRYPTED_VALUE_UNAVAILABLE)
         obj.raw_value = raw_value
@@ -45,7 +47,7 @@ class EncryptedTextField(models.TextField):
     def _fernet(self) -> Fernet | MultiFernet:
         return _build_fernet()
 
-    def clean(self, value: Any, model_instance: models.Model) -> Any:
+    def clean(self, value: Any, model_instance: models.Model | None) -> Any:
         if value == ENCRYPTED_VALUE_UNAVAILABLE:
             from django.core.exceptions import ValidationError
             raise ValidationError(
@@ -82,9 +84,10 @@ class EncryptedTextField(models.TextField):
         try:
             return self._decrypt(value, fail_closed=True)
         except EncryptedFieldDecryptionError:
+            model = getattr(self, "model", None)
             logger.warning(
                 "Encrypted field to_python decryption failed for %s.%s",
-                getattr(self, "model", None).__name__ if getattr(self, "model", None) else "?",
+                getattr(model, "__name__", "?"),
                 getattr(self, "attname", "?"),
             )
             return EncryptedValueUnavailable(force_str(value))

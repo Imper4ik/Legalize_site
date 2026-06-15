@@ -7,7 +7,7 @@ import time
 from datetime import timedelta
 from io import BytesIO
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any, Iterable, cast
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -26,6 +26,8 @@ from clients.services.zus import format_zus_months, missing_zus_months
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
+
+    from users.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +147,8 @@ def _send_mail_with_retry(
     max_attempts: int | None = None,
     backoff_seconds: float | None = None,
 ) -> int:
-    attempts = max(1, int(max_attempts or getattr(settings, "EMAIL_SEND_RETRY_ATTEMPTS", 3)))
+    attempts_setting = max_attempts if max_attempts is not None else getattr(settings, "EMAIL_SEND_RETRY_ATTEMPTS", 3)
+    attempts = max(1, int(attempts_setting or 3))
     backoff = float(backoff_seconds if backoff_seconds is not None else getattr(settings, "EMAIL_SEND_RETRY_BACKOFF_SECONDS", 0.25))
     last_error_type = ""
     for attempt in range(1, attempts + 1):
@@ -322,12 +325,16 @@ def notify_staff_about_fingerprint_invitation_upload(
     client_detail_url = reverse("clients:client_detail", kwargs={"pk": client.pk})
     client_edit_url = reverse("clients:client_edit", kwargs={"pk": client.pk})
     document_preview_url = reverse("clients:document_preview", kwargs={"doc_id": document.pk})
+    created_by = cast(
+        "User | None",
+        actor if actor and actor.is_authenticated and getattr(actor, "is_staff", False) else None,
+    )
 
     task = StaffTask.objects.create(
         client=client,
         document=document,
         assignee=client.assigned_staff,
-        created_by=actor if actor and actor.is_authenticated and getattr(actor, "is_staff", False) else None,
+        created_by=created_by,
         title=str(_("Клиент загрузил вызов на отпечатки пальцев")),
         description=str(
             _(
