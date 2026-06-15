@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import base64
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import Mock, call, patch
 
@@ -282,6 +282,22 @@ def test_weekly_document_reminder_loop_command_runs_document_sections():
         "--only",
         "custom-documents",
     )
+
+
+@pytest.mark.django_db
+def test_weekly_document_reminder_loop_allows_1710_retry_slot():
+    morning = timezone.make_aware(datetime(2026, 6, 15, 8, 5))
+    retry_time = timezone.make_aware(datetime(2026, 6, 15, 17, 10))
+
+    with patch("clients.management.commands.run_weekly_document_reminders.timezone.localtime", side_effect=[morning, retry_time]):
+        with patch("clients.management.commands.run_weekly_document_reminders.cache.add", return_value=True) as cache_add:
+            with patch("clients.management.commands.run_weekly_document_reminders.call_command") as call_mock:
+                call_command("run_weekly_document_reminders")
+                call_command("run_weekly_document_reminders")
+
+    assert call_mock.call_count == 2
+    assert cache_add.call_args_list[0].args[0] == "daily_document_reminders:2026-06-15:0800"
+    assert cache_add.call_args_list[1].args[0] == "daily_document_reminders:2026-06-15:1710"
 
 
 @pytest.mark.django_db
