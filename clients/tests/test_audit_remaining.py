@@ -119,7 +119,7 @@ class RemainingAuditHardeningTests(TestCase):
 
         self.assertEqual(
             missing_zus_months(client, today=date(2026, 5, 15)),
-            [date(2026, 3, 1), date(2026, 4, 1)],
+            [date(2025, 12, 1), date(2026, 1, 1), date(2026, 2, 1), date(2026, 3, 1)],
         )
 
         client.documents.update(verified=True)

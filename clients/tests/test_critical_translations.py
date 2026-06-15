@@ -122,15 +122,11 @@ class ReminderTranslationsTest(TestCase):
             notes="Document for client John Doe expires on 31.12.2026."
         )
 
-        # Test payment reminder
-        payment_reminder = Reminder.objects.create(
-            client=client,
-            payment=payment,
-            due_date=date(2026, 6, 15),
-            reminder_type="payment",
-            title="Payment overdue: Consultation",
-            notes="Total payment: 100.00; amount due: 100.00; client: John Doe."
-        )
+        # Test payment reminder. Creating a due payment automatically syncs its one-to-one reminder.
+        payment_reminder = Reminder.objects.get(payment=payment)
+        payment_reminder.title = "Payment overdue: Consultation"
+        payment_reminder.notes = "Total payment: 100.00; amount due: 100.00; client: John Doe."
+        payment_reminder.save(update_fields=["title", "notes"])
 
         # Test legal stay reminder
         mos_data = client.mos_application_data
@@ -195,5 +191,4 @@ class NewTranslationsTest(TestCase):
             self.assertEqual(_(msg), "Nie można przejść do etapu oczekiwania na decyzję bez daty odciski palców.")
         with override("ru"):
             self.assertEqual(_(msg), "Нельзя перейти к ожиданию решения без даты отпечатков.")
-
 
