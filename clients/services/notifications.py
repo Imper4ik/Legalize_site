@@ -615,7 +615,12 @@ def send_expired_documents_email(client: Client, *, sent_by: AbstractBaseUser | 
     )
 
 
-def _get_missing_documents_context(client: Client, language: str | None = None) -> dict[str, Any] | None:
+def _get_missing_documents_context(
+    client: Client,
+    language: str | None = None,
+    *,
+    today: Any | None = None,
+) -> dict[str, Any] | None:
     if language is None:
         language = _get_preferred_language(client)
     from clients.models import ClientDocumentRequirement, DocumentRequirement
@@ -631,7 +636,7 @@ def _get_missing_documents_context(client: Client, language: str | None = None) 
     )
     uploaded_codes = set(client.documents.values_list("document_type", flat=True))
     submitted_codes = get_submitted_document_codes(client)
-    missing_zus = missing_zus_months(client)
+    missing_zus = missing_zus_months(client, today=today)
     missing = []
     uploaded_with_expiry = []
 
@@ -698,6 +703,7 @@ def send_missing_documents_email(
     sent_by: AbstractBaseUser | AnonymousUser | None = None,
     weekly_key: str | None = None,
     idempotency_extra: str | None = None,
+    today: Any | None = None,
 ) -> int:
     """Send a reminder listing documents that are still missing for the client."""
 
@@ -705,13 +711,13 @@ def send_missing_documents_email(
         return 0
 
     language = _get_preferred_language(client)
-    context = _get_missing_documents_context(client, language)
+    context = _get_missing_documents_context(client, language, today=today)
     if not context:
         return 0
 
     subject = _get_subject("missing_documents", language)
     body = _render_email_body("missing_documents", context, language)
-    today = timezone.localdate()
+    today = today or timezone.localdate()
     iso_year, iso_week, _iso_weekday = today.isocalendar()
     idempotency_key = weekly_key or idempotency_extra or (
         f"missing_documents:{client.pk}:{iso_year}-W{iso_week:02d}"
