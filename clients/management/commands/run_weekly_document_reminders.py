@@ -31,7 +31,13 @@ class Command(BaseCommand):
             "--hour",
             type=int,
             default=8,
-            help="Scheduled local hour in Django TIME_ZONE.",
+            help="Primary scheduled local hour in Django TIME_ZONE.",
+        )
+        parser.add_argument(
+            "--retry-hour",
+            type=int,
+            default=13,
+            help="Second same-day retry hour in Django TIME_ZONE. Use -1 to disable.",
         )
         parser.add_argument(
             "--check-interval-seconds",
@@ -47,17 +53,24 @@ class Command(BaseCommand):
             self._run_if_due(
                 force=bool(options["force"]),
                 hour=int(options["hour"]),
+                retry_hour=int(options["retry_hour"]),
             )
             if not loop:
                 return
             time.sleep(max(60, int(options["check_interval_seconds"])))
 
-    def _run_if_due(self, *, force: bool, hour: int) -> bool:
+    def _run_if_due(self, *, force: bool, hour: int, retry_hour: int = 13) -> bool:
         now = timezone.localtime()
-        if not force and now.hour < hour:
+        scheduled_hours = sorted({value for value in (hour, retry_hour) if 0 <= value <= 23})
+        if not scheduled_hours:
+            scheduled_hours = [hour]
+
+        due_hour = max((value for value in scheduled_hours if now.hour >= value), default=None)
+        if not force and due_hour is None:
             return False
 
-        cache_key = f"daily_document_reminders:{now.date().isoformat()}"
+        cache_hour = due_hour if due_hour is not None else now.hour
+        cache_key = f"daily_document_reminders:{now.date().isoformat()}:{cache_hour:02d}"
         if not force:
             try:
                 if not cache.add(cache_key, now.isoformat(), timeout=25 * 60 * 60):
@@ -65,7 +78,7 @@ class Command(BaseCommand):
             except Exception:
                 logger.warning("Daily document reminder cache guard failed; running anyway.", exc_info=True)
 
-        logger.info("Starting daily document reminder check.")
+        logger.info("Starting daily document reminder check for scheduled_hour=%s.", cache_hour)
         call_command("update_reminders", *self.UPDATE_REMINDER_ARGS)
         self.stdout.write(self.style.SUCCESS("Daily document reminder check completed."))
         return True

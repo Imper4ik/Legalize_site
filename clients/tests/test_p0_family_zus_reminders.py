@@ -5,6 +5,7 @@ from datetime import date, timedelta
 from unittest.mock import patch
 
 import pytest
+from django.core import mail
 from django.core.management import call_command
 from django.test import Client as DjangoClient
 from django.test import override_settings
@@ -17,6 +18,7 @@ from clients.models import (
     Client,
     Document,
     DocumentRequirement,
+    EmailLog,
     FamilyGroup,
     Payment,
     Reminder,
@@ -511,6 +513,42 @@ class TestUpdateRemindersCommand:
         assert doc_today.pk in reminder_doc_ids, "Doc today SHOULD get reminder"
         assert doc_future.pk in reminder_doc_ids, "Doc +30 days SHOULD get reminder"
         assert doc_far.pk not in reminder_doc_ids, "Doc +31 days should NOT get reminder"
+
+
+    @pytest.mark.django_db
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_only_zus_sends_missing_zus_email_and_creates_email_log(self):
+        client = _make_client(
+            None,
+            workflow_stage="waiting_decision",
+            fingerprints_date=date(2026, 2, 10),
+            email="zus-missing@example.com",
+            language="ru",
+        )
+        DocumentRequirement.objects.create(
+            application_purpose="work",
+            document_type=DocumentType.PASSPORT.value,
+            is_required=True,
+        )
+        _make_doc(client, doc_type=DocumentType.PASSPORT.value)
+        today = date(2026, 5, 15)
+        iso_year, iso_week, _ = today.isocalendar()
+        expected_key = f"zus_rca_missing:{client.pk}:{iso_year}-W{iso_week:02d}"
+        mail.outbox = []
+
+        with patch("clients.management.commands.update_reminders.timezone.localdate", return_value=today):
+            with patch("clients.services.notifications._send_confirmation_email"):
+                call_command("update_reminders", only=["zus"])
+
+        assert len(mail.outbox) == 1
+        assert "ZUS RCA" in mail.outbox[0].body
+        assert "03.2026" in mail.outbox[0].body
+        assert "04.2026" in mail.outbox[0].body
+        assert EmailLog.objects.filter(
+            client=client,
+            template_type="missing_documents",
+            idempotency_key=expected_key,
+        ).count() == 1
 
     @pytest.mark.django_db
     def test_no_duplicate_reminders(self):
