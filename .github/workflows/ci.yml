@@ -31,6 +31,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
 
+      - name: Compile messages
+        run: python manage.py compilemessages --ignore "venv" --ignore ".venv"
+
       - name: Django check
         run: python manage.py check
 
@@ -60,9 +63,6 @@ jobs:
 
       - name: pip-audit
         run: pip-audit
-
-      - name: Compile messages
-        run: python manage.py compilemessages --ignore "venv" --ignore ".venv"
 
       - name: Collect static
         run: python manage.py collectstatic --noinput
