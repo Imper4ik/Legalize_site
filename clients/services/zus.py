@@ -45,9 +45,11 @@ def expected_zus_months(fingerprints_date: date | None, *, today: date | None = 
     today = today or timezone.localdate()
     if fingerprints_date > today:
         return []
-    first_expected = add_months(month_start(fingerprints_date), 1)
-    # ZUS RCA for previous month is usually available after 15th
-    last_expected = add_months(month_start(today), -1 if today.day >= 15 else -2)
+    fingerprints_month = month_start(fingerprints_date)
+    # Require the two months before fingerprints, the fingerprints month, and later available months.
+    first_expected = add_months(fingerprints_month, -2)
+    # ZUS RCA for the previous month is considered available from the 17th day.
+    last_expected = add_months(month_start(today), -1 if today.day >= 17 else -2)
     return iter_months(first_expected, last_expected)
 
 
