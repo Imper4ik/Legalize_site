@@ -16,6 +16,7 @@ from clients.services.roles import ensure_predefined_roles
 
 TEST_EMAIL_DOMAIN = "@example.test"
 TEST_USER_PREFIX = "test-center-"
+TEST_USER_CREDENTIAL = f"{TEST_USER_PREFIX}pass"
 
 
 def unique_email(prefix: str) -> str:
@@ -55,7 +56,7 @@ def create_test_user(
     user_model = get_user_model()
     user = user_model.objects.create_user(
         email=email or unique_email(f"{TEST_USER_PREFIX}{role.lower()}"),
-        password="test-center-pass",
+        password=TEST_USER_CREDENTIAL,
         is_staff=True,
         is_superuser=is_superuser,
         is_active=True,
@@ -69,7 +70,7 @@ def create_client_user(*, email: str | None = None):
     user_model = get_user_model()
     return user_model.objects.create_user(
         email=email or unique_email(f"{TEST_USER_PREFIX}client"),
-        password="test-center-pass",
+        password=TEST_USER_CREDENTIAL,
         is_staff=False,
         is_active=True,
     )
@@ -142,4 +143,3 @@ def create_onboarding_session(client: Client, *, days: int = 7) -> tuple[str, Cl
         expires_at=timezone.now() + timedelta(days=days),
     )
     return raw_token, session
-

@@ -17,6 +17,7 @@ __all__ = [
     'FAMILY_CHILD_DOCS',
     'DOCUMENT_CHECKLIST',
     'INTERNAL_DOCS',
+    'SELF_ONBOARDING_SLUG',
     'is_company_document_type',
     'is_passport_document_type',
     'is_rental_document_type',
@@ -30,6 +31,8 @@ INTERNAL_DOCS = {
     DocumentType.PAYMENT_CONFIRMATION,
     DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION,
 }
+
+SELF_ONBOARDING_SLUG = "me"
 
 WEZWANIE_DOCUMENT_TYPES = {
     DocumentType.WEZWANIE.value,

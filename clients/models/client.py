@@ -5,7 +5,7 @@ from datetime import date, timedelta
 from typing import TYPE_CHECKING, Any, Self, cast
 
 from django.conf import settings
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
 from django.db.models import Count, Q
 from django.urls import reverse
@@ -574,6 +574,25 @@ class Client(SoftDeleteModel):
             return str(resolve_document_label(doc_code, language=current_language))
         return doc_code.replace("_", " ").capitalize()
 
+    def _get_mos_legal_stay_until(self) -> date | None:
+        try:
+            mos_application_data = self.mos_application_data
+        except ObjectDoesNotExist:
+            return None
+        return mos_application_data.legal_stay_until
+
+    def _get_family_group_for_income_check(self) -> Any | None:
+        family_group = getattr(self, "family_group", None)
+        if family_group is not None:
+            return family_group
+        if not self.sponsor_client_id:
+            return None
+        try:
+            sponsor_client = self.sponsor_client
+        except ObjectDoesNotExist:
+            return None
+        return getattr(sponsor_client, "family_group", None)
+
     def get_health_alerts(self, document_status_list: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
         alerts: list[dict[str, Any]] = []
         today = timezone.localdate()
@@ -597,13 +616,7 @@ class Client(SoftDeleteModel):
 
         # Check legal stay expiration only if client hasn't submitted yet
         if self.workflow_stage in ["new_client", "document_collection"]:
-            legal_stay_date = self.legal_basis_end_date
-            if not legal_stay_date:
-                try:
-                    if hasattr(self, "mos_application_data") and self.mos_application_data.legal_stay_until:
-                        legal_stay_date = self.mos_application_data.legal_stay_until
-                except Exception:
-                    pass
+            legal_stay_date = self.legal_basis_end_date or self._get_mos_legal_stay_until()
 
             if legal_stay_date:
                 if legal_stay_date < today:
@@ -771,16 +784,7 @@ class Client(SoftDeleteModel):
                     }
                 )
 
-        family_group = None
-        try:
-            family_group = getattr(self, 'family_group', None)
-        except Exception:
-            family_group = None
-        if family_group is None and self.sponsor_client_id:
-            try:
-                family_group = getattr(self.sponsor_client, 'family_group', None)
-            except Exception:
-                family_group = None
+        family_group = self._get_family_group_for_income_check()
         if family_group is not None:
             from clients.services.family import calculate_family_income
 
@@ -831,13 +835,7 @@ class Client(SoftDeleteModel):
         edit_url = reverse("clients:client_edit", kwargs={"pk": self.pk})
 
         # 1. Stay Validity
-        legal_stay_date = self.legal_basis_end_date
-        if not legal_stay_date:
-            try:
-                if hasattr(self, "mos_application_data") and self.mos_application_data.legal_stay_until:
-                    legal_stay_date = self.mos_application_data.legal_stay_until
-            except Exception:
-                pass
+        legal_stay_date = self.legal_basis_end_date or self._get_mos_legal_stay_until()
 
         if not legal_stay_date:
             checks.append({
@@ -1044,16 +1042,7 @@ class Client(SoftDeleteModel):
             })
 
         # 10. Family Income
-        family_group = None
-        try:
-            family_group = getattr(self, 'family_group', None)
-        except Exception:
-            pass
-        if family_group is None and self.sponsor_client_id:
-            try:
-                family_group = getattr(self.sponsor_client, 'family_group', None)
-            except Exception:
-                pass
+        family_group = self._get_family_group_for_income_check()
 
         if family_group is not None:
             from clients.services.family import calculate_family_income

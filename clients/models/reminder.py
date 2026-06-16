@@ -80,8 +80,8 @@ class Reminder(models.Model):
                         "stay_until": stay_str,
                         "due_date": due_str
                     }
-            except Exception:
-                pass
+            except AttributeError:
+                return self.notes or ""
         return self.notes or ""
 
     def __str__(self) -> str:

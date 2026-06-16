@@ -657,13 +657,12 @@ class MOSApplicationDataAdmin(admin.ModelAdmin):
     def _render_json_masked(self, data, mask_keys=None):
         import json
 
-        from django.utils.safestring import mark_safe
         if not data:
             return "-"
         if mask_keys:
             data = mask_json_pii(data, mask_keys)
         formatted = json.dumps(data, indent=2, ensure_ascii=False)
-        return mark_safe(f"<pre>{formatted}</pre>")
+        return format_html("<pre>{}</pre>", formatted)
 
     def personal_data_masked(self, obj):
         return self._render_json_masked(obj.personal_data, ["first_name", "last_name", "phone", "email", "birth_date"])
@@ -682,17 +681,11 @@ class MOSApplicationDataAdmin(admin.ModelAdmin):
     stay_data_masked.short_description = "Stay data"
 
     def previous_stays_masked(self, obj):
-        import json
-
-        from django.utils.safestring import mark_safe
-        return mark_safe(f"<pre>{json.dumps(obj.previous_stays, indent=2, ensure_ascii=False)}</pre>") if obj.previous_stays else "-"
+        return self._render_json_masked(obj.previous_stays)
     previous_stays_masked.short_description = "Previous stays"
 
     def travel_history_masked(self, obj):
-        import json
-
-        from django.utils.safestring import mark_safe
-        return mark_safe(f"<pre>{json.dumps(obj.travel_history, indent=2, ensure_ascii=False)}</pre>") if obj.travel_history else "-"
+        return self._render_json_masked(obj.travel_history)
     travel_history_masked.short_description = "Travel history"
 
     def insurance_data_masked(self, obj):
@@ -784,13 +777,12 @@ class PeselApplicationAdmin(admin.ModelAdmin):
     def _render_json_masked(self, data, mask_keys=None):
         import json
 
-        from django.utils.safestring import mark_safe
         if not data:
             return "-"
         if mask_keys:
             data = mask_json_pii(data, mask_keys)
         formatted = json.dumps(data, indent=2, ensure_ascii=False)
-        return mark_safe(f"<pre>{formatted}</pre>")
+        return format_html("<pre>{}</pre>", formatted)
 
     def pesel_form_data_masked(self, obj):
         return self._render_json_masked(obj.pesel_form_data, ["first_name", "last_name", "phone", "email", "birth_date", "pesel"])
