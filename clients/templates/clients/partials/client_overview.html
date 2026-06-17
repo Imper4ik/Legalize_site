@@ -33,6 +33,11 @@
         <i class="bi bi-file-earmark-arrow-up"></i>
         <span>{% translate "Загрузить Wezwanie" %}</span>
       </button>
+      <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal"
+        data-doc-type="new_residence_card_application_confirmation" data-doc-name="{% translate 'Фото/скан подачи на карту побыту' %}">
+        <i class="bi bi-file-earmark-check"></i>
+        <span>{% translate "Загрузить подачу" %}</span>
+      </button>
       <a href="{% url 'clients:client_edit' client.pk %}" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-pencil-square"></i>
         <span>{% translate "Редактировать" %}</span>

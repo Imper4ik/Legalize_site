@@ -704,6 +704,18 @@ class TestChecklistManageFamilyPurposes:
         assert req.custom_name == "Birth Certificate Updated"
 
 
+class TestClientOverviewUploadActions:
+    def _template_source(self):
+        from pathlib import Path
+        tpl = Path(__file__).resolve().parent.parent / "templates" / "clients" / "partials" / "client_overview.html"
+        return tpl.read_text(encoding="utf-8")
+
+    def test_new_residence_card_application_confirmation_upload_action_exists(self):
+        src = self._template_source()
+        assert 'data-doc-type="new_residence_card_application_confirmation"' in src
+        assert "Загрузить подачу" in src
+
+
 # ===========================================================================
 # 9. CLIENT FORM TEMPLATE — JS LOGIC KEYWORDS
 # ===========================================================================
