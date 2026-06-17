@@ -29,8 +29,8 @@ def normalize_onboarding_purpose(value: str | None) -> str:
 
 def purpose_label(purpose: str | None) -> str:
     if not purpose:
-        return _("не выбрана")
-    return ONBOARDING_PURPOSE_LABELS.get(purpose, str(purpose))
+        return str(_("не выбрана"))
+    return str(ONBOARDING_PURPOSE_LABELS.get(purpose, str(purpose)))
 
 
 def onboarding_purpose_mismatch_q() -> Q:
@@ -64,11 +64,11 @@ def attach_onboarding_purpose_review_state(client: Client) -> Client:
     mos_data = getattr(client, "mos_application_data", None)
     selected = getattr(mos_data, "mos_purpose", "") if mos_data else ""
     current = client.get_document_requirement_purpose()
-    client.onboarding_purpose_requires_review = onboarding_purpose_requires_review(client)
-    client.onboarding_selected_purpose = selected
-    client.onboarding_selected_purpose_label = purpose_label(selected)
-    client.onboarding_card_purpose = current
-    client.onboarding_card_purpose_label = purpose_label(current)
+    setattr(client, "onboarding_purpose_requires_review", onboarding_purpose_requires_review(client))
+    setattr(client, "onboarding_selected_purpose", selected)
+    setattr(client, "onboarding_selected_purpose_label", purpose_label(selected))
+    setattr(client, "onboarding_card_purpose", current)
+    setattr(client, "onboarding_card_purpose_label", purpose_label(current))
     return client
 
 

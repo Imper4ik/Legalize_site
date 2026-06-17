@@ -588,7 +588,7 @@ class TestUpdateRemindersCommand:
         client = _make_client(
             None,
             workflow_stage="waiting_decision",
-            fingerprints_date=date(2026, 2, 10),
+            fingerprints_date=date(2026, 5, 10),
             email="zus-missing@example.com",
             language="ru",
         )
@@ -598,7 +598,9 @@ class TestUpdateRemindersCommand:
             is_required=True,
         )
         _make_doc(client, doc_type=DocumentType.PASSPORT.value)
-        today = date(2026, 5, 15)
+        _make_doc(client, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 3, 1), verified=True)
+        _make_doc(client, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 4, 1), verified=True)
+        today = date(2026, 6, 17)
         iso_year, iso_week, _ = today.isocalendar()
         expected_key = f"zus_rca_missing:{client.pk}:{iso_year}-W{iso_week:02d}"
         mail.outbox = []
@@ -609,8 +611,7 @@ class TestUpdateRemindersCommand:
 
         assert len(mail.outbox) == 1
         assert "ZUS RCA" in mail.outbox[0].body
-        assert "03.2026" in mail.outbox[0].body
-        assert "04.2026" in mail.outbox[0].body
+        assert "05.2026" in mail.outbox[0].body
         assert EmailLog.objects.filter(
             client=client,
             template_type="missing_documents",

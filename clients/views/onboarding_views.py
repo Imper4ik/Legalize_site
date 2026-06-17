@@ -16,7 +16,7 @@ from django.urls import reverse
 from django.utils import timezone, translation
 from django.utils.translation import gettext as _
 
-from clients.constants import DocumentType
+from clients.constants import SELF_ONBOARDING_SLUG, DocumentType
 from clients.forms import DocumentUploadForm
 from clients.models import (
     Client,
@@ -129,7 +129,7 @@ def check_onboarding_session(
     allowed_statuses: tuple[str, ...] = ("created", "active"),
     request: HttpRequest | None = None,
 ) -> ClientOnboardingSession | None:
-    if token == "me":
+    if token == SELF_ONBOARDING_SLUG:
         if request and request.user.is_authenticated and hasattr(request.user, "client_profile"):
             client = request.user.client_profile
             session = ClientOnboardingSession.objects.filter(
@@ -152,7 +152,7 @@ def check_onboarding_session(
                 session.save(update_fields=["status"])
                 MOSApplicationData.objects.get_or_create(client=client)
                 ClientDigitalAccess.objects.get_or_create(client=client)
-            session.token_hash = "me"
+            session.token_hash = SELF_ONBOARDING_SLUG
             session.client = client
             return session
         return None

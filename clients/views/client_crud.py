@@ -12,6 +12,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils.translation import gettext as _
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
+from clients.constants import SELF_ONBOARDING_SLUG
 from clients.forms import (
     ClientForm,
     DocumentUploadForm,
@@ -362,7 +363,7 @@ def dashboard_redirect_view(request: HttpRequest) -> HttpResponseBase:
         return redirect("translations:dashboard")
 
     if hasattr(request.user, "client_profile") and request.user.client_profile:
-        return redirect("clients:onboarding_start", token="me")
+        return redirect("clients:onboarding_start", token=SELF_ONBOARDING_SLUG)
 
     support_email = str(getattr(settings, "DEFAULT_FROM_EMAIL", "support@example.com"))
     context = {

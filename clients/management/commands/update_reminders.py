@@ -55,7 +55,10 @@ class Command(BaseCommand):
 
             if "zus" in selected_sections:
                 self.stdout.write(self.style.HTTP_INFO("-> Checking missing ZUS RCA months..."))
-                self.check_zus_rca_missing_months(dry_run=dry_run)
+                self.check_zus_rca_missing_months(
+                    dry_run=dry_run,
+                    send_email="missing-docs" not in selected_sections,
+                )
 
             if "documents" in selected_sections:
                 self.stdout.write(self.style.HTTP_INFO("-> Checking expiring document emails..."))
@@ -121,7 +124,7 @@ class Command(BaseCommand):
         prefix = "DRY RUN: would send" if dry_run else "Sent"
         self.stdout.write(f"{prefix} {sent_count} missing-document emails. skipped={skipped_count}")
 
-    def check_zus_rca_missing_months(self, *, dry_run: bool = False) -> None:
+    def check_zus_rca_missing_months(self, *, dry_run: bool = False, send_email: bool = True) -> None:
         today = timezone.localdate()
         clients = Client.objects.filter(
             workflow_stage="waiting_decision",
@@ -141,6 +144,15 @@ class Command(BaseCommand):
                 message = f"ZUS RCA missing months: client_id={client.pk}, months={months}"
                 logger.info(message)
                 self.stdout.write(message)
+
+                if not send_email:
+                    skipped_count += 1
+                    logger.info(
+                        "notification skipped: template=missing_documents reason=zus_rca_missing "
+                        "client_id=%s covered_by=missing_docs_section",
+                        client.pk,
+                    )
+                    continue
 
                 weekly_key = f"zus_rca_missing:{client.pk}:{iso_year}-W{iso_week:02d}"
                 if dry_run:

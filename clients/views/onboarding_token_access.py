@@ -4,6 +4,7 @@ import importlib
 
 from django.http import HttpRequest, HttpResponse
 
+from clients.constants import SELF_ONBOARDING_SLUG
 from clients.models import ClientOnboardingSession
 
 onboarding_views = importlib.import_module("clients.views.onboarding_views")
@@ -22,7 +23,7 @@ def check_client_auth_for_token_link(
     are also handled by the original function.
     """
 
-    if token != "me":
+    if token != SELF_ONBOARDING_SLUG:
         return None
     return _ORIGINAL_CHECK_CLIENT_AUTH(request, session, token)
 
