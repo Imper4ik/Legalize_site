@@ -5,6 +5,7 @@ from datetime import date, timedelta
 from unittest.mock import patch
 
 import pytest
+from django.core import mail
 from django.core.management import call_command
 from django.test import Client as DjangoClient
 from django.test import override_settings
@@ -17,6 +18,7 @@ from clients.models import (
     Client,
     Document,
     DocumentRequirement,
+    EmailLog,
     FamilyGroup,
     Payment,
     Reminder,
@@ -264,17 +266,84 @@ class TestZusRcaBackend:
         result = expected_zus_months(date(2030, 1, 1), today=date(2026, 5, 14))
         assert result == []
 
-    def test_day_14_does_not_include_april(self):
-        """On May 14, last_expected = month_start(2026-05-14) - 2 = March 2026."""
-        result = expected_zus_months(date(2026, 2, 10), today=date(2026, 5, 14))
+    def test_day_16_does_not_include_previous_month(self):
+        result = expected_zus_months(date(2026, 5, 10), today=date(2026, 6, 16))
         months = [m.strftime("%Y-%m") for m in result]
-        assert "2026-04" not in months
+        assert months == ["2026-03", "2026-04"]
 
-    def test_day_15_includes_april(self):
-        """On May 15, last_expected = month_start(2026-05-15) - 1 = April 2026."""
-        result = expected_zus_months(date(2026, 2, 10), today=date(2026, 5, 15))
+    def test_day_17_includes_previous_month(self):
+        result = expected_zus_months(date(2026, 5, 10), today=date(2026, 6, 17))
         months = [m.strftime("%Y-%m") for m in result]
-        assert "2026-04" in months
+        assert months == ["2026-03", "2026-04", "2026-05"]
+
+    @pytest.mark.django_db
+    def test_missing_zus_returns_only_unuploaded_available_month(self):
+        c = _make_client(
+            None,
+            workflow_stage="waiting_decision",
+            fingerprints_date=date(2026, 5, 10),
+        )
+        _make_doc(c, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 3, 1), verified=True)
+        _make_doc(c, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 4, 1), verified=True)
+
+        assert missing_zus_months(c, today=date(2026, 6, 17)) == [date(2026, 5, 1)]
+
+    @pytest.mark.django_db
+    def test_missing_zus_waits_until_day_17_for_previous_month(self):
+        c = _make_client(
+            None,
+            workflow_stage="waiting_decision",
+            fingerprints_date=date(2026, 5, 10),
+        )
+        _make_doc(c, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 3, 1), verified=True)
+        _make_doc(c, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 4, 1), verified=True)
+
+        assert missing_zus_months(c, today=date(2026, 6, 16)) == []
+
+    @pytest.mark.django_db
+    def test_unverified_zus_rca_does_not_cover_missing_month(self):
+        c = _make_client(
+            None,
+            workflow_stage="waiting_decision",
+            fingerprints_date=date(2026, 5, 10),
+        )
+        _make_doc(c, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 3, 1), verified=True)
+        _make_doc(c, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 4, 1), verified=True)
+        _make_doc(c, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 5, 1), verified=False)
+
+        assert missing_zus_months(c, today=date(2026, 6, 17)) == [date(2026, 5, 1)]
+
+    @pytest.mark.django_db
+    def test_archived_zus_rca_does_not_cover_missing_month(self):
+        c = _make_client(
+            None,
+            workflow_stage="waiting_decision",
+            fingerprints_date=date(2026, 5, 10),
+        )
+        _make_doc(c, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 3, 1), verified=True)
+        _make_doc(c, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 4, 1), verified=True)
+        _make_doc(
+            c,
+            doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+            zus_period_month=date(2026, 5, 1),
+            verified=True,
+            archived_at=timezone.now(),
+        )
+
+        assert missing_zus_months(c, today=date(2026, 6, 17)) == [date(2026, 5, 1)]
+
+    @pytest.mark.django_db
+    def test_health_insurance_covers_missing_zus_month_until_expiry(self):
+        c = _make_client(
+            None,
+            workflow_stage="waiting_decision",
+            fingerprints_date=date(2026, 5, 10),
+        )
+        _make_doc(c, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 3, 1), verified=True)
+        _make_doc(c, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 4, 1), verified=True)
+        _make_doc(c, doc_type=DocumentType.HEALTH_INSURANCE.value, expiry_date=date(2026, 5, 31), verified=True)
+
+        assert missing_zus_months(c, today=date(2026, 6, 17)) == []
 
     @pytest.mark.django_db
     def test_missing_zus_requires_waiting_decision(self):
@@ -304,12 +373,12 @@ class TestClientDetailZusUploadMonths:
         client = _make_client(
             None,
             workflow_stage="waiting_decision",
-            fingerprints_date=date(2026, 2, 10),
+            fingerprints_date=date(2026, 5, 10),
         )
         http = DjangoClient()
         http.force_login(admin)
 
-        with patch("clients.services.zus.timezone.localdate", return_value=date(2026, 5, 15)):
+        with patch("clients.services.zus.timezone.localdate", return_value=date(2026, 6, 16)):
             response = http.get(reverse("clients:client_detail", kwargs={"pk": client.pk}))
 
         assert response.status_code == 200
@@ -512,6 +581,42 @@ class TestUpdateRemindersCommand:
         assert doc_future.pk in reminder_doc_ids, "Doc +30 days SHOULD get reminder"
         assert doc_far.pk not in reminder_doc_ids, "Doc +31 days should NOT get reminder"
 
+
+    @pytest.mark.django_db
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_only_zus_sends_missing_zus_email_and_creates_email_log(self):
+        client = _make_client(
+            None,
+            workflow_stage="waiting_decision",
+            fingerprints_date=date(2026, 2, 10),
+            email="zus-missing@example.com",
+            language="ru",
+        )
+        DocumentRequirement.objects.create(
+            application_purpose="work",
+            document_type=DocumentType.PASSPORT.value,
+            is_required=True,
+        )
+        _make_doc(client, doc_type=DocumentType.PASSPORT.value)
+        today = date(2026, 5, 15)
+        iso_year, iso_week, _ = today.isocalendar()
+        expected_key = f"zus_rca_missing:{client.pk}:{iso_year}-W{iso_week:02d}"
+        mail.outbox = []
+
+        with patch("clients.management.commands.update_reminders.timezone.localdate", return_value=today):
+            with patch("clients.services.notifications._send_confirmation_email"):
+                call_command("update_reminders", only=["zus"])
+
+        assert len(mail.outbox) == 1
+        assert "ZUS RCA" in mail.outbox[0].body
+        assert "03.2026" in mail.outbox[0].body
+        assert "04.2026" in mail.outbox[0].body
+        assert EmailLog.objects.filter(
+            client=client,
+            template_type="missing_documents",
+            idempotency_key=expected_key,
+        ).count() == 1
+
     @pytest.mark.django_db
     def test_no_duplicate_reminders(self):
         client = _make_client(None)
@@ -596,6 +701,18 @@ class TestChecklistManageFamilyPurposes:
         assert response.status_code == 302
         req.refresh_from_db()
         assert req.custom_name == "Birth Certificate Updated"
+
+
+class TestClientOverviewUploadActions:
+    def _template_source(self):
+        from pathlib import Path
+        tpl = Path(__file__).resolve().parent.parent / "templates" / "clients" / "partials" / "client_overview.html"
+        return tpl.read_text(encoding="utf-8")
+
+    def test_new_residence_card_application_confirmation_upload_action_exists(self):
+        src = self._template_source()
+        assert 'data-doc-type="new_residence_card_application_confirmation"' in src
+        assert "Загрузить подачу" in src
 
 
 # ===========================================================================
