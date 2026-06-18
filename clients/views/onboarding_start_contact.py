@@ -303,6 +303,7 @@ def _build_start_context(
     import os
 
     from django.conf import settings
+    support_email = str(getattr(settings, "DEFAULT_FROM_EMAIL", "support@example.com"))
 
     checklist = []
     checklist_codes = set()
@@ -413,6 +414,7 @@ def _build_start_context(
         "docs_required_pending_count": docs_required_pending_count,
         "passport_complete": passport_complete,
         "travel_complete": travel_complete,
+        "support_email": support_email,
         **purpose_ctx,
     }
 

@@ -345,3 +345,41 @@ class RemainingAuditHardeningTests(TestCase):
         self.assertIn("Задан вопрос сотруднику", activity.summary)
         self.assertEqual(activity.details, "How do I upload my contract?")
 
+    def test_onboarding_start_renders_specialist_info(self):
+        from clients.models import ClientOnboardingSession
+        from clients.services.onboarding_tokens import hash_onboarding_token
+        import uuid
+
+        client = Client.objects.create(first_name="Test", last_name="User", email="test-start@example.com")
+        User = get_user_model()
+        user = User.objects.create_user(email=client.email, password="password123")
+        client.user = user
+        client.save()
+        self.client.force_login(user)
+
+        token = uuid.uuid4().hex
+        session = ClientOnboardingSession.objects.create(
+            client=client,
+            token_hash=hash_onboarding_token(token),
+            expires_at=timezone.now() + timedelta(days=1),
+        )
+
+        url = reverse("clients:onboarding_start", kwargs={"token": token})
+
+        # When no specialist is assigned, support info is shown
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("support_email", response.context)
+        self.assertContains(response, "Служба поддержки")
+
+        # When a specialist is assigned, their name and email are shown
+        staff_user = User.objects.create_user(email="specialist@example.com", password="password123", first_name="John", last_name="Specialist")
+        client.assigned_staff = staff_user
+        client.save()
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "John Specialist")
+        self.assertContains(response, "specialist@example.com")
+
+
