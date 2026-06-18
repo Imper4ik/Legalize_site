@@ -1,6 +1,6 @@
 Здравствуйте, {{ client.first_name }}!
 
-Мы записали вас на подачу или получение документов: {{ appointment_date|date:"d.m.Y H:i" }}.
+Мы записали Вас на встречу: {{ appointment_date|date:"d.m.Y H:i" }}.
 Подробности: {{ notes }}
 
 С уважением,

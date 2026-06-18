@@ -14,19 +14,18 @@
 {% endif %}
 
 {% if expired_documents %}
-❌ Истекло:
+❌ Истёкшие:
 {% for document in expired_documents %}- {{ document.display_name }} (истёк {{ document.expiry_date|date:"d.m.Y" }})
 {% endfor %}
 Пожалуйста, пришлите актуальные версии документов как можно скорее.
 {% endif %}
 
 {% if missing_documents %}
-📄 Отсутствует (не донесён):
+📄 Отсутствующие (не предоставлены):
 {% for document in missing_documents %}- {{ document.name }}{% if document.expiry_date %} (действителен до {{ document.expiry_date|date:"d.m.Y" }}){% endif %}
 {% endfor %}
+Пришлите их вместе с обновлёнными документами.
 {% endif %}
-
-Пожалуйста, подготовьте обновлённые версии и отправьте их нам в ответ на это письмо, чтобы избежать задержек.
 
 С уважением,
 Команда Legalize

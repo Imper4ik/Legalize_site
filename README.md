@@ -150,9 +150,10 @@ Background automation also runs from the web service startup script. `start.sh`
 launches `python manage.py run_background_automation_loop --loop` by default. The
 loop processes queued OCR jobs and queued email campaigns every 5 minutes, and
 checks missing checklist documents, missing ZUS RCA months, expiring documents, and
-regular reminder records every Monday after 08:00 Europe/Warsaw time. Missing-
-document emails are idempotent per client per week, so repeated manual runs or
-service restarts do not spam clients. Set `ENABLE_BACKGROUND_AUTOMATION_LOOP=false`
+regular reminder records daily after 08:00 Europe/Warsaw time with a same-day retry
+slot after 17:10. Missing-document and missing-ZUS RCA emails use weekly
+idempotency keys per client, so they can be checked daily but are sent at most once
+per week for the same reminder type. Set `ENABLE_BACKGROUND_AUTOMATION_LOOP=false`
 to disable the built-in loop and use an external scheduler instead.
 
 Example:
