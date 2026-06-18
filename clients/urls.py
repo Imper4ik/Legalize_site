@@ -141,6 +141,7 @@ urlpatterns = [
     path('onboarding/<str:token>/declarations/', views.onboarding_declarations, name='onboarding_declarations'),
     path('onboarding/<str:token>/review/', views.onboarding_review, name='onboarding_review'),
     path('onboarding/<str:token>/auto-save/', views.onboarding_auto_save, name='onboarding_auto_save'),
+    path('onboarding/<str:token>/ask-question/', views.onboarding_ask_question, name='onboarding_ask_question'),
 
     path('<int:client_id>/mos-review/', views.admin_mos_review, name='admin_mos_review'),
     path('api/client-autocomplete/', views.client_autocomplete_api, name='client_autocomplete_api'),

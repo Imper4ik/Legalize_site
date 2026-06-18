@@ -297,3 +297,51 @@ class RemainingAuditHardeningTests(TestCase):
         # Check that detected_names is cleared (empty list)
         self.assertEqual(doc.parsed_data["detected_names"], [])
         self.assertTrue(doc.parsed_data.get("pii_scrubbed"))
+
+    def test_onboarding_ask_question_creates_staff_task(self):
+        from clients.models import ClientOnboardingSession, StaffTask, ClientActivity
+        from clients.services.onboarding_tokens import hash_onboarding_token
+        import uuid
+
+        client = Client.objects.create(first_name="Test", last_name="User", email="test-ask@example.com")
+        User = get_user_model()
+        user = User.objects.create_user(email=client.email, password="password123")
+        client.user = user
+        client.save()
+        self.client.force_login(user)
+
+        token = uuid.uuid4().hex
+        session = ClientOnboardingSession.objects.create(
+            client=client,
+            token_hash=hash_onboarding_token(token),
+            expires_at=timezone.now() + timedelta(days=1),
+        )
+
+        url = reverse("clients:onboarding_ask_question", kwargs={"token": token})
+
+        # Test GET method is rejected
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 405)
+
+        # Test POST method with empty question is rejected
+        response = self.client.post(url, {"question": ""})
+        self.assertEqual(response.status_code, 400)
+
+        # Test POST method with valid question creates a task and log
+        response = self.client.post(url, {"question": "How do I upload my contract?"})
+        self.assertEqual(response.status_code, 302)
+
+        # Check StaffTask exists
+        task = StaffTask.objects.filter(client=client).first()
+        self.assertIsNotNone(task)
+        self.assertIn("Вопрос от клиента", task.title)
+        self.assertIn("How do I upload my contract?", task.description)
+        self.assertEqual(task.priority, "high")
+        self.assertEqual(task.status, "open")
+
+        # Check ClientActivity exists
+        activity = ClientActivity.objects.filter(client=client, event_type="comment").first()
+        self.assertIsNotNone(activity)
+        self.assertIn("Задан вопрос сотруднику", activity.summary)
+        self.assertEqual(activity.details, "How do I upload my contract?")
+

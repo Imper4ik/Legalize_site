@@ -25,6 +25,7 @@ from clients.views.onboarding_token_access import enable_token_link_access
 from clients.views.onboarding_views import (
     check_onboarding_session,
     generate_onboarding_link,
+    onboarding_ask_question,
     onboarding_auto_save,
     onboarding_document_delete,
     onboarding_document_preview,

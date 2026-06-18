@@ -1211,3 +1211,53 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         client.save()
 
     return JsonResponse({"status": "ok", "message": _("Draft auto-saved")})
+
+
+def onboarding_ask_question(request: HttpRequest, token: str) -> HttpResponse:
+    if request.method != "POST":
+        return HttpResponseNotAllowed(["POST"])
+
+    session = check_onboarding_session(token, request=request)
+    if not session:
+        return HttpResponseForbidden(_("Срок действия ссылки истёк или она недействительна."))
+
+    auth_redirect = check_client_auth(request, session, token)
+    if auth_redirect:
+        return auth_redirect
+
+    question_text = request.POST.get("question", "").strip()
+    if not question_text:
+        return HttpResponseBadRequest(_("Текст вопроса не может быть пустым."))
+
+    client = session.client
+    assignee = client.assigned_staff
+    if not assignee:
+        from django.contrib.auth import get_user_model
+        assignee = get_user_model().objects.filter(is_staff=True, is_active=True).first()
+
+    from clients.models import StaffTask
+    from django.urls import reverse
+
+    task = StaffTask.objects.create(
+        client=client,
+        title=f"Вопрос от клиента: {client.get_full_name()}",
+        description=f"Клиент задал вопрос через приложение:\n\n{question_text}",
+        priority="high",
+        status="open",
+        assignee=assignee,
+    )
+
+    from clients.services.activity import log_client_activity
+    log_client_activity(
+        client=client,
+        actor=client.user,
+        event_type="comment",
+        summary=f"Задан вопрос сотруднику: '{question_text[:50]}...'",
+        details=question_text,
+    )
+
+    from django.contrib import messages
+    messages.success(request, _("Ваш вопрос успешно отправлен. Сотрудник свяжется с вами!"))
+
+    next_url = request.POST.get("next") or reverse("clients:onboarding_start", kwargs={"token": token})
+    return redirect(next_url)
