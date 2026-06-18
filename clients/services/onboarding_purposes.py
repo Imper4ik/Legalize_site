@@ -112,3 +112,4 @@ def clear_onboarding_notifications_cache(client: Client | None = None) -> None:
     for user_id in users.values_list("pk", flat=True).distinct():
         for language in _notification_cache_languages():
             cache.delete(f"onboarding_notifications:v3:user:{user_id}:lang:{language}")
+            cache.delete(f"onboarding_notifications:v4:user:{user_id}:lang:{language}")

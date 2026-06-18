@@ -286,8 +286,14 @@
   <nav class="mobile-nav-bar d-flex d-lg-none">
     {% if user|has_any_role:"Admin,Manager,Staff,ReadOnly" %}
       <!-- Staff Mobile Navigation -->
-      <a href="{% url 'clients:client_list' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'client_list' %}active{% endif %}">
+      <a href="{% url 'clients:client_list' %}" class="mobile-nav-item position-relative {% if request.resolver_match.url_name == 'client_list' %}active{% endif %}">
         <i class="bi bi-people-fill"></i>
+        {% if client_attention_count %}
+          <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-danger"
+                aria-label="{% translate 'События клиентов требуют внимания' %}: {{ client_attention_count }}">
+            {{ client_attention_count }}
+          </span>
+        {% endif %}
         <span>{% translate "Клиенты" %}</span>
       </a>
       <a href="{% url 'clients:client_add' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'client_add' %}active{% endif %}">

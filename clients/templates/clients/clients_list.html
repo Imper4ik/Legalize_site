@@ -69,6 +69,8 @@
         {% translate "Клиенты с OCR предупреждениями" %}
       {% elif document_filter == "ocr_pending" %}
         {% translate "Клиенты с OCR в обработке" %}
+      {% elif document_filter == "ocr_failed" %}
+        {% translate "Клиенты с ошибкой OCR" %}
       {% else %}
         {% translate "Отфильтрованные события клиентов" %}
       {% endif %}
@@ -79,9 +81,42 @@
 </div>
 {% endif %}
 
+{% if attention_filter %}
+<div class="alert alert-danger d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
+  <div>
+    <strong>
+      {% if attention_filter == "legal_stay" %}
+        {% translate "Клиенты с истекающим легальным пребыванием" %}
+      {% elif attention_filter == "expired_documents" %}
+        {% translate "Клиенты с просроченными документами" %}
+      {% elif attention_filter == "expiring_documents" %}
+        {% translate "Клиенты с документами, которые скоро истекают" %}
+      {% elif attention_filter == "unverified_documents" %}
+        {% translate "Клиенты с документами, ожидающими проверки" %}
+      {% elif attention_filter == "overdue_payments" %}
+        {% translate "Клиенты с просроченными оплатами" %}
+      {% elif attention_filter == "failed_emails" %}
+        {% translate "Клиенты с ошибками отправки email" %}
+      {% elif attention_filter == "fingerprints_email" %}
+        {% translate "Клиенты без отправленного письма по отпечаткам" %}
+      {% elif attention_filter == "overdue_tasks" %}
+        {% translate "Клиенты с просроченными задачами" %}
+      {% elif attention_filter == "wezwanie_missing_case" %}
+        {% translate "Клиенты с wezwanie без номера дела" %}
+      {% else %}
+        {% translate "Клиенты с событиями, требующими внимания" %}
+      {% endif %}
+    </strong>
+    <div class="small mb-0">{% translate "Откройте карточку клиента, чтобы проверить детали и закрыть следующий шаг." %}</div>
+  </div>
+  <a href="{% url 'clients:client_list' %}" class="btn btn-sm btn-outline-secondary">{% translate "Показать всех клиентов" %}</a>
+</div>
+{% endif %}
+
 <form method="get" class="client-list-filters mb-3">
 {% if onboarding_filter %}<input type="hidden" name="onboarding" value="{{ onboarding_filter }}">{% endif %}
 {% if document_filter %}<input type="hidden" name="document" value="{{ document_filter }}">{% endif %}
+{% if attention_filter %}<input type="hidden" name="attention" value="{{ attention_filter }}">{% endif %}
   <div class="row g-2 align-items-center">
     <div class="col-12 col-md-3">
     <select name="company" class="form-select">

@@ -23,6 +23,7 @@ from clients.models import Client, ClientActivity, Document, EmailLog, Payment, 
 from clients.security.encrypted import safe_encrypted_attr
 from clients.services.access import accessible_clients_queryset
 from clients.services.activity import log_client_view
+from clients.services.attention import apply_client_attention_filter
 from clients.services.notifications import (
     send_expired_documents_email,
     send_required_documents_email,
@@ -117,6 +118,38 @@ class ClientListView(StaffRequiredMixin, ListView):
             )
             queryset = queryset.annotate(latest_event_uploaded_at=Max("documents__uploaded_at"))
             list_ordering = ["-latest_event_uploaded_at", "-created_at"]
+        elif self.document_filter == "ocr_failed":
+            queryset = queryset.filter(
+                documents__ocr_status="failed",
+                documents__archived_at__isnull=True,
+            )
+            queryset = queryset.annotate(latest_event_uploaded_at=Max("documents__uploaded_at"))
+            list_ordering = ["-latest_event_uploaded_at", "-created_at"]
+
+        self.attention_filter = self.request.GET.get("attention", "")
+        if self.attention_filter:
+            queryset = apply_client_attention_filter(queryset, self.attention_filter)
+            if self.attention_filter in {
+                "expired_documents",
+                "expiring_documents",
+                "unverified_documents",
+                "wezwanie_missing_case",
+            }:
+                queryset = queryset.annotate(latest_event_uploaded_at=Max("documents__uploaded_at"))
+                list_ordering = ["-latest_event_uploaded_at", "-created_at"]
+            elif self.attention_filter == "overdue_payments":
+                queryset = queryset.annotate(latest_attention_due_date=Max("payments__due_date"))
+                list_ordering = ["latest_attention_due_date", "-created_at"]
+            elif self.attention_filter == "overdue_tasks":
+                queryset = queryset.annotate(latest_attention_due_date=Max("staff_tasks__due_date"))
+                list_ordering = ["latest_attention_due_date", "-created_at"]
+            elif self.attention_filter == "failed_emails":
+                queryset = queryset.annotate(latest_attention_sent_at=Max("email_logs__sent_at"))
+                list_ordering = ["-latest_attention_sent_at", "-created_at"]
+            elif self.attention_filter == "fingerprints_email":
+                list_ordering = ["fingerprints_date", "-created_at"]
+            elif self.attention_filter == "legal_stay":
+                list_ordering = ["legal_basis_end_date", "-created_at"]
 
         company_id = self.request.GET.get("company")
         if company_id:
@@ -142,6 +175,7 @@ class ClientListView(StaffRequiredMixin, ListView):
         context["selected_company"] = self.request.GET.get("company", "")
         context["onboarding_filter"] = self.request.GET.get("onboarding", "")
         context["document_filter"] = self.request.GET.get("document", "")
+        context["attention_filter"] = self.request.GET.get("attention", "")
         for client in context.get("clients", []):
             client.safe_case_number = safe_encrypted_attr(client, "case_number", default="—")
             attach_onboarding_purpose_review_state(client)

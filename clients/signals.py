@@ -11,12 +11,26 @@ from django.utils.translation import gettext as _
 
 from clients.services.activity import log_client_activity
 
-from .models import Client, Document, EmailLog, EmployeePermission, Payment, Reminder
+from .models import Client, Document, EmailLog, EmployeePermission, Payment, Reminder, StaffTask
 
 if TYPE_CHECKING:
     pass
 
 logger = logging.getLogger(__name__)
+
+
+def _clear_attention_cache_for_client_id(client_id: int | None, *, reason: str) -> None:
+    if not client_id:
+        return
+
+    from clients.services.onboarding_purposes import clear_onboarding_notifications_cache
+
+    try:
+        client = Client.objects.filter(pk=client_id).first()
+        if client:
+            clear_onboarding_notifications_cache(client)
+    except Exception:
+        logger.warning("Failed to clear onboarding notifications cache: reason=%s", reason)
 
 
 
@@ -70,6 +84,16 @@ def sync_payment_reminder_on_save(sender: Any, instance: Payment, **kwargs: Any)
         Reminder.objects.filter(payment=instance).delete()
 
 
+@receiver(post_save, sender=Payment)
+def clear_cache_on_payment_save(sender: Any, instance: Payment, **kwargs: Any) -> None:
+    _clear_attention_cache_for_client_id(instance.client_id, reason="payment_save")
+
+
+@receiver(pre_delete, sender=Payment)
+def clear_cache_on_payment_delete(sender: Any, instance: Payment, **kwargs: Any) -> None:
+    _clear_attention_cache_for_client_id(instance.client_id, reason="payment_delete")
+
+
 @receiver(pre_save, sender=Payment)
 def deactivate_payment_reminders_on_archive(sender: Any, instance: Payment, **kwargs: Any) -> None:
     if not instance.pk or not getattr(instance, "archived_at", None):
@@ -106,6 +130,11 @@ def deactivate_user_account_when_client_archived(sender: Any, instance: Client, 
 
     user.is_active = False
     user.save(update_fields=["is_active"])
+
+
+@receiver(post_save, sender=Client)
+def clear_cache_on_client_save(sender: Any, instance: Client, **kwargs: Any) -> None:
+    _clear_attention_cache_for_client_id(instance.pk, reason="client_save")
 
 
 @receiver(pre_save, sender=Client)
@@ -192,6 +221,26 @@ def create_activity_for_email_log(sender: Any, instance: EmailLog, created: bool
                 "recipients_count": len([item for item in (instance.recipients or "").split(",") if item.strip()]),
             },
         )
+
+
+@receiver(post_save, sender=EmailLog)
+def clear_cache_on_email_log_save(sender: Any, instance: EmailLog, **kwargs: Any) -> None:
+    _clear_attention_cache_for_client_id(instance.client_id, reason="email_log_save")
+
+
+@receiver(pre_delete, sender=EmailLog)
+def clear_cache_on_email_log_delete(sender: Any, instance: EmailLog, **kwargs: Any) -> None:
+    _clear_attention_cache_for_client_id(instance.client_id, reason="email_log_delete")
+
+
+@receiver(post_save, sender=StaffTask)
+def clear_cache_on_staff_task_save(sender: Any, instance: StaffTask, **kwargs: Any) -> None:
+    _clear_attention_cache_for_client_id(instance.client_id, reason="staff_task_save")
+
+
+@receiver(pre_delete, sender=StaffTask)
+def clear_cache_on_staff_task_delete(sender: Any, instance: StaffTask, **kwargs: Any) -> None:
+    _clear_attention_cache_for_client_id(instance.client_id, reason="staff_task_delete")
 
 
 @receiver(post_save, sender=Document)

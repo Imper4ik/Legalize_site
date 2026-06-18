@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from datetime import date, timedelta
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -16,11 +17,13 @@ from clients.models import (
     Client,
     ClientActivity,
     Document,
+    EmailLog,
     MOSApplicationData,
     Payment,
     Reminder,
     ServicePrice,
     StaffAuditEvent,
+    StaffTask,
 )
 from clients.services.access import user_has_internal_role
 from clients.services.roles import ensure_predefined_roles
@@ -194,18 +197,25 @@ class ClientViewEdgeCaseTests(TestCase):
             last_name="Client",
             email="ocr-warning@example.com",
         )
+        failed_client = Client.objects.create(
+            first_name="Failed",
+            last_name="Client",
+            email="ocr-failed@example.com",
+        )
         Document.objects.create(
             client=review_client,
             document_type="passport",
             file=SimpleUploadedFile("review.pdf", b"file", content_type="application/pdf"),
             awaiting_confirmation=True,
             ocr_status="success",
+            verified=True,
         )
         Document.objects.create(
             client=pending_client,
             document_type="passport",
             file=SimpleUploadedFile("pending.pdf", b"file", content_type="application/pdf"),
             ocr_status="pending",
+            verified=True,
         )
         Document.objects.create(
             client=warning_client,
@@ -213,6 +223,14 @@ class ClientViewEdgeCaseTests(TestCase):
             file=SimpleUploadedFile("warning.pdf", b"file", content_type="application/pdf"),
             ocr_status="success",
             ocr_name_mismatch=True,
+            verified=True,
+        )
+        Document.objects.create(
+            client=failed_client,
+            document_type="passport",
+            file=SimpleUploadedFile("failed.pdf", b"file", content_type="application/pdf"),
+            ocr_status="failed",
+            verified=True,
         )
 
         list_url = reverse("clients:client_list")
@@ -221,14 +239,138 @@ class ClientViewEdgeCaseTests(TestCase):
         self.assertContains(response, f"{list_url}?document=ocr_review")
         self.assertContains(response, f"{list_url}?document=ocr_pending")
         self.assertContains(response, f"{list_url}?document=ocr_warning")
-        self.assertEqual(response.context["client_attention_count"], 3)
+        self.assertContains(response, f"{list_url}?document=ocr_failed")
+        self.assertEqual(response.context["client_attention_count"], 4)
 
         filtered_response = self.client.get(list_url, {"document": "ocr_review"})
         self.assertEqual(filtered_response.status_code, 200)
         self.assertContains(filtered_response, "Review")
         self.assertNotContains(filtered_response, "Pending")
         self.assertNotContains(filtered_response, "Warning")
+        self.assertNotContains(filtered_response, "Failed")
         self.assertEqual(filtered_response.context["document_filter"], "ocr_review")
+
+        failed_response = self.client.get(list_url, {"document": "ocr_failed"})
+        self.assertEqual(failed_response.status_code, 200)
+        self.assertContains(failed_response, "Failed")
+        self.assertNotContains(failed_response, "Review")
+        self.assertEqual(failed_response.context["document_filter"], "ocr_failed")
+
+    def test_client_attention_menu_and_attention_filters_show_operational_events(self):
+        today = date.today()
+        clients_by_filter = {
+            "legal_stay": Client.objects.create(
+                first_name="LegalStayAttention",
+                last_name="Client",
+                email="legal-stay-attention@example.com",
+                workflow_stage="new_client",
+                legal_basis_end_date=today + timedelta(days=5),
+            ),
+            "expired_documents": Client.objects.create(
+                first_name="ExpiredDocumentAttention",
+                last_name="Client",
+                email="expired-doc-attention@example.com",
+            ),
+            "expiring_documents": Client.objects.create(
+                first_name="ExpiringDocumentAttention",
+                last_name="Client",
+                email="expiring-doc-attention@example.com",
+            ),
+            "unverified_documents": Client.objects.create(
+                first_name="UnverifiedDocumentAttention",
+                last_name="Client",
+                email="unverified-doc-attention@example.com",
+            ),
+            "overdue_payments": Client.objects.create(
+                first_name="OverduePaymentAttention",
+                last_name="Client",
+                email="overdue-payment-attention@example.com",
+            ),
+            "failed_emails": Client.objects.create(
+                first_name="FailedEmailAttention",
+                last_name="Client",
+                email="failed-email-attention@example.com",
+            ),
+            "fingerprints_email": Client.objects.create(
+                first_name="FingerprintsEmailAttention",
+                last_name="Client",
+                email="fingerprints-email-attention@example.com",
+                fingerprints_date=today,
+            ),
+            "overdue_tasks": Client.objects.create(
+                first_name="OverdueTaskAttention",
+                last_name="Client",
+                email="overdue-task-attention@example.com",
+            ),
+            "wezwanie_missing_case": Client.objects.create(
+                first_name="WezwanieMissingCaseAttention",
+                last_name="Client",
+                email="wezwanie-missing-case-attention@example.com",
+            ),
+        }
+        Document.objects.create(
+            client=clients_by_filter["expired_documents"],
+            document_type="passport",
+            file=SimpleUploadedFile("expired.pdf", b"file", content_type="application/pdf"),
+            expiry_date=today - timedelta(days=1),
+            verified=True,
+        )
+        Document.objects.create(
+            client=clients_by_filter["expiring_documents"],
+            document_type="passport",
+            file=SimpleUploadedFile("expiring.pdf", b"file", content_type="application/pdf"),
+            expiry_date=today + timedelta(days=2),
+            verified=True,
+        )
+        Document.objects.create(
+            client=clients_by_filter["unverified_documents"],
+            document_type="passport",
+            file=SimpleUploadedFile("unverified.pdf", b"file", content_type="application/pdf"),
+            verified=False,
+        )
+        Document.objects.create(
+            client=clients_by_filter["wezwanie_missing_case"],
+            document_type="wezwanie",
+            file=SimpleUploadedFile("wezwanie.pdf", b"file", content_type="application/pdf"),
+            verified=True,
+        )
+        Payment.objects.create(
+            client=clients_by_filter["overdue_payments"],
+            service_description="consultation",
+            total_amount="100.00",
+            amount_paid="0.00",
+            status="pending",
+            due_date=today,
+        )
+        EmailLog.objects.create(
+            client=clients_by_filter["failed_emails"],
+            subject="Failed email",
+            body="Body",
+            recipients="client@example.com",
+            delivery_status=EmailLog.DELIVERY_STATUS_FAILED,
+        )
+        StaffTask.objects.create(
+            client=clients_by_filter["overdue_tasks"],
+            title="Overdue task",
+            due_date=today - timedelta(days=1),
+            status="open",
+        )
+
+        list_url = reverse("clients:client_list")
+        response = self.client.get(list_url)
+        self.assertEqual(response.status_code, 200)
+        for attention_filter in clients_by_filter:
+            self.assertContains(response, f"{list_url}?attention={attention_filter}")
+            self.assertEqual(response.context["attention_counts"][attention_filter], 1)
+
+        for attention_filter, expected_client in clients_by_filter.items():
+            filtered_response = self.client.get(list_url, {"attention": attention_filter})
+            self.assertEqual(filtered_response.status_code, 200)
+            self.assertEqual(filtered_response.context["attention_filter"], attention_filter)
+            self.assertEqual(
+                [client.first_name for client in filtered_response.context["clients"]],
+                [expected_client.first_name],
+            )
 
     def test_get_price_for_service_returns_success_json(self):
         response = self.client.get(reverse("clients:get_price_for_service", kwargs={"service_value": "study_service"}))
