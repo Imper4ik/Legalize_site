@@ -1,6 +1,6 @@
 Dzień dobry, {{ client.first_name }}.
 
-Informujemy, że wyznaczono Panu/Pani termin złożenia odcisków palców.
+Informujemy, że wyznaczono termin złożenia odcisków palców.
 
 Szczegóły wizyty:
 - Data: {{ fingerprints_date|date:"d.m.Y" }}

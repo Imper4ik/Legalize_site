@@ -1,6 +1,6 @@
 {{ client.first_name }} {{ client.last_name }},
 
-Мы проверили документы, отправленные Вами. Для завершения дела нам ещё не хватает следующих документов:
+Мы проверили отправленные Вами документы. Для дальнейшего ведения дела нам ещё нужны следующие документы:
 {% for document in documents %}- {{ document.name }}{% if document.expiry_date %} (действителен до {{ document.expiry_date|date:"d.m.Y" }}){% endif %}
 {% endfor %}
 {% if uploaded_with_expiry %}
