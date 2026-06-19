@@ -32,13 +32,13 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
 
     from django.db.models import Q
 
-    from clients.models import Client
-    from clients.services.access import accessible_clients_queryset
+    from clients.models import Client, StaffTask
+    from clients.services.access import accessible_clients_queryset, accessible_tasks_queryset
     from clients.services.attention import count_client_attention_filters
     from clients.services.onboarding_purposes import onboarding_purpose_mismatch_q
 
     language = translation.get_language() or getattr(settings, "LANGUAGE_CODE", "")
-    cache_key = f"onboarding_notifications:v4:user:{request.user.pk}:lang:{language}"
+    cache_key = f"onboarding_notifications:v5:user:{request.user.pk}:lang:{language}"
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
@@ -70,9 +70,26 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
             documents__archived_at__isnull=True,
         ).distinct().count()
         attention_counts = count_client_attention_filters(qs)
+        pending_question_tasks = accessible_tasks_queryset(
+            request.user,
+            StaffTask.objects.filter(
+                status__in=["open", "in_progress"],
+                description__startswith="Клиент задал вопрос через приложение:",
+            ),
+        ).select_related("client").order_by("-created_at")
+        pending_question_count = pending_question_tasks.count()
+        pending_question_preview = list(pending_question_tasks[:5])
 
         client_list_url = reverse("clients:client_list")
         items = []
+        if pending_question_count:
+            items.append({
+                "label": _("Вопросы клиентов"),
+                "count": pending_question_count,
+                "url": f"{reverse('clients:task_list')}?type=questions",
+                "icon": "bi-envelope-paper",
+                "level": "danger",
+            })
         if attention_counts["legal_stay"]:
             items.append({
                 "label": _("Истекает легальное пребывание"),
@@ -217,6 +234,9 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
             "attention_counts": attention_counts,
             "client_attention_count": sum(item["count"] for item in items),
             "client_attention_items": items,
+            "pending_question_count": pending_question_count,
+            "pending_question_tasks": pending_question_preview,
+            "pending_question_url": f"{reverse('clients:task_list')}?type=questions",
         }
         cache.set(cache_key, context, int(getattr(settings, "ONBOARDING_NOTIFICATIONS_CACHE_SECONDS", 45)))
         return context

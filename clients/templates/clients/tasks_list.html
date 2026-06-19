@@ -18,23 +18,37 @@
       <a href="{% url 'clients:task_list' %}?assignee=me" class="btn {% if assignee_filter == 'me' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
         {% translate "Мои задачи" %}
       </a>
+      <a href="{% url 'clients:task_list' %}?type=questions" class="btn {% if type_filter == 'questions' %}btn-danger{% else %}btn-outline-danger{% endif %} btn-sm">
+        <i class="bi bi-envelope me-1"></i>{% translate "Вопросы клиентов" %}
+      </a>
     </div>
     <span class="badge {% if overdue_count %}bg-danger{% else %}bg-success{% endif %}">
       {% translate "Просрочено" %}: {{ overdue_count }}
     </span>
   </div>
 
+  {% if type_filter == 'questions' %}
+    <div class="alert alert-info border-0 shadow-sm d-flex gap-2 align-items-start" role="alert">
+      <i class="bi bi-info-circle-fill flex-shrink-0"></i>
+      <div>
+        {% translate "Вопросы клиентов попадают в общий inbox без ответственного и без приоритета: сотрудники разбирают их по очереди и закрывают после ответа." %}
+      </div>
+    </div>
+  {% endif %}
+
   <div class="card shadow-sm">
     {% if tasks %}
       <div class="table-responsive">
-        <table class="table align-middle mb-0">
-          <thead class="table-light">
+        <table class="table table-modern align-middle mb-0">
+          <thead>
             <tr>
               <th>{% translate "Задача" %}</th>
               <th>{% translate "Клиент" %}</th>
-              <th>{% translate "Ответственный" %}</th>
-              <th>{% translate "Приоритет" %}</th>
+              {% if type_filter != 'questions' %}<th>{% translate "Ответственный" %}</th>{% endif %}
+              <th>{% translate "Контакты" %}</th>
+              {% if type_filter != 'questions' %}<th>{% translate "Приоритет" %}</th>{% endif %}
               <th>{% translate "Срок" %}</th>
+              <th class="text-end">{% translate "Действия" %}</th>
             </tr>
           </thead>
           <tbody>
@@ -46,15 +60,41 @@
                     <div class="small text-muted">{{ task.description|truncatechars:120 }}</div>
                   {% endif %}
                 </td>
-                <td><a href="{% url 'clients:client_detail' task.client.pk %}">{{ task.client }}</a></td>
-                <td>{{ task.assignee_display }}</td>
-                <td><span class="badge {{ task.priority_badge_class }}">{{ task.get_priority_display }}</span></td>
+                <td>
+                  <a href="{{ task.communication_url }}" class="fw-semibold">{{ task.client }}</a>
+                  {% if task.is_client_question %}<span class="badge text-bg-danger ms-1"><i class="bi bi-envelope me-1"></i>{% translate "вопрос" %}</span>{% endif %}
+                </td>
+                {% if type_filter != 'questions' %}<td>{% if task.is_client_question %}<span class="text-muted">—</span>{% else %}{{ task.assignee_display }}{% endif %}</td>{% endif %}
+                <td class="small">
+                  <div><i class="bi bi-telephone me-1 text-muted"></i>{{ task.client.phone|default:"—" }}</div>
+                  <div><i class="bi bi-envelope me-1 text-muted"></i>{{ task.client.email|default:"—" }}</div>
+                </td>
+                {% if type_filter != 'questions' %}
+                <td>
+                  {% if task.is_client_question %}
+                    <span class="text-muted">—</span>
+                  {% else %}
+                    <span class="badge {{ task.priority_badge_class }}">{{ task.get_priority_display }}</span>
+                  {% endif %}
+                </td>
+                {% endif %}
                 <td>
                   {% if task.due_date %}
                     <span class="{% if task.due_date < today %}text-danger fw-semibold{% endif %}">{{ task.due_date|date:"d.m.Y" }}</span>
                   {% else %}
                     <span class="text-muted">—</span>
                   {% endif %}
+                </td>
+                <td class="text-end text-nowrap">
+                  <a href="{{ task.communication_url }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-chat-left-text me-1"></i>{% translate "История" %}
+                  </a>
+                  <form action="{% url 'clients:complete_task' task.pk %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button class="btn btn-outline-success btn-sm" type="submit">
+                      <i class="bi bi-check2"></i>
+                    </button>
+                  </form>
                 </td>
               </tr>
             {% endfor %}
