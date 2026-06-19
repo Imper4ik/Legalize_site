@@ -44,9 +44,9 @@
             <tr>
               <th>{% translate "Задача" %}</th>
               <th>{% translate "Клиент" %}</th>
-              {% if type_filter != 'questions' %}<th>{% translate "Ответственный" %}</th>{% endif %}
+              <th>{% translate "Ответственный" %}</th>
               <th>{% translate "Контакты" %}</th>
-              {% if type_filter != 'questions' %}<th>{% translate "Приоритет" %}</th>{% endif %}
+              <th>{% translate "Приоритет" %}</th>
               <th>{% translate "Срок" %}</th>
               <th class="text-end">{% translate "Действия" %}</th>
             </tr>
@@ -64,20 +64,12 @@
                   <a href="{{ task.communication_url }}" class="fw-semibold">{{ task.client }}</a>
                   {% if task.is_client_question %}<span class="badge text-bg-danger ms-1"><i class="bi bi-envelope me-1"></i>{% translate "вопрос" %}</span>{% endif %}
                 </td>
-                {% if type_filter != 'questions' %}<td>{% if task.is_client_question %}<span class="text-muted">—</span>{% else %}{{ task.assignee_display }}{% endif %}</td>{% endif %}
+                <td>{{ task.assignee_display }}</td>
                 <td class="small">
                   <div><i class="bi bi-telephone me-1 text-muted"></i>{{ task.client.phone|default:"—" }}</div>
                   <div><i class="bi bi-envelope me-1 text-muted"></i>{{ task.client.email|default:"—" }}</div>
                 </td>
-                {% if type_filter != 'questions' %}
-                <td>
-                  {% if task.is_client_question %}
-                    <span class="text-muted">—</span>
-                  {% else %}
-                    <span class="badge {{ task.priority_badge_class }}">{{ task.get_priority_display }}</span>
-                  {% endif %}
-                </td>
-                {% endif %}
+                <td><span class="badge {{ task.priority_badge_class }}">{{ task.get_priority_display }}</span></td>
                 <td>
                   {% if task.due_date %}
                     <span class="{% if task.due_date < today %}text-danger fw-semibold{% endif %}">{{ task.due_date|date:"d.m.Y" }}</span>

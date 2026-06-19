@@ -1240,7 +1240,7 @@ def onboarding_ask_question(request: HttpRequest, token: str) -> HttpResponse:
         description=f"Клиент задал вопрос через приложение:\n\n{question_text}",
         priority="medium",
         status="open",
-        assignee=None,
+        assignee=assignee,
         created_by=client.user,
     )
 
