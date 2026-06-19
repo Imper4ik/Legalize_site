@@ -1230,10 +1230,6 @@ def onboarding_ask_question(request: HttpRequest, token: str) -> HttpResponse:
         return HttpResponseBadRequest(_("Текст вопроса не может быть пустым."))
 
     client = session.client
-    assignee = client.assigned_staff
-    if not assignee:
-        from django.contrib.auth import get_user_model
-        assignee = get_user_model().objects.filter(is_staff=True, is_active=True).first()
 
     from clients.models import StaffTask
     from django.urls import reverse
@@ -1242,7 +1238,7 @@ def onboarding_ask_question(request: HttpRequest, token: str) -> HttpResponse:
         client=client,
         title=f"Вопрос от клиента: {client.get_full_name()}",
         description=f"Клиент задал вопрос через приложение:\n\n{question_text}",
-        priority="high",
+        priority="medium",
         status="open",
         assignee=assignee,
         created_by=client.user,
