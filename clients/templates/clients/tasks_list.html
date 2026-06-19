@@ -18,6 +18,9 @@
       <a href="{% url 'clients:task_list' %}?assignee=me" class="btn {% if assignee_filter == 'me' %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm">
         {% translate "Мои задачи" %}
       </a>
+      <a href="{% url 'clients:task_list' %}?type=questions" class="btn {% if type_filter == 'questions' %}btn-danger{% else %}btn-outline-danger{% endif %} btn-sm">
+        <i class="bi bi-envelope me-1"></i>{% translate "Вопросы клиентов" %}
+      </a>
     </div>
     <span class="badge {% if overdue_count %}bg-danger{% else %}bg-success{% endif %}">
       {% translate "Просрочено" %}: {{ overdue_count }}
@@ -33,8 +36,10 @@
               <th>{% translate "Задача" %}</th>
               <th>{% translate "Клиент" %}</th>
               <th>{% translate "Ответственный" %}</th>
+              <th>{% translate "Контакты" %}</th>
               <th>{% translate "Приоритет" %}</th>
               <th>{% translate "Срок" %}</th>
+              <th class="text-end">{% translate "Действия" %}</th>
             </tr>
           </thead>
           <tbody>
@@ -46,8 +51,15 @@
                     <div class="small text-muted">{{ task.description|truncatechars:120 }}</div>
                   {% endif %}
                 </td>
-                <td><a href="{% url 'clients:client_detail' task.client.pk %}">{{ task.client }}</a></td>
+                <td>
+                  <a href="{{ task.communication_url }}" class="fw-semibold">{{ task.client }}</a>
+                  {% if task.is_client_question %}<span class="badge text-bg-danger ms-1"><i class="bi bi-envelope me-1"></i>{% translate "вопрос" %}</span>{% endif %}
+                </td>
                 <td>{{ task.assignee_display }}</td>
+                <td class="small">
+                  <div><i class="bi bi-telephone me-1 text-muted"></i>{{ task.client.phone|default:"—" }}</div>
+                  <div><i class="bi bi-envelope me-1 text-muted"></i>{{ task.client.email|default:"—" }}</div>
+                </td>
                 <td><span class="badge {{ task.priority_badge_class }}">{{ task.get_priority_display }}</span></td>
                 <td>
                   {% if task.due_date %}
@@ -55,6 +67,17 @@
                   {% else %}
                     <span class="text-muted">—</span>
                   {% endif %}
+                </td>
+                <td class="text-end text-nowrap">
+                  <a href="{{ task.communication_url }}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-chat-left-text me-1"></i>{% translate "История" %}
+                  </a>
+                  <form action="{% url 'clients:complete_task' task.pk %}" method="post" class="d-inline">
+                    {% csrf_token %}
+                    <button class="btn btn-outline-success btn-sm" type="submit">
+                      <i class="bi bi-check2"></i>
+                    </button>
+                  </form>
                 </td>
               </tr>
             {% endfor %}

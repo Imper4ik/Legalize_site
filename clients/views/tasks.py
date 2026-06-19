@@ -40,6 +40,8 @@ class TaskListView(RoleOrFeatureRequiredMixin, ListView):
         assignee_filter = self.request.GET.get("assignee")
         if assignee_filter == "me":
             queryset = queryset.filter(assignee=cast(Any, self.request.user))
+        if self.request.GET.get("type") == "questions":
+            queryset = queryset.filter(description__startswith="Клиент задал вопрос через приложение:")
         return queryset
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
@@ -48,6 +50,7 @@ class TaskListView(RoleOrFeatureRequiredMixin, ListView):
         context["overdue_count"] = self.get_queryset().filter(due_date__lt=today).count()
         context["today"] = today
         context["assignee_filter"] = self.request.GET.get("assignee", "")
+        context["type_filter"] = self.request.GET.get("type", "")
         return context
 
 

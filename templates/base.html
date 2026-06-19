@@ -148,6 +148,14 @@
           {% endif %}
 
           <ul class="navbar-nav ms-auto align-items-center">
+            {% if user.is_authenticated and user|has_any_role:"Admin,Manager,Staff" and pending_question_count %}
+            <li class="nav-item me-2">
+              <a class="nav-link position-relative" href="{{ pending_question_url }}" title="{% translate 'Вопросы клиентов ждут ответа' %}" aria-label="{% translate 'Вопросы клиентов ждут ответа' %}: {{ pending_question_count }}">
+                <i class="bi bi-envelope fs-5"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ pending_question_count }}</span>
+              </a>
+            </li>
+            {% endif %}
             <li class="nav-item me-3">
 
               <button class="btn btn-sm theme-toggle" type="button" aria-pressed="false"
