@@ -357,13 +357,22 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
       </div>
       <div class="modal-body">
-        <label for="quick-onboarding-purpose" class="form-label">{% translate "Выберите основание для ссылки" %}</label>
-        <select id="quick-onboarding-purpose" class="form-select">
-          <option value="study">{% translate "Учёба" %}</option>
-          <option value="work">{% translate "Работа" %}</option>
-          <option value="family_spouse">{% translate "Воссоединение с супругом" %}</option>
-          <option value="family_child">{% translate "Воссоединение с ребёнком" %}</option>
-        </select>
+        <div class="mb-2">
+          <label for="quick-onboarding-purpose" class="form-label">{% translate "Выберите основание для ссылки" %}</label>
+          <select id="quick-onboarding-purpose" class="form-select">
+            <option value="study">{% translate "Учёба" %}</option>
+            <option value="work">{% translate "Работа" %}</option>
+            <option value="family_spouse">{% translate "Воссоединение с супругом" %}</option>
+            <option value="family_child">{% translate "Воссоединение с ребёнком" %}</option>
+          </select>
+        </div>
+        <div class="mb-2 mt-3">
+          <label for="quick-onboarding-intake-type" class="form-label">{% translate "Тип онбординга" %}</label>
+          <select id="quick-onboarding-intake-type" class="form-select">
+            <option value="new" selected>{% translate "Подача с нуля (составление анкеты)" %}</option>
+            <option value="join">{% translate "Присоединение к делу" %}</option>
+          </select>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>

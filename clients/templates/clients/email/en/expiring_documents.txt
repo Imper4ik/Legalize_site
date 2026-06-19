@@ -1,7 +1,7 @@
 {{ client.first_name }} {{ client.last_name }},
 
 {% if valid_documents %}
-✅ All good:
+✅ Documents with sufficient validity:
 {% for document in valid_documents %}- {{ document.display_name }} (valid until {{ document.expiry_date|date:"d.m.Y" }})
 {% endfor %}
 {% endif %}

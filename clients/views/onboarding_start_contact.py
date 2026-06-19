@@ -189,13 +189,13 @@ def _new_card_missing_warnings(mos_data: MOSApplicationData, confirmation_docume
         if not mos_data.new_residence_card_case_number:
             warnings.append(str(_("Prosimy o uzupełnienie numeru sprawy, jeśli jest już dostępny. / Пожалуйста, добавьте номер дела, если он уже доступен.")))
         if not confirmation_document:
-            warnings.append(str(_("Prosimy o załadowanie potwierdzenia złożenia wniosku o kartę pobytu. / Пожалуйста, загрузите подтверждение подачи заявления на карту побыту.")))
+            warnings.append(str(_("Prosimy o załadowanie potwierdzenia złożenia wniosku o kartę pobytu. / Пожалуйста, загрузите подтверждение подачи заявления на карту пребывания.")))
         if not mos_data.new_residence_card_submitted_at:
             warnings.append(str(_("Jeśli znasz datę złożenia wniosku, dodaj ją w tym bloku. / Если знаете дату подачи заявления, добавьте её в этом блоке.")))
         return warnings
     if mos_data.new_residence_card_application_status == MOSApplicationData.NEW_CARD_STATUS_UNKNOWN:
         return [
-            str(_("Prosimy o sprawdzenie, czy posiada Pan/Pani potwierdzenie złożenia wniosku, pieczątkę w paszporcie lub wiadomość z urzędu. / Пожалуйста, проверьте, есть ли у вас подтверждение подачи заявления, печать в паспорте или сообщение из уженда."))
+            str(_("Prosimy o sprawdzenie, czy posiada Pan/Pani potwierdzenie złożenia wniosku, pieczątkę w paszporcie lub wiadomość z urzędu. / Пожалуйста, проверьте, есть ли у вас подтверждение подачи заявления, печать в паспорте или сообщение из управления (urząd)."))
         ]
     return []
 

@@ -129,8 +129,8 @@ class Client(SoftDeleteModel):
     WORKFLOW_STAGE_CHOICES = [
         ("new_client", _("Новый клиент")),
         ("document_collection", _("Сбор документов")),
-        ("application_submitted", _("Подача")),
-        ("fingerprints", _("Отпечатки")),
+        ("application_submitted", _("Подано в ужонд")),
+        ("fingerprints", _("Ожидание отпечатков")),
         ("waiting_decision", _("Ожидание решения")),
         ("decision_received", _("Децизия")),
         ("closed", _("Закрыто")),

@@ -1,7 +1,7 @@
 {{ client.first_name }} {{ client.last_name }},
 
 {% if valid_documents %}
-✅ Wszystko w porządku:
+✅ Dokumenty z dłuższą ważnością:
 {% for document in valid_documents %}- {{ document.display_name }} (ważny do {{ document.expiry_date|date:"d.m.Y" }})
 {% endfor %}
 {% endif %}

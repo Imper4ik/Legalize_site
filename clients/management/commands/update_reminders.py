@@ -233,8 +233,8 @@ class Command(BaseCommand):
             Reminder.objects.create(
                 client=document.client,
                 document=document,
-                title=f"Document expires: {document.display_name}",
-                notes=f"Document for client_id={document.client_id} expires on {document.expiry_date:%d.%m.%Y}.",
+                title=f"Document validity check: {document.display_name}",
+                notes=f"Document validity date for client_id={document.client_id}: {document.expiry_date:%d.%m.%Y}.",
                 due_date=cast(Any, document.expiry_date),
                 reminder_type="document",
             )
@@ -263,7 +263,7 @@ class Command(BaseCommand):
                 payment=payment,
                 defaults={
                     "client": payment.client,
-                    "title": f"Payment overdue: {payment.get_service_description_display()}",
+                    "title": f"Payment due: {payment.get_service_description_display()}",
                     "notes": (
                         f"Payment total={payment.total_amount}; amount_due={payment.amount_due}; "
                         f"client_id={payment.client_id}."
@@ -304,10 +304,10 @@ class Command(BaseCommand):
                 due_date = due_date - timedelta(days=2)
 
             defaults = {
-                "title": f"Истекает легальное пребывание: {due_date.strftime('%d.%m.%Y')}",
+                "title": f"Срок подачи по легальному пребыванию: {due_date.strftime('%d.%m.%Y')}",
                 "notes": (
-                    f"По срокам: {mos.legal_stay_until.strftime('%d.%m.%Y')}. "
-                    f"Сдвиг дедлайна с учетом выходных: {due_date.strftime('%d.%m.%Y')}."
+                    f"Легальное пребывание до: {mos.legal_stay_until.strftime('%d.%m.%Y')}. "
+                    f"Рекомендуемый срок подачи с учетом выходных: {due_date.strftime('%d.%m.%Y')}."
                 ),
                 "due_date": cast(Any, due_date),
                 "is_active": True,

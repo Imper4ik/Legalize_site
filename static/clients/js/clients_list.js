@@ -458,10 +458,15 @@
         icon.className = 'spinner-border spinner-border-sm';
       }
 
+      const intakeTypeSelect = root.getElementById('quick-onboarding-intake-type');
+
       try {
         const formData = new FormData();
         if (purposeSelect && purposeSelect.value) {
           formData.append('application_purpose', purposeSelect.value);
+        }
+        if (intakeTypeSelect && intakeTypeSelect.value) {
+          formData.append('intake_type', intakeTypeSelect.value);
         }
         const response = await fetch(url, {
           method: 'POST',

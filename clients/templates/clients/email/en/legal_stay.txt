@@ -2,9 +2,9 @@
 
 ⚠️ We would like to remind you that your legal stay in the country expires on {{ legal_stay_until|date:"d.m.Y" }}.
 
-Adjusting for weekends, the recommended deadline to submit documents is {{ due_date|date:"d.m.Y" }}.
+Adjusting for weekends, the recommended deadline to submit the application or documents is {{ due_date|date:"d.m.Y" }}.
 
-Please contact us as soon as possible to prepare the documents for extending your legal stay and avoid any visa violations.
+Please contact us as soon as possible so we can prepare the next case steps in time and help avoid a gap in your legal stay.
 
 Best regards,
 The Legalize Team

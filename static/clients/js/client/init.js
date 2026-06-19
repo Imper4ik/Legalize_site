@@ -68,10 +68,15 @@ function initOnboardingPanelLinkGenerator() {
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
                       document.querySelector('[name=csrfmiddlewaretoken]')?.value;
 
+    const intakeTypeSelect = document.getElementById('detail-onboarding-intake-type');
+
     try {
       const formData = new FormData();
       if (purposeSelect && purposeSelect.value) {
         formData.append('application_purpose', purposeSelect.value);
+      }
+      if (intakeTypeSelect && intakeTypeSelect.value) {
+        formData.append('intake_type', intakeTypeSelect.value);
       }
       const response = await fetch(url, {
         method: 'POST',

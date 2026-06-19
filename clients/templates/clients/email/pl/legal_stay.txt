@@ -2,9 +2,9 @@
 
 ⚠️ Przypominamy, że okres Twojego legalnego pobytu kończy się w dniu {{ legal_stay_until|date:"d.m.Y" }}.
 
-Uwzględniając weekendy, zalecany termin złożenia dokumentów to {{ due_date|date:"d.m.Y" }}.
+Uwzględniając weekendy, zalecany termin złożenia wniosku lub dokumentów to {{ due_date|date:"d.m.Y" }}.
 
-Prosimy o jak najszybszy kontakt z nami w celu przygotowania dokumentów do przedłużenia legalnego pobytu, aby uniknąć naruszenia przepisów wizowych.
+Prosimy o jak najszybszy kontakt, aby na czas przygotować dalsze działania w sprawie i uniknąć przerwy w legalnym pobycie.
 
 Z poważaniem,
 Zespół Legalize

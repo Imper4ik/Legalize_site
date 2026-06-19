@@ -344,9 +344,9 @@ def _document_source_hint(doc_type: str) -> str:
     hints = {
         DocumentType.PHOTOS.value: _("Фото 45x35 мм можно сделать в фотоателье или фотокабине. Попросите формат do karty pobytu."),
         DocumentType.PAYMENT_CONFIRMATION.value: _("Сделайте оплату банковским переводом или в кассе, затем загрузите подтверждение платежа."),
-        DocumentType.STUDY_APPLICATION_FEE.value: _("Оплату можно сделать банковским переводом на счёт ужонда; сохраните подтверждение из банка."),
-        DocumentType.WORK_PERMIT_FEE.value: _("Оплату можно сделать банковским переводом на счёт ужонда; сохраните подтверждение 440 zł и 17 zł за доверенность, если она нужна."),
-        "family_reunification_fee": _("Оплату можно сделать банковским переводом на счёт ужонда; сохраните подтверждение платежа и доверенности, если она нужна."),
+        DocumentType.STUDY_APPLICATION_FEE.value: _("Оплату можно сделать банковским переводом на счёт управления (urząd); сохраните подтверждение из банка."),
+        DocumentType.WORK_PERMIT_FEE.value: _("Оплату можно сделать банковским переводом на счёт управления (urząd); сохраните подтверждение 440 zł и 17 zł за доверенность, если она нужна."),
+        "family_reunification_fee": _("Оплату можно сделать банковским переводом на счёт управления (urząd); сохраните подтверждение платежа и доверенности, если она нужна."),
         DocumentType.PASSPORT.value: _("Отсканируйте или сфотографируйте действующий паспорт. Если паспорт нужно оформить заново, обратитесь в консульство или орган вашей страны."),
         DocumentType.RESIDENCE_CARD.value: _("Отсканируйте или сфотографируйте текущую карту побыту с двух сторон, если она у вас есть."),
         DocumentType.ENROLLMENT_CERTIFICATE.value: _("Закажите справку в деканате, student office или личном кабинете вашей учёбы."),
@@ -354,7 +354,7 @@ def _document_source_hint(doc_type: str) -> str:
         DocumentType.TUITION_FEE_PROOF.value: _("Возьмите подтверждение оплаты обучения в банковском приложении или в бухгалтерии учебного заведения."),
         DocumentType.GRADES.value: _("Оценки или свидетельства можно получить в деканате, student office, школе или в электронном кабинете ученика/студента."),
         DocumentType.HEALTH_INSURANCE.value: _("Полис можно получить у страховщика, работодателя, в ZUS/eZUS или NFZ. Подойдёт документ с подтверждением активной страховки."),
-        DocumentType.ADDRESS_PROOF.value: _("Обычно это договор аренды от владельца жилья, подтверждение meldunek из ужонда или документы об оплате проживания."),
+        DocumentType.ADDRESS_PROOF.value: _("Обычно это договор аренды от владельца жилья, подтверждение meldunek из управления (urząd) или документы об оплате проживания."),
         DocumentType.FINANCIAL_PROOF.value: _("Подготовьте выписку из банка, справку о доходах, документы спонсора или другое подтверждение средств на проживание."),
         DocumentType.ZALACZNIK_NR_1.value: _("Załącznik nr 1 заполняет и подписывает работодатель. Обратитесь в отдел кадров, HR или бухгалтерию."),
         DocumentType.EMPLOYMENT_CONTRACT.value: _("Копию договора о работе или zlecenie можно получить у работодателя, в HR или бухгалтерии."),
@@ -369,7 +369,7 @@ def _document_source_hint(doc_type: str) -> str:
         DocumentType.ZUS_EMPLOYEE_COUNT.value: _("Справку о количестве сотрудников и взносах работодатель получает в ZUS/eZUS. Обратитесь в HR или бухгалтерию."),
         DocumentType.STATEMENT_X.value: _("Шаблон заявления выдаёт менеджер или юрист. Заполните и подпишите его после проверки данных."),
         DocumentType.MAINTENANCE_STATEMENT.value: _("Заявление об обеспечении заполняет и подписывает человек, который будет вас содержать. Шаблон можно получить у менеджера."),
-        DocumentType.WEZWANIE.value: _("Загрузите письмо wezwanie / вызов на отпечатки, которое пришло из ужонда по почте, ePUAP или MOS."),
+        DocumentType.WEZWANIE.value: _("Загрузите письмо/wezwanie из управления (urząd), которое пришло по почте, ePUAP или MOS: дата отпечатков, требования или номер дела."),
         DocumentType.FINGERPRINT_CONFIRMATION.value: _("Подтверждение выдаёт ужонд после сдачи отпечатков пальцев."),
         "sponsor_residence_decision_or_card": _("Спонсор должен отсканировать свою карту побыту, решение о побыте или другой документ, подтверждающий легальное пребывание."),
         "sponsor_income_proof": _("Документы о доходе спонсора можно получить у работодателя, в бухгалтерии, банке, ZUS или налоговом ужонде."),
@@ -904,6 +904,10 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
                 return JsonResponse({"status": "error", "message": _("Invalid application purpose")}, status=400)
             return HttpResponseBadRequest(_("Invalid application purpose."))
 
+    intake_type = request.POST.get("intake_type", "").strip() if request.method == "POST" else ""
+    if not intake_type:
+        intake_type = "join" if (client.submission_date or client.fingerprints_date) else "new"
+
     token, token_hash = generate_onboarding_token()
     payment = client.payments.filter(status__in=["paid", "partial"]).first()
 
@@ -925,6 +929,25 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
                     summary="Onboarding link purpose set by staff",
                     metadata={"selected_purpose": selected_purpose, "changed_fields": changed_fields},
                 )
+
+        if intake_type == "join":
+            mos_data.new_residence_card_application_status = "yes"
+            mos_data.new_residence_card_updated_at = timezone.now()
+            
+            # Smart transition logic based on existing dates
+            target_stage = "waiting_decision" if client.fingerprints_date else "fingerprints"
+            mos_data.status = target_stage
+            mos_data.save(update_fields=["new_residence_card_application_status", "new_residence_card_updated_at", "status", "updated_at"])
+            
+            if client.workflow_stage != target_stage:
+                from clients.services.workflow_transitions import transition_client_workflow
+                try:
+                    transition_client_workflow(client=client, target_stage=target_stage, actor=request.user, save=True)
+                except Exception:
+                    pass
+        elif intake_type == "new":
+            mos_data.new_residence_card_application_status = "no"
+            mos_data.save(update_fields=["new_residence_card_application_status", "updated_at"])
 
         ClientOnboardingSession.objects.create(
             client=client,
@@ -968,6 +991,8 @@ def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
     application_purpose = "family" if selected_purpose in {"family_spouse", "family_child"} else selected_purpose
     family_role = selected_purpose if application_purpose == "family" else ""
 
+    intake_type = request.POST.get("intake_type", "new").strip()
+
     try:
         with transaction.atomic():
             client = Client.objects.create(
@@ -987,6 +1012,20 @@ def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
                 client=client,
                 actor=request.user,
             )
+
+            mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
+            if intake_type == "join":
+                mos_data.new_residence_card_application_status = "yes"
+                mos_data.new_residence_card_updated_at = timezone.now()
+                target_stage = "fingerprints"
+                mos_data.status = target_stage
+                mos_data.save(update_fields=["new_residence_card_application_status", "new_residence_card_updated_at", "status", "updated_at"])
+                
+                client.workflow_stage = target_stage
+                client.save(update_fields=["workflow_stage"])
+            elif intake_type == "new":
+                mos_data.new_residence_card_application_status = "no"
+                mos_data.save(update_fields=["new_residence_card_application_status", "updated_at"])
 
             token, token_hash = generate_onboarding_token()
             ClientOnboardingSession.objects.create(
@@ -1238,9 +1277,9 @@ def onboarding_ask_question(request: HttpRequest, token: str) -> HttpResponse:
         client=client,
         title=f"Вопрос от клиента: {client.get_full_name()}",
         description=f"Клиент задал вопрос через приложение:\n\n{question_text}",
-        priority="medium",
+        priority="high",
         status="open",
-        assignee=assignee,
+        assignee=None,
         created_by=client.user,
     )
 
@@ -1248,7 +1287,7 @@ def onboarding_ask_question(request: HttpRequest, token: str) -> HttpResponse:
     log_client_activity(
         client=client,
         actor=client.user,
-        event_type="task_created",
+        event_type="comment",
         summary=f"Задан вопрос сотруднику: '{question_text[:50]}...'",
         details=question_text,
         task=task,

@@ -1,7 +1,7 @@
 {{ client.first_name }} {{ client.last_name }},
 
 {% if valid_documents %}
-✅ Всё хорошо:
+✅ Документы с запасом срока:
 {% for document in valid_documents %}- {{ document.display_name }} (действителен до {{ document.expiry_date|date:"d.m.Y" }})
 {% endfor %}
 {% endif %}

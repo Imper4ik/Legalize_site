@@ -1,6 +1,6 @@
 {{ client.first_name }} {{ client.last_name }},
 
-Thank you for submitting your fingerprints{% if fingerprints_date %} on {{ fingerprints_date|date:"d.m.Y" }}{% endif %}.
+Your case is now at the post-fingerprints stage{% if fingerprints_date %} (case date: {{ fingerprints_date|date:"d.m.Y" }}){% endif %}.
 
 Our records show that the following documents have expired:
 {% if expired_documents %}

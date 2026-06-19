@@ -1,6 +1,6 @@
 {{ client.first_name }} {{ client.last_name }},
 
-Dziękujemy za złożenie odcisków palców{% if fingerprints_date %} w dniu {{ fingerprints_date|date:"d.m.Y" }}{% endif %}.
+Sprawa jest na etapie po złożeniu odcisków palców{% if fingerprints_date %} (data w sprawie: {{ fingerprints_date|date:"d.m.Y" }}){% endif %}.
 
 Z naszych danych wynika, że następujące dokumenty wygasły:
 {% if expired_documents %}

@@ -94,6 +94,16 @@
                     </select>
                 </div>
             {% endwith %}
+
+            {% with has_dates=client.submission_date|default:client.fingerprints_date %}
+                <div class="mb-3">
+                    <label for="detail-onboarding-intake-type" class="form-label small text-muted mb-1">{% translate 'Тип онбординга' %}</label>
+                    <select id="detail-onboarding-intake-type" class="form-select form-select-sm">
+                        <option value="new" {% if not has_dates %}selected{% endif %}>{% translate "Подача с нуля (составление анкеты)" %}</option>
+                        <option value="join" {% if has_dates %}selected{% endif %}>{% translate "Присоединение к делу" %}</option>
+                    </select>
+                </div>
+            {% endwith %}
             <button type="button" class="btn btn-primary btn-sm btn-generate-onboarding-link"
                     id="btn-generate-detail-onboarding"
                     data-text-generating-ru="Генерация..."

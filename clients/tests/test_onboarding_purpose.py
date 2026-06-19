@@ -167,7 +167,7 @@ class OnboardingPurposeTests(TestCase):
         response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Письмо из ужонда")
+        self.assertContains(response, "Письмо из управления")
         self.assertContains(response, "Загрузить новый")
         self.assertContains(response, reverse("clients:onboarding_document_preview", kwargs={"token": token, "doc_id": document.pk}))
 

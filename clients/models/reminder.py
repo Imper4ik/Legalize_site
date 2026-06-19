@@ -38,16 +38,16 @@ class Reminder(models.Model):
                 "name": self.custom_document_requirement.name
             }
         if self.reminder_type == 'document' and self.document:
-            return gettext("Истекает срок действия документа: %(name)s") % {
+            return gettext("Проверьте срок действия документа: %(name)s") % {
                 "name": self.document.display_name
             }
         if self.reminder_type == 'payment' and self.payment:
-            return gettext("Просрочен платеж: %(service)s") % {
+            return gettext("Срок оплаты наступил: %(service)s") % {
                 "service": self.payment.get_service_description_display()
             }
         if self.reminder_type == 'legal_stay':
             due_str = self.due_date.strftime('%d.%m.%Y') if self.due_date else ""
-            return gettext("Истекает легальное пребывание: %(date)s") % {
+            return gettext("Срок подачи по легальному пребыванию: %(date)s") % {
                 "date": due_str
             }
         return self.title
@@ -58,14 +58,14 @@ class Reminder(models.Model):
             return self.custom_document_requirement.description or self.notes or ""
         if self.reminder_type == 'document' and self.document:
             expiry_str = self.document.expiry_date.strftime('%d.%m.%Y') if self.document.expiry_date else ""
-            return gettext("Документ для клиента %(client)s истекает %(date)s.") % {
+            return gettext("Срок действия документа клиента %(client)s: %(date)s.") % {
                 "client": str(self.client),
                 "date": expiry_str
             }
         if self.reminder_type == 'payment' and self.payment:
             total_str = f"{self.payment.total_amount:.2f}"
             due_str = f"{self.payment.amount_due:.2f}"
-            return gettext("Сумма к оплате: %(total)s; долг: %(due)s; клиент: %(client)s.") % {
+            return gettext("Сумма услуги: %(total)s; осталось оплатить: %(due)s; клиент: %(client)s.") % {
                 "total": total_str,
                 "due": due_str,
                 "client": str(self.client),
@@ -76,7 +76,7 @@ class Reminder(models.Model):
                 if mos and mos.legal_stay_until:
                     stay_str = mos.legal_stay_until.strftime('%d.%m.%Y')
                     due_str = self.due_date.strftime('%d.%m.%Y') if self.due_date else ""
-                    return gettext("По срокам: %(stay_until)s. Сдвиг дедлайна с учетом выходных: %(due_date)s.") % {
+                    return gettext("Легальное пребывание до: %(stay_until)s. Рекомендуемый срок подачи с учетом выходных: %(due_date)s.") % {
                         "stay_until": stay_str,
                         "due_date": due_str
                     }

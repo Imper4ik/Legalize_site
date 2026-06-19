@@ -119,13 +119,13 @@ class ReminderTranslationsTest(TestCase):
             due_date=date(2026, 12, 31),
             reminder_type="document",
             title="Document expires: Passport",
-            notes="Document for client John Doe expires on 31.12.2026."
+            notes="Document validity date for client John Doe: 31.12.2026."
         )
 
         # Test payment reminder. Creating a due payment automatically syncs its one-to-one reminder.
         payment_reminder = Reminder.objects.get(payment=payment)
-        payment_reminder.title = "Payment overdue: Consultation"
-        payment_reminder.notes = "Total payment: 100.00; amount due: 100.00; client: John Doe."
+        payment_reminder.title = "Payment due: Consultation"
+        payment_reminder.notes = "Service total: 100.00; amount left to pay: 100.00; client: John Doe."
         payment_reminder.save(update_fields=["title", "notes"])
 
         # Test legal stay reminder
@@ -138,36 +138,36 @@ class ReminderTranslationsTest(TestCase):
             client=client,
             due_date=date(2026, 7, 30),
             reminder_type="legal_stay",
-            title="Legal stay expires: 30.07.2026",
-            notes="Original deadline: 31.07.2026. Adjusted deadline (considering weekends): 30.07.2026."
+            title="Legal stay filing deadline: 30.07.2026",
+            notes="Legal stay valid until: 31.07.2026. Recommended filing deadline considering weekends: 30.07.2026."
         )
 
         # English assertions
         with override("en"):
-            self.assertEqual(doc_reminder.display_title, "Document expires: Paszport")
-            self.assertEqual(doc_reminder.display_notes, "Document for client John Doe expires on 31.12.2026.")
-            self.assertEqual(payment_reminder.display_title, "Payment overdue: Consultation")
-            self.assertEqual(payment_reminder.display_notes, "Total payment: 100.00; amount due: 100.00; client: John Doe.")
-            self.assertEqual(stay_reminder.display_title, "Legal stay expires: 30.07.2026")
-            self.assertEqual(stay_reminder.display_notes, "Original deadline: 31.07.2026. Adjusted deadline (considering weekends): 30.07.2026.")
+            self.assertEqual(doc_reminder.display_title, "Check document validity: Paszport")
+            self.assertEqual(doc_reminder.display_notes, "Document validity date for client John Doe: 31.12.2026.")
+            self.assertEqual(payment_reminder.display_title, "Payment due: Consultation")
+            self.assertEqual(payment_reminder.display_notes, "Service total: 100.00; amount left to pay: 100.00; client: John Doe.")
+            self.assertEqual(stay_reminder.display_title, "Legal stay filing deadline: 30.07.2026")
+            self.assertEqual(stay_reminder.display_notes, "Legal stay valid until: 31.07.2026. Recommended filing deadline considering weekends: 30.07.2026.")
 
         # Polish assertions
         with override("pl"):
-            self.assertEqual(doc_reminder.display_title, "Wygasa ważność dokumentu: Paszport")
-            self.assertEqual(doc_reminder.display_notes, "Dokument dla klienta John Doe wygasa 31.12.2026.")
-            self.assertEqual(payment_reminder.display_title, "Zaległa płatność: Konsultacja")
-            self.assertEqual(payment_reminder.display_notes, "Kwota do zapłaty: 100.00; zaległość: 100.00; klient: John Doe.")
-            self.assertEqual(stay_reminder.display_title, "Wygasa legalny pobyt: 30.07.2026")
-            self.assertEqual(stay_reminder.display_notes, "Zgodnie z terminem: 31.07.2026. Zmiana terminu z uwzględnieniem weekendów: 30.07.2026.")
+            self.assertEqual(doc_reminder.display_title, "Sprawdź ważność dokumentu: Paszport")
+            self.assertEqual(doc_reminder.display_notes, "Data ważności dokumentu klienta John Doe: 31.12.2026.")
+            self.assertEqual(payment_reminder.display_title, "Termin płatności: Konsultacja")
+            self.assertEqual(payment_reminder.display_notes, "Kwota usługi: 100.00; pozostało do zapłaty: 100.00; klient: John Doe.")
+            self.assertEqual(stay_reminder.display_title, "Termin złożenia w sprawie legalnego pobytu: 30.07.2026")
+            self.assertEqual(stay_reminder.display_notes, "Legalny pobyt do: 31.07.2026. Zalecany termin złożenia z uwzględnieniem weekendów: 30.07.2026.")
 
         # Russian assertions
         with override("ru"):
-            self.assertEqual(doc_reminder.display_title, "\u0418\u0441\u0442\u0435\u043a\u0430\u0435\u0442 \u0441\u0440\u043e\u043a \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044f \u0434\u043e\u043a\u0443\u043c\u0435\u043d\u0442\u0430: \u041f\u0430\u0441\u043f\u043e\u0440\u0442")
-            self.assertEqual(doc_reminder.display_notes, "\u0414\u043e\u043a\u0443\u043c\u0435\u043d\u0442 \u0434\u043b\u044f \u043a\u043b\u0438\u0435\u043d\u0442\u0430 John Doe \u0438\u0441\u0442\u0435\u043a\u0430\u0435\u0442 31.12.2026.")
-            self.assertEqual(payment_reminder.display_title, "\u041f\u0440\u043e\u0441\u0440\u043e\u0447\u0435\u043d \u043f\u043b\u0430\u0442\u0435\u0436: \u041a\u043e\u043d\u0441\u0443\u043b\u044c\u0442\u0430\u0446\u0438\u044f")
-            self.assertEqual(payment_reminder.display_notes, "\u0421\u0443\u043c\u043c\u0430 \u043a \u043e\u043f\u043b\u0430\u0442\u0435: 100.00; \u0434\u043e\u043b\u0433: 100.00; \u043a\u043b\u0438\u0435\u043d\u0442: John Doe.")
-            self.assertEqual(stay_reminder.display_title, "\u0418\u0441\u0442\u0435\u043a\u0430\u0435\u0442 \u043b\u0435\u0433\u0430\u043b\u044c\u043d\u043e\u0435 \u043f\u0440\u0435\u0431\u044b\u0432\u0430\u043d\u0438\u0435: 30.07.2026")
-            self.assertEqual(stay_reminder.display_notes, "\u041f\u043e \u0441\u0440\u043e\u043a\u0430\u043c: 31.07.2026. \u0421\u0434\u0432\u0438\u0433 \u0434\u0435\u0434\u043b\u0430\u0439\u043d\u0430 \u0441 \u0443\u0447\u0435\u0442\u043e\u043c \u0432\u044b\u0445\u043e\u0434\u043d\u044b\u0445: 30.07.2026.")
+            self.assertEqual(doc_reminder.display_title, "Проверьте срок действия документа: Паспорт")
+            self.assertEqual(doc_reminder.display_notes, "Срок действия документа клиента John Doe: 31.12.2026.")
+            self.assertEqual(payment_reminder.display_title, "Срок оплаты наступил: Консультация")
+            self.assertEqual(payment_reminder.display_notes, "Сумма услуги: 100.00; осталось оплатить: 100.00; клиент: John Doe.")
+            self.assertEqual(stay_reminder.display_title, "Срок подачи по легальному пребыванию: 30.07.2026")
+            self.assertEqual(stay_reminder.display_notes, "Легальное пребывание до: 31.07.2026. Рекомендуемый срок подачи с учетом выходных: 30.07.2026.")
 
 
 class NewTranslationsTest(TestCase):
