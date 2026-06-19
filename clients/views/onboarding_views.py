@@ -1245,15 +1245,17 @@ def onboarding_ask_question(request: HttpRequest, token: str) -> HttpResponse:
         priority="high",
         status="open",
         assignee=assignee,
+        created_by=client.user,
     )
 
     from clients.services.activity import log_client_activity
     log_client_activity(
         client=client,
         actor=client.user,
-        event_type="comment",
+        event_type="task_created",
         summary=f"Задан вопрос сотруднику: '{question_text[:50]}...'",
         details=question_text,
+        task=task,
     )
 
     from django.contrib import messages

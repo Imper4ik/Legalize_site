@@ -91,6 +91,16 @@ class StaffTask(models.Model):
         return str(self.title)
 
     @property
+    def is_client_question(self) -> bool:
+        return self.description.startswith("Клиент задал вопрос через приложение:")
+
+    @property
+    def communication_url(self) -> str:
+        from django.urls import reverse
+
+        return f"{reverse('clients:client_detail', kwargs={'pk': self.client_id})}?tab=history#communication-history"
+
+    @property
     def is_open(self) -> bool:
         return self.status in {"open", "in_progress"}
 
