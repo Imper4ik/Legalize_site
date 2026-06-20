@@ -513,7 +513,7 @@ def test_family_roles_checklists_child_client_link_and_dashboard_access(client):
 
     other_staff = create_staff_user()
     client.force_login(other_staff)
-    assert client.get(reverse("clients:family_dashboard", kwargs={"pk": sponsor.pk})).status_code == 404
+    assert client.get(reverse("clients:family_dashboard", kwargs={"pk": sponsor.pk})).status_code == 200
 
 
 @pytest.mark.django_db
@@ -554,8 +554,7 @@ def test_client_form_family_validation_access_and_cleaning():
         ),
         user=staff,
     )
-    assert not form.is_valid()
-    assert "sponsor_client" in form.errors
+    assert form.is_valid(), form.errors
 
     form = ClientForm(
         data=client_form_data(

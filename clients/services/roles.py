@@ -12,31 +12,31 @@ if TYPE_CHECKING:
 PREDEFINED_ROLES: dict[str, str] = {
     "Admin": "All permissions (Superuser equivalent)",
     "Manager": "CRUD clients, documents, payments, tasks; send emails; view metrics",
-    "Staff": "View/edit clients, upload documents, manage tasks",
+    "Staff": "Full office access: clients, documents, payments, tasks, emails, reports, exports and operational settings",
     "ReadOnly": "View clients and documents only",
     "Translator": "Access to Translation Studio only",
 }
 
 
 ADMIN_PANEL_ALLOWED_ROLES = ("Admin", "Manager", "Staff", "ReadOnly")
-SETTINGS_ALLOWED_ROLES = ("Admin", "Manager")
+SETTINGS_ALLOWED_ROLES = ("Admin", "Manager", "Staff")
 PEOPLE_ALLOWED_ROLES = ("Admin", "Manager")
 
 CLIENT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
 DOCUMENT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
 SUBMISSION_EDIT_ROLES = ("Admin", "Manager", "Staff")
-SUBMISSION_DELETE_ROLES = ("Admin", "Manager")
+SUBMISSION_DELETE_ROLES = ("Admin", "Manager", "Staff")
 DOCUMENT_EDIT_ROLES = ("Admin", "Manager", "Staff")
-DOCUMENT_DELETE_ROLES = ("Admin", "Manager")
+DOCUMENT_DELETE_ROLES = ("Admin", "Manager", "Staff")
 TASK_MUTATION_ROLES = ("Admin", "Manager", "Staff")
-PAYMENT_MUTATION_ROLES = ("Admin", "Manager")
-EMAIL_MUTATION_ROLES = ("Admin", "Manager")
-EXPORT_MUTATION_ROLES = ("Admin", "Manager")
-REPORT_MUTATION_ROLES = ("Admin", "Manager")
+PAYMENT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
+EMAIL_MUTATION_ROLES = ("Admin", "Manager", "Staff")
+EXPORT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
+REPORT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
 TRANSLATION_ALLOWED_ROLES = ("Admin", "Translator")
 CLIENT_EDIT_ROLES = CLIENT_MUTATION_ROLES
-CLIENT_DELETE_ROLES = ("Admin", "Manager")
-CHECKLIST_MANAGE_ROLES = ("Admin", "Manager")
+CLIENT_DELETE_ROLES = ("Admin", "Manager", "Staff")
+CHECKLIST_MANAGE_ROLES = ("Admin", "Manager", "Staff")
 
 
 def user_has_any_role(user: AbstractBaseUser | AnonymousUser | None, *role_names: str) -> bool:
@@ -75,9 +75,9 @@ def ensure_predefined_roles() -> list[Group]:
     groups["Manager"].permissions.set(manager_perms)
 
     staff_perms: list[Permission] = []
-    for model in [Client, Document, StaffTask]:
+    for model in [Client, Document, Payment, StaffTask]:
         ct = ContentType.objects.get_for_model(model)
-        staff_perms.extend(Permission.objects.filter(content_type=ct).exclude(codename__startswith="delete_"))
+        staff_perms.extend(Permission.objects.filter(content_type=ct))
     groups["Staff"].permissions.set(staff_perms)
 
     readonly_perms: list[Permission] = []

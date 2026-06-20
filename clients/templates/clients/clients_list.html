@@ -15,7 +15,7 @@
     <div class="text-muted">{% translate "Поиск, быстрые заметки и переход в карточку клиента" %}</div>
   </div>
   <div class="d-flex flex-wrap gap-2 justify-content-end">
-    {% if user|has_any_role:"Admin,Manager" %}
+    {% if user|has_any_role:"Admin,Manager,Staff" %}
     <a href="{% url 'clients:mass_email' %}" class="btn btn-outline-primary" id="btn-mass-email">
       <i class="bi bi-envelope me-1"></i>{% translate "Массовая рассылка" %}
     </a>
@@ -289,7 +289,7 @@
                 <i class="bi bi-link-45deg"></i>
               </button>
               {% endif %}
-              {% if user|has_any_role:"Admin,Manager" %}
+              {% if user|has_any_role:"Admin,Manager,Staff" %}
               <a href="{% url 'clients:client_delete' pk=client.pk %}" class="btn btn-outline-danger btn-sm"
                 title="{% translate 'Удалить' %}" aria-label="{% translate 'Удалить' %}" id="btn-delete-{{ client.pk }}">
                 <i class="bi bi-trash"></i>

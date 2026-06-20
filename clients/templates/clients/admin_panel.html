@@ -327,7 +327,7 @@
     </div>
   </section>
 
-  {% if user|has_any_role:"Admin,Manager" %}
+  {% if user|has_any_role:"Admin,Manager,Staff" %}
   <section class="ops-section">
     <h2 class="ops-section-title">
       <span class="ops-section-icon"><i class="bi bi-sliders"></i></span>

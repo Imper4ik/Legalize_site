@@ -212,7 +212,8 @@ class DocumentOCRRegressionTests(TestCase):
             reverse("clients:get_document_parsed_data", kwargs={"doc_id": restricted_document.pk}),
             HTTP_X_REQUESTED_WITH="XMLHttpRequest",
         )
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["parsed_data"]["case_number"], "SECRET")
 
     def test_staff_without_ocr_permission_cannot_start_parse_via_upload(self):
         self.client.force_login(self.staff)

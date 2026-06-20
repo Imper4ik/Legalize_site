@@ -77,7 +77,7 @@ class WorkdayViewTests(TestCase):
         self.assertGreaterEqual(sections["zus_rca"]["count"], 1)
         self.assertTrue(context["has_workday_items"])
 
-    def test_workday_service_respects_staff_client_scope(self):
+    def test_workday_service_gives_global_visibility_to_staff(self):
         today = date(2026, 6, 20)
         visible_client = Client.objects.create(first_name="Visible", last_name="Client", assigned_staff=self.staff)
         hidden_client = Client.objects.create(first_name="Hidden", last_name="Client", assigned_staff=self.other_staff)
@@ -99,7 +99,7 @@ class WorkdayViewTests(TestCase):
         names = {str(item["client"]) for item in review_items}
 
         self.assertIn("Visible Client", names)
-        self.assertNotIn("Hidden Client", names)
+        self.assertIn("Hidden Client", names)
 
     def test_workday_page_renders_for_staff(self):
         self.client.force_login(self.admin)

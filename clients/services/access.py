@@ -10,7 +10,8 @@ from clients.services.roles import ADMIN_PANEL_ALLOWED_ROLES, SETTINGS_ALLOWED_R
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
-PRIVILEGED_INTERNAL_ROLES = tuple(SETTINGS_ALLOWED_ROLES)
+OFFICE_WIDE_ACCESS_ROLES = ("Admin", "Manager", "Staff")
+PRIVILEGED_INTERNAL_ROLES = OFFICE_WIDE_ACCESS_ROLES
 
 
 def is_internal_staff_user(user: AbstractBaseUser | AnonymousUser | None) -> bool:

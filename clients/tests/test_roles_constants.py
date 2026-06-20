@@ -19,5 +19,5 @@ def test_required_role_constants_are_exported_and_non_empty():
         assert value, f"{name} should not be empty"
 
 
-def test_checklist_manage_roles_are_restricted_to_admin_and_manager():
-    assert roles.CHECKLIST_MANAGE_ROLES == ("Admin", "Manager")
+def test_checklist_manage_roles_include_staff_admin_and_manager():
+    assert roles.CHECKLIST_MANAGE_ROLES == ("Admin", "Manager", "Staff")

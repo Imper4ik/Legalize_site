@@ -67,10 +67,11 @@ class RolePermissionMatrixTests(TestCase):
         self.assertEqual(self.client.post(reverse("clients:send_custom_email", kwargs={"pk": self.client_obj.pk})).status_code, 403)
         self.assertEqual(self.client.post(reverse("clients:edit_payment", kwargs={"payment_id": self.payment.pk})).status_code, 403)
 
-    def test_staff_cannot_delete_client(self):
+    def test_staff_can_delete_client(self):
         self.client.force_login(self.staff)
         response = self.client.post(reverse("clients:client_delete", kwargs={"pk": self.client_obj.pk}))
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Client.objects.filter(pk=self.client_obj.pk).exists())
 
     def test_manager_can_delete_client(self):
         self.client.force_login(self.manager)
@@ -84,10 +85,11 @@ class RolePermissionMatrixTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Client.objects.filter(pk=self.client_obj.pk).exists())
 
-    def test_staff_cannot_delete_document(self):
+    def test_staff_can_delete_document(self):
         self.client.force_login(self.staff)
         response = self.client.post(reverse("clients:document_delete", kwargs={"pk": self.document.pk}))
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Document.objects.filter(pk=self.document.pk).exists())
 
     def test_manager_can_delete_document(self):
         self.client.force_login(self.manager)
@@ -101,7 +103,7 @@ class RolePermissionMatrixTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Document.objects.filter(pk=self.document.pk).exists())
 
-    def test_staff_cannot_manage_document_requirements_and_checklists(self):
+    def test_staff_can_manage_document_requirements_and_checklists(self):
         self.client.force_login(self.staff)
         manage_response = self.client.get(reverse("clients:document_checklist_manage"))
         add_response = self.client.post(
@@ -120,9 +122,9 @@ class RolePermissionMatrixTests(TestCase):
                 f"req-{self.requirement.pk}-custom_name_ru": "",
             },
         )
-        self.assertEqual(manage_response.status_code, 403)
-        self.assertEqual(add_response.status_code, 403)
-        self.assertEqual(edit_response.status_code, 403)
+        self.assertEqual(manage_response.status_code, 200)
+        self.assertEqual(add_response.status_code, 302)
+        self.assertEqual(edit_response.status_code, 302)
 
     def test_manager_can_manage_document_requirements_and_checklists(self):
         self.client.force_login(self.manager)
@@ -147,12 +149,12 @@ class RolePermissionMatrixTests(TestCase):
         self.assertEqual(add_response.status_code, 302)
         self.assertEqual(edit_response.status_code, 302)
 
-    def test_staff_cannot_access_people_and_settings_management(self):
+    def test_staff_cannot_access_people_management_but_can_access_settings(self):
         self.client.force_login(self.staff)
         self.assertEqual(self.client.get(reverse("clients:staff_manage")).status_code, 403)
         self.assertEqual(self.client.get(reverse("clients:role_manage")).status_code, 403)
-        self.assertEqual(self.client.get(reverse("clients:app_settings")).status_code, 403)
-        self.assertEqual(self.client.get(reverse("clients:service_price_manage")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("clients:app_settings")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("clients:service_price_manage")).status_code, 200)
 
     @patch("clients.views.emails.send_mail", return_value=1)
     def test_manager_can_manage_payments_emails_reports(self, _send_mail):

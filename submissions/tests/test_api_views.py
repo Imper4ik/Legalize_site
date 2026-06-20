@@ -72,15 +72,16 @@ class SubmissionApiViewsTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()["status"], "error")
 
-    def test_staff_cannot_delete_submission_via_api(self):
+    def test_staff_can_delete_submission_via_api(self):
         submission = Submission.objects.create(name="Delete me")
 
         response = self.client.delete(
             reverse("submissions:api_submission_detail", kwargs={"pk": submission.pk})
         )
 
-        self.assertEqual(response.status_code, 403)
-        self.assertTrue(Submission.objects.filter(pk=submission.pk).exists())
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Submission.objects.filter(pk=submission.pk).exists())
+        self.assertTrue(Submission.all_objects.filter(pk=submission.pk, archived_at__isnull=False).exists())
 
     def test_manager_can_delete_submission_via_api(self):
         self.client.login(email="manager@example.com", password="pass")
@@ -148,7 +149,7 @@ class SubmissionApiViewsTests(TestCase):
             reverse("submissions:document_download", kwargs={"pk": document.pk}),
         )
 
-    def test_staff_cannot_delete_document_via_api(self):
+    def test_staff_can_delete_document_via_api(self):
         submission = Submission.objects.create(name="Has docs for delete")
         document = Document.objects.create(
             submission=submission,
@@ -160,8 +161,8 @@ class SubmissionApiViewsTests(TestCase):
             reverse("submissions:api_document_detail", kwargs={"pk": document.pk})
         )
 
-        self.assertEqual(response.status_code, 403)
-        self.assertTrue(Document.objects.filter(pk=document.pk).exists())
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Document.objects.filter(pk=document.pk).exists())
 
     def test_manager_can_delete_document_via_api(self):
         self.client.login(email="manager@example.com", password="pass")

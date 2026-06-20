@@ -94,7 +94,7 @@
                   <input type="hidden" name="submission_id" value="{{ submission.id }}">
                 </form>
                 <button type="submit" form="update-submission-{{ submission.id }}" class="btn btn-sm btn-outline-primary">{% translate "Сохранить" %}</button>
-                 <form method="post" class="d-inline" onsubmit="return confirm('{% translate \'Удалить это основание подачи?\' %}');">
+                 <form method="post" class="d-inline" onsubmit="return confirm('{% translate "Удалить это основание подачи?" %}');">
                   {% csrf_token %}
                   <input type="hidden" name="action" value="delete">
                   <input type="hidden" name="submission_id" value="{{ submission.id }}">
