@@ -321,7 +321,8 @@ class P0FixesVerificationTests(TestCase):
         task.refresh_from_db()
         self.assertEqual(task.status, "open")
         self.assertEqual(task.title, "Проверить номер дела")
-        self.assertIn("WSC-CASE-12345", task.description)
+        self.assertNotIn("WSC-CASE-12345", task.description)
+        self.assertEqual(task.description, "Клиент указал номер дела новой подачи. Проверьте его и перенесите в основной номер дела.")
 
         # Check activity logs privacy
         act = ClientActivity.objects.filter(client=self.client_obj, event_type="new_card_application_updated").first()
@@ -400,3 +401,56 @@ class P0FixesVerificationTests(TestCase):
 
         self.assertEqual(workday_clients[1]["client"].pk, self.client_obj.pk)
         self.assertEqual(workday_clients[1]["highest_priority"], "important")
+
+    def test_bulk_verify_clears_awaiting_confirmation_and_excludes_from_workday(self):
+        """Verify that bulk verify clears awaiting_confirmation and the document is excluded from workday."""
+        today = timezone.localdate()
+        doc = Document.objects.create(
+            client=self.client_obj,
+            document_type=DocumentType.WEZWANIE.value,
+            file="wezwanie.pdf",
+            verified=False,
+            awaiting_confirmation=True
+        )
+
+        # Confirm it shows in workday before bulk verify
+        context1 = build_workday_context(self.admin, today=today)
+        review_section1 = next(sec for sec in context1["workday_sections"] if sec["key"] == "documents_review")
+        self.assertEqual(review_section1["count"], 1)
+
+        # Run bulk verify
+        verify_all_client_documents(client=self.client_obj, actor=self.admin)
+
+        doc.refresh_from_db()
+        self.assertTrue(doc.verified)
+        self.assertFalse(doc.awaiting_confirmation)
+
+        # Confirm it is excluded from workday
+        context2 = build_workday_context(self.admin, today=today)
+        review_section2 = next(sec for sec in context2["workday_sections"] if sec["key"] == "documents_review")
+        self.assertEqual(review_section2["count"], 0)
+
+    def test_archived_confirmation_document_is_excluded(self):
+        """Verify that archived new card confirmation documents are excluded from latest confirmation lookups."""
+        from clients.views.onboarding_start_contact import _latest_new_card_confirmation_document
+
+        # 1. Create archived confirmation
+        Document.objects.create(
+            client=self.client_obj,
+            document_type=DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION.value,
+            file="old_confirm.pdf",
+            archived_at=timezone.now()
+        )
+
+        latest = _latest_new_card_confirmation_document(self.client_obj)
+        self.assertIsNone(latest)
+
+        # 2. Create active confirmation
+        doc_active = Document.objects.create(
+            client=self.client_obj,
+            document_type=DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION.value,
+            file="new_confirm.pdf"
+        )
+
+        latest = _latest_new_card_confirmation_document(self.client_obj)
+        self.assertEqual(latest.pk, doc_active.pk)

@@ -73,7 +73,7 @@ class DocumentOCRRegressionTests(TestCase):
         self.assertEqual(len(matching_items), 1)
         self.assertEqual(matching_items[0]["documents"], [document])
 
-    def test_verify_all_files_does_not_clear_ocr_confirmation(self):
+    def test_verify_all_files_clears_ocr_confirmation(self):
         document = Document.objects.create(
             client=self.client_record,
             document_type=DocumentType.WEZWANIE.value,
@@ -91,7 +91,7 @@ class DocumentOCRRegressionTests(TestCase):
         document.refresh_from_db()
         self.assertEqual(result.updated_count, 1)
         self.assertTrue(document.verified)
-        self.assertTrue(document.awaiting_confirmation)
+        self.assertFalse(document.awaiting_confirmation)
 
     def test_upload_wezwanie_without_parse_request_does_not_enqueue_ocr(self):
         parser = Mock(side_effect=AssertionError("parser must not run"))

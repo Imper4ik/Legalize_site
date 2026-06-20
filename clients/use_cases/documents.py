@@ -200,7 +200,7 @@ def verify_all_client_documents(
             client.documents.filter(verified=False, archived_at__isnull=True)
             .exclude(expiry_date__isnull=False, expiry_date__lt=today)
             .exclude(Q(rejection_reason__isnull=False) & ~Q(rejection_reason=""))
-            .update(verified=True)
+            .update(verified=True, awaiting_confirmation=False)
         )
         if updated_count:
             from clients.services.tasks import close_auto_task

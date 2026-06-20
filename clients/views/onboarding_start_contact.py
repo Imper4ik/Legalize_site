@@ -122,7 +122,11 @@ def _save_contact_values(client: Client, mos_data: MOSApplicationData, values: d
 
 def _latest_new_card_confirmation_document(client: Client) -> Document | None:
     return (
-        Document.objects.filter(client=client, document_type=NEW_CARD_CONFIRMATION_DOC_TYPE)
+        Document.objects.filter(
+            client=client,
+            document_type=NEW_CARD_CONFIRMATION_DOC_TYPE,
+            archived_at__isnull=True,
+        )
         .order_by("-uploaded_at", "-id")
         .first()
     )
@@ -285,14 +289,14 @@ def _handle_new_card_application_post(
         if tasks.exists():
             tasks.update(
                 title=_("Проверить номер дела"),
-                description=_("Клиент ввёл номер дела новой подачи: %s. Проверьте его и перенесите в основной номер дела.") % values.get("case_number")
+                description=_("Клиент указал номер дела новой подачи. Проверьте его и перенесите в основной номер дела.")
             )
         else:
             create_auto_task(
                 session.client,
                 "case_number_missing",
                 title=_("Проверить номер дела"),
-                description=_("Клиент ввёл номер дела новой подачи: %s. Проверьте его и перенесите в основной номер дела.") % values.get("case_number")
+                description=_("Клиент указал номер дела новой подачи. Проверьте его и перенесите в основной номер дела.")
             )
 
     if upload_form is not None:
@@ -358,7 +362,7 @@ def _build_start_context(
     language = translation.get_language() or client.language
 
     fingerprint_invitation_doc_type = DocumentType.WEZWANIE.value
-    existing_documents = list(Document.objects.filter(client=client).order_by("document_type", "-uploaded_at"))
+    existing_documents = list(Document.objects.filter(client=client, archived_at__isnull=True).order_by("document_type", "-uploaded_at"))
     existing_map = {document.document_type: document.id for document in existing_documents}
     new_card_confirmation_document = next(
         (document for document in existing_documents if document.document_type == NEW_CARD_CONFIRMATION_DOC_TYPE),
