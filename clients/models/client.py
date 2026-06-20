@@ -462,13 +462,14 @@ class Client(SoftDeleteModel):
         for code, name in required_docs:
             documents = docs_map.get(code, [])
             submitted_records = submitted_by_code.get(code, [])
+            has_valid_document = any(doc.computed_status in ("approved", "pending_review") for doc in documents)
             status_list.append(
                 {
                     "code": code,
                     "name": str(name),
                     "is_uploaded": bool(documents),
                     "is_submitted": bool(submitted_records),
-                    "is_complete": bool(documents) or bool(submitted_records),
+                    "is_complete": has_valid_document or bool(submitted_records),
                     "documents": documents,
                     "submitted_records": submitted_records,
                     "is_custom_submission": False,
@@ -480,13 +481,14 @@ class Client(SoftDeleteModel):
             if code in seen_codes:
                 continue
             documents = docs_map.get(code, [])
+            has_valid_document = any(doc.computed_status in ("approved", "pending_review") for doc in documents)
             status_list.append(
                 {
                     "code": code,
                     "name": str(resolve_document_label(code, language=current_language)),
                     "is_uploaded": bool(documents),
                     "is_submitted": bool(submitted_records),
-                    "is_complete": bool(documents) or bool(submitted_records),
+                    "is_complete": has_valid_document or bool(submitted_records),
                     "documents": documents,
                     "submitted_records": submitted_records,
                     "is_custom_submission": False,
@@ -497,13 +499,14 @@ class Client(SoftDeleteModel):
         for code, documents in docs_map.items():
             if code in seen_codes:
                 continue
+            has_valid_document = any(doc.computed_status in ("approved", "pending_review") for doc in documents)
             status_list.append(
                 {
                     "code": code,
                     "name": str(resolve_document_label(code, language=current_language)),
                     "is_uploaded": bool(documents),
                     "is_submitted": False,
-                    "is_complete": bool(documents),
+                    "is_complete": has_valid_document,
                     "documents": documents,
                     "submitted_records": [],
                     "is_custom_submission": False,
@@ -526,6 +529,7 @@ class Client(SoftDeleteModel):
                 for document in docs_map.get(requirement.document_type, [])
                 if getattr(document, "archived_at", None) is None
             ]
+            has_valid_document = any(doc.computed_status in ("approved", "pending_review") for doc in documents)
             status_list.append(
                 {
                     "code": requirement.document_type,
@@ -533,7 +537,7 @@ class Client(SoftDeleteModel):
                     "description": requirement.description,
                     "is_uploaded": bool(documents),
                     "is_submitted": False,
-                    "is_complete": bool(documents) or not requirement.is_required,
+                    "is_complete": has_valid_document or not requirement.is_required,
                     "documents": documents,
                     "submitted_records": [],
                     "is_custom_submission": False,
@@ -623,8 +627,17 @@ class Client(SoftDeleteModel):
 
     def get_pending_verification_documents_count(self) -> int:
         from django.utils import timezone
+        from django.db.models import Q
         today = timezone.localdate()
-        return self.documents.filter(verified=False, archived_at__isnull=True).exclude(expiry_date__isnull=False, expiry_date__lt=today).count()
+        return self.documents.filter(
+            verified=False,
+            archived_at__isnull=True,
+        ).exclude(
+            expiry_date__isnull=False,
+            expiry_date__lt=today,
+        ).exclude(
+            Q(rejection_reason__isnull=False) & ~Q(rejection_reason="")
+        ).count()
 
     def _get_mos_legal_stay_until(self) -> date | None:
         try:

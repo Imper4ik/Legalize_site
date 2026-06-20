@@ -512,8 +512,9 @@ def reject_document(request: HttpRequest, doc_id: int) -> HttpResponseBase:
         rejection_reason = request.POST.get("rejection_reason", "").strip()
         if rejection_reason:
             document.verified = False
+            document.awaiting_confirmation = False
             document.rejection_reason = rejection_reason
-            document.save(update_fields=["verified", "rejection_reason"])
+            document.save(update_fields=["verified", "awaiting_confirmation", "rejection_reason"])
 
             from clients.services.activity import log_client_activity
             log_client_activity(

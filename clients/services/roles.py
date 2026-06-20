@@ -20,7 +20,7 @@ PREDEFINED_ROLES: dict[str, str] = {
 
 ADMIN_PANEL_ALLOWED_ROLES = ("Admin", "Manager", "Staff", "ReadOnly")
 SETTINGS_ALLOWED_ROLES = ("Admin", "Manager")
-PEOPLE_ALLOWED_ROLES = ("Admin",)
+PEOPLE_ALLOWED_ROLES = ("Admin", "Manager")
 
 CLIENT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
 DOCUMENT_MUTATION_ROLES = ("Admin", "Manager", "Staff")

@@ -31,6 +31,7 @@ class ClientActivity(models.Model):
         ("task_created", _("Задача создана")),
         ("task_completed", _("Задача завершена")),
         ("note_updated", _("Заметка обновлена")),
+        ("new_card_application_updated", _("Новая подача обновлена")),
     ]
 
     client = models.ForeignKey(
@@ -123,5 +124,6 @@ class ClientActivity(models.Model):
             "task_created": "bg-primary",
             "task_completed": "bg-success",
             "note_updated": "bg-secondary",
+            "new_card_application_updated": "bg-info text-dark",
         }
         return badge_map.get(self.event_type, "bg-secondary")

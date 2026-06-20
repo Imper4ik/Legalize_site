@@ -39,10 +39,17 @@ class AdminPanelView(RoleRequiredMixin, TemplateView):
         context["active_clients"] = Client.objects.count()
         context["active_cases"] = Client.objects.exclude(workflow_stage__in=["closed", "decision_received"]).count()
         context["ocr_awaiting_review"] = Document.objects.filter(awaiting_confirmation=True).count()
+        from django.db.models import Q
         context["documents_awaiting_verification"] = Document.objects.filter(
             file__gt="",
             verified=False,
             awaiting_confirmation=False,
+            archived_at__isnull=True,
+        ).exclude(
+            Q(rejection_reason__isnull=False) & ~Q(rejection_reason="")
+        ).exclude(
+            expiry_date__isnull=False,
+            expiry_date__lt=today,
         ).count()
         context["missing_documents"] = _count_missing_document_items()
         context["expired_documents"] = Document.objects.filter(

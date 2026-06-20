@@ -275,6 +275,20 @@ class Document(SoftDeleteModel):
         )
 
     @property
+    def computed_status(self) -> str:
+        from django.utils import timezone
+        today = timezone.localdate()
+        if self.archived_at is not None:
+            return "archived"
+        if self.expiry_date is not None and self.expiry_date < today:
+            return "expired"
+        if self.rejection_reason:
+            return "rejected"
+        if self.verified:
+            return "approved"
+        return "pending_review"
+
+    @property
     def is_standard_type(self) -> bool:
         return self.document_type in DOCUMENT_TYPE_VALUES
 

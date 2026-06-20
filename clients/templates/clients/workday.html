@@ -57,53 +57,65 @@
 </section>
 
 <div class="row g-3">
-  {% for section in workday_sections %}
-    <div class="col-12 col-xl-6">
-      <section class="card shadow-sm h-100" id="workday-{{ section.key }}">
-        <div class="card-header bg-white d-flex justify-content-between align-items-start gap-3">
-          <div class="d-flex align-items-start gap-2">
-            <span class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width:2.25rem;height:2.25rem;">
-              <i class="bi {{ section.icon }} text-primary"></i>
-            </span>
-            <div>
-              <h2 class="h6 mb-1">{{ section.title }}</h2>
-              <div class="small text-muted">{{ section.description }}</div>
-            </div>
+  <div class="col-12">
+    <div class="card shadow-sm border-0 p-3 bg-white">
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        <span class="text-muted small me-2 fw-semibold"><i class="bi bi-funnel me-1"></i>{% translate "Отслеживаемые разделы" %}:</span>
+        {% for section in workday_sections %}
+          <span class="badge bg-secondary-subtle text-dark border px-2 py-2" style="font-size: 0.85rem;">
+            {{ section.title }}
+            <span class="badge bg-secondary text-light ms-1">{{ section.count }}</span>
+          </span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% if workday_clients %}
+    {% for card in workday_clients %}
+      <div class="col-12 col-md-6 col-xl-4">
+        <div class="card shadow-sm h-100 border-0 border-start border-4 {% if card.highest_priority == 'urgent' %}border-danger{% elif card.highest_priority == 'important' %}border-warning{% else %}border-info{% endif %}">
+          <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 border-bottom-0">
+            <h2 class="h6 mb-0 fw-semibold text-truncate" style="max-width: 80%;">
+              <a href="{% url 'clients:client_detail' card.client.pk %}" class="text-decoration-none text-dark hover-primary">
+                {{ card.client }}
+              </a>
+            </h2>
+            <span class="badge bg-secondary-subtle text-secondary border">{{ card.alerts|length }}</span>
           </div>
-          <span class="badge {% if section.count %}text-bg-warning{% else %}text-bg-success{% endif %}">{{ section.count }}</span>
-        </div>
-        <div class="card-body p-0">
-          {% if section.items %}
+          <div class="card-body p-0">
             <div class="list-group list-group-flush">
-              {% for item in section.items %}
-                <div class="list-group-item {% if item.priority == 'urgent' %}border-start border-4 border-danger{% elif item.priority == 'important' %}border-start border-4 border-warning{% else %}border-start border-4 border-info{% endif %}">
-                  <div class="d-flex justify-content-between align-items-start gap-3">
+              {% for alert in card.alerts %}
+                <div class="list-group-item py-3 border-secondary-subtle">
+                  <div class="d-flex justify-content-between align-items-start gap-2">
                     <div class="min-w-0">
-                      <div class="fw-semibold text-truncate">{{ item.client }}</div>
-                      <div class="small">{{ item.title }}</div>
-                      {% if item.detail %}
-                        <div class="small text-muted">{{ item.detail }}</div>
-                      {% endif %}
-                      {% if item.extra_count %}
-                        <div class="small text-muted">{% blocktrans with count=item.extra_count %}+ {{ count }} ещё{% endblocktrans %}</div>
+                      <div class="d-flex align-items-center gap-1 mb-1">
+                        <span class="badge {% if alert.priority == 'urgent' %}bg-danger text-light{% elif alert.priority == 'important' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %} px-2 py-1" style="font-size: 0.7rem;">
+                          <i class="bi {{ alert.icon }} me-1"></i>{{ alert.section_title }}
+                        </span>
+                      </div>
+                      <div class="small fw-semibold text-dark">{{ alert.title }}</div>
+                      {% if alert.detail %}
+                        <div class="small text-muted mt-1">{{ alert.detail }}</div>
                       {% endif %}
                     </div>
-                    <a href="{{ item.url }}" class="btn btn-outline-primary btn-sm text-nowrap">{{ item.action_label }}</a>
+                    <a href="{{ alert.url }}" class="btn btn-outline-primary btn-sm flex-shrink-0 text-nowrap px-2 py-1">
+                      {{ alert.action_label }}
+                    </a>
                   </div>
                 </div>
               {% endfor %}
             </div>
-          {% else %}
-            <div class="p-3 text-muted small">{% translate "Сейчас нет событий в этом разделе." %}</div>
-          {% endif %}
-        </div>
-        {% if section.action_url %}
-          <div class="card-footer bg-white">
-            <a href="{{ section.action_url }}" class="small text-decoration-none">{% translate "Открыть полный список" %}</a>
           </div>
-        {% endif %}
-      </section>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="col-12">
+      <div class="card shadow-sm border-0 p-4 text-center">
+        <p class="text-muted mb-0">{% translate "Сейчас нет событий, требующих вашего внимания." %}</p>
+      </div>
     </div>
-  {% endfor %}
+  {% endif %}
 </div>
 {% endblock %}

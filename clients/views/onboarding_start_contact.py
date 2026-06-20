@@ -273,10 +273,27 @@ def _handle_new_card_application_post(
 
     _save_new_card_values(mos_data, values)
     from clients.services.tasks import create_auto_task, close_auto_task
+    from clients.models import StaffTask
     if values.get("status") == NEW_CARD_STATUS_SUBMITTED_NO_NUMBER:
-        create_auto_task(session.client, "case_number_missing")
+        create_auto_task(session.client, "case_number_missing", title=_("Запросить номер дела у клиента"))
     elif values.get("status") == NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER and values.get("case_number"):
-        close_auto_task(session.client, "case_number_missing")
+        tasks = StaffTask.objects.filter(
+            client=session.client,
+            task_type="case_number_missing",
+            status__in=["open", "in_progress"],
+        )
+        if tasks.exists():
+            tasks.update(
+                title=_("Проверить номер дела"),
+                description=_("Клиент ввёл номер дела новой подачи: %s. Проверьте его и перенесите в основной номер дела.") % values.get("case_number")
+            )
+        else:
+            create_auto_task(
+                session.client,
+                "case_number_missing",
+                title=_("Проверить номер дела"),
+                description=_("Клиент ввёл номер дела новой подачи: %s. Проверьте его и перенесите в основной номер дела.") % values.get("case_number")
+            )
 
     if upload_form is not None:
         upload_client_document(
@@ -292,8 +309,11 @@ def _handle_new_card_application_post(
         actor=request.user if request.user.is_authenticated else None,
         event_type="new_card_application_updated",
         summary="Клиент обновил информацию о новой подаче на карту побыту",
-        details=f"Статус: {values.get('status')}, Номер дела: {values.get('case_number') or '-'}",
-        metadata={"status": values.get("status"), "case_number": values.get("case_number")}
+        details="Клиент обновил информацию о новой подаче.",
+        metadata={
+            "status": values.get("status"),
+            "has_case_number": bool(values.get("case_number")),
+        }
     )
 
     mos_data.refresh_from_db()

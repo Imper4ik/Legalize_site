@@ -62,6 +62,11 @@ def apply_client_attention_filter(queryset: QuerySet[Any], attention_filter: str
         return queryset.filter(
             documents__verified=False,
             documents__archived_at__isnull=True,
+        ).exclude(
+            Q(documents__rejection_reason__isnull=False) & ~Q(documents__rejection_reason="")
+        ).exclude(
+            documents__expiry_date__isnull=False,
+            documents__expiry_date__lt=today,
         ).distinct()
     if attention_filter == "overdue_payments":
         return queryset.filter(

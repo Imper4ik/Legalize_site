@@ -152,7 +152,12 @@ def toggle_client_document_verification(
     was_verified = document.verified
     with transaction.atomic():
         document.verified = not document.verified
-        document.save(update_fields=["verified"])
+        if document.verified:
+            document.awaiting_confirmation = False
+            document.rejection_reason = ""
+            document.save(update_fields=["verified", "awaiting_confirmation", "rejection_reason"])
+        else:
+            document.save(update_fields=["verified"])
 
         if document.verified:
             from clients.services.tasks import close_auto_task
@@ -189,10 +194,12 @@ def verify_all_client_documents(
 ) -> DocumentScenarioResult:
     with transaction.atomic():
         from django.utils import timezone
+        from django.db.models import Q
         today = timezone.localdate()
         updated_count = (
             client.documents.filter(verified=False, archived_at__isnull=True)
             .exclude(expiry_date__isnull=False, expiry_date__lt=today)
+            .exclude(Q(rejection_reason__isnull=False) & ~Q(rejection_reason=""))
             .update(verified=True)
         )
         if updated_count:

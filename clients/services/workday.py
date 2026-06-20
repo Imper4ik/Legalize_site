@@ -41,12 +41,15 @@ def _section(key: str, title: str, description: str, icon: str, items: list[dict
 
 
 def _review_documents(user: AbstractBaseUser | AnonymousUser | None, limit: int) -> list[dict[str, Any]]:
+    today = timezone.localdate()
     queryset = (
         accessible_documents_queryset(
             user,
             Document.objects.select_related("client").filter(archived_at__isnull=True),
         )
         .filter(Q(verified=False) | Q(awaiting_confirmation=True))
+        .exclude(Q(rejection_reason__isnull=False) & ~Q(rejection_reason=""))
+        .exclude(expiry_date__isnull=False, expiry_date__lt=today)
         .order_by("uploaded_at")[:limit]
     )
     return [
@@ -346,10 +349,60 @@ def build_workday_context(
             else:
                 other_count += 1
 
+    # Group by client
+    priority_order = {"urgent": 3, "important": 2, "other": 1}
+    clients_map = {}
+    
+    for section in sections:
+        section_key = section["key"]
+        section_title = section["title"]
+        for item in section["items"]:
+            client = item["client"]
+            
+            icons = {
+                "documents_review": "bi-file-earmark-check",
+                "missing_documents": "bi-folder-x",
+                "zus_rca": "bi-file-medical",
+                "new_card_missing_case": "bi-file-earmark-plus",
+                "fingerprints_followup": "bi-fingerprint",
+                "overdue_tasks": "bi-list-task",
+                "overdue_payments": "bi-credit-card-2-back",
+            }
+            
+            alert = {
+                "section_key": section_key,
+                "section_title": section_title,
+                "title": item["title"],
+                "detail": item.get("detail"),
+                "url": item["url"],
+                "action_label": item.get("action_label") or _("Открыть"),
+                "priority": item["priority"],
+                "icon": icons.get(section_key, "bi-exclamation-circle"),
+            }
+            
+            clients_map.setdefault(client.pk, {"client": client, "alerts": []})
+            clients_map[client.pk]["alerts"].append(alert)
+
+    client_list = []
+    for client_id, data in clients_map.items():
+        highest_p = "other"
+        highest_p_val = 0
+        for alert in data["alerts"]:
+            p = alert["priority"]
+            val = priority_order.get(p, 0)
+            if val > highest_p_val:
+                highest_p_val = val
+                highest_p = p
+        data["highest_priority"] = highest_p
+        client_list.append(data)
+
+    client_list.sort(key=lambda d: (-priority_order.get(d["highest_priority"], 0), str(d["client"])))
+
     total_items = sum(section["count"] for section in sections)
     return {
         "today": today,
         "workday_sections": sections,
+        "workday_clients": client_list,
         "workday_total_items": total_items,
         "has_workday_items": total_items > 0,
         "urgent_count": urgent_count,
