@@ -165,6 +165,7 @@ class Document(SoftDeleteModel):
     uploaded_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Дата загрузки"))
     verified = models.BooleanField(default=False, verbose_name=_("Проверено"))
     awaiting_confirmation = models.BooleanField(default=False, verbose_name=_("Ожидает подтверждения"))
+    rejection_reason = models.TextField(blank=True, null=True, verbose_name=_("Причина отклонения"))
 
     ocr_status = models.CharField(
         max_length=20,

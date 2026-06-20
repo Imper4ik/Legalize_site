@@ -359,5 +359,123 @@
                 </div>
             </form>
         </div>
+</div>
+</div>
+
+<!-- Modal: Reject Document -->
+<div class="modal fade" id="rejectDocumentModal" tabindex="-1" aria-labelledby="rejectDocumentModalLabel" aria-hidden="true"
+    data-reject-error-text="{% translate 'Не удалось отклонить документ. Попробуйте ещё раз.' %}">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="rejectDocumentModalLabel">{% translate "Отклонить документ" %}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" id="rejectDocumentForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="rejectDocumentReason" class="form-label">{% translate "Причина отклонения" %}</label>
+                        <textarea class="form-control bg-dark text-light border-secondary" id="rejectDocumentReason" name="rejection_reason" rows="3" required></textarea>
+                    </div>
+                    <div class="modal-footer border-top-0 px-0 pb-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+                        <button type="submit" class="btn btn-danger" id="rejectDocumentSubmitBtn">{% translate "Отклонить" %}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+</div>
+
+<!-- Modal: Message Templates -->
+<div class="modal fade" id="messageTemplatesModal" tabindex="-1" aria-labelledby="messageTemplatesModalLabel" aria-hidden="true"
+    data-client-first-name="{{ client.first_name|escapejs }}"
+    data-client-language="{{ client.language }}"
+    data-tpl-missing-documents-ru="Здравствуйте, {name}! Пожалуйста, загрузите в личный кабинет следующие недостающие документы: {docs}."
+    data-tpl-missing-documents-en="Hello, {name}! Please upload the following missing documents to your portal: {docs}."
+    data-tpl-missing-documents-pl="Dzień dobry, {name}! Prosimy o przesłanie następujących brakujących dokumentów: {docs}."
+    data-tpl-zus-update-ru="Здравствуйте, {name}! Пожалуйста, загрузите в личный кабинет актуальный отчёт ZUS RCA за {zus}."
+    data-tpl-zus-update-en="Hello, {name}! Please upload the latest ZUS RCA report for {zus} to your portal."
+    data-tpl-zus-update-pl="Dzień dobry, {name}! Prosimy o przesłanie aktualnego raportu ZUS RCA za {zus}."
+    data-tpl-case-number-missing-ru="Здравствуйте, {name}! Мы заметили, что вы обновили статус новой подачи, но не указали номер дела. Пожалуйста, введите его в личном кабинете, как только он станет известен."
+    data-tpl-case-number-missing-en="Hello, {name}! We noticed you updated your new card application status but didn't provide a case number. Please enter it in your portal as soon as it becomes available."
+    data-tpl-case-number-missing-pl="Dzień dobry, {name}! Zauważyliśmy, że zaktualizowałeś status nowego wniosku, ale nie podałeś numeru sprawy. Prosimy o wpisanie go w portalu, gdy tylko będzie dostępny."
+    data-tpl-document-rejected-ru="Здравствуйте, {name}! Загруженный вами документ {doc_name} был отклонен по следующей причине: {reason}. Пожалуйста, загрузите исправленную версию документа."
+    data-tpl-document-rejected-en="Hello, {name}! The document {doc_name} you uploaded has been rejected for the following reason: {reason}. Please upload a corrected version."
+    data-tpl-document-rejected-pl="Dzień dobry, {name}! Przesłany dokument {doc_name} został odrzucony z powodu: {reason}. Prosimy o ponowne przesłanie poprawnej wersji."
+    data-tpl-document-accepted-ru="Здравствуйте, {name}! Загруженный вами документ {doc_name} успешно проверен и принят."
+    data-tpl-document-accepted-en="Hello, {name}! The document {doc_name} you uploaded has been verified and accepted."
+    data-tpl-document-accepted-pl="Dzień dobry, {name}! Przesłany dokument {doc_name} został pomyślnie zweryfikowany i zaakceptowany."
+    data-text-copied="{% translate 'Скопировано!' %}"
+    data-text-all-required="{% translate 'Все обязательные документы' %}"
+    data-text-last-month="{% translate 'последний месяц' %}"
+    data-text-select-doc-placeholder="{% translate '[название документа]' %}"
+    data-text-reason-placeholder="{% translate '[причина]' %}"
+    data-text-default-reason="{% translate 'Нечеткое фото / неверный формат' %}">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title" id="messageTemplatesModalLabel">{% translate "Шаблоны сообщений клиенту" %}</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Helper data markers -->
+                <div class="d-none">
+                    {% for item in document_status_list %}
+                        {% if not item.is_complete %}
+                            <span class="missing-doc-item" data-name="{% translate item.name %}"></span>
+                        {% endif %}
+                    {% endfor %}
+                    {% for month in missing_zus_months_for_upload %}
+                        <span class="missing-zus-month" data-value="{{ month.label }}"></span>
+                    {% endfor %}
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="messageTemplateType" class="form-label">{% translate "Выберите шаблон" %}</label>
+                        <select id="messageTemplateType" class="form-select bg-dark text-light border-secondary">
+                            <option value="missing_documents" selected>{% translate "Запрос недостающих документов" %}</option>
+                            <option value="zus_update">{% translate "Запрос ZUS RCA" %}</option>
+                            <option value="case_number_missing">{% translate "Запрос номера дела" %}</option>
+                            <option value="document_rejected">{% translate "Документ отклонён" %}</option>
+                            <option value="document_accepted">{% translate "Документ принят" %}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="messageTemplateLanguage" class="form-label">{% translate "Язык сообщения" %}</label>
+                        <select id="messageTemplateLanguage" class="form-select bg-dark text-light border-secondary">
+                            <option value="ru" {% if client.language == 'ru' %}selected{% endif %}>{% translate "Русский" %}</option>
+                            <option value="en" {% if client.language == 'en' %}selected{% endif %}>{% translate "Английский" %}</option>
+                            <option value="pl" {% if client.language == 'pl' %}selected{% endif %}>{% translate "Польский" %}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-3 d-none" id="templateDocSelectGroup">
+                    <label for="templateDocSelect" class="form-label">{% translate "Выберите документ" %}</label>
+                    <select id="templateDocSelect" class="form-select bg-dark text-light border-secondary"></select>
+                </div>
+
+                <div class="mb-3 d-none" id="templateRejectionReasonGroup">
+                    <label for="templateRejectionReason" class="form-label">{% translate "Причина отклонения" %}</label>
+                    <input type="text" id="templateRejectionReason" class="form-control bg-dark text-light border-secondary" placeholder="{% translate 'Нечеткое фото / неверный формат' %}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="generatedMessageText" class="form-label">{% translate "Текст сообщения" %}</label>
+                    <textarea id="generatedMessageText" class="form-control bg-dark text-light border-secondary" rows="8"></textarea>
+                </div>
+
+                <div class="modal-footer border-top-0 px-0 pb-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Закрыть" %}</button>
+                    <button type="button" class="btn btn-primary" id="btnCopyGeneratedMessage">
+                        <i class="bi bi-clipboard me-1"></i>{% translate "Копировать в буфер" %}
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+

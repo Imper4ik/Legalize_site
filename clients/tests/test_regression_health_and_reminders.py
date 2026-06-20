@@ -7,7 +7,7 @@ from django.test import override_settings
 from django.urls import reverse
 
 from clients.constants import DocumentType
-from clients.models import Client, Document, EmailLog, Payment, Reminder, StaffTask
+from clients.models import Client, Document, EmailLog, MOSApplicationData, Payment, Reminder, StaffTask
 
 
 def test_with_health_stats_uses_distinct_counts(db):
@@ -117,6 +117,39 @@ def test_get_health_alerts_legal_stay_logic(db):
     expected_title_expired = str(_("Основание пребывания уже истекло"))
     assert not any(str(a["title"]) in [expected_title, expected_title_expired] for a in alerts_submitted)
 
+
+@override_settings(LANGUAGE_CODE="ru")
+def test_get_health_alerts_new_card_application_mentions_case_joining(db):
+    client = Client.objects.create(
+        first_name="NewCard",
+        last_name="CaseJoin",
+        application_purpose="work",
+        fingerprints_date=date.today() - timedelta(days=7),
+    )
+    mos_data = client.mos_application_data
+    mos_data.new_residence_card_application_status = MOSApplicationData.NEW_CARD_STATUS_YES
+    mos_data.save(update_fields=["new_residence_card_application_status"])
+
+    alerts = client.get_health_alerts()
+
+    matching = [alert for alert in alerts if str(alert["title"]) == "Новая подача требует проверки дела"]
+    assert len(matching) == 1
+    assert matching[0]["level"] == "warning"
+    assert "присоединение к делу" in str(matching[0]["message"])
+
+    mos_data.new_residence_card_case_number = "WSC-II-77/2026"
+    mos_data.save(update_fields=["new_residence_card_case_number"])
+    alerts_with_mos_number = client.get_health_alerts()
+    matching_with_mos_number = [
+        alert for alert in alerts_with_mos_number if str(alert["title"]) == "Новая подача требует проверки дела"
+    ]
+    assert len(matching_with_mos_number) == 1
+    assert "Перенесите номер или проверьте присоединение к делу" in str(matching_with_mos_number[0]["message"])
+
+    client.case_number = "WSC-II-77/2026"
+    client.save(update_fields=["case_number"])
+    alerts_with_client_case = client.get_health_alerts()
+    assert not any(str(alert["title"]) == "Новая подача требует проверки дела" for alert in alerts_with_client_case)
 
 def test_send_legal_stay_email_critical_interval(db):
     from unittest.mock import patch

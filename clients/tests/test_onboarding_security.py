@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import override
 
-from clients.models import Client, ClientOnboardingSession
+from clients.models import Client, ClientOnboardingSession, Document
 from clients.services.onboarding_tokens import generate_onboarding_token
 from clients.views.onboarding_views import check_onboarding_session
 
@@ -257,6 +257,42 @@ class OnboardingSecurityTests(TestCase):
         self.assertContains(response, "onboarding-messages")
         self.assertContains(response, "alert-success")
         self.assertEqual(client.documents.filter(document_type="payment_confirmation").count(), 1)
+
+    def test_onboarding_preview_cannot_open_another_clients_document(self):
+        User = get_user_model()
+        user = User.objects.create_user(email="preview-a@example.com", password="password123")
+        client_a = Client.objects.create(
+            first_name="Preview",
+            last_name="Owner",
+            email="preview-a@example.com",
+            user=user,
+            application_purpose="work",
+        )
+        client_b = Client.objects.create(
+            first_name="Preview",
+            last_name="Other",
+            email="preview-b@example.com",
+            application_purpose="work",
+        )
+        raw, hashed = generate_onboarding_token()
+        ClientOnboardingSession.objects.create(
+            client=client_a,
+            token_hash=hashed,
+            status="created",
+            expires_at=timezone.now() + timedelta(days=1),
+        )
+        foreign_document = Document.objects.create(
+            client=client_b,
+            document_type="passport",
+            file="documents/foreign-preview.pdf",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(
+            reverse("clients:onboarding_document_preview", kwargs={"token": raw, "doc_id": foreign_document.pk})
+        )
+
+        self.assertEqual(response.status_code, 404)
 
     def test_onboarding_actions_log_activity_with_actor(self):
         from django.core.files.uploadedfile import SimpleUploadedFile

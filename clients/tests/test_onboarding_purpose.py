@@ -123,7 +123,7 @@ class OnboardingPurposeTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Document.objects.filter(pk=document.pk).exists())
         response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
-        self.assertContains(response, "Загружено")
+        self.assertContains(response, "Ожидает проверки")
         self.assertContains(response, reverse("clients:onboarding_document_preview", kwargs={"token": token, "doc_id": document.pk}))
 
 

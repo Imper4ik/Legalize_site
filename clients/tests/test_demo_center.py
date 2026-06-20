@@ -61,17 +61,17 @@ class DemoCenterTests(TestCase):
         response = self.browser.post(reverse("clients:demo_center"), {"action": "prepare"})
         self.assertEqual(response.status_code, 302)
 
-        # Assert 5 clients are created with is_demo_data=True
+        # Assert 8 clients are created with is_demo_data=True
         demo_clients = Client.all_objects.filter(is_demo_data=True)
-        self.assertEqual(demo_clients.count(), 5)
+        self.assertEqual(demo_clients.count(), 8)
 
         # Check specific names
         first_names = set(demo_clients.values_list("first_name", flat=True))
-        expected_names = {"Jan", "Anna", "Daria", "Ivan", "Maria"}
+        expected_names = {"Jan", "Anna", "Piotr", "Elena", "Dmitry", "Aliaksandr", "Volodymyr", "Yuki"}
         self.assertEqual(first_names, expected_names)
         self.assertEqual(
             set(demo_clients.values_list("application_purpose", flat=True)),
-            {"work", "study", "family"},
+            {"work"},
         )
         anna = demo_clients.get(first_name="Anna")
         self.assertEqual(anna.family_role, "family_spouse")
@@ -95,7 +95,7 @@ class DemoCenterTests(TestCase):
 
         # Prepare first
         self.browser.post(reverse("clients:demo_center"), {"action": "prepare"})
-        self.assertEqual(Client.all_objects.filter(is_demo_data=True).count(), 5)
+        self.assertEqual(Client.all_objects.filter(is_demo_data=True).count(), 8)
 
         # Add a non-demo client to make sure it is not deleted
         non_demo_client = Client.objects.create(

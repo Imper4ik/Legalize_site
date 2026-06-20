@@ -758,7 +758,7 @@ msgstr "Do końca pobytu pozostało niecałe 30 dni."
 #: .\clients\templates\clients\partials\document_checklist.html:357
 #: .\clients\views\documents.py:336
 msgid "Проверить"
-msgstr "Zatwierdź"
+msgstr "Sprawdź"
 
 #: .\clients\models\client.py:641
 msgid "Есть OCR-данные без подтверждения"
@@ -789,7 +789,7 @@ msgstr "Zaległe dokumenty: %(count)s."
 #: .\clients\models\client.py:656 .\clients\models\client.py:668
 #: .\clients\models\client.py:747 .\clients\models\client.py:769
 msgid "Открыть чеклист"
-msgstr "Otwórz listę kontrolną"
+msgstr "Otwórz checklistę"
 
 #: .\clients\models\client.py:665
 #: .\clients\templates\clients\document_reminder_list.html:277
@@ -6127,7 +6127,7 @@ msgstr "Pakiet gotowy"
 #: .\clients\templates\clients\onboarding\start.html:64
 #: .\clients\templates\clients\onboarding\start_contact.html:110
 msgid "Подано"
-msgstr "Utwórz"
+msgstr "Złożono"
 
 #: .\clients\templates\clients\onboarding\start.html:100
 #: .\clients\templates\clients\onboarding\start_contact.html:186
@@ -10582,6 +10582,255 @@ msgstr ""
 
 msgid "Фото/скан подтверждения подачи на карту пребывания"
 msgstr "Zdjęcie/skan potwierdzenia złożenia wniosku o kartę pobytu"
+
+msgid ""
+"Data złożenia nie może być w przyszłości. / Дата подачи не может быть в "
+"будущем."
+msgstr "Data złożenia nie może być w przyszłości."
+
+msgid "Подтверждено %(count)s документов, ожидающих проверки."
+msgstr "Potwierdzono %(count)s dokumentów oczekujących na sprawdzenie."
+
+msgid "Все активные документы уже были проверены."
+msgstr "Wszystkie aktywne dokumenty zostały już sprawdzone."
+
+msgid ""
+"Будут подтверждены только активные документы, ожидающие проверки. "
+"Отклонённые, архивные и уже проверенные документы не изменятся. Продолжить?"
+msgstr ""
+"Potwierdzone zostaną tylko aktywne dokumenty oczekujące na sprawdzenie. "
+"Odrzucone, archiwalne i już sprawdzone dokumenty nie zostaną zmienione. "
+"Kontynuować?"
+
+msgid "Подтверждено документов:"
+msgstr "Potwierdzono dokumentów:"
+
+msgid "Подтвердить ожидающие документы"
+msgstr "Potwierdź oczekujące dokumenty"
+
+msgid "Новая подача"
+msgstr "Nowy wniosek"
+
+msgid "Новое заявление на карту пребывания"
+msgstr "Nowy wniosek o kartę pobytu"
+
+msgid "Нужно уточнить"
+msgstr "Do wyjaśnienia"
+
+msgid "Не подано"
+msgstr "Nie złożono"
+
+msgid ""
+"Если новое заявление уже подано или мы подключились к делу после подачи, "
+"укажите это здесь. Так сотрудник не будет просить готовить подачу заново и "
+"сможет корректно вести напоминания."
+msgstr ""
+"Jeśli nowy wniosek został już złożony albo dołączyliśmy do sprawy po "
+"złożeniu, zaznacz to tutaj. Dzięki temu pracownik nie będzie prosił o "
+"ponowne przygotowanie złożenia i poprawnie poprowadzi przypomnienia."
+
+msgid "Проверьте данные о новой подаче."
+msgstr "Sprawdź dane nowego wniosku."
+
+msgid "Вы уже подали новое заявление?"
+msgstr "Czy nowy wniosek został już złożony?"
+
+msgid "Ещё не подано"
+msgstr "Jeszcze nie złożono"
+
+msgid "Подано или дело уже идёт после подачи"
+msgstr "Złożono albo sprawa jest już po złożeniu"
+
+msgid "Не знаю / нужна помощь"
+msgstr "Nie wiem / potrzebuję pomocy"
+
+msgid "Номер дела, если есть"
+msgstr "Numer sprawy, jeśli jest"
+
+msgid "Фото / PDF подтверждения"
+msgstr "Zdjęcie / PDF potwierdzenia"
+
+msgid "Подтверждение уже загружено."
+msgstr "Potwierdzenie zostało już przesłane."
+
+msgid "Например: подано через MOS, номер дела ещё не пришёл."
+msgstr "Na przykład: złożono przez MOS, numer sprawy jeszcze nie przyszedł."
+
+msgid "Сохранить информацию о подаче"
+msgstr "Zapisz informacje o złożeniu"
+
+msgid ""
+"Изменения по этому этапу уже закрыты. Если нужно обновить данные, напишите "
+"специалисту."
+msgstr ""
+"Zmiany na tym etapie są już zamknięte. Jeśli trzeba zaktualizować dane, "
+"napisz do specjalisty."
+
+msgid "Новая подача требует проверки дела"
+msgstr "Nowe złożenie wymaga sprawdzenia sprawy"
+
+msgid ""
+"Клиент указал номер дела в блоке новой подачи, но основной номер дела в "
+"карточке пуст. Перенесите номер или проверьте присоединение к делу."
+msgstr ""
+"Klient podał numer sprawy w bloku nowego złożenia, ale główny numer sprawy w"
+" karcie klienta jest pusty. Przenieś numer albo sprawdź dołączenie do "
+"sprawy."
+
+msgid ""
+"Клиент сообщил о новой подаче на карту пребывания, но номер дела ещё не "
+"заполнен. Если клиент уже был на отпечатках, проверьте присоединение к делу."
+msgstr ""
+"Klient zgłosił nowe złożenie na kartę pobytu, ale numer sprawy nie jest "
+"jeszcze uzupełniony. Jeśli klient był już na odciskach, sprawdź dołączenie "
+"do sprawy."
+
+msgid "Проверить подачу"
+msgstr "Sprawdź zgłoszenie"
+
+msgid "Клиенты с новой подачей без основного номера дела"
+msgstr "Klienci z nowym złożeniem bez głównego numeru sprawy"
+
+msgid "Клиент не уверен"
+msgstr "Klient nie jest pewien"
+
+msgid ""
+"Номер дела не указан; если были отпечатки, проверьте присоединение к делу"
+msgstr ""
+"Brakuje numeru sprawy; jeśli były już odciski, sprawdź dołączenie do sprawy"
+
+msgid "Новая подача без основного номера"
+msgstr "Nowe zgłoszenie bez głównego numeru sprawy"
+
+msgid "Рабочий день"
+msgstr "Dzień pracy"
+
+msgid "Операционный список действий на сегодня"
+msgstr "Operacyjna lista działań na dziś"
+
+msgid "Что требует внимания сегодня, %(date)s."
+msgstr "Co wymaga sprawdzenia dzisiaj, %(date)s."
+
+msgid "Всего действий"
+msgstr "Łącznie działań"
+
+msgid "По доступным клиентам и открытым событиям."
+msgstr "Dla dostępnych klientów i otwartych zdarzeń."
+
+msgid "Есть события для проверки"
+msgstr "Są sprawy do sprawdzenia"
+
+msgid ""
+"Откройте раздел ниже, проверьте детали и закройте следующий шаг в карточке "
+"клиента."
+msgstr ""
+"Otwórz sekcję poniżej, sprawdź szczegóły i zamknij kolejny krok w karcie "
+"klienta."
+
+msgid "На сегодня критичных действий нет"
+msgstr "Na dziś nie ma krytycznych działań"
+
+msgid ""
+"Новые документы, оплаты, просроченные задачи и подачи без номера появятся "
+"здесь автоматически."
+msgstr ""
+"Nowe dokumenty, płatności, zaległe zadania i zgłoszenia bez numeru pojawią "
+"się tutaj automatycznie."
+
+msgid "+ %(count)s ещё"
+msgstr "+ %(count)s więcej"
+
+msgid "Открыть полный список"
+msgstr "Otwórz pełną listę"
+
+msgid "Сейчас нет событий в этом разделе."
+msgstr "W tej sekcji nie ma teraz zdarzeń."
+
+msgid "ZUS RCA"
+msgstr "ZUS RCA"
+
+msgid "Запросить"
+msgstr "Poproś"
+
+msgid "подтверждение загружено"
+msgstr "potwierdzenie załadowane"
+
+msgid "нет подтверждения"
+msgstr "brak potwierdzenia"
+
+msgid "номер есть в блоке подачи"
+msgstr "numer jest w bloku zgłoszenia"
+
+msgid "После отпечатков без решения"
+msgstr "Po odciskach bez decyzji"
+
+msgid "%(days)s дней после отпечатков"
+msgstr "%(days)s dni po odciskach"
+
+msgid "Проверить статус"
+msgstr "Sprawdź status"
+
+msgid "срок: %(date)s"
+msgstr "termin: %(date)s"
+
+msgid "к оплате: %(amount)s PLN"
+msgstr "do zapłaty: %(amount)s PLN"
+
+msgid "Документы на проверку"
+msgstr "Dokumenty do sprawdzenia"
+
+msgid "Новые загрузки и OCR-данные, которые сотрудник ещё не подтвердил."
+msgstr "Nowe pliki i dane OCR, których pracownik jeszcze nie potwierdził."
+
+msgid "Клиенты, у которых ещё не закрыт обязательный чеклист."
+msgstr "Klienci, którzy nadal mają niezamkniętą obowiązkową checklistę."
+
+msgid "Дела после отпечатков, где не хватает актуальных ZUS RCA."
+msgstr "Sprawy po odciskach, w których brakuje aktualnych ZUS RCA."
+
+msgid "Новая подача без номера дела"
+msgstr "Nowe zgłoszenie bez numeru sprawy"
+
+msgid "Клиент сообщил о подаче, но основной номер дела в карточке ещё пуст."
+msgstr ""
+"Klient zgłosił złożenie wniosku, ale główny numer sprawy w karcie nadal jest"
+" pusty."
+
+msgid "Прошло больше 90 дней после отпечатков, решения в карточке нет."
+msgstr "Minęło ponad 90 dni od odcisków, a w karcie nie ma decyzji."
+
+msgid "Просроченные задачи"
+msgstr "Zaległe zadania"
+
+msgid "Открытые задачи сотрудников с прошедшим сроком."
+msgstr "Otwarte zadania pracowników po terminie."
+
+msgid "Просроченные или частично оплаченные счета."
+msgstr "Przeterminowane lub częściowo opłacone faktury."
+
+msgid "Нет открытой проблемы"
+msgstr "Brak otwartej sprawy"
+
+msgid "Автоматические проверки не требуют действий."
+msgstr "Automatyczne kontrole nie wymagają działania."
+
+msgid "Контролировать текущий этап"
+msgstr "Monitoruj bieżący etap"
+
+msgid "Открыть карточку"
+msgstr "Otwórz kartę"
+
+msgid "Детальные действия доступны в блоке рисков."
+msgstr "Szczegółowe działania są dostępne w bloku ryzyk."
+
+msgid "Проверить дело"
+msgstr "Sprawdź sprawę"
+
+msgid "Главная проблема"
+msgstr "Główny problem"
+
+msgid "Следующее действие"
+msgstr "Następne działanie"
 
 #~ msgid "Вы уверены, что хотите разослать это сообщение?"
 #~ msgstr "Czy na pewno chcesz wysłać tę wiadomość?"

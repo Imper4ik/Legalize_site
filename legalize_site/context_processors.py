@@ -162,6 +162,14 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
                 "icon": "bi-journal-text",
                 "level": "warning",
             })
+        if attention_counts["new_card_missing_case"]:
+            items.append({
+                "label": _("Новая подача без основного номера"),
+                "count": attention_counts["new_card_missing_case"],
+                "url": f"{client_list_url}?attention=new_card_missing_case",
+                "icon": "bi-file-earmark-plus",
+                "level": "warning",
+            })
         if purpose_change_count:
             items.append({
                 "label": _("Смена основания"),

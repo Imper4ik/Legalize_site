@@ -28,6 +28,7 @@ from clients.services.notifications import (
 )
 from clients.services.permissions import has_employee_permission
 from clients.services.responses import ResponseHelper, apply_no_store
+from clients.security.encrypted import safe_encrypted_attr
 from clients.services.roles import DOCUMENT_DELETE_ROLES, DOCUMENT_EDIT_ROLES
 from clients.services.wezwanie_parser import parse_wezwanie
 from clients.services.zus import missing_zus_month_upload_options
@@ -364,17 +365,22 @@ def verify_all_documents(request: HttpRequest, client_id: int) -> HttpResponseBa
 
     if helper.expects_json:
         return helper.success(
+            message=str(
+                _("Подтверждено %(count)s документов, ожидающих проверки.") % {"count": result.updated_count}
+                if result.updated_count
+                else _("Все активные документы уже были проверены.")
+            ),
             verified_count=result.updated_count,
             emails_sent=result.emails_sent,
         )
 
     if result.updated_count:
-        message = _("Отмечено %(count)s документов как проверенные.") % {"count": result.updated_count}
+        message = _("Подтверждено %(count)s документов, ожидающих проверки.") % {"count": result.updated_count}
         if result.emails_sent:
             message += " " + _("Письмо с недостающими документами отправлено.")
         messages.success(request, message)
     else:
-        messages.info(request, _("Все загруженные документы уже проверены."))
+        messages.info(request, _("Все активные документы уже были проверены."))
 
     return redirect("clients:client_detail", pk=client.id)
 
@@ -438,13 +444,17 @@ def client_status_api(request: HttpRequest, pk: int) -> HttpResponseBase:
 def client_overview_partial(request: HttpRequest, pk: int) -> HttpResponseBase:
     """Return the rendered client overview partial for AJAX refreshes."""
 
-    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
+    client = get_object_or_404(
+        accessible_clients_queryset(request.user, Client.objects.select_related("mos_application_data")),
+        pk=pk,
+    )
     document_status_list = client.get_document_checklist(check_file_existence=True)
     overview_html = render_to_string(
         "clients/partials/client_overview.html",
         {
             "client": client,
             "workflow_summary": client.get_workflow_summary(document_status_list=document_status_list),
+            "safe_case_number": safe_encrypted_attr(client, "case_number", default=_("Не указан")),
             "show_family_dashboard_link": bool(
                 client.family_role
                 or client.sponsor_client_id
@@ -491,3 +501,42 @@ def get_document_parsed_data(request: HttpRequest, doc_id: int) -> HttpResponseB
         return JsonResponse({"error": str(_("Document is not awaiting confirmation."))}, status=400)
 
     return JsonResponse({"parsed_data": document.parsed_data or {}})
+
+
+@role_required_view(*DOCUMENT_EDIT_ROLES)
+def reject_document(request: HttpRequest, doc_id: int) -> HttpResponseBase:
+    """Set document status as rejected and specify the reason."""
+    document = get_object_or_404(accessible_documents_queryset(request.user, Document.objects.all()), pk=doc_id)
+    helper = ResponseHelper(request)
+    if request.method == "POST":
+        rejection_reason = request.POST.get("rejection_reason", "").strip()
+        if rejection_reason:
+            document.verified = False
+            document.rejection_reason = rejection_reason
+            document.save(update_fields=["verified", "rejection_reason"])
+
+            from clients.services.activity import log_client_activity
+            log_client_activity(
+                client=document.client,
+                actor=request.user,
+                event_type="document_verified",
+                summary=f"Документ отклонён: {document.display_name}",
+                details=f"Причина: {rejection_reason}",
+                metadata={"document_id": document.id, "verified": False, "rejection_reason": rejection_reason},
+                document=document,
+            )
+
+            from clients.services.tasks import close_auto_task
+            close_auto_task(document.client, "document_review", document=document)
+
+            if helper.expects_json:
+                return helper.success(
+                    message=str(_("Документ успешно отклонён.")),
+                )
+            messages.success(request, _("Документ отклонён."))
+        else:
+            if helper.expects_json:
+                return helper.error(message=str(_("Укажите причину отклонения.")))
+            messages.error(request, _("Укажите причину отклонения."))
+
+    return redirect("clients:client_detail", pk=document.client.id)

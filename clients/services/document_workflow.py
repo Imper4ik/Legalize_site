@@ -98,6 +98,12 @@ def upload_client_document(
         actor=actor,
     )
 
+    if not actor or not getattr(actor, "is_staff", False):
+        from clients.services.tasks import create_auto_task
+        from clients.constants import is_wezwanie_document_type
+        if not is_wezwanie_document_type(doc_type):
+            create_auto_task(client, "document_review", document=document)
+
     log_client_activity(
         client=client,
         actor=actor,

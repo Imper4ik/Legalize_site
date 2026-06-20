@@ -190,7 +190,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
     def get_queryset(self) -> Any:
         return accessible_clients_queryset(
             self.request.user,
-            Client.objects.select_related("user", "sponsor_client", "company", "assigned_staff").defer(
+            Client.objects.select_related("user", "sponsor_client", "company", "assigned_staff", "mos_application_data").defer(
                 "case_number",
                 "passport_num",
                 "sponsor_client__case_number",

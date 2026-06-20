@@ -107,6 +107,11 @@
               </a>
               <ul class="dropdown-menu">
                 <li>
+                  <a class="dropdown-item" href="{% url 'clients:workday' %}" title="{% translate 'Операционный список действий на сегодня' %}">
+                    <i class="bi bi-clipboard-check me-2"></i>{% translate "Рабочий день" %}
+                  </a>
+                </li>
+                <li>
                   <a class="dropdown-item" href="{% url 'clients:calculator' %}" title="{% translate 'Расчет сроков пребывания, дат подачи и визитов' %}">
                     <i class="bi bi-calculator me-2"></i>{% translate "Калькулятор" %}
                   </a>
@@ -191,7 +196,7 @@
               </a>
               <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="navbarUserDropdown">
                 {% if user|has_any_role:"Admin,Manager,Staff,ReadOnly" %}
-                <li>
+<li>
                   <a class="dropdown-item" href="{% url 'clients:admin_panel' %}">
                     <i class="bi bi-grid me-2 text-muted"></i>{% translate "Админ панель" %}
                   </a>
@@ -234,7 +239,7 @@
                   </a>
                 </li>
                 {% endif %}
-                <li><hr class="dropdown-divider"></li>
+<li><hr class="dropdown-divider"></li>
                 {% endif %}
                 <li>
                   <form id="logout-form" method="post" action="{% url 'account_logout' %}">
@@ -323,7 +328,12 @@
           <i class="bi bi-grid-fill"></i>
           <span>{% translate "Меню" %}</span>
         </a>
-        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="mobileMenuDropdown" style="margin-bottom: 12px; z-index: 1050;">
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="mobileMenuDropdown" style="margin-bottom: 12px; z-index: 1050;">
+          <li>
+            <a class="dropdown-item" href="{% url 'clients:workday' %}">
+              <i class="bi bi-clipboard-check me-2 text-muted"></i>{% translate "Рабочий день" %}
+            </a>
+          </li>
           <li>
             <a class="dropdown-item" href="{% url 'clients:admin_panel' %}">
               <i class="bi bi-grid me-2 text-muted"></i>{% translate "Админ панель" %}

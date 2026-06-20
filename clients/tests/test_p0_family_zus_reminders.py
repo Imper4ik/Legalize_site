@@ -450,6 +450,24 @@ class TestDocumentUploadFormZus:
         assert not form.is_valid()
         assert "zus_period_month" in form.errors
 
+    @pytest.mark.django_db
+    def test_archived_zus_period_does_not_block_replacement(self):
+        client = _make_client(None)
+        _make_doc(
+            client,
+            doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+            zus_period_month=date(2026, 3, 1),
+            archived_at=timezone.now(),
+        )
+        form = DocumentUploadForm(
+            data={"expiry_date": "", "zus_period_month": "2026-03-15"},
+            files={"file": _simple_uploaded_file()},
+            doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+            client=client,
+        )
+        assert form.is_valid(), form.errors
+        assert form.cleaned_data["zus_period_month"] == date(2026, 3, 1)
+
 
 def _minimal_pdf_bytes():
     """Return bytes that pass the document validator's PDF checks."""
@@ -715,6 +733,11 @@ class TestClientOverviewUploadActions:
         assert 'data-doc-type="new_residence_card_application_confirmation"' in src
         assert "Загрузить подачу" in src
 
+    def test_new_residence_card_application_summary_mentions_case_joining(self):
+        src = self._template_source()
+        assert 'id="new-card-application-summary"' in src
+        assert "Новая подача" in src
+        assert "Номер дела не указан; если были отпечатки, проверьте присоединение к делу" in src
 
 # ===========================================================================
 # 9. CLIENT FORM TEMPLATE — JS LOGIC KEYWORDS

@@ -14,6 +14,10 @@
 {% block page_header %}{% endblock %}
 
 {% block content %}
+<div id="client-overview" data-refresh-url="{% url 'clients:client_overview_partial' client.pk %}" class="mb-4">
+  {% include 'clients/partials/client_overview.html' with client=client workflow_summary=workflow_summary %}
+</div>
+
 <ul class="nav nav-tabs mb-4" id="clientTabs" role="tablist">
   <li class="nav-item" role="presentation">
     <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">
@@ -45,10 +49,6 @@
 <div class="tab-content" id="clientTabsContent">
   <!-- Вкладка: Обзор -->
   <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
-    <div id="client-overview" data-refresh-url="{% url 'clients:client_overview_partial' client.pk %}">
-      {% include 'clients/partials/client_overview.html' with client=client workflow_summary=workflow_summary %}
-    </div>
-
     <div class="row g-3 mb-4">
       <div class="col-lg-6">
         {% include 'clients/partials/workflow_panel.html' with workflow_summary=workflow_summary workflow_alerts=workflow_alerts %}
@@ -77,16 +77,19 @@
             data-bs-target="#sendEmailModal">
             <i class="bi bi-envelope"></i> {% translate "Email" %}
           </button>
+          {% with pending_count=client.get_pending_verification_documents_count %}
           <form id="verify-all-documents-form" action="{% url 'clients:verify_all_documents' client_id=client.pk %}"
             method="post" class="m-0"
-            data-verified-count-text="{% translate 'Отмечено документов:' %}"
-            data-all-verified-text="{% translate 'Все документы уже были проверены.' %}"
+            data-confirm-text="{% blocktranslate count counter=pending_count %}Будет подтвержден {{ counter }} документ, ожидающий проверки. Отклонённые, архивные и уже проверенные документы не изменятся. Продолжить?{% plural %}Будет подтверждено {{ counter }} документов, ожидающих проверки. Отклонённые, архивные и уже проверенные документы не изменятся. Продолжить?{% endblocktranslate %}"
+            data-verified-count-text="{% translate 'Подтверждено документов:' %}"
+            data-all-verified-text="{% translate 'Все active документы уже были проверены.' %}"
             data-update-error-text="{% translate 'Не удалось обновить статус документов. Попробуйте ещё раз.' %}">
             {% csrf_token %}
             <button type="submit" class="btn btn-outline-success btn-sm">
-              <i class="bi bi-check2-all me-1"></i>{% translate "Проверить все файлы" %}
+              <i class="bi bi-check2-all me-1"></i>{% translate "Подтвердить все ожидающие проверки документы" %}
             </button>
           </form>
+          {% endwith %}
         </div>
       </div>
 
@@ -156,6 +159,9 @@
         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#sendEmailModal">
           <i class="bi bi-envelope-paper me-1"></i>{% translate "Написать email" %}
         </button>
+        <button type="button" class="btn btn-outline-info btn-sm ms-2" data-bs-toggle="modal" data-bs-target="#messageTemplatesModal">
+          <i class="bi bi-chat-right-text me-1"></i>{% translate "Шаблоны сообщений" %}
+        </button>
       </div>
     </div>
     <div class="row g-4">
@@ -191,6 +197,7 @@
 <script src="{% static 'clients/js/client/documents.js' %}" defer></script>
 <script src="{% static 'clients/js/client/checklist.js' %}" defer></script>
 <script src="{% static 'clients/js/client/email_modal.js' %}" defer></script>
+<script src="{% static 'clients/js/client/message_templates.js' %}" defer></script>
 <script src="{% static 'clients/js/client/init.js' %}" defer></script>
 <script>
   document.addEventListener('DOMContentLoaded', function () {

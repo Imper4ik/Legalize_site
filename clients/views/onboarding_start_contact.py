@@ -30,14 +30,22 @@ CONTACT_REQUIRED_FIELDS = ("first_name", "last_name", "email", "phone")
 CONTACT_PLACEHOLDER_PAIRS = {("новый", "клиент"), ("new", "client")}
 START_TEMPLATE = "clients/onboarding/start_contact.html"
 NEW_CARD_CONFIRMATION_DOC_TYPE = DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION.value
+NEW_CARD_STATUS_YES = MOSApplicationData.NEW_CARD_STATUS_YES
+NEW_CARD_STATUS_NO = MOSApplicationData.NEW_CARD_STATUS_NO
+NEW_CARD_STATUS_UNKNOWN = MOSApplicationData.NEW_CARD_STATUS_UNKNOWN
+NEW_CARD_STATUS_SUBMITTED_NO_NUMBER = "submitted_no_number"
+NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER = "submitted_with_number"
+
 NEW_CARD_ALLOWED_STATUSES = {
-    MOSApplicationData.NEW_CARD_STATUS_YES,
-    MOSApplicationData.NEW_CARD_STATUS_NO,
-    MOSApplicationData.NEW_CARD_STATUS_UNKNOWN,
+    NEW_CARD_STATUS_NO,
+    NEW_CARD_STATUS_SUBMITTED_NO_NUMBER,
+    NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER,
+    NEW_CARD_STATUS_UNKNOWN,
 }
 NEW_CARD_CONFIRMATION_UPLOAD_STATUSES = {
-    MOSApplicationData.NEW_CARD_STATUS_YES,
-    MOSApplicationData.NEW_CARD_STATUS_UNKNOWN,
+    NEW_CARD_STATUS_SUBMITTED_NO_NUMBER,
+    NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER,
+    NEW_CARD_STATUS_UNKNOWN,
 }
 
 
@@ -128,8 +136,14 @@ def _new_card_values_from_mos(mos_data: MOSApplicationData | None) -> dict[str, 
             "submitted_at": "",
             "comment": "",
         }
+    status = mos_data.new_residence_card_application_status or ""
+    if status == MOSApplicationData.NEW_CARD_STATUS_YES:
+        if mos_data.new_residence_card_case_number:
+            status = NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER
+        else:
+            status = NEW_CARD_STATUS_SUBMITTED_NO_NUMBER
     return {
-        "status": mos_data.new_residence_card_application_status or "",
+        "status": status,
         "case_number": str(mos_data.new_residence_card_case_number or ""),
         "submitted_at": mos_data.new_residence_card_submitted_at.isoformat()
         if mos_data.new_residence_card_submitted_at
@@ -139,8 +153,14 @@ def _new_card_values_from_mos(mos_data: MOSApplicationData | None) -> dict[str, 
 
 
 def _new_card_values_from_post(request: HttpRequest) -> dict[str, str]:
+    status = request.POST.get("new_card_application_status", "").strip()
+    if status == MOSApplicationData.NEW_CARD_STATUS_YES:
+        if request.POST.get("new_card_case_number", "").strip():
+            status = NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER
+        else:
+            status = NEW_CARD_STATUS_SUBMITTED_NO_NUMBER
     return {
-        "status": request.POST.get("new_card_application_status", "").strip(),
+        "status": status,
         "case_number": request.POST.get("new_card_case_number", "").strip(),
         "submitted_at": request.POST.get("new_card_submitted_at", "").strip(),
         "comment": request.POST.get("new_card_comment", "").strip(),
@@ -154,19 +174,31 @@ def _validate_new_card_values(values: dict[str, str]) -> dict[str, str]:
         errors["status"] = str(_("Wybierz odpowiedź / Выберите ответ."))
 
     submitted_at = values.get("submitted_at", "")
-    if submitted_at and parse_date(submitted_at) is None:
-        errors["submitted_at"] = str(_("Podaj poprawną datę / Укажите корректную дату."))
+    if status in (NEW_CARD_STATUS_SUBMITTED_NO_NUMBER, NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER):
+        parsed_submitted_at = parse_date(submitted_at) if submitted_at else None
+        if submitted_at and parsed_submitted_at is None:
+            errors["submitted_at"] = str(_("Podaj poprawną datę / Укажите корректную дату."))
+        elif parsed_submitted_at and parsed_submitted_at > timezone.localdate():
+            errors["submitted_at"] = str(_("Data złożenia nie może być w przyszłości. / Дата подачи не может быть в будущем."))
+        if status == NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER:
+            if not values.get("case_number", "").strip():
+                errors["case_number"] = str(_("Podaj numer sprawy / Укажите номер дела."))
     return errors
 
 
 def _save_new_card_values(mos_data: MOSApplicationData, values: dict[str, str]) -> None:
     status = values["status"]
-    mos_data.new_residence_card_application_status = status
-    if status == MOSApplicationData.NEW_CARD_STATUS_YES:
+    if status in (NEW_CARD_STATUS_SUBMITTED_NO_NUMBER, NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER):
+        mos_data.new_residence_card_application_status = MOSApplicationData.NEW_CARD_STATUS_YES
         mos_data.new_residence_card_case_number = values.get("case_number", "")
         submitted_at = values.get("submitted_at", "")
         mos_data.new_residence_card_submitted_at = parse_date(submitted_at) if submitted_at else None
-    else:
+    elif status == NEW_CARD_STATUS_NO:
+        mos_data.new_residence_card_application_status = MOSApplicationData.NEW_CARD_STATUS_NO
+        mos_data.new_residence_card_case_number = ""
+        mos_data.new_residence_card_submitted_at = None
+    elif status == NEW_CARD_STATUS_UNKNOWN:
+        mos_data.new_residence_card_application_status = MOSApplicationData.NEW_CARD_STATUS_UNKNOWN
         mos_data.new_residence_card_case_number = ""
         mos_data.new_residence_card_submitted_at = None
     mos_data.new_residence_card_comment = values.get("comment", "")
@@ -240,6 +272,12 @@ def _handle_new_card_application_post(
         )
 
     _save_new_card_values(mos_data, values)
+    from clients.services.tasks import create_auto_task, close_auto_task
+    if values.get("status") == NEW_CARD_STATUS_SUBMITTED_NO_NUMBER:
+        create_auto_task(session.client, "case_number_missing")
+    elif values.get("status") == NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER and values.get("case_number"):
+        close_auto_task(session.client, "case_number_missing")
+
     if upload_form is not None:
         upload_client_document(
             client=session.client,
@@ -248,6 +286,15 @@ def _handle_new_card_application_post(
             actor=request.user if request.user.is_authenticated else None,
             parse_requested=False,
         )
+    from clients.services.activity import log_client_activity
+    log_client_activity(
+        client=session.client,
+        actor=request.user if request.user.is_authenticated else None,
+        event_type="new_card_application_updated",
+        summary="Клиент обновил информацию о новой подаче на карту побыту",
+        details=f"Статус: {values.get('status')}, Номер дела: {values.get('case_number') or '-'}",
+        metadata={"status": values.get("status"), "case_number": values.get("case_number")}
+    )
 
     mos_data.refresh_from_db()
     confirmation_document = _latest_new_card_confirmation_document(session.client)
@@ -305,6 +352,8 @@ def _build_start_context(
     from django.conf import settings
     support_email = str(getattr(settings, "DEFAULT_FROM_EMAIL", "support@example.com"))
 
+    from datetime import date
+    today = date.today()
     checklist = []
     checklist_codes = set()
     for item in required_docs_catalog:
@@ -321,12 +370,28 @@ def _build_start_context(
             if os.path.exists(static_filepath):
                 sample_image_url = settings.STATIC_URL + static_filename
 
+        is_expired = False
+        is_rejected = False
+        is_verified = False
+        is_awaiting_verification = False
+        if doc_obj:
+            is_expired = bool(doc_obj.expiry_date and doc_obj.expiry_date < today)
+            is_rejected = bool(doc_obj.rejection_reason and not doc_obj.verified)
+            is_verified = bool(doc_obj.verified)
+            is_awaiting_verification = bool(not doc_obj.verified and not doc_obj.rejection_reason)
+
         checklist.append({
             "code": doc_type,
             "label": item["label"],
             "is_required": item["is_required"],
             "is_uploaded": is_uploaded,
             "doc_id": doc_obj.id if doc_obj else None,
+            "verified": doc_obj.verified if doc_obj else False,
+            "rejection_reason": doc_obj.rejection_reason if doc_obj else "",
+            "is_expired": is_expired,
+            "is_rejected": is_rejected,
+            "is_verified": is_verified,
+            "is_awaiting_verification": is_awaiting_verification,
             "ocr_status": doc_obj.ocr_status if doc_obj else None,
             "ocr_status_badge": doc_obj.ocr_status_badge if doc_obj else "",
             "source_hint": _document_source_hint(doc_type),
@@ -384,7 +449,7 @@ def _build_start_context(
         and mos_data.stay_data.get("stay_basis")
     )
 
-    case_step = _case_step_for_status(mos_data.status if mos_data else "draft")
+    case_step = client.get_case_step()
 
     return {
         "session": session,
@@ -415,6 +480,12 @@ def _build_start_context(
         "passport_complete": passport_complete,
         "travel_complete": travel_complete,
         "support_email": support_email,
+        "rejected_count": sum(1 for doc in checklist if doc.get("is_rejected")),
+        "missing_case_number": bool(
+            mos_data
+            and mos_data.new_residence_card_application_status == "yes"
+            and not mos_data.new_residence_card_case_number
+        ),
         **purpose_ctx,
     }
 

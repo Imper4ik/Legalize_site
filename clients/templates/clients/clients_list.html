@@ -103,6 +103,8 @@
         {% translate "Клиенты с просроченными задачами" %}
       {% elif attention_filter == "wezwanie_missing_case" %}
         {% translate "Клиенты с wezwanie без номера дела" %}
+      {% elif attention_filter == "new_card_missing_case" %}
+        {% translate "Клиенты с новой подачей без основного номера дела" %}
       {% else %}
         {% translate "Клиенты с событиями, требующими внимания" %}
       {% endif %}

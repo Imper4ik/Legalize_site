@@ -307,7 +307,15 @@ class ClientViewEdgeCaseTests(TestCase):
                 last_name="Client",
                 email="wezwanie-missing-case-attention@example.com",
             ),
+            "new_card_missing_case": Client.objects.create(
+                first_name="NewCardMissingCaseAttention",
+                last_name="Client",
+                email="new-card-missing-case-attention@example.com",
+            ),
         }
+        new_card_mos_data = clients_by_filter["new_card_missing_case"].mos_application_data
+        new_card_mos_data.new_residence_card_application_status = MOSApplicationData.NEW_CARD_STATUS_YES
+        new_card_mos_data.save(update_fields=["new_residence_card_application_status"])
         Document.objects.create(
             client=clients_by_filter["expired_documents"],
             document_type="passport",
@@ -371,6 +379,44 @@ class ClientViewEdgeCaseTests(TestCase):
                 [client.first_name for client in filtered_response.context["clients"]],
                 [expected_client.first_name],
             )
+
+    def test_client_overview_partial_shows_safe_case_number_and_new_card_application(self):
+        today = date.today()
+        self.client_obj.case_number = "WSC-II-99/2026"
+        self.client_obj.save(update_fields=["case_number"])
+        mos_data = self.client_obj.mos_application_data
+        mos_data.new_residence_card_application_status = MOSApplicationData.NEW_CARD_STATUS_YES
+        mos_data.new_residence_card_case_number = "WSC-II-99/2026"
+        mos_data.new_residence_card_submitted_at = today
+        mos_data.save(update_fields=[
+            "new_residence_card_application_status",
+            "new_residence_card_case_number",
+            "new_residence_card_submitted_at",
+        ])
+
+        response = self.client.get(reverse("clients:client_overview_partial", kwargs={"pk": self.client_obj.pk}))
+
+        self.assertEqual(response.status_code, 200)
+        html = response.json()["html"]
+        self.assertIn("WSC-II-99/2026", html)
+        self.assertIn("Новая подача", html)
+        self.assertIn("Подано", html)
+        self.assertIn("Номер дела", html)
+
+    def test_client_overview_highlights_primary_problem_and_next_action(self):
+        mos_data = self.client_obj.mos_application_data
+        mos_data.new_residence_card_application_status = MOSApplicationData.NEW_CARD_STATUS_YES
+        mos_data.save(update_fields=["new_residence_card_application_status"])
+
+        response = self.client.get(reverse("clients:client_overview_partial", kwargs={"pk": self.client_obj.pk}))
+
+        self.assertEqual(response.status_code, 200)
+        html = response.json()["html"]
+        self.assertIn("Главная проблема", html)
+        self.assertIn("Следующее действие", html)
+        self.assertIn("Новая подача требует проверки дела", html)
+        self.assertIn("Проверить подачу", html)
+        self.assertIn("присоединение к делу", html)
 
     def test_get_price_for_service_returns_success_json(self):
         response = self.client.get(reverse("clients:get_price_for_service", kwargs={"service_value": "study_service"}))

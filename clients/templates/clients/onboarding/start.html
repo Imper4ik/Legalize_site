@@ -12,80 +12,88 @@
     
     <div class="case-timeline-wrapper">
       <div class="case-timeline-progress-track">
-        <div class="case-timeline-progress-fill" style="width: {% widthratio case_step|add:'-1' 5 100 %}%;"></div>
+        <div class="case-timeline-progress-fill" style="width: {% widthratio case_step|add:'-1' 9 100 %}%;"></div>
       </div>
       
       <div class="case-timeline-steps">
-        <!-- Step 1: Анкета -->
+        <!-- Step 1: Цель -->
         <div class="case-timeline-step-item {% if case_step == 1 %}active{% elif case_step > 1 %}completed{% endif %}">
           <div class="case-timeline-node">
-            {% if case_step > 1 %}
-              <i class="bi bi-check-lg"></i>
-            {% else %}
-              <i class="bi bi-file-earmark-text"></i>
-            {% endif %}
+            {% if case_step > 1 %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-flag"></i>{% endif %}
+          </div>
+          <div class="case-timeline-label">{% trans "Цель" %}</div>
+        </div>
+        
+        <!-- Step 2: Анкета -->
+        <div class="case-timeline-step-item {% if case_step == 2 %}active{% elif case_step > 2 %}completed{% endif %}">
+          <div class="case-timeline-node">
+            {% if case_step > 2 %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-file-earmark-text"></i>{% endif %}
           </div>
           <div class="case-timeline-label">{% trans "Анкета" %}</div>
         </div>
         
-        <!-- Step 2: Проверка -->
-        <div class="case-timeline-step-item {% if case_step == 2 %}active{% elif case_step > 2 %}completed{% endif %}">
+        <!-- Step 3: Документы -->
+        <div class="case-timeline-step-item {% if case_step == 3 %}active{% elif case_step > 3 %}completed{% endif %}">
           <div class="case-timeline-node">
-            {% if case_step > 2 %}
-              <i class="bi bi-check-lg"></i>
-            {% else %}
-              <i class="bi bi-clipboard2-check"></i>
-            {% endif %}
+            {% if case_step > 3 %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-upload"></i>{% endif %}
+          </div>
+          <div class="case-timeline-label">{% trans "Документы" %}</div>
+        </div>
+        
+        <!-- Step 4: Проверка -->
+        <div class="case-timeline-step-item {% if case_step == 4 %}active{% elif case_step > 4 %}completed{% endif %}">
+          <div class="case-timeline-node">
+            {% if case_step > 4 %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-clipboard2-check"></i>{% endif %}
           </div>
           <div class="case-timeline-label">{% trans "Проверка" %}</div>
         </div>
         
-        <!-- Step 3: Пакет готов -->
-        <div class="case-timeline-step-item {% if case_step == 3 %}active{% elif case_step > 3 %}completed{% endif %}">
-          <div class="case-timeline-node">
-            {% if case_step > 3 %}
-              <i class="bi bi-check-lg"></i>
-            {% else %}
-              <i class="bi bi-folder-check"></i>
-            {% endif %}
-          </div>
-          <div class="case-timeline-label">{% trans "Пакет готов" %}</div>
-        </div>
-        
-        <!-- Step 4: Подано -->
-        <div class="case-timeline-step-item {% if case_step == 4 %}active{% elif case_step > 4 %}completed{% endif %}">
-          <div class="case-timeline-node">
-            {% if case_step > 4 %}
-              <i class="bi bi-check-lg"></i>
-            {% else %}
-              <i class="bi bi-send-check"></i>
-            {% endif %}
-          </div>
-          <div class="case-timeline-label">{% trans "Подано в ужонд" %}</div>
-        </div>
-        
-        <!-- Step 5: Отпечатки -->
+        <!-- Step 5: Оплата -->
         <div class="case-timeline-step-item {% if case_step == 5 %}active{% elif case_step > 5 %}completed{% endif %}">
           <div class="case-timeline-node">
-            {% if case_step > 5 %}
-              <i class="bi bi-check-lg"></i>
-            {% else %}
-              <i class="bi bi-fingerprint"></i>
-            {% endif %}
+            {% if case_step > 5 %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-credit-card"></i>{% endif %}
           </div>
-          <div class="case-timeline-label">{% trans "Ожидание отпечатков" %}</div>
+          <div class="case-timeline-label">{% trans "Оплата" %}</div>
         </div>
         
-        <!-- Step 6: Децизия -->
+        <!-- Step 6: Подготовка -->
         <div class="case-timeline-step-item {% if case_step == 6 %}active{% elif case_step > 6 %}completed{% endif %}">
           <div class="case-timeline-node">
-            {% if case_step > 6 %}
-              <i class="bi bi-award-fill"></i>
-            {% else %}
-              <i class="bi bi-award"></i>
-            {% endif %}
+            {% if case_step > 6 %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-folder-check"></i>{% endif %}
           </div>
-          <div class="case-timeline-label">{% trans "Ожидание решения" %}</div>
+          <div class="case-timeline-label">{% trans "Подготовка" %}</div>
+        </div>
+        
+        <!-- Step 7: Подача -->
+        <div class="case-timeline-step-item {% if case_step == 7 %}active{% elif case_step > 7 %}completed{% endif %}">
+          <div class="case-timeline-node">
+            {% if case_step > 7 %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-send-check"></i>{% endif %}
+          </div>
+          <div class="case-timeline-label">{% trans "Подано" %}</div>
+        </div>
+        
+        <!-- Step 8: Отпечатков -->
+        <div class="case-timeline-step-item {% if case_step == 8 %}active{% elif case_step > 8 %}completed{% endif %}">
+          <div class="case-timeline-node">
+            {% if case_step > 8 %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-fingerprint"></i>{% endif %}
+          </div>
+          <div class="case-timeline-label">{% trans "Отпечатки" %}</div>
+        </div>
+        
+        <!-- Step 9: Решение -->
+        <div class="case-timeline-step-item {% if case_step == 9 %}active{% elif case_step > 9 %}completed{% endif %}">
+          <div class="case-timeline-node">
+            {% if case_step > 9 %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-hourglass-split"></i>{% endif %}
+          </div>
+          <div class="case-timeline-label">{% trans "Решение" %}</div>
+        </div>
+        
+        <!-- Step 10: Готово -->
+        <div class="case-timeline-step-item {% if case_step == 10 %}active{% elif case_step > 10 %}completed{% endif %}">
+          <div class="case-timeline-node">
+            {% if case_step > 9 %}<i class="bi bi-award-fill"></i>{% else %}<i class="bi bi-award"></i>{% endif %}
+          </div>
+          <div class="case-timeline-label">{% trans "Карта" %}</div>
         </div>
       </div>
     </div>
@@ -215,6 +223,12 @@
                                                 <span>{{ doc.source_hint }}</span>
                                             </div>
                                         {% endif %}
+                                        {% if doc.is_rejected and doc.rejection_reason %}
+                                            <div class="text-danger small mt-1">
+                                                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                                <strong>{% trans "Причина отклонения:" %}</strong> {{ doc.rejection_reason }}
+                                            </div>
+                                        {% endif %}
                                     </div>
                                     <div class="onboarding-document-actions">
                                         {% if doc.sample_image_url %}
@@ -223,7 +237,15 @@
                                             </button>
                                         {% endif %}
                                         {% if doc.is_uploaded %}
-                                            <span class="badge bg-success">{% trans "Загружено" %}</span>
+                                            {% if doc.is_expired %}
+                                                <span class="badge bg-danger">{% trans "Истёк" %}</span>
+                                            {% elif doc.is_verified %}
+                                                <span class="badge bg-success">{% trans "Принят" %}</span>
+                                            {% elif doc.is_rejected %}
+                                                <span class="badge bg-danger">{% trans "Отклонён" %}</span>
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">{% trans "Ожидает проверки" %}</span>
+                                            {% endif %}
                                             {% if doc.ocr_status %}
                                                 {% if doc.ocr_status == 'pending' %}
                                                     <span class="badge bg-warning text-dark">{% trans "Распознавание..." %}</span>
@@ -241,7 +263,7 @@
                                                 </form>
                                             {% endif %}
                                         {% else %}
-                                            <span class="badge bg-warning text-dark">{% trans "Ожидается" %}</span>
+                                            <span class="badge bg-secondary">{% trans "Не загружен (ожидается)" %}</span>
                                             {% if allow_doc_edit %}
                                                 <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">{% trans "Загрузить" %}</button>
                                             {% else %}
@@ -279,6 +301,12 @@
                                                                 <span>{{ doc.source_hint }}</span>
                                                             </div>
                                                         {% endif %}
+                                                        {% if doc.is_rejected and doc.rejection_reason %}
+                                                            <div class="text-danger small mt-1">
+                                                                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                                                <strong>{% trans "Причина отклонения:" %}</strong> {{ doc.rejection_reason }}
+                                                            </div>
+                                                        {% endif %}
                                                     </div>
                                                     <div class="onboarding-document-actions">
                                                         {% if doc.sample_image_url %}
@@ -287,7 +315,15 @@
                                                             </button>
                                                         {% endif %}
                                                         {% if doc.is_uploaded %}
-                                                            <span class="badge bg-success">{% trans "Загружено" %}</span>
+                                                            {% if doc.is_expired %}
+                                                                <span class="badge bg-danger">{% trans "Истёк" %}</span>
+                                                            {% elif doc.is_verified %}
+                                                                <span class="badge bg-success">{% trans "Принят" %}</span>
+                                                            {% elif doc.is_rejected %}
+                                                                <span class="badge bg-danger">{% trans "Отклонён" %}</span>
+                                                            {% else %}
+                                                                <span class="badge bg-warning text-dark">{% trans "Ожидает проверки" %}</span>
+                                                            {% endif %}
                                                             {% if doc.ocr_status %}
                                                                 {% if doc.ocr_status == 'pending' %}
                                                                     <span class="badge bg-warning text-dark">{% trans "Распознавание..." %}</span>
@@ -310,7 +346,7 @@
                                                                 </form>
                                                             {% endif %}
                                                         {% else %}
-                                                            <span class="badge bg-warning text-dark">{% trans "Ожидается" %}</span>
+                                                            <span class="badge bg-secondary">{% trans "Не загружен (ожидается)" %}</span>
                                                             {% if allow_doc_edit %}
                                                                 {% if doc.code == 'passport' %}
                                                                     <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">
@@ -410,6 +446,12 @@
                                             <span>{{ doc.source_hint }}</span>
                                         </div>
                                     {% endif %}
+                                    {% if doc.is_rejected and doc.rejection_reason %}
+                                        <div class="text-danger small mt-1">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                            <strong>{% trans "Причина отклонения:" %}</strong> {{ doc.rejection_reason }}
+                                        </div>
+                                    {% endif %}
                                 </div>
                                 <div class="onboarding-document-actions">
                                     {% if doc.sample_image_url %}
@@ -418,7 +460,15 @@
                                         </button>
                                     {% endif %}
                                     {% if doc.is_uploaded %}
-                                        <span class="badge bg-success">{% trans "Загружено" %}</span>
+                                        {% if doc.is_expired %}
+                                            <span class="badge bg-danger">{% trans "Истёк" %}</span>
+                                        {% elif doc.is_verified %}
+                                            <span class="badge bg-success">{% trans "Принят" %}</span>
+                                        {% elif doc.is_rejected %}
+                                            <span class="badge bg-danger">{% trans "Отклонён" %}</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">{% trans "Ожидает проверки" %}</span>
+                                        {% endif %}
                                         {% if doc.ocr_status %}
                                             {% if doc.ocr_status == 'pending' %}
                                                 <span class="badge bg-warning text-dark">{% trans "Распознавание..." %}</span>
@@ -441,7 +491,7 @@
                                             </form>
                                         {% endif %}
                                     {% else %}
-                                        <span class="badge bg-warning text-dark">{% trans "Ожидается" %}</span>
+                                        <span class="badge bg-secondary">{% trans "Не загружен (ожидается)" %}</span>
                                         {% if allow_doc_edit %}
                                             {% if doc.code == 'passport' %}
                                                 <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">

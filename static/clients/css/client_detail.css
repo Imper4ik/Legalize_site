@@ -123,6 +123,10 @@
   padding: 0.72rem 0.8rem;
 }
 
+.client-summary-item.is-wide {
+  grid-column: span 2;
+}
+
 :root[data-theme="dark"] .client-summary-item {
   background: rgba(255, 255, 255, 0.04);
 }
@@ -296,6 +300,10 @@
 }
 
 @media (max-width: 767.98px) {
+  .client-summary-item.is-wide {
+    grid-column: auto;
+  }
+
   .client-action-bar .btn-group,
   .client-action-bar .btn {
     flex: 1 1 auto;

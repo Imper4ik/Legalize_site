@@ -487,7 +487,8 @@ class DocumentUploadForm(forms.ModelForm):
                 client=self.client,
                 document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
                 zus_period_month=normalized,
-            ).exists()
+                archived_at__isnull=True,
+            ).exclude(pk=self.instance.pk).exists()
         ):
             raise forms.ValidationError(_("ZUS RCA for this month is already uploaded."))
         return normalized

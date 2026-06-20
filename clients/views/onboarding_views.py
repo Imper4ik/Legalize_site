@@ -410,18 +410,38 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
     existing_documents = list(Document.objects.filter(client=client).order_by("document_type", "-uploaded_at"))
     existing_map = {document.document_type: document.id for document in existing_documents}
 
+    from datetime import date
+    today = date.today()
     checklist = []
     checklist_codes = set()
     for item in required_docs_catalog:
         doc_type = item["code"]
         checklist_codes.add(doc_type)
         is_uploaded = doc_type in existing_map
+        doc_obj = next((d for d in existing_documents if d.document_type == doc_type), None)
+        
+        is_expired = False
+        is_rejected = False
+        is_verified = False
+        is_awaiting_verification = False
+        if doc_obj:
+            is_expired = bool(doc_obj.expiry_date and doc_obj.expiry_date < today)
+            is_rejected = bool(doc_obj.rejection_reason and not doc_obj.verified)
+            is_verified = bool(doc_obj.verified)
+            is_awaiting_verification = bool(not doc_obj.verified and not doc_obj.rejection_reason)
+
         checklist.append({
             "code": doc_type,
             "label": item["label"],
             "is_required": item["is_required"],
             "is_uploaded": is_uploaded,
-            "doc_id": existing_map.get(doc_type),
+            "doc_id": doc_obj.id if doc_obj else None,
+            "verified": doc_obj.verified if doc_obj else False,
+            "rejection_reason": doc_obj.rejection_reason if doc_obj else "",
+            "is_expired": is_expired,
+            "is_rejected": is_rejected,
+            "is_verified": is_verified,
+            "is_awaiting_verification": is_awaiting_verification,
             "source_hint": _document_source_hint(doc_type),
         })
 
@@ -445,21 +465,7 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
     allow_doc_edit = _mos_documents_are_editable(mos_data)
     allow_delete = bool(mos_data and allow_doc_edit)
 
-    status = mos_data.status if mos_data else 'draft'
-    if status in ['draft', 'client_filling', 'client_completed', 'needs_correction']:
-        case_step = 1
-    elif status in ['staff_review']:
-        case_step = 2
-    elif status in ['approved_by_staff', 'mos_package_ready']:
-        case_step = 3
-    elif status in ['submitted_in_mos']:
-        case_step = 4
-    elif status in ['fingerprints']:
-        case_step = 5
-    elif status in ['waiting_decision', 'decision_received', 'closed']:
-        case_step = 6
-    else:
-        case_step = 1
+    case_step = client.get_case_step()
 
     return render(request, "clients/onboarding/start.html", {
         "session": session,
@@ -474,6 +480,8 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
         "fingerprint_invitation_document": fingerprint_invitation_document,
         "fingerprint_invitation_label": client.get_document_name_by_code(fingerprint_invitation_doc_type),
         "can_change_purpose": allow_edit,
+        "rejected_count": sum(1 for doc in checklist if doc.get("is_rejected")),
+        "missing_case_number": bool(mos_data and mos_data.new_residence_card_application_status == 'yes' and not mos_data.new_residence_card_case_number),
         **purpose_ctx,
     })
 

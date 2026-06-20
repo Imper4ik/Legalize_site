@@ -137,6 +137,13 @@ class UseCasesStage13Tests(TestCase):
             file=SimpleUploadedFile("permit-c.pdf", b"c", content_type="application/pdf"),
             verified=True,
         )
+        archived_document = Document.objects.create(
+            client=self.client_obj,
+            document_type=DocumentType.PHOTOS.value,
+            file=SimpleUploadedFile("archived-d.pdf", b"d", content_type="application/pdf"),
+            verified=False,
+        )
+        archived_document.archive()
         send_missing_email = Mock(return_value=1)
 
         result = verify_all_client_documents(
@@ -148,6 +155,8 @@ class UseCasesStage13Tests(TestCase):
         self.assertEqual(result.updated_count, 2)
         self.assertTrue(result.emails_sent)
         self.assertEqual(self.client_obj.documents.filter(verified=False).count(), 0)
+        archived_document = Document.all_objects.get(pk=archived_document.pk)
+        self.assertFalse(archived_document.verified)
         send_missing_email.assert_called_once_with(self.client_obj)
         activity = ClientActivity.objects.get(client=self.client_obj, event_type="document_verified")
         self.assertEqual(activity.metadata["verified_count"], 2)

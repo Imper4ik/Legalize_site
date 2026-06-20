@@ -7,9 +7,11 @@ document.addEventListener('DOMContentLoaded', () => {
   initChecklistRefresher();
   initDocumentDeletion();
   initDocumentVerification();
+  initDocumentRejection();
   initBulkVerification();
   initHoverDropdowns();
   initSendEmailModal();
+  initMessageTemplatesModal();
   initEmailHistoryToggle();
   initTabAnchorLinks();
   initOnboardingPanelLinkGenerator();

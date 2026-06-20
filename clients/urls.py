@@ -13,6 +13,7 @@ urlpatterns = [
     # CRUD для Клиентов (используя CBV)
     path('metrics/', views.MetricsDashboardView.as_view(), name='metrics_dashboard'),
     path('tasks/', views.TaskListView.as_view(), name='task_list'),
+    path('workday/', views.WorkdayView.as_view(), name='workday'),
     path('fingerprints-schedule/', fingerprints_schedule_view, name='fingerprints_schedule'),
     path('', views.ClientListView.as_view(), name='client_list'),
     path('mass-email/', views.mass_email_view, name='mass_email'),
@@ -80,6 +81,7 @@ urlpatterns = [
     ),
     path('document/<int:doc_id>/toggle-verification/', views.toggle_document_verification,
          name='toggle_document_verification'),
+    path('document/<int:doc_id>/reject/', views.reject_document, name='reject_document'),
     path('client/<int:client_id>/documents/verify-all/', views.verify_all_documents, name='verify_all_documents'),
     path('<int:pk>/checklist-partial/', views.client_checklist_partial, name='client_checklist_partial'),
     path('<int:pk>/overview-partial/', views.client_overview_partial, name='client_overview_partial'),

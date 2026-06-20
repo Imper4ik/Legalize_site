@@ -18,6 +18,7 @@ ATTENTION_FILTERS = (
     "fingerprints_email",
     "overdue_tasks",
     "wezwanie_missing_case",
+    "new_card_missing_case",
 )
 
 
@@ -85,6 +86,11 @@ def apply_client_attention_filter(queryset: QuerySet[Any], attention_filter: str
             _missing_case_number_q(),
             documents__document_type__in=wezwanie_types,
             documents__archived_at__isnull=True,
+        ).distinct()
+    if attention_filter == "new_card_missing_case":
+        return queryset.filter(
+            _missing_case_number_q(),
+            mos_application_data__new_residence_card_application_status="yes",
         ).distinct()
     return queryset
 

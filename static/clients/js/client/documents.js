@@ -493,6 +493,11 @@ function initBulkVerification() {
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
 
+    const confirmText = form.dataset.confirmText;
+    if (confirmText && !window.confirm(confirmText)) {
+      return;
+    }
+
     const submitButton = form.querySelector('[type="submit"]');
     submitButton?.setAttribute('disabled', 'disabled');
     pauseChecklistRefresh();
@@ -504,7 +509,9 @@ function initBulkVerification() {
       });
 
       if (response.ok && data.status === 'success') {
-        if (data.verified_count > 0) {
+        if (data.message) {
+          showDocumentAlert(data.message, data.verified_count > 0 ? 'success' : 'info');
+        } else if (data.verified_count > 0) {
           const prefix = form.dataset.verifiedCountText || 'Documents marked:';
           showDocumentAlert(`${prefix} ${data.verified_count}.`);
         } else {
@@ -530,3 +537,81 @@ function initBulkVerification() {
     }
   });
 }
+
+function initDocumentRejection() {
+  const modal = document.getElementById('rejectDocumentModal');
+  if (!modal) {
+    return;
+  }
+
+  const form = modal.querySelector('#rejectDocumentForm');
+  const reasonInput = modal.querySelector('#rejectDocumentReason');
+  const submitBtn = modal.querySelector('#rejectDocumentSubmitBtn');
+  let currentDocId = '';
+  let rejectUrl = '';
+
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('.reject-document-btn');
+    if (!button) {
+      return;
+    }
+    currentDocId = button.getAttribute('data-doc-id');
+    rejectUrl = button.getAttribute('data-reject-url');
+    
+    if (form && rejectUrl) {
+      form.setAttribute('action', rejectUrl);
+    }
+    if (reasonInput) {
+      reasonInput.value = '';
+    }
+  });
+
+  if (!form) {
+    return;
+  }
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    if (submitBtn) {
+      submitBtn.setAttribute('disabled', 'disabled');
+    }
+    pauseChecklistRefresh();
+
+    try {
+      const { response, data } = await fetchJson(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+      });
+
+      if (response.ok && data.status === 'success') {
+        bootstrap.Modal.getOrCreateInstance(modal).hide();
+        showDocumentAlert(data.message || 'Document rejected.');
+        
+        let docType = '';
+        const docRow = document.querySelector(`.reject-document-btn[data-doc-id="${currentDocId}"]`)?.closest('.accordion-item');
+        if (docRow) {
+          const header = docRow.querySelector('.accordion-header');
+          if (header && header.id) {
+            docType = header.id.replace('heading', '');
+          }
+        }
+        await refreshAndScrollToChecklist(docType);
+        return;
+      }
+
+      showDocumentAlert(
+        getErrorMessage(data.errors || data.message, modal.dataset.rejectErrorText || 'Failed to reject document. Please try again.'),
+        'danger',
+      );
+    } catch (error) {
+      logAjaxError('reject document', error, { url: form.action });
+      showDocumentAlert(modal.dataset.rejectErrorText || 'Failed to reject document. Please try again.', 'danger');
+    } finally {
+      if (submitBtn) {
+        submitBtn.removeAttribute('disabled');
+      }
+    }
+  });
+}
+

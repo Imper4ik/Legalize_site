@@ -154,6 +154,10 @@ def toggle_client_document_verification(
         document.verified = not document.verified
         document.save(update_fields=["verified"])
 
+        if document.verified:
+            from clients.services.tasks import close_auto_task
+            close_auto_task(document.client, "document_review", document=document)
+
         log_client_activity(
             client=document.client,
             actor=actor,
@@ -184,13 +188,22 @@ def verify_all_client_documents(
     send_missing_email: MissingDocumentsSender = send_missing_documents_email,
 ) -> DocumentScenarioResult:
     with transaction.atomic():
-        updated_count = client.documents.filter(verified=False).update(verified=True)
+        from django.utils import timezone
+        today = timezone.localdate()
+        updated_count = (
+            client.documents.filter(verified=False, archived_at__isnull=True)
+            .exclude(expiry_date__isnull=False, expiry_date__lt=today)
+            .update(verified=True)
+        )
         if updated_count:
+            from clients.services.tasks import close_auto_task
+            close_auto_task(client, "document_review")
+
             log_client_activity(
                 client=client,
                 actor=actor,
                 event_type="document_verified",
-                summary="Все документы клиента отмечены как проверенные",
+                summary="Сотрудник подтвердил документы через массовое действие",
                 metadata={"verified_count": updated_count},
             )
 

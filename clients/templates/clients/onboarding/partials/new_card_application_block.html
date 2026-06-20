@@ -1,0 +1,96 @@
+{% load i18n %}
+
+<div class="card shadow-sm border-0 mb-4" id="new-card-application">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+      <div class="small text-muted text-uppercase fw-semibold" style="letter-spacing: .04em;">{% translate "Новая подача" %}</div>
+      <h5 class="mb-0 fw-bold">{% translate "Новое заявление на карту пребывания" %}</h5>
+    </div>
+    {% if new_card_values.status == 'submitted_with_number' or new_card_values.status == 'submitted_no_number' %}
+      <span class="badge bg-success-subtle text-success border border-success-subtle">{% translate "Подано" %}</span>
+    {% elif new_card_values.status == 'unknown' %}
+      <span class="badge bg-warning-subtle text-warning border border-warning-subtle">{% translate "Нужно уточнить" %}</span>
+    {% else %}
+      <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">{% translate "Не подано" %}</span>
+    {% endif %}
+  </div>
+  <div class="card-body">
+    <p class="text-muted small mb-3">
+      {% translate "Если новое заявление уже подано или мы подключились к делу после подачи, укажите это здесь. Так сотрудник не будет просить готовить подачу заново и сможет корректно вести напоминания." %}
+    </p>
+    {% if new_card_errors %}
+      <div class="alert alert-danger py-2 px-3 small">{% translate "Проверьте данные о новой подаче." %}</div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" data-no-autosave="true" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="action" value="new_card_application">
+
+      <fieldset {% if not allow_doc_edit %}disabled{% endif %}>
+        <legend class="form-label fw-semibold">{% translate "Вы уже подали новое заявление?" %}</legend>
+        <div class="d-flex flex-column gap-2 mb-3">
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="new_card_application_status" id="newCardStatusNo" value="no" data-new-card-status {% if new_card_values.status == 'no' or not new_card_values.status %}checked{% endif %}>
+            <label class="form-check-label" for="newCardStatusNo">{% translate "Ещё не подано" %}</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="new_card_application_status" id="newCardStatusSubmittedNoNumber" value="submitted_no_number" data-new-card-status {% if new_card_values.status == 'submitted_no_number' %}checked{% endif %}>
+            <label class="form-check-label" for="newCardStatusSubmittedNoNumber">{% translate "Подано, но номера дела пока нет" %}</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="new_card_application_status" id="newCardStatusSubmittedWithNumber" value="submitted_with_number" data-new-card-status {% if new_card_values.status == 'submitted_with_number' %}checked{% endif %}>
+            <label class="form-check-label" for="newCardStatusSubmittedWithNumber">{% translate "Подано, номер дела уже есть" %}</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="new_card_application_status" id="newCardStatusUnknown" value="unknown" data-new-card-status {% if new_card_values.status == 'unknown' %}checked{% endif %}>
+            <label class="form-check-label" for="newCardStatusUnknown">{% translate "Не знаю / нужна помощь" %}</label>
+          </div>
+        </div>
+        {% if new_card_errors.status %}<div class="text-danger small mb-3">{{ new_card_errors.status }}</div>{% endif %}
+
+        <div class="row g-3 d-none" data-new-card-fields-container>
+          <div class="col-md-4">
+            <label class="form-label" for="id_new_card_submitted_at">{% translate "Дата подачи" %}</label>
+            <input type="date" class="form-control {% if new_card_errors.submitted_at %}is-invalid{% endif %}" id="id_new_card_submitted_at" name="new_card_submitted_at" value="{{ new_card_values.submitted_at }}">
+            {% if new_card_errors.submitted_at %}<div class="invalid-feedback">{{ new_card_errors.submitted_at }}</div>{% endif %}
+          </div>
+          <div class="col-md-4 d-none" data-new-card-case-number-container>
+            <label class="form-label" for="id_new_card_case_number">{% translate "Номер дела" %}</label>
+            <input class="form-control {% if new_card_errors.case_number %}is-invalid{% endif %}" id="id_new_card_case_number" name="new_card_case_number" value="{{ new_card_values.case_number }}" autocomplete="off">
+            {% if new_card_errors.case_number %}<div class="invalid-feedback">{{ new_card_errors.case_number }}</div>{% endif %}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="id_new_card_confirmation_file">{% translate "Фото / PDF подтверждения" %}</label>
+            <input type="file" class="form-control {% if new_card_errors.confirmation_file %}is-invalid{% endif %}" id="id_new_card_confirmation_file" name="new_card_confirmation_file" accept="application/pdf,image/jpeg,image/png,image/webp">
+            {% if new_card_errors.confirmation_file %}<div class="invalid-feedback">{{ new_card_errors.confirmation_file }}</div>{% endif %}
+          </div>
+        </div>
+
+        {% if new_card_confirmation_document %}
+          <div class="alert alert-success py-2 px-3 small mt-3 mb-0">
+            <i class="bi bi-check-circle-fill me-1"></i>{% translate "Подтверждение уже загружено." %}
+            <a class="alert-link" href="{% url 'clients:onboarding_document_preview' session.token_hash new_card_confirmation_document.id %}" target="_blank" rel="noopener">{% translate "Открыть файл" %}</a>
+          </div>
+        {% endif %}
+
+        <div class="alert alert-info py-2 px-3 small mt-3 mb-0 d-none" data-new-card-unknown-hint>
+          <i class="bi bi-info-circle-fill me-1"></i>
+          {% translate "Пожалуйста, проверьте, есть ли у вас подтверждение подачи заявления, печать в паспорте или сообщение из управления (urząd)." %}
+        </div>
+
+        <div class="mt-3">
+          <label class="form-label" for="id_new_card_comment">{% translate "Комментарий" %}</label>
+          <textarea class="form-control" id="id_new_card_comment" name="new_card_comment" rows="2" placeholder="{% translate 'Например: подано через MOS, номер дела ещё не пришёл.' %}">{{ new_card_values.comment }}</textarea>
+        </div>
+      </fieldset>
+
+      {% if allow_doc_edit %}
+        <button type="submit" class="btn btn-primary mt-3">
+          <i class="bi bi-save me-1"></i>{% translate "Сохранить информацию о подаче" %}
+        </button>
+      {% else %}
+        <div class="text-muted small mt-3">{% translate "Изменения по этому этапу уже закрыты. Если нужно обновить данные, напишите специалисту." %}</div>
+      {% endif %}
+    </form>
+  </div>
+</div>

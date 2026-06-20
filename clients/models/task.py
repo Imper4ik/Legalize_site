@@ -20,11 +20,33 @@ class StaffTask(models.Model):
         ("urgent", _("Срочный")),
     ]
 
+    TASK_TYPE_CHOICES = [
+        ("document_review", _("Проверка документов")),
+        ("missing_document", _("Недостающий документ")),
+        ("zus_update", _("Обновление ZUS")),
+        ("case_number_missing", _("Отсутствует номер дела")),
+        ("fingerprints_followup", _("Контроль после отпечатков")),
+        ("payment_followup", _("Контроль оплаты")),
+        ("client_question", _("Вопрос клиента")),
+        ("internal_note", _("Внутренняя заметка")),
+        ("deadline_check", _("Контроль дедлайна")),
+    ]
+
     client = models.ForeignKey(
         "clients.Client",
         on_delete=models.CASCADE,
         related_name="staff_tasks",
         verbose_name=_("Клиент"),
+    )
+    task_type = models.CharField(
+        max_length=50,
+        choices=TASK_TYPE_CHOICES,
+        default="internal_note",
+        verbose_name=_("Тип задачи"),
+    )
+    is_auto_created = models.BooleanField(
+        default=False,
+        verbose_name=_("Создана автоматически"),
     )
     title = models.CharField(max_length=255, verbose_name=_("Задача"))
     description = models.TextField(blank=True, verbose_name=_("Описание"))

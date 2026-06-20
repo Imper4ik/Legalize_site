@@ -351,6 +351,12 @@ class Client(SoftDeleteModel):
             kwargs["update_fields"] = list(update_fields)
 
         super().save(*args, **kwargs)
+        if self.case_number:
+            try:
+                from clients.services.tasks import close_auto_task
+                close_auto_task(self, "case_number_missing")
+            except Exception:
+                pass
 
     def get_absolute_url(self) -> str:
         return reverse("clients:client_detail", kwargs={"pk": self.id})
@@ -553,6 +559,47 @@ class Client(SoftDeleteModel):
             )
         return status_list
 
+    def get_case_step(self) -> int:
+        """Calculate the current step (1 to 10) on the onboarding timeline."""
+        mos_data = getattr(self, "mos_application_data", None)
+        status = mos_data.status if mos_data else 'draft'
+
+        if status == 'draft':
+            return 1  # Выбор цели
+        if status == 'client_filling':
+            return 2  # Заполнение анкеты
+
+        if status in ['client_completed', 'needs_correction', 'staff_review']:
+            # Check checklist completion
+            checklist = self.get_document_checklist(check_file_existence=False)
+            has_missing_required = any(item.get("is_required") and not item.get("is_complete") for item in checklist)
+            if has_missing_required:
+                return 3  # Загрузка документов
+            return 4  # Проверка сотрудником
+
+        # Check if there is an unpaid/partially paid payment
+        prefetched_payments = getattr(self, "_prefetched_objects_cache", {}).get("payments")
+        if prefetched_payments is not None:
+            has_unpaid_payments = any(p.status in ["unpaid", "partially_paid"] for p in prefetched_payments)
+        else:
+            has_unpaid_payments = self.payments.filter(status__in=["unpaid", "partially_paid"]).exists()
+
+        if has_unpaid_payments and status in ['approved_by_staff', 'mos_package_ready']:
+            return 5  # Оплата услуг
+
+        if status in ['approved_by_staff', 'mos_package_ready']:
+            return 6  # Подготовка пакета
+        if status == 'submitted_in_mos':
+            return 7  # Подача заявления
+        if status == 'fingerprints':
+            return 8  # Сдача отпечатков
+        if status == 'waiting_decision':
+            return 9  # Ожидание решения
+        if status in ['decision_received', 'closed']:
+            return 10  # Решение получено
+
+        return 1
+
     def get_document_name_by_code(self, doc_code: str) -> str:
         from .document import DocumentRequirement, get_available_document_types, resolve_document_label
         custom = self.custom_document_requirements.filter(document_type=doc_code).order_by("-is_active", "-id").first()
@@ -573,6 +620,11 @@ class Client(SoftDeleteModel):
         if doc_code in get_available_document_types(purpose):
             return str(resolve_document_label(doc_code, language=current_language))
         return doc_code.replace("_", " ").capitalize()
+
+    def get_pending_verification_documents_count(self) -> int:
+        from django.utils import timezone
+        today = timezone.localdate()
+        return self.documents.filter(verified=False, archived_at__isnull=True).exclude(expiry_date__isnull=False, expiry_date__lt=today).count()
 
     def _get_mos_legal_stay_until(self) -> date | None:
         try:
@@ -624,7 +676,9 @@ class Client(SoftDeleteModel):
                         {
                             "level": "danger",
                             "title": _("Основание пребывания уже истекло"),
-                            "message": _("Проверьте основание пребывания и срочно свяжитесь с клиентом."),
+                            "message": _("Проверьте основание пребывания и свяжитесь с клиентом."),
+                            "action_label": _("Связаться с клиентом"),
+                            "action_url": "#history",
                         }
                     )
                 elif legal_stay_date <= today + timedelta(days=30):
@@ -633,6 +687,8 @@ class Client(SoftDeleteModel):
                             "level": "warning",
                             "title": _("Основание пребывания скоро истекает"),
                             "message": _("До окончания основания пребывания осталось меньше 30 дней."),
+                            "action_label": _("Связаться с клиентом"),
+                            "action_url": "#history",
                         }
                     )
 
@@ -648,37 +704,71 @@ class Client(SoftDeleteModel):
                     "doc_id": doc.id,
                     "doc_type": doc.document_type,
                 })
+            
+            if awaiting_docs:
+                doc_name = self.get_document_name_by_code(awaiting_docs[0].document_type)
+                action_label = _("Проверить документ: %s") % doc_name
+            else:
+                action_label = _("Проверить OCR")
+
             alerts.append(
                 {
                     "level": "warning",
                     "title": _("Есть OCR-данные без подтверждения"),
                     "message": _("Документов с распознанными данными, ожидающими подтверждения: %(count)s.")
                     % {"count": self.health_awaiting_confirmation_count},
-                    "action_label": _("Проверить OCR"),
+                    "action_label": action_label,
                     "action_url": "#documentAccordion",
                     "actions": actions,
                 }
             )
 
         if getattr(self, "health_expired_documents_count", 0):
+            expired_docs = list(self.documents.filter(expiry_date__lt=today, archived_at__isnull=True))
+            if expired_docs:
+                doc_name = self.get_document_name_by_code(expired_docs[0].document_type)
+                action_label = _("Запросить документ: %s") % doc_name
+            else:
+                action_label = _("Открыть чеклист")
             alerts.append(
                 {
                     "level": "danger",
                     "title": _("Просроченные документы"),
                     "message": _("Просроченных документов: %(count)s.") % {"count": self.health_expired_documents_count},
-                    "action_label": _("Открыть чеклист"),
+                    "action_label": action_label,
                     "action_url": "#documentAccordion",
                 }
             )
 
         if getattr(self, "health_expiring_documents_count", 0):
+            expiring_docs = list(self.documents.filter(expiry_date__gte=today, expiry_date__lte=today + timedelta(days=7), archived_at__isnull=True))
+            if expiring_docs:
+                doc_name = self.get_document_name_by_code(expiring_docs[0].document_type)
+                action_label = _("Запросить документ: %s") % doc_name
+            else:
+                action_label = _("Открыть чеклист")
             alerts.append(
                 {
                     "level": "warning",
                     "title": _("Истекающие документы"),
                     "message": _("Документов истекает в течение 7 дней: %(count)s.")
                     % {"count": self.health_expiring_documents_count},
-                    "action_label": _("Открыть чеклист"),
+                    "action_label": action_label,
+                    "action_url": "#documentAccordion",
+                }
+            )
+
+        # Rejected documents check
+        rejected_docs = list(self.documents.filter(rejection_reason__isnull=False, archived_at__isnull=True).exclude(rejection_reason=""))
+        if rejected_docs:
+            doc_name = self.get_document_name_by_code(rejected_docs[0].document_type)
+            action_label = _("Запросить документ: %s") % doc_name
+            alerts.append(
+                {
+                    "level": "danger",
+                    "title": _("Отклонённые документы"),
+                    "message": _("Отклонённых документов: %(count)s.") % {"count": len(rejected_docs)},
+                    "action_label": action_label,
                     "action_url": "#documentAccordion",
                 }
             )
@@ -708,7 +798,41 @@ class Client(SoftDeleteModel):
                     "level": "warning",
                     "title": _("Есть wezwanie без номера дела"),
                     "message": _("Проверьте распознавание или заполните case number вручную."),
+                    "action_label": _("Запросить номер дела у клиента"),
+                    "action_url": "#history",
                     "actions": actions,
+                }
+            )
+
+        try:
+            mos_application_data = self.mos_application_data
+        except ObjectDoesNotExist:
+            mos_application_data = None
+        new_card_case_number = ""
+        if mos_application_data is not None:
+            new_card_case_number = str(mos_application_data.new_residence_card_case_number or "").strip()
+        if (
+            mos_application_data is not None
+            and mos_application_data.new_residence_card_application_status == "yes"
+            and not self.case_number
+        ):
+            if new_card_case_number:
+                new_card_message = _(
+                    "Клиент указал номер дела в блоке новой подачи, но основной номер дела в карточке пуст. "
+                    "Перенесите номер или проверьте присоединение к делу."
+                )
+            else:
+                new_card_message = _(
+                    "Клиент сообщил о новой подаче на карту пребывания, но номер дела ещё не заполнен. "
+                    "Если клиент уже был на отпечатках, проверьте присоединение к делу."
+                )
+            alerts.append(
+                {
+                    "level": "warning",
+                    "title": _("Новая подача требует проверки дела"),
+                    "message": new_card_message,
+                    "action_label": _("Запросить номер дела у клиента"),
+                    "action_url": "#history",
                 }
             )
 
@@ -718,6 +842,8 @@ class Client(SoftDeleteModel):
                     "level": "warning",
                     "title": _("Не отправлено письмо по отпечаткам"),
                     "message": _("Дата fingerprints есть, но в истории нет appointment notification."),
+                    "action_label": _("Отправить письмо клиенту"),
+                    "action_url": "#history",
                 }
             )
 
@@ -750,6 +876,11 @@ class Client(SoftDeleteModel):
             document_status_list = self.get_document_checklist()
         missing_documents_count = sum(1 for item in document_status_list if not item["is_complete"])
         if missing_documents_count:
+            first_missing = next((item for item in document_status_list if not item["is_complete"]), None)
+            if first_missing:
+                action_label = _("Запросить документ: %s") % first_missing["name"]
+            else:
+                action_label = _("Открыть чеклист")
             alerts.append(
                 {
                     "level": "info",
@@ -757,7 +888,7 @@ class Client(SoftDeleteModel):
                     "message": _("Не хватает обязательных документов: %(count)s.")
                     % {"count": missing_documents_count},
                     "count": missing_documents_count,
-                    "action_label": _("Открыть чеклист"),
+                    "action_label": action_label,
                     "action_url": "#documentAccordion",
                 }
             )
@@ -772,6 +903,8 @@ class Client(SoftDeleteModel):
 
             missing_zus = missing_zus_months(self, today=today)
             if missing_zus:
+                month_name = format_zus_months([missing_zus[0]])
+                action_label = _("Запросить ZUS RCA за %s") % month_name
                 alerts.append(
                     {
                         "level": "warning",
@@ -779,7 +912,7 @@ class Client(SoftDeleteModel):
                         "message": _("Нет ZUS RCA за месяцы: %(months)s.")
                         % {"months": format_zus_months(missing_zus)},
                         "count": len(missing_zus),
-                        "action_label": _("Открыть чеклист"),
+                        "action_label": action_label,
                         "action_url": "#documentAccordion",
                     }
                 )
@@ -801,13 +934,38 @@ class Client(SoftDeleteModel):
                 )
 
         if getattr(self, "health_overdue_tasks_count", 0):
+            first_overdue = self.staff_tasks.filter(status__in=["open", "in_progress"], due_date__lt=today).first()
+            if first_overdue:
+                action_label = _("Выполнить задачу: %s") % first_overdue.title
+            else:
+                action_label = _("Выполнить просроченные задачи")
             alerts.append(
                 {
                     "level": "danger",
                     "title": _("Есть просроченные задачи"),
                     "message": _("Просроченных задач: %(count)s.") % {"count": self.health_overdue_tasks_count},
+                    "action_label": action_label,
+                    "action_url": "#overview",
                 }
             )
+
+        # Check inactivity 30+ days
+        if self.workflow_stage not in ["closed", "decision_received"]:
+            latest_act = self.activities.exclude(event_type="client_viewed").order_by("-created_at").first()
+            last_action_date = latest_act.created_at.date() if latest_act else self.created_at.date()
+            if last_action_date < today - timedelta(days=30):
+                alerts.append(
+                    {
+                        "level": "warning",
+                        "title": _("Бездействие по делу более 30 дней"),
+                        "message": _("Последнее значимое действие было %(days)s дней назад (%(date)s).") % {
+                            "days": (today - last_action_date).days,
+                            "date": last_action_date.strftime("%d.%m.%Y"),
+                        },
+                        "action_label": _("Связаться с клиентом"),
+                        "action_url": "#history",
+                    }
+                )
 
         return alerts
 
@@ -1088,6 +1246,35 @@ class Client(SoftDeleteModel):
             ]
             open_tasks_count = len(open_tasks_list)
             overdue_tasks = sum(1 for task in open_tasks_list if task.due_date and task.due_date < today)
+        main_issue = {
+            "title": _("Нет критических проблем"),
+            "message": _("Все процессы идут по плану."),
+            "level": "success",
+        }
+        next_action = {
+            "label": _("Ожидать действий от клиента или ведомства"),
+            "url": "",
+            "note": "",
+        }
+
+        if alerts:
+            level_priority = {"danger": 3, "warning": 2, "info": 1}
+            sorted_alerts = sorted(alerts, key=lambda a: level_priority.get(a.get("level"), 0), reverse=True)
+            alert = sorted_alerts[0]
+            main_issue = {
+                "title": alert.get("title", ""),
+                "message": alert.get("message", ""),
+                "level": alert.get("level", "info"),
+            }
+            action_label = alert.get("action_label", "")
+            if str(alert.get("title")) == str(_("Новая подача требует проверки дела")):
+                action_label = _("Проверить подачу")
+            next_action = {
+                "label": action_label,
+                "url": alert.get("action_url", ""),
+                "note": alert.get("message", ""),
+            }
+
         return {
             "stage_label": self.get_workflow_stage_display(),
             "alerts": alerts,
@@ -1095,4 +1282,6 @@ class Client(SoftDeleteModel):
             "open_tasks_count": open_tasks_count,
             "overdue_tasks_count": overdue_tasks,
             "automatic_checks": self.get_automatic_checks(document_status_list=document_status_list),
+            "main_issue": main_issue,
+            "next_action": next_action,
         }

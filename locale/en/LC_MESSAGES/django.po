@@ -758,7 +758,7 @@ msgstr "There are less than 30 days left until the end of your stay."
 #: .\clients\templates\clients\partials\document_checklist.html:357
 #: .\clients\views\documents.py:336
 msgid "Проверить"
-msgstr "Verify"
+msgstr "Review"
 
 #: .\clients\models\client.py:641
 msgid "Есть OCR-данные без подтверждения"
@@ -6102,7 +6102,7 @@ msgstr "Package is ready"
 #: .\clients\templates\clients\onboarding\start.html:64
 #: .\clients\templates\clients\onboarding\start_contact.html:110
 msgid "Подано"
-msgstr "Create"
+msgstr "Submitted"
 
 #: .\clients\templates\clients\onboarding\start.html:100
 #: .\clients\templates\clients\onboarding\start_contact.html:186
@@ -7854,7 +7854,7 @@ msgstr "Create submission purpose"
 #: .\clients\templates\clients\tasks_list.html:4
 #: .\clients\templates\clients\tasks_list.html:5
 msgid "Центр задач"
-msgstr "Task Center"
+msgstr "Task center"
 
 #: .\clients\templates\clients\tasks_list.html:6
 msgid "Открытые и просроченные задачи сотрудников по клиентским делам."
@@ -10548,6 +10548,257 @@ msgstr ""
 
 msgid "Фото/скан подтверждения подачи на карту пребывания"
 msgstr "Photo/scan of residence card application confirmation"
+
+msgid ""
+"Data złożenia nie może być w przyszłości. / Дата подачи не может быть в "
+"будущем."
+msgstr "The submission date cannot be in the future."
+
+msgid "Подтверждено %(count)s документов, ожидающих проверки."
+msgstr "Confirmed %(count)s documents awaiting review."
+
+msgid "Все активные документы уже были проверены."
+msgstr "All active documents have already been reviewed."
+
+msgid ""
+"Будут подтверждены только активные документы, ожидающие проверки. "
+"Отклонённые, архивные и уже проверенные документы не изменятся. Продолжить?"
+msgstr ""
+"Only active documents awaiting review will be confirmed. Rejected, archived,"
+" and already reviewed documents will not change. Continue?"
+
+msgid "Подтверждено документов:"
+msgstr "Documents confirmed:"
+
+msgid "Подтвердить ожидающие документы"
+msgstr "Confirm pending documents"
+
+msgid "Новая подача"
+msgstr "New application"
+
+msgid "Новое заявление на карту пребывания"
+msgstr "New residence card application"
+
+msgid "Нужно уточнить"
+msgstr "Needs clarification"
+
+msgid "Не подано"
+msgstr "Not submitted"
+
+msgid ""
+"Если новое заявление уже подано или мы подключились к делу после подачи, "
+"укажите это здесь. Так сотрудник не будет просить готовить подачу заново и "
+"сможет корректно вести напоминания."
+msgstr ""
+"If the new application has already been submitted, or we joined the case "
+"after submission, indicate it here. This prevents staff from asking you to "
+"prepare a new filing again and keeps reminders accurate."
+
+msgid "Проверьте данные о новой подаче."
+msgstr "Check the new application details."
+
+msgid "Вы уже подали новое заявление?"
+msgstr "Have you already submitted a new application?"
+
+msgid "Ещё не подано"
+msgstr "Not submitted yet"
+
+msgid "Подано или дело уже идёт после подачи"
+msgstr "Submitted or already in progress after submission"
+
+msgid "Не знаю / нужна помощь"
+msgstr "I do not know / need help"
+
+msgid "Номер дела, если есть"
+msgstr "Case number, if available"
+
+msgid "Фото / PDF подтверждения"
+msgstr "Photo / PDF confirmation"
+
+msgid "Подтверждение уже загружено."
+msgstr "Confirmation has already been uploaded."
+
+msgid "Например: подано через MOS, номер дела ещё не пришёл."
+msgstr "For example: submitted through MOS, case number has not arrived yet."
+
+msgid "Сохранить информацию о подаче"
+msgstr "Save application information"
+
+msgid ""
+"Изменения по этому этапу уже закрыты. Если нужно обновить данные, напишите "
+"специалисту."
+msgstr ""
+"Changes for this stage are closed. If you need to update details, contact "
+"your specialist."
+
+msgid "Новая подача требует проверки дела"
+msgstr "New application requires case review"
+
+msgid ""
+"Клиент указал номер дела в блоке новой подачи, но основной номер дела в "
+"карточке пуст. Перенесите номер или проверьте присоединение к делу."
+msgstr ""
+"The client entered a case number in the new application block, but the main "
+"case number in the client card is empty. Copy the number or check whether "
+"the application should be joined to the existing case."
+
+msgid ""
+"Клиент сообщил о новой подаче на карту пребывания, но номер дела ещё не "
+"заполнен. Если клиент уже был на отпечатках, проверьте присоединение к делу."
+msgstr ""
+"The client reported a new residence card application, but the case number is"
+" not filled in yet. If the client has already given fingerprints, check "
+"whether the application should be joined to the existing case."
+
+msgid "Проверить подачу"
+msgstr "Review submission"
+
+msgid "Клиенты с новой подачей без основного номера дела"
+msgstr "Clients with a new application and no main case number"
+
+msgid "Клиент не уверен"
+msgstr "Client is not sure"
+
+msgid ""
+"Номер дела не указан; если были отпечатки, проверьте присоединение к делу"
+msgstr ""
+"Case number is missing; if fingerprints were already given, check joining to"
+" the existing case"
+
+msgid "Новая подача без основного номера"
+msgstr "New submission without the main case number"
+
+msgid "Рабочий день"
+msgstr "Workday"
+
+msgid "Операционный список действий на сегодня"
+msgstr "Operational action list for today"
+
+msgid "Что требует внимания сегодня, %(date)s."
+msgstr "What needs attention today, %(date)s."
+
+msgid "Всего действий"
+msgstr "Total actions"
+
+msgid "По доступным клиентам и открытым событиям."
+msgstr "Across accessible clients and open events."
+
+msgid "Есть события для проверки"
+msgstr "There are items to review"
+
+msgid ""
+"Откройте раздел ниже, проверьте детали и закройте следующий шаг в карточке "
+"клиента."
+msgstr ""
+"Open the section below, review the details, and close the next step in the "
+"client card."
+
+msgid "На сегодня критичных действий нет"
+msgstr "No critical actions for today"
+
+msgid ""
+"Новые документы, оплаты, просроченные задачи и подачи без номера появятся "
+"здесь автоматически."
+msgstr ""
+"New documents, payments, overdue tasks, and submissions without a number "
+"will appear here automatically."
+
+msgid "+ %(count)s ещё"
+msgstr "+ %(count)s more"
+
+msgid "Открыть полный список"
+msgstr "Open full list"
+
+msgid "Сейчас нет событий в этом разделе."
+msgstr "There are no items in this section right now."
+
+msgid "ZUS RCA"
+msgstr "ZUS RCA"
+
+msgid "Запросить"
+msgstr "Request"
+
+msgid "подтверждение загружено"
+msgstr "confirmation uploaded"
+
+msgid "нет подтверждения"
+msgstr "no confirmation"
+
+msgid "номер есть в блоке подачи"
+msgstr "number is present in the submission block"
+
+msgid "После отпечатков без решения"
+msgstr "After fingerprints without a decision"
+
+msgid "%(days)s дней после отпечатков"
+msgstr "%(days)s days after fingerprints"
+
+msgid "Проверить статус"
+msgstr "Check status"
+
+msgid "срок: %(date)s"
+msgstr "due: %(date)s"
+
+msgid "к оплате: %(amount)s PLN"
+msgstr "due: %(amount)s PLN"
+
+msgid "Документы на проверку"
+msgstr "Documents to review"
+
+msgid "Новые загрузки и OCR-данные, которые сотрудник ещё не подтвердил."
+msgstr "New uploads and OCR data that staff have not confirmed yet."
+
+msgid "Клиенты, у которых ещё не закрыт обязательный чеклист."
+msgstr "Clients whose required checklist is still incomplete."
+
+msgid "Дела после отпечатков, где не хватает актуальных ZUS RCA."
+msgstr "Cases after fingerprints that are missing current ZUS RCA documents."
+
+msgid "Новая подача без номера дела"
+msgstr "New submission without a case number"
+
+msgid "Клиент сообщил о подаче, но основной номер дела в карточке ещё пуст."
+msgstr ""
+"The client reported a submission, but the main case number in the card is "
+"still empty."
+
+msgid "Прошло больше 90 дней после отпечатков, решения в карточке нет."
+msgstr ""
+"More than 90 days have passed since fingerprints, and there is no decision "
+"in the card."
+
+msgid "Просроченные задачи"
+msgstr "Overdue tasks"
+
+msgid "Открытые задачи сотрудников с прошедшим сроком."
+msgstr "Open staff tasks with a past due date."
+
+msgid "Просроченные или частично оплаченные счета."
+msgstr "Overdue or partially paid invoices."
+
+msgid "Нет открытой проблемы"
+msgstr "No open issue"
+
+msgid "Автоматические проверки не требуют действий."
+msgstr "Automatic checks do not require action."
+
+msgid "Контролировать текущий этап"
+msgstr "Monitor the current stage"
+
+msgid "Открыть карточку"
+msgstr "Open card"
+
+msgid "Детальные действия доступны в блоке рисков."
+msgstr "Detailed actions are available in the risks block."
+
+msgid "Проверить дело"
+msgstr "Review case"
+
+msgid "Главная проблема"
+msgstr "Main issue"
+
+msgid "Следующее действие"
+msgstr "Next action"
 
 #~ msgid "Вы уверены, что хотите разослать это сообщение?"
 #~ msgstr "Are you sure you want to send this message?"

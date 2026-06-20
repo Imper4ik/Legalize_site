@@ -43,6 +43,7 @@ from clients.views.schedule_views import fingerprints_schedule_view
 from clients.views.staff_views import *  # noqa: F403
 from clients.views.tasks import *  # noqa: F403
 from clients.views.testcenter import testcenter_view
+from clients.views.workday import WorkdayView
 
 enable_token_link_access()
 

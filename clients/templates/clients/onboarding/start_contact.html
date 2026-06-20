@@ -58,83 +58,204 @@
 
     <div class="case-timeline-wrapper">
       <div class="case-timeline-progress-track">
-        <div class="case-timeline-progress-fill" style="width: {% widthratio case_step|add:'-1' 5 100 %}%;"></div>
+        <div class="case-timeline-progress-fill" style="width: {% widthratio case_step|add:'-1' 9 100 %}%;"></div>
       </div>
 
       <div class="case-timeline-steps">
-        <!-- Step 1: Анкета -->
+        <!-- Step 1: Цель -->
         <div class="case-timeline-step-item {% if case_step == 1 %}active{% elif case_step > 1 %}completed{% endif %}">
           <div class="case-timeline-node">
-            {% if case_step > 1 %}
-              <i class="bi bi-check-lg"></i>
-            {% else %}
-              <i class="bi bi-file-earmark-text"></i>
-            {% endif %}
+            {% if case_step > 1 %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-flag"></i>{% endif %}
+          </div>
+          <div class="case-timeline-label">{% trans "Цель" %}</div>
+        </div>
+
+        <!-- Step 2: Анкета -->
+        <div class="case-timeline-step-item {% if case_step == 2 %}active{% elif case_step > 2 %}completed{% endif %}">
+          <div class="case-timeline-node">
+            {% if case_step > 2 %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-file-earmark-text"></i>{% endif %}
           </div>
           <div class="case-timeline-label">{% trans "Анкета" %}</div>
         </div>
 
-        <!-- Step 2: Проверка -->
-        <div class="case-timeline-step-item {% if case_step == 2 %}active{% elif case_step > 2 %}completed{% endif %}">
+        <!-- Step 3: Документы -->
+        <div class="case-timeline-step-item {% if case_step == 3 %}active{% elif case_step > 3 %}completed{% endif %}">
           <div class="case-timeline-node">
-            {% if case_step > 2 %}
-              <i class="bi bi-check-lg"></i>
-            {% else %}
-              <i class="bi bi-clipboard2-check"></i>
-            {% endif %}
+            {% if case_step > 3 %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-upload"></i>{% endif %}
+          </div>
+          <div class="case-timeline-label">{% trans "Документы" %}</div>
+        </div>
+
+        <!-- Step 4: Проверка -->
+        <div class="case-timeline-step-item {% if case_step == 4 %}active{% elif case_step > 4 %}completed{% endif %}">
+          <div class="case-timeline-node">
+            {% if case_step > 4 %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-clipboard2-check"></i>{% endif %}
           </div>
           <div class="case-timeline-label">{% trans "Проверка" %}</div>
         </div>
 
-        <!-- Step 3: Пакет готов -->
-        <div class="case-timeline-step-item {% if case_step == 3 %}active{% elif case_step > 3 %}completed{% endif %}">
-          <div class="case-timeline-node">
-            {% if case_step > 3 %}
-              <i class="bi bi-check-lg"></i>
-            {% else %}
-              <i class="bi bi-folder-check"></i>
-            {% endif %}
-          </div>
-          <div class="case-timeline-label">{% trans "Пакет готов" %}</div>
-        </div>
-
-        <!-- Step 4: Подано -->
-        <div class="case-timeline-step-item {% if case_step == 4 %}active{% elif case_step > 4 %}completed{% endif %}">
-          <div class="case-timeline-node">
-            {% if case_step > 4 %}
-              <i class="bi bi-check-lg"></i>
-            {% else %}
-              <i class="bi bi-send-check"></i>
-            {% endif %}
-          </div>
-          <div class="case-timeline-label">{% trans "Подано в ужонд" %}</div>
-        </div>
-
-        <!-- Step 5: Отпечатки -->
+        <!-- Step 5: Оплата -->
         <div class="case-timeline-step-item {% if case_step == 5 %}active{% elif case_step > 5 %}completed{% endif %}">
           <div class="case-timeline-node">
-            {% if case_step > 5 %}
-              <i class="bi bi-check-lg"></i>
-            {% else %}
-              <i class="bi bi-fingerprint"></i>
-            {% endif %}
+            {% if case_step > 5 %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-credit-card"></i>{% endif %}
           </div>
-          <div class="case-timeline-label">{% trans "Ожидание отпечатков" %}</div>
+          <div class="case-timeline-label">{% trans "Оплата" %}</div>
         </div>
 
-        <!-- Step 6: Децизия -->
+        <!-- Step 6: Подготовка -->
         <div class="case-timeline-step-item {% if case_step == 6 %}active{% elif case_step > 6 %}completed{% endif %}">
           <div class="case-timeline-node">
-            {% if case_step > 6 %}
-              <i class="bi bi-award-fill"></i>
-            {% else %}
-              <i class="bi bi-award"></i>
-            {% endif %}
+            {% if case_step > 6 %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-folder-check"></i>{% endif %}
           </div>
-          <div class="case-timeline-label">{% trans "Ожидание решения" %}</div>
+          <div class="case-timeline-label">{% trans "Подготовка" %}</div>
+        </div>
+
+        <!-- Step 7: Подача -->
+        <div class="case-timeline-step-item {% if case_step == 7 %}active{% elif case_step > 7 %}completed{% endif %}">
+          <div class="case-timeline-node">
+            {% if case_step > 7 %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-send-check"></i>{% endif %}
+          </div>
+          <div class="case-timeline-label">{% trans "Подано" %}</div>
+        </div>
+
+        <!-- Step 8: Отпечатков -->
+        <div class="case-timeline-step-item {% if case_step == 8 %}active{% elif case_step > 8 %}completed{% endif %}">
+          <div class="case-timeline-node">
+            {% if case_step > 8 %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-fingerprint"></i>{% endif %}
+          </div>
+          <div class="case-timeline-label">{% trans "Отпечатки" %}</div>
+        </div>
+
+        <!-- Step 9: Решение -->
+        <div class="case-timeline-step-item {% if case_step == 9 %}active{% elif case_step > 9 %}completed{% endif %}">
+          <div class="case-timeline-node">
+            {% if case_step > 9 %}<i class="bi bi-check-lg"></i>{% else %}<i class="bi bi-hourglass-split"></i>{% endif %}
+          </div>
+          <div class="case-timeline-label">{% trans "Решение" %}</div>
+        </div>
+
+        <!-- Step 10: Готово -->
+        <div class="case-timeline-step-item {% if case_step == 10 %}active{% elif case_step > 10 %}completed{% endif %}">
+          <div class="case-timeline-node">
+            {% if case_step > 9 %}<i class="bi bi-award-fill"></i>{% else %}<i class="bi bi-award"></i>{% endif %}
+          </div>
+          <div class="case-timeline-label">{% trans "Карта" %}</div>
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Блок «Что сейчас требуется сделать» -->
+<div class="card shadow-sm border-0 mb-4 premium-next-steps-card">
+  <div class="card-body p-4">
+    <h5 class="fw-bold mb-3 text-primary">
+      <i class="bi bi-list-task me-2"></i>{% trans "Что сейчас требуется сделать" %}
+    </h5>
+
+    <ul class="list-group list-group-flush">
+      <!-- 1. Заполнить контактные данные -->
+      {% if not contact_complete %}
+        <li class="list-group-item px-0 py-3 d-flex align-items-start gap-3">
+          <i class="bi bi-exclamation-circle-fill text-warning fs-5"></i>
+          <div>
+            <div class="fw-bold">{% trans "Заполнить контактные данные" %}</div>
+            <div class="text-muted small">{% trans "Укажите имя, фамилию, email и телефон в форме внизу страницы." %}</div>
+            <a href="#contactEditForm" class="btn btn-sm btn-outline-warning mt-2">{% trans "Перейти к заполнению" %}</a>
+          </div>
+        </li>
+      {% endif %}
+
+      <!-- 2. Внести исправления в анкету -->
+      {% if mos_data.status == 'needs_correction' %}
+        <li class="list-group-item px-0 py-3 d-flex align-items-start gap-3">
+          <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+          <div>
+            <div class="fw-bold">{% trans "Исправить анкету" %}</div>
+            <div class="text-muted small">{% trans "Сотрудник попросил исправить данные в анкете:" %} {% if mos_data.correction_message %}{{ mos_data.correction_message }}{% else %}{% trans "Проверьте комментарии сотрудника." %}{% endif %}</div>
+            <a href="{% url 'clients:onboarding_digital_access' session.token_hash %}" class="btn btn-sm btn-warning mt-2">{% trans "Открыть анкету" %}</a>
+          </div>
+        </li>
+      {% endif %}
+
+      <!-- 3. Заполнить профиль (паспорт или информация о пребывании) -->
+      {% if contact_complete and not passport_complete or not travel_complete %}
+        <li class="list-group-item px-0 py-3 d-flex align-items-start gap-3">
+          <i class="bi bi-person-bounding-box text-warning fs-5"></i>
+          <div>
+            <div class="fw-bold">{% trans "Заполнить личный профиль" %}</div>
+            <div class="text-muted small">{% trans "Для подготовки документов требуется заполнить разделы паспорта и информации о пребывании." %}</div>
+            <a href="{% url 'clients:onboarding_digital_access' session.token_hash %}" class="btn btn-sm btn-outline-primary mt-2">{% trans "Заполнить профиль" %}</a>
+          </div>
+        </li>
+      {% endif %}
+
+      <!-- 4. Указать номер дела -->
+      {% if missing_case_number %}
+        <li class="list-group-item px-0 py-3 d-flex align-items-start gap-3">
+          <i class="bi bi-file-earmark-diff text-danger fs-5"></i>
+          <div>
+            <div class="fw-bold">{% trans "Указать номер дела" %}</div>
+            <div class="text-muted small">{% trans "Вы указали, что заявление на карту подано, но не ввели номер дела. Пожалуйста, укажите его, чтобы мы могли отслеживать статус." %}</div>
+            <a href="#newCardApplicationBlock" class="btn btn-sm btn-outline-danger mt-2">{% trans "Ввести номер дела" %}</a>
+          </div>
+        </li>
+      {% endif %}
+
+      <!-- 5. Загрузить недостающие обязательные документы -->
+      {% if docs_required_pending_count > 0 %}
+        <li class="list-group-item px-0 py-3 d-flex align-items-start gap-3">
+          <i class="bi bi-file-earmark-arrow-up text-warning fs-5"></i>
+          <div>
+            <div class="fw-bold">{% trans "Загрузить недостающие документы" %}</div>
+            <div class="text-muted small">{% trans "Необходимо загрузить обязательные документы для продолжения дела." %}</div>
+            <ul class="mb-0 mt-1 small">
+              {% for doc in checklist %}
+                {% if doc.is_required and not doc.is_uploaded %}
+                  <li>{{ doc.label }}</li>
+                {% endif %}
+              {% endfor %}
+            </ul>
+            <a href="#documents" class="btn btn-sm btn-outline-primary mt-2">{% trans "Перейти к документам" %}</a>
+          </div>
+        </li>
+      {% endif %}
+
+      <!-- 6. Перезагрузить отклоненные документы -->
+      {% if rejected_count > 0 %}
+        <li class="list-group-item px-0 py-3 d-flex align-items-start gap-3">
+          <i class="bi bi-x-circle-fill text-danger fs-5"></i>
+          <div>
+            <div class="fw-bold">{% trans "Перезагрузить отклонённые документы" %}</div>
+            <div class="text-muted small">{% trans "Некоторые документы были отклонены сотрудником после проверки. Пожалуйста, загрузите их корректные копии:" %}</div>
+            <ul class="mb-0 mt-1 small text-danger">
+              {% for doc in checklist %}
+                {% if doc.is_rejected %}
+                  <li>
+                    <strong>{{ doc.label }}</strong>
+                    {% if doc.rejection_reason %}
+                      - {% trans "Причина:" %} {{ doc.rejection_reason }}
+                    {% endif %}
+                  </li>
+                {% endif %}
+              {% endfor %}
+            </ul>
+            <a href="#documents" class="btn btn-sm btn-outline-danger mt-2">{% trans "Загрузить заново" %}</a>
+          </div>
+        </li>
+      {% endif %}
+
+      <!-- Fallback text: все готово -->
+      {% if contact_complete and not missing_case_number and docs_required_pending_count == 0 and rejected_count == 0 and passport_complete and travel_complete and mos_data.status != 'needs_correction' %}
+        <li class="list-group-item px-0 py-3 d-flex align-items-center gap-3 border-0">
+          <i class="bi bi-shield-check text-success fs-4"></i>
+          <div>
+            <div class="fw-bold text-success">{% trans "Всё готово!" %}</div>
+            <div class="text-muted small">{% trans "В данный момент от вас не требуется никаких действий. Мы сообщим, если понадобится что-то ещё." %}</div>
+          </div>
+        </li>
+      {% endif %}
+    </ul>
   </div>
 </div>
 
@@ -252,6 +373,8 @@
     </div>
   </div>
 </div>
+
+{% include "clients/onboarding/partials/new_card_application_block.html" %}
 
 
 
@@ -425,6 +548,33 @@
                           {% if doc.is_required %}<span class="badge bg-danger-subtle text-danger font-monospace" style="font-size: 0.65rem; border: 1px solid rgba(220,53,69,0.15)">{% trans "Нужно" %}</span>{% endif %}
                         </div>
                         {% if doc.source_hint %}<div class="small text-muted mt-1" style="font-size: 0.8rem;">{{ doc.source_hint }}</div>{% endif %}
+                        {% if doc.is_rejected and doc.rejection_reason %}
+                          <div class="text-danger small mt-1" style="font-size: 0.8rem;">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            <strong>{% trans "Причина отклонения:" %}</strong> {{ doc.rejection_reason }}
+                          </div>
+                        {% endif %}
+                        {% if doc.code == 'passport' or doc.code == 'employment_contract' or doc.code == 'zus_rca_or_insurance' %}
+                          <div class="mt-2">
+                            <button class="btn btn-sm btn-link text-decoration-none p-0 text-muted" style="font-size: 0.8rem;" type="button" data-bs-toggle="collapse" data-bs-target="#helperGuide-1-{{ doc.code|slugify }}">
+                              <i class="bi bi-info-circle me-1"></i> {% trans "Подсказка по документу" %}
+                            </button>
+                            <div class="collapse mt-1" id="helperGuide-1-{{ doc.code|slugify }}">
+                              <div class="card card-body bg-light border-0 p-3 text-start" style="font-size: 0.8rem; line-height: 1.4;">
+                                {% if doc.code == 'passport' %}
+                                  <strong>{% trans "Как получить:" %}</strong> {% trans "Сделайте скан-копию всех страниц заграничного паспорта (все страницы с визами, штампами и отметками)." %}<br>
+                                  <strong class="text-danger">{% trans "Частые ошибки:" %}</strong> {% trans "Размытое изображение, обрезанные углы страниц, блики от вспышки или отсутствующие страницы." %}
+                                {% elif doc.code == 'employment_contract' %}
+                                  <strong>{% trans "Как получить:" %}</strong> {% trans "Предоставьте оригинал действующего трудового договора (Umowa o pracę / Umowa zlecenie), подписанный обеими сторонами." %}<br>
+                                  <strong class="text-danger">{% trans "Частые ошибки:" %}</strong> {% trans "Подпись только с одной стороны, отсутствие приложений или дополнительных соглашений, истекший срок действия договора." %}
+                                {% elif doc.code == 'zus_rca_or_insurance' %}
+                                  <strong>{% trans "Как получить:" %}</strong> {% trans "Запросите у своего работодателя / бухгалтера ежемесячную декларацию ZUS RCA за последний отработанный месяц вместе с подтверждением отправки (UPO)." %}<br>
+                                  <strong class="text-danger">{% trans "Частые ошибки:" %}</strong> {% trans "Загрузка общей декларации ZUS DRA вместо персональной ZUS RCA, отсутствие UPO, устаревшие данные за прошлые периоды." %}
+                                {% endif %}
+                              </div>
+                            </div>
+                          </div>
+                        {% endif %}
                       </div>
                       <div class="text-end flex-shrink-0">
                         <div class="d-flex align-items-center gap-2 justify-content-end">
@@ -434,7 +584,15 @@
                             </button>
                           {% endif %}
                           {% if doc.is_uploaded %}
-                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.75rem;">{% trans "Загружено" %}</span>
+                            {% if doc.is_expired %}
+                              <span class="badge bg-danger" style="font-size: 0.75rem;">{% trans "Истёк" %}</span>
+                            {% elif doc.is_verified %}
+                              <span class="badge bg-success" style="font-size: 0.75rem;">{% trans "Принят" %}</span>
+                            {% elif doc.is_rejected %}
+                              <span class="badge bg-danger" style="font-size: 0.75rem;">{% trans "Отклонён" %}</span>
+                            {% else %}
+                              <span class="badge bg-warning text-dark" style="font-size: 0.75rem;">{% trans "Ожидает проверки" %}</span>
+                            {% endif %}
                             {% if doc.ocr_status %}
                               {% if doc.ocr_status == 'pending' %}
                                 <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Проверяем файл..." %}</span>
@@ -446,7 +604,7 @@
                             {% endif %}
                             <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
                           {% else %}
-                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Нужно загрузить" %}</span>
+                            <span class="badge bg-secondary" style="font-size: 0.75rem;">{% trans "Не загружен (ожидается)" %}</span>
                             {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}"><i class="bi bi-upload"></i> {% trans "Загрузить" %}</button>{% endif %}
                           {% endif %}
                         </div>
@@ -478,6 +636,33 @@
                                   {% if doc.is_required %}<span class="badge bg-danger-subtle text-danger font-monospace" style="font-size: 0.65rem; border: 1px solid rgba(220,53,69,0.15)">{% trans "Нужно" %}</span>{% endif %}
                                 </div>
                                 {% if doc.source_hint %}<div class="small text-muted mt-1" style="font-size: 0.8rem;">{{ doc.source_hint }}</div>{% endif %}
+                                {% if doc.is_rejected and doc.rejection_reason %}
+                                  <div class="text-danger small mt-1" style="font-size: 0.8rem;">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                    <strong>{% trans "Причина отклонения:" %}</strong> {{ doc.rejection_reason }}
+                                  </div>
+                                {% endif %}
+                                {% if doc.code == 'passport' or doc.code == 'employment_contract' or doc.code == 'zus_rca_or_insurance' %}
+                                  <div class="mt-2">
+                                    <button class="btn btn-sm btn-link text-decoration-none p-0 text-muted" style="font-size: 0.8rem;" type="button" data-bs-toggle="collapse" data-bs-target="#helperGuide-2-{{ doc.code|slugify }}">
+                                      <i class="bi bi-info-circle me-1"></i> {% trans "Подсказка по документу" %}
+                                    </button>
+                                    <div class="collapse mt-1" id="helperGuide-2-{{ doc.code|slugify }}">
+                                      <div class="card card-body bg-light border-0 p-3 text-start" style="font-size: 0.8rem; line-height: 1.4;">
+                                        {% if doc.code == 'passport' %}
+                                          <strong>{% trans "Как получить:" %}</strong> {% trans "Сделайте скан-копию всех страниц заграничного паспорта (все страницы с визами, штампами и отметками)." %}<br>
+                                          <strong class="text-danger">{% trans "Частые ошибки:" %}</strong> {% trans "Размытое изображение, обрезанные углы страниц, блики от вспышки или отсутствующие страницы." %}
+                                        {% elif doc.code == 'employment_contract' %}
+                                          <strong>{% trans "Как получить:" %}</strong> {% trans "Предоставьте оригинал действующего трудового договора (Umowa o pracę / Umowa zlecenie), подписанный обеими сторонами." %}<br>
+                                          <strong class="text-danger">{% trans "Частые ошибки:" %}</strong> {% trans "Подпись только с одной стороны, отсутствие приложений или дополнительных соглашений, истекший срок действия договора." %}
+                                        {% elif doc.code == 'zus_rca_or_insurance' %}
+                                          <strong>{% trans "Как получить:" %}</strong> {% trans "Запросите у своего работодателя / бухгалтера ежемесячную декларацию ZUS RCA за последний отработанный месяц вместе с подтверждением отправки (UPO)." %}<br>
+                                          <strong class="text-danger">{% trans "Частые ошибки:" %}</strong> {% trans "Загрузка общей декларации ZUS DRA вместо персональной ZUS RCA, отсутствие UPO, устаревшие данные за прошлые периоды." %}
+                                        {% endif %}
+                                      </div>
+                                    </div>
+                                  </div>
+                                {% endif %}
                               </div>
                               <div class="text-end flex-shrink-0">
                                 <div class="d-flex align-items-center gap-2 justify-content-end">
@@ -487,7 +672,15 @@
                                     </button>
                                   {% endif %}
                                   {% if doc.is_uploaded %}
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.75rem;">{% trans "Загружено" %}</span>
+                                    {% if doc.is_expired %}
+                                      <span class="badge bg-danger" style="font-size: 0.75rem;">{% trans "Истёк" %}</span>
+                                    {% elif doc.is_verified %}
+                                      <span class="badge bg-success" style="font-size: 0.75rem;">{% trans "Принят" %}</span>
+                                    {% elif doc.is_rejected %}
+                                      <span class="badge bg-danger" style="font-size: 0.75rem;">{% trans "Отклонён" %}</span>
+                                    {% else %}
+                                      <span class="badge bg-warning text-dark" style="font-size: 0.75rem;">{% trans "Ожидает проверки" %}</span>
+                                    {% endif %}
                                     {% if doc.ocr_status %}
                                       {% if doc.ocr_status == 'pending' %}
                                         <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Проверяем файл..." %}</span>
@@ -504,7 +697,7 @@
                                       </a>
                                     {% endif %}
                                   {% else %}
-                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Нужно загрузить" %}</span>
+                                    <span class="badge bg-secondary" style="font-size: 0.75rem;">{% trans "Не загружен (ожидается)" %}</span>
                                     {% if allow_doc_edit %}
                                       {% if doc.code == 'passport' %}
                                         <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">
@@ -592,6 +785,33 @@
                         {% if doc.is_required %}<span class="badge bg-danger-subtle text-danger font-monospace" style="font-size: 0.65rem; border: 1px solid rgba(220,53,69,0.15)">{% trans "Нужно" %}</span>{% endif %}
                       </div>
                       {% if doc.source_hint %}<div class="small text-muted mt-1" style="font-size: 0.8rem;">{{ doc.source_hint }}</div>{% endif %}
+                      {% if doc.is_rejected and doc.rejection_reason %}
+                        <div class="text-danger small mt-1" style="font-size: 0.8rem;">
+                          <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                          <strong>{% trans "Причина отклонения:" %}</strong> {{ doc.rejection_reason }}
+                        </div>
+                      {% endif %}
+                      {% if doc.code == 'passport' or doc.code == 'employment_contract' or doc.code == 'zus_rca_or_insurance' %}
+                        <div class="mt-2">
+                          <button class="btn btn-sm btn-link text-decoration-none p-0 text-muted" style="font-size: 0.8rem;" type="button" data-bs-toggle="collapse" data-bs-target="#helperGuide-3-{{ doc.code|slugify }}">
+                            <i class="bi bi-info-circle me-1"></i> {% trans "Подсказка по документу" %}
+                          </button>
+                          <div class="collapse mt-1" id="helperGuide-3-{{ doc.code|slugify }}">
+                            <div class="card card-body bg-light border-0 p-3 text-start" style="font-size: 0.8rem; line-height: 1.4;">
+                              {% if doc.code == 'passport' %}
+                                <strong>{% trans "Как получить:" %}</strong> {% trans "Сделайте скан-копию всех страниц заграничного паспорта (все страницы с визами, штампами и отметками)." %}<br>
+                                <strong class="text-danger">{% trans "Частые ошибки:" %}</strong> {% trans "Размытое изображение, обрезанные углы страниц, блики от вспышки или отсутствующие страницы." %}
+                              {% elif doc.code == 'employment_contract' %}
+                                <strong>{% trans "Как получить:" %}</strong> {% trans "Предоставьте оригинал действующего трудового договора (Umowa o pracę / Umowa zlecenie), подписанный обеими сторонами." %}<br>
+                                <strong class="text-danger">{% trans "Частые ошибки:" %}</strong> {% trans "Подпись только с одной стороны, отсутствие приложений или дополнительных соглашений, истекший срок действия договора." %}
+                              {% elif doc.code == 'zus_rca_or_insurance' %}
+                                <strong>{% trans "Как получить:" %}</strong> {% trans "Запросите у своего работодателя / бухгалтера ежемесячную декларацию ZUS RCA за последний отработанный месяц вместе с подтверждением отправки (UPO)." %}<br>
+                                <strong class="text-danger">{% trans "Частые ошибки:" %}</strong> {% trans "Загрузка общей декларации ZUS DRA вместо персональной ZUS RCA, отсутствие UPO, устаревшие данные за прошлые периоды." %}
+                              {% endif %}
+                            </div>
+                          </div>
+                        </div>
+                      {% endif %}
                     </div>
                     <div class="text-end flex-shrink-0">
                       <div class="d-flex align-items-center gap-2 justify-content-end">
@@ -601,7 +821,15 @@
                           </button>
                         {% endif %}
                         {% if doc.is_uploaded %}
-                          <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.75rem;">{% trans "Загружено" %}</span>
+                          {% if doc.is_expired %}
+                            <span class="badge bg-danger" style="font-size: 0.75rem;">{% trans "Истёк" %}</span>
+                          {% elif doc.is_verified %}
+                            <span class="badge bg-success" style="font-size: 0.75rem;">{% trans "Принят" %}</span>
+                          {% elif doc.is_rejected %}
+                            <span class="badge bg-danger" style="font-size: 0.75rem;">{% trans "Отклонён" %}</span>
+                          {% else %}
+                            <span class="badge bg-warning text-dark" style="font-size: 0.75rem;">{% trans "Ожидает проверки" %}</span>
+                          {% endif %}
                           {% if doc.ocr_status %}
                             {% if doc.ocr_status == 'pending' %}
                               <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Проверяем файл..." %}</span>
@@ -618,7 +846,7 @@
                             </a>
                           {% endif %}
                         {% else %}
-                          <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Нужно загрузить" %}</span>
+                          <span class="badge bg-secondary" style="font-size: 0.75rem;">{% trans "Не загружен (ожидается)" %}</span>
                           {% if allow_doc_edit %}
                             {% if doc.code == 'passport' %}
                               <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">
@@ -718,22 +946,29 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const newCardStatusInputs = document.querySelectorAll("[data-new-card-status]");
-  const newCardKnownDetails = document.querySelector("[data-new-card-known-details]");
-  const newCardUploadDetails = document.querySelector("[data-new-card-upload-details]");
+  const newCardFieldsContainer = document.querySelector("[data-new-card-fields-container]");
+  const newCardCaseNumberContainer = document.querySelector("[data-new-card-case-number-container]");
   const newCardUnknownHint = document.querySelector("[data-new-card-unknown-hint]");
 
   function syncNewCardApplicationFields() {
     const selected = document.querySelector("[data-new-card-status]:checked");
     const value = selected ? selected.value : "";
-    if (newCardKnownDetails) newCardKnownDetails.classList.toggle("d-none", value !== "yes");
-    if (newCardUploadDetails) newCardUploadDetails.classList.toggle("d-none", value !== "yes" && value !== "unknown");
-    if (newCardUnknownHint) newCardUnknownHint.classList.toggle("d-none", value !== "unknown");
+    if (newCardFieldsContainer) {
+      newCardFieldsContainer.classList.toggle("d-none", value !== "submitted_no_number" && value !== "submitted_with_number");
+    }
+    if (newCardCaseNumberContainer) {
+      newCardCaseNumberContainer.classList.toggle("d-none", value !== "submitted_with_number");
+    }
+    if (newCardUnknownHint) {
+      newCardUnknownHint.classList.toggle("d-none", value !== "unknown");
+    }
   }
 
   newCardStatusInputs.forEach(function (input) {
     input.addEventListener("change", syncNewCardApplicationFields);
   });
   syncNewCardApplicationFields();
+
 
   document.querySelectorAll(".onboarding-upload-form").forEach(function (form) {
     const input = form.querySelector(".onboarding-upload-input");

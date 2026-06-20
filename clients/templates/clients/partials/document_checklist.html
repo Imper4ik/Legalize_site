@@ -86,6 +86,11 @@
             <span class="badge {% if doc.verified %}bg-success{% else %}bg-warning text-dark{% endif %} ms-2">
               {% if doc.verified %}{% translate "Проверен" %}{% else %}{% translate "Ожидает проверки" %}{% endif %}
             </span>
+            {% if doc.rejection_reason and not doc.verified %}
+            <div class="text-danger mt-1 small">
+              <i class="bi bi-exclamation-octagon-fill"></i> <strong>{% translate "Отклонен:" %}</strong> {{ doc.rejection_reason }}
+            </div>
+            {% endif %}
             {% if doc.ocr_name_mismatch %}
             <span class="badge bg-danger ms-2" title="{% translate 'Имя в документе не совпадает с профилем' %}">
               <i class="bi bi-exclamation-triangle"></i> OCR Mismatch
@@ -358,6 +363,16 @@
                 </span>
               </button>
             </form>
+            {% if not doc.verified %}
+            <button type="button" class="btn btn-sm btn-outline-danger reject-document-btn"
+              data-doc-id="{{ doc.id }}"
+              data-reject-url="{% url 'clients:reject_document' doc.id %}"
+              title="{% translate 'Отклонить' %}"
+              data-bs-toggle="modal" data-bs-target="#rejectDocumentModal">
+              <i class="bi bi-x-circle"></i>
+              <span class="d-none d-xl-inline ms-1">{% translate "Отклонить" %}</span>
+            </button>
+            {% endif %}
             <a href="{% url 'clients:document_versions' doc.pk %}" class="btn btn-sm btn-outline-info" title="{% translate 'Versions' %}">
               <i class="fas fa-history"></i>
             </a>

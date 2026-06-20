@@ -197,3 +197,71 @@ class OnboardingStartContactTests(TestCase):
         client.refresh_from_db()
         self.assertEqual(client.first_name, "Existing")
         self.assertEqual(client.email, "existing@example.com")
+    def _png_upload(self, name="confirmation.png"):
+        image = Image.new("RGB", (8, 8), color="white")
+        buffer = BytesIO()
+        image.save(buffer, format="PNG")
+        return SimpleUploadedFile(name, buffer.getvalue(), content_type="image/png")
+
+    def test_new_card_application_block_is_visible(self):
+        _client, token = self._client_with_session()
+
+        from django.utils import translation
+        with translation.override("ru"):
+            response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Новое заявление на карту пребывания")
+        self.assertContains(response, 'name="action" value="new_card_application"')
+        self.assertContains(response, 'name="new_card_application_status"')
+        self.assertContains(response, 'name="new_card_confirmation_file"')
+
+    def test_new_card_application_post_saves_data_and_confirmation_file(self):
+        client, token = self._client_with_session()
+        today = timezone.localdate()
+
+        response = self.client.post(
+            reverse("clients:onboarding_start", kwargs={"token": token}),
+            {
+                "action": "new_card_application",
+                "new_card_application_status": MOSApplicationData.NEW_CARD_STATUS_YES,
+                "new_card_case_number": "WSC-II-123/2026",
+                "new_card_submitted_at": today.isoformat(),
+                "new_card_comment": "Submitted through MOS.",
+                "new_card_confirmation_file": self._png_upload(),
+            },
+        )
+
+        self.assertRedirects(response, reverse("clients:onboarding_start", kwargs={"token": token}))
+        mos_data = MOSApplicationData.objects.get(client=client)
+        self.assertEqual(mos_data.new_residence_card_application_status, MOSApplicationData.NEW_CARD_STATUS_YES)
+        self.assertEqual(str(mos_data.new_residence_card_case_number), "WSC-II-123/2026")
+        self.assertEqual(mos_data.new_residence_card_submitted_at, today)
+        self.assertEqual(mos_data.new_residence_card_comment, "Submitted through MOS.")
+        self.assertTrue(
+            Document.objects.filter(
+                client=client,
+                document_type=DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION.value,
+            ).exists()
+        )
+
+    def test_new_card_application_rejects_future_submission_date(self):
+        client, token = self._client_with_session()
+        future_date = timezone.localdate() + timedelta(days=1)
+
+        from django.utils import translation
+        with translation.override("ru"):
+            response = self.client.post(
+                reverse("clients:onboarding_start", kwargs={"token": token}),
+                {
+                    "action": "new_card_application",
+                    "new_card_application_status": MOSApplicationData.NEW_CARD_STATUS_YES,
+                    "new_card_submitted_at": future_date.isoformat(),
+                },
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Дата подачи не может быть в будущем")
+        mos_data = MOSApplicationData.objects.get(client=client)
+        self.assertEqual(mos_data.new_residence_card_application_status, "")
+        self.assertIsNone(mos_data.new_residence_card_submitted_at)
