@@ -276,8 +276,8 @@ def _handle_new_card_application_post(
         )
 
     _save_new_card_values(mos_data, values)
-    from clients.services.tasks import create_auto_task, close_auto_task
     from clients.models import StaffTask
+    from clients.services.tasks import create_auto_task
     if values.get("status") == NEW_CARD_STATUS_SUBMITTED_NO_NUMBER:
         create_auto_task(session.client, "case_number_missing", title=_("Запросить номер дела у клиента"))
     elif values.get("status") == NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER and values.get("case_number"):

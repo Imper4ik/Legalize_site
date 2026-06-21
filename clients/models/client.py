@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Self, cast
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Count, Q
 from django.urls import reverse
 from django.utils import timezone, translation
@@ -298,15 +298,47 @@ class Client(SoftDeleteModel):
         return f"{self.first_name} {self.last_name}".strip()
 
     def on_archive(self) -> None:
-        if not self.user_id:
+        with transaction.atomic():
+            self._archive_related_case_records()
+            if not self.user_id:
+                return
+
+            from django.contrib.auth import get_user_model
+
+            user = get_user_model().objects.filter(pk=self.user_id).first()
+            if user and not user.is_staff and user.is_active:
+                user.is_active = False
+                user.save(update_fields=["is_active"])
+
+    def on_restore(self) -> None:
+        with transaction.atomic():
+            self._restore_related_case_records()
+
+    def _archive_related_case_records(self) -> None:
+        from .document import Document
+        from .payment import Payment
+        from .reminder import Reminder
+
+        if not self.pk:
             return
 
-        from django.contrib.auth import get_user_model
+        for document in Document.objects.filter(client_id=self.pk).iterator():
+            document.archive()
+        for payment in Payment.objects.filter(client_id=self.pk).iterator():
+            payment.archive()
+        Reminder.objects.filter(client_id=self.pk, is_active=True).update(is_active=False)
 
-        user = get_user_model().objects.filter(pk=self.user_id).first()
-        if user and not user.is_staff and user.is_active:
-            user.is_active = False
-            user.save(update_fields=["is_active"])
+    def _restore_related_case_records(self) -> None:
+        from .document import Document
+        from .payment import Payment
+
+        if not self.pk:
+            return
+
+        for document in Document.all_objects.filter(client_id=self.pk, archived_at__isnull=False).iterator():
+            document.restore()
+        for payment in Payment.all_objects.filter(client_id=self.pk, archived_at__isnull=False).iterator():
+            payment.restore()
 
     @staticmethod
     def normalize_case_number(case_number: str) -> str:
@@ -462,7 +494,11 @@ class Client(SoftDeleteModel):
         for code, name in required_docs:
             documents = docs_map.get(code, [])
             submitted_records = submitted_by_code.get(code, [])
-            has_valid_document = any(doc.computed_status in ("approved", "pending_review") for doc in documents)
+            has_valid_document = any(
+                doc.computed_status in ("approved", "pending_review")
+                and (not check_file_existence or getattr(doc, "file_exists", False))
+                for doc in documents
+            )
             status_list.append(
                 {
                     "code": code,
@@ -481,7 +517,11 @@ class Client(SoftDeleteModel):
             if code in seen_codes:
                 continue
             documents = docs_map.get(code, [])
-            has_valid_document = any(doc.computed_status in ("approved", "pending_review") for doc in documents)
+            has_valid_document = any(
+                doc.computed_status in ("approved", "pending_review")
+                and (not check_file_existence or getattr(doc, "file_exists", False))
+                for doc in documents
+            )
             status_list.append(
                 {
                     "code": code,
@@ -499,7 +539,11 @@ class Client(SoftDeleteModel):
         for code, documents in docs_map.items():
             if code in seen_codes:
                 continue
-            has_valid_document = any(doc.computed_status in ("approved", "pending_review") for doc in documents)
+            has_valid_document = any(
+                doc.computed_status in ("approved", "pending_review")
+                and (not check_file_existence or getattr(doc, "file_exists", False))
+                for doc in documents
+            )
             status_list.append(
                 {
                     "code": code,
@@ -529,7 +573,11 @@ class Client(SoftDeleteModel):
                 for document in docs_map.get(requirement.document_type, [])
                 if getattr(document, "archived_at", None) is None
             ]
-            has_valid_document = any(doc.computed_status in ("approved", "pending_review") for doc in documents)
+            has_valid_document = any(
+                doc.computed_status in ("approved", "pending_review")
+                and (not check_file_existence or getattr(doc, "file_exists", False))
+                for doc in documents
+            )
             status_list.append(
                 {
                     "code": requirement.document_type,
@@ -584,9 +632,9 @@ class Client(SoftDeleteModel):
         # Check if there is an unpaid/partially paid payment
         prefetched_payments = getattr(self, "_prefetched_objects_cache", {}).get("payments")
         if prefetched_payments is not None:
-            has_unpaid_payments = any(p.status in ["unpaid", "partially_paid"] for p in prefetched_payments)
+            has_unpaid_payments = any(p.status in ["pending", "partial"] for p in prefetched_payments)
         else:
-            has_unpaid_payments = self.payments.filter(status__in=["unpaid", "partially_paid"]).exists()
+            has_unpaid_payments = self.payments.filter(status__in=["pending", "partial"]).exists()
 
         if has_unpaid_payments and status in ['approved_by_staff', 'mos_package_ready']:
             return 5  # Оплата услуг
@@ -626,8 +674,8 @@ class Client(SoftDeleteModel):
         return doc_code.replace("_", " ").capitalize()
 
     def get_pending_verification_documents_count(self) -> int:
-        from django.utils import timezone
         from django.db.models import Q
+        from django.utils import timezone
         today = timezone.localdate()
         return self.documents.filter(
             verified=False,
@@ -717,7 +765,7 @@ class Client(SoftDeleteModel):
                     "doc_id": doc.id,
                     "doc_type": doc.document_type,
                 })
-            
+
             if awaiting_docs:
                 doc_name = self.get_document_name_by_code(awaiting_docs[0].document_type)
                 action_label = _("Проверить документ: %s") % doc_name

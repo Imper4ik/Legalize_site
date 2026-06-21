@@ -193,8 +193,8 @@ def verify_all_client_documents(
     send_missing_email: MissingDocumentsSender = send_missing_documents_email,
 ) -> DocumentScenarioResult:
     with transaction.atomic():
-        from django.utils import timezone
         from django.db.models import Q
+        from django.utils import timezone
         today = timezone.localdate()
         updated_count = (
             client.documents.filter(verified=False, archived_at__isnull=True)

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import Any
+
 from django.utils import timezone
 from django.utils.translation import gettext as _
-from clients.models import Client, StaffTask, Document, Payment
+
+from clients.models import Client, Document, Payment, StaffTask
+
 
 def create_auto_task(
     client: Client,
@@ -17,6 +19,9 @@ def create_auto_task(
     due_date: date | None = None,
 ) -> StaffTask | None:
     """Create an automated StaffTask if a duplicate open one does not exist."""
+    if client.archived_at is not None:
+        return None
+
     existing_query = StaffTask.objects.filter(
         client=client,
         task_type=task_type,
