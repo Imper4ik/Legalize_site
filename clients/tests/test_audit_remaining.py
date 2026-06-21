@@ -299,9 +299,10 @@ class RemainingAuditHardeningTests(TestCase):
         self.assertTrue(doc.parsed_data.get("pii_scrubbed"))
 
     def test_onboarding_ask_question_creates_staff_task(self):
-        from clients.models import ClientOnboardingSession, StaffTask, ClientActivity
-        from clients.services.onboarding_tokens import hash_onboarding_token
         import uuid
+
+        from clients.models import ClientActivity, ClientOnboardingSession, StaffTask
+        from clients.services.onboarding_tokens import hash_onboarding_token
 
         client = Client.objects.create(first_name="Test", last_name="User", email="test-ask@example.com")
         User = get_user_model()
@@ -311,7 +312,7 @@ class RemainingAuditHardeningTests(TestCase):
         self.client.force_login(user)
 
         token = uuid.uuid4().hex
-        session = ClientOnboardingSession.objects.create(
+        ClientOnboardingSession.objects.create(
             client=client,
             token_hash=hash_onboarding_token(token),
             expires_at=timezone.now() + timedelta(days=1),
@@ -346,9 +347,10 @@ class RemainingAuditHardeningTests(TestCase):
         self.assertEqual(activity.details, "How do I upload my contract?")
 
     def test_onboarding_start_renders_specialist_info(self):
+        import uuid
+
         from clients.models import ClientOnboardingSession
         from clients.services.onboarding_tokens import hash_onboarding_token
-        import uuid
 
         client = Client.objects.create(first_name="Test", last_name="User", email="test-start@example.com")
         User = get_user_model()
@@ -358,7 +360,7 @@ class RemainingAuditHardeningTests(TestCase):
         self.client.force_login(user)
 
         token = uuid.uuid4().hex
-        session = ClientOnboardingSession.objects.create(
+        ClientOnboardingSession.objects.create(
             client=client,
             token_hash=hash_onboarding_token(token),
             expires_at=timezone.now() + timedelta(days=1),

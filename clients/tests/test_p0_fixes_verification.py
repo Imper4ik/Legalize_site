@@ -1,17 +1,20 @@
 from __future__ import annotations
 
 import datetime
+
 from django.contrib.auth import get_user_model
-from django.test import TestCase, Client as DjangoClient
+from django.test import Client as DjangoClient
+from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from clients.constants import DocumentType
-from clients.models import Client, Document, StaffTask, ClientActivity
-from clients.tests.factories import create_admin_user, create_manager_user, create_staff_user
-from clients.use_cases.documents import verify_all_client_documents, toggle_client_document_verification
-from clients.services.workday import build_workday_context
+from clients.models import Client, ClientActivity, Document, StaffTask
 from clients.services.roles import PEOPLE_ALLOWED_ROLES
+from clients.services.workday import build_workday_context
+from clients.tests.factories import create_admin_user, create_manager_user, create_staff_user
+from clients.use_cases.documents import toggle_client_document_verification, verify_all_client_documents
+
 
 class P0FixesVerificationTests(TestCase):
     def setUp(self):
@@ -296,8 +299,9 @@ class P0FixesVerificationTests(TestCase):
         c.force_login(user)
         today = timezone.localdate()
         from io import BytesIO
-        from PIL import Image
+
         from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
 
         im = Image.new("RGB", (10, 10))
         buf = BytesIO()

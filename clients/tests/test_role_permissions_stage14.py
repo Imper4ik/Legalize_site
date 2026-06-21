@@ -153,7 +153,7 @@ class RolePermissionMatrixTests(TestCase):
         self.client.force_login(self.staff)
         self.assertEqual(self.client.get(reverse("clients:staff_manage")).status_code, 403)
         self.assertEqual(self.client.get(reverse("clients:role_manage")).status_code, 403)
-        self.assertEqual(self.client.get(reverse("clients:app_settings")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("clients:app_settings")).status_code, 403)
         self.assertEqual(self.client.get(reverse("clients:service_price_manage")).status_code, 200)
 
     @patch("clients.views.emails.send_mail", return_value=1)

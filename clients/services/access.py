@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, cast
 from django.db.models import Q, QuerySet
 
 from clients.models import Client, Document, EmailCampaign, Payment, Reminder, StaffTask
-from clients.services.roles import ADMIN_PANEL_ALLOWED_ROLES, SETTINGS_ALLOWED_ROLES
+from clients.services.roles import ADMIN_PANEL_ALLOWED_ROLES
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser, AnonymousUser

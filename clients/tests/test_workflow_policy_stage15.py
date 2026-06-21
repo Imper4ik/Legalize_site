@@ -90,8 +90,10 @@ class WorkflowPolicyStage15Tests(TestCase):
 
     def test_client_form_requires_all_required_documents_before_submission_stage(self):
         self.client_obj.workflow_stage = "document_collection"
+        self.client_obj.application_purpose = "other"
+        self.client_obj.save(update_fields=["workflow_stage", "application_purpose"])
         DocumentRequirement.objects.create(
-            application_purpose="work",
+            application_purpose="other",
             document_type=DocumentType.PASSPORT.value,
             custom_name="Passport",
             is_required=True,
@@ -120,8 +122,10 @@ class WorkflowPolicyStage15Tests(TestCase):
 
     def test_client_form_allows_submission_stage_when_required_documents_complete(self):
         self.client_obj.workflow_stage = "document_collection"
+        self.client_obj.application_purpose = "other"
+        self.client_obj.save(update_fields=["workflow_stage", "application_purpose"])
         DocumentRequirement.objects.create(
-            application_purpose="work",
+            application_purpose="other",
             document_type=DocumentType.PASSPORT.value,
             custom_name="Passport",
             is_required=True,

@@ -5,8 +5,6 @@ from typing import TYPE_CHECKING
 
 from django.utils.translation import gettext as _
 
-from clients.models import DocumentRequirement
-
 if TYPE_CHECKING:
     from clients.models.client import Client
 
@@ -47,20 +45,14 @@ def validate_client_workflow_transition(*, client: Client, previous_stage: str |
                 _("Сначала сохраните клиента, затем загрузите обязательные документы и переведите его к этапу подачи."),
             )
 
-        purpose = client.get_document_requirement_purpose()
-        has_db_records = DocumentRequirement.objects.filter(application_purpose=purpose).exists()
-        required_codes = set(
-            item["code"]
-            for item in DocumentRequirement.catalog_for(
-                purpose,
-                getattr(client, "language", None),
-                include_optional=False,
-                include_fallback=not has_db_records,
-            )
-        )
-        uploaded_codes = set(client.documents.values_list("document_type", flat=True))
-        submitted_codes = set(client.get_submitted_document_codes())
-        missing_required = required_codes - uploaded_codes - submitted_codes
+        checklist = client.get_document_checklist(check_file_existence=True)
+        missing_required = [
+            item
+            for item in checklist
+            if item.get("is_required", True)
+            and not item.get("is_custom_submission")
+            and not item.get("is_complete")
+        ]
         if missing_required:
             return WorkflowValidationResult(
                 False,

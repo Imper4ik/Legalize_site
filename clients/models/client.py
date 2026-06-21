@@ -462,7 +462,11 @@ class Client(SoftDeleteModel):
         for code, name in required_docs:
             documents = docs_map.get(code, [])
             submitted_records = submitted_by_code.get(code, [])
-            has_valid_document = any(doc.computed_status in ("approved", "pending_review") for doc in documents)
+            has_valid_document = any(
+                doc.computed_status in ("approved", "pending_review")
+                and (not check_file_existence or getattr(doc, "file_exists", False))
+                for doc in documents
+            )
             status_list.append(
                 {
                     "code": code,
@@ -481,7 +485,11 @@ class Client(SoftDeleteModel):
             if code in seen_codes:
                 continue
             documents = docs_map.get(code, [])
-            has_valid_document = any(doc.computed_status in ("approved", "pending_review") for doc in documents)
+            has_valid_document = any(
+                doc.computed_status in ("approved", "pending_review")
+                and (not check_file_existence or getattr(doc, "file_exists", False))
+                for doc in documents
+            )
             status_list.append(
                 {
                     "code": code,
@@ -499,7 +507,11 @@ class Client(SoftDeleteModel):
         for code, documents in docs_map.items():
             if code in seen_codes:
                 continue
-            has_valid_document = any(doc.computed_status in ("approved", "pending_review") for doc in documents)
+            has_valid_document = any(
+                doc.computed_status in ("approved", "pending_review")
+                and (not check_file_existence or getattr(doc, "file_exists", False))
+                for doc in documents
+            )
             status_list.append(
                 {
                     "code": code,
@@ -529,7 +541,11 @@ class Client(SoftDeleteModel):
                 for document in docs_map.get(requirement.document_type, [])
                 if getattr(document, "archived_at", None) is None
             ]
-            has_valid_document = any(doc.computed_status in ("approved", "pending_review") for doc in documents)
+            has_valid_document = any(
+                doc.computed_status in ("approved", "pending_review")
+                and (not check_file_existence or getattr(doc, "file_exists", False))
+                for doc in documents
+            )
             status_list.append(
                 {
                     "code": requirement.document_type,
@@ -584,9 +600,9 @@ class Client(SoftDeleteModel):
         # Check if there is an unpaid/partially paid payment
         prefetched_payments = getattr(self, "_prefetched_objects_cache", {}).get("payments")
         if prefetched_payments is not None:
-            has_unpaid_payments = any(p.status in ["unpaid", "partially_paid"] for p in prefetched_payments)
+            has_unpaid_payments = any(p.status in ["pending", "partial"] for p in prefetched_payments)
         else:
-            has_unpaid_payments = self.payments.filter(status__in=["unpaid", "partially_paid"]).exists()
+            has_unpaid_payments = self.payments.filter(status__in=["pending", "partial"]).exists()
 
         if has_unpaid_payments and status in ['approved_by_staff', 'mos_package_ready']:
             return 5  # Оплата услуг
@@ -626,8 +642,8 @@ class Client(SoftDeleteModel):
         return doc_code.replace("_", " ").capitalize()
 
     def get_pending_verification_documents_count(self) -> int:
-        from django.utils import timezone
         from django.db.models import Q
+        from django.utils import timezone
         today = timezone.localdate()
         return self.documents.filter(
             verified=False,
@@ -717,7 +733,7 @@ class Client(SoftDeleteModel):
                     "doc_id": doc.id,
                     "doc_type": doc.document_type,
                 })
-            
+
             if awaiting_docs:
                 doc_name = self.get_document_name_by_code(awaiting_docs[0].document_type)
                 action_label = _("Проверить документ: %s") % doc_name

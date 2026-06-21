@@ -1,7 +1,9 @@
+import logging
 from typing import Any, cast
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -20,6 +22,8 @@ from clients.services.onboarding_purposes import (
 )
 from clients.services.workflow_transitions import transition_client_workflow
 from clients.views.base import role_required_view
+
+logger = logging.getLogger(__name__)
 
 APPLY_TO_CLIENT_FIELDS = (
     "first_name",
@@ -171,23 +175,33 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
             messages.warning(request, _("Correction requested from client."))
             return redirect("clients:client_detail", pk=client.id)
         elif action == "mark_submitted":
-            mos_data.status = "submitted_in_mos"
-            mos_data.save(update_fields=["status"])
             try:
-                transition_client_workflow(client=client, target_stage="application_submitted", actor=request.user)
+                with transaction.atomic():
+                    transition_client_workflow(client=client, target_stage="application_submitted", actor=request.user)
+                    mos_data.status = "submitted_in_mos"
+                    mos_data.save(update_fields=["status"])
             except ValidationError as exc:
                 messages.error(request, str(exc))
+                return redirect("clients:admin_mos_review", client_id=client.id)
+            except Exception:
+                logger.exception("Unexpected error while marking MOS application submitted", extra={"client_id": client.id})
+                messages.error(request, _("Unexpected error while updating application status."))
                 return redirect("clients:admin_mos_review", client_id=client.id)
             messages.success(request, _("Status: submitted in MOS."))
             return redirect("clients:admin_mos_review", client_id=client.id)
         elif action == "mark_fingerprints":
-            mos_data.status = "fingerprints"
-            mos_data.save(update_fields=["status"])
             try:
-                next_stage = "waiting_decision" if client.fingerprints_date and client.fingerprints_date <= timezone.localdate() else "fingerprints"
-                transition_client_workflow(client=client, target_stage=next_stage, actor=request.user)
+                with transaction.atomic():
+                    next_stage = "waiting_decision" if client.fingerprints_date and client.fingerprints_date <= timezone.localdate() else "fingerprints"
+                    transition_client_workflow(client=client, target_stage=next_stage, actor=request.user)
+                    mos_data.status = "fingerprints"
+                    mos_data.save(update_fields=["status"])
             except ValidationError as exc:
                 messages.error(request, str(exc))
+                return redirect("clients:admin_mos_review", client_id=client.id)
+            except Exception:
+                logger.exception("Unexpected error while marking MOS fingerprints", extra={"client_id": client.id})
+                messages.error(request, _("Unexpected error while updating application status."))
                 return redirect("clients:admin_mos_review", client_id=client.id)
             messages.success(request, _("Status: fingerprints completed."))
             return redirect("clients:admin_mos_review", client_id=client.id)
@@ -195,10 +209,11 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
             if not client.fingerprints_date:
                 messages.error(request, _("Cannot mark waiting decision without fingerprints date."))
                 return redirect("clients:admin_mos_review", client_id=client.id)
-            mos_data.status = "waiting_decision"
-            mos_data.save(update_fields=["status"])
             try:
-                transition_client_workflow(client=client, target_stage="waiting_decision", actor=request.user)
+                with transaction.atomic():
+                    transition_client_workflow(client=client, target_stage="waiting_decision", actor=request.user)
+                    mos_data.status = "waiting_decision"
+                    mos_data.save(update_fields=["status"])
             except ValidationError as exc:
                 messages.error(request, str(exc))
                 return redirect("clients:admin_mos_review", client_id=client.id)
@@ -208,10 +223,11 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
             if not client.decision_date:
                 messages.error(request, _("Cannot mark decision received without decision date."))
                 return redirect("clients:admin_mos_review", client_id=client.id)
-            mos_data.status = "decision_received"
-            mos_data.save(update_fields=["status"])
             try:
-                transition_client_workflow(client=client, target_stage="decision_received", actor=request.user)
+                with transaction.atomic():
+                    transition_client_workflow(client=client, target_stage="decision_received", actor=request.user)
+                    mos_data.status = "decision_received"
+                    mos_data.save(update_fields=["status"])
             except ValidationError as exc:
                 messages.error(request, str(exc))
                 return redirect("clients:admin_mos_review", client_id=client.id)
