@@ -181,6 +181,7 @@ class Command(BaseCommand):
             expiry_date__isnull=False,
             expiry_date__gte=today,
             expiry_date__lte=cutoff,
+            client__archived_at__isnull=True,
         )
 
         if not expiring_docs.exists():
@@ -216,6 +217,7 @@ class Command(BaseCommand):
             expiry_date__gte=reminder_period_start,
             expiry_date__lte=reminder_period_end,
             reminder__isnull=True,
+            client__archived_at__isnull=True,
         )
 
         if not expiring_docs.exists():
@@ -247,6 +249,7 @@ class Command(BaseCommand):
         due_payments = Payment.objects.select_related("client").filter(
             due_date__lte=today,
             status__in=["pending", "partial"],
+            client__archived_at__isnull=True,
         ).exclude(reminder__is_active=True)
 
         if not due_payments.exists():
@@ -287,6 +290,7 @@ class Command(BaseCommand):
             legal_stay_until__gte=today,
             legal_stay_until__lte=cutoff,
             client__workflow_stage__in=["new_client", "document_collection"],
+            client__archived_at__isnull=True,
         )
 
         count = 0
@@ -337,7 +341,7 @@ class Command(BaseCommand):
 
     def sync_custom_document_requirement_reminders(self, *, dry_run: bool = False) -> None:
         counts = defaultdict(int)
-        for requirement in ClientDocumentRequirement.objects.select_related("client").all().iterator():
+        for requirement in ClientDocumentRequirement.objects.select_related("client").filter(client__archived_at__isnull=True).iterator():
             outcome = sync_custom_document_requirement_reminder(requirement, dry_run=dry_run)
             counts[outcome] += 1
         self.stdout.write(
@@ -357,6 +361,7 @@ class Command(BaseCommand):
             legal_stay_until__gte=today,
             legal_stay_until__lte=cutoff,
             client__workflow_stage__in=["new_client", "document_collection"],
+            client__archived_at__isnull=True,
         )
 
         if not mos_data_list.exists():

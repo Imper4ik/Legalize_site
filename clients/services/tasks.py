@@ -19,6 +19,9 @@ def create_auto_task(
     due_date: date | None = None,
 ) -> StaffTask | None:
     """Create an automated StaffTask if a duplicate open one does not exist."""
+    if client.archived_at is not None:
+        return None
+
     existing_query = StaffTask.objects.filter(
         client=client,
         task_type=task_type,

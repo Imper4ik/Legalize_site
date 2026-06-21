@@ -10,7 +10,8 @@ from django.urls import reverse
 from django.utils import timezone
 
 from clients.constants import DocumentType
-from clients.models import Client, Document, DocumentRequirement, MOSApplicationData, Payment
+from clients.models import Client, Document, DocumentRequirement, MOSApplicationData, Payment, Reminder, StaffTask
+from clients.services.access import accessible_tasks_queryset
 from clients.services.workflow import validate_client_workflow_transition
 from clients.services.workflow_transitions import transition_client_workflow
 from clients.testing.factories import create_test_client, create_test_document, create_test_user
@@ -22,17 +23,38 @@ class StaffRoleRegressionTests(TestCase):
         self.readonly = create_test_user(role="ReadOnly")
         self.client_obj = create_test_client(workflow_stage="document_collection")
 
-    def test_staff_can_restore_archived_client_document_and_payment(self):
+    def test_staff_can_restore_archived_client_with_documents_and_payments(self):
         document = create_test_document(self.client_obj)
-        payment = Payment.objects.create(client=self.client_obj, service_description="work_service", total_amount=Decimal("100.00"), status="pending")
+        payment = Payment.objects.create(
+            client=self.client_obj,
+            service_description="work_service",
+            total_amount=Decimal("100.00"),
+            status="pending",
+        )
         self.client_obj.archive()
+        self.client.force_login(self.staff)
+
+        response = self.client.post(reverse("clients:client_restore", kwargs={"pk": self.client_obj.pk}))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIsNone(Client.all_objects.get(pk=self.client_obj.pk).archived_at)
+        self.assertIsNone(Document.all_objects.get(pk=document.pk).archived_at)
+        self.assertIsNone(Payment.all_objects.get(pk=payment.pk).archived_at)
+
+    def test_staff_can_restore_archived_document_and_payment_for_active_client(self):
+        document = create_test_document(self.client_obj)
+        payment = Payment.objects.create(
+            client=self.client_obj,
+            service_description="work_service",
+            total_amount=Decimal("100.00"),
+            status="pending",
+        )
         document.archive()
         payment.archive()
         self.client.force_login(self.staff)
-        self.assertEqual(self.client.post(reverse("clients:client_restore", kwargs={"pk": self.client_obj.pk})).status_code, 302)
+
         self.assertEqual(self.client.post(reverse("clients:document_restore", kwargs={"pk": document.pk})).status_code, 302)
         self.assertEqual(self.client.post(reverse("clients:payment_restore", kwargs={"pk": payment.pk})).status_code, 302)
-        self.assertIsNone(Client.all_objects.get(pk=self.client_obj.pk).archived_at)
         self.assertIsNone(Document.all_objects.get(pk=document.pk).archived_at)
         self.assertIsNone(Payment.all_objects.get(pk=payment.pk).archived_at)
 
@@ -62,6 +84,58 @@ class StaffRoleRegressionTests(TestCase):
         for name in ["clients:role_manage", "clients:staff_manage", "clients:staff_activity_logs", "clients:app_settings"]:
             self.assertEqual(self.client.get(reverse(name)).status_code, 403)
 
+
+class ClientArchiveCascadeTests(TestCase):
+    def setUp(self):
+        self.staff = create_test_user(role="Staff")
+        self.client_obj = create_test_client(workflow_stage="document_collection", assigned_staff=self.staff)
+
+    def test_archiving_client_archives_case_records_and_hides_open_tasks(self):
+        document = create_test_document(self.client_obj)
+        payment = Payment.objects.create(
+            client=self.client_obj,
+            service_description="work_service",
+            total_amount=Decimal("100.00"),
+            amount_paid=Decimal("20.00"),
+            status="partial",
+            due_date=timezone.localdate(),
+        )
+        payment_reminder = Reminder.objects.get(payment=payment)
+        custom_reminder = Reminder.objects.create(
+            client=self.client_obj,
+            reminder_type="other",
+            title="Manual follow-up",
+            due_date=timezone.localdate(),
+        )
+        task = StaffTask.objects.create(client=self.client_obj, title="Open task", status="open")
+
+        self.client_obj.archive()
+
+        self.assertIsNotNone(Client.all_objects.get(pk=self.client_obj.pk).archived_at)
+        self.assertIsNotNone(Document.all_objects.get(pk=document.pk).archived_at)
+        self.assertIsNotNone(Payment.all_objects.get(pk=payment.pk).archived_at)
+        payment_reminder.refresh_from_db()
+        custom_reminder.refresh_from_db()
+        self.assertFalse(payment_reminder.is_active)
+        self.assertFalse(custom_reminder.is_active)
+        self.assertFalse(
+            accessible_tasks_queryset(self.staff, StaffTask.objects.all()).filter(pk=task.pk).exists()
+        )
+
+    def test_restoring_client_restores_archived_documents_and_payments(self):
+        document = create_test_document(self.client_obj)
+        payment = Payment.objects.create(
+            client=self.client_obj,
+            service_description="work_service",
+            total_amount=Decimal("100.00"),
+            status="pending",
+        )
+        self.client_obj.archive()
+
+        Client.all_objects.get(pk=self.client_obj.pk).restore()
+
+        self.assertIsNone(Document.all_objects.get(pk=document.pk).archived_at)
+        self.assertIsNone(Payment.all_objects.get(pk=payment.pk).archived_at)
 
 class WorkflowDocumentEligibilityTests(TestCase):
     def setUp(self):

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, Self, cast
 
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Count, Q
 from django.urls import reverse
 from django.utils import timezone, translation
@@ -298,15 +298,47 @@ class Client(SoftDeleteModel):
         return f"{self.first_name} {self.last_name}".strip()
 
     def on_archive(self) -> None:
-        if not self.user_id:
+        with transaction.atomic():
+            self._archive_related_case_records()
+            if not self.user_id:
+                return
+
+            from django.contrib.auth import get_user_model
+
+            user = get_user_model().objects.filter(pk=self.user_id).first()
+            if user and not user.is_staff and user.is_active:
+                user.is_active = False
+                user.save(update_fields=["is_active"])
+
+    def on_restore(self) -> None:
+        with transaction.atomic():
+            self._restore_related_case_records()
+
+    def _archive_related_case_records(self) -> None:
+        from .document import Document
+        from .payment import Payment
+        from .reminder import Reminder
+
+        if not self.pk:
             return
 
-        from django.contrib.auth import get_user_model
+        for document in Document.objects.filter(client_id=self.pk).iterator():
+            document.archive()
+        for payment in Payment.objects.filter(client_id=self.pk).iterator():
+            payment.archive()
+        Reminder.objects.filter(client_id=self.pk, is_active=True).update(is_active=False)
 
-        user = get_user_model().objects.filter(pk=self.user_id).first()
-        if user and not user.is_staff and user.is_active:
-            user.is_active = False
-            user.save(update_fields=["is_active"])
+    def _restore_related_case_records(self) -> None:
+        from .document import Document
+        from .payment import Payment
+
+        if not self.pk:
+            return
+
+        for document in Document.all_objects.filter(client_id=self.pk, archived_at__isnull=False).iterator():
+            document.restore()
+        for payment in Payment.all_objects.filter(client_id=self.pk, archived_at__isnull=False).iterator():
+            payment.restore()
 
     @staticmethod
     def normalize_case_number(case_number: str) -> str:

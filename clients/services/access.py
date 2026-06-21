@@ -106,9 +106,6 @@ def accessible_tasks_queryset(user: AbstractBaseUser | AnonymousUser | None, que
     if not is_internal_staff_user(user):
         return queryset.none()
 
-    if can_access_all_clients(user):
-        return queryset
-
     return queryset.filter(
         client__in=accessible_clients_queryset(user, Client.objects.all())
     )

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Self
 
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
 
 
@@ -51,21 +51,23 @@ class SoftDeleteModel(models.Model):
     def archive(self, *, save: bool = True) -> Self:
         if self.archived_at is None:
             self.archived_at = timezone.now()
-            if save:
-                type(self).all_objects.filter(pk=self.pk).update(archived_at=self.archived_at)
-            on_archive = getattr(self, "on_archive", None)
-            if callable(on_archive):
-                on_archive()
+            with transaction.atomic():
+                if save:
+                    type(self).all_objects.filter(pk=self.pk).update(archived_at=self.archived_at)
+                on_archive = getattr(self, "on_archive", None)
+                if callable(on_archive):
+                    on_archive()
         return self
 
     def restore(self, *, save: bool = True) -> Self:
         if self.archived_at is not None:
             self.archived_at = None
-            if save:
-                type(self).all_objects.filter(pk=self.pk).update(archived_at=None)
-            on_restore = getattr(self, "on_restore", None)
-            if callable(on_restore):
-                on_restore()
+            with transaction.atomic():
+                if save:
+                    type(self).all_objects.filter(pk=self.pk).update(archived_at=None)
+                on_restore = getattr(self, "on_restore", None)
+                if callable(on_restore):
+                    on_restore()
         return self
 
     def delete(self, using: Any = None, keep_parents: bool = False, *, hard: bool = False) -> tuple[int, dict[str, int]]:

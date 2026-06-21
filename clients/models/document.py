@@ -233,7 +233,7 @@ class Document(SoftDeleteModel):
         from clients.services.onboarding_purposes import clear_onboarding_notifications_cache
         if self.client_id:
             try:
-                client = self.client or Client.objects.filter(pk=self.client_id).first()
+                client = Client.all_objects.filter(pk=self.client_id).first()
                 if client:
                     clear_onboarding_notifications_cache(client)
             except Exception:
@@ -244,7 +244,7 @@ class Document(SoftDeleteModel):
         from clients.services.onboarding_purposes import clear_onboarding_notifications_cache
         if self.client_id:
             try:
-                client = self.client or Client.objects.filter(pk=self.client_id).first()
+                client = Client.all_objects.filter(pk=self.client_id).first()
                 if client:
                     clear_onboarding_notifications_cache(client)
             except Exception:

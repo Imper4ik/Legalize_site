@@ -39,13 +39,14 @@ class AdminPanelView(RoleRequiredMixin, TemplateView):
         context["total_service_prices"] = ServicePrice.objects.count()
         context["active_clients"] = Client.objects.count()
         context["active_cases"] = Client.objects.exclude(workflow_stage__in=["closed", "decision_received"]).count()
-        context["ocr_awaiting_review"] = Document.objects.filter(awaiting_confirmation=True).count()
+        context["ocr_awaiting_review"] = Document.objects.filter(awaiting_confirmation=True, client__archived_at__isnull=True).count()
         from django.db.models import Q
         context["documents_awaiting_verification"] = Document.objects.filter(
             file__gt="",
             verified=False,
             awaiting_confirmation=False,
             archived_at__isnull=True,
+            client__archived_at__isnull=True,
         ).exclude(
             Q(rejection_reason__isnull=False) & ~Q(rejection_reason="")
         ).exclude(
@@ -56,9 +57,10 @@ class AdminPanelView(RoleRequiredMixin, TemplateView):
         context["expired_documents"] = Document.objects.filter(
             expiry_date__isnull=False,
             expiry_date__lt=today,
+            client__archived_at__isnull=True,
         ).count()
-        context["open_tasks"] = StaffTask.objects.filter(status__in=["open", "in_progress"]).count()
-        context["pending_payments"] = Payment.objects.filter(status__in=["pending", "partial"]).count()
+        context["open_tasks"] = StaffTask.objects.filter(status__in=["open", "in_progress"], client__archived_at__isnull=True).count()
+        context["pending_payments"] = Payment.objects.filter(status__in=["pending", "partial"], client__archived_at__isnull=True).count()
         context["upcoming_fingerprints"] = Client.objects.filter(
             fingerprints_date__isnull=False,
             fingerprints_date__gte=today,
@@ -71,7 +73,7 @@ class AdminPanelView(RoleRequiredMixin, TemplateView):
             decision_date__isnull=True,
         ).count()
         context["decisions_received"] = Client.objects.filter(decision_date__isnull=False).count()
-        context["active_reminders"] = Reminder.objects.filter(is_active=True).count()
+        context["active_reminders"] = Reminder.objects.filter(is_active=True, client__archived_at__isnull=True).count()
         context["total_price_sum"] = ServicePrice.objects.aggregate(total=Sum("price")).get("total") or 0
         context["test_center_available"] = bool(
             getattr(self.request.user, "is_superuser", False)
