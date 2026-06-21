@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import Any
 from decimal import Decimal
+from typing import Any
 
 from clients.constants import DocumentType
 from clients.demo.demo_factory import (
@@ -13,7 +13,7 @@ from clients.demo.demo_factory import (
     create_demo_payment,
     create_demo_staff_audit,
 )
-from clients.models import DocumentProcessingJob, EmailLog, Reminder, StaffTask, MOSApplicationData
+from clients.models import DocumentProcessingJob, EmailLog, MOSApplicationData, StaffTask
 
 
 def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
@@ -124,12 +124,12 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
     )
     create_demo_payment(piotr, status="paid")
     token_piotr, _ = create_demo_onboarding_session(piotr)
-    
+
     # Подтверждение подачи загружено
     create_demo_document(
-        piotr, 
-        doc_type=DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION.value, 
-        verified=True, 
+        piotr,
+        doc_type=DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION.value,
+        verified=True,
         filename="confirmation_stamp.pdf"
     )
 
@@ -158,12 +158,12 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
     )
     create_demo_payment(elena, status="paid")
     token_elena, _ = create_demo_onboarding_session(elena)
-    
+
     # Подтверждение подачи загружено
     create_demo_document(
-        elena, 
-        doc_type=DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION.value, 
-        verified=True, 
+        elena,
+        doc_type=DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION.value,
+        verified=True,
         filename="confirmation_no_number.pdf"
     )
 
@@ -342,7 +342,7 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
             "mos_purpose": "work",
         },
     )
-    
+
     # 1. Консультация оплачена
     create_demo_payment(
         yuki,

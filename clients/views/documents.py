@@ -14,6 +14,7 @@ from django.utils.translation import gettext as _
 from clients.constants import DocumentType, is_wezwanie_document_type
 from clients.forms import ClientDocumentRequirementForm, DocumentUploadForm
 from clients.models import Client, ClientDocumentRequirement, Document, WniosekAttachment
+from clients.security.encrypted import safe_encrypted_attr
 from clients.services.access import (
     accessible_clients_queryset,
     accessible_documents_queryset,
@@ -28,8 +29,7 @@ from clients.services.notifications import (
 )
 from clients.services.permissions import has_employee_permission
 from clients.services.responses import ResponseHelper, apply_no_store
-from clients.security.encrypted import safe_encrypted_attr
-from clients.services.roles import DOCUMENT_DELETE_ROLES, DOCUMENT_EDIT_ROLES
+from clients.services.roles import DOCUMENT_DELETE_ROLES, DOCUMENT_EDIT_ROLES, OCR_REVIEW_ALLOWED_ROLES
 from clients.services.wezwanie_parser import parse_wezwanie
 from clients.services.zus import missing_zus_month_upload_options
 from clients.use_cases.documents import (
@@ -62,7 +62,7 @@ def _uploaded_file_log_payload(files: list[Any]) -> list[dict[str, Any]]:
 
 def _can_run_ocr_review(user: AbstractBaseUser | AnonymousUser | None) -> bool:
     return (
-        user_has_internal_role(user, "Admin", "Manager")
+        user_has_internal_role(user, *OCR_REVIEW_ALLOWED_ROLES)
         or has_employee_permission(user, "can_run_ocr_review")
     )
 
@@ -236,7 +236,7 @@ def add_client_document_requirement(request: HttpRequest, client_id: int) -> Htt
     return redirect("clients:client_detail", pk=client.pk)
 
 
-@role_or_feature_required_view("can_run_ocr_review", "Admin", "Manager")
+@role_or_feature_required_view("can_run_ocr_review", *OCR_REVIEW_ALLOWED_ROLES)
 def confirm_wezwanie_parse(request: HttpRequest, doc_id: int) -> HttpResponseBase:
     document = get_object_or_404(accessible_documents_queryset(request.user, Document.objects.all()), pk=doc_id)
     helper = ResponseHelper(request)
@@ -485,7 +485,7 @@ def client_checklist_partial(request: HttpRequest, pk: int) -> HttpResponseBase:
     return apply_no_store(response)
 
 
-@role_or_feature_required_view("can_run_ocr_review", "Admin", "Manager")
+@role_or_feature_required_view("can_run_ocr_review", *OCR_REVIEW_ALLOWED_ROLES)
 def get_document_parsed_data(request: HttpRequest, doc_id: int) -> HttpResponseBase:
     document = (
         Document.objects.select_related("client")

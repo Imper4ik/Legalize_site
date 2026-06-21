@@ -618,7 +618,7 @@ class ClientViewEdgeCaseTests(TestCase):
         limited_staff.groups.add(Group.objects.get(name="Staff"))
         self.client.login(email="limited@example.com", password="pass")
 
-        self.assertEqual(self.client.get(reverse("clients:app_settings")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("clients:app_settings")).status_code, 403)
         self.assertEqual(self.client.get(reverse("clients:service_price_manage")).status_code, 200)
         self.assertEqual(self.client.get(reverse("clients:submission_manage")).status_code, 200)
         self.assertEqual(self.client.get(reverse("clients:document_template_hub")).status_code, 200)

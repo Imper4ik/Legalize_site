@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import Any
+
 from django.utils import timezone
 from django.utils.translation import gettext as _
-from clients.models import Client, StaffTask, Document, Payment
+
+from clients.models import Client, Document, Payment, StaffTask
+
 
 def create_auto_task(
     client: Client,

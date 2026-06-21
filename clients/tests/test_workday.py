@@ -113,7 +113,7 @@ class WorkdayViewTests(TestCase):
 
     def test_workday_prioritizes_items_correctly(self):
         today = date(2026, 6, 20)
-        
+
         # Client whose stay is expiring soon (<= 30 days)
         critical_client = Client.objects.create(
             first_name="Critical",
@@ -142,7 +142,7 @@ class WorkdayViewTests(TestCase):
 
         context = build_workday_context(self.admin, today=today, limit_per_section=10)
         review_items = {item["client"].last_name: item for item in context["workday_sections"][0]["items"]}
-        
+
         self.assertEqual(review_items["Stay"]["priority"], "urgent")
         self.assertEqual(review_items["Client"]["priority"], "important")
         self.assertEqual(context["urgent_count"], 2)

@@ -19,6 +19,7 @@ from clients.forms import (
 from clients.models import AppSettings, Client, Document, Payment, Reminder, ServicePrice, StaffTask
 from clients.services.roles import (
     ADMIN_PANEL_ALLOWED_ROLES,
+    CRITICAL_SETTINGS_ALLOWED_ROLES,
     SETTINGS_ALLOWED_ROLES,
 )
 from clients.views.base import RoleRequiredMixin, role_required_view
@@ -109,7 +110,7 @@ class AppSettingsUpdateView(RoleRequiredMixin, UpdateView):
     form_class = AppSettingsForm
     template_name = "clients/app_settings_form.html"
     success_url = reverse_lazy("clients:app_settings")
-    allowed_roles = list(SETTINGS_ALLOWED_ROLES)
+    allowed_roles = list(CRITICAL_SETTINGS_ALLOWED_ROLES)
 
     def get_object(self, queryset: Any = None) -> AppSettings:
         return AppSettings.get_solo()

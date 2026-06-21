@@ -333,7 +333,7 @@ def build_workday_context(
             reverse("clients:payment_reminder_list"),
         ),
     ]
-    
+
     urgent_count = 0
     important_count = 0
     other_count = 0
@@ -352,13 +352,13 @@ def build_workday_context(
     # Group by client
     priority_order = {"urgent": 3, "important": 2, "other": 1}
     clients_map = {}
-    
+
     for section in sections:
         section_key = section["key"]
         section_title = section["title"]
         for item in section["items"]:
             client = item["client"]
-            
+
             icons = {
                 "documents_review": "bi-file-earmark-check",
                 "missing_documents": "bi-folder-x",
@@ -368,7 +368,7 @@ def build_workday_context(
                 "overdue_tasks": "bi-list-task",
                 "overdue_payments": "bi-credit-card-2-back",
             }
-            
+
             alert = {
                 "section_key": section_key,
                 "section_title": section_title,
@@ -379,7 +379,7 @@ def build_workday_context(
                 "priority": item["priority"],
                 "icon": icons.get(section_key, "bi-exclamation-circle"),
             }
-            
+
             clients_map.setdefault(client.pk, {"client": client, "alerts": []})
             clients_map[client.pk]["alerts"].append(alert)
 

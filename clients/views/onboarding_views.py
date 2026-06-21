@@ -1,7 +1,9 @@
+import logging
 from datetime import timedelta
 from typing import cast
 
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.http import (
     HttpRequest,
@@ -38,6 +40,7 @@ from clients.services.onboarding_purposes import (
     purpose_label,
 )
 from clients.services.onboarding_tokens import generate_onboarding_token, hash_onboarding_token
+from clients.services.workflow_transitions import transition_client_workflow
 from clients.use_cases.client_records import finalize_client_creation
 from clients.views.base import role_required_view
 from legalize_site.utils.files import build_protected_file_response
@@ -45,6 +48,7 @@ from legalize_site.utils.http import request_is_ajax
 
 EDITABLE_MOS_STATUSES = {"draft", "client_filling", "needs_correction"}
 CONTACT_SYNC_FIELDS = ("first_name", "last_name", "phone", "email")
+logger = logging.getLogger(__name__)
 
 
 def _mos_data_is_editable(mos_data: MOSApplicationData | None) -> bool:
@@ -188,7 +192,6 @@ def check_client_auth(request: HttpRequest, session: ClientOnboardingSession, to
         return redirect("clients:onboarding_set_password", token=token)
 
     if not request.user.is_authenticated or request.user != client.user:
-        from django.contrib import messages
         messages.info(request, _("Пожалуйста, войдите в свой аккаунт для продолжения."))
         login_url = reverse("account_login")
         return redirect(f"{login_url}?email={client.email}")
@@ -419,7 +422,7 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
         checklist_codes.add(doc_type)
         is_uploaded = doc_type in existing_map
         doc_obj = next((d for d in existing_documents if d.document_type == doc_type), None)
-        
+
         is_expired = False
         is_rejected = False
         is_verified = False
@@ -941,18 +944,22 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
         if intake_type == "join":
             mos_data.new_residence_card_application_status = "yes"
             mos_data.new_residence_card_updated_at = timezone.now()
-            
+
             # Smart transition logic based on existing dates
             target_stage = "waiting_decision" if client.fingerprints_date else "fingerprints"
-            mos_data.status = target_stage
-            mos_data.save(update_fields=["new_residence_card_application_status", "new_residence_card_updated_at", "status", "updated_at"])
-            
-            if client.workflow_stage != target_stage:
-                from clients.services.workflow_transitions import transition_client_workflow
-                try:
-                    transition_client_workflow(client=client, target_stage=target_stage, actor=request.user, save=True)
-                except Exception:
-                    pass
+            try:
+                with transaction.atomic():
+                    if client.workflow_stage != target_stage:
+                        transition_client_workflow(client=client, target_stage=target_stage, actor=request.user, save=True)
+                    mos_data.status = target_stage
+                    mos_data.save(update_fields=["new_residence_card_application_status", "new_residence_card_updated_at", "status", "updated_at"])
+            except ValidationError as exc:
+                messages.error(request, str(exc))
+                return redirect("clients:client_detail", pk=client.pk)
+            except Exception:
+                logger.exception("Unexpected error while preparing join onboarding", extra={"client_id": client.pk})
+                messages.error(request, _("Unexpected error while updating application status."))
+                return redirect("clients:client_detail", pk=client.pk)
         elif intake_type == "new":
             mos_data.new_residence_card_application_status = "no"
             mos_data.save(update_fields=["new_residence_card_application_status", "updated_at"])
@@ -1026,11 +1033,18 @@ def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
                 mos_data.new_residence_card_application_status = "yes"
                 mos_data.new_residence_card_updated_at = timezone.now()
                 target_stage = "fingerprints"
-                mos_data.status = target_stage
-                mos_data.save(update_fields=["new_residence_card_application_status", "new_residence_card_updated_at", "status", "updated_at"])
-                
-                client.workflow_stage = target_stage
-                client.save(update_fields=["workflow_stage"])
+                try:
+                    with transaction.atomic():
+                        transition_client_workflow(client=client, target_stage=target_stage, actor=request.user, save=True)
+                        mos_data.status = target_stage
+                        mos_data.save(update_fields=["new_residence_card_application_status", "new_residence_card_updated_at", "status", "updated_at"])
+                except ValidationError as exc:
+                    messages.error(request, str(exc))
+                    return redirect("clients:client_add")
+                except Exception:
+                    logger.exception("Unexpected error while quick-creating join onboarding", extra={"client_id": client.pk})
+                    messages.error(request, _("Unexpected error while updating application status."))
+                    return redirect("clients:client_add")
             elif intake_type == "new":
                 mos_data.new_residence_card_application_status = "no"
                 mos_data.save(update_fields=["new_residence_card_application_status", "updated_at"])
@@ -1278,8 +1292,9 @@ def onboarding_ask_question(request: HttpRequest, token: str) -> HttpResponse:
 
     client = session.client
 
-    from clients.models import StaffTask
     from django.urls import reverse
+
+    from clients.models import StaffTask
 
     task = StaffTask.objects.create(
         client=client,
@@ -1301,7 +1316,6 @@ def onboarding_ask_question(request: HttpRequest, token: str) -> HttpResponse:
         task=task,
     )
 
-    from django.contrib import messages
     messages.success(request, _("Ваш вопрос успешно отправлен. Сотрудник свяжется с вами!"))
 
     next_url = request.POST.get("next") or reverse("clients:onboarding_start", kwargs={"token": token})

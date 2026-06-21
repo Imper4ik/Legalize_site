@@ -11,6 +11,7 @@ from clients.services.access import (
     accessible_documents_queryset,
     accessible_payments_queryset,
 )
+from clients.services.roles import RESTORE_ALLOWED_ROLES
 from clients.use_cases.archive import (
     restore_client_document,
     restore_client_payment,
@@ -19,7 +20,7 @@ from clients.use_cases.archive import (
 from clients.views.base import role_required_view
 
 
-@role_required_view("Admin", "Manager")
+@role_required_view(*RESTORE_ALLOWED_ROLES)
 def restore_client_view(request: HttpRequest, pk: int) -> HttpResponse:
     if request.method != "POST":
         return redirect("clients:client_list")
@@ -34,7 +35,7 @@ def restore_client_view(request: HttpRequest, pk: int) -> HttpResponse:
     return redirect("clients:client_detail", pk=client.pk)
 
 
-@role_required_view("Admin", "Manager")
+@role_required_view(*RESTORE_ALLOWED_ROLES)
 def restore_document_view(request: HttpRequest, pk: int) -> HttpResponse:
     if request.method != "POST":
         return redirect("clients:client_list")
@@ -49,7 +50,7 @@ def restore_document_view(request: HttpRequest, pk: int) -> HttpResponse:
     return redirect("clients:client_detail", pk=result.client.pk)
 
 
-@role_required_view("Admin", "Manager")
+@role_required_view(*RESTORE_ALLOWED_ROLES)
 def restore_payment_view(request: HttpRequest, pk: int) -> HttpResponse:
     if request.method != "POST":
         return redirect("clients:client_list")
