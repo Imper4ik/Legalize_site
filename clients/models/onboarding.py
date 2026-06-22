@@ -6,11 +6,18 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 
-from fernet_fields import EncryptedTextField
+from fernet_fields import EncryptedJSONField, EncryptedTextField
 
 
 class ClientOnboardingSession(models.Model):
     client = models.ForeignKey("clients.Client", on_delete=models.CASCADE, related_name="onboarding_sessions")
+    case = models.ForeignKey(
+        "clients.Case",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="onboarding_sessions",
+    )
     payment = models.ForeignKey("clients.Payment", null=True, blank=True, on_delete=models.SET_NULL)
 
     token_hash = models.CharField(max_length=64, db_index=True)
@@ -34,6 +41,21 @@ class ClientOnboardingSession(models.Model):
     is_demo_data = models.BooleanField(default=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args: object, **kwargs: object) -> None:
+        update_fields = kwargs.get("update_fields")
+        if self.case_id is None:
+            if self.payment_id and self.payment.case_id:
+                self.case_id = self.payment.case_id
+            elif self.client_id:
+                from clients.services.cases import get_primary_case_for_client_id
+
+                self.case = get_primary_case_for_client_id(self.client_id)
+            if self.case_id is not None and update_fields is not None:
+                update_fields = set(update_fields)
+                update_fields.add("case")
+                kwargs["update_fields"] = list(update_fields)
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"Session for {self.client} - {self.status}"
@@ -78,6 +100,13 @@ class MOSApplicationData(models.Model):
     ]
 
     client = models.OneToOneField("clients.Client", on_delete=models.CASCADE, related_name="mos_application_data")
+    case = models.ForeignKey(
+        "clients.Case",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="mos_application_records",
+    )
 
     status = models.CharField(
         max_length=40,
@@ -102,15 +131,15 @@ class MOSApplicationData(models.Model):
 
     legal_stay_until = models.DateField(null=True, blank=True, verbose_name="Legal stay valid until")
 
-    personal_data = models.JSONField(default=dict, blank=True)
-    passport_data = models.JSONField(default=dict, blank=True)
-    address_data = models.JSONField(default=dict, blank=True)
-    stay_data = models.JSONField(default=dict, blank=True)
-    previous_stays = models.JSONField(default=list, blank=True)
-    travel_history = models.JSONField(default=list, blank=True)
-    insurance_data = models.JSONField(default=dict, blank=True)
-    financial_data = models.JSONField(default=dict, blank=True)
-    legal_declarations = models.JSONField(default=dict, blank=True)
+    personal_data = EncryptedJSONField(default=dict, blank=True)
+    passport_data = EncryptedJSONField(default=dict, blank=True)
+    address_data = EncryptedJSONField(default=dict, blank=True)
+    stay_data = EncryptedJSONField(default=dict, blank=True)
+    previous_stays = EncryptedJSONField(default=list, blank=True)
+    travel_history = EncryptedJSONField(default=list, blank=True)
+    insurance_data = EncryptedJSONField(default=dict, blank=True)
+    financial_data = EncryptedJSONField(default=dict, blank=True)
+    legal_declarations = EncryptedJSONField(default=dict, blank=True)
 
     new_residence_card_application_status = models.CharField(
         max_length=16,
@@ -140,6 +169,19 @@ class MOSApplicationData(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    version = models.PositiveIntegerField(default=1)
+
+    def save(self, *args: object, **kwargs: object) -> None:
+        update_fields = kwargs.get("update_fields")
+        if self.case_id is None and self.client_id:
+            from clients.services.cases import get_primary_case_for_client_id
+
+            self.case = get_primary_case_for_client_id(self.client_id)
+            if update_fields is not None:
+                update_fields = set(update_fields)
+                update_fields.add("case")
+                kwargs["update_fields"] = list(update_fields)
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"MOS Data for {self.client} - {self.status}"
@@ -147,6 +189,13 @@ class MOSApplicationData(models.Model):
 
 class PeselApplication(models.Model):
     client = models.ForeignKey("clients.Client", on_delete=models.CASCADE, related_name="pesel_applications")
+    case = models.ForeignKey(
+        "clients.Case",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="pesel_applications",
+    )
 
     status = models.CharField(
         max_length=40,
@@ -166,7 +215,7 @@ class PeselApplication(models.Model):
 
     legal_basis = models.TextField(blank=True)
 
-    pesel_form_data = models.JSONField(default=dict, blank=True)
+    pesel_form_data = EncryptedJSONField(default=dict, blank=True)
 
     generated_pdf = models.FileField(upload_to="pesel_applications/", null=True, blank=True)
     signed_scan = models.FileField(upload_to="pesel_signed/", null=True, blank=True)
@@ -184,6 +233,19 @@ class PeselApplication(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    version = models.PositiveIntegerField(default=1)
+
+    def save(self, *args: object, **kwargs: object) -> None:
+        update_fields = kwargs.get("update_fields")
+        if self.case_id is None and self.client_id:
+            from clients.services.cases import get_primary_case_for_client_id
+
+            self.case = get_primary_case_for_client_id(self.client_id)
+            if update_fields is not None:
+                update_fields = set(update_fields)
+                update_fields.add("case")
+                kwargs["update_fields"] = list(update_fields)
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"PESEL App for {self.client} - {self.status}"
@@ -193,4 +255,5 @@ class PeselApplication(models.Model):
 def create_client_onboarding_profiles(sender: object, instance: Any, created: bool, **kwargs: object) -> None:
     if created:
         ClientDigitalAccess.objects.get_or_create(client=instance)
-        MOSApplicationData.objects.get_or_create(client=instance)
+        case = instance.cases.order_by("opened_at", "id").first()
+        MOSApplicationData.objects.get_or_create(client=instance, defaults={"case": case})

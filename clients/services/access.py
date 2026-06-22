@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 from django.db.models import Q, QuerySet
 
-from clients.models import Client, Document, EmailCampaign, Payment, Reminder, StaffTask
+from clients.models import Case, Client, Document, EmailCampaign, Payment, Reminder, StaffTask
 from clients.services.roles import ADMIN_PANEL_ALLOWED_ROLES
 
 if TYPE_CHECKING:
@@ -71,6 +71,17 @@ def accessible_clients_queryset(user: AbstractBaseUser | AnonymousUser | None, q
         Q(assigned_staff=cast(Any, user)) | Q(assigned_staff__isnull=True)
     ).distinct()
 
+
+def accessible_cases_queryset(user: AbstractBaseUser | AnonymousUser | None, queryset: QuerySet[Case] | None = None) -> QuerySet[Case]:
+    if queryset is None:
+        queryset = Case.objects.select_related("client", "assigned_staff")
+
+    if not is_internal_staff_user(user):
+        return queryset.none()
+
+    return queryset.filter(
+        client__in=accessible_clients_queryset(user, Client.objects.all())
+    )
 
 def accessible_documents_queryset(user: AbstractBaseUser | AnonymousUser | None, queryset: QuerySet[Document] | None = None) -> QuerySet[Document]:
     if queryset is None:

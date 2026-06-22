@@ -13,6 +13,7 @@ from django.utils.translation import gettext_lazy as _
 
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.validators import validate_uploaded_document
+from fernet_fields import EncryptedJSONField
 from legalize_site.soft_delete import SoftDeleteModel
 
 logger = logging.getLogger(__name__)
@@ -153,6 +154,14 @@ class Document(SoftDeleteModel):
     ]
 
     client = models.ForeignKey('clients.Client', on_delete=models.CASCADE, related_name='documents', verbose_name=_("Клиент"))
+    case = models.ForeignKey(
+        'clients.Case',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='documents',
+        verbose_name=_("Дело"),
+    )
     document_type = models.CharField(max_length=255, verbose_name=_("Тип документа"))
     file = models.FileField(upload_to=document_upload_path, verbose_name=_("Файл"), validators=[validate_uploaded_document])
     expiry_date = models.DateField(null=True, blank=True, verbose_name=_("Действителен до"))
@@ -177,12 +186,13 @@ class Document(SoftDeleteModel):
         default=False,
         verbose_name=_("Несовпадение имени OCR"),
     )
-    parsed_data: models.JSONField[dict[str, Any]] = models.JSONField(
+    parsed_data: EncryptedJSONField = EncryptedJSONField(
         null=True,
         blank=True,
         verbose_name=_("Распознанные данные"),
     )
 
+    version = models.PositiveIntegerField(default=1, verbose_name=_("Версия"))
     is_test_data = models.BooleanField(default=False, db_index=True)
     is_demo_data = models.BooleanField(default=False, db_index=True)
 
@@ -197,6 +207,7 @@ class Document(SoftDeleteModel):
         ordering = ['-uploaded_at']
         indexes = [
             models.Index(fields=["client", "document_type"], name="doc_client_type_idx"),
+            models.Index(fields=["case", "document_type"], name="doc_case_type_idx"),
             models.Index(fields=["ocr_status", "awaiting_confirmation"], name="doc_ocr_confirm_idx"),
             models.Index(fields=["client", "document_type", "zus_period_month"], name="doc_zus_period_idx"),
             models.Index(
@@ -207,13 +218,14 @@ class Document(SoftDeleteModel):
         ]
         constraints = [
             models.UniqueConstraint(
-                fields=["client", "document_type", "zus_period_month"],
+                fields=["case", "document_type", "zus_period_month"],
                 condition=models.Q(
+                    case__isnull=False,
                     document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
                     zus_period_month__isnull=False,
                     archived_at__isnull=True,
                 ),
-                name="unique_zus_rca_period_per_client",
+                name="unique_zus_rca_period_per_case",
             ),
         ]
 
@@ -222,6 +234,15 @@ class Document(SoftDeleteModel):
         return f"{self.display_name} {gettext('for')} {self.client}"
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        update_fields = kwargs.get("update_fields")
+        if self.case_id is None and self.client_id:
+            from clients.services.cases import get_primary_case_for_client_id
+
+            self.case = get_primary_case_for_client_id(self.client_id)
+            if update_fields is not None:
+                update_fields = set(update_fields)
+                update_fields.add("case")
+                kwargs["update_fields"] = list(update_fields)
         if self.document_type == DocumentType.ZUS_RCA_OR_INSURANCE.value:
             self.zus_period_month = _first_day_of_month(self.zus_period_month)
         else:
@@ -419,6 +440,13 @@ class DocumentRequirement(models.Model):
 
 class ClientDocumentRequirement(models.Model):
     client = models.ForeignKey("clients.Client", on_delete=models.CASCADE, related_name="custom_document_requirements")
+    case = models.ForeignKey(
+        "clients.Case",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="custom_document_requirements",
+    )
     document_type = models.CharField(max_length=255, blank=True, default="")
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, default="")
@@ -434,16 +462,27 @@ class ClientDocumentRequirement(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    version = models.PositiveIntegerField(default=1)
 
     class Meta:
         ordering = ["due_date", "created_at"]
         indexes = [
             models.Index(fields=["client", "is_active"], name="cl_doc_req_cl_act_idx"),
+            models.Index(fields=["case", "is_active"], name="cl_doc_req_case_act_idx"),
             models.Index(fields=["document_type"], name="cl_doc_req_type_idx"),
             models.Index(fields=["due_date"], name="cl_doc_req_due_idx"),
         ]
 
     def save(self, *args: Any, **kwargs: Any) -> None:
+        update_fields = kwargs.get("update_fields")
+        if self.case_id is None and self.client_id:
+            from clients.services.cases import get_primary_case_for_client_id
+
+            self.case = get_primary_case_for_client_id(self.client_id)
+            if update_fields is not None:
+                update_fields = set(update_fields)
+                update_fields.add("case")
+                kwargs["update_fields"] = list(update_fields)
         super().save(*args, **kwargs)
         if not self.document_type and self.pk:
             self.document_type = f"client_custom_{self.pk}"

@@ -4,12 +4,14 @@ from clients.models import ClientDocumentRequirement, Document, Reminder
 
 
 def requirement_has_uploaded_document(requirement: ClientDocumentRequirement) -> bool:
-    return Document.objects.filter(
+    queryset = Document.objects.filter(
         client=requirement.client,
         document_type=requirement.document_type,
         archived_at__isnull=True,
-    ).exists()
-
+    )
+    if requirement.case_id:
+        queryset = queryset.filter(case=requirement.case)
+    return queryset.exists()
 
 def sync_custom_document_requirement_reminder(requirement: ClientDocumentRequirement, *, dry_run: bool = False) -> str:
     reminders_qs = Reminder.objects.filter(custom_document_requirement=requirement, is_active=True)
@@ -21,6 +23,7 @@ def sync_custom_document_requirement_reminder(requirement: ClientDocumentRequire
 
     defaults = {
         "client": requirement.client,
+        "case": requirement.case,
         "reminder_type": "document",
         "title": f"Нужно предоставить документ: {requirement.name}",
         "notes": requirement.description,

@@ -7,14 +7,22 @@ from django.conf import settings
 from django.db import transaction
 
 from clients.models import (
+    Case,
     Client,
     ClientActivity,
+    ClientDocumentRequirement,
+    ClientFamilyMemberMOS,
     ClientOnboardingSession,
     Document,
     DocumentProcessingJob,
     EmailLog,
+    MOSApplicationData,
     Payment,
+    PeselApplication,
+    Reminder,
     StaffAuditEvent,
+    StaffTask,
+    WniosekSubmission,
 )
 
 logger = logging.getLogger(__name__)
@@ -84,6 +92,34 @@ def cleanup_demo_data(extra_media_roots: list[str] | None = None) -> dict[str, i
         session_count, _ = ClientOnboardingSession.objects.filter(is_demo_data=True).delete()
         report["onboarding_sessions"] = session_count
 
+        # Reminder
+        reminder_count, _ = Reminder.objects.filter(client__is_demo_data=True).delete()
+        report["reminders"] = reminder_count
+
+        # StaffTask
+        task_count, _ = StaffTask.objects.filter(client__is_demo_data=True).delete()
+        report["staff_tasks"] = task_count
+
+        # ClientDocumentRequirement
+        requirement_count, _ = ClientDocumentRequirement.objects.filter(client__is_demo_data=True).delete()
+        report["client_document_requirements"] = requirement_count
+
+        # WniosekSubmission
+        wniosek_count, _ = WniosekSubmission.objects.filter(client__is_demo_data=True).delete()
+        report["wniosek_submissions"] = wniosek_count
+
+        # ClientFamilyMemberMOS
+        family_mos_count, _ = ClientFamilyMemberMOS.objects.filter(client__is_demo_data=True).delete()
+        report["family_mos_records"] = family_mos_count
+
+        # PeselApplication
+        pesel_count, _ = PeselApplication.objects.filter(client__is_demo_data=True).delete()
+        report["pesel_applications"] = pesel_count
+
+        # MOSApplicationData
+        mos_count, _ = MOSApplicationData.objects.filter(client__is_demo_data=True).delete()
+        report["mos_application_data"] = mos_count
+
         # Document
         doc_count, _ = Document.all_objects.filter(is_demo_data=True).hard_delete()
         report["documents"] = doc_count
@@ -95,6 +131,10 @@ def cleanup_demo_data(extra_media_roots: list[str] | None = None) -> dict[str, i
         # EmailLog
         email_count, _ = EmailLog.objects.filter(is_demo_data=True).delete()
         report["email_logs"] = email_count
+
+        # Case
+        case_count, _ = Case.all_objects.filter(is_demo_data=True).hard_delete()
+        report["cases"] = case_count
 
         # Client
         client_count, _ = Client.all_objects.filter(is_demo_data=True).hard_delete()

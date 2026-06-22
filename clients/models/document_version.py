@@ -16,6 +16,14 @@ class DocumentVersion(models.Model):
         related_name="versions",
         verbose_name=_("Документ"),
     )
+    case = models.ForeignKey(
+        "clients.Case",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="document_versions",
+        verbose_name=_("Дело"),
+    )
     file = models.FileField(
         upload_to="document_versions/",
         verbose_name=_("Файл версии"),
@@ -58,7 +66,18 @@ class DocumentVersion(models.Model):
         verbose_name_plural = _("Версии документов")
         indexes = [
             models.Index(fields=["document", "-version_number"], name="docver_doc_version_idx"),
+            models.Index(fields=["case", "-version_number"], name="docver_case_version_idx"),
         ]
+
+    def save(self, *args: object, **kwargs: object) -> None:
+        update_fields = kwargs.get("update_fields")
+        if self.case_id is None and self.document_id and self.document.case_id:
+            self.case_id = self.document.case_id
+            if update_fields is not None:
+                update_fields = set(update_fields)
+                update_fields.add("case")
+                kwargs["update_fields"] = list(update_fields)
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"v{self.version_number} — {self.document}"

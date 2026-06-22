@@ -30,6 +30,14 @@ class EmailLog(models.Model):
         null=True,
         blank=True,
     )
+    case = models.ForeignKey(
+        "clients.Case",
+        on_delete=models.SET_NULL,
+        related_name="email_logs",
+        verbose_name=_("Дело"),
+        null=True,
+        blank=True,
+    )
     subject = models.CharField(max_length=500, verbose_name=_("Тема"))
     body = EncryptedTextField(verbose_name=_("Текст письма"))
     recipients = EncryptedTextField(verbose_name=_("Получатели"))
@@ -65,12 +73,25 @@ class EmailLog(models.Model):
     is_test_data = models.BooleanField(default=False, db_index=True)
     is_demo_data = models.BooleanField(default=False, db_index=True)
 
+    def save(self, *args: object, **kwargs: object) -> None:
+        update_fields = kwargs.get("update_fields")
+        if self.case_id is None and self.client_id:
+            from clients.services.cases import get_primary_case_for_client_id
+
+            self.case = get_primary_case_for_client_id(self.client_id)
+            if update_fields is not None:
+                update_fields = set(update_fields)
+                update_fields.add("case")
+                kwargs["update_fields"] = list(update_fields)
+        super().save(*args, **kwargs)
+
     class Meta:
         ordering = ["-sent_at"]
         verbose_name = _("Журнал email")
         verbose_name_plural = _("Журнал email")
         indexes = [
             models.Index(fields=["client", "-sent_at"], name="emaillog_client_sent_idx"),
+            models.Index(fields=["case", "-sent_at"], name="emaillog_case_sent_idx"),
             models.Index(fields=["client", "template_type"], name="emaillog_client_tmpl_idx"),
             models.Index(fields=["delivery_status", "-sent_at"], name="emaillog_status_sent_idx"),
             models.Index(fields=["-sent_at"], name="emaillog_sent_idx"),

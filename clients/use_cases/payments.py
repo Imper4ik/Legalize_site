@@ -68,7 +68,6 @@ def create_payment_for_client(
             metadata={
                 "payment_id": payment.id,
                 "status": payment.status,
-                "total_amount": str(payment.total_amount),
             },
             payment=payment,
         )

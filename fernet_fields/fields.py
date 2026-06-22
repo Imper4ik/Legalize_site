@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from typing import Any
 
 from cryptography.fernet import Fernet, InvalidToken, MultiFernet
 from django.conf import settings
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.utils.encoding import force_str
 from django.utils.functional import cached_property
@@ -109,3 +111,68 @@ class EncryptedTextField(models.TextField):
                 ) from None
             return value
         return force_str(decrypted)
+
+
+class EncryptedJSONField(models.TextField):
+    """JSON value encrypted at rest using the same Fernet key ring as text fields.
+
+    The field stores encrypted JSON text in the database and returns normal Python
+    JSON values to application code. Plain legacy JSON strings are still readable
+    so existing rows can be migrated safely by re-saving them.
+    """
+
+    description = "Fernet-encrypted JSON"
+
+    @cached_property
+    def _fernet(self) -> Fernet | MultiFernet:
+        return _build_fernet()
+
+    def get_prep_value(self, value: Any) -> Any:
+        if isinstance(value, EncryptedValueUnavailable):
+            return value.raw_value
+        if value is None or value == "":
+            return value
+        json_value = json.dumps(value, cls=DjangoJSONEncoder, ensure_ascii=False, separators=(",", ":"))
+        token = self._fernet.encrypt(json_value.encode("utf-8"))
+        return token.decode("utf-8")
+
+    def from_db_value(self, value: Any, expression: Any, connection: Any) -> Any:
+        return self._load_value(value)
+
+    def to_python(self, value: Any) -> Any:
+        return self._load_value(value)
+
+    def value_to_string(self, obj: models.Model) -> str:
+        value = self.value_from_object(obj)
+        if value is None:
+            return ""
+        return json.dumps(value, cls=DjangoJSONEncoder, ensure_ascii=False)
+
+    def _load_value(self, value: Any) -> Any:
+        if value is None or value == "":
+            return value
+        if isinstance(value, EncryptedValueUnavailable):
+            return value
+        if isinstance(value, (dict, list, int, float, bool)):
+            return value
+        if not isinstance(value, str):
+            return value
+
+        raw_value = value
+        if self._looks_like_fernet_token(value):
+            try:
+                raw_value = force_str(self._fernet.decrypt(value.encode("utf-8")))
+            except InvalidToken:
+                logger.warning(
+                    "Encrypted JSON field value could not be decrypted; returning unavailable marker"
+                )
+                return EncryptedValueUnavailable(force_str(value))
+
+        try:
+            return json.loads(raw_value)
+        except (TypeError, json.JSONDecodeError):
+            return raw_value
+
+    @staticmethod
+    def _looks_like_fernet_token(value: Any) -> bool:
+        return isinstance(value, str) and value.startswith("gAAAA")
