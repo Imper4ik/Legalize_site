@@ -77,13 +77,10 @@
       "  .mobile-notifications-menu .dropdown-item { display: flex; align-items: flex-start !important; gap: .7rem; padding: .7rem .9rem; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; }",
       "  .mobile-notifications-menu .dropdown-item > span:first-child { min-width: 0; flex: 1 1 auto; }",
       "  .mobile-notifications-menu .dropdown-item .badge { flex: 0 0 auto; margin-top: .05rem; }",
-      "  /* The bottom bar already exposes Clients and New. Reminders live in the bell. */",
-      "  #navbarNav > .navbar-nav.me-auto > .nav-item:nth-child(1),",
-      "  #navbarNav > .navbar-nav.me-auto > .nav-item:nth-child(2),",
-      "  #navbarNav > .navbar-nav.me-auto > .nav-item:nth-child(4) { display: none; }",
       "  .theme-navbar .navbar-collapse { position: fixed; top: calc(var(--mobile-navbar-height, 6rem) + .5rem); left: .75rem; right: .75rem; width: auto; max-height: calc(100dvh - var(--mobile-navbar-height, 6rem) - 1.25rem); overflow-y: auto; padding: .65rem; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 18px; box-shadow: 0 18px 42px rgba(0, 0, 0, .28); }",
-      "  .theme-navbar .navbar-collapse:not(.show) { display: none; }",
-      "  .theme-navbar .navbar-collapse.show { display: block; }",
+      "  .theme-navbar .navbar-collapse:not(.show) { display: none !important; }",
+      "  .theme-navbar .navbar-collapse.show { display: block !important; }",
+      "  .theme-navbar .navbar-collapse .mobile-hidden-primary { display: none !important; }",
       "  .theme-navbar .navbar-nav { gap: .2rem; margin: 0 !important; }",
       "  .theme-navbar .navbar-nav + .navbar-nav { margin-top: .5rem !important; padding-top: .55rem; border-top: 1px solid var(--border); }",
       "  .theme-navbar .nav-link, .theme-navbar .navbar-collapse .theme-toggle, .theme-navbar .navbar-collapse [data-language-switcher] { width: 100%; min-height: 44px; }",
@@ -117,27 +114,35 @@
     return copied;
   }
 
-  function setupMobileNotifications() {
+  function setupMobileNavigation() {
     var container = document.querySelector(".theme-navbar .container");
     var toggler = document.querySelector(".theme-navbar .navbar-toggler");
+    var navbarNav = document.getElementById("navbarNav");
     var mobileNav = document.querySelector(".mobile-nav-bar");
-    var desktopBell = document.querySelector("#navbarNav .nav-item.dropdown .bi.bi-bell");
+    var primaryList = navbarNav ? navbarNav.querySelector("ul.navbar-nav.me-auto") : null;
 
-    if (!container || !toggler || !mobileNav || !desktopBell || document.getElementById("mobileNotificationDropdown")) {
-      return;
-    }
+    if (!container || !toggler || !navbarNav || !mobileNav || !primaryList) return;
 
-    var desktopDropdown = desktopBell.closest(".nav-item.dropdown");
-    var reminderMenu = desktopDropdown ? desktopDropdown.querySelector(".dropdown-menu") : null;
-    if (!reminderMenu) return;
+    var primaryItems = primaryList.children;
+    var clientItem = primaryItems[0];
+    var newClientItem = primaryItems[1];
+    var operationsItem = primaryItems[2];
+    var remindersItem = primaryItems[3];
+
+    if (clientItem) clientItem.classList.add("mobile-hidden-primary");
+    if (newClientItem) newClientItem.classList.add("mobile-hidden-primary");
+    if (remindersItem) remindersItem.classList.add("mobile-hidden-primary");
+
+    var reminderMenu = remindersItem ? remindersItem.querySelector(".dropdown-menu") : null;
+    if (!reminderMenu || document.getElementById("mobileNotificationDropdown")) return;
 
     var bottomBell = mobileNav.querySelector(".mobile-nav-item .bi-bell-fill");
     var bottomReminder = bottomBell ? bottomBell.closest("a.mobile-nav-item") : null;
     if (bottomReminder) bottomReminder.remove();
 
-    var oldBadge = mobileNav.querySelector(".mobile-nav-item .badge");
-    var count = oldBadge ? oldBadge.textContent.trim() : "";
-    if (oldBadge) oldBadge.remove();
+    var clientBadge = mobileNav.querySelector(".mobile-nav-item .badge");
+    var count = clientBadge ? clientBadge.textContent.trim() : "";
+    if (clientBadge) clientBadge.remove();
 
     var actions = document.createElement("div");
     actions.className = "navbar-mobile-actions d-lg-none ms-auto me-2";
@@ -166,8 +171,7 @@
     menu.className = "dropdown-menu dropdown-menu-end shadow-sm mobile-notifications-menu";
     menu.setAttribute("aria-labelledby", "mobileNotificationDropdown");
 
-    var attentionButton = document.querySelector("#navbarNav .badge.bg-danger");
-    var attentionMenu = attentionButton ? attentionButton.closest(".dropdown").querySelector(".dropdown-menu") : null;
+    var attentionMenu = clientItem ? clientItem.querySelector(".dropdown-menu") : null;
     if (copyMenuItems(attentionMenu, menu)) {
       var divider = document.createElement("li");
       divider.innerHTML = '<hr class="dropdown-divider">';
@@ -180,6 +184,26 @@
     dropdown.appendChild(menu);
     actions.appendChild(dropdown);
     container.insertBefore(actions, toggler);
+
+    if (window.bootstrap) {
+      var collapse = window.bootstrap.Collapse.getOrCreateInstance(navbarNav, { toggle: false });
+      var mobileDropdown = window.bootstrap.Dropdown.getOrCreateInstance(button);
+
+      dropdown.addEventListener("show.bs.dropdown", function () {
+        collapse.hide();
+      });
+
+      navbarNav.addEventListener("show.bs.collapse", function () {
+        mobileDropdown.hide();
+      });
+
+      navbarNav.addEventListener("click", function (event) {
+        var link = event.target.closest("a:not([data-bs-toggle='dropdown'])");
+        if (link && window.matchMedia("(max-width: 991.98px)").matches) {
+          collapse.hide();
+        }
+      });
+    }
   }
 
   function init() {
@@ -195,9 +219,9 @@
 
     var stored = safeGet();
     applyTheme(stored || (mq && mq.matches ? "dark" : "light"));
-    syncMobileNavbarHeight();
     addMobileNavigationStyles();
-    setupMobileNotifications();
+    syncMobileNavbarHeight();
+    setupMobileNavigation();
 
     window.addEventListener("resize", syncMobileNavbarHeight);
 
