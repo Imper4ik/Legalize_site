@@ -11,20 +11,27 @@
   var body = document.body;
   var mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
 
-  function safeGet() { try { return localStorage.getItem(STORAGE_KEY); } catch (_) { return null; } }
-  function safeSet(value) { try { localStorage.setItem(STORAGE_KEY, value); } catch (_) {} }
-  function currentTheme() { return docEl.getAttribute("data-theme") === "dark" ? "dark" : "light"; }
+  function safeGet() {
+    try { return localStorage.getItem(STORAGE_KEY); } catch (_) { return null; }
+  }
+
+  function safeSet(value) {
+    try { localStorage.setItem(STORAGE_KEY, value); } catch (_) {}
+  }
 
   function applyTheme(theme) {
     theme = theme === "dark" ? "dark" : "light";
     docEl.setAttribute("data-theme", theme);
     docEl.setAttribute("data-bs-theme", theme);
+
     if (body) {
       body.setAttribute("data-theme", theme);
       body.setAttribute("data-bs-theme", theme);
     }
+
     docEl.classList.toggle("theme-dark", theme === "dark");
     docEl.classList.toggle("theme-light", theme !== "dark");
+
     var meta = document.querySelector('meta[name="color-scheme"]');
     if (meta) meta.setAttribute("content", theme === "dark" ? "dark light" : "light dark");
 
@@ -32,22 +39,52 @@
       var button = toggles[i];
       button.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
       var label = button.querySelector("[data-theme-toggle-text]");
-      if (label) label.textContent = theme === "dark" ? button.dataset.themeDarkText : button.dataset.themeLightText;
+      if (label) {
+        label.textContent = theme === "dark" ? button.dataset.themeDarkText : button.dataset.themeLightText;
+      }
     }
   }
 
-  function addMobileStyles() {
+  function currentTheme() {
+    return docEl.getAttribute("data-theme") === "dark" ? "dark" : "light";
+  }
+
+  function addMobileNotificationStyles() {
     if (document.getElementById("mobile-notification-nav-styles")) return;
+
     var style = document.createElement("style");
     style.id = "mobile-notification-nav-styles";
-    style.textContent = "@media (max-width:991.98px){"
-      + ".navbar-mobile-actions{display:flex;align-items:center}.navbar-mobile-notification-button{position:relative;display:inline-grid;place-items:center;width:42px;height:42px;color:var(--nav-fg);background:color-mix(in srgb,var(--surface) 82%,transparent);border:1px solid var(--border);border-radius:12px}.navbar-mobile-notification-button i{font-size:1.18rem}.navbar-mobile-notification-badge{position:absolute;top:-.35rem;right:-.45rem;min-width:1.25rem;height:1.25rem;padding:0 .3rem;display:inline-flex;align-items:center;justify-content:center;color:#fff;background:#dc3545;border:2px solid var(--nav-bg);border-radius:999px;font-size:.65rem;font-weight:700;line-height:1}.mobile-notifications-menu{min-width:min(21rem,calc(100vw - 2rem));max-height:min(70vh,30rem);overflow-y:auto}.theme-navbar .container{flex-wrap:nowrap}.theme-navbar .navbar-brand{min-width:0}.theme-navbar .navbar-toggler{flex:0 0 auto}.mobile-nav-bar{justify-content:space-evenly}"
-      + "}";
+    style.textContent = [
+      "@media (max-width: 991.98px) {",
+      "  .theme-navbar .container { flex-wrap: nowrap; }",
+      "  .theme-navbar .navbar-brand { min-width: 0; }",
+      "  .theme-navbar .navbar-toggler { flex: 0 0 auto; }",
+      "  .navbar-mobile-actions { display: flex; align-items: center; }",
+      "  .navbar-mobile-actions > .dropdown { position: static; }",
+      "  .navbar-mobile-notification-button { position: relative; display: inline-grid; place-items: center; width: 42px; height: 42px; color: var(--nav-fg); background: color-mix(in srgb, var(--surface) 82%, transparent); border: 1px solid var(--border); border-radius: 12px; }",
+      "  .navbar-mobile-notification-button:hover, .navbar-mobile-notification-button:focus-visible { color: var(--brand-1); background: color-mix(in srgb, var(--brand-1) 10%, var(--surface)); border-color: color-mix(in srgb, var(--brand-1) 44%, var(--border)); outline: none; }",
+      "  .navbar-mobile-notification-button i { font-size: 1.18rem; }",
+      "  .navbar-mobile-notification-badge { position: absolute; top: -.35rem; right: -.45rem; min-width: 1.25rem; height: 1.25rem; padding: 0 .3rem; display: inline-flex; align-items: center; justify-content: center; color: #fff; background: #dc3545; border: 2px solid var(--nav-bg); border-radius: 999px; font-size: .65rem; font-weight: 700; line-height: 1; }",
+      "  .mobile-notifications-menu.show { position: fixed !important; top: calc(env(safe-area-inset-top) + 4.8rem) !important; left: .75rem !important; right: .75rem !important; width: auto !important; max-width: none !important; max-height: calc(100dvh - 6rem); margin: 0 !important; padding: .35rem 0; overflow-y: auto; transform: none !important; z-index: 1080; }",
+      "  .mobile-notifications-menu .dropdown-header { padding: .6rem .9rem .35rem; white-space: normal; }",
+      "  .mobile-notifications-menu .dropdown-item { display: flex; align-items: flex-start !important; gap: .7rem; padding: .7rem .9rem; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; }",
+      "  .mobile-notifications-menu .dropdown-item > span:first-child { min-width: 0; flex: 1 1 auto; }",
+      "  .mobile-notifications-menu .dropdown-item .badge { flex: 0 0 auto; margin-top: .05rem; }",
+      "  .mobile-nav-bar { box-sizing: border-box; height: calc(62px + env(safe-area-inset-bottom)); justify-content: center; gap: .25rem; padding: .2rem .5rem calc(.2rem + env(safe-area-inset-bottom)); }",
+      "  .mobile-nav-bar > .mobile-nav-item, .mobile-nav-bar > .dropup { flex: 0 1 80px !important; min-width: 0; }",
+      "  .mobile-nav-bar > .dropup .mobile-nav-item { width: 100%; }",
+      "  .mobile-nav-item { flex: 0 1 80px; min-width: 0; padding: .22rem .1rem; font-size: .68rem; line-height: 1.15; }",
+      "  .mobile-nav-item i { font-size: 1.22rem; margin-bottom: .05rem; }",
+      "  body { padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important; }",
+      "}"
+    ].join("\n");
+
     document.head.appendChild(style);
   }
 
   function copyMenuItems(source, target) {
     if (!source) return false;
+
     var items = source.children;
     var copied = false;
     for (var i = 0; i < items.length; i++) {
@@ -62,7 +99,10 @@
     var toggler = document.querySelector(".theme-navbar .navbar-toggler");
     var mobileNav = document.querySelector(".mobile-nav-bar");
     var desktopBell = document.querySelector("#navbarNav .nav-item.dropdown .bi.bi-bell");
-    if (!container || !toggler || !mobileNav || !desktopBell || document.getElementById("mobileNotificationDropdown")) return;
+
+    if (!container || !toggler || !mobileNav || !desktopBell || document.getElementById("mobileNotificationDropdown")) {
+      return;
+    }
 
     var desktopDropdown = desktopBell.closest(".nav-item.dropdown");
     var reminderMenu = desktopDropdown ? desktopDropdown.querySelector(".dropdown-menu") : null;
@@ -78,6 +118,7 @@
 
     var actions = document.createElement("div");
     actions.className = "navbar-mobile-actions d-lg-none ms-auto me-2";
+
     var dropdown = document.createElement("div");
     dropdown.className = "dropdown";
 
@@ -90,6 +131,7 @@
     button.setAttribute("aria-label", "Напоминания");
     button.setAttribute("title", "Напоминания");
     button.innerHTML = '<i class="bi bi-bell-fill" aria-hidden="true"></i>';
+
     if (count) {
       var badge = document.createElement("span");
       badge.className = "navbar-mobile-notification-badge";
@@ -100,20 +142,22 @@
     var menu = document.createElement("ul");
     menu.className = "dropdown-menu dropdown-menu-end shadow-sm mobile-notifications-menu";
     menu.setAttribute("aria-labelledby", "mobileNotificationDropdown");
+
     var attentionButton = document.querySelector("#navbarNav .badge.bg-danger");
     var attentionMenu = attentionButton ? attentionButton.closest(".dropdown").querySelector(".dropdown-menu") : null;
     if (copyMenuItems(attentionMenu, menu)) {
-      var separator = document.createElement("li");
-      separator.innerHTML = '<hr class="dropdown-divider">';
-      menu.appendChild(separator);
+      var divider = document.createElement("li");
+      divider.innerHTML = '<hr class="dropdown-divider">';
+      menu.appendChild(divider);
     }
+
     copyMenuItems(reminderMenu, menu);
 
     dropdown.appendChild(button);
     dropdown.appendChild(menu);
     actions.appendChild(dropdown);
     container.insertBefore(actions, toggler);
-    addMobileStyles();
+    addMobileNotificationStyles();
   }
 
   function init() {
@@ -132,7 +176,9 @@
     setupMobileNotifications();
 
     if (mq) {
-      var systemChange = function (event) { if (!safeGet()) applyTheme(event.matches ? "dark" : "light"); };
+      var systemChange = function (event) {
+        if (!safeGet()) applyTheme(event.matches ? "dark" : "light");
+      };
       if (mq.addEventListener) mq.addEventListener("change", systemChange);
       else if (mq.addListener) mq.addListener(systemChange);
     }
