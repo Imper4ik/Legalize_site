@@ -19,8 +19,12 @@
     try { localStorage.setItem(STORAGE_KEY, value); } catch (_) {}
   }
 
+  function normalize(theme) {
+    return theme === "dark" ? "dark" : "light";
+  }
+
   function applyTheme(theme) {
-    theme = theme === "dark" ? "dark" : "light";
+    theme = normalize(theme);
     docEl.setAttribute("data-theme", theme);
     docEl.setAttribute("data-bs-theme", theme);
 
@@ -49,13 +53,7 @@
     return docEl.getAttribute("data-theme") === "dark" ? "dark" : "light";
   }
 
-  function syncMobileNavbarHeight() {
-    var navbar = document.querySelector(".theme-navbar");
-    if (!navbar) return;
-    docEl.style.setProperty("--mobile-navbar-height", Math.ceil(navbar.getBoundingClientRect().height) + "px");
-  }
-
-  function addMobileNavigationStyles() {
+  function injectMobileStyles() {
     if (document.getElementById("mobile-navigation-styles")) return;
 
     var style = document.createElement("style");
@@ -64,88 +62,68 @@
       "@media (max-width: 991.98px) {",
       "  .theme-navbar { position: relative; z-index: 1060; }",
       "  .theme-navbar .container { flex-wrap: nowrap; }",
+      "  .theme-navbar .navbar-toggler, .theme-navbar #navbarNav { display: none !important; }",
       "  .theme-navbar .navbar-brand { min-width: 0; }",
-      "  .theme-navbar .navbar-toggler { flex: 0 0 auto; }",
-      "  .navbar-mobile-actions { display: flex; align-items: center; }",
-      "  .navbar-mobile-actions > .dropdown { position: static; }",
-      "  .navbar-mobile-notification-button { position: relative; display: inline-grid; place-items: center; width: 42px; height: 42px; color: var(--nav-fg); background: color-mix(in srgb, var(--surface) 82%, transparent); border: 1px solid var(--border); border-radius: 12px; }",
-      "  .navbar-mobile-notification-button:hover, .navbar-mobile-notification-button:focus-visible { color: var(--brand-1); background: color-mix(in srgb, var(--brand-1) 10%, var(--surface)); border-color: color-mix(in srgb, var(--brand-1) 44%, var(--border)); outline: none; }",
-      "  .navbar-mobile-notification-button i { font-size: 1.18rem; }",
-      "  .navbar-mobile-notification-badge { position: absolute; top: -.35rem; right: -.45rem; min-width: 1.25rem; height: 1.25rem; padding: 0 .3rem; display: inline-flex; align-items: center; justify-content: center; color: #fff; background: #dc3545; border: 2px solid var(--nav-bg); border-radius: 999px; font-size: .65rem; font-weight: 700; line-height: 1; }",
-      "  .mobile-notifications-menu.show { position: fixed !important; top: calc(var(--mobile-navbar-height, 6rem) + .5rem) !important; left: .75rem !important; right: .75rem !important; width: auto !important; max-width: none !important; max-height: calc(100dvh - var(--mobile-navbar-height, 6rem) - 1.25rem); margin: 0 !important; padding: .35rem 0; overflow-y: auto; transform: none !important; z-index: 1080; }",
+      "  .mobile-header-actions { display: flex; align-items: center; margin-left: auto; margin-right: .35rem; }",
+      "  .mobile-header-actions > .dropdown { position: static; }",
+      "  .mobile-header-notification-button { position: relative; display: inline-grid; place-items: center; width: 42px; height: 42px; color: var(--nav-fg); background: color-mix(in srgb, var(--surface) 82%, transparent); border: 1px solid var(--border); border-radius: 12px; }",
+      "  .mobile-header-notification-button:hover, .mobile-header-notification-button:focus-visible { color: var(--brand-1); background: color-mix(in srgb, var(--brand-1) 10%, var(--surface)); border-color: color-mix(in srgb, var(--brand-1) 44%, var(--border)); outline: none; }",
+      "  .mobile-header-notification-button i { font-size: 1.18rem; }",
+      "  .mobile-header-notification-badge { position: absolute; top: -.35rem; right: -.45rem; min-width: 1.25rem; height: 1.25rem; padding: 0 .3rem; display: inline-flex; align-items: center; justify-content: center; color: #fff; background: #dc3545; border: 2px solid var(--nav-bg); border-radius: 999px; font-size: .65rem; font-weight: 700; line-height: 1; }",
+      "  .mobile-notifications-menu.show { position: fixed !important; top: calc(env(safe-area-inset-top) + 5rem) !important; left: .75rem !important; right: .75rem !important; width: auto !important; max-width: none !important; max-height: calc(100dvh - 6rem); margin: 0 !important; padding: .35rem 0; overflow-y: auto; transform: none !important; z-index: 1080; }",
       "  .mobile-notifications-menu .dropdown-header { padding: .6rem .9rem .35rem; white-space: normal; }",
       "  .mobile-notifications-menu .dropdown-item { display: flex; align-items: flex-start !important; gap: .7rem; padding: .7rem .9rem; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; }",
       "  .mobile-notifications-menu .dropdown-item > span:first-child { min-width: 0; flex: 1 1 auto; }",
       "  .mobile-notifications-menu .dropdown-item .badge { flex: 0 0 auto; margin-top: .05rem; }",
-      "  .theme-navbar .navbar-collapse { position: fixed; top: calc(var(--mobile-navbar-height, 6rem) + .5rem); left: .75rem; right: .75rem; width: auto; max-height: calc(100dvh - var(--mobile-navbar-height, 6rem) - 1.25rem); overflow-y: auto; padding: .65rem; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 18px; box-shadow: 0 18px 42px rgba(0, 0, 0, .28); }",
-      "  .theme-navbar .navbar-collapse:not(.show) { display: none !important; }",
-      "  .theme-navbar .navbar-collapse.show { display: block !important; }",
-      "  .theme-navbar .navbar-collapse .mobile-hidden-primary { display: none !important; }",
-      "  .theme-navbar .navbar-nav { gap: .2rem; margin: 0 !important; }",
-      "  .theme-navbar .navbar-nav + .navbar-nav { margin-top: .5rem !important; padding-top: .55rem; border-top: 1px solid var(--border); }",
-      "  .theme-navbar .nav-link, .theme-navbar .navbar-collapse .theme-toggle, .theme-navbar .navbar-collapse [data-language-switcher] { width: 100%; min-height: 44px; }",
-      "  .theme-navbar .nav-link { display: flex; align-items: center; padding: .68rem .75rem; border-radius: 12px; white-space: normal; }",
-      "  .theme-navbar .navbar-collapse .nav-item { margin: 0 !important; }",
-      "  .theme-navbar .navbar-collapse .dropdown-menu { position: static !important; width: 100%; margin: .2rem 0 .5rem; transform: none !important; box-shadow: none; }",
-      "  .theme-navbar .navbar-collapse .dropdown-item { white-space: normal; }",
-      "  .theme-navbar .navbar-collapse [data-language-switcher] { display: flex; align-items: center; }",
-      "  .theme-navbar .navbar-collapse [data-language-switcher] .form-select { width: 100%; }",
-      "  .mobile-nav-bar { box-sizing: border-box; height: calc(62px + env(safe-area-inset-bottom)); justify-content: center; gap: .25rem; padding: .2rem .5rem calc(.2rem + env(safe-area-inset-bottom)); }",
-      "  .mobile-nav-bar > .mobile-nav-item, .mobile-nav-bar > .dropup { flex: 0 1 80px !important; min-width: 0; }",
-      "  .mobile-nav-bar > .dropup .mobile-nav-item { width: 100%; }",
-      "  .mobile-nav-item { flex: 0 1 80px; min-width: 0; padding: .22rem .1rem; font-size: .68rem; line-height: 1.15; }",
-      "  .mobile-nav-item i { font-size: 1.22rem; margin-bottom: .05rem; }",
-      "  body { padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important; }",
+      "  .mobile-nav-bar { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }",
+      "  .mobile-nav-bar > .mobile-nav-item, .mobile-nav-bar > .dropup { min-width: 0; }",
+      "  .mobile-nav-menu .dropdown-menu.show { position: fixed !important; left: .5rem !important; right: .5rem !important; bottom: calc(74px + env(safe-area-inset-bottom)) !important; width: auto !important; max-width: none !important; max-height: min(62dvh, 32rem); margin: 0 !important; overflow-y: auto; transform: none !important; z-index: 1080; }",
+      "  .mobile-nav-menu .dropdown-item { white-space: normal; }",
+      "  body { padding-bottom: calc(86px + env(safe-area-inset-bottom)) !important; }",
       "}"
     ].join("\n");
 
     document.head.appendChild(style);
   }
 
-  function copyMenuItems(source, target) {
-    if (!source) return false;
+  function copyMenuItems(sourceMenu, targetMenu) {
+    if (!sourceMenu || !targetMenu) return false;
 
-    var items = source.children;
+    var children = sourceMenu.children;
     var copied = false;
-    for (var i = 0; i < items.length; i++) {
-      target.appendChild(items[i].cloneNode(true));
+    for (var i = 0; i < children.length; i++) {
+      targetMenu.appendChild(children[i].cloneNode(true));
       copied = true;
     }
     return copied;
   }
 
-  function setupMobileNavigation() {
-    var container = document.querySelector(".theme-navbar .container");
-    var toggler = document.querySelector(".theme-navbar .navbar-toggler");
-    var navbarNav = document.getElementById("navbarNav");
+  function setupMobileNotifications() {
+    var navbarContainer = document.querySelector(".theme-navbar .container");
+    var navbarToggler = document.querySelector(".theme-navbar .navbar-toggler");
     var mobileNav = document.querySelector(".mobile-nav-bar");
-    var primaryList = navbarNav ? navbarNav.querySelector("ul.navbar-nav.me-auto") : null;
+    var desktopReminderIcon = document.querySelector("#navbarNav .nav-item.dropdown .bi.bi-bell");
+    var attentionButton = document.querySelector("#navbarNav .badge.bg-danger");
 
-    if (!container || !toggler || !navbarNav || !mobileNav || !primaryList) return;
+    if (!navbarContainer || !navbarToggler || !mobileNav || !desktopReminderIcon) return;
+    if (document.getElementById("mobileNotificationDropdown")) return;
 
-    var primaryItems = primaryList.children;
-    var clientItem = primaryItems[0];
-    var newClientItem = primaryItems[1];
-    var operationsItem = primaryItems[2];
-    var remindersItem = primaryItems[3];
+    var reminderDropdown = desktopReminderIcon.closest(".nav-item.dropdown");
+    var reminderMenu = reminderDropdown ? reminderDropdown.querySelector(".dropdown-menu") : null;
+    if (!reminderMenu) return;
 
-    if (clientItem) clientItem.classList.add("mobile-hidden-primary");
-    if (newClientItem) newClientItem.classList.add("mobile-hidden-primary");
-    if (remindersItem) remindersItem.classList.add("mobile-hidden-primary");
+    var bottomReminderIcon = mobileNav.querySelector(".mobile-nav-item .bi-bell-fill");
+    var bottomReminderLink = bottomReminderIcon ? bottomReminderIcon.closest("a.mobile-nav-item") : null;
+    if (bottomReminderLink) bottomReminderLink.remove();
 
-    var reminderMenu = remindersItem ? remindersItem.querySelector(".dropdown-menu") : null;
-    if (!reminderMenu || document.getElementById("mobileNotificationDropdown")) return;
+    var legacyAttentionBadge = mobileNav.querySelector(".mobile-nav-badge, .mobile-nav-item .badge");
+    if (legacyAttentionBadge) legacyAttentionBadge.remove();
 
-    var bottomBell = mobileNav.querySelector(".mobile-nav-item .bi-bell-fill");
-    var bottomReminder = bottomBell ? bottomBell.closest("a.mobile-nav-item") : null;
-    if (bottomReminder) bottomReminder.remove();
-
-    var clientBadge = mobileNav.querySelector(".mobile-nav-item .badge");
-    var count = clientBadge ? clientBadge.textContent.trim() : "";
-    if (clientBadge) clientBadge.remove();
+    var attentionCount = attentionButton ? attentionButton.textContent.trim() : "";
+    var attentionMenu = attentionButton ? attentionButton.closest(".dropdown").querySelector(".dropdown-menu") : null;
 
     var actions = document.createElement("div");
-    actions.className = "navbar-mobile-actions d-lg-none ms-auto me-2";
+    actions.className = "mobile-header-actions d-lg-none";
 
     var dropdown = document.createElement("div");
     dropdown.className = "dropdown";
@@ -153,17 +131,17 @@
     var button = document.createElement("button");
     button.id = "mobileNotificationDropdown";
     button.type = "button";
-    button.className = "navbar-mobile-notification-button";
+    button.className = "mobile-header-notification-button";
     button.setAttribute("data-bs-toggle", "dropdown");
     button.setAttribute("aria-expanded", "false");
-    button.setAttribute("aria-label", "Напоминания");
-    button.setAttribute("title", "Напоминания");
+    button.setAttribute("aria-label", "Уведомления и напоминания");
+    button.setAttribute("title", "Уведомления и напоминания");
     button.innerHTML = '<i class="bi bi-bell-fill" aria-hidden="true"></i>';
 
-    if (count) {
+    if (attentionCount) {
       var badge = document.createElement("span");
-      badge.className = "navbar-mobile-notification-badge";
-      badge.textContent = count;
+      badge.className = "mobile-header-notification-badge";
+      badge.textContent = attentionCount;
       button.appendChild(badge);
     }
 
@@ -171,7 +149,6 @@
     menu.className = "dropdown-menu dropdown-menu-end shadow-sm mobile-notifications-menu";
     menu.setAttribute("aria-labelledby", "mobileNotificationDropdown");
 
-    var attentionMenu = clientItem ? clientItem.querySelector(".dropdown-menu") : null;
     if (copyMenuItems(attentionMenu, menu)) {
       var divider = document.createElement("li");
       divider.innerHTML = '<hr class="dropdown-divider">';
@@ -183,57 +160,49 @@
     dropdown.appendChild(button);
     dropdown.appendChild(menu);
     actions.appendChild(dropdown);
-    container.insertBefore(actions, toggler);
-
-    if (window.bootstrap) {
-      var collapse = window.bootstrap.Collapse.getOrCreateInstance(navbarNav, { toggle: false });
-      var mobileDropdown = window.bootstrap.Dropdown.getOrCreateInstance(button);
-
-      dropdown.addEventListener("show.bs.dropdown", function () {
-        collapse.hide();
-      });
-
-      navbarNav.addEventListener("show.bs.collapse", function () {
-        mobileDropdown.hide();
-      });
-
-      navbarNav.addEventListener("click", function (event) {
-        var link = event.target.closest("a:not([data-bs-toggle='dropdown'])");
-        if (link && window.matchMedia("(max-width: 991.98px)").matches) {
-          collapse.hide();
-        }
-      });
-    }
+    navbarContainer.insertBefore(actions, navbarToggler);
   }
 
   function init() {
     var nodes = document.querySelectorAll("[data-theme-toggle]");
     for (var i = 0; i < nodes.length; i++) {
-      toggles.push(nodes[i]);
-      nodes[i].addEventListener("click", function () {
-        var next = currentTheme() === "dark" ? "light" : "dark";
-        applyTheme(next);
-        safeSet(next);
+      var button = nodes[i];
+      toggles.push(button);
+      button.addEventListener("click", function () {
+        var nextTheme = currentTheme() === "dark" ? "light" : "dark";
+        applyTheme(nextTheme);
+        safeSet(nextTheme);
       });
     }
 
-    var stored = safeGet();
-    applyTheme(stored || (mq && mq.matches ? "dark" : "light"));
-    addMobileNavigationStyles();
-    syncMobileNavbarHeight();
-    setupMobileNavigation();
+    var storedTheme = safeGet();
+    if (storedTheme) {
+      applyTheme(storedTheme);
+    } else if (mq && typeof mq.matches === "boolean") {
+      applyTheme(mq.matches ? "dark" : "light");
+    } else {
+      applyTheme("light");
+    }
 
-    window.addEventListener("resize", syncMobileNavbarHeight);
+    injectMobileStyles();
+    setupMobileNotifications();
 
     if (mq) {
-      var systemChange = function (event) {
+      var onSystemThemeChange = function (event) {
         if (!safeGet()) applyTheme(event.matches ? "dark" : "light");
       };
-      if (mq.addEventListener) mq.addEventListener("change", systemChange);
-      else if (mq.addListener) mq.addListener(systemChange);
+
+      if (typeof mq.addEventListener === "function") {
+        mq.addEventListener("change", onSystemThemeChange);
+      } else if (typeof mq.addListener === "function") {
+        mq.addListener(onSystemThemeChange);
+      }
     }
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
-  else init();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 })();
