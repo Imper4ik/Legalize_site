@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 from decimal import Decimal
+from typing import Any
 from uuid import uuid4
 
 from django.contrib.auth import get_user_model
@@ -119,9 +120,11 @@ def create_test_document(
     zus_period_month: date | None = None,
     expiry_date: date | None = None,
     filename: str = "test.pdf",
+    case: Any | None = None,
 ) -> Document:
     return Document.objects.create(
         client=client,
+        case=case,
         document_type=doc_type,
         file=build_pdf_upload(filename),
         verified=verified,

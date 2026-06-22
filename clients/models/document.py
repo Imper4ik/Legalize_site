@@ -3,10 +3,11 @@ from __future__ import annotations
 import logging
 from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Self, cast
 from uuid import uuid4
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import translation
 from django.utils.translation import gettext_lazy as _
@@ -14,7 +15,7 @@ from django.utils.translation import gettext_lazy as _
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
 from clients.validators import validate_uploaded_document
 from fernet_fields import EncryptedJSONField
-from legalize_site.soft_delete import SoftDeleteModel
+from legalize_site.soft_delete import SoftDeleteModel, SoftDeleteQuerySet
 
 logger = logging.getLogger(__name__)
 
@@ -145,7 +146,20 @@ def get_available_document_types(purpose: str | None = None) -> set[str]:
     return types
 
 
+class DocumentQuerySet(SoftDeleteQuerySet):
+    def for_active_cases(self) -> Self:
+        return self.filter(case__isnull=False, case__archived_at__isnull=True)
+
+
+class DocumentManager(models.Manager.from_queryset(DocumentQuerySet)):  # type: ignore[misc]
+    def get_queryset(self) -> DocumentQuerySet:
+        return super().get_queryset().active()
+
+
 class Document(SoftDeleteModel):
+    objects = DocumentManager()
+    all_objects = DocumentQuerySet.as_manager()
+
     OCR_STATUS_CHOICES = [
         ("skipped", _("Пропущено")),
         ("success", _("Успешно")),
@@ -215,6 +229,7 @@ class Document(SoftDeleteModel):
         verbose_name = _("Документ")
         verbose_name_plural = _("Документы")
         ordering = ['-uploaded_at']
+        base_manager_name = "all_objects"
         indexes = [
             models.Index(fields=["client", "document_type"], name="doc_client_type_idx"),
             models.Index(fields=["case", "document_type"], name="doc_case_type_idx"),
@@ -243,12 +258,25 @@ class Document(SoftDeleteModel):
         from django.utils.translation import gettext
         return f"{self.display_name} {gettext('for')} {self.client}"
 
+    def clean(self) -> None:
+        super().clean()
+        if self.case_id is None:
+            if self.client_id:
+                from clients.services.cases import get_legacy_compatibility_case
+                try:
+                    self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
+                except ValidationError as e:
+                    raise ValidationError({"case": e.message})
+            else:
+                raise ValidationError({"case": "Case is required."})
+        if self.case_id and self.client_id and self.case.client_id != self.client_id:
+            raise ValidationError("Клиент и дело не согласованы.")
+
     def save(self, *args: Any, **kwargs: Any) -> None:
         update_fields = kwargs.get("update_fields")
         if self.case_id is None and self.client_id:
-            from clients.services.cases import get_primary_case_for_client_id
-
-            self.case = get_primary_case_for_client_id(self.client_id)
+            from clients.services.cases import get_legacy_compatibility_case
+            self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
             if update_fields is not None:
                 update_fields = set(update_fields)
                 update_fields.add("case")
@@ -483,12 +511,25 @@ class ClientDocumentRequirement(models.Model):
             models.Index(fields=["due_date"], name="cl_doc_req_due_idx"),
         ]
 
+    def clean(self) -> None:
+        super().clean()
+        if self.case_id is None:
+            if self.client_id:
+                from clients.services.cases import get_legacy_compatibility_case
+                try:
+                    self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
+                except ValidationError as e:
+                    raise ValidationError({"case": e.message})
+            else:
+                raise ValidationError({"case": "Case is required."})
+        if self.case_id and self.client_id and self.case.client_id != self.client_id:
+            raise ValidationError("Клиент и дело не согласованы.")
+
     def save(self, *args: Any, **kwargs: Any) -> None:
         update_fields = kwargs.get("update_fields")
         if self.case_id is None and self.client_id:
-            from clients.services.cases import get_primary_case_for_client_id
-
-            self.case = get_primary_case_for_client_id(self.client_id)
+            from clients.services.cases import get_legacy_compatibility_case
+            self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
             if update_fields is not None:
                 update_fields = set(update_fields)
                 update_fields.add("case")

@@ -10,11 +10,13 @@ from django.utils.translation import gettext as _
 from django.views.generic import CreateView, DetailView, UpdateView
 
 from clients.forms import CaseForm
-from clients.models import Case, ClientActivity, Document, Payment, Reminder, StaffTask
+from clients.models import Case, CaseArchiveBatch, ClientActivity, Document, Payment, Reminder, StaffTask
 from clients.services.access import accessible_cases_queryset, accessible_clients_queryset
-from clients.services.cases import archive_case, create_case_for_client, restore_case
-from clients.services.roles import CLIENT_MUTATION_ROLES, RESTORE_ALLOWED_ROLES
+from clients.services.archive import archive_case as archive_case_service
+from clients.services.archive import restore_case as restore_case_service
+from clients.services.cases import create_case_for_client
 from clients.services.locking import update_case_with_version
+from clients.services.roles import CLIENT_MUTATION_ROLES, RESTORE_ALLOWED_ROLES
 from clients.views.base import RoleRequiredMixin, role_required_view
 
 
@@ -131,7 +133,7 @@ def archive_case_view(request: HttpRequest, pk: int) -> HttpResponse:
     if request.method != "POST":
         return redirect("clients:client_list")
     case = get_object_or_404(accessible_cases_queryset(request.user, Case.objects.select_related("client")), pk=pk)
-    archive_case(case=case, actor=request.user)
+    archive_case_service(case=case, actor=request.user)
     messages.success(request, _("Case archived."))
     return redirect("clients:client_detail", pk=case.client_id)
 
@@ -141,7 +143,11 @@ def restore_case_view(request: HttpRequest, pk: int) -> HttpResponse:
     if request.method != "POST":
         return redirect("clients:client_list")
     case = get_object_or_404(accessible_cases_queryset(request.user, Case.all_objects.select_related("client")), pk=pk)
-    restore_case(case=case, actor=request.user)
+    batch = CaseArchiveBatch.objects.filter(case=case, status="archived").first()
+    if not batch:
+        messages.error(request, _("No active archive batch found for this case."))
+        return redirect("clients:case_detail", pk=case.pk)
+    restore_case_service(case=case, actor=request.user, batch=batch)
     messages.success(request, _("Case restored."))
     return redirect("clients:case_detail", pk=case.pk)
 

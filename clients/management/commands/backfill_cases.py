@@ -1,22 +1,35 @@
+from __future__ import annotations
+
 import logging
-from django.core.management.base import BaseCommand
+import sys
+
 from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
 from django.db import transaction
-from django.utils import timezone
 
 from clients.models import (
-    Case, CaseParticipant, Document, DocumentVersion, Payment, Reminder, StaffTask,
-    DocumentProcessingJob, ClientDocumentRequirement, WniosekSubmission,
-    ClientFamilyMemberMOS, ClientOnboardingSession, PeselApplication, MOSApplicationData,
-    ClientActivity, EmailLog, ClientArchiveBatch, CaseArchiveBatch, Client
+    Case,
+    CaseArchiveBatch,
+    CaseParticipant,
+    Client,
+    ClientActivity,
+    ClientArchiveBatch,
+    ClientDocumentRequirement,
+    ClientFamilyMemberMOS,
+    ClientOnboardingSession,
+    Document,
+    DocumentProcessingJob,
+    DocumentVersion,
+    EmailLog,
+    MOSApplicationData,
+    Payment,
+    PeselApplication,
+    Reminder,
+    StaffTask,
+    WniosekSubmission,
 )
 
 logger = logging.getLogger(__name__)
-
-
-class RollbackException(Exception):
-    """Exception used to force rollback in dry-run mode."""
-    pass
 
 
 class Command(BaseCommand):
@@ -36,14 +49,27 @@ class Command(BaseCommand):
         parser.add_argument(
             "--batch-size",
             type=int,
-            default=0,
-            help="Максимальное количество клиентов для обработки за один запуск (0 - без ограничений).",
+            default=200,
+            help="Максимальное количество клиентов для обработки за один запуск (по умолчанию 200).",
+        )
+        parser.add_argument(
+            "--client-id",
+            type=int,
+            default=None,
+            help="Идентификатор конкретного клиента для обработки.",
+        )
+        parser.add_argument(
+            "--report",
+            action="store_true",
+            help="Вывести подробный отчет о проделанной работе.",
         )
 
     def handle(self, *args, **options):
         dry_run = options["dry_run"]
         resume = options["resume"]
         batch_size = options["batch_size"]
+        client_id = options["client_id"]
+        report = options["report"]
 
         User = get_user_model()
         actor_user = (
@@ -53,101 +79,135 @@ class Command(BaseCommand):
         )
         if not actor_user:
             self.stdout.write(self.style.ERROR("В системе нет пользователей для назначения автором архивации!"))
-            return
+            sys.exit(1)
 
         try:
-            with transaction.atomic():
-                self.run_backfill(dry_run, resume, batch_size, actor_user)
-                if dry_run:
-                    self.stdout.write(self.style.WARNING("DRY RUN: Откат изменений в базе данных..."))
-                    raise RollbackException()
-        except RollbackException:
-            self.stdout.write(self.style.SUCCESS("DRY RUN: Все изменения успешно откачены."))
+            self.run_backfill(dry_run, resume, batch_size, client_id, report, actor_user)
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"Критическая ошибка во время выполнения: {str(e)}"))
+            sys.exit(1)
 
-    def run_backfill(self, dry_run, resume, batch_size, actor_user):
-        # Выбираем клиентов без привязанных дел
+    def run_backfill(self, dry_run, resume, batch_size, client_id, report, actor_user):
         clients_qs = Client.all_objects.all().order_by("id")
-        if resume:
+        if client_id is not None:
+            clients_qs = clients_qs.filter(pk=client_id)
+        elif resume:
             clients_qs = clients_qs.exclude(cases__migration_origin="legacy_client_backfill")
         else:
             clients_qs = clients_qs.filter(cases__isnull=True)
 
-        total_clients = clients_qs.count()
-        self.stdout.write(self.style.SUCCESS(f"Найдено клиентов для миграции: {total_clients}"))
+        total_to_process = clients_qs.count()
+        self.stdout.write(self.style.SUCCESS(f"Найдено клиентов для миграции: {total_to_process}"))
 
-        if batch_size > 0:
-            clients_to_process = clients_qs[:batch_size]
-            self.stdout.write(self.style.SUCCESS(f"Обрабатываем батч размером {batch_size}"))
+        if batch_size > 0 and client_id is None:
+            clients_to_process = list(clients_qs[:batch_size])
         else:
-            clients_to_process = clients_qs
+            clients_to_process = list(clients_qs)
 
         processed_count = 0
-        for client in clients_to_process:
-            self.stdout.write(f"Миграция клиента ID={client.pk}: {client}")
+        skipped_count = 0
+        error_count = 0
 
-            # Создаем основное дело
-            case = Case.all_objects.create_from_client(client)
-            case.migration_origin = "legacy_client_backfill"
-            case.legacy_case_number = str(client.case_number or "")
-            case.needs_manual_number_check = True
+        chunk_size = 50
+        for i in range(0, len(clients_to_process), chunk_size):
+            chunk = clients_to_process[i : i + chunk_size]
+            try:
+                with transaction.atomic():
+                    for client in chunk:
+                        if Case.all_objects.filter(client=client, migration_origin="legacy_client_backfill").exists():
+                            skipped_count += 1
+                            continue
 
-            if client.archived_at:
-                case.archived_at = client.archived_at
-                case.archived_by = client.archived_by or actor_user
-            if client.deleted_at:
-                case.deleted_at = client.deleted_at
+                        # Создаем Case с legacy_case_number
+                        case = Case.all_objects.create(
+                            client=client,
+                            legacy_case_number=str(getattr(client, "case_number", "") or ""),
+                            needs_manual_number_check=True,
+                            internal_number="",
+                            authority_case_number="",
+                            status=getattr(client, "status", "new") or "new",
+                            workflow_stage=getattr(client, "workflow_stage", "new_client") or "new_client",
+                            application_purpose=getattr(client, "application_purpose", "") or "",
+                            basis_of_stay=getattr(client, "basis_of_stay", "") or "",
+                            submission_date=getattr(client, "submission_date", None),
+                            fingerprints_date=getattr(client, "fingerprints_date", None),
+                            fingerprints_time=getattr(client, "fingerprints_time", None),
+                            fingerprints_location=getattr(client, "fingerprints_location", "") or "",
+                            fingerprints_ticket=getattr(client, "fingerprints_ticket", "") or "",
+                            fingerprints_list=getattr(client, "fingerprints_list", "") or "",
+                            fingerprints_info=getattr(client, "fingerprints_info", "") or "",
+                            decision_date=getattr(client, "decision_date", None),
+                            assigned_staff=getattr(client, "assigned_staff", None),
+                            company=getattr(client, "company", None),
+                            is_test_data=getattr(client, "is_test_data", False),
+                            is_demo_data=getattr(client, "is_demo_data", False),
+                        )
+                        case.migration_origin = "legacy_client_backfill"
+                        if client.archived_at:
+                            case.archived_at = client.archived_at
+                            case.archived_by = client.archived_by or actor_user
+                        if client.deleted_at:
+                            case.deleted_at = client.deleted_at
+                        case.save()
 
-            case.save()
+                        # CaseParticipant
+                        CaseParticipant.objects.get_or_create(
+                            case=case,
+                            client=client,
+                            defaults={"role": "principal"},
+                        )
 
-            # Создаем участника дела с ролью principal
-            CaseParticipant.objects.create(
-                case=case,
-                client=client,
-                role="principal",
-            )
+                        # Переносим архивные батчи
+                        if client.archived_at:
+                            client_batch, _ = ClientArchiveBatch.objects.get_or_create(
+                                client=client,
+                                status="archived",
+                                defaults={
+                                    "archived_by": client.archived_by or actor_user,
+                                    "archived_at": client.archived_at,
+                                },
+                            )
+                            CaseArchiveBatch.objects.get_or_create(
+                                case=case,
+                                client_archive_batch=client_batch,
+                                status="archived",
+                                defaults={
+                                    "archived_by": client.archived_by or actor_user,
+                                    "archived_at": client.archived_at,
+                                },
+                            )
 
-            # Переносим архивные батчи
-            if client.archived_at:
-                client_batch = ClientArchiveBatch.objects.create(
-                    client=client,
-                    archived_by=client.archived_by or actor_user,
-                    archived_at=client.archived_at,
-                    status="archived",
-                )
-                CaseArchiveBatch.objects.create(
-                    case=case,
-                    client_archive_batch=client_batch,
-                    archived_by=client.archived_by or actor_user,
-                    archived_at=client.archived_at,
-                    status="archived",
-                )
+                        # Привязываем дочерние объекты к делу
+                        Document.all_objects.filter(client=client, case__isnull=True).update(case=case)
+                        DocumentVersion.objects.filter(document__client=client, case__isnull=True).update(case=case)
+                        Payment.all_objects.filter(client=client, case__isnull=True).update(case=case)
+                        Reminder.objects.filter(client=client, case__isnull=True).update(case=case)
+                        StaffTask.objects.filter(client=client, case__isnull=True).update(case=case)
+                        ClientDocumentRequirement.objects.filter(client=client, case__isnull=True).update(case=case)
+                        WniosekSubmission.objects.filter(client=client, case__isnull=True).update(case=case)
+                        ClientFamilyMemberMOS.objects.filter(client=client, case__isnull=True).update(case=case)
+                        ClientOnboardingSession.objects.filter(client=client, case__isnull=True).update(case=case, scope="case_link")
+                        PeselApplication.objects.filter(client=client, case__isnull=True).update(case=case)
+                        MOSApplicationData.objects.filter(client=client, case__isnull=True).update(case=case)
+                        ClientActivity.objects.filter(client=client, case__isnull=True).update(case=case)
+                        EmailLog.objects.filter(client=client, case__isnull=True).update(case=case)
+                        DocumentProcessingJob.objects.filter(document__client=client, case__isnull=True).update(case=case)
 
-            # Привязываем дочерние объекты к делу
-            docs_updated = Document.all_objects.filter(client=client, case__isnull=True).update(case=case)
-            doc_versions_updated = DocumentVersion.objects.filter(document__client=client, case__isnull=True).update(case=case)
-            payments_updated = Payment.all_objects.filter(client=client, case__isnull=True).update(case=case)
-            reminders_updated = Reminder.objects.filter(client=client, case__isnull=True).update(case=case)
-            tasks_updated = StaffTask.objects.filter(client=client, case__isnull=True).update(case=case)
-            reqs_updated = ClientDocumentRequirement.objects.filter(client=client, case__isnull=True).update(case=case)
-            wniosek_updated = WniosekSubmission.objects.filter(client=client, case__isnull=True).update(case=case)
-            family_mos_updated = ClientFamilyMemberMOS.objects.filter(client=client, case__isnull=True).update(case=case)
-            
-            # Для onboarding сессий обновляем также scope
-            sessions_updated = ClientOnboardingSession.objects.filter(client=client, case__isnull=True).update(case=case, scope="case_link")
-            
-            pesel_updated = PeselApplication.objects.filter(client=client, case__isnull=True).update(case=case)
-            mos_updated = MOSApplicationData.objects.filter(client=client, case__isnull=True).update(case=case)
-            activities_updated = ClientActivity.objects.filter(client=client, case__isnull=True).update(case=case)
-            emails_updated = EmailLog.objects.filter(client=client, case__isnull=True).update(case=case)
-            jobs_updated = DocumentProcessingJob.objects.filter(document__client=client, case__isnull=True).update(case=case)
+                        processed_count += 1
 
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f"Успешно: документы={docs_updated}, версии_документов={doc_versions_updated}, "
-                    f"платежи={payments_updated}, напоминания={reminders_updated}, задачи={tasks_updated}, "
-                    f"onboarding={sessions_updated}, ocr_jobs={jobs_updated}"
-                )
-            )
-            processed_count += 1
+                    if dry_run:
+                        raise transaction.TransactionManagementError("Dry run rollback")
+            except transaction.TransactionManagementError:
+                self.stdout.write(self.style.WARNING(f"DRY RUN: Откат пачки из {len(chunk)} клиентов."))
+            except Exception as e:
+                error_count += len(chunk)
+                self.stdout.write(self.style.ERROR(f"Ошибка при обработке пачки клиентов: {str(e)}"))
+                raise e
 
-        self.stdout.write(self.style.SUCCESS(f"Завершено. Обработано клиентов: {processed_count}"))
+        if report:
+            self.stdout.write(self.style.MIGRATE_HEADING("\n--- Отчет о переносе ---"))
+            self.stdout.write(f"Всего клиентов для обработки: {total_to_process}")
+            self.stdout.write(self.style.SUCCESS(f"Успешно обработано: {processed_count}"))
+            self.stdout.write(self.style.WARNING(f"Пропущено (уже обработаны): {skipped_count}"))
+            if error_count > 0:
+                self.stdout.write(self.style.ERROR(f"Ошибок (клиентов не обработано): {error_count}"))

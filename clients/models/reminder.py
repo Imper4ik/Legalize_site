@@ -1,12 +1,21 @@
 from __future__ import annotations
 
+from typing import Self
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 
 
+class ReminderQuerySet(models.QuerySet):
+    def for_active_cases(self) -> Self:
+        return self.filter(case__isnull=False, case__archived_at__isnull=True)
+
+
 class Reminder(models.Model):
+    objects = models.Manager.from_queryset(ReminderQuerySet)()
+
     REMINDER_TYPE_CHOICES = [
         ('payment', _('Оплата')),
         ('document', _('Документ')),
@@ -97,6 +106,29 @@ class Reminder(models.Model):
 
     def clean(self) -> None:
         super().clean()
+        source_case_id = None
+        if self.payment_id and self.payment.case_id:
+            source_case_id = self.payment.case_id
+        elif self.document_id and self.document.case_id:
+            source_case_id = self.document.case_id
+        elif self.custom_document_requirement_id and self.custom_document_requirement.case_id:
+            source_case_id = self.custom_document_requirement.case_id
+
+        if self.case_id is None:
+            if source_case_id is not None:
+                self.case_id = source_case_id
+            elif self.client_id:
+                from clients.services.cases import get_legacy_compatibility_case
+                try:
+                    self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
+                except ValidationError as e:
+                    raise ValidationError({"case": e.message})
+            else:
+                raise ValidationError({"case": "Case is required."})
+
+        if self.case_id and self.client_id and self.case.client_id != self.client_id:
+            raise ValidationError("Клиент и дело не согласованы.")
+
         errors: dict[str, list[str]] = {}
         sources = [
             source
@@ -152,9 +184,8 @@ class Reminder(models.Model):
             if source_case_id is not None:
                 self.case_id = source_case_id
             elif self.client_id:
-                from clients.services.cases import get_primary_case_for_client_id
-
-                self.case = get_primary_case_for_client_id(self.client_id)
+                from clients.services.cases import get_legacy_compatibility_case
+                self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
             if self.case_id is not None and update_fields is not None:
                 update_fields = set(update_fields)
                 update_fields.add("case")

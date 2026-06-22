@@ -21,8 +21,8 @@ from django.utils.translation import gettext as _
 from clients.constants import SELF_ONBOARDING_SLUG, DocumentType
 from clients.forms import DocumentUploadForm
 from clients.models import (
-    Client,
     Case,
+    Client,
     ClientDigitalAccess,
     ClientOnboardingSession,
     Document,

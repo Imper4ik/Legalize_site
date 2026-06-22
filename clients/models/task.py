@@ -1,12 +1,22 @@
 from __future__ import annotations
 
+from typing import Self
+
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
+class StaffTaskQuerySet(models.QuerySet):
+    def for_active_cases(self) -> Self:
+        return self.filter(case__isnull=False, case__archived_at__isnull=True)
+
+
 class StaffTask(models.Model):
+    objects = models.Manager.from_queryset(StaffTaskQuerySet)()
+
     STATUS_CHOICES = [
         ("open", _("Открыта")),
         ("in_progress", _("В работе")),
@@ -104,6 +114,16 @@ class StaffTask(models.Model):
         verbose_name=_("Платёж"),
     )
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Завершена"))
+    suspended_by_case_archive = models.BooleanField(default=False, verbose_name=_("Приостановлена архивацией дела"))
+    suspended_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Дата приостановки"))
+    suspended_by_archive_batch = models.ForeignKey(
+        "clients.CaseArchiveBatch",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="suspended_tasks",
+        verbose_name=_("Батч архивации"),
+    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Создана"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Обновлена"))
     version = models.PositiveIntegerField(default=1, verbose_name=_("Версия"))
@@ -119,6 +139,29 @@ class StaffTask(models.Model):
             models.Index(fields=["assignee", "status", "due_date"], name="task_assignee_status_due_idx"),
         ]
 
+    def clean(self) -> None:
+        super().clean()
+        source_case_id = None
+        if self.document_id and self.document.case_id:
+            source_case_id = self.document.case_id
+        elif self.payment_id and self.payment.case_id:
+            source_case_id = self.payment.case_id
+
+        if self.case_id is None:
+            if source_case_id is not None:
+                self.case_id = source_case_id
+            elif self.client_id:
+                from clients.services.cases import get_legacy_compatibility_case
+                try:
+                    self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
+                except ValidationError as e:
+                    raise ValidationError({"case": e.message})
+            else:
+                raise ValidationError({"case": "Case is required."})
+
+        if self.case_id and self.client_id and self.case.client_id != self.client_id:
+            raise ValidationError("Клиент и дело не согласованы.")
+
     def save(self, *args: object, **kwargs: object) -> None:
         update_fields = kwargs.get("update_fields")
         source_case_id = None
@@ -130,9 +173,8 @@ class StaffTask(models.Model):
             if source_case_id is not None:
                 self.case_id = source_case_id
             elif self.client_id:
-                from clients.services.cases import get_primary_case_for_client_id
-
-                self.case = get_primary_case_for_client_id(self.client_id)
+                from clients.services.cases import get_legacy_compatibility_case
+                self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
             if self.case_id is not None and update_fields is not None:
                 update_fields = set(update_fields)
                 update_fields.add("case")

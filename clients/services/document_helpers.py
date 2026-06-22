@@ -1,8 +1,10 @@
 import logging
 import os
 from typing import Any
+
 from django.core.files.base import ContentFile
-from clients.models import Document, Case
+
+from clients.models import Case, Document
 
 logger = logging.getLogger(__name__)
 

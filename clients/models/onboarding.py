@@ -1,6 +1,7 @@
 from typing import Any
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -61,15 +62,30 @@ class ClientOnboardingSession(models.Model):
             )
         ]
 
+    def clean(self) -> None:
+        super().clean()
+        if self.case_id is None:
+            if self.payment_id and self.payment.case_id:
+                self.case_id = self.payment.case_id
+            elif self.client_id:
+                from clients.services.cases import get_legacy_compatibility_case
+                try:
+                    self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
+                except ValidationError as e:
+                    raise ValidationError({"case": e.message})
+            else:
+                raise ValidationError({"case": "Case is required."})
+        if self.case_id and self.client_id and self.case.client_id != self.client_id:
+            raise ValidationError("Клиент и дело не согласованы.")
+
     def save(self, *args: object, **kwargs: object) -> None:
         update_fields = kwargs.get("update_fields")
         if self.case_id is None:
             if self.payment_id and self.payment.case_id:
                 self.case_id = self.payment.case_id
             elif self.client_id:
-                from clients.services.cases import get_primary_case_for_client_id
-
-                self.case = get_primary_case_for_client_id(self.client_id)
+                from clients.services.cases import get_legacy_compatibility_case
+                self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
             if self.case_id is not None and update_fields is not None:
                 update_fields = set(update_fields)
                 update_fields.add("case")
@@ -190,12 +206,25 @@ class MOSApplicationData(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     version = models.PositiveIntegerField(default=1)
 
+    def clean(self) -> None:
+        super().clean()
+        if self.case_id is None:
+            if self.client_id:
+                from clients.services.cases import get_legacy_compatibility_case
+                try:
+                    self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
+                except ValidationError as e:
+                    raise ValidationError({"case": e.message})
+            else:
+                raise ValidationError({"case": "Case is required."})
+        if self.case_id and self.client_id and self.case.client_id != self.client_id:
+            raise ValidationError("Клиент и дело не согласованы.")
+
     def save(self, *args: object, **kwargs: object) -> None:
         update_fields = kwargs.get("update_fields")
         if self.case_id is None and self.client_id:
-            from clients.services.cases import get_primary_case_for_client_id
-
-            self.case = get_primary_case_for_client_id(self.client_id)
+            from clients.services.cases import get_legacy_compatibility_case
+            self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
             if update_fields is not None:
                 update_fields = set(update_fields)
                 update_fields.add("case")
@@ -254,12 +283,25 @@ class PeselApplication(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     version = models.PositiveIntegerField(default=1)
 
+    def clean(self) -> None:
+        super().clean()
+        if self.case_id is None:
+            if self.client_id:
+                from clients.services.cases import get_legacy_compatibility_case
+                try:
+                    self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
+                except ValidationError as e:
+                    raise ValidationError({"case": e.message})
+            else:
+                raise ValidationError({"case": "Case is required."})
+        if self.case_id and self.client_id and self.case.client_id != self.client_id:
+            raise ValidationError("Клиент и дело не согласованы.")
+
     def save(self, *args: object, **kwargs: object) -> None:
         update_fields = kwargs.get("update_fields")
         if self.case_id is None and self.client_id:
-            from clients.services.cases import get_primary_case_for_client_id
-
-            self.case = get_primary_case_for_client_id(self.client_id)
+            from clients.services.cases import get_legacy_compatibility_case
+            self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
             if update_fields is not None:
                 update_fields = set(update_fields)
                 update_fields.add("case")
@@ -275,4 +317,5 @@ def create_client_onboarding_profiles(sender: object, instance: Any, created: bo
     if created:
         ClientDigitalAccess.objects.get_or_create(client=instance)
         case = instance.cases.order_by("opened_at", "id").first()
-        MOSApplicationData.objects.get_or_create(client=instance, defaults={"case": case})
+        if case:
+            MOSApplicationData.objects.get_or_create(client=instance, case=case)

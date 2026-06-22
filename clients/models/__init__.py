@@ -1,7 +1,7 @@
 from .activity import ClientActivity
 from .app_settings import AppSettings
 from .campaign import EmailCampaign
-from .case import Case, CaseArchiveSnapshot, ClientArchiveBatch, CaseArchiveBatch, CaseParticipant
+from .case import Case, CaseArchiveBatch, CaseArchiveSnapshot, CaseParticipant, ClientArchiveBatch
 from .client import Client
 from .company import Company
 from .document import (

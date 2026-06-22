@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from django.utils.translation import gettext as _
 
 if TYPE_CHECKING:
+    from clients.models.case import Case
     from clients.models.client import Client
 
 WORKFLOW_SEQUENCE = (
@@ -25,7 +26,7 @@ class WorkflowValidationResult:
     message: str = ""
 
 
-def validate_client_workflow_transition(*, client: Client, previous_stage: str | None, next_stage: str | None) -> WorkflowValidationResult:
+def validate_case_workflow_transition(*, case: Case, previous_stage: str | None, next_stage: str | None) -> WorkflowValidationResult:
     if not previous_stage or not next_stage or previous_stage == next_stage:
         return WorkflowValidationResult(True)
 
@@ -38,14 +39,22 @@ def validate_client_workflow_transition(*, client: Client, previous_stage: str |
     if next_index <= previous_index:
         return WorkflowValidationResult(True)
 
-    if next_stage == "application_submitted":
-        if not getattr(client, "pk", None):
+    # 4. Запретить перевод Case в рабочий статус без principal participant.
+    if next_stage != "new_client":
+        if not case.participants.filter(role="principal").exists():
             return WorkflowValidationResult(
                 False,
-                _("Сначала сохраните клиента, затем загрузите обязательные документы и переведите его к этапу подачи."),
+                _("Нельзя перевести дело в рабочий статус без главного заявителя."),
             )
 
-        checklist = client.get_document_checklist(check_file_existence=True)
+    if next_stage == "application_submitted":
+        if not getattr(case, "pk", None):
+            return WorkflowValidationResult(
+                False,
+                _("Сначала сохраните дело, затем загрузите обязательные документы и переведите его к этапу подачи."),
+            )
+
+        checklist = case.client.get_document_checklist(check_file_existence=True, case=case)
         missing_required = [
             item
             for item in checklist
@@ -59,26 +68,26 @@ def validate_client_workflow_transition(*, client: Client, previous_stage: str |
                 _("Нельзя перейти к подаче, пока не собраны обязательные документы."),
             )
 
-    if next_stage == "fingerprints" and not client.submission_date:
+    if next_stage == "fingerprints" and not case.submission_date:
         return WorkflowValidationResult(
             False,
             _("Нельзя перейти к этапу отпечатков без даты подачи."),
         )
 
-    if next_stage == "waiting_decision" and not client.fingerprints_date:
+    if next_stage == "waiting_decision" and not case.fingerprints_date:
         return WorkflowValidationResult(
             False,
             _("Нельзя перейти к ожиданию решения без даты отпечатков."),
         )
 
-    if next_stage in {"decision_received", "closed"} and not client.decision_date:
+    if next_stage in {"decision_received", "closed"} and not case.decision_date:
         return WorkflowValidationResult(
             False,
             _("Нельзя перейти к решению без даты решения."),
         )
 
-    if next_stage == "closed" and getattr(client, "pk", None):
-        has_open_payments = client.payments.filter(status__in=["pending", "partial"]).exists()
+    if next_stage == "closed" and getattr(case, "pk", None):
+        has_open_payments = case.payments.filter(status__in=["pending", "partial"]).exists()
         if has_open_payments:
             return WorkflowValidationResult(
                 False,
@@ -86,3 +95,14 @@ def validate_client_workflow_transition(*, client: Client, previous_stage: str |
             )
 
     return WorkflowValidationResult(True)
+
+
+def validate_client_workflow_transition(*, client: Client, previous_stage: str | None, next_stage: str | None) -> WorkflowValidationResult:
+    from clients.services.cases import get_primary_case_for_client
+    case = get_primary_case_for_client(client)
+    # Temporarily overlay client fields on the case for validation
+    case.workflow_stage = next_stage
+    case.submission_date = getattr(client, "submission_date", None)
+    case.fingerprints_date = getattr(client, "fingerprints_date", None)
+    case.decision_date = getattr(client, "decision_date", None)
+    return validate_case_workflow_transition(case=case, previous_stage=previous_stage, next_stage=next_stage)

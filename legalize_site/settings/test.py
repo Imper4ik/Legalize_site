@@ -29,7 +29,10 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 # Static files configuration for tests
 STATIC_URL = "/static/"
-STORAGES["staticfiles"] = {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}  # noqa: F405
+if "STORAGES" not in locals():
+    STORAGES = {}
+STORAGES["staticfiles"] = {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"}
+STORAGES["default"] = {"BACKEND": "django.core.files.storage.FileSystemStorage"}
 
 # Keep test-generated files in writable, disposable directories.
 TEST_ARTIFACTS_DIR = BASE_DIR / "tmp" / "test-artifacts"  # noqa: F405

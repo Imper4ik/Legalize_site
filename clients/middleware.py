@@ -1,6 +1,7 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+
 from clients.views.onboarding_views import OnboardingLinkExpired
+
 
 class OnboardingLinkExpiredMiddleware:
     def __init__(self, get_response):

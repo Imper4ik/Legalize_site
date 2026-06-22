@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import uuid
 from typing import Any, Self, cast
 from uuid import uuid4
 
-import uuid
-from django.core.exceptions import ValidationError
 from django.conf import settings
-from django.db import models
+from django.core.exceptions import ValidationError
+from django.db import models, transaction
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.urls import reverse
@@ -17,7 +17,6 @@ from django.utils.translation import gettext_lazy as _
 
 from fernet_fields import EncryptedJSONField, EncryptedTextField
 from legalize_site.soft_delete import SoftDeleteModel, SoftDeleteQuerySet
-from clients.models.locking import OptimisticLockingMixin
 
 
 class CaseQuerySet(SoftDeleteQuerySet):
@@ -47,30 +46,40 @@ class CaseManager(models.Manager.from_queryset(CaseQuerySet)):  # type: ignore[m
 
 class CaseAllManager(models.Manager.from_queryset(CaseQuerySet)):  # type: ignore[misc]
     def create_from_client(self, client: Any) -> Case:
-        return self.create(
-            client=client,
-            internal_number=str(getattr(client, "case_number", "") or ""),
-            authority_case_number=str(getattr(client, "case_number", "") or ""),
-            status=getattr(client, "status", "new") or "new",
-            workflow_stage=getattr(client, "workflow_stage", "new_client") or "new_client",
-            application_purpose=getattr(client, "application_purpose", "") or "",
-            basis_of_stay=getattr(client, "basis_of_stay", "") or "",
-            submission_date=getattr(client, "submission_date", None),
-            fingerprints_date=getattr(client, "fingerprints_date", None),
-            fingerprints_time=getattr(client, "fingerprints_time", None),
-            fingerprints_location=getattr(client, "fingerprints_location", "") or "",
-            fingerprints_ticket=getattr(client, "fingerprints_ticket", "") or "",
-            fingerprints_list=getattr(client, "fingerprints_list", "") or "",
-            fingerprints_info=getattr(client, "fingerprints_info", "") or "",
-            decision_date=getattr(client, "decision_date", None),
-            assigned_staff=getattr(client, "assigned_staff", None),
-            company=getattr(client, "company", None),
-            is_test_data=getattr(client, "is_test_data", False),
-            is_demo_data=getattr(client, "is_demo_data", False),
-        )
+        with transaction.atomic():
+            case = self.create(
+                client=client,
+                legacy_case_number=str(getattr(client, "case_number", "") or ""),
+                needs_manual_number_check=True,
+                internal_number="",
+                authority_case_number="",
+                status=getattr(client, "status", "new") or "new",
+                workflow_stage=getattr(client, "workflow_stage", "new_client") or "new_client",
+                application_purpose=getattr(client, "application_purpose", "") or "",
+                basis_of_stay=getattr(client, "basis_of_stay", "") or "",
+                submission_date=getattr(client, "submission_date", None),
+                fingerprints_date=getattr(client, "fingerprints_date", None),
+                fingerprints_time=getattr(client, "fingerprints_time", None),
+                fingerprints_location=getattr(client, "fingerprints_location", "") or "",
+                fingerprints_ticket=getattr(client, "fingerprints_ticket", "") or "",
+                fingerprints_list=getattr(client, "fingerprints_list", "") or "",
+                fingerprints_info=getattr(client, "fingerprints_info", "") or "",
+                decision_date=getattr(client, "decision_date", None),
+                assigned_staff=getattr(client, "assigned_staff", None),
+                company=getattr(client, "company", None),
+                is_test_data=getattr(client, "is_test_data", False),
+                is_demo_data=getattr(client, "is_demo_data", False),
+            )
+            from clients.models.case import CaseParticipant
+            CaseParticipant.objects.create(
+                case=case,
+                client=client,
+                role="principal",
+            )
+            return case
 
 
-class Case(OptimisticLockingMixin, SoftDeleteModel):
+class Case(SoftDeleteModel):
     STATUS_CHOICES = [
         ("new", _("Новый")),
         ("pending", _("В ожидании")),
@@ -157,6 +166,7 @@ class Case(OptimisticLockingMixin, SoftDeleteModel):
         ordering = ["-opened_at", "-created_at", "-id"]
         verbose_name = _("Дело")
         verbose_name_plural = _("Дела")
+        base_manager_name = "all_objects"
         indexes = [
             models.Index(fields=["client", "archived_at"], name="case_client_archived_idx"),
             models.Index(fields=["workflow_stage", "status"], name="case_workflow_status_idx"),

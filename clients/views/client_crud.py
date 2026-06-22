@@ -391,10 +391,34 @@ class ClientDeleteView(RoleOrFeatureRequiredMixin, DeleteView):
     def get_queryset(self) -> Any:
         return accessible_clients_queryset(self.request.user, Client.objects.all())
 
-    def form_valid(self, form: Any) -> HttpResponse:
-        client_name = self.get_object()
-        messages.success(self.request, _("Клиент %(name)s был успешно удалён.") % {"name": client_name})
-        return super().form_valid(form)
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        client = self.get_object()
+        context["active_cases"] = client.cases.filter(archived_at__isnull=True)
+        return context
+
+    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        self.object = self.get_object()
+        active_cases = self.object.cases.filter(archived_at__isnull=True)
+        if active_cases.exists():
+            confirm = request.POST.get("confirm_archive_all_cases") == "true"
+            if not confirm:
+                messages.error(request, _("Вы должны подтвердить архивацию всех активных дел клиента."))
+                return self.render_to_response(self.get_context_data(object=self.object))
+
+        from clients.services.archive import archive_client_with_all_cases
+        try:
+            archive_client_with_all_cases(
+                client=self.object,
+                actor=request.user,
+                confirmed=True,
+            )
+            messages.success(request, _("Клиент %(name)s и все его дела были успешно заархивированы.") % {"name": self.object})
+        except Exception as e:
+            messages.error(request, str(e))
+            return self.render_to_response(self.get_context_data(object=self.object))
+
+        return redirect(self.success_url)
 
 
 def dashboard_redirect_view(request: HttpRequest) -> HttpResponseBase:

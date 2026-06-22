@@ -19,10 +19,22 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+SAFE_FIELD_NAMES = {
+    "status", "workflow_stage", "application_purpose", "application_type", "basis_of_stay",
+    "opened_at", "submission_date", "fingerprints_date", "fingerprints_time", "fingerprints_location",
+    "decision_date", "decision_valid_until", "assigned_staff", "company", "is_test_data", "is_demo_data",
+    "due_date", "is_active", "notes", "description", "title", "document_type", "expiry_date",
+    "total_amount", "amount_paid", "payment_method", "payment_date", "rejection_reason",
+    "document_kind", "attachment_count", "metadata_version", "ocr_version", "version"
+}
+
 ALLOWED_METADATA_SCHEMA = {
     "case_id": "uuid",
-    "document_count": "int",
+    "document_id": "uuid_or_int",
     "archive_batch_uuid": "uuid",
+    "document_count": "int",
+    "payment_count": "int",
+    "task_count": "int",
     "status_tag": {
         "archived",
         "restored",
@@ -30,44 +42,7 @@ ALLOWED_METADATA_SCHEMA = {
         "approved",
         "rejected",
     },
-    "status": "str",
-    "has_case_number": "bool",
-    "path": "str",
-    "method": "str",
-    "export_type": "str",
-    "payment_count": "int",
-    "document_id": "int",
-    "document_version_id": "int",
-    "version_number": "int",
-    "restored_version_id": "int",
-    "restored_version_number": "int",
-    "workflow_stage": "str",
-    "changed_fields": "list",
-    "auto_updates": "dict",
-    "source": "str",
-    "restored_object": "str",
-    "restored_object_id": "int",
-    "payment_id": "int",
-    "task_id": "int",
-    "verified": "bool",
-    "verified_count": "int",
-    "document_type": "str",
-    "selected_purpose": "str",
-    "priority": "str",
-    "assignee_id": "int",
-    "due_date": "str",
-    "attachment_id": "int",
-    "attachment_name": "str",
-    "submission_id": "int",
-    "remaining_count": "int",
-    "submission_deleted": "bool",
-    "old_workflow_stage": "str",
-    "field": "str",
-    "old_value": "str",
-    "new_value": "str",
-    "old_status": "str",
-    "new_status": "str",
-    "reminder_id": "int",
+    "changed_fields": "safe_field_names_list",
 }
 
 
@@ -79,9 +54,9 @@ def sanitize_activity_metadata(metadata: dict[str, Any] | None) -> dict[str, Any
         if key not in ALLOWED_METADATA_SCHEMA:
             logger.warning("Metadata key rejected due to security policy whitelist violation: %s", key)
             continue
-        
+
         expected_type = ALLOWED_METADATA_SCHEMA[key]
-        
+
         if expected_type == "uuid":
             if isinstance(value, uuid.UUID):
                 sanitized[key] = str(value)
@@ -92,82 +67,57 @@ def sanitize_activity_metadata(metadata: dict[str, Any] | None) -> dict[str, Any
                 except ValueError:
                     logger.warning("Metadata key '%s' rejected due to invalid UUID format", key)
             else:
-                logger.warning("Metadata key '%s' rejected due to type mismatch (expected UUID)", key)
-                
+                logger.warning("Metadata key '%s' rejected due to type mismatch", key)
+
+        elif expected_type == "uuid_or_int":
+            if isinstance(value, (int, uuid.UUID)) and not isinstance(value, bool):
+                sanitized[key] = str(value)
+            elif isinstance(value, str):
+                if value.isdigit():
+                    sanitized[key] = value
+                else:
+                    try:
+                        parsed = uuid.UUID(value)
+                        sanitized[key] = str(parsed)
+                    except ValueError:
+                        logger.warning("Metadata key '%s' rejected due to invalid UUID/int format", key)
+            else:
+                logger.warning("Metadata key '%s' rejected due to type mismatch", key)
+
         elif expected_type == "int":
             if isinstance(value, int) and not isinstance(value, bool):
                 sanitized[key] = value
             elif isinstance(value, str) and value.isdigit():
                 sanitized[key] = int(value)
             else:
-                logger.warning("Metadata key '%s' rejected due to type mismatch (expected int)", key)
-                
-        elif expected_type == "str":
-            if isinstance(value, (str, int, float, bool, uuid.UUID)):
-                val_str = str(value)
-            elif hasattr(value, "isoformat"):
-                val_str = value.isoformat()
-            else:
-                val_str = None
-                
-            if val_str is not None:
-                if len(val_str) <= 100:
-                    sanitized[key] = val_str
-                else:
-                    logger.warning("Metadata key '%s' rejected due to string length limit (max 100)", key)
-            else:
-                logger.warning("Metadata key '%s' rejected due to type mismatch (expected str)", key)
-                
+                logger.warning("Metadata key '%s' rejected due to type mismatch", key)
+
         elif isinstance(expected_type, set):
             if isinstance(value, str) and value in expected_type:
-                sanitized[key] = value
+                if len(value) <= 100:
+                    sanitized[key] = value
+                else:
+                    logger.warning("Metadata key '%s' rejected due to string length limit", key)
             else:
-                logger.warning("Metadata key '%s' rejected due to value mismatch (expected one of %s)", key, expected_type)
+                logger.warning("Metadata key '%s' rejected due to value mismatch", key)
 
-        elif expected_type == "bool":
-            if isinstance(value, bool):
-                sanitized[key] = value
-            else:
-                logger.warning("Metadata key '%s' rejected due to type mismatch (expected bool)", key)
-
-        elif expected_type == "list":
+        elif expected_type == "safe_field_names_list":
             if isinstance(value, (list, tuple)):
                 sanitized_list = []
                 for item in value:
-                    if isinstance(item, (int, float)) and not isinstance(item, bool):
-                        sanitized_list.append(item)
-                    elif isinstance(item, bool):
-                        sanitized_list.append(item)
-                    elif isinstance(item, str) and len(item) <= 100:
-                        sanitized_list.append(item)
-                    elif hasattr(item, "isoformat"):
-                        sanitized_list.append(item.isoformat())
+                    if isinstance(item, str) and item in SAFE_FIELD_NAMES:
+                        if len(item) <= 100:
+                            sanitized_list.append(item)
+                        else:
+                            logger.warning("Metadata list item rejected due to string length limit")
                     else:
-                        logger.warning("Metadata list item rejected due to type/length constraint")
+                        logger.warning("Metadata list item rejected because it is not a safe field name")
                 sanitized[key] = sanitized_list
             else:
-                logger.warning("Metadata key '%s' rejected due to type mismatch (expected list)", key)
+                logger.warning("Metadata key '%s' rejected due to type mismatch", key)
 
-        elif expected_type == "dict":
-            if isinstance(value, dict):
-                def sanitize_val(val: Any) -> Any:
-                    if isinstance(val, dict):
-                        return {str(k): sanitize_val(v) for k, v in val.items() if len(str(k)) <= 100}
-                    elif isinstance(val, (list, tuple)):
-                        return [sanitize_val(v) for v in val]
-                    elif isinstance(val, (int, float)) and not isinstance(val, bool):
-                        return val
-                    elif isinstance(val, bool):
-                        return val
-                    elif isinstance(val, str) and len(val) <= 100:
-                        return val
-                    elif hasattr(val, "isoformat"):
-                        return val.isoformat()
-                    return None
-                sanitized[key] = sanitize_val(value)
-            else:
-                logger.warning("Metadata key '%s' rejected due to type mismatch (expected dict)", key)
-                
+    return sanitized
+
     return sanitized
 
 

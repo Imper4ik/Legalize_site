@@ -1,8 +1,9 @@
 import logging
+
+from cryptography.fernet import InvalidToken
+from django.apps import apps
 from django.core.management.base import BaseCommand
 from django.db import connection, models
-from django.apps import apps
-from cryptography.fernet import InvalidToken, MultiFernet, Fernet
 
 from fernet_fields.fields import EncryptedFieldDecryptionError
 

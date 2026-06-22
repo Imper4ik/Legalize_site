@@ -1,19 +1,26 @@
 from __future__ import annotations
 
 import logging
-import uuid
 from typing import Any
-from django.db import models, transaction
-from django.utils import timezone
-from django.core.exceptions import ValidationError, PermissionDenied
+
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import models
 from django.db.models import F
+from django.utils import timezone
 
 from clients.models import (
-    Case, Payment, Reminder, MOSApplicationData, PeselApplication,
-    ClientDocumentRequirement, StaffTask, WniosekSubmission, Document
+    Case,
+    ClientDocumentRequirement,
+    Document,
+    MOSApplicationData,
+    Payment,
+    PeselApplication,
+    Reminder,
+    StaffTask,
+    WniosekSubmission,
 )
-from clients.services.roles import user_has_any_role
 from clients.services.access import is_internal_staff_user
+from clients.services.roles import user_has_any_role
 
 logger = logging.getLogger(__name__)
 

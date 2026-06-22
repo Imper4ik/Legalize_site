@@ -9,9 +9,10 @@ from django.test import TestCase, TransactionTestCase
 from django.utils import timezone
 
 from clients.constants import DocumentType
-from clients.models import Case, CaseArchiveSnapshot, Document, Payment, Reminder, StaffTask
+from clients.models import Case, Document, Payment, Reminder, StaffTask
 from clients.services.activity import log_client_activity
-from clients.services.cases import archive_case, create_case_for_client, restore_case
+from clients.services.archive import archive_case, restore_case
+from clients.services.cases import create_case_for_client
 from clients.testing.factories import build_pdf_upload, create_test_client, create_test_document, create_test_user
 
 
@@ -95,7 +96,7 @@ class CaseArchitectureTests(TestCase):
             application_purpose="study",
             workflow_stage="document_collection",
         )
-        primary_document = create_test_document(self.client_obj, filename="primary.pdf")
+        primary_document = create_test_document(self.client_obj, filename="primary.pdf", case=self.primary_case)
         second_document = Document.objects.create(
             client=self.client_obj,
             case=second_case,
@@ -105,6 +106,7 @@ class CaseArchitectureTests(TestCase):
         )
         primary_payment = Payment.objects.create(
             client=self.client_obj,
+            case=self.primary_case,
             service_description="work_service",
             total_amount=Decimal("100.00"),
             status="pending",
@@ -133,7 +135,7 @@ class CaseArchitectureTests(TestCase):
 
     def test_archive_and_restore_case_use_snapshots_without_touching_other_cases(self) -> None:
         second_case = create_case_for_client(client=self.client_obj, actor=self.staff, application_purpose="study")
-        active_document = create_test_document(self.client_obj, filename="active.pdf")
+        active_document = create_test_document(self.client_obj, filename="active.pdf", case=self.primary_case)
         other_document = Document.objects.create(
             client=self.client_obj,
             case=second_case,
@@ -141,44 +143,60 @@ class CaseArchitectureTests(TestCase):
             file=build_pdf_upload("other.pdf"),
             is_test_data=True,
         )
-        archived_document = create_test_document(self.client_obj, filename="archived.pdf")
+        archived_document = create_test_document(self.client_obj, filename="archived.pdf", case=self.primary_case)
         archived_document.archive()
         payment = Payment.objects.create(
             client=self.client_obj,
+            case=self.primary_case,
             service_description="work_service",
             total_amount=Decimal("100.00"),
             status="pending",
         )
         inactive_reminder = Reminder.objects.create(
             client=self.client_obj,
+            case=self.primary_case,
             reminder_type="other",
             title="Manual inactive",
             due_date=timezone.localdate(),
             is_active=False,
         )
-        task = StaffTask.objects.create(client=self.client_obj, title="Open task", status="open")
+        task = StaffTask.objects.create(client=self.client_obj, case=self.primary_case, title="Open task", status="open")
 
         result = archive_case(case=self.primary_case, actor=self.staff)
 
-        self.assertGreater(result.documents_changed, 0)
-        self.assertIsNotNone(Document.all_objects.get(pk=active_document.pk).archived_at)
+        self.assertEqual(result.status, "archived")
+        self.assertEqual(result.case, self.primary_case)
+        self.assertIsNotNone(Case.all_objects.get(pk=self.primary_case.pk).archived_at)
+
+        # Documents, Payments, Reminders do not change their state
+        self.assertIsNone(Document.all_objects.get(pk=active_document.pk).archived_at)
         self.assertIsNone(Document.objects.get(pk=other_document.pk).archived_at)
-        self.assertEqual(StaffTask.objects.get(pk=task.pk).status, "cancelled")
-        self.assertTrue(CaseArchiveSnapshot.objects.filter(archive_batch_uuid=result.archive_batch_uuid).exists())
+        self.assertIsNone(Payment.all_objects.get(pk=payment.pk).archived_at)
+        self.assertFalse(Reminder.objects.get(pk=inactive_reminder.pk).is_active)
 
-        restore_case(case=Case.all_objects.get(pk=self.primary_case.pk), actor=self.staff)
-        restore_case(case=Case.objects.get(pk=self.primary_case.pk), actor=self.staff)
+        # Tasks are suspended
+        task_refreshed = StaffTask.objects.get(pk=task.pk)
+        self.assertTrue(task_refreshed.suspended_by_case_archive)
+        self.assertEqual(task_refreshed.suspended_by_archive_batch, result)
 
+        restore_case(case=Case.all_objects.get(pk=self.primary_case.pk), actor=self.staff, batch=result)
+
+        self.assertIsNone(Case.objects.get(pk=self.primary_case.pk).archived_at)
         self.assertIsNone(Document.all_objects.get(pk=active_document.pk).archived_at)
         self.assertIsNotNone(Document.all_objects.get(pk=archived_document.pk).archived_at)
         self.assertIsNone(Payment.all_objects.get(pk=payment.pk).archived_at)
         self.assertFalse(Reminder.objects.get(pk=inactive_reminder.pk).is_active)
-        self.assertEqual(StaffTask.objects.get(pk=task.pk).status, "open")
+
+        # Tasks are unsuspended
+        task_refreshed = StaffTask.objects.get(pk=task.pk)
+        self.assertFalse(task_refreshed.suspended_by_case_archive)
+        self.assertIsNone(task_refreshed.suspended_by_archive_batch)
 
     def test_reminder_rejects_mismatched_case_source(self) -> None:
         second_case = create_case_for_client(client=self.client_obj, actor=self.staff, application_purpose="study")
         payment = Payment.objects.create(
             client=self.client_obj,
+            case=self.primary_case,
             service_description="work_service",
             total_amount=Decimal("100.00"),
             status="pending",

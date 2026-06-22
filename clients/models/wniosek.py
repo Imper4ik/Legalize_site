@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -40,12 +41,25 @@ class WniosekSubmission(models.Model):
         verbose_name=_("Confirmed by"),
     )
 
+    def clean(self) -> None:
+        super().clean()
+        if self.case_id is None:
+            if self.client_id:
+                from clients.services.cases import get_legacy_compatibility_case
+                try:
+                    self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
+                except ValidationError as e:
+                    raise ValidationError({"case": e.message})
+            else:
+                raise ValidationError({"case": "Case is required."})
+        if self.case_id and self.client_id and self.case.client_id != self.client_id:
+            raise ValidationError("Клиент и дело не согласованы.")
+
     def save(self, *args: object, **kwargs: object) -> None:
         update_fields = kwargs.get("update_fields")
         if self.case_id is None and self.client_id:
-            from clients.services.cases import get_primary_case_for_client_id
-
-            self.case = get_primary_case_for_client_id(self.client_id)
+            from clients.services.cases import get_legacy_compatibility_case
+            self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
             if update_fields is not None:
                 update_fields = set(update_fields)
                 update_fields.add("case")

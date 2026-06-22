@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.utils import timezone
-from django.core.exceptions import ValidationError, PermissionDenied
 
-from clients.models import Client, Case, ClientArchiveBatch, CaseArchiveBatch, StaffTask
-from clients.services.roles import user_has_any_role
+from clients.models import Case, CaseArchiveBatch, Client, ClientArchiveBatch, StaffTask
 from clients.services.access import is_internal_staff_user
+from clients.services.roles import user_has_any_role
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ def archive_case(
     if not has_archive_permission(actor):
         raise PermissionDenied("У вас нет прав для архивации дел.")
 
-    case = Case.objects.select_for_update().get(pk=case.pk)
+    case = Case.all_objects.select_for_update().get(pk=case.pk)
 
     if case.archived_at is not None:
         raise ValidationError("Дело уже заархивировано.")
@@ -94,7 +95,7 @@ def restore_case(
     if not has_archive_permission(actor):
         raise PermissionDenied("У вас нет прав для восстановления дел.")
 
-    case = Case.objects.select_for_update().get(pk=case.pk)
+    case = Case.all_objects.select_for_update().get(pk=case.pk)
     batch = CaseArchiveBatch.objects.select_for_update().get(pk=batch.pk)
 
     if batch.case_id != case.id:
@@ -154,7 +155,7 @@ def archive_client_with_all_cases(
     if not has_archive_permission(actor):
         raise PermissionDenied("У вас нет прав для архивации клиентов.")
 
-    client = Client.objects.select_for_update().get(pk=client.pk)
+    client = Client.all_objects.select_for_update().get(pk=client.pk)
 
     if client.archived_at is not None:
         raise ValidationError("Клиент уже заархивирован.")
@@ -203,7 +204,7 @@ def restore_client_with_all_cases(
     if not has_archive_permission(actor):
         raise PermissionDenied("У вас нет прав для восстановления клиентов.")
 
-    client = Client.objects.select_for_update().get(pk=client.pk)
+    client = Client.all_objects.select_for_update().get(pk=client.pk)
     batch = ClientArchiveBatch.objects.select_for_update().get(pk=batch.pk)
 
     if batch.client_id != client.pk:
