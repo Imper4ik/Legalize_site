@@ -68,6 +68,7 @@ def sync_payment_reminder_on_save(sender: Any, instance: Payment, **kwargs: Any)
             payment=instance,
             defaults={
                 "client": instance.client,
+                "case": instance.case,
                 "reminder_type": "payment",
                 "title": _("Просроченная оплата: %(service)s") % {
                     "service": instance.get_service_description_display(),

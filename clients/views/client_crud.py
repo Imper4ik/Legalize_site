@@ -14,12 +14,13 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 
 from clients.constants import SELF_ONBOARDING_SLUG
 from clients.forms import (
+    CaseForm,
     ClientForm,
     DocumentUploadForm,
     PaymentForm,
     StaffTaskForm,
 )
-from clients.models import Client, ClientActivity, Document, EmailLog, Payment, StaffTask, WniosekSubmission
+from clients.models import Case, Client, ClientActivity, Document, EmailLog, Payment, StaffTask, WniosekSubmission
 from clients.security.encrypted import safe_encrypted_attr
 from clients.services.access import accessible_clients_queryset
 from clients.services.activity import log_client_view
@@ -196,6 +197,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
                 "sponsor_client__case_number",
                 "sponsor_client__passport_num",
             ).prefetch_related(
+                Prefetch("cases", queryset=Case.objects.select_related("assigned_staff", "company").order_by("-opened_at", "-id")),
                 Prefetch("payments", queryset=Payment.objects.order_by("-created_at")),
                 Prefetch(
                     "documents",
@@ -234,6 +236,8 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         client = self.object
         document_status_list = client.get_document_checklist(check_file_existence=True) if hasattr(client, "get_document_checklist") else []
 
+        context["case_form"] = CaseForm(initial={"assigned_staff": client.assigned_staff_id, "workflow_stage": client.workflow_stage})
+        context["cases"] = list(client.cases.all())
         context["payment_form"] = PaymentForm()
         context["document_upload_form"] = DocumentUploadForm()
         context["document_status_list"] = document_status_list

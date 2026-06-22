@@ -38,6 +38,14 @@ class StaffTask(models.Model):
         related_name="staff_tasks",
         verbose_name=_("Клиент"),
     )
+    case = models.ForeignKey(
+        "clients.Case",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="staff_tasks",
+        verbose_name=_("Дело"),
+    )
     task_type = models.CharField(
         max_length=50,
         choices=TASK_TYPE_CHOICES,
@@ -98,6 +106,7 @@ class StaffTask(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Завершена"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Создана"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Обновлена"))
+    version = models.PositiveIntegerField(default=1, verbose_name=_("Версия"))
 
     class Meta:
         ordering = ["status", "due_date", "-created_at"]
@@ -106,8 +115,29 @@ class StaffTask(models.Model):
         indexes = [
             models.Index(fields=["status", "due_date"], name="task_status_due_idx"),
             models.Index(fields=["client", "status", "due_date"], name="task_client_status_due_idx"),
+            models.Index(fields=["case", "status", "due_date"], name="task_case_status_due_idx"),
             models.Index(fields=["assignee", "status", "due_date"], name="task_assignee_status_due_idx"),
         ]
+
+    def save(self, *args: object, **kwargs: object) -> None:
+        update_fields = kwargs.get("update_fields")
+        source_case_id = None
+        if self.document_id and self.document.case_id:
+            source_case_id = self.document.case_id
+        elif self.payment_id and self.payment.case_id:
+            source_case_id = self.payment.case_id
+        if self.case_id is None:
+            if source_case_id is not None:
+                self.case_id = source_case_id
+            elif self.client_id:
+                from clients.services.cases import get_primary_case_for_client_id
+
+                self.case = get_primary_case_for_client_id(self.client_id)
+            if self.case_id is not None and update_fields is not None:
+                update_fields = set(update_fields)
+                update_fields.add("case")
+                kwargs["update_fields"] = list(update_fields)
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return str(self.title)

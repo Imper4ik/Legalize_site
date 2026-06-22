@@ -177,7 +177,7 @@ class Command(BaseCommand):
     def send_expiring_document_notifications(self, *, dry_run: bool = False) -> None:
         today = timezone.localdate()
         cutoff = today + timedelta(days=7)
-        expiring_docs = Document.objects.select_related("client").filter(
+        expiring_docs = Document.objects.select_related("client", "case").filter(
             expiry_date__isnull=False,
             expiry_date__gte=today,
             expiry_date__lte=cutoff,
@@ -234,6 +234,7 @@ class Command(BaseCommand):
 
             Reminder.objects.create(
                 client=document.client,
+                case=document.case,
                 document=document,
                 title=f"Document validity check: {document.display_name}",
                 notes=f"Document validity date for client_id={document.client_id}: {document.expiry_date:%d.%m.%Y}.",
@@ -246,7 +247,7 @@ class Command(BaseCommand):
 
     def create_payment_reminders(self, *, dry_run: bool = False) -> None:
         today = timezone.localdate()
-        due_payments = Payment.objects.select_related("client").filter(
+        due_payments = Payment.objects.select_related("client", "case").filter(
             due_date__lte=today,
             status__in=["pending", "partial"],
             client__archived_at__isnull=True,
@@ -266,6 +267,7 @@ class Command(BaseCommand):
                 payment=payment,
                 defaults={
                     "client": payment.client,
+                    "case": payment.case,
                     "title": f"Payment due: {payment.get_service_description_display()}",
                     "notes": (
                         f"Payment total={payment.total_amount}; amount_due={payment.amount_due}; "
@@ -285,7 +287,7 @@ class Command(BaseCommand):
         today = timezone.localdate()
         cutoff = today + timedelta(days=45)
 
-        mos_data_list = MOSApplicationData.objects.select_related("client").filter(
+        mos_data_list = MOSApplicationData.objects.select_related("client", "case").filter(
             legal_stay_until__isnull=False,
             legal_stay_until__gte=today,
             legal_stay_until__lte=cutoff,
@@ -308,6 +310,7 @@ class Command(BaseCommand):
                 due_date = due_date - timedelta(days=2)
 
             defaults = {
+                "case": mos.case,
                 "title": f"Срок подачи по легальному пребыванию: {due_date.strftime('%d.%m.%Y')}",
                 "notes": (
                     f"Легальное пребывание до: {mos.legal_stay_until.strftime('%d.%m.%Y')}. "
@@ -319,6 +322,7 @@ class Command(BaseCommand):
 
             existing = Reminder.objects.filter(
                 client=mos.client,
+                case=mos.case,
                 reminder_type="legal_stay",
                 is_active=True,
             ).first()
@@ -329,6 +333,7 @@ class Command(BaseCommand):
 
             _reminder, created = Reminder.objects.update_or_create(
                 client=mos.client,
+                case=mos.case,
                 reminder_type="legal_stay",
                 is_active=True,
                 defaults=defaults,
@@ -341,7 +346,7 @@ class Command(BaseCommand):
 
     def sync_custom_document_requirement_reminders(self, *, dry_run: bool = False) -> None:
         counts = defaultdict(int)
-        for requirement in ClientDocumentRequirement.objects.select_related("client").filter(client__archived_at__isnull=True).iterator():
+        for requirement in ClientDocumentRequirement.objects.select_related("client", "case").filter(client__archived_at__isnull=True).iterator():
             outcome = sync_custom_document_requirement_reminder(requirement, dry_run=dry_run)
             counts[outcome] += 1
         self.stdout.write(

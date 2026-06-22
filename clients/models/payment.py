@@ -29,6 +29,14 @@ class Payment(SoftDeleteModel):
     ]
 
     client = models.ForeignKey("clients.Client", on_delete=models.CASCADE, related_name="payments", verbose_name=_("Клиент"))
+    case = models.ForeignKey(
+        "clients.Case",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="payments",
+        verbose_name=_("Дело"),
+    )
     service_description = models.CharField(max_length=100, choices=SERVICE_CHOICES, verbose_name=_("Описание услуги"))
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, verbose_name=_("Общая сумма"))
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name=_("Оплаченная сумма"))
@@ -39,9 +47,22 @@ class Payment(SoftDeleteModel):
     transaction_id = models.CharField(max_length=100, blank=True, null=True, verbose_name=_("ID транзакции"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Создано"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Обновлено"))
+    version = models.PositiveIntegerField(default=1, verbose_name=_("Версия"))
 
     is_test_data = models.BooleanField(default=False, db_index=True)
     is_demo_data = models.BooleanField(default=False, db_index=True)
+
+    def save(self, *args: object, **kwargs: object) -> None:
+        update_fields = kwargs.get("update_fields")
+        if self.case_id is None and self.client_id:
+            from clients.services.cases import get_primary_case_for_client_id
+
+            self.case = get_primary_case_for_client_id(self.client_id)
+            if update_fields is not None:
+                update_fields = set(update_fields)
+                update_fields.add("case")
+                kwargs["update_fields"] = list(update_fields)
+        super().save(*args, **kwargs)
 
     @property
     def amount_due(self) -> Decimal:
@@ -116,6 +137,7 @@ class Payment(SoftDeleteModel):
         ordering = ["-created_at"]
         indexes = [
             models.Index(fields=["client", "status"], name="payment_client_status_idx"),
+            models.Index(fields=["case", "status"], name="payment_case_status_idx"),
             models.Index(fields=["status", "due_date"], name="payment_status_due_idx"),
         ]
         constraints = [

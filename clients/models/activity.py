@@ -40,6 +40,14 @@ class ClientActivity(models.Model):
         related_name="activities",
         verbose_name=_("Клиент"),
     )
+    case = models.ForeignKey(
+        "clients.Case",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="activities",
+        verbose_name=_("Дело"),
+    )
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
@@ -85,6 +93,7 @@ class ClientActivity(models.Model):
         verbose_name_plural = _("События клиентов")
         indexes = [
             models.Index(fields=["client", "-created_at"], name="activity_client_created_idx"),
+            models.Index(fields=["case", "-created_at"], name="activity_case_created_idx"),
             models.Index(fields=["actor", "-created_at"], name="activity_actor_created_idx"),
             models.Index(fields=["-created_at"], name="activity_created_idx"),
         ]

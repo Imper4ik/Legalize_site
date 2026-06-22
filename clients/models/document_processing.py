@@ -39,6 +39,14 @@ class DocumentProcessingJob(models.Model):
         related_name="processing_jobs",
         verbose_name=_("Document"),
     )
+    case = models.ForeignKey(
+        "clients.Case",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="document_processing_jobs",
+        verbose_name=_("Case"),
+    )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,
@@ -82,10 +90,21 @@ class DocumentProcessingJob(models.Model):
         unique_together = ("document", "job_type")
         indexes = [
             models.Index(fields=["job_type", "status", "next_attempt_at"], name="docjob_ready_idx"),
+            models.Index(fields=["case", "status"], name="docjob_case_status_idx"),
             models.Index(fields=["status", "lease_expires_at"], name="docjob_lease_idx"),
         ]
         verbose_name = _("Document processing job")
         verbose_name_plural = _("Document processing jobs")
+
+    def save(self, *args: object, **kwargs: object) -> None:
+        update_fields = kwargs.get("update_fields")
+        if self.case_id is None and self.document_id and self.document.case_id:
+            self.case_id = self.document.case_id
+            if update_fields is not None:
+                update_fields = set(update_fields)
+                update_fields.add("case")
+                kwargs["update_fields"] = list(update_fields)
+        super().save(*args, **kwargs)
 
     def __str__(self) -> str:
         return f"{self.job_type} for document {self.document_id} ({self.status})"

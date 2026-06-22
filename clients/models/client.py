@@ -315,11 +315,18 @@ class Client(SoftDeleteModel):
             self._restore_related_case_records()
 
     def _archive_related_case_records(self) -> None:
+        from clients.models.case import Case
+        from clients.services.cases import archive_all_client_cases
+
         from .document import Document
         from .payment import Payment
         from .reminder import Reminder
 
         if not self.pk:
+            return
+
+        if Case.objects.filter(client_id=self.pk).exists():
+            archive_all_client_cases(client=self)
             return
 
         for document in Document.objects.filter(client_id=self.pk).iterator():
@@ -329,10 +336,19 @@ class Client(SoftDeleteModel):
         Reminder.objects.filter(client_id=self.pk, is_active=True).update(is_active=False)
 
     def _restore_related_case_records(self) -> None:
+        from clients.models.case import Case
+        from clients.services.cases import restore_case
+
         from .document import Document
         from .payment import Payment
 
         if not self.pk:
+            return
+
+        archived_cases = Case.all_objects.filter(client_id=self.pk, archived_at__isnull=False).order_by("id")
+        if archived_cases.exists():
+            for case in archived_cases:
+                restore_case(case=case)
             return
 
         for document in Document.all_objects.filter(client_id=self.pk, archived_at__isnull=False).iterator():

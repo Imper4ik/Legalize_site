@@ -29,6 +29,7 @@ from submissions.models import Submission
 from .constants import INTERNAL_DOCS, DocumentType
 from .models import (
     AppSettings,
+    Case,
     Client,
     Company,
     Document,
@@ -233,6 +234,38 @@ def _label_for_document_type(code: str) -> str:
         return str(DocumentType(code).label)
     except ValueError:
         return code.replace('_', ' ').capitalize()
+
+
+
+class CaseForm(forms.ModelForm):
+    class Meta:
+        model = Case
+        fields = [
+            "application_purpose",
+            "application_type",
+            "basis_of_stay",
+            "workflow_stage",
+            "assigned_staff",
+            "company",
+        ]
+        widgets = {
+            "application_purpose": forms.TextInput(attrs={"class": "form-control"}),
+            "application_type": forms.TextInput(attrs={"class": "form-control"}),
+            "basis_of_stay": forms.TextInput(attrs={"class": "form-control"}),
+            "workflow_stage": forms.Select(attrs={"class": "form-select"}),
+            "assigned_staff": forms.Select(attrs={"class": "form-select"}),
+            "company": forms.Select(attrs={"class": "form-select"}),
+        }
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        user_model = get_user_model()
+        self.fields["assigned_staff"].queryset = user_model.objects.filter(
+            is_staff=True,
+            is_active=True,
+        ).order_by("email")
+        self.fields["assigned_staff"].required = False
+        self.fields["company"].required = False
 
 
 class ClientForm(forms.ModelForm):
@@ -481,16 +514,18 @@ class DocumentUploadForm(forms.ModelForm):
         if not value:
             return None
         normalized = value.replace(day=1)
-        if (
-            self.client is not None
-            and Document.objects.filter(
+        if self.client is not None:
+            duplicate_query = Document.objects.filter(
                 client=self.client,
                 document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
                 zus_period_month=normalized,
                 archived_at__isnull=True,
-            ).exclude(pk=self.instance.pk).exists()
-        ):
-            raise forms.ValidationError(_("ZUS RCA for this month is already uploaded."))
+            )
+            case = self.client.cases.order_by("opened_at", "id").first()
+            if case is not None:
+                duplicate_query = duplicate_query.filter(case=case)
+            if duplicate_query.exclude(pk=self.instance.pk).exists():
+                raise forms.ValidationError(_("ZUS RCA for this month is already uploaded for this case."))
         return normalized
 
     class Meta:

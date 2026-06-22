@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
@@ -14,6 +15,14 @@ class Reminder(models.Model):
     ]
 
     client = models.ForeignKey('clients.Client', on_delete=models.CASCADE, related_name='reminders', verbose_name=_("Клиент"))
+    case = models.ForeignKey(
+        'clients.Case',
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name='reminders',
+        verbose_name=_("Дело"),
+    )
     payment = models.OneToOneField('clients.Payment', on_delete=models.CASCADE, null=True, blank=True, related_name="reminder")
     document = models.OneToOneField('clients.Document', on_delete=models.CASCADE, null=True, blank=True, related_name="reminder")
     custom_document_requirement = models.ForeignKey(
@@ -30,6 +39,8 @@ class Reminder(models.Model):
     due_date = models.DateField(verbose_name=_("Ключевая дата"))
     is_active = models.BooleanField(default=True, verbose_name=_("Активно"))
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    version = models.PositiveIntegerField(default=1, verbose_name=_("Версия"))
 
     @property
     def display_title(self) -> str:
@@ -84,6 +95,72 @@ class Reminder(models.Model):
                 return self.notes or ""
         return self.notes or ""
 
+    def clean(self) -> None:
+        super().clean()
+        errors: dict[str, list[str]] = {}
+        sources = [
+            source
+            for source in (self.payment, self.document, self.custom_document_requirement)
+            if source is not None
+        ]
+        if len(sources) > 1:
+            errors.setdefault("__all__", []).append(_("Reminder cannot point to multiple source objects."))
+
+        if self.payment_id:
+            if self.client_id and self.payment.client_id != self.client_id:
+                errors.setdefault("payment", []).append(_("Payment reminder must belong to the same client."))
+            if self.case_id and self.payment.case_id and self.payment.case_id != self.case_id:
+                errors.setdefault("payment", []).append(_("Payment reminder must belong to the same case."))
+            if self.reminder_type != "payment":
+                errors.setdefault("reminder_type", []).append(_("Payment source requires payment reminder type."))
+
+        if self.document_id:
+            if self.client_id and self.document.client_id != self.client_id:
+                errors.setdefault("document", []).append(_("Document reminder must belong to the same client."))
+            if self.case_id and self.document.case_id and self.document.case_id != self.case_id:
+                errors.setdefault("document", []).append(_("Document reminder must belong to the same case."))
+            if self.reminder_type != "document":
+                errors.setdefault("reminder_type", []).append(_("Document source requires document reminder type."))
+
+        if self.custom_document_requirement_id:
+            requirement = self.custom_document_requirement
+            if self.client_id and requirement.client_id != self.client_id:
+                errors.setdefault("custom_document_requirement", []).append(
+                    _("Custom document reminder must belong to the same client.")
+                )
+            if self.case_id and requirement.case_id and requirement.case_id != self.case_id:
+                errors.setdefault("custom_document_requirement", []).append(
+                    _("Custom document reminder must belong to the same case.")
+                )
+            if self.reminder_type != "document":
+                errors.setdefault("reminder_type", []).append(_("Custom document source requires document reminder type."))
+
+        if errors:
+            raise ValidationError(errors)
+
+    def save(self, *args: object, **kwargs: object) -> None:
+        update_fields = kwargs.get("update_fields")
+        source_case_id = None
+        if self.payment_id and self.payment.case_id:
+            source_case_id = self.payment.case_id
+        elif self.document_id and self.document.case_id:
+            source_case_id = self.document.case_id
+        elif self.custom_document_requirement_id and self.custom_document_requirement.case_id:
+            source_case_id = self.custom_document_requirement.case_id
+
+        if self.case_id is None:
+            if source_case_id is not None:
+                self.case_id = source_case_id
+            elif self.client_id:
+                from clients.services.cases import get_primary_case_for_client_id
+
+                self.case = get_primary_case_for_client_id(self.client_id)
+            if self.case_id is not None and update_fields is not None:
+                update_fields = set(update_fields)
+                update_fields.add("case")
+                kwargs["update_fields"] = list(update_fields)
+        super().save(*args, **kwargs)
+
     def __str__(self) -> str:
         return f"Напоминание для {self.client}: {self.title}"
 
@@ -92,4 +169,19 @@ class Reminder(models.Model):
         indexes = [
             models.Index(fields=["is_active", "due_date"], name="reminder_active_due_idx"),
             models.Index(fields=["client", "is_active"], name="reminder_client_active_idx"),
+            models.Index(fields=["case", "is_active"], name="reminder_case_active_idx"),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=~(models.Q(payment__isnull=False) & models.Q(document__isnull=False)),
+                name="reminder_not_payment_and_document",
+            ),
+            models.CheckConstraint(
+                condition=~(models.Q(payment__isnull=False) & models.Q(custom_document_requirement__isnull=False)),
+                name="reminder_not_payment_and_custom",
+            ),
+            models.CheckConstraint(
+                condition=~(models.Q(document__isnull=False) & models.Q(custom_document_requirement__isnull=False)),
+                name="reminder_not_document_and_custom",
+            ),
         ]

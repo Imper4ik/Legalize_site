@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Create case" %}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h1 class="h3 mb-1">{% translate "Create case" %}</h1>
+      <div class="text-muted">{{ client.get_full_name }}</div>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'clients:client_detail' client.pk %}">{% translate "Back" %}</a>
+  </div>
+  <form method="post" class="card card-body shadow-sm">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-primary">{% translate "Create" %}</button>
+      <a class="btn btn-outline-secondary" href="{% url 'clients:client_detail' client.pk %}">{% translate "Cancel" %}</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

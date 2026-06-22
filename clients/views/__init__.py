@@ -3,6 +3,7 @@ from clients.views.admin_mos_review import admin_mos_review
 from clients.views.admin_settings import *  # noqa: F403
 from clients.views.archive import *  # noqa: F403
 from clients.views.base import StaffRequiredMixin, staff_required_view
+from clients.views.cases import *  # noqa: F403
 from clients.views.checklist_views import *  # noqa: F403
 from clients.views.client_crud import *  # noqa: F403
 from clients.views.demo_center import democenter_view

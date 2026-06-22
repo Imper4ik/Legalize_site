@@ -15,6 +15,14 @@ class WniosekSubmission(models.Model):
         related_name="wniosek_submissions",
         verbose_name=_("Client"),
     )
+    case = models.ForeignKey(
+        "clients.Case",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="wniosek_submissions",
+        verbose_name=_("Case"),
+    )
     document_kind = models.CharField(
         max_length=64,
         choices=DocumentKind.choices,
@@ -31,6 +39,18 @@ class WniosekSubmission(models.Model):
         related_name="confirmed_wniosek_submissions",
         verbose_name=_("Confirmed by"),
     )
+
+    def save(self, *args: object, **kwargs: object) -> None:
+        update_fields = kwargs.get("update_fields")
+        if self.case_id is None and self.client_id:
+            from clients.services.cases import get_primary_case_for_client_id
+
+            self.case = get_primary_case_for_client_id(self.client_id)
+            if update_fields is not None:
+                update_fields = set(update_fields)
+                update_fields.add("case")
+                kwargs["update_fields"] = list(update_fields)
+        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ["-confirmed_at", "-id"]
