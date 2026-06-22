@@ -49,13 +49,20 @@
     return docEl.getAttribute("data-theme") === "dark" ? "dark" : "light";
   }
 
-  function addMobileNotificationStyles() {
-    if (document.getElementById("mobile-notification-nav-styles")) return;
+  function syncMobileNavbarHeight() {
+    var navbar = document.querySelector(".theme-navbar");
+    if (!navbar) return;
+    docEl.style.setProperty("--mobile-navbar-height", Math.ceil(navbar.getBoundingClientRect().height) + "px");
+  }
+
+  function addMobileNavigationStyles() {
+    if (document.getElementById("mobile-navigation-styles")) return;
 
     var style = document.createElement("style");
-    style.id = "mobile-notification-nav-styles";
+    style.id = "mobile-navigation-styles";
     style.textContent = [
       "@media (max-width: 991.98px) {",
+      "  .theme-navbar { position: relative; z-index: 1060; }",
       "  .theme-navbar .container { flex-wrap: nowrap; }",
       "  .theme-navbar .navbar-brand { min-width: 0; }",
       "  .theme-navbar .navbar-toggler { flex: 0 0 auto; }",
@@ -65,11 +72,27 @@
       "  .navbar-mobile-notification-button:hover, .navbar-mobile-notification-button:focus-visible { color: var(--brand-1); background: color-mix(in srgb, var(--brand-1) 10%, var(--surface)); border-color: color-mix(in srgb, var(--brand-1) 44%, var(--border)); outline: none; }",
       "  .navbar-mobile-notification-button i { font-size: 1.18rem; }",
       "  .navbar-mobile-notification-badge { position: absolute; top: -.35rem; right: -.45rem; min-width: 1.25rem; height: 1.25rem; padding: 0 .3rem; display: inline-flex; align-items: center; justify-content: center; color: #fff; background: #dc3545; border: 2px solid var(--nav-bg); border-radius: 999px; font-size: .65rem; font-weight: 700; line-height: 1; }",
-      "  .mobile-notifications-menu.show { position: fixed !important; top: calc(env(safe-area-inset-top) + 4.8rem) !important; left: .75rem !important; right: .75rem !important; width: auto !important; max-width: none !important; max-height: calc(100dvh - 6rem); margin: 0 !important; padding: .35rem 0; overflow-y: auto; transform: none !important; z-index: 1080; }",
+      "  .mobile-notifications-menu.show { position: fixed !important; top: calc(var(--mobile-navbar-height, 6rem) + .5rem) !important; left: .75rem !important; right: .75rem !important; width: auto !important; max-width: none !important; max-height: calc(100dvh - var(--mobile-navbar-height, 6rem) - 1.25rem); margin: 0 !important; padding: .35rem 0; overflow-y: auto; transform: none !important; z-index: 1080; }",
       "  .mobile-notifications-menu .dropdown-header { padding: .6rem .9rem .35rem; white-space: normal; }",
       "  .mobile-notifications-menu .dropdown-item { display: flex; align-items: flex-start !important; gap: .7rem; padding: .7rem .9rem; white-space: normal; overflow-wrap: anywhere; line-height: 1.25; }",
       "  .mobile-notifications-menu .dropdown-item > span:first-child { min-width: 0; flex: 1 1 auto; }",
       "  .mobile-notifications-menu .dropdown-item .badge { flex: 0 0 auto; margin-top: .05rem; }",
+      "  /* The bottom bar already exposes Clients and New. Reminders live in the bell. */",
+      "  #navbarNav > .navbar-nav.me-auto > .nav-item:nth-child(1),",
+      "  #navbarNav > .navbar-nav.me-auto > .nav-item:nth-child(2),",
+      "  #navbarNav > .navbar-nav.me-auto > .nav-item:nth-child(4) { display: none; }",
+      "  .theme-navbar .navbar-collapse { position: fixed; top: calc(var(--mobile-navbar-height, 6rem) + .5rem); left: .75rem; right: .75rem; width: auto; max-height: calc(100dvh - var(--mobile-navbar-height, 6rem) - 1.25rem); overflow-y: auto; padding: .65rem; background: var(--nav-bg); border: 1px solid var(--border); border-radius: 18px; box-shadow: 0 18px 42px rgba(0, 0, 0, .28); }",
+      "  .theme-navbar .navbar-collapse:not(.show) { display: none; }",
+      "  .theme-navbar .navbar-collapse.show { display: block; }",
+      "  .theme-navbar .navbar-nav { gap: .2rem; margin: 0 !important; }",
+      "  .theme-navbar .navbar-nav + .navbar-nav { margin-top: .5rem !important; padding-top: .55rem; border-top: 1px solid var(--border); }",
+      "  .theme-navbar .nav-link, .theme-navbar .navbar-collapse .theme-toggle, .theme-navbar .navbar-collapse [data-language-switcher] { width: 100%; min-height: 44px; }",
+      "  .theme-navbar .nav-link { display: flex; align-items: center; padding: .68rem .75rem; border-radius: 12px; white-space: normal; }",
+      "  .theme-navbar .navbar-collapse .nav-item { margin: 0 !important; }",
+      "  .theme-navbar .navbar-collapse .dropdown-menu { position: static !important; width: 100%; margin: .2rem 0 .5rem; transform: none !important; box-shadow: none; }",
+      "  .theme-navbar .navbar-collapse .dropdown-item { white-space: normal; }",
+      "  .theme-navbar .navbar-collapse [data-language-switcher] { display: flex; align-items: center; }",
+      "  .theme-navbar .navbar-collapse [data-language-switcher] .form-select { width: 100%; }",
       "  .mobile-nav-bar { box-sizing: border-box; height: calc(62px + env(safe-area-inset-bottom)); justify-content: center; gap: .25rem; padding: .2rem .5rem calc(.2rem + env(safe-area-inset-bottom)); }",
       "  .mobile-nav-bar > .mobile-nav-item, .mobile-nav-bar > .dropup { flex: 0 1 80px !important; min-width: 0; }",
       "  .mobile-nav-bar > .dropup .mobile-nav-item { width: 100%; }",
@@ -157,7 +180,6 @@
     dropdown.appendChild(menu);
     actions.appendChild(dropdown);
     container.insertBefore(actions, toggler);
-    addMobileNotificationStyles();
   }
 
   function init() {
@@ -173,7 +195,11 @@
 
     var stored = safeGet();
     applyTheme(stored || (mq && mq.matches ? "dark" : "light"));
+    syncMobileNavbarHeight();
+    addMobileNavigationStyles();
     setupMobileNotifications();
+
+    window.addEventListener("resize", syncMobileNavbarHeight);
 
     if (mq) {
       var systemChange = function (event) {
