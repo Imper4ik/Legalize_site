@@ -821,7 +821,7 @@ class ClientViewsTestCase(TestCase):
 
     def test_client_detail_renders_and_contains_service_choices(self):
         self.client.login(email='staff@example.com', password='pass')
-        url = reverse('clients:client_detail', kwargs={'pk': self.client_record.pk})
+        url = reverse('clients:client_detail', kwargs={'pk': self.client_record.pk}) + '?view=person'
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertIn('service_choices', response.context)

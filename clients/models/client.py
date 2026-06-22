@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from datetime import date, timedelta
+from functools import cached_property
 from typing import TYPE_CHECKING, Any, Self, cast
 
 from django.conf import settings
@@ -297,6 +298,22 @@ class Client(SoftDeleteModel):
     def get_full_name(self) -> str:
         return f"{self.first_name} {self.last_name}".strip()
 
+    @cached_property
+    def mos_application_data(self):
+        """Backwards-compatible accessor for the primary MOSApplicationData.
+
+        Previously this was an auto-generated reverse OneToOne descriptor.
+        Now MOSApplicationData uses ForeignKey to Client with related_name='mos_applications'.
+        This property returns the first entry (or None), enabling templates and legacy code
+        to keep using ``client.mos_application_data`` without changes.
+        """
+        # Prefer prefetched data if available to avoid N+1 queries.
+        prefetched = getattr(self, "_prefetched_objects_cache", {})
+        if "mos_applications" in prefetched:
+            items = prefetched["mos_applications"]
+            return items[0] if items else None
+        return self.mos_applications.first()
+
     def on_archive(self) -> None:
         with transaction.atomic():
             self._archive_related_case_records()
@@ -362,8 +379,10 @@ class Client(SoftDeleteModel):
 
     @classmethod
     def hash_case_number(cls, case_number: str) -> str:
+        import hmac
         normalized = cls.normalize_case_number(case_number)
-        return hashlib.sha256(normalized.encode("utf-8")).hexdigest()
+        secret = str(getattr(settings, "SECRET_KEY", ""))
+        return hmac.new(secret.encode("utf-8"), normalized.encode("utf-8"), hashlib.sha256).hexdigest()
 
 
     def clean(self) -> None:
@@ -629,7 +648,7 @@ class Client(SoftDeleteModel):
 
     def get_case_step(self) -> int:
         """Calculate the current step (1 to 10) on the onboarding timeline."""
-        mos_data = getattr(self, "mos_application_data", None)
+        mos_data = self.mos_applications.first()
         status = mos_data.status if mos_data else 'draft'
 
         if status == 'draft':
@@ -704,9 +723,8 @@ class Client(SoftDeleteModel):
         ).count()
 
     def _get_mos_legal_stay_until(self) -> date | None:
-        try:
-            mos_application_data = self.mos_application_data
-        except ObjectDoesNotExist:
+        mos_application_data = self.mos_applications.first()
+        if not mos_application_data:
             return None
         return mos_application_data.legal_stay_until
 
@@ -881,10 +899,7 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        try:
-            mos_application_data = self.mos_application_data
-        except ObjectDoesNotExist:
-            mos_application_data = None
+        mos_application_data = self.mos_applications.first()
         new_card_case_number = ""
         if mos_application_data is not None:
             new_card_case_number = str(mos_application_data.new_residence_card_case_number or "").strip()

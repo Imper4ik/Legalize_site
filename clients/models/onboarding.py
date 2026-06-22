@@ -19,6 +19,14 @@ class ClientOnboardingSession(models.Model):
         related_name="onboarding_sessions",
     )
     payment = models.ForeignKey("clients.Payment", null=True, blank=True, on_delete=models.SET_NULL)
+    scope = models.CharField(
+        max_length=20,
+        choices=[
+            ("case_link", "Ссылка на дело"),
+            ("client_portal", "Портал клиента"),
+        ],
+        default="case_link",
+    )
 
     token_hash = models.CharField(max_length=64, db_index=True)
     status = models.CharField(
@@ -41,6 +49,17 @@ class ClientOnboardingSession(models.Model):
     is_demo_data = models.BooleanField(default=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    models.Q(scope="case_link", case__isnull=False)
+                    | models.Q(scope="client_portal", case__isnull=True)
+                ),
+                name="onboarding_scope_matches_case",
+            )
+        ]
 
     def save(self, *args: object, **kwargs: object) -> None:
         update_fields = kwargs.get("update_fields")
@@ -99,13 +118,13 @@ class MOSApplicationData(models.Model):
         (NEW_CARD_STATUS_UNKNOWN, _("Nie wiem / Не знаю")),
     ]
 
-    client = models.OneToOneField("clients.Client", on_delete=models.CASCADE, related_name="mos_application_data")
-    case = models.ForeignKey(
+    client = models.ForeignKey("clients.Client", on_delete=models.CASCADE, related_name="mos_applications")
+    case = models.OneToOneField(
         "clients.Case",
         null=True,
         blank=True,
-        on_delete=models.PROTECT,
-        related_name="mos_application_records",
+        on_delete=models.CASCADE,
+        related_name="mos_application_data",
     )
 
     status = models.CharField(

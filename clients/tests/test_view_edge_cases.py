@@ -313,7 +313,7 @@ class ClientViewEdgeCaseTests(TestCase):
                 email="new-card-missing-case-attention@example.com",
             ),
         }
-        new_card_mos_data = clients_by_filter["new_card_missing_case"].mos_application_data
+        new_card_mos_data = clients_by_filter["new_card_missing_case"].mos_applications.first()
         new_card_mos_data.new_residence_card_application_status = MOSApplicationData.NEW_CARD_STATUS_YES
         new_card_mos_data.save(update_fields=["new_residence_card_application_status"])
         Document.objects.create(
@@ -384,7 +384,7 @@ class ClientViewEdgeCaseTests(TestCase):
         today = date.today()
         self.client_obj.case_number = "WSC-II-99/2026"
         self.client_obj.save(update_fields=["case_number"])
-        mos_data = self.client_obj.mos_application_data
+        mos_data, _ = MOSApplicationData.objects.get_or_create(client=self.client_obj)
         mos_data.new_residence_card_application_status = MOSApplicationData.NEW_CARD_STATUS_YES
         mos_data.new_residence_card_case_number = "WSC-II-99/2026"
         mos_data.new_residence_card_submitted_at = today
@@ -404,7 +404,7 @@ class ClientViewEdgeCaseTests(TestCase):
         self.assertIn("Номер дела", html)
 
     def test_client_overview_highlights_primary_problem_and_next_action(self):
-        mos_data = self.client_obj.mos_application_data
+        mos_data, _ = MOSApplicationData.objects.get_or_create(client=self.client_obj)
         mos_data.new_residence_card_application_status = MOSApplicationData.NEW_CARD_STATUS_YES
         mos_data.save(update_fields=["new_residence_card_application_status"])
 
@@ -707,8 +707,14 @@ class ClientViewEdgeCaseTests(TestCase):
         call_cmd.assert_called_once_with("update_reminders")
 
     def test_reminder_action_deactivate_marks_inactive(self):
+        doc = Document.objects.create(
+            client=self.client_obj,
+            document_type="passport",
+            file="documents/test_deactivate.pdf",
+        )
         reminder = Reminder.objects.create(
             client=self.client_obj,
+            document=doc,
             reminder_type="document",
             title="Check docs",
             due_date="2030-01-01",
@@ -833,7 +839,7 @@ class ObjectAccessPolicyTests(TestCase):
         self.client.login(email="staff-a@example.com", password="pass")
 
         response = self.client.get(
-            reverse("clients:client_detail", kwargs={"pk": self.client_foreign.pk})
+            reverse("clients:client_detail", kwargs={"pk": self.client_foreign.pk}) + "?view=person"
         )
 
         self.assertEqual(response.status_code, 200)
@@ -867,7 +873,7 @@ class ObjectAccessPolicyTests(TestCase):
         self.client.login(email="staff-a@example.com", password="pass")
 
         response = self.client.get(
-            reverse("clients:client_detail", kwargs={"pk": self.client_owned.pk})
+            reverse("clients:client_detail", kwargs={"pk": self.client_owned.pk}) + "?view=person"
         )
 
         self.assertEqual(response.status_code, 200)

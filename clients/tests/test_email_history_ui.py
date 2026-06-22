@@ -26,7 +26,7 @@ def test_email_history_visibility(admin_client):
             sent_at=now - timedelta(minutes=i)
         )
 
-    url = reverse("clients:client_detail", kwargs={"pk": client.pk})
+    url = reverse("clients:client_detail", kwargs={"pk": client.pk}) + "?view=person"
     response = admin_client.get(url)
 
     assert response.status_code == 200
@@ -61,7 +61,7 @@ def test_email_history_no_toggle_for_3_logs(admin_client):
             recipients="test@example.com"
         )
 
-    url = reverse("clients:client_detail", kwargs={"pk": client.pk})
+    url = reverse("clients:client_detail", kwargs={"pk": client.pk}) + "?view=person"
     response = admin_client.get(url)
 
     assert response.status_code == 200

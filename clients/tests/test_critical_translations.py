@@ -129,7 +129,7 @@ class ReminderTranslationsTest(TestCase):
         payment_reminder.save(update_fields=["title", "notes"])
 
         # Test legal stay reminder
-        mos_data = client.mos_application_data
+        mos_data = client.mos_applications.first()
         mos_data.legal_stay_until = date(2026, 7, 31)
         mos_data.save()
         client.refresh_from_db()

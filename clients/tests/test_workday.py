@@ -40,7 +40,7 @@ class WorkdayViewTests(TestCase):
         )
 
         new_card_client = Client.objects.create(first_name="NewCard", last_name="MissingCase")
-        mos_data = new_card_client.mos_application_data
+        mos_data = new_card_client.mos_applications.first()
         mos_data.new_residence_card_application_status = MOSApplicationData.NEW_CARD_STATUS_YES
         mos_data.new_residence_card_submitted_at = today - timedelta(days=3)
         mos_data.save(update_fields=["new_residence_card_application_status", "new_residence_card_submitted_at"])

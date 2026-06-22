@@ -379,7 +379,7 @@ class TestClientDetailZusUploadMonths:
         http.force_login(admin)
 
         with patch("clients.services.zus.timezone.localdate", return_value=date(2026, 6, 16)):
-            response = http.get(reverse("clients:client_detail", kwargs={"pk": client.pk}))
+            response = http.get(reverse("clients:client_detail", kwargs={"pk": client.pk}) + "?view=person")
 
         assert response.status_code == 200
         content = response.content.decode()
@@ -401,7 +401,7 @@ class TestClientDetailZusUploadMonths:
         http = DjangoClient()
         http.force_login(admin)
 
-        response = http.get(reverse("clients:client_detail", kwargs={"pk": client.pk}))
+        response = http.get(reverse("clients:client_detail", kwargs={"pk": client.pk}) + "?view=person")
 
         assert response.status_code == 200
         content = response.content.decode()

@@ -119,6 +119,7 @@ class CaseArchitectureTests(TestCase):
         Reminder.objects.create(
             client=self.client_obj,
             case=second_case,
+            document=second_document,
             reminder_type="document",
             title="Second case reminder",
             due_date=timezone.localdate(),
@@ -202,7 +203,7 @@ class CaseArchitectureTests(TestCase):
             event_type="client_updated",
             summary="Safe metadata test",
             metadata={
-                "case_id": self.primary_case.pk,
+                "case_id": self.primary_case.uuid,
                 "document_count": 2,
                 "email": "client@example.test",
                 "total_amount": "999.00",
@@ -210,7 +211,7 @@ class CaseArchitectureTests(TestCase):
             },
         )
 
-        self.assertEqual(activity.metadata["case_id"], self.primary_case.pk)
+        self.assertEqual(activity.metadata["case_id"], str(self.primary_case.uuid))
         self.assertEqual(activity.metadata["document_count"], 2)
         self.assertNotIn("email", activity.metadata)
         self.assertNotIn("total_amount", activity.metadata)

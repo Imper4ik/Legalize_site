@@ -22,6 +22,7 @@ from clients.constants import SELF_ONBOARDING_SLUG, DocumentType
 from clients.forms import DocumentUploadForm
 from clients.models import (
     Client,
+    Case,
     ClientDigitalAccess,
     ClientOnboardingSession,
     Document,
@@ -128,6 +129,10 @@ def _save_onboarding_purpose(mos_data: MOSApplicationData, selected_purpose: str
     clear_onboarding_notifications_cache(mos_data.client)
 
 
+class OnboardingLinkExpired(Exception):
+    pass
+
+
 def check_onboarding_session(
     token: str,
     allowed_statuses: tuple[str, ...] = ("created", "active"),
@@ -158,21 +163,52 @@ def check_onboarding_session(
                 ClientDigitalAccess.objects.get_or_create(client=client)
             session.token_hash = SELF_ONBOARDING_SLUG
             session.client = client
-            return session
-        return None
+        else:
+            return None
+    else:
+        token_h = hash_onboarding_token(token)
+        session_any = ClientOnboardingSession.objects.filter(token_hash=token_h).first()
+        if session_any:
+            if session_any.expires_at <= timezone.now() or session_any.status in ("revoked", "expired"):
+                raise OnboardingLinkExpired()
 
-    token_h = hash_onboarding_token(token)
-    session = ClientOnboardingSession.objects.filter(token_hash=token_h, expires_at__gt=timezone.now()).first()
-    if not session or session.status not in allowed_statuses:
-        return None
-    if session.status == "created" and "active" in allowed_statuses:
-        session.status = "active"
-        session.save(update_fields=["status"])
-    # Keep templates backward-compatible: they still reference `session.token_hash` in URLs.
-    # We expose the raw token in-memory only (not persisted), so links remain functional
-    # while the database stores only hashed values.
-    session.token_hash = token
-    session.client = Client.objects.defer("case_number", "passport_num").get(pk=session.client_id)
+        session = ClientOnboardingSession.objects.filter(token_hash=token_h, expires_at__gt=timezone.now()).first()
+        if not session or session.status not in allowed_statuses:
+            return None
+        if session.status == "created" and "active" in allowed_statuses:
+            session.status = "active"
+            session.save(update_fields=["status"])
+        session.token_hash = token
+        session.client = Client.objects.defer("case_number", "passport_num").get(pk=session.client_id)
+
+    # Валидация scope и согласованности дела
+    case_id = None
+    if session.scope == "case_link":
+        if not session.case_id:
+            return None
+        case_id = session.case_id
+    elif session.scope == "client_portal":
+        if request:
+            case_id = request.session.get("case_id")
+        if not case_id:
+            from clients.services.cases import get_primary_case_for_client
+            primary_case = get_primary_case_for_client(session.client)
+            case_id = primary_case.id
+            if request:
+                request.session["case_id"] = case_id
+
+    if case_id:
+        try:
+            case = Case.all_objects.get(pk=case_id)
+            if case.client_id != session.client_id:
+                return None
+            if case.archived_at is not None:
+                return None
+            if request:
+                request.session["case_id"] = case.id
+        except Case.DoesNotExist:
+            return None
+
     return session
 
 def _should_bypass_client_auth(request: HttpRequest) -> bool:

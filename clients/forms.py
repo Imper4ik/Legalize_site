@@ -238,6 +238,8 @@ def _label_for_document_type(code: str) -> str:
 
 
 class CaseForm(forms.ModelForm):
+    version = forms.IntegerField(widget=forms.HiddenInput(), required=False)
+
     class Meta:
         model = Case
         fields = [
@@ -247,6 +249,7 @@ class CaseForm(forms.ModelForm):
             "workflow_stage",
             "assigned_staff",
             "company",
+            "version",
         ]
         widgets = {
             "application_purpose": forms.TextInput(attrs={"class": "form-control"}),

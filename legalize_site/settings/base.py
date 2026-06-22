@@ -270,6 +270,7 @@ if WHITENOISE_AVAILABLE:
     MIDDLEWARE.append("whitenoise.middleware.WhiteNoiseMiddleware")
 MIDDLEWARE += [
     "legalize_site.observability.RequestIDMiddleware",
+    "clients.middleware.OnboardingLinkExpiredMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",

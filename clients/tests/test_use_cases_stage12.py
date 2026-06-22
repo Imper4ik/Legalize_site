@@ -170,7 +170,7 @@ class UseCasesStage12Tests(TestCase):
     def test_deactivate_reminder_use_case_marks_inactive_and_logs_activity(self):
         reminder = Reminder.objects.create(
             client=self.client_obj,
-            reminder_type="document",
+            reminder_type="legal_stay",
             title="Renew passport",
             due_date=timezone.localdate() + timedelta(days=3),
             is_active=True,
@@ -187,7 +187,7 @@ class UseCasesStage12Tests(TestCase):
     def test_delete_reminder_use_case_deletes_record_and_logs_activity(self):
         reminder = Reminder.objects.create(
             client=self.client_obj,
-            reminder_type="payment",
+            reminder_type="legal_stay",
             title="Payment due",
             due_date=timezone.localdate() + timedelta(days=2),
             is_active=True,

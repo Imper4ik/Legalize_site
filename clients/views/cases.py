@@ -3,16 +3,18 @@ from __future__ import annotations
 from typing import Any
 
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext as _
-from django.views.generic import CreateView, DetailView
+from django.views.generic import CreateView, DetailView, UpdateView
 
 from clients.forms import CaseForm
 from clients.models import Case, ClientActivity, Document, Payment, Reminder, StaffTask
 from clients.services.access import accessible_cases_queryset, accessible_clients_queryset
 from clients.services.cases import archive_case, create_case_for_client, restore_case
 from clients.services.roles import CLIENT_MUTATION_ROLES, RESTORE_ALLOWED_ROLES
+from clients.services.locking import update_case_with_version
 from clients.views.base import RoleRequiredMixin, role_required_view
 
 
@@ -82,6 +84,45 @@ class CaseCreateView(RoleRequiredMixin, CreateView):
             company=form.cleaned_data.get("company"),
         )
         messages.success(self.request, _("Case created."))
+        return redirect(case.get_absolute_url())
+
+
+class CaseUpdateView(RoleRequiredMixin, UpdateView):
+    allowed_roles = list(CLIENT_MUTATION_ROLES)
+    model = Case
+    form_class = CaseForm
+    template_name = "clients/case_form.html"
+
+    def get_queryset(self) -> Any:
+        return accessible_cases_queryset(
+            self.request.user,
+            Case.all_objects.select_related("client", "assigned_staff", "company"),
+        )
+
+    def form_valid(self, form: CaseForm) -> HttpResponse:
+        case = self.object
+        expected_version = form.cleaned_data.get("version")
+        if expected_version is None:
+            expected_version = case.version
+
+        try:
+            update_case_with_version(
+                case_id=case.id,
+                expected_version=expected_version,
+                actor=self.request.user,
+                changes_dict={
+                    "application_purpose": form.cleaned_data.get("application_purpose") or "",
+                    "application_type": form.cleaned_data.get("application_type") or "",
+                    "basis_of_stay": form.cleaned_data.get("basis_of_stay") or "",
+                    "workflow_stage": form.cleaned_data.get("workflow_stage") or case.workflow_stage,
+                    "assigned_staff": form.cleaned_data.get("assigned_staff"),
+                    "company": form.cleaned_data.get("company"),
+                }
+            )
+            messages.success(self.request, _("Case updated."))
+        except ValidationError as e:
+            form.add_error(None, e)
+            return self.form_invalid(form)
         return redirect(case.get_absolute_url())
 
 

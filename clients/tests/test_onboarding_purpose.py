@@ -355,7 +355,7 @@ class OnboardingPurposeTests(TestCase):
         self.assertContains(filtered_response, "Purpose")
         self.assertNotContains(filtered_response, "NoChange")
 
-        detail_response = self.client.get(reverse("clients:client_detail", kwargs={"pk": client.pk}))
+        detail_response = self.client.get(reverse("clients:client_detail", kwargs={"pk": client.pk}) + "?view=person")
         self.assertEqual(detail_response.status_code, 200)
         self.assertContains(detail_response, "Клиент изменил основание подачи")
         self.assertContains(detail_response, "Подтвердить или проверить")

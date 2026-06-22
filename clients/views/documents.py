@@ -445,7 +445,7 @@ def client_overview_partial(request: HttpRequest, pk: int) -> HttpResponseBase:
     """Return the rendered client overview partial for AJAX refreshes."""
 
     client = get_object_or_404(
-        accessible_clients_queryset(request.user, Client.objects.select_related("mos_application_data")),
+        accessible_clients_queryset(request.user, Client.objects.prefetch_related("mos_applications")),
         pk=pk,
     )
     document_status_list = client.get_document_checklist(check_file_existence=True)

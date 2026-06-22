@@ -297,41 +297,46 @@
 
   <!-- BOTTOM MOBILE NAVIGATION BAR -->
   {% if user.is_authenticated %}
-  <nav class="mobile-nav-bar d-flex d-lg-none">
+  <nav class="mobile-nav-bar d-lg-none" aria-label="{% translate 'Мобильная навигация' %}">
     {% if user|has_any_role:"Admin,Manager,Staff,ReadOnly" %}
-      <!-- Staff Mobile Navigation -->
-      <a href="{% url 'clients:client_list' %}" class="mobile-nav-item position-relative {% if request.resolver_match.url_name == 'client_list' %}active{% endif %}">
+      <a href="{% url 'clients:client_list' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'client_list' %}active{% endif %}">
         <i class="bi bi-people-fill"></i>
-        {% if client_attention_count %}
-          <span class="position-absolute top-0 start-50 translate-middle badge rounded-pill bg-danger"
-                aria-label="{% translate 'События клиентов требуют внимания' %}: {{ client_attention_count }}">
-            {{ client_attention_count }}
-          </span>
-        {% endif %}
         <span>{% translate "Клиенты" %}</span>
       </a>
       <a href="{% url 'clients:client_add' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'client_add' %}active{% endif %}">
         <i class="bi bi-person-plus-fill"></i>
         <span>{% translate "Новый" %}</span>
       </a>
-      <a href="{% url 'clients:fingerprints_schedule' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'fingerprints_schedule' %}active{% endif %}">
-        <i class="bi bi-fingerprint"></i>
-        <span>{% translate "Отпечатки" %}</span>
+      <a href="{% url 'clients:workday' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'workday' %}active{% endif %}" aria-label="{% translate 'Рабочий день' %}{% if client_attention_count %}: {{ client_attention_count }}{% endif %}">
+        <i class="bi bi-clipboard-check-fill"></i>
+        {% if client_attention_count %}
+          <span class="mobile-nav-badge">{{ client_attention_count }}</span>
+        {% endif %}
+        <span>{% translate "День" %}</span>
       </a>
       <a href="{% url 'clients:document_reminder_list' %}" class="mobile-nav-item {% if request.resolver_match.url_name == 'document_reminder_list' or request.resolver_match.url_name == 'payment_reminder_list' %}active{% endif %}">
         <i class="bi bi-bell-fill"></i>
-        <span>{% translate "Напоминания" %}</span>
+        <span>{% translate "Сроки" %}</span>
       </a>
-      
-      <div class="dropup d-flex flex-column align-items-center justify-content-center flex-1">
-        <a href="#" class="mobile-nav-item" data-bs-toggle="dropdown" aria-expanded="false" id="mobileMenuDropdown">
-          <i class="bi bi-grid-fill"></i>
-          <span>{% translate "Меню" %}</span>
+      <div class="dropup mobile-nav-menu">
+        <a href="#" class="mobile-nav-item" data-bs-toggle="dropdown" aria-expanded="false" id="mobileMenuDropdown" aria-label="{% translate 'Дополнительное меню' %}">
+          <i class="bi bi-grid-3x3-gap-fill"></i>
+          <span>{% translate "Ещё" %}</span>
         </a>
-                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="mobileMenuDropdown" style="margin-bottom: 12px; z-index: 1050;">
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="mobileMenuDropdown">
           <li>
-            <a class="dropdown-item" href="{% url 'clients:workday' %}">
-              <i class="bi bi-clipboard-check me-2 text-muted"></i>{% translate "Рабочий день" %}
+            <a class="dropdown-item" href="{% url 'clients:fingerprints_schedule' %}">
+              <i class="bi bi-fingerprint me-2 text-muted"></i>{% translate "Отпечатки" %}
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="{% url 'clients:task_list' %}">
+              <i class="bi bi-list-task me-2 text-muted"></i>{% translate "Центр задач" %}
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" href="{% url 'clients:payment_reminder_list' %}">
+              <i class="bi bi-credit-card me-2 text-muted"></i>{% translate "Напоминания по оплатам" %}
             </a>
           </li>
           <li>
@@ -363,20 +368,18 @@
         </ul>
       </div>
     {% else %}
-      <!-- Client Mobile Navigation -->
       {% if user.client_profile %}
         <a href="{% url 'clients:client_detail' pk=user.client_profile.pk %}" class="mobile-nav-item active">
           <i class="bi bi-person-badge-fill"></i>
           <span>{% translate "Моё дело" %}</span>
         </a>
       {% endif %}
-      
-      <div class="dropup d-flex flex-column align-items-center justify-content-center flex-1">
-        <a href="#" class="mobile-nav-item" data-bs-toggle="dropdown" aria-expanded="false" id="mobileClientMenuDropdown">
+      <div class="dropup mobile-nav-menu">
+        <a href="#" class="mobile-nav-item" data-bs-toggle="dropdown" aria-expanded="false" id="mobileClientMenuDropdown" aria-label="{% translate 'Дополнительное меню' %}">
           <i class="bi bi-gear-fill"></i>
           <span>{% translate "Ещё" %}</span>
         </a>
-        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="mobileClientMenuDropdown" style="margin-bottom: 12px; z-index: 1050;">
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="mobileClientMenuDropdown">
           <li>
             <form id="mobile-client-logout-form" method="post" action="{% url 'account_logout' %}" class="m-0">
               {% csrf_token %}

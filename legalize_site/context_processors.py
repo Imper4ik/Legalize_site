@@ -48,10 +48,10 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
             request.user,
             Client.objects.filter(Q(user__is_staff=False) | Q(user__isnull=True)),
         )
-        completed_onboarding_count = qs.filter(mos_application_data__status="client_completed").count()
+        completed_onboarding_count = qs.filter(mos_applications__status="client_completed").count()
         purpose_change_count = qs.filter(onboarding_purpose_mismatch_q()).count()
-        staff_review_count = qs.filter(mos_application_data__status="staff_review").count()
-        submitted_in_mos_count = qs.filter(mos_application_data__status="submitted_in_mos").count()
+        staff_review_count = qs.filter(mos_applications__status="staff_review").count()
+        submitted_in_mos_count = qs.filter(mos_applications__status="submitted_in_mos").count()
         ocr_review_count = qs.filter(
             documents__awaiting_confirmation=True,
             documents__archived_at__isnull=True,

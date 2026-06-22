@@ -43,7 +43,7 @@ class WorkflowAuditStage11Tests(TestCase):
         )
 
     def test_client_detail_logs_view_and_exposes_workflow_summary(self):
-        response = self.client.get(reverse("clients:client_detail", kwargs={"pk": self.client_obj.pk}))
+        response = self.client.get(reverse("clients:client_detail", kwargs={"pk": self.client_obj.pk}) + "?view=person")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(

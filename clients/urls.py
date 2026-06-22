@@ -20,6 +20,7 @@ urlpatterns = [
     path('api/campaign/<int:campaign_id>/status/', views.campaign_status_api, name='campaign_status_api'),
     path('client/<int:pk>/', views.ClientDetailView.as_view(), name='client_detail'),
     path('case/<int:pk>/', views.CaseDetailView.as_view(), name='case_detail'),
+    path('case/<int:pk>/edit/', views.CaseUpdateView.as_view(), name='case_edit'),
     path('client/<int:pk>/cases/add/', views.CaseCreateView.as_view(), name='case_add'),
     path('case/<int:pk>/archive/', views.archive_case_view, name='case_archive'),
     path('case/<int:pk>/restore/', views.restore_case_view, name='case_restore'),

@@ -127,7 +127,7 @@ class RemainingAuditHardeningTests(TestCase):
 
     def test_legal_stay_reminder_updates_existing_active_reminder(self):
         client = Client.objects.create(first_name="Legal", last_name="Stay", workflow_stage="document_collection")
-        mos_data = client.mos_application_data
+        mos_data = client.mos_applications.first()
         mos_data.legal_stay_until = timezone.localdate() + timedelta(days=20)
         mos_data.save(update_fields=["legal_stay_until"])
         command = Command()
@@ -183,7 +183,7 @@ class RemainingAuditHardeningTests(TestCase):
             expires_at=timezone.now() + timedelta(days=1),
         )
 
-        mos_data = client.mos_application_data
+        mos_data = client.mos_applications.first()
         mos_data.status = "client_filling"
         mos_data.save()
 

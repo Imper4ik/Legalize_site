@@ -1,7 +1,7 @@
 from .activity import ClientActivity
 from .app_settings import AppSettings
 from .campaign import EmailCampaign
-from .case import Case, CaseArchiveSnapshot
+from .case import Case, CaseArchiveSnapshot, ClientArchiveBatch, CaseArchiveBatch, CaseParticipant
 from .client import Client
 from .company import Company
 from .document import (
@@ -32,6 +32,9 @@ __all__ = [
     'Client',
     'Case',
     'CaseArchiveSnapshot',
+    'ClientArchiveBatch',
+    'CaseArchiveBatch',
+    'CaseParticipant',
     'AppSettings',
     'ClientActivity',
     'Company',

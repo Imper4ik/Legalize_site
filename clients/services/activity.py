@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+import uuid
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, cast
 
@@ -15,60 +17,58 @@ if TYPE_CHECKING:
     from clients.models import Case, Client, Document, Payment, StaffTask
 
 
-DANGEROUS_ACTIVITY_METADATA_KEYS = {
-    "email",
-    "first_name",
-    "last_name",
-    "full_name",
-    "phone",
-    "employer_phone",
-    "passport",
-    "passport_num",
-    "passport_number",
-    "pesel",
-    "birth_date",
-    "address",
-    "full_address",
-    "token",
-    "token_hash",
-    "text",
-    "raw_text",
-    "ocr_text",
-    "content",
-    "body",
-    "notes",
-    "comment",
-    "total_amount",
-    "amount_due",
-    "amount_paid",
-    "transaction_id",
-    "rejection_reason",
-    "case_number",
-    "internal_number",
-    "authority_case_number",
+logger = logging.getLogger(__name__)
+
+ALLOWED_METADATA_SCHEMA = {
+    "case_id": "uuid",
+    "document_count": "int",
+    "archive_batch_uuid": "uuid",
+    "status_tag": {
+        "archived",
+        "restored",
+        "submitted",
+        "approved",
+        "rejected",
+    },
+    "status": "str",
+    "has_case_number": "bool",
+    "path": "str",
+    "method": "str",
+    "export_type": "str",
+    "payment_count": "int",
+    "document_id": "int",
+    "document_version_id": "int",
+    "version_number": "int",
+    "restored_version_id": "int",
+    "restored_version_number": "int",
+    "workflow_stage": "str",
+    "changed_fields": "list",
+    "auto_updates": "dict",
+    "source": "str",
+    "restored_object": "str",
+    "restored_object_id": "int",
+    "payment_id": "int",
+    "task_id": "int",
+    "verified": "bool",
+    "verified_count": "int",
+    "document_type": "str",
+    "selected_purpose": "str",
+    "priority": "str",
+    "assignee_id": "int",
+    "due_date": "str",
+    "attachment_id": "int",
+    "attachment_name": "str",
+    "submission_id": "int",
+    "remaining_count": "int",
+    "submission_deleted": "bool",
+    "old_workflow_stage": "str",
+    "field": "str",
+    "old_value": "str",
+    "new_value": "str",
+    "old_status": "str",
+    "new_status": "str",
+    "reminder_id": "int",
 }
-
-
-def _metadata_key_is_sensitive(key: Any, value: Any) -> bool:
-    normalized = str(key).lower()
-    if normalized in DANGEROUS_ACTIVITY_METADATA_KEYS:
-        return True
-    if normalized.endswith("_case_number") and normalized != "has_case_number":
-        return not isinstance(value, bool)
-    return False
-
-
-def _sanitize_metadata_value(value: Any) -> Any:
-    if isinstance(value, dict):
-        sanitized: dict[str, Any] = {}
-        for key, child_value in value.items():
-            if _metadata_key_is_sensitive(key, child_value):
-                continue
-            sanitized[str(key)] = _sanitize_metadata_value(child_value)
-        return sanitized
-    if isinstance(value, list | tuple):
-        return [_sanitize_metadata_value(item) for item in value]
-    return value
 
 
 def sanitize_activity_metadata(metadata: dict[str, Any] | None) -> dict[str, Any]:
@@ -76,9 +76,98 @@ def sanitize_activity_metadata(metadata: dict[str, Any] | None) -> dict[str, Any
         return {}
     sanitized: dict[str, Any] = {}
     for key, value in metadata.items():
-        if _metadata_key_is_sensitive(key, value):
+        if key not in ALLOWED_METADATA_SCHEMA:
+            logger.warning("Metadata key rejected due to security policy whitelist violation: %s", key)
             continue
-        sanitized[str(key)] = _sanitize_metadata_value(value)
+        
+        expected_type = ALLOWED_METADATA_SCHEMA[key]
+        
+        if expected_type == "uuid":
+            if isinstance(value, uuid.UUID):
+                sanitized[key] = str(value)
+            elif isinstance(value, str):
+                try:
+                    parsed = uuid.UUID(value)
+                    sanitized[key] = str(parsed)
+                except ValueError:
+                    logger.warning("Metadata key '%s' rejected due to invalid UUID format", key)
+            else:
+                logger.warning("Metadata key '%s' rejected due to type mismatch (expected UUID)", key)
+                
+        elif expected_type == "int":
+            if isinstance(value, int) and not isinstance(value, bool):
+                sanitized[key] = value
+            elif isinstance(value, str) and value.isdigit():
+                sanitized[key] = int(value)
+            else:
+                logger.warning("Metadata key '%s' rejected due to type mismatch (expected int)", key)
+                
+        elif expected_type == "str":
+            if isinstance(value, (str, int, float, bool, uuid.UUID)):
+                val_str = str(value)
+            elif hasattr(value, "isoformat"):
+                val_str = value.isoformat()
+            else:
+                val_str = None
+                
+            if val_str is not None:
+                if len(val_str) <= 100:
+                    sanitized[key] = val_str
+                else:
+                    logger.warning("Metadata key '%s' rejected due to string length limit (max 100)", key)
+            else:
+                logger.warning("Metadata key '%s' rejected due to type mismatch (expected str)", key)
+                
+        elif isinstance(expected_type, set):
+            if isinstance(value, str) and value in expected_type:
+                sanitized[key] = value
+            else:
+                logger.warning("Metadata key '%s' rejected due to value mismatch (expected one of %s)", key, expected_type)
+
+        elif expected_type == "bool":
+            if isinstance(value, bool):
+                sanitized[key] = value
+            else:
+                logger.warning("Metadata key '%s' rejected due to type mismatch (expected bool)", key)
+
+        elif expected_type == "list":
+            if isinstance(value, (list, tuple)):
+                sanitized_list = []
+                for item in value:
+                    if isinstance(item, (int, float)) and not isinstance(item, bool):
+                        sanitized_list.append(item)
+                    elif isinstance(item, bool):
+                        sanitized_list.append(item)
+                    elif isinstance(item, str) and len(item) <= 100:
+                        sanitized_list.append(item)
+                    elif hasattr(item, "isoformat"):
+                        sanitized_list.append(item.isoformat())
+                    else:
+                        logger.warning("Metadata list item rejected due to type/length constraint")
+                sanitized[key] = sanitized_list
+            else:
+                logger.warning("Metadata key '%s' rejected due to type mismatch (expected list)", key)
+
+        elif expected_type == "dict":
+            if isinstance(value, dict):
+                def sanitize_val(val: Any) -> Any:
+                    if isinstance(val, dict):
+                        return {str(k): sanitize_val(v) for k, v in val.items() if len(str(k)) <= 100}
+                    elif isinstance(val, (list, tuple)):
+                        return [sanitize_val(v) for v in val]
+                    elif isinstance(val, (int, float)) and not isinstance(val, bool):
+                        return val
+                    elif isinstance(val, bool):
+                        return val
+                    elif isinstance(val, str) and len(val) <= 100:
+                        return val
+                    elif hasattr(val, "isoformat"):
+                        return val.isoformat()
+                    return None
+                sanitized[key] = sanitize_val(value)
+            else:
+                logger.warning("Metadata key '%s' rejected due to type mismatch (expected dict)", key)
+                
     return sanitized
 
 

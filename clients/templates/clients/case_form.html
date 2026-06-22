@@ -1,23 +1,62 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% translate "Create case" %}{% endblock %}
+{% block title %}
+  {% if object.pk %}
+    {% translate "Редактировать дело" %} {{ object.display_number }}
+  {% else %}
+    {% translate "Создать дело" %}
+  {% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-      <h1 class="h3 mb-1">{% translate "Create case" %}</h1>
-      <div class="text-muted">{{ client.get_full_name }}</div>
+      <h1 class="h3 mb-1">
+        {% if object.pk %}
+          {% translate "Редактировать дело" %} {{ object.display_number }}
+        {% else %}
+          {% translate "Создать дело" %}
+        {% endif %}
+      </h1>
+      <div class="text-muted">
+        {% if object.pk %}
+          {{ object.client.get_full_name }}
+        {% else %}
+          {{ client.get_full_name }}
+        {% endif %}
+      </div>
     </div>
-    <a class="btn btn-outline-secondary" href="{% url 'clients:client_detail' client.pk %}">{% translate "Back" %}</a>
+    {% if object.pk %}
+      <a class="btn btn-outline-secondary" href="{% url 'clients:case_detail' object.pk %}">{% translate "Назад" %}</a>
+    {% else %}
+      <a class="btn btn-outline-secondary" href="{% url 'clients:client_detail' client.pk %}?view=person">{% translate "Назад" %}</a>
+    {% endif %}
   </div>
   <form method="post" class="card card-body shadow-sm">
     {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger shadow-sm border-0">
+        {% for error in form.non_field_errors %}
+          {{ error }}
+        {% endfor %}
+      </div>
+    {% endif %}
     {{ form.as_p }}
     <div class="d-flex gap-2">
-      <button type="submit" class="btn btn-primary">{% translate "Create" %}</button>
-      <a class="btn btn-outline-secondary" href="{% url 'clients:client_detail' client.pk %}">{% translate "Cancel" %}</a>
+      <button type="submit" class="btn btn-primary">
+        {% if object.pk %}
+          {% translate "Сохранить" %}
+        {% else %}
+          {% translate "Создать" %}
+        {% endif %}
+      </button>
+      {% if object.pk %}
+        <a class="btn btn-outline-secondary" href="{% url 'clients:case_detail' object.pk %}">{% translate "Отмена" %}</a>
+      {% else %}
+        <a class="btn btn-outline-secondary" href="{% url 'clients:client_detail' client.pk %}?view=person">{% translate "Отмена" %}</a>
+      {% endif %}
     </div>
   </form>
 </div>

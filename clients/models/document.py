@@ -193,6 +193,16 @@ class Document(SoftDeleteModel):
     )
 
     version = models.PositiveIntegerField(default=1, verbose_name=_("Версия"))
+    metadata_version = models.PositiveIntegerField(default=1, verbose_name=_("Версия метаданных"))
+    ocr_version = models.PositiveIntegerField(default=1, verbose_name=_("Версия OCR"))
+    copied_from_document = models.ForeignKey(
+        "self",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="copies",
+        verbose_name=_("Скопировано из документа"),
+    )
     is_test_data = models.BooleanField(default=False, db_index=True)
     is_demo_data = models.BooleanField(default=False, db_index=True)
 

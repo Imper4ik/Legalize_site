@@ -80,7 +80,7 @@ class ClientListView(StaffRequiredMixin, ListView):
                 "sponsor_client__case_number",
                 "sponsor_client__passport_num",
             ),
-        ).select_related("sponsor_client", "mos_application_data").annotate(
+        ).select_related("sponsor_client").prefetch_related("mos_applications").annotate(
             family_members_count=Count("sponsored_family_members")
         )
 
@@ -88,14 +88,14 @@ class ClientListView(StaffRequiredMixin, ListView):
         self.onboarding_filter = self.request.GET.get("onboarding", "")
         if self.onboarding_filter:
             if self.onboarding_filter == "completed":
-                queryset = queryset.filter(mos_application_data__status="client_completed")
-                list_ordering = ["-mos_application_data__updated_at", "-created_at"]
+                queryset = queryset.filter(mos_applications__status="client_completed")
+                list_ordering = ["-mos_applications__updated_at", "-created_at"]
             elif self.onboarding_filter == "purpose_change":
                 queryset = queryset.filter(onboarding_purpose_mismatch_q())
-                list_ordering = ["-mos_application_data__updated_at", "-created_at"]
+                list_ordering = ["-mos_applications__updated_at", "-created_at"]
             elif self.onboarding_filter in ["staff_review", "submitted_in_mos"]:
-                queryset = queryset.filter(mos_application_data__status=self.onboarding_filter)
-                list_ordering = ["-mos_application_data__updated_at", "-created_at"]
+                queryset = queryset.filter(mos_applications__status=self.onboarding_filter)
+                list_ordering = ["-mos_applications__updated_at", "-created_at"]
 
         self.document_filter = self.request.GET.get("document", "")
         if self.document_filter == "ocr_review":
@@ -191,12 +191,13 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
     def get_queryset(self) -> Any:
         return accessible_clients_queryset(
             self.request.user,
-            Client.objects.select_related("user", "sponsor_client", "company", "assigned_staff", "mos_application_data").defer(
+            Client.objects.select_related("user", "sponsor_client", "company", "assigned_staff").defer(
                 "case_number",
                 "passport_num",
                 "sponsor_client__case_number",
                 "sponsor_client__passport_num",
             ).prefetch_related(
+                "mos_applications",
                 Prefetch("cases", queryset=Case.objects.select_related("assigned_staff", "company").order_by("-opened_at", "-id")),
                 Prefetch("payments", queryset=Payment.objects.order_by("-created_at")),
                 Prefetch(
@@ -268,6 +269,11 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
 
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         self.object = self.get_object()
+        if request.GET.get("view") != "person":
+            from clients.services.cases import get_primary_case_for_client
+            primary_case = get_primary_case_for_client(self.object)
+            return redirect("clients:case_detail", pk=primary_case.pk)
+
         log_client_view(client=self.object, actor=request.user, request=request)
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)

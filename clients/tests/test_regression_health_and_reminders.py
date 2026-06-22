@@ -58,7 +58,7 @@ def test_with_health_stats_uses_distinct_counts(db):
 
 def test_legal_stay_choice_and_no_duplicate_reminders(db):
     client = Client.objects.create(first_name="L", last_name="S", application_purpose="work")
-    mos_data = client.mos_application_data
+    mos_data = client.mos_applications.first()
     mos_data.legal_stay_until = date.today() + timedelta(days=10)
     mos_data.save()
 
@@ -77,7 +77,7 @@ def test_legal_stay_ignored_for_submitted_and_later_stages(db):
         application_purpose="work",
         workflow_stage="application_submitted",
     )
-    mos_data = client.mos_application_data
+    mos_data = client.mos_applications.first()
     mos_data.legal_stay_until = date.today() + timedelta(days=10)
     mos_data.save()
 
@@ -94,7 +94,7 @@ def test_get_health_alerts_legal_stay_logic(db):
         application_purpose="work",
         workflow_stage="new_client",
     )
-    mos_data = client_new.mos_application_data
+    mos_data = client_new.mos_applications.first()
     mos_data.legal_stay_until = date.today() + timedelta(days=20)
     mos_data.save()
 
@@ -109,7 +109,7 @@ def test_get_health_alerts_legal_stay_logic(db):
         application_purpose="work",
         workflow_stage="application_submitted",
     )
-    mos_data_sub = client_submitted.mos_application_data
+    mos_data_sub = client_submitted.mos_applications.first()
     mos_data_sub.legal_stay_until = date.today() + timedelta(days=20)
     mos_data_sub.save()
 
@@ -126,7 +126,7 @@ def test_get_health_alerts_new_card_application_mentions_case_joining(db):
         application_purpose="work",
         fingerprints_date=date.today() - timedelta(days=7),
     )
-    mos_data = client.mos_application_data
+    mos_data = client.mos_applications.first()
     mos_data.new_residence_card_application_status = MOSApplicationData.NEW_CARD_STATUS_YES
     mos_data.save(update_fields=["new_residence_card_application_status"])
 

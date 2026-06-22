@@ -28,8 +28,8 @@ def _legal_stay_attention_q(today: date) -> Q:
         Q(legal_basis_end_date__isnull=False, legal_basis_end_date__lte=cutoff)
         | Q(
             legal_basis_end_date__isnull=True,
-            mos_application_data__legal_stay_until__isnull=False,
-            mos_application_data__legal_stay_until__lte=cutoff,
+            mos_applications__legal_stay_until__isnull=False,
+            mos_applications__legal_stay_until__lte=cutoff,
         )
     )
 
@@ -95,7 +95,7 @@ def apply_client_attention_filter(queryset: QuerySet[Any], attention_filter: str
     if attention_filter == "new_card_missing_case":
         return queryset.filter(
             _missing_case_number_q(),
-            mos_application_data__new_residence_card_application_status="yes",
+            mos_applications__new_residence_card_application_status="yes",
         ).distinct()
     return queryset
 

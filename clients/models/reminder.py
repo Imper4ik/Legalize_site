@@ -83,7 +83,7 @@ class Reminder(models.Model):
             }
         if self.reminder_type == 'legal_stay' and self.client:
             try:
-                mos = self.client.mos_application_data
+                mos = self.client.mos_applications.first()
                 if mos and mos.legal_stay_until:
                     stay_str = mos.legal_stay_until.strftime('%d.%m.%Y')
                     due_str = self.due_date.strftime('%d.%m.%Y') if self.due_date else ""
@@ -183,5 +183,17 @@ class Reminder(models.Model):
             models.CheckConstraint(
                 condition=~(models.Q(document__isnull=False) & models.Q(custom_document_requirement__isnull=False)),
                 name="reminder_not_document_and_custom",
+            ),
+            models.CheckConstraint(
+                condition=~(models.Q(reminder_type='legal_stay') & (models.Q(payment__isnull=False) | models.Q(document__isnull=False) | models.Q(custom_document_requirement__isnull=False))),
+                name="reminder_legal_stay_no_source",
+            ),
+            models.CheckConstraint(
+                condition=~(models.Q(reminder_type='payment') & models.Q(payment__isnull=True)),
+                name="reminder_payment_type_requires_payment",
+            ),
+            models.CheckConstraint(
+                condition=~(models.Q(reminder_type='document') & models.Q(document__isnull=True) & models.Q(custom_document_requirement__isnull=True)),
+                name="reminder_document_type_requires_source",
             ),
         ]

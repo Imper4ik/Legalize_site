@@ -134,7 +134,7 @@ def _new_card_missing_case(user: AbstractBaseUser | AnonymousUser | None, limit:
     queryset = (
         accessible_clients_queryset(
             user,
-            Client.objects.select_related("mos_application_data")
+            Client.objects.prefetch_related("mos_applications")
             .annotate(
                 new_card_confirmation_count=Count(
                     "documents",
@@ -147,14 +147,14 @@ def _new_card_missing_case(user: AbstractBaseUser | AnonymousUser | None, limit:
             )
             .filter(
                 Q(case_number_hash__isnull=True) | Q(case_number_hash=""),
-                mos_application_data__new_residence_card_application_status="yes",
+                mos_applications__new_residence_card_application_status="yes",
             )
-            .order_by("mos_application_data__new_residence_card_submitted_at", "last_name", "first_name"),
+            .order_by("mos_applications__new_residence_card_submitted_at", "last_name", "first_name"),
         )[:limit]
     )
     items: list[dict[str, Any]] = []
     for client in queryset:
-        mos_data = client.mos_application_data
+        mos_data = client.mos_applications.first()
         detail_parts = []
         if mos_data.new_residence_card_submitted_at:
             detail_parts.append(mos_data.new_residence_card_submitted_at.strftime("%d.%m.%Y"))
@@ -238,12 +238,9 @@ def _is_stay_expiring_soon(client: Client, today: date) -> bool:
         return False
     date_to_check = client.legal_basis_end_date
     if not date_to_check:
-        try:
-            mos_data = client.mos_application_data
-            if mos_data:
-                date_to_check = mos_data.legal_stay_until
-        except Exception:
-            pass
+        mos_data = client.mos_applications.first()
+        if mos_data:
+            date_to_check = mos_data.legal_stay_until
     if date_to_check:
         return date_to_check <= today + timedelta(days=30)
     return False

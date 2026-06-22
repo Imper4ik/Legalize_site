@@ -5,6 +5,8 @@ import hmac
 from typing import Any, Self, cast
 from uuid import uuid4
 
+import uuid
+from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.db import models
 from django.db.models.signals import post_save
@@ -15,6 +17,7 @@ from django.utils.translation import gettext_lazy as _
 
 from fernet_fields import EncryptedJSONField, EncryptedTextField
 from legalize_site.soft_delete import SoftDeleteModel, SoftDeleteQuerySet
+from clients.models.locking import OptimisticLockingMixin
 
 
 class CaseQuerySet(SoftDeleteQuerySet):
@@ -67,7 +70,7 @@ class CaseAllManager(models.Manager.from_queryset(CaseQuerySet)):  # type: ignor
         )
 
 
-class Case(SoftDeleteModel):
+class Case(OptimisticLockingMixin, SoftDeleteModel):
     STATUS_CHOICES = [
         ("new", _("Новый")),
         ("pending", _("В ожидании")),
@@ -139,6 +142,9 @@ class Case(SoftDeleteModel):
     )
     last_archive_batch_uuid = models.UUIDField(null=True, blank=True, db_index=True)
     version = models.PositiveIntegerField(default=1, verbose_name=_("Версия"))
+    legacy_case_number = EncryptedTextField(blank=True, default="", verbose_name=_("Предыдущий номер дела"))
+    needs_manual_number_check = models.BooleanField(default=False, verbose_name=_("Требуется ручная проверка номера"))
+    migration_origin = models.CharField(max_length=40, null=True, blank=True, verbose_name=_("Источник миграции"))
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Создано"))
     updated_at = models.DateTimeField(auto_now=True, verbose_name=_("Обновлено"))
     is_test_data = models.BooleanField(default=False, db_index=True)
@@ -156,6 +162,13 @@ class Case(SoftDeleteModel):
             models.Index(fields=["workflow_stage", "status"], name="case_workflow_status_idx"),
             models.Index(fields=["assigned_staff", "status"], name="case_staff_status_idx"),
             models.Index(fields=["opened_at"], name="case_opened_at_idx"),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["client", "migration_origin"],
+                condition=models.Q(migration_origin__isnull=False),
+                name="unique_legacy_case_per_client",
+            )
         ]
 
     def __str__(self) -> str:
@@ -241,6 +254,104 @@ class CaseArchiveSnapshot(models.Model):
 
     def __str__(self) -> str:
         return f"{self.archive_batch_uuid}: {self.object_type}#{self.object_id}"
+
+
+class ClientArchiveBatch(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    client = models.ForeignKey("clients.Client", on_delete=models.PROTECT, related_name="archive_batches")
+    archived_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="archived_client_batches")
+    archived_at = models.DateTimeField(auto_now_add=True)
+    restored_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="restored_client_batches")
+    restored_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[("archived", "Архивировано"), ("restored", "Восстановлено")],
+        default="archived",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["client"],
+                condition=models.Q(status="archived"),
+                name="one_open_archive_batch_per_client",
+            )
+        ]
+
+
+class CaseArchiveBatch(models.Model):
+    uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    case = models.ForeignKey(Case, on_delete=models.PROTECT, related_name="archive_batches")
+    client_archive_batch = models.ForeignKey(
+        ClientArchiveBatch,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="case_batches",
+    )
+    archived_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="archived_case_batches")
+    archived_at = models.DateTimeField(auto_now_add=True)
+    restored_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="restored_case_batches")
+    restored_at = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(
+        max_length=20,
+        choices=[("archived", "Архивировано"), ("restored", "Восстановлено")],
+        default="archived",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["case"],
+                condition=models.Q(status="archived"),
+                name="one_open_archive_batch_per_case",
+            )
+        ]
+
+
+class CaseParticipant(models.Model):
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name="participants")
+    client = models.ForeignKey("clients.Client", on_delete=models.CASCADE, related_name="case_participations")
+    role = models.CharField(
+        max_length=20,
+        choices=[
+            ("principal", "Главный заявитель"),
+            ("spouse", "Супруг(а)"),
+            ("child", "Ребенок"),
+            ("parent", "Родитель"),
+        ],
+    )
+    sponsor_participant = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="sponsored_participants",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["case", "client"], name="unique_case_client_participant"),
+            models.UniqueConstraint(
+                fields=["case"],
+                condition=models.Q(role="principal"),
+                name="one_principal_per_case",
+            ),
+        ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.sponsor_participant:
+            if self.sponsor_participant.case_id != self.case_id:
+                raise ValidationError("Спонсор должен принадлежать к тому же делу.")
+            if self.sponsor_participant == self:
+                raise ValidationError("Участник не может быть спонсором самого себя.")
+        if self.role == "principal" and self.sponsor_participant is not None:
+            raise ValidationError("Главный заявитель не может иметь спонсора.")
+        if self.role == "principal" and self.case_id and self.client_id:
+            if self.case.client_id != self.client_id:
+                raise ValidationError("Клиент главного заявителя должен совпадать с основным клиентом дела.")
+
 
 
 @receiver(post_save, sender="clients.Client")

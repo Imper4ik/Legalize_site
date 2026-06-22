@@ -1,54 +1,276 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% translate "Case" %} {{ case.display_number }}{% endblock %}
+{% block title %}{% translate "Дело" %} {{ case.display_number }}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
-  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
-    <div>
-      <a href="{% url 'clients:client_detail' case.client.pk %}" class="text-decoration-none small">&larr; {{ case.client.get_full_name }}</a>
-      <h1 class="h3 mb-1">{{ case.display_number }}</h1>
-      <div class="text-muted">{{ case.application_purpose|default:"-" }} · {{ case.workflow_stage }}</div>
-    </div>
-    <div class="d-flex gap-2">
-      {% if case.archived_at %}
-        <form method="post" action="{% url 'clients:case_restore' case.pk %}">{% csrf_token %}<button class="btn btn-outline-success" type="submit">{% translate "Restore" %}</button></form>
-      {% else %}
-        <form method="post" action="{% url 'clients:case_archive' case.pk %}">{% csrf_token %}<button class="btn btn-outline-danger" type="submit">{% translate "Archive" %}</button></form>
-      {% endif %}
+  <!-- Верхняя панель (сводка, действия) -->
+  <div class="card shadow-sm border-0 mb-4 bg-light">
+    <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+      <div>
+        <a href="{% url 'clients:client_detail' case.client.pk %}?view=person" class="text-decoration-none small text-primary">&larr; {{ case.client.get_full_name }}</a>
+        <h1 class="h3 mb-1 mt-1 font-weight-bold">{{ case.display_number }}</h1>
+        <div class="text-muted">
+          <span class="badge bg-secondary me-2">{{ case.get_status_display }}</span>
+          <span class="badge bg-info text-dark me-2">{{ case.get_workflow_stage_display }}</span>
+          {% if case.assigned_staff %}
+            <span class="small">{% translate "Ответственный" %}: {{ case.assigned_staff.email }}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="{% url 'clients:case_edit' case.pk %}" class="btn btn-primary">
+          <i class="bi bi-pencil-square me-1"></i>{% translate "Редактировать" %}
+        </a>
+        {% if case.archived_at %}
+          <form method="post" action="{% url 'clients:case_restore' case.pk %}" class="m-0">
+            {% csrf_token %}
+            <button class="btn btn-outline-success" type="submit">{% translate "Восстановить" %}</button>
+          </form>
+        {% else %}
+          <form method="post" action="{% url 'clients:case_archive' case.pk %}" class="m-0">
+            {% csrf_token %}
+            <button class="btn btn-outline-danger" type="submit">{% translate "Архивировать" %}</button>
+          </form>
+        {% endif %}
+      </div>
     </div>
   </div>
 
-  <section class="card card-body mb-4">
-    <h2 class="h5">{% translate "Next action" %}</h2>
-    <p class="mb-0">{{ next_action }}</p>
-  </section>
+  <!-- Блок «Следующее действие» -->
+  <div class="card shadow-sm border-0 mb-4 border-start border-primary border-4">
+    <div class="card-body">
+      <h5 class="card-title text-primary mb-1">{% translate "Следующее действие" %}</h5>
+      <p class="card-text mb-0 font-weight-bold">{{ next_action }}</p>
+    </div>
+  </div>
 
-  <div class="row g-4">
-    <div class="col-lg-6">
-      <section class="card card-body h-100">
-        <h2 class="h5">{% translate "Documents" %}</h2>
-        <ul class="list-unstyled mb-0">{% for document in documents %}<li>{{ document.display_name }} <span class="text-muted small">{{ document.computed_status }}</span></li>{% empty %}<li class="text-muted">{% translate "No documents." %}</li>{% endfor %}</ul>
-      </section>
+  <!-- Вкладки -->
+  <ul class="nav nav-pills mb-4 shadow-sm p-1 bg-white rounded" id="caseTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">{% translate "Обзор" %}</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">{% translate "Документы" %}</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button" role="tab" aria-controls="tasks" aria-selected="false">{% translate "Задачи" %}</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab" aria-controls="payments" aria-selected="false">{% translate "Платежи" %}</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="submission-tab" data-bs-toggle="tab" data-bs-target="#submission" type="button" role="tab" aria-controls="submission" aria-selected="false">{% translate "Подача" %}</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="mos-pesel-tab" data-bs-toggle="tab" data-bs-target="#mos-pesel" type="button" role="tab" aria-controls="mos-pesel" aria-selected="false">{% translate "MOS/PESEL" %}</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="fingerprints-tab" data-bs-toggle="tab" data-bs-target="#fingerprints" type="button" role="tab" aria-controls="fingerprints" aria-selected="false">{% translate "Отпечатки" %}</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">{% translate "История" %}</button>
+    </li>
+  </ul>
+
+  <!-- Содержимое вкладок -->
+  <div class="tab-content" id="caseTabsContent">
+    <!-- Обзор -->
+    <div class="tab-pane fade show active p-3 bg-white rounded shadow-sm" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+      <h4 class="mb-3 text-muted">{% translate "Основная информация по делу" %}</h4>
+      <div class="row g-3">
+        <div class="col-md-6"><strong>{% translate "Клиент" %}:</strong> {{ case.client.get_full_name }}</div>
+        <div class="col-md-6"><strong>{% translate "Версия записи" %}:</strong> {{ case.version }}</div>
+        <div class="col-md-6"><strong>{% translate "Внутренний номер" %}:</strong> {{ case.display_number }}</div>
+        <div class="col-md-6"><strong>{% translate "Номер в ужонде" %}:</strong> {{ case.authority_case_number|default:"—" }}</div>
+        <div class="col-md-6"><strong>{% translate "Цель подачи" %}:</strong> {{ case.application_purpose|default:"—" }}</div>
+        <div class="col-md-6"><strong>{% translate "Тип заявления" %}:</strong> {{ case.application_type|default:"—" }}</div>
+        <div class="col-md-6"><strong>{% translate "Основание пребывания" %}:</strong> {{ case.basis_of_stay|default:"—" }}</div>
+        <div class="col-md-6"><strong>{% translate "Компания" %}:</strong> {{ case.company|default:"—" }}</div>
+      </div>
     </div>
-    <div class="col-lg-6">
-      <section class="card card-body h-100">
-        <h2 class="h5">{% translate "Payments" %}</h2>
-        <ul class="list-unstyled mb-0">{% for payment in payments %}<li>{{ payment.get_service_description_display }} <span class="text-muted small">{{ payment.status }}</span></li>{% empty %}<li class="text-muted">{% translate "No payments." %}</li>{% endfor %}</ul>
-      </section>
+
+    <!-- Документы -->
+    <div class="tab-pane fade p-3 bg-white rounded shadow-sm" id="documents" role="tabpanel" aria-labelledby="documents-tab">
+      <h4 class="mb-3 text-muted">{% translate "Документы по делу" %}</h4>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>{% translate "Название" %}</th>
+              <th>{% translate "Статус" %}</th>
+              <th>{% translate "Дата загрузки" %}</th>
+              <th>{% translate "Срок действия" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for document in documents %}
+              <tr>
+                <td>{{ document.display_name }}</td>
+                <td><span class="badge bg-secondary">{{ document.computed_status }}</span></td>
+                <td>{{ document.uploaded_at|date:"d.m.Y H:i" }}</td>
+                <td>{{ document.expiry_date|date:"d.m.Y"|default:"—" }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" class="text-center text-muted">{% translate "Нет документов по этому делу." %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div class="col-lg-6">
-      <section class="card card-body h-100">
-        <h2 class="h5">{% translate "Tasks" %}</h2>
-        <ul class="list-unstyled mb-0">{% for task in tasks %}<li>{{ task.title }} <span class="text-muted small">{{ task.status }}</span></li>{% empty %}<li class="text-muted">{% translate "No tasks." %}</li>{% endfor %}</ul>
-      </section>
+
+    <!-- Задачи -->
+    <div class="tab-pane fade p-3 bg-white rounded shadow-sm" id="tasks" role="tabpanel" aria-labelledby="tasks-tab">
+      <h4 class="mb-3 text-muted">{% translate "Задачи сотрудников по делу" %}</h4>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>{% translate "Название" %}</th>
+              <th>{% translate "Ответственный" %}</th>
+              <th>{% translate "Статус" %}</th>
+              <th>{% translate "Срок" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for task in tasks %}
+              <tr>
+                <td>{{ task.title }}</td>
+                <td>{{ task.assignee.email|default:"—" }}</td>
+                <td><span class="badge bg-secondary">{{ task.status }}</span></td>
+                <td>{{ task.due_date|date:"d.m.Y"|default:"—" }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" class="text-center text-muted">{% translate "Нет задач по этому делу." %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
-    <div class="col-lg-6">
-      <section class="card card-body h-100">
-        <h2 class="h5">{% translate "Reminders" %}</h2>
-        <ul class="list-unstyled mb-0">{% for reminder in reminders %}<li>{{ reminder.title }} <span class="text-muted small">{{ reminder.due_date|date:"d.m.Y" }}</span></li>{% empty %}<li class="text-muted">{% translate "No reminders." %}</li>{% endfor %}</ul>
-      </section>
+
+    <!-- Платежи -->
+    <div class="tab-pane fade p-3 bg-white rounded shadow-sm" id="payments" role="tabpanel" aria-labelledby="payments-tab">
+      <h4 class="mb-3 text-muted">{% translate "Платежи и счета" %}</h4>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>{% translate "Услуга" %}</th>
+              <th>{% translate "Сумма" %}</th>
+              <th>{% translate "Статус" %}</th>
+              <th>{% translate "Срок оплаты" %}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for payment in payments %}
+              <tr>
+                <td>{{ payment.get_service_description_display }}</td>
+                <td>{{ payment.total_amount }}</td>
+                <td><span class="badge bg-secondary">{{ payment.status }}</span></td>
+                <td>{{ payment.due_date|date:"d.m.Y"|default:"—" }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" class="text-center text-muted">{% translate "Нет платежей по этому делу." %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Подача -->
+    <div class="tab-pane fade p-3 bg-white rounded shadow-sm" id="submission" role="tabpanel" aria-labelledby="submission-tab">
+      <h4 class="mb-3 text-muted">{% translate "Информация о подаче" %}</h4>
+      <div class="row g-3">
+        <div class="col-md-6"><strong>{% translate "Дата подачи" %}:</strong> {{ case.submission_date|date:"d.m.Y"|default:"—" }}</div>
+        <div class="col-md-6"><strong>{% translate "Дата решения" %}:</strong> {{ case.decision_date|date:"d.m.Y"|default:"—" }}</div>
+        <div class="col-12"><strong>{% translate "Решение" %}:</strong><p class="mt-1 mb-0">{{ case.decision|default:"—" }}</p></div>
+      </div>
+    </div>
+
+    <!-- MOS/PESEL -->
+    <div class="tab-pane fade p-3 bg-white rounded shadow-sm" id="mos-pesel" role="tabpanel" aria-labelledby="mos-pesel-tab">
+      <h4 class="mb-3 text-muted">{% translate "Заявления MOS и PESEL" %}</h4>
+      <div class="mb-4">
+        <h5>{% translate "Заявление в системе MOS" %}</h5>
+        {% if case.mos_application_data %}
+          <div class="row g-2">
+            <div class="col-md-6"><strong>{% translate "Статус MOS" %}:</strong> {{ case.mos_application_data.status }}</div>
+            <div class="col-md-6"><strong>{% translate "Цель пребывания" %}:</strong> {{ case.mos_application_data.mos_purpose|default:"—" }}</div>
+          </div>
+        {% else %}
+          <p class="text-muted mb-0">{% translate "Данные заявления MOS отсутствуют." %}</p>
+        {% endif %}
+      </div>
+      <div>
+        <h5>{% translate "Заявления PESEL" %}</h5>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead>
+              <tr>
+                <th>{% translate "ID" %}</th>
+                <th>{% translate "Статус" %}</th>
+                <th>{% translate "Правовое основание" %}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for pesel in case.pesel_applications.all %}
+                <tr>
+                  <td>{{ pesel.id }}</td>
+                  <td>{{ pesel.status }}</td>
+                  <td>{{ pesel.legal_basis|default:"—" }}</td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="3" class="text-center text-muted">{% translate "Нет заявлений PESEL по этому делу." %}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Отпечатки -->
+    <div class="tab-pane fade p-3 bg-white rounded shadow-sm" id="fingerprints" role="tabpanel" aria-labelledby="fingerprints-tab">
+      <h4 class="mb-3 text-muted">{% translate "Сдача отпечатков пальцев" %}</h4>
+      <div class="row g-3">
+        <div class="col-md-6"><strong>{% translate "Дата сдачи" %}:</strong> {{ case.fingerprints_date|date:"d.m.Y"|default:"—" }}</div>
+        <div class="col-md-6"><strong>{% translate "Время" %}:</strong> {{ case.fingerprints_time|default:"—" }}</div>
+        <div class="col-md-6"><strong>{% translate "Место" %}:</strong> {{ case.fingerprints_location|default:"—" }}</div>
+        <div class="col-md-6"><strong>{% translate "Номер талона" %}:</strong> {{ case.fingerprints_ticket|default:"—" }}</div>
+        <div class="col-md-6"><strong>{% translate "Список" %}:</strong> {{ case.fingerprints_list|default:"—" }}</div>
+        <div class="col-12"><strong>{% translate "Дополнительная информация" %}:</strong><p class="mt-1 mb-0">{{ case.fingerprints_info|default:"—" }}</p></div>
+      </div>
+    </div>
+
+    <!-- История -->
+    <div class="tab-pane fade p-3 bg-white rounded shadow-sm" id="history" role="tabpanel" aria-labelledby="history-tab">
+      <h4 class="mb-3 text-muted">{% translate "История активности по делу" %}</h4>
+      <ul class="list-unstyled mb-0">
+        {% for act in activities %}
+          <li class="mb-3 pb-2 border-bottom">
+            <div class="d-flex justify-content-between align-items-start">
+              <strong>{{ act.summary }}</strong>
+              <small class="text-muted">{{ act.created_at|date:"d.m.Y H:i" }}</small>
+            </div>
+            {% if act.details %}
+              <div class="text-muted mt-1 small">{{ act.details }}</div>
+            {% endif %}
+            {% if act.actor %}
+              <div class="text-muted mt-1 small">{% translate "Автор" %}: {{ act.actor.email }}</div>
+            {% endif %}
+          </li>
+        {% empty %}
+          <li class="text-muted">{% translate "История активности пуста." %}</li>
+        {% endfor %}
+      </ul>
     </div>
   </div>
 </div>

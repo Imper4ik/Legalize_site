@@ -7,9 +7,10 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from legalize_site.soft_delete import SoftDeleteModel
+from clients.models.locking import OptimisticLockingMixin
 
 
-class Payment(SoftDeleteModel):
+class Payment(OptimisticLockingMixin, SoftDeleteModel):
     PAYMENT_STATUS_CHOICES = [
         ("pending", _("Ожидает оплаты")),
         ("partial", _("Частично оплачен")),

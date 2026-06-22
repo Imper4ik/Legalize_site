@@ -634,8 +634,13 @@ def test_family_role_checklist_used_for_workflow_notifications_and_wniosek():
     assert [item["name"] for item in context["documents"]] == ["Spouse-only document"]
     assert match_attachment_to_document_type(spouse, "Spouse-only document", "en") == "spouse_only_document"
 
+    from clients.testing.factories import build_pdf_upload
     for code, _label in DocumentRequirement.required_for("family_spouse", "en"):
-        Document.objects.get_or_create(client=spouse, document_type=code)
+        Document.objects.get_or_create(
+            client=spouse,
+            document_type=code,
+            defaults={"file": build_pdf_upload(f"{code}.pdf")}
+        )
     result = validate_client_workflow_transition(
         client=spouse,
         previous_stage="document_collection",

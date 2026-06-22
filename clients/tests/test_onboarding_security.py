@@ -25,7 +25,8 @@ class OnboardingSecurityTests(TestCase):
         self.assertFalse(ClientOnboardingSession.objects.filter(token_hash=raw).exists())
         self.assertIsNotNone(check_onboarding_session(raw))
 
-    def test_invalid_or_expired_token_forbidden(self):
+    def test_expired_token_raises_expired_exception(self):
+        from clients.views.onboarding_views import OnboardingLinkExpired
         client = Client.objects.create(first_name="A", last_name="B", application_purpose="work")
         raw, hashed = generate_onboarding_token()
         ClientOnboardingSession.objects.create(
@@ -34,7 +35,11 @@ class OnboardingSecurityTests(TestCase):
             status="created",
             expires_at=timezone.now() - timedelta(minutes=1),
         )
-        self.assertIsNone(check_onboarding_session(raw))
+        with self.assertRaises(OnboardingLinkExpired):
+            check_onboarding_session(raw)
+
+    def test_invalid_token_returns_none(self):
+        self.assertIsNone(check_onboarding_session("invalid-token-value"))
 
     def test_onboarding_redirects_to_set_password_if_no_password_set(self):
         client = Client.objects.create(first_name="A", last_name="B", email="test_no_pwd@example.com", application_purpose="work")
