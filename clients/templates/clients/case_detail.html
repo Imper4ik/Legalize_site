@@ -1,15 +1,33 @@
 {% extends "base.html" %}
 {% load i18n static %}
 
+{% block body_class %}case-detail-body{% endblock %}
+
 {% block extra_head %}
-  <link rel="stylesheet" href="{% static 'clients/css/case_detail.css' %}">
+<style>
+  .case-detail-body main.page-surface { background: transparent; border: 0; box-shadow: none; backdrop-filter: none; padding: 0; }
+  .case-detail-page { color: var(--fg); }
+  .case-detail-hero, .case-tab-panel, .case-tabs { background: var(--surface) !important; color: var(--fg); border: 1px solid var(--border); }
+  .case-detail-hero, .case-tab-panel { box-shadow: var(--shadow-1); }
+  .case-detail-title, .case-section-heading { color: var(--fg); }
+  .case-detail-meta, .case-detail-number-hint, .case-detail-page .text-muted { color: var(--muted) !important; }
+  .case-detail-number-hint { font-size: .875rem; }
+  .case-next-action { background: color-mix(in srgb, var(--surface) 88%, var(--brand-1)) !important; }
+  .case-tabs { display: flex; flex-wrap: nowrap; gap: .25rem; overflow-x: auto; }
+  .case-tabs .nav-link { color: var(--muted); white-space: nowrap; }
+  .case-tabs .nav-link:hover, .case-tabs .nav-link:focus-visible { color: var(--brand-1); background: rgba(29, 78, 216, .10); }
+  .case-tabs .nav-link.active { color: #fff; background: var(--brand-1); }
+  .case-tab-panel .table { --bs-table-bg: transparent; --bs-table-color: var(--fg); --bs-table-border-color: var(--border); --bs-table-hover-bg: rgba(15, 118, 110, .08); --bs-table-hover-color: var(--fg); }
+  @media (max-width: 767.98px) { .case-detail-hero .card-body { padding: 1.25rem; } .case-tabs { padding: .4rem !important; } }
+</style>
 {% endblock %}
+
+{% block page_header %}{% endblock %}
 
 {% block title %}{% translate "Дело" %}{% endblock %}
 
 {% block content %}
 <div class="container py-4 case-detail-page">
-  <!-- Верхняя панель (сводка, действия) -->
   <div class="card shadow-sm border-0 mb-4 case-detail-hero">
     <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
       <div>
@@ -19,11 +37,15 @@
             {{ case.internal_number }}
           {% elif case.authority_case_number %}
             {{ case.authority_case_number }}
+          {% elif case.legacy_case_number %}
+            {{ case.legacy_case_number }}
           {% else %}
             {% translate "Дело без номера" %}
           {% endif %}
         </h1>
-        {% if not case.internal_number and not case.authority_case_number %}
+        {% if case.legacy_case_number and not case.internal_number and not case.authority_case_number %}
+          <p class="case-detail-number-hint mb-0">{% translate "Номер из предыдущей карточки; проверьте и перенесите его в нужное поле." %}</p>
+        {% elif not case.internal_number and not case.authority_case_number %}
           <p class="case-detail-number-hint mb-0">{% translate "Внутренний номер ещё не присвоен" %}</p>
         {% endif %}
         <div class="case-detail-meta">
@@ -35,81 +57,45 @@
         </div>
       </div>
       <div class="d-flex gap-2">
-        <a href="{% url 'clients:case_edit' case.pk %}" class="btn btn-primary">
-          <i class="bi bi-pencil-square me-1"></i>{% translate "Редактировать" %}
-        </a>
+        <a href="{% url 'clients:case_edit' case.pk %}" class="btn btn-primary"><i class="bi bi-pencil-square me-1"></i>{% translate "Редактировать" %}</a>
         {% if case.archived_at %}
-          <form method="post" action="{% url 'clients:case_restore' case.pk %}" class="m-0">
-            {% csrf_token %}
-            <button class="btn btn-outline-success" type="submit">{% translate "Восстановить" %}</button>
-          </form>
+          <form method="post" action="{% url 'clients:case_restore' case.pk %}" class="m-0">{% csrf_token %}<button class="btn btn-outline-success" type="submit">{% translate "Восстановить" %}</button></form>
         {% else %}
-          <form method="post" action="{% url 'clients:case_archive' case.pk %}" class="m-0">
-            {% csrf_token %}
-            <button class="btn btn-outline-danger" type="submit">{% translate "Архивировать" %}</button>
-          </form>
+          <form method="post" action="{% url 'clients:case_archive' case.pk %}" class="m-0">{% csrf_token %}<button class="btn btn-outline-danger" type="submit">{% translate "Архивировать" %}</button></form>
         {% endif %}
       </div>
     </div>
   </div>
 
-  <!-- Блок «Следующее действие» -->
   <div class="card shadow-sm border-0 mb-4 border-start border-primary border-4 case-next-action">
     <div class="card-body">
       <h5 class="card-title text-primary mb-1">{% translate "Следующее действие" %}</h5>
       <p class="card-text mb-0 fw-semibold">
-        {% if case.workflow_stage == "new_client" %}
-          {% translate "Заполните основные данные по делу." %}
-        {% elif case.workflow_stage == "document_collection" %}
-          {% translate "Соберите и проверьте обязательные документы." %}
-        {% elif case.workflow_stage == "application_submitted" %}
-          {% translate "Проверьте подтверждение подачи и подготовьте клиента к отпечаткам." %}
-        {% elif case.workflow_stage == "fingerprints" %}
-          {% translate "Подтвердите дату, время и место сдачи отпечатков." %}
-        {% elif case.workflow_stage == "waiting_decision" %}
-          {% translate "Контролируйте срок ожидания решения." %}
-        {% elif case.workflow_stage == "decision_received" %}
-          {% translate "Проверьте решение и завершите последующие задачи." %}
-        {% elif case.workflow_stage == "closed" %}
-          {% translate "Активных действий по делу нет." %}
-        {% else %}
-          {% translate "Проверьте актуальный статус дела." %}
+        {% if case.workflow_stage == "new_client" %}{% translate "Заполните основные данные по делу." %}
+        {% elif case.workflow_stage == "document_collection" %}{% translate "Соберите и проверьте обязательные документы." %}
+        {% elif case.workflow_stage == "application_submitted" %}{% translate "Проверьте подтверждение подачи и подготовьте клиента к отпечаткам." %}
+        {% elif case.workflow_stage == "fingerprints" %}{% translate "Подтвердите дату, время и место сдачи отпечатков." %}
+        {% elif case.workflow_stage == "waiting_decision" %}{% translate "Контролируйте срок ожидания решения." %}
+        {% elif case.workflow_stage == "decision_received" %}{% translate "Проверьте решение и завершите последующие задачи." %}
+        {% elif case.workflow_stage == "closed" %}{% translate "Активных действий по делу нет." %}
+        {% else %}{% translate "Проверьте актуальный статус дела." %}
         {% endif %}
       </p>
     </div>
   </div>
 
-  <!-- Вкладки -->
   <ul class="nav nav-pills mb-4 shadow-sm p-1 rounded case-tabs" id="caseTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">{% translate "Обзор" %}</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">{% translate "Документы" %}</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button" role="tab" aria-controls="tasks" aria-selected="false">{% translate "Задачи" %}</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab" aria-controls="payments" aria-selected="false">{% translate "Платежи" %}</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="submission-tab" data-bs-toggle="tab" data-bs-target="#submission" type="button" role="tab" aria-controls="submission" aria-selected="false">{% translate "Подача" %}</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="mos-pesel-tab" data-bs-toggle="tab" data-bs-target="#mos-pesel" type="button" role="tab" aria-controls="mos-pesel" aria-selected="false">{% translate "MOS/PESEL" %}</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="fingerprints-tab" data-bs-toggle="tab" data-bs-target="#fingerprints" type="button" role="tab" aria-controls="fingerprints" aria-selected="false">{% translate "Отпечатки" %}</button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">{% translate "История" %}</button>
-    </li>
+    <li class="nav-item" role="presentation"><button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">{% translate "Обзор" %}</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">{% translate "Документы" %}</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button" role="tab" aria-controls="tasks" aria-selected="false">{% translate "Задачи" %}</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments" type="button" role="tab" aria-controls="payments" aria-selected="false">{% translate "Платежи" %}</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" id="submission-tab" data-bs-toggle="tab" data-bs-target="#submission" type="button" role="tab" aria-controls="submission" aria-selected="false">{% translate "Подача" %}</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" id="mos-pesel-tab" data-bs-toggle="tab" data-bs-target="#mos-pesel" type="button" role="tab" aria-controls="mos-pesel" aria-selected="false">{% translate "MOS/PESEL" %}</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" id="fingerprints-tab" data-bs-toggle="tab" data-bs-target="#fingerprints" type="button" role="tab" aria-controls="fingerprints" aria-selected="false">{% translate "Отпечатки" %}</button></li>
+    <li class="nav-item" role="presentation"><button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab" aria-controls="history" aria-selected="false">{% translate "История" %}</button></li>
   </ul>
 
-  <!-- Содержимое вкладок -->
   <div class="tab-content" id="caseTabsContent">
-    <!-- Обзор -->
     <div class="tab-pane fade show active p-3 rounded shadow-sm case-tab-panel" id="overview" role="tabpanel" aria-labelledby="overview-tab">
       <h4 class="mb-3 case-section-heading">{% translate "Основная информация по делу" %}</h4>
       <div class="row g-3">
@@ -117,6 +103,7 @@
         <div class="col-md-6"><strong>{% translate "Версия записи" %}:</strong> {{ case.version }}</div>
         <div class="col-md-6"><strong>{% translate "Внутренний номер" %}:</strong> {{ case.internal_number|default:"—" }}</div>
         <div class="col-md-6"><strong>{% translate "Номер в ужонде" %}:</strong> {{ case.authority_case_number|default:"—" }}</div>
+        {% if case.legacy_case_number %}<div class="col-md-6"><strong>{% translate "Номер из предыдущей карточки" %}:</strong> {{ case.legacy_case_number }}</div>{% endif %}
         <div class="col-md-6"><strong>{% translate "Цель подачи" %}:</strong> {{ case.application_purpose|default:"—" }}</div>
         <div class="col-md-6"><strong>{% translate "Тип заявления" %}:</strong> {{ case.application_type|default:"—" }}</div>
         <div class="col-md-6"><strong>{% translate "Основание пребывания" %}:</strong> {{ case.basis_of_stay|default:"—" }}</div>
@@ -124,186 +111,49 @@
       </div>
     </div>
 
-    <!-- Документы -->
     <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="documents" role="tabpanel" aria-labelledby="documents-tab">
       <h4 class="mb-3 case-section-heading">{% translate "Документы по делу" %}</h4>
-      <div class="table-responsive">
-        <table class="table table-hover align-middle">
-          <thead>
-            <tr>
-              <th>{% translate "Название" %}</th>
-              <th>{% translate "Статус" %}</th>
-              <th>{% translate "Дата загрузки" %}</th>
-              <th>{% translate "Срок действия" %}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for document in documents %}
-              <tr>
-                <td>{{ document.display_name }}</td>
-                <td><span class="badge bg-secondary">{{ document.computed_status }}</span></td>
-                <td>{{ document.uploaded_at|date:"d.m.Y H:i" }}</td>
-                <td>{{ document.expiry_date|date:"d.m.Y"|default:"—" }}</td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="4" class="text-center text-muted">{% translate "Нет документов по этому делу." %}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+      <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>{% translate "Название" %}</th><th>{% translate "Статус" %}</th><th>{% translate "Дата загрузки" %}</th><th>{% translate "Срок действия" %}</th></tr></thead><tbody>
+        {% for document in documents %}<tr><td>{{ document.display_name }}</td><td><span class="badge bg-secondary">{{ document.computed_status }}</span></td><td>{{ document.uploaded_at|date:"d.m.Y H:i" }}</td><td>{{ document.expiry_date|date:"d.m.Y"|default:"—" }}</td></tr>
+        {% empty %}<tr><td colspan="4" class="text-center text-muted">{% translate "Нет документов по этому делу." %}</td></tr>{% endfor %}
+      </tbody></table></div>
     </div>
 
-    <!-- Задачи -->
     <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="tasks" role="tabpanel" aria-labelledby="tasks-tab">
       <h4 class="mb-3 case-section-heading">{% translate "Задачи сотрудников по делу" %}</h4>
-      <div class="table-responsive">
-        <table class="table table-hover align-middle">
-          <thead>
-            <tr>
-              <th>{% translate "Название" %}</th>
-              <th>{% translate "Ответственный" %}</th>
-              <th>{% translate "Статус" %}</th>
-              <th>{% translate "Срок" %}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for task in tasks %}
-              <tr>
-                <td>{{ task.title }}</td>
-                <td>{{ task.assignee.email|default:"—" }}</td>
-                <td><span class="badge bg-secondary">{{ task.status }}</span></td>
-                <td>{{ task.due_date|date:"d.m.Y"|default:"—" }}</td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="4" class="text-center text-muted">{% translate "Нет задач по этому делу." %}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+      <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>{% translate "Название" %}</th><th>{% translate "Ответственный" %}</th><th>{% translate "Статус" %}</th><th>{% translate "Срок" %}</th></tr></thead><tbody>
+        {% for task in tasks %}<tr><td>{{ task.title }}</td><td>{{ task.assignee.email|default:"—" }}</td><td><span class="badge bg-secondary">{{ task.status }}</span></td><td>{{ task.due_date|date:"d.m.Y"|default:"—" }}</td></tr>
+        {% empty %}<tr><td colspan="4" class="text-center text-muted">{% translate "Нет задач по этому делу." %}</td></tr>{% endfor %}
+      </tbody></table></div>
     </div>
 
-    <!-- Платежи -->
     <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="payments" role="tabpanel" aria-labelledby="payments-tab">
       <h4 class="mb-3 case-section-heading">{% translate "Платежи и счета" %}</h4>
-      <div class="table-responsive">
-        <table class="table table-hover align-middle">
-          <thead>
-            <tr>
-              <th>{% translate "Услуга" %}</th>
-              <th>{% translate "Сумма" %}</th>
-              <th>{% translate "Статус" %}</th>
-              <th>{% translate "Срок оплаты" %}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for payment in payments %}
-              <tr>
-                <td>{{ payment.get_service_description_display }}</td>
-                <td>{{ payment.total_amount }}</td>
-                <td><span class="badge bg-secondary">{{ payment.status }}</span></td>
-                <td>{{ payment.due_date|date:"d.m.Y"|default:"—" }}</td>
-              </tr>
-            {% empty %}
-              <tr>
-                <td colspan="4" class="text-center text-muted">{% translate "Нет платежей по этому делу." %}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+      <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>{% translate "Услуга" %}</th><th>{% translate "Сумма" %}</th><th>{% translate "Статус" %}</th><th>{% translate "Срок оплаты" %}</th></tr></thead><tbody>
+        {% for payment in payments %}<tr><td>{{ payment.get_service_description_display }}</td><td>{{ payment.total_amount }}</td><td><span class="badge bg-secondary">{{ payment.status }}</span></td><td>{{ payment.due_date|date:"d.m.Y"|default:"—" }}</td></tr>
+        {% empty %}<tr><td colspan="4" class="text-center text-muted">{% translate "Нет платежей по этому делу." %}</td></tr>{% endfor %}
+      </tbody></table></div>
     </div>
 
-    <!-- Подача -->
     <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="submission" role="tabpanel" aria-labelledby="submission-tab">
       <h4 class="mb-3 case-section-heading">{% translate "Информация о подаче" %}</h4>
-      <div class="row g-3">
-        <div class="col-md-6"><strong>{% translate "Дата подачи" %}:</strong> {{ case.submission_date|date:"d.m.Y"|default:"—" }}</div>
-        <div class="col-md-6"><strong>{% translate "Дата решения" %}:</strong> {{ case.decision_date|date:"d.m.Y"|default:"—" }}</div>
-        <div class="col-12"><strong>{% translate "Решение" %}:</strong><p class="mt-1 mb-0">{{ case.decision|default:"—" }}</p></div>
-      </div>
+      <div class="row g-3"><div class="col-md-6"><strong>{% translate "Дата подачи" %}:</strong> {{ case.submission_date|date:"d.m.Y"|default:"—" }}</div><div class="col-md-6"><strong>{% translate "Дата решения" %}:</strong> {{ case.decision_date|date:"d.m.Y"|default:"—" }}</div><div class="col-12"><strong>{% translate "Решение" %}:</strong><p class="mt-1 mb-0">{{ case.decision|default:"—" }}</p></div></div>
     </div>
 
-    <!-- MOS/PESEL -->
     <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="mos-pesel" role="tabpanel" aria-labelledby="mos-pesel-tab">
       <h4 class="mb-3 case-section-heading">{% translate "Заявления MOS и PESEL" %}</h4>
-      <div class="mb-4">
-        <h5>{% translate "Заявление в системе MOS" %}</h5>
-        {% if case.mos_application_data %}
-          <div class="row g-2">
-            <div class="col-md-6"><strong>{% translate "Статус MOS" %}:</strong> {{ case.mos_application_data.status }}</div>
-            <div class="col-md-6"><strong>{% translate "Цель пребывания" %}:</strong> {{ case.mos_application_data.mos_purpose|default:"—" }}</div>
-          </div>
-        {% else %}
-          <p class="text-muted mb-0">{% translate "Данные заявления MOS отсутствуют." %}</p>
-        {% endif %}
-      </div>
-      <div>
-        <h5>{% translate "Заявления PESEL" %}</h5>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead>
-              <tr>
-                <th>{% translate "ID" %}</th>
-                <th>{% translate "Статус" %}</th>
-                <th>{% translate "Правовое основание" %}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for pesel in case.pesel_applications.all %}
-                <tr>
-                  <td>{{ pesel.id }}</td>
-                  <td>{{ pesel.status }}</td>
-                  <td>{{ pesel.legal_basis|default:"—" }}</td>
-                </tr>
-              {% empty %}
-                <tr>
-                  <td colspan="3" class="text-center text-muted">{% translate "Нет заявлений PESEL по этому делу." %}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <div class="mb-4"><h5>{% translate "Заявление в системе MOS" %}</h5>{% if case.mos_application_data %}<div class="row g-2"><div class="col-md-6"><strong>{% translate "Статус MOS" %}:</strong> {{ case.mos_application_data.status }}</div><div class="col-md-6"><strong>{% translate "Цель пребывания" %}:</strong> {{ case.mos_application_data.mos_purpose|default:"—" }}</div></div>{% else %}<p class="text-muted mb-0">{% translate "Данные заявления MOS отсутствуют." %}</p>{% endif %}</div>
+      <div><h5>{% translate "Заявления PESEL" %}</h5><div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>{% translate "ID" %}</th><th>{% translate "Статус" %}</th><th>{% translate "Правовое основание" %}</th></tr></thead><tbody>{% for pesel in case.pesel_applications.all %}<tr><td>{{ pesel.id }}</td><td>{{ pesel.status }}</td><td>{{ pesel.legal_basis|default:"—" }}</td></tr>{% empty %}<tr><td colspan="3" class="text-center text-muted">{% translate "Нет заявлений PESEL по этому делу." %}</td></tr>{% endfor %}</tbody></table></div></div>
     </div>
 
-    <!-- Отпечатки -->
     <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="fingerprints" role="tabpanel" aria-labelledby="fingerprints-tab">
       <h4 class="mb-3 case-section-heading">{% translate "Сдача отпечатков пальцев" %}</h4>
-      <div class="row g-3">
-        <div class="col-md-6"><strong>{% translate "Дата сдачи" %}:</strong> {{ case.fingerprints_date|date:"d.m.Y"|default:"—" }}</div>
-        <div class="col-md-6"><strong>{% translate "Время" %}:</strong> {{ case.fingerprints_time|default:"—" }}</div>
-        <div class="col-md-6"><strong>{% translate "Место" %}:</strong> {{ case.fingerprints_location|default:"—" }}</div>
-        <div class="col-md-6"><strong>{% translate "Номер талона" %}:</strong> {{ case.fingerprints_ticket|default:"—" }}</div>
-        <div class="col-md-6"><strong>{% translate "Список" %}:</strong> {{ case.fingerprints_list|default:"—" }}</div>
-        <div class="col-12"><strong>{% translate "Дополнительная информация" %}:</strong><p class="mt-1 mb-0">{{ case.fingerprints_info|default:"—" }}</p></div>
-      </div>
+      <div class="row g-3"><div class="col-md-6"><strong>{% translate "Дата сдачи" %}:</strong> {{ case.fingerprints_date|date:"d.m.Y"|default:"—" }}</div><div class="col-md-6"><strong>{% translate "Время" %}:</strong> {{ case.fingerprints_time|default:"—" }}</div><div class="col-md-6"><strong>{% translate "Место" %}:</strong> {{ case.fingerprints_location|default:"—" }}</div><div class="col-md-6"><strong>{% translate "Номер талона" %}:</strong> {{ case.fingerprints_ticket|default:"—" }}</div><div class="col-md-6"><strong>{% translate "Список" %}:</strong> {{ case.fingerprints_list|default:"—" }}</div><div class="col-12"><strong>{% translate "Дополнительная информация" %}:</strong><p class="mt-1 mb-0">{{ case.fingerprints_info|default:"—" }}</p></div></div>
     </div>
 
-    <!-- История -->
     <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="history" role="tabpanel" aria-labelledby="history-tab">
       <h4 class="mb-3 case-section-heading">{% translate "История активности по делу" %}</h4>
-      <ul class="list-unstyled mb-0">
-        {% for act in activities %}
-          <li class="mb-3 pb-2 border-bottom">
-            <div class="d-flex justify-content-between align-items-start">
-              <strong>{{ act.summary }}</strong>
-              <small class="text-muted">{{ act.created_at|date:"d.m.Y H:i" }}</small>
-            </div>
-            {% if act.details %}
-              <div class="text-muted mt-1 small">{{ act.details }}</div>
-            {% endif %}
-            {% if act.actor %}
-              <div class="text-muted mt-1 small">{% translate "Автор" %}: {{ act.actor.email }}</div>
-            {% endif %}
-          </li>
-        {% empty %}
-          <li class="text-muted">{% translate "История активности пуста." %}</li>
-        {% endfor %}
-      </ul>
+      <ul class="list-unstyled mb-0">{% for act in activities %}<li class="mb-3 pb-2 border-bottom"><div class="d-flex justify-content-between align-items-start"><strong>{{ act.summary }}</strong><small class="text-muted">{{ act.created_at|date:"d.m.Y H:i" }}</small></div>{% if act.details %}<div class="text-muted mt-1 small">{{ act.details }}</div>{% endif %}{% if act.actor %}<div class="text-muted mt-1 small">{% translate "Автор" %}: {{ act.actor.email }}</div>{% endif %}</li>{% empty %}<li class="text-muted">{% translate "История активности пуста." %}</li>{% endfor %}</ul>
     </div>
   </div>
 </div>
