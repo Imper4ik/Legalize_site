@@ -1,0 +1,77 @@
+/* Theme-safe surface styles for the Case page. */
+.case-detail-page {
+  color: var(--fg);
+}
+
+.case-detail-hero,
+.case-tab-panel,
+.case-tabs {
+  background: var(--surface) !important;
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+
+.case-detail-hero,
+.case-tab-panel {
+  box-shadow: var(--shadow-1);
+}
+
+.case-detail-title,
+.case-section-heading {
+  color: var(--fg);
+}
+
+.case-detail-meta,
+.case-detail-number-hint,
+.case-detail-page .text-muted {
+  color: var(--muted) !important;
+}
+
+.case-detail-number-hint {
+  font-size: .875rem;
+}
+
+.case-next-action {
+  background: color-mix(in srgb, var(--surface) 88%, var(--brand-1)) !important;
+}
+
+.case-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: .25rem;
+  overflow-x: auto;
+}
+
+.case-tabs .nav-link {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.case-tabs .nav-link:hover,
+.case-tabs .nav-link:focus-visible {
+  color: var(--brand-1);
+  background: rgba(29, 78, 216, .10);
+}
+
+.case-tabs .nav-link.active {
+  color: #fff;
+  background: var(--brand-1);
+}
+
+.case-tab-panel .table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--fg);
+  --bs-table-border-color: var(--border);
+  --bs-table-hover-bg: rgba(15, 118, 110, .08);
+  --bs-table-hover-color: var(--fg);
+}
+
+@media (max-width: 767.98px) {
+  .case-detail-hero .card-body {
+    padding: 1.25rem;
+  }
+
+  .case-tabs {
+    padding: .4rem !important;
+  }
+}
