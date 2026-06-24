@@ -168,7 +168,7 @@ class WorkflowDocumentEligibilityTests(TestCase):
                 self.assertFalse(self._transition_allowed())
 
     def test_valid_document_allows_submission_transition(self):
-        create_test_document(self.client_obj, doc_type=DocumentType.PASSPORT.value)
+        create_test_document(self.client_obj, doc_type=DocumentType.PASSPORT.value, verified=True)
         self.assertTrue(self._transition_allowed())
 
 
@@ -178,7 +178,7 @@ class OnboardingTransitionConsistencyTests(TestCase):
         purpose = client.get_document_requirement_purpose()
         DocumentRequirement.objects.filter(application_purpose=purpose).delete()
         DocumentRequirement.objects.create(application_purpose=purpose, document_type=DocumentType.PASSPORT.value, is_required=True)
-        create_test_document(client, doc_type=DocumentType.PASSPORT.value)
+        create_test_document(client, doc_type=DocumentType.PASSPORT.value, verified=True)
         mos = MOSApplicationData.objects.update_or_create(client=client, defaults={"status": "mos_package_ready"})[0]
         transition_client_workflow(client=client, target_stage="application_submitted")
         mos.status = "submitted_in_mos"
@@ -206,7 +206,7 @@ class OnboardingTransitionConsistencyTests(TestCase):
         purpose = client.get_document_requirement_purpose()
         DocumentRequirement.objects.filter(application_purpose=purpose).delete()
         DocumentRequirement.objects.create(application_purpose=purpose, document_type=DocumentType.PASSPORT.value, is_required=True)
-        create_test_document(client, doc_type=DocumentType.PASSPORT.value)
+        create_test_document(client, doc_type=DocumentType.PASSPORT.value, verified=True)
         mos = MOSApplicationData.objects.update_or_create(client=client, defaults={"status": "mos_package_ready"})[0]
         with patch("clients.services.workflow_transitions.log_client_activity", side_effect=RuntimeError("boom")):
             with self.assertRaises(RuntimeError):

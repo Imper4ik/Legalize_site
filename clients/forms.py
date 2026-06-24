@@ -673,8 +673,12 @@ class StaffTaskForm(forms.ModelForm):
             'assignee': forms.Select(attrs={'class': 'form-select'}),
         }
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, client: Client | None = None, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+        # Assign the owner client so model-level clean() can resolve the required
+        # Case (single-case legacy fallback) during form validation.
+        if client is not None:
+            self.instance.client = client
         user_model = get_user_model()
         staff_qs = user_model.objects.filter(is_staff=True, is_active=True).order_by('email')
         if hasattr(self.fields['assignee'], 'queryset'):

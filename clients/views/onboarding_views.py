@@ -34,6 +34,7 @@ from clients.services.document_workflow import upload_client_document
 from clients.services.intake_extraction import pre_fill_mos_data_from_ocr
 from clients.services.notifications import notify_staff_about_fingerprint_invitation_upload
 from clients.services.onboarding_purposes import (
+    FAMILY_ONBOARDING_PURPOSES,
     ONBOARDING_PURPOSE_CHOICES,
     apply_onboarding_purpose_to_client,
     clear_onboarding_notifications_cache,
@@ -1011,7 +1012,19 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
         if case:
             mos_data, _created = MOSApplicationData.objects.get_or_create(client=client, case=case)
             if selected_purpose:
-                case.application_purpose = selected_purpose
+                # application_purpose belongs to the Case; family_role is a
+                # permanent client attribute. Family purposes split into
+                # application_purpose="family" + the family_role on the client.
+                if selected_purpose in FAMILY_ONBOARDING_PURPOSES:
+                    case.application_purpose = "family"
+                    if client.family_role != selected_purpose:
+                        client.family_role = selected_purpose
+                        client.save(update_fields=["family_role"])
+                else:
+                    case.application_purpose = selected_purpose
+                    if client.family_role:
+                        client.family_role = ""
+                        client.save(update_fields=["family_role"])
                 case.save(update_fields=["application_purpose"])
                 if mos_data.mos_purpose:
                     mos_data.mos_purpose = ""

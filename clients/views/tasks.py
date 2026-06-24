@@ -61,7 +61,7 @@ def add_task(request: HttpRequest, client_id: int) -> HttpResponseBase:
     if request.method != "POST":
         return redirect("clients:client_detail", pk=client.pk)
 
-    form = StaffTaskForm(request.POST)
+    form = StaffTaskForm(request.POST, client=client)
     if form.is_valid():
         create_task_for_client(
             client=client,

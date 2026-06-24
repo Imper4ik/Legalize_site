@@ -64,6 +64,7 @@ ALLOWED_METADATA_SCHEMA = {
     "attachment_id": "uuid_or_int",
     "restored_version_id": "uuid_or_int",
     "restored_version_number": "int",
+    "document_version_id": "uuid_or_int",
     "verified_count": "int",
     "remaining_count": "int",
 }
