@@ -64,6 +64,14 @@ class ClientOnboardingSession(models.Model):
 
     def clean(self) -> None:
         super().clean()
+        if self.scope == "client_portal":
+            # A portal session spans every active case of the client. The
+            # selected case is chosen per request and kept server-side only, so
+            # the session itself must never bind to (or auto-assign) a case.
+            if self.case_id is not None:
+                raise ValidationError("Сессия портала клиента не может быть привязана к делу.")
+            return
+        # case_link: a specific case is mandatory.
         if self.case_id is None:
             if self.payment_id and self.payment.case_id:
                 self.case_id = self.payment.case_id
@@ -80,7 +88,8 @@ class ClientOnboardingSession(models.Model):
 
     def save(self, *args: object, **kwargs: object) -> None:
         update_fields = kwargs.get("update_fields")
-        if self.case_id is None:
+        # Never auto-assign a case for portal sessions (see clean()).
+        if self.scope != "client_portal" and self.case_id is None:
             if self.payment_id and self.payment.case_id:
                 self.case_id = self.payment.case_id
             elif self.client_id:
