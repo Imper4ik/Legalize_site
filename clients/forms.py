@@ -504,6 +504,15 @@ class DocumentUploadForm(forms.ModelForm):
         self.client = client
         self.case = case
         super().__init__(*args, **kwargs)
+        # Assign owners onto the instance so model-level clean() can resolve the
+        # required Case (an explicit case, or the single-case legacy fallback)
+        # during form validation, before the document is saved.
+        if client is not None:
+            self.instance.client = client
+        if case is not None:
+            self.instance.case = case
+        if doc_type is not None:
+            self.instance.document_type = doc_type
         self.fields["zus_period_month"].help_text = _(
             "Для ZUS RCA укажите месяц отчёта. Если загружаете страховой полис, добавьте его как отдельный документ «Polisa ubezpieczeniowa / Health insurance»."
         )

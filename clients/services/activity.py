@@ -19,12 +19,17 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# NOTE: every entry here is a *field name* recorded in ``changed_fields``.
+# Field values (the actual case number, dates, amounts, free text) are never
+# stored in metadata — only the names of fields that changed. Free-text field
+# names (notes/description/title/rejection_reason) are intentionally excluded.
 SAFE_FIELD_NAMES = {
     "status", "workflow_stage", "application_purpose", "application_type", "basis_of_stay",
     "opened_at", "submission_date", "fingerprints_date", "fingerprints_time", "fingerprints_location",
+    "fingerprints_ticket", "fingerprints_list", "authority_case_number", "first_name", "last_name",
     "decision_date", "decision_valid_until", "assigned_staff", "company", "is_test_data", "is_demo_data",
-    "due_date", "is_active", "notes", "description", "title", "document_type", "expiry_date",
-    "total_amount", "amount_paid", "payment_method", "payment_date", "rejection_reason",
+    "due_date", "is_active", "document_type", "expiry_date",
+    "total_amount", "amount_paid", "payment_method", "payment_date",
     "document_kind", "attachment_count", "metadata_version", "ocr_version", "version",
     "transaction_id"
 }
@@ -144,8 +149,6 @@ def sanitize_activity_metadata(metadata: dict[str, Any] | None) -> dict[str, Any
                 sanitized[key] = sanitized_list
             else:
                 logger.warning("Metadata key '%s' rejected due to type mismatch", key)
-
-    return sanitized
 
     return sanitized
 

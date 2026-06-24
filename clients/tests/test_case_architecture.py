@@ -192,6 +192,46 @@ class CaseArchitectureTests(TestCase):
         self.assertFalse(task_refreshed.suspended_by_case_archive)
         self.assertIsNone(task_refreshed.suspended_by_archive_batch)
 
+    def test_ocr_on_case_b_document_does_not_touch_case_a(self) -> None:
+        from clients.services.document_workflow import confirm_wezwanie_document
+
+        case_a = self.primary_case
+        case_b = create_case_for_client(client=self.client_obj, actor=self.staff, application_purpose="study")
+        document_b = Document.objects.create(
+            client=self.client_obj,
+            case=case_b,
+            document_type=DocumentType.WEZWANIE.value,
+            file=build_pdf_upload("wezwanie-b.pdf"),
+            awaiting_confirmation=True,
+            ocr_status="success",
+            parsed_data={"raw_text": "x", "case_number": "OLD"},
+            is_test_data=True,
+        )
+
+        confirm_wezwanie_document(
+            document=document_b,
+            actor=self.staff,
+            confirmation_data={
+                "case_number": "WSC-II-P.6151.999.2025",
+                "fingerprints_date": "2026-05-04",
+                "fingerprints_location": "Wroclaw",
+            },
+            parser=lambda *a, **k: (_ for _ in ()).throw(RuntimeError("parser must not run")),
+            send_missing_email=lambda _client: 0,
+            send_appointment_email=lambda _client: 0,
+        )
+
+        case_a.refresh_from_db()
+        case_b.refresh_from_db()
+        # Case B received all the process data.
+        self.assertEqual(case_b.authority_case_number, "WSC-II-P.6151.999.2025")
+        self.assertEqual(case_b.fingerprints_date, timezone.datetime(2026, 5, 4).date())
+        self.assertEqual(case_b.fingerprints_location, "Wroclaw")
+        # Case A is completely untouched.
+        self.assertEqual(case_a.authority_case_number, "")
+        self.assertIsNone(case_a.fingerprints_date)
+        self.assertEqual(case_a.fingerprints_location, "")
+
     def test_reminder_rejects_mismatched_case_source(self) -> None:
         second_case = create_case_for_client(client=self.client_obj, actor=self.staff, application_purpose="study")
         payment = Payment.objects.create(

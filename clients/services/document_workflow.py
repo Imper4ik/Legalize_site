@@ -231,16 +231,20 @@ def confirm_wezwanie_document(
         document.save(update_fields=["awaiting_confirmation", "parsed_data", "ocr_status"])
 
     client = document.client
-    updated_fields, auto_updates = _apply_confirmation_updates(client, confirmation_data)
-    if updated_fields:
-        client.save(update_fields=updated_fields)
+    case = Case.all_objects.get(pk=document.case_id) if document.case_id else None
+    client_fields, case_fields, auto_updates = _apply_confirmation_updates(client, case, confirmation_data)
+    if case is not None and case_fields:
+        case.save(update_fields=case_fields)
+    if client_fields:
+        client.save(update_fields=client_fields)
 
     log_client_activity(
         client=client,
+        case=case,
         actor=actor,
         event_type="document_confirmed",
         summary="Confirmed wezwanie data",
-        metadata={"document_id": document.id, "auto_updates": auto_updates},
+        metadata={"document_id": document.id, "changed_fields": client_fields + case_fields},
         document=document,
     )
 
@@ -1406,6 +1410,11 @@ def _finalize_successful_document_job(
             )
 
         client = Client.objects.select_for_update().get(pk=document.client_id)
+        case = (
+            Case.all_objects.select_for_update().get(pk=document.case_id)
+            if document.case_id
+            else None
+        )
         actor = job.created_by
         parsed_payload = _build_wezwanie_payload(parsed)
 
@@ -1416,19 +1425,26 @@ def _finalize_successful_document_job(
             document.ocr_name_mismatch = _has_name_mismatch(parsed.full_name, client)
             document.save(update_fields=["parsed_data", "ocr_status", "awaiting_confirmation", "ocr_name_mismatch"])
         else:
-            updated_fields, parsed_updates = _apply_parsed_client_updates(client, parsed)
+            client_fields, case_fields, parsed_updates = _apply_parsed_client_updates(client, case, parsed)
             auto_updates.extend(parsed_updates)
             _append_required_documents_update(parsed, auto_updates)
 
-            if updated_fields:
-                client.save(update_fields=updated_fields)
+            if case is not None and case_fields:
+                case.save(update_fields=case_fields)
+            if client_fields:
+                client.save(update_fields=client_fields)
+            if client_fields or case_fields:
                 log_client_activity(
                     client=client,
+                    case=case,
                     actor=actor,
                     event_type="client_updated",
-                    summary="Client data updated from background wezwanie OCR",
-                    details=", ".join(changed_field_labels(client, updated_fields)),
-                    metadata={"changed_fields": updated_fields, "source": "document_processing_job"},
+                    summary="Case data updated from background wezwanie OCR",
+                    details=", ".join(
+                        changed_field_labels(client, client_fields)
+                        + (changed_field_labels(case, case_fields) if case is not None else [])
+                    ),
+                    metadata={"changed_fields": client_fields + case_fields, "source": "document_processing_job"},
                     document=document,
                 )
 
@@ -1630,67 +1646,83 @@ def _append_required_documents_update_from_codes(doc_codes: list[str] | None, au
         )
 
 
-def _apply_parsed_client_updates(client: Client, parsed: WezwanieData) -> tuple[list[str], list[str]]:
-    updated_fields: list[str] = []
+def _apply_parsed_client_updates(
+    client: Client, case: Case | None, parsed: WezwanieData
+) -> tuple[list[str], list[str], list[str]]:
+    """Apply OCR (wezwanie) results to the correct owner.
+
+    All process data — authority case number, fingerprints details, decision
+    date and application purpose — belongs to the *Case* of the scanned
+    document, so OCR on a document of Case B must never mutate Case A or the
+    shared Client. Only genuinely permanent identity data (a missing name) is
+    written back to the Client.
+
+    Returns ``(client_fields, case_fields, auto_updates)``.
+    """
+    client_fields: list[str] = []
+    case_fields: list[str] = []
     auto_updates: list[str] = []
 
-    if parsed.case_number and parsed.case_number != client.case_number:
-        client.case_number = parsed.case_number
-        updated_fields.append("case_number")
-        auto_updates.append(_("case number updated"))
+    # --- Process data → Case (never Client) ---
+    if case is not None:
+        if parsed.case_number and parsed.case_number != case.authority_case_number:
+            case.authority_case_number = parsed.case_number
+            case_fields.append("authority_case_number")
+            auto_updates.append(_("case number updated"))
 
-    if parsed.fingerprints_date and parsed.fingerprints_date != client.fingerprints_date:
-        client.fingerprints_date = parsed.fingerprints_date
-        updated_fields.append("fingerprints_date")
-        auto_updates.append(
-            _("fingerprints date: %(val)s")
-            % {"val": parsed.fingerprints_date.strftime("%d.%m.%Y")}
-        )
+        if parsed.fingerprints_date and parsed.fingerprints_date != case.fingerprints_date:
+            case.fingerprints_date = parsed.fingerprints_date
+            case_fields.append("fingerprints_date")
+            auto_updates.append(
+                _("fingerprints date: %(val)s")
+                % {"val": parsed.fingerprints_date.strftime("%d.%m.%Y")}
+            )
 
-    parsed_fingerprints_time = parse_time(parsed.fingerprints_time or "")
-    if parsed_fingerprints_time and parsed_fingerprints_time != client.fingerprints_time:
-        client.fingerprints_time = parsed_fingerprints_time
-        updated_fields.append("fingerprints_time")
+        parsed_fingerprints_time = parse_time(parsed.fingerprints_time or "")
+        if parsed_fingerprints_time and parsed_fingerprints_time != case.fingerprints_time:
+            case.fingerprints_time = parsed_fingerprints_time
+            case_fields.append("fingerprints_time")
 
-    if parsed.fingerprints_location and parsed.fingerprints_location != (client.fingerprints_location or ""):
-        client.fingerprints_location = parsed.fingerprints_location
-        updated_fields.append("fingerprints_location")
+        if parsed.fingerprints_location and parsed.fingerprints_location != (case.fingerprints_location or ""):
+            case.fingerprints_location = parsed.fingerprints_location
+            case_fields.append("fingerprints_location")
 
-    if parsed.decision_date and parsed.decision_date != client.decision_date:
-        client.decision_date = parsed.decision_date
-        updated_fields.append("decision_date")
-        auto_updates.append(
-            _("decision date: %(val)s") % {"val": parsed.decision_date.strftime("%d.%m.%Y")}
-        )
+        if parsed.decision_date and parsed.decision_date != case.decision_date:
+            case.decision_date = parsed.decision_date
+            case_fields.append("decision_date")
+            auto_updates.append(
+                _("decision date: %(val)s") % {"val": parsed.decision_date.strftime("%d.%m.%Y")}
+            )
 
+        if parsed.ticket_number and parsed.ticket_number != case.fingerprints_ticket:
+            case.fingerprints_ticket = parsed.ticket_number
+            case_fields.append("fingerprints_ticket")
+            auto_updates.append(_("ticket number: %(val)s") % {"val": parsed.ticket_number})
+
+        if parsed.list_name and parsed.list_name != case.fingerprints_list:
+            case.fingerprints_list = parsed.list_name
+            case_fields.append("fingerprints_list")
+            auto_updates.append(_("list: %(val)s") % {"val": parsed.list_name})
+
+        # Map P/S/K to application purpose if not set
+        if parsed.application_status_code:
+            purpose_map = {"P": "work", "S": "study", "K": "family"}
+            mapped_purpose = purpose_map.get(parsed.application_status_code)
+            if mapped_purpose and case.application_purpose != mapped_purpose:
+                case.application_purpose = mapped_purpose
+                case_fields.append("application_purpose")
+                auto_updates.append(_("application purpose set to: %(val)s") % {"val": mapped_purpose})
+
+    # --- Permanent identity data → Client (only when missing) ---
     if parsed.full_name and (not client.first_name or not client.last_name):
         name_parts = parsed.full_name.split()
         if len(name_parts) >= 2:
             client.first_name = name_parts[0]
             client.last_name = " ".join(name_parts[1:])
-            updated_fields.extend(["first_name", "last_name"])
+            client_fields.extend(["first_name", "last_name"])
             auto_updates.append(_("client name updated"))
 
-    if parsed.ticket_number and parsed.ticket_number != client.fingerprints_ticket:
-        client.fingerprints_ticket = parsed.ticket_number
-        updated_fields.append("fingerprints_ticket")
-        auto_updates.append(_("ticket number: %(val)s") % {"val": parsed.ticket_number})
-
-    if parsed.list_name and parsed.list_name != client.fingerprints_list:
-        client.fingerprints_list = parsed.list_name
-        updated_fields.append("fingerprints_list")
-        auto_updates.append(_("list: %(val)s") % {"val": parsed.list_name})
-
-    # Map P/S/K to application purpose if not set
-    if parsed.application_status_code:
-        purpose_map = {"P": "work", "S": "study", "K": "family"}
-        mapped_purpose = purpose_map.get(parsed.application_status_code)
-        if mapped_purpose and client.application_purpose != mapped_purpose:
-            client.application_purpose = mapped_purpose
-            updated_fields.append("application_purpose")
-            auto_updates.append(_("application purpose set to: %(val)s") % {"val": mapped_purpose})
-
-    return updated_fields, auto_updates
+    return client_fields, case_fields, auto_updates
 
 
 def _build_confirmed_wezwanie_payload(confirmation_data: Mapping[str, str]) -> dict[str, Any]:
@@ -1730,9 +1762,18 @@ def _build_confirmed_wezwanie_notification_data(confirmation_data: Mapping[str, 
 
 def _apply_confirmation_updates(
     client: Client,
+    case: Case | None,
     confirmation_data: Mapping[str, str],
-) -> tuple[list[str], list[str]]:
-    updated_fields: list[str] = []
+) -> tuple[list[str], list[str], list[str]]:
+    """Apply staff-confirmed wezwanie data.
+
+    Mirrors :func:`_apply_parsed_client_updates`: process data lands on the
+    document's Case, only a missing name is written to the Client.
+
+    Returns ``(client_fields, case_fields, auto_updates)``.
+    """
+    client_fields: list[str] = []
+    case_fields: list[str] = []
     auto_updates: list[str] = []
 
     first_name = (confirmation_data.get("first_name") or "").strip()
@@ -1743,60 +1784,63 @@ def _apply_confirmation_updates(
     fingerprints_location = (confirmation_data.get("fingerprints_location") or "").strip()
     decision_date_raw = (confirmation_data.get("decision_date") or "").strip()
 
+    # --- Permanent identity data → Client ---
     if first_name and first_name != client.first_name:
         client.first_name = first_name
-        updated_fields.append("first_name")
+        client_fields.append("first_name")
 
     if last_name and last_name != client.last_name:
         client.last_name = last_name
-        updated_fields.append("last_name")
+        client_fields.append("last_name")
 
-    if case_number and case_number != client.case_number:
-        client.case_number = case_number
-        updated_fields.append("case_number")
-        auto_updates.append(_("case number updated"))
+    # --- Process data → Case (never Client) ---
+    if case is not None:
+        if case_number and case_number != case.authority_case_number:
+            case.authority_case_number = case_number
+            case_fields.append("authority_case_number")
+            auto_updates.append(_("case number updated"))
 
-    fingerprints_date = parse_date(fingerprints_date_raw) if fingerprints_date_raw else None
-    if fingerprints_date and fingerprints_date != client.fingerprints_date:
-        client.fingerprints_date = fingerprints_date
-        updated_fields.append("fingerprints_date")
-        auto_updates.append(
-            _("fingerprints date: %(val)s") % {"val": fingerprints_date.strftime("%d.%m.%Y")}
-        )
+        fingerprints_date = parse_date(fingerprints_date_raw) if fingerprints_date_raw else None
+        if fingerprints_date and fingerprints_date != case.fingerprints_date:
+            case.fingerprints_date = fingerprints_date
+            case_fields.append("fingerprints_date")
+            auto_updates.append(
+                _("fingerprints date: %(val)s") % {"val": fingerprints_date.strftime("%d.%m.%Y")}
+            )
 
-    fingerprints_time = parse_time(fingerprints_time_raw) if fingerprints_time_raw else None
-    if fingerprints_time and fingerprints_time != client.fingerprints_time:
-        client.fingerprints_time = fingerprints_time
-        updated_fields.append("fingerprints_time")
+        fingerprints_time = parse_time(fingerprints_time_raw) if fingerprints_time_raw else None
+        if fingerprints_time and fingerprints_time != case.fingerprints_time:
+            case.fingerprints_time = fingerprints_time
+            case_fields.append("fingerprints_time")
 
-    if fingerprints_location and fingerprints_location != (client.fingerprints_location or ""):
-        client.fingerprints_location = fingerprints_location
-        updated_fields.append("fingerprints_location")
+        if fingerprints_location and fingerprints_location != (case.fingerprints_location or ""):
+            case.fingerprints_location = fingerprints_location
+            case_fields.append("fingerprints_location")
 
-    ticket_number = (confirmation_data.get("ticket_number") or "").strip()
-    if ticket_number and ticket_number != client.fingerprints_ticket:
-        client.fingerprints_ticket = ticket_number
-        updated_fields.append("fingerprints_ticket")
+        ticket_number = (confirmation_data.get("ticket_number") or "").strip()
+        if ticket_number and ticket_number != case.fingerprints_ticket:
+            case.fingerprints_ticket = ticket_number
+            case_fields.append("fingerprints_ticket")
 
-    list_name = (confirmation_data.get("list_name") or "").strip()
-    if list_name and list_name != client.fingerprints_list:
-        client.fingerprints_list = list_name
-        updated_fields.append("fingerprints_list")
+        list_name = (confirmation_data.get("list_name") or "").strip()
+        if list_name and list_name != case.fingerprints_list:
+            case.fingerprints_list = list_name
+            case_fields.append("fingerprints_list")
 
-    status_code = (confirmation_data.get("application_status_code") or "").strip()
-    if status_code:
-        purpose_map = {"P": "work", "S": "study", "K": "family"}
-        mapped_purpose = purpose_map.get(status_code)
-        if mapped_purpose and client.application_purpose != mapped_purpose:
-            client.application_purpose = mapped_purpose
-            updated_fields.append("application_purpose")
+        status_code = (confirmation_data.get("application_status_code") or "").strip()
+        if status_code:
+            purpose_map = {"P": "work", "S": "study", "K": "family"}
+            mapped_purpose = purpose_map.get(status_code)
+            if mapped_purpose and case.application_purpose != mapped_purpose:
+                case.application_purpose = mapped_purpose
+                case_fields.append("application_purpose")
 
-    decision_date = parse_date(decision_date_raw) if decision_date_raw else None
-    if decision_date and decision_date != client.decision_date:
-        client.decision_date = decision_date
-        updated_fields.append("decision_date")
-        auto_updates.append(
-            _("decision date: %(val)s") % {"val": decision_date.strftime("%d.%m.%Y")}
-        )
+        decision_date = parse_date(decision_date_raw) if decision_date_raw else None
+        if decision_date and decision_date != case.decision_date:
+            case.decision_date = decision_date
+            case_fields.append("decision_date")
+            auto_updates.append(
+                _("decision date: %(val)s") % {"val": decision_date.strftime("%d.%m.%Y")}
+            )
 
-    return updated_fields, auto_updates
+    return client_fields, case_fields, auto_updates
