@@ -176,9 +176,10 @@ def archive_client_with_all_cases(
     for case in active_cases:
         archive_case(case, actor, client_batch=client_batch)
 
+    # The Client model has no archived_by field; the ClientArchiveBatch records
+    # who archived the client.
     client.archived_at = timezone.now()
-    client.archived_by = actor
-    client.save(update_fields=["archived_at", "archived_by"])
+    client.save(update_fields=["archived_at"])
 
     from clients.services.activity import log_client_activity
     log_client_activity(
@@ -215,8 +216,7 @@ def restore_client_with_all_cases(
         raise ValidationError("Клиент не находится в архивном состоянии.")
 
     client.archived_at = None
-    client.archived_by = None
-    client.save(update_fields=["archived_at", "archived_by"])
+    client.save(update_fields=["archived_at"])
 
     case_batches = list(batch.case_batches.filter(status="archived"))
 
