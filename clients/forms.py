@@ -604,6 +604,13 @@ class PaymentForm(forms.ModelForm):
             "transaction_id": forms.TextInput(attrs={"class": "form-control"}),
         }
 
+    def __init__(self, *args: Any, client: Client | None = None, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        # Assign the owner client so model-level clean() can resolve the required
+        # Case (single-case legacy fallback) during form validation.
+        if client is not None:
+            self.instance.client = client
+
     def clean_amount_paid(self) -> Decimal:
         return cast(Decimal, self.cleaned_data.get("amount_paid") or Decimal("0.00"))
 

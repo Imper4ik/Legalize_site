@@ -62,7 +62,7 @@ def finalize_client_creation(
             actor=actor,
             event_type="client_created",
             summary="Клиент создан",
-            metadata={"workflow_stage": client.workflow_stage, "status": client.status},
+            metadata={"changed_fields": ["workflow_stage", "status"]},
         )
     return ClientRecordScenarioResult(
         client=client,
@@ -115,10 +115,7 @@ def finalize_client_update(
                 event_type="client_status_changed",
                 summary="Статус клиента изменён",
                 details=client.get_status_display(),
-                metadata={
-                    "old_status": str(previous_values.get("status")),
-                    "new_status": client.status,
-                },
+                metadata={"changed_fields": ["status"], "status_tag": client.status},
             )
 
         if workflow_changed:
@@ -128,10 +125,7 @@ def finalize_client_update(
                 event_type="workflow_changed",
                 summary="Этап workflow изменён",
                 details=client.get_workflow_stage_display(),
-                metadata={
-                    "old_workflow_stage": str(previous_values.get("workflow_stage")),
-                    "workflow_stage": client.workflow_stage,
-                },
+                metadata={"changed_fields": ["workflow_stage"]},
             )
 
         for field_name, summary in (
@@ -140,31 +134,13 @@ def finalize_client_update(
         ):
             if field_name not in changed_fields:
                 continue
-            old_val = previous_values.get(field_name)
-            new_val = getattr(client, field_name)
-
-            old_val_iso = ""
-            if old_val and hasattr(old_val, "isoformat"):
-                old_val_iso = old_val.isoformat()
-            else:
-                old_val_iso = str(old_val or "")
-
-            new_val_iso = ""
-            if new_val and hasattr(new_val, "isoformat"):
-                new_val_iso = new_val.isoformat()
-            else:
-                new_val_iso = str(new_val or "")
 
             log_client_activity(
                 client=client,
                 actor=actor,
                 event_type="deadline_changed",
                 summary=summary,
-                metadata={
-                    "field": field_name,
-                    "old_value": old_val_iso,
-                    "new_value": new_val_iso,
-                },
+                metadata={"changed_fields": [field_name]},
             )
 
     return ClientRecordScenarioResult(

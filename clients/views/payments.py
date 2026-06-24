@@ -30,7 +30,7 @@ def add_payment(request: HttpRequest, client_id: int) -> HttpResponseBase:
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
     helper = ResponseHelper(request)
     if request.method == "POST":
-        form = PaymentForm(request.POST)
+        form = PaymentForm(request.POST, client=client)
         if form.is_valid():
             result = create_payment_for_client(
                 client=client,
