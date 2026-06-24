@@ -67,6 +67,7 @@ ALLOWED_METADATA_SCHEMA = {
     "document_version_id": "uuid_or_int",
     "verified_count": "int",
     "remaining_count": "int",
+    "has_case_number": "bool",
 }
 
 
@@ -115,6 +116,12 @@ def sanitize_activity_metadata(metadata: dict[str, Any] | None) -> dict[str, Any
                 sanitized[key] = value
             elif isinstance(value, str) and value.isdigit():
                 sanitized[key] = int(value)
+            else:
+                logger.warning("Metadata key '%s' rejected due to type mismatch", key)
+
+        elif expected_type == "bool":
+            if isinstance(value, bool):
+                sanitized[key] = value
             else:
                 logger.warning("Metadata key '%s' rejected due to type mismatch", key)
 

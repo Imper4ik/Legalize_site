@@ -684,11 +684,13 @@ class WezwanieUploadFlowTests(TestCase):
             )
 
         self.assertEqual(response.status_code, 200)
-        updated_client = Client.objects.get(pk=self.client_record.pk)
-        self.assertEqual(updated_client.case_number, "ZZ/987/24")
-        self.assertEqual(updated_client.fingerprints_date, date(2024, 6, 5))
-
         document.refresh_from_db()
+        # Process data (case number, fingerprints date) is written to the Case.
+        case = document.case
+        case.refresh_from_db()
+        self.assertEqual(case.authority_case_number, "ZZ/987/24")
+        self.assertEqual(case.fingerprints_date, date(2024, 6, 5))
+
         self.assertFalse(document.awaiting_confirmation)
 
         self.assertGreaterEqual(len(mail.outbox), 1)

@@ -122,6 +122,7 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
                 from django.contrib import messages
 
                 from clients.forms import DocumentUploadForm
+                from clients.models import Document
                 from clients.services.document_workflow import upload_client_document
 
                 # Copy request.FILES to map passport_file to file for the form validation
