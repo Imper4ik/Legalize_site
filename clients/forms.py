@@ -439,18 +439,28 @@ class ClientForm(forms.ModelForm):
         next_stage = cleaned_data.get("workflow_stage")
         previous_stage = getattr(self.instance, "workflow_stage", None)
 
-        temp_client = copy.copy(self.instance)
-        for field_name, value in cleaned_data.items():
-            if hasattr(temp_client, field_name):
-                setattr(temp_client, field_name, value)
+        # Workflow-transition validation is case-scoped. A brand-new client has
+        # no case yet (it is created on save), and a multi-case client has no
+        # single case to validate against here, so only validate the legacy
+        # single-case bridge for an already-persisted client.
+        if self.instance.pk:
+            temp_client = copy.copy(self.instance)
+            for field_name, value in cleaned_data.items():
+                if hasattr(temp_client, field_name):
+                    setattr(temp_client, field_name, value)
 
-        transition_result = validate_client_workflow_transition(
-            client=temp_client,
-            previous_stage=previous_stage,
-            next_stage=next_stage,
-        )
-        if not transition_result.allowed:
-            self.add_error("workflow_stage", transition_result.message)
+            try:
+                transition_result = validate_client_workflow_transition(
+                    client=temp_client,
+                    previous_stage=previous_stage,
+                    next_stage=next_stage,
+                )
+            except forms.ValidationError:
+                # No unambiguous single case to validate against; defer to
+                # case-level workflow validation instead of blocking the form.
+                transition_result = None
+            if transition_result is not None and not transition_result.allowed:
+                self.add_error("workflow_stage", transition_result.message)
 
         return cleaned_data
 

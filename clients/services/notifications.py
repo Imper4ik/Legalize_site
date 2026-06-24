@@ -656,7 +656,7 @@ def _get_missing_documents_context(
         include_fallback=not has_db_records,
     )
     uploaded_codes = set(case.documents.filter(client=client).values_list("document_type", flat=True))
-    submitted_codes = get_submitted_document_codes(case)
+    submitted_codes = get_submitted_document_codes(client)
     missing_zus = missing_zus_months(case, today=today)
     missing = []
     uploaded_with_expiry = []

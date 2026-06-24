@@ -191,11 +191,17 @@ class Case(SoftDeleteModel):
         return f"{self.display_number} / {self.client}"
 
     def get_document_requirement_purpose(self, client: Any) -> str:
-        participant = self.participants.filter(client=client).first()
-        role = participant.role if participant else None
+        """Resolve the DocumentRequirement purpose key for ``client`` on this case.
+
+        Document requirements are keyed by ``study``/``work``/``family_spouse``/
+        ``family_child``. For family applications the precise sub-purpose comes
+        from the client's permanent ``family_role`` (the participant who is
+        themselves a spouse or child), while a sponsor uses the ``work`` set.
+        """
         if self.application_purpose == "family":
-            if role in ["spouse", "child", "parent"]:
-                return str(role)
+            family_role = getattr(client, "family_role", "") or ""
+            if family_role in {"family_spouse", "family_child"}:
+                return family_role
             return "work"
         return str(self.application_purpose)
 

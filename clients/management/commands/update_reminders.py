@@ -107,6 +107,7 @@ class Command(BaseCommand):
         skipped_count = 0
         iso_year, iso_week, _iso_weekday = today.isocalendar()
         for case in cases.iterator():
+            client = case.client
             weekly_key = f"waiting_decision_missing_docs:{case.pk}:{iso_year}-W{iso_week:02d}"
             if dry_run:
                 sent = 1 if _get_missing_documents_context(case) else 0
