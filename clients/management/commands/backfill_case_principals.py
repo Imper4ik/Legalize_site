@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import logging
 import sys
+from typing import Any
+
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.db.models import Exists, OuterRef

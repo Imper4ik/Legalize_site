@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import logging
 import sys
+from typing import Any
+
 from cryptography.fernet import InvalidToken
 from django.apps import apps
 from django.core.management.base import BaseCommand
@@ -136,5 +138,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.ERROR(f"DECRYPTION_FAILED (ошибка расшифровки): {total_failed}"))
         self.stdout.write(self.style.ERROR(f"ERROR (критическая ошибка): {total_errors}"))
 
-        if total_failed > 0 or total_errors > 0:
+        # Plaintext after migration (NOT_ENCRYPTED), failed decryption and
+        # critical errors are all failures and must yield a non-zero exit code.
+        if total_failed > 0 or total_errors > 0 or total_not_encrypted > 0:
             sys.exit(1)
