@@ -235,6 +235,42 @@ class CaseArchitectureTests(TestCase):
         self.assertNotIn("total_amount", activity.metadata)
         self.assertNotIn("passport_number", activity.metadata)
 
+    def test_display_number_never_exposes_uuid_or_internal_number(self) -> None:
+        self.primary_case.authority_case_number = ""
+        self.primary_case.internal_number = "INTERNAL-123"
+        self.primary_case.save(update_fields=["authority_case_number", "internal_number"])
+
+        display = self.primary_case.display_number
+        self.assertNotIn(str(self.primary_case.uuid), display)
+        self.assertNotIn("INTERNAL-123", display)
+        self.assertEqual(display, "Дело без номера")
+        self.assertFalse(self.primary_case.has_authority_number)
+
+    def test_display_number_shows_authority_number_when_present(self) -> None:
+        self.primary_case.authority_case_number = "WSC-II-P.6151.138285.2025"
+        self.primary_case.internal_number = "INTERNAL-123"
+        self.primary_case.save(update_fields=["authority_case_number", "internal_number"])
+
+        self.assertEqual(self.primary_case.display_number, "WSC-II-P.6151.138285.2025")
+        self.assertTrue(self.primary_case.has_authority_number)
+
+    def test_case_detail_view_hides_uuid_and_internal_number(self) -> None:
+        from django.test import Client as DjangoTestClient
+        from django.urls import reverse
+
+        self.primary_case.authority_case_number = "WSC-II-P.6151.138285.2025"
+        self.primary_case.internal_number = "SECRET-INTERNAL-999"
+        self.primary_case.save(update_fields=["authority_case_number", "internal_number"])
+
+        http = DjangoTestClient()
+        http.force_login(self.staff)
+        response = http.get(reverse("clients:case_detail", kwargs={"pk": self.primary_case.pk}))
+        self.assertEqual(response.status_code, 200)
+        body = response.content.decode()
+        self.assertIn("WSC-II-P.6151.138285.2025", body)
+        self.assertNotIn(str(self.primary_case.uuid), body)
+        self.assertNotIn("SECRET-INTERNAL-999", body)
+
     def test_encrypted_json_field_stores_ciphertext_and_reads_python_value(self) -> None:
         document = create_test_document(self.client_obj, filename="encrypted-json.pdf")
         document.parsed_data = {"passport": "AA123456", "safe": "value"}

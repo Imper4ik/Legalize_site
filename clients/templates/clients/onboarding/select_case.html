@@ -22,8 +22,8 @@
                                 <div class="d-flex flex-column">
                                     <span class="fw-bold">
                                         {{ case.get_application_purpose_display }}
-                                        {% if case.internal_number %}
-                                            ({{ case.internal_number }})
+                                        {% if case.authority_case_number %}
+                                            ({{ case.authority_case_number }})
                                         {% endif %}
                                     </span>
                                     <span class="small text-muted">

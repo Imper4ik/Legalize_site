@@ -352,9 +352,31 @@ class Case(SoftDeleteModel):
 
         return 1
 
+    APPLICATION_PURPOSE_CHOICES = [
+        ("study", _("Учёба")),
+        ("work", _("Работа")),
+        ("family", _("Воссоединение с семьёй")),
+    ]
+
     @property
     def display_number(self) -> str:
-        return str(self.internal_number or self.authority_case_number or self.uuid)
+        """Human-facing case number.
+
+        Only the authority (urzad) case number is a real working number. The
+        UUID and the deprecated internal number must never be shown to staff;
+        when no authority number exists yet we show a neutral placeholder.
+        """
+        number = str(self.authority_case_number or "").strip()
+        return number or str(_("Дело без номера"))
+
+    @property
+    def has_authority_number(self) -> bool:
+        return bool(str(self.authority_case_number or "").strip())
+
+    def get_application_purpose_display(self) -> str:
+        if not self.application_purpose:
+            return ""
+        return str(dict(self.APPLICATION_PURPOSE_CHOICES).get(self.application_purpose, self.application_purpose))
 
     @staticmethod
     def normalize_case_number(case_number: str) -> str:
