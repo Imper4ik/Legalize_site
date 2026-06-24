@@ -1,17 +1,32 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 
-{% block title %}{% translate "Дело" %} {{ case.display_number }}{% endblock %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'clients/css/case_detail.css' %}">
+{% endblock %}
+
+{% block title %}{% translate "Дело" %}{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container py-4 case-detail-page">
   <!-- Верхняя панель (сводка, действия) -->
-  <div class="card shadow-sm border-0 mb-4 bg-light">
+  <div class="card shadow-sm border-0 mb-4 case-detail-hero">
     <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
       <div>
         <a href="{% url 'clients:client_detail' case.client.pk %}?view=person" class="text-decoration-none small text-primary">&larr; {{ case.client.get_full_name }}</a>
-        <h1 class="h3 mb-1 mt-1 font-weight-bold">{{ case.display_number }}</h1>
-        <div class="text-muted">
+        <h1 class="h3 mb-1 mt-1 fw-bold case-detail-title">
+          {% if case.internal_number %}
+            {{ case.internal_number }}
+          {% elif case.authority_case_number %}
+            {{ case.authority_case_number }}
+          {% else %}
+            {% translate "Дело без номера" %}
+          {% endif %}
+        </h1>
+        {% if not case.internal_number and not case.authority_case_number %}
+          <p class="case-detail-number-hint mb-0">{% translate "Внутренний номер ещё не присвоен" %}</p>
+        {% endif %}
+        <div class="case-detail-meta">
           <span class="badge bg-secondary me-2">{{ case.get_status_display }}</span>
           <span class="badge bg-info text-dark me-2">{{ case.get_workflow_stage_display }}</span>
           {% if case.assigned_staff %}
@@ -39,15 +54,33 @@
   </div>
 
   <!-- Блок «Следующее действие» -->
-  <div class="card shadow-sm border-0 mb-4 border-start border-primary border-4">
+  <div class="card shadow-sm border-0 mb-4 border-start border-primary border-4 case-next-action">
     <div class="card-body">
       <h5 class="card-title text-primary mb-1">{% translate "Следующее действие" %}</h5>
-      <p class="card-text mb-0 font-weight-bold">{{ next_action }}</p>
+      <p class="card-text mb-0 fw-semibold">
+        {% if case.workflow_stage == "new_client" %}
+          {% translate "Заполните основные данные по делу." %}
+        {% elif case.workflow_stage == "document_collection" %}
+          {% translate "Соберите и проверьте обязательные документы." %}
+        {% elif case.workflow_stage == "application_submitted" %}
+          {% translate "Проверьте подтверждение подачи и подготовьте клиента к отпечаткам." %}
+        {% elif case.workflow_stage == "fingerprints" %}
+          {% translate "Подтвердите дату, время и место сдачи отпечатков." %}
+        {% elif case.workflow_stage == "waiting_decision" %}
+          {% translate "Контролируйте срок ожидания решения." %}
+        {% elif case.workflow_stage == "decision_received" %}
+          {% translate "Проверьте решение и завершите последующие задачи." %}
+        {% elif case.workflow_stage == "closed" %}
+          {% translate "Активных действий по делу нет." %}
+        {% else %}
+          {% translate "Проверьте актуальный статус дела." %}
+        {% endif %}
+      </p>
     </div>
   </div>
 
   <!-- Вкладки -->
-  <ul class="nav nav-pills mb-4 shadow-sm p-1 bg-white rounded" id="caseTabs" role="tablist">
+  <ul class="nav nav-pills mb-4 shadow-sm p-1 rounded case-tabs" id="caseTabs" role="tablist">
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">{% translate "Обзор" %}</button>
     </li>
@@ -77,12 +110,12 @@
   <!-- Содержимое вкладок -->
   <div class="tab-content" id="caseTabsContent">
     <!-- Обзор -->
-    <div class="tab-pane fade show active p-3 bg-white rounded shadow-sm" id="overview" role="tabpanel" aria-labelledby="overview-tab">
-      <h4 class="mb-3 text-muted">{% translate "Основная информация по делу" %}</h4>
+    <div class="tab-pane fade show active p-3 rounded shadow-sm case-tab-panel" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+      <h4 class="mb-3 case-section-heading">{% translate "Основная информация по делу" %}</h4>
       <div class="row g-3">
         <div class="col-md-6"><strong>{% translate "Клиент" %}:</strong> {{ case.client.get_full_name }}</div>
         <div class="col-md-6"><strong>{% translate "Версия записи" %}:</strong> {{ case.version }}</div>
-        <div class="col-md-6"><strong>{% translate "Внутренний номер" %}:</strong> {{ case.display_number }}</div>
+        <div class="col-md-6"><strong>{% translate "Внутренний номер" %}:</strong> {{ case.internal_number|default:"—" }}</div>
         <div class="col-md-6"><strong>{% translate "Номер в ужонде" %}:</strong> {{ case.authority_case_number|default:"—" }}</div>
         <div class="col-md-6"><strong>{% translate "Цель подачи" %}:</strong> {{ case.application_purpose|default:"—" }}</div>
         <div class="col-md-6"><strong>{% translate "Тип заявления" %}:</strong> {{ case.application_type|default:"—" }}</div>
@@ -92,8 +125,8 @@
     </div>
 
     <!-- Документы -->
-    <div class="tab-pane fade p-3 bg-white rounded shadow-sm" id="documents" role="tabpanel" aria-labelledby="documents-tab">
-      <h4 class="mb-3 text-muted">{% translate "Документы по делу" %}</h4>
+    <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="documents" role="tabpanel" aria-labelledby="documents-tab">
+      <h4 class="mb-3 case-section-heading">{% translate "Документы по делу" %}</h4>
       <div class="table-responsive">
         <table class="table table-hover align-middle">
           <thead>
@@ -123,8 +156,8 @@
     </div>
 
     <!-- Задачи -->
-    <div class="tab-pane fade p-3 bg-white rounded shadow-sm" id="tasks" role="tabpanel" aria-labelledby="tasks-tab">
-      <h4 class="mb-3 text-muted">{% translate "Задачи сотрудников по делу" %}</h4>
+    <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="tasks" role="tabpanel" aria-labelledby="tasks-tab">
+      <h4 class="mb-3 case-section-heading">{% translate "Задачи сотрудников по делу" %}</h4>
       <div class="table-responsive">
         <table class="table table-hover align-middle">
           <thead>
@@ -154,8 +187,8 @@
     </div>
 
     <!-- Платежи -->
-    <div class="tab-pane fade p-3 bg-white rounded shadow-sm" id="payments" role="tabpanel" aria-labelledby="payments-tab">
-      <h4 class="mb-3 text-muted">{% translate "Платежи и счета" %}</h4>
+    <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="payments" role="tabpanel" aria-labelledby="payments-tab">
+      <h4 class="mb-3 case-section-heading">{% translate "Платежи и счета" %}</h4>
       <div class="table-responsive">
         <table class="table table-hover align-middle">
           <thead>
@@ -185,8 +218,8 @@
     </div>
 
     <!-- Подача -->
-    <div class="tab-pane fade p-3 bg-white rounded shadow-sm" id="submission" role="tabpanel" aria-labelledby="submission-tab">
-      <h4 class="mb-3 text-muted">{% translate "Информация о подаче" %}</h4>
+    <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="submission" role="tabpanel" aria-labelledby="submission-tab">
+      <h4 class="mb-3 case-section-heading">{% translate "Информация о подаче" %}</h4>
       <div class="row g-3">
         <div class="col-md-6"><strong>{% translate "Дата подачи" %}:</strong> {{ case.submission_date|date:"d.m.Y"|default:"—" }}</div>
         <div class="col-md-6"><strong>{% translate "Дата решения" %}:</strong> {{ case.decision_date|date:"d.m.Y"|default:"—" }}</div>
@@ -195,8 +228,8 @@
     </div>
 
     <!-- MOS/PESEL -->
-    <div class="tab-pane fade p-3 bg-white rounded shadow-sm" id="mos-pesel" role="tabpanel" aria-labelledby="mos-pesel-tab">
-      <h4 class="mb-3 text-muted">{% translate "Заявления MOS и PESEL" %}</h4>
+    <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="mos-pesel" role="tabpanel" aria-labelledby="mos-pesel-tab">
+      <h4 class="mb-3 case-section-heading">{% translate "Заявления MOS и PESEL" %}</h4>
       <div class="mb-4">
         <h5>{% translate "Заявление в системе MOS" %}</h5>
         {% if case.mos_application_data %}
@@ -238,8 +271,8 @@
     </div>
 
     <!-- Отпечатки -->
-    <div class="tab-pane fade p-3 bg-white rounded shadow-sm" id="fingerprints" role="tabpanel" aria-labelledby="fingerprints-tab">
-      <h4 class="mb-3 text-muted">{% translate "Сдача отпечатков пальцев" %}</h4>
+    <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="fingerprints" role="tabpanel" aria-labelledby="fingerprints-tab">
+      <h4 class="mb-3 case-section-heading">{% translate "Сдача отпечатков пальцев" %}</h4>
       <div class="row g-3">
         <div class="col-md-6"><strong>{% translate "Дата сдачи" %}:</strong> {{ case.fingerprints_date|date:"d.m.Y"|default:"—" }}</div>
         <div class="col-md-6"><strong>{% translate "Время" %}:</strong> {{ case.fingerprints_time|default:"—" }}</div>
@@ -251,8 +284,8 @@
     </div>
 
     <!-- История -->
-    <div class="tab-pane fade p-3 bg-white rounded shadow-sm" id="history" role="tabpanel" aria-labelledby="history-tab">
-      <h4 class="mb-3 text-muted">{% translate "История активности по делу" %}</h4>
+    <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="history" role="tabpanel" aria-labelledby="history-tab">
+      <h4 class="mb-3 case-section-heading">{% translate "История активности по делу" %}</h4>
       <ul class="list-unstyled mb-0">
         {% for act in activities %}
           <li class="mb-3 pb-2 border-bottom">
