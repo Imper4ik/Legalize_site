@@ -33,9 +33,28 @@ class CaseDetailView(RoleRequiredMixin, DetailView):
             .prefetch_related("documents", "payments", "reminders", "staff_tasks", "activities"),
         )
 
+    @staticmethod
+    def _hydrate_unambiguous_legacy_number_for_display(case: Case) -> None:
+        """Display a pre-refactor client number only when it is unambiguous.
+
+        This does not write to the database. Migration 0103 persists the same
+        value safely. The temporary display fallback prevents legacy one-case
+        clients from seeing a UUID or an empty title while data migration runs.
+        """
+        if case.internal_number or case.authority_case_number or case.legacy_case_number:
+            return
+        if Case.all_objects.filter(client_id=case.client_id).count() != 1:
+            return
+
+        legacy_number = str(case.client.case_number or "").strip()
+        if legacy_number:
+            case.legacy_case_number = legacy_number
+            case.needs_manual_number_check = True
+
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         case = self.object
+        self._hydrate_unambiguous_legacy_number_for_display(case)
         context["documents"] = Document.all_objects.filter(case=case).order_by("-uploaded_at")[:50]
         context["payments"] = Payment.all_objects.filter(case=case).order_by("-created_at")[:50]
         context["tasks"] = StaffTask.objects.filter(case=case).select_related("assignee").order_by("status", "due_date")[:50]
