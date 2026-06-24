@@ -52,8 +52,8 @@ def transition_case_workflow(*, case: Case, target_stage: str, actor: Any = None
 
 
 def transition_client_workflow(*, client: Client, target_stage: str, actor: Any = None, submission_date: date | None = None, fingerprints_date: date | None = None, decision_date: date | None = None, save: bool = True) -> WorkflowTransitionResult:
-    from clients.services.cases import get_primary_case_for_client
-    case = get_primary_case_for_client(client)
+    from clients.services.cases import get_legacy_compatibility_case
+    case = get_legacy_compatibility_case(client.pk, "transition_client_workflow")
     res = transition_case_workflow(
         case=case,
         target_stage=target_stage,

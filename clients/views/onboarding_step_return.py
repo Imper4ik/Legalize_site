@@ -32,11 +32,14 @@ def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = _auth_redirect(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = onboarding_views.check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
     try:
-        mos_data = MOSApplicationData.objects.get(client=session.client)
+        mos_data = MOSApplicationData.objects.get(client=session.client, case=session.case)
     except MOSApplicationData.DoesNotExist:
-        mos_data = MOSApplicationData(client=session.client)
+        mos_data = MOSApplicationData(client=session.client, case=session.case)
 
     if mos_data.pk and not onboarding_views._mos_data_is_editable(mos_data):
         return onboarding_views._locked_response(request, session)
@@ -47,7 +50,7 @@ def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
         digital_access = ClientDigitalAccess(client=session.client)
 
     if request.method == "POST":
-        mos_data, created = MOSApplicationData.objects.get_or_create(client=session.client)
+        mos_data, created = MOSApplicationData.objects.get_or_create(client=session.client, case=session.case)
         digital_access, created_access = ClientDigitalAccess.objects.get_or_create(client=session.client)
 
         digital_access.has_pesel = request.POST.get("has_pesel") == "yes"
@@ -73,12 +76,15 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = _auth_redirect(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = onboarding_views.check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
     client = session.client
     try:
-        mos_data = MOSApplicationData.objects.get(client=client)
+        mos_data = MOSApplicationData.objects.get(client=client, case=session.case)
     except MOSApplicationData.DoesNotExist:
-        mos_data = MOSApplicationData(client=client)
+        mos_data = MOSApplicationData(client=client, case=session.case)
 
     if mos_data.pk and not onboarding_views._mos_data_is_editable(mos_data):
         return onboarding_views._locked_response(request, session)
@@ -108,7 +114,7 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
 
     if request.method == "POST":
         # Ensure mos_data is saved to DB
-        mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
+        mos_data, _created = MOSApplicationData.objects.get_or_create(client=client, case=session.case)
         action = request.POST.get("action", "")
         if action == "upload_passport" or request.FILES.get("passport_file"):
             passport_file = request.FILES.get("passport_file")
@@ -122,7 +128,8 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
                 files_dict = request.FILES.copy()
                 files_dict["file"] = files_dict["passport_file"]
 
-                form = DocumentUploadForm(request.POST, files_dict, doc_type="passport", client=client)
+                doc_instance = Document(client=client, case=session.case)
+                form = DocumentUploadForm(request.POST, files_dict, doc_type="passport", client=client, case=session.case, instance=doc_instance)
                 if form.is_valid():
                     upload_client_document(
                         client=client,
@@ -130,6 +137,7 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
                         uploaded_document=form.save(commit=False),
                         actor=request.user if request.user.is_authenticated else None,
                         parse_requested=True,
+                        case=session.case,
                     )
                     messages.success(request, _("Скан паспорта успешно загружен. Данные распознаются."))
                 else:
@@ -192,7 +200,7 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
 
         return _next_or_dashboard(request, token, "clients:onboarding_personal_extra")
 
-    passport_doc = client.documents.filter(document_type="passport").order_by("-uploaded_at").first()
+    passport_doc = client.documents.filter(document_type="passport", case=session.case).order_by("-uploaded_at").first()
     return render(
         request,
         "clients/onboarding/passport.html",
@@ -211,8 +219,11 @@ def onboarding_personal_extra(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = _auth_redirect(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = onboarding_views.check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
-    mos_data = get_object_or_404(MOSApplicationData, client=session.client)
+    mos_data = get_object_or_404(MOSApplicationData, client=session.client, case=session.case)
 
     if not onboarding_views._mos_data_is_editable(mos_data):
         return onboarding_views._locked_response(request, session)
@@ -242,8 +253,11 @@ def onboarding_address(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = _auth_redirect(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = onboarding_views.check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
-    mos_data = get_object_or_404(MOSApplicationData, client=session.client)
+    mos_data = get_object_or_404(MOSApplicationData, client=session.client, case=session.case)
 
     if not onboarding_views._mos_data_is_editable(mos_data):
         return onboarding_views._locked_response(request, session)
@@ -276,8 +290,11 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = _auth_redirect(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = onboarding_views.check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
-    mos_data = get_object_or_404(MOSApplicationData, client=session.client)
+    mos_data = get_object_or_404(MOSApplicationData, client=session.client, case=session.case)
 
     if not onboarding_views._mos_data_is_editable(mos_data):
         return onboarding_views._locked_response(request, session)
@@ -341,8 +358,11 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = _auth_redirect(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = onboarding_views.check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
-    mos_data = get_object_or_404(MOSApplicationData, client=session.client)
+    mos_data = get_object_or_404(MOSApplicationData, client=session.client, case=session.case)
 
     if not onboarding_views._mos_data_is_editable(mos_data):
         return onboarding_views._locked_response(request, session)

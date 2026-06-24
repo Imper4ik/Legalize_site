@@ -54,7 +54,7 @@ def validate_case_workflow_transition(*, case: Case, previous_stage: str | None,
                 _("Сначала сохраните дело, затем загрузите обязательные документы и переведите его к этапу подачи."),
             )
 
-        checklist = case.client.get_document_checklist(check_file_existence=True, case=case)
+        checklist = case.get_document_checklist(client=case.client, check_file_existence=True)
         missing_required = [
             item
             for item in checklist
@@ -98,8 +98,8 @@ def validate_case_workflow_transition(*, case: Case, previous_stage: str | None,
 
 
 def validate_client_workflow_transition(*, client: Client, previous_stage: str | None, next_stage: str | None) -> WorkflowValidationResult:
-    from clients.services.cases import get_primary_case_for_client
-    case = get_primary_case_for_client(client)
+    from clients.services.cases import get_legacy_compatibility_case
+    case = get_legacy_compatibility_case(client.pk, "validate_client_workflow_transition")
     # Temporarily overlay client fields on the case for validation
     case.workflow_stage = next_stage
     case.submission_date = getattr(client, "submission_date", None)

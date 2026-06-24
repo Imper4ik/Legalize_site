@@ -499,9 +499,10 @@ class MassEmailForm(forms.Form):
 
 
 class DocumentUploadForm(forms.ModelForm):
-    def __init__(self, *args: Any, doc_type: str | None = None, client: Client | None = None, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, doc_type: str | None = None, client: Client | None = None, case: Case | None = None, **kwargs: Any) -> None:
         self.doc_type = doc_type
         self.client = client
+        self.case = case
         super().__init__(*args, **kwargs)
         self.fields["zus_period_month"].help_text = _(
             "Для ZUS RCA укажите месяц отчёта. Если загружаете страховой полис, добавьте его как отдельный документ «Polisa ubezpieczeniowa / Health insurance»."
@@ -524,7 +525,7 @@ class DocumentUploadForm(forms.ModelForm):
                 zus_period_month=normalized,
                 archived_at__isnull=True,
             )
-            case = self.client.cases.order_by("opened_at", "id").first()
+            case = self.case
             if case is not None:
                 duplicate_query = duplicate_query.filter(case=case)
             if duplicate_query.exclude(pk=self.instance.pk).exists():

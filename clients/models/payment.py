@@ -85,19 +85,19 @@ class Payment(SoftDeleteModel):
 
     def clean(self) -> None:
         super().clean()
+        errors: dict[str, list[str]] = {}
         if self.case_id is None:
             if self.client_id:
                 from clients.services.cases import get_legacy_compatibility_case
                 try:
                     self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
                 except ValidationError as e:
-                    raise ValidationError({"case": e.message})
+                    errors.setdefault("__all__", []).append(e.message)
             else:
-                raise ValidationError({"case": "Case is required."})
+                errors.setdefault("__all__", []).append("Case is required.")
         if self.case_id and self.client_id and self.case.client_id != self.client_id:
-            raise ValidationError("Клиент и дело не согласованы.")
+            errors.setdefault("__all__", []).append("Клиент и дело не согласованы.")
 
-        errors: dict[str, list[str]] = {}
         raw_total_amount = self.total_amount
         raw_amount_paid = self.amount_paid
 

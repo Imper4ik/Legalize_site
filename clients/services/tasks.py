@@ -5,7 +5,7 @@ from datetime import date, timedelta
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from clients.models import Client, Document, Payment, StaffTask
+from clients.models import Client, Document, Payment, StaffTask, Case
 
 
 def create_auto_task(
@@ -17,6 +17,7 @@ def create_auto_task(
     title: str | None = None,
     description: str | None = None,
     due_date: date | None = None,
+    case: Case | None = None,
 ) -> StaffTask | None:
     """Create an automated StaffTask if a duplicate open one does not exist."""
     if client.archived_at is not None:
@@ -53,6 +54,7 @@ def create_auto_task(
 
     task = StaffTask.objects.create(
         client=client,
+        case=case,
         task_type=task_type,
         is_auto_created=True,
         title=title,

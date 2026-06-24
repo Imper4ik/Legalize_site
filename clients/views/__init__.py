@@ -36,6 +36,7 @@ from clients.views.onboarding_views import (
     onboarding_review,
     onboarding_set_password,
     quick_create_client_onboarding,
+    onboarding_select_case,
 )
 from clients.views.payments import *  # noqa: F403
 from clients.views.print_views import *  # noqa: F403

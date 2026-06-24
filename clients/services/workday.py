@@ -9,8 +9,9 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from clients.constants import DocumentType
-from clients.models import Client, ClientDocumentRequirement, Document, Payment, StaffTask
+from clients.models import Case, Client, ClientDocumentRequirement, Document, Payment, StaffTask
 from clients.services.access import (
+    accessible_cases_queryset,
     accessible_clients_queryset,
     accessible_documents_queryset,
     accessible_payments_queryset,
@@ -45,7 +46,7 @@ def _review_documents(user: AbstractBaseUser | AnonymousUser | None, limit: int)
     queryset = (
         accessible_documents_queryset(
             user,
-            Document.objects.select_related("client").filter(archived_at__isnull=True),
+            Document.objects.for_active_cases().select_related("client"),
         )
         .filter(Q(verified=False) | Q(awaiting_confirmation=True))
         .exclude(Q(rejection_reason__isnull=False) & ~Q(rejection_reason=""))
@@ -67,9 +68,9 @@ def _review_documents(user: AbstractBaseUser | AnonymousUser | None, limit: int)
 
 def _missing_document_clients(user: AbstractBaseUser | AnonymousUser | None, limit: int) -> list[dict[str, Any]]:
     candidates = (
-        accessible_clients_queryset(
+        accessible_cases_queryset(
             user,
-            Client.objects.exclude(workflow_stage__in=["closed", "decision_received"]).order_by("last_name", "first_name"),
+            Case.objects.active().exclude(workflow_stage__in=["closed", "decision_received"]).select_related("client").order_by("client__last_name", "client__first_name"),
         )
         .prefetch_related(
             Prefetch("documents", queryset=Document.objects.order_by("-uploaded_at")),
@@ -83,17 +84,17 @@ def _missing_document_clients(user: AbstractBaseUser | AnonymousUser | None, lim
     )
     items: list[dict[str, Any]] = []
     requirements_cache: dict[str, Any] = {}
-    for client in candidates:
-        missing = [item for item in client.get_document_checklist(requirements_cache=requirements_cache) if not item.get("is_complete")]
+    for case in candidates:
+        missing = [item for item in case.get_document_checklist(client=case.client, requirements_cache=requirements_cache) if not item.get("is_complete")]
         if not missing:
             continue
         items.append(
             {
-                "client": client,
+                "client": case.client,
                 "title": _("Недостающие документы"),
                 "detail": ", ".join(str(item.get("name")) for item in missing[:3]),
                 "extra_count": max(len(missing) - 3, 0),
-                "url": _client_url(client.pk, "#documentAccordion"),
+                "url": _client_url(case.client_id, "#documentAccordion"),
                 "action_label": _("Открыть чеклист"),
             }
         )
@@ -103,25 +104,25 @@ def _missing_document_clients(user: AbstractBaseUser | AnonymousUser | None, lim
 
 
 def _missing_zus_clients(user: AbstractBaseUser | AnonymousUser | None, today: date, limit: int) -> list[dict[str, Any]]:
-    candidates = accessible_clients_queryset(
+    candidates = accessible_cases_queryset(
         user,
-        Client.objects.filter(
+        Case.objects.active().select_related("client").filter(
             workflow_stage="waiting_decision",
             fingerprints_date__isnull=False,
             decision_date__isnull=True,
         ).order_by("fingerprints_date"),
     )[:50]
     items: list[dict[str, Any]] = []
-    for client in candidates:
-        months = missing_zus_months(client, today=today)
+    for case in candidates:
+        months = missing_zus_months(case, today=today)
         if not months:
             continue
         items.append(
             {
-                "client": client,
+                "client": case.client,
                 "title": _("ZUS RCA"),
                 "detail": format_zus_months(months),
-                "url": _client_url(client.pk, "#documentAccordion"),
+                "url": _client_url(case.client_id, "#documentAccordion"),
                 "action_label": _("Запросить"),
             }
         )
@@ -132,9 +133,9 @@ def _missing_zus_clients(user: AbstractBaseUser | AnonymousUser | None, today: d
 
 def _new_card_missing_case(user: AbstractBaseUser | AnonymousUser | None, limit: int) -> list[dict[str, Any]]:
     queryset = (
-        accessible_clients_queryset(
+        accessible_cases_queryset(
             user,
-            Client.objects.prefetch_related("mos_applications")
+            Case.objects.active().select_related("client").prefetch_related("mos_application_data")
             .annotate(
                 new_card_confirmation_count=Count(
                     "documents",
@@ -146,27 +147,29 @@ def _new_card_missing_case(user: AbstractBaseUser | AnonymousUser | None, limit:
                 )
             )
             .filter(
-                Q(case_number_hash__isnull=True) | Q(case_number_hash=""),
-                mos_applications__new_residence_card_application_status="yes",
+                Q(authority_case_number_hash__isnull=True) | Q(authority_case_number_hash="") | Q(authority_case_number=""),
+                mos_application_data__new_residence_card_application_status="yes",
             )
-            .order_by("mos_applications__new_residence_card_submitted_at", "last_name", "first_name"),
+            .order_by("mos_application_data__new_residence_card_submitted_at", "client__last_name", "client__first_name"),
         )[:limit]
     )
     items: list[dict[str, Any]] = []
-    for client in queryset:
-        mos_data = client.mos_applications.first()
+    for case in queryset:
+        mos_data = getattr(case, "mos_application_data", None)
+        if not mos_data:
+            continue
         detail_parts = []
         if mos_data.new_residence_card_submitted_at:
             detail_parts.append(mos_data.new_residence_card_submitted_at.strftime("%d.%m.%Y"))
-        detail_parts.append(_("подтверждение загружено") if client.new_card_confirmation_count else _("нет подтверждения"))
+        detail_parts.append(_("подтверждение загружено") if case.new_card_confirmation_count else _("нет подтверждения"))
         if str(mos_data.new_residence_card_case_number or "").strip():
             detail_parts.append(_("номер есть в блоке подачи"))
         items.append(
             {
-                "client": client,
+                "client": case.client,
                 "title": _("Новая подача без основного номера"),
                 "detail": " · ".join(str(part) for part in detail_parts),
-                "url": _client_url(client.pk, "#new-card-application-summary"),
+                "url": _client_url(case.client_id, "#new-card-application-summary"),
                 "action_label": _("Проверить подачу"),
             }
         )
@@ -175,9 +178,9 @@ def _new_card_missing_case(user: AbstractBaseUser | AnonymousUser | None, limit:
 
 def _fingerprints_followup(user: AbstractBaseUser | AnonymousUser | None, today: date, limit: int) -> list[dict[str, Any]]:
     cutoff = today - timedelta(days=FINGERPRINTS_FOLLOWUP_DAYS)
-    queryset = accessible_clients_queryset(
+    queryset = accessible_cases_queryset(
         user,
-        Client.objects.filter(
+        Case.objects.active().select_related("client").filter(
             fingerprints_date__isnull=False,
             fingerprints_date__lte=cutoff,
             decision_date__isnull=True,
@@ -187,19 +190,19 @@ def _fingerprints_followup(user: AbstractBaseUser | AnonymousUser | None, today:
     )[:limit]
     return [
         {
-            "client": client,
+            "client": case.client,
             "title": _("После отпечатков без решения"),
-            "detail": _("%(days)s дней после отпечатков") % {"days": (today - client.fingerprints_date).days},
-            "url": _client_url(client.pk, "#overview"),
+            "detail": _("%(days)s дней после отпечатков") % {"days": (today - case.fingerprints_date).days},
+            "url": _client_url(case.client_id, "#overview"),
             "action_label": _("Проверить статус"),
         }
-        for client in queryset
+        for case in queryset
     ]
 
 
 def _overdue_tasks(user: AbstractBaseUser | AnonymousUser | None, today: date, limit: int) -> list[dict[str, Any]]:
     queryset = (
-        accessible_tasks_queryset(user, StaffTask.objects.select_related("client", "assignee"))
+        accessible_tasks_queryset(user, StaffTask.objects.for_active_cases().select_related("client", "assignee"))
         .filter(status__in=["open", "in_progress"], due_date__lt=today)
         .order_by("due_date", "-created_at")[:limit]
     )
@@ -217,7 +220,7 @@ def _overdue_tasks(user: AbstractBaseUser | AnonymousUser | None, today: date, l
 
 def _overdue_payments(user: AbstractBaseUser | AnonymousUser | None, today: date, limit: int) -> list[dict[str, Any]]:
     queryset = (
-        accessible_payments_queryset(user, Payment.objects.select_related("client"))
+        accessible_payments_queryset(user, Payment.objects.for_active_cases().select_related("client"))
         .filter(status__in=["pending", "partial"], due_date__isnull=False, due_date__lte=today, archived_at__isnull=True)
         .order_by("due_date", "-created_at")[:limit]
     )
@@ -234,13 +237,16 @@ def _overdue_payments(user: AbstractBaseUser | AnonymousUser | None, today: date
 
 
 def _is_stay_expiring_soon(client: Client, today: date) -> bool:
-    if client.workflow_stage in ["closed", "decision_received"]:
+    active_cases = client.cases.filter(archived_at__isnull=True).exclude(workflow_stage__in=["closed", "decision_received"])
+    if not active_cases.exists():
         return False
     date_to_check = client.legal_basis_end_date
     if not date_to_check:
-        mos_data = client.mos_applications.first()
-        if mos_data:
-            date_to_check = mos_data.legal_stay_until
+        for case in active_cases:
+            mos_data = getattr(case, "mos_application_data", None)
+            if mos_data and mos_data.legal_stay_until:
+                date_to_check = mos_data.legal_stay_until
+                break
     if date_to_check:
         return date_to_check <= today + timedelta(days=30)
     return False

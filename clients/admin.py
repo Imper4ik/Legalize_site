@@ -40,18 +40,50 @@ if TYPE_CHECKING:
 
 @admin.action(description="Archive selected records")
 def archive_selected(modeladmin: Any, request: HttpRequest, queryset: QuerySet) -> None:
+    from clients.models import Client, Case
+    from clients.services.archive import archive_case, archive_client_with_all_cases
     for obj in queryset:
-        if hasattr(obj, "archive"):
+        if isinstance(obj, Client):
+            try:
+                archive_client_with_all_cases(client=obj, actor=request.user, confirmed=True)
+            except Exception as e:
+                modeladmin.message_user(request, f"Ошибка архивации клиента: {e}", level=messages.ERROR)
+        elif isinstance(obj, Case):
+            try:
+                archive_case(case=obj, actor=request.user)
+            except Exception as e:
+                modeladmin.message_user(request, f"Ошибка архивации дела: {e}", level=messages.ERROR)
+        elif hasattr(obj, "archive"):
             obj.archive()
 
 
 @admin.action(description="Restore selected archived records")
 def restore_selected(modeladmin: Any, request: HttpRequest, queryset: QuerySet) -> None:
+    from clients.models import Client, Case, ClientArchiveBatch, CaseArchiveBatch
+    from clients.services.archive import restore_case, restore_client_with_all_cases
     base_queryset = getattr(modeladmin.model, "all_objects", None)
     if base_queryset is None:
         return
     for obj in base_queryset.filter(pk__in=queryset.values_list("pk", flat=True)):
-        if hasattr(obj, "restore"):
+        if isinstance(obj, Client):
+            batch = ClientArchiveBatch.objects.filter(client=obj, status="archived").first()
+            if batch:
+                try:
+                    restore_client_with_all_cases(client=obj, actor=request.user, batch=batch)
+                except Exception as e:
+                    modeladmin.message_user(request, f"Ошибка восстановления клиента: {e}", level=messages.ERROR)
+            else:
+                modeladmin.message_user(request, f"Не найден активный архивный батч для клиента", level=messages.ERROR)
+        elif isinstance(obj, Case):
+            batch = CaseArchiveBatch.objects.filter(case=obj, status="archived").first()
+            if batch:
+                try:
+                    restore_case(case=obj, actor=request.user, batch=batch)
+                except Exception as e:
+                    modeladmin.message_user(request, f"Ошибка восстановления дела: {e}", level=messages.ERROR)
+            else:
+                modeladmin.message_user(request, f"Не найден активный архивный батч для дела", level=messages.ERROR)
+        elif hasattr(obj, "restore"):
             obj.restore()
 
 
@@ -316,7 +348,7 @@ class ClientAdmin(admin.ModelAdmin):
                     client=client,
                     actor=request.user,
                     event_type="client_viewed",
-                    summary=f"Staff viewed sensitive data for client {client.get_full_name()}",
+                    summary="Просмотрены чувствительные данные клиента",
                     details="Viewed Client detail page in admin interface."
                 )
         return response
@@ -428,8 +460,8 @@ class EmailLogAdmin(admin.ModelAdmin):
                     client=log_obj.client,
                     actor=request.user,
                     event_type="client_viewed",
-                    summary=f"Staff viewed sensitive email log (ID: {log_obj.id}) for client {log_obj.client.get_full_name()}",
-                    details=f"Viewed email with subject: {log_obj.subject}"
+                    summary="Просмотрен лог чувствительного email клиента",
+                    details="Viewed email log in admin."
                 )
         return response
 
@@ -641,7 +673,7 @@ class ClientDigitalAccessAdmin(admin.ModelAdmin):
                     client=access.client,
                     actor=request.user,
                     event_type="client_viewed",
-                    summary=f"Staff viewed sensitive digital access details for client {access.client.get_full_name()}",
+                    summary="Просмотрены чувствительные данные цифрового доступа клиента",
                     details="Viewed ClientDigitalAccess detail page in admin interface."
                 )
         return response
@@ -761,7 +793,7 @@ class MOSApplicationDataAdmin(admin.ModelAdmin):
                     client=mos_data.client,
                     actor=request.user,
                     event_type="client_viewed",
-                    summary=f"Staff viewed sensitive MOS application data for client {mos_data.client.get_full_name()}",
+                    summary="Просмотрены чувствительные данные MOS клиента",
                     details="Viewed MOSApplicationData detail page in admin interface."
                 )
         return response
@@ -826,7 +858,7 @@ class PeselApplicationAdmin(admin.ModelAdmin):
                     client=pesel_app.client,
                     actor=request.user,
                     event_type="client_viewed",
-                    summary=f"Staff viewed sensitive PESEL application for client {pesel_app.client.get_full_name()}",
+                    summary="Просмотрены чувствительные данные PESEL клиента",
                     details="Viewed PeselApplication detail page in admin interface."
                 )
         return response

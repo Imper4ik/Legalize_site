@@ -95,22 +95,23 @@ class Command(BaseCommand):
 
     def send_missing_document_notifications(self, *, dry_run: bool = False) -> None:
         today = timezone.localdate()
-        clients = Client.objects.filter(
+        from clients.models import Case
+        cases = Case.objects.active().filter(
             workflow_stage="waiting_decision",
             fingerprints_date__isnull=False,
             fingerprints_date__lte=today,
             decision_date__isnull=True,
-        ).exclude(email="")
+        ).exclude(client__email="")
 
         sent_count = 0
         skipped_count = 0
         iso_year, iso_week, _iso_weekday = today.isocalendar()
-        for client in clients.iterator():
-            weekly_key = f"waiting_decision_missing_docs:{client.pk}:{iso_year}-W{iso_week:02d}"
+        for case in cases.iterator():
+            weekly_key = f"waiting_decision_missing_docs:{case.pk}:{iso_year}-W{iso_week:02d}"
             if dry_run:
-                sent = 1 if _get_missing_documents_context(client) else 0
+                sent = 1 if _get_missing_documents_context(case) else 0
             else:
-                sent = send_missing_documents_email(client, weekly_key=weekly_key)
+                sent = send_missing_documents_email(case, weekly_key=weekly_key)
 
             sent_count += sent
             if dry_run and sent:
@@ -126,7 +127,8 @@ class Command(BaseCommand):
 
     def check_zus_rca_missing_months(self, *, dry_run: bool = False, send_email: bool = True) -> None:
         today = timezone.localdate()
-        clients = Client.objects.filter(
+        from clients.models import Case
+        cases = Case.objects.active().filter(
             workflow_stage="waiting_decision",
             fingerprints_date__isnull=False,
             fingerprints_date__lte=today,
@@ -136,12 +138,13 @@ class Command(BaseCommand):
         sent_count = 0
         skipped_count = 0
         iso_year, iso_week, _iso_weekday = today.isocalendar()
-        for client in clients.iterator():
-            missing = missing_zus_months(client, today=today)
+        for case in cases.iterator():
+            client = case.client
+            missing = missing_zus_months(case, today=today)
             if missing:
                 affected += 1
                 months = format_zus_months(missing)
-                message = f"ZUS RCA missing months: client_id={client.pk}, months={months}"
+                message = f"ZUS RCA missing months: case_id={case.pk}, client_id={client.pk}, months={months}"
                 logger.info(message)
                 self.stdout.write(message)
 
@@ -149,16 +152,16 @@ class Command(BaseCommand):
                     skipped_count += 1
                     logger.info(
                         "notification skipped: template=missing_documents reason=zus_rca_missing "
-                        "client_id=%s covered_by=missing_docs_section",
-                        client.pk,
+                        "case_id=%s covered_by=missing_docs_section",
+                        case.pk,
                     )
                     continue
 
-                weekly_key = f"zus_rca_missing:{client.pk}:{iso_year}-W{iso_week:02d}"
+                weekly_key = f"zus_rca_missing:{case.pk}:{iso_year}-W{iso_week:02d}"
                 if dry_run:
-                    sent = 1 if client.email and _get_missing_documents_context(client, today=today) else 0
+                    sent = 1 if client.email and _get_missing_documents_context(case, today=today) else 0
                 else:
-                    sent = send_missing_documents_email(client, weekly_key=weekly_key, today=today)
+                    sent = send_missing_documents_email(case, weekly_key=weekly_key, today=today)
 
                 sent_count += sent
                 if dry_run and sent:
@@ -177,11 +180,10 @@ class Command(BaseCommand):
     def send_expiring_document_notifications(self, *, dry_run: bool = False) -> None:
         today = timezone.localdate()
         cutoff = today + timedelta(days=7)
-        expiring_docs = Document.objects.select_related("client", "case").filter(
+        expiring_docs = Document.objects.for_active_cases().select_related("client", "case").filter(
             expiry_date__isnull=False,
             expiry_date__gte=today,
             expiry_date__lte=cutoff,
-            client__archived_at__isnull=True,
         )
 
         if not expiring_docs.exists():
@@ -212,12 +214,11 @@ class Command(BaseCommand):
         reminder_period_start = today - timedelta(days=30)
         reminder_period_end = today + timedelta(days=30)
 
-        expiring_docs = Document.objects.select_related("client").filter(
+        expiring_docs = Document.objects.for_active_cases().select_related("client").filter(
             expiry_date__isnull=False,
             expiry_date__gte=reminder_period_start,
             expiry_date__lte=reminder_period_end,
             reminder__isnull=True,
-            client__archived_at__isnull=True,
         )
 
         if not expiring_docs.exists():
@@ -247,10 +248,9 @@ class Command(BaseCommand):
 
     def create_payment_reminders(self, *, dry_run: bool = False) -> None:
         today = timezone.localdate()
-        due_payments = Payment.objects.select_related("client", "case").filter(
+        due_payments = Payment.objects.for_active_cases().select_related("client", "case").filter(
             due_date__lte=today,
             status__in=["pending", "partial"],
-            client__archived_at__isnull=True,
         ).exclude(reminder__is_active=True)
 
         if not due_payments.exists():
@@ -291,8 +291,8 @@ class Command(BaseCommand):
             legal_stay_until__isnull=False,
             legal_stay_until__gte=today,
             legal_stay_until__lte=cutoff,
-            client__workflow_stage__in=["new_client", "document_collection"],
-            client__archived_at__isnull=True,
+            case__workflow_stage__in=["new_client", "document_collection"],
+            case__archived_at__isnull=True,
         )
 
         count = 0
@@ -346,7 +346,7 @@ class Command(BaseCommand):
 
     def sync_custom_document_requirement_reminders(self, *, dry_run: bool = False) -> None:
         counts = defaultdict(int)
-        for requirement in ClientDocumentRequirement.objects.select_related("client", "case").filter(client__archived_at__isnull=True).iterator():
+        for requirement in ClientDocumentRequirement.objects.select_related("client", "case").filter(case__archived_at__isnull=True).iterator():
             outcome = sync_custom_document_requirement_reminder(requirement, dry_run=dry_run)
             counts[outcome] += 1
         self.stdout.write(
@@ -361,12 +361,12 @@ class Command(BaseCommand):
         today = timezone.localdate()
         cutoff = today + timedelta(days=45)
 
-        mos_data_list = MOSApplicationData.objects.select_related("client").filter(
+        mos_data_list = MOSApplicationData.objects.select_related("client", "case").filter(
             legal_stay_until__isnull=False,
             legal_stay_until__gte=today,
             legal_stay_until__lte=cutoff,
-            client__workflow_stage__in=["new_client", "document_collection"],
-            client__archived_at__isnull=True,
+            case__workflow_stage__in=["new_client", "document_collection"],
+            case__archived_at__isnull=True,
         )
 
         if not mos_data_list.exists():

@@ -17,7 +17,7 @@ from django.utils.dateparse import parse_date, parse_time
 from django.utils.translation import gettext as _
 
 from clients.constants import DocumentType
-from clients.models import Client, Document, DocumentProcessingJob
+from clients.models import Client, Document, DocumentProcessingJob, Case
 from clients.services.activity import changed_field_labels, log_client_activity
 from clients.services.company_parser import parse_company_doc
 from clients.services.notifications import (
@@ -85,6 +85,7 @@ def upload_client_document(
     uploaded_document: Document,
     actor: AbstractBaseUser | AnonymousUser | None,
     parse_requested: bool,
+    case: Case | None = None,
     parser: Parser = parse_wezwanie,
     send_missing_email: NotificationSender = send_missing_documents_email,
     send_appointment_email: NotificationSender = send_appointment_notification_email,
@@ -96,13 +97,14 @@ def upload_client_document(
         doc_type=doc_type,
         uploaded_document=uploaded_document,
         actor=actor,
+        case=case,
     )
 
     if not actor or not getattr(actor, "is_staff", False):
         from clients.constants import is_wezwanie_document_type
         from clients.services.tasks import create_auto_task
         if not is_wezwanie_document_type(doc_type):
-            create_auto_task(client, "document_review", document=document)
+            create_auto_task(client, "document_review", document=document, case=case)
 
     log_client_activity(
         client=client,
@@ -1272,9 +1274,12 @@ def _save_client_document(
     doc_type: str,
     uploaded_document: Document,
     actor: AbstractBaseUser | AnonymousUser | None,
+    case: Case | None = None,
 ) -> Document:
     uploaded_document.client = client
     uploaded_document.document_type = doc_type
+    if case is not None:
+        uploaded_document.case = case
     uploaded_document.save()
     return uploaded_document
 

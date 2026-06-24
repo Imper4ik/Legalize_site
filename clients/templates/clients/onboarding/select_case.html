@@ -1,0 +1,44 @@
+{% extends "clients/onboarding/base_onboarding.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Выбор дела" %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white fw-bold">{% translate "Выберите дело для продолжения" %}</div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    {% translate "Для продолжения выберите одно из ваших активных дел. Каждый процесс ведения дела изолирован и содержит свои документы, статусы и напоминания." %}
+                </p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="list-group mb-4">
+                        {% for case in active_cases %}
+                            <label class="list-group-item d-flex gap-3 align-items-center cursor-pointer" style="cursor: pointer;">
+                                <input class="form-check-input m-0" type="radio" name="case_id" value="{{ case.id }}" {% if forloop.first %}checked{% endif %} required>
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold">
+                                        {{ case.get_application_purpose_display }}
+                                        {% if case.internal_number %}
+                                            ({{ case.internal_number }})
+                                        {% endif %}
+                                    </span>
+                                    <span class="small text-muted">
+                                        {% translate "Статус" %}: {{ case.get_status_display }} | {% translate "Этап" %}: {{ case.get_workflow_stage_display }}
+                                    </span>
+                                </div>
+                            </label>
+                        {% endfor %}
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">{% translate "Выбрать дело" %}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

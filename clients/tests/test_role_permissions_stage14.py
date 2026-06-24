@@ -69,19 +69,19 @@ class RolePermissionMatrixTests(TestCase):
 
     def test_staff_can_delete_client(self):
         self.client.force_login(self.staff)
-        response = self.client.post(reverse("clients:client_delete", kwargs={"pk": self.client_obj.pk}))
+        response = self.client.post(reverse("clients:client_delete", kwargs={"pk": self.client_obj.pk}), data={"confirm_archive_all_cases": "true"})
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Client.objects.filter(pk=self.client_obj.pk).exists())
 
     def test_manager_can_delete_client(self):
         self.client.force_login(self.manager)
-        response = self.client.post(reverse("clients:client_delete", kwargs={"pk": self.client_obj.pk}))
+        response = self.client.post(reverse("clients:client_delete", kwargs={"pk": self.client_obj.pk}), data={"confirm_archive_all_cases": "true"})
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Client.objects.filter(pk=self.client_obj.pk).exists())
 
     def test_admin_can_delete_client(self):
         self.client.force_login(self.admin)
-        response = self.client.post(reverse("clients:client_delete", kwargs={"pk": self.client_obj.pk}))
+        response = self.client.post(reverse("clients:client_delete", kwargs={"pk": self.client_obj.pk}), data={"confirm_archive_all_cases": "true"})
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Client.objects.filter(pk=self.client_obj.pk).exists())
 
