@@ -98,8 +98,28 @@ def validate_case_workflow_transition(*, case: Case, previous_stage: str | None,
 
 
 def validate_client_workflow_transition(*, client: Client, previous_stage: str | None, next_stage: str | None) -> WorkflowValidationResult:
+    from django.core.exceptions import ValidationError as DjangoValidationError
+
     from clients.services.cases import get_legacy_compatibility_case
-    case = get_legacy_compatibility_case(client.pk, "validate_client_workflow_transition")
+
+    if not getattr(client, "pk", None):
+        # An unsaved client has no case yet (the case is created on save). Allow
+        # staying at the initial stage but block entering a working stage with a
+        # friendly message instead of raising deep in the case lookup.
+        if next_stage and next_stage != "new_client" and previous_stage != next_stage:
+            return WorkflowValidationResult(
+                False,
+                _("Сначала сохраните клиента, затем переведите дело в рабочий статус."),
+            )
+        return WorkflowValidationResult(True)
+
+    try:
+        case = get_legacy_compatibility_case(client.pk, "validate_client_workflow_transition")
+    except DjangoValidationError:
+        # No single unambiguous case (zero or multiple); defer to case-level
+        # workflow validation rather than blocking the client-level edit.
+        return WorkflowValidationResult(True)
+
     # Temporarily overlay client fields on the case for validation
     case.workflow_stage = next_stage
     case.submission_date = getattr(client, "submission_date", None)
