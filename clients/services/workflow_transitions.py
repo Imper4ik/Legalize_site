@@ -29,7 +29,6 @@ def transition_case_workflow(*, case: Case, target_stage: str, actor: Any = None
     if not validation.allowed:
         raise ValidationError(validation.message)
 
-    old_stage = case.workflow_stage
     case.workflow_stage = target_stage
     if save:
         fields = ["workflow_stage"]
@@ -45,8 +44,8 @@ def transition_case_workflow(*, case: Case, target_stage: str, actor: Any = None
             case=case,
             actor=actor,
             event_type="workflow_stage_changed",
-            summary=f"Workflow stage changed for case {case.display_number}: {old_stage} -> {target_stage}",
-            metadata={"case_id": str(case.uuid), "old_stage": old_stage, "new_stage": target_stage},
+            summary="Этап дела изменён",
+            metadata={"case_id": str(case.uuid), "changed_fields": ["workflow_stage"]},
         )
     return WorkflowTransitionResult(ok=True)
 
