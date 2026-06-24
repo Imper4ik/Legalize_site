@@ -7,6 +7,7 @@ from typing import Any
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.db.models import Exists, OuterRef
+
 from clients.models import Case, CaseParticipant
 
 logger = logging.getLogger(__name__)

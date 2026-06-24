@@ -17,7 +17,7 @@ from django.utils.dateparse import parse_date, parse_time
 from django.utils.translation import gettext as _
 
 from clients.constants import DocumentType
-from clients.models import Client, Document, DocumentProcessingJob, Case
+from clients.models import Case, Client, Document, DocumentProcessingJob
 from clients.services.activity import changed_field_labels, log_client_activity
 from clients.services.company_parser import parse_company_doc
 from clients.services.notifications import (

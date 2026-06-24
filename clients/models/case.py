@@ -205,9 +205,11 @@ class Case(SoftDeleteModel):
         check_file_existence: bool = False,
         requirements_cache: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
-        from clients.services.document_helpers import document_file_exists
-        from .document import DocumentRequirement, resolve_document_label
         from django.utils import translation
+
+        from clients.services.document_helpers import document_file_exists
+
+        from .document import DocumentRequirement
 
         current_language = translation.get_language() or client.language
         purpose = self.get_document_requirement_purpose(client)
