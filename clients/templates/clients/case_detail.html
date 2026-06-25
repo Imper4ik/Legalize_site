@@ -11,14 +11,15 @@
   .case-detail-hero, .case-tab-panel { box-shadow: var(--shadow-1); }
   .case-detail-title, .case-section-heading { color: var(--fg); }
   .case-detail-meta, .case-detail-number-hint, .case-detail-page .text-muted { color: var(--muted) !important; }
-  .case-detail-number-hint { font-size: .875rem; }
-  .case-next-action { background: color-mix(in srgb, var(--surface) 88%, var(--brand-1)) !important; }
-  .case-tabs { display: flex; flex-wrap: nowrap; gap: .25rem; overflow-x: auto; }
+  .case-detail-number-hint { font-size: .8125rem; }
+  .case-next-action-inline { font-size: .9rem; }
+  .case-tabs { display: flex; flex-wrap: nowrap; gap: .25rem; overflow-x: auto; position: sticky; top: 0; z-index: 5; }
   .case-tabs .nav-link { color: var(--muted); white-space: nowrap; }
   .case-tabs .nav-link:hover, .case-tabs .nav-link:focus-visible { color: var(--brand-1); background: rgba(29, 78, 216, .10); }
   .case-tabs .nav-link.active { color: #fff; background: var(--brand-1); }
   .case-tab-panel .table { --bs-table-bg: transparent; --bs-table-color: var(--fg); --bs-table-border-color: var(--border); --bs-table-hover-bg: rgba(15, 118, 110, .08); --bs-table-hover-color: var(--fg); }
-  @media (max-width: 767.98px) { .case-detail-hero .card-body { padding: 1.25rem; } .case-tabs { padding: .4rem !important; } }
+  tr.doc-archived { opacity: .55; }
+  @media (max-width: 767.98px) { .case-detail-hero .card-body { padding: 1rem; } .case-tabs { padding: .4rem !important; } }
 </style>
 {% endblock %}
 
@@ -27,12 +28,12 @@
 {% block title %}{% translate "Дело" %}{% endblock %}
 
 {% block content %}
-<div class="container py-4 case-detail-page">
-  <div class="card shadow-sm border-0 mb-4 case-detail-hero">
-    <div class="card-body p-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+<div class="container py-3 case-detail-page">
+  <div class="card shadow-sm border-0 mb-3 case-detail-hero">
+    <div class="card-body p-3 d-flex flex-wrap justify-content-between align-items-start gap-3">
       <div>
         <a href="{% url 'clients:client_detail' case.client.pk %}?view=person" class="text-decoration-none small text-primary">&larr; {{ case.client.get_full_name }}</a>
-        <h1 class="h3 mb-1 mt-1 fw-bold case-detail-title">
+        <h1 class="h4 mb-1 mt-1 fw-bold case-detail-title">
           {% if case.authority_case_number %}
             {{ case.authority_case_number }}
           {% elif case.legacy_case_number %}
@@ -42,16 +43,27 @@
           {% endif %}
         </h1>
         {% if case.legacy_case_number and not case.authority_case_number %}
-          <p class="case-detail-number-hint mb-0 text-warning">{% translate "Номер из предыдущей карточки; проверьте и перенесите его в поле «Номер в ужонде»." %}</p>
+          <p class="case-detail-number-hint mb-1 text-warning">{% translate "Номер из предыдущей карточки; проверьте и перенесите его в поле «Номер в ужонде»." %}</p>
         {% elif not case.authority_case_number %}
-          <p class="case-detail-number-hint mb-0">{% translate "Номер дела в ужонде ещё не присвоен" %}</p>
+          <p class="case-detail-number-hint mb-1">{% translate "Номер дела в ужонде ещё не присвоен" %}</p>
         {% endif %}
-        <div class="case-detail-meta">
+        <div class="case-detail-meta mb-1">
           <span class="badge bg-secondary me-2">{{ case.get_status_display }}</span>
-          <span class="badge bg-info text-dark me-2">{{ case.get_workflow_stage_display }}</span>
-          {% if case.assigned_staff %}
-            <span class="small">{% translate "Ответственный" %}: {{ case.assigned_staff.email }}</span>
-          {% endif %}
+          <span class="badge bg-info text-dark">{{ case.get_workflow_stage_display }}</span>
+        </div>
+        <div class="case-next-action-inline">
+          <i class="bi bi-arrow-right-circle text-primary me-1"></i>
+          <span class="fw-semibold">
+            {% if case.workflow_stage == "new_client" %}{% translate "Заполните основные данные по делу." %}
+            {% elif case.workflow_stage == "document_collection" %}{% translate "Соберите и проверьте обязательные документы." %}
+            {% elif case.workflow_stage == "application_submitted" %}{% translate "Проверьте подтверждение подачи и подготовьте клиента к отпечаткам." %}
+            {% elif case.workflow_stage == "fingerprints" %}{% translate "Подтвердите дату, время и место сдачи отпечатков." %}
+            {% elif case.workflow_stage == "waiting_decision" %}{% translate "Контролируйте срок ожидания решения." %}
+            {% elif case.workflow_stage == "decision_received" %}{% translate "Проверьте решение и завершите последующие задачи." %}
+            {% elif case.workflow_stage == "closed" %}{% translate "Активных действий по делу нет." %}
+            {% else %}{% translate "Проверьте актуальный статус дела." %}
+            {% endif %}
+          </span>
         </div>
       </div>
       <div class="d-flex gap-2">
@@ -65,24 +77,7 @@
     </div>
   </div>
 
-  <div class="card shadow-sm border-0 mb-4 border-start border-primary border-4 case-next-action">
-    <div class="card-body">
-      <h5 class="card-title text-primary mb-1">{% translate "Следующее действие" %}</h5>
-      <p class="card-text mb-0 fw-semibold">
-        {% if case.workflow_stage == "new_client" %}{% translate "Заполните основные данные по делу." %}
-        {% elif case.workflow_stage == "document_collection" %}{% translate "Соберите и проверьте обязательные документы." %}
-        {% elif case.workflow_stage == "application_submitted" %}{% translate "Проверьте подтверждение подачи и подготовьте клиента к отпечаткам." %}
-        {% elif case.workflow_stage == "fingerprints" %}{% translate "Подтвердите дату, время и место сдачи отпечатков." %}
-        {% elif case.workflow_stage == "waiting_decision" %}{% translate "Контролируйте срок ожидания решения." %}
-        {% elif case.workflow_stage == "decision_received" %}{% translate "Проверьте решение и завершите последующие задачи." %}
-        {% elif case.workflow_stage == "closed" %}{% translate "Активных действий по делу нет." %}
-        {% else %}{% translate "Проверьте актуальный статус дела." %}
-        {% endif %}
-      </p>
-    </div>
-  </div>
-
-  <ul class="nav nav-pills mb-4 shadow-sm p-1 rounded case-tabs" id="caseTabs" role="tablist">
+  <ul class="nav nav-pills mb-3 shadow-sm p-1 rounded case-tabs" id="caseTabs" role="tablist">
     <li class="nav-item" role="presentation"><button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">{% translate "Обзор" %}</button></li>
     <li class="nav-item" role="presentation"><button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">{% translate "Документы" %}</button></li>
     <li class="nav-item" role="presentation"><button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button" role="tab" aria-controls="tasks" aria-selected="false">{% translate "Задачи" %}</button></li>
@@ -98,7 +93,6 @@
       <h4 class="mb-3 case-section-heading">{% translate "Основная информация по делу" %}</h4>
       <div class="row g-3">
         <div class="col-md-6"><strong>{% translate "Клиент" %}:</strong> {{ case.client.get_full_name }}</div>
-        <div class="col-md-6"><strong>{% translate "Версия записи" %}:</strong> {{ case.version }}</div>
         <div class="col-md-6"><strong>{% translate "Номер в ужонде" %}:</strong> {{ case.authority_case_number|default:"—" }}</div>
         {% if case.legacy_case_number and not case.authority_case_number %}<div class="col-md-6"><strong>{% translate "Номер из предыдущей карточки" %}:</strong> <span class="text-warning">{{ case.legacy_case_number }}</span></div>{% endif %}
         <div class="col-md-6"><strong>{% translate "Цель подачи" %}:</strong> {{ case.application_purpose|default:"—" }}</div>
@@ -109,26 +103,45 @@
     </div>
 
     <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="documents" role="tabpanel" aria-labelledby="documents-tab">
-      <h4 class="mb-3 case-section-heading">{% translate "Документы по делу" %}</h4>
-      <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>{% translate "Название" %}</th><th>{% translate "Статус" %}</th><th>{% translate "Дата загрузки" %}</th><th>{% translate "Срок действия" %}</th></tr></thead><tbody>
-        {% for document in documents %}<tr><td>{{ document.display_name }}</td><td><span class="badge bg-secondary">{{ document.computed_status }}</span></td><td>{{ document.uploaded_at|date:"d.m.Y H:i" }}</td><td>{{ document.expiry_date|date:"d.m.Y"|default:"—" }}</td></tr>
-        {% empty %}<tr><td colspan="4" class="text-center text-muted">{% translate "Нет документов по этому делу." %}</td></tr>{% endfor %}
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h4 class="mb-0 case-section-heading">{% translate "Документы по делу" %}</h4>
+        <div class="form-check form-switch m-0">
+          <input class="form-check-input" type="checkbox" id="hideArchivedDocs" checked>
+          <label class="form-check-label small" for="hideArchivedDocs">{% translate "Скрыть архивные" %}</label>
+        </div>
+      </div>
+      <div class="table-responsive"><table class="table table-hover align-middle" id="documentsTable"><thead><tr><th>{% translate "Название" %}</th><th>{% translate "Статус" %}</th><th>{% translate "Дата загрузки" %}</th><th>{% translate "Срок действия" %}</th><th class="text-end">{% translate "Действия" %}</th></tr></thead><tbody>
+        {% for document in documents %}<tr class="{% if document.archived_at %}doc-archived{% endif %}" data-archived="{% if document.archived_at %}1{% else %}0{% endif %}"><td>{{ document.display_name }}</td><td><span class="badge bg-secondary">{{ document.computed_status }}</span></td><td>{{ document.uploaded_at|date:"d.m.Y H:i" }}</td><td>{{ document.expiry_date|date:"d.m.Y"|default:"—" }}</td><td class="text-end text-nowrap">
+          {% if document.file %}<a href="{% url 'clients:document_preview' document.id %}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="{% translate 'Просмотр' %}"><i class="bi bi-eye"></i></a>
+          <a href="{% url 'clients:document_download' document.id %}" class="btn btn-sm btn-outline-secondary" title="{% translate 'Скачать' %}"><i class="bi bi-download"></i></a>{% else %}<span class="text-muted small">—</span>{% endif %}
+        </td></tr>
+        {% empty %}<tr><td colspan="5" class="text-center text-muted">{% translate "Нет документов по этому делу." %}</td></tr>{% endfor %}
       </tbody></table></div>
     </div>
 
     <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="tasks" role="tabpanel" aria-labelledby="tasks-tab">
-      <h4 class="mb-3 case-section-heading">{% translate "Задачи сотрудников по делу" %}</h4>
-      <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>{% translate "Название" %}</th><th>{% translate "Ответственный" %}</th><th>{% translate "Статус" %}</th><th>{% translate "Срок" %}</th></tr></thead><tbody>
-        {% for task in tasks %}<tr><td>{{ task.title }}</td><td>{{ task.assignee.email|default:"—" }}</td><td><span class="badge bg-secondary">{{ task.status }}</span></td><td>{{ task.due_date|date:"d.m.Y"|default:"—" }}</td></tr>
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h4 class="mb-0 case-section-heading">{% translate "Задачи по делу" %}</h4>
+        <a href="{% url 'clients:add_task' case.client.pk %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>{% translate "Добавить задачу" %}</a>
+      </div>
+      <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>{% translate "Название" %}</th><th>{% translate "Статус" %}</th><th>{% translate "Срок" %}</th><th class="text-end">{% translate "Действия" %}</th></tr></thead><tbody>
+        {% for task in tasks %}<tr><td>{{ task.title }}</td><td><span class="badge bg-secondary">{{ task.status }}</span></td><td>{{ task.due_date|date:"d.m.Y"|default:"—" }}</td><td class="text-end text-nowrap">
+          {% if task.status != "done" %}<form method="post" action="{% url 'clients:complete_task' task.id %}" class="d-inline m-0">{% csrf_token %}<button class="btn btn-sm btn-outline-success" type="submit" title="{% translate 'Завершить' %}"><i class="bi bi-check-lg"></i></button></form>{% else %}<span class="text-muted small">—</span>{% endif %}
+        </td></tr>
         {% empty %}<tr><td colspan="4" class="text-center text-muted">{% translate "Нет задач по этому делу." %}</td></tr>{% endfor %}
       </tbody></table></div>
     </div>
 
     <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="payments" role="tabpanel" aria-labelledby="payments-tab">
-      <h4 class="mb-3 case-section-heading">{% translate "Платежи и счета" %}</h4>
-      <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>{% translate "Услуга" %}</th><th>{% translate "Сумма" %}</th><th>{% translate "Статус" %}</th><th>{% translate "Срок оплаты" %}</th></tr></thead><tbody>
-        {% for payment in payments %}<tr><td>{{ payment.get_service_description_display }}</td><td>{{ payment.total_amount }}</td><td><span class="badge bg-secondary">{{ payment.status }}</span></td><td>{{ payment.due_date|date:"d.m.Y"|default:"—" }}</td></tr>
-        {% empty %}<tr><td colspan="4" class="text-center text-muted">{% translate "Нет платежей по этому делу." %}</td></tr>{% endfor %}
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h4 class="mb-0 case-section-heading">{% translate "Платежи и счета" %}</h4>
+        <a href="{% url 'clients:add_payment' case.client.pk %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>{% translate "Добавить платёж" %}</a>
+      </div>
+      <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>{% translate "Услуга" %}</th><th>{% translate "Сумма" %}</th><th>{% translate "Статус" %}</th><th>{% translate "Срок оплаты" %}</th><th class="text-end">{% translate "Действия" %}</th></tr></thead><tbody>
+        {% for payment in payments %}<tr><td>{{ payment.get_service_description_display }}</td><td>{{ payment.total_amount }}</td><td><span class="badge bg-secondary">{{ payment.status }}</span></td><td>{{ payment.due_date|date:"d.m.Y"|default:"—" }}</td><td class="text-end text-nowrap">
+          <a href="{% url 'clients:edit_payment' payment.id %}" class="btn btn-sm btn-outline-primary" title="{% translate 'Изменить' %}"><i class="bi bi-pencil"></i></a>
+        </td></tr>
+        {% empty %}<tr><td colspan="5" class="text-center text-muted">{% translate "Нет платежей по этому делу." %}</td></tr>{% endfor %}
       </tbody></table></div>
     </div>
 
@@ -149,9 +162,43 @@
     </div>
 
     <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="history" role="tabpanel" aria-labelledby="history-tab">
-      <h4 class="mb-3 case-section-heading">{% translate "История активности по делу" %}</h4>
-      <ul class="list-unstyled mb-0">{% for act in activities %}<li class="mb-3 pb-2 border-bottom"><div class="d-flex justify-content-between align-items-start"><strong>{{ act.summary }}</strong><small class="text-muted">{{ act.created_at|date:"d.m.Y H:i" }}</small></div>{% if act.details %}<div class="text-muted mt-1 small">{{ act.details }}</div>{% endif %}{% if act.actor %}<div class="text-muted mt-1 small">{% translate "Автор" %}: {{ act.actor.email }}</div>{% endif %}</li>{% empty %}<li class="text-muted">{% translate "История активности пуста." %}</li>{% endfor %}</ul>
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h4 class="mb-0 case-section-heading">{% translate "История активности по делу" %}</h4>
+        <input type="search" id="historyFilter" class="form-control form-control-sm" style="max-width: 280px;" placeholder="{% translate 'Поиск по истории…' %}" autocomplete="off">
+      </div>
+      <ul class="list-unstyled mb-0" id="historyList">{% for act in activities %}<li class="mb-3 pb-2 border-bottom history-item"><div class="d-flex justify-content-between align-items-start"><strong>{{ act.summary }}</strong><small class="text-muted">{{ act.created_at|date:"d.m.Y H:i" }}</small></div>{% if act.details %}<div class="text-muted mt-1 small">{{ act.details }}</div>{% endif %}{% if act.actor %}<div class="text-muted mt-1 small">{% translate "Автор" %}: {{ act.actor.email }}</div>{% endif %}</li>{% empty %}<li class="text-muted" id="historyEmpty">{% translate "История активности пуста." %}</li>{% endfor %}</ul>
+      <p class="text-muted small mt-2 d-none" id="historyNoMatch">{% translate "Ничего не найдено." %}</p>
     </div>
   </div>
 </div>
+
+<script>
+(function () {
+  // Hide/show archived documents.
+  var toggle = document.getElementById("hideArchivedDocs");
+  function applyDocFilter() {
+    var hide = toggle && toggle.checked;
+    document.querySelectorAll('#documentsTable tbody tr[data-archived]').forEach(function (row) {
+      row.style.display = (hide && row.getAttribute("data-archived") === "1") ? "none" : "";
+    });
+  }
+  if (toggle) { toggle.addEventListener("change", applyDocFilter); applyDocFilter(); }
+
+  // Filter history entries by free text.
+  var filter = document.getElementById("historyFilter");
+  if (filter) {
+    filter.addEventListener("input", function () {
+      var q = filter.value.trim().toLowerCase();
+      var anyVisible = false;
+      document.querySelectorAll("#historyList .history-item").forEach(function (item) {
+        var match = item.textContent.toLowerCase().indexOf(q) !== -1;
+        item.style.display = match ? "" : "none";
+        if (match) anyVisible = true;
+      });
+      var noMatch = document.getElementById("historyNoMatch");
+      if (noMatch) noMatch.classList.toggle("d-none", anyVisible || q === "");
+    });
+  }
+})();
+</script>
 {% endblock %}
