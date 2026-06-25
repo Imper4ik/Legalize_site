@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING
 from django.conf import settings
 from django.utils import timezone
 
-from clients.security.encrypted import safe_encrypted_attr
 from clients.services.document_helpers import document_file_exists
 
 if TYPE_CHECKING:
@@ -47,14 +46,21 @@ def generate_client_summary_text(client: Client) -> str:
     lines.append(f"  Email:             {client.email or '—'}")
     lines.append(f"  Phone:             {client.phone or '—'}")
     lines.append(f"  Citizenship:       {client.citizenship or '—'}")
-    lines.append(f"  Application:       {client.get_application_purpose_display()}")
-    lines.append(f"  Workflow Stage:    {client.get_workflow_stage_display()}")
-    lines.append(f"  Case Number:       {safe_encrypted_attr(client, 'case_number', default='—')}")
-    if hasattr(client, "fingerprints_date"):
-        lines.append(f"  Fingerprints Date: {client.fingerprints_date or '—'}")
-    if hasattr(client, "decision_date"):
-        lines.append(f"  Decision Date:     {client.decision_date or '—'}")
     lines.append(f"  Created:           {client.created_at.strftime('%d.%m.%Y %H:%M')}")
+    lines.append("")
+
+    # Cases — process data lives on the Case, so each case is listed separately.
+    from clients.models import Case
+    cases = Case.all_objects.filter(client=client).order_by("opened_at", "id")
+    lines.append(f"CASES ({cases.count()})")
+    for case in cases:
+        archived = " [ARCHIVED]" if case.archived_at else ""
+        lines.append(f"  • {case.display_number}{archived}")
+        lines.append(f"       Application:       {case.get_application_purpose_display() or '—'}")
+        lines.append(f"       Workflow Stage:    {case.get_workflow_stage_display()}")
+        lines.append(f"       Authority Number:  {case.authority_case_number or '—'}")
+        lines.append(f"       Fingerprints Date: {case.fingerprints_date or '—'}")
+        lines.append(f"       Decision Date:     {case.decision_date or '—'}")
     lines.append("")
 
     # Documents

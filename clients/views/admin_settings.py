@@ -16,7 +16,7 @@ from clients.forms import (
     AppSettingsForm,
     ServicePriceForm,
 )
-from clients.models import AppSettings, Client, Document, Payment, Reminder, ServicePrice, StaffTask
+from clients.models import AppSettings, Case, Client, Document, Payment, Reminder, ServicePrice, StaffTask
 from clients.services.roles import (
     ADMIN_PANEL_ALLOWED_ROLES,
     CRITICAL_SETTINGS_ALLOWED_ROLES,
@@ -38,7 +38,10 @@ class AdminPanelView(RoleRequiredMixin, TemplateView):
         context["total_submissions"] = Submission.objects.count()
         context["total_service_prices"] = ServicePrice.objects.count()
         context["active_clients"] = Client.objects.count()
-        context["active_cases"] = Client.objects.exclude(workflow_stage__in=["closed", "decision_received"]).count()
+        # Case-first: process state lives on Case, so case counters query Case.
+        context["active_cases"] = Case.objects.active().filter(
+            client__archived_at__isnull=True,
+        ).exclude(workflow_stage__in=["closed", "decision_received"]).count()
         context["ocr_awaiting_review"] = Document.objects.filter(awaiting_confirmation=True, client__archived_at__isnull=True).count()
         from django.db.models import Q
         context["documents_awaiting_verification"] = Document.objects.filter(
@@ -61,18 +64,23 @@ class AdminPanelView(RoleRequiredMixin, TemplateView):
         ).count()
         context["open_tasks"] = StaffTask.objects.filter(status__in=["open", "in_progress"], client__archived_at__isnull=True).count()
         context["pending_payments"] = Payment.objects.filter(status__in=["pending", "partial"], client__archived_at__isnull=True).count()
-        context["upcoming_fingerprints"] = Client.objects.filter(
+        context["upcoming_fingerprints"] = Case.objects.active().filter(
+            client__archived_at__isnull=True,
             fingerprints_date__isnull=False,
             fingerprints_date__gte=today,
             fingerprints_date__lte=upcoming_cutoff,
         ).count()
-        context["waiting_after_fingerprints"] = Client.objects.filter(
+        context["waiting_after_fingerprints"] = Case.objects.active().filter(
+            client__archived_at__isnull=True,
             workflow_stage="waiting_decision",
             fingerprints_date__isnull=False,
             fingerprints_date__lte=today,
             decision_date__isnull=True,
         ).count()
-        context["decisions_received"] = Client.objects.filter(decision_date__isnull=False).count()
+        context["decisions_received"] = Case.objects.active().filter(
+            client__archived_at__isnull=True,
+            decision_date__isnull=False,
+        ).count()
         context["active_reminders"] = Reminder.objects.filter(is_active=True, client__archived_at__isnull=True).count()
         context["total_price_sum"] = ServicePrice.objects.aggregate(total=Sum("price")).get("total") or 0
         context["test_center_available"] = bool(
@@ -85,24 +93,25 @@ class AdminPanelView(RoleRequiredMixin, TemplateView):
 
 
 def _count_missing_document_items() -> int | str:
-    active_qs = Client.objects.exclude(workflow_stage__in=["closed", "decision_received"])
+    # Case-first: the checklist belongs to the Case, so iterate active cases.
+    active_qs = Case.objects.active().filter(
+        client__archived_at__isnull=True,
+    ).exclude(workflow_stage__in=["closed", "decision_received"])
 
     # Для огромных баз данных мы не можем считать это в реальном времени,
-    # так как это требует создания чеклистов для каждого клиента.
+    # так как это требует создания чеклистов для каждого дела.
     if active_qs.count() > 500:
         return "500+ (Расчет отключен для скорости)"
 
-    clients = active_qs.prefetch_related(
+    cases = active_qs.select_related("client").prefetch_related(
         "documents",
         "custom_document_requirements",
-        "wniosek_submissions__confirmed_by",
-        "wniosek_submissions__attachments",
     )
-    requirements_cache = {}
+    requirements_cache: dict[str, Any] = {}
     return sum(
         1
-        for client in clients
-        for item in client.get_document_checklist(requirements_cache=requirements_cache)
+        for case in cases
+        for item in case.get_document_checklist(client=case.client, requirements_cache=requirements_cache)
         if not item.get("is_complete")
     )
 

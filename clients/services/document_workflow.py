@@ -252,6 +252,7 @@ def confirm_wezwanie_document(
     auto_updates.extend(
         _send_background_notifications(
             client=client,
+            case=case,
             parsed=notification_data,
             send_missing_email=send_missing_email,
             send_appointment_email=send_appointment_email,
@@ -1467,6 +1468,7 @@ def _finalize_successful_document_job(
         auto_updates.extend(
             _send_background_notifications(
                 client=client,
+                case=case,
                 parsed=parsed,
                 send_missing_email=send_missing_email,
                 send_appointment_email=send_appointment_email,
@@ -1528,22 +1530,27 @@ def _send_background_notifications(
     parsed: WezwanieData,
     send_missing_email: NotificationSender,
     send_appointment_email: NotificationSender,
+    case: Case | None = None,
 ) -> list[str]:
     auto_updates: list[str] = []
 
-    if _send_notification(send_missing_email, client, "missing-documents email"):
+    # Process data lives on the Case; pass the case (falling back to the client
+    # only for legacy single-case resolution) so emails read case fingerprints.
+    target = case if case is not None else client
+
+    if _send_notification(send_missing_email, target, client, "missing-documents email"):
         auto_updates.append(_("missing-documents email sent"))
 
     if parsed.wezwanie_type == "fingerprints" and parsed.fingerprints_date:
-        if _send_notification(send_appointment_email, client, "appointment notification"):
+        if _send_notification(send_appointment_email, target, client, "appointment notification"):
             auto_updates.append(_("appointment notification sent"))
 
     return auto_updates
 
 
-def _send_notification(sender: NotificationSender, client: Client, label: str) -> bool:
+def _send_notification(sender: NotificationSender, target: Any, client: Client, label: str) -> bool:
     try:
-        return bool(sender(client))
+        return bool(sender(target))
     except Exception as exc:
         logger.warning(
             "Failed to send %s for client_id=%s error_type=%s",

@@ -280,10 +280,14 @@ class CaseArchitectureTests(TestCase):
         self.primary_case.internal_number = "INTERNAL-123"
         self.primary_case.save(update_fields=["authority_case_number", "internal_number"])
 
-        display = self.primary_case.display_number
-        self.assertNotIn(str(self.primary_case.uuid), display)
-        self.assertNotIn("INTERNAL-123", display)
-        self.assertEqual(display, "Дело без номера")
+        from django.utils import translation
+
+        with translation.override("ru"):
+            display = self.primary_case.display_number
+            self.assertEqual(display, "Дело без номера")
+        # Locale-independent guarantees: never the UUID or the internal number.
+        self.assertNotIn(str(self.primary_case.uuid), self.primary_case.display_number)
+        self.assertNotIn("INTERNAL-123", self.primary_case.display_number)
         self.assertFalse(self.primary_case.has_authority_number)
 
     def test_display_number_shows_authority_number_when_present(self) -> None:

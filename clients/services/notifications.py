@@ -852,25 +852,46 @@ def send_expiring_documents_email(client: Client, documents: list[Document], *, 
     )
 
 
-def _get_appointment_context(client: Client) -> dict[str, Any] | None:
-    if not client.fingerprints_date:
+def _get_appointment_context(case_or_client: Case | Client) -> dict[str, Any] | None:
+    from clients.models import Case
+    if isinstance(case_or_client, Case):
+        case = case_or_client
+        client = case.client
+    else:
+        client = case_or_client
+        from clients.services.cases import get_legacy_compatibility_case
+        case = get_legacy_compatibility_case(client.pk, "_get_appointment_context")
+
+    if not case.fingerprints_date:
         return None
 
     return {
         "client": client,
-        "fingerprints_date": client.fingerprints_date,
-        "fingerprints_time": client.fingerprints_time,
-        "fingerprints_location": client.fingerprints_location,
+        "case": case,
+        "fingerprints_date": case.fingerprints_date,
+        "fingerprints_time": case.fingerprints_time,
+        "fingerprints_location": case.fingerprints_location,
     }
 
 
-def send_appointment_notification_email(client: Client, *, sent_by: AbstractBaseUser | AnonymousUser | None = None) -> int:
-    """Send a notification about a fingerprint appointment."""
-    if not client.email or not client.fingerprints_date:
+def send_appointment_notification_email(
+    case_or_client: Case | Client, *, sent_by: AbstractBaseUser | AnonymousUser | None = None
+) -> int:
+    """Send a notification about a fingerprint appointment (data lives on Case)."""
+    from clients.models import Case
+    if isinstance(case_or_client, Case):
+        case = case_or_client
+        client = case.client
+    else:
+        client = case_or_client
+        from clients.services.cases import get_legacy_compatibility_case
+        case = get_legacy_compatibility_case(client.pk, "send_appointment_notification_email")
+
+    if not client.email or not case.fingerprints_date:
         return 0
 
     language = _get_preferred_language(client)
-    context = _get_appointment_context(client)
+    context = _get_appointment_context(case)
     if not context:
         return 0
 
@@ -881,15 +902,16 @@ def send_appointment_notification_email(client: Client, *, sent_by: AbstractBase
         body,
         [client.email],
         client=client,
+        case=case,
         template_type="appointment_notification",
         sent_by=sent_by,
         idempotency_key=build_email_idempotency_key(
             "appointment_notification",
-            client.pk,
+            case.pk,
             client.email,
-            client.fingerprints_date,
-            client.fingerprints_time,
-            client.fingerprints_location,
+            case.fingerprints_date,
+            case.fingerprints_time,
+            case.fingerprints_location,
         ),
     )
 
