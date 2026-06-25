@@ -24,7 +24,9 @@ ATTENTION_FILTERS = (
 
 def _legal_stay_attention_q(today: date) -> Q:
     cutoff = today + timedelta(days=30)
-    return Q(workflow_stage__in=["new_client", "document_collection"]) & (
+    # Stage check reads the case (spec §4): in scope when the client has a case
+    # still in an early stage.
+    return Q(cases__workflow_stage__in=["new_client", "document_collection"]) & (
         Q(legal_basis_end_date__isnull=False, legal_basis_end_date__lte=cutoff)
         | Q(
             legal_basis_end_date__isnull=True,
@@ -35,7 +37,9 @@ def _legal_stay_attention_q(today: date) -> Q:
 
 
 def _missing_case_number_q() -> Q:
-    return Q(case_number_hash__isnull=True) | Q(case_number_hash="")
+    # The authority case number lives on the case (spec §4); a client is flagged
+    # when they have a case without one.
+    return Q(cases__authority_case_number_hash__isnull=True) | Q(cases__authority_case_number_hash="")
 
 
 def apply_client_attention_filter(queryset: QuerySet[Any], attention_filter: str, today: date | None = None) -> QuerySet[Any]:
@@ -78,7 +82,8 @@ def apply_client_attention_filter(queryset: QuerySet[Any], attention_filter: str
     if attention_filter == "failed_emails":
         return queryset.filter(email_logs__delivery_status="failed").distinct()
     if attention_filter == "fingerprints_email":
-        return queryset.filter(fingerprints_date__isnull=False).exclude(
+        # Fingerprints date lives on the case (spec §4).
+        return queryset.filter(cases__fingerprints_date__isnull=False).exclude(
             email_logs__template_type="appointment_notification",
         ).distinct()
     if attention_filter == "overdue_tasks":

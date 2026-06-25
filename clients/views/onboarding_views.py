@@ -41,7 +41,7 @@ from clients.services.onboarding_purposes import (
     purpose_label,
 )
 from clients.services.onboarding_tokens import generate_onboarding_token, hash_onboarding_token
-from clients.services.workflow_transitions import transition_client_workflow
+from clients.services.workflow_transitions import transition_case_workflow
 from clients.use_cases.client_records import finalize_client_creation
 from clients.views.base import role_required_view
 from legalize_site.utils.files import build_protected_file_response
@@ -1113,12 +1113,13 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
             mos_data.new_residence_card_application_status = "yes"
             mos_data.new_residence_card_updated_at = timezone.now()
 
-            # Smart transition logic based on existing dates
-            target_stage = "waiting_decision" if client.fingerprints_date else "fingerprints"
+            # Smart transition logic based on the case's existing dates (§4).
+            case = mos_data.case
+            target_stage = "waiting_decision" if case.fingerprints_date else "fingerprints"
             try:
                 with transaction.atomic():
-                    if client.workflow_stage != target_stage:
-                        transition_client_workflow(client=client, target_stage=target_stage, actor=request.user, save=True)
+                    if case.workflow_stage != target_stage:
+                        transition_case_workflow(case=case, target_stage=target_stage, actor=request.user, save=True)
                     mos_data.status = target_stage
                     mos_data.save(update_fields=["new_residence_card_application_status", "new_residence_card_updated_at", "status", "updated_at"])
             except ValidationError as exc:
@@ -1207,7 +1208,7 @@ def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
                 target_stage = "fingerprints"
                 try:
                     with transaction.atomic():
-                        transition_client_workflow(client=client, target_stage=target_stage, actor=request.user, save=True)
+                        transition_case_workflow(case=mos_data.case, target_stage=target_stage, actor=request.user, save=True)
                         mos_data.status = target_stage
                         mos_data.save(update_fields=["new_residence_card_application_status", "new_residence_card_updated_at", "status", "updated_at"])
                 except ValidationError as exc:

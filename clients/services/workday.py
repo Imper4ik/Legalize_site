@@ -8,7 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from clients.constants import DocumentType
+from clients.constants import ACTIVE_WORKFLOW_STAGES, FINISHED_WORKFLOW_STAGES, DocumentType
 from clients.models import Case, Client, ClientDocumentRequirement, Document, Payment, StaffTask
 from clients.services.access import (
     accessible_cases_queryset,
@@ -70,7 +70,9 @@ def _missing_document_clients(user: AbstractBaseUser | AnonymousUser | None, lim
     candidates = (
         accessible_clients_queryset(
             user,
-            Client.objects.exclude(workflow_stage__in=["closed", "decision_received"]).order_by("last_name", "first_name"),
+            Client.objects.filter(
+                cases__workflow_stage__in=ACTIVE_WORKFLOW_STAGES
+            ).distinct().order_by("last_name", "first_name"),
         )
         .prefetch_related(
             Prefetch("documents", queryset=Document.objects.order_by("-uploaded_at")),
@@ -247,19 +249,18 @@ def _overdue_payments(user: AbstractBaseUser | AnonymousUser | None, today: date
 
 
 def _is_stay_expiring_soon(client: Client, today: date) -> bool:
-    if client.workflow_stage in ["closed", "decision_received"]:
+    # Only fall back to MOS data when the client has a single active case; with
+    # several cases we do not guess which legal-stay date applies (spec §4/§5).
+    from clients.services.cases import resolve_single_active_case
+
+    case = resolve_single_active_case(client)
+    if case is not None and case.workflow_stage in FINISHED_WORKFLOW_STAGES:
         return False
     date_to_check = client.legal_basis_end_date
-    if not date_to_check:
-        # Only fall back to MOS data when the client has a single active case;
-        # with several cases we do not guess which legal-stay date applies.
-        from clients.services.cases import resolve_single_active_case
-
-        case = resolve_single_active_case(client)
-        if case is not None:
-            mos_data = client.mos_applications.filter(case=case).first()
-            if mos_data:
-                date_to_check = mos_data.legal_stay_until
+    if not date_to_check and case is not None:
+        mos_data = client.mos_applications.filter(case=case).first()
+        if mos_data:
+            date_to_check = mos_data.legal_stay_until
     if date_to_check:
         return date_to_check <= today + timedelta(days=30)
     return False

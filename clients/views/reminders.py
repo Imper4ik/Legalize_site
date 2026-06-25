@@ -16,6 +16,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _lazy
 from django.views.generic import ListView
 
+from clients.constants import ACTIVE_WORKFLOW_STAGES
 from clients.models import Client, ClientDocumentRequirement, Document, Reminder
 from clients.services.access import accessible_clients_queryset, accessible_reminders_queryset
 from clients.services.notifications import send_expiring_documents_email
@@ -109,7 +110,10 @@ class DocumentReminderListView(ReminderListView):
         }
 
     def _missing_document_clients_queryset(self) -> Any:
-        queryset = Client.objects.exclude(workflow_stage__in=["closed", "decision_received"]).order_by(
+        # Active = the client has at least one active (non-finished) case (§4).
+        queryset = Client.objects.filter(
+            cases__workflow_stage__in=ACTIVE_WORKFLOW_STAGES
+        ).distinct().order_by(
             "last_name",
             "first_name",
         )

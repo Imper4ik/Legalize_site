@@ -18,6 +18,8 @@ __all__ = [
     'DOCUMENT_CHECKLIST',
     'INTERNAL_DOCS',
     'SELF_ONBOARDING_SLUG',
+    'FINISHED_WORKFLOW_STAGES',
+    'ACTIVE_WORKFLOW_STAGES',
     'is_company_document_type',
     'is_passport_document_type',
     'is_rental_document_type',
@@ -33,6 +35,17 @@ INTERNAL_DOCS = {
 }
 
 SELF_ONBOARDING_SLUG = "me"
+
+# Workflow stages that represent finished work (a case no longer needs active
+# attention). Used to scope dashboards/queues/metrics to active cases (spec §4).
+FINISHED_WORKFLOW_STAGES = ("closed", "decision_received")
+ACTIVE_WORKFLOW_STAGES = (
+    "new_client",
+    "document_collection",
+    "application_submitted",
+    "fingerprints",
+    "waiting_decision",
+)
 
 WEZWANIE_DOCUMENT_TYPES = {
     DocumentType.WEZWANIE.value,
