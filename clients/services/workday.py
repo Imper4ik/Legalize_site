@@ -9,8 +9,9 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from clients.constants import DocumentType
-from clients.models import Client, ClientDocumentRequirement, Document, Payment, StaffTask
+from clients.models import Case, Client, ClientDocumentRequirement, Document, Payment, StaffTask
 from clients.services.access import (
+    accessible_cases_queryset,
     accessible_clients_queryset,
     accessible_documents_queryset,
     accessible_payments_queryset,
@@ -103,25 +104,27 @@ def _missing_document_clients(user: AbstractBaseUser | AnonymousUser | None, lim
 
 
 def _missing_zus_clients(user: AbstractBaseUser | AnonymousUser | None, today: date, limit: int) -> list[dict[str, Any]]:
-    candidates = accessible_clients_queryset(
+    # Case-first: iterate active cases (archived cases are excluded by the
+    # default manager) and read ZUS process data from the case.
+    candidates = accessible_cases_queryset(
         user,
-        Client.objects.filter(
+        Case.objects.select_related("client").filter(
             workflow_stage="waiting_decision",
             fingerprints_date__isnull=False,
             decision_date__isnull=True,
         ).order_by("fingerprints_date"),
     )[:50]
     items: list[dict[str, Any]] = []
-    for client in candidates:
-        months = missing_zus_months(client, today=today)
+    for case in candidates:
+        months = missing_zus_months(case, today=today)
         if not months:
             continue
         items.append(
             {
-                "client": client,
+                "client": case.client,
                 "title": _("ZUS RCA"),
                 "detail": format_zus_months(months),
-                "url": _client_url(client.pk, "#documentAccordion"),
+                "url": _client_url(case.client_id, "#documentAccordion"),
                 "action_label": _("Запросить"),
             }
         )
@@ -175,9 +178,9 @@ def _new_card_missing_case(user: AbstractBaseUser | AnonymousUser | None, limit:
 
 def _fingerprints_followup(user: AbstractBaseUser | AnonymousUser | None, today: date, limit: int) -> list[dict[str, Any]]:
     cutoff = today - timedelta(days=FINGERPRINTS_FOLLOWUP_DAYS)
-    queryset = accessible_clients_queryset(
+    queryset = accessible_cases_queryset(
         user,
-        Client.objects.filter(
+        Case.objects.select_related("client").filter(
             fingerprints_date__isnull=False,
             fingerprints_date__lte=cutoff,
             decision_date__isnull=True,
@@ -187,13 +190,13 @@ def _fingerprints_followup(user: AbstractBaseUser | AnonymousUser | None, today:
     )[:limit]
     return [
         {
-            "client": client,
+            "client": case.client,
             "title": _("После отпечатков без решения"),
-            "detail": _("%(days)s дней после отпечатков") % {"days": (today - client.fingerprints_date).days},
-            "url": _client_url(client.pk, "#overview"),
+            "detail": _("%(days)s дней после отпечатков") % {"days": (today - case.fingerprints_date).days},
+            "url": _client_url(case.client_id, "#overview"),
             "action_label": _("Проверить статус"),
         }
-        for client in queryset
+        for case in queryset
     ]
 
 

@@ -1037,15 +1037,19 @@ class Client(SoftDeleteModel):
                 }
             )
 
+        from clients.services.cases import resolve_single_active_case
+
+        zus_case = resolve_single_active_case(self)
         if (
-            self.workflow_stage == "waiting_decision"
-            and self.fingerprints_date
-            and self.fingerprints_date <= today
-            and not self.decision_date
+            zus_case is not None
+            and zus_case.workflow_stage == "waiting_decision"
+            and zus_case.fingerprints_date
+            and zus_case.fingerprints_date <= today
+            and not zus_case.decision_date
         ):
             from clients.services.zus import format_zus_months, missing_zus_months
 
-            missing_zus = missing_zus_months(self, today=today)
+            missing_zus = missing_zus_months(zus_case, today=today)
             if missing_zus:
                 month_name = format_zus_months([missing_zus[0]])
                 action_label = _("Запросить ZUS RCA за %s") % month_name
@@ -1291,15 +1295,19 @@ class Client(SoftDeleteModel):
                 "action_url": edit_url,
             })
 
-        # 8. ZUS RCA months
+        # 8. ZUS RCA months (case-first; ambiguous multi-case clients skipped)
+        from clients.services.cases import resolve_single_active_case
+
+        zus_case = resolve_single_active_case(self)
         if (
-            self.workflow_stage == "waiting_decision"
-            and self.fingerprints_date
-            and self.fingerprints_date <= today
-            and not self.decision_date
+            zus_case is not None
+            and zus_case.workflow_stage == "waiting_decision"
+            and zus_case.fingerprints_date
+            and zus_case.fingerprints_date <= today
+            and not zus_case.decision_date
         ):
             from clients.services.zus import missing_zus_months
-            missing_zus = missing_zus_months(self, today=today)
+            missing_zus = missing_zus_months(zus_case, today=today)
             if missing_zus:
                 checks.append({
                     "label": _("Отчёты ZUS RCA"),

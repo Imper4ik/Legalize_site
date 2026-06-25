@@ -80,6 +80,20 @@ def create_case_for_client(
     return case
 
 
+def resolve_single_active_case(client: Client) -> Case | None:
+    """Return the client's single active case, or None if zero or several.
+
+    A safe, non-raising accessor for client-level consumers (emails, health
+    alerts, upload widgets) that need case-first process data but operate at the
+    client level. With several active cases it returns None so the caller can
+    skip ambiguous aggregation rather than guess (spec section 4/5).
+    """
+    active_cases = list(Case.objects.filter(client=client)[:2])
+    if len(active_cases) == 1:
+        return active_cases[0]
+    return None
+
+
 def get_legacy_compatibility_case(client_id: int, model_name: str) -> Case:
     """
     DEPRECATED: Compatibility fallback for legacy records when the client has exactly one Case.

@@ -584,9 +584,12 @@ def _get_expired_documents_context(client: Client) -> dict[str, Any] | None:
     if not expired_documents.exists():
         return None
 
+    from clients.services.cases import resolve_single_active_case
+
+    case = resolve_single_active_case(client)
     return {
         "client": client,
-        "fingerprints_date": client.fingerprints_date,
+        "fingerprints_date": case.fingerprints_date if case else None,
         "expired_documents": expired_documents,
         "today": today,
     }
@@ -643,7 +646,10 @@ def _get_missing_documents_context(
     )
     uploaded_codes = set(client.documents.values_list("document_type", flat=True))
     submitted_codes = get_submitted_document_codes(client)
-    missing_zus = missing_zus_months(client, today=today)
+    from clients.services.cases import resolve_single_active_case
+
+    zus_case = resolve_single_active_case(client)
+    missing_zus = missing_zus_months(zus_case, today=today) if zus_case else []
     missing = []
     uploaded_with_expiry = []
 
@@ -829,20 +835,25 @@ def send_expiring_documents_email(client: Client, documents: list[Document], *, 
 
 
 def _get_appointment_context(client: Client) -> dict[str, Any] | None:
-    if not client.fingerprints_date:
+    # Fingerprints data lives on the case; source it from the client's single
+    # active case (spec section 5). Ambiguous multi-case clients are skipped.
+    from clients.services.cases import resolve_single_active_case
+
+    case = resolve_single_active_case(client)
+    if case is None or not case.fingerprints_date:
         return None
 
     return {
         "client": client,
-        "fingerprints_date": client.fingerprints_date,
-        "fingerprints_time": client.fingerprints_time,
-        "fingerprints_location": client.fingerprints_location,
+        "fingerprints_date": case.fingerprints_date,
+        "fingerprints_time": case.fingerprints_time,
+        "fingerprints_location": case.fingerprints_location,
     }
 
 
 def send_appointment_notification_email(client: Client, *, sent_by: AbstractBaseUser | AnonymousUser | None = None) -> int:
     """Send a notification about a fingerprint appointment."""
-    if not client.email or not client.fingerprints_date:
+    if not client.email:
         return 0
 
     language = _get_preferred_language(client)
@@ -863,9 +874,9 @@ def send_appointment_notification_email(client: Client, *, sent_by: AbstractBase
             "appointment_notification",
             client.pk,
             client.email,
-            client.fingerprints_date,
-            client.fingerprints_time,
-            client.fingerprints_location,
+            context["fingerprints_date"],
+            context["fingerprints_time"],
+            context["fingerprints_location"],
         ),
     )
 

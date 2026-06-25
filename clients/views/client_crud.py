@@ -25,6 +25,7 @@ from clients.security.encrypted import safe_encrypted_attr
 from clients.services.access import accessible_clients_queryset
 from clients.services.activity import log_client_view
 from clients.services.attention import apply_client_attention_filter
+from clients.services.cases import resolve_single_active_case
 from clients.services.notifications import (
     send_expired_documents_email,
     send_required_documents_email,
@@ -243,7 +244,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         context["document_upload_form"] = DocumentUploadForm()
         context["document_status_list"] = document_status_list
         context["safe_case_number"] = safe_encrypted_attr(client, "case_number", default=_("Не указан"))
-        context["missing_zus_months_for_upload"] = missing_zus_month_upload_options(client)
+        context["missing_zus_months_for_upload"] = (missing_zus_month_upload_options(resolve_single_active_case(client)) if resolve_single_active_case(client) else [])
         prefetched = getattr(client, "_prefetched_objects_cache", {})
         email_logs = prefetched.get("email_logs")
         if email_logs is None:

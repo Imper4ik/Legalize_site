@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.utils import timezone
 
-from clients.models import Client, ClientDocumentRequirement, Document, Payment, Reminder
+from clients.models import Case, Client, ClientDocumentRequirement, Document, Payment, Reminder
 from clients.services.custom_document_requirements import sync_custom_document_requirement_reminder
 from clients.services.notifications import (
     _get_missing_documents_context,
@@ -126,7 +126,9 @@ class Command(BaseCommand):
 
     def check_zus_rca_missing_months(self, *, dry_run: bool = False, send_email: bool = True) -> None:
         today = timezone.localdate()
-        clients = Client.objects.filter(
+        # Case-first: ZUS reminders are computed per active case (archived cases
+        # are excluded by Case.objects).
+        cases = Case.objects.select_related("client").filter(
             workflow_stage="waiting_decision",
             fingerprints_date__isnull=False,
             fingerprints_date__lte=today,
@@ -136,12 +138,13 @@ class Command(BaseCommand):
         sent_count = 0
         skipped_count = 0
         iso_year, iso_week, _iso_weekday = today.isocalendar()
-        for client in clients.iterator():
-            missing = missing_zus_months(client, today=today)
+        for case in cases.iterator():
+            client = case.client
+            missing = missing_zus_months(case, today=today)
             if missing:
                 affected += 1
                 months = format_zus_months(missing)
-                message = f"ZUS RCA missing months: client_id={client.pk}, months={months}"
+                message = f"ZUS RCA missing months: case_pk={case.pk}, months={months}"
                 logger.info(message)
                 self.stdout.write(message)
 
