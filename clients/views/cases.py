@@ -41,7 +41,9 @@ class CaseDetailView(RoleRequiredMixin, DetailView):
         value safely. The temporary display fallback prevents legacy one-case
         clients from seeing a UUID or an empty title while data migration runs.
         """
-        if case.internal_number or case.authority_case_number or case.legacy_case_number:
+        # internal_number is deprecated and must not drive UI logic; only the
+        # authority (urząd) number or a legacy number suppress the fallback.
+        if case.authority_case_number or case.legacy_case_number:
             return
         if Case.all_objects.filter(client_id=case.client_id).count() != 1:
             return
