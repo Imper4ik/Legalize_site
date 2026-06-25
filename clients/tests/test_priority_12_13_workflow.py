@@ -376,10 +376,15 @@ def test_fingerprints_date_change_does_not_send_expired_email_and_appointment_is
     assert not result.expired_documents_email_sent
     send_expired.assert_not_called()
 
+    # Fingerprints are process data and live on the Case, so set them there.
+    case = sample_client.cases.get()
+    case.fingerprints_date = timezone.localdate()
+    case.save(update_fields=["fingerprints_date"])
+
     mail.outbox = []
     with patch("clients.services.notifications._send_confirmation_email"):
-        assert send_appointment_notification_email(sample_client) == 1
-        assert send_appointment_notification_email(sample_client) == 0
+        assert send_appointment_notification_email(case) == 1
+        assert send_appointment_notification_email(case) == 0
     assert len(mail.outbox) == 1
 
 
