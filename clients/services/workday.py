@@ -134,34 +134,44 @@ def _missing_zus_clients(user: AbstractBaseUser | AnonymousUser | None, today: d
 
 
 def _new_card_missing_case(user: AbstractBaseUser | AnonymousUser | None, limit: int) -> list[dict[str, Any]]:
-    queryset = (
-        accessible_clients_queryset(
-            user,
-            Client.objects.prefetch_related("mos_applications")
-            .annotate(
-                new_card_confirmation_count=Count(
-                    "documents",
-                    filter=Q(
-                        documents__document_type=DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION.value,
-                        documents__archived_at__isnull=True,
-                    ),
-                    distinct=True,
-                )
+    # Case-first (spec §5/§6): iterate the per-case MOS records so a client with
+    # two qualifying cases surfaces once per case, each with its own submission
+    # data, instead of an arbitrary ``mos_applications.first()``.
+    from clients.models import MOSApplicationData
+
+    accessible_cases = accessible_cases_queryset(user)
+    mos_queryset = (
+        MOSApplicationData.objects.filter(
+            case__in=accessible_cases,
+            new_residence_card_application_status="yes",
+        )
+        .filter(
+            Q(case__authority_case_number_hash__isnull=True) | Q(case__authority_case_number_hash="")
+        )
+        .select_related("case", "case__client")
+        .annotate(
+            new_card_confirmation_count=Count(
+                "case__documents",
+                filter=Q(
+                    case__documents__document_type=DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION.value,
+                    case__documents__archived_at__isnull=True,
+                ),
+                distinct=True,
             )
-            .filter(
-                Q(case_number_hash__isnull=True) | Q(case_number_hash=""),
-                mos_applications__new_residence_card_application_status="yes",
-            )
-            .order_by("mos_applications__new_residence_card_submitted_at", "last_name", "first_name"),
-        )[:limit]
-    )
+        )
+        .order_by(
+            "new_residence_card_submitted_at",
+            "case__client__last_name",
+            "case__client__first_name",
+        )
+    )[:limit]
     items: list[dict[str, Any]] = []
-    for client in queryset:
-        mos_data = client.mos_applications.first()
+    for mos_data in mos_queryset:
+        client = mos_data.case.client
         detail_parts = []
         if mos_data.new_residence_card_submitted_at:
             detail_parts.append(mos_data.new_residence_card_submitted_at.strftime("%d.%m.%Y"))
-        detail_parts.append(_("подтверждение загружено") if client.new_card_confirmation_count else _("нет подтверждения"))
+        detail_parts.append(_("подтверждение загружено") if mos_data.new_card_confirmation_count else _("нет подтверждения"))
         if str(mos_data.new_residence_card_case_number or "").strip():
             detail_parts.append(_("номер есть в блоке подачи"))
         items.append(
@@ -241,9 +251,15 @@ def _is_stay_expiring_soon(client: Client, today: date) -> bool:
         return False
     date_to_check = client.legal_basis_end_date
     if not date_to_check:
-        mos_data = client.mos_applications.first()
-        if mos_data:
-            date_to_check = mos_data.legal_stay_until
+        # Only fall back to MOS data when the client has a single active case;
+        # with several cases we do not guess which legal-stay date applies.
+        from clients.services.cases import resolve_single_active_case
+
+        case = resolve_single_active_case(client)
+        if case is not None:
+            mos_data = client.mos_applications.filter(case=case).first()
+            if mos_data:
+                date_to_check = mos_data.legal_stay_until
     if date_to_check:
         return date_to_check <= today + timedelta(days=30)
     return False
