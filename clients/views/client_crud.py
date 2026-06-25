@@ -271,9 +271,14 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         self.object = self.get_object()
         if request.GET.get("view") != "person":
-            from clients.services.cases import get_primary_case_for_client
-            primary_case = get_primary_case_for_client(self.object)
-            return redirect("clients:case_detail", pk=primary_case.pk)
+            # Redirect to the case only when there is exactly one active case.
+            # Never auto-create or guess a case on a GET: a client with no active
+            # case, archived-only cases, or several cases falls through to the
+            # person view instead of raising/500.
+            from clients.services.cases import resolve_single_active_case
+            primary_case = resolve_single_active_case(self.object)
+            if primary_case is not None:
+                return redirect("clients:case_detail", pk=primary_case.pk)
 
         log_client_view(client=self.object, actor=request.user, request=request)
         context = self.get_context_data(object=self.object)
