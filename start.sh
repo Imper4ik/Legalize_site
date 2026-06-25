@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
-# start.sh - runtime server only
+# start.sh - runtime server
 set -o errexit
 set -o pipefail
 
 mkdir -p "${MEDIA_ROOT:-/app/media}"
 
-: "${RUN_MIGRATIONS_ON_START:=false}"
+# Railway/Nixpacks deployments may start the web process even when a configured
+# release phase was skipped. Apply pending migrations before Gunicorn so ORM
+# code can never query a column that has not reached PostgreSQL yet.
+# Set RUN_MIGRATIONS_ON_START=false only for a deployment that runs migrations
+# through a separate, guaranteed pre-deploy job.
+: "${RUN_MIGRATIONS_ON_START:=true}"
 case "${RUN_MIGRATIONS_ON_START}" in
   1|true|TRUE|yes|YES|on|ON)
-    echo "Running migrations on start..."
+    echo "Running migrations before starting the web server..."
     python manage.py migrate --no-input
     ;;
 esac
