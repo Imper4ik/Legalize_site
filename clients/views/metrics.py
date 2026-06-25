@@ -8,13 +8,13 @@ from django.utils import timezone
 from django.views.generic import TemplateView
 
 from clients.models import Client
-from clients.services.roles import SETTINGS_ALLOWED_ROLES
+from clients.services.roles import REPORTS_VIEW_ROLES
 from clients.views.base import RoleOrFeatureRequiredMixin
 
 
 class MetricsDashboardView(RoleOrFeatureRequiredMixin, TemplateView):
     template_name = 'clients/metrics_dashboard.html'
-    allowed_roles = list(SETTINGS_ALLOWED_ROLES)
+    allowed_roles = list(REPORTS_VIEW_ROLES)
     required_permission_name = "can_view_reports"
 
     def _parse_date_param(self, name: str, default: date) -> date:

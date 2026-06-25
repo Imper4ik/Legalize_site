@@ -67,14 +67,16 @@ class RolePermissionMatrixTests(TestCase):
         self.assertEqual(self.client.post(reverse("clients:send_custom_email", kwargs={"pk": self.client_obj.pk})).status_code, 403)
         self.assertEqual(self.client.post(reverse("clients:edit_payment", kwargs={"payment_id": self.payment.pk})).status_code, 403)
 
-    def test_staff_can_delete_client(self):
+    def test_staff_cannot_delete_client_by_default(self):
+        # Deletions are off for Staff by default; the admin grants them per
+        # employee via EmployeePermission.can_delete_clients.
         self.client.force_login(self.staff)
         response = self.client.post(
             reverse("clients:client_delete", kwargs={"pk": self.client_obj.pk}),
             {"confirm_archive_all_cases": "true"},
         )
-        self.assertEqual(response.status_code, 302)
-        self.assertFalse(Client.objects.filter(pk=self.client_obj.pk).exists())
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Client.objects.filter(pk=self.client_obj.pk).exists())
 
     def test_manager_can_delete_client(self):
         self.client.force_login(self.manager)
@@ -94,11 +96,11 @@ class RolePermissionMatrixTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Client.objects.filter(pk=self.client_obj.pk).exists())
 
-    def test_staff_can_delete_document(self):
+    def test_staff_cannot_delete_document_by_default(self):
         self.client.force_login(self.staff)
         response = self.client.post(reverse("clients:document_delete", kwargs={"pk": self.document.pk}))
-        self.assertEqual(response.status_code, 302)
-        self.assertFalse(Document.objects.filter(pk=self.document.pk).exists())
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Document.objects.filter(pk=self.document.pk).exists())
 
     def test_manager_can_delete_document(self):
         self.client.force_login(self.manager)
@@ -158,12 +160,13 @@ class RolePermissionMatrixTests(TestCase):
         self.assertEqual(add_response.status_code, 302)
         self.assertEqual(edit_response.status_code, 302)
 
-    def test_staff_cannot_access_people_management_but_can_access_settings(self):
+    def test_staff_cannot_access_people_management_or_settings(self):
+        # Settings/templates are Manager/Admin only now.
         self.client.force_login(self.staff)
         self.assertEqual(self.client.get(reverse("clients:staff_manage")).status_code, 403)
         self.assertEqual(self.client.get(reverse("clients:role_manage")).status_code, 403)
         self.assertEqual(self.client.get(reverse("clients:app_settings")).status_code, 403)
-        self.assertEqual(self.client.get(reverse("clients:service_price_manage")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("clients:service_price_manage")).status_code, 403)
 
     @patch("clients.views.emails.send_mail", return_value=1)
     def test_manager_can_manage_payments_emails_reports(self, _send_mail):

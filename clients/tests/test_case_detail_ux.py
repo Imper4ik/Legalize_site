@@ -5,7 +5,11 @@ from django.urls import reverse
 
 from clients.models import Client
 from clients.services.cases import create_case_for_client
-from clients.testing.factories import TEST_USER_CREDENTIAL, create_test_user
+from clients.testing.factories import (
+    TEST_USER_CREDENTIAL,
+    create_test_document,
+    create_test_user,
+)
 
 
 @pytest.mark.django_db
@@ -31,6 +35,25 @@ def test_case_detail_renders_with_ux_changes(client):
     # Working modals are present on the case page.
     assert 'id="caseAddTaskModal"' in body
     assert 'id="caseAddPaymentModal"' in body
+
+
+@pytest.mark.django_db
+def test_repeated_documents_are_grouped(client):
+    staff = create_test_user(role="Manager")
+    client.login(email=staff.email, password=TEST_USER_CREDENTIAL)
+
+    customer = Client.objects.create(first_name="Darya", last_name="A", citizenship="BY")
+    case = create_case_for_client(client=customer, actor=staff)
+    for _ in range(3):
+        create_test_document(client=customer, doc_type="passport", case=case)
+
+    response = client.get(reverse("clients:case_detail", kwargs={"pk": case.pk}))
+    body = response.content.decode()
+
+    assert response.status_code == 200
+    # One primary row + a "+2" badge for the collapsed earlier versions.
+    assert "+2" in body
+    assert "doc-version" in body
 
 
 @pytest.mark.django_db
