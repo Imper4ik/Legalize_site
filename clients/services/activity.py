@@ -118,8 +118,6 @@ def sanitize_activity_metadata(metadata: dict[str, Any] | None) -> dict[str, Any
 
     return sanitized
 
-    return sanitized
-
 
 def log_client_activity(
     *,
@@ -171,17 +169,13 @@ def log_client_view(*, client: Client, actor: AbstractBaseUser | AnonymousUser |
     ).exists():
         return None
 
-    metadata: dict[str, Any] = {}
-    if request is not None:
-        metadata["path"] = request.path
-        metadata["method"] = request.method
-
+    # Request path/method are intentionally not recorded: they are not on the
+    # metadata whitelist and could leak object identifiers (spec section 9).
     return log_client_activity(
         client=client,
         actor=actor,
         event_type="client_viewed",
         summary="Карточка клиента открыта",
-        metadata=metadata,
     )
 
 

@@ -243,6 +243,7 @@ class CaseForm(forms.ModelForm):
     class Meta:
         model = Case
         fields = [
+            "authority_case_number",
             "application_purpose",
             "application_type",
             "basis_of_stay",
@@ -252,6 +253,9 @@ class CaseForm(forms.ModelForm):
             "version",
         ]
         widgets = {
+            "authority_case_number": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "WSC-II-P.6151.138285.2025"}
+            ),
             "application_purpose": forms.TextInput(attrs={"class": "form-control"}),
             "application_type": forms.TextInput(attrs={"class": "form-control"}),
             "basis_of_stay": forms.TextInput(attrs={"class": "form-control"}),

@@ -186,7 +186,16 @@ class Case(SoftDeleteModel):
 
     @property
     def display_number(self) -> str:
-        return str(self.internal_number or self.authority_case_number or self.uuid)
+        """Staff-facing case number.
+
+        Only the authority case number is a real working number. The internal
+        number is deprecated and the UUID must never be surfaced to staff, so an
+        unnumbered case shows a neutral placeholder instead.
+        """
+        number = str(self.authority_case_number or "").strip()
+        if number:
+            return number
+        return str(_("Дело без номера"))
 
     @staticmethod
     def normalize_case_number(case_number: str) -> str:

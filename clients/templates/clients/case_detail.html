@@ -33,9 +33,7 @@
       <div>
         <a href="{% url 'clients:client_detail' case.client.pk %}?view=person" class="text-decoration-none small text-primary">&larr; {{ case.client.get_full_name }}</a>
         <h1 class="h3 mb-1 mt-1 fw-bold case-detail-title">
-          {% if case.internal_number %}
-            {{ case.internal_number }}
-          {% elif case.authority_case_number %}
+          {% if case.authority_case_number %}
             {{ case.authority_case_number }}
           {% elif case.legacy_case_number %}
             {{ case.legacy_case_number }}
@@ -43,10 +41,10 @@
             {% translate "Дело без номера" %}
           {% endif %}
         </h1>
-        {% if case.legacy_case_number and not case.internal_number and not case.authority_case_number %}
-          <p class="case-detail-number-hint mb-0">{% translate "Номер из предыдущей карточки; проверьте и перенесите его в нужное поле." %}</p>
-        {% elif not case.internal_number and not case.authority_case_number %}
-          <p class="case-detail-number-hint mb-0">{% translate "Внутренний номер ещё не присвоен" %}</p>
+        {% if case.legacy_case_number and not case.authority_case_number %}
+          <p class="case-detail-number-hint mb-0 text-warning">{% translate "Номер из предыдущей карточки; проверьте и перенесите его в поле «Номер в ужонде»." %}</p>
+        {% elif not case.authority_case_number %}
+          <p class="case-detail-number-hint mb-0">{% translate "Номер дела в ужонде ещё не присвоен" %}</p>
         {% endif %}
         <div class="case-detail-meta">
           <span class="badge bg-secondary me-2">{{ case.get_status_display }}</span>
@@ -101,9 +99,8 @@
       <div class="row g-3">
         <div class="col-md-6"><strong>{% translate "Клиент" %}:</strong> {{ case.client.get_full_name }}</div>
         <div class="col-md-6"><strong>{% translate "Версия записи" %}:</strong> {{ case.version }}</div>
-        <div class="col-md-6"><strong>{% translate "Внутренний номер" %}:</strong> {{ case.internal_number|default:"—" }}</div>
         <div class="col-md-6"><strong>{% translate "Номер в ужонде" %}:</strong> {{ case.authority_case_number|default:"—" }}</div>
-        {% if case.legacy_case_number %}<div class="col-md-6"><strong>{% translate "Номер из предыдущей карточки" %}:</strong> {{ case.legacy_case_number }}</div>{% endif %}
+        {% if case.legacy_case_number and not case.authority_case_number %}<div class="col-md-6"><strong>{% translate "Номер из предыдущей карточки" %}:</strong> <span class="text-warning">{{ case.legacy_case_number }}</span></div>{% endif %}
         <div class="col-md-6"><strong>{% translate "Цель подачи" %}:</strong> {{ case.application_purpose|default:"—" }}</div>
         <div class="col-md-6"><strong>{% translate "Тип заявления" %}:</strong> {{ case.application_type|default:"—" }}</div>
         <div class="col-md-6"><strong>{% translate "Основание пребывания" %}:</strong> {{ case.basis_of_stay|default:"—" }}</div>
