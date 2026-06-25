@@ -147,7 +147,9 @@ class Command(BaseCommand):
             STATUS_ERROR: 0,
         }
 
-        query = f'SELECT "{pk_col}", "{field_col}" FROM "{table_name}"'
+        # Table and column names come from Django model metadata, never from
+        # user input, so this interpolation cannot be an injection vector.
+        query = f'SELECT "{pk_col}", "{field_col}" FROM "{table_name}"'  # nosec B608
         with connection.cursor() as cursor:
             try:
                 cursor.execute(query)
