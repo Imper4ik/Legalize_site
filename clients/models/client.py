@@ -774,8 +774,33 @@ class Client(SoftDeleteModel):
             Q(rejection_reason__isnull=False) & ~Q(rejection_reason="")
         ).count()
 
+    def get_effective_workflow_stage(self) -> str:
+        """The workflow stage to use for client-level heuristics (spec §4).
+
+        Process state lives on the case, so we read the single active case's
+        stage. With zero or several active cases we fall back to the legacy
+        client field rather than guess.
+        """
+        from clients.services.cases import resolve_single_active_case
+
+        case = resolve_single_active_case(self)
+        return case.workflow_stage if case is not None else self.workflow_stage
+
+    def get_effective_workflow_stage_display(self) -> str:
+        from clients.services.cases import resolve_single_active_case
+
+        case = resolve_single_active_case(self)
+        if case is not None:
+            return case.get_workflow_stage_display()
+        return self.get_workflow_stage_display()
+
     def _get_mos_legal_stay_until(self) -> date | None:
-        mos_application_data = self.mos_applications.first()
+        from clients.services.cases import resolve_single_active_case
+
+        case = resolve_single_active_case(self)
+        if case is None:
+            return None
+        mos_application_data = self.mos_applications.filter(case=case).first()
         if not mos_application_data:
             return None
         return mos_application_data.legal_stay_until
@@ -814,7 +839,7 @@ class Client(SoftDeleteModel):
             setattr(self, key, value)
 
         # Check legal stay expiration only if client hasn't submitted yet
-        if self.workflow_stage in ["new_client", "document_collection"]:
+        if self.get_effective_workflow_stage() in ["new_client", "document_collection"]:
             legal_stay_date = self.legal_basis_end_date or self._get_mos_legal_stay_until()
 
             if legal_stay_date:
@@ -1098,7 +1123,7 @@ class Client(SoftDeleteModel):
             )
 
         # Check inactivity 30+ days
-        if self.workflow_stage not in ["closed", "decision_received"]:
+        if self.get_effective_workflow_stage() not in ["closed", "decision_received"]:
             latest_act = self.activities.exclude(event_type="client_viewed").order_by("-created_at").first()
             last_action_date = latest_act.created_at.date() if latest_act else self.created_at.date()
             if last_action_date < today - timedelta(days=30):
@@ -1428,7 +1453,7 @@ class Client(SoftDeleteModel):
             }
 
         return {
-            "stage_label": self.get_workflow_stage_display(),
+            "stage_label": self.get_effective_workflow_stage_display(),
             "alerts": alerts,
             "alerts_count": len(alerts),
             "open_tasks_count": open_tasks_count,

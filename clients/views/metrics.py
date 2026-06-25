@@ -7,7 +7,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.views.generic import TemplateView
 
-from clients.models import Client
+from clients.models import Case, Client
 from clients.services.roles import REPORTS_VIEW_ROLES
 from clients.views.base import RoleOrFeatureRequiredMixin
 
@@ -61,15 +61,16 @@ class MetricsDashboardView(RoleOrFeatureRequiredMixin, TemplateView):
             payments__status='paid',
         ).distinct().count()
 
-        # 5. Decision received
+        # 5. Decision received — read the decision from the case (spec §4); keep
+        # the client-creation cohort so the funnel still counts clients.
         cases_closed = Client.objects.filter(
             **period_filter,
-            decision_date__isnull=False,
+            cases__decision_date__isnull=False,
         ).distinct().count()
 
-        # 6. Overdue SLA — correct logic
+        # 6. Overdue SLA — count cases (process state lives on the case, §4/§10).
         sla_days = getattr(settings, "DECISION_SLA_DAYS", 180)
-        overdue_sla = Client.objects.filter(
+        overdue_sla = Case.objects.filter(
             workflow_stage="waiting_decision",
             fingerprints_date__isnull=False,
             fingerprints_date__lt=today - timedelta(days=sla_days),

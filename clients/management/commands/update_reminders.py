@@ -95,12 +95,15 @@ class Command(BaseCommand):
 
     def send_missing_document_notifications(self, *, dry_run: bool = False) -> None:
         today = timezone.localdate()
+        # Case-first (spec §4): the client is in scope when one of their cases is
+        # in waiting_decision after fingerprints without a decision. The four
+        # conditions share one .filter() so they must match the same case.
         clients = Client.objects.production().filter(
-            workflow_stage="waiting_decision",
-            fingerprints_date__isnull=False,
-            fingerprints_date__lte=today,
-            decision_date__isnull=True,
-        ).exclude(email="")
+            cases__workflow_stage="waiting_decision",
+            cases__fingerprints_date__isnull=False,
+            cases__fingerprints_date__lte=today,
+            cases__decision_date__isnull=True,
+        ).exclude(email="").distinct()
 
         sent_count = 0
         skipped_count = 0
@@ -294,7 +297,7 @@ class Command(BaseCommand):
             legal_stay_until__isnull=False,
             legal_stay_until__gte=today,
             legal_stay_until__lte=cutoff,
-            client__workflow_stage__in=["new_client", "document_collection"],
+            case__workflow_stage__in=["new_client", "document_collection"],
             client__archived_at__isnull=True,
             client__is_demo_data=False,
             client__is_test_data=False,
@@ -370,7 +373,7 @@ class Command(BaseCommand):
             legal_stay_until__isnull=False,
             legal_stay_until__gte=today,
             legal_stay_until__lte=cutoff,
-            client__workflow_stage__in=["new_client", "document_collection"],
+            case__workflow_stage__in=["new_client", "document_collection"],
             client__archived_at__isnull=True,
         )
 
