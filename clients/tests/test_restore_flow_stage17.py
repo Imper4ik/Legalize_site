@@ -43,8 +43,7 @@ class RestoreFlowStage17Tests(TestCase):
         self.assertTrue(
             ClientActivity.objects.filter(
                 client=self.client_obj,
-                event_type="client_updated",
-                metadata__restored_object="client",
+                event_type="client_restored",
             ).exists()
         )
 

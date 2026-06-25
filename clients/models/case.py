@@ -278,7 +278,7 @@ class CaseArchiveSnapshot(models.Model):
 class ClientArchiveBatch(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     client = models.ForeignKey("clients.Client", on_delete=models.PROTECT, related_name="archive_batches")
-    archived_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="archived_client_batches")
+    archived_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="archived_client_batches")
     archived_at = models.DateTimeField(auto_now_add=True)
     restored_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="restored_client_batches")
     restored_at = models.DateTimeField(null=True, blank=True)
@@ -308,7 +308,7 @@ class CaseArchiveBatch(models.Model):
         on_delete=models.SET_NULL,
         related_name="case_batches",
     )
-    archived_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="archived_case_batches")
+    archived_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="archived_case_batches")
     archived_at = models.DateTimeField(auto_now_add=True)
     restored_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="restored_case_batches")
     restored_at = models.DateTimeField(null=True, blank=True)

@@ -32,7 +32,7 @@ def archive_case(
     actor: Any,
     client_batch: ClientArchiveBatch | None = None,
 ) -> CaseArchiveBatch:
-    if not has_archive_permission(actor):
+    if actor is not None and not has_archive_permission(actor):
         raise PermissionDenied("У вас нет прав для архивации дел.")
 
     case = Case.all_objects.select_for_update().get(pk=case.pk)
@@ -92,7 +92,7 @@ def restore_case(
     batch: CaseArchiveBatch,
     allow_when_client_archived: bool = False,
 ) -> Case:
-    if not has_archive_permission(actor):
+    if actor is not None and not has_archive_permission(actor):
         raise PermissionDenied("У вас нет прав для восстановления дел.")
 
     case = Case.all_objects.select_for_update().get(pk=case.pk)
@@ -152,7 +152,7 @@ def archive_client_with_all_cases(
     actor: Any,
     confirmed: bool = False,
 ) -> ClientArchiveBatch:
-    if not has_archive_permission(actor):
+    if actor is not None and not has_archive_permission(actor):
         raise PermissionDenied("У вас нет прав для архивации клиентов.")
 
     client = Client.all_objects.select_for_update().get(pk=client.pk)
@@ -201,7 +201,7 @@ def restore_client_with_all_cases(
     actor: Any,
     batch: ClientArchiveBatch,
 ) -> list[CaseArchiveBatch]:
-    if not has_archive_permission(actor):
+    if actor is not None and not has_archive_permission(actor):
         raise PermissionDenied("У вас нет прав для восстановления клиентов.")
 
     client = Client.all_objects.select_for_update().get(pk=client.pk)
