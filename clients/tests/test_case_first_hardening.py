@@ -512,6 +512,70 @@ class WorkdayPerCaseQueueTests(TestCase):
         self.assertEqual(len(mine), 1)
 
 
+class OcrDoesNotMirrorProcessStateToClientTests(TestCase):
+    """spec section 4: OCR/wezwanie confirmation writes process state only to the
+    case. The client may only receive permanent personal data (name), never the
+    case number, workflow, fingerprints, decision or purpose."""
+
+    def setUp(self) -> None:
+        self.staff = create_test_user(role="Staff")
+        self.client_obj = create_test_client(
+            first_name="Olek", last_name="Stary", assigned_staff=self.staff
+        )
+        self.case_a = self.client_obj.cases.get()
+        self.case_b = create_case_for_client(
+            client=self.client_obj, actor=self.staff, application_purpose="study"
+        )
+
+    def test_confirmation_keeps_process_state_off_the_client(self) -> None:
+        from clients.constants import DocumentType
+        from clients.models import Document
+        from clients.services.document_workflow import confirm_wezwanie_document
+        from clients.testing.factories import build_pdf_upload
+
+        client_purpose_before = self.client_obj.application_purpose
+        client_stage_before = self.client_obj.workflow_stage
+
+        document = Document.objects.create(
+            client=self.client_obj,
+            case=self.case_b,
+            document_type=DocumentType.WEZWANIE.value,
+            file=build_pdf_upload("wezwanie.pdf"),
+            awaiting_confirmation=True,
+            ocr_status="success",
+            is_test_data=True,
+        )
+
+        confirm_wezwanie_document(
+            document=document,
+            actor=self.staff,
+            confirmation_data={
+                "first_name": "Aleksander",
+                "last_name": "Nowak",
+                "case_number": "WSC-II-S.6151.55555.2026",
+                "fingerprints_date": "2026-09-01",
+                "decision_date": "2026-10-01",
+                "application_status_code": "S",
+            },
+        )
+
+        client = type(self.client_obj).all_objects.get(pk=self.client_obj.pk)
+        # Permanent personal data is allowed on the client…
+        self.assertEqual(client.first_name, "Aleksander")
+        self.assertEqual(client.last_name, "Nowak")
+        # …but process state must stay on the case only.
+        self.assertEqual(client.case_number or "", "")
+        self.assertIsNone(client.fingerprints_date)
+        self.assertIsNone(client.decision_date)
+        self.assertEqual(client.application_purpose, client_purpose_before)
+        self.assertEqual(client.workflow_stage, client_stage_before)
+
+        case_b = Case.all_objects.get(pk=self.case_b.pk)
+        self.assertEqual(case_b.authority_case_number, "WSC-II-S.6151.55555.2026")
+        self.assertIsNotNone(case_b.fingerprints_date)
+        self.assertEqual(case_b.application_purpose, "study")
+
+
 class CompatibilityHelperTests(TestCase):
     """spec section 4: legacy compatibility helper must never auto-create or
     silently pick from multiple cases."""
