@@ -111,10 +111,14 @@
         </div>
       </div>
       <div class="table-responsive"><table class="table table-hover align-middle" id="documentsTable"><thead><tr><th>{% translate "Название" %}</th><th>{% translate "Статус" %}</th><th>{% translate "Дата загрузки" %}</th><th>{% translate "Срок действия" %}</th><th class="text-end">{% translate "Действия" %}</th></tr></thead><tbody>
-        {% for document in documents %}<tr class="{% if document.archived_at %}doc-archived{% endif %}" data-archived="{% if document.archived_at %}1{% else %}0{% endif %}"><td>{{ document.display_name }}</td><td><span class="badge bg-secondary">{{ document.computed_status }}</span></td><td>{{ document.uploaded_at|date:"d.m.Y H:i" }}</td><td>{{ document.expiry_date|date:"d.m.Y"|default:"—" }}</td><td class="text-end text-nowrap">
+        {% for group in document_groups %}{% with document=group.latest %}<tr class="{% if document.archived_at %}doc-archived{% endif %}" data-archived="{% if document.archived_at %}1{% else %}0{% endif %}"><td>{{ document.display_name }}{% if group.older %} <button type="button" class="btn btn-sm btn-link p-0 ms-1 text-decoration-none js-doc-versions" data-target="docgrp{{ forloop.counter }}" title="{% translate 'Показать предыдущие версии' %}"><span class="badge bg-light text-dark border">+{{ group.older|length }}</span></button>{% endif %}</td><td><span class="badge bg-secondary">{{ document.computed_status }}</span></td><td>{{ document.uploaded_at|date:"d.m.Y H:i" }}</td><td>{{ document.expiry_date|date:"d.m.Y"|default:"—" }}</td><td class="text-end text-nowrap">
           {% if document.file %}<a href="{% url 'clients:document_preview' document.id %}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="{% translate 'Просмотр' %}"><i class="bi bi-eye"></i></a>
           <a href="{% url 'clients:document_download' document.id %}" class="btn btn-sm btn-outline-secondary" title="{% translate 'Скачать' %}"><i class="bi bi-download"></i></a>{% else %}<span class="text-muted small">—</span>{% endif %}
-        </td></tr>
+        </td></tr>{% endwith %}
+        {% for document in group.older %}<tr class="doc-version d-none docgrp{{ forloop.parentloop.counter }} {% if document.archived_at %}doc-archived{% endif %}" data-archived="{% if document.archived_at %}1{% else %}0{% endif %}"><td class="ps-4 text-muted small">↳ {{ document.display_name }}</td><td><span class="badge bg-secondary">{{ document.computed_status }}</span></td><td>{{ document.uploaded_at|date:"d.m.Y H:i" }}</td><td>{{ document.expiry_date|date:"d.m.Y"|default:"—" }}</td><td class="text-end text-nowrap">
+          {% if document.file %}<a href="{% url 'clients:document_preview' document.id %}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="{% translate 'Просмотр' %}"><i class="bi bi-eye"></i></a>
+          <a href="{% url 'clients:document_download' document.id %}" class="btn btn-sm btn-outline-secondary" title="{% translate 'Скачать' %}"><i class="bi bi-download"></i></a>{% else %}<span class="text-muted small">—</span>{% endif %}
+        </td></tr>{% endfor %}
         {% empty %}<tr><td colspan="5" class="text-center text-muted">{% translate "Нет документов по этому делу." %}</td></tr>{% endfor %}
       </tbody></table></div>
     </div>
@@ -260,6 +264,15 @@
     });
   }
   if (toggle) { toggle.addEventListener("change", applyDocFilter); applyDocFilter(); }
+
+  // Expand/collapse earlier versions of a grouped document.
+  document.querySelectorAll(".js-doc-versions").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll("." + btn.getAttribute("data-target")).forEach(function (row) {
+        row.classList.toggle("d-none");
+      });
+    });
+  });
 
   // Filter history entries by free text.
   var filter = document.getElementById("historyFilter");
