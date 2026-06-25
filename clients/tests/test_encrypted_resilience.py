@@ -44,8 +44,20 @@ class EncryptedFieldResilienceTests(TestCase):
         self.assertNotIn("SECRET-CASE", log_output)
 
     def test_corrupted_case_number_does_not_break_zip_export(self):
-        client = Client.objects.create(first_name="Export", last_name="Client", case_number="SECRET-CASE")
-        _corrupt_client_field(client, "case_number")
+        # The export now sources the case number from the case (spec section 5),
+        # so corrupt the case's authority_case_number rather than the client's
+        # legacy field.
+        client = Client.objects.create(first_name="Export", last_name="Client")
+        case = client.cases.get()
+        case.authority_case_number = "SECRET-CASE"
+        case.save(update_fields=["authority_case_number"])
+
+        table = case._meta.db_table
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"UPDATE {table} SET authority_case_number = %s WHERE id = %s",
+                [CORRUPTED_FERNET_TOKEN, case.pk],
+            )
         client = Client.objects.defer("case_number", "passport_num").get(pk=client.pk)
 
         buffer = generate_client_zip(client)
