@@ -36,6 +36,9 @@ Thumbs.db
 # Compiled translation catalogs
 *.mo
 
+# Archives
+*.zip
+
 # Test & Debug artifacts
 .coverage
 /recordings/

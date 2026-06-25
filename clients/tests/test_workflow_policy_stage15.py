@@ -124,6 +124,11 @@ class WorkflowPolicyStage15Tests(TestCase):
         self.client_obj.workflow_stage = "document_collection"
         self.client_obj.application_purpose = "other"
         self.client_obj.save(update_fields=["workflow_stage", "application_purpose"])
+        # Process fields (purpose, stage) and documents are case-scoped.
+        case = self.client_obj.cases.get()
+        case.workflow_stage = "document_collection"
+        case.application_purpose = "other"
+        case.save(update_fields=["workflow_stage", "application_purpose"])
         DocumentRequirement.objects.create(
             application_purpose="other",
             document_type=DocumentType.PASSPORT.value,
@@ -133,8 +138,10 @@ class WorkflowPolicyStage15Tests(TestCase):
         )
         Document.objects.create(
             client=self.client_obj,
+            case=case,
             document_type=DocumentType.PASSPORT.value,
             file=SimpleUploadedFile("passport.pdf", b"pdf-data", content_type="application/pdf"),
+            verified=True,
         )
         form = ClientForm(
             data=self._build_form_data(workflow_stage="application_submitted"),

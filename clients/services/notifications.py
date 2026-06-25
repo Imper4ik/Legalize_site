@@ -85,6 +85,7 @@ def _reserve_idempotent_email_send(
     recipients: list[str],
     *,
     client: Client | None = None,
+    case: Case | None = None,
     template_type: str = "",
     sent_by: AbstractBaseUser | AnonymousUser | None = None,
     idempotency_key: str = "",
@@ -98,6 +99,7 @@ def _reserve_idempotent_email_send(
 
     payload: dict[str, Any] = {
         "client": client,
+        "case": case,
         "subject": subject,
         "body": body,
         "recipients": ", ".join(recipients),
@@ -173,6 +175,7 @@ def _send_email(
     recipients: Iterable[str],
     *,
     client: Client | None = None,
+    case: Case | None = None,
     template_type: str = "",
     sent_by: AbstractBaseUser | AnonymousUser | None = None,
     idempotency_key: str = "",
@@ -184,6 +187,7 @@ def _send_email(
         body,
         recipient_list,
         client=client,
+        case=case,
         template_type=template_type,
         sent_by=sent_by,
         idempotency_key=idempotency_key,
@@ -211,6 +215,7 @@ def _send_email(
                     body,
                     recipient_list,
                     client=client,
+                    case=case,
                     template_type=template_type,
                     sent_by=sent_by,
                     idempotency_key=idempotency_key,
@@ -222,30 +227,28 @@ def _send_email(
                     body,
                     recipient_list,
                     client=client,
+                    case=case,
                     template_type=template_type,
                     sent_by=sent_by,
                     idempotency_key=idempotency_key,
-                    delivery_status="failed",
-                    error_message="send returned 0",
+                    delivery_status="skipped",
                 )
         except Exception as exc:
             logger.warning(
-                "Failed to send notification email: template=%s client_id=%s error_type=%s",
-                template_type,
-                getattr(client, "pk", None),
+                "Email delivery failed completely: error_type=%s",
                 type(exc).__name__,
             )
-            result["sent_count"] = 0
             _log_email(
                 subject,
                 body,
                 recipient_list,
                 client=client,
+                case=case,
                 template_type=template_type,
                 sent_by=sent_by,
                 idempotency_key=idempotency_key,
                 delivery_status="failed",
-                error_message="send failed",
+                error_message=str(exc),
             )
     _do_send()
     return result["sent_count"]
@@ -257,6 +260,7 @@ def _log_email(
     recipients: list[str],
     *,
     client: Client | None = None,
+    case: Case | None = None,
     template_type: str = "",
     sent_by: AbstractBaseUser | AnonymousUser | None = None,
     idempotency_key: str = "",
@@ -270,6 +274,7 @@ def _log_email(
     try:
         payload = {
             "client": client,
+            "case": case,
             "subject": subject,
             "body": body,
             "recipients": ", ".join(recipients),
@@ -623,15 +628,24 @@ def send_expired_documents_email(client: Client, *, sent_by: AbstractBaseUser | 
 
 
 def _get_missing_documents_context(
-    client: Client,
+    case_or_client: Case | Client,
     language: str | None = None,
     *,
     today: Any | None = None,
 ) -> dict[str, Any] | None:
+    from clients.models import Case, Client
+    if isinstance(case_or_client, Case):
+        case = case_or_client
+        client = case.client
+    else:
+        client = case_or_client
+        from clients.services.cases import get_legacy_compatibility_case
+        case = get_legacy_compatibility_case(client.pk, "_get_missing_documents_context")
+
     if language is None:
         language = _get_preferred_language(client)
     from clients.models import ClientDocumentRequirement, DocumentRequirement
-    purpose = client.get_document_requirement_purpose()
+    purpose = case.get_document_requirement_purpose(client)
     has_db_records = DocumentRequirement.objects.filter(
         application_purpose=purpose
     ).exists()
@@ -641,9 +655,9 @@ def _get_missing_documents_context(
         include_optional=False,
         include_fallback=not has_db_records,
     )
-    uploaded_codes = set(client.documents.values_list("document_type", flat=True))
+    uploaded_codes = set(case.documents.filter(client=client).values_list("document_type", flat=True))
     submitted_codes = get_submitted_document_codes(client)
-    missing_zus = missing_zus_months(client, today=today)
+    missing_zus = missing_zus_months(case, today=today)
     missing = []
     uploaded_with_expiry = []
 
@@ -653,7 +667,7 @@ def _get_missing_documents_context(
             continue
 
         if code in uploaded_codes or code in submitted_codes:
-            doc = client.documents.filter(document_type=code).order_by("-uploaded_at").first()
+            doc = case.documents.filter(client=client, document_type=code).order_by("-uploaded_at").first()
             expiry_date = getattr(doc, "expiry_date", None)
             if expiry_date:
                 uploaded_with_expiry.append(
@@ -673,7 +687,7 @@ def _get_missing_documents_context(
 
     # Append case-specific custom requirements that are still missing
     custom_reqs = ClientDocumentRequirement.objects.filter(
-        client=client, is_active=True, is_required=True,
+        case=case, is_active=True, is_required=True,
     ).order_by("due_date", "created_at")
     for req in custom_reqs:
         if req.document_type not in uploaded_codes and req.document_type not in submitted_codes:
@@ -699,13 +713,14 @@ def _get_missing_documents_context(
 
     return {
         "client": client,
+        "case": case,
         "documents": missing,
         "uploaded_with_expiry": uploaded_with_expiry,
     }
 
 
 def send_missing_documents_email(
-    client: Client,
+    case_or_client: Case | Client,
     *,
     sent_by: AbstractBaseUser | AnonymousUser | None = None,
     weekly_key: str | None = None,
@@ -713,12 +728,20 @@ def send_missing_documents_email(
     today: Any | None = None,
 ) -> int:
     """Send a reminder listing documents that are still missing for the client."""
+    from clients.models import Case, Client
+    if isinstance(case_or_client, Case):
+        case = case_or_client
+        client = case.client
+    else:
+        client = case_or_client
+        from clients.services.cases import get_legacy_compatibility_case
+        case = get_legacy_compatibility_case(client.pk, "send_missing_documents_email")
 
     if not client.email:
         return 0
 
     language = _get_preferred_language(client)
-    context = _get_missing_documents_context(client, language, today=today)
+    context = _get_missing_documents_context(case, language, today=today)
     if not context:
         return 0
 
@@ -727,13 +750,14 @@ def send_missing_documents_email(
     today = today or timezone.localdate()
     iso_year, iso_week, _iso_weekday = today.isocalendar()
     idempotency_key = weekly_key or idempotency_extra or (
-        f"missing_documents:{client.pk}:{iso_year}-W{iso_week:02d}"
+        f"missing_documents:{case.pk}:{iso_year}-W{iso_week:02d}"
     )
     return _send_email(
         subject,
         body,
         [client.email],
         client=client,
+        case=case,
         template_type="missing_documents",
         sent_by=sent_by,
         idempotency_key=idempotency_key,
@@ -828,25 +852,46 @@ def send_expiring_documents_email(client: Client, documents: list[Document], *, 
     )
 
 
-def _get_appointment_context(client: Client) -> dict[str, Any] | None:
-    if not client.fingerprints_date:
+def _get_appointment_context(case_or_client: Case | Client) -> dict[str, Any] | None:
+    from clients.models import Case
+    if isinstance(case_or_client, Case):
+        case = case_or_client
+        client = case.client
+    else:
+        client = case_or_client
+        from clients.services.cases import get_legacy_compatibility_case
+        case = get_legacy_compatibility_case(client.pk, "_get_appointment_context")
+
+    if not case.fingerprints_date:
         return None
 
     return {
         "client": client,
-        "fingerprints_date": client.fingerprints_date,
-        "fingerprints_time": client.fingerprints_time,
-        "fingerprints_location": client.fingerprints_location,
+        "case": case,
+        "fingerprints_date": case.fingerprints_date,
+        "fingerprints_time": case.fingerprints_time,
+        "fingerprints_location": case.fingerprints_location,
     }
 
 
-def send_appointment_notification_email(client: Client, *, sent_by: AbstractBaseUser | AnonymousUser | None = None) -> int:
-    """Send a notification about a fingerprint appointment."""
-    if not client.email or not client.fingerprints_date:
+def send_appointment_notification_email(
+    case_or_client: Case | Client, *, sent_by: AbstractBaseUser | AnonymousUser | None = None
+) -> int:
+    """Send a notification about a fingerprint appointment (data lives on Case)."""
+    from clients.models import Case
+    if isinstance(case_or_client, Case):
+        case = case_or_client
+        client = case.client
+    else:
+        client = case_or_client
+        from clients.services.cases import get_legacy_compatibility_case
+        case = get_legacy_compatibility_case(client.pk, "send_appointment_notification_email")
+
+    if not client.email or not case.fingerprints_date:
         return 0
 
     language = _get_preferred_language(client)
-    context = _get_appointment_context(client)
+    context = _get_appointment_context(case)
     if not context:
         return 0
 
@@ -857,15 +902,16 @@ def send_appointment_notification_email(client: Client, *, sent_by: AbstractBase
         body,
         [client.email],
         client=client,
+        case=case,
         template_type="appointment_notification",
         sent_by=sent_by,
         idempotency_key=build_email_idempotency_key(
             "appointment_notification",
-            client.pk,
+            case.pk,
             client.email,
-            client.fingerprints_date,
-            client.fingerprints_time,
-            client.fingerprints_location,
+            case.fingerprints_date,
+            case.fingerprints_time,
+            case.fingerprints_location,
         ),
     )
 

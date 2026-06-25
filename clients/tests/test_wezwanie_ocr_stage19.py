@@ -140,8 +140,11 @@ class WezwanieOCRStage19Tests(TestCase):
         self.client_obj.refresh_from_db()
         self.assertEqual(document.parsed_data["ticket_number"], "X29")
         self.assertEqual(document.parsed_data["list_name"], "Lista X1")
-        self.assertEqual(self.client_obj.fingerprints_ticket, "X29")
-        self.assertEqual(self.client_obj.fingerprints_list, "Lista X1")
+        # Fingerprints data (process data) is written to the document's Case.
+        case = document.case
+        case.refresh_from_db()
+        self.assertEqual(case.fingerprints_ticket, "X29")
+        self.assertEqual(case.fingerprints_list, "Lista X1")
 
         self.assertTrue(document.parsed_data.get("pii_scrubbed"))
         self.assertNotIn("full_name", document.parsed_data)

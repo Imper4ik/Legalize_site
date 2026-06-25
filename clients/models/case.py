@@ -23,19 +23,25 @@ class CaseQuerySet(SoftDeleteQuerySet):
     def active_for_client(self, client_id: int) -> Self:
         return cast(Self, self.filter(client_id=client_id, archived_at__isnull=True))
 
+    def active(self) -> Self:
+        return cast(Self, self.filter(archived_at__isnull=True))
+
+    def archived(self) -> Self:
+        return cast(Self, self.filter(archived_at__isnull=False))
+
 
 class CaseManager(models.Manager.from_queryset(CaseQuerySet)):  # type: ignore[misc]
     def get_queryset(self) -> CaseQuerySet:
-        return cast(CaseQuerySet, super().get_queryset().active())
+        return cast(CaseQuerySet, super().get_queryset())
 
     def get_or_create_primary_for_client(self, client: Any) -> tuple[Case, bool]:
-        case = self.filter(client=client).order_by("opened_at", "id").first()
+        case = self.filter(client=client, archived_at__isnull=True).order_by("opened_at", "id").first()
         if case is not None:
             return case, False
         return self.model.all_objects.create_from_client(client), True
 
     def get_or_create_primary_for_client_id(self, client_id: int) -> tuple[Case, bool]:
-        case = self.filter(client_id=client_id).order_by("opened_at", "id").first()
+        case = self.filter(client_id=client_id, archived_at__isnull=True).order_by("opened_at", "id").first()
         if case is not None:
             return case, False
         from clients.models.client import Client
@@ -184,9 +190,201 @@ class Case(SoftDeleteModel):
     def __str__(self) -> str:
         return f"{self.display_number} / {self.client}"
 
+    def get_document_requirement_purpose(self, client: Any) -> str:
+        """Resolve the DocumentRequirement purpose key for ``client`` on this case.
+
+        Document requirements are keyed by ``study``/``work``/``family_spouse``/
+        ``family_child``. For family applications the precise sub-purpose comes
+        from the client's permanent ``family_role`` (the participant who is
+        themselves a spouse or child), while a sponsor uses the ``work`` set.
+        """
+        if self.application_purpose == "family":
+            family_role = getattr(client, "family_role", "") or ""
+            if family_role in {"family_spouse", "family_child"}:
+                return family_role
+            return "work"
+        return str(self.application_purpose)
+
+    def get_document_checklist(
+        self,
+        client: Any,
+        check_file_existence: bool = False,
+        requirements_cache: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
+        from django.utils import translation
+
+        from clients.services.document_helpers import document_file_exists
+
+        from .document import DocumentRequirement
+
+        current_language = translation.get_language() or client.language
+        purpose = self.get_document_requirement_purpose(client)
+
+        if requirements_cache is not None:
+            cache_key = f"{purpose}:{current_language}"
+            if cache_key not in requirements_cache:
+                required_docs = DocumentRequirement.required_for(purpose, current_language)
+                reqs = list(DocumentRequirement.objects.filter(application_purpose=purpose))
+                requirements_cache[cache_key] = (required_docs, reqs)
+            required_docs, reqs = requirements_cache[cache_key]
+        else:
+            required_docs = DocumentRequirement.required_for(purpose, current_language)
+            reqs = DocumentRequirement.objects.filter(application_purpose=purpose)
+
+        uploaded_docs = self.documents.filter(client=client).annotate(
+            preloaded_version_count=models.Count("versions")
+        ).order_by("-uploaded_at")
+
+        req_map = {r.document_type: r for r in reqs}
+
+        docs_map: dict[str, list] = {}
+        for doc in uploaded_docs:
+            setattr(doc, "_preloaded_version_count", getattr(doc, "preloaded_version_count", 0))
+            setattr(doc, "_preloaded_requirement", req_map.get(doc.document_type))
+            if check_file_existence:
+                setattr(doc, "file_exists", document_file_exists(doc))
+            docs_map.setdefault(doc.document_type, []).append(doc)
+
+        checklist = []
+        seen_codes = set()
+        for code, label in required_docs:
+            doc_type = code
+            docs = docs_map.get(doc_type, [])
+            doc_obj = docs[0] if docs else None
+
+            is_complete = False
+            rejection_reason = ""
+            is_awaiting_verification = False
+            is_rejected = False
+            is_verified = False
+
+            if doc_obj:
+                is_complete = bool(doc_obj.verified)
+                rejection_reason = doc_obj.rejection_reason or ""
+                is_verified = bool(doc_obj.verified)
+                is_rejected = bool(doc_obj.rejection_reason and not doc_obj.verified)
+                is_awaiting_verification = bool(not doc_obj.verified and not doc_obj.rejection_reason)
+
+            checklist.append({
+                "code": doc_type,
+                "name": str(label),
+                "label": str(label),
+                "is_required": True,
+                "is_complete": is_complete,
+                "document": doc_obj,
+                "documents": docs,
+                "rejection_reason": rejection_reason,
+                "is_awaiting_verification": is_awaiting_verification,
+                "is_rejected": is_rejected,
+                "is_verified": is_verified,
+            })
+            seen_codes.add(doc_type)
+
+        prefetched_requirements = getattr(self, "_prefetched_objects_cache", {}).get("custom_document_requirements")
+        if prefetched_requirements is None:
+            custom_requirements = self.custom_document_requirements.filter(is_active=True).order_by("due_date", "created_at")
+        else:
+            from datetime import date as dt_date
+            custom_requirements = sorted(
+                [requirement for requirement in prefetched_requirements if requirement.is_active],
+                key=lambda requirement: (requirement.due_date or dt_date.max, requirement.created_at),
+            )
+
+        for requirement in custom_requirements:
+            docs = docs_map.get(requirement.document_type, [])
+            doc_obj = docs[0] if docs else None
+            is_complete = False
+            rejection_reason = ""
+            is_awaiting_verification = False
+            is_rejected = False
+            is_verified = False
+
+            if doc_obj:
+                is_complete = bool(doc_obj.verified)
+                rejection_reason = doc_obj.rejection_reason or ""
+                is_verified = bool(doc_obj.verified)
+                is_rejected = bool(doc_obj.rejection_reason and not doc_obj.verified)
+                is_awaiting_verification = bool(not doc_obj.verified and not doc_obj.rejection_reason)
+
+            checklist.append({
+                "code": requirement.document_type,
+                "name": requirement.name,
+                "label": requirement.name,
+                "description": requirement.description,
+                "is_required": requirement.is_required,
+                "is_complete": is_complete or not requirement.is_required,
+                "document": doc_obj,
+                "documents": docs,
+                "rejection_reason": rejection_reason,
+                "is_awaiting_verification": is_awaiting_verification,
+                "is_rejected": is_rejected,
+                "is_verified": is_verified,
+                "is_custom_requirement": True,
+                "custom_requirement": requirement,
+                "due_date": requirement.due_date,
+            })
+        return checklist
+
+    def get_case_step(self, client: Any) -> int:
+        mos_data = self.mos_application_data if hasattr(self, "mos_application_data") else None
+        status = mos_data.status if mos_data else 'draft'
+
+        if status == 'draft':
+            return 1  # Выбор цели
+        if status == 'client_filling':
+            return 2  # Заполнение анкеты
+
+        if status in ['client_completed', 'needs_correction', 'staff_review']:
+            # Check checklist completion
+            checklist = self.get_document_checklist(client, check_file_existence=False)
+            has_missing_required = any(item.get("is_required") and not item.get("is_complete") for item in checklist)
+            if has_missing_required:
+                return 3  # Загрузка документов
+            return 4  # Проверка сотрудником
+
+        has_unpaid_payments = self.payments.filter(status__in=["pending", "partial"]).exists()
+
+        if has_unpaid_payments and status in ['approved_by_staff', 'mos_package_ready']:
+            return 5  # Оплата услуг
+
+        if status in ['approved_by_staff', 'mos_package_ready']:
+            return 6  # Подготовка пакета
+        if status == 'submitted_in_mos':
+            return 7  # Подача заявления
+        if status == 'fingerprints':
+            return 8  # Сдача отпечатков
+        if status == 'waiting_decision':
+            return 9  # Ожидание решения
+        if status in ['decision_received', 'closed']:
+            return 10  # Решение получено
+
+        return 1
+
+    APPLICATION_PURPOSE_CHOICES = [
+        ("study", _("Учёба")),
+        ("work", _("Работа")),
+        ("family", _("Воссоединение с семьёй")),
+    ]
+
     @property
     def display_number(self) -> str:
-        return str(self.internal_number or self.authority_case_number or self.uuid)
+        """Human-facing case number.
+
+        Only the authority (urzad) case number is a real working number. The
+        UUID and the deprecated internal number must never be shown to staff;
+        when no authority number exists yet we show a neutral placeholder.
+        """
+        number = str(self.authority_case_number or "").strip()
+        return number or str(_("Дело без номера"))
+
+    @property
+    def has_authority_number(self) -> bool:
+        return bool(str(self.authority_case_number or "").strip())
+
+    def get_application_purpose_display(self) -> str:
+        if not self.application_purpose:
+            return ""
+        return str(dict(self.APPLICATION_PURPOSE_CHOICES).get(self.application_purpose, self.application_purpose))
 
     @staticmethod
     def normalize_case_number(case_number: str) -> str:

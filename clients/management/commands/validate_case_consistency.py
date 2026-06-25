@@ -2,11 +2,20 @@ from __future__ import annotations
 
 import logging
 import sys
-
 from django.core.management.base import BaseCommand
-from django.db.models import Count, F, Q
+from django.db.models import Count, F, Q, Exists, OuterRef
 
-from clients.models import Case, CaseParticipant
+from clients.models import (
+    Case,
+    CaseParticipant,
+    Document,
+    Payment,
+    Reminder,
+    StaffTask,
+    MOSApplicationData,
+    PeselApplication,
+    CaseArchiveBatch
+)
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +84,92 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"Найдено несоответствий клиента дела и главного заявителя: {bad_principal_client.count()}"))
             for part in bad_principal_client:
                 self.stdout.write(self.style.WARNING(f"  Участник ID={part.pk} в деле ID={part.case_id} имеет client_id={part.client_id}, но у дела client_id={part.case.client_id}."))
+
+        # 7. child.case.client != child.client (семейный участник не должен совпадать с владельцем дела)
+        bad_family_client = CaseParticipant.objects.exclude(
+            role="principal"
+        ).filter(client_id=F("case__client_id"))
+        if bad_family_client.exists():
+            errors_found = True
+            self.stdout.write(self.style.ERROR(f"Найдено семейных участников, совпадающих с владельцем дела: {bad_family_client.count()}"))
+            for part in bad_family_client:
+                self.stdout.write(self.style.WARNING(f"  Участник ID={part.pk} (роль={part.role}) в деле ID={part.case_id} совпадает с основным клиентом дела."))
+
+        # 8. Process object без Case
+        docs_no_case = Document.objects.filter(case__isnull=True)
+        if docs_no_case.exists():
+            errors_found = True
+            self.stdout.write(self.style.ERROR(f"Найдено документов без дела: {docs_no_case.count()}"))
+            for d in docs_no_case:
+                self.stdout.write(self.style.WARNING(f"  Документ ID={d.pk} не имеет привязки к делу."))
+
+        payments_no_case = Payment.objects.filter(case__isnull=True)
+        if payments_no_case.exists():
+            errors_found = True
+            self.stdout.write(self.style.ERROR(f"Найдено платежей без дела: {payments_no_case.count()}"))
+            for p in payments_no_case:
+                self.stdout.write(self.style.WARNING(f"  Платеж ID={p.pk} не имеет привязки к делу."))
+
+        reminders_no_case = Reminder.objects.filter(case__isnull=True)
+        if reminders_no_case.exists():
+            errors_found = True
+            self.stdout.write(self.style.ERROR(f"Найдено напоминаний без дела: {reminders_no_case.count()}"))
+            for r in reminders_no_case:
+                self.stdout.write(self.style.WARNING(f"  Напоминание ID={r.pk} не имеет привязки к делу."))
+
+        tasks_no_case = StaffTask.objects.filter(case__isnull=True)
+        if tasks_no_case.exists():
+            errors_found = True
+            self.stdout.write(self.style.ERROR(f"Найдено задач без дела: {tasks_no_case.count()}"))
+            for t in tasks_no_case:
+                self.stdout.write(self.style.WARNING(f"  Задача ID={t.pk} не имеет привязки к делу."))
+
+        mos_no_case = MOSApplicationData.objects.filter(case__isnull=True)
+        if mos_no_case.exists():
+            errors_found = True
+            self.stdout.write(self.style.ERROR(f"Найдено MOS анкет без дела: {mos_no_case.count()}"))
+            for m in mos_no_case:
+                self.stdout.write(self.style.WARNING(f"  MOS анкета ID={m.pk} не имеет привязки к делу."))
+
+        pesel_no_case = PeselApplication.objects.filter(case__isnull=True)
+        if pesel_no_case.exists():
+            errors_found = True
+            self.stdout.write(self.style.ERROR(f"Найдено PESEL анкет без дела: {pesel_no_case.count()}"))
+            for p in pesel_no_case:
+                self.stdout.write(self.style.WARNING(f"  PESEL анкета ID={p.pk} не имеет привязки к делу."))
+
+        # 9. Case с некорректным archive state
+        # a) Активные дела у архивных клиентов
+        bad_active_cases_of_archived_clients = Case.all_objects.filter(
+            archived_at__isnull=True,
+            client__archived_at__isnull=False
+        )
+        if bad_active_cases_of_archived_clients.exists():
+            errors_found = True
+            self.stdout.write(self.style.ERROR(f"Найдено активных дел у заархивированных клиентов: {bad_active_cases_of_archived_clients.count()}"))
+            for case in bad_active_cases_of_archived_clients:
+                self.stdout.write(self.style.WARNING(f"  Дело ID={case.pk} активно, но его клиент заархивирован."))
+
+        # b) Архивные дела без активного CaseArchiveBatch (status="archived")
+        active_batch_exists = CaseArchiveBatch.objects.filter(case=OuterRef("pk"), status="archived")
+        bad_archived_cases_no_batch = Case.all_objects.filter(
+            archived_at__isnull=False
+        ).annotate(has_batch=Exists(active_batch_exists)).filter(has_batch=False)
+        if bad_archived_cases_no_batch.exists():
+            errors_found = True
+            self.stdout.write(self.style.ERROR(f"Найдено архивных дел без активного батча архивации: {bad_archived_cases_no_batch.count()}"))
+            for case in bad_archived_cases_no_batch:
+                self.stdout.write(self.style.WARNING(f"  Дело ID={case.pk} заархивировано, но активный CaseArchiveBatch отсутствует."))
+
+        # c) Активные дела, у которых есть активный CaseArchiveBatch (status="archived")
+        bad_active_cases_with_batch = Case.all_objects.filter(
+            archived_at__isnull=True
+        ).annotate(has_batch=Exists(active_batch_exists)).filter(has_batch=True)
+        if bad_active_cases_with_batch.exists():
+            errors_found = True
+            self.stdout.write(self.style.ERROR(f"Найдено активных дел с активным батчом архивации: {bad_active_cases_with_batch.count()}"))
+            for case in bad_active_cases_with_batch:
+                self.stdout.write(self.style.WARNING(f"  Дело ID={case.pk} активно, но имеет активный CaseArchiveBatch."))
 
         if errors_found:
             self.stdout.write(self.style.ERROR("Проверка согласованности дел завершилась с ошибками."))

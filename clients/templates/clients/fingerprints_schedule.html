@@ -40,46 +40,46 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for client in upcoming_appointments %}
-                        <tr {% if client.fingerprints_date == today %}class="table-warning fw-bold"{% endif %}>
+                        {% for case in upcoming_appointments %}
+                        <tr {% if case.fingerprints_date == today %}class="table-warning fw-bold"{% endif %}>
                             <td>
                                 <div class="d-flex flex-column">
-                                    <span><i class="far fa-calendar-alt me-1"></i> {{ client.fingerprints_date|date:"d.m.Y" }}</span>
-                                    <span class="text-primary fw-bold"><i class="far fa-clock me-1"></i> {{ client.fingerprints_time|time:"H:i" }}</span>
+                                    <span><i class="far fa-calendar-alt me-1"></i> {{ case.fingerprints_date|date:"d.m.Y" }}</span>
+                                    <span class="text-primary fw-bold"><i class="far fa-clock me-1"></i> {{ case.fingerprints_time|time:"H:i" }}</span>
                                 </div>
                             </td>
                             <td>
-                                <a href="{{ client.get_absolute_url }}" class="fw-bold text-decoration-none">
-                                    {{ client.first_name }} {{ client.last_name }}
+                                <a href="{{ case.get_absolute_url }}" class="fw-bold text-decoration-none">
+                                    {{ case.client.first_name }} {{ case.client.last_name }}
                                 </a>
-                                <div class="small text-muted">{{ client.safe_case_number|default:"-" }}</div>
+                                <div class="small text-muted">{{ case.display_number }}</div>
                             </td>
                             <td>
-                                <span class="badge {% if client.application_purpose == 'work' %}bg-success{% elif client.application_purpose == 'study' %}bg-primary{% else %}bg-secondary{% endif %}">
-                                    {{ client.get_application_purpose_display }}
+                                <span class="badge {% if case.application_purpose == 'work' %}bg-success{% elif case.application_purpose == 'study' %}bg-primary{% else %}bg-secondary{% endif %}">
+                                    {{ case.get_application_purpose_display }}
                                 </span>
                             </td>
                             <td>
                                 <div class="small">
-                                    <i class="fas fa-map-marker-alt text-danger me-1"></i> {{ client.fingerprints_location|default:"-" }}
-                                    {% if client.fingerprints_info %}
-                                    <div class="text-info mt-1"><i class="fas fa-info-circle me-1"></i> {{ client.fingerprints_info }}</div>
+                                    <i class="fas fa-map-marker-alt text-danger me-1"></i> {{ case.fingerprints_location|default:"-" }}
+                                    {% if case.fingerprints_info %}
+                                    <div class="text-info mt-1"><i class="fas fa-info-circle me-1"></i> {{ case.fingerprints_info }}</div>
                                     {% endif %}
                                 </div>
                             </td>
                             <td>
-                                {% if client.fingerprints_ticket %}
-                                <span class="badge rounded-pill bg-dark px-3">{{ client.fingerprints_ticket }}</span>
+                                {% if case.fingerprints_ticket %}
+                                <span class="badge rounded-pill bg-dark px-3">{{ case.fingerprints_ticket }}</span>
                                 {% endif %}
-                                {% if client.fingerprints_list %}
-                                <div class="small text-muted mt-1">{{ client.fingerprints_list }}</div>
+                                {% if case.fingerprints_list %}
+                                <div class="small text-muted mt-1">{{ case.fingerprints_list }}</div>
                                 {% endif %}
-                                {% if not client.fingerprints_ticket and not client.fingerprints_list %}
+                                {% if not case.fingerprints_ticket and not case.fingerprints_list %}
                                 -
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{{ client.get_absolute_url }}" class="btn btn-sm btn-outline-primary shadow-sm">
+                                <a href="{{ case.get_absolute_url }}" class="btn btn-sm btn-outline-primary shadow-sm">
                                     <i class="fas fa-eye"></i>
                                 </a>
                             </td>
@@ -117,13 +117,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for client in past_appointments %}
+                        {% for case in past_appointments %}
                         <tr class="past-appointment-row">
-                            <td>{{ client.fingerprints_date|date:"d.m.Y" }}</td>
-                            <td>{{ client.first_name }} {{ client.last_name }}</td>
-                            <td>{{ client.fingerprints_location|truncatechars:50 }}</td>
+                            <td>{{ case.fingerprints_date|date:"d.m.Y" }}</td>
+                            <td>{{ case.client.first_name }} {{ case.client.last_name }}</td>
+                            <td>{{ case.fingerprints_location|truncatechars:50 }}</td>
                             <td>
-                                {% if client.workflow_stage == 'fingerprints' %}
+                                {% if case.workflow_stage == 'fingerprints' %}
                                 <span class="badge past-status-badge past-status-in-progress">
                                     {% trans "В процессе" %}
                                 </span>

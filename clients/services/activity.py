@@ -19,18 +19,27 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# NOTE: every entry here is a *field name* recorded in ``changed_fields``.
+# Field values (the actual case number, dates, amounts, free text) are never
+# stored in metadata — only the names of fields that changed. Free-text field
+# names (notes/description/title/rejection_reason) are intentionally excluded.
 SAFE_FIELD_NAMES = {
     "status", "workflow_stage", "application_purpose", "application_type", "basis_of_stay",
     "opened_at", "submission_date", "fingerprints_date", "fingerprints_time", "fingerprints_location",
+    "fingerprints_ticket", "fingerprints_list", "authority_case_number", "first_name", "last_name",
     "decision_date", "decision_valid_until", "assigned_staff", "company", "is_test_data", "is_demo_data",
-    "due_date", "is_active", "notes", "description", "title", "document_type", "expiry_date",
-    "total_amount", "amount_paid", "payment_method", "payment_date", "rejection_reason",
-    "document_kind", "attachment_count", "metadata_version", "ocr_version", "version"
+    "due_date", "is_active", "document_type", "expiry_date",
+    "total_amount", "amount_paid", "payment_method", "payment_date",
+    "document_kind", "attachment_count", "metadata_version", "ocr_version", "version",
+    "transaction_id"
 }
 
 ALLOWED_METADATA_SCHEMA = {
     "case_id": "uuid",
     "document_id": "uuid_or_int",
+    "payment_id": "uuid_or_int",
+    "task_id": "uuid_or_int",
+    "reminder_id": "uuid_or_int",
     "archive_batch_uuid": "uuid",
     "document_count": "int",
     "payment_count": "int",
@@ -43,6 +52,22 @@ ALLOWED_METADATA_SCHEMA = {
         "rejected",
     },
     "changed_fields": "safe_field_names_list",
+    "restored_object": {
+        "client",
+        "document",
+        "payment",
+    },
+    "restored_object_id": "uuid_or_int",
+    "priority": "string",
+    "document_type": "string",
+    "export_type": "string",
+    "attachment_id": "uuid_or_int",
+    "restored_version_id": "uuid_or_int",
+    "restored_version_number": "int",
+    "document_version_id": "uuid_or_int",
+    "verified_count": "int",
+    "remaining_count": "int",
+    "has_case_number": "bool",
 }
 
 
@@ -70,11 +95,13 @@ def sanitize_activity_metadata(metadata: dict[str, Any] | None) -> dict[str, Any
                 logger.warning("Metadata key '%s' rejected due to type mismatch", key)
 
         elif expected_type == "uuid_or_int":
-            if isinstance(value, (int, uuid.UUID)) and not isinstance(value, bool):
+            if isinstance(value, int) and not isinstance(value, bool):
+                sanitized[key] = value
+            elif isinstance(value, uuid.UUID):
                 sanitized[key] = str(value)
             elif isinstance(value, str):
                 if value.isdigit():
-                    sanitized[key] = value
+                    sanitized[key] = int(value)
                 else:
                     try:
                         parsed = uuid.UUID(value)
@@ -89,6 +116,21 @@ def sanitize_activity_metadata(metadata: dict[str, Any] | None) -> dict[str, Any
                 sanitized[key] = value
             elif isinstance(value, str) and value.isdigit():
                 sanitized[key] = int(value)
+            else:
+                logger.warning("Metadata key '%s' rejected due to type mismatch", key)
+
+        elif expected_type == "bool":
+            if isinstance(value, bool):
+                sanitized[key] = value
+            else:
+                logger.warning("Metadata key '%s' rejected due to type mismatch", key)
+
+        elif expected_type == "string":
+            if isinstance(value, str):
+                if len(value) <= 100:
+                    sanitized[key] = value
+                else:
+                    logger.warning("Metadata key '%s' rejected due to string length limit", key)
             else:
                 logger.warning("Metadata key '%s' rejected due to type mismatch", key)
 
@@ -115,8 +157,6 @@ def sanitize_activity_metadata(metadata: dict[str, Any] | None) -> dict[str, Any
                 sanitized[key] = sanitized_list
             else:
                 logger.warning("Metadata key '%s' rejected due to type mismatch", key)
-
-    return sanitized
 
     return sanitized
 

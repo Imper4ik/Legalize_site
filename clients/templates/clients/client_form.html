@@ -307,7 +307,7 @@
         sponsorHelpText = document.createElement('div');
         sponsorHelpText.id = 'sponsor-role-help-text';
         sponsorHelpText.className = 'form-text text-info d-none';
-        sponsorHelpText.textContent = 'Спонсор семьи использует рабочий чеклист документов.';
+        sponsorHelpText.textContent = '{% translate "Спонсор семьи использует рабочий чеклист документов." %}';
         const roleFieldEl = document.getElementById('family-role-field');
         if (roleFieldEl) {
           roleFieldEl.appendChild(sponsorHelpText);

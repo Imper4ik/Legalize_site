@@ -34,6 +34,7 @@ from clients.services.document_workflow import upload_client_document
 from clients.services.intake_extraction import pre_fill_mos_data_from_ocr
 from clients.services.notifications import notify_staff_about_fingerprint_invitation_upload
 from clients.services.onboarding_purposes import (
+    FAMILY_ONBOARDING_PURPOSES,
     ONBOARDING_PURPOSE_CHOICES,
     apply_onboarding_purpose_to_client,
     clear_onboarding_notifications_cache,
@@ -41,7 +42,7 @@ from clients.services.onboarding_purposes import (
     purpose_label,
 )
 from clients.services.onboarding_tokens import generate_onboarding_token, hash_onboarding_token
-from clients.services.workflow_transitions import transition_client_workflow
+from clients.services.workflow_transitions import transition_case_workflow, transition_client_workflow
 from clients.use_cases.client_records import finalize_client_creation
 from clients.views.base import role_required_view
 from legalize_site.utils.files import build_protected_file_response
@@ -188,14 +189,10 @@ def check_onboarding_session(
             return None
         case_id = session.case_id
     elif session.scope == "client_portal":
+        if session.case_id is not None:
+            return None
         if request:
             case_id = request.session.get("case_id")
-        if not case_id:
-            from clients.services.cases import get_primary_case_for_client
-            primary_case = get_primary_case_for_client(session.client)
-            case_id = primary_case.id
-            if request:
-                request.session["case_id"] = case_id
 
     if case_id:
         try:
@@ -204,12 +201,22 @@ def check_onboarding_session(
                 return None
             if case.archived_at is not None:
                 return None
+            if session.client.archived_at is not None:
+                return None
             if request:
                 request.session["case_id"] = case.id
+            session.case = case
         except Case.DoesNotExist:
             return None
+    elif session.scope == "case_link":
+        return None
 
     return session
+
+def check_portal_case_selected(request: HttpRequest, session: ClientOnboardingSession, token: str) -> HttpResponse | None:
+    if session.scope == "client_portal" and not request.session.get("case_id"):
+        return redirect("clients:onboarding_select_case", token=token)
+    return None
 
 def _should_bypass_client_auth(request: HttpRequest) -> bool:
     if not request.user.is_authenticated:
@@ -431,9 +438,12 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
     client = session.client
-    mos_data = getattr(client, "mos_application_data", None)
+    mos_data = MOSApplicationData.objects.filter(client=client, case=session.case).first()
 
     if request.method == "POST":
         if not _mos_data_is_editable(mos_data):
@@ -446,7 +456,7 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
     required_docs_catalog = DocumentRequirement.catalog_for(purpose=effective_purpose, language=language)
     fingerprint_invitation_doc_type = DocumentType.WEZWANIE.value
 
-    existing_documents = list(Document.objects.filter(client=client).order_by("document_type", "-uploaded_at"))
+    existing_documents = list(Document.objects.filter(case=session.case).order_by("document_type", "-uploaded_at"))
     existing_map = {document.document_type: document.id for document in existing_documents}
 
     from datetime import date
@@ -504,7 +514,7 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
     allow_doc_edit = _mos_documents_are_editable(mos_data)
     allow_delete = bool(mos_data and allow_doc_edit)
 
-    case_step = client.get_case_step()
+    case_step = session.case.get_case_step(client)
 
     return render(request, "clients/onboarding/start.html", {
         "session": session,
@@ -532,14 +542,17 @@ def onboarding_purpose(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
     client = session.client
-    mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
+    mos_data, _created = MOSApplicationData.objects.get_or_create(client=client, case=session.case)
 
     if not _mos_data_is_editable(mos_data):
         return _locked_response(request, session)
 
-    current_purpose = mos_data.mos_purpose or client.get_document_requirement_purpose()
+    current_purpose = mos_data.mos_purpose or session.case.get_document_requirement_purpose(client)
 
     if request.method == "POST":
         try:
@@ -566,8 +579,11 @@ def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) 
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
-    mos_data = getattr(session.client, "mos_application_data", None)
+    mos_data = MOSApplicationData.objects.filter(client=session.client, case=session.case).first()
     if not _mos_documents_are_editable(mos_data):
         return _locked_response(request, session)
 
@@ -575,7 +591,8 @@ def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) 
         if not request.FILES.get("file"):
             messages.error(request, _("Выберите файл для загрузки."))
         else:
-            form = DocumentUploadForm(request.POST, request.FILES, doc_type=doc_type, client=session.client)
+            doc_instance = Document(client=session.client, case=session.case)
+            form = DocumentUploadForm(request.POST, request.FILES, doc_type=doc_type, client=session.client, case=session.case, instance=doc_instance)
             if form.is_valid():
                 is_fingerprint_invitation = doc_type == DocumentType.WEZWANIE.value
                 result = upload_client_document(
@@ -583,10 +600,8 @@ def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) 
                     doc_type=doc_type,
                     uploaded_document=form.save(commit=False),
                     actor=request.user if request.user.is_authenticated else None,
-                    # Client-side wezwanie uploads use the manual scenario: do not queue OCR here,
-                    # because staff must open the original file and enter fingerprints details.
-                    # For passport uploads, we trigger OCR to extract details.
                     parse_requested=(doc_type == "passport"),
+                    case=session.case,
                 )
                 if is_fingerprint_invitation:
                     notify_staff_about_fingerprint_invitation_upload(
@@ -611,8 +626,11 @@ def onboarding_document_preview(request: HttpRequest, token: str, doc_id: int) -
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
-    document = get_object_or_404(Document, id=doc_id, client=session.client)
+    document = get_object_or_404(Document, id=doc_id, client=session.client, case=session.case)
     return cast(HttpResponse, build_protected_file_response(document.file, as_attachment=False))
 
 
@@ -625,14 +643,17 @@ def onboarding_document_delete(request: HttpRequest, token: str, doc_id: int) ->
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
     client = session.client
-    mos_data = getattr(client, "mos_application_data", None)
+    mos_data = MOSApplicationData.objects.filter(client=client, case=session.case).first()
 
     if not _mos_documents_are_editable(mos_data):
         return _locked_response(request, session)
 
-    doc = get_object_or_404(Document, id=doc_id, client=client)
+    doc = get_object_or_404(Document, id=doc_id, client=client, case=session.case)
     if not doc.verified:
         from clients.use_cases.documents import delete_client_document
         delete_client_document(
@@ -650,8 +671,11 @@ def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
-    mos_data, created = MOSApplicationData.objects.get_or_create(client=session.client)
+    mos_data, created = MOSApplicationData.objects.get_or_create(client=session.client, case=session.case)
     if not _mos_data_is_editable(mos_data):
         return _locked_response(request, session)
 
@@ -680,12 +704,15 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
     client = session.client
     try:
-        mos_data = MOSApplicationData.objects.get(client=client)
+        mos_data = MOSApplicationData.objects.get(client=client, case=session.case)
     except MOSApplicationData.DoesNotExist:
-        mos_data = MOSApplicationData(client=client)
+        mos_data = MOSApplicationData(client=client, case=session.case)
 
     if mos_data.pk and not _mos_data_is_editable(mos_data):
         return _locked_response(request, session)
@@ -708,7 +735,7 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
     mos_data.personal_data = personal_data
 
     if request.method == "POST":
-        mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
+        mos_data, _created = MOSApplicationData.objects.get_or_create(client=client, case=session.case)
 
         mos_data.status = "client_filling"
 
@@ -771,8 +798,11 @@ def onboarding_personal_extra(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
-    mos_data = get_object_or_404(MOSApplicationData, client=session.client)
+    mos_data = get_object_or_404(MOSApplicationData, client=session.client, case=session.case)
 
     if not _mos_data_is_editable(mos_data):
         return _locked_response(request, session)
@@ -802,8 +832,11 @@ def onboarding_address(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
-    mos_data = get_object_or_404(MOSApplicationData, client=session.client)
+    mos_data = get_object_or_404(MOSApplicationData, client=session.client, case=session.case)
 
     if not _mos_data_is_editable(mos_data):
         return _locked_response(request, session)
@@ -836,8 +869,11 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
-    mos_data = get_object_or_404(MOSApplicationData, client=session.client)
+    mos_data = get_object_or_404(MOSApplicationData, client=session.client, case=session.case)
 
     if not _mos_data_is_editable(mos_data):
         return _locked_response(request, session)
@@ -894,8 +930,11 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
-    mos_data = get_object_or_404(MOSApplicationData, client=session.client)
+    mos_data = get_object_or_404(MOSApplicationData, client=session.client, case=session.case)
 
     if not _mos_data_is_editable(mos_data):
         return _locked_response(request, session)
@@ -934,8 +973,11 @@ def onboarding_review(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
-    mos_data = get_object_or_404(MOSApplicationData, client=session.client)
+    mos_data = get_object_or_404(MOSApplicationData, client=session.client, case=session.case)
 
     return render(request, "clients/onboarding/review.html", {"session": session, "mos_data": mos_data})
 
@@ -951,57 +993,75 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
                 return JsonResponse({"status": "error", "message": _("Invalid application purpose")}, status=400)
             return HttpResponseBadRequest(_("Invalid application purpose."))
 
+    case = None
+    case_id = request.POST.get("case_id") or request.GET.get("case_id")
+    if case_id:
+        case = client.cases.filter(id=case_id, archived_at__isnull=True).first()
+    if not case and client.cases.filter(archived_at__isnull=True).count() == 1:
+        case = client.cases.filter(archived_at__isnull=True).first()
+
     intake_type = request.POST.get("intake_type", "").strip() if request.method == "POST" else ""
     if not intake_type:
-        intake_type = "join" if (client.submission_date or client.fingerprints_date) else "new"
+        intake_type = "join" if (case and (case.submission_date or case.fingerprints_date)) else "new"
 
     token, token_hash = generate_onboarding_token()
     payment = client.payments.filter(status__in=["paid", "partial"]).first()
 
     with transaction.atomic():
-        mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
         ClientDigitalAccess.objects.get_or_create(client=client)
-        if selected_purpose:
-            changed_fields = apply_onboarding_purpose_to_client(client, selected_purpose)
-            if mos_data.mos_purpose:
-                mos_data.mos_purpose = ""
-                mos_data.save(update_fields=["mos_purpose", "updated_at"])
-            clear_onboarding_notifications_cache(client)
-            if changed_fields:
+        if case:
+            mos_data, _created = MOSApplicationData.objects.get_or_create(client=client, case=case)
+            if selected_purpose:
+                # application_purpose belongs to the Case; family_role is a
+                # permanent client attribute. Family purposes split into
+                # application_purpose="family" + the family_role on the client.
+                if selected_purpose in FAMILY_ONBOARDING_PURPOSES:
+                    case.application_purpose = "family"
+                    if client.family_role != selected_purpose:
+                        client.family_role = selected_purpose
+                        client.save(update_fields=["family_role"])
+                else:
+                    case.application_purpose = selected_purpose
+                    if client.family_role:
+                        client.family_role = ""
+                        client.save(update_fields=["family_role"])
+                case.save(update_fields=["application_purpose"])
+                if mos_data.mos_purpose:
+                    mos_data.mos_purpose = ""
+                    mos_data.save(update_fields=["mos_purpose", "updated_at"])
+                clear_onboarding_notifications_cache(client)
                 from clients.services.activity import log_client_activity
                 log_client_activity(
                     client=client,
+                    case=case,
                     actor=request.user,
                     event_type="onboarding_link_purpose_set",
                     summary="Onboarding link purpose set by staff",
-                    metadata={"selected_purpose": selected_purpose, "changed_fields": changed_fields},
+                    metadata={"selected_purpose": selected_purpose},
                 )
 
-        if intake_type == "join":
-            mos_data.new_residence_card_application_status = "yes"
-            mos_data.new_residence_card_updated_at = timezone.now()
+            if intake_type == "join":
+                mos_data.new_residence_card_application_status = "yes"
+                mos_data.new_residence_card_updated_at = timezone.now()
 
-            # Smart transition logic based on existing dates
-            target_stage = "waiting_decision" if client.fingerprints_date else "fingerprints"
-            try:
-                with transaction.atomic():
-                    if client.workflow_stage != target_stage:
-                        transition_client_workflow(client=client, target_stage=target_stage, actor=request.user, save=True)
+                # Smart transition logic based on existing dates on case
+                target_stage = "waiting_decision" if case.fingerprints_date else "fingerprints"
+                try:
+                    from clients.services.workflow_transitions import transition_case_workflow
+                    transition_case_workflow(case=case, target_stage=target_stage, actor=request.user)
                     mos_data.status = target_stage
                     mos_data.save(update_fields=["new_residence_card_application_status", "new_residence_card_updated_at", "status", "updated_at"])
-            except ValidationError as exc:
-                messages.error(request, str(exc))
-                return redirect("clients:client_detail", pk=client.pk)
-            except Exception:
-                logger.exception("Unexpected error while preparing join onboarding", extra={"client_id": client.pk})
-                messages.error(request, _("Unexpected error while updating application status."))
-                return redirect("clients:client_detail", pk=client.pk)
-        elif intake_type == "new":
-            mos_data.new_residence_card_application_status = "no"
-            mos_data.save(update_fields=["new_residence_card_application_status", "updated_at"])
-
+                except ValidationError as exc:
+                    messages.error(request, str(exc))
+                    return redirect("clients:client_detail", pk=client.pk)
+            elif intake_type == "new":
+                mos_data.new_residence_card_application_status = "no"
+                mos_data.save(update_fields=["new_residence_card_application_status", "updated_at"])
+        
         ClientOnboardingSession.objects.create(
             client=client,
+            case=case,
+            scope="case_link" if case else "client_portal",
             payment=payment,
             token_hash=token_hash,
             status="created",
@@ -1063,8 +1123,8 @@ def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
                 client=client,
                 actor=request.user,
             )
-
-            mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
+            case = client.cases.order_by("opened_at", "id").first()
+            mos_data, _created = MOSApplicationData.objects.get_or_create(client=client, case=case)
             if intake_type == "join":
                 mos_data.new_residence_card_application_status = "yes"
                 mos_data.new_residence_card_updated_at = timezone.now()
@@ -1118,9 +1178,12 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return JsonResponse({"status": "error", "message": _("Authentication required")}, status=401)
+    case_redirect = check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return JsonResponse({"status": "redirect", "url": reverse("clients:onboarding_select_case", kwargs={"token": token})})
 
     client = session.client
-    mos_data, created_mos = MOSApplicationData.objects.get_or_create(client=client)
+    mos_data, created_mos = MOSApplicationData.objects.get_or_create(client=client, case=session.case)
     if not _mos_data_is_editable(mos_data):
         return JsonResponse({"status": "locked", "message": _("This onboarding form is locked.")}, status=423)
 
@@ -1321,6 +1384,9 @@ def onboarding_ask_question(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
     question_text = request.POST.get("question", "").strip()
     if not question_text:
@@ -1334,6 +1400,7 @@ def onboarding_ask_question(request: HttpRequest, token: str) -> HttpResponse:
 
     task = StaffTask.objects.create(
         client=client,
+        case=session.case,
         title=f"Вопрос от клиента: {client.get_full_name()}",
         description=f"Клиент задал вопрос через приложение:\n\n{question_text}",
         priority="high",
@@ -1356,3 +1423,35 @@ def onboarding_ask_question(request: HttpRequest, token: str) -> HttpResponse:
 
     next_url = request.POST.get("next") or reverse("clients:onboarding_start", kwargs={"token": token})
     return redirect(next_url)
+
+
+def onboarding_select_case(request: HttpRequest, token: str) -> HttpResponse:
+    session = check_onboarding_session(token, request=request)
+    if not session:
+        return HttpResponseForbidden(_("Срок действия ссылки истёк или она недействительна."))
+    auth_redirect = check_client_auth(request, session, token)
+    if auth_redirect:
+        return auth_redirect
+
+    client = session.client
+    if client.archived_at is not None:
+        return render(request, "clients/onboarding/neutral.html", {"message": _("Личный кабинет недоступен.")})
+
+    active_cases = client.cases.filter(archived_at__isnull=True)
+    if not active_cases.exists():
+        return render(request, "clients/onboarding/neutral.html", {"message": _("У вас нет активных дел.")})
+
+    if request.method == "POST":
+        case_id = request.POST.get("case_id")
+        if case_id:
+            try:
+                selected_case = active_cases.get(pk=case_id)
+                request.session["case_id"] = selected_case.id
+                return redirect("clients:onboarding_start", token=token)
+            except (Case.DoesNotExist, ValueError):
+                pass
+
+    return render(request, "clients/onboarding/select_case.html", {
+        "session": session,
+        "active_cases": active_cases,
+    })

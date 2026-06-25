@@ -413,7 +413,7 @@ class ClientDeleteView(RoleOrFeatureRequiredMixin, DeleteView):
                 actor=request.user,
                 confirmed=True,
             )
-            messages.success(request, _("Клиент %(name)s и все его дела были успешно заархивированы.") % {"name": self.object})
+            messages.success(request, _("Клиент и все его дела были успешно заархивированы."))
         except Exception as e:
             messages.error(request, str(e))
             return self.render_to_response(self.get_context_data(object=self.object))

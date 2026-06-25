@@ -29,7 +29,6 @@ def transition_case_workflow(*, case: Case, target_stage: str, actor: Any = None
     if not validation.allowed:
         raise ValidationError(validation.message)
 
-    old_stage = case.workflow_stage
     case.workflow_stage = target_stage
     if save:
         fields = ["workflow_stage"]
@@ -45,15 +44,15 @@ def transition_case_workflow(*, case: Case, target_stage: str, actor: Any = None
             case=case,
             actor=actor,
             event_type="workflow_stage_changed",
-            summary=f"Workflow stage changed for case {case.display_number}: {old_stage} -> {target_stage}",
-            metadata={"case_id": str(case.uuid), "old_stage": old_stage, "new_stage": target_stage},
+            summary="Этап дела изменён",
+            metadata={"case_id": str(case.uuid), "changed_fields": ["workflow_stage"]},
         )
     return WorkflowTransitionResult(ok=True)
 
 
 def transition_client_workflow(*, client: Client, target_stage: str, actor: Any = None, submission_date: date | None = None, fingerprints_date: date | None = None, decision_date: date | None = None, save: bool = True) -> WorkflowTransitionResult:
-    from clients.services.cases import get_primary_case_for_client
-    case = get_primary_case_for_client(client)
+    from clients.services.cases import get_legacy_compatibility_case
+    case = get_legacy_compatibility_case(client.pk, "transition_client_workflow")
     res = transition_case_workflow(
         case=case,
         target_stage=target_stage,

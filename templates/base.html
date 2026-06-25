@@ -276,16 +276,16 @@
   <!-- PAGE CONTENT WRAPPER -->
   <main class="container page-surface mb-5">
     {% block page_header %}
-    <!-- Optional: pretty header with title/actions -->
+    {# Shared pretty header. Pages fill page_title / page_subtitle / page_actions.
+       Defaults are empty so no placeholder stub is ever shown; pages that render
+       their own heading in the content block override page_header to be empty. #}
     <div class="section-header">
       <div>
-        <h1 class="h3 mb-1">{% block page_title %}{% translate "Заголовок страницы" %}{% endblock %}</h1>
-        <div class="text-muted">{% block page_subtitle %}{% translate "Короткое описание страницы" %}{% endblock %}
-        </div>
+        <h1 class="h3 mb-1">{% block page_title %}{% endblock %}</h1>
+        <div class="text-muted">{% block page_subtitle %}{% endblock %}</div>
       </div>
       <div class="d-flex gap-2">
-        {% block page_actions %}
-        {% endblock %}
+        {% block page_actions %}{% endblock %}
       </div>
     </div>
     {% endblock %}

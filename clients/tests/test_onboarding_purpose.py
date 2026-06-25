@@ -278,9 +278,12 @@ class OnboardingPurposeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         raw_token = response.json()["link"].rstrip("/").split("/")[-1]
         client.refresh_from_db()
-        self.assertEqual(client.application_purpose, "family")
+        # Case-first: application_purpose lives on the Case; family_role stays on
+        # the Client as permanent identity data.
+        case = client.cases.get()
+        self.assertEqual(case.application_purpose, "family")
         self.assertEqual(client.family_role, "family_spouse")
-        self.assertEqual(client.get_document_requirement_purpose(), "family_spouse")
+        self.assertEqual(case.get_document_requirement_purpose(client), "family_spouse")
         self.assertTrue(ClientOnboardingSession.objects.filter(client=client, token_hash=hash_onboarding_token(raw_token)).exists())
         self.assertEqual(MOSApplicationData.objects.get(client=client).mos_purpose, "")
 

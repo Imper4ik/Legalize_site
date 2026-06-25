@@ -444,6 +444,8 @@ class ClientForm(forms.ModelForm):
             if hasattr(temp_client, field_name):
                 setattr(temp_client, field_name, value)
 
+        # validate_client_workflow_transition handles unsaved/ambiguous clients
+        # gracefully (returns a result, never raises).
         transition_result = validate_client_workflow_transition(
             client=temp_client,
             previous_stage=previous_stage,
@@ -499,10 +501,20 @@ class MassEmailForm(forms.Form):
 
 
 class DocumentUploadForm(forms.ModelForm):
-    def __init__(self, *args: Any, doc_type: str | None = None, client: Client | None = None, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, doc_type: str | None = None, client: Client | None = None, case: Case | None = None, **kwargs: Any) -> None:
         self.doc_type = doc_type
         self.client = client
+        self.case = case
         super().__init__(*args, **kwargs)
+        # Assign owners onto the instance so model-level clean() can resolve the
+        # required Case (an explicit case, or the single-case legacy fallback)
+        # during form validation, before the document is saved.
+        if client is not None:
+            self.instance.client = client
+        if case is not None:
+            self.instance.case = case
+        if doc_type is not None:
+            self.instance.document_type = doc_type
         self.fields["zus_period_month"].help_text = _(
             "Для ZUS RCA укажите месяц отчёта. Если загружаете страховой полис, добавьте его как отдельный документ «Polisa ubezpieczeniowa / Health insurance»."
         )
@@ -524,7 +536,7 @@ class DocumentUploadForm(forms.ModelForm):
                 zus_period_month=normalized,
                 archived_at__isnull=True,
             )
-            case = self.client.cases.order_by("opened_at", "id").first()
+            case = self.case
             if case is not None:
                 duplicate_query = duplicate_query.filter(case=case)
             if duplicate_query.exclude(pk=self.instance.pk).exists():
@@ -592,6 +604,13 @@ class PaymentForm(forms.ModelForm):
             "transaction_id": forms.TextInput(attrs={"class": "form-control"}),
         }
 
+    def __init__(self, *args: Any, client: Client | None = None, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        # Assign the owner client so model-level clean() can resolve the required
+        # Case (single-case legacy fallback) during form validation.
+        if client is not None:
+            self.instance.client = client
+
     def clean_amount_paid(self) -> Decimal:
         return cast(Decimal, self.cleaned_data.get("amount_paid") or Decimal("0.00"))
 
@@ -653,8 +672,12 @@ class StaffTaskForm(forms.ModelForm):
             'assignee': forms.Select(attrs={'class': 'form-select'}),
         }
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, client: Client | None = None, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+        # Assign the owner client so model-level clean() can resolve the required
+        # Case (single-case legacy fallback) during form validation.
+        if client is not None:
+            self.instance.client = client
         user_model = get_user_model()
         staff_qs = user_model.objects.filter(is_staff=True, is_active=True).order_by('email')
         if hasattr(self.fields['assignee'], 'queryset'):

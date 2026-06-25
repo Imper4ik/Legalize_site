@@ -10800,6 +10800,72 @@ msgstr "Main issue"
 msgid "Следующее действие"
 msgstr "Next action"
 
+msgid "Дело без номера"
+msgstr "Case without a number"
+
+msgid "Номер дела в ужонде ещё не присвоен"
+msgstr "Authority case number not assigned yet"
+
+msgid "Номер дела в ужонде"
+msgstr "Authority case number"
+
+msgid "Временный номер (проверьте)"
+msgstr "Temporary number (verify)"
+
+msgid "Сначала сохраните клиента, затем переведите дело в рабочий статус."
+msgstr "Save the client first, then move the case to a working status."
+
+msgid "Выберите дело для продолжения"
+msgstr "Select a case to continue"
+
+msgid "Выбор дела"
+msgstr "Select case"
+
+msgid "Выбрать дело"
+msgstr "Select case"
+
+msgid "Информационное сообщение"
+msgstr "Information message"
+
+msgid ""
+"Для продолжения выберите одно из ваших активных дел. Каждый процесс ведения "
+"дела изолирован и содержит свои документы, статусы и напоминания."
+msgstr ""
+"To continue, select one of your active cases. Each case is handled "
+"separately and has its own documents, statuses and reminders."
+
+msgid ""
+"Если у вас возникли вопросы, пожалуйста, обратитесь к вашему менеджеру."
+msgstr "If you have any questions, please contact your manager."
+
+msgid "Запросить номер дела у клиента"
+msgstr "Request the case number from the client"
+
+msgid "Клиент и все его дела были успешно заархивированы."
+msgstr "The client and all their cases were archived successfully."
+
+msgid "Клиент и все его дела восстановлены из архива."
+msgstr "The client and all their cases were restored from the archive."
+
+msgid ""
+"Клиент указал номер дела новой подачи. Проверьте его и перенесите в основной"
+" номер дела."
+msgstr ""
+"The client provided a case number for the new application. Verify it and "
+"move it to the main case number."
+
+msgid "Личный кабинет недоступен."
+msgstr "The client portal is unavailable."
+
+msgid "У вас нет активных дел."
+msgstr "You have no active cases."
+
+msgid "Ошибка при восстановлении клиента: %(error)s"
+msgstr "Error while restoring the client: %(error)s"
+
+msgid "Спонсор семьи использует рабочий чеклист документов."
+msgstr "A family sponsor uses the work document checklist."
+
 #~ msgid "Вы уверены, что хотите разослать это сообщение?"
 #~ msgstr "Are you sure you want to send this message?"
 

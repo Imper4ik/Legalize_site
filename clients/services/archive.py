@@ -73,12 +73,12 @@ def archive_case(
         case=case,
         actor=actor,
         event_type="case_archived",
-        summary=f"Дело {case.display_number} заархивировано",
+        summary="Дело заархивировано",
         metadata={
             "case_id": str(case.uuid),
             "archive_batch_uuid": str(batch.uuid),
             "status_tag": "archived",
-            "document_count": tasks_count,
+            "task_count": tasks_count,
         }
     )
 
@@ -135,7 +135,7 @@ def restore_case(
         case=case,
         actor=actor,
         event_type="case_restored",
-        summary=f"Дело {case.display_number} восстановлено",
+        summary="Дело восстановлено",
         metadata={
             "case_id": str(case.uuid),
             "archive_batch_uuid": str(batch.uuid),
@@ -176,16 +176,17 @@ def archive_client_with_all_cases(
     for case in active_cases:
         archive_case(case, actor, client_batch=client_batch)
 
+    # The Client model has no archived_by field; the ClientArchiveBatch records
+    # who archived the client.
     client.archived_at = timezone.now()
-    client.archived_by = actor
-    client.save(update_fields=["archived_at", "archived_by"])
+    client.save(update_fields=["archived_at"])
 
     from clients.services.activity import log_client_activity
     log_client_activity(
         client=client,
         actor=actor,
         event_type="client_archived",
-        summary=f"Клиент {client} заархивирован",
+        summary="Клиент заархивирован",
         metadata={
             "archive_batch_uuid": str(client_batch.uuid),
             "status_tag": "archived",
@@ -215,8 +216,7 @@ def restore_client_with_all_cases(
         raise ValidationError("Клиент не находится в архивном состоянии.")
 
     client.archived_at = None
-    client.archived_by = None
-    client.save(update_fields=["archived_at", "archived_by"])
+    client.save(update_fields=["archived_at"])
 
     case_batches = list(batch.case_batches.filter(status="archived"))
 
@@ -238,7 +238,7 @@ def restore_client_with_all_cases(
         client=client,
         actor=actor,
         event_type="client_restored",
-        summary=f"Клиент {client} восстановлен",
+        summary="Клиент восстановлен",
         metadata={
             "archive_batch_uuid": str(batch.uuid),
             "status_tag": "restored",

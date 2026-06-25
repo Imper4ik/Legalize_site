@@ -230,13 +230,13 @@
                     </tr>
                     <tr>
                         <td class="label-col">{% translate "Cel złożenia wniosku / Цель" %}</td>
-                        <td class="value-col">{% if client.application_purpose %}{{ client.get_application_purpose_display }}{% endif %}</td>
+                        <td class="value-col">{% if case.application_purpose %}{{ case.get_application_purpose_display }}{% endif %}</td>
                     </tr>
 
                     <tr>
                         <td class="label-col">{% translate "Podstawa pobytu i ważność / Основание и срок" %}</td>
                         <td class="value-col">
-                            <span class="bold">{{ client.basis_of_stay|default_if_none:"" }}</span>
+                            <span class="bold">{{ case.basis_of_stay|default:client.basis_of_stay|default_if_none:"" }}</span>
                             <br>
                             <span style="font-size: 0.9em; color: #666;">{% translate "(ważne do / действительно до:" %} <span
                                     style="color: var(--primary-color); font-weight: bold;">{% if client.legal_basis_end_date %}{{ client.legal_basis_end_date|date:"d.m.Y" }}{% endif %}</span>)</span>
@@ -245,7 +245,7 @@
 
                     <tr>
                         <td class="label-col" style="background-color: #e8efff;">{% translate "Data złożenia wniosku / Дата подачи" %}</td>
-                        <td class="value-col bold" style="background-color: #f4f8ff;">{% if client.submission_date %}{{ client.submission_date|date:"d.m.Y" }}{% endif %}</td>
+                        <td class="value-col bold" style="background-color: #f4f8ff;">{% if case.submission_date %}{{ case.submission_date|date:"d.m.Y" }}{% endif %}</td>
                     </tr>
                 </table>
             </div>

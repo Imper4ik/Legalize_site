@@ -318,8 +318,11 @@ class DocumentFlowsStage4Tests(TestCase):
         document.refresh_from_db()
         job.refresh_from_db()
 
-        self.assertEqual(self.client_obj.case_number, "WSC-II-S.123.2026")
-        self.assertEqual(self.client_obj.fingerprints_date, date(2030, 1, 5))
+        # Background OCR writes process data to the document's Case, not the Client.
+        case = document.case
+        case.refresh_from_db()
+        self.assertEqual(case.authority_case_number, "WSC-II-S.123.2026")
+        self.assertEqual(case.fingerprints_date, date(2030, 1, 5))
         self.assertEqual(document.ocr_status, "success")
         self.assertFalse(document.awaiting_confirmation)
         self.assertEqual(job.status, DocumentProcessingJob.STATUS_COMPLETED)
@@ -415,8 +418,12 @@ class DocumentFlowsStage4Tests(TestCase):
 
         self.client_obj.refresh_from_db()
         document.refresh_from_db()
+        # Name (permanent identity) is written to the Client; the authority case
+        # number (process data) is written to the document's Case.
         self.assertEqual(self.client_obj.first_name, "Ann")
-        self.assertEqual(self.client_obj.case_number, "AB/123")
+        case = document.case
+        case.refresh_from_db()
+        self.assertEqual(case.authority_case_number, "AB/123")
         self.assertFalse(document.awaiting_confirmation)
 
     @patch("clients.views.documents.send_missing_documents_email", return_value=1)

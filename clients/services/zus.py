@@ -2,14 +2,15 @@ from __future__ import annotations
 
 import logging
 from datetime import date
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 from clients.constants import DocumentType
 
 if TYPE_CHECKING:
-    from clients.models.client import Client
+    from clients.models import Client, Case
 
 logger = logging.getLogger(__name__)
 
@@ -53,10 +54,20 @@ def expected_zus_months(fingerprints_date: date | None, *, today: date | None = 
     return iter_months(first_expected, last_expected)
 
 
-def uploaded_zus_months(client: Client) -> set[date]:
+def _resolve_to_case(obj: Case | Client, func_name: str) -> Case:
+    from clients.models import Case, Client
+    if isinstance(obj, Case):
+        return obj
+    # Deprecated fallback using compatibility helper
+    from clients.services.cases import get_legacy_compatibility_case
+    return get_legacy_compatibility_case(obj.pk, func_name)
+
+
+def uploaded_zus_months(case_or_client: Case | Client) -> set[date]:
+    case = _resolve_to_case(case_or_client, "uploaded_zus_months")
     return {
         month_start(value)
-        for value in client.documents.filter(
+        for value in case.documents.filter(
             document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
             zus_period_month__isnull=False,
             verified=True,
@@ -66,33 +77,36 @@ def uploaded_zus_months(client: Client) -> set[date]:
     }
 
 
-def missing_zus_months(client: Client, *, today: date | None = None) -> list[date]:
+def missing_zus_months(case_or_client: Case | Client, *, today: date | None = None) -> list[date]:
+    case = _resolve_to_case(case_or_client, "missing_zus_months")
     today = today or timezone.localdate()
-    if getattr(client, "workflow_stage", None) != "waiting_decision":
+    if getattr(case, "workflow_stage", None) != "waiting_decision":
         return []
-    if not client.fingerprints_date or client.fingerprints_date > today:
+    if not case.fingerprints_date or case.fingerprints_date > today:
         return []
-    if getattr(client, "decision_date", None):
+    if getattr(case, "decision_date", None):
         return []
 
-    expected = expected_zus_months(client.fingerprints_date, today=today)
-    insurance_expiry = latest_health_insurance_expiry(client)
+    expected = expected_zus_months(case.fingerprints_date, today=today)
+    insurance_expiry = latest_health_insurance_expiry(case)
     if insurance_expiry:
         covered_until = month_start(insurance_expiry)
         expected = [month for month in expected if month > covered_until]
-    uploaded = uploaded_zus_months(client)
+    uploaded = uploaded_zus_months(case)
     missing = [month for month in expected if month not in uploaded]
     if missing:
         logger.info(
-            "ZUS RCA missing months: client_id=%s months=%s",
-            client.pk,
+            "ZUS RCA missing months: case_id=%s client_id=%s months=%s",
+            case.pk,
+            case.client_id,
             [month.isoformat() for month in missing],
         )
     return missing
 
 
-def latest_health_insurance_expiry(client: Client) -> date | None:
-    return client.documents.filter(
+def latest_health_insurance_expiry(case_or_client: Case | Client) -> date | None:
+    case = _resolve_to_case(case_or_client, "latest_health_insurance_expiry")
+    return case.documents.filter(
         document_type=DocumentType.HEALTH_INSURANCE.value,
         expiry_date__isnull=False,
         archived_at__isnull=True,
@@ -104,11 +118,12 @@ def format_zus_months(months: list[date]) -> str:
     return ", ".join(month.strftime("%m.%Y") for month in months)
 
 
-def missing_zus_month_upload_options(client: Client, *, today: date | None = None) -> list[dict[str, str]]:
+def missing_zus_month_upload_options(case_or_client: Case | Client, *, today: date | None = None) -> list[dict[str, str]]:
+    case = _resolve_to_case(case_or_client, "missing_zus_month_upload_options")
     return [
         {
             "value": month.isoformat(),
             "label": month.strftime("%m.%Y"),
         }
-        for month in missing_zus_months(client, today=today)
+        for month in missing_zus_months(case, today=today)
     ]

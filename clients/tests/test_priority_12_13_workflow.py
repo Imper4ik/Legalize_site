@@ -376,10 +376,15 @@ def test_fingerprints_date_change_does_not_send_expired_email_and_appointment_is
     assert not result.expired_documents_email_sent
     send_expired.assert_not_called()
 
+    # Fingerprints are process data and live on the Case, so set them there.
+    case = sample_client.cases.get()
+    case.fingerprints_date = timezone.localdate()
+    case.save(update_fields=["fingerprints_date"])
+
     mail.outbox = []
     with patch("clients.services.notifications._send_confirmation_email"):
-        assert send_appointment_notification_email(sample_client) == 1
-        assert send_appointment_notification_email(sample_client) == 0
+        assert send_appointment_notification_email(case) == 1
+        assert send_appointment_notification_email(case) == 0
     assert len(mail.outbox) == 1
 
 
@@ -410,25 +415,29 @@ def test_expected_zus_months_respects_17th_day_cutoff_and_prefingerprint_months(
 
 @pytest.mark.django_db
 def test_zus_rca_uploaded_period_closes_month_and_duplicates_are_blocked(sample_client):
-    sample_client.fingerprints_date = date(2026, 1, 20)
-    sample_client.workflow_stage = "waiting_decision"
-    sample_client.save(update_fields=["fingerprints_date", "workflow_stage"])
+    # Process data (workflow stage, fingerprints date) lives on the Case.
+    case = sample_client.cases.get()
+    case.fingerprints_date = date(2026, 1, 20)
+    case.workflow_stage = "waiting_decision"
+    case.save(update_fields=["fingerprints_date", "workflow_stage"])
     for month in (date(2025, 11, 1), date(2025, 12, 1), date(2026, 1, 1), date(2026, 2, 20)):
         Document.objects.create(
             client=sample_client,
+            case=case,
             document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
             file=SimpleUploadedFile(f"zus-{month:%Y-%m}.pdf", b"x", content_type="application/pdf"),
             zus_period_month=month,
             verified=True,
         )
 
-    assert missing_zus_months(sample_client, today=date(2026, 4, 16)) == []
-    assert missing_zus_months(sample_client, today=date(2026, 4, 17)) == [date(2026, 3, 1)]
+    assert missing_zus_months(case, today=date(2026, 4, 16)) == []
+    assert missing_zus_months(case, today=date(2026, 4, 17)) == [date(2026, 3, 1)]
 
     with pytest.raises(IntegrityError):
         with transaction.atomic():
             Document.objects.create(
                 client=sample_client,
+                case=case,
                 document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
                 file=SimpleUploadedFile("zus-feb-duplicate.pdf", b"x", content_type="application/pdf"),
                 zus_period_month=date(2026, 2, 1),
@@ -635,11 +644,14 @@ def test_family_role_checklist_used_for_workflow_notifications_and_wniosek():
     assert match_attachment_to_document_type(spouse, "Spouse-only document", "en") == "spouse_only_document"
 
     from clients.testing.factories import build_pdf_upload
+    # Case-first: required documents must be verified before submission is allowed.
+    case = spouse.cases.get()
     for code, _label in DocumentRequirement.required_for("family_spouse", "en"):
         Document.objects.get_or_create(
             client=spouse,
+            case=case,
             document_type=code,
-            defaults={"file": build_pdf_upload(f"{code}.pdf")}
+            defaults={"file": build_pdf_upload(f"{code}.pdf"), "verified": True},
         )
     result = validate_client_workflow_transition(
         client=spouse,

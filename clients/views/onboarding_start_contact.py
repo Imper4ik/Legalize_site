@@ -24,6 +24,7 @@ from clients.views.onboarding_views import (
     _sync_contact_fields_to_client,
     check_client_auth,
     check_onboarding_session,
+    check_portal_case_selected,
 )
 
 CONTACT_REQUIRED_FIELDS = ("first_name", "last_name", "email", "phone")
@@ -120,16 +121,15 @@ def _save_contact_values(client: Client, mos_data: MOSApplicationData, values: d
     mos_data.save(update_fields=update_fields)
 
 
-def _latest_new_card_confirmation_document(client: Client) -> Document | None:
-    return (
-        Document.objects.filter(
-            client=client,
-            document_type=NEW_CARD_CONFIRMATION_DOC_TYPE,
-            archived_at__isnull=True,
-        )
-        .order_by("-uploaded_at", "-id")
-        .first()
+def _latest_new_card_confirmation_document(client: Client, case: Case | None = None) -> Document | None:
+    qs = Document.objects.filter(
+        client=client,
+        document_type=NEW_CARD_CONFIRMATION_DOC_TYPE,
+        archived_at__isnull=True,
     )
+    if case is not None:
+        qs = qs.filter(case=case)
+    return qs.order_by("-uploaded_at", "-id").first()
 
 
 def _new_card_values_from_mos(mos_data: MOSApplicationData | None) -> dict[str, str]:
@@ -253,11 +253,14 @@ def _handle_new_card_application_post(
     if confirmation_file and values.get("status") in NEW_CARD_CONFIRMATION_UPLOAD_STATUSES:
         files_dict = request.FILES.copy()
         files_dict["file"] = files_dict["new_card_confirmation_file"]
+        doc_instance = Document(client=session.client, case=session.case)
         upload_form = DocumentUploadForm(
             request.POST,
             files_dict,
             doc_type=NEW_CARD_CONFIRMATION_DOC_TYPE,
             client=session.client,
+            case=session.case,
+            instance=doc_instance,
         )
         if not upload_form.is_valid():
             errors["confirmation_file"] = " ".join(
@@ -279,10 +282,11 @@ def _handle_new_card_application_post(
     from clients.models import StaffTask
     from clients.services.tasks import create_auto_task
     if values.get("status") == NEW_CARD_STATUS_SUBMITTED_NO_NUMBER:
-        create_auto_task(session.client, "case_number_missing", title=_("Запросить номер дела у клиента"))
+        create_auto_task(session.client, "case_number_missing", title=_("Запросить номер дела у клиента"), case=session.case)
     elif values.get("status") == NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER and values.get("case_number"):
         tasks = StaffTask.objects.filter(
             client=session.client,
+            case=session.case,
             task_type="case_number_missing",
             status__in=["open", "in_progress"],
         )
@@ -296,7 +300,8 @@ def _handle_new_card_application_post(
                 session.client,
                 "case_number_missing",
                 title=_("Проверить номер дела"),
-                description=_("Клиент указал номер дела новой подачи. Проверьте его и перенесите в основной номер дела.")
+                description=_("Клиент указал номер дела новой подачи. Проверьте его и перенесите в основной номер дела."),
+                case=session.case,
             )
 
     if upload_form is not None:
@@ -306,10 +311,12 @@ def _handle_new_card_application_post(
             uploaded_document=upload_form.save(commit=False),
             actor=request.user if request.user.is_authenticated else None,
             parse_requested=False,
+            case=session.case,
         )
     from clients.services.activity import log_client_activity
     log_client_activity(
         client=session.client,
+        case=session.case,
         actor=request.user if request.user.is_authenticated else None,
         event_type="new_card_application_updated",
         summary="Клиент обновил информацию о новой подаче на карту побыту",
@@ -321,7 +328,7 @@ def _handle_new_card_application_post(
     )
 
     mos_data.refresh_from_db()
-    confirmation_document = _latest_new_card_confirmation_document(session.client)
+    confirmation_document = _latest_new_card_confirmation_document(session.client, case=session.case)
     messages.success(request, _("Informacja o nowym wniosku została zapisana. / Информация о новом заявлении сохранена."))
     for warning in _new_card_missing_warnings(mos_data, confirmation_document):
         messages.warning(request, warning)
@@ -354,15 +361,15 @@ def _build_start_context(
 ) -> dict[str, Any]:
     client = session.client
     try:
-        mos_data = MOSApplicationData.objects.get(client=client)
+        mos_data = MOSApplicationData.objects.get(client=client, case=session.case)
     except MOSApplicationData.DoesNotExist:
-        mos_data = MOSApplicationData(client=client)
+        mos_data = MOSApplicationData(client=client, case=session.case)
     purpose_ctx = _purpose_context(client, mos_data)
     effective_purpose = str(purpose_ctx["effective_purpose"])
     language = translation.get_language() or client.language
 
     fingerprint_invitation_doc_type = DocumentType.WEZWANIE.value
-    existing_documents = list(Document.objects.filter(client=client, archived_at__isnull=True).order_by("document_type", "-uploaded_at"))
+    existing_documents = list(Document.objects.filter(case=session.case).order_by("document_type", "-uploaded_at"))
     existing_map = {document.document_type: document.id for document in existing_documents}
     new_card_confirmation_document = next(
         (document for document in existing_documents if document.document_type == NEW_CARD_CONFIRMATION_DOC_TYPE),
@@ -522,15 +529,18 @@ def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = check_portal_case_selected(request, session, token)
+    if case_redirect:
+        return case_redirect
 
     client = session.client
     try:
-        mos_data = MOSApplicationData.objects.get(client=client)
+        mos_data = MOSApplicationData.objects.get(client=client, case=session.case)
     except MOSApplicationData.DoesNotExist:
-        mos_data = MOSApplicationData(client=client)
+        mos_data = MOSApplicationData(client=client, case=session.case)
 
     if request.method == "POST":
-        mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
+        mos_data, _created = MOSApplicationData.objects.get_or_create(client=client, case=session.case)
         if request.POST.get("action") == "new_card_application":
             return _handle_new_card_application_post(request, session=session, mos_data=mos_data, token=token)
 

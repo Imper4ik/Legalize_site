@@ -147,8 +147,11 @@ class DocumentOCRRegressionTests(TestCase):
         self.assertFalse(result.manual_review_required)
         self.assertFalse(document.awaiting_confirmation)
         self.assertEqual(document.ocr_status, "success")
-        self.assertEqual(self.client_record.case_number, "WSC-II-P.123.2026")
-        self.assertEqual(self.client_record.fingerprints_date, date(2026, 5, 4))
+        # Process data is written to the document's Case, never the Client.
+        case = document.case
+        case.refresh_from_db()
+        self.assertEqual(case.authority_case_number, "WSC-II-P.123.2026")
+        self.assertEqual(case.fingerprints_date, date(2026, 5, 4))
         self.assertNotIn("raw_text", document.parsed_data)
         self.assertEqual(document.parsed_data["confirmed"], True)
 

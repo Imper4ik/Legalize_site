@@ -30,8 +30,20 @@ def restore_client_view(request: HttpRequest, pk: int) -> HttpResponse:
         pk=pk,
         archived_at__isnull=False,
     )
-    restore_client_record(client=client, actor=request.user)
-    messages.success(request, _("Клиент восстановлен из архива."))
+    from clients.services.archive import restore_client_with_all_cases
+    from clients.models import ClientArchiveBatch
+    batch = ClientArchiveBatch.objects.filter(client=client, status="archived").first()
+    try:
+        if batch:
+            restore_client_with_all_cases(client=client, actor=request.user, batch=batch)
+            messages.success(request, _("Клиент и все его дела восстановлены из архива."))
+        else:
+            from clients.use_cases.archive import restore_client_record
+            restore_client_record(client=client, actor=request.user)
+            messages.success(request, _("Клиент восстановлен из архива."))
+    except Exception as e:
+        messages.error(request, _("Ошибка при восстановлении клиента: %(error)s") % {"error": str(e)})
+
     return redirect("clients:client_detail", pk=client.pk)
 
 

@@ -12,7 +12,6 @@ from django.utils.translation import gettext as _
 from django.views.generic import DetailView
 
 from clients.models import AppSettings, Client, WniosekSubmission
-from clients.security.encrypted import safe_encrypted_attr
 from clients.services.access import accessible_clients_queryset
 from clients.services.roles import DOCUMENT_EDIT_ROLES
 from clients.services.wniosek import record_wniosek_submission
@@ -28,23 +27,24 @@ class ClientPrintBaseView(StaffRequiredMixin, DetailView):
     def get_queryset(self) -> Any:
         return accessible_clients_queryset(self.request.user, Client.objects.defer("case_number", "passport_num"))
 
+    def get_print_case(self, client: Client) -> Any:
+        """Resolve the case to print. Process data lives on the Case."""
+        return client.cases.filter(archived_at__isnull=True).order_by("opened_at", "id").first()
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        case = self.get_print_case(context["client"])
+        context["case"] = case
+        context["safe_case_number"] = (case.authority_case_number if case else "") or ""
+        return context
+
 
 class ClientPrintView(ClientPrintBaseView):
     template_name = "clients/client_printable.html"
 
-    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
-        context = super().get_context_data(**kwargs)
-        context["safe_case_number"] = safe_encrypted_attr(context["client"], "case_number")
-        return context
-
 
 class ClientWSCPrintView(ClientPrintBaseView):
     template_name = "clients/client_wsc_print.html"
-
-    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
-        context = super().get_context_data(**kwargs)
-        context["safe_case_number"] = safe_encrypted_attr(context["client"], "case_number")
-        return context
 
 
 class ClientDocumentPrintView(ClientPrintBaseView):
@@ -84,8 +84,9 @@ class ClientDocumentPrintView(ClientPrintBaseView):
         context["doc_type"] = self.kwargs.get("doc_type")
         if context["doc_type"] == "mazowiecki_application":
             client = context["client"]
-            application_date = client.submission_date or client.created_at.date()
-            attachment_names = self._get_attachment_names(client)
+            case = context.get("case")
+            application_date = (case.submission_date if case else None) or client.created_at.date()
+            attachment_names = self._get_attachment_names(client, case)
 
             # Ensure attachment_count is str or int as expected by templates
             attachment_count: str | int = self.request.GET.get("attachment_count") or ""
@@ -100,7 +101,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                     "application_date": application_date,
                     "full_name": f"{client.first_name} {client.last_name}",
                     "citizenship": client.citizenship or "",
-                    "case_number": safe_encrypted_attr(client, "case_number"),
+                    "case_number": (case.authority_case_number if case else "") or "",
                     "mos_id": getattr(client, "mos_id", "") or "",
                     "inpol_id": getattr(client, "inpol_id", "") or "",
                     "birth_date": getattr(client, "birth_date", ""),
@@ -114,8 +115,8 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                     ),
                     "auto_print": self.request.GET.get("auto_print") == "1",
                     "last_submission_id": self.request.GET.get("submission_id") or "",
-                    "other_text": (client.basis_of_stay or "").strip(),
-                    "check_pobyt_czasowy": client.application_purpose in {"study", "work", "family"},
+                    "other_text": ((case.basis_of_stay if case else "") or "").strip(),
+                    "check_pobyt_czasowy": (case.application_purpose if case else "") in {"study", "work", "family"},
                     "check_pobyt_staly": False,
                     "check_rezydent_ue": False,
                     "check_uznanie_obywatel": False,
@@ -127,15 +128,16 @@ class ClientDocumentPrintView(ClientPrintBaseView):
             )
         return context
 
-    def _get_attachment_names(self, client: Client) -> list[str]:
+    def _get_attachment_names(self, client: Client, case: Any = None) -> list[str]:
         attachments = [name.strip() for name in self.request.GET.getlist("attachments") if name.strip()]
 
         today = timezone.localdate()
-        if client.decision_date and client.decision_date < today:
-            days_overdue = (today - client.decision_date).days
+        decision_date = case.decision_date if case else None
+        if decision_date and decision_date < today:
+            days_overdue = (today - decision_date).days
             reminder_text = (
                 f"Prośba o przyspieszenie wydania decyzji "
-                f"(termin był {client.decision_date.strftime('%d.%m.%Y')}, {days_overdue} dni temu)"
+                f"(termin był {decision_date.strftime('%d.%m.%Y')}, {days_overdue} dni temu)"
             )
             if not any("przyspieszenie" in att.lower() for att in attachments):
                 attachments.insert(0, reminder_text)
