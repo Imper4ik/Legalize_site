@@ -6,11 +6,13 @@ from django.contrib import messages
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from clients.forms import PaymentForm
 from clients.models import Client, Payment
 from clients.services.access import accessible_clients_queryset, accessible_payments_queryset
+from clients.views.base import safe_redirect_target
 from clients.services.pricing import get_service_price
 from clients.services.responses import ResponseHelper
 from clients.services.roles import PAYMENT_MUTATION_ROLES
@@ -46,14 +48,14 @@ def add_payment(request: HttpRequest, client_id: int) -> HttpResponseBase:
                     payment_id=payment.id,
                 )
             messages.success(request, _("Платёж успешно добавлен."))
-            return redirect("clients:client_detail", pk=client.id)
+            return redirect(safe_redirect_target(request) or reverse("clients:client_detail", kwargs={"pk": client.id}))
         if helper.expects_json:
             return helper.error(
                 message=str(_("Проверьте правильность заполнения формы.")),
                 errors=form.errors.get_json_data(),
             )
 
-    return redirect("clients:client_detail", pk=client.id)
+    return redirect(safe_redirect_target(request) or reverse("clients:client_detail", kwargs={"pk": client.id}))
 
 
 @role_or_feature_required_view("can_manage_payments", *PAYMENT_MUTATION_ROLES)
@@ -77,14 +79,14 @@ def edit_payment(request: HttpRequest, payment_id: int) -> HttpResponseBase:
                     payment_id=updated_payment.id,
                 )
             messages.success(request, _("Платёж успешно обновлён."))
-            return redirect("clients:client_detail", pk=updated_payment.client.id)
+            return redirect(safe_redirect_target(request) or reverse("clients:client_detail", kwargs={"pk": updated_payment.client.id}))
         if helper.expects_json:
             return helper.error(
                 message=str(_("Проверьте правильность заполнения формы.")),
                 errors=form.errors.get_json_data(),
             )
 
-    return redirect("clients:client_detail", pk=payment.client.id)
+    return redirect(safe_redirect_target(request) or reverse("clients:client_detail", kwargs={"pk": payment.client.id}))
 
 
 @role_or_feature_required_view("can_manage_payments", *PAYMENT_MUTATION_ROLES)

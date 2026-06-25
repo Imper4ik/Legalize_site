@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Callable
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import HttpRequest, HttpResponseForbidden
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 
 from clients.services.access import is_internal_staff_user, user_has_internal_role
@@ -14,6 +15,24 @@ from clients.services.responses import ResponseHelper
 
 if TYPE_CHECKING:
     from django.http.response import HttpResponseBase
+
+
+def safe_redirect_target(request: HttpRequest) -> str | None:
+    """Return a validated same-site ``next`` URL from the request, or None.
+
+    Lets action views (add/edit payment, add/complete task) return the user to
+    the page they came from (e.g. a case detail page) instead of always the
+    client page, without opening an open-redirect.
+    """
+
+    candidate = (request.POST.get("next") or request.GET.get("next") or "").strip()
+    if candidate and url_has_allowed_host_and_scheme(
+        candidate,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return candidate
+    return None
 
 
 class StaffRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
