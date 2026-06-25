@@ -12,23 +12,28 @@ if TYPE_CHECKING:
 PREDEFINED_ROLES: dict[str, str] = {
     "Admin": "All permissions (Superuser equivalent)",
     "Manager": "CRUD clients, documents, payments, tasks; send emails; view metrics",
-    "Staff": "Full office access: clients, documents, payments, tasks, emails, reports, exports and operational settings",
+    "Staff": "Office access: clients, documents, payments, tasks, emails, reports, exports. No settings/templates, no action logs, no deletions by default (the admin can grant deletions per employee).",
     "ReadOnly": "View clients and documents only",
     "Translator": "Access to Translation Studio only",
 }
 
 
 ADMIN_PANEL_ALLOWED_ROLES = ("Admin", "Manager", "Staff", "ReadOnly")
-SETTINGS_ALLOWED_ROLES = ("Admin", "Manager", "Staff")
+# Settings and templates are Manager/Admin only — Staff has no access by default.
+SETTINGS_ALLOWED_ROLES = ("Admin", "Manager")
 CRITICAL_SETTINGS_ALLOWED_ROLES = ("Admin", "Manager")
 PEOPLE_ALLOWED_ROLES = ("Admin", "Manager")
+# Operational overview/reports stay available to Staff (not "settings").
+REPORTS_VIEW_ROLES = ("Admin", "Manager", "Staff")
 
 CLIENT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
 DOCUMENT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
 SUBMISSION_EDIT_ROLES = ("Admin", "Manager", "Staff")
-SUBMISSION_DELETE_ROLES = ("Admin", "Manager", "Staff")
+SUBMISSION_DELETE_ROLES = ("Admin", "Manager")
 DOCUMENT_EDIT_ROLES = ("Admin", "Manager", "Staff")
-DOCUMENT_DELETE_ROLES = ("Admin", "Manager", "Staff")
+# Deletions are off for Staff by default; the admin grants them per employee
+# (can_delete_documents / can_delete_clients) via staff management.
+DOCUMENT_DELETE_ROLES = ("Admin", "Manager")
 TASK_MUTATION_ROLES = ("Admin", "Manager", "Staff")
 PAYMENT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
 EMAIL_MUTATION_ROLES = ("Admin", "Manager", "Staff")
@@ -36,7 +41,7 @@ EXPORT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
 REPORT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
 TRANSLATION_ALLOWED_ROLES = ("Admin", "Translator")
 CLIENT_EDIT_ROLES = CLIENT_MUTATION_ROLES
-CLIENT_DELETE_ROLES = ("Admin", "Manager", "Staff")
+CLIENT_DELETE_ROLES = ("Admin", "Manager")
 CHECKLIST_MANAGE_ROLES = ("Admin", "Manager", "Staff")
 RESTORE_ALLOWED_ROLES = ("Admin", "Manager", "Staff")
 OCR_REVIEW_ALLOWED_ROLES = ("Admin", "Manager", "Staff")
@@ -77,10 +82,14 @@ def ensure_predefined_roles() -> list[Group]:
         manager_perms.extend(Permission.objects.filter(content_type=ct))
     groups["Manager"].permissions.set(manager_perms)
 
+    # Staff: add/change/view but NOT delete by default. Deletions are granted
+    # per employee through EmployeePermission (can_delete_clients/documents).
     staff_perms: list[Permission] = []
     for model in [Client, Document, Payment, StaffTask]:
         ct = ContentType.objects.get_for_model(model)
-        staff_perms.extend(Permission.objects.filter(content_type=ct))
+        staff_perms.extend(
+            Permission.objects.filter(content_type=ct).exclude(codename__startswith="delete_")
+        )
     groups["Staff"].permissions.set(staff_perms)
 
     readonly_perms: list[Permission] = []

@@ -10,7 +10,7 @@ from django.views import View
 
 from clients.models import Client
 from clients.services.access import accessible_clients_queryset
-from clients.services.roles import SETTINGS_ALLOWED_ROLES
+from clients.services.roles import REPORTS_VIEW_ROLES
 from clients.views.base import RoleRequiredMixin, StaffRequiredMixin
 
 if TYPE_CHECKING:
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class AdminDashboardView(RoleRequiredMixin, StaffRequiredMixin, View):
-    allowed_roles = list(SETTINGS_ALLOWED_ROLES)
+    allowed_roles = list(REPORTS_VIEW_ROLES)
     template_name = "clients/admin_dashboard.html"
 
     def get_queryset(self) -> QuerySet[Client]:
