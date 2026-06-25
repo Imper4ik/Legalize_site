@@ -1,0 +1,30 @@
+name: Build resolved case-first merge
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  resolve-and-publish:
+    if: github.head_ref != 'chore/merged-case-first-ready'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Merge main and publish the resolved branch
+        env:
+          TARGET_BRANCH: chore/merged-case-first-ready
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git merge --no-edit -X ours origin/main
+          git push --force-with-lease origin "HEAD:refs/heads/${TARGET_BRANCH}"
