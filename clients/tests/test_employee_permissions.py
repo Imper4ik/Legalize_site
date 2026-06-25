@@ -81,7 +81,10 @@ class EmployeePermissionsTests(TestCase):
         perms.save(update_fields=["can_delete_clients", "updated_at"])
 
         self.client.force_login(self.staff)
-        response = self.client.post(reverse("clients:client_delete", kwargs={"pk": self.client_obj.pk}))
+        response = self.client.post(
+            reverse("clients:client_delete", kwargs={"pk": self.client_obj.pk}),
+            {"confirm_archive_all_cases": "true"},
+        )
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Client.objects.filter(pk=self.client_obj.pk).exists())
 

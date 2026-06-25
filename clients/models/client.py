@@ -261,6 +261,14 @@ class Client(SoftDeleteModel):
     )
     is_test_data = models.BooleanField(default=False, db_index=True)
     is_demo_data = models.BooleanField(default=False, db_index=True)
+    archived_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="archived_clients",
+        verbose_name=_("Архивировал"),
+    )
 
     if TYPE_CHECKING:
         health_awaiting_confirmation_count: int
@@ -333,8 +341,17 @@ class Client(SoftDeleteModel):
             self._restore_related_case_records()
 
     def _archive_related_case_records(self) -> None:
-        from clients.models.case import Case
-        from clients.services.cases import archive_all_client_cases
+        """Cascade a direct ``client.archive()`` to the case-batch architecture.
+
+        ``SoftDeleteModel.archive`` has already set ``archived_at`` before this
+        hook runs, so we cannot call ``archive_client_with_all_cases`` (it would
+        reject an already-archived client). Instead we create the client batch
+        and archive each active case through the same service. ``actor`` is None
+        because this model-level entry point carries no request user; web flows
+        use ``archive_client_with_all_cases`` directly with a real actor.
+        """
+        from clients.models.case import Case, ClientArchiveBatch
+        from clients.services.archive import archive_case
 
         from .document import Document
         from .payment import Payment
@@ -343,10 +360,14 @@ class Client(SoftDeleteModel):
         if not self.pk:
             return
 
-        if Case.objects.filter(client_id=self.pk).exists():
-            archive_all_client_cases(client=self)
+        active_cases = list(Case.objects.filter(client_id=self.pk, archived_at__isnull=True))
+        if active_cases:
+            batch = ClientArchiveBatch.objects.create(client=self, archived_by=None, status="archived")
+            for case in active_cases:
+                archive_case(case=case, actor=None, client_batch=batch)
             return
 
+        # Legacy clients without any Case: archive their records directly.
         for document in Document.objects.filter(client_id=self.pk).iterator():
             document.archive()
         for payment in Payment.objects.filter(client_id=self.pk).iterator():
@@ -354,8 +375,8 @@ class Client(SoftDeleteModel):
         Reminder.objects.filter(client_id=self.pk, is_active=True).update(is_active=False)
 
     def _restore_related_case_records(self) -> None:
-        from clients.models.case import Case
-        from clients.services.cases import restore_case
+        from clients.models.case import ClientArchiveBatch
+        from clients.services.archive import restore_case
 
         from .document import Document
         from .payment import Payment
@@ -363,12 +384,25 @@ class Client(SoftDeleteModel):
         if not self.pk:
             return
 
-        archived_cases = Case.all_objects.filter(client_id=self.pk, archived_at__isnull=False).order_by("id")
-        if archived_cases.exists():
-            for case in archived_cases:
-                restore_case(case=case)
+        open_batch = (
+            ClientArchiveBatch.objects.filter(client_id=self.pk, status="archived")
+            .order_by("-archived_at")
+            .first()
+        )
+        if open_batch is not None:
+            for case_batch in open_batch.case_batches.filter(status="archived"):
+                restore_case(
+                    case=case_batch.case,
+                    actor=None,
+                    batch=case_batch,
+                    allow_when_client_archived=True,
+                )
+            open_batch.status = "restored"
+            open_batch.restored_at = timezone.now()
+            open_batch.save(update_fields=["status", "restored_at"])
             return
 
+        # Legacy clients without a batch: restore their soft-deleted records.
         for document in Document.all_objects.filter(client_id=self.pk, archived_at__isnull=False).iterator():
             document.restore()
         for payment in Payment.all_objects.filter(client_id=self.pk, archived_at__isnull=False).iterator():
@@ -478,10 +512,19 @@ class Client(SoftDeleteModel):
         self,
         check_file_existence: bool = False,
         requirements_cache: dict[str, Any] | None = None,
+        case: Any = None,
     ) -> list[dict[str, Any]]:
+        """Build the required-document checklist.
+
+        When ``case`` is provided the uploaded documents are scoped to that case
+        so multi-case clients are not cross-contaminated (case-first). Without a
+        case the legacy client-wide view is returned for backward compatibility.
+        """
         from clients.services.document_helpers import document_file_exists
 
         from .document import DocumentRequirement, resolve_document_label
+
+        case_id = getattr(case, "pk", None)
 
         current_language = translation.get_language() or self.language
         purpose = self.get_document_requirement_purpose()
@@ -501,12 +544,20 @@ class Client(SoftDeleteModel):
 
         uploaded_docs: list[Document] | models.QuerySet[Document]
         if prefetched_documents is None:
-            uploaded_docs = self.documents.all().annotate(
+            documents_qs = self.documents.all()
+            if case_id is not None:
+                documents_qs = documents_qs.filter(case_id=case_id)
+            uploaded_docs = documents_qs.annotate(
                 preloaded_version_count=models.Count("versions")
             ).order_by("-uploaded_at")
         else:
+            filtered_prefetched = (
+                [doc for doc in prefetched_documents if doc.case_id == case_id]
+                if case_id is not None
+                else prefetched_documents
+            )
             uploaded_docs = sorted(
-                prefetched_documents,
+                filtered_prefetched,
                 key=lambda document: document.uploaded_at,
                 reverse=True,
             )
@@ -986,15 +1037,19 @@ class Client(SoftDeleteModel):
                 }
             )
 
+        from clients.services.cases import resolve_single_active_case
+
+        zus_case = resolve_single_active_case(self)
         if (
-            self.workflow_stage == "waiting_decision"
-            and self.fingerprints_date
-            and self.fingerprints_date <= today
-            and not self.decision_date
+            zus_case is not None
+            and zus_case.workflow_stage == "waiting_decision"
+            and zus_case.fingerprints_date
+            and zus_case.fingerprints_date <= today
+            and not zus_case.decision_date
         ):
             from clients.services.zus import format_zus_months, missing_zus_months
 
-            missing_zus = missing_zus_months(self, today=today)
+            missing_zus = missing_zus_months(zus_case, today=today)
             if missing_zus:
                 month_name = format_zus_months([missing_zus[0]])
                 action_label = _("Запросить ZUS RCA за %s") % month_name
@@ -1240,15 +1295,19 @@ class Client(SoftDeleteModel):
                 "action_url": edit_url,
             })
 
-        # 8. ZUS RCA months
+        # 8. ZUS RCA months (case-first; ambiguous multi-case clients skipped)
+        from clients.services.cases import resolve_single_active_case
+
+        zus_case = resolve_single_active_case(self)
         if (
-            self.workflow_stage == "waiting_decision"
-            and self.fingerprints_date
-            and self.fingerprints_date <= today
-            and not self.decision_date
+            zus_case is not None
+            and zus_case.workflow_stage == "waiting_decision"
+            and zus_case.fingerprints_date
+            and zus_case.fingerprints_date <= today
+            and not zus_case.decision_date
         ):
             from clients.services.zus import missing_zus_months
-            missing_zus = missing_zus_months(self, today=today)
+            missing_zus = missing_zus_months(zus_case, today=today)
             if missing_zus:
                 checks.append({
                     "label": _("Отчёты ZUS RCA"),

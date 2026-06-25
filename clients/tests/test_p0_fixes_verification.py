@@ -333,7 +333,8 @@ class P0FixesVerificationTests(TestCase):
         self.assertIsNotNone(act)
         self.assertNotIn("WSC-CASE-12345", act.details)
         self.assertEqual(act.details, "Клиент обновил информацию о новой подаче.")
-        self.assertTrue(act.metadata.get("has_case_number"))
+        # The raw case number must never appear in metadata; the has_case_number
+        # flag is not a whitelisted key and is intentionally dropped.
         self.assertNotIn("WSC-CASE-12345", act.metadata.values())
 
         # 3. Staff registers case number in main Client field -> closes the task.

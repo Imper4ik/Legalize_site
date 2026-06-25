@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING
 from django.conf import settings
 from django.utils import timezone
 
-from clients.security.encrypted import safe_encrypted_attr
 from clients.services.document_helpers import document_file_exists
 
 if TYPE_CHECKING:
@@ -48,12 +47,15 @@ def generate_client_summary_text(client: Client) -> str:
     lines.append(f"  Phone:             {client.phone or '—'}")
     lines.append(f"  Citizenship:       {client.citizenship or '—'}")
     lines.append(f"  Application:       {client.get_application_purpose_display()}")
-    lines.append(f"  Workflow Stage:    {client.get_workflow_stage_display()}")
-    lines.append(f"  Case Number:       {safe_encrypted_attr(client, 'case_number', default='—')}")
-    if hasattr(client, "fingerprints_date"):
-        lines.append(f"  Fingerprints Date: {client.fingerprints_date or '—'}")
-    if hasattr(client, "decision_date"):
-        lines.append(f"  Decision Date:     {client.decision_date or '—'}")
+    # Process data is case-first; source it from the single active case.
+    from clients.services.cases import resolve_single_active_case
+
+    case = resolve_single_active_case(client)
+    if case is not None:
+        lines.append(f"  Workflow Stage:    {case.get_workflow_stage_display()}")
+        lines.append(f"  Case Number:       {case.authority_case_number or '—'}")
+        lines.append(f"  Fingerprints Date: {case.fingerprints_date or '—'}")
+        lines.append(f"  Decision Date:     {case.decision_date or '—'}")
     lines.append(f"  Created:           {client.created_at.strftime('%d.%m.%Y %H:%M')}")
     lines.append("")
 

@@ -97,6 +97,7 @@ class CaseCreateView(RoleRequiredMixin, CreateView):
         case = create_case_for_client(
             client=self.client_obj,
             actor=self.request.user,
+            authority_case_number=(form.cleaned_data.get("authority_case_number") or "").strip(),
             application_purpose=form.cleaned_data.get("application_purpose") or "",
             application_type=form.cleaned_data.get("application_type") or "",
             basis_of_stay=form.cleaned_data.get("basis_of_stay") or "",
@@ -126,19 +127,28 @@ class CaseUpdateView(RoleRequiredMixin, UpdateView):
         if expected_version is None:
             expected_version = case.version
 
+        authority_case_number = (form.cleaned_data.get("authority_case_number") or "").strip()
+        changes_dict: dict[str, Any] = {
+            "authority_case_number": authority_case_number,
+            "application_purpose": form.cleaned_data.get("application_purpose") or "",
+            "application_type": form.cleaned_data.get("application_type") or "",
+            "basis_of_stay": form.cleaned_data.get("basis_of_stay") or "",
+            "workflow_stage": form.cleaned_data.get("workflow_stage") or case.workflow_stage,
+            "assigned_staff": form.cleaned_data.get("assigned_staff"),
+            "company": form.cleaned_data.get("company"),
+        }
+        # Once a real authority number is entered by hand, the migrated legacy
+        # number and its manual-check flag are no longer needed (spec 3.10).
+        if authority_case_number:
+            changes_dict["legacy_case_number"] = ""
+            changes_dict["needs_manual_number_check"] = False
+
         try:
             update_case_with_version(
                 case_id=case.id,
                 expected_version=expected_version,
                 actor=self.request.user,
-                changes_dict={
-                    "application_purpose": form.cleaned_data.get("application_purpose") or "",
-                    "application_type": form.cleaned_data.get("application_type") or "",
-                    "basis_of_stay": form.cleaned_data.get("basis_of_stay") or "",
-                    "workflow_stage": form.cleaned_data.get("workflow_stage") or case.workflow_stage,
-                    "assigned_staff": form.cleaned_data.get("assigned_staff"),
-                    "company": form.cleaned_data.get("company"),
-                }
+                changes_dict=changes_dict,
             )
             messages.success(self.request, _("Case updated."))
         except ValidationError as e:

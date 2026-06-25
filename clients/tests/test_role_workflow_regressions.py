@@ -111,18 +111,21 @@ class ClientArchiveCascadeTests(TestCase):
 
         self.client_obj.archive()
 
+        # Spec section 7: archiving a client archives the client and its cases,
+        # but documents/payments/reminders keep their own state and only open
+        # tasks are suspended (and hidden because the client is archived).
         self.assertIsNotNone(Client.all_objects.get(pk=self.client_obj.pk).archived_at)
-        self.assertIsNotNone(Document.all_objects.get(pk=document.pk).archived_at)
-        self.assertIsNotNone(Payment.all_objects.get(pk=payment.pk).archived_at)
+        self.assertIsNone(Document.all_objects.get(pk=document.pk).archived_at)
+        self.assertIsNone(Payment.all_objects.get(pk=payment.pk).archived_at)
         payment_reminder.refresh_from_db()
         custom_reminder.refresh_from_db()
-        self.assertFalse(payment_reminder.is_active)
-        self.assertFalse(custom_reminder.is_active)
+        self.assertTrue(payment_reminder.is_active)
+        self.assertTrue(custom_reminder.is_active)
         self.assertFalse(
             accessible_tasks_queryset(self.staff, StaffTask.objects.all()).filter(pk=task.pk).exists()
         )
 
-    def test_restoring_client_restores_archived_documents_and_payments(self):
+    def test_restoring_client_restores_case_but_not_manually_archived_records(self):
         document = create_test_document(self.client_obj)
         payment = Payment.objects.create(
             client=self.client_obj,
@@ -130,11 +133,16 @@ class ClientArchiveCascadeTests(TestCase):
             total_amount=Decimal("100.00"),
             status="pending",
         )
+        # A manually archived document must stay archived across the cycle.
+        document.archive()
         self.client_obj.archive()
 
         Client.all_objects.get(pk=self.client_obj.pk).restore()
 
-        self.assertIsNone(Document.all_objects.get(pk=document.pk).archived_at)
+        # Spec section 7: restore brings back the client/case, but documents and
+        # payments do not revive automatically — manual archive state is kept.
+        self.assertIsNone(Client.all_objects.get(pk=self.client_obj.pk).archived_at)
+        self.assertIsNotNone(Document.all_objects.get(pk=document.pk).archived_at)
         self.assertIsNone(Payment.all_objects.get(pk=payment.pk).archived_at)
 
 class WorkflowDocumentEligibilityTests(TestCase):

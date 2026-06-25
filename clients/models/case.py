@@ -186,7 +186,16 @@ class Case(SoftDeleteModel):
 
     @property
     def display_number(self) -> str:
-        return str(self.internal_number or self.authority_case_number or self.uuid)
+        """Staff-facing case number.
+
+        Only the authority case number is a real working number. The internal
+        number is deprecated and the UUID must never be surfaced to staff, so an
+        unnumbered case shows a neutral placeholder instead.
+        """
+        number = str(self.authority_case_number or "").strip()
+        if number:
+            return number
+        return str(_("Дело без номера"))
 
     @staticmethod
     def normalize_case_number(case_number: str) -> str:
@@ -269,7 +278,7 @@ class CaseArchiveSnapshot(models.Model):
 class ClientArchiveBatch(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     client = models.ForeignKey("clients.Client", on_delete=models.PROTECT, related_name="archive_batches")
-    archived_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="archived_client_batches")
+    archived_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="archived_client_batches")
     archived_at = models.DateTimeField(auto_now_add=True)
     restored_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="restored_client_batches")
     restored_at = models.DateTimeField(null=True, blank=True)
@@ -299,7 +308,7 @@ class CaseArchiveBatch(models.Model):
         on_delete=models.SET_NULL,
         related_name="case_batches",
     )
-    archived_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="archived_case_batches")
+    archived_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL, related_name="archived_case_batches")
     archived_at = models.DateTimeField(auto_now_add=True)
     restored_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.PROTECT, related_name="restored_case_batches")
     restored_at = models.DateTimeField(null=True, blank=True)

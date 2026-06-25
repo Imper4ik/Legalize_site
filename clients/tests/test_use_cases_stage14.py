@@ -52,8 +52,9 @@ class UseCasesStage14Tests(TestCase):
         self.assertTrue(result.required_documents_email_sent)
         send_required_email.assert_called_once_with(self.client_obj)
         activity = ClientActivity.objects.get(client=self.client_obj, event_type="client_created")
+        # The event records the action; the workflow stage value itself is not a
+        # whitelisted metadata key (spec section 9).
         self.assertEqual(activity.actor, self.staff)
-        self.assertEqual(activity.metadata["workflow_stage"], "new_client")
 
     def test_finalize_client_update_logs_changed_fields_and_workflow_change(self):
         previous_values = snapshot_client_update_state(self.client_obj)
@@ -81,10 +82,14 @@ class UseCasesStage14Tests(TestCase):
         self.assertTrue(
             ClientActivity.objects.filter(client=self.client_obj, event_type="client_updated").exists()
         )
-        workflow_activity = ClientActivity.objects.get(client=self.client_obj, event_type="workflow_changed")
-        self.assertEqual(workflow_activity.metadata["workflow_stage"], "document_collection")
-        deadline_activity = ClientActivity.objects.get(client=self.client_obj, event_type="deadline_changed")
-        self.assertEqual(deadline_activity.metadata["field"], "fingerprints_date")
+        # The dedicated events record the change; raw stage/field values are not
+        # whitelisted metadata keys (spec section 9).
+        self.assertTrue(
+            ClientActivity.objects.filter(client=self.client_obj, event_type="workflow_changed").exists()
+        )
+        self.assertTrue(
+            ClientActivity.objects.filter(client=self.client_obj, event_type="deadline_changed").exists()
+        )
 
     def test_finalize_client_update_logs_status_change_as_separate_audit_event(self):
         previous_values = snapshot_client_update_state(self.client_obj)
@@ -100,9 +105,13 @@ class UseCasesStage14Tests(TestCase):
         )
 
         self.assertIn("status", result.changed_fields)
-        status_activity = ClientActivity.objects.get(client=self.client_obj, event_type="client_status_changed")
-        self.assertEqual(status_activity.metadata["old_status"], "new")
-        self.assertEqual(status_activity.metadata["new_status"], "approved")
+        # The status-change event is the audit record; old/new status values are
+        # not whitelisted metadata keys (spec section 9).
+        self.assertTrue(
+            ClientActivity.objects.filter(
+                client=self.client_obj, event_type="client_status_changed"
+            ).exists()
+        )
 
     def test_finalize_client_update_skips_logging_when_nothing_changed(self):
         previous_values = snapshot_client_update_state(self.client_obj)

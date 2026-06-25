@@ -17,6 +17,7 @@ from clients.models import Client, ClientOnboardingSession, Document, DocumentRe
 from clients.services.document_workflow import upload_client_document
 from clients.views.onboarding_views import (
     _document_source_hint,
+    _ensure_mos,
     _locked_response,
     _mos_data_is_editable,
     _mos_documents_are_editable,
@@ -523,6 +524,10 @@ def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
     if auth_redirect:
         return auth_redirect
 
+    # Portal users must pick a case before any case-scoped step.
+    if session.scope == "client_portal" and not request.session.get("case_id"):
+        return redirect("clients:onboarding_select_case", token=token)
+
     client = session.client
     try:
         mos_data = MOSApplicationData.objects.get(client=client)
@@ -530,7 +535,7 @@ def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
         mos_data = MOSApplicationData(client=client)
 
     if request.method == "POST":
-        mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
+        mos_data, _created = _ensure_mos(client)
         if request.POST.get("action") == "new_card_application":
             return _handle_new_card_application_post(request, session=session, mos_data=mos_data, token=token)
 

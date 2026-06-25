@@ -20,15 +20,28 @@ class RestoreScenarioResult:
 
 
 def restore_client_record(*, client: Client, actor: AbstractBaseUser | AnonymousUser | None) -> RestoreScenarioResult:
+    from clients.models import ClientArchiveBatch
+    from clients.services.archive import restore_client_with_all_cases
+
     with transaction.atomic():
-        client.restore()
-        log_client_activity(
-            client=client,
-            actor=actor,
-            event_type="client_updated",
-            summary="Клиент восстановлен из архива",
-            metadata={"restored_object": "client", "restored_object_id": client.pk},
+        open_batch = (
+            ClientArchiveBatch.objects.filter(client=client, status="archived")
+            .order_by("-archived_at")
+            .first()
         )
+        if open_batch is not None:
+            # Proper batch-based restore with actor attribution and audit entry.
+            restore_client_with_all_cases(client=client, actor=actor, batch=open_batch)
+        else:
+            # Legacy client archived without a batch.
+            client.restore()
+            log_client_activity(
+                client=client,
+                actor=actor,
+                event_type="client_restored",
+                summary="Клиент восстановлен",
+                metadata={"status_tag": "restored"},
+            )
     return RestoreScenarioResult(client=client, restored_object_id=client.pk, restored_object_type="client")
 
 

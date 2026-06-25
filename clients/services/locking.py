@@ -117,7 +117,8 @@ def _update_instance_with_locking(
 
 
 CASE_WHITELIST = {
-    "internal_number", "authority_case_number", "status", "workflow_stage",
+    "authority_case_number", "legacy_case_number", "needs_manual_number_check",
+    "status", "workflow_stage",
     "application_purpose", "application_type", "basis_of_stay", "opened_at",
     "submission_date", "fingerprints_date", "fingerprints_time", "fingerprints_location",
     "fingerprints_ticket", "fingerprints_list", "fingerprints_info", "decision",

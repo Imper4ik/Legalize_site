@@ -84,8 +84,9 @@ class UseCasesStage13Tests(TestCase):
         self.assertFalse(Document.objects.filter(pk=document.pk).exists())
         self.assertTrue(Document.all_objects.filter(pk=document.pk, archived_at__isnull=False).exists())
         activity = ClientActivity.objects.get(client=self.client_obj, event_type="document_deleted")
-        self.assertEqual(activity.metadata["document_id"], document.pk)
-        self.assertEqual(activity.metadata["document_type"], DocumentType.PASSPORT.value)
+        # document_id is stored as a string per the metadata whitelist; the
+        # document is also linked via FK. document_type is not whitelisted.
+        self.assertEqual(activity.metadata["document_id"], str(document.pk))
         self.assertEqual(activity.document_id, document.pk)
 
     def test_toggle_client_document_verification_sends_email_only_when_switching_to_verified(self):
@@ -158,8 +159,11 @@ class UseCasesStage13Tests(TestCase):
         archived_document = Document.all_objects.get(pk=archived_document.pk)
         self.assertFalse(archived_document.verified)
         send_missing_email.assert_called_once_with(self.client_obj)
-        activity = ClientActivity.objects.get(client=self.client_obj, event_type="document_verified")
-        self.assertEqual(activity.metadata["verified_count"], 2)
+        self.assertTrue(
+            ClientActivity.objects.filter(
+                client=self.client_obj, event_type="document_verified"
+            ).exists()
+        )
 
     def test_delete_wniosek_attachment_updates_submission_count_and_logs_activity(self):
         submission = WniosekSubmission.objects.create(
@@ -188,9 +192,11 @@ class UseCasesStage13Tests(TestCase):
         self.assertEqual(submission.attachment_count, 1)
         self.assertFalse(WniosekAttachment.objects.filter(pk=removable.pk).exists())
         self.assertTrue(WniosekAttachment.objects.filter(pk=retained.pk).exists())
-        activity = ClientActivity.objects.get(client=self.client_obj, event_type="wniosek_attachment_deleted")
-        self.assertEqual(activity.metadata["attachment_id"], result.deleted_attachment_id)
-        self.assertEqual(activity.metadata["remaining_count"], 1)
+        self.assertTrue(
+            ClientActivity.objects.filter(
+                client=self.client_obj, event_type="wniosek_attachment_deleted"
+            ).exists()
+        )
 
     def test_delete_last_wniosek_attachment_removes_submission(self):
         submission = WniosekSubmission.objects.create(
@@ -241,7 +247,7 @@ class UseCasesStage13Tests(TestCase):
 
         self.assertEqual(result.export_type, "zip")
         activity = ClientActivity.objects.get(client=self.client_obj, event_type="client_exported")
-        self.assertEqual(activity.metadata["export_type"], "zip")
+        # export_type is not whitelisted; document_count is.
         self.assertEqual(activity.metadata["document_count"], 3)
 
     def test_restore_document_version_for_client_restores_file_and_logs_activity(self):
@@ -269,9 +275,9 @@ class UseCasesStage13Tests(TestCase):
 
         self.assertEqual(restored_content, b"old")
         activity = ClientActivity.objects.get(client=self.client_obj, event_type="document_version_restored")
+        # The restored document is referenced via FK; raw version ids are not
+        # part of the metadata whitelist (spec section 9).
         self.assertEqual(activity.document, result.document)
-        self.assertEqual(activity.metadata["restored_version_id"], version.pk)
-        self.assertEqual(activity.metadata["restored_version_number"], 1)
 
     def test_create_task_for_client_creates_task_with_default_assignee_and_audit(self):
         due_date = timezone.localdate() + timedelta(days=2)
@@ -295,8 +301,8 @@ class UseCasesStage13Tests(TestCase):
         self.assertEqual(result.task.assignee, self.staff)
         self.assertEqual(result.task.created_by, self.staff)
         activity = ClientActivity.objects.get(client=self.client_obj, event_type="task_created")
+        # The task is referenced via FK; priority is not a whitelisted key.
         self.assertEqual(activity.task, result.task)
-        self.assertEqual(activity.metadata["priority"], "high")
 
     def test_complete_task_for_client_marks_task_done_once_and_logs_audit(self):
         task_result = create_task_for_client(

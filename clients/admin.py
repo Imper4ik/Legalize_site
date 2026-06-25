@@ -316,8 +316,8 @@ class ClientAdmin(admin.ModelAdmin):
                     client=client,
                     actor=request.user,
                     event_type="client_viewed",
-                    summary=f"Staff viewed sensitive data for client {client.get_full_name()}",
-                    details="Viewed Client detail page in admin interface."
+                    summary="Просмотр конфиденциальных данных клиента",
+                    details=""
                 )
         return response
 
@@ -428,8 +428,8 @@ class EmailLogAdmin(admin.ModelAdmin):
                     client=log_obj.client,
                     actor=request.user,
                     event_type="client_viewed",
-                    summary=f"Staff viewed sensitive email log (ID: {log_obj.id}) for client {log_obj.client.get_full_name()}",
-                    details=f"Viewed email with subject: {log_obj.subject}"
+                    summary="Просмотр конфиденциального журнала писем",
+                    details=""
                 )
         return response
 
@@ -641,8 +641,8 @@ class ClientDigitalAccessAdmin(admin.ModelAdmin):
                     client=access.client,
                     actor=request.user,
                     event_type="client_viewed",
-                    summary=f"Staff viewed sensitive digital access details for client {access.client.get_full_name()}",
-                    details="Viewed ClientDigitalAccess detail page in admin interface."
+                    summary="Просмотр конфиденциальных данных цифрового доступа",
+                    details=""
                 )
         return response
 
@@ -761,8 +761,8 @@ class MOSApplicationDataAdmin(admin.ModelAdmin):
                     client=mos_data.client,
                     actor=request.user,
                     event_type="client_viewed",
-                    summary=f"Staff viewed sensitive MOS application data for client {mos_data.client.get_full_name()}",
-                    details="Viewed MOSApplicationData detail page in admin interface."
+                    summary="Просмотр конфиденциальных данных заявления MOS",
+                    details=""
                 )
         return response
 
@@ -826,8 +826,8 @@ class PeselApplicationAdmin(admin.ModelAdmin):
                     client=pesel_app.client,
                     actor=request.user,
                     event_type="client_viewed",
-                    summary=f"Staff viewed sensitive PESEL application for client {pesel_app.client.get_full_name()}",
-                    details="Viewed PeselApplication detail page in admin interface."
+                    summary="Просмотр конфиденциального заявления PESEL",
+                    details=""
                 )
         return response
 

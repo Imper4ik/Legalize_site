@@ -16,7 +16,7 @@ from clients.forms import (
     AppSettingsForm,
     ServicePriceForm,
 )
-from clients.models import AppSettings, Client, Document, Payment, Reminder, ServicePrice, StaffTask
+from clients.models import AppSettings, Case, Client, Document, Payment, Reminder, ServicePrice, StaffTask
 from clients.services.roles import (
     ADMIN_PANEL_ALLOWED_ROLES,
     CRITICAL_SETTINGS_ALLOWED_ROLES,
@@ -38,7 +38,11 @@ class AdminPanelView(RoleRequiredMixin, TemplateView):
         context["total_submissions"] = Submission.objects.count()
         context["total_service_prices"] = ServicePrice.objects.count()
         context["active_clients"] = Client.objects.count()
-        context["active_cases"] = Client.objects.exclude(workflow_stage__in=["closed", "decision_received"]).count()
+        # Count active Cases (not Clients): Case.objects already excludes archived
+        # cases, and we drop the finished workflow stages (spec section 10).
+        context["active_cases"] = Case.objects.exclude(
+            workflow_stage__in=["closed", "decision_received"]
+        ).count()
         context["ocr_awaiting_review"] = Document.objects.filter(awaiting_confirmation=True, client__archived_at__isnull=True).count()
         from django.db.models import Q
         context["documents_awaiting_verification"] = Document.objects.filter(

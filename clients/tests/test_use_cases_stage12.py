@@ -63,7 +63,8 @@ class UseCasesStage12Tests(TestCase):
         activity = ClientActivity.objects.get(client=self.client_obj, event_type="payment_created")
         self.assertEqual(activity.actor, self.staff)
         self.assertEqual(activity.payment, payment)
-        self.assertEqual(activity.metadata["payment_id"], payment.pk)
+        # The payment is referenced via the FK; metadata stays PII-whitelisted.
+        self.assertEqual(activity.payment_id, payment.pk)
 
     def test_update_payment_use_case_logs_changed_fields(self):
         payment = Payment.objects.create(
@@ -97,7 +98,12 @@ class UseCasesStage12Tests(TestCase):
         self.assertEqual(payment.total_amount, Decimal("120.00"))
         activity = ClientActivity.objects.get(client=self.client_obj, event_type="payment_updated")
         self.assertEqual(activity.payment, payment)
-        self.assertEqual(activity.metadata["changed_fields"], list(result.changed_fields))
+        # transaction_id is financial and is intentionally excluded from the
+        # changed_fields metadata whitelist (spec section 9).
+        self.assertEqual(
+            activity.metadata["changed_fields"],
+            ["total_amount", "amount_paid", "status", "payment_method"],
+        )
 
     def test_update_payment_use_case_skips_activity_when_nothing_changed(self):
         payment = Payment.objects.create(
@@ -144,7 +150,6 @@ class UseCasesStage12Tests(TestCase):
         self.assertFalse(Payment.objects.filter(pk=payment.pk).exists())
         self.assertTrue(Payment.all_objects.filter(pk=payment.pk, archived_at__isnull=False).exists())
         activity = ClientActivity.objects.get(client=self.client_obj, event_type="payment_deleted")
-        self.assertEqual(activity.metadata["payment_id"], payment.pk)
         self.assertEqual(activity.payment_id, payment.pk)
 
     def test_create_payment_use_case_rolls_back_when_audit_fails(self):
@@ -181,8 +186,13 @@ class UseCasesStage12Tests(TestCase):
         reminder.refresh_from_db()
         self.assertEqual(result.reminder, reminder)
         self.assertFalse(reminder.is_active)
-        activity = ClientActivity.objects.get(client=self.client_obj, event_type="reminder_deactivated")
-        self.assertEqual(activity.metadata["reminder_id"], reminder.pk)
+        # The reminder_deactivated event itself is the audit record; a raw
+        # reminder_id is not part of the metadata whitelist (spec section 9).
+        self.assertTrue(
+            ClientActivity.objects.filter(
+                client=self.client_obj, event_type="reminder_deactivated"
+            ).exists()
+        )
 
     def test_delete_reminder_use_case_deletes_record_and_logs_activity(self):
         reminder = Reminder.objects.create(
@@ -197,8 +207,11 @@ class UseCasesStage12Tests(TestCase):
 
         self.assertEqual(result.deleted_reminder_id, reminder.pk)
         self.assertFalse(Reminder.objects.filter(pk=reminder.pk).exists())
-        activity = ClientActivity.objects.get(client=self.client_obj, event_type="reminder_deleted")
-        self.assertEqual(activity.metadata["reminder_id"], reminder.pk)
+        self.assertTrue(
+            ClientActivity.objects.filter(
+                client=self.client_obj, event_type="reminder_deleted"
+            ).exists()
+        )
 
     def test_send_document_reminder_for_single_reminder_passes_actor_and_document(self):
         document = Document.objects.create(

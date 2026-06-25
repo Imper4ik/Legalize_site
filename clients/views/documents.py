@@ -20,6 +20,7 @@ from clients.services.access import (
     accessible_documents_queryset,
     user_has_internal_role,
 )
+from clients.services.cases import resolve_single_active_case
 from clients.services.custom_document_requirements import sync_custom_document_requirement_reminder
 from clients.services.document_helpers import document_file_exists
 from clients.services.document_workflow import confirm_wezwanie_document, upload_client_document
@@ -225,7 +226,7 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
 def add_client_document_requirement(request: HttpRequest, client_id: int) -> HttpResponseBase:
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
     if request.method == "POST":
-        form = ClientDocumentRequirementForm(request.POST)
+        form = ClientDocumentRequirementForm(request.POST, client=client)
         if form.is_valid():
             requirement = form.save(commit=False)
             requirement.client = client
@@ -432,7 +433,7 @@ def client_status_api(request: HttpRequest, pk: int) -> HttpResponseBase:
         "clients/partials/document_checklist.html",
         {
             "document_status_list": client.get_document_checklist(check_file_existence=True),
-            "missing_zus_months_for_upload": missing_zus_month_upload_options(client),
+            "missing_zus_months_for_upload": (missing_zus_month_upload_options(resolve_single_active_case(client)) if resolve_single_active_case(client) else []),
             "client": client,
         },
     )
@@ -479,7 +480,7 @@ def client_checklist_partial(request: HttpRequest, pk: int) -> HttpResponseBase:
         {
             "client": client,
             "document_status_list": document_status_list,
-            "missing_zus_months_for_upload": missing_zus_month_upload_options(client),
+            "missing_zus_months_for_upload": (missing_zus_month_upload_options(resolve_single_active_case(client)) if resolve_single_active_case(client) else []),
         },
     )
     return apply_no_store(response)
