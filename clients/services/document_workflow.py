@@ -656,8 +656,14 @@ def _finalize_successful_ocr_job(
 
     if job.job_type == DocumentProcessingJob.JOB_TYPE_PASSPORT_OCR:
         try:
+            from clients.models import MOSApplicationData
             from clients.services.intake_extraction import pre_fill_mos_data_from_ocr
-            mos_data = getattr(document.client, "mos_application_data", None)
+            # OCR of a document must only touch its own case's MOS data.
+            mos_data = (
+                MOSApplicationData.objects.filter(case=document.case).first()
+                if document.case_id
+                else None
+            )
             if mos_data:
                 pre_fill_mos_data_from_ocr(mos_data)
         except Exception as exc:
@@ -859,8 +865,13 @@ def _process_rental_doc_job_internal(
     if not name_matched:
         warnings.append(str(_("Client name not matched in the rental agreement.")))
 
-    # 2. Verify Address
-    mos_data = getattr(client, "mos_application_data", None)
+    # 2. Verify Address (case-scoped: only this document's case MOS data)
+    from clients.models import MOSApplicationData
+    mos_data = (
+        MOSApplicationData.objects.filter(case=job.document.case).first()
+        if job.document.case_id
+        else None
+    )
     if mos_data and mos_data.address_data:
         street = mos_data.address_data.get("street", "").strip()
         city = mos_data.address_data.get("city", "").strip()
