@@ -65,8 +65,10 @@ Not yet modelled: pobyt stały, EU long-term resident, CUKR.
 - **A3 — strict CSP:** drop `script-src 'unsafe-inline'`. Requires migrating 17 inline
   scripts to nonces and refactoring ~41 inline event handlers to `addEventListener`,
   with full browser verification. Current CSP is active with `unsafe-inline`; combined
-  with `nh3` HTML sanitization this is acceptable for a pilot. Suggested first step:
-  enable a strict policy in `report-only` mode to collect violations.
+  with `nh3` HTML sanitization this is acceptable for a pilot.
+  **First step is available now:** set `LEGALIZE_CSP_STRICT_REPORT_ONLY=True` to emit a
+  strict policy in Report-Only mode (zero UI risk) and collect the violation inventory
+  from the browser console before doing the enforcing refactor.
 - **B1 — MOS 2 detailed fields:** structured `karalność`, tax obligations, and the
   professional-qualifications section. Needs the official `wzór` (Dz.U. 2025 poz. 1647)
   to map fields exactly rather than guess. Core applicant/passport/family/address data

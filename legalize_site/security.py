@@ -135,17 +135,27 @@ class ContentSecurityPolicyMiddleware:
         self.header_value: str = getattr(settings, "LEGALIZE_CONTENT_SECURITY_POLICY", "")
         report_only = getattr(settings, "LEGALIZE_CSP_REPORT_ONLY", False)
         self.report_only: bool = str(report_only).lower() in {"1", "true", "yes", "on"}
+        # Optional stricter policy emitted in Report-Only mode alongside the
+        # enforced one. Lets us inventory inline-script/style violations before
+        # dropping 'unsafe-inline' for real (the A3 hardening path).
+        self.strict_report_only_value: str = getattr(
+            settings, "LEGALIZE_CONTENT_SECURITY_POLICY_REPORT_ONLY", ""
+        )
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
         response = self.get_response(request)
-        if not self.header_value:
-            return response
+        if self.header_value:
+            header_name = (
+                "Content-Security-Policy-Report-Only"
+                if self.report_only
+                else "Content-Security-Policy"
+            )
+            if header_name not in response:
+                response[header_name] = self.header_value
 
-        header_name = (
-            "Content-Security-Policy-Report-Only"
-            if self.report_only
-            else "Content-Security-Policy"
-        )
-        if header_name not in response:
-            response[header_name] = self.header_value
+        # Attach the strict report-only policy only when the main policy is being
+        # enforced, to avoid emitting two competing Report-Only headers.
+        if self.strict_report_only_value and not self.report_only:
+            if "Content-Security-Policy-Report-Only" not in response:
+                response["Content-Security-Policy-Report-Only"] = self.strict_report_only_value
         return response
