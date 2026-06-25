@@ -181,6 +181,10 @@ def check_onboarding_session(
         session.token_hash = token
         session.client = Client.objects.defer("case_number", "passport_num").get(pk=session.client_id)
 
+    # An archived client never has an accessible portal/onboarding context.
+    if session.client.archived_at is not None:
+        return None
+
     # Валидация scope и согласованности дела
     case_id = None
     if session.scope == "case_link":
@@ -188,26 +192,26 @@ def check_onboarding_session(
             return None
         case_id = session.case_id
     elif session.scope == "client_portal":
+        # Never auto-assign a Case for the portal: the client picks one and it
+        # is kept server-side in the Django session. An untrusted GET/POST value
+        # is only honoured after the ownership/archive checks below.
         if request:
             case_id = request.session.get("case_id")
-        if not case_id:
-            from clients.services.cases import get_primary_case_for_client
-            primary_case = get_primary_case_for_client(session.client)
-            case_id = primary_case.id
-            if request:
-                request.session["case_id"] = case_id
 
     if case_id:
         try:
             case = Case.all_objects.get(pk=case_id)
-            if case.client_id != session.client_id:
-                return None
-            if case.archived_at is not None:
-                return None
-            if request:
-                request.session["case_id"] = case.id
         except Case.DoesNotExist:
             return None
+        if case.client_id != session.client_id or case.archived_at is not None:
+            # Drop a stale/forged selection; the portal will ask again.
+            if request and session.scope == "client_portal":
+                request.session.pop("case_id", None)
+            return None
+        if request:
+            request.session["case_id"] = case.id
+    elif session.scope == "case_link":
+        return None
 
     return session
 
@@ -432,6 +436,10 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
     if auth_redirect:
         return auth_redirect
 
+    # Portal users must pick a case before any case-scoped step.
+    if session.scope == "client_portal" and not request.session.get("case_id"):
+        return redirect("clients:onboarding_select_case", token=token)
+
     client = session.client
     mos_data = getattr(client, "mos_application_data", None)
 
@@ -523,6 +531,44 @@ def onboarding_start(request: HttpRequest, token: str) -> HttpResponse:
         "missing_case_number": bool(mos_data and mos_data.new_residence_card_application_status == 'yes' and not mos_data.new_residence_card_case_number),
         **purpose_ctx,
     })
+
+
+def onboarding_select_case(request: HttpRequest, token: str) -> HttpResponse:
+    """Let a client_portal user pick which of their cases to work on.
+
+    The chosen case is validated against the session's client and stored
+    server-side in the Django session. A forged/foreign case id simply does not
+    match the active-cases queryset and is rejected without revealing anything
+    about other clients' cases (spec section 6).
+    """
+    session = check_onboarding_session(token, request=request)
+    if not session:
+        return HttpResponseForbidden(_("Срок действия ссылки истёк или она недействительна."))
+
+    # case_link sessions are bound to a single case and never choose one.
+    if session.scope != "client_portal":
+        return redirect("clients:onboarding_start", token=token)
+
+    auth_redirect = check_client_auth(request, session, token)
+    if auth_redirect:
+        return auth_redirect
+
+    client = session.client
+    active_cases = Case.objects.filter(client=client, archived_at__isnull=True).order_by("-opened_at", "-id")
+
+    if request.method == "POST":
+        chosen_case = active_cases.filter(pk=request.POST.get("case_id")).first()
+        if chosen_case is None:
+            messages.error(request, _("Выберите дело из списка."))
+        else:
+            request.session["case_id"] = chosen_case.id
+            return redirect("clients:onboarding_start", token=token)
+
+    return render(
+        request,
+        "clients/onboarding/select_case.html",
+        {"session": session, "token": token, "active_cases": active_cases},
+    )
 
 
 def onboarding_purpose(request: HttpRequest, token: str) -> HttpResponse:

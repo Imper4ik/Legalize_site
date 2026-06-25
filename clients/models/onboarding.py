@@ -64,7 +64,13 @@ class ClientOnboardingSession(models.Model):
 
     def clean(self) -> None:
         super().clean()
-        if self.case_id is None:
+        # client_portal sessions must never carry a Case (the DB check
+        # constraint enforces case IS NULL); the case is chosen per-request and
+        # kept in the server-side session instead.
+        if self.scope == "client_portal":
+            if self.case_id is not None:
+                raise ValidationError({"case": "Портальная сессия не может быть привязана к делу."})
+        elif self.case_id is None:
             if self.payment_id and self.payment.case_id:
                 self.case_id = self.payment.case_id
             elif self.client_id:
@@ -80,7 +86,8 @@ class ClientOnboardingSession(models.Model):
 
     def save(self, *args: object, **kwargs: object) -> None:
         update_fields = kwargs.get("update_fields")
-        if self.case_id is None:
+        # Only case_link sessions auto-resolve a Case; client_portal stays NULL.
+        if self.scope != "client_portal" and self.case_id is None:
             if self.payment_id and self.payment.case_id:
                 self.case_id = self.payment.case_id
             elif self.client_id:

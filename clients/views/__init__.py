@@ -34,6 +34,7 @@ from clients.views.onboarding_views import (
     onboarding_personal_data,
     onboarding_purpose,
     onboarding_review,
+    onboarding_select_case,
     onboarding_set_password,
     quick_create_client_onboarding,
 )

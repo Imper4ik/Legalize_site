@@ -194,6 +194,64 @@ class AuthorityNumberClearsLegacyTests(TestCase):
         self.assertFalse(refreshed.needs_manual_number_check)
 
 
+class ClientPortalOnboardingTests(TestCase):
+    """spec section 6: client_portal never auto-assigns a Case."""
+
+    def setUp(self) -> None:
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from clients.models import ClientOnboardingSession
+        from clients.services.onboarding_tokens import generate_onboarding_token
+
+        self.staff = create_test_user(role="Staff")
+        self.client_obj = create_test_client(assigned_staff=self.staff)
+        self.case_a = self.client_obj.cases.get()
+        self.case_b = create_case_for_client(
+            client=self.client_obj, actor=self.staff, application_purpose="study"
+        )
+        self.raw_token, hashed = generate_onboarding_token()
+        self.session = ClientOnboardingSession.objects.create(
+            client=self.client_obj,
+            scope="client_portal",
+            case=None,
+            token_hash=hashed,
+            status="active",
+            expires_at=timezone.now() + timedelta(days=1),
+        )
+
+    def test_portal_session_persists_with_null_case(self) -> None:
+        self.session.refresh_from_db()
+        self.assertEqual(self.session.scope, "client_portal")
+        self.assertIsNone(self.session.case_id)
+
+    def test_portal_session_does_not_autoassign_case(self) -> None:
+        from clients.views.onboarding_views import check_onboarding_session
+
+        resolved = check_onboarding_session(self.raw_token, request=None)
+        self.assertIsNotNone(resolved)
+        # No case is silently chosen for the portal.
+        self.assertIsNone(resolved.case_id)
+
+    def test_portal_rejects_foreign_case_id(self) -> None:
+        from django.contrib.sessions.backends.db import SessionStore
+        from django.test import RequestFactory
+
+        from clients.views.onboarding_views import check_onboarding_session
+
+        other_client = create_test_client()
+        foreign_case = other_client.cases.get()
+
+        request = RequestFactory().get("/")
+        request.session = SessionStore()
+        request.session["case_id"] = foreign_case.id
+
+        check_onboarding_session(self.raw_token, request=request)
+        # The forged selection is dropped, not honoured.
+        self.assertIsNone(request.session.get("case_id"))
+
+
 class CompatibilityHelperTests(TestCase):
     """spec section 4: legacy compatibility helper must never auto-create or
     silently pick from multiple cases."""

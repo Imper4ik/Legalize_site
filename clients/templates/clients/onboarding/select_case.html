@@ -1,0 +1,41 @@
+{% extends "clients/onboarding/base_onboarding.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Выберите дело" %}{% endblock %}
+
+{% block content %}
+<p class="text-muted text-center mb-4">
+    {% trans "У вас несколько дел. Выберите дело, с которым хотите продолжить работу в личном кабинете." %}
+</p>
+
+{% if active_cases %}
+<form method="post" action="{% url 'clients:onboarding_select_case' token %}">
+    {% csrf_token %}
+    <div class="list-group mb-4">
+        {% for case in active_cases %}
+        <label class="list-group-item d-flex align-items-center gap-3" style="cursor: pointer;">
+            <input class="form-check-input flex-shrink-0 m-0" type="radio" name="case_id" value="{{ case.id }}"
+                   {% if forloop.first %}checked{% endif %} required>
+            <span class="flex-grow-1">
+                <span class="fw-semibold d-block">{{ case.display_number }}</span>
+                <span class="text-muted small">
+                    {{ case.get_workflow_stage_display }}
+                    {% if case.application_purpose %}· {{ case.application_purpose }}{% endif %}
+                </span>
+            </span>
+            <i class="bi bi-chevron-right text-muted" aria-hidden="true"></i>
+        </label>
+        {% endfor %}
+    </div>
+    <div class="d-grid">
+        <button type="submit" class="btn btn-primary rounded-pill py-2 fw-bold">
+            {% trans "Продолжить" %}
+        </button>
+    </div>
+</form>
+{% else %}
+<div class="alert alert-info mb-0" role="alert">
+    {% trans "Для вашего профиля пока нет активных дел. Свяжитесь с сотрудником офиса." %}
+</div>
+{% endif %}
+{% endblock %}

@@ -523,6 +523,10 @@ def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
     if auth_redirect:
         return auth_redirect
 
+    # Portal users must pick a case before any case-scoped step.
+    if session.scope == "client_portal" and not request.session.get("case_id"):
+        return redirect("clients:onboarding_select_case", token=token)
+
     client = session.client
     try:
         mos_data = MOSApplicationData.objects.get(client=client)
