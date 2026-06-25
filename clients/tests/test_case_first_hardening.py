@@ -252,6 +252,55 @@ class ClientPortalOnboardingTests(TestCase):
         self.assertIsNone(request.session.get("case_id"))
 
 
+class OcrCaseIsolationTests(TestCase):
+    """spec section 5: OCR of a document on case B must not touch case A."""
+
+    def setUp(self) -> None:
+        self.staff = create_test_user(role="Staff")
+        self.client_obj = create_test_client(assigned_staff=self.staff)
+        self.case_a = self.client_obj.cases.get()
+        self.case_b = create_case_for_client(
+            client=self.client_obj, actor=self.staff, application_purpose="study"
+        )
+
+    def test_confirmed_wezwanie_updates_only_its_case(self) -> None:
+        from clients.constants import DocumentType
+        from clients.models import Document
+        from clients.services.document_workflow import confirm_wezwanie_document
+        from clients.testing.factories import build_pdf_upload
+
+        document = Document.objects.create(
+            client=self.client_obj,
+            case=self.case_b,
+            document_type=DocumentType.WEZWANIE.value,
+            file=build_pdf_upload("wezwanie.pdf"),
+            awaiting_confirmation=True,
+            ocr_status="success",
+            is_test_data=True,
+        )
+
+        confirm_wezwanie_document(
+            document=document,
+            actor=self.staff,
+            confirmation_data={
+                "case_number": "WSC-II-S.6151.97770.2026",
+                "fingerprints_date": "2026-08-15",
+                "fingerprints_time": "10:30",
+                "fingerprints_location": "Marszałkowska 3/5",
+            },
+        )
+
+        case_b = Case.all_objects.get(pk=self.case_b.pk)
+        case_a = Case.all_objects.get(pk=self.case_a.pk)
+
+        self.assertEqual(case_b.authority_case_number, "WSC-II-S.6151.97770.2026")
+        self.assertIsNotNone(case_b.fingerprints_date)
+        # Case A is fully untouched.
+        self.assertEqual(case_a.authority_case_number, "")
+        self.assertIsNone(case_a.fingerprints_date)
+        self.assertEqual(case_a.fingerprints_location, "")
+
+
 class CompatibilityHelperTests(TestCase):
     """spec section 4: legacy compatibility helper must never auto-create or
     silently pick from multiple cases."""
