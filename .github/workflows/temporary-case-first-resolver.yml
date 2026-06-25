@@ -1,0 +1,27 @@
+name: Temporary case-first resolver
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  resolve-and-publish:
+    if: github.event.pull_request.head.ref == 'chore/trigger-case-first-merge' && github.event.pull_request.base.ref == 'chore/resolve-case-first-merge'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the controlled technical branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Merge current main and publish result
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git merge --no-edit -X ours origin/main
+          git push --force-with-lease origin HEAD:refs/heads/chore/merged-case-first-ready
