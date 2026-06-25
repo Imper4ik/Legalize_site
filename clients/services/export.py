@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 from django.conf import settings
 from django.utils import timezone
 
+from clients.security.encrypted import safe_encrypted_attr
 from clients.services.document_helpers import document_file_exists
 
 if TYPE_CHECKING:
@@ -55,10 +56,13 @@ def generate_client_summary_text(client: Client) -> str:
     lines.append(f"CASES ({cases.count()})")
     for case in cases:
         archived = " [ARCHIVED]" if case.archived_at else ""
-        lines.append(f"  • {case.display_number}{archived}")
+        # Read the encrypted authority number defensively so a corrupted token
+        # degrades to a placeholder instead of breaking the whole export.
+        authority_number = safe_encrypted_attr(case, "authority_case_number", default="—") or "—"
+        lines.append(f"  • {authority_number if case.authority_case_number_hash else 'Case without a number'}{archived}")
         lines.append(f"       Application:       {case.get_application_purpose_display() or '—'}")
         lines.append(f"       Workflow Stage:    {case.get_workflow_stage_display()}")
-        lines.append(f"       Authority Number:  {case.authority_case_number or '—'}")
+        lines.append(f"       Authority Number:  {authority_number}")
         lines.append(f"       Fingerprints Date: {case.fingerprints_date or '—'}")
         lines.append(f"       Decision Date:     {case.decision_date or '—'}")
     lines.append("")

@@ -25,6 +25,15 @@ def _corrupt_client_field(client: Client, field_name: str) -> None:
         )
 
 
+def _corrupt_model_field(instance, field_name: str) -> None:
+    table = instance._meta.db_table
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"UPDATE {table} SET {field_name} = %s WHERE id = %s",
+            [CORRUPTED_FERNET_TOKEN, instance.pk],
+        )
+
+
 @override_settings(LANGUAGE_CODE="en")
 class EncryptedFieldResilienceTests(TestCase):
     def test_safe_encrypted_attr_returns_placeholder_and_logs_metadata_only(self):
@@ -44,8 +53,12 @@ class EncryptedFieldResilienceTests(TestCase):
         self.assertNotIn("SECRET-CASE", log_output)
 
     def test_corrupted_case_number_does_not_break_zip_export(self):
-        client = Client.objects.create(first_name="Export", last_name="Client", case_number="SECRET-CASE")
-        _corrupt_client_field(client, "case_number")
+        client = Client.objects.create(first_name="Export", last_name="Client")
+        # The authority case number lives on the Case (the export's source).
+        case = client.cases.get()
+        case.authority_case_number = "SECRET-CASE"
+        case.save(update_fields=["authority_case_number"])
+        _corrupt_model_field(case, "authority_case_number")
         client = Client.objects.defer("case_number", "passport_num").get(pk=client.pk)
 
         buffer = generate_client_zip(client)
