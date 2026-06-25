@@ -512,6 +512,59 @@ class WorkdayPerCaseQueueTests(TestCase):
         self.assertEqual(len(mine), 1)
 
 
+class WorkflowTransitionDoesNotMirrorToClientTests(TestCase):
+    """spec section 4: workflow transitions write the case only; the deprecated
+    client wrapper no longer mirrors stage/dates onto the Client."""
+
+    def setUp(self) -> None:
+        self.staff = create_test_user(role="Staff")
+        self.client_obj = create_test_client(
+            workflow_stage="new_client", assigned_staff=self.staff
+        )
+        self.case = self.client_obj.cases.get()
+        # The primary case mirrors the client's starting stage.
+        self.case.workflow_stage = "new_client"
+        self.case.save(update_fields=["workflow_stage"])
+
+    def test_case_transition_leaves_client_stage_untouched(self) -> None:
+        from clients.services.workflow_transitions import transition_case_workflow
+
+        transition_case_workflow(
+            case=self.case,
+            target_stage="document_collection",
+            actor=self.staff,
+        )
+
+        refreshed_case = Case.all_objects.get(pk=self.case.pk)
+        refreshed_client = type(self.client_obj).all_objects.get(pk=self.client_obj.pk)
+        self.assertEqual(refreshed_case.workflow_stage, "document_collection")
+        # The client keeps its legacy value; process state is not mirrored.
+        self.assertEqual(refreshed_client.workflow_stage, "new_client")
+
+    def test_client_wrapper_delegates_without_writing_client(self) -> None:
+        from clients.services.workflow_transitions import transition_client_workflow
+
+        transition_client_workflow(
+            client=self.client_obj, target_stage="document_collection", actor=self.staff
+        )
+
+        refreshed_case = Case.all_objects.get(pk=self.case.pk)
+        refreshed_client = type(self.client_obj).all_objects.get(pk=self.client_obj.pk)
+        self.assertEqual(refreshed_case.workflow_stage, "document_collection")
+        self.assertEqual(refreshed_client.workflow_stage, "new_client")
+
+    def test_client_wrapper_raises_on_ambiguous_cases(self) -> None:
+        from clients.services.workflow_transitions import transition_client_workflow
+
+        create_case_for_client(
+            client=self.client_obj, actor=self.staff, application_purpose="study"
+        )
+        with self.assertRaises(ValidationError):
+            transition_client_workflow(
+                client=self.client_obj, target_stage="document_collection", actor=self.staff
+            )
+
+
 class OcrDoesNotMirrorProcessStateToClientTests(TestCase):
     """spec section 4: OCR/wezwanie confirmation writes process state only to the
     case. The client may only receive permanent personal data (name), never the

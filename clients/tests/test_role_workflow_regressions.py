@@ -188,12 +188,15 @@ class OnboardingTransitionConsistencyTests(TestCase):
         DocumentRequirement.objects.create(application_purpose=purpose, document_type=DocumentType.PASSPORT.value, is_required=True)
         create_test_document(client, doc_type=DocumentType.PASSPORT.value)
         mos = MOSApplicationData.objects.update_or_create(client=client, defaults={"status": "mos_package_ready"})[0]
+        case = client.cases.get()
         transition_client_workflow(client=client, target_stage="application_submitted")
         mos.status = "submitted_in_mos"
         mos.save(update_fields=["status"])
-        client.refresh_from_db()
+        case.refresh_from_db()
         mos.refresh_from_db()
-        self.assertEqual(client.workflow_stage, "application_submitted")
+        # Process state lives on the case; the shim no longer mirrors it to the
+        # client (spec §4).
+        self.assertEqual(case.workflow_stage, "application_submitted")
         self.assertEqual(mos.status, "submitted_in_mos")
 
     def test_forbidden_transition_changes_neither_model(self):

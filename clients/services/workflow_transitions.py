@@ -51,9 +51,18 @@ def transition_case_workflow(*, case: Case, target_stage: str, actor: Any = None
 
 
 def transition_client_workflow(*, client: Client, target_stage: str, actor: Any = None, submission_date: date | None = None, fingerprints_date: date | None = None, decision_date: date | None = None, save: bool = True) -> WorkflowTransitionResult:
+    """DEPRECATED compatibility shim. Transition the client's single case.
+
+    Process state (workflow stage, submission/fingerprints/decision dates) lives
+    on the case, so this shim no longer mirrors it onto the Client. It resolves
+    the client's single active case and delegates to
+    :func:`transition_case_workflow`, raising (via the resolver) when the client
+    has zero or several active cases — callers with a known case must call
+    ``transition_case_workflow`` directly (spec §4).
+    """
     from clients.services.cases import get_primary_case_for_client
     case = get_primary_case_for_client(client)
-    res = transition_case_workflow(
+    return transition_case_workflow(
         case=case,
         target_stage=target_stage,
         actor=actor,
@@ -62,20 +71,3 @@ def transition_client_workflow(*, client: Client, target_stage: str, actor: Any 
         decision_date=decision_date,
         save=save,
     )
-    if submission_date is not None:
-        client.submission_date = submission_date
-    if fingerprints_date is not None:
-        client.fingerprints_date = fingerprints_date
-    if decision_date is not None:
-        client.decision_date = decision_date
-    client.workflow_stage = target_stage
-    if save:
-        fields = ["workflow_stage"]
-        if submission_date is not None:
-            fields.append("submission_date")
-        if fingerprints_date is not None:
-            fields.append("fingerprints_date")
-        if decision_date is not None:
-            fields.append("decision_date")
-        client.save(update_fields=fields)
-    return res
