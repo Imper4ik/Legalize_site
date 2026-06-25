@@ -9,6 +9,17 @@
     <a href="{% url 'clients:client_detail' client.id %}" class="btn btn-outline-secondary">{% translate "Вернуться к клиенту" %}</a>
 </div>
 
+{% if mos_eligibility.has_warnings %}
+<div class="alert alert-warning" role="alert">
+    <strong>{% translate "Внимание: онлайн-подача через MOS 2 недоступна" %}</strong>
+    <ul class="mb-0 mt-2">
+        {% for reason in mos_eligibility.reasons %}
+        <li>{{ reason }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
 <div class="row">
     <div class="col-md-8">
         <div class="card mb-3">
