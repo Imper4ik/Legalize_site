@@ -70,8 +70,7 @@ def _mos_documents_are_editable(mos_data: MOSApplicationData | None) -> bool:
 
 
 def _locked_response(request: HttpRequest, session: ClientOnboardingSession) -> HttpResponse:
-    client = session.client
-    mos_data = getattr(client, "mos_application_data", None)
+    mos_data = _get_scoped_mos(session)
     status_display = mos_data.get_status_display() if mos_data else ""
 
     if (
@@ -119,6 +118,32 @@ def _purpose_context(client: Client, mos_data: MOSApplicationData | None) -> dic
     }
 
 
+def _session_case(session: ClientOnboardingSession) -> Case | None:
+    """The Case the current portal/onboarding request operates on.
+
+    ``case_link`` sessions are bound to a single case; ``client_portal`` sessions
+    carry the case the client picked for this Django session. The value is set by
+    :func:`check_onboarding_session` after the ownership/archive re-validation, so
+    it is always either ``None`` or a case that belongs to the session's client
+    and is not archived (spec section 1).
+    """
+    return getattr(session, "active_case", None)
+
+
+def _require_portal_case(
+    request: HttpRequest, session: ClientOnboardingSession, token: str
+) -> HttpResponse | None:
+    """Redirect portal users to the case picker until they have chosen a case.
+
+    Case-scoped steps must never run without a selected case for a
+    ``client_portal`` session, otherwise the MOS/Document lookups would fall back
+    to the ambiguous legacy resolution.
+    """
+    if session.scope == "client_portal" and _session_case(session) is None:
+        return redirect("clients:onboarding_select_case", token=token)
+    return None
+
+
 def _ensure_mos(client: Client, case: Any = None) -> tuple[MOSApplicationData, bool]:
     """Create/fetch the MOS record for a specific case (spec section 6).
 
@@ -133,6 +158,18 @@ def _ensure_mos(client: Client, case: Any = None) -> tuple[MOSApplicationData, b
     if resolved_case is not None:
         return MOSApplicationData.objects.get_or_create(client=client, case=resolved_case)
     return MOSApplicationData.objects.get_or_create(client=client)
+
+
+def _get_scoped_mos(session: ClientOnboardingSession) -> MOSApplicationData | None:
+    """Return the MOS record for the session's active case, or None.
+
+    Replaces the legacy ``client.mos_application_data`` (``.first()``) accessor so
+    a multi-case client only ever sees the MOS of the case in scope.
+    """
+    case = _session_case(session)
+    if case is not None:
+        return MOSApplicationData.objects.filter(client=session.client, case=case).first()
+    return MOSApplicationData.objects.filter(client=session.client).first()
 
 
 def _save_onboarding_purpose(mos_data: MOSApplicationData, selected_purpose: str) -> None:
@@ -164,18 +201,21 @@ def check_onboarding_session(
             if not session:
                 from clients.services.onboarding_tokens import generate_onboarding_token
                 _, token_hash = generate_onboarding_token()
+                # Self-onboarding is a client portal: it must never carry/auto-pick
+                # a Case. The case is chosen per-request and kept server-side. MOS
+                # data is created lazily once a case is selected (spec section 1).
                 session = ClientOnboardingSession.objects.create(
                     client=client,
+                    scope="client_portal",
+                    case=None,
                     token_hash=token_hash,
                     status="active",
                     expires_at=timezone.now() + timedelta(days=7),
                 )
-                _ensure_mos(client)
                 ClientDigitalAccess.objects.get_or_create(client=client)
             elif session.status == "created" and "active" in allowed_statuses:
                 session.status = "active"
                 session.save(update_fields=["status"])
-                _ensure_mos(client)
                 ClientDigitalAccess.objects.get_or_create(client=client)
             session.token_hash = SELF_ONBOARDING_SLUG
             session.client = client
@@ -201,9 +241,13 @@ def check_onboarding_session(
     if session.client.archived_at is not None:
         return None
 
-    # Валидация scope и согласованности дела
-    case_id = None
+    # Валидация scope и согласованности дела. The resolved case is attached to
+    # the session as ``active_case`` for the view layer to consume.
+    session.active_case = None
+    case_id: Any = None
     if session.scope == "case_link":
+        # case_link sessions are permanently bound to one case; without it there
+        # is nothing to show.
         if not session.case_id:
             return None
         case_id = session.case_id
@@ -215,19 +259,25 @@ def check_onboarding_session(
             case_id = request.session.get("case_id")
 
     if case_id:
-        try:
-            case = Case.all_objects.get(pk=case_id)
-        except Case.DoesNotExist:
-            return None
-        if case.client_id != session.client_id or case.archived_at is not None:
-            # Drop a stale/forged selection; the portal will ask again.
+        case = Case.all_objects.filter(pk=case_id).first()
+        case_is_valid = (
+            case is not None
+            and case.client_id == session.client_id
+            and case.archived_at is None
+        )
+        if case_is_valid:
+            session.active_case = case
+            # Only the portal persists the chosen case in the Django session;
+            # case_link derives it from the session row itself.
             if request and session.scope == "client_portal":
+                request.session["case_id"] = case.id
+        else:
+            if session.scope == "case_link":
+                # The bound case vanished/was archived: the link is dead.
+                return None
+            # Portal: drop the stale/forged selection and ask again (no leak).
+            if request:
                 request.session.pop("case_id", None)
-            return None
-        if request:
-            request.session["case_id"] = case.id
-    elif session.scope == "case_link":
-        return None
 
     return session
 
@@ -594,9 +644,12 @@ def onboarding_purpose(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = _require_portal_case(request, session, token)
+    if case_redirect:
+        return case_redirect
 
     client = session.client
-    mos_data, _created = _ensure_mos(client)
+    mos_data, _created = _ensure_mos(client, _session_case(session))
 
     if not _mos_data_is_editable(mos_data):
         return _locked_response(request, session)
@@ -628,8 +681,11 @@ def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) 
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = _require_portal_case(request, session, token)
+    if case_redirect:
+        return case_redirect
 
-    mos_data = getattr(session.client, "mos_application_data", None)
+    mos_data = _get_scoped_mos(session)
     if not _mos_documents_are_editable(mos_data):
         return _locked_response(request, session)
 
@@ -645,6 +701,7 @@ def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) 
                     doc_type=doc_type,
                     uploaded_document=form.save(commit=False),
                     actor=request.user if request.user.is_authenticated else None,
+                    case=_session_case(session),
                     # Client-side wezwanie uploads use the manual scenario: do not queue OCR here,
                     # because staff must open the original file and enter fingerprints details.
                     # For passport uploads, we trigger OCR to extract details.
@@ -673,8 +730,13 @@ def onboarding_document_preview(request: HttpRequest, token: str, doc_id: int) -
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = _require_portal_case(request, session, token)
+    if case_redirect:
+        return case_redirect
 
-    document = get_object_or_404(Document, id=doc_id, client=session.client)
+    document = get_object_or_404(
+        Document, id=doc_id, client=session.client, case=_session_case(session)
+    )
     return cast(HttpResponse, build_protected_file_response(document.file, as_attachment=False))
 
 
@@ -687,14 +749,17 @@ def onboarding_document_delete(request: HttpRequest, token: str, doc_id: int) ->
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = _require_portal_case(request, session, token)
+    if case_redirect:
+        return case_redirect
 
     client = session.client
-    mos_data = getattr(client, "mos_application_data", None)
+    mos_data = _get_scoped_mos(session)
 
     if not _mos_documents_are_editable(mos_data):
         return _locked_response(request, session)
 
-    doc = get_object_or_404(Document, id=doc_id, client=client)
+    doc = get_object_or_404(Document, id=doc_id, client=client, case=_session_case(session))
     if not doc.verified:
         from clients.use_cases.documents import delete_client_document
         delete_client_document(
@@ -996,8 +1061,13 @@ def onboarding_review(request: HttpRequest, token: str) -> HttpResponse:
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:
         return auth_redirect
+    case_redirect = _require_portal_case(request, session, token)
+    if case_redirect:
+        return case_redirect
 
-    mos_data = get_object_or_404(MOSApplicationData, client=session.client)
+    mos_data = get_object_or_404(
+        MOSApplicationData, client=session.client, case=_session_case(session)
+    )
 
     return render(request, "clients/onboarding/review.html", {"session": session, "mos_data": mos_data})
 
@@ -1062,9 +1132,13 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
             mos_data.new_residence_card_application_status = "no"
             mos_data.save(update_fields=["new_residence_card_application_status", "updated_at"])
 
+        # Staff-generated links are case-scoped (case_link): they point at the
+        # specific case the MOS data was resolved for (spec section 1).
         ClientOnboardingSession.objects.create(
             client=client,
             payment=payment,
+            scope="case_link",
+            case=mos_data.case,
             token_hash=token_hash,
             status="created",
             expires_at=timezone.now() + timedelta(days=7),
@@ -1148,8 +1222,12 @@ def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
                 mos_data.save(update_fields=["new_residence_card_application_status", "updated_at"])
 
             token, token_hash = generate_onboarding_token()
+            # A freshly created client has exactly one case: the staff link is
+            # case-scoped to it (spec section 1).
             ClientOnboardingSession.objects.create(
                 client=client,
+                scope="case_link",
+                case=mos_data.case,
                 token_hash=token_hash,
                 status="created",
                 expires_at=timezone.now() + timedelta(days=7)
@@ -1181,8 +1259,11 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
     if auth_redirect:
         return JsonResponse({"status": "error", "message": _("Authentication required")}, status=401)
 
+    if session.scope == "client_portal" and _session_case(session) is None:
+        return JsonResponse({"status": "error", "message": _("Select a case first")}, status=409)
+
     client = session.client
-    mos_data, created_mos = _ensure_mos(client)
+    mos_data, created_mos = _ensure_mos(client, _session_case(session))
     if not _mos_data_is_editable(mos_data):
         return JsonResponse({"status": "locked", "message": _("This onboarding form is locked.")}, status=423)
 

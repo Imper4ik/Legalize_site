@@ -17,7 +17,7 @@ from django.utils.dateparse import parse_date, parse_time
 from django.utils.translation import gettext as _
 
 from clients.constants import DocumentType
-from clients.models import Client, Document, DocumentProcessingJob
+from clients.models import Case, Client, Document, DocumentProcessingJob
 from clients.services.activity import log_client_activity
 from clients.services.company_parser import parse_company_doc
 from clients.services.notifications import (
@@ -85,17 +85,25 @@ def upload_client_document(
     uploaded_document: Document,
     actor: AbstractBaseUser | AnonymousUser | None,
     parse_requested: bool,
+    case: Case | None = None,
     parser: Parser = parse_wezwanie,
     send_missing_email: NotificationSender = send_missing_documents_email,
     send_appointment_email: NotificationSender = send_appointment_notification_email,
 ) -> DocumentUploadResult:
-    """Persist an uploaded document and route wezwanie handling through services."""
+    """Persist an uploaded document and route wezwanie handling through services.
+
+    ``case`` scopes the document to a specific case (spec section 1/5). When
+    omitted the Document model falls back to the client's single active case;
+    portal callers must always pass it so a multi-case client cannot trigger the
+    ambiguous legacy fallback.
+    """
 
     document = _save_client_document(
         client=client,
         doc_type=doc_type,
         uploaded_document=uploaded_document,
         actor=actor,
+        case=case,
     )
 
     if not actor or not getattr(actor, "is_staff", False):
@@ -1287,9 +1295,12 @@ def _save_client_document(
     doc_type: str,
     uploaded_document: Document,
     actor: AbstractBaseUser | AnonymousUser | None,
+    case: Case | None = None,
 ) -> Document:
     uploaded_document.client = client
     uploaded_document.document_type = doc_type
+    if case is not None:
+        uploaded_document.case = case
     uploaded_document.save()
     return uploaded_document
 
