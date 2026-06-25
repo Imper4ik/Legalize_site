@@ -95,7 +95,7 @@ class Command(BaseCommand):
 
     def send_missing_document_notifications(self, *, dry_run: bool = False) -> None:
         today = timezone.localdate()
-        clients = Client.objects.filter(
+        clients = Client.objects.production().filter(
             workflow_stage="waiting_decision",
             fingerprints_date__isnull=False,
             fingerprints_date__lte=today,
@@ -128,7 +128,7 @@ class Command(BaseCommand):
         today = timezone.localdate()
         # Case-first: ZUS reminders are computed per active case (archived cases
         # are excluded by Case.objects).
-        cases = Case.objects.select_related("client").filter(
+        cases = Case.objects.production().select_related("client").filter(
             workflow_stage="waiting_decision",
             fingerprints_date__isnull=False,
             fingerprints_date__lte=today,
@@ -180,7 +180,7 @@ class Command(BaseCommand):
     def send_expiring_document_notifications(self, *, dry_run: bool = False) -> None:
         today = timezone.localdate()
         cutoff = today + timedelta(days=7)
-        expiring_docs = Document.objects.select_related("client", "case").filter(
+        expiring_docs = Document.objects.production().select_related("client", "case").filter(
             expiry_date__isnull=False,
             expiry_date__gte=today,
             expiry_date__lte=cutoff,
@@ -215,7 +215,7 @@ class Command(BaseCommand):
         reminder_period_start = today - timedelta(days=30)
         reminder_period_end = today + timedelta(days=30)
 
-        expiring_docs = Document.objects.select_related("client").filter(
+        expiring_docs = Document.objects.production().select_related("client").filter(
             expiry_date__isnull=False,
             expiry_date__gte=reminder_period_start,
             expiry_date__lte=reminder_period_end,
@@ -250,7 +250,7 @@ class Command(BaseCommand):
 
     def create_payment_reminders(self, *, dry_run: bool = False) -> None:
         today = timezone.localdate()
-        due_payments = Payment.objects.select_related("client", "case").filter(
+        due_payments = Payment.objects.production().select_related("client", "case").filter(
             due_date__lte=today,
             status__in=["pending", "partial"],
             client__archived_at__isnull=True,
@@ -296,6 +296,8 @@ class Command(BaseCommand):
             legal_stay_until__lte=cutoff,
             client__workflow_stage__in=["new_client", "document_collection"],
             client__archived_at__isnull=True,
+            client__is_demo_data=False,
+            client__is_test_data=False,
         )
 
         count = 0

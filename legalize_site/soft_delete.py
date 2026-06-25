@@ -13,6 +13,20 @@ class SoftDeleteQuerySet(models.QuerySet):
     def archived(self) -> Self:
         return self.filter(archived_at__isnull=False)
 
+    def production(self) -> Self:
+        """Exclude non-production (Demo/Test Center) records.
+
+        Used by autonomous background tasks so the unattended reminder loop never
+        processes or emails seeded demo/test data. Fields are checked at runtime
+        so the method is safe on models that only carry one of the flags.
+        """
+        qs = self
+        field_names = {field.name for field in self.model._meta.get_fields()}
+        for flag in ("is_demo_data", "is_test_data"):
+            if flag in field_names:
+                qs = qs.filter(**{flag: False})
+        return qs
+
     def delete(self) -> tuple[int, dict[str, int]]:
         count = 0
         for obj in self:

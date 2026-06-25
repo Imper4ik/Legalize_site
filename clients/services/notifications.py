@@ -179,6 +179,28 @@ def _send_email(
 ) -> int:
     recipient_list = list(recipients)
 
+    # Autonomy guard: never dispatch real email for non-production records. The
+    # autonomous reminder loop processes every active client, including Demo and
+    # Test Center data; sending to those would bounce, pollute delivery metrics,
+    # or leak. Log the attempt (so the Demo Center still shows it) but skip SMTP.
+    if client is not None and (
+        getattr(client, "is_demo_data", False) or getattr(client, "is_test_data", False)
+    ):
+        from clients.models import EmailLog
+
+        _log_email(
+            subject,
+            body,
+            recipient_list,
+            client=client,
+            template_type=template_type,
+            sent_by=sent_by,
+            idempotency_key=idempotency_key,
+            delivery_status=EmailLog.DELIVERY_STATUS_SKIPPED,
+            error_message="non-production recipient; real send skipped",
+        )
+        return 0
+
     if not _reserve_idempotent_email_send(
         subject,
         body,
