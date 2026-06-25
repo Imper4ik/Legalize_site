@@ -55,23 +55,12 @@ class CaseDetailView(RoleRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         case = self.object
         self._hydrate_unambiguous_legacy_number_for_display(case)
-        case_documents = list(
-            Document.all_objects.filter(case=case).order_by("-uploaded_at")[:200]
+        context["documents"] = Document.all_objects.filter(case=case).order_by("-uploaded_at")[:200]
+        # Checklist grouped by required document (the pre-refactor view): one row
+        # per requirement with status, missing items flagged, files nested inside.
+        context["document_status_list"] = case.client.get_document_checklist(
+            check_file_existence=True, case=case
         )
-        context["documents"] = case_documents
-        # Group repeated uploads of the same document under one row (latest shown,
-        # earlier versions collapsed) so the list is not visually cluttered.
-        groups: dict[str, dict[str, Any]] = {}
-        ordered_keys: list[str] = []
-        for document in case_documents:
-            key = (document.display_name or "").strip().lower() or f"doc-{document.pk}"
-            group = groups.get(key)
-            if group is None:
-                groups[key] = {"latest": document, "older": []}
-                ordered_keys.append(key)
-            else:
-                group["older"].append(document)
-        context["document_groups"] = [groups[key] for key in ordered_keys]
         context["payments"] = Payment.all_objects.filter(case=case).order_by("-created_at")[:50]
         context["tasks"] = StaffTask.objects.filter(case=case).select_related("assignee").order_by("status", "due_date")[:50]
         context["reminders"] = Reminder.objects.filter(case=case).order_by("-is_active", "due_date")[:50]

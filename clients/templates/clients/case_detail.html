@@ -103,24 +103,51 @@
     </div>
 
     <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="documents" role="tabpanel" aria-labelledby="documents-tab">
-      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <h4 class="mb-0 case-section-heading">{% translate "Документы по делу" %}</h4>
-        <div class="form-check form-switch m-0">
-          <input class="form-check-input" type="checkbox" id="hideArchivedDocs" checked>
-          <label class="form-check-label small" for="hideArchivedDocs">{% translate "Скрыть архивные" %}</label>
+      <h4 class="mb-3 case-section-heading">{% translate "Документы по делу" %}</h4>
+      <div class="accordion" id="documentChecklist">
+        {% for item in document_status_list %}
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="docHead{{ forloop.counter }}">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#docBody{{ forloop.counter }}" aria-expanded="false" aria-controls="docBody{{ forloop.counter }}">
+              <span class="me-2">{{ item.name }}</span>
+              {% if item.is_uploaded %}<span class="badge bg-success me-1">{{ item.documents|length }} {% translate "шт." %}</span>{% endif %}
+              {% if item.is_submitted %}<span class="badge bg-info text-dark me-1">{% translate "Сдано" %}</span>{% endif %}
+              {% if not item.is_complete %}<span class="badge bg-danger me-1">{% translate "Отсутствует" %}</span>{% endif %}
+              {% if item.is_custom_submission %}<span class="badge bg-secondary me-1">{% translate "Свой" %}</span>{% endif %}
+            </button>
+          </h2>
+          <div id="docBody{{ forloop.counter }}" class="accordion-collapse collapse" data-bs-parent="#documentChecklist">
+            <div class="accordion-body">
+              {% if item.documents %}
+              <ul class="list-group list-group-flush">
+                {% for doc in item.documents %}
+                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2 bg-transparent">
+                  <span>
+                    {% translate "Файл от" %} {{ doc.uploaded_at|date:"d.m.Y H:i" }}
+                    <span class="badge {% if doc.verified %}bg-success{% else %}bg-warning text-dark{% endif %} ms-2">{% if doc.verified %}{% translate "Проверен" %}{% else %}{% translate "Ожидает проверки" %}{% endif %}</span>
+                    {% if doc.zus_period_month %}<span class="badge bg-info text-dark ms-1"><i class="bi bi-calendar-month"></i> {{ doc.zus_period_month|date:"m.Y" }}</span>{% endif %}
+                    {% if doc.expiry_date %}<small class="text-muted ms-2">{% translate "до" %} {{ doc.expiry_date|date:"d.m.Y" }}</small>{% endif %}
+                    {% if doc.rejection_reason and not doc.verified %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-octagon-fill"></i> {{ doc.rejection_reason }}</div>{% endif %}
+                  </span>
+                  <span class="text-nowrap">
+                    {% if doc.file %}<a href="{% url 'clients:document_preview' doc.id %}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="{% translate 'Просмотр' %}"><i class="bi bi-eye"></i></a>
+                    <a href="{% url 'clients:document_download' doc.id %}" class="btn btn-sm btn-outline-secondary" title="{% translate 'Скачать' %}"><i class="bi bi-download"></i></a>{% endif %}
+                  </span>
+                </li>
+                {% endfor %}
+              </ul>
+              {% elif item.is_submitted %}
+              <p class="text-muted mb-0">{% translate "Покрыт поданным Wnioskiem." %}</p>
+              {% else %}
+              <p class="text-danger mb-0"><i class="bi bi-exclamation-triangle"></i> {% translate "Документ ещё не загружен." %}</p>
+              {% endif %}
+            </div>
+          </div>
         </div>
+        {% empty %}
+        <p class="text-center text-muted mb-0">{% translate "Чек-лист документов пуст." %}</p>
+        {% endfor %}
       </div>
-      <div class="table-responsive"><table class="table table-hover align-middle" id="documentsTable"><thead><tr><th>{% translate "Название" %}</th><th>{% translate "Статус" %}</th><th>{% translate "Дата загрузки" %}</th><th>{% translate "Срок действия" %}</th><th class="text-end">{% translate "Действия" %}</th></tr></thead><tbody>
-        {% for group in document_groups %}{% with document=group.latest %}<tr class="{% if document.archived_at %}doc-archived{% endif %}" data-archived="{% if document.archived_at %}1{% else %}0{% endif %}"><td>{{ document.display_name }}{% if group.older %} <button type="button" class="btn btn-sm btn-link p-0 ms-1 text-decoration-none js-doc-versions" data-target="docgrp{{ forloop.counter }}" title="{% translate 'Показать предыдущие версии' %}"><span class="badge bg-light text-dark border">+{{ group.older|length }}</span></button>{% endif %}</td><td><span class="badge bg-secondary">{{ document.computed_status }}</span></td><td>{{ document.uploaded_at|date:"d.m.Y H:i" }}</td><td>{{ document.expiry_date|date:"d.m.Y"|default:"—" }}</td><td class="text-end text-nowrap">
-          {% if document.file %}<a href="{% url 'clients:document_preview' document.id %}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="{% translate 'Просмотр' %}"><i class="bi bi-eye"></i></a>
-          <a href="{% url 'clients:document_download' document.id %}" class="btn btn-sm btn-outline-secondary" title="{% translate 'Скачать' %}"><i class="bi bi-download"></i></a>{% else %}<span class="text-muted small">—</span>{% endif %}
-        </td></tr>{% endwith %}
-        {% for document in group.older %}<tr class="doc-version d-none docgrp{{ forloop.parentloop.counter }} {% if document.archived_at %}doc-archived{% endif %}" data-archived="{% if document.archived_at %}1{% else %}0{% endif %}"><td class="ps-4 text-muted small">↳ {{ document.display_name }}</td><td><span class="badge bg-secondary">{{ document.computed_status }}</span></td><td>{{ document.uploaded_at|date:"d.m.Y H:i" }}</td><td>{{ document.expiry_date|date:"d.m.Y"|default:"—" }}</td><td class="text-end text-nowrap">
-          {% if document.file %}<a href="{% url 'clients:document_preview' document.id %}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="{% translate 'Просмотр' %}"><i class="bi bi-eye"></i></a>
-          <a href="{% url 'clients:document_download' document.id %}" class="btn btn-sm btn-outline-secondary" title="{% translate 'Скачать' %}"><i class="bi bi-download"></i></a>{% else %}<span class="text-muted small">—</span>{% endif %}
-        </td></tr>{% endfor %}
-        {% empty %}<tr><td colspan="5" class="text-center text-muted">{% translate "Нет документов по этому делу." %}</td></tr>{% endfor %}
-      </tbody></table></div>
     </div>
 
     <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="tasks" role="tabpanel" aria-labelledby="tasks-tab">
@@ -255,24 +282,6 @@
 
 <script>
 (function () {
-  // Hide/show archived documents.
-  var toggle = document.getElementById("hideArchivedDocs");
-  function applyDocFilter() {
-    var hide = toggle && toggle.checked;
-    document.querySelectorAll('#documentsTable tbody tr[data-archived]').forEach(function (row) {
-      row.style.display = (hide && row.getAttribute("data-archived") === "1") ? "none" : "";
-    });
-  }
-  if (toggle) { toggle.addEventListener("change", applyDocFilter); applyDocFilter(); }
-
-  // Expand/collapse earlier versions of a grouped document.
-  document.querySelectorAll(".js-doc-versions").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      document.querySelectorAll("." + btn.getAttribute("data-target")).forEach(function (row) {
-        row.classList.toggle("d-none");
-      });
-    });
-  });
 
   // Filter history entries by free text.
   var filter = document.getElementById("historyFilter");
