@@ -606,6 +606,17 @@ class PaymentForm(forms.ModelForm):
     def clean_amount_paid(self) -> Decimal:
         return cast(Decimal, self.cleaned_data.get("amount_paid") or Decimal("0.00"))
 
+    def clean(self) -> dict[str, Any]:
+        cleaned_data = cast(dict[str, Any], super().clean() or {})
+        total = cleaned_data.get("total_amount")
+        paid = cleaned_data.get("amount_paid")
+        if total is not None and paid is not None and paid > total:
+            self.add_error(
+                "amount_paid",
+                _("Оплаченная сумма не может превышать общую сумму."),
+            )
+        return cleaned_data
+
     def __init__(self, *args: Any, client: Client | None = None, case: Any = None, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         # Bind client/case so the model's case-first validation can resolve a

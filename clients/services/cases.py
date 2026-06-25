@@ -102,7 +102,7 @@ def get_legacy_compatibility_case(client_id: int, model_name: str) -> Case:
 
     from clients.models import Case
     logger.warning(
-        "Legacy fallback invoked for model %s, client_id %d. This fallback is deprecated.",
+        "Legacy fallback invoked for model %s, client_id %s. This fallback is deprecated.",
         model_name,
         client_id,
     )
