@@ -49,6 +49,41 @@ class ContentSecurityPolicyMiddlewareTests(SimpleTestCase):
         self.assertNotIn("Content-Security-Policy-Report-Only", response)
 
     @override_settings(
+        LEGALIZE_CONTENT_SECURITY_POLICY="default-src 'self'; script-src 'self' 'unsafe-inline'",
+        LEGALIZE_CSP_REPORT_ONLY=False,
+        LEGALIZE_CONTENT_SECURITY_POLICY_REPORT_ONLY="default-src 'self'; script-src 'self'",
+    )
+    def test_strict_report_only_is_sent_alongside_enforced_policy(self):
+        middleware = ContentSecurityPolicyMiddleware(lambda request: HttpResponse("ok"))
+
+        response = middleware(self.factory.get("/"))
+
+        # Enforced (lenient) policy keeps the UI working...
+        self.assertEqual(
+            response["Content-Security-Policy"],
+            "default-src 'self'; script-src 'self' 'unsafe-inline'",
+        )
+        # ...while the strict policy is reported (not enforced) for inventory.
+        self.assertEqual(
+            response["Content-Security-Policy-Report-Only"],
+            "default-src 'self'; script-src 'self'",
+        )
+
+    @override_settings(
+        LEGALIZE_CONTENT_SECURITY_POLICY="default-src 'self'",
+        LEGALIZE_CSP_REPORT_ONLY=True,
+        LEGALIZE_CONTENT_SECURITY_POLICY_REPORT_ONLY="default-src 'self'; script-src 'self'",
+    )
+    def test_strict_report_only_is_skipped_when_main_policy_is_report_only(self):
+        # Avoid emitting two competing Report-Only headers.
+        middleware = ContentSecurityPolicyMiddleware(lambda request: HttpResponse("ok"))
+
+        response = middleware(self.factory.get("/"))
+
+        self.assertEqual(response["Content-Security-Policy-Report-Only"], "default-src 'self'")
+        self.assertNotIn("Content-Security-Policy", response)
+
+    @override_settings(
         LEGALIZE_CONTENT_SECURITY_POLICY="",
         LEGALIZE_CSP_REPORT_ONLY=False,
     )

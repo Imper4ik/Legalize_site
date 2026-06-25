@@ -136,6 +136,23 @@ LEGALIZE_CONTENT_SECURITY_POLICY = "; ".join(
 )
 LEGALIZE_CSP_REPORT_ONLY = env_flag("LEGALIZE_CSP_REPORT_ONLY", "False")
 
+# Opt-in stricter CSP, emitted in Report-Only mode alongside the enforced policy.
+# Drops 'unsafe-inline' from script/style so the browser reports every inline
+# script/style/handler without breaking anything — the inventory step before
+# enforcing the strict policy for real (A3). Default off; enable to collect data.
+LEGALIZE_CSP_STRICT_REPORT_ONLY = env_flag("LEGALIZE_CSP_STRICT_REPORT_ONLY", "False")
+LEGALIZE_CONTENT_SECURITY_POLICY_REPORT_ONLY = ""
+if LEGALIZE_CSP_STRICT_REPORT_ONLY:
+    STRICT_CONTENT_SECURITY_POLICY = {
+        **CONTENT_SECURITY_POLICY,
+        "style-src": ("'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"),
+        "script-src": ("'self'", "https://cdn.jsdelivr.net"),
+    }
+    LEGALIZE_CONTENT_SECURITY_POLICY_REPORT_ONLY = "; ".join(
+        f"{directive} {' '.join(sources)}"
+        for directive, sources in STRICT_CONTENT_SECURITY_POLICY.items()
+    )
+
 if SESSION_COOKIE_SAMESITE.lower() == "none" and not SESSION_COOKIE_SECURE:
     raise ImproperlyConfigured("SESSION_COOKIE_SAMESITE=None requires SESSION_COOKIE_SECURE=True in production.")
 if CSRF_COOKIE_SAMESITE.lower() == "none" and not CSRF_COOKIE_SECURE:
