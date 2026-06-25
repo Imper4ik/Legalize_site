@@ -467,6 +467,51 @@ class OcrCaseIsolationTests(TestCase):
         self.assertEqual(case_a.fingerprints_location, "")
 
 
+class WorkdayPerCaseQueueTests(TestCase):
+    """spec section 5: a client with two qualifying cases appears once per case,
+    each carrying that specific case's MOS data (not an arbitrary first)."""
+
+    def setUp(self) -> None:
+        from clients.models import MOSApplicationData
+
+        self.MOSApplicationData = MOSApplicationData
+        self.staff = create_test_user(role="Staff")
+        self.client_obj = create_test_client(assigned_staff=self.staff)
+        self.case_a = self.client_obj.cases.get()
+        self.case_b = create_case_for_client(
+            client=self.client_obj, actor=self.staff, application_purpose="study"
+        )
+
+    def _mark_new_card(self, case) -> None:
+        mos, _ = self.MOSApplicationData.objects.get_or_create(client=self.client_obj, case=case)
+        mos.new_residence_card_application_status = self.MOSApplicationData.NEW_CARD_STATUS_YES
+        mos.save(update_fields=["new_residence_card_application_status"])
+
+    def test_each_qualifying_case_appears_separately(self) -> None:
+        from clients.services.workday import _new_card_missing_case
+
+        self._mark_new_card(self.case_a)
+        self._mark_new_card(self.case_b)
+
+        items = _new_card_missing_case(self.staff, limit=50)
+        mine = [item for item in items if item["client"].pk == self.client_obj.pk]
+        # Both cases qualify -> the client surfaces twice (once per case).
+        self.assertEqual(len(mine), 2)
+
+    def test_numbered_case_is_excluded(self) -> None:
+        from clients.services.workday import _new_card_missing_case
+
+        self._mark_new_card(self.case_a)
+        self._mark_new_card(self.case_b)
+        # Give case B an authority number: only case A should remain.
+        self.case_b.authority_case_number = "WSC-II-P.6151.100000.2026"
+        self.case_b.save(update_fields=["authority_case_number"])
+
+        items = _new_card_missing_case(self.staff, limit=50)
+        mine = [item for item in items if item["client"].pk == self.client_obj.pk]
+        self.assertEqual(len(mine), 1)
+
+
 class CompatibilityHelperTests(TestCase):
     """spec section 4: legacy compatibility helper must never auto-create or
     silently pick from multiple cases."""

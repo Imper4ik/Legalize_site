@@ -54,14 +54,31 @@ def onboarding_purpose_mismatch_q() -> Q:
     )
 
 
+def _unambiguous_mos(client: Client):
+    """Return the client's MOS record only when it is unambiguous.
+
+    A client-level display cannot pick a case, so we surface the MOS purpose only
+    when the client has exactly one MOS record (one case). With several cases the
+    value is ambiguous and we return ``None`` instead of an arbitrary
+    ``.first()`` (spec §5/§6). Prefetched data is reused to avoid N+1 queries on
+    the staff client list.
+    """
+    prefetched = getattr(client, "_prefetched_objects_cache", {})
+    if "mos_applications" in prefetched:
+        items = list(prefetched["mos_applications"])
+        return items[0] if len(items) == 1 else None
+    items = list(client.mos_applications.all()[:2])
+    return items[0] if len(items) == 1 else None
+
+
 def onboarding_purpose_requires_review(client: Client) -> bool:
-    mos_data = client.mos_applications.first()
+    mos_data = _unambiguous_mos(client)
     selected = getattr(mos_data, "mos_purpose", "") if mos_data else ""
     return bool(selected in ALLOWED_ONBOARDING_PURPOSES and selected != client.get_document_requirement_purpose())
 
 
 def attach_onboarding_purpose_review_state(client: Client) -> Client:
-    mos_data = client.mos_applications.first()
+    mos_data = _unambiguous_mos(client)
     selected = getattr(mos_data, "mos_purpose", "") if mos_data else ""
     current = client.get_document_requirement_purpose()
     setattr(client, "onboarding_purpose_requires_review", onboarding_purpose_requires_review(client))
