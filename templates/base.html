@@ -210,8 +210,8 @@
                 {% endif %}
                 {% if user|has_any_role:"Admin,Manager" %}
                 <li>
-                  <a class="dropdown-item" href="{% url 'clients:app_settings' %}">
-                    <i class="bi bi-sliders me-2 text-muted"></i>{% translate "Настройки шаблонов" %}
+                  <a class="dropdown-item" href="{% url 'clients:document_template_hub' %}">
+                    <i class="bi bi-file-earmark-text me-2 text-muted"></i>{% translate "Шаблоны документов" %}
                   </a>
                 </li>
                 <li>

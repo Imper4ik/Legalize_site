@@ -31,14 +31,15 @@ def test_case_detail_renders_with_ux_changes(client):
     assert reverse("clients:add_task", kwargs={"client_id": customer.pk}) in body
     assert reverse("clients:add_payment", kwargs={"client_id": customer.pk}) in body
     assert 'id="historyFilter"' in body
-    assert 'id="hideArchivedDocs"' in body
+    # Documents are shown as a checklist grouped by requirement.
+    assert 'id="documentChecklist"' in body
     # Working modals are present on the case page.
     assert 'id="caseAddTaskModal"' in body
     assert 'id="caseAddPaymentModal"' in body
 
 
 @pytest.mark.django_db
-def test_repeated_documents_are_grouped(client):
+def test_documents_shown_as_checklist_grouped_by_requirement(client):
     staff = create_test_user(role="Manager")
     client.login(email=staff.email, password=TEST_USER_CREDENTIAL)
 
@@ -51,9 +52,8 @@ def test_repeated_documents_are_grouped(client):
     body = response.content.decode()
 
     assert response.status_code == 200
-    # One primary row + a "+2" badge for the collapsed earlier versions.
-    assert "+2" in body
-    assert "doc-version" in body
+    # Checklist accordion (grouped by requirement), not a flat per-file list.
+    assert 'id="documentChecklist"' in body
 
 
 @pytest.mark.django_db
