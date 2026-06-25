@@ -1085,7 +1085,12 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
 
     intake_type = request.POST.get("intake_type", "").strip() if request.method == "POST" else ""
     if not intake_type:
-        intake_type = "join" if (client.submission_date or client.fingerprints_date) else "new"
+        # Default guess reads progress from the client's single active case (§4).
+        from clients.services.cases import resolve_single_active_case
+
+        active_case = resolve_single_active_case(client)
+        has_progress = bool(active_case and (active_case.submission_date or active_case.fingerprints_date))
+        intake_type = "join" if has_progress else "new"
 
     token, token_hash = generate_onboarding_token()
     payment = client.payments.filter(status__in=["paid", "partial"]).first()

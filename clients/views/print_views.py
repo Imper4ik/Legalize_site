@@ -131,11 +131,17 @@ class ClientDocumentPrintView(ClientPrintBaseView):
         attachments = [name.strip() for name in self.request.GET.getlist("attachments") if name.strip()]
 
         today = timezone.localdate()
-        if client.decision_date and client.decision_date < today:
-            days_overdue = (today - client.decision_date).days
+        # Decision date lives on the case (spec §4); read it from the single
+        # active case rather than the legacy client mirror.
+        from clients.services.cases import resolve_single_active_case
+
+        active_case = resolve_single_active_case(client)
+        decision_date = active_case.decision_date if active_case is not None else client.decision_date
+        if decision_date and decision_date < today:
+            days_overdue = (today - decision_date).days
             reminder_text = (
                 f"Prośba o przyspieszenie wydania decyzji "
-                f"(termin był {client.decision_date.strftime('%d.%m.%Y')}, {days_overdue} dni temu)"
+                f"(termin był {decision_date.strftime('%d.%m.%Y')}, {days_overdue} dni temu)"
             )
             if not any("przyspieszenie" in att.lower() for att in attachments):
                 attachments.insert(0, reminder_text)
