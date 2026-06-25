@@ -14,6 +14,7 @@ from clients.models import Client, MOSApplicationData
 from clients.security.encrypted import safe_encrypted_attr
 from clients.services.access import accessible_clients_queryset
 from clients.services.activity import log_client_activity
+from clients.services.mos_eligibility import evaluate_mos_eligibility
 from clients.services.onboarding_purposes import (
     ALLOWED_ONBOARDING_PURPOSES,
     apply_onboarding_purpose_to_client,
@@ -235,6 +236,8 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
             return redirect("clients:admin_mos_review", client_id=client.id)
 
     passport_doc = client.documents.filter(document_type="passport").order_by("-uploaded_at").first()
+    mos_eligibility = evaluate_mos_eligibility(client, mos_data)
+
     return render(
         request,
         "clients/mos_review.html",
@@ -243,6 +246,7 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
             "mos_data": mos_data,
             "review_diffs": _build_review_diffs(client, mos_data),
             "passport_doc": passport_doc,
+            "mos_eligibility": mos_eligibility,
             **_purpose_review_context(client, mos_data),
         },
     )

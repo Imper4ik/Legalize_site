@@ -601,6 +601,7 @@ RATE_LIMITS = {
         "window_seconds": int(os.environ.get("RATE_LIMIT_LOGIN_WINDOW", "300")),
         "by_user": False,
         "by_ip": True,
+        "fail_closed": True,
         "message": _("Too many login attempts. Try again later."),
     },
     "account_resend_verification": {
@@ -608,6 +609,7 @@ RATE_LIMITS = {
         "window_seconds": int(os.environ.get("RATE_LIMIT_RESEND_VERIFICATION_WINDOW", "600")),
         "by_user": False,
         "by_ip": True,
+        "fail_closed": True,
         "message": _("Too many verification email requests. Try again later."),
     },
     "clients:add_document": {
@@ -635,6 +637,7 @@ RATE_LIMITS = {
         "window_seconds": int(os.environ.get("RATE_LIMIT_SET_PASSWORD_WINDOW", "300")),
         "by_user": False,
         "by_ip": True,
+        "fail_closed": True,
         "message": _("Too many account creation attempts. Try again later."),
     },
 }

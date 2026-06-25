@@ -98,8 +98,26 @@ def validate_case_workflow_transition(*, case: Case, previous_stage: str | None,
 
 
 def validate_client_workflow_transition(*, client: Client, previous_stage: str | None, next_stage: str | None) -> WorkflowValidationResult:
-    from clients.services.cases import get_primary_case_for_client
-    case = get_primary_case_for_client(client)
+    # No-op, unknown or non-forward transitions never need a Case. Resolve one
+    # only for a genuine forward move, so creating or editing a client who has
+    # no case yet (or several) does not crash or get wrongly blocked.
+    if not previous_stage or not next_stage or previous_stage == next_stage:
+        return WorkflowValidationResult(True)
+    try:
+        previous_index = WORKFLOW_SEQUENCE.index(previous_stage)
+        next_index = WORKFLOW_SEQUENCE.index(next_stage)
+    except ValueError:
+        return WorkflowValidationResult(True)
+    if next_index <= previous_index:
+        return WorkflowValidationResult(True)
+
+    from clients.services.cases import resolve_single_active_case
+    case = resolve_single_active_case(client) if getattr(client, "pk", None) else None
+    if case is None:
+        return WorkflowValidationResult(
+            False,
+            _("Сначала сохраните клиента, затем переведите дело на следующий этап."),
+        )
     # Temporarily overlay client fields on the case for validation
     case.workflow_stage = next_stage
     case.submission_date = getattr(client, "submission_date", None)

@@ -22,6 +22,10 @@ class RateLimitRule:
     by_user: bool = True
     by_ip: bool = True
     message: str = _("Too many requests. Please try again later.")
+    # When True, a cache backend failure blocks the request regardless of the
+    # global RATE_LIMIT_CACHE_FAILURE_MODE. Use for auth-sensitive endpoints so
+    # a cache outage cannot silently disable brute-force protection.
+    fail_closed: bool = False
 
 
 def _client_ip(request: HttpRequest) -> str:
@@ -57,7 +61,9 @@ def is_rate_limited(request: HttpRequest, url_name: str, rule: RateLimitRule) ->
         cache.set(cache_key, 1, timeout=rule.window_seconds)
         return False
     except Exception:
-        failure_mode = getattr(settings, "RATE_LIMIT_CACHE_FAILURE_MODE", "closed")
+        failure_mode = "closed" if rule.fail_closed else getattr(
+            settings, "RATE_LIMIT_CACHE_FAILURE_MODE", "closed"
+        )
         logger.exception(
             "Rate limit cache backend failed for url_name=%s failure_mode=%s",
             url_name,

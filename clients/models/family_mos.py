@@ -33,9 +33,9 @@ class ClientFamilyMemberMOS(models.Model):
                 try:
                     self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
                 except ValidationError as e:
-                    raise ValidationError({"case": e.message})
+                    raise ValidationError(e.message)
             else:
-                raise ValidationError({"case": "Case is required."})
+                raise ValidationError("Case is required.")
         if self.case_id and self.client_id and self.case.client_id != self.client_id:
             raise ValidationError("Клиент и дело не согласованы.")
 

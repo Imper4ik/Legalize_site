@@ -89,7 +89,13 @@ class RedactPIIFilter(logging.Filter):
     """Redact PII from log messages."""
 
     def filter(self, record: logging.LogRecord) -> bool:
-        message = record.getMessage()
+        try:
+            message = record.getMessage()
+        except Exception:
+            # A malformed log call (e.g. "%d" with a None argument) must not
+            # crash the caller through the filter. Leave the record untouched
+            # and let the handler's own error handling deal with formatting.
+            return True
         redacted = redact_text(message)
         if redacted != message:
             record.msg = redacted

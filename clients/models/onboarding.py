@@ -69,7 +69,7 @@ class ClientOnboardingSession(models.Model):
         # kept in the server-side session instead.
         if self.scope == "client_portal":
             if self.case_id is not None:
-                raise ValidationError({"case": "Портальная сессия не может быть привязана к делу."})
+                raise ValidationError("Портальная сессия не может быть привязана к делу.")
         elif self.case_id is None:
             if self.payment_id and self.payment.case_id:
                 self.case_id = self.payment.case_id
@@ -78,9 +78,9 @@ class ClientOnboardingSession(models.Model):
                 try:
                     self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
                 except ValidationError as e:
-                    raise ValidationError({"case": e.message})
+                    raise ValidationError(e.message)
             else:
-                raise ValidationError({"case": "Case is required."})
+                raise ValidationError("Case is required.")
         if self.case_id and self.client_id and self.case.client_id != self.client_id:
             raise ValidationError("Клиент и дело не согласованы.")
 
@@ -221,9 +221,9 @@ class MOSApplicationData(models.Model):
                 try:
                     self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
                 except ValidationError as e:
-                    raise ValidationError({"case": e.message})
+                    raise ValidationError(e.message)
             else:
-                raise ValidationError({"case": "Case is required."})
+                raise ValidationError("Case is required.")
         if self.case_id and self.client_id and self.case.client_id != self.client_id:
             raise ValidationError("Клиент и дело не согласованы.")
 
@@ -298,9 +298,9 @@ class PeselApplication(models.Model):
                 try:
                     self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
                 except ValidationError as e:
-                    raise ValidationError({"case": e.message})
+                    raise ValidationError(e.message)
             else:
-                raise ValidationError({"case": "Case is required."})
+                raise ValidationError("Case is required.")
         if self.case_id and self.client_id and self.case.client_id != self.client_id:
             raise ValidationError("Клиент и дело не согласованы.")
 
