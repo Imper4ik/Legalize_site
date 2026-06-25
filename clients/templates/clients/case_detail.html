@@ -122,11 +122,11 @@
     <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="tasks" role="tabpanel" aria-labelledby="tasks-tab">
       <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h4 class="mb-0 case-section-heading">{% translate "Задачи по делу" %}</h4>
-        <a href="{% url 'clients:add_task' case.client.pk %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>{% translate "Добавить задачу" %}</a>
+        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#caseAddTaskModal"><i class="bi bi-plus-lg me-1"></i>{% translate "Добавить задачу" %}</button>
       </div>
       <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>{% translate "Название" %}</th><th>{% translate "Статус" %}</th><th>{% translate "Срок" %}</th><th class="text-end">{% translate "Действия" %}</th></tr></thead><tbody>
         {% for task in tasks %}<tr><td>{{ task.title }}</td><td><span class="badge bg-secondary">{{ task.status }}</span></td><td>{{ task.due_date|date:"d.m.Y"|default:"—" }}</td><td class="text-end text-nowrap">
-          {% if task.status != "done" %}<form method="post" action="{% url 'clients:complete_task' task.id %}" class="d-inline m-0">{% csrf_token %}<button class="btn btn-sm btn-outline-success" type="submit" title="{% translate 'Завершить' %}"><i class="bi bi-check-lg"></i></button></form>{% else %}<span class="text-muted small">—</span>{% endif %}
+          {% if task.status != "done" %}<form method="post" action="{% url 'clients:complete_task' task.id %}" class="d-inline m-0">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="btn btn-sm btn-outline-success" type="submit" title="{% translate 'Завершить' %}"><i class="bi bi-check-lg"></i></button></form>{% else %}<span class="text-muted small">—</span>{% endif %}
         </td></tr>
         {% empty %}<tr><td colspan="4" class="text-center text-muted">{% translate "Нет задач по этому делу." %}</td></tr>{% endfor %}
       </tbody></table></div>
@@ -135,11 +135,16 @@
     <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="payments" role="tabpanel" aria-labelledby="payments-tab">
       <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h4 class="mb-0 case-section-heading">{% translate "Платежи и счета" %}</h4>
-        <a href="{% url 'clients:add_payment' case.client.pk %}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>{% translate "Добавить платёж" %}</a>
+        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#caseAddPaymentModal"><i class="bi bi-plus-lg me-1"></i>{% translate "Добавить платёж" %}</button>
       </div>
       <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>{% translate "Услуга" %}</th><th>{% translate "Сумма" %}</th><th>{% translate "Статус" %}</th><th>{% translate "Срок оплаты" %}</th><th class="text-end">{% translate "Действия" %}</th></tr></thead><tbody>
         {% for payment in payments %}<tr><td>{{ payment.get_service_description_display }}</td><td>{{ payment.total_amount }}</td><td><span class="badge bg-secondary">{{ payment.status }}</span></td><td>{{ payment.due_date|date:"d.m.Y"|default:"—" }}</td><td class="text-end text-nowrap">
-          <a href="{% url 'clients:edit_payment' payment.id %}" class="btn btn-sm btn-outline-primary" title="{% translate 'Изменить' %}"><i class="bi bi-pencil"></i></a>
+          <button type="button" class="btn btn-sm btn-outline-primary js-edit-payment" title="{% translate 'Изменить' %}"
+            data-action="{% url 'clients:edit_payment' payment.id %}"
+            data-service="{{ payment.service_description }}" data-total="{{ payment.total_amount }}"
+            data-paid="{{ payment.amount_paid }}" data-status="{{ payment.status }}"
+            data-method="{{ payment.payment_method }}"
+            data-due="{{ payment.due_date|date:'Y-m-d' }}" data-transaction="{{ payment.transaction_id }}"><i class="bi bi-pencil"></i></button>
         </td></tr>
         {% empty %}<tr><td colspan="5" class="text-center text-muted">{% translate "Нет платежей по этому делу." %}</td></tr>{% endfor %}
       </tbody></table></div>
@@ -172,6 +177,78 @@
   </div>
 </div>
 
+{# --- Add Payment modal --- #}
+<div class="modal fade" id="caseAddPaymentModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">{% translate "Добавить платёж" %}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+      <form method="post" action="{% url 'clients:add_payment' case.client.pk %}">
+        {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
+        <div class="modal-body">
+          <div class="mb-2"><label class="form-label">{% translate "Услуга" %}</label><select name="service_description" class="form-select" required>{% for value, label in payment_form.service_description.field.choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+          <div class="row g-2">
+            <div class="col-6 mb-2"><label class="form-label">{% translate "Сумма (PLN)" %}</label><input type="number" name="total_amount" step="0.01" min="0" class="form-control" required></div>
+            <div class="col-6 mb-2"><label class="form-label">{% translate "Оплачено (PLN)" %}</label><input type="number" name="amount_paid" step="0.01" min="0" class="form-control" value="0"></div>
+          </div>
+          <div class="row g-2">
+            <div class="col-6 mb-2"><label class="form-label">{% translate "Статус" %}</label><select name="status" class="form-select">{% for value, label in payment_form.status.field.choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+            <div class="col-6 mb-2"><label class="form-label">{% translate "Способ оплаты" %}</label><select name="payment_method" class="form-select">{% for value, label in payment_form.payment_method.field.choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+          </div>
+          <div class="mb-2"><label class="form-label">{% translate "Срок оплаты" %}</label><input type="date" name="due_date" class="form-control"></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button><button type="submit" class="btn btn-primary">{% translate "Сохранить" %}</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{# --- Edit Payment modal (populated via JS) --- #}
+<div class="modal fade" id="caseEditPaymentModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">{% translate "Редактировать платёж" %}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+      <form method="post" id="caseEditPaymentForm">
+        {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
+        <div class="modal-body">
+          <div class="mb-2"><label class="form-label">{% translate "Услуга" %}</label><select name="service_description" class="form-select" data-edit="service" required>{% for value, label in payment_form.service_description.field.choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+          <div class="row g-2">
+            <div class="col-6 mb-2"><label class="form-label">{% translate "Сумма (PLN)" %}</label><input type="number" name="total_amount" step="0.01" min="0" class="form-control" data-edit="total" required></div>
+            <div class="col-6 mb-2"><label class="form-label">{% translate "Оплачено (PLN)" %}</label><input type="number" name="amount_paid" step="0.01" min="0" class="form-control" data-edit="paid"></div>
+          </div>
+          <div class="row g-2">
+            <div class="col-6 mb-2"><label class="form-label">{% translate "Статус" %}</label><select name="status" class="form-select" data-edit="status">{% for value, label in payment_form.status.field.choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+            <div class="col-6 mb-2"><label class="form-label">{% translate "Способ оплаты" %}</label><select name="payment_method" class="form-select" data-edit="method">{% for value, label in payment_form.payment_method.field.choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+          </div>
+          <div class="mb-2"><label class="form-label">{% translate "Срок оплаты" %}</label><input type="date" name="due_date" class="form-control" data-edit="due"></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button><button type="submit" class="btn btn-primary">{% translate "Сохранить" %}</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{# --- Add Task modal --- #}
+<div class="modal fade" id="caseAddTaskModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">{% translate "Добавить задачу" %}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+      <form method="post" action="{% url 'clients:add_task' case.client.pk %}">
+        {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><input type="hidden" name="assignee" value="{{ request.user.pk }}">
+        <div class="modal-body">
+          <div class="mb-2"><label class="form-label">{% translate "Название" %}</label><input type="text" name="title" class="form-control" required></div>
+          <div class="mb-2"><label class="form-label">{% translate "Описание" %}</label><textarea name="description" rows="2" class="form-control"></textarea></div>
+          <div class="row g-2">
+            <div class="col-6 mb-2"><label class="form-label">{% translate "Приоритет" %}</label><select name="priority" class="form-select">{% for value, label in task_form.priority.field.choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+            <div class="col-6 mb-2"><label class="form-label">{% translate "Статус" %}</label><select name="status" class="form-select">{% for value, label in task_form.status.field.choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
+          </div>
+          <div class="mb-2"><label class="form-label">{% translate "Срок" %}</label><input type="date" name="due_date" class="form-control"></div>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button><button type="submit" class="btn btn-primary">{% translate "Сохранить" %}</button></div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script>
 (function () {
   // Hide/show archived documents.
@@ -199,6 +276,26 @@
       if (noMatch) noMatch.classList.toggle("d-none", anyVisible || q === "");
     });
   }
+
+  // Populate and open the Edit Payment modal from a row's data-* attributes.
+  var editForm = document.getElementById("caseEditPaymentForm");
+  function setVal(selector, value) {
+    var el = editForm.querySelector(selector);
+    if (el) el.value = value || "";
+  }
+  document.querySelectorAll(".js-edit-payment").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      if (!editForm) return;
+      editForm.setAttribute("action", btn.getAttribute("data-action"));
+      setVal('[data-edit="service"]', btn.getAttribute("data-service"));
+      setVal('[data-edit="total"]', btn.getAttribute("data-total"));
+      setVal('[data-edit="paid"]', btn.getAttribute("data-paid"));
+      setVal('[data-edit="status"]', btn.getAttribute("data-status"));
+      setVal('[data-edit="method"]', btn.getAttribute("data-method"));
+      setVal('[data-edit="due"]', btn.getAttribute("data-due"));
+      new bootstrap.Modal(document.getElementById("caseEditPaymentModal")).show();
+    });
+  });
 })();
 </script>
 {% endblock %}

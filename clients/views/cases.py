@@ -61,6 +61,9 @@ class CaseDetailView(RoleRequiredMixin, DetailView):
         context["reminders"] = Reminder.objects.filter(case=case).order_by("-is_active", "due_date")[:50]
         context["activities"] = ClientActivity.objects.filter(case=case).select_related("actor").order_by("-created_at")[:50]
         context["next_action"] = _case_next_action(case)
+        from clients.forms import PaymentForm, StaffTaskForm
+        context["payment_form"] = PaymentForm()
+        context["task_form"] = StaffTaskForm(initial={"assignee": self.request.user.pk})
         return context
 
 
