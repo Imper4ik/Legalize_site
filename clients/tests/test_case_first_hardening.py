@@ -322,3 +322,12 @@ class CompatibilityHelperTests(TestCase):
         create_case_for_client(client=self.client_obj, actor=self.staff, application_purpose="study")
         with self.assertRaises(ValidationError):
             get_legacy_compatibility_case(self.client_obj.pk, "Document")
+
+    def test_archived_only_case_raises_and_is_not_returned(self) -> None:
+        # The fallback considers active cases only; it must not bind to an
+        # archived case (spec section 1/3).
+        from clients.services.cases import get_legacy_compatibility_case
+
+        self.client_obj.cases.get().archive(save=True)
+        with self.assertRaises(ValidationError):
+            get_legacy_compatibility_case(self.client_obj.pk, "Document")

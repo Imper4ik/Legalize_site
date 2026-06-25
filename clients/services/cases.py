@@ -96,7 +96,11 @@ def resolve_single_active_case(client: Client) -> Case | None:
 
 def get_legacy_compatibility_case(client_id: int, model_name: str) -> Case:
     """
-    DEPRECATED: Compatibility fallback for legacy records when the client has exactly one Case.
+    DEPRECATED: Compatibility fallback that resolves a client's single ACTIVE case.
+
+    Allowed only when the client has exactly one active (non-archived) case. With
+    zero active cases (including archived-only) or several active cases it raises,
+    never creating a case, guessing one, or binding to an archived case.
     """
     from django.core.exceptions import ValidationError
 
@@ -106,8 +110,9 @@ def get_legacy_compatibility_case(client_id: int, model_name: str) -> Case:
         model_name,
         client_id,
     )
-    cases = list(Case.all_objects.filter(client_id=client_id))
-    if len(cases) == 1:
-        return cases[0]
-    raise ValidationError(f"Case is required for new {model_name} objects (client has {len(cases)} cases).")
+    # Case.objects excludes archived cases, so this only ever returns an active one.
+    active_cases = list(Case.objects.filter(client_id=client_id)[:2])
+    if len(active_cases) == 1:
+        return active_cases[0]
+    raise ValidationError("Для этой операции необходимо выбрать дело.")
 
