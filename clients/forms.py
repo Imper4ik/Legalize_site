@@ -503,10 +503,17 @@ class MassEmailForm(forms.Form):
 
 
 class DocumentUploadForm(forms.ModelForm):
-    def __init__(self, *args: Any, doc_type: str | None = None, client: Client | None = None, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, doc_type: str | None = None, client: Client | None = None, case: Any = None, **kwargs: Any) -> None:
         self.doc_type = doc_type
         self.client = client
         super().__init__(*args, **kwargs)
+        # Bind the client (and case when known) onto the instance so the model's
+        # case-first validation can resolve a case for single-case clients and
+        # reject ambiguous multi-case uploads (spec section 5).
+        if client is not None:
+            self.instance.client = client
+        if case is not None:
+            self.instance.case = case
         self.fields["zus_period_month"].help_text = _(
             "Для ZUS RCA укажите месяц отчёта. Если загружаете страховой полис, добавьте его как отдельный документ «Polisa ubezpieczeniowa / Health insurance»."
         )
@@ -599,6 +606,15 @@ class PaymentForm(forms.ModelForm):
     def clean_amount_paid(self) -> Decimal:
         return cast(Decimal, self.cleaned_data.get("amount_paid") or Decimal("0.00"))
 
+    def __init__(self, *args: Any, client: Client | None = None, case: Any = None, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        # Bind client/case so the model's case-first validation can resolve a
+        # case for single-case clients and reject ambiguous multi-case input.
+        if client is not None:
+            self.instance.client = client
+        if case is not None:
+            self.instance.case = case
+
 
 class ClientDocumentRequirementForm(forms.ModelForm):
     class Meta:
@@ -611,6 +627,13 @@ class ClientDocumentRequirementForm(forms.ModelForm):
             "is_required": forms.CheckboxInput(attrs={"class": "form-check-input"}),
             "due_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
         }
+
+    def __init__(self, *args: Any, client: Client | None = None, case: Any = None, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        if client is not None:
+            self.instance.client = client
+        if case is not None:
+            self.instance.case = case
 
     def clean_name(self) -> str:
         return str(self.cleaned_data["name"]).strip()
@@ -657,8 +680,12 @@ class StaffTaskForm(forms.ModelForm):
             'assignee': forms.Select(attrs={'class': 'form-select'}),
         }
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, client: Client | None = None, case: Any = None, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+        if client is not None:
+            self.instance.client = client
+        if case is not None:
+            self.instance.case = case
         user_model = get_user_model()
         staff_qs = user_model.objects.filter(is_staff=True, is_active=True).order_by('email')
         if hasattr(self.fields['assignee'], 'queryset'):

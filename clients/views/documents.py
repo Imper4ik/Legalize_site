@@ -225,7 +225,7 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
 def add_client_document_requirement(request: HttpRequest, client_id: int) -> HttpResponseBase:
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
     if request.method == "POST":
-        form = ClientDocumentRequirementForm(request.POST)
+        form = ClientDocumentRequirementForm(request.POST, client=client)
         if form.is_valid():
             requirement = form.save(commit=False)
             requirement.client = client
