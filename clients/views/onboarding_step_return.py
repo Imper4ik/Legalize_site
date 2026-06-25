@@ -47,7 +47,7 @@ def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
         digital_access = ClientDigitalAccess(client=session.client)
 
     if request.method == "POST":
-        mos_data, created = MOSApplicationData.objects.get_or_create(client=session.client)
+        mos_data, created = onboarding_views._ensure_mos(session.client)
         digital_access, created_access = ClientDigitalAccess.objects.get_or_create(client=session.client)
 
         digital_access.has_pesel = request.POST.get("has_pesel") == "yes"
@@ -108,7 +108,7 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
 
     if request.method == "POST":
         # Ensure mos_data is saved to DB
-        mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)
+        mos_data, _created = onboarding_views._ensure_mos(client)
         action = request.POST.get("action", "")
         if action == "upload_passport" or request.FILES.get("passport_file"):
             passport_file = request.FILES.get("passport_file")
