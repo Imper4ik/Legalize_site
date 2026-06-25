@@ -5,7 +5,7 @@ from datetime import date, timedelta
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from clients.models import Client, Document, Payment, StaffTask
+from clients.models import Case, Client, Document, Payment, StaffTask
 
 
 def create_auto_task(
@@ -14,11 +14,17 @@ def create_auto_task(
     *,
     document: Document | None = None,
     payment: Payment | None = None,
+    case: Case | None = None,
     title: str | None = None,
     description: str | None = None,
     due_date: date | None = None,
 ) -> StaffTask | None:
-    """Create an automated StaffTask if a duplicate open one does not exist."""
+    """Create an automated StaffTask if a duplicate open one does not exist.
+
+    ``case`` scopes the task to a specific case. When omitted it is derived from
+    the document/payment (by StaffTask.save) or the client's single active case;
+    callers operating on a multi-case client must pass it (spec section 1/5).
+    """
     if client.archived_at is not None:
         return None
 
@@ -31,6 +37,8 @@ def create_auto_task(
         existing_query = existing_query.filter(document=document)
     if payment:
         existing_query = existing_query.filter(payment=payment)
+    if case:
+        existing_query = existing_query.filter(case=case)
 
     if existing_query.exists():
         return None
@@ -62,6 +70,7 @@ def create_auto_task(
         assignee=client.assigned_staff,
         document=document,
         payment=payment,
+        case=case,
     )
     return task
 

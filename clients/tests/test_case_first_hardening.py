@@ -252,6 +252,172 @@ class ClientPortalOnboardingTests(TestCase):
         self.assertIsNone(request.session.get("case_id"))
 
 
+class PortalScopeSection1Tests(TestCase):
+    """spec section 1: the client portal is strictly case-scoped.
+
+    Self-onboarding sessions never carry/auto-pick a Case; the selected case is
+    re-validated on every request and all portal data (MOS, documents) is read
+    and written only within that case.
+    """
+
+    def setUp(self) -> None:
+        from datetime import timedelta
+
+        from django.contrib.auth import get_user_model
+        from django.utils import timezone
+
+        from clients.models import ClientOnboardingSession, Document, MOSApplicationData
+        from clients.services.onboarding_tokens import generate_onboarding_token
+
+        self.timezone = timezone
+        self.timedelta = timedelta
+        self.ClientOnboardingSession = ClientOnboardingSession
+        self.MOSApplicationData = MOSApplicationData
+        self.Document = Document
+        self.generate_onboarding_token = generate_onboarding_token
+
+        self.staff = create_test_user(role="Staff")
+        self.client_obj = create_test_client(assigned_staff=self.staff)
+        self.case_a = self.client_obj.cases.get()
+        self.case_b = create_case_for_client(
+            client=self.client_obj, actor=self.staff, application_purpose="study"
+        )
+
+        # Distinguishable MOS data per case.
+        self.mos_a, _ = MOSApplicationData.objects.get_or_create(
+            client=self.client_obj, case=self.case_a
+        )
+        self.mos_a.mos_purpose = "work"
+        self.mos_a.save(update_fields=["mos_purpose"])
+        self.mos_b, _ = MOSApplicationData.objects.get_or_create(
+            client=self.client_obj, case=self.case_b
+        )
+        self.mos_b.mos_purpose = "study"
+        self.mos_b.save(update_fields=["mos_purpose"])
+
+        # A document on each case.
+        from clients.constants import DocumentType
+        from clients.testing.factories import build_pdf_upload
+
+        self.doc_a = Document.objects.create(
+            client=self.client_obj,
+            case=self.case_a,
+            document_type=DocumentType.PASSPORT.value,
+            file=build_pdf_upload("a.pdf"),
+            is_test_data=True,
+        )
+        self.doc_b = Document.objects.create(
+            client=self.client_obj,
+            case=self.case_b,
+            document_type=DocumentType.PASSPORT.value,
+            file=build_pdf_upload("b.pdf"),
+            is_test_data=True,
+        )
+
+        # Give the client a login so the portal token flow works.
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            email="portal-client@example.test", password="portal-pass-123", is_active=True
+        )
+        self.client_obj.user = self.user
+        self.client_obj.save(update_fields=["user"])
+
+    def _portal_request(self, case_id: object = None):
+        from django.contrib.sessions.backends.db import SessionStore
+        from django.test import RequestFactory
+
+        request = RequestFactory().get("/")
+        request.user = self.user
+        request.session = SessionStore()
+        if case_id is not None:
+            request.session["case_id"] = case_id
+        return request
+
+    def test_self_onboarding_creates_portal_scoped_session(self) -> None:
+        from clients.constants import SELF_ONBOARDING_SLUG
+        from clients.views.onboarding_views import check_onboarding_session
+
+        request = self._portal_request()
+        session = check_onboarding_session(SELF_ONBOARDING_SLUG, request=request)
+        self.assertIsNotNone(session)
+
+        created = self.ClientOnboardingSession.objects.get(client=self.client_obj)
+        self.assertEqual(created.scope, "client_portal")
+        self.assertIsNone(created.case_id)
+
+    def test_active_case_resolves_for_selected_case(self) -> None:
+        from clients.constants import SELF_ONBOARDING_SLUG
+        from clients.views.onboarding_views import check_onboarding_session
+
+        request = self._portal_request(case_id=self.case_b.id)
+        session = check_onboarding_session(SELF_ONBOARDING_SLUG, request=request)
+        self.assertEqual(session.active_case.id, self.case_b.id)
+
+    def test_mos_is_scoped_to_selected_case(self) -> None:
+        from clients.constants import SELF_ONBOARDING_SLUG
+        from clients.views.onboarding_views import _get_scoped_mos, check_onboarding_session
+
+        request = self._portal_request(case_id=self.case_b.id)
+        session = check_onboarding_session(SELF_ONBOARDING_SLUG, request=request)
+        scoped = _get_scoped_mos(session)
+        self.assertEqual(scoped.pk, self.mos_b.pk)
+        self.assertNotEqual(scoped.pk, self.mos_a.pk)
+
+    def test_portal_preview_cannot_reach_other_case_document(self) -> None:
+        from django.test import Client as DjangoClient
+        from django.urls import reverse
+
+        from clients.constants import SELF_ONBOARDING_SLUG
+
+        slug = SELF_ONBOARDING_SLUG
+        http = DjangoClient()
+        http.force_login(self.user)
+        # Pick case B server-side.
+        resp = http.post(
+            reverse("clients:onboarding_select_case", kwargs={"token": slug}),
+            {"case_id": self.case_b.id},
+        )
+        self.assertEqual(resp.status_code, 302)
+
+        # Document of case B is reachable…
+        ok = http.get(
+            reverse(
+                "clients:onboarding_document_preview",
+                kwargs={"token": slug, "doc_id": self.doc_b.id},
+            )
+        )
+        self.assertEqual(ok.status_code, 200)
+        # …but the other case's document is not (neutral 404, no leak).
+        denied = http.get(
+            reverse(
+                "clients:onboarding_document_preview",
+                kwargs={"token": slug, "doc_id": self.doc_a.id},
+            )
+        )
+        self.assertEqual(denied.status_code, 404)
+
+    def test_invalid_token_returns_none(self) -> None:
+        from clients.views.onboarding_views import check_onboarding_session
+
+        request = self._portal_request()
+        self.assertIsNone(check_onboarding_session("not-a-real-token", request=request))
+
+    def test_expired_token_raises_gone(self) -> None:
+        from clients.views.onboarding_views import OnboardingLinkExpired, check_onboarding_session
+
+        raw_token, hashed = self.generate_onboarding_token()
+        self.ClientOnboardingSession.objects.create(
+            client=self.client_obj,
+            scope="case_link",
+            case=self.case_a,
+            token_hash=hashed,
+            status="active",
+            expires_at=self.timezone.now() - self.timedelta(days=1),
+        )
+        with self.assertRaises(OnboardingLinkExpired):
+            check_onboarding_session(raw_token, request=self._portal_request())
+
+
 class OcrCaseIsolationTests(TestCase):
     """spec section 5: OCR of a document on case B must not touch case A."""
 

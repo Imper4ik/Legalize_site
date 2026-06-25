@@ -22,6 +22,8 @@ from clients.views.onboarding_views import (
     _mos_data_is_editable,
     _mos_documents_are_editable,
     _purpose_context,
+    _require_portal_case,
+    _session_case,
     _sync_contact_fields_to_client,
     check_client_auth,
     check_onboarding_session,
@@ -121,16 +123,15 @@ def _save_contact_values(client: Client, mos_data: MOSApplicationData, values: d
     mos_data.save(update_fields=update_fields)
 
 
-def _latest_new_card_confirmation_document(client: Client) -> Document | None:
-    return (
-        Document.objects.filter(
-            client=client,
-            document_type=NEW_CARD_CONFIRMATION_DOC_TYPE,
-            archived_at__isnull=True,
-        )
-        .order_by("-uploaded_at", "-id")
-        .first()
+def _latest_new_card_confirmation_document(client: Client, case: Any = None) -> Document | None:
+    qs = Document.objects.filter(
+        client=client,
+        document_type=NEW_CARD_CONFIRMATION_DOC_TYPE,
+        archived_at__isnull=True,
     )
+    if case is not None:
+        qs = qs.filter(case=case)
+    return qs.order_by("-uploaded_at", "-id").first()
 
 
 def _new_card_values_from_mos(mos_data: MOSApplicationData | None) -> dict[str, str]:
@@ -276,14 +277,16 @@ def _handle_new_card_application_post(
             ),
         )
 
+    case = _session_case(session)
     _save_new_card_values(mos_data, values)
     from clients.models import StaffTask
     from clients.services.tasks import create_auto_task
     if values.get("status") == NEW_CARD_STATUS_SUBMITTED_NO_NUMBER:
-        create_auto_task(session.client, "case_number_missing", title=_("Запросить номер дела у клиента"))
+        create_auto_task(session.client, "case_number_missing", case=case, title=_("Запросить номер дела у клиента"))
     elif values.get("status") == NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER and values.get("case_number"):
         tasks = StaffTask.objects.filter(
             client=session.client,
+            case=case,
             task_type="case_number_missing",
             status__in=["open", "in_progress"],
         )
@@ -296,6 +299,7 @@ def _handle_new_card_application_post(
             create_auto_task(
                 session.client,
                 "case_number_missing",
+                case=case,
                 title=_("Проверить номер дела"),
                 description=_("Клиент указал номер дела новой подачи. Проверьте его и перенесите в основной номер дела.")
             )
@@ -307,6 +311,7 @@ def _handle_new_card_application_post(
             uploaded_document=upload_form.save(commit=False),
             actor=request.user if request.user.is_authenticated else None,
             parse_requested=False,
+            case=case,
         )
     from clients.services.activity import log_client_activity
     log_client_activity(
@@ -322,7 +327,7 @@ def _handle_new_card_application_post(
     )
 
     mos_data.refresh_from_db()
-    confirmation_document = _latest_new_card_confirmation_document(session.client)
+    confirmation_document = _latest_new_card_confirmation_document(session.client, case)
     messages.success(request, _("Informacja o nowym wniosku została zapisana. / Информация о новом заявлении сохранена."))
     for warning in _new_card_missing_warnings(mos_data, confirmation_document):
         messages.warning(request, warning)
@@ -354,16 +359,19 @@ def _build_start_context(
     new_card_errors: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     client = session.client
-    try:
-        mos_data = MOSApplicationData.objects.get(client=client)
-    except MOSApplicationData.DoesNotExist:
-        mos_data = MOSApplicationData(client=client)
+    case = _session_case(session)
+    mos_data = MOSApplicationData.objects.filter(client=client, case=case).first()
+    if mos_data is None:
+        mos_data = MOSApplicationData(client=client, case=case)
     purpose_ctx = _purpose_context(client, mos_data)
     effective_purpose = str(purpose_ctx["effective_purpose"])
     language = translation.get_language() or client.language
 
     fingerprint_invitation_doc_type = DocumentType.WEZWANIE.value
-    existing_documents = list(Document.objects.filter(client=client, archived_at__isnull=True).order_by("document_type", "-uploaded_at"))
+    documents_qs = Document.objects.filter(client=client, archived_at__isnull=True)
+    if case is not None:
+        documents_qs = documents_qs.filter(case=case)
+    existing_documents = list(documents_qs.order_by("document_type", "-uploaded_at"))
     existing_map = {document.document_type: document.id for document in existing_documents}
     new_card_confirmation_document = next(
         (document for document in existing_documents if document.document_type == NEW_CARD_CONFIRMATION_DOC_TYPE),
@@ -525,17 +533,18 @@ def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
         return auth_redirect
 
     # Portal users must pick a case before any case-scoped step.
-    if session.scope == "client_portal" and not request.session.get("case_id"):
-        return redirect("clients:onboarding_select_case", token=token)
+    case_redirect = _require_portal_case(request, session, token)
+    if case_redirect:
+        return case_redirect
 
     client = session.client
-    try:
-        mos_data = MOSApplicationData.objects.get(client=client)
-    except MOSApplicationData.DoesNotExist:
-        mos_data = MOSApplicationData(client=client)
+    case = _session_case(session)
+    mos_data = MOSApplicationData.objects.filter(client=client, case=case).first()
+    if mos_data is None:
+        mos_data = MOSApplicationData(client=client, case=case)
 
     if request.method == "POST":
-        mos_data, _created = _ensure_mos(client)
+        mos_data, _created = _ensure_mos(client, case)
         if request.POST.get("action") == "new_card_application":
             return _handle_new_card_application_post(request, session=session, mos_data=mos_data, token=token)
 
