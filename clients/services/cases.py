@@ -28,13 +28,17 @@ class CaseArchiveResult:
 
 
 def get_primary_case_for_client(client: Client) -> Case:
-    case, _created = Case.objects.get_or_create_primary_for_client(client)
-    return case
+    """Legacy compatibility shim: resolve the single case of a client.
+
+    Never creates a case and raises if the client has zero or several cases, so
+    legacy business code cannot silently pick or fabricate one (spec section 4).
+    New code must pass the case explicitly.
+    """
+    return get_legacy_compatibility_case(client.pk, "Case")
 
 
 def get_primary_case_for_client_id(client_id: int) -> Case:
-    case, _created = Case.objects.get_or_create_primary_for_client_id(client_id)
-    return case
+    return get_legacy_compatibility_case(client_id, "Case")
 
 
 def create_case_for_client(
