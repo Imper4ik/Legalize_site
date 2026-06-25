@@ -318,8 +318,10 @@ class DocumentFlowsStage4Tests(TestCase):
         document.refresh_from_db()
         job.refresh_from_db()
 
-        self.assertEqual(self.client_obj.case_number, "WSC-II-S.123.2026")
-        self.assertEqual(self.client_obj.fingerprints_date, date(2030, 1, 5))
+        # Process data is written to the document's case (spec section 5).
+        document_case = document.case
+        self.assertEqual(document_case.authority_case_number, "WSC-II-S.123.2026")
+        self.assertEqual(document_case.fingerprints_date, date(2030, 1, 5))
         self.assertEqual(document.ocr_status, "success")
         self.assertFalse(document.awaiting_confirmation)
         self.assertEqual(job.status, DocumentProcessingJob.STATUS_COMPLETED)
@@ -415,8 +417,9 @@ class DocumentFlowsStage4Tests(TestCase):
 
         self.client_obj.refresh_from_db()
         document.refresh_from_db()
+        # Name stays on the client; the case number is process data on the case.
         self.assertEqual(self.client_obj.first_name, "Ann")
-        self.assertEqual(self.client_obj.case_number, "AB/123")
+        self.assertEqual(document.case.authority_case_number, "AB/123")
         self.assertFalse(document.awaiting_confirmation)
 
     @patch("clients.views.documents.send_missing_documents_email", return_value=1)

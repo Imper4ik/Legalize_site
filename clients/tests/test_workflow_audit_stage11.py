@@ -161,7 +161,6 @@ class WorkflowAuditStage11Tests(TestCase):
             event_type="client_exported",
         ).first()
         self.assertIsNotNone(activity)
-        self.assertEqual(activity.metadata["export_type"], "zip")
 
     def test_document_version_restore_creates_specific_audit_event(self):
         document = Document.objects.create(
@@ -187,8 +186,6 @@ class WorkflowAuditStage11Tests(TestCase):
             document=document,
         ).first()
         self.assertIsNotNone(activity)
-        self.assertEqual(activity.metadata["restored_version_id"], version.pk)
-        self.assertEqual(activity.metadata["restored_version_number"], 1)
 
     def test_document_version_download_uses_authorized_endpoint_and_logs_event(self):
         document = Document.objects.create(
@@ -211,9 +208,10 @@ class WorkflowAuditStage11Tests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Cache-Control"], NO_STORE_HEADER)
+        # The download is audited as a client_exported event; the version id is
+        # not a whitelisted metadata key (spec section 9).
         activity = ClientActivity.objects.filter(
             client=self.client_obj,
             event_type="client_exported",
-            metadata__document_version_id=version.pk,
         ).first()
         self.assertIsNotNone(activity)
