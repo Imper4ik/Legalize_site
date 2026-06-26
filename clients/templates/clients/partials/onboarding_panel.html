@@ -95,7 +95,7 @@
                 </div>
             {% endwith %}
 
-            {% with has_dates=client.submission_date|default:client.fingerprints_date %}
+            {% with has_dates=client.active_case.submission_date|default:client.active_case.fingerprints_date %}
                 <div class="mb-3">
                     <label for="detail-onboarding-intake-type" class="form-label small text-muted mb-1">{% translate 'Тип онбординга' %}</label>
                     <select id="detail-onboarding-intake-type" class="form-select form-select-sm">

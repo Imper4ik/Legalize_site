@@ -308,6 +308,43 @@ class Client(SoftDeleteModel):
         return f"{self.first_name} {self.last_name}".strip()
 
     @cached_property
+    def active_case(self):
+        """The single active case for client-level display/heuristics, or None.
+
+        Process state (workflow stage, case number, process dates) lives on the
+        Case (spec §4). Client-level consumers read it from here; with zero or
+        several active cases this is ``None`` so callers do not guess. Prefetched
+        ``cases`` are reused to avoid N+1 queries on list views.
+        """
+        prefetched = getattr(self, "_prefetched_objects_cache", {})
+        if "cases" in prefetched:
+            cases = list(prefetched["cases"])
+            return cases[0] if len(cases) == 1 else None
+        from clients.services.cases import resolve_single_active_case
+
+        return resolve_single_active_case(self)
+
+    @property
+    def effective_case_number(self) -> str:
+        case = self.active_case
+        return str(case.authority_case_number or "") if case is not None else ""
+
+    @property
+    def effective_submission_date(self):
+        case = self.active_case
+        return case.submission_date if case is not None else None
+
+    @property
+    def effective_fingerprints_date(self):
+        case = self.active_case
+        return case.fingerprints_date if case is not None else None
+
+    @property
+    def effective_decision_date(self):
+        case = self.active_case
+        return case.decision_date if case is not None else None
+
+    @cached_property
     def mos_application_data(self):
         """Backwards-compatible accessor for the primary MOSApplicationData.
 
@@ -778,26 +815,22 @@ class Client(SoftDeleteModel):
         """The workflow stage to use for client-level heuristics (spec §4).
 
         Process state lives on the case, so we read the single active case's
-        stage. With zero or several active cases we fall back to the legacy
-        client field rather than guess.
+        stage. With zero or several active cases there is no unambiguous stage,
+        so we report ``new_client``.
         """
-        from clients.services.cases import resolve_single_active_case
-
-        case = resolve_single_active_case(self)
-        return case.workflow_stage if case is not None else self.workflow_stage
+        case = self.active_case
+        return case.workflow_stage if case is not None else "new_client"
 
     def get_effective_workflow_stage_display(self) -> str:
-        from clients.services.cases import resolve_single_active_case
-
-        case = resolve_single_active_case(self)
+        case = self.active_case
         if case is not None:
             return case.get_workflow_stage_display()
-        return self.get_workflow_stage_display()
+        from clients.models.case import Case
+
+        return str(dict(Case.WORKFLOW_STAGE_CHOICES).get("new_client", "new_client"))
 
     def _get_mos_legal_stay_until(self) -> date | None:
-        from clients.services.cases import resolve_single_active_case
-
-        case = resolve_single_active_case(self)
+        case = self.active_case
         if case is None:
             return None
         mos_application_data = self.mos_applications.filter(case=case).first()
@@ -827,10 +860,10 @@ class Client(SoftDeleteModel):
 
         active_case = resolve_single_active_case(self)
         effective_case_number = (
-            (active_case.authority_case_number if active_case is not None else self.case_number) or ""
+            (active_case.authority_case_number if active_case is not None else "") or ""
         )
         effective_fingerprints_date = (
-            active_case.fingerprints_date if active_case is not None else self.fingerprints_date
+            active_case.fingerprints_date if active_case is not None else None
         )
 
         stats = (
@@ -1162,10 +1195,10 @@ class Client(SoftDeleteModel):
 
         active_case = resolve_single_active_case(self)
         effective_case_number = (
-            (active_case.authority_case_number if active_case is not None else self.case_number) or ""
+            (active_case.authority_case_number if active_case is not None else "") or ""
         )
         effective_fingerprints_date = (
-            active_case.fingerprints_date if active_case is not None else self.fingerprints_date
+            active_case.fingerprints_date if active_case is not None else None
         )
         if not hasattr(self, "health_awaiting_confirmation_count"):
             stats = (

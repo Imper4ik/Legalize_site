@@ -245,7 +245,7 @@
 
                     <tr>
                         <td class="label-col" style="background-color: #e8efff;">{% translate "Data złożenia wniosku / Дата подачи" %}</td>
-                        <td class="value-col bold" style="background-color: #f4f8ff;">{% if client.submission_date %}{{ client.submission_date|date:"d.m.Y" }}{% endif %}</td>
+                        <td class="value-col bold" style="background-color: #f4f8ff;">{% if client.active_case.submission_date %}{{ client.active_case.submission_date|date:"d.m.Y" }}{% endif %}</td>
                     </tr>
                 </table>
             </div>

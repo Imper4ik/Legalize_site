@@ -40,7 +40,7 @@ class ClientExportPDFView(RoleOrFeatureRequiredMixin, DetailView):
     template_name = "clients/client_export_pdf.html"
 
     def get_queryset(self) -> Any:
-        return accessible_clients_queryset(self.request.user, Client.objects.defer("case_number", "passport_num"))
+        return accessible_clients_queryset(self.request.user, Client.objects.defer("passport_num"))
 
     def get(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         self.object = self.get_object()
@@ -63,7 +63,12 @@ class ClientExportPDFView(RoleOrFeatureRequiredMixin, DetailView):
         context["tasks"] = client.staff_tasks.all().order_by("-created_at")[:30]
         context["reminders"] = client.reminders.filter(is_active=True).order_by("due_date")
         context["activities"] = client.activities.all().order_by("-created_at")[:50]
-        context["safe_case_number"] = safe_encrypted_attr(client, "case_number")
+        # The case holds the authority number now (spec §4).
+        context["safe_case_number"] = (
+            safe_encrypted_attr(client.active_case, "authority_case_number")
+            if client.active_case is not None
+            else ""
+        )
         context["generated_at"] = timezone.now()
         return context
 
@@ -74,7 +79,7 @@ def client_export_zip(request: HttpRequest, pk: int) -> HttpResponse:
 
     from django.contrib import messages as django_messages
 
-    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.defer("case_number", "passport_num")), pk=pk)
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.defer("passport_num")), pk=pk)
 
     try:
         buffer = generate_client_zip(client)

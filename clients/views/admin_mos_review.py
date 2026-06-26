@@ -137,7 +137,7 @@ def _apply_mos_data_to_client(*, client: Client, mos_data: MOSApplicationData, a
 
 @role_required_view("Admin", "Manager", "Staff")
 def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
-    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.defer("passport_num", "case_number")), id=client_id)
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.defer("passport_num")), id=client_id)
     mos_data = get_object_or_404(MOSApplicationData, client=client)
     # Process transitions act on the MOS record's case (spec §4); the client is
     # never used as the process carrier.
