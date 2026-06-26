@@ -165,6 +165,54 @@ def test_overview_partial_no_500(_staff_client, _client_record):
     assert response.status_code != 500
 
 
+def test_update_notes_post_no_500(_staff_client, _client_record):
+    http_client, _ = _staff_client
+    url = reverse("clients:update_client_notes", kwargs={"pk": _client_record.pk})
+    response = http_client.post(url, {"notes": "smoke note"})
+    assert response.status_code != 500
+    _client_record.refresh_from_db()
+    assert _client_record.notes == "smoke note"
+
+
+def test_add_payment_post_no_500(_staff_client, _client_record):
+    # Payments attach to the client's case (process data moved off Client, §4).
+    http_client, _ = _staff_client
+    url = reverse("clients:add_payment", kwargs={"client_id": _client_record.pk})
+    response = http_client.post(
+        url,
+        {"service_description": "consultation", "total_amount": "100.00", "status": "pending"},
+    )
+    assert response.status_code != 500
+    assert _client_record.payments.exists()
+
+
+def test_edit_payment_post_no_500(_staff_client, _client_record):
+    from clients.models import Payment
+
+    http_client, _ = _staff_client
+    case = _client_record.cases.first()
+    payment = Payment.objects.create(
+        client=_client_record, case=case, service_description="consultation", total_amount="100.00"
+    )
+    url = reverse("clients:edit_payment", kwargs={"payment_id": payment.pk})
+    response = http_client.post(
+        url,
+        {"service_description": "consultation", "total_amount": "150.00", "status": "pending"},
+    )
+    assert response.status_code != 500
+
+
+def test_add_task_post_no_500(_staff_client, _client_record):
+    http_client, _ = _staff_client
+    url = reverse("clients:add_task", kwargs={"client_id": _client_record.pk})
+    response = http_client.post(
+        url,
+        {"title": "Smoke task", "description": "", "priority": "medium", "status": "open"},
+    )
+    assert response.status_code != 500
+    assert _client_record.staff_tasks.filter(title="Smoke task").exists()
+
+
 def test_unauthenticated_redirects_to_login(db):
     """An anonymous user should be redirected, never get a 500."""
     http_client = DjangoClient()
