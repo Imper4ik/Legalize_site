@@ -46,9 +46,11 @@ def archive_case(
     if case.client.archived_at is not None and client_batch is None:
         raise ValidationError("Нельзя индивидуально архивировать дело, если клиент уже заархивирован.")
 
+    # Who archived the case is recorded on the batch, not on the case itself
+    # (spec §11): the legacy Case.archived_by column is kept for schema
+    # compatibility but never written from runtime code.
     case.archived_at = timezone.now()
-    case.archived_by = actor
-    case.save(update_fields=["archived_at", "archived_by"])
+    case.save(update_fields=["archived_at"])
 
     batch = CaseArchiveBatch.objects.create(
         case=case,
@@ -111,8 +113,7 @@ def restore_case(
         raise ValidationError("Нельзя восстановить отдельное дело, пока клиент заархивирован.")
 
     case.archived_at = None
-    case.archived_by = None
-    case.save(update_fields=["archived_at", "archived_by"])
+    case.save(update_fields=["archived_at"])
 
     StaffTask.objects.filter(
         case=case,
@@ -176,9 +177,9 @@ def archive_client_with_all_cases(
     for case in active_cases:
         archive_case(case, actor, client_batch=client_batch)
 
+    # Who archived the client lives on the batch, not on the client (spec §11).
     client.archived_at = timezone.now()
-    client.archived_by = actor
-    client.save(update_fields=["archived_at", "archived_by"])
+    client.save(update_fields=["archived_at"])
 
     from clients.services.activity import log_client_activity
     log_client_activity(
@@ -215,8 +216,7 @@ def restore_client_with_all_cases(
         raise ValidationError("Клиент не находится в архивном состоянии.")
 
     client.archived_at = None
-    client.archived_by = None
-    client.save(update_fields=["archived_at", "archived_by"])
+    client.save(update_fields=["archived_at"])
 
     case_batches = list(batch.case_batches.filter(status="archived"))
 
