@@ -87,6 +87,43 @@ def test_client_edit_post_saves_without_500(_staff_client, _client_record):
     assert _client_record.last_name == "Edited"
 
 
+def test_case_edit_no_500(_staff_client, _client_record):
+    http_client, _ = _staff_client
+    case = _client_record.cases.first()
+    assert case is not None, "primary case should be auto-created"
+    url = reverse("clients:case_edit", kwargs={"pk": case.pk})
+    response = http_client.get(url)
+    assert response.status_code != 500
+
+
+def test_case_edit_post_saves_process_data_without_500(_staff_client, _client_record):
+    # Regression: process data (case number, dates) now lives on Case (spec §4);
+    # CaseUpdateView.form_valid must persist it without touching dropped Client
+    # columns or 500ing.
+    http_client, _ = _staff_client
+    case = _client_record.cases.first()
+    assert case is not None
+    url = reverse("clients:case_edit", kwargs={"pk": case.pk})
+    response = http_client.post(
+        url,
+        {
+            "authority_case_number": "WSC-II-P.6151.000001.2026",
+            "application_purpose": "work",
+            "application_type": "",
+            "basis_of_stay": "",
+            "workflow_stage": case.workflow_stage,
+            "submission_date": "",
+            "fingerprints_date": "",
+            "assigned_staff": "",
+            "company": "",
+            "version": case.version,
+        },
+    )
+    assert response.status_code != 500
+    case.refresh_from_db()
+    assert case.authority_case_number == "WSC-II-P.6151.000001.2026"
+
+
 def test_client_print_no_500(_staff_client, _client_record):
     http_client, _ = _staff_client
     url = reverse("clients:client_print", kwargs={"pk": _client_record.pk})
