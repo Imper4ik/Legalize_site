@@ -77,6 +77,7 @@
             <div class="card-header"><h5 class="mb-0">📁 {% translate "Детали дела" %}</h5></div>
             <div class="card-body">
                 <div class="row g-3">
+                    {% if form.case_number %}
                     <div class="col-md-6">
                         <label class="form-label">
                             {{ form.case_number.label }}
@@ -85,6 +86,7 @@
                         {{ form.case_number }}
                         {% for error in form.case_number.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
+                    {% endif %}
                     {% if form.status %}
                     <div class="col-md-6">
                         <label class="form-label">{{ form.status.label }}</label>
@@ -148,6 +150,7 @@
                         </div>
                         {% for error in form.legal_basis_end_date.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
+                    {% if form.submission_date %}
                     <div class="col-md-4">
                         <label class="form-label">
                             {{ form.submission_date.label }}
@@ -159,6 +162,8 @@
                         </div>
                         {% for error in form.submission_date.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
+                    {% endif %}
+                    {% if form.fingerprints_date %}
                     <div class="col-md-4">
                         <label class="form-label">
                             {{ form.fingerprints_date.label }}
@@ -170,6 +175,7 @@
                         </div>
                         {% for error in form.fingerprints_date.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -386,8 +392,6 @@
             }
         }
         setupFlatpickr('id_legal_basis_end_date', 'toggle_legal_basis_end_date');
-        setupFlatpickr('id_submission_date', 'toggle_submission_date');
-        setupFlatpickr('id_fingerprints_date', 'toggle_fingerprints_date');
     });
 </script>
 {% endblock %}

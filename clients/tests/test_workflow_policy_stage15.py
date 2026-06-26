@@ -46,6 +46,10 @@ class WorkflowPolicyStage15Tests(TestCase):
             "application_type": "",
             "basis_of_stay": "",
             "workflow_stage": self.case.workflow_stage,
+            # CaseForm now owns these dates: default to the case's current values
+            # so a stage change does not blank them out unintentionally.
+            "submission_date": self.case.submission_date.strftime("%d.%m.%Y") if self.case.submission_date else "",
+            "fingerprints_date": self.case.fingerprints_date.strftime("%d.%m.%Y") if self.case.fingerprints_date else "",
             "assigned_staff": str(self.staff.pk),
             "company": "",
             "version": self.case.version,

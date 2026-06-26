@@ -527,6 +527,35 @@ class WorkflowStageEditedOnCaseNotClientTests(TestCase):
         form = ClientForm(instance=self.client_obj, user=self.staff)
         self.assertNotIn("workflow_stage", form.fields)
 
+    def test_process_and_legacy_fields_move_to_case_form(self) -> None:
+        from datetime import date
+
+        from clients.forms import CaseForm, ClientForm
+
+        # The client form no longer edits process/legacy number fields (§4).
+        client_form = ClientForm(instance=self.client_obj, user=self.staff)
+        for name in ("case_number", "submission_date", "fingerprints_date"):
+            self.assertNotIn(name, client_form.fields)
+
+        # The case form owns the process dates and parses dd.mm.yyyy input.
+        case_form = CaseForm(
+            data={
+                "authority_case_number": "",
+                "application_purpose": "work",
+                "application_type": "",
+                "basis_of_stay": "",
+                "workflow_stage": self.case.workflow_stage,
+                "submission_date": "15.03.2026",
+                "fingerprints_date": "",
+                "assigned_staff": "",
+                "company": "",
+                "version": self.case.version,
+            },
+            instance=self.case,
+        )
+        self.assertTrue(case_form.is_valid(), case_form.errors)
+        self.assertEqual(case_form.cleaned_data["submission_date"], date(2026, 3, 15))
+
     def test_case_form_blocks_closing_with_open_payments(self) -> None:
         from decimal import Decimal
 
