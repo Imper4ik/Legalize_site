@@ -821,6 +821,18 @@ class Client(SoftDeleteModel):
         alerts: list[dict[str, Any]] = []
         today = timezone.localdate()
 
+        # Process state lives on the case (spec §4): read the case number and
+        # fingerprints date from the single active case, not the legacy mirror.
+        from clients.services.cases import resolve_single_active_case
+
+        active_case = resolve_single_active_case(self)
+        effective_case_number = (
+            (active_case.authority_case_number if active_case is not None else self.case_number) or ""
+        )
+        effective_fingerprints_date = (
+            active_case.fingerprints_date if active_case is not None else self.fingerprints_date
+        )
+
         stats = (
             cast(Any, self.__class__.objects).filter(pk=self.pk)
             .with_health_stats(today=today)
@@ -945,7 +957,7 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        if getattr(self, "health_wezwanie_count", 0) > 0 and not self.case_number:
+        if getattr(self, "health_wezwanie_count", 0) > 0 and not effective_case_number:
             from django.utils.translation import gettext
             wezwanie_types = {DocumentType.WEZWANIE.value, DocumentType.WEZWANIE}
             wezwanie_docs = list(self.documents.filter(document_type__in=wezwanie_types, archived_at__isnull=True).order_by("-uploaded_at"))
@@ -983,7 +995,7 @@ class Client(SoftDeleteModel):
         if (
             mos_application_data is not None
             and mos_application_data.new_residence_card_application_status == "yes"
-            and not self.case_number
+            and not effective_case_number
         ):
             if new_card_case_number:
                 new_card_message = _(
@@ -1005,7 +1017,7 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        if self.fingerprints_date and not getattr(self, "health_appointment_email_sent_count", 0):
+        if effective_fingerprints_date and not getattr(self, "health_appointment_email_sent_count", 0):
             alerts.append(
                 {
                     "level": "warning",
@@ -1144,6 +1156,17 @@ class Client(SoftDeleteModel):
 
     def get_automatic_checks(self, document_status_list: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
         today = timezone.localdate()
+        # Read the case number and fingerprints date from the single active case
+        # (spec §4) rather than the legacy client mirror.
+        from clients.services.cases import resolve_single_active_case
+
+        active_case = resolve_single_active_case(self)
+        effective_case_number = (
+            (active_case.authority_case_number if active_case is not None else self.case_number) or ""
+        )
+        effective_fingerprints_date = (
+            active_case.fingerprints_date if active_case is not None else self.fingerprints_date
+        )
         if not hasattr(self, "health_awaiting_confirmation_count"):
             stats = (
                 self.__class__.objects.filter(pk=self.pk)
@@ -1267,7 +1290,7 @@ class Client(SoftDeleteModel):
             })
 
         # 5. Case Number
-        if getattr(self, "health_wezwanie_count", 0) > 0 and not self.case_number:
+        if getattr(self, "health_wezwanie_count", 0) > 0 and not effective_case_number:
             checks.append({
                 "label": _("Номер дела"),
                 "status": "warning",
@@ -1279,7 +1302,7 @@ class Client(SoftDeleteModel):
             checks.append({
                 "label": _("Номер дела"),
                 "status": "success",
-                "message": self.case_number or _("OK (нет wezwanie)"),
+                "message": effective_case_number or _("OK (нет wezwanie)"),
                 "tooltip": _("Номер дела заполнен или нет документов Wezwanie, требующих его наличия."),
                 "action_url": edit_url,
             })
@@ -1303,7 +1326,7 @@ class Client(SoftDeleteModel):
             })
 
         # 7. Fingerprints letter
-        if self.fingerprints_date and not getattr(self, "health_appointment_email_sent_count", 0):
+        if effective_fingerprints_date and not getattr(self, "health_appointment_email_sent_count", 0):
             checks.append({
                 "label": _("Письмо об отпечатках"),
                 "status": "warning",
