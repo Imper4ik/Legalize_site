@@ -1,7 +1,7 @@
 {{ client.first_name }} {{ client.last_name }},
 
 We reviewed the documents you uploaded. We still need the following to continue working on your case:
-{% if client.active_case.fingerprints_date %}If we joined your case after fingerprints had already been taken, this list is for ongoing case handling, not for a new application:
+{% if client.effective_fingerprints_date %}If we joined your case after fingerprints had already been taken, this list is for ongoing case handling, not for a new application:
 {% endif %}
 {% for document in documents %}- {{ document.name }}{% if document.expiry_date %} (valid until {{ document.expiry_date|date:"d.m.Y" }}){% endif %}
 {% endfor %}

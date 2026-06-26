@@ -209,7 +209,7 @@ class OnboardingTransitionConsistencyTests(TestCase):
             transition_client_workflow(client=client, target_stage="application_submitted")
         client.refresh_from_db()
         mos.refresh_from_db()
-        self.assertEqual(client.workflow_stage, "document_collection")
+        self.assertEqual(client.cases.get().workflow_stage, "document_collection")
         self.assertEqual(mos.status, "mos_package_ready")
 
     def test_atomic_error_rolls_back_partial_data(self):
@@ -228,7 +228,7 @@ class OnboardingTransitionConsistencyTests(TestCase):
         mos.save(update_fields=["status"])
         client.refresh_from_db()
         mos.refresh_from_db()
-        self.assertEqual(client.workflow_stage, "document_collection")
+        self.assertEqual(client.cases.get().workflow_stage, "document_collection")
         self.assertEqual(mos.status, "mos_package_ready")
 
 

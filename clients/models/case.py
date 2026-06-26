@@ -220,6 +220,14 @@ class Case(SoftDeleteModel):
                 update_fields.add("authority_case_number_hash")
                 kwargs["update_fields"] = list(update_fields)
         super().save(*args, **kwargs)
+        # Once the case has an authority number, the "case number missing" task
+        # for this client is resolved (spec §4 — moved off Client.save).
+        if self.authority_case_number and self.client_id:
+            try:
+                from clients.services.tasks import close_auto_task
+                close_auto_task(self.client, "case_number_missing")
+            except Exception:
+                pass
 
     def get_absolute_url(self) -> str:
         return reverse("clients:case_detail", kwargs={"pk": self.pk})

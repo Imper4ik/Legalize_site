@@ -152,10 +152,12 @@ class OnboardingPurposeTests(TestCase):
         self.assertIn(reverse("clients:client_edit", kwargs={"pk": client.pk}), task.description)
         self.assertFalse(DocumentProcessingJob.objects.filter(document=document).exists())
 
-        client.refresh_from_db()
-        self.assertIsNone(client.fingerprints_date)
-        self.assertIsNone(client.fingerprints_time)
-        self.assertIn(client.fingerprints_location, (None, ""))
+        # A client-uploaded wezwanie must not auto-fill fingerprints data on the
+        # case (manual scenario; staff enters it) — process state lives on the case.
+        case = client.cases.get()
+        self.assertIsNone(case.fingerprints_date)
+        self.assertIsNone(case.fingerprints_time)
+        self.assertIn(case.fingerprints_location, (None, ""))
 
         self.client.force_login(self.manager)
         schedule_response = self.client.get(reverse("clients:fingerprints_schedule"))

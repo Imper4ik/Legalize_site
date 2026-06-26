@@ -620,10 +620,8 @@ class WorkflowTransitionDoesNotMirrorToClientTests(TestCase):
         )
 
         refreshed_case = Case.all_objects.get(pk=self.case.pk)
-        refreshed_client = type(self.client_obj).all_objects.get(pk=self.client_obj.pk)
+        # Process state lives on the case; the client no longer carries a stage.
         self.assertEqual(refreshed_case.workflow_stage, "document_collection")
-        # The client keeps its legacy value; process state is not mirrored.
-        self.assertEqual(refreshed_client.workflow_stage, "new_client")
 
     def test_client_wrapper_delegates_without_writing_client(self) -> None:
         from clients.services.workflow_transitions import transition_client_workflow
@@ -633,9 +631,7 @@ class WorkflowTransitionDoesNotMirrorToClientTests(TestCase):
         )
 
         refreshed_case = Case.all_objects.get(pk=self.case.pk)
-        refreshed_client = type(self.client_obj).all_objects.get(pk=self.client_obj.pk)
         self.assertEqual(refreshed_case.workflow_stage, "document_collection")
-        self.assertEqual(refreshed_client.workflow_stage, "new_client")
 
     def test_client_wrapper_raises_on_ambiguous_cases(self) -> None:
         from clients.services.workflow_transitions import transition_client_workflow
@@ -671,7 +667,6 @@ class OcrDoesNotMirrorProcessStateToClientTests(TestCase):
         from clients.testing.factories import build_pdf_upload
 
         client_purpose_before = self.client_obj.application_purpose
-        client_stage_before = self.client_obj.workflow_stage
 
         document = Document.objects.create(
             client=self.client_obj,
@@ -700,12 +695,9 @@ class OcrDoesNotMirrorProcessStateToClientTests(TestCase):
         # Permanent personal data is allowed on the client…
         self.assertEqual(client.first_name, "Aleksander")
         self.assertEqual(client.last_name, "Nowak")
-        # …but process state must stay on the case only.
-        self.assertEqual(client.case_number or "", "")
-        self.assertIsNone(client.fingerprints_date)
-        self.assertIsNone(client.decision_date)
+        # …process state has no place on the client at all (the columns are gone)
+        # and the application purpose is not mutated either.
         self.assertEqual(client.application_purpose, client_purpose_before)
-        self.assertEqual(client.workflow_stage, client_stage_before)
 
         case_b = Case.all_objects.get(pk=self.case_b.pk)
         self.assertEqual(case_b.authority_case_number, "WSC-II-S.6151.55555.2026")
@@ -727,10 +719,9 @@ class HealthAlertsReadCaseNotClientTests(TestCase):
         mos.new_residence_card_application_status = "yes"
         mos.save(update_fields=["new_residence_card_application_status"])
 
-    def test_legacy_client_case_number_does_not_clear_alert(self) -> None:
-        # A number on the legacy client field must NOT suppress the alert…
-        self.client_obj.case_number = "LEGACY-123"
-        self.client_obj.save(update_fields=["case_number"])
+    def test_alert_fires_when_case_has_no_authority_number(self) -> None:
+        # The alert tracks the case authority number (the legacy client field is
+        # gone); with no number on the case it fires.
         titles = [str(a["title"]) for a in self.client_obj.get_health_alerts()]
         self.assertIn("Новая подача требует проверки дела", titles)
 

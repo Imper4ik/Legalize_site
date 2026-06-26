@@ -254,9 +254,10 @@ def test_payment_reminders_use_due_date_lte_today_and_do_not_duplicate(sample_cl
 @pytest.mark.django_db
 def test_update_reminders_dry_run_creates_and_sends_nothing(sample_client):
     require_passport()
-    sample_client.workflow_stage = "waiting_decision"
-    sample_client.fingerprints_date = timezone.localdate() - timedelta(days=10)
-    sample_client.save(update_fields=["workflow_stage", "fingerprints_date"])
+    case = sample_client.cases.get()
+    case.workflow_stage = "waiting_decision"
+    case.fingerprints_date = timezone.localdate() - timedelta(days=10)
+    case.save(update_fields=["workflow_stage", "fingerprints_date"])
     Payment.objects.create(
         client=sample_client,
         service_description="consultation",
@@ -410,9 +411,10 @@ def test_expected_zus_months_respects_17th_day_cutoff_and_prefingerprint_months(
 
 @pytest.mark.django_db
 def test_zus_rca_uploaded_period_closes_month_and_duplicates_are_blocked(sample_client):
-    sample_client.fingerprints_date = date(2026, 1, 20)
-    sample_client.workflow_stage = "waiting_decision"
-    sample_client.save(update_fields=["fingerprints_date", "workflow_stage"])
+    case = sample_client.cases.get()
+    case.fingerprints_date = date(2026, 1, 20)
+    case.workflow_stage = "waiting_decision"
+    case.save(update_fields=["fingerprints_date", "workflow_stage"])
     for month in (date(2025, 11, 1), date(2025, 12, 1), date(2026, 1, 1), date(2026, 2, 20)):
         Document.objects.create(
             client=sample_client,
@@ -422,8 +424,8 @@ def test_zus_rca_uploaded_period_closes_month_and_duplicates_are_blocked(sample_
             verified=True,
         )
 
-    assert missing_zus_months(sample_client, today=date(2026, 4, 16)) == []
-    assert missing_zus_months(sample_client, today=date(2026, 4, 17)) == [date(2026, 3, 1)]
+    assert missing_zus_months(sample_client.cases.get(), today=date(2026, 4, 16)) == []
+    assert missing_zus_months(sample_client.cases.get(), today=date(2026, 4, 17)) == [date(2026, 3, 1)]
 
     with pytest.raises(IntegrityError):
         with transaction.atomic():

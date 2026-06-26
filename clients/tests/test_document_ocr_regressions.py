@@ -112,7 +112,8 @@ class DocumentOCRRegressionTests(TestCase):
         self.assertFalse(DocumentProcessingJob.objects.filter(document=result.document).exists())
         self.assertFalse(result.document.awaiting_confirmation)
         self.assertEqual(result.document.ocr_status, "skipped")
-        self.assertIsNone(self.client_record.case_number)
+        # No parse ran, so the case authority number stays empty (§4).
+        self.assertEqual(self.client_record.cases.get().authority_case_number, "")
 
     def test_confirm_ocr_uses_confirmed_data_without_rerunning_parser(self):
         document = Document.objects.create(

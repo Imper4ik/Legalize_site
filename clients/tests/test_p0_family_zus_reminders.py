@@ -286,7 +286,7 @@ class TestZusRcaBackend:
         _make_doc(c, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 3, 1), verified=True)
         _make_doc(c, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 4, 1), verified=True)
 
-        assert missing_zus_months(c, today=date(2026, 6, 17)) == [date(2026, 5, 1)]
+        assert missing_zus_months(c.cases.get(), today=date(2026, 6, 17)) == [date(2026, 5, 1)]
 
     @pytest.mark.django_db
     def test_missing_zus_waits_until_day_17_for_previous_month(self):
@@ -298,7 +298,7 @@ class TestZusRcaBackend:
         _make_doc(c, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 3, 1), verified=True)
         _make_doc(c, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 4, 1), verified=True)
 
-        assert missing_zus_months(c, today=date(2026, 6, 16)) == []
+        assert missing_zus_months(c.cases.get(), today=date(2026, 6, 16)) == []
 
     @pytest.mark.django_db
     def test_unverified_zus_rca_does_not_cover_missing_month(self):
@@ -311,7 +311,7 @@ class TestZusRcaBackend:
         _make_doc(c, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 4, 1), verified=True)
         _make_doc(c, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 5, 1), verified=False)
 
-        assert missing_zus_months(c, today=date(2026, 6, 17)) == [date(2026, 5, 1)]
+        assert missing_zus_months(c.cases.get(), today=date(2026, 6, 17)) == [date(2026, 5, 1)]
 
     @pytest.mark.django_db
     def test_archived_zus_rca_does_not_cover_missing_month(self):
@@ -330,7 +330,7 @@ class TestZusRcaBackend:
             archived_at=timezone.now(),
         )
 
-        assert missing_zus_months(c, today=date(2026, 6, 17)) == [date(2026, 5, 1)]
+        assert missing_zus_months(c.cases.get(), today=date(2026, 6, 17)) == [date(2026, 5, 1)]
 
     @pytest.mark.django_db
     def test_health_insurance_covers_missing_zus_month_until_expiry(self):
@@ -343,7 +343,7 @@ class TestZusRcaBackend:
         _make_doc(c, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 4, 1), verified=True)
         _make_doc(c, doc_type=DocumentType.HEALTH_INSURANCE.value, expiry_date=date(2026, 5, 31), verified=True)
 
-        assert missing_zus_months(c, today=date(2026, 6, 17)) == []
+        assert missing_zus_months(c.cases.get(), today=date(2026, 6, 17)) == []
 
     @pytest.mark.django_db
     def test_missing_zus_requires_waiting_decision(self):
@@ -352,7 +352,7 @@ class TestZusRcaBackend:
             workflow_stage="document_collection",
             fingerprints_date=date(2026, 2, 10),
         )
-        assert missing_zus_months(c, today=date(2026, 5, 15)) == []
+        assert missing_zus_months(c.cases.get(), today=date(2026, 5, 15)) == []
 
     @pytest.mark.django_db
     def test_missing_zus_requires_no_decision_date(self):
@@ -362,7 +362,7 @@ class TestZusRcaBackend:
             fingerprints_date=date(2026, 2, 10),
             decision_date=date(2026, 5, 1),
         )
-        assert missing_zus_months(c, today=date(2026, 5, 15)) == []
+        assert missing_zus_months(c.cases.get(), today=date(2026, 5, 15)) == []
 
 
 class TestClientDetailZusUploadMonths:

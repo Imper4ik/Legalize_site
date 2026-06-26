@@ -337,9 +337,10 @@ class P0FixesVerificationTests(TestCase):
         # flag is not a whitelisted key and is intentionally dropped.
         self.assertNotIn("WSC-CASE-12345", act.metadata.values())
 
-        # 3. Staff registers case number in main Client field -> closes the task.
-        self.client_obj.case_number = "WSC-CASE-12345"
-        self.client_obj.save()
+        # 3. Staff registers the case authority number -> closes the task (§4).
+        case = self.client_obj.cases.get()
+        case.authority_case_number = "WSC-CASE-12345"
+        case.save(update_fields=["authority_case_number"])
         task.refresh_from_db()
         self.assertEqual(task.status, "done")
 
@@ -355,12 +356,6 @@ class P0FixesVerificationTests(TestCase):
         )
         self.assertEqual(act.get_event_type_display(), "Новая подача обновлена")
         self.assertEqual(act.badge_class, "bg-info text-dark")
-
-        # Also, check that case_number is encrypted in Client.
-        self.client_obj.case_number = "12345-XYZ"
-        self.client_obj.save()
-        self.assertEqual(self.client_obj.case_number, "12345-XYZ")
-        # Ensure it hashes or encrypts as expected by the DB model (we don't check implementation details, but make sure save is successful).
 
     def test_manager_allowed_to_manage_people(self):
         """PEOPLE_ALLOWED_ROLES must include Manager so managers can edit employee roles."""

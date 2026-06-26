@@ -615,8 +615,10 @@ class WezwanieUploadFlowTests(TestCase):
         parse_mock.assert_not_called()
 
         updated_client = Client.objects.get(pk=self.client_record.pk)
-        self.assertIsNone(updated_client.case_number)
-        self.assertIsNone(updated_client.fingerprints_date)
+        # OCR is only queued here; the case must not have process data yet (§4).
+        case = updated_client.cases.get()
+        self.assertEqual(case.authority_case_number, "")
+        self.assertIsNone(case.fingerprints_date)
 
         document = Document.objects.get(client=updated_client, document_type="wezwanie")
         job = DocumentProcessingJob.objects.get(document=document)

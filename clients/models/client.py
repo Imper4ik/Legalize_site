@@ -84,9 +84,45 @@ class ClientQuerySet(SoftDeleteQuerySet):
         )
 
 
+# Process fields that used to live on Client now live on the Case (spec §4).
+# Creation calls that still pass them are routed to the client's primary case so
+# existing factories/seed/demo code keeps working without the legacy columns.
+_CASE_PROCESS_CREATE_KWARGS = {
+    "workflow_stage",
+    "submission_date",
+    "fingerprints_date",
+    "fingerprints_time",
+    "fingerprints_location",
+    "fingerprints_ticket",
+    "fingerprints_list",
+    "fingerprints_info",
+    "decision_date",
+    "case_number",
+}
+
+
+def _apply_case_process_kwargs(client: "Client", case_kwargs: dict[str, Any]) -> None:
+    if not case_kwargs:
+        return
+    case = client.cases.order_by("opened_at", "id").first()
+    if case is None:
+        return
+    if "case_number" in case_kwargs:
+        case_kwargs["authority_case_number"] = case_kwargs.pop("case_number") or ""
+    for name, value in case_kwargs.items():
+        setattr(case, name, value)
+    case.save()
+
+
 class ClientManager(models.Manager.from_queryset(ClientQuerySet)):  # type: ignore[misc]
     def get_queryset(self) -> ClientQuerySet:
         return cast(ClientQuerySet, super().get_queryset().active())
+
+    def create(self, **kwargs: Any) -> "Client":
+        case_kwargs = {k: kwargs.pop(k) for k in list(kwargs) if k in _CASE_PROCESS_CREATE_KWARGS}
+        client = super().create(**kwargs)
+        _apply_case_process_kwargs(client, case_kwargs)
+        return client
 
 
 class Client(SoftDeleteModel):
@@ -144,8 +180,6 @@ class Client(SoftDeleteModel):
     phone = models.CharField(max_length=20, blank=True, verbose_name=_("Телефон"))
     email = models.EmailField(blank=True, verbose_name="Email")
     passport_num = EncryptedTextField(null=True, blank=True, verbose_name=_("Номер паспорта"))
-    case_number = EncryptedTextField(blank=True, null=True, verbose_name=_("Номер дела"))
-    case_number_hash = models.CharField(max_length=64, blank=True, null=True, db_index=True)
     application_purpose = models.CharField(
         max_length=64,
         default="study",
@@ -164,59 +198,13 @@ class Client(SoftDeleteModel):
         verbose_name=_("Язык документов"),
     )
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="new", verbose_name=_("Статус"))
-    workflow_stage = models.CharField(
-        max_length=32,
-        choices=WORKFLOW_STAGE_CHOICES,
-        default="new_client",
-        verbose_name=_("Этап workflow"),
-    )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name=_("Дата создания"))
     legal_basis_end_date = models.DateField(null=True, blank=True, verbose_name=_("Дата окончания основания"))
-    submission_date = models.DateField(null=True, blank=True, verbose_name=_("Дата подачи (Złożone)"))
     employer_phone = models.CharField(
         max_length=20,
         blank=True,
         null=True,
         verbose_name=_("Телефон работодателя"),
-    )
-    fingerprints_date = models.DateField(
-        null=True,
-        blank=True,
-        verbose_name=_("Дата сдачи отпечатков"),
-    )
-    fingerprints_time = models.TimeField(
-        null=True,
-        blank=True,
-        verbose_name=_("Время сдачи отпечатков"),
-    )
-    fingerprints_location = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True,
-        verbose_name=_("Место сдачи отпечатков"),
-    )
-    fingerprints_ticket = models.CharField(
-        max_length=50,
-        blank=True,
-        null=True,
-        verbose_name=_("Номер билета (Bilet)"),
-    )
-    fingerprints_list = models.CharField(
-        max_length=100,
-        blank=True,
-        null=True,
-        verbose_name=_("Название списка (Lista)"),
-    )
-    fingerprints_info = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name=_("Дополнительная информация (кабинет, окно и т.д.)"),
-    )
-    decision_date = models.DateField(
-
-        null=True,
-        blank=True,
-        verbose_name=_("Дата официальной децизии"),
     )
     notes = models.TextField(blank=True, null=True, verbose_name=_("Uwagi / Заметки"))
     has_checklist_access = models.BooleanField(default=False, verbose_name=_("Доступ к чеклисту предоставлен"))
@@ -287,7 +275,6 @@ class Client(SoftDeleteModel):
         base_manager_name = "all_objects"
         indexes = [
             models.Index(fields=["assigned_staff", "status"], name="client_staff_status_idx"),
-            models.Index(fields=["workflow_stage", "status"], name="client_workflow_status_idx"),
             models.Index(fields=["created_at"], name="client_created_at_idx"),
             models.Index(fields=["sponsor_client", "family_role"], name="client_family_role_idx"),
             models.Index(fields=["email"], name="client_email_idx"),
@@ -473,29 +460,6 @@ class Client(SoftDeleteModel):
                 break
             visited.add(current.pk)
             current = current.sponsor_client
-
-    def save(self, *args: Any, **kwargs: Any) -> None:
-        update_fields = kwargs.get("update_fields")
-        should_refresh_case_hash = update_fields is None or "case_number" in update_fields
-
-        if should_refresh_case_hash:
-            if self.case_number:
-                self.case_number_hash = self.hash_case_number(cast(str, self.case_number))
-            else:
-                self.case_number_hash = None
-
-        if update_fields is not None and "case_number" in update_fields:
-            update_fields = set(update_fields)
-            update_fields.add("case_number_hash")
-            kwargs["update_fields"] = list(update_fields)
-
-        super().save(*args, **kwargs)
-        if self.case_number:
-            try:
-                from clients.services.tasks import close_auto_task
-                close_auto_task(self, "case_number_missing")
-            except Exception:
-                pass
 
     def get_absolute_url(self) -> str:
         return reverse("clients:client_detail", kwargs={"pk": self.id})
