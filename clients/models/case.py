@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import logging
 import uuid
 from typing import Any, Self, cast
 from uuid import uuid4
@@ -17,6 +18,8 @@ from django.utils.translation import gettext_lazy as _
 
 from fernet_fields import EncryptedJSONField, EncryptedTextField
 from legalize_site.soft_delete import SoftDeleteModel, SoftDeleteQuerySet
+
+logger = logging.getLogger(__name__)
 
 
 class CaseQuerySet(SoftDeleteQuerySet):
@@ -227,7 +230,10 @@ class Case(SoftDeleteModel):
                 from clients.services.tasks import close_auto_task
                 close_auto_task(self.client, "case_number_missing")
             except Exception:
-                pass
+                # Task auto-close is best-effort; never let it break the save.
+                logger.exception(
+                    "Failed to close case_number_missing task for client_id=%s", self.client_id
+                )
 
     def get_absolute_url(self) -> str:
         return reverse("clients:case_detail", kwargs={"pk": self.pk})
