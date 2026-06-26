@@ -360,7 +360,6 @@ class ClientUpdateView(RoleRequiredMixin, UpdateView):
         return context
 
     def form_valid(self, form: ClientForm) -> HttpResponse:
-        previous_fingerprints_date = self.object.fingerprints_date
         previous_values = snapshot_client_update_state(self.object)
         messages.success(self.request, _("Данные клиента успешно обновлены!"))
         with transaction.atomic():

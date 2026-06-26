@@ -61,6 +61,32 @@ def test_client_edit_no_500(_staff_client, _client_record):
     assert response.status_code != 500
 
 
+def test_client_edit_post_saves_without_500(_staff_client, _client_record):
+    # Regression: ClientUpdateView.form_valid must not touch dropped Client
+    # process columns (spec §4).
+    http_client, _ = _staff_client
+    url = reverse("clients:client_edit", kwargs={"pk": _client_record.pk})
+    response = http_client.post(
+        url,
+        {
+            "first_name": "Smoke",
+            "last_name": "Edited",
+            "email": "smoke@example.com",
+            "phone": "+48000000001",
+            "citizenship": "Poland",
+            "application_purpose": "work",
+            "language": "pl",
+            "status": "new",
+            "family_role": "",
+            "sponsor_client": "",
+            "notes": "edited",
+        },
+    )
+    assert response.status_code != 500
+    _client_record.refresh_from_db()
+    assert _client_record.last_name == "Edited"
+
+
 def test_client_print_no_500(_staff_client, _client_record):
     http_client, _ = _staff_client
     url = reverse("clients:client_print", kwargs={"pk": _client_record.pk})
