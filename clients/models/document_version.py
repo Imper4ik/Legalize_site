@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -69,7 +71,7 @@ class DocumentVersion(models.Model):
             models.Index(fields=["case", "-version_number"], name="docver_case_version_idx"),
         ]
 
-    def save(self, *args: object, **kwargs: object) -> None:
+    def save(self, *args: Any, **kwargs: Any) -> None:
         update_fields = kwargs.get("update_fields")
         if self.case_id is None and self.document_id and self.document.case_id:
             self.case_id = self.document.case_id

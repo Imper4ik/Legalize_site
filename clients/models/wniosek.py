@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -52,10 +54,10 @@ class WniosekSubmission(models.Model):
                     raise ValidationError(e.message)
             else:
                 raise ValidationError("Case is required.")
-        if self.case_id and self.client_id and self.case.client_id != self.client_id:
+        if self.case_id and self.client_id and self.case and self.case.client_id != self.client_id:
             raise ValidationError("Клиент и дело не согласованы.")
 
-    def save(self, *args: object, **kwargs: object) -> None:
+    def save(self, *args: Any, **kwargs: Any) -> None:
         update_fields = kwargs.get("update_fields")
         if self.case_id is None and self.client_id:
             from clients.services.cases import get_legacy_compatibility_case

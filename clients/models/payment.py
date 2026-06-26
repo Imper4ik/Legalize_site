@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
-from typing import Self
+from typing import Any, Self
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -21,8 +21,8 @@ class PaymentManager(models.Manager.from_queryset(PaymentQuerySet)):  # type: ig
 
 
 class Payment(SoftDeleteModel):
-    objects = PaymentManager()
-    all_objects = PaymentQuerySet.as_manager()
+    objects = PaymentManager()  # type: ignore[misc]
+    all_objects = PaymentQuerySet.as_manager()  # type: ignore[misc]
 
     PAYMENT_STATUS_CHOICES = [
         ("pending", _("Ожидает оплаты")),
@@ -66,7 +66,7 @@ class Payment(SoftDeleteModel):
     is_test_data = models.BooleanField(default=False, db_index=True)
     is_demo_data = models.BooleanField(default=False, db_index=True)
 
-    def save(self, *args: object, **kwargs: object) -> None:
+    def save(self, *args: Any, **kwargs: Any) -> None:
         update_fields = kwargs.get("update_fields")
         if self.case_id is None and self.client_id:
             from clients.services.cases import get_legacy_compatibility_case
@@ -94,7 +94,7 @@ class Payment(SoftDeleteModel):
                     raise ValidationError(e.message)
             else:
                 raise ValidationError("Case is required.")
-        if self.case_id and self.client_id and self.case.client_id != self.client_id:
+        if self.case_id and self.client_id and self.case and self.case.client_id != self.client_id:
             raise ValidationError("Клиент и дело не согласованы.")
 
         errors: dict[str, list[str]] = {}

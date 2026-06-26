@@ -18,7 +18,9 @@ from fernet_fields import EncryptedTextField
 from legalize_site.soft_delete import SoftDeleteModel, SoftDeleteQuerySet
 
 if TYPE_CHECKING:
-    from .document import Document
+    from .case import Case
+    from .document import ClientDocumentRequirement, Document
+    from .onboarding import MOSApplicationData
 
 
 class ClientQuerySet(SoftDeleteQuerySet):
@@ -285,7 +287,7 @@ class Client(SoftDeleteModel):
         return f"{self.first_name} {self.last_name}".strip()
 
     @cached_property
-    def active_case(self):
+    def active_case(self) -> Case | None:
         """The single active case for client-level display/heuristics, or None.
 
         Process state (workflow stage, case number, process dates) lives on the
@@ -307,22 +309,22 @@ class Client(SoftDeleteModel):
         return str(case.authority_case_number or "") if case is not None else ""
 
     @property
-    def effective_submission_date(self):
+    def effective_submission_date(self) -> date | None:
         case = self.active_case
         return case.submission_date if case is not None else None
 
     @property
-    def effective_fingerprints_date(self):
+    def effective_fingerprints_date(self) -> date | None:
         case = self.active_case
         return case.fingerprints_date if case is not None else None
 
     @property
-    def effective_decision_date(self):
+    def effective_decision_date(self) -> date | None:
         case = self.active_case
         return case.decision_date if case is not None else None
 
     @cached_property
-    def mos_application_data(self):
+    def mos_application_data(self) -> MOSApplicationData | None:
         """Backwards-compatible accessor for the primary MOSApplicationData.
 
         Previously this was an auto-generated reverse OneToOne descriptor.
@@ -529,7 +531,7 @@ class Client(SoftDeleteModel):
             required_docs, reqs = requirements_cache[cache_key]
         else:
             required_docs = DocumentRequirement.required_for(purpose, current_language)
-            reqs = DocumentRequirement.objects.filter(application_purpose=purpose)
+            reqs = list(DocumentRequirement.objects.filter(application_purpose=purpose))
 
         prefetched_documents = getattr(self, "_prefetched_objects_cache", {}).get("documents")
 
@@ -637,6 +639,7 @@ class Client(SoftDeleteModel):
             seen_codes.add(code)
 
         prefetched_requirements = getattr(self, "_prefetched_objects_cache", {}).get("custom_document_requirements")
+        custom_requirements: list[ClientDocumentRequirement] | models.QuerySet[ClientDocumentRequirement]
         if prefetched_requirements is None:
             custom_requirements = self.custom_document_requirements.filter(is_active=True).order_by("due_date", "created_at")
         else:
@@ -880,7 +883,7 @@ class Client(SoftDeleteModel):
                 doc_name = self.get_document_name_by_code(awaiting_docs[0].document_type)
                 action_label = _("Проверить документ: %s") % doc_name
             else:
-                action_label = _("Проверить OCR")
+                action_label = str(_("Проверить OCR"))
 
             alerts.append(
                 {
@@ -900,7 +903,7 @@ class Client(SoftDeleteModel):
                 doc_name = self.get_document_name_by_code(expired_docs[0].document_type)
                 action_label = _("Запросить документ: %s") % doc_name
             else:
-                action_label = _("Открыть чеклист")
+                action_label = str(_("Открыть чеклист"))
             alerts.append(
                 {
                     "level": "danger",
@@ -917,7 +920,7 @@ class Client(SoftDeleteModel):
                 doc_name = self.get_document_name_by_code(expiring_docs[0].document_type)
                 action_label = _("Запросить документ: %s") % doc_name
             else:
-                action_label = _("Открыть чеклист")
+                action_label = str(_("Открыть чеклист"))
             alerts.append(
                 {
                     "level": "warning",
@@ -1048,7 +1051,7 @@ class Client(SoftDeleteModel):
             if first_missing:
                 action_label = _("Запросить документ: %s") % first_missing["name"]
             else:
-                action_label = _("Открыть чеклист")
+                action_label = str(_("Открыть чеклист"))
             alerts.append(
                 {
                     "level": "info",
@@ -1110,7 +1113,7 @@ class Client(SoftDeleteModel):
             if first_overdue:
                 action_label = _("Выполнить задачу: %s") % first_overdue.title
             else:
-                action_label = _("Выполнить просроченные задачи")
+                action_label = str(_("Выполнить просроченные задачи"))
             alerts.append(
                 {
                     "level": "danger",
@@ -1446,7 +1449,7 @@ class Client(SoftDeleteModel):
 
         if alerts:
             level_priority = {"danger": 3, "warning": 2, "info": 1}
-            sorted_alerts = sorted(alerts, key=lambda a: level_priority.get(a.get("level"), 0), reverse=True)
+            sorted_alerts = sorted(alerts, key=lambda a: level_priority.get(a.get("level", ""), 0), reverse=True)
             alert = sorted_alerts[0]
             main_issue = {
                 "title": alert.get("title", ""),

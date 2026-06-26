@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Self
+from typing import Any, Self
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -139,13 +139,16 @@ class StaffTask(models.Model):
             models.Index(fields=["assignee", "status", "due_date"], name="task_assignee_status_due_idx"),
         ]
 
+    def _resolve_source_case_id(self) -> int | None:
+        """Case id implied by the task's source object, if any (document first)."""
+        for source in (self.document, self.payment):
+            if source is not None and source.case_id:
+                return source.case_id
+        return None
+
     def clean(self) -> None:
         super().clean()
-        source_case_id = None
-        if self.document_id and self.document.case_id:
-            source_case_id = self.document.case_id
-        elif self.payment_id and self.payment.case_id:
-            source_case_id = self.payment.case_id
+        source_case_id = self._resolve_source_case_id()
 
         if self.case_id is None:
             if source_case_id is not None:
@@ -159,16 +162,12 @@ class StaffTask(models.Model):
             else:
                 raise ValidationError("Case is required.")
 
-        if self.case_id and self.client_id and self.case.client_id != self.client_id:
+        if self.case_id and self.client_id and self.case and self.case.client_id != self.client_id:
             raise ValidationError("Клиент и дело не согласованы.")
 
-    def save(self, *args: object, **kwargs: object) -> None:
+    def save(self, *args: Any, **kwargs: Any) -> None:
         update_fields = kwargs.get("update_fields")
-        source_case_id = None
-        if self.document_id and self.document.case_id:
-            source_case_id = self.document.case_id
-        elif self.payment_id and self.payment.case_id:
-            source_case_id = self.payment.case_id
+        source_case_id = self._resolve_source_case_id()
         if self.case_id is None:
             if source_case_id is not None:
                 self.case_id = source_case_id

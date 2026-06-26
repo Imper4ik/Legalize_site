@@ -157,8 +157,8 @@ class DocumentManager(models.Manager.from_queryset(DocumentQuerySet)):  # type: 
 
 
 class Document(SoftDeleteModel):
-    objects = DocumentManager()
-    all_objects = DocumentQuerySet.as_manager()
+    objects = DocumentManager()  # type: ignore[misc]
+    all_objects = DocumentQuerySet.as_manager()  # type: ignore[misc]
 
     OCR_STATUS_CHOICES = [
         ("skipped", _("Пропущено")),
@@ -269,7 +269,7 @@ class Document(SoftDeleteModel):
                     raise ValidationError(e.message)
             else:
                 raise ValidationError("Case is required.")
-        if self.case_id and self.client_id and self.case.client_id != self.client_id:
+        if self.case_id and self.client_id and self.case and self.case.client_id != self.client_id:
             raise ValidationError("Клиент и дело не согласованы.")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
@@ -522,7 +522,7 @@ class ClientDocumentRequirement(models.Model):
                     raise ValidationError(e.message)
             else:
                 raise ValidationError("Case is required.")
-        if self.case_id and self.client_id and self.case.client_id != self.client_id:
+        if self.case_id and self.client_id and self.case and self.case.client_id != self.client_id:
             raise ValidationError("Клиент и дело не согласованы.")
 
     def save(self, *args: Any, **kwargs: Any) -> None:

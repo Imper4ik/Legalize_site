@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Self
+from typing import Any, Self
 
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -104,15 +104,16 @@ class Reminder(models.Model):
                 return self.notes or ""
         return self.notes or ""
 
+    def _resolve_source_case_id(self) -> int | None:
+        """Case id implied by the reminder's source object, if any (payment first)."""
+        for source in (self.payment, self.document, self.custom_document_requirement):
+            if source is not None and source.case_id:
+                return source.case_id
+        return None
+
     def clean(self) -> None:
         super().clean()
-        source_case_id = None
-        if self.payment_id and self.payment.case_id:
-            source_case_id = self.payment.case_id
-        elif self.document_id and self.document.case_id:
-            source_case_id = self.document.case_id
-        elif self.custom_document_requirement_id and self.custom_document_requirement.case_id:
-            source_case_id = self.custom_document_requirement.case_id
+        source_case_id = self._resolve_source_case_id()
 
         if self.case_id is None:
             if source_case_id is not None:
@@ -126,10 +127,10 @@ class Reminder(models.Model):
             else:
                 raise ValidationError("Case is required.")
 
-        if self.case_id and self.client_id and self.case.client_id != self.client_id:
+        if self.case_id and self.client_id and self.case and self.case.client_id != self.client_id:
             raise ValidationError("Клиент и дело не согласованы.")
 
-        errors: dict[str, list[str]] = {}
+        errors: dict[str, list[Any]] = {}
         sources = [
             source
             for source in (self.payment, self.document, self.custom_document_requirement)
@@ -138,24 +139,26 @@ class Reminder(models.Model):
         if len(sources) > 1:
             errors.setdefault("__all__", []).append(_("Reminder cannot point to multiple source objects."))
 
-        if self.payment_id:
-            if self.client_id and self.payment.client_id != self.client_id:
+        payment = self.payment
+        if payment is not None:
+            if self.client_id and payment.client_id != self.client_id:
                 errors.setdefault("payment", []).append(_("Payment reminder must belong to the same client."))
-            if self.case_id and self.payment.case_id and self.payment.case_id != self.case_id:
+            if self.case_id and payment.case_id and payment.case_id != self.case_id:
                 errors.setdefault("payment", []).append(_("Payment reminder must belong to the same case."))
             if self.reminder_type != "payment":
                 errors.setdefault("reminder_type", []).append(_("Payment source requires payment reminder type."))
 
-        if self.document_id:
-            if self.client_id and self.document.client_id != self.client_id:
+        document = self.document
+        if document is not None:
+            if self.client_id and document.client_id != self.client_id:
                 errors.setdefault("document", []).append(_("Document reminder must belong to the same client."))
-            if self.case_id and self.document.case_id and self.document.case_id != self.case_id:
+            if self.case_id and document.case_id and document.case_id != self.case_id:
                 errors.setdefault("document", []).append(_("Document reminder must belong to the same case."))
             if self.reminder_type != "document":
                 errors.setdefault("reminder_type", []).append(_("Document source requires document reminder type."))
 
-        if self.custom_document_requirement_id:
-            requirement = self.custom_document_requirement
+        requirement = self.custom_document_requirement
+        if requirement is not None:
             if self.client_id and requirement.client_id != self.client_id:
                 errors.setdefault("custom_document_requirement", []).append(
                     _("Custom document reminder must belong to the same client.")
@@ -170,15 +173,9 @@ class Reminder(models.Model):
         if errors:
             raise ValidationError(errors)
 
-    def save(self, *args: object, **kwargs: object) -> None:
+    def save(self, *args: Any, **kwargs: Any) -> None:
         update_fields = kwargs.get("update_fields")
-        source_case_id = None
-        if self.payment_id and self.payment.case_id:
-            source_case_id = self.payment.case_id
-        elif self.document_id and self.document.case_id:
-            source_case_id = self.document.case_id
-        elif self.custom_document_requirement_id and self.custom_document_requirement.case_id:
-            source_case_id = self.custom_document_requirement.case_id
+        source_case_id = self._resolve_source_case_id()
 
         if self.case_id is None:
             if source_case_id is not None:

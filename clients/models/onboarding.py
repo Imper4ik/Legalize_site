@@ -71,8 +71,9 @@ class ClientOnboardingSession(models.Model):
             if self.case_id is not None:
                 raise ValidationError("Портальная сессия не может быть привязана к делу.")
         elif self.case_id is None:
-            if self.payment_id and self.payment.case_id:
-                self.case_id = self.payment.case_id
+            payment = self.payment
+            if payment is not None and payment.case_id:
+                self.case_id = payment.case_id
             elif self.client_id:
                 from clients.services.cases import get_legacy_compatibility_case
                 try:
@@ -81,15 +82,16 @@ class ClientOnboardingSession(models.Model):
                     raise ValidationError(e.message)
             else:
                 raise ValidationError("Case is required.")
-        if self.case_id and self.client_id and self.case.client_id != self.client_id:
+        if self.case_id and self.client_id and self.case and self.case.client_id != self.client_id:
             raise ValidationError("Клиент и дело не согласованы.")
 
-    def save(self, *args: object, **kwargs: object) -> None:
+    def save(self, *args: Any, **kwargs: Any) -> None:
         update_fields = kwargs.get("update_fields")
         # Only case_link sessions auto-resolve a Case; client_portal stays NULL.
         if self.scope != "client_portal" and self.case_id is None:
-            if self.payment_id and self.payment.case_id:
-                self.case_id = self.payment.case_id
+            payment = self.payment
+            if payment is not None and payment.case_id:
+                self.case_id = payment.case_id
             elif self.client_id:
                 from clients.services.cases import get_legacy_compatibility_case
                 self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
@@ -224,10 +226,10 @@ class MOSApplicationData(models.Model):
                     raise ValidationError(e.message)
             else:
                 raise ValidationError("Case is required.")
-        if self.case_id and self.client_id and self.case.client_id != self.client_id:
+        if self.case_id and self.client_id and self.case and self.case.client_id != self.client_id:
             raise ValidationError("Клиент и дело не согласованы.")
 
-    def save(self, *args: object, **kwargs: object) -> None:
+    def save(self, *args: Any, **kwargs: Any) -> None:
         update_fields = kwargs.get("update_fields")
         if self.case_id is None and self.client_id:
             from clients.services.cases import get_legacy_compatibility_case
@@ -301,10 +303,10 @@ class PeselApplication(models.Model):
                     raise ValidationError(e.message)
             else:
                 raise ValidationError("Case is required.")
-        if self.case_id and self.client_id and self.case.client_id != self.client_id:
+        if self.case_id and self.client_id and self.case and self.case.client_id != self.client_id:
             raise ValidationError("Клиент и дело не согласованы.")
 
-    def save(self, *args: object, **kwargs: object) -> None:
+    def save(self, *args: Any, **kwargs: Any) -> None:
         update_fields = kwargs.get("update_fields")
         if self.case_id is None and self.client_id:
             from clients.services.cases import get_legacy_compatibility_case
