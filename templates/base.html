@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-{% load static %}
 {% load i18n static %}
 {% load role_tags %}
 <html lang="{{ LANGUAGE_CODE }}">
@@ -8,7 +7,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light dark">
-  <script>
+  <script nonce="{{ request.csp_nonce }}">
     (function () {
       var docEl = document.documentElement;
       var theme = "light";
@@ -400,7 +399,7 @@
 
   <!-- Helpers -->
   <script src="{% static 'js/csrf.js' %}" defer></script>
-  <script>
+  <script nonce="{{ request.csp_nonce }}">
     document.addEventListener('DOMContentLoaded', () => {
       // Auto-dismiss alerts
       document.querySelectorAll('.alert.alert-dismissible').forEach((el) => {

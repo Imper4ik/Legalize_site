@@ -413,7 +413,7 @@
             </div>
         </div>
 
-        <script>
+        <script nonce="{{ request.csp_nonce }}">
             document.addEventListener('DOMContentLoaded', () => {
                 const attachmentContainer = document.querySelector('.attachment-inputs');
                 const lineInputs = Array.from(document.querySelectorAll('.line-input'));

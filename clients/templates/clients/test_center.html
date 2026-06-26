@@ -590,7 +590,7 @@
 </div>
 
 {% if selected_run %}
-<script>
+<script nonce="{{ request.csp_nonce }}">
   document.addEventListener("DOMContentLoaded", function () {
     const results = [
       {% for result in selected_results %}

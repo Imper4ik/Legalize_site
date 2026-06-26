@@ -182,7 +182,7 @@
 
 
 {% block extra_js %}
-  <script>
+  <script nonce="{{ request.csp_nonce }}">
     document.addEventListener('DOMContentLoaded', function() {
         // --- Календарь ---
         flatpickr("#id_total_end_date", {

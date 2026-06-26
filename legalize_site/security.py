@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import secrets
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -143,6 +144,15 @@ class ContentSecurityPolicyMiddleware:
         )
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
+        # Per-request nonce for inline <script nonce="{{ request.csp_nonce }}">.
+        # Set before the view renders so templates can read it. The enforced
+        # policy still carries 'unsafe-inline' (nothing breaks); the nonce makes
+        # the strict report-only policy pass for our inline scripts, so the
+        # eventual drop of 'unsafe-inline' can be validated against clean
+        # telemetry (the A3 hardening path).
+        nonce = secrets.token_urlsafe(16)
+        request.csp_nonce = nonce  # type: ignore[attr-defined]
+
         response = self.get_response(request)
         if self.header_value:
             header_name = (
@@ -157,5 +167,9 @@ class ContentSecurityPolicyMiddleware:
         # enforced, to avoid emitting two competing Report-Only headers.
         if self.strict_report_only_value and not self.report_only:
             if "Content-Security-Policy-Report-Only" not in response:
-                response["Content-Security-Policy-Report-Only"] = self.strict_report_only_value
+                response["Content-Security-Policy-Report-Only"] = (
+                    self.strict_report_only_value.replace(
+                        "script-src 'self'", f"script-src 'self' 'nonce-{nonce}'"
+                    )
+                )
         return response
