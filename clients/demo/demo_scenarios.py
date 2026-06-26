@@ -190,8 +190,10 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
         language="ru",
         assigned_staff=staff_user,
     )
-    dmitry.fingerprints_date = date.today() - timedelta(days=120)
-    dmitry.save(update_fields=["fingerprints_date"])
+    _dmitry_case = dmitry.cases.first()
+    if _dmitry_case is not None:
+        _dmitry_case.fingerprints_date = date.today() - timedelta(days=120)
+        _dmitry_case.save(update_fields=["fingerprints_date"])
 
     MOSApplicationData.objects.update_or_create(
         client=dmitry,
@@ -290,8 +292,10 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
         language="ru",
         assigned_staff=staff_user,
     )
-    volodymyr.fingerprints_date = date.today() - timedelta(days=60)
-    volodymyr.save(update_fields=["fingerprints_date"])
+    _volodymyr_case = volodymyr.cases.first()
+    if _volodymyr_case is not None:
+        _volodymyr_case.fingerprints_date = date.today() - timedelta(days=60)
+        _volodymyr_case.save(update_fields=["fingerprints_date"])
 
     MOSApplicationData.objects.update_or_create(
         client=volodymyr,

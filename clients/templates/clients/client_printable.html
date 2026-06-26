@@ -280,7 +280,7 @@
                     <tr>
                         <td class="label-col" style="background-color: #e8efff;">{% translate "Data złożenia wniosku / Дата подачи" %}
                         </td>
-                        <td class="value-col bold" style="background-color: #f4f8ff;">{{ client.active_case.submission_date|date:"d.m.Y"|default:"" }}</td>
+                        <td class="value-col bold" style="background-color: #f4f8ff;">{{ client.effective_submission_date|date:"d.m.Y"|default:"" }}</td>
                     </tr>
                 </table>
             </div>

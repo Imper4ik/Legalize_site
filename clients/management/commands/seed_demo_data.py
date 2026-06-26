@@ -177,6 +177,9 @@ class Command(BaseCommand):
         return user
 
     def _upsert_client(self, *, email: str, first_name: str, last_name: str, **defaults: Any) -> Client:
+        from clients.models.client import _CASE_PROCESS_CREATE_KWARGS, _apply_case_process_kwargs
+
+        case_kwargs = {k: defaults.pop(k) for k in list(defaults) if k in _CASE_PROCESS_CREATE_KWARGS}
         payload = {
             "first_name": first_name,
             "last_name": last_name,
@@ -186,6 +189,9 @@ class Command(BaseCommand):
             **defaults,
         }
         client, _created = Client.objects.update_or_create(email=email, defaults=payload)
+        # Process state (workflow stage, fingerprints, decision) lives on the
+        # case now (spec §4).
+        _apply_case_process_kwargs(client, case_kwargs)
         return client
 
     def _ensure_document(

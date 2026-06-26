@@ -236,16 +236,16 @@
       <strong class="client-summary-value">{{ client.legal_basis_end_date|date:"d.m.Y" }}</strong>
     </div>
     {% endif %}
-    {% if client.active_case.submission_date %}
+    {% if client.effective_submission_date %}
     <div class="client-summary-item">
       <span class="client-summary-label">{% translate "Дата подачи" %}</span>
-      <strong class="client-summary-value">{{ client.active_case.submission_date|date:"d.m.Y" }}</strong>
+      <strong class="client-summary-value">{{ client.effective_submission_date|date:"d.m.Y" }}</strong>
     </div>
     {% endif %}
-    {% if client.active_case.fingerprints_date %}
+    {% if client.effective_fingerprints_date %}
     <div class="client-summary-item">
       <span class="client-summary-label">{% translate "Отпечатки" %}</span>
-      <strong class="client-summary-value">{{ client.active_case.fingerprints_date|date:"d.m.Y" }}</strong>
+      <strong class="client-summary-value">{{ client.effective_fingerprints_date|date:"d.m.Y" }}</strong>
       {% if client.active_case.fingerprints_ticket %}
       <span class="client-summary-note">{% translate "Билет" %}: {{ client.active_case.fingerprints_ticket }}</span>
       {% endif %}
