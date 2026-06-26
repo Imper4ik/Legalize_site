@@ -53,9 +53,13 @@ def create_payment_for_client(
     client: Client,
     actor: AbstractBaseUser | AnonymousUser | None,
     cleaned_data: Mapping[str, Any],
+    case: Any = None,
 ) -> PaymentScenarioResult:
     with transaction.atomic():
-        payment = Payment(client=client)
+        # When created from a Case screen the concrete case is passed in and used
+        # directly (spec §6); otherwise the model resolves the client's single
+        # active case (or rejects an ambiguous multi-case client).
+        payment = Payment(client=client, case=case)
         _set_payment_fields(payment, cleaned_data)
         _validate_payment(payment)
         payment.save()

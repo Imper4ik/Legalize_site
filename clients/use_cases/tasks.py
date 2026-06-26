@@ -26,12 +26,15 @@ def create_task_for_client(
     client: Client,
     actor: AbstractBaseUser | AnonymousUser | None,
     cleaned_data: Mapping[str, Any],
+    case: Any = None,
 ) -> TaskScenarioResult:
     with transaction.atomic():
         # AnonymousUser cannot be assigned to ForeignKey
         creator = actor if actor and actor.is_authenticated else None
 
-        task = StaffTask(client=client, created_by=cast(Any, creator))
+        # A task created from a Case screen carries that concrete case (spec §6);
+        # without one the model resolves the client's single active case.
+        task = StaffTask(client=client, case=case, created_by=cast(Any, creator))
         for field in ("title", "description", "due_date", "priority", "status", "assignee", "document", "payment"):
             if field in cleaned_data:
                 setattr(task, field, cleaned_data[field])

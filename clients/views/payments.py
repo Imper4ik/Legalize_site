@@ -31,12 +31,25 @@ def add_payment(request: HttpRequest, client_id: int) -> HttpResponseBase:
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=client_id)
     helper = ResponseHelper(request)
     if request.method == "POST":
-        form = PaymentForm(request.POST, client=client)
+        # A payment created from a Case screen is attached to that concrete case
+        # (spec §6); a supplied-but-unresolvable case_uuid is refused.
+        from clients.services.cases import resolve_active_case_for_client
+
+        case_uuid = request.POST.get("case_uuid")
+        case = resolve_active_case_for_client(client, case_uuid)
+        if case_uuid and case is None:
+            if helper.expects_json:
+                return helper.error(message=str(_("Дело не найдено.")))
+            messages.error(request, _("Дело не найдено."))
+            return redirect(safe_redirect_target(request) or reverse("clients:client_detail", kwargs={"pk": client.id}))
+
+        form = PaymentForm(request.POST, client=client, case=case)
         if form.is_valid():
             result = create_payment_for_client(
                 client=client,
                 actor=request.user,
                 cleaned_data=form.cleaned_data,
+                case=case,
             )
             payment = cast(Payment, result.payment)
             if helper.expects_json:

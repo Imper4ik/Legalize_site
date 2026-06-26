@@ -41,6 +41,19 @@ def get_primary_case_for_client_id(client_id: int) -> Case:
     return get_legacy_compatibility_case(client_id, "Case")
 
 
+def resolve_active_case_for_client(client: Client, case_uuid: Any) -> Case | None:
+    """Resolve an active case identified by ``case_uuid`` that belongs to ``client``.
+
+    Returns ``None`` when no uuid is supplied or it does not match an active case
+    of this client. Used by Case-scoped POST handlers so a payment/task/etc. can
+    never be attached to another client's case or an archived one (spec §6).
+    ``Case.objects`` already excludes archived cases.
+    """
+    if not case_uuid:
+        return None
+    return Case.objects.filter(uuid=case_uuid, client_id=client.id).first()
+
+
 def create_case_for_client(
     *,
     client: Client,

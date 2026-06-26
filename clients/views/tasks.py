@@ -62,12 +62,24 @@ def add_task(request: HttpRequest, client_id: int) -> HttpResponseBase:
     if request.method != "POST":
         return redirect("clients:client_detail", pk=client.pk)
 
-    form = StaffTaskForm(request.POST, client=client)
+    # When submitted from a Case screen the form carries the concrete case so the
+    # task is attached to that case, never to another case of the same client
+    # (spec §6). A supplied-but-unresolvable case_uuid is refused.
+    from clients.services.cases import resolve_active_case_for_client
+
+    case_uuid = request.POST.get("case_uuid")
+    case = resolve_active_case_for_client(client, case_uuid)
+    if case_uuid and case is None:
+        messages.error(request, _("Дело не найдено."))
+        return redirect(safe_redirect_target(request) or reverse("clients:client_detail", kwargs={"pk": client.pk}))
+
+    form = StaffTaskForm(request.POST, client=client, case=case)
     if form.is_valid():
         create_task_for_client(
             client=client,
             actor=request.user,
             cleaned_data=form.cleaned_data,
+            case=case,
         )
         messages.success(request, _("Задача создана."))
     else:

@@ -216,6 +216,7 @@
       <div class="modal-header"><h5 class="modal-title">{% translate "Добавить платёж" %}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
       <form method="post" action="{% url 'clients:add_payment' case.client.pk %}">
         {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
+        <input type="hidden" name="case_uuid" value="{{ case.uuid }}">
         <div class="modal-body">
           <div class="mb-2"><label class="form-label">{% translate "Услуга" %}</label><select name="service_description" class="form-select" required>{% for value, label in payment_form.service_description.field.choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}</select></div>
           <div class="row g-2">
@@ -265,7 +266,7 @@
     <div class="modal-content">
       <div class="modal-header"><h5 class="modal-title">{% translate "Добавить задачу" %}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
       <form method="post" action="{% url 'clients:add_task' case.client.pk %}">
-        {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><input type="hidden" name="assignee" value="{{ request.user.pk }}">
+        {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><input type="hidden" name="assignee" value="{{ request.user.pk }}"><input type="hidden" name="case_uuid" value="{{ case.uuid }}">
         <div class="modal-body">
           <div class="mb-2"><label class="form-label">{% translate "Название" %}</label><input type="text" name="title" class="form-control" required></div>
           <div class="mb-2"><label class="form-label">{% translate "Описание" %}</label><textarea name="description" rows="2" class="form-control"></textarea></div>
