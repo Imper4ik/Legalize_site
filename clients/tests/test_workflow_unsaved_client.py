@@ -26,14 +26,14 @@ def client_form_data(**overrides):
 
 
 @pytest.mark.django_db
-def test_unsaved_client_cannot_move_to_application_submitted_without_500():
-    from django.utils import translation
-    with translation.override("ru"):
-        form = ClientForm(data=client_form_data())
+def test_unsaved_client_form_ignores_workflow_stage_without_500():
+    # The workflow stage moved to the case (CaseForm), so the client form no
+    # longer exposes or validates it: passing one is ignored gracefully and can
+    # never crash on an unsaved client (spec §4).
+    form = ClientForm(data=client_form_data())
 
-        assert not form.is_valid()
-        assert "workflow_stage" in form.errors
-        assert "Сначала сохраните клиента" in str(form.errors["workflow_stage"])
+    assert "workflow_stage" not in form.fields
+    assert form.is_valid(), form.errors
 
 
 @pytest.mark.django_db

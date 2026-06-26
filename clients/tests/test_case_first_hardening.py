@@ -512,6 +512,61 @@ class WorkdayPerCaseQueueTests(TestCase):
         self.assertEqual(len(mine), 1)
 
 
+class WorkflowStageEditedOnCaseNotClientTests(TestCase):
+    """spec section 4: the workflow stage is edited on the case (CaseForm), and
+    the case-edit path enforces the transition policy."""
+
+    def setUp(self) -> None:
+        self.staff = create_test_user(role="Staff")
+        self.client_obj = create_test_client(assigned_staff=self.staff)
+        self.case = self.client_obj.cases.get()
+
+    def test_client_form_has_no_workflow_stage_field(self) -> None:
+        from clients.forms import ClientForm
+
+        form = ClientForm(instance=self.client_obj, user=self.staff)
+        self.assertNotIn("workflow_stage", form.fields)
+
+    def test_case_form_blocks_closing_with_open_payments(self) -> None:
+        from decimal import Decimal
+
+        from django.utils import timezone
+
+        from clients.forms import CaseForm
+        from clients.models import Payment
+        from clients.models.case import CaseParticipant
+
+        CaseParticipant.objects.get_or_create(
+            case=self.case, client=self.client_obj, role="principal"
+        )
+        self.case.workflow_stage = "decision_received"
+        self.case.decision_date = timezone.localdate()
+        self.case.save(update_fields=["workflow_stage", "decision_date"])
+        Payment.objects.create(
+            client=self.client_obj,
+            case=self.case,
+            service_description="consultation",
+            total_amount=Decimal("100.00"),
+            amount_paid=Decimal("0.00"),
+            status="pending",
+            is_test_data=True,
+        )
+
+        form = CaseForm(
+            data={
+                "authority_case_number": "",
+                "application_purpose": "work",
+                "application_type": "",
+                "basis_of_stay": "",
+                "workflow_stage": "closed",
+                "version": self.case.version,
+            },
+            instance=self.case,
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn("workflow_stage", form.errors)
+
+
 class WorkflowTransitionDoesNotMirrorToClientTests(TestCase):
     """spec section 4: workflow transitions write the case only; the deprecated
     client wrapper no longer mirrors stage/dates onto the Client."""
