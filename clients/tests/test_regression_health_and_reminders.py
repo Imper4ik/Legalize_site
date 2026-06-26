@@ -146,10 +146,13 @@ def test_get_health_alerts_new_card_application_mentions_case_joining(db):
     assert len(matching_with_mos_number) == 1
     assert "Перенесите номер или проверьте присоединение к делу" in str(matching_with_mos_number[0]["message"])
 
-    client.case_number = "WSC-II-77/2026"
-    client.save(update_fields=["case_number"])
-    alerts_with_client_case = client.get_health_alerts()
-    assert not any(str(alert["title"]) == "Новая подача требует проверки дела" for alert in alerts_with_client_case)
+    # The alert clears once the case (not the legacy client field) has an
+    # authority number (spec §4).
+    case = client.cases.get()
+    case.authority_case_number = "WSC-II-77/2026"
+    case.save(update_fields=["authority_case_number"])
+    alerts_with_case_number = client.get_health_alerts()
+    assert not any(str(alert["title"]) == "Новая подача требует проверки дела" for alert in alerts_with_case_number)
 
 def test_send_legal_stay_email_critical_interval(db):
     from unittest.mock import patch

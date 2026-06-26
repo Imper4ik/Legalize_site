@@ -713,6 +713,35 @@ class OcrDoesNotMirrorProcessStateToClientTests(TestCase):
         self.assertEqual(case_b.application_purpose, "study")
 
 
+class HealthAlertsReadCaseNotClientTests(TestCase):
+    """spec section 4: client health checks read the case number/fingerprints
+    date from the active case, ignoring the legacy client mirror."""
+
+    def setUp(self) -> None:
+        from clients.models import MOSApplicationData
+
+        self.staff = create_test_user(role="Staff")
+        self.client_obj = create_test_client(assigned_staff=self.staff)
+        self.case = self.client_obj.cases.get()
+        mos, _ = MOSApplicationData.objects.get_or_create(client=self.client_obj, case=self.case)
+        mos.new_residence_card_application_status = "yes"
+        mos.save(update_fields=["new_residence_card_application_status"])
+
+    def test_legacy_client_case_number_does_not_clear_alert(self) -> None:
+        # A number on the legacy client field must NOT suppress the alert…
+        self.client_obj.case_number = "LEGACY-123"
+        self.client_obj.save(update_fields=["case_number"])
+        titles = [str(a["title"]) for a in self.client_obj.get_health_alerts()]
+        self.assertIn("Новая подача требует проверки дела", titles)
+
+    def test_case_authority_number_clears_alert(self) -> None:
+        # …only the case's authority number does.
+        self.case.authority_case_number = "WSC-II-P.6151.100000.2026"
+        self.case.save(update_fields=["authority_case_number"])
+        titles = [str(a["title"]) for a in self.client_obj.get_health_alerts()]
+        self.assertNotIn("Новая подача требует проверки дела", titles)
+
+
 class CompatibilityHelperTests(TestCase):
     """spec section 4: legacy compatibility helper must never auto-create or
     silently pick from multiple cases."""
