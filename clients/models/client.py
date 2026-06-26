@@ -974,9 +974,11 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        # Case-safe: a multi-case client returns None here rather than an
-        # arbitrary record from another case (spec §8).
-        mos_application_data = self.mos_application_data
+        # Case-safe and non-cached: a multi-case client yields None here rather
+        # than an arbitrary record from another case (spec §8). A fresh lookup
+        # (vs. the cached_property) reflects in-request MOS updates.
+        _mos_records = list(self.mos_applications.all()[:2])
+        mos_application_data = _mos_records[0] if len(_mos_records) == 1 else None
         new_card_case_number = ""
         if mos_application_data is not None:
             new_card_case_number = str(mos_application_data.new_residence_card_case_number or "").strip()
