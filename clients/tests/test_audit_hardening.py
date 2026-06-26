@@ -160,7 +160,8 @@ def test_manager_client_form_keeps_control_fields():
 
     assert "assigned_staff" in form.fields
     assert "status" in form.fields
-    assert "workflow_stage" in form.fields
+    # Workflow stage is edited on the case (CaseForm), not on the client (§4).
+    assert "workflow_stage" not in form.fields
 
 
 @pytest.mark.django_db

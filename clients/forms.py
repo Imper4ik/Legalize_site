@@ -16,7 +16,7 @@ from clients.security.sanitizer import sanitize_user_html
 from clients.services.access import accessible_clients_queryset
 from clients.services.calculator import CURRENCY_EUR, CURRENCY_PLN
 from clients.services.roles import user_has_any_role
-from clients.services.workflow import validate_client_workflow_transition
+from clients.services.workflow import validate_case_workflow_transition
 from clients.use_cases.document_requirements import (
     build_document_requirement_code,
     create_document_requirement_for_purpose,
@@ -274,6 +274,32 @@ class CaseForm(forms.ModelForm):
         self.fields["assigned_staff"].required = False
         self.fields["company"].required = False
 
+    def clean(self) -> dict[str, Any]:
+        cleaned_data = super().clean()
+        if cleaned_data is None:
+            return {}
+
+        # The case is the process carrier, so workflow transitions are validated
+        # here (spec §4). Overlay the cleaned values onto a copy of the instance
+        # so date-dependent rules (submission/fingerprints/decision, open
+        # payments) are checked against the about-to-be-saved state.
+        next_stage = cleaned_data.get("workflow_stage")
+        previous_stage = getattr(self.instance, "workflow_stage", None)
+        temp_case = copy.copy(self.instance)
+        for field_name, value in cleaned_data.items():
+            if hasattr(temp_case, field_name):
+                setattr(temp_case, field_name, value)
+
+        transition_result = validate_case_workflow_transition(
+            case=temp_case,
+            previous_stage=previous_stage,
+            next_stage=next_stage,
+        )
+        if not transition_result.allowed:
+            self.add_error("workflow_stage", transition_result.message)
+
+        return cleaned_data
+
 
 class ClientForm(forms.ModelForm):
     application_purpose = forms.ChoiceField(
@@ -363,7 +389,7 @@ class ClientForm(forms.ModelForm):
             setattr(self.fields['sponsor_client'], 'queryset', sponsor_queryset.order_by('last_name', 'first_name'))
 
         if self._is_limited_staff_user():
-            for field_name in ("assigned_staff", "status", "workflow_stage"):
+            for field_name in ("assigned_staff", "status"):
                 self.fields.pop(field_name, None)
 
     def _is_limited_staff_user(self) -> bool:
@@ -377,7 +403,7 @@ class ClientForm(forms.ModelForm):
         fields = [
             'first_name', 'last_name', 'email', 'phone', 'citizenship',
             'birth_date', 'passport_num', 'case_number', 'application_purpose', 'language',
-            'company', 'assigned_staff', 'status', 'workflow_stage',
+            'company', 'assigned_staff', 'status',
             'basis_of_stay', 'legal_basis_end_date', 'submission_date',
             'employer_phone',
             'fingerprints_date', 'family_role', 'sponsor_client', 'notes'
@@ -393,7 +419,6 @@ class ClientForm(forms.ModelForm):
             'case_number': forms.TextInput(attrs={'class': 'form-control'}),
             'language': forms.Select(attrs={'class': 'form-select'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
-            'workflow_stage': forms.Select(attrs={'class': 'form-select'}),
             'company': forms.Select(attrs={'class': 'form-select'}),
             'assigned_staff': forms.Select(attrs={'class': 'form-select'}),
             'family_role': forms.Select(attrs={'class': 'form-select'}),
@@ -440,22 +465,8 @@ class ClientForm(forms.ModelForm):
             if not has_family_members or family_role != "sponsor":
                 cleaned_data["family_role"] = ""
 
-        next_stage = cleaned_data.get("workflow_stage")
-        previous_stage = getattr(self.instance, "workflow_stage", None)
-
-        temp_client = copy.copy(self.instance)
-        for field_name, value in cleaned_data.items():
-            if hasattr(temp_client, field_name):
-                setattr(temp_client, field_name, value)
-
-        transition_result = validate_client_workflow_transition(
-            client=temp_client,
-            previous_stage=previous_stage,
-            next_stage=next_stage,
-        )
-        if not transition_result.allowed:
-            self.add_error("workflow_stage", transition_result.message)
-
+        # Workflow stage is no longer edited on the client: it lives on the case
+        # and is validated by CaseForm (spec §4).
         return cleaned_data
 
     def _validate_sponsor_relationship(self, sponsor_client: Client) -> None:
