@@ -143,31 +143,34 @@ def _require_portal_case(
 
 
 def _ensure_mos(client: Client, case: Any = None) -> tuple[MOSApplicationData, bool]:
-    """Create/fetch the MOS record for a specific case (spec section 6).
+    """Create/fetch the MOS record for a specific case (spec §8).
 
-    Self-onboarding must scope MOS data to a case, not the client. When the
-    caller already knows the case it is used directly; otherwise the client's
-    single active case is resolved. Ambiguous multi-case clients fall back to
-    the legacy client-only lookup (which the model resolves or rejects).
+    MOS data is always scoped to a Case, never the bare Client. When the caller
+    already knows the case it is used directly; otherwise the client's single
+    active case is resolved. A client with zero or several active cases is
+    ambiguous, so this raises instead of guessing or creating a case-less MOS.
     """
+    from django.core.exceptions import ValidationError
+
     from clients.services.cases import resolve_single_active_case
 
     resolved_case = case or resolve_single_active_case(client)
-    if resolved_case is not None:
-        return MOSApplicationData.objects.get_or_create(client=client, case=resolved_case)
-    return MOSApplicationData.objects.get_or_create(client=client)
+    if resolved_case is None:
+        raise ValidationError("Для этой операции необходимо выбрать дело.")
+    return MOSApplicationData.objects.get_or_create(client=client, case=resolved_case)
 
 
 def _get_scoped_mos(session: ClientOnboardingSession) -> MOSApplicationData | None:
     """Return the MOS record for the session's active case, or None.
 
-    Replaces the legacy ``client.mos_application_data`` (``.first()``) accessor so
-    a multi-case client only ever sees the MOS of the case in scope.
+    Strictly case-scoped (spec §8): without a case in scope there is no MOS to
+    show, so this returns ``None`` rather than falling back to an arbitrary
+    client-level record that could belong to another case.
     """
     case = _session_case(session)
-    if case is not None:
-        return MOSApplicationData.objects.filter(client=session.client, case=case).first()
-    return MOSApplicationData.objects.filter(client=session.client).first()
+    if case is None:
+        return None
+    return MOSApplicationData.objects.filter(client=session.client, case=case).first()
 
 
 def _save_onboarding_purpose(mos_data: MOSApplicationData, selected_purpose: str) -> None:

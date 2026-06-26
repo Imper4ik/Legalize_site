@@ -182,6 +182,17 @@ def client_document_print_confirm_view(request: HttpRequest, pk: int, doc_type: 
 
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.defer("passport_num")), pk=pk)
 
+    # The submission must be attached to a concrete case (spec §7). This view is
+    # keyed by client, so resolve the single active case; if the client has zero
+    # or several active cases, the case is ambiguous and we refuse rather than
+    # guessing or cross-contaminating another case.
+    from clients.services.cases import resolve_single_active_case
+
+    case = resolve_single_active_case(client)
+    if case is None:
+        messages.error(request, _("Для этой операции необходимо выбрать дело."))
+        return redirect("clients:client_detail", pk=client.pk)
+
     # Cast user to User for record_wniosek_submission
     confirmed_by = cast('User', request.user) if request.user.is_authenticated else None
 
@@ -191,6 +202,7 @@ def client_document_print_confirm_view(request: HttpRequest, pk: int, doc_type: 
         attachment_names=request.POST.getlist("attachments"),
         confirmed_by=confirmed_by,
         language=client.language,
+        case=case,
     )
 
     confirmed_attachments = list(

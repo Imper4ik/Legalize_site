@@ -316,19 +316,21 @@ class Client(SoftDeleteModel):
 
     @cached_property
     def mos_application_data(self) -> MOSApplicationData | None:
-        """Backwards-compatible accessor for the primary MOSApplicationData.
+        """Backwards-compatible, case-safe accessor for a single MOS record.
 
-        Previously this was an auto-generated reverse OneToOne descriptor.
-        Now MOSApplicationData uses ForeignKey to Client with related_name='mos_applications'.
-        This property returns the first entry (or None), enabling templates and legacy code
-        to keep using ``client.mos_application_data`` without changes.
+        MOS data is owned by a Case, not the Client (spec §8). This read-only
+        compatibility accessor returns the record only when the client has
+        exactly one MOS record; with several records it returns ``None`` rather
+        than picking an arbitrary ``.first()`` that could belong to another case.
+        Runtime screens must resolve MOS through the case in scope instead.
         """
         # Prefer prefetched data if available to avoid N+1 queries.
         prefetched = getattr(self, "_prefetched_objects_cache", {})
         if "mos_applications" in prefetched:
-            items = prefetched["mos_applications"]
-            return items[0] if items else None
-        return self.mos_applications.first()
+            items = list(prefetched["mos_applications"])
+        else:
+            items = list(self.mos_applications.all()[:2])
+        return items[0] if len(items) == 1 else None
 
     def on_archive(self) -> None:
         with transaction.atomic():
@@ -483,13 +485,13 @@ class Client(SoftDeleteModel):
                 return "work"
         return str(self.application_purpose)
 
-    def get_submitted_document_summary(self) -> dict[str, Any]:
+    def get_submitted_document_summary(self, case: Any = None) -> dict[str, Any]:
         from clients.services.wniosek import build_submitted_document_summary
 
-        return cast(dict[str, Any], build_submitted_document_summary(self))
+        return cast(dict[str, Any], build_submitted_document_summary(self, case=case))
 
-    def get_submitted_document_codes(self) -> set[str]:
-        summary = self.get_submitted_document_summary()
+    def get_submitted_document_codes(self, case: Any = None) -> set[str]:
+        summary = self.get_submitted_document_summary(case=case)
         return set(summary.get("codes", {}).keys())
 
     def get_document_checklist(
@@ -556,7 +558,10 @@ class Client(SoftDeleteModel):
                 setattr(doc, "file_exists", document_file_exists(doc))
             docs_map.setdefault(doc.document_type, []).append(doc)
 
-        submitted_summary = self.get_submitted_document_summary()
+        # Scope Wniosek submissions to the same case as the documents so a
+        # submission from another case cannot complete this case's checklist
+        # (spec §7).
+        submitted_summary = self.get_submitted_document_summary(case=case)
         submitted_by_code = submitted_summary.get("codes", {})
         custom_submissions = submitted_summary.get("custom", [])
 
@@ -969,7 +974,9 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        mos_application_data = self.mos_applications.first()
+        # Case-safe: a multi-case client returns None here rather than an
+        # arbitrary record from another case (spec §8).
+        mos_application_data = self.mos_application_data
         new_card_case_number = ""
         if mos_application_data is not None:
             new_card_case_number = str(mos_application_data.new_residence_card_case_number or "").strip()

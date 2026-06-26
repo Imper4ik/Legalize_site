@@ -181,13 +181,18 @@ class Case(SoftDeleteModel):
     def display_number(self) -> str:
         """Staff-facing case number.
 
-        Only the authority case number is a real working number. The internal
-        number is deprecated and the UUID must never be surfaced to staff, so an
-        unnumbered case shows a neutral placeholder instead.
+        Only the authority case number is a real working number. When it is not
+        set yet, the migrated legacy number is shown as a fallback. The internal
+        number is deprecated and the UUID must never be surfaced to staff, so a
+        case with neither number shows a neutral placeholder instead
+        (spec §3: authority → legacy → "Дело без номера").
         """
         number = str(self.authority_case_number or "").strip()
         if number:
             return number
+        legacy = str(self.legacy_case_number or "").strip()
+        if legacy:
+            return legacy
         return str(_("Дело без номера"))
 
     @staticmethod

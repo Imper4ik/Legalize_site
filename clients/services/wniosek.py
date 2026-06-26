@@ -121,15 +121,24 @@ def create_wniosek_submission(
     attachment_names: list[str],
     confirmed_by: AbstractBaseUser | AnonymousUser | None = None,
     language: str | None = None,
+    case: Any = None,
 ) -> WniosekSubmission:
     cleaned_names = clean_attachment_names(attachment_names)
 
     # AnonymousUser cannot be assigned to ForeignKey
     creator = confirmed_by if confirmed_by and confirmed_by.is_authenticated else None
 
+    # New submissions must be stored against a concrete case (spec §7). When the
+    # caller does not pass one, the client's single active case is resolved; an
+    # ambiguous multi-case client raises rather than guessing.
+    if case is None:
+        from clients.services.cases import get_legacy_compatibility_case
+        case = get_legacy_compatibility_case(client.pk, WniosekSubmission.__name__)
+
     with transaction.atomic():
         submission = WniosekSubmission.objects.create(
             client=client,
+            case=case,
             document_kind=document_kind,
             attachment_count=len(cleaned_names),
             confirmed_by=cast(Any, creator),
@@ -209,12 +218,21 @@ def _submitted_record(attachment: WniosekAttachment, document_type: str = "") ->
     }
 
 
-def build_submitted_document_summary(client: Client) -> dict[str, Any]:
-    """Build a summary of all submitted documents for the client."""
+def build_submitted_document_summary(client: Client, case: Any = None) -> dict[str, Any]:
+    """Build a summary of submitted (Wniosek) documents for the client.
+
+    When ``case`` is provided the Wniosek submissions are scoped to that case so
+    a submission confirmed in one case never marks a requirement complete in
+    another case of the same client (spec §7). Without a case the legacy
+    client-wide view is returned for backward compatibility.
+    """
+    case_id = getattr(case, "pk", None)
     prefetched_subs = getattr(client, "_prefetched_objects_cache", {}).get("wniosek_submissions")
     if prefetched_subs is not None:
         attachments = []
         for sub in prefetched_subs:
+            if case_id is not None and sub.case_id != case_id:
+                continue
             prefetched_atts = getattr(sub, "_prefetched_objects_cache", {}).get("attachments")
             if prefetched_atts is not None:
                 for att in prefetched_atts:
@@ -223,9 +241,12 @@ def build_submitted_document_summary(client: Client) -> dict[str, Any]:
             else:
                 attachments.extend(sub.attachments.all())
     else:
+        submissions_filter: dict[str, Any] = {"submission__client": client}
+        if case_id is not None:
+            submissions_filter["submission__case_id"] = case_id
         attachments = list(
             WniosekAttachment.objects.filter(
-                submission__client=client
+                **submissions_filter
             ).select_related("submission", "submission__confirmed_by")
         )
 
