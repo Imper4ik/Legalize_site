@@ -56,7 +56,8 @@ class Command(BaseCommand):
         if dry_run:
             self.stdout.write(self.style.SUCCESS('[DRY RUN] Would have anonymized the following:'))
             for client in clients_to_anonymize:
-                self.stdout.write(f' - ID {client.id}: {client.first_name} {client.last_name}')
+                # Do not print PII (names) to the console (GDPR / spec §13).
+                self.stdout.write(f' - ID {client.id}')
             return
 
         anonymized_count = 0
@@ -64,13 +65,35 @@ class Command(BaseCommand):
             for client in clients_to_anonymize:
                 client_id = client.id
 
-                # Anonymize PII
+                # Anonymize client PII. Process state (incl. the case number) now
+                # lives on the Case, not the Client, so it is anonymized below per
+                # case (spec §9); the removed Client.case_number is never touched.
                 client.first_name = f'Anonymized_{client_id}'
                 client.last_name = 'User'
                 client.email = f'deleted_{client_id}@example.com'
                 client.phone = '000000000'
-                client.case_number = f'DELETED-{client_id}'
                 client.company = None
+
+                # Anonymize the case-level numbers and free-text process PII for
+                # every case of the client (active or archived).
+                from clients.models import Case
+
+                for case in Case.all_objects.filter(client=client):
+                    case.authority_case_number = ''
+                    case.authority_case_number_hash = ''
+                    case.legacy_case_number = ''
+                    case.internal_number = ''
+                    case.fingerprints_location = ''
+                    case.fingerprints_ticket = ''
+                    case.fingerprints_list = ''
+                    case.fingerprints_info = ''
+                    case.decision = ''
+                    case.save(update_fields=[
+                        'authority_case_number', 'authority_case_number_hash',
+                        'legacy_case_number', 'internal_number',
+                        'fingerprints_location', 'fingerprints_ticket',
+                        'fingerprints_list', 'fingerprints_info', 'decision',
+                    ])
 
                 # We do not delete financial records to keep aggregate statistics intact,
                 # but we should delete any uploaded documents.
