@@ -36,8 +36,8 @@ STORAGES["default"] = {"BACKEND": "django.core.files.storage.FileSystemStorage"}
 
 # Keep test-generated files in writable, disposable directories.
 TEST_ARTIFACTS_DIR = BASE_DIR / "tmp" / "test-artifacts"  # noqa: F405
-MEDIA_ROOT = TEST_ARTIFACTS_DIR / "media"
-STATIC_ROOT = TEST_ARTIFACTS_DIR / "staticfiles"
+MEDIA_ROOT = str(TEST_ARTIFACTS_DIR / "media")
+STATIC_ROOT = str(TEST_ARTIFACTS_DIR / "staticfiles")
 FILE_UPLOAD_TEMP_DIR = TEST_ARTIFACTS_DIR / "uploads"
 for _path in (MEDIA_ROOT, STATIC_ROOT, FILE_UPLOAD_TEMP_DIR):
     os.makedirs(_path, exist_ok=True)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import shutil
 import tempfile
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
@@ -61,7 +61,7 @@ def run_e2e_scenarios(
             is_test_data=True,
         )
         recorder = ScenarioRecorder(test_run)
-        scenario_functions: list[Callable[[ScenarioRecorder], None]] = SCENARIO_GROUPS[mode]
+        scenario_functions: Sequence[Callable[[ScenarioRecorder], None]] = SCENARIO_GROUPS[mode]
         media_root: str | None = None
         remove_media_root = False
 

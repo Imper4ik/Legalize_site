@@ -2,11 +2,14 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+
+if TYPE_CHECKING:
+    from users.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 
@@ -52,7 +55,7 @@ def create_test_user(
     role: str = "Staff",
     email: str | None = None,
     is_superuser: bool = False,
-):
+) -> User:
     ensure_predefined_roles()
     user_model = get_user_model()
     user = user_model.objects.create_user(
@@ -67,7 +70,7 @@ def create_test_user(
     return user
 
 
-def create_client_user(*, email: str | None = None):
+def create_client_user(*, email: str | None = None) -> User:
     user_model = get_user_model()
     return user_model.objects.create_user(
         email=email or unique_email(f"{TEST_USER_PREFIX}client"),

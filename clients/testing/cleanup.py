@@ -37,24 +37,25 @@ def _delete_document_files(report: CleanupReport, *, extra_media_roots: list[str
 
     for document in Document.all_objects.filter(is_test_data=True).only("id", "file"):
         file_field = document.file
-        if not file_field:
+        if not file_field or not file_field.name:
             continue
+        file_name = file_field.name
         deleted_names: set[str] = set()
         try:
-            if file_field.storage.exists(file_field.name):
+            if file_field.storage.exists(file_name):
                 file_field.delete(save=False)
-                deleted_names.add(file_field.name)
+                deleted_names.add(file_name)
                 report.files_deleted += 1
         except Exception as exc:
             report.file_errors.append(f"document_id={document.pk}: {type(exc).__name__}")
 
         for root in extra_roots:
-            candidate = root / file_field.name
-            if file_field.name in deleted_names or not candidate.exists():
+            candidate = root / file_name
+            if file_name in deleted_names or not candidate.exists():
                 continue
             try:
                 candidate.unlink()
-                deleted_names.add(file_field.name)
+                deleted_names.add(file_name)
                 report.files_deleted += 1
             except Exception as exc:
                 report.file_errors.append(f"document_id={document.pk}: {type(exc).__name__}")

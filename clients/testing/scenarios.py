@@ -60,6 +60,7 @@ def run_smoke_scenario(recorder: ScenarioRecorder) -> None:
         filename="passport.pdf",
     )
     mos_data = client.mos_application_data
+    assert mos_data is not None  # scenario sets up MOS data above
     mos_data.new_residence_card_application_status = MOSApplicationData.NEW_CARD_STATUS_YES
     mos_data.new_residence_card_case_number = "WSC-III.TEST.2026"
     mos_data.new_residence_card_submitted_at = date(2026, 6, 2)
@@ -114,9 +115,9 @@ def run_smoke_scenario(recorder: ScenarioRecorder) -> None:
     activity_exists = ClientActivity.objects.filter(client=client, event_type="workflow_stage_changed").exists()
     recorder.check(
         "smoke.workflow_transition_updates_stage_and_audit",
-        client.workflow_stage == "fingerprints" and activity_exists,
+        client.get_effective_workflow_stage() == "fingerprints" and activity_exists,
         expected="workflow_stage=fingerprints and audit activity exists",
-        actual=f"stage={client.workflow_stage}, audit={activity_exists}",
+        actual=f"stage={client.get_effective_workflow_stage()}, audit={activity_exists}",
         related=RelatedObjects(client=client),
     )
 
@@ -136,7 +137,7 @@ def run_real_ocr_fixture_scenarios(recorder: ScenarioRecorder) -> None:
     from django.core.files.uploadedfile import SimpleUploadedFile
 
     from clients.constants import DocumentType
-    from clients.models import Document, DocumentProcessingJob
+    from clients.models import Client, Document, DocumentProcessingJob
     from clients.services.document_workflow import (
         enqueue_document_processing_job,
         process_document_processing_job,
@@ -146,7 +147,7 @@ def run_real_ocr_fixture_scenarios(recorder: ScenarioRecorder) -> None:
     # Locate real fixtures directory
     fixtures_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "tests", "fixtures")
 
-    def create_real_document(client, doc_type, filename):
+    def create_real_document(client: Client, doc_type: str, filename: str) -> Document:
         filepath = os.path.join(fixtures_dir, filename)
         with open(filepath, "rb") as f:
             content = f.read()

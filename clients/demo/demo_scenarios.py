@@ -247,6 +247,7 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
     )
     # Установим причину отклонения прямо в документе
     passport_doc = aliaksandr.documents.filter(document_type=DocumentType.PASSPORT.value).first()
+    assert passport_doc is not None  # just created above
     passport_doc.rejection_reason = "Фото паспорта размыто, не видны буквы серии и номера. Пожалуйста, переделайте фото при хорошем освещении."
     passport_doc.save(update_fields=["rejection_reason"])
 

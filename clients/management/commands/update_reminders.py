@@ -353,7 +353,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"{prefix} {count} legal stay reminders."))
 
     def sync_custom_document_requirement_reminders(self, *, dry_run: bool = False) -> None:
-        counts = defaultdict(int)
+        counts: defaultdict[str, int] = defaultdict(int)
         for requirement in ClientDocumentRequirement.objects.select_related("client", "case").filter(client__archived_at__isnull=True).iterator():
             outcome = sync_custom_document_requirement_reminder(requirement, dry_run=dry_run)
             counts[outcome] += 1
@@ -390,6 +390,9 @@ class Command(BaseCommand):
                 continue
 
             legal_stay_until = mos.legal_stay_until
+            if legal_stay_until is None:  # guaranteed by the queryset filter, but narrow for safety
+                skipped_count += 1
+                continue
             due_date = legal_stay_until
 
             # Weekend adjustment logic

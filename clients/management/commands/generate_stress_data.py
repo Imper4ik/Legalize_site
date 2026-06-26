@@ -38,7 +38,6 @@ class Command(BaseCommand):
                         citizenship=fake.country()[:100],
                         application_purpose=fake.random_element(["work", "study", "family"]),
                         status=fake.random_element(["new", "pending", "approved", "rejected"]),
-                        workflow_stage=fake.random_element(["new_client", "document_collection", "waiting_decision"]),
                     )
                 )
 

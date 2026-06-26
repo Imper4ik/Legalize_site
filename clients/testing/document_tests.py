@@ -206,7 +206,7 @@ def run_document_access_scenarios(recorder: ScenarioRecorder) -> None:
     doc_versioned.refresh_from_db()
     recorder.check(
         "documents.file_replaced",
-        "version2" in doc_versioned.file.name and doc_versioned.ocr_status == "skipped",
+        "version2" in (doc_versioned.file.name or "") and doc_versioned.ocr_status == "skipped",
         expected="file name updated, status reset",
         actual=f"name={doc_versioned.file.name}, ocr={doc_versioned.ocr_status}",
         related=RelatedObjects(client=client_1, document=doc_versioned),

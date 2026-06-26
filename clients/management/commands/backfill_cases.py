@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import logging
 import sys
+from typing import Any
 
 from django.contrib.auth import get_user_model
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandParser
 from django.db import transaction
 
 from clients.models import (
@@ -35,7 +36,7 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     help = "Идемпотентный перенос процессных полей из Client в Case и связывание дочерних объектов."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument(
             "--dry-run",
             action="store_true",
@@ -64,7 +65,7 @@ class Command(BaseCommand):
             help="Вывести подробный отчет о проделанной работе.",
         )
 
-    def handle(self, *args, **options):
+    def handle(self, *args: Any, **options: Any) -> None:
         dry_run = options["dry_run"]
         resume = options["resume"]
         batch_size = options["batch_size"]
@@ -87,7 +88,15 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"Критическая ошибка во время выполнения: {str(e)}"))
             sys.exit(1)
 
-    def run_backfill(self, dry_run, resume, batch_size, client_id, report, actor_user):
+    def run_backfill(
+        self,
+        dry_run: bool,
+        resume: bool,
+        batch_size: int,
+        client_id: int | None,
+        report: bool,
+        actor_user: Any,
+    ) -> None:
         clients_qs = Client.all_objects.all().order_by("id")
         if client_id is not None:
             clients_qs = clients_qs.filter(pk=client_id)
@@ -146,8 +155,6 @@ class Command(BaseCommand):
                         if client.archived_at:
                             case.archived_at = client.archived_at
                             case.archived_by = client.archived_by or actor_user
-                        if client.deleted_at:
-                            case.deleted_at = client.deleted_at
                         case.save()
 
                         # CaseParticipant

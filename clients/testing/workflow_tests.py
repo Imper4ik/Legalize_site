@@ -60,9 +60,9 @@ def run_workflow_scenarios(recorder: ScenarioRecorder) -> None:
     ).exists()
     recorder.check(
         "workflow.allowed_transition_writes_audit_activity",
-        paid_client.workflow_stage == "waiting_decision" and activity_exists,
+        paid_client.get_effective_workflow_stage() == "waiting_decision" and activity_exists,
         expected="stage waiting_decision and audit activity exists",
-        actual=f"stage={paid_client.workflow_stage}, audit={activity_exists}",
+        actual=f"stage={paid_client.get_effective_workflow_stage()}, audit={activity_exists}",
         related=RelatedObjects(client=paid_client),
     )
 

@@ -158,19 +158,19 @@ class StaffUserCreateForm(forms.ModelForm):
         }
 
     def clean(self) -> dict[str, Any]:
-        cleaned = super().clean()
-        password1 = cleaned.get("password1") if cleaned else None
-        password2 = cleaned.get("password2") if cleaned else None
-        if cleaned and password1 != password2:
+        cleaned = super().clean() or {}
+        password1 = cleaned.get("password1")
+        password2 = cleaned.get("password2")
+        if password1 != password2:
             self.add_error("password2", "Passwords do not match.")
         if password1 and password1 == password2:
             user = self.instance or self.Meta.model(
-                email=cleaned.get("email"),
+                email=cleaned.get("email") or "",
                 first_name=cleaned.get("first_name", ""),
                 last_name=cleaned.get("last_name", ""),
             )
             validate_password(password1, user=user)
-        return cleaned or {}
+        return cleaned
 
     def save(self, commit: bool = True) -> Any:
         user = super().save(commit=False)
@@ -283,7 +283,7 @@ class CaseForm(forms.ModelForm):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         user_model = get_user_model()
-        self.fields["assigned_staff"].queryset = user_model.objects.filter(
+        cast(forms.ModelChoiceField, self.fields["assigned_staff"]).queryset = user_model.objects.filter(
             is_staff=True,
             is_active=True,
         ).order_by("email")

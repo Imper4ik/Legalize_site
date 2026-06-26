@@ -5,6 +5,7 @@ from datetime import date
 from django.core.management import call_command
 
 from clients.models import EmailLog
+from clients.services.cases import resolve_single_active_case
 from clients.services.notifications import send_missing_documents_email
 from clients.testing.assertions import RelatedObjects, ScenarioRecorder
 from clients.testing.factories import create_test_client, create_test_document
@@ -18,8 +19,11 @@ def run_email_scenarios(recorder: ScenarioRecorder) -> None:
         purpose="work",
         workflow_stage="waiting_decision",
     )
-    client.fingerprints_date = date(2026, 2, 10)
-    client.save(update_fields=["fingerprints_date"])
+    # Process dates live on the Case now (spec §4).
+    case = resolve_single_active_case(client)
+    assert case is not None
+    case.fingerprints_date = date(2026, 2, 10)
+    case.save(update_fields=["fingerprints_date"])
 
     other = create_test_client(
         email="client_all_ok@example.test",

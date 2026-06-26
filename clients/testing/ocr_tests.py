@@ -61,9 +61,9 @@ def run_ocr_scenarios(recorder: ScenarioRecorder) -> None:
     )
     recorder.check(
         "ocr.no_client_updates_before_staff_confirmation",
-        not client.case_number and not client.fingerprints_date,
+        not client.effective_case_number and not client.effective_fingerprints_date,
         expected="case_number and fingerprints_date unchanged",
-        actual=f"case_number={client.case_number}, fingerprints_date={client.fingerprints_date}",
+        actual=f"case_number={client.effective_case_number}, fingerprints_date={client.effective_fingerprints_date}",
         related=RelatedObjects(client=client, document=document),
     )
     recorder.check(

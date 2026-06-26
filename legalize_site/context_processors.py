@@ -81,7 +81,7 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
         pending_question_preview = list(pending_question_tasks[:5])
 
         client_list_url = reverse("clients:client_list")
-        items = []
+        items: list[dict[str, Any]] = []
         if pending_question_count:
             items.append({
                 "label": _("Вопросы клиентов"),
