@@ -619,10 +619,13 @@ class ClientViewEdgeCaseTests(TestCase):
         limited_staff.groups.add(Group.objects.get(name="Staff"))
         self.client.login(email="limited@example.com", password="pass")
 
+        # Office settings (templates, submission bases, prices) are Admin/Manager
+        # only; Staff has no access. Checklist management is Staff-allowed.
         self.assertEqual(self.client.get(reverse("clients:app_settings")).status_code, 403)
-        self.assertEqual(self.client.get(reverse("clients:service_price_manage")).status_code, 200)
-        self.assertEqual(self.client.get(reverse("clients:submission_manage")).status_code, 200)
-        self.assertEqual(self.client.get(reverse("clients:document_template_hub")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("clients:service_price_manage")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("clients:submission_manage")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("clients:document_template_hub")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("clients:document_checklist_manage")).status_code, 200)
         self.assertEqual(self.client.get(reverse("clients:staff_manage")).status_code, 403)
         self.assertEqual(self.client.get(reverse("clients:role_manage")).status_code, 403)
 
@@ -639,9 +642,12 @@ class ClientViewEdgeCaseTests(TestCase):
         response = self.client.get(reverse("clients:admin_panel"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, reverse("clients:document_template_hub"))
-        self.assertContains(response, reverse("clients:submission_manage"))
-        self.assertContains(response, reverse("clients:service_price_manage"))
+        # Staff sees only what it can open: checklist management, not the
+        # Admin/Manager-only office settings cards.
+        self.assertContains(response, reverse("clients:document_checklist_manage"))
+        self.assertNotContains(response, reverse("clients:document_template_hub"))
+        self.assertNotContains(response, reverse("clients:submission_manage"))
+        self.assertNotContains(response, reverse("clients:service_price_manage"))
         self.assertNotContains(response, reverse("clients:staff_manage"))
         self.assertContains(response, reverse("clients:metrics_dashboard"))
 

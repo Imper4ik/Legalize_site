@@ -334,6 +334,7 @@
       {% translate "Настройки работы офиса" %}
     </h2>
     <div class="ops-action-grid ops-action-grid-3">
+      {% if user|has_any_role:"Admin,Manager" %}
       <div class="ops-card">
         <span class="ops-card-icon"><i class="bi bi-file-earmark-ruled"></i></span>
         <div class="ops-card-body">
@@ -342,6 +343,7 @@
           <a href="{% url 'clients:document_template_hub' %}" class="btn btn-sm btn-outline-primary">{% translate "Открыть" %}</a>
         </div>
       </div>
+      {% endif %}
       <div class="ops-card">
         <span class="ops-card-icon" style="--ops-icon-color:#16a34a;--ops-icon-bg:rgba(22,163,74,.1);"><i class="bi bi-card-checklist"></i></span>
         <div class="ops-card-body">
@@ -350,6 +352,7 @@
           <a href="{% url 'clients:document_checklist_manage' %}" class="btn btn-sm btn-outline-primary">{% translate "Открыть" %}</a>
         </div>
       </div>
+      {% if user|has_any_role:"Admin,Manager" %}
       <div class="ops-card">
         <span class="ops-card-icon" style="--ops-icon-color:#7c3aed;--ops-icon-bg:rgba(124,58,237,.1);"><i class="bi bi-stack"></i></span>
         <div class="ops-card-body">
@@ -366,6 +369,7 @@
           <a href="{% url 'clients:service_price_manage' %}" class="btn btn-sm btn-outline-primary">{% translate "Открыть" %}</a>
         </div>
       </div>
+      {% endif %}
       {% if user|has_any_role:"Admin" %}
       <div class="ops-card">
         <span class="ops-card-icon" style="--ops-icon-color:#0891b2;--ops-icon-bg:rgba(8,145,178,.1);"><i class="bi bi-person-badge"></i></span>
