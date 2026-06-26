@@ -6,7 +6,7 @@ from django.core.cache import cache
 from django.db.models import F, Q
 from django.utils.translation import gettext_lazy as _
 
-from clients.models import Client
+from clients.models import Client, MOSApplicationData
 
 ONBOARDING_PURPOSE_CHOICES = (
     ("study", _("Учёба")),
@@ -54,7 +54,7 @@ def onboarding_purpose_mismatch_q() -> Q:
     )
 
 
-def _unambiguous_mos(client: Client):
+def _unambiguous_mos(client: Client) -> MOSApplicationData | None:
     """Return the client's MOS record only when it is unambiguous.
 
     A client-level display cannot pick a case, so we surface the MOS purpose only

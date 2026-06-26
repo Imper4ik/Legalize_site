@@ -57,7 +57,7 @@ def _update_instance_with_locking(
         case_id = changes_dict.get("case_id", getattr(instance, "case_id"))
         client_id = changes_dict.get("client_id", getattr(instance, "client_id"))
         if case_id and client_id:
-            if instance.case.client_id != client_id:
+            if getattr(instance, "case").client_id != client_id:
                 raise ValidationError("Клиент и дело не согласованы.")
 
     prepared_changes: dict[str, Any] = {}
@@ -76,7 +76,7 @@ def _update_instance_with_locking(
         version_field_name: expected_version,
     }
 
-    update_kwargs = {
+    update_kwargs: dict[str, Any] = {
         version_field_name: F(version_field_name) + 1,
     }
 

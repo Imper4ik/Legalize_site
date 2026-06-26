@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import date
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeAlias
 
 from django.utils import timezone
 
@@ -10,12 +10,10 @@ from clients.constants import DocumentType
 
 if TYPE_CHECKING:
     from clients.models.case import Case
-    from clients.models.client import Client
 
-    # ZUS computation is case-first: callers should pass a Case (whose
-    # workflow_stage/fingerprints_date/decision_date and documents are the
-    # source of truth). A Client is still accepted for legacy single-case flows.
-    ZusSubject = Case | Client
+    # ZUS computation is case-first (spec §4): the workflow stage, fingerprints
+    # date, decision date and documents are all read from the Case.
+    ZusSubject: TypeAlias = "Case"
 
 logger = logging.getLogger(__name__)
 

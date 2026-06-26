@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from datetime import timedelta
 from unittest.mock import Mock
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
-from django.utils import timezone
 
 from clients.models import Client, ClientActivity, DocumentRequirement
 from clients.use_cases.client_records import (

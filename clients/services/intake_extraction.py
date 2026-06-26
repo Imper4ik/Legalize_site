@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 from clients.models import MOSApplicationData
 
 
@@ -20,8 +22,8 @@ def pre_fill_mos_data_from_ocr(mos_data: MOSApplicationData) -> bool:
     if passport_doc and passport_doc.parsed_data:
         parsed = passport_doc.parsed_data
 
-        personal_data = dict(mos_data.personal_data or {})
-        passport_data = dict(mos_data.passport_data or {})
+        personal_data: dict[str, Any] = dict(cast("dict[str, Any]", mos_data.personal_data) or {})
+        passport_data: dict[str, Any] = dict(cast("dict[str, Any]", mos_data.passport_data) or {})
 
         # Fill missing personal data fields if empty
         if "first_name" in parsed and parsed["first_name"]:
@@ -53,8 +55,9 @@ def pre_fill_mos_data_from_ocr(mos_data: MOSApplicationData) -> bool:
                 updated = True
 
         if updated:
-            mos_data.personal_data = personal_data
-            mos_data.passport_data = passport_data
+            # EncryptedJSONField stores dicts but django-stubs types it as text.
+            mos_data.personal_data = personal_data  # type: ignore[assignment]
+            mos_data.passport_data = passport_data  # type: ignore[assignment]
             mos_data.save(update_fields=["personal_data", "passport_data", "updated_at"])
 
     return updated

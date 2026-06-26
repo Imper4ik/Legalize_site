@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from django.db.models import Count, Prefetch, Q
 from django.urls import reverse
@@ -169,7 +169,8 @@ def _new_card_missing_case(user: AbstractBaseUser | AnonymousUser | None, limit:
     )[:limit]
     items: list[dict[str, Any]] = []
     for mos_data in mos_queryset:
-        client = mos_data.case.client
+        # case is non-null: the queryset filters case__in=accessible_cases.
+        client = cast("Case", mos_data.case).client
         detail_parts = []
         if mos_data.new_residence_card_submitted_at:
             detail_parts.append(mos_data.new_residence_card_submitted_at.strftime("%d.%m.%Y"))
@@ -204,7 +205,7 @@ def _fingerprints_followup(user: AbstractBaseUser | AnonymousUser | None, today:
         {
             "client": case.client,
             "title": _("После отпечатков без решения"),
-            "detail": _("%(days)s дней после отпечатков") % {"days": (today - case.fingerprints_date).days},
+            "detail": _("%(days)s дней после отпечатков") % {"days": (today - cast(date, case.fingerprints_date)).days},
             "url": _client_url(case.client_id, "#overview"),
             "action_label": _("Проверить статус"),
         }
@@ -222,7 +223,7 @@ def _overdue_tasks(user: AbstractBaseUser | AnonymousUser | None, today: date, l
         {
             "client": task.client,
             "title": task.title,
-            "detail": _("срок: %(date)s") % {"date": task.due_date.strftime("%d.%m.%Y")},
+            "detail": _("срок: %(date)s") % {"date": cast(date, task.due_date).strftime("%d.%m.%Y")},
             "url": task.communication_url,
             "action_label": _("Открыть"),
         }
@@ -368,7 +369,7 @@ def build_workday_context(
 
     # Group by client
     priority_order = {"urgent": 3, "important": 2, "other": 1}
-    clients_map = {}
+    clients_map: dict[Any, dict[str, Any]] = {}
 
     for section in sections:
         section_key = section["key"]

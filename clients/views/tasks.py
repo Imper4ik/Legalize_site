@@ -13,10 +13,9 @@ from django.views.generic import ListView
 from clients.forms import StaffTaskForm
 from clients.models import Client, StaffTask
 from clients.services.access import accessible_clients_queryset, accessible_tasks_queryset
-from clients.views.base import safe_redirect_target
 from clients.services.roles import TASK_MUTATION_ROLES
 from clients.use_cases.tasks import complete_task_for_client, create_task_for_client
-from clients.views.base import RoleOrFeatureRequiredMixin, role_or_feature_required_view
+from clients.views.base import RoleOrFeatureRequiredMixin, role_or_feature_required_view, safe_redirect_target
 
 if TYPE_CHECKING:
     from django.http.response import HttpResponseBase

@@ -12,7 +12,6 @@ from django.utils.translation import gettext as _
 from clients.forms import PaymentForm
 from clients.models import Client, Payment
 from clients.services.access import accessible_clients_queryset, accessible_payments_queryset
-from clients.views.base import safe_redirect_target
 from clients.services.pricing import get_service_price
 from clients.services.responses import ResponseHelper
 from clients.services.roles import PAYMENT_MUTATION_ROLES
@@ -21,7 +20,7 @@ from clients.use_cases.payments import (
     delete_payment_for_client,
     update_payment_for_client,
 )
-from clients.views.base import role_or_feature_required_view
+from clients.views.base import role_or_feature_required_view, safe_redirect_target
 
 if TYPE_CHECKING:
     from django.http.response import HttpResponseBase

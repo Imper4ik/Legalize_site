@@ -8,7 +8,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from hashlib import sha256
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from django.conf import settings
 from django.db import IntegrityError, models, transaction
@@ -881,9 +881,10 @@ def _process_rental_doc_job_internal(
         else None
     )
     if mos_data and mos_data.address_data:
-        street = mos_data.address_data.get("street", "").strip()
-        city = mos_data.address_data.get("city", "").strip()
-        postal_code = mos_data.address_data.get("postal_code", "").strip()
+        address_data = cast("dict[str, Any]", mos_data.address_data)
+        street = address_data.get("street", "").strip()
+        city = address_data.get("city", "").strip()
+        postal_code = address_data.get("postal_code", "").strip()
 
         if street or city or postal_code:
             norm_parsed_addr = normalize_string(parsed.address or "")

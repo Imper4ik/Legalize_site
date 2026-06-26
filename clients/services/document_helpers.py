@@ -41,7 +41,7 @@ def copy_document_to_case(document: Document, target_case: Case) -> Document:
             document.file.seek(0)
             content = document.file.read()
             document.file.seek(0)
-            filename = os.path.basename(document.file.name)
+            filename = os.path.basename(document.file.name or "")
             new_doc.file.save(filename, ContentFile(content), save=False)
         except Exception:
             logger.exception("Failed to physically copy document file, referencing original: document_id=%s", document.pk)

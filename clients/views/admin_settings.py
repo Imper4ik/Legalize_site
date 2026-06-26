@@ -12,11 +12,11 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.views.generic import TemplateView, UpdateView
 
+from clients.constants import ACTIVE_WORKFLOW_STAGES
 from clients.forms import (
     AppSettingsForm,
     ServicePriceForm,
 )
-from clients.constants import ACTIVE_WORKFLOW_STAGES
 from clients.models import AppSettings, Case, Client, Document, Payment, Reminder, ServicePrice, StaffTask
 from clients.services.roles import (
     ADMIN_PANEL_ALLOWED_ROLES,
