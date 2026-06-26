@@ -112,6 +112,8 @@ class CaseCreateView(RoleRequiredMixin, CreateView):
             application_type=form.cleaned_data.get("application_type") or "",
             basis_of_stay=form.cleaned_data.get("basis_of_stay") or "",
             workflow_stage=form.cleaned_data.get("workflow_stage") or self.client_obj.workflow_stage,
+            submission_date=form.cleaned_data.get("submission_date"),
+            fingerprints_date=form.cleaned_data.get("fingerprints_date"),
             assigned_staff=form.cleaned_data.get("assigned_staff"),
             company=form.cleaned_data.get("company"),
         )
@@ -144,6 +146,8 @@ class CaseUpdateView(RoleRequiredMixin, UpdateView):
             "application_type": form.cleaned_data.get("application_type") or "",
             "basis_of_stay": form.cleaned_data.get("basis_of_stay") or "",
             "workflow_stage": form.cleaned_data.get("workflow_stage") or case.workflow_stage,
+            "submission_date": form.cleaned_data.get("submission_date"),
+            "fingerprints_date": form.cleaned_data.get("fingerprints_date"),
             "assigned_staff": form.cleaned_data.get("assigned_staff"),
             "company": form.cleaned_data.get("company"),
         }

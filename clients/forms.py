@@ -239,6 +239,20 @@ def _label_for_document_type(code: str) -> str:
 
 class CaseForm(forms.ModelForm):
     version = forms.IntegerField(widget=forms.HiddenInput(), required=False)
+    # Process dates live on the case (spec §4); accept the same dd.mm.yyyy input
+    # the client form used to offer.
+    submission_date = forms.DateField(
+        label=_("Дата подачи (Złożone)"),
+        required=False,
+        input_formats=["%d.%m.%Y", "%d-%m-%Y", "%Y-%m-%d"],
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": _("дд.мм.гггг")}),
+    )
+    fingerprints_date = forms.DateField(
+        label=_("Дата сдачи отпечатков"),
+        required=False,
+        input_formats=["%d.%m.%Y", "%d-%m-%Y", "%Y-%m-%d"],
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": _("дд.мм.гггг")}),
+    )
 
     class Meta:
         model = Case
@@ -248,6 +262,8 @@ class CaseForm(forms.ModelForm):
             "application_type",
             "basis_of_stay",
             "workflow_stage",
+            "submission_date",
+            "fingerprints_date",
             "assigned_staff",
             "company",
             "version",
@@ -322,19 +338,6 @@ class ClientForm(forms.ModelForm):
         input_formats=['%d.%m.%Y', '%d-%m-%Y', '%Y-%m-%d'],
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('дд.мм.гггг')})
     )
-    submission_date = forms.DateField(
-        label=_("Дата подачи (Złożone)"),
-        required=False,
-        input_formats=['%d.%m.%Y', '%d-%m-%Y', '%Y-%m-%d'],
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('дд.мм.гггг')})
-    )
-    fingerprints_date = forms.DateField(
-        label=_("Дата сдачи отпечатков"),
-        required=False,
-        input_formats=['%d.%m.%Y', '%d-%m-%Y', '%Y-%m-%d'],
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('дд.мм.гггг')})
-    )
-
     def __init__(self, *args: Any, user: AbstractBaseUser | AnonymousUser | None = None, **kwargs: Any) -> None:
         self.user = user
         super().__init__(*args, **kwargs)
@@ -402,11 +405,11 @@ class ClientForm(forms.ModelForm):
         model = Client
         fields = [
             'first_name', 'last_name', 'email', 'phone', 'citizenship',
-            'birth_date', 'passport_num', 'case_number', 'application_purpose', 'language',
+            'birth_date', 'passport_num', 'application_purpose', 'language',
             'company', 'assigned_staff', 'status',
-            'basis_of_stay', 'legal_basis_end_date', 'submission_date',
+            'basis_of_stay', 'legal_basis_end_date',
             'employer_phone',
-            'fingerprints_date', 'family_role', 'sponsor_client', 'notes'
+            'family_role', 'sponsor_client', 'notes'
         ]
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -416,7 +419,6 @@ class ClientForm(forms.ModelForm):
             'citizenship': forms.TextInput(attrs={'class': 'form-control'}),
             'birth_date': forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('дд.мм.гггг')}),
             'passport_num': forms.TextInput(attrs={'class': 'form-control'}),
-            'case_number': forms.TextInput(attrs={'class': 'form-control'}),
             'language': forms.Select(attrs={'class': 'form-select'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
             'company': forms.Select(attrs={'class': 'form-select'}),
