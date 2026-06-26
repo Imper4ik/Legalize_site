@@ -28,18 +28,26 @@ def _corrupt_client_field(client: Client, field_name: str) -> None:
 @override_settings(LANGUAGE_CODE="en")
 class EncryptedFieldResilienceTests(TestCase):
     def test_safe_encrypted_attr_returns_placeholder_and_logs_metadata_only(self):
+        # The case number lives on the case now (spec §4); corrupt that field.
+        from clients.models import Case
+
         client = Client.objects.create(first_name="Safe", last_name="Client", case_number="SECRET-CASE")
-        _corrupt_client_field(client, "case_number")
-        client = Client.objects.defer("case_number").get(pk=client.pk)
+        case = client.cases.get()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"UPDATE {case._meta.db_table} SET authority_case_number = %s WHERE id = %s",
+                [CORRUPTED_FERNET_TOKEN, case.pk],
+            )
+        case = Case.objects.get(pk=case.pk)
 
         with self.assertLogs("clients.security.encrypted", level="WARNING") as captured:
-            value = safe_encrypted_attr(client, "case_number")
+            value = safe_encrypted_attr(case, "authority_case_number")
 
         self.assertEqual(value, ENCRYPTED_VALUE_UNAVAILABLE)
         log_output = "\n".join(captured.output)
-        self.assertIn("model=clients.Client", log_output)
-        self.assertIn(f"pk={client.pk}", log_output)
-        self.assertIn("field=case_number", log_output)
+        self.assertIn("model=clients.Case", log_output)
+        self.assertIn(f"pk={case.pk}", log_output)
+        self.assertIn("field=authority_case_number", log_output)
         self.assertNotIn(CORRUPTED_FERNET_TOKEN, log_output)
         self.assertNotIn("SECRET-CASE", log_output)
 
@@ -58,7 +66,7 @@ class EncryptedFieldResilienceTests(TestCase):
                 f"UPDATE {table} SET authority_case_number = %s WHERE id = %s",
                 [CORRUPTED_FERNET_TOKEN, case.pk],
             )
-        client = Client.objects.defer("case_number", "passport_num").get(pk=client.pk)
+        client = Client.objects.defer("passport_num").get(pk=client.pk)
 
         buffer = generate_client_zip(client)
 

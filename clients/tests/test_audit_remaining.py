@@ -118,12 +118,12 @@ class RemainingAuditHardeningTests(TestCase):
         )
 
         self.assertEqual(
-            missing_zus_months(client, today=date(2026, 5, 15)),
+            missing_zus_months(client.cases.get(), today=date(2026, 5, 15)),
             [date(2025, 12, 1), date(2026, 1, 1), date(2026, 2, 1), date(2026, 3, 1)],
         )
 
         client.documents.update(verified=True)
-        self.assertEqual(missing_zus_months(client, today=date(2026, 5, 15)), [])
+        self.assertEqual(missing_zus_months(client.cases.get(), today=date(2026, 5, 15)), [])
 
     def test_legal_stay_reminder_updates_existing_active_reminder(self):
         client = Client.objects.create(first_name="Legal", last_name="Stay", workflow_stage="document_collection")

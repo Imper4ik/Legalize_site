@@ -382,9 +382,10 @@ class ClientViewEdgeCaseTests(TestCase):
 
     def test_client_overview_partial_shows_safe_case_number_and_new_card_application(self):
         today = date.today()
-        self.client_obj.case_number = "WSC-II-99/2026"
-        self.client_obj.save(update_fields=["case_number"])
-        mos_data, _ = MOSApplicationData.objects.get_or_create(client=self.client_obj)
+        case = self.client_obj.cases.get()
+        case.authority_case_number = "WSC-II-99/2026"
+        case.save(update_fields=["authority_case_number"])
+        mos_data, _ = MOSApplicationData.objects.get_or_create(client=self.client_obj, case=case)
         mos_data.new_residence_card_application_status = MOSApplicationData.NEW_CARD_STATUS_YES
         mos_data.new_residence_card_case_number = "WSC-II-99/2026"
         mos_data.new_residence_card_submitted_at = today

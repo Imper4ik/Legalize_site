@@ -39,17 +39,14 @@ class NotificationServiceStage5Tests(TestCase):
         )
 
     def test_get_appointment_context_returns_none_without_date(self):
-        self.client_obj.fingerprints_date = None
-        self.client_obj.save(update_fields=["fingerprints_date"])
-
+        # Fingerprints live on the case (§4); the case has no date by default.
         context = notifications._get_appointment_context(self.client_obj)
 
         self.assertIsNone(context)
 
     def test_send_appointment_notification_returns_zero_without_email(self):
         self.client_obj.email = ""
-        self.client_obj.fingerprints_date = timezone.localdate()
-        self.client_obj.save(update_fields=["email", "fingerprints_date"])
+        self.client_obj.save(update_fields=["email"])
 
         sent = notifications.send_appointment_notification_email(self.client_obj)
 

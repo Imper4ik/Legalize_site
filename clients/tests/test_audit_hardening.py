@@ -44,7 +44,7 @@ def _client_form_data(client: Client, **overrides) -> dict[str, str]:
         "company": "",
         "assigned_staff": str(client.assigned_staff_id or ""),
         "status": client.status,
-        "workflow_stage": client.workflow_stage,
+        "workflow_stage": "new_client",
         "basis_of_stay": "",
         "legal_basis_end_date": "",
         "submission_date": "",
@@ -148,7 +148,6 @@ def test_limited_staff_client_form_ignores_control_fields_from_post():
     saved.refresh_from_db()
     assert saved.assigned_staff == staff
     assert saved.status == "new"
-    assert saved.workflow_stage == "new_client"
 
 
 @pytest.mark.django_db

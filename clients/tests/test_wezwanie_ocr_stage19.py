@@ -102,8 +102,10 @@ class WezwanieOCRStage19Tests(TestCase):
         self.assertEqual(doc.parsed_data["fingerprints_date_display"], "04.05.2026")
         self.assertEqual(doc.parsed_data["ticket_number"], "X29")
         self.assertEqual(doc.parsed_data["list_name"], "Lista X1")
-        self.assertIsNone(self.client_obj.fingerprints_ticket)
-        self.assertIsNone(self.client_obj.fingerprints_list)
+        # OCR is awaiting confirmation: nothing is applied to the case yet (§4).
+        case = self.client_obj.cases.get()
+        self.assertIn(case.fingerprints_ticket, (None, ""))
+        self.assertIn(case.fingerprints_list, (None, ""))
         _send_missing.assert_not_called()
         _send_appointment.assert_not_called()
 

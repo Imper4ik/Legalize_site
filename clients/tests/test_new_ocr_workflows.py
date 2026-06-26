@@ -281,8 +281,9 @@ class NewOcrWorkflowsTests(TestCase):
 
     @patch("clients.services.zus_parser.parse_zus_doc")
     def test_zus_period_month_saved_and_exposed_in_parsed_data(self, parse_mock):
-        self.client_obj.workflow_stage = "waiting_decision"
-        self.client_obj.save(update_fields=["workflow_stage"])
+        case = self.client_obj.cases.get()
+        case.workflow_stage = "waiting_decision"
+        case.save(update_fields=["workflow_stage"])
         parse_mock.return_value = ZusDocData(
             text="ZUS RCA",
             employer_nip="525-23-44-078",
