@@ -163,16 +163,6 @@ class Client(SoftDeleteModel):
         ("approved", _("Одобрен")),
         ("rejected", _("Отклонён")),
     ]
-    WORKFLOW_STAGE_CHOICES = [
-        ("new_client", _("Новый клиент")),
-        ("document_collection", _("Сбор документов")),
-        ("application_submitted", _("Подано в ужонд")),
-        ("fingerprints", _("Ожидание отпечатков")),
-        ("waiting_decision", _("Ожидание решения")),
-        ("decision_received", _("Децизия")),
-        ("closed", _("Закрыто")),
-    ]
-
     first_name = models.CharField(max_length=100, verbose_name=_("Имя"))
     last_name = models.CharField(max_length=100, verbose_name=_("Фамилия"))
     citizenship = models.CharField(max_length=100, blank=True, verbose_name=_("Гражданство"))
