@@ -810,7 +810,6 @@ def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
                 language=language,
                 application_purpose=application_purpose,
                 family_role=family_role,
-                assigned_staff=request.user,
                 status="new",
                 workflow_stage="new_client",
             )

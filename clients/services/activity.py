@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 SAFE_FIELD_NAMES = {
     "status", "workflow_stage", "application_purpose", "application_type", "basis_of_stay",
     "opened_at", "submission_date", "fingerprints_date", "fingerprints_time", "fingerprints_location",
-    "decision_date", "decision_valid_until", "assigned_staff", "company", "is_test_data", "is_demo_data",
+    "decision_date", "decision_valid_until", "company", "is_test_data", "is_demo_data",
     "due_date", "is_active", "notes", "description", "title", "document_type", "expiry_date",
     "total_amount", "amount_paid", "payment_method", "payment_date", "rejection_reason",
     "document_kind", "attachment_count", "metadata_version", "ocr_version", "version"

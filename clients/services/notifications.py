@@ -327,12 +327,9 @@ def _get_staff_recipients() -> list[str]:
 
 
 def _staff_notification_recipients_for_client(client: Client) -> list[str]:
-    recipients: list[str] = []
-    assigned_staff = getattr(client, "assigned_staff", None)
-    assigned_email = str(getattr(assigned_staff, "email", "") or "").strip()
-    if assigned_email:
-        recipients.append(assigned_email)
-    recipients.extend(_get_staff_recipients())
+    # Internal notifications go to the shared office mailbox(es); there is no
+    # per-client assigned staff to single out (spec §2).
+    recipients: list[str] = list(_get_staff_recipients())
     return list(dict.fromkeys(email for email in recipients if email))
 
 
@@ -355,7 +352,7 @@ def notify_staff_about_fingerprint_invitation_upload(
     task = StaffTask.objects.create(
         client=client,
         document=document,
-        assignee=client.assigned_staff,
+        assignee=None,
         created_by=created_by,
         title=str(_("Клиент загрузил вызов на отпечатки пальцев")),
         description=str(
@@ -904,12 +901,8 @@ def send_appointment_notification_email(client: Client, *, sent_by: AbstractBase
 
 
 def send_onboarding_completed_email(client: Client) -> int:
-    """Send an email notification to the assigned staff (or admin staff) when a client completes onboarding."""
-    recipients = []
-    if client.assigned_staff and client.assigned_staff.email:
-        recipients.append(client.assigned_staff.email)
-    else:
-        recipients = _get_staff_recipients()
+    """Send an email notification to the office staff when a client completes onboarding."""
+    recipients = _get_staff_recipients()
 
     if not recipients:
         return 0
@@ -983,8 +976,7 @@ def send_legal_stay_email(
 
     if days_left <= 14:
         recipients = [client.email]
-        if client.assigned_staff and client.assigned_staff.email:
-            recipients.append(client.assigned_staff.email)
+        recipients.extend(_get_staff_recipients())
 
         days_epoch = (today - date(2026, 1, 1)).days
         interval = days_epoch // 3
@@ -993,7 +985,6 @@ def send_legal_stay_email(
             "legal_stay_expiring_critical",
             client.pk,
             client.email,
-            client.assigned_staff.email if (client.assigned_staff and client.assigned_staff.email) else "",
             legal_stay_until,
             interval,
         )

@@ -35,7 +35,7 @@ def create_test_client(
     purpose: str = "work",
     workflow_stage: str = "document_collection",
     language: str = "en",
-    assigned_staff: object | None = None,
+    assigned_staff: object | None = None,  # noqa: ARG001 - accepted but ignored; staff is not assigned to clients (spec §2)
 ) -> Client:
     return Client.objects.create(
         first_name=first_name,
@@ -45,7 +45,6 @@ def create_test_client(
         application_purpose=purpose,
         workflow_stage=workflow_stage,
         language=language,
-        assigned_staff=assigned_staff,
         is_test_data=True,
     )
 

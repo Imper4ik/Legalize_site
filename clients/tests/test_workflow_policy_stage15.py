@@ -35,7 +35,6 @@ class WorkflowPolicyStage15Tests(TestCase):
             email="marta-stage15@example.com",
             application_purpose="work",
             workflow_stage="new_client",
-            assigned_staff=self.staff,
         )
         self.case = self.client_obj.cases.get()
 

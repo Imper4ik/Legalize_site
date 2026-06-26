@@ -118,7 +118,6 @@ class QuickOnboardingTests(TestCase):
         client = Client.objects.create(
             first_name="Новый",
             last_name="Клиент",
-            assigned_staff=self.manager,
         )
         token = uuid.uuid4().hex
         ClientOnboardingSession.objects.create(
@@ -155,7 +154,6 @@ class QuickOnboardingTests(TestCase):
         client = Client.objects.create(
             first_name="Upload",
             last_name="Client",
-            assigned_staff=self.manager,
             application_purpose="work",
             language="en",
         )
@@ -190,7 +188,6 @@ class QuickOnboardingTests(TestCase):
         client = Client.objects.create(
             first_name="Placeholder",
             last_name="Client",
-            assigned_staff=self.manager,
             language="pl",
         )
         token = uuid.uuid4().hex
@@ -227,12 +224,16 @@ class QuickOnboardingTests(TestCase):
         self.assertEqual(mos_data.personal_data["birth_date"], "1990-05-15")
         self.assertEqual(mos_data.passport_data["document_number"], "MP1234567")
 
+    @override_settings(DEFAULT_FROM_EMAIL="office@example.com", EMAIL_REPLY_TO="office@example.com")
     def test_onboarding_completion_notifies_staff(self):
-        """Verify that completing onboarding sends an email notification to the assigned staff."""
+        """Completing onboarding emails the shared office mailbox.
+
+        Staff is not assigned to clients (spec §2), so the notification goes to
+        the office staff recipients, never to a per-client "responsible" staffer.
+        """
         client = Client.objects.create(
             first_name="Иван",
             last_name="Иванов",
-            assigned_staff=self.manager,
             language="pl",
         )
         token = uuid.uuid4().hex
@@ -260,10 +261,11 @@ class QuickOnboardingTests(TestCase):
         mos_data.refresh_from_db()
         self.assertEqual(mos_data.status, "client_completed")
 
-        # Verify email was sent to self.manager
+        # Verify email was sent to the office mailbox, not the logged-in manager.
         self.assertGreaterEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
-        self.assertIn(self.manager.email, email.to)
+        self.assertIn("office@example.com", email.to)
+        self.assertNotIn(self.manager.email, email.to)
         self.assertIn("Иван Иванов", email.subject)
         self.assertIn("завершил заполнение анкеты онбординга", email.body)
 
@@ -272,7 +274,6 @@ class QuickOnboardingTests(TestCase):
         client = Client.objects.create(
             first_name="Новый",
             last_name="Клиент",
-            assigned_staff=self.manager,
         )
         token = uuid.uuid4().hex
         ClientOnboardingSession.objects.create(
@@ -301,7 +302,6 @@ class QuickOnboardingTests(TestCase):
         client = Client.objects.create(
             first_name="Placeholder",
             last_name="Client",
-            assigned_staff=self.manager,
         )
         token = uuid.uuid4().hex
         ClientOnboardingSession.objects.create(
@@ -354,7 +354,6 @@ class QuickOnboardingTests(TestCase):
             first_name="Ivan",
             last_name="Ivanov",
             phone="+48000000000",
-            assigned_staff=self.manager,
         )
         mos_data = MOSApplicationData.objects.get(client=client)
         mos_data.personal_data = {
@@ -388,7 +387,6 @@ class QuickOnboardingTests(TestCase):
         client = Client.objects.create(
             first_name="Locked",
             last_name="Client",
-            assigned_staff=self.manager,
         )
         token = uuid.uuid4().hex
         ClientOnboardingSession.objects.create(
@@ -414,7 +412,6 @@ class QuickOnboardingTests(TestCase):
         client = Client.objects.create(
             first_name="Locked",
             last_name="Client",
-            assigned_staff=self.manager,
         )
         token = uuid.uuid4().hex
         ClientOnboardingSession.objects.create(

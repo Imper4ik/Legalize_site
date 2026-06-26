@@ -87,7 +87,6 @@ class CaseArchitectureTests(TestCase):
     def test_new_client_gets_primary_case(self) -> None:
         self.assertEqual(self.client_obj.cases.count(), 1)
         self.assertEqual(self.primary_case.workflow_stage, self.client_obj.get_effective_workflow_stage())
-        self.assertEqual(self.primary_case.assigned_staff, self.staff)
 
     def test_second_case_keeps_documents_payments_and_reminders_separate(self) -> None:
         second_case = create_case_for_client(

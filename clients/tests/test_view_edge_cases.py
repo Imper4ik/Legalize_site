@@ -820,7 +820,6 @@ class ObjectAccessPolicyTests(TestCase):
             citizenship="PL",
             phone="+48111111111",
             email="owned@example.com",
-            assigned_staff=self.staff_a,
         )
         self.client_foreign = Client.objects.create(
             first_name="Foreign",
@@ -828,7 +827,6 @@ class ObjectAccessPolicyTests(TestCase):
             citizenship="PL",
             phone="+48222222222",
             email="foreign@example.com",
-            assigned_staff=self.staff_b,
         )
         self.foreign_payment = Payment.objects.create(
             client=self.client_foreign,
@@ -876,7 +874,7 @@ class ObjectAccessPolicyTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
 
-    def test_assigned_staff_can_open_owned_client(self):
+    def test_staff_can_open_any_client(self):
         self.client.login(email="staff-a@example.com", password="pass")
 
         response = self.client.get(

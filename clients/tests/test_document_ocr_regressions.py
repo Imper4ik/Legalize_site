@@ -201,7 +201,6 @@ class DocumentOCRRegressionTests(TestCase):
             citizenship="PL",
             phone="+48000000000",
             email="restricted@example.com",
-            assigned_staff=self.staff,
         )
         restricted_document = Document.objects.create(
             client=restricted_client,

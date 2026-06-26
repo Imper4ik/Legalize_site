@@ -79,8 +79,8 @@ class WorkdayViewTests(TestCase):
 
     def test_workday_service_gives_global_visibility_to_staff(self):
         today = date(2026, 6, 20)
-        visible_client = Client.objects.create(first_name="Visible", last_name="Client", assigned_staff=self.staff)
-        hidden_client = Client.objects.create(first_name="Hidden", last_name="Client", assigned_staff=self.other_staff)
+        visible_client = Client.objects.create(first_name="Visible", last_name="Client")
+        hidden_client = Client.objects.create(first_name="Hidden", last_name="Client")
         Document.objects.create(
             client=visible_client,
             document_type=DocumentType.PASSPORT.value,

@@ -176,7 +176,6 @@
           <div class="d-flex flex-wrap gap-3 small">
             <span><i class="bi bi-telephone me-1 text-primary"></i>{{ client.phone|default:"—" }}</span>
             <span><i class="bi bi-envelope me-1 text-primary"></i>{{ client.email|default:"—" }}</span>
-            <span><i class="bi bi-person-badge me-1 text-primary"></i>{% translate "Ответственный" %}: {% if client.assigned_staff %}{{ client.assigned_staff.get_full_name|default:client.assigned_staff.email }}{% else %}—{% endif %}</span>
           </div>
         </div>
         <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#sendEmailModal">

@@ -34,7 +34,6 @@ class RolePermissionMatrixTests(TestCase):
             citizenship="PL",
             phone="+48123123123",
             email="jan@example.com",
-            assigned_staff=self.staff,
         )
         self.payment = Payment.objects.create(client=self.client_obj, total_amount=10, amount_paid=0, service_description="consultation", payment_method="cash")
         self.document = Document.objects.create(

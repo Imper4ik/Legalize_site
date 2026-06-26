@@ -43,7 +43,6 @@ class OnboardingPurposeTests(TestCase):
             email=f"purpose-{uuid.uuid4().hex[:8]}@example.com",
             application_purpose=application_purpose,
             language="ru",
-            assigned_staff=self.manager,
         )
         User = get_user_model()
         user = User.objects.create_user(email=client.email, password="password123")
@@ -142,7 +141,9 @@ class OnboardingPurposeTests(TestCase):
         self.assertEqual(response.status_code, 302)
         document = Document.objects.get(client=client, document_type=DocumentType.WEZWANIE.value)
         task = StaffTask.objects.get(client=client, document=document)
-        self.assertEqual(task.assignee, self.manager)
+        # Staff is not assigned to clients (spec §2): the auto-created task is
+        # left unassigned so any staff member can pick it up.
+        self.assertIsNone(task.assignee)
         self.assertEqual(task.priority, "high")
         self.assertIn("отпечатки", task.title.lower())
         self.assertIn("Откройте файл", task.description)
@@ -267,7 +268,6 @@ class OnboardingPurposeTests(TestCase):
             email="existing-purpose@example.com",
             application_purpose="study",
             language="ru",
-            assigned_staff=self.manager,
         )
 
         self.client.login(email="manager-purpose@example.com", password="securepassword")

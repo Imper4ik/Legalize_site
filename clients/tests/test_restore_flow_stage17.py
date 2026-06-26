@@ -29,7 +29,6 @@ class RestoreFlowStage17Tests(TestCase):
             citizenship="UA",
             phone="+48666666666",
             email="yuliia-stage17@example.com",
-            assigned_staff=self.manager,
         )
 
     def test_manager_can_restore_archived_client(self):

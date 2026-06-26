@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, cast
 
-from django.db.models import Q, QuerySet
+from django.db.models import QuerySet
 
 from clients.models import Case, Client, Document, EmailCampaign, Payment, Reminder, StaffTask
 from clients.services.roles import ADMIN_PANEL_ALLOWED_ROLES
@@ -63,18 +63,15 @@ def accessible_clients_queryset(user: AbstractBaseUser | AnonymousUser | None, q
     if not is_internal_staff_user(user):
         return queryset.none()
 
-    if can_access_all_clients(user):
-        return queryset
-
-    # Cast user to Any for ForeignKey lookup compatibility in filter
-    return queryset.filter(
-        Q(assigned_staff=cast(Any, user)) | Q(assigned_staff__isnull=True)
-    ).distinct()
+    # There is no per-staff client assignment: every internal staff member has
+    # office-wide read access. Mutation is gated separately by role checks
+    # (spec §2). ReadOnly users therefore see all clients but cannot change them.
+    return queryset
 
 
 def accessible_cases_queryset(user: AbstractBaseUser | AnonymousUser | None, queryset: QuerySet[Case] | None = None) -> QuerySet[Case]:
     if queryset is None:
-        queryset = Case.objects.select_related("client", "assigned_staff")
+        queryset = Case.objects.select_related("client")
 
     if not is_internal_staff_user(user):
         return queryset.none()

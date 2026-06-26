@@ -31,7 +31,6 @@ class EmployeePermissionsTests(TestCase):
             citizenship="PL",
             phone="+48123123123",
             email="jan.nowak@example.com",
-            assigned_staff=self.staff,
         )
         self.document = Document.objects.create(
             client=self.client_obj,

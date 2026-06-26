@@ -44,6 +44,8 @@ def make_client(**overrides) -> Client:
         "language": "pl",
     }
     defaults.update(overrides)
+    # Staff is no longer assigned to clients (spec §2); ignore any legacy kwarg.
+    defaults.pop("assigned_staff", None)
     return Client.objects.create(**defaults)
 
 
@@ -487,7 +489,6 @@ def test_family_roles_checklists_child_client_link_and_dashboard_access(client):
         first_name="Spouse",
         last_name="Client",
         email="spouse@example.com",
-        assigned_staff=admin,
     )
     child_member = create_family_member(
         sponsor=sponsor,
@@ -495,7 +496,6 @@ def test_family_roles_checklists_child_client_link_and_dashboard_access(client):
         first_name="Child",
         last_name="Client",
         email="child@example.com",
-        assigned_staff=admin,
     )
 
     spouse_codes = {item["code"] for item in spouse.get_document_checklist()}

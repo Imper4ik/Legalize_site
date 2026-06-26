@@ -52,7 +52,6 @@ class CaseForm(forms.ModelForm):
             "workflow_stage",
             "submission_date",
             "fingerprints_date",
-            "assigned_staff",
             "company",
             "version",
         ]
@@ -64,18 +63,11 @@ class CaseForm(forms.ModelForm):
             "application_type": forms.TextInput(attrs={"class": "form-control"}),
             "basis_of_stay": forms.TextInput(attrs={"class": "form-control"}),
             "workflow_stage": forms.Select(attrs={"class": "form-select"}),
-            "assigned_staff": forms.Select(attrs={"class": "form-select"}),
             "company": forms.Select(attrs={"class": "form-select"}),
         }
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        user_model = get_user_model()
-        cast(forms.ModelChoiceField, self.fields["assigned_staff"]).queryset = user_model.objects.filter(
-            is_staff=True,
-            is_active=True,
-        ).order_by("email")
-        self.fields["assigned_staff"].required = False
         self.fields["company"].required = False
 
     def clean(self) -> dict[str, Any]:
@@ -162,14 +154,6 @@ class ClientForm(forms.ModelForm):
 
         cast(forms.ChoiceField, self.fields['application_purpose']).choices = choices
 
-        # Fixed typing for queryset assignment
-        staff_qs = get_user_model().objects.filter(
-            is_staff=True,
-            is_active=True,
-        ).order_by('email')
-        if hasattr(self.fields['assigned_staff'], 'queryset'):
-            setattr(self.fields['assigned_staff'], 'queryset', staff_qs)
-
         sponsor_queryset = Client.objects.exclude(pk=self.instance.pk)
         if self.user is not None:
             sponsor_queryset = cast(Any, accessible_clients_queryset(self.user, sponsor_queryset))
@@ -180,8 +164,7 @@ class ClientForm(forms.ModelForm):
             setattr(self.fields['sponsor_client'], 'queryset', sponsor_queryset.order_by('last_name', 'first_name'))
 
         if self._is_limited_staff_user():
-            for field_name in ("assigned_staff", "status"):
-                self.fields.pop(field_name, None)
+            self.fields.pop("status", None)
 
     def _is_limited_staff_user(self) -> bool:
         user = self.user
@@ -194,7 +177,7 @@ class ClientForm(forms.ModelForm):
         fields = [
             'first_name', 'last_name', 'email', 'phone', 'citizenship',
             'birth_date', 'passport_num', 'application_purpose', 'language',
-            'company', 'assigned_staff', 'status',
+            'company', 'status',
             'basis_of_stay', 'legal_basis_end_date',
             'employer_phone',
             'family_role', 'sponsor_client', 'notes'
@@ -210,7 +193,6 @@ class ClientForm(forms.ModelForm):
             'language': forms.Select(attrs={'class': 'form-select'}),
             'status': forms.Select(attrs={'class': 'form-select'}),
             'company': forms.Select(attrs={'class': 'form-select'}),
-            'assigned_staff': forms.Select(attrs={'class': 'form-select'}),
             'family_role': forms.Select(attrs={'class': 'form-select'}),
             'sponsor_client': forms.Select(attrs={'class': 'form-select'}),
             'basis_of_stay': forms.TextInput(attrs={'class': 'form-control'}),

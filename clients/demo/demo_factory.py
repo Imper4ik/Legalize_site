@@ -33,7 +33,7 @@ def create_demo_client(
     purpose: str = "work",
     workflow_stage: str = "new_client",
     language: str = "pl",
-    assigned_staff: Any = None,
+    assigned_staff: Any = None,  # noqa: ARG001 - accepted but ignored; staff is not assigned to clients (spec §2)
 ) -> Client:
     return Client.objects.create(
         first_name=first_name,
@@ -43,7 +43,6 @@ def create_demo_client(
         application_purpose=purpose,
         workflow_stage=workflow_stage,
         language=language,
-        assigned_staff=assigned_staff,
         is_demo_data=True,
         is_test_data=False,
     )

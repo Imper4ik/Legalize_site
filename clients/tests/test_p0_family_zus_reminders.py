@@ -217,20 +217,16 @@ class TestAddRelativeServerSideInitial:
         assert str(sponsor.pk) in response.content.decode()
 
     @pytest.mark.django_db
-    def test_inaccessible_sponsor_returns_404(self):
+    def test_staff_can_reach_any_sponsor(self):
+        # There is no per-staff client assignment: every internal staff member
+        # has office-wide access, so any sponsor is reachable (spec §2).
         staff = create_staff_user()
         sponsor = _make_client(None, email="hidden@x.com")
-        # Assign sponsor to a different staff member so it becomes inaccessible
-        other_staff = create_staff_user(email="other@x.com")
-        sponsor.assigned_staff = other_staff
-        sponsor.save(update_fields=["assigned_staff"])
         http = DjangoClient()
         http.force_login(staff)
         url = reverse("clients:client_add") + f"?sponsor={sponsor.pk}"
         response = http.get(url)
-        # Should be 404 if access is properly restricted
-        # Or 200 if staff role has full access (Admin/Manager have full access)
-        assert response.status_code in (200, 404)
+        assert response.status_code == 200
 
 
 # ===========================================================================

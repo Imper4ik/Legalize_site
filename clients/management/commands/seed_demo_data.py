@@ -59,7 +59,6 @@ class Command(BaseCommand):
                 last_name="Nowak",
                 workflow_stage="document_collection",
                 application_purpose="work",
-                assigned_staff=user,
             )
             waiting_client = self._upsert_client(
                 email="demo.waiting@example.test",
@@ -67,7 +66,6 @@ class Command(BaseCommand):
                 last_name="Kowalski",
                 workflow_stage="waiting_decision",
                 application_purpose="work",
-                assigned_staff=user,
                 fingerprints_date=today - timedelta(days=35),
                 fingerprints_time=time(10, 30),
                 fingerprints_location="Mazowiecki Urzad Wojewodzki, demo room",
@@ -79,7 +77,6 @@ class Command(BaseCommand):
                 workflow_stage="decision_received",
                 application_purpose="study",
                 status="approved",
-                assigned_staff=user,
                 decision_date=today - timedelta(days=2),
             )
 

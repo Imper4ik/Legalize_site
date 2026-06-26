@@ -368,20 +368,11 @@ class RemainingAuditHardeningTests(TestCase):
 
         url = reverse("clients:onboarding_start", kwargs={"token": token})
 
-        # When no specialist is assigned, support info is shown
+        # Staff is not assigned to clients (spec §2): the portal always shows the
+        # shared support contact, never a per-client "personal specialist".
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertIn("support_email", response.context)
         self.assertContains(response, "Служба поддержки")
-
-        # When a specialist is assigned, their name and email are shown
-        staff_user = User.objects.create_user(email="specialist@example.com", password="password123", first_name="John", last_name="Specialist")
-        client.assigned_staff = staff_user
-        client.save()
-
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "John Specialist")
-        self.assertContains(response, "specialist@example.com")
 
 

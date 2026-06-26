@@ -54,7 +54,6 @@ def create_case_for_client(
             "workflow_stage": "new_client",
             "application_purpose": client.application_purpose,
             "basis_of_stay": client.basis_of_stay or "",
-            "assigned_staff": client.assigned_staff,
             "company": client.company,
             "is_test_data": client.is_test_data,
             "is_demo_data": client.is_demo_data,

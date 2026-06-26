@@ -67,7 +67,7 @@ def create_auto_task(
         description=description or "",
         due_date=due_date,
         priority="high" if task_type in ("document_review", "case_number_missing", "deadline_check") else "medium",
-        assignee=client.assigned_staff,
+        assignee=None,
         document=document,
         payment=payment,
         case=case,

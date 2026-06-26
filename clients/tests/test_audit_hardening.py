@@ -26,6 +26,8 @@ def _client(**overrides) -> Client:
         "language": "pl",
     }
     defaults.update(overrides)
+    # Staff is no longer assigned to clients (spec §2); ignore any legacy kwarg.
+    defaults.pop("assigned_staff", None)
     return Client.objects.create(**defaults)
 
 
@@ -42,7 +44,6 @@ def _client_form_data(client: Client, **overrides) -> dict[str, str]:
         "application_purpose": client.application_purpose,
         "language": client.language,
         "company": "",
-        "assigned_staff": str(client.assigned_staff_id or ""),
         "status": client.status,
         "workflow_stage": "new_client",
         "basis_of_stay": "",
@@ -146,7 +147,7 @@ def test_limited_staff_client_form_ignores_control_fields_from_post():
 
     saved = form.save()
     saved.refresh_from_db()
-    assert saved.assigned_staff == staff
+    # Status is a control field limited staff cannot change via POST; it stays "new".
     assert saved.status == "new"
 
 
@@ -157,7 +158,8 @@ def test_manager_client_form_keeps_control_fields():
 
     form = ClientForm(instance=client, user=manager)
 
-    assert "assigned_staff" in form.fields
+    # Staff is no longer assigned to clients, so the field is gone for everyone (§2).
+    assert "assigned_staff" not in form.fields
     assert "status" in form.fields
     # Workflow stage is edited on the case (CaseForm), not on the client (§4).
     assert "workflow_stage" not in form.fields

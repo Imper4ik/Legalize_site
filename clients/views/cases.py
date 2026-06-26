@@ -29,7 +29,7 @@ class CaseDetailView(RoleRequiredMixin, DetailView):
     def get_queryset(self) -> Any:
         return accessible_cases_queryset(
             self.request.user,
-            Case.all_objects.select_related("client", "assigned_staff", "company")
+            Case.all_objects.select_related("client", "company")
             .prefetch_related("documents", "payments", "reminders", "staff_tasks", "activities"),
         )
 
@@ -74,7 +74,6 @@ class CaseCreateView(RoleRequiredMixin, CreateView):
             # New cases start at the initial stage; process state lives on the
             # Case now, not the Client (spec §4).
             "workflow_stage": "new_client",
-            "assigned_staff": self.client_obj.assigned_staff_id,
             "company": self.client_obj.company_id,
         })
         return initial
@@ -95,7 +94,6 @@ class CaseCreateView(RoleRequiredMixin, CreateView):
             workflow_stage=form.cleaned_data.get("workflow_stage") or "new_client",
             submission_date=form.cleaned_data.get("submission_date"),
             fingerprints_date=form.cleaned_data.get("fingerprints_date"),
-            assigned_staff=form.cleaned_data.get("assigned_staff"),
             company=form.cleaned_data.get("company"),
         )
         messages.success(self.request, _("Case created."))
@@ -111,7 +109,7 @@ class CaseUpdateView(RoleRequiredMixin, UpdateView):
     def get_queryset(self) -> Any:
         return accessible_cases_queryset(
             self.request.user,
-            Case.all_objects.select_related("client", "assigned_staff", "company"),
+            Case.all_objects.select_related("client", "company"),
         )
 
     def form_valid(self, form: CaseForm) -> HttpResponse:
@@ -129,7 +127,6 @@ class CaseUpdateView(RoleRequiredMixin, UpdateView):
             "workflow_stage": form.cleaned_data.get("workflow_stage") or case.workflow_stage,
             "submission_date": form.cleaned_data.get("submission_date"),
             "fingerprints_date": form.cleaned_data.get("fingerprints_date"),
-            "assigned_staff": form.cleaned_data.get("assigned_staff"),
             "company": form.cleaned_data.get("company"),
         }
         # Once a real authority number is entered by hand, the migrated legacy

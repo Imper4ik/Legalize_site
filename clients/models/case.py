@@ -68,7 +68,6 @@ class CaseAllManager(models.Manager.from_queryset(CaseQuerySet)):  # type: ignor
                 fingerprints_list=getattr(client, "fingerprints_list", "") or "",
                 fingerprints_info=getattr(client, "fingerprints_info", "") or "",
                 decision_date=getattr(client, "decision_date", None),
-                assigned_staff=getattr(client, "assigned_staff", None),
                 company=getattr(client, "company", None),
                 is_test_data=getattr(client, "is_test_data", False),
                 is_demo_data=getattr(client, "is_demo_data", False),
@@ -125,14 +124,6 @@ class Case(SoftDeleteModel):
     decision = models.TextField(blank=True, default="", verbose_name=_("Решение"))
     decision_date = models.DateField(null=True, blank=True, verbose_name=_("Дата решения"))
     decision_valid_until = models.DateField(null=True, blank=True, verbose_name=_("Решение действительно до"))
-    assigned_staff = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="assigned_cases",
-        verbose_name=_("Ответственный сотрудник"),
-    )
     company = models.ForeignKey(
         "clients.Company",
         on_delete=models.SET_NULL,
@@ -173,7 +164,6 @@ class Case(SoftDeleteModel):
         indexes = [
             models.Index(fields=["client", "archived_at"], name="case_client_archived_idx"),
             models.Index(fields=["workflow_stage", "status"], name="case_workflow_status_idx"),
-            models.Index(fields=["assigned_staff", "status"], name="case_staff_status_idx"),
             models.Index(fields=["opened_at"], name="case_opened_at_idx"),
         ]
         constraints = [

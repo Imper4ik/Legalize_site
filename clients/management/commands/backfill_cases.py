@@ -146,7 +146,6 @@ class Command(BaseCommand):
                             fingerprints_list=getattr(client, "fingerprints_list", "") or "",
                             fingerprints_info=getattr(client, "fingerprints_info", "") or "",
                             decision_date=getattr(client, "decision_date", None),
-                            assigned_staff=getattr(client, "assigned_staff", None),
                             company=getattr(client, "company", None),
                             is_test_data=getattr(client, "is_test_data", False),
                             is_demo_data=getattr(client, "is_demo_data", False),

@@ -224,14 +224,6 @@ class Client(SoftDeleteModel):
         related_name="clients",
         verbose_name=_("Компания / Работодатель"),
     )
-    assigned_staff = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="managed_clients",
-        verbose_name=_("Assigned staff"),
-    )
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -266,7 +258,6 @@ class Client(SoftDeleteModel):
         ]
         base_manager_name = "all_objects"
         indexes = [
-            models.Index(fields=["assigned_staff", "status"], name="client_staff_status_idx"),
             models.Index(fields=["created_at"], name="client_created_at_idx"),
             models.Index(fields=["sponsor_client", "family_role"], name="client_family_role_idx"),
             models.Index(fields=["email"], name="client_email_idx"),

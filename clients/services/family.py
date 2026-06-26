@@ -3,15 +3,12 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 from django.db import transaction
 from django.utils.translation import gettext as _
 
 from clients.models import Client, FamilyGroup
-
-if TYPE_CHECKING:
-    from users.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +89,6 @@ def create_family_member(
     email: str = "",
     phone: str = "",
     citizenship: str = "",
-    assigned_staff: User | None = None,
 ) -> Client:
     role = LEGACY_FAMILY_MEMBER_ROLES.get(role, role)
     if role not in FAMILY_MEMBER_ROLES:
@@ -108,7 +104,6 @@ def create_family_member(
         application_purpose="family",
         family_role=role,
         sponsor_client=sponsor,
-        assigned_staff=assigned_staff or sponsor.assigned_staff,
         language=sponsor.language,
         status=sponsor.status,
     ))

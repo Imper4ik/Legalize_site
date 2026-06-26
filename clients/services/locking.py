@@ -122,7 +122,7 @@ CASE_WHITELIST = {
     "application_purpose", "application_type", "basis_of_stay", "opened_at",
     "submission_date", "fingerprints_date", "fingerprints_time", "fingerprints_location",
     "fingerprints_ticket", "fingerprints_list", "fingerprints_info", "decision",
-    "decision_date", "assigned_staff", "company"
+    "decision_date", "company"
 }
 
 PAYMENT_WHITELIST = {
@@ -151,7 +151,7 @@ REQUIREMENT_WHITELIST = {
 }
 
 TASK_WHITELIST = {
-    "title", "description", "status", "due_date", "assigned_staff"
+    "title", "description", "status", "due_date", "assignee"
 }
 
 WNIOSEK_WHITELIST = {

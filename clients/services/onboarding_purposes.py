@@ -119,12 +119,13 @@ def _notification_cache_languages() -> set[str]:
 def clear_onboarding_notifications_cache(client: Client | None = None) -> None:
     from clients.services.roles import ADMIN_PANEL_ALLOWED_ROLES
 
+    # All internal staff share office-wide access, so the onboarding
+    # notification cache is invalidated for every privileged user. There is no
+    # per-client assigned staff to special-case (spec §2).
     user_model = get_user_model()
     users = user_model.objects.filter(is_active=True, is_staff=True).filter(
         Q(is_superuser=True) | Q(groups__name__in=ADMIN_PANEL_ALLOWED_ROLES)
     )
-    if client and client.assigned_staff_id:
-        users = users | user_model.objects.filter(pk=client.assigned_staff_id)
 
     for user_id in users.values_list("pk", flat=True).distinct():
         for language in _notification_cache_languages():

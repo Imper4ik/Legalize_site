@@ -190,12 +190,12 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
     def get_queryset(self) -> Any:
         return accessible_clients_queryset(
             self.request.user,
-            Client.objects.select_related("user", "sponsor_client", "company", "assigned_staff").defer(
+            Client.objects.select_related("user", "sponsor_client", "company").defer(
                 "passport_num",
                 "sponsor_client__passport_num",
             ).prefetch_related(
                 "mos_applications",
-                Prefetch("cases", queryset=Case.objects.select_related("assigned_staff", "company").order_by("-opened_at", "-id")),
+                Prefetch("cases", queryset=Case.objects.select_related("company").order_by("-opened_at", "-id")),
                 Prefetch("payments", queryset=Payment.objects.order_by("-created_at")),
                 Prefetch(
                     "documents",
@@ -234,7 +234,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         client = self.object
         document_status_list = client.get_document_checklist(check_file_existence=True) if hasattr(client, "get_document_checklist") else []
 
-        context["case_form"] = CaseForm(initial={"assigned_staff": client.assigned_staff_id, "workflow_stage": client.get_effective_workflow_stage()})
+        context["case_form"] = CaseForm(initial={"workflow_stage": client.get_effective_workflow_stage()})
         context["cases"] = list(client.cases.all())
         context["payment_form"] = PaymentForm()
         context["document_upload_form"] = DocumentUploadForm()
@@ -318,8 +318,6 @@ class ClientCreateView(RoleRequiredMixin, CreateView):
         return context
 
     def form_valid(self, form: ClientForm) -> HttpResponse:
-        if not form.instance.assigned_staff_id:
-            form.instance.assigned_staff = self.request.user
         messages.success(self.request, _("Клиент успешно добавлен!"))
         with transaction.atomic():
             self.object = form.save()
