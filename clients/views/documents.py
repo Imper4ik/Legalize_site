@@ -455,7 +455,7 @@ def client_overview_partial(request: HttpRequest, pk: int) -> HttpResponseBase:
         {
             "client": client,
             "workflow_summary": client.get_workflow_summary(document_status_list=document_status_list),
-            "safe_case_number": safe_encrypted_attr(client, "case_number", default=_("Не указан")),
+            "safe_case_number": (safe_encrypted_attr(client.active_case, "authority_case_number", default=_("Не указан")) if client.active_case is not None else _("Не указан")),
             "show_family_dashboard_link": bool(
                 client.family_role
                 or client.sponsor_client_id

@@ -641,7 +641,7 @@ def send_expired_documents_email(client: Client, *, sent_by: AbstractBaseUser | 
             "expired_documents",
             client.pk,
             client.email,
-            client.fingerprints_date,
+            client.effective_fingerprints_date,
             timezone.localdate(),
         ),
     )

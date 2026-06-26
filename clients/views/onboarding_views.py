@@ -235,7 +235,7 @@ def check_onboarding_session(
             session.status = "active"
             session.save(update_fields=["status"])
         session.token_hash = token
-        session.client = Client.objects.defer("case_number", "passport_num").get(pk=session.client_id)
+        session.client = Client.objects.defer("passport_num").get(pk=session.client_id)
 
     # An archived client never has an accessible portal/onboarding context.
     if session.client.archived_at is not None:

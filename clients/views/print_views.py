@@ -26,7 +26,7 @@ class ClientPrintBaseView(StaffRequiredMixin, DetailView):
     context_object_name = "client"
 
     def get_queryset(self) -> Any:
-        return accessible_clients_queryset(self.request.user, Client.objects.defer("case_number", "passport_num"))
+        return accessible_clients_queryset(self.request.user, Client.objects.defer("passport_num"))
 
 
 class ClientPrintView(ClientPrintBaseView):
@@ -34,7 +34,7 @@ class ClientPrintView(ClientPrintBaseView):
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        context["safe_case_number"] = safe_encrypted_attr(context["client"], "case_number")
+        context["safe_case_number"] = (safe_encrypted_attr(context["client"].active_case, "authority_case_number") if context["client"].active_case is not None else "")
         return context
 
 
@@ -43,7 +43,7 @@ class ClientWSCPrintView(ClientPrintBaseView):
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        context["safe_case_number"] = safe_encrypted_attr(context["client"], "case_number")
+        context["safe_case_number"] = (safe_encrypted_attr(context["client"].active_case, "authority_case_number") if context["client"].active_case is not None else "")
         return context
 
 
@@ -84,7 +84,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
         context["doc_type"] = self.kwargs.get("doc_type")
         if context["doc_type"] == "mazowiecki_application":
             client = context["client"]
-            application_date = client.submission_date or client.created_at.date()
+            application_date = client.effective_submission_date or client.created_at.date()
             attachment_names = self._get_attachment_names(client)
 
             # Ensure attachment_count is str or int as expected by templates
@@ -100,7 +100,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                     "application_date": application_date,
                     "full_name": f"{client.first_name} {client.last_name}",
                     "citizenship": client.citizenship or "",
-                    "case_number": safe_encrypted_attr(client, "case_number"),
+                    "case_number": (safe_encrypted_attr(client.active_case, "authority_case_number") if client.active_case is not None else ""),
                     "mos_id": getattr(client, "mos_id", "") or "",
                     "inpol_id": getattr(client, "inpol_id", "") or "",
                     "birth_date": getattr(client, "birth_date", ""),
@@ -136,7 +136,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
         from clients.services.cases import resolve_single_active_case
 
         active_case = resolve_single_active_case(client)
-        decision_date = active_case.decision_date if active_case is not None else client.decision_date
+        decision_date = active_case.decision_date if active_case is not None else None
         if decision_date and decision_date < today:
             days_overdue = (today - decision_date).days
             reminder_text = (
@@ -180,7 +180,7 @@ def client_document_print_confirm_view(request: HttpRequest, pk: int, doc_type: 
     if doc_type != WniosekSubmission.DocumentKind.MAZOWIECKI_APPLICATION:
         raise Http404("Confirmation is only available for this document type")
 
-    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.defer("case_number", "passport_num")), pk=pk)
+    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.defer("passport_num")), pk=pk)
 
     # Cast user to User for record_wniosek_submission
     confirmed_by = cast('User', request.user) if request.user.is_authenticated else None

@@ -76,12 +76,10 @@ class ClientListView(StaffRequiredMixin, ListView):
         queryset = accessible_clients_queryset(
             self.request.user,
             Client.objects.filter(Q(user__is_staff=False) | Q(user__isnull=True)).defer(
-                "case_number",
                 "passport_num",
-                "sponsor_client__case_number",
                 "sponsor_client__passport_num",
             ),
-        ).select_related("sponsor_client").prefetch_related("mos_applications").annotate(
+        ).select_related("sponsor_client").prefetch_related("mos_applications", "cases").annotate(
             family_members_count=Count("sponsored_family_members")
         )
 
@@ -149,7 +147,7 @@ class ClientListView(StaffRequiredMixin, ListView):
                 queryset = queryset.annotate(latest_attention_sent_at=Max("email_logs__sent_at"))
                 list_ordering = ["-latest_attention_sent_at", "-created_at"]
             elif self.attention_filter == "fingerprints_email":
-                list_ordering = ["fingerprints_date", "-created_at"]
+                list_ordering = ["cases__fingerprints_date", "-created_at"]
             elif self.attention_filter == "legal_stay":
                 list_ordering = ["legal_basis_end_date", "-created_at"]
 
@@ -165,7 +163,7 @@ class ClientListView(StaffRequiredMixin, ListView):
                 | Q(last_name__icontains=query)
                 | Q(email__icontains=query)
                 | Q(phone__icontains=query)
-                | Q(case_number_hash=case_number_hash)
+                | Q(cases__authority_case_number_hash=case_number_hash)
             )
         return queryset.distinct().order_by(*list_ordering)
 
@@ -179,7 +177,7 @@ class ClientListView(StaffRequiredMixin, ListView):
         context["document_filter"] = self.request.GET.get("document", "")
         context["attention_filter"] = self.request.GET.get("attention", "")
         for client in context.get("clients", []):
-            client.safe_case_number = safe_encrypted_attr(client, "case_number", default="—")
+            client.safe_case_number = (safe_encrypted_attr(client.active_case, "authority_case_number", default="—") if client.active_case is not None else "—")
             attach_onboarding_purpose_review_state(client)
         context["companies"] = Company.objects.all()
         return context
@@ -238,12 +236,12 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         client = self.object
         document_status_list = client.get_document_checklist(check_file_existence=True) if hasattr(client, "get_document_checklist") else []
 
-        context["case_form"] = CaseForm(initial={"assigned_staff": client.assigned_staff_id, "workflow_stage": client.workflow_stage})
+        context["case_form"] = CaseForm(initial={"assigned_staff": client.assigned_staff_id, "workflow_stage": client.get_effective_workflow_stage()})
         context["cases"] = list(client.cases.all())
         context["payment_form"] = PaymentForm()
         context["document_upload_form"] = DocumentUploadForm()
         context["document_status_list"] = document_status_list
-        context["safe_case_number"] = safe_encrypted_attr(client, "case_number", default=_("Не указан"))
+        context["safe_case_number"] = (safe_encrypted_attr(client.active_case, "authority_case_number", default=_("Не указан")) if client.active_case is not None else _("Не указан"))
         context["missing_zus_months_for_upload"] = (missing_zus_month_upload_options(resolve_single_active_case(client)) if resolve_single_active_case(client) else [])
         prefetched = getattr(client, "_prefetched_objects_cache", {})
         email_logs = prefetched.get("email_logs")
@@ -504,7 +502,7 @@ def client_autocomplete_api(request: HttpRequest) -> HttpResponse:
         | Q(last_name__icontains=query)
         | Q(email__icontains=query)
         | Q(phone__icontains=query)
-        | Q(case_number_hash=case_number_hash)
+        | Q(cases__authority_case_number_hash=case_number_hash)
     )
 
     results = []
