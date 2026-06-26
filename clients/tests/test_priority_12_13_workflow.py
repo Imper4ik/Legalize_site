@@ -359,22 +359,22 @@ def test_health_alerts_missing_docs_and_payment_due_dates():
 @pytest.mark.django_db
 def test_fingerprints_date_change_does_not_send_expired_email_and_appointment_is_idempotent(sample_client):
     previous_values = snapshot_client_update_state(sample_client)
-    previous_fingerprints_date = sample_client.fingerprints_date
-    sample_client.fingerprints_date = timezone.localdate()
-    sample_client.save(update_fields=["fingerprints_date"])
     send_expired = Mock(return_value=1)
 
     result = finalize_client_update(
         client=sample_client,
         actor=None,
         previous_values=previous_values,
-        previous_fingerprints_date=previous_fingerprints_date,
-        new_fingerprints_date=sample_client.fingerprints_date,
         send_expired_email=send_expired,
     )
 
     assert not result.expired_documents_email_sent
     send_expired.assert_not_called()
+
+    # Fingerprints live on the case now (§4): set the appointment date there.
+    case = sample_client.cases.get()
+    case.fingerprints_date = timezone.localdate()
+    case.save(update_fields=["fingerprints_date"])
 
     mail.outbox = []
     with patch("clients.services.notifications._send_confirmation_email"):

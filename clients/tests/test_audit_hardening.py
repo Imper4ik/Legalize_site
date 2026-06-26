@@ -188,30 +188,20 @@ def test_workflow_cannot_close_with_open_payments():
 
 
 @pytest.mark.django_db
-def test_finalize_client_update_enforces_workflow_policy():
+def test_finalize_client_update_does_not_track_workflow():
+    # Workflow policy is enforced on the case (CaseForm), not the client update
+    # path: finalize no longer validates or logs workflow changes (spec §4).
     staff = create_staff_user()
-    client = _client(
-        assigned_staff=staff,
-        workflow_stage="decision_received",
-        decision_date=timezone.localdate(),
-    )
-    Payment.objects.create(
-        client=client,
-        service_description="consultation",
-        total_amount=Decimal("100.00"),
-        amount_paid=Decimal("0.00"),
-        status="pending",
-    )
+    client = _client(assigned_staff=staff, workflow_stage="decision_received")
     previous_values = snapshot_client_update_state(client)
     client.workflow_stage = "closed"
 
-    with pytest.raises(ValidationError):
-        finalize_client_update(
-            client=client,
-            actor=staff,
-            previous_values=previous_values,
-            previous_fingerprints_date=client.fingerprints_date,
-            new_fingerprints_date=client.fingerprints_date,
-        )
+    result = finalize_client_update(
+        client=client,
+        actor=staff,
+        previous_values=previous_values,
+    )
 
+    assert not result.workflow_changed
+    assert "workflow_stage" not in result.changed_fields
     assert not ClientActivity.objects.filter(client=client, event_type="workflow_changed").exists()

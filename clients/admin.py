@@ -135,17 +135,15 @@ class ClientAdmin(admin.ModelAdmin):
         "first_name",
         "last_name",
         "company",
-        "case_number",
         "application_purpose",
         "family_role",
         "status",
-        "workflow_stage",
         "phone",
         "email",
         "archived_at",
         "created_at",
     )
-    list_filter = ("company", "status", "workflow_stage", "application_purpose", "family_role", "language", "is_test_data", "archived_at")
+    list_filter = ("company", "status", "application_purpose", "family_role", "language", "is_test_data", "archived_at")
     search_fields = ("first_name", "last_name", "email", "phone", "notes", "company__name")
     fieldsets = (
         (
@@ -154,7 +152,7 @@ class ClientAdmin(admin.ModelAdmin):
         ),
         (
             "Детали подачи",
-            {"fields": ("application_purpose", "basis_of_stay", "language", "legal_basis_end_date", "workflow_stage")},
+            {"fields": ("application_purpose", "basis_of_stay", "language", "legal_basis_end_date")},
         ),
         (
             "Nowy wniosek o kartę pobytu / Новое заявление на карту побыту",
@@ -169,16 +167,6 @@ class ClientAdmin(admin.ModelAdmin):
         "new_residence_card_application_summary_masked",
     )
     actions = [archive_selected, restore_selected]
-
-    def case_number_masked(self, obj):
-        if not obj.case_number:
-            return "-"
-        val = str(obj.case_number)
-        if "-" in val:
-            parts = val.split("-")
-            return parts[0] + "-***-" + parts[-1]
-        return val[:3] + "***" + val[-4:] if len(val) > 7 else "***"
-    case_number_masked.short_description = "Номер дела (Masked)"
 
     def passport_num_masked(self, obj):
         from clients.security.encrypted import safe_encrypted_attr
@@ -269,7 +257,7 @@ class ClientAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         readonly = list(super().get_readonly_fields(request, obj))
         if not request.user.has_perm("clients.view_sensitive_data"):
-            for f in ["case_number_masked", "passport_num_masked", "phone_masked", "email_masked"]:
+            for f in ["passport_num_masked", "phone_masked", "email_masked"]:
                 if f not in readonly:
                     readonly.append(f)
         return readonly
@@ -279,7 +267,7 @@ class ClientAdmin(admin.ModelAdmin):
         if not request.user.has_perm("clients.view_sensitive_data"):
             new_list_display = []
             for f in list_display:
-                if f in ["case_number", "passport_num", "phone", "email"]:
+                if f in ["passport_num", "phone", "email"]:
                     new_list_display.append(f"{f}_masked")
                 else:
                     new_list_display.append(f)
@@ -294,7 +282,7 @@ class ClientAdmin(admin.ModelAdmin):
                 fields = list(opts.get("fields", []))
                 new_fields = []
                 for f in fields:
-                    if f in ["case_number", "passport_num", "phone", "email"]:
+                    if f in ["passport_num", "phone", "email"]:
                         new_fields.append(f"{f}_masked")
                     elif f == "new_residence_card_application_summary":
                         new_fields.append("new_residence_card_application_summary_masked")
