@@ -1,4 +1,5 @@
 {% extends "clients/onboarding/base_onboarding.html" %}
+{% load static %}
 {% load i18n %}
 
 {% block title %}{% trans "Шаг 4: Пребывание и Поездки" %}{% endblock %}
@@ -136,22 +137,5 @@
     </div>
 </form>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const wasPolYes = document.getElementById("wasPolYes");
-        const wasPolNo = document.getElementById("wasPolNo");
-        const prevStaysContainer = document.getElementById("previousStaysContainer");
-
-        function togglePreviousStays() {
-            if (wasPolYes.checked) {
-                prevStaysContainer.style.display = "block";
-            } else {
-                prevStaysContainer.style.display = "none";
-            }
-        }
-        wasPolYes.addEventListener("change", togglePreviousStays);
-        wasPolNo.addEventListener("change", togglePreviousStays);
-        togglePreviousStays();
-    });
-</script>
+<script src="{% static 'clients/js/pages/travel.js' %}"></script>
 {% endblock %}

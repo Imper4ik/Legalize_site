@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% load i18n static %}
 
 <!-- prettier-ignore -->
@@ -221,15 +222,5 @@
 <script src="{% static 'clients/js/client/email_modal.js' %}" defer></script>
 <script src="{% static 'clients/js/client/message_templates.js' %}" defer></script>
 <script src="{% static 'clients/js/client/init.js' %}" defer></script>
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    var params = new URLSearchParams(window.location.search);
-    if (params.get('tab') === 'history' || window.location.hash === '#communication-history') {
-      var trigger = document.getElementById('history-tab');
-      if (trigger && window.bootstrap) {
-        window.bootstrap.Tab.getOrCreateInstance(trigger).show();
-      }
-    }
-  });
-</script>
+<script src="{% static 'clients/js/pages/client_detail.js' %}"></script>
 {% endblock %}
