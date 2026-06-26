@@ -524,9 +524,9 @@ def reject_document(request: HttpRequest, doc_id: int) -> HttpResponseBase:
                 client=document.client,
                 actor=request.user,
                 event_type="document_verified",
-                summary=f"Документ отклонён: {document.display_name}",
-                details=f"Причина: {rejection_reason}",
-                metadata={"document_id": document.id, "verified": False, "rejection_reason": rejection_reason},
+                summary="Документ отклонён",
+                details="",
+                metadata={"document_id": document.id},
                 document=document,
             )
 

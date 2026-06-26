@@ -1115,8 +1115,8 @@ def onboarding_ask_question(request: HttpRequest, token: str) -> HttpResponse:
         client=client,
         actor=client.user,
         event_type="comment",
-        summary=f"Задан вопрос сотруднику: '{question_text[:50]}...'",
-        details=question_text,
+        summary="Клиент задал вопрос сотруднику",
+        details="",
         task=task,
     )
 

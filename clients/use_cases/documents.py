@@ -87,8 +87,8 @@ def delete_client_document(*, document: Document, actor: AbstractBaseUser | Anon
             client=client,
             actor=actor,
             event_type="document_deleted",
-            summary=f"Удалён документ: {document_display_name}",
-            metadata={"document_id": document_id, "document_type": document.document_type},
+            summary="Документ удалён",
+            metadata={"document_id": document_id},
             document=document,
         )
         document.archive()
@@ -106,8 +106,6 @@ def delete_wniosek_attachment(*, attachment: WniosekAttachment, actor: AbstractB
     client = submission.client
     attachment_id = attachment.pk
     attachment_name = attachment.entered_name
-    document_type = attachment.document_type
-    submission_id = submission.pk
 
     with transaction.atomic():
         attachment.delete()
@@ -123,15 +121,8 @@ def delete_wniosek_attachment(*, attachment: WniosekAttachment, actor: AbstractB
             client=client,
             actor=actor,
             event_type="wniosek_attachment_deleted",
-            summary=f"Удалена отметка wniosek: {attachment_name}",
-            metadata={
-                "attachment_id": attachment_id,
-                "attachment_name": attachment_name,
-                "document_type": document_type,
-                "submission_id": submission_id,
-                "remaining_count": remaining_count,
-                "submission_deleted": submission_deleted,
-            },
+            summary="Отметка wniosek удалена",
+            metadata={},
         )
 
     return WniosekAttachmentScenarioResult(
@@ -167,8 +158,8 @@ def toggle_client_document_verification(
             client=document.client,
             actor=actor,
             event_type="document_verified",
-            summary=f"Статус документа изменён: {document.display_name}",
-            details="verified" if document.verified else "verification removed",
+            summary="Статус документа изменён",
+            details="",
             metadata={"document_id": document.id, "verified": document.verified},
             document=document,
         )
@@ -230,8 +221,8 @@ def record_document_download(*, document: Document, actor: AbstractBaseUser | An
         client=document.client,
         actor=actor,
         event_type="document_downloaded",
-        summary=f"Открыт документ: {document.display_name}",
-        metadata={"document_id": document.id, "document_type": document.document_type},
+        summary="Документ открыт",
+        metadata={"document_id": document.id},
         document=document,
     )
     return DocumentScenarioResult(

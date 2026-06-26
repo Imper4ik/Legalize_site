@@ -52,8 +52,8 @@ def restore_client_document(*, document: Document, actor: AbstractBaseUser | Ano
             client=document.client,
             actor=actor,
             event_type="client_updated",
-            summary=f"Документ восстановлен из архива: {document.display_name}",
-            metadata={"restored_object": "document", "restored_object_id": document.pk},
+            summary="Документ восстановлен из архива",
+            metadata={"document_id": document.pk},
             document=document,
         )
     return RestoreScenarioResult(
@@ -70,8 +70,8 @@ def restore_client_payment(*, payment: Payment, actor: AbstractBaseUser | Anonym
             client=payment.client,
             actor=actor,
             event_type="payment_updated",
-            summary=f"Платёж восстановлен из архива: {payment.get_service_description_display()}",
-            metadata={"restored_object": "payment", "restored_object_id": payment.pk},
+            summary="Платёж восстановлен из архива",
+            metadata={"payment_id": payment.pk},
             payment=payment,
         )
     return RestoreScenarioResult(

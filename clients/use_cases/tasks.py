@@ -46,14 +46,9 @@ def create_task_for_client(
             client=client,
             actor=actor,
             event_type="task_created",
-            summary=f"Создана задача: {task.title}",
-            details=task.description,
-            metadata={
-                "priority": task.priority,
-                "status": task.status,
-                "assignee_id": task.assignee_id,
-                "due_date": task.due_date.isoformat() if task.due_date else "",
-            },
+            summary="Задача создана",
+            details="",
+            metadata={},
             task=task,
         )
     return TaskScenarioResult(client=client, task=task, created=True)
@@ -74,8 +69,8 @@ def complete_task_for_client(*, task: StaffTask, actor: AbstractBaseUser | Anony
             client=locked_task.client,
             actor=actor,
             event_type="task_completed",
-            summary=f"Задача завершена: {locked_task.title}",
-            metadata={"task_id": locked_task.pk},
+            summary="Задача завершена",
+            metadata={},
             task=locked_task,
         )
         task.status = locked_task.status

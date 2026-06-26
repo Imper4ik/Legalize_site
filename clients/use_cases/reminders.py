@@ -24,14 +24,9 @@ class ReminderScenarioResult:
 
 
 def _reminder_metadata(reminder: Reminder) -> dict[str, Any]:
-    return {
-        "reminder_id": reminder.pk,
-        "reminder_type": reminder.reminder_type,
-        "title": reminder.title,
-        "due_date": reminder.due_date.isoformat() if reminder.due_date else None,
-        "document_id": reminder.document_id,
-        "payment_id": reminder.payment_id,
-    }
+    # Only whitelisted, non-PII keys (spec §12). The activity sanitizer would
+    # drop the rest, but we avoid building the reminder title/type at all.
+    return {"document_id": reminder.document_id}
 
 
 def delete_reminder(*, reminder: Reminder, actor: AbstractBaseUser | AnonymousUser | None) -> ReminderScenarioResult:
@@ -41,7 +36,7 @@ def delete_reminder(*, reminder: Reminder, actor: AbstractBaseUser | AnonymousUs
         client=client,
         actor=actor,
         event_type="reminder_deleted",
-        summary=f"Напоминание удалено: {reminder.title}",
+        summary="Напоминание удалено",
         metadata=_reminder_metadata(reminder),
     )
     reminder.delete()
@@ -56,7 +51,7 @@ def deactivate_reminder(*, reminder: Reminder, actor: AbstractBaseUser | Anonymo
         client=reminder.client,
         actor=actor,
         event_type="reminder_deactivated",
-        summary=f"Напоминание отмечено выполненным: {reminder.title}",
+        summary="Напоминание отмечено выполненным",
         metadata=_reminder_metadata(reminder),
     )
     return ReminderScenarioResult(client=reminder.client, reminder=reminder)

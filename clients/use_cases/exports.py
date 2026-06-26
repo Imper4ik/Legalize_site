@@ -55,15 +55,12 @@ def restore_document_version_for_client(
     uploaded_by = actor if getattr(actor, "is_authenticated", False) else None
     document = restore_document_version(version, uploaded_by=uploaded_by)
 
-    metadata: dict[str, Any] = {
-        "restored_version_id": version.pk,
-        "restored_version_number": version.version_number,
-    }
+    metadata: dict[str, Any] = {}
     log_client_activity(
         client=document.client,
         actor=actor,
         event_type="document_version_restored",
-        summary=f"Документ восстановлен к v{version.version_number}",
+        summary="Версия документа восстановлена",
         document=document,
         metadata=metadata,
     )

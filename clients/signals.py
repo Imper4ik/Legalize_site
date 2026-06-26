@@ -215,12 +215,8 @@ def create_activity_for_email_log(sender: Any, instance: EmailLog, created: bool
             client=instance.client,
             actor=instance.sent_by,
             event_type="email_sent",
-            summary=f"Отправлено письмо: {instance.subject}",
-            metadata={
-                "email_log_id": instance.pk,
-                "template_type": instance.template_type,
-                "recipients_count": len([item for item in (instance.recipients or "").split(",") if item.strip()]),
-            },
+            summary="Письмо отправлено",
+            metadata={},
         )
 
 

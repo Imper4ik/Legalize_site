@@ -106,7 +106,7 @@ def _update_instance_with_locking(
             case=case,
             actor=actor,
             event_type=event_type,
-            summary=f"Обновлена запись {model_class.__name__} (ID: {instance_id})",
+            summary="Запись обновлена",
             metadata={
                 "case_id": str(case.uuid) if case else None,
                 "status_tag": "approved" if getattr(instance, "status", "") == "approved" else "submitted",

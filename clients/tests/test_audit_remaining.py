@@ -343,8 +343,11 @@ class RemainingAuditHardeningTests(TestCase):
         # Check ClientActivity exists
         activity = ClientActivity.objects.filter(client=client, event_type="comment").first()
         self.assertIsNotNone(activity)
-        self.assertIn("Задан вопрос сотруднику", activity.summary)
-        self.assertEqual(activity.details, "How do I upload my contract?")
+        # spec §12: the summary is neutral and the question text (PII) is never
+        # stored in details.
+        self.assertIn("вопрос сотруднику", activity.summary)
+        self.assertNotIn("How do I upload my contract?", activity.summary)
+        self.assertEqual(activity.details, "")
 
     def test_onboarding_start_renders_specialist_info(self):
         import uuid

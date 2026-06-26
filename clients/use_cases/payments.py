@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 from django.db import transaction
 
 from clients.models import Client, Payment
-from clients.services.activity import changed_field_labels, log_client_activity
+from clients.services.activity import log_client_activity
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
@@ -64,7 +64,7 @@ def create_payment_for_client(
             client=client,
             actor=actor,
             event_type="payment_created",
-            summary=f"Создан платёж: {payment.get_service_description_display()}",
+            summary="Платёж создан",
             metadata={
                 "payment_id": payment.id,
                 "status": payment.status,
@@ -89,8 +89,8 @@ def update_payment_for_client(
                 client=payment.client,
                 actor=actor,
                 event_type="payment_updated",
-                summary=f"Обновлён платёж: {payment.get_service_description_display()}",
-                details=", ".join(changed_field_labels(payment, list(changed_fields))),
+                summary="Платёж обновлён",
+                details="",
                 metadata={"payment_id": payment.id, "changed_fields": list(changed_fields)},
                 payment=payment,
             )
@@ -111,8 +111,8 @@ def delete_payment_for_client(*, payment: Payment, actor: AbstractBaseUser | Ano
             client=client,
             actor=actor,
             event_type="payment_deleted",
-            summary=f"Удалён платёж: {payment.get_service_description_display()}",
-            metadata={"payment_id": payment_id, "status": payment.status},
+            summary="Платёж удалён",
+            metadata={"payment_id": payment_id},
             payment=payment,
         )
         payment.archive()
