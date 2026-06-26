@@ -240,7 +240,8 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
         context["document_upload_form"] = DocumentUploadForm()
         context["document_status_list"] = document_status_list
         context["safe_case_number"] = (safe_encrypted_attr(client.active_case, "authority_case_number", default=_("Не указан")) if client.active_case is not None else _("Не указан"))
-        context["missing_zus_months_for_upload"] = (missing_zus_month_upload_options(resolve_single_active_case(client)) if resolve_single_active_case(client) else [])
+        active_case_for_zus = resolve_single_active_case(client)
+        context["missing_zus_months_for_upload"] = (missing_zus_month_upload_options(active_case_for_zus) if active_case_for_zus else [])
         prefetched = getattr(client, "_prefetched_objects_cache", {})
         email_logs = prefetched.get("email_logs")
         if email_logs is None:

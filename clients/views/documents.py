@@ -429,11 +429,12 @@ def client_status_api(request: HttpRequest, pk: int) -> HttpResponseBase:
     """Return the latest client checklist as JSON for AJAX refreshes."""
 
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
+    active_case = resolve_single_active_case(client)
     checklist_html = render_to_string(
         "clients/partials/document_checklist.html",
         {
             "document_status_list": client.get_document_checklist(check_file_existence=True),
-            "missing_zus_months_for_upload": (missing_zus_month_upload_options(resolve_single_active_case(client)) if resolve_single_active_case(client) else []),
+            "missing_zus_months_for_upload": (missing_zus_month_upload_options(active_case) if active_case else []),
             "client": client,
         },
     )
@@ -474,13 +475,14 @@ def client_overview_partial(request: HttpRequest, pk: int) -> HttpResponseBase:
 def client_checklist_partial(request: HttpRequest, pk: int) -> HttpResponseBase:
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
     document_status_list = client.get_document_checklist(check_file_existence=True)
+    active_case = resolve_single_active_case(client)
     response = render(
         request,
         "clients/partials/document_checklist.html",
         {
             "client": client,
             "document_status_list": document_status_list,
-            "missing_zus_months_for_upload": (missing_zus_month_upload_options(resolve_single_active_case(client)) if resolve_single_active_case(client) else []),
+            "missing_zus_months_for_upload": (missing_zus_month_upload_options(active_case) if active_case else []),
         },
     )
     return apply_no_store(response)

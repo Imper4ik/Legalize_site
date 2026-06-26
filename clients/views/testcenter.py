@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -11,6 +11,9 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
+if TYPE_CHECKING:
+    from users.models import User
+
 from clients.models import ClientOnboardingSession, StaffAuditEvent, TestRun, TestScenarioResult
 from clients.services.onboarding_tokens import hash_onboarding_token
 from clients.testing.cleanup import cleanup_test_data
@@ -19,16 +22,17 @@ from clients.testing.e2e_runner import available_modes, ensure_test_center_enabl
 ONBOARDING_CASE_PREFIX = "onboarding:"
 
 
-def _forbidden(message: str = None) -> HttpResponseForbidden:
+def _forbidden(message: str | None = None) -> HttpResponseForbidden:
     if message is None:
         message = _("Test Center is not available.")
     return HttpResponseForbidden(message)
 
 
 def _audit_event(request: HttpRequest, event_type: str, summary: str, metadata: dict[str, Any]) -> None:
+    actor = cast("User", request.user)
     StaffAuditEvent.objects.create(
-        actor=request.user,
-        target=request.user,
+        actor=actor,
+        target=actor,
         event_type=event_type,
         summary=summary,
         metadata=metadata,
@@ -39,7 +43,8 @@ def _attach_test_portal_urls(results: list[TestScenarioResult]) -> None:
     """Expose raw onboarding URLs only for still-valid Test Center sessions."""
     now = timezone.now()
     for result in results:
-        result.onboarding_url = ""
+        # Dynamic display-only attribute attached for the template.
+        result.onboarding_url = ""  # type: ignore[attr-defined]
         if not result.related_case_identifier.startswith(ONBOARDING_CASE_PREFIX):
             continue
         if not result.related_client_id or not result.related_client or not result.related_client.is_test_data:
@@ -59,7 +64,7 @@ def _attach_test_portal_urls(results: list[TestScenarioResult]) -> None:
             .exists()
         )
         if session_exists:
-            result.onboarding_url = reverse("clients:onboarding_start", kwargs={"token": token})
+            result.onboarding_url = reverse("clients:onboarding_start", kwargs={"token": token})  # type: ignore[attr-defined]
 
 
 @login_required

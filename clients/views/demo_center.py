@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -11,6 +11,9 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
+if TYPE_CHECKING:
+    from users.models import User
+
 from clients.demo.demo_cleanup import cleanup_demo_data
 from clients.demo.demo_factory import get_demo_token_for_client
 from clients.demo.demo_runner import democenter_lock, ensure_demo_center_enabled, prepare_demo
@@ -18,16 +21,17 @@ from clients.models import Client, Document, DocumentProcessingJob, EmailLog, St
 from clients.services.onboarding_tokens import hash_onboarding_token
 
 
-def _forbidden(message: str = None) -> HttpResponseForbidden:
+def _forbidden(message: str | None = None) -> HttpResponseForbidden:
     if message is None:
         message = _("Demo Center is not available.")
     return HttpResponseForbidden(message)
 
 
 def _audit_event(request: HttpRequest, event_type: str, summary: str, metadata: dict[str, Any]) -> None:
+    actor = cast("User", request.user)
     StaffAuditEvent.objects.create(
-        actor=request.user,
-        target=request.user,
+        actor=actor,
+        target=actor,
         event_type=event_type,
         summary=summary,
         metadata=metadata,
@@ -95,11 +99,12 @@ def democenter_view(request: HttpRequest) -> HttpResponse:
             .first()
         )
         if session:
-            client.portal_url = request.build_absolute_uri(
+            # Dynamic display-only attribute attached for the template.
+            client.portal_url = request.build_absolute_uri(  # type: ignore[attr-defined]
                 reverse("clients:onboarding_start", kwargs={"token": token})
             )
         else:
-            client.portal_url = None
+            client.portal_url = None  # type: ignore[attr-defined]
             if client.onboarding_sessions.exists():
                 stale_portal_links += 1
 

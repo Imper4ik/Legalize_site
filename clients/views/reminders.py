@@ -118,8 +118,9 @@ class DocumentReminderListView(ReminderListView):
             "first_name",
         )
         queryset = accessible_clients_queryset(self.request.user, queryset)
-        if getattr(self, "client_filter_id", None):
-            queryset = queryset.filter(pk=self.client_filter_id)
+        client_filter_id = getattr(self, "client_filter_id", None)
+        if client_filter_id:
+            queryset = queryset.filter(pk=client_filter_id)
         return queryset.prefetch_related(
             Prefetch(
                 "documents",
@@ -185,7 +186,7 @@ class DocumentReminderListView(ReminderListView):
                 else:
                     group["ok_count"] += 1
 
-        requirements_cache = {}
+        requirements_cache: dict[str, Any] = {}
         for group in grouped.values():
             group["missing_documents"] = self._missing_documents_for_client(group["client"], requirements_cache)
 

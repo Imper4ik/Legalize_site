@@ -29,4 +29,6 @@ def check_client_auth_for_token_link(
 
 
 def enable_token_link_access() -> None:
-    onboarding_views.check_client_auth = check_client_auth_for_token_link
+    # Runtime monkeypatch of the module-level view function; the module is loaded
+    # via importlib so mypy cannot see the attribute.
+    onboarding_views.check_client_auth = check_client_auth_for_token_link  # type: ignore[attr-defined]

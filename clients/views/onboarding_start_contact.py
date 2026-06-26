@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
@@ -60,7 +60,11 @@ def _clean_placeholder_contact_value(field_name: str, value: str, *, first_name:
 
 
 def _contact_values_from_client(client: Client, mos_data: MOSApplicationData | None) -> dict[str, str]:
-    personal_data = mos_data.personal_data if mos_data and isinstance(mos_data.personal_data, dict) else {}
+    personal_data: dict[str, Any] = (
+        cast("dict[str, Any]", mos_data.personal_data)
+        if mos_data and isinstance(mos_data.personal_data, dict)
+        else {}
+    )
     raw_first_name = str(client.first_name or personal_data.get("first_name") or "").strip()
     raw_last_name = str(client.last_name or personal_data.get("last_name") or "").strip()
     return {
@@ -111,10 +115,11 @@ def _contact_form_is_editable(mos_data: MOSApplicationData | None, contact_value
 def _save_contact_values(client: Client, mos_data: MOSApplicationData, values: dict[str, str]) -> None:
     _sync_contact_fields_to_client(client, **values)
 
-    personal_data = dict(mos_data.personal_data or {})
+    personal_data = dict(cast("dict[str, Any]", mos_data.personal_data) or {})
     for field_name in CONTACT_REQUIRED_FIELDS:
         personal_data[field_name] = values[field_name]
-    mos_data.personal_data = personal_data
+    # EncryptedJSONField stores dicts but django-stubs types it as text.
+    mos_data.personal_data = personal_data  # type: ignore[assignment]
 
     update_fields = ["personal_data", "updated_at"]
     if mos_data.status == "draft":
@@ -254,7 +259,7 @@ def _handle_new_card_application_post(
     confirmation_file = request.FILES.get("new_card_confirmation_file")
     if confirmation_file and values.get("status") in NEW_CARD_CONFIRMATION_UPLOAD_STATUSES:
         files_dict = request.FILES.copy()
-        files_dict["file"] = files_dict["new_card_confirmation_file"]
+        files_dict["file"] = confirmation_file
         upload_form = DocumentUploadForm(
             request.POST,
             files_dict,

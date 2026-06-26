@@ -87,6 +87,26 @@ def test_client_edit_post_saves_without_500(_staff_client, _client_record):
     assert _client_record.last_name == "Edited"
 
 
+def test_case_detail_no_500(_staff_client, _client_record):
+    # Regression: CaseDetailView must not read dropped Client.case_number when a
+    # single case has no authority/legacy number yet (spec §4).
+    http_client, _ = _staff_client
+    case = _client_record.cases.first()
+    assert case is not None
+    url = reverse("clients:case_detail", kwargs={"pk": case.pk})
+    response = http_client.get(url)
+    assert response.status_code != 500
+
+
+def test_case_add_no_500(_staff_client, _client_record):
+    # Regression: CaseCreateView.get_initial must not read dropped
+    # Client.workflow_stage (spec §4).
+    http_client, _ = _staff_client
+    url = reverse("clients:case_add", kwargs={"pk": _client_record.pk})
+    response = http_client.get(url)
+    assert response.status_code != 500
+
+
 def test_case_edit_no_500(_staff_client, _client_record):
     http_client, _ = _staff_client
     case = _client_record.cases.first()

@@ -1,21 +1,24 @@
 from __future__ import annotations
 
+from typing import Any, cast
+
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from clients.models import ClientDigitalAccess, MOSApplicationData
+from clients.models import ClientDigitalAccess, ClientOnboardingSession, MOSApplicationData
 from clients.security.encrypted import safe_encrypted_attr
+from clients.services.intake_extraction import pre_fill_mos_data_from_ocr
 from clients.services.onboarding_purposes import clear_onboarding_notifications_cache, normalize_onboarding_purpose
 from clients.views import onboarding_views
 
 
-def _auth_redirect(request: HttpRequest, session, token: str) -> HttpResponse | None:
+def _auth_redirect(request: HttpRequest, session: ClientOnboardingSession, token: str) -> HttpResponse | None:
     return onboarding_views.check_client_auth(request, session, token)
 
 
-def _scoped_mos_get_or_404(session):
+def _scoped_mos_get_or_404(session: ClientOnboardingSession) -> MOSApplicationData:
     """Fetch the MOS record for the session's active case (spec section 1).
 
     A multi-case client must only ever read/write the MOS of the case in scope,
@@ -28,7 +31,7 @@ def _scoped_mos_get_or_404(session):
     )
 
 
-def _scoped_mos_or_new(session) -> MOSApplicationData:
+def _scoped_mos_or_new(session: ClientOnboardingSession) -> MOSApplicationData:
     case = onboarding_views._session_case(session)
     mos = MOSApplicationData.objects.filter(client=session.client, case=case).first()
     return mos if mos is not None else MOSApplicationData(client=session.client, case=case)
@@ -75,7 +78,7 @@ def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
         digital_access.save()
 
         if created or (not mos_data.passport_data and not mos_data.personal_data):
-            onboarding_views.pre_fill_mos_data_from_ocr(mos_data)
+            pre_fill_mos_data_from_ocr(mos_data)
 
         return _next_or_dashboard(request, token, "clients:onboarding_passport")
 
@@ -102,8 +105,9 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
     if mos_data.pk and not onboarding_views._mos_data_is_editable(mos_data):
         return onboarding_views._locked_response(request, session)
 
-    # Prefill in-memory only (without saving) for rendering form
-    personal_data = dict(mos_data.personal_data or {})
+    # Prefill in-memory only (without saving) for rendering form.
+    # EncryptedJSONField stores dicts but django-stubs types it as text.
+    personal_data = dict(cast("dict[str, Any]", mos_data.personal_data) or {})
     for key, val in [
         ("first_name", client.first_name),
         ("last_name", client.last_name),
@@ -117,13 +121,13 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
     if client.birth_date and ("birth_date" not in personal_data or not personal_data["birth_date"]):
         personal_data["birth_date"] = client.birth_date.isoformat()
 
-    mos_data.personal_data = personal_data
+    mos_data.personal_data = personal_data  # type: ignore[assignment]
 
-    passport_data = dict(mos_data.passport_data or {})
+    passport_data = dict(cast("dict[str, Any]", mos_data.passport_data) or {})
     passport_num_val = safe_encrypted_attr(client, "passport_num")
     if passport_num_val and ("document_number" not in passport_data or not passport_data["document_number"]):
         passport_data["document_number"] = passport_num_val
-    mos_data.passport_data = passport_data
+    mos_data.passport_data = passport_data  # type: ignore[assignment]
 
     if request.method == "POST":
         # Ensure mos_data is saved to DB
@@ -139,7 +143,7 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
 
                 # Copy request.FILES to map passport_file to file for the form validation
                 files_dict = request.FILES.copy()
-                files_dict["file"] = files_dict["passport_file"]
+                files_dict["file"] = passport_file
 
                 form = DocumentUploadForm(request.POST, files_dict, doc_type="passport", client=client)
                 if form.is_valid():
@@ -178,7 +182,7 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         birth_country = request.POST.get("birth_country", "").strip()
         origin_country = request.POST.get("origin_country", "").strip()
 
-        personal_data = mos_data.personal_data or {}
+        personal_data = cast("dict[str, Any]", mos_data.personal_data) or {}
         personal_data["first_name"] = first_name
         personal_data["last_name"] = last_name
         personal_data["phone"] = phone
@@ -192,14 +196,14 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         personal_data["birth_place"] = birth_place
         personal_data["birth_country"] = birth_country
         personal_data["origin_country"] = origin_country
-        mos_data.personal_data = personal_data
+        mos_data.personal_data = personal_data  # type: ignore[assignment]
 
-        passport_data = mos_data.passport_data or {}
+        passport_data = cast("dict[str, Any]", mos_data.passport_data) or {}
         passport_data["document_number"] = doc_num
         passport_data["expiry_date"] = expiry_date
         passport_data["issue_date"] = request.POST.get("issue_date", "").strip()
         passport_data["issuing_authority"] = request.POST.get("issuing_authority", "").strip()
-        mos_data.passport_data = passport_data
+        mos_data.passport_data = passport_data  # type: ignore[assignment]
 
         mos_data.save()
         onboarding_views._sync_contact_fields_to_client(
@@ -247,7 +251,7 @@ def onboarding_personal_extra(request: HttpRequest, token: str) -> HttpResponse:
         return onboarding_views._locked_response(request, session)
 
     if request.method == "POST":
-        personal_data = mos_data.personal_data or {}
+        personal_data = cast("dict[str, Any]", mos_data.personal_data) or {}
         personal_data["father_name"] = request.POST.get("father_name", "")
         personal_data["mother_name"] = request.POST.get("mother_name", "")
         personal_data["mother_maiden_name"] = request.POST.get("mother_maiden_name", "")
@@ -257,7 +261,7 @@ def onboarding_personal_extra(request: HttpRequest, token: str) -> HttpResponse:
         personal_data["marital_status"] = request.POST.get("marital_status", "")
         personal_data["profession"] = request.POST.get("profession", "").strip()
         personal_data["special_marks"] = request.POST.get("special_marks", "").strip()
-        mos_data.personal_data = personal_data
+        mos_data.personal_data = personal_data  # type: ignore[assignment]
         mos_data.save()
         return _next_or_dashboard(request, token, "clients:onboarding_address")
 
@@ -281,7 +285,7 @@ def onboarding_address(request: HttpRequest, token: str) -> HttpResponse:
         return onboarding_views._locked_response(request, session)
 
     if request.method == "POST":
-        address_data = mos_data.address_data or {}
+        address_data = cast("dict[str, Any]", mos_data.address_data) or {}
         address_data["street"] = request.POST.get("street", "")
         address_data["city"] = request.POST.get("city", "")
         address_data["postal_code"] = request.POST.get("postal_code", "")
@@ -294,7 +298,7 @@ def onboarding_address(request: HttpRequest, token: str) -> HttpResponse:
         address_data["gmina"] = request.POST.get("gmina", "").strip()
         address_data["house_number"] = request.POST.get("house_number", "").strip()
         address_data["apartment_number"] = request.POST.get("apartment_number", "").strip()
-        mos_data.address_data = address_data
+        mos_data.address_data = address_data  # type: ignore[assignment]
         mos_data.save()
         return _next_or_dashboard(request, token, "clients:onboarding_travel")
 
@@ -339,23 +343,23 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
         else:
             mos_data.legal_stay_until = None
 
-        stay_data = mos_data.stay_data or {}
+        stay_data = cast("dict[str, Any]", mos_data.stay_data) or {}
         stay_data["is_in_poland"] = request.POST.get("is_in_poland") == "yes"
         stay_data["last_entry_date"] = request.POST.get("last_entry_date", "")
         stay_data["stay_basis"] = request.POST.get("stay_basis", "")
         stay_data["was_in_poland_before"] = request.POST.get("was_in_poland_before") == "yes"
         stay_data["has_insurance"] = request.POST.get("has_insurance") == "yes"
         stay_data["has_stable_income"] = request.POST.get("has_stable_income") == "yes"
-        mos_data.stay_data = stay_data
+        mos_data.stay_data = stay_data  # type: ignore[assignment]
 
-        personal_data = mos_data.personal_data or {}
+        personal_data = cast("dict[str, Any]", mos_data.personal_data) or {}
         personal_data["employer_email"] = request.POST.get("employer_email", "").strip()
         personal_data["university_email"] = request.POST.get("university_email", "").strip()
-        mos_data.personal_data = personal_data
+        mos_data.personal_data = personal_data  # type: ignore[assignment]
 
         previous_stays_detail = request.POST.get("previous_stays", "").strip()
-        mos_data.previous_stays = [previous_stays_detail]
-        mos_data.travel_history = [request.POST.get("travel_history", "")]
+        mos_data.previous_stays = [previous_stays_detail]  # type: ignore[assignment]
+        mos_data.travel_history = [request.POST.get("travel_history", "")]  # type: ignore[assignment]
         mos_data.save()
         if purpose_updated:
             clear_onboarding_notifications_cache(session.client)
@@ -386,10 +390,10 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
         return onboarding_views._locked_response(request, session)
 
     if request.method == "POST":
-        declarations = mos_data.legal_declarations or {}
+        declarations = cast("dict[str, Any]", mos_data.legal_declarations) or {}
         declarations["criminal_record"] = request.POST.get("criminal_record") == "yes"
         declarations["tax_arrears"] = request.POST.get("tax_arrears") == "yes"
-        mos_data.legal_declarations = declarations
+        mos_data.legal_declarations = declarations  # type: ignore[assignment]
 
         if _save_return_requested(request):
             if mos_data.status == "draft":

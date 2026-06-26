@@ -107,7 +107,7 @@ def _count_missing_document_items() -> int | str:
         "wniosek_submissions__confirmed_by",
         "wniosek_submissions__attachments",
     )
-    requirements_cache = {}
+    requirements_cache: dict[str, Any] = {}
     return sum(
         1
         for client in clients

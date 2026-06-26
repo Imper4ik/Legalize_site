@@ -241,7 +241,7 @@ def check_onboarding_session(
 
     # Валидация scope и согласованности дела. The resolved case is attached to
     # the session as ``active_case`` for the view layer to consume.
-    session.active_case = None
+    session.active_case = None  # type: ignore[attr-defined]
     case_id: Any = None
     if session.scope == "case_link":
         # case_link sessions are permanently bound to one case; without it there
@@ -264,7 +264,7 @@ def check_onboarding_session(
             and case.archived_at is None
         )
         if case_is_valid:
-            session.active_case = case
+            session.active_case = case  # type: ignore[attr-defined]
             # Only the portal persists the chosen case in the Django session;
             # case_link derives it from the session row itself.
             if request and session.scope == "client_portal":
@@ -325,7 +325,7 @@ def _split_onboarding_full_name(full_name: str) -> tuple[str, str] | None:
     return " ".join(parts[1:]), parts[0]
 
 
-def _mark_user_email_verified(user, email: str) -> None:
+def _mark_user_email_verified(user: Any, email: str) -> None:
     from allauth.account.models import EmailAddress
 
     email_address = EmailAddress.objects.filter(user=user, email__iexact=email).first()
@@ -730,6 +730,9 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
 
             # Smart transition logic based on the case's existing dates (§4).
             case = mos_data.case
+            if case is None:
+                messages.error(request, _("Не удалось определить дело для заявки."))
+                return redirect("clients:client_detail", pk=client.pk)
             target_stage = "waiting_decision" if case.fingerprints_date else "fingerprints"
             try:
                 with transaction.atomic():
@@ -821,9 +824,13 @@ def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
                 mos_data.new_residence_card_application_status = "yes"
                 mos_data.new_residence_card_updated_at = timezone.now()
                 target_stage = "fingerprints"
+                case = mos_data.case
+                if case is None:
+                    messages.error(request, _("Не удалось определить дело для заявки."))
+                    return redirect("clients:client_add")
                 try:
                     with transaction.atomic():
-                        transition_case_workflow(case=mos_data.case, target_stage=target_stage, actor=request.user, save=True)
+                        transition_case_workflow(case=case, target_stage=target_stage, actor=request.user, save=True)
                         mos_data.status = target_stage
                         mos_data.save(update_fields=["new_residence_card_application_status", "new_residence_card_updated_at", "status", "updated_at"])
                 except ValidationError as exc:
@@ -904,8 +911,8 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
     passport_dirty = False
     client_dirty = False
 
-    personal_data = mos_data.personal_data or {}
-    passport_data = mos_data.passport_data or {}
+    personal_data = cast("dict[str, Any]", mos_data.personal_data) or {}
+    passport_data = cast("dict[str, Any]", mos_data.passport_data) or {}
 
     if "first_name" in request.POST:
         val = request.POST.get("first_name", "").strip()
@@ -976,13 +983,13 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
             personal_dirty = True
 
     if personal_dirty:
-        mos_data.personal_data = personal_data
+        mos_data.personal_data = personal_data  # type: ignore[assignment]
     if passport_dirty:
-        mos_data.passport_data = passport_data
+        mos_data.passport_data = passport_data  # type: ignore[assignment]
 
     # Process address fields
     address_dirty = False
-    address_data = mos_data.address_data or {}
+    address_data = cast("dict[str, Any]", mos_data.address_data) or {}
     for field in ["street", "city", "postal_code", "home_country", "home_city", "home_street", "voivodeship", "powiat", "gmina", "house_number", "apartment_number"]:
         if field in request.POST:
             address_data[field] = request.POST.get(field, "")
@@ -991,7 +998,7 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         address_data["meldunek"] = request.POST.get("meldunek") == "yes"
         address_dirty = True
     if address_dirty:
-        mos_data.address_data = address_data
+        mos_data.address_data = address_data  # type: ignore[assignment]
 
     # Process travel fields
     purpose_updated = False
@@ -1008,7 +1015,7 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         if val:
             mos_data.legal_stay_until = val
 
-    stay_data = mos_data.stay_data or {}
+    stay_data = cast("dict[str, Any]", mos_data.stay_data) or {}
     stay_dirty = False
     if "is_in_poland" in request.POST:
         stay_data["is_in_poland"] = request.POST.get("is_in_poland") == "yes"
@@ -1030,23 +1037,23 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         stay_dirty = True
 
     if stay_dirty:
-        mos_data.stay_data = stay_data
+        mos_data.stay_data = stay_data  # type: ignore[assignment]
 
     if "employer_email" in request.POST:
         personal_data["employer_email"] = request.POST.get("employer_email", "").strip()
-        mos_data.personal_data = personal_data
+        mos_data.personal_data = personal_data  # type: ignore[assignment]
     if "university_email" in request.POST:
         personal_data["university_email"] = request.POST.get("university_email", "").strip()
-        mos_data.personal_data = personal_data
+        mos_data.personal_data = personal_data  # type: ignore[assignment]
     if "previous_stays" in request.POST:
-        mos_data.previous_stays = [request.POST.get("previous_stays", "").strip()]
+        mos_data.previous_stays = [request.POST.get("previous_stays", "").strip()]  # type: ignore[assignment]
 
     if "travel_history" in request.POST:
-        mos_data.travel_history = [request.POST.get("travel_history", "")]
+        mos_data.travel_history = [request.POST.get("travel_history", "")]  # type: ignore[assignment]
 
     # Process declarations fields
     declarations_dirty = False
-    declarations = mos_data.legal_declarations or {}
+    declarations = cast("dict[str, Any]", mos_data.legal_declarations) or {}
     if "criminal_record" in request.POST:
         declarations["criminal_record"] = request.POST.get("criminal_record") == "yes"
         declarations_dirty = True
@@ -1054,7 +1061,7 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         declarations["tax_arrears"] = request.POST.get("tax_arrears") == "yes"
         declarations_dirty = True
     if declarations_dirty:
-        mos_data.legal_declarations = declarations
+        mos_data.legal_declarations = declarations  # type: ignore[assignment]
 
     # Set status to client_filling if not already filled or completed
     if mos_data.status not in ["client_completed", "staff_review", "approved_by_staff", "mos_package_ready", "submitted_in_mos", "fingerprints", "waiting_decision", "decision_received", "closed"]:

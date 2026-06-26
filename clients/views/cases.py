@@ -4,7 +4,7 @@ from typing import Any
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
-from django.http import HttpRequest, HttpResponse
+from django.http import HttpRequest, HttpResponse, HttpResponseBase
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.translation import gettext as _
 from django.views.generic import CreateView, DetailView, UpdateView
@@ -33,30 +33,9 @@ class CaseDetailView(RoleRequiredMixin, DetailView):
             .prefetch_related("documents", "payments", "reminders", "staff_tasks", "activities"),
         )
 
-    @staticmethod
-    def _hydrate_unambiguous_legacy_number_for_display(case: Case) -> None:
-        """Display a pre-refactor client number only when it is unambiguous.
-
-        This does not write to the database. Migration 0103 persists the same
-        value safely. The temporary display fallback prevents legacy one-case
-        clients from seeing a UUID or an empty title while data migration runs.
-        """
-        # internal_number is deprecated and must not drive UI logic; only the
-        # authority (urząd) number or a legacy number suppress the fallback.
-        if case.authority_case_number or case.legacy_case_number:
-            return
-        if Case.all_objects.filter(client_id=case.client_id).count() != 1:
-            return
-
-        legacy_number = str(case.client.case_number or "").strip()
-        if legacy_number:
-            case.legacy_case_number = legacy_number
-            case.needs_manual_number_check = True
-
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         case = self.object
-        self._hydrate_unambiguous_legacy_number_for_display(case)
         context["documents"] = Document.all_objects.filter(case=case).order_by("-uploaded_at")[:200]
         # Checklist grouped by required document (the pre-refactor view): one row
         # per requirement with status, missing items flagged, files nested inside.
@@ -80,7 +59,7 @@ class CaseCreateView(RoleRequiredMixin, CreateView):
     form_class = CaseForm
     template_name = "clients/case_form.html"
 
-    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+    def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponseBase:
         self.client_obj = get_object_or_404(
             accessible_clients_queryset(request.user),
             pk=kwargs["pk"],
@@ -92,7 +71,9 @@ class CaseCreateView(RoleRequiredMixin, CreateView):
         initial.update({
             "application_purpose": self.client_obj.application_purpose,
             "basis_of_stay": self.client_obj.basis_of_stay or "",
-            "workflow_stage": self.client_obj.workflow_stage,
+            # New cases start at the initial stage; process state lives on the
+            # Case now, not the Client (spec §4).
+            "workflow_stage": "new_client",
             "assigned_staff": self.client_obj.assigned_staff_id,
             "company": self.client_obj.company_id,
         })
@@ -111,7 +92,7 @@ class CaseCreateView(RoleRequiredMixin, CreateView):
             application_purpose=form.cleaned_data.get("application_purpose") or "",
             application_type=form.cleaned_data.get("application_type") or "",
             basis_of_stay=form.cleaned_data.get("basis_of_stay") or "",
-            workflow_stage=form.cleaned_data.get("workflow_stage") or self.client_obj.workflow_stage,
+            workflow_stage=form.cleaned_data.get("workflow_stage") or "new_client",
             submission_date=form.cleaned_data.get("submission_date"),
             fingerprints_date=form.cleaned_data.get("fingerprints_date"),
             assigned_staff=form.cleaned_data.get("assigned_staff"),

@@ -51,9 +51,10 @@ def _purpose_review_context(client: Client, mos_data: MOSApplicationData) -> dic
 
 
 def _mos_client_update_values(mos_data: MOSApplicationData) -> dict[str, object]:
-    personal_data = mos_data.personal_data or {}
-    passport_data = mos_data.passport_data or {}
-    stay_data = mos_data.stay_data or {}
+    # EncryptedJSONField stores dicts but django-stubs types it as text.
+    personal_data = cast("dict[str, Any]", mos_data.personal_data) or {}
+    passport_data = cast("dict[str, Any]", mos_data.passport_data) or {}
+    stay_data = cast("dict[str, Any]", mos_data.stay_data) or {}
 
     values: dict[str, object] = {}
     for field_name in ("first_name", "last_name", "email", "phone", "citizenship"):
