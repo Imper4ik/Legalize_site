@@ -73,7 +73,7 @@
                                     <a href="{% url 'clients:document_version_download' version.pk %}" class="btn btn-outline-secondary btn-sm" title="{% translate 'Скачать' %}" aria-label="{% translate 'Скачать' %}">
                                         <i class="bi bi-download"></i>
                                     </a>
-                                    <form method="post" action="{% url 'clients:document_version_restore' version.pk %}" class="d-inline" onsubmit="return confirm('{% translate "Are you sure you want to restore this version? The current file will be archived." %}');">
+                                    <form method="post" action="{% url 'clients:document_version_restore' version.pk %}" class="d-inline" data-confirm="{% translate "Are you sure you want to restore this version? The current file will be archived." %}">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-outline-primary btn-sm" title="{% translate 'Restore' %}">
                                             <i class="fas fa-history"></i> {% translate "Restore" %}

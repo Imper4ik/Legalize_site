@@ -69,7 +69,7 @@
                     </p>
                     <div class="input-group mb-3">
                         <input type="text" class="form-control" value="" id="onboardingLink" placeholder="{% translate 'Сгенерируйте или скопируйте ссылку' %}" readonly>
-                        <button class="btn btn-outline-secondary" type="button" id="btn-copy-onboarding-link" onclick="const val=document.getElementById('onboardingLink').value; if(val) { navigator.clipboard.writeText(val); }" disabled>{% translate "Копировать ссылку" %}</button>
+                        <button class="btn btn-outline-secondary" type="button" id="btn-copy-onboarding-link" data-copy-target="onboardingLink" disabled>{% translate "Копировать ссылку" %}</button>
                     </div>
                 {% else %}
                     <p class="text-muted" id="onboarding-session-info"
@@ -78,7 +78,7 @@
                        data-label-en="Current session: <strong>Created</strong> (expires: {date})">{% translate "Ссылка для онбординга еще не создана." %}</p>
                     <div class="input-group mb-3">
                         <input type="text" class="form-control" value="" id="onboardingLink" placeholder="{% translate 'Сгенерируйте ссылку для получения доступа' %}" readonly>
-                        <button class="btn btn-outline-secondary" type="button" id="btn-copy-onboarding-link" onclick="const val=document.getElementById('onboardingLink').value; if(val) { navigator.clipboard.writeText(val); }" disabled>{% translate "Копировать ссылку" %}</button>
+                        <button class="btn btn-outline-secondary" type="button" id="btn-copy-onboarding-link" data-copy-target="onboardingLink" disabled>{% translate "Копировать ссылку" %}</button>
                     </div>
                 {% endif %}
             </div>

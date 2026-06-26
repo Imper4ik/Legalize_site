@@ -1,4 +1,4 @@
-{% load i18n %}
+{% load i18n static %}
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -125,7 +125,7 @@
 </head>
 <body>
   <div class="print-actions">
-    <button type="button" onclick="window.print()">{% trans "Печать" %}</button>
+    <button type="button" data-print>{% trans "Печать" %}</button>
     <a href="javascript:window.history.back()">{% trans "Назад" %}</a>
   </div>
 
@@ -182,5 +182,6 @@
       </div>
     </div>
   </div>
+<script src="{% static 'clients/js/csp_handlers.js' %}" defer></script>
 </body>
 </html>

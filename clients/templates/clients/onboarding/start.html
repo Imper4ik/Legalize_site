@@ -258,7 +258,7 @@
                                             {% endif %}
                                             <a href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener">{% trans "Preview" %}</a>
                                             {% if allow_delete %}
-                                                <form action="{% url 'clients:onboarding_document_delete' session.token_hash doc.doc_id %}" method="post" class="m-0 d-inline" onsubmit="return confirm('{% trans "Вы уверены, что хотите удалить этот документ?" %}');">
+                                                <form action="{% url 'clients:onboarding_document_delete' session.token_hash doc.doc_id %}" method="post" class="m-0 d-inline" data-confirm="{% trans "Вы уверены, что хотите удалить этот документ?" %}">
                                                     {% csrf_token %}
                                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="{% trans 'Удалить' %}"><i class="bi bi-trash"></i></button>
                                                 </form>
@@ -341,7 +341,7 @@
                                                                 </a>
                                                             {% endif %}
                                                             {% if allow_delete %}
-                                                                <form action="{% url 'clients:onboarding_document_delete' session.token_hash doc.doc_id %}" method="post" class="m-0 d-inline" onsubmit="return confirm('{% trans "Вы уверены, что хотите удалить этот документ?" %}');">
+                                                                <form action="{% url 'clients:onboarding_document_delete' session.token_hash doc.doc_id %}" method="post" class="m-0 d-inline" data-confirm="{% trans "Вы уверены, что хотите удалить этот документ?" %}">
                                                                     {% csrf_token %}
                                                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="{% trans 'Удалить' %}"><i class="bi bi-trash"></i></button>
                                                                 </form>
@@ -486,7 +486,7 @@
                                             </a>
                                         {% endif %}
                                         {% if allow_delete %}
-                                            <form action="{% url 'clients:onboarding_document_delete' session.token_hash doc.doc_id %}" method="post" class="m-0 d-inline" onsubmit="return confirm('{% trans "Вы уверены, что хотите удалить этот документ?" %}');">
+                                            <form action="{% url 'clients:onboarding_document_delete' session.token_hash doc.doc_id %}" method="post" class="m-0 d-inline" data-confirm="{% trans "Вы уверены, что хотите удалить этот документ?" %}">
                                                 {% csrf_token %}
                                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="{% trans 'Удалить' %}"><i class="bi bi-trash"></i></button>
                                             </form>

@@ -421,6 +421,9 @@
   <!-- Your theme toggle script -->
   <script src="{% static 'js/theme-toggle.js' %}" defer></script>
 
+  <!-- CSP-safe delegated handlers (replaces inline on*= attributes) -->
+  <script src="{% static 'clients/js/csp_handlers.js' %}" defer></script>
+
   {% block extra_js %}{% endblock %}
 </body>
 

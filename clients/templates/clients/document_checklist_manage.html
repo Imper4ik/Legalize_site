@@ -94,7 +94,7 @@
               </li>
               <li>
                 <form action="{% url 'submissions:submission_quick_delete' submission.id %}" method="post"
-                      onsubmit="return confirm('{% translate 'Удалить это основание и связанные документы?' %}');">
+                      data-confirm="{% translate 'Удалить это основание и связанные документы?' %}">
                   {% csrf_token %}
                   <button class="dropdown-item text-danger" type="submit">
                     <i class="bi bi-trash me-2"></i>{% translate "Удалить" %}
@@ -145,7 +145,7 @@
                           </button>
                           <button class="btn btn-outline-danger" type="submit" title="{% translate 'Удалить документ' %}"
                                   form="deleteRequirement{{ requirement.id }}" formnovalidate
-                                  onclick="return confirm('{% translate 'Удалить этот документ из чеклиста?' %}');">
+                                  data-confirm="{% translate 'Удалить этот документ из чеклиста?' %}">
                             <i class="bi bi-trash"></i>
                           </button>
                         </div>

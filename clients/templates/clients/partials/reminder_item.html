@@ -90,7 +90,7 @@
               {% csrf_token %}
               <input type="hidden" name="action" value="delete">
               <input type="hidden" name="next" value="{% if reminder.reminder_type == 'document' and reminder.client %}{{ request.get_full_path }}#heading-{{ reminder.client.id }}{% else %}{{ request.get_full_path }}{% endif %}">
-              <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('{% translate "Вы уверены, что хотите безвозвратно удалить это напоминание?" %}');">
+              <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm="{% translate "Вы уверены, что хотите безвозвратно удалить это напоминание?" %}">
                   <i class="fas fa-trash"></i> {% translate "Удалить" %}
               </button>
           </form>

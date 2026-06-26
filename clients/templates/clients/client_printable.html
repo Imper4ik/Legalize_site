@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pl">
 
@@ -222,7 +223,7 @@
 <body>
 
     <div class="no-print actions">
-        <button type="button" onclick="window.print();">{% translate "Распечатать" %}</button>
+        <button type="button" data-print>{% translate "Распечатать" %}</button>
         <a href="{% url 'clients:client_detail' client.pk %}">{% translate "Вернуться к профилю" %}</a>
     </div>
 
@@ -292,6 +293,7 @@
 
     </div>
 
+<script src="{% static 'clients/js/csp_handlers.js' %}" defer></script>
 </body>
 
 </html>

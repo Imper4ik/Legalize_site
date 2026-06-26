@@ -747,9 +747,15 @@ class TestClientFormTemplateJsLogic:
     """Verify client_form.html contains the updated family/sponsor JS logic."""
 
     def _template_source(self):
+        # The form's JS now lives in an external static file (CSP hardening);
+        # check both the template and that extracted script.
         from pathlib import Path
-        tpl = Path(__file__).resolve().parent.parent / "templates" / "clients" / "client_form.html"
-        return tpl.read_text(encoding="utf-8")
+        root = Path(__file__).resolve().parent.parent
+        src = (root / "templates" / "clients" / "client_form.html").read_text(encoding="utf-8")
+        js = root.parent / "static" / "clients" / "js" / "pages" / "client_form.js"
+        if js.exists():
+            src += "\n" + js.read_text(encoding="utf-8")
+        return src
 
     def test_needs_sponsor_variable(self):
         src = self._template_source()
