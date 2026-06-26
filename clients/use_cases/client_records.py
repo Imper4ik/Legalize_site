@@ -4,7 +4,6 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from clients.models import Client
@@ -13,7 +12,6 @@ from clients.services.notifications import (
     send_expired_documents_email,
     send_required_documents_email,
 )
-from clients.services.workflow import validate_client_workflow_transition
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
@@ -21,13 +19,11 @@ if TYPE_CHECKING:
 ClientNotificationSender = Callable[[Client], int]
 
 CLIENT_UPDATE_TRACKED_FIELDS = (
+    # Process state (workflow stage, case number, process dates) lives on the
+    # Case now (spec §4); only permanent client attributes are tracked here.
     "passport_num",
-    "case_number",
     "status",
-    "workflow_stage",
     "application_purpose",
-    "fingerprints_date",
-    "decision_date",
     "notes",
 )
 
@@ -62,7 +58,7 @@ def finalize_client_creation(
             actor=actor,
             event_type="client_created",
             summary="Клиент создан",
-            metadata={"workflow_stage": client.workflow_stage, "status": client.status},
+            metadata={"workflow_stage": client.get_effective_workflow_stage(), "status": client.status},
         )
     return ClientRecordScenarioResult(
         client=client,
@@ -75,27 +71,17 @@ def finalize_client_update(
     client: Client,
     actor: AbstractBaseUser | AnonymousUser | None,
     previous_values: Mapping[str, Any],
-    previous_fingerprints_date: Any,
-    new_fingerprints_date: Any,
     send_expired_email: ClientNotificationSender = send_expired_documents_email,
 ) -> ClientRecordScenarioResult:
     expired_documents_email_sent = False
 
+    # Process state (workflow stage, dates) lives on the Case (spec §4): the
+    # client form no longer edits it, so this only tracks permanent attributes.
     changed_fields = tuple(
         field
         for field, old_value in previous_values.items()
         if getattr(client, field) != old_value
     )
-
-    workflow_changed = "workflow_stage" in changed_fields
-    if workflow_changed:
-        transition_result = validate_client_workflow_transition(
-            client=client,
-            previous_stage=str(previous_values.get("workflow_stage") or ""),
-            next_stage=client.workflow_stage,
-        )
-        if not transition_result.allowed:
-            raise ValidationError({"workflow_stage": transition_result.message})
 
     with transaction.atomic():
         if changed_fields:
@@ -121,55 +107,9 @@ def finalize_client_update(
                 },
             )
 
-        if workflow_changed:
-            log_client_activity(
-                client=client,
-                actor=actor,
-                event_type="workflow_changed",
-                summary="Этап workflow изменён",
-                details=client.get_workflow_stage_display(),
-                metadata={
-                    "old_workflow_stage": str(previous_values.get("workflow_stage")),
-                    "workflow_stage": client.workflow_stage,
-                },
-            )
-
-        for field_name, summary in (
-            ("fingerprints_date", "Дата отпечатков изменена"),
-            ("decision_date", "Дата решения изменена"),
-        ):
-            if field_name not in changed_fields:
-                continue
-            old_val = previous_values.get(field_name)
-            new_val = getattr(client, field_name)
-
-            old_val_iso = ""
-            if old_val and hasattr(old_val, "isoformat"):
-                old_val_iso = old_val.isoformat()
-            else:
-                old_val_iso = str(old_val or "")
-
-            new_val_iso = ""
-            if new_val and hasattr(new_val, "isoformat"):
-                new_val_iso = new_val.isoformat()
-            else:
-                new_val_iso = str(new_val or "")
-
-            log_client_activity(
-                client=client,
-                actor=actor,
-                event_type="deadline_changed",
-                summary=summary,
-                metadata={
-                    "field": field_name,
-                    "old_value": old_val_iso,
-                    "new_value": new_val_iso,
-                },
-            )
-
     return ClientRecordScenarioResult(
         client=client,
         changed_fields=changed_fields,
-        workflow_changed=workflow_changed,
+        workflow_changed=False,
         expired_documents_email_sent=expired_documents_email_sent,
     )

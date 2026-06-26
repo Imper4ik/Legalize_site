@@ -56,38 +56,33 @@ class UseCasesStage14Tests(TestCase):
         # whitelisted metadata key (spec section 9).
         self.assertEqual(activity.actor, self.staff)
 
-    def test_finalize_client_update_logs_changed_fields_and_workflow_change(self):
+    def test_finalize_client_update_logs_changed_permanent_fields(self):
+        # Process state (workflow stage, dates) is tracked on the Case now (§4):
+        # finalize only records permanent client attribute changes.
         previous_values = snapshot_client_update_state(self.client_obj)
-        previous_fingerprints_date = self.client_obj.fingerprints_date
-        new_fingerprints_date = timezone.localdate() + timedelta(days=9)
-        self.client_obj.workflow_stage = "document_collection"
         self.client_obj.notes = "Waiting for updated documents."
-        self.client_obj.fingerprints_date = new_fingerprints_date
-        self.client_obj.save(update_fields=["workflow_stage", "notes", "fingerprints_date"])
+        self.client_obj.save(update_fields=["notes"])
         send_expired_email = Mock(return_value=1)
 
         result = finalize_client_update(
             client=self.client_obj,
             actor=self.staff,
             previous_values=previous_values,
-            previous_fingerprints_date=previous_fingerprints_date,
-            new_fingerprints_date=new_fingerprints_date,
             send_expired_email=send_expired_email,
         )
 
-        self.assertEqual(result.changed_fields, ("workflow_stage", "fingerprints_date", "notes"))
-        self.assertTrue(result.workflow_changed)
+        self.assertEqual(result.changed_fields, ("notes",))
+        self.assertFalse(result.workflow_changed)
         self.assertFalse(result.expired_documents_email_sent)
         send_expired_email.assert_not_called()
         self.assertTrue(
             ClientActivity.objects.filter(client=self.client_obj, event_type="client_updated").exists()
         )
-        # The dedicated events record the change; raw stage/field values are not
-        # whitelisted metadata keys (spec section 9).
-        self.assertTrue(
+        # No workflow/deadline events are emitted from the client update path.
+        self.assertFalse(
             ClientActivity.objects.filter(client=self.client_obj, event_type="workflow_changed").exists()
         )
-        self.assertTrue(
+        self.assertFalse(
             ClientActivity.objects.filter(client=self.client_obj, event_type="deadline_changed").exists()
         )
 
@@ -100,8 +95,7 @@ class UseCasesStage14Tests(TestCase):
             client=self.client_obj,
             actor=self.staff,
             previous_values=previous_values,
-            previous_fingerprints_date=self.client_obj.fingerprints_date,
-            new_fingerprints_date=self.client_obj.fingerprints_date,
+
         )
 
         self.assertIn("status", result.changed_fields)
@@ -121,8 +115,7 @@ class UseCasesStage14Tests(TestCase):
             client=self.client_obj,
             actor=self.staff,
             previous_values=previous_values,
-            previous_fingerprints_date=self.client_obj.fingerprints_date,
-            new_fingerprints_date=self.client_obj.fingerprints_date,
+
             send_expired_email=send_expired_email,
         )
 

@@ -371,8 +371,6 @@ class ClientUpdateView(RoleRequiredMixin, UpdateView):
                 client=self.object,
                 actor=self.request.user,
                 previous_values=previous_values,
-                previous_fingerprints_date=previous_fingerprints_date,
-                new_fingerprints_date=form.cleaned_data.get("fingerprints_date"),
                 send_expired_email=send_expired_documents_email,
             )
         return redirect(self.get_success_url())
