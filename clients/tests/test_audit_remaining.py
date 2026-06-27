@@ -10,7 +10,7 @@ from django.core.exceptions import ValidationError
 from django.template import Context, Template
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 
 from clients.constants import DocumentType
 from clients.forms import StaffUserCreateForm
@@ -369,11 +369,11 @@ class RemainingAuditHardeningTests(TestCase):
             expires_at=timezone.now() + timedelta(days=1),
         )
 
-        url = reverse("clients:onboarding_start", kwargs={"token": token})
-
         # Staff is not assigned to clients (spec §2): the portal always shows the
         # shared support contact, never a per-client "personal specialist".
-        response = self.client.get(url)
+        with translation.override("ru"):
+            url = reverse("clients:onboarding_start", kwargs={"token": token})
+            response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertIn("support_email", response.context)
         self.assertContains(response, "Служба поддержки")

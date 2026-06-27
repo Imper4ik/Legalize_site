@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client as DjangoClient
 from django.test import TestCase
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 
 from clients.constants import DocumentType
 from clients.models import Client, ClientActivity, Document, StaffTask
@@ -309,16 +309,17 @@ class P0FixesVerificationTests(TestCase):
         buf.seek(0)
         uploaded = SimpleUploadedFile("confirm.png", buf.read(), content_type="image/png")
 
-        response = c.post(
-            reverse("clients:onboarding_start", kwargs={"token": token}),
-            {
-                "action": "new_card_application",
-                "new_card_application_status": "submitted_with_number",
-                "new_card_case_number": "WSC-CASE-12345",
-                "new_card_submitted_at": today.isoformat(),
-                "new_card_confirmation_file": uploaded
-            }
-        )
+        with translation.override("ru"):
+            response = c.post(
+                reverse("clients:onboarding_start", kwargs={"token": token}),
+                {
+                    "action": "new_card_application",
+                    "new_card_application_status": "submitted_with_number",
+                    "new_card_case_number": "WSC-CASE-12345",
+                    "new_card_submitted_at": today.isoformat(),
+                    "new_card_confirmation_file": uploaded
+                }
+            )
         self.assertEqual(response.status_code, 302)
 
         # Task is still open but title/description are updated
@@ -354,7 +355,8 @@ class P0FixesVerificationTests(TestCase):
             details="Клиент обновил информацию о новой подаче.",
             metadata={"status": "submitted_with_number", "has_case_number": True}
         )
-        self.assertEqual(act.get_event_type_display(), "Новая подача обновлена")
+        with translation.override("ru"):
+            self.assertEqual(act.get_event_type_display(), "Новая подача обновлена")
         self.assertEqual(act.badge_class, "bg-info text-dark")
 
     def test_manager_allowed_to_manage_people(self):

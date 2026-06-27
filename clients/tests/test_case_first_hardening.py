@@ -13,6 +13,7 @@ from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db import connection
 from django.test import TestCase
+from django.utils import translation
 
 from clients.models import Case
 from clients.services.activity import sanitize_activity_metadata
@@ -34,7 +35,8 @@ class DisplayNumberTests(TestCase):
 
     def test_display_number_placeholder_when_unnumbered(self) -> None:
         self.case.authority_case_number = ""
-        self.assertEqual(self.case.display_number, "Дело без номера")
+        with translation.override("ru"):
+            self.assertEqual(self.case.display_number, "Дело без номера")
 
     def test_display_number_uses_authority_number(self) -> None:
         self.case.authority_case_number = "WSC-II-P.6151.138285.2025"
@@ -44,7 +46,8 @@ class DisplayNumberTests(TestCase):
         # internal_number is deprecated and must never surface to staff.
         self.case.internal_number = "INTERNAL-123"
         self.case.authority_case_number = ""
-        self.assertEqual(self.case.display_number, "Дело без номера")
+        with translation.override("ru"):
+            self.assertEqual(self.case.display_number, "Дело без номера")
 
 
 class AuditSummaryNeutralityTests(TestCase):
@@ -722,8 +725,9 @@ class HealthAlertsReadCaseNotClientTests(TestCase):
     def test_alert_fires_when_case_has_no_authority_number(self) -> None:
         # The alert tracks the case authority number (the legacy client field is
         # gone); with no number on the case it fires.
-        titles = [str(a["title"]) for a in self.client_obj.get_health_alerts()]
-        self.assertIn("Новая подача требует проверки дела", titles)
+        with translation.override("ru"):
+            titles = [str(a["title"]) for a in self.client_obj.get_health_alerts()]
+            self.assertIn("Новая подача требует проверки дела", titles)
 
     def test_case_authority_number_clears_alert(self) -> None:
         # …only the case's authority number does.

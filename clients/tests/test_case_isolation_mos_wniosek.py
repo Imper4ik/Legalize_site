@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from django.db import IntegrityError, transaction
 from django.test import TestCase
+from django.utils import translation
 
 from clients.models import Case, MOSApplicationData
 from clients.models.wniosek import WniosekAttachment, WniosekSubmission
@@ -35,7 +36,8 @@ class DisplayNumberLegacyFallbackTests(TestCase):
     def test_placeholder_when_no_number(self) -> None:
         self.case.authority_case_number = ""
         self.case.legacy_case_number = ""
-        self.assertEqual(self.case.display_number, "Дело без номера")
+        with translation.override("ru"):
+            self.assertEqual(self.case.display_number, "Дело без номера")
 
     def test_uuid_never_shown(self) -> None:
         self.case.authority_case_number = ""
