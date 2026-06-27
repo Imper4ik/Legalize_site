@@ -195,8 +195,12 @@ def check_onboarding_session(
     if token == SELF_ONBOARDING_SLUG:
         if request and request.user.is_authenticated and hasattr(request.user, "client_profile"):
             client = request.user.client_profile
+            # Self-onboarding is strictly a client_portal session. Filter by scope
+            # so an older case_link session (bound to a specific case) is never
+            # picked up as the portal session (spec §5).
             session = ClientOnboardingSession.objects.filter(
                 client=client,
+                scope="client_portal",
                 expires_at__gt=timezone.now()
             ).exclude(status__in=["revoked", "expired"]).first()
             if not session:
@@ -708,8 +712,48 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
     token, token_hash = generate_onboarding_token()
     payment = client.payments.filter(status__in=["paid", "partial"]).first()
 
+    def _link_response() -> HttpResponse:
+        if request_is_ajax(request):
+            link = request.build_absolute_uri(
+                reverse("clients:onboarding_start", kwargs={"token": token})
+            )
+            return JsonResponse({
+                "status": "ok",
+                "link": link,
+                "message": _("Ссылка на онбординг скопирована!"),
+            })
+        messages.success(request, _("Ссылка на онбординг успешно создана."))
+        return redirect("clients:client_detail", pk=client.id)
+
+    # Two explicit modes (spec §5). Staff may pass a concrete case; otherwise the
+    # client's single active case is used. When the case is ambiguous (zero or
+    # several active cases) we never silently pick one: a client_portal link is
+    # issued and the client chooses the case in the portal.
+    from clients.services.cases import resolve_active_case_for_client, resolve_single_active_case
+
+    case_uuid = request.POST.get("case_uuid") if request.method == "POST" else None
+    target_case = (
+        resolve_active_case_for_client(client, case_uuid)
+        if case_uuid
+        else resolve_single_active_case(client)
+    )
+
+    if target_case is None:
+        with transaction.atomic():
+            ClientDigitalAccess.objects.get_or_create(client=client)
+            ClientOnboardingSession.objects.create(
+                client=client,
+                payment=payment,
+                scope="client_portal",
+                case=None,
+                token_hash=token_hash,
+                status="created",
+                expires_at=timezone.now() + timedelta(days=7),
+            )
+        return _link_response()
+
     with transaction.atomic():
-        mos_data, _created = _ensure_mos(client)
+        mos_data, _created = _ensure_mos(client, target_case)
         ClientDigitalAccess.objects.get_or_create(client=client)
         if selected_purpose:
             changed_fields = apply_onboarding_purpose_to_client(client, selected_purpose)
@@ -766,18 +810,7 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
             expires_at=timezone.now() + timedelta(days=7),
         )
 
-    if request_is_ajax(request):
-        link = request.build_absolute_uri(
-            reverse("clients:onboarding_start", kwargs={"token": token})
-        )
-        return JsonResponse({
-            "status": "ok",
-            "link": link,
-            "message": _("Ссылка на онбординг скопирована!")
-        })
-
-    messages.success(request, _("Ссылка на онбординг успешно создана."))
-    return redirect("clients:client_detail", pk=client.id)
+    return _link_response()
 
 def onboarding_personal_data(request: HttpRequest, token: str) -> HttpResponse:
     return redirect("clients:onboarding_passport", token=token)

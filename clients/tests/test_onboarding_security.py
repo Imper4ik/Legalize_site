@@ -117,9 +117,12 @@ class OnboardingSecurityTests(TestCase):
         user = User.objects.create_user(email="client_me@example.com", password="password123")
         client = Client.objects.create(first_name="A", last_name="B", email="client_me@example.com", user=user, application_purpose="work")
 
+        # A stale staff-generated case_link session must NOT be reused for
+        # self-onboarding (spec §5).
         raw, hashed = generate_onboarding_token()
         ClientOnboardingSession.objects.create(
             client=client,
+            scope="case_link",
             token_hash=hashed,
             status="created",
             expires_at=timezone.now() + timedelta(days=1),
@@ -128,10 +131,20 @@ class OnboardingSecurityTests(TestCase):
         # Log user in
         self.client.force_login(user)
 
-        # Try accessing with "me" token
+        # Try accessing with "me" token: self-onboarding resolves to a
+        # client_portal session and lands on the case-selection screen.
         url = reverse("clients:onboarding_start", kwargs={"token": "me"})
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.headers["Location"],
+            reverse("clients:onboarding_select_case", kwargs={"token": "me"}),
+        )
+        self.assertTrue(
+            ClientOnboardingSession.objects.filter(
+                client=client, scope="client_portal"
+            ).exists()
+        )
 
     def test_dashboard_redirect_for_client_user(self):
         User = get_user_model()
@@ -149,7 +162,13 @@ class OnboardingSecurityTests(TestCase):
         self.client.force_login(user)
         url = reverse("root_dashboard")
         response = self.client.get(url)
-        self.assertRedirects(response, reverse("clients:onboarding_start", kwargs={"token": "me"}))
+        # The "me" target itself redirects on to the portal case-selection
+        # screen, so the immediate target returns 302 (spec §5).
+        self.assertRedirects(
+            response,
+            reverse("clients:onboarding_start", kwargs={"token": "me"}),
+            target_status_code=302,
+        )
 
     def test_onboarding_returning_client_reuse_user(self):
         # 1. Old archived client with user
