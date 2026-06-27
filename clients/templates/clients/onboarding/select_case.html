@@ -20,7 +20,7 @@
                 <span class="fw-semibold d-block">{{ case.display_number }}</span>
                 <span class="text-muted small">
                     {{ case.get_workflow_stage_display }}
-                    {% if case.application_purpose %}· {{ case.application_purpose }}{% endif %}
+                    {% if case.application_purpose %}· {{ case.get_application_purpose_display }}{% endif %}
                 </span>
             </span>
             <i class="bi bi-chevron-right text-muted" aria-hidden="true"></i>

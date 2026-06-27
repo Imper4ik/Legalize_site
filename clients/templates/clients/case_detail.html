@@ -96,7 +96,7 @@
         <div class="col-md-6"><strong>{% translate "Клиент" %}:</strong> {{ case.client.get_full_name }}</div>
         <div class="col-md-6"><strong>{% translate "Номер в ужонде" %}:</strong> {{ case.authority_case_number|default:"—" }}</div>
         {% if case.legacy_case_number and not case.authority_case_number %}<div class="col-md-6"><strong>{% translate "Номер из предыдущей карточки" %}:</strong> <span class="text-warning">{{ case.legacy_case_number }}</span></div>{% endif %}
-        <div class="col-md-6"><strong>{% translate "Цель подачи" %}:</strong> {{ case.application_purpose|default:"—" }}</div>
+        <div class="col-md-6"><strong>{% translate "Цель подачи" %}:</strong> {{ case.get_application_purpose_display|default:"—" }}</div>
         <div class="col-md-6"><strong>{% translate "Тип заявления" %}:</strong> {{ case.application_type|default:"—" }}</div>
         <div class="col-md-6"><strong>{% translate "Основание пребывания" %}:</strong> {{ case.basis_of_stay|default:"—" }}</div>
         <div class="col-md-6"><strong>{% translate "Компания" %}:</strong> {{ case.company|default:"—" }}</div>

@@ -195,6 +195,18 @@ class Case(SoftDeleteModel):
             return legacy
         return str(_("Дело без номера"))
 
+    def get_application_purpose_display(self) -> str:
+        """Localized purpose label; never a raw code like "work" (spec §15).
+
+        Known purpose codes (study/work/family) are mapped to their localized
+        labels; any other free-text basis is shown as entered.
+        """
+        from clients.models.client import Client
+
+        choices = dict(Client.APPLICATION_PURPOSE_CHOICES)
+        value = self.application_purpose or ""
+        return str(choices.get(value, value))
+
     @staticmethod
     def normalize_case_number(case_number: str) -> str:
         return case_number.strip().upper().replace(" ", "")
