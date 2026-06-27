@@ -7,9 +7,11 @@ from typing import Any, cast
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
-from clients.models import Case, Client, ClientDocumentRequirement, Document, Payment, Reminder
+from clients.constants import FINISHED_WORKFLOW_STAGES
+from clients.models import Case, Client, ClientDocumentRequirement, Document, Payment, Reminder, StaffTask
 from clients.services.custom_document_requirements import sync_custom_document_requirement_reminder
 from clients.services.notifications import (
     _get_missing_documents_context,
@@ -17,6 +19,8 @@ from clients.services.notifications import (
     send_legal_stay_email,
     send_missing_documents_email,
 )
+from clients.services.tasks import create_auto_task
+from clients.services.workday import FINGERPRINTS_FOLLOWUP_DAYS
 from clients.services.zus import format_zus_months, missing_zus_months
 
 logger = logging.getLogger(__name__)
@@ -25,7 +29,7 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     help = "Create daily document, payment, ZUS RCA, and missing-document reminders safely."
 
-    SECTIONS = ("payments", "documents", "zus", "missing-docs", "legal-stay", "custom-documents")
+    SECTIONS = ("payments", "documents", "zus", "missing-docs", "legal-stay", "custom-documents", "fingerprints-followup")
 
     def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
@@ -86,6 +90,14 @@ class Command(BaseCommand):
                         self.create_legal_stay_reminders()
             if "custom-documents" in selected_sections:
                 self.sync_custom_document_requirement_reminders(dry_run=dry_run)
+
+            if "fingerprints-followup" in selected_sections:
+                self.stdout.write(self.style.HTTP_INFO("-> Checking stale waiting-decision cases after fingerprints..."))
+                if dry_run:
+                    self.create_fingerprints_followup_tasks(dry_run=True)
+                else:
+                    with transaction.atomic():
+                        self.create_fingerprints_followup_tasks()
 
             self.stdout.write(self.style.SUCCESS("--- Reminder update completed ---"))
         except Exception as exc:
@@ -351,6 +363,83 @@ class Command(BaseCommand):
 
         prefix = "DRY RUN: would upsert" if dry_run else "Upserted"
         self.stdout.write(self.style.SUCCESS(f"{prefix} {count} legal stay reminders."))
+
+    def create_fingerprints_followup_tasks(self, *, dry_run: bool = False) -> None:
+        """Proactively surface cases stuck in waiting_decision after fingerprints.
+
+        The Workday dashboard already *shows* these cases, but that is a pull
+        surface — a staff member has to open it. For an autonomous base we also
+        *push* the signal: an idempotent ``fingerprints_followup`` StaffTask is
+        created once per stale case (create_auto_task dedupes on the open task),
+        and previously created tasks are auto-closed once a decision lands or the
+        case leaves the waiting stage. No human intervention is required either
+        to raise or to clear the alert.
+        """
+        today = timezone.localdate()
+        cutoff = today - timedelta(days=FINGERPRINTS_FOLLOWUP_DAYS)
+
+        # Self-heal first: close auto follow-up tasks whose case has since
+        # received a decision or moved to a finished stage.
+        stale_tasks = StaffTask.objects.filter(
+            task_type="fingerprints_followup",
+            status__in=["open", "in_progress"],
+            is_auto_created=True,
+        ).filter(
+            Q(case__decision_date__isnull=False) | Q(case__workflow_stage__in=FINISHED_WORKFLOW_STAGES)
+        )
+        closed_count = 0
+        for task in stale_tasks.iterator():
+            closed_count += 1
+            if not dry_run:
+                task.mark_done()
+
+        # Raise: one task per case still waiting for a decision past the window.
+        cases = Case.objects.production().select_related("client").filter(
+            workflow_stage="waiting_decision",
+            fingerprints_date__isnull=False,
+            fingerprints_date__lte=cutoff,
+            decision_date__isnull=True,
+            client__archived_at__isnull=True,
+        )
+        created_count = 0
+        for case in cases.iterator():
+            days_waiting = (today - case.fingerprints_date).days
+            if dry_run:
+                already = StaffTask.objects.filter(
+                    client=case.client,
+                    case=case,
+                    task_type="fingerprints_followup",
+                    status__in=["open", "in_progress"],
+                ).exists()
+                if not already:
+                    created_count += 1
+                continue
+
+            task = create_auto_task(
+                case.client,
+                "fingerprints_followup",
+                case=case,
+                description=(
+                    f"Дело в статусе ожидания решения уже {days_waiting} дней после отпечатков "
+                    f"(отпечатки: {case.fingerprints_date:%d.%m.%Y}), решение не зафиксировано. "
+                    "Проверьте статус в urzędzie и обновите карточку дела."
+                ),
+            )
+            if task is not None:
+                created_count += 1
+                logger.info(
+                    "notification created: task=fingerprints_followup case_pk=%s client_id=%s days_waiting=%s",
+                    case.pk,
+                    case.client_id,
+                    days_waiting,
+                )
+
+        prefix = "DRY RUN: would create" if dry_run else "Created"
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"{prefix} {created_count} fingerprints follow-up tasks; closed {closed_count} resolved."
+            )
+        )
 
     def sync_custom_document_requirement_reminders(self, *, dry_run: bool = False) -> None:
         counts: defaultdict[str, int] = defaultdict(int)

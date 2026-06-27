@@ -283,19 +283,10 @@ def test_weekly_document_reminder_loop_command_runs_document_sections():
     with patch("clients.management.commands.run_weekly_document_reminders.call_command") as call_mock:
         call_command("run_weekly_document_reminders", "--force")
 
-    call_mock.assert_called_once_with(
-        "update_reminders",
-        "--only",
-        "missing-docs",
-        "--only",
-        "zus",
-        "--only",
-        "documents",
-        "--only",
-        "legal-stay",
-        "--only",
-        "custom-documents",
-    )
+    # The daily loop now runs the full update_reminders section set (no --only),
+    # keeping the in-process loop in parity with the HTTP cron (single source of
+    # truth). This covers payments and fingerprints-followup autonomously too.
+    call_mock.assert_called_once_with("update_reminders")
 
 
 @pytest.mark.django_db

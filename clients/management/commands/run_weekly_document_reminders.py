@@ -14,7 +14,12 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     help = "Run daily document/ZUS RCA/legal-stay reminder checks, optionally as a long-running loop."
 
-    UPDATE_REMINDER_ARGS = ("--only", "missing-docs", "--only", "zus", "--only", "documents", "--only", "legal-stay", "--only", "custom-documents")
+    # Single source of truth for the daily set: run the full update_reminders
+    # command (its own Command.SECTIONS), with no --only allowlist. This keeps
+    # the in-process automation loop in parity with the HTTP /cron/update-reminders
+    # endpoint so a section can never silently run on one contour but not the
+    # other. Every section is idempotent, so running them all daily is safe.
+    UPDATE_REMINDER_ARGS: tuple[str, ...] = ()
 
     def add_arguments(self, parser: Any) -> None:
         parser.add_argument(
