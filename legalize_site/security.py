@@ -161,7 +161,15 @@ class ContentSecurityPolicyMiddleware:
                 else "Content-Security-Policy"
             )
             if header_name not in response:
-                response[header_name] = self.header_value
+                policy = self.header_value
+                # Bind the per-request nonce to script-src so inline scripts that
+                # carry nonce="{{ request.csp_nonce }}" execute under a policy that
+                # no longer needs 'unsafe-inline' for scripts (audit P-02).
+                if "script-src " in policy and "'nonce-" not in policy:
+                    policy = policy.replace(
+                        "script-src ", f"script-src 'nonce-{nonce}' ", 1
+                    )
+                response[header_name] = policy
 
         # Attach the strict report-only policy only when the main policy is being
         # enforced, to avoid emitting two competing Report-Only headers.

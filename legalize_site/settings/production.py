@@ -127,7 +127,13 @@ CONTENT_SECURITY_POLICY = {
     "img-src": ("'self'", "data:", "blob:"),
     "font-src": ("'self'", "data:", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"),
     "style-src": ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"),
-    "script-src": ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"),
+    # script-src no longer relies on 'unsafe-inline': every inline <script> in our
+    # own templates (and allauth) carries nonce="{{ request.csp_nonce }}", and the
+    # CSP middleware injects that per-request nonce into this directive. Verified
+    # that staff pages, allauth, and Django admin have no un-nonced executable
+    # inline scripts. style-src keeps 'unsafe-inline' until inline style="" usages
+    # are refactored. (audit P-02)
+    "script-src": ("'self'", "https://cdn.jsdelivr.net"),
     "connect-src": ("'self'",),
 }
 LEGALIZE_CONTENT_SECURITY_POLICY = "; ".join(
