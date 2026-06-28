@@ -687,6 +687,25 @@ class Client(SoftDeleteModel):
                 }
             )
 
+        # ZUS RCA completeness is per-month, not "any upload": a client in
+        # waiting_decision needs a ZUS RCA for every required month, so the row
+        # must stay incomplete while a month is missing even if some files exist.
+        zus_missing: list[Any] = []
+        zus_code = ""
+        try:
+            from clients.constants import DocumentType
+            from clients.services.zus import missing_zus_months
+
+            zus_code = DocumentType.ZUS_RCA_OR_INSURANCE.value
+            zus_subject = case
+            if zus_subject is None:
+                from clients.services.cases import resolve_single_active_case
+                zus_subject = resolve_single_active_case(self)
+            if zus_subject is not None:
+                zus_missing = list(missing_zus_months(zus_subject))
+        except Exception:
+            zus_missing = []
+
         # Flag, per checklist row, which uploaded documents need staff attention
         # so the collapsed list distinguishes an OCR review from a plain manual
         # verification (one badge each, never double-counting the same file).
@@ -711,6 +730,17 @@ class Client(SoftDeleteModel):
             # The exact document a status badge should jump to ("веди на проблему").
             row["ocr_review_doc_id"] = ocr_doc.id if ocr_doc is not None else None
             row["verification_doc_id"] = verify_doc.id if verify_doc is not None else None
+
+            # ZUS RCA: a missing required month keeps the row incomplete (not green)
+            # even when some months are already uploaded.
+            row["zus_missing_count"] = 0
+            if zus_missing and zus_code and row.get("code") == zus_code:
+                from clients.services.zus import format_zus_months
+
+                row["is_complete"] = False
+                row["zus_missing_months"] = zus_missing
+                row["zus_missing_count"] = len(zus_missing)
+                row["zus_missing_label"] = format_zus_months(zus_missing)
 
         return status_list
 

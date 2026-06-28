@@ -32,7 +32,9 @@
       {% if item.is_submitted %}
       <span class="badge bg-info text-dark">{% translate "Сдано" %}</span>
       {% endif %}
-      {% if not item.is_complete %}
+      {% if item.zus_missing_count %}
+      <span class="badge bg-danger" title="{% translate 'Отсутствуют месяцы ZUS RCA:' %} {{ item.zus_missing_label }}"><i class="bi bi-calendar-x me-1"></i>{% blocktranslate count counter=item.zus_missing_count %}Не хватает {{ counter }} месяца{% plural %}Не хватает {{ counter }} месяцев{% endblocktranslate %}</span>
+      {% elif not item.is_complete %}
       <span class="badge bg-danger">{% translate "Отсутствует" %}</span>
       {% endif %}
       {% if item.has_ocr_review %}
