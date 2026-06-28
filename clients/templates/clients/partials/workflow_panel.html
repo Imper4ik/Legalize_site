@@ -46,19 +46,19 @@
                 <div class="d-flex flex-wrap gap-1">
                   {% for action in alert.actions %}
                     {% if action.is_ocr_review %}
-                      <button type="button" class="btn btn-sm btn-outline-dark review-ocr-data-btn"
+                      <button type="button" class="btn btn-sm btn-alert-action review-ocr-data-btn"
                               data-doc-id="{{ action.doc_id }}" data-doc-type="{{ action.doc_type }}">
                         {{ action.label }}
                       </button>
                     {% else %}
-                      <a href="{{ action.url }}" class="btn btn-sm btn-outline-dark"{% if action.target %} target="{{ action.target }}"{% endif %}>
+                      <a href="{{ action.url }}" class="btn btn-sm btn-alert-action"{% if action.target %} target="{{ action.target }}"{% endif %}>
                         {{ action.label }}
                       </a>
                     {% endif %}
                   {% endfor %}
                 </div>
               {% elif alert.action_label and alert.action_url %}
-                <a href="{{ alert.action_url }}" class="btn btn-sm btn-outline-dark">
+                <a href="{{ alert.action_url }}" class="btn btn-sm btn-alert-action">
                   {{ alert.action_label }}
                 </a>
               {% endif %}

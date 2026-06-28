@@ -366,3 +366,18 @@ a { color: var(--brand-1); }
   outline: 2px solid rgba(13, 110, 253, 0.5);
   outline-offset: 1px;
 }
+
+/* Action buttons inside coloured alert cards ("Риски"): inherit the alert's
+   own text colour so the label stays readable in both light and dark themes
+   (btn-outline-dark was invisible on the dark alert background). */
+.btn-alert-action {
+  color: inherit;
+  background-color: transparent;
+  border: 1px solid currentColor;
+}
+.btn-alert-action:hover,
+.btn-alert-action:focus-visible {
+  color: inherit;
+  border-color: currentColor;
+  background-color: rgba(127, 127, 127, 0.18);
+}
