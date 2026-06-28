@@ -243,6 +243,9 @@
           <td data-label="{% translate 'Номер дела' %}">
             <a href="{% url 'clients:client_detail' pk=client.pk %}" class="client-cell-link text-decoration-none">
               <strong>{{ client.safe_case_number|default:"—" }}</strong>
+              {% if client.case_number_is_legacy %}
+                <i class="bi bi-exclamation-triangle-fill text-warning ms-1" title="{% translate 'Номер из предыдущей карточки — подтвердите и сохраните как номер дела в ужонде' %}"></i>
+              {% endif %}
             </a>
           </td>
           <td data-label="{% translate 'Основание' %}">

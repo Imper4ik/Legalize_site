@@ -342,3 +342,15 @@ a { color: var(--brand-1); }
     font-size: 1.08rem;
   }
 }
+
+/* Brief highlight when a cross-tab "attention" action jumps to its target
+   (works in both light and dark themes via theme tokens). */
+@keyframes attention-flash-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.0); }
+  20%  { box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.45); }
+  100% { box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.0); }
+}
+.attention-flash {
+  animation: attention-flash-pulse 1.6s ease-out 1;
+  border-radius: 0.5rem;
+}

@@ -177,7 +177,13 @@ class ClientListView(StaffRequiredMixin, ListView):
         context["document_filter"] = self.request.GET.get("document", "")
         context["attention_filter"] = self.request.GET.get("attention", "")
         for client in context.get("clients", []):
-            client.safe_case_number = (safe_encrypted_attr(client.active_case, "authority_case_number", default="—") if client.active_case is not None else "—")
+            # Show the same number the case detail shows: authority → legacy → "—"
+            # so the list never says "—" while the case actually carries a number.
+            case = client.active_case
+            authority = safe_encrypted_attr(case, "authority_case_number", default="") if case is not None else ""
+            legacy = safe_encrypted_attr(case, "legacy_case_number", default="") if case is not None else ""
+            client.safe_case_number = authority or legacy or "—"
+            client.case_number_is_legacy = bool(not authority and legacy)
             attach_onboarding_purpose_review_state(client)
         context["companies"] = Company.objects.all()
         return context
