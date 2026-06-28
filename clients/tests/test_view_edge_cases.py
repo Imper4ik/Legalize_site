@@ -236,10 +236,11 @@ class ClientViewEdgeCaseTests(TestCase):
         list_url = reverse("clients:client_list")
         response = self.client.get(list_url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, f"{list_url}?document=ocr_review")
-        self.assertContains(response, f"{list_url}?document=ocr_pending")
-        self.assertContains(response, f"{list_url}?document=ocr_warning")
-        self.assertContains(response, f"{list_url}?document=ocr_failed")
+        # Each category has a single matching client, so the menu links straight
+        # to that client's documents tab instead of a filtered list.
+        for client in (review_client, pending_client, warning_client, failed_client):
+            deep = reverse("clients:client_detail", kwargs={"pk": client.pk}) + "?view=person#documentAccordion"
+            self.assertContains(response, deep)
         self.assertEqual(response.context["client_attention_count"], 4)
 
         filtered_response = self.client.get(list_url, {"document": "ocr_review"})
@@ -367,9 +368,30 @@ class ClientViewEdgeCaseTests(TestCase):
         list_url = reverse("clients:client_list")
         response = self.client.get(list_url)
         self.assertEqual(response.status_code, 200)
-        for attention_filter in clients_by_filter:
-            self.assertContains(response, f"{list_url}?attention={attention_filter}")
+        # With a single matching client per category, the menu links straight to
+        # that client's relevant tab instead of a filtered list.
+        anchors = {
+            "legal_stay": "#overview",
+            "expired_documents": "#documentAccordion",
+            "expiring_documents": "#documentAccordion",
+            "unverified_documents": "#documentAccordion",
+            "overdue_payments": "#payment-list-container",
+            "fingerprints_email": "#overview",
+            "overdue_tasks": "#overview",
+            "wezwanie_missing_case": "#overview",
+            "new_card_missing_case": "#overview",
+        }
+        for attention_filter, expected_client in clients_by_filter.items():
             self.assertEqual(response.context["attention_counts"][attention_filter], 1)
+            if attention_filter in anchors:
+                deep = (
+                    reverse("clients:client_detail", kwargs={"pk": expected_client.pk})
+                    + "?view=person"
+                    + anchors[attention_filter]
+                )
+                self.assertContains(response, deep)
+            else:
+                self.assertContains(response, f"{list_url}?attention={attention_filter}")
 
         for attention_filter, expected_client in clients_by_filter.items():
             filtered_response = self.client.get(list_url, {"attention": attention_filter})

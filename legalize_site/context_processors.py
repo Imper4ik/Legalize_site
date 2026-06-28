@@ -10,6 +10,21 @@ from django.utils import translation
 from django.utils.translation import gettext as _
 
 
+def _attention_item_url(filtered_qs: Any, list_url: str, count: int, anchor: str) -> str:
+    """URL for a client-attention notification.
+
+    With a single matching client, link straight to that client's relevant tab
+    (the person view keeps the client page so the tab anchor and the clickable
+    status badges work) instead of a filtered list — so the staffer lands where
+    the fix is. With several matches, fall back to the filtered list.
+    """
+    if count == 1:
+        client = filtered_qs.only("pk").first()
+        if client is not None:
+            return f"{reverse('clients:client_detail', kwargs={'pk': client.pk})}?view=person{anchor}"
+    return list_url
+
+
 def feature_flags(request: HttpRequest) -> dict[str, Any]:
     """Expose feature flags needed by templates."""
 
@@ -34,7 +49,7 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
 
     from clients.models import Client, StaffTask
     from clients.services.access import accessible_clients_queryset, accessible_tasks_queryset
-    from clients.services.attention import count_client_attention_filters
+    from clients.services.attention import apply_client_attention_filter, count_client_attention_filters
     from clients.services.onboarding_purposes import onboarding_purpose_mismatch_q
 
     language = translation.get_language() or getattr(settings, "LANGUAGE_CODE", "")
@@ -94,7 +109,12 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
             items.append({
                 "label": _("Истекает легальное пребывание"),
                 "count": attention_counts["legal_stay"],
-                "url": f"{client_list_url}?attention=legal_stay",
+                "url": _attention_item_url(
+                    apply_client_attention_filter(qs, "legal_stay"),
+                    f"{client_list_url}?attention=legal_stay",
+                    attention_counts["legal_stay"],
+                    "#overview",
+                ),
                 "icon": "bi-calendar-x",
                 "level": "danger",
             })
@@ -102,7 +122,12 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
             items.append({
                 "label": _("Просроченные документы"),
                 "count": attention_counts["expired_documents"],
-                "url": f"{client_list_url}?attention=expired_documents",
+                "url": _attention_item_url(
+                    apply_client_attention_filter(qs, "expired_documents"),
+                    f"{client_list_url}?attention=expired_documents",
+                    attention_counts["expired_documents"],
+                    "#documentAccordion",
+                ),
                 "icon": "bi-file-earmark-x",
                 "level": "danger",
             })
@@ -110,7 +135,12 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
             items.append({
                 "label": _("Документы скоро истекают"),
                 "count": attention_counts["expiring_documents"],
-                "url": f"{client_list_url}?attention=expiring_documents",
+                "url": _attention_item_url(
+                    apply_client_attention_filter(qs, "expiring_documents"),
+                    f"{client_list_url}?attention=expiring_documents",
+                    attention_counts["expiring_documents"],
+                    "#documentAccordion",
+                ),
                 "icon": "bi-file-earmark-medical",
                 "level": "warning",
             })
@@ -118,7 +148,12 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
             items.append({
                 "label": _("Документы ждут проверки"),
                 "count": attention_counts["unverified_documents"],
-                "url": f"{client_list_url}?attention=unverified_documents",
+                "url": _attention_item_url(
+                    apply_client_attention_filter(qs, "unverified_documents"),
+                    f"{client_list_url}?attention=unverified_documents",
+                    attention_counts["unverified_documents"],
+                    "#documentAccordion",
+                ),
                 "icon": "bi-file-earmark-check",
                 "level": "warning",
             })
@@ -126,7 +161,12 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
             items.append({
                 "label": _("Просроченные оплаты"),
                 "count": attention_counts["overdue_payments"],
-                "url": f"{client_list_url}?attention=overdue_payments",
+                "url": _attention_item_url(
+                    apply_client_attention_filter(qs, "overdue_payments"),
+                    f"{client_list_url}?attention=overdue_payments",
+                    attention_counts["overdue_payments"],
+                    "#payment-list-container",
+                ),
                 "icon": "bi-credit-card-2-back",
                 "level": "warning",
             })
@@ -142,7 +182,12 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
             items.append({
                 "label": _("Письмо по отпечаткам не отправлено"),
                 "count": attention_counts["fingerprints_email"],
-                "url": f"{client_list_url}?attention=fingerprints_email",
+                "url": _attention_item_url(
+                    apply_client_attention_filter(qs, "fingerprints_email"),
+                    f"{client_list_url}?attention=fingerprints_email",
+                    attention_counts["fingerprints_email"],
+                    "#overview",
+                ),
                 "icon": "bi-fingerprint",
                 "level": "warning",
             })
@@ -150,7 +195,12 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
             items.append({
                 "label": _("Просроченные задачи"),
                 "count": attention_counts["overdue_tasks"],
-                "url": f"{client_list_url}?attention=overdue_tasks",
+                "url": _attention_item_url(
+                    apply_client_attention_filter(qs, "overdue_tasks"),
+                    f"{client_list_url}?attention=overdue_tasks",
+                    attention_counts["overdue_tasks"],
+                    "#overview",
+                ),
                 "icon": "bi-list-task",
                 "level": "danger",
             })
@@ -158,7 +208,12 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
             items.append({
                 "label": _("Wezwanie без номера дела"),
                 "count": attention_counts["wezwanie_missing_case"],
-                "url": f"{client_list_url}?attention=wezwanie_missing_case",
+                "url": _attention_item_url(
+                    apply_client_attention_filter(qs, "wezwanie_missing_case"),
+                    f"{client_list_url}?attention=wezwanie_missing_case",
+                    attention_counts["wezwanie_missing_case"],
+                    "#overview",
+                ),
                 "icon": "bi-journal-text",
                 "level": "warning",
             })
@@ -166,7 +221,12 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
             items.append({
                 "label": _("Новая подача без основного номера"),
                 "count": attention_counts["new_card_missing_case"],
-                "url": f"{client_list_url}?attention=new_card_missing_case",
+                "url": _attention_item_url(
+                    apply_client_attention_filter(qs, "new_card_missing_case"),
+                    f"{client_list_url}?attention=new_card_missing_case",
+                    attention_counts["new_card_missing_case"],
+                    "#overview",
+                ),
                 "icon": "bi-file-earmark-plus",
                 "level": "warning",
             })
@@ -206,7 +266,12 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
             items.append({
                 "label": _("OCR требует подтверждения"),
                 "count": ocr_review_count,
-                "url": f"{client_list_url}?document=ocr_review",
+                "url": _attention_item_url(
+                    qs.filter(documents__awaiting_confirmation=True, documents__archived_at__isnull=True).distinct(),
+                    f"{client_list_url}?document=ocr_review",
+                    ocr_review_count,
+                    "#documentAccordion",
+                ),
                 "icon": "bi-eye",
                 "level": "warning",
             })
@@ -214,7 +279,12 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
             items.append({
                 "label": _("OCR предупреждения"),
                 "count": ocr_warning_count,
-                "url": f"{client_list_url}?document=ocr_warning",
+                "url": _attention_item_url(
+                    qs.filter(documents__ocr_name_mismatch=True, documents__archived_at__isnull=True).distinct(),
+                    f"{client_list_url}?document=ocr_warning",
+                    ocr_warning_count,
+                    "#documentAccordion",
+                ),
                 "icon": "bi-exclamation-triangle",
                 "level": "danger",
             })
@@ -222,7 +292,12 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
             items.append({
                 "label": _("OCR обрабатывается"),
                 "count": ocr_pending_count,
-                "url": f"{client_list_url}?document=ocr_pending",
+                "url": _attention_item_url(
+                    qs.filter(documents__ocr_status="pending", documents__archived_at__isnull=True).distinct(),
+                    f"{client_list_url}?document=ocr_pending",
+                    ocr_pending_count,
+                    "#documentAccordion",
+                ),
                 "icon": "bi-hourglass-split",
                 "level": "info",
             })
@@ -231,7 +306,12 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
             items.append({
                 "label": _("OCR с ошибкой"),
                 "count": ocr_failed_count,
-                "url": f"{client_list_url}?document=ocr_failed",
+                "url": _attention_item_url(
+                    qs.filter(documents__ocr_status="failed", documents__archived_at__isnull=True).distinct(),
+                    f"{client_list_url}?document=ocr_failed",
+                    ocr_failed_count,
+                    "#documentAccordion",
+                ),
                 "icon": "bi-exclamation-octagon",
                 "level": "danger",
             })
