@@ -292,11 +292,14 @@ def test_health_alert_ocr_and_wezwanie_actions(db):
     assert any(act["doc_id"] == doc_passport.id and act["is_ocr_review"] for act in ocr_alert["actions"])
     assert any(act["doc_id"] == doc_wezwanie.id and act["is_ocr_review"] for act in ocr_alert["actions"])
 
+    case_edit_url = reverse("clients:case_edit", kwargs={"pk": client.cases.get().pk})
+
     wezwanie_alert = next(a for a in alerts if a["title"] == "Есть wezwanie без номера дела")
     assert "actions" in wezwanie_alert
-    assert len(wezwanie_alert["actions"]) == 1
-    assert wezwanie_alert["actions"][0]["doc_id"] == doc_wezwanie.id
-    assert wezwanie_alert["actions"][0]["is_ocr_review"] is True
+    # The OCR-review action for the wezwanie ...
+    assert any(act.get("doc_id") == doc_wezwanie.id and act.get("is_ocr_review") for act in wezwanie_alert["actions"])
+    # ... plus a direct "fill the number manually" action to the case edit form.
+    assert any(act.get("url") == case_edit_url for act in wezwanie_alert["actions"])
 
     doc_wezwanie.awaiting_confirmation = False
     doc_wezwanie.save()
@@ -304,8 +307,9 @@ def test_health_alert_ocr_and_wezwanie_actions(db):
     alerts = client.get_health_alerts()
     wezwanie_alert = next(a for a in alerts if a["title"] == "Есть wezwanie без номера дела")
     assert "actions" in wezwanie_alert
-    assert wezwanie_alert["actions"][0]["url"] == reverse("clients:document_preview", kwargs={"doc_id": doc_wezwanie.id})
-    assert wezwanie_alert["actions"][0].get("is_ocr_review") is not True
+    preview_url = reverse("clients:document_preview", kwargs={"doc_id": doc_wezwanie.id})
+    assert any(act.get("url") == preview_url and act.get("is_ocr_review") is not True for act in wezwanie_alert["actions"])
+    assert any(act.get("url") == case_edit_url for act in wezwanie_alert["actions"])
 
 
 

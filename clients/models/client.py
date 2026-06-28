@@ -1019,6 +1019,13 @@ class Client(SoftDeleteModel):
                         "url": reverse("clients:document_preview", kwargs={"doc_id": doc.id}),
                         "target": "_blank",
                     })
+            # Direct path to actually enter the number ("заполните case number
+            # вручную"): the case edit form, where authority_case_number lives.
+            if active_case is not None:
+                actions.append({
+                    "label": gettext("Заполнить номер дела"),
+                    "url": reverse("clients:case_edit", kwargs={"pk": active_case.pk}),
+                })
             alerts.append(
                 {
                     "level": "warning",
@@ -1053,6 +1060,13 @@ class Client(SoftDeleteModel):
                     "Клиент сообщил о новой подаче на карту пребывания, но номер дела ещё не заполнен. "
                     "Если клиент уже был на отпечатках, проверьте присоединение к делу."
                 )
+            new_card_actions = []
+            if active_case is not None:
+                from django.utils.translation import gettext
+                new_card_actions.append({
+                    "label": gettext("Заполнить номер дела"),
+                    "url": reverse("clients:case_edit", kwargs={"pk": active_case.pk}),
+                })
             alerts.append(
                 {
                     "level": "warning",
@@ -1060,6 +1074,7 @@ class Client(SoftDeleteModel):
                     "message": new_card_message,
                     "action_label": _("Запросить номер дела у клиента"),
                     "action_url": "#history",
+                    "actions": new_card_actions,
                 }
             )
 
