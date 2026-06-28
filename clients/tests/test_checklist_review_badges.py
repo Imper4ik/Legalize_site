@@ -49,6 +49,11 @@ class ChecklistReviewBadgeTests(TestCase):
         self.assertFalse(umowa["has_ocr_review"])
         self.assertTrue(umowa["needs_verification"])
 
+    def test_checklist_rows_expose_the_problem_document_ids(self) -> None:
+        rows = {r["code"]: r for r in self.client_obj.get_document_checklist(case=self.case)}
+        self.assertEqual(rows["passport"]["ocr_review_doc_id"], self.ocr_doc.id)
+        self.assertEqual(rows["oryginaly_umow_o_prace"]["verification_doc_id"], self.review_doc.id)
+
     def test_case_detail_renders_both_badges(self) -> None:
         self.client.login(email=self.staff.email, password=TEST_USER_CREDENTIAL)
         resp = self.client.get(reverse("clients:case_detail", kwargs={"pk": self.case.pk}))
@@ -56,3 +61,7 @@ class ChecklistReviewBadgeTests(TestCase):
         body = resp.content.decode()
         self.assertIn("OCR-проверка", body)
         self.assertIn("Ждёт проверки", body)
+        # The badges are clickable and point at the exact problem document.
+        self.assertIn('data-jump-doc="%d" data-jump-action="ocr"' % self.ocr_doc.id, body)
+        self.assertIn('data-jump-doc="%d" data-jump-action="verify"' % self.review_doc.id, body)
+        self.assertIn('id="doc-row-%d"' % self.ocr_doc.id, body)

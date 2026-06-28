@@ -695,15 +695,22 @@ class Client(SoftDeleteModel):
                 doc for doc in row.get("documents", [])
                 if getattr(doc, "archived_at", None) is None
             ]
-            row["has_ocr_review"] = any(
-                getattr(doc, "awaiting_confirmation", False) or doc.ocr_status == "failed"
-                for doc in active_docs
+            ocr_doc = next(
+                (doc for doc in active_docs
+                 if getattr(doc, "awaiting_confirmation", False) or doc.ocr_status == "failed"),
+                None,
             )
-            row["needs_verification"] = any(
-                doc.computed_status == "pending_review"
-                and not getattr(doc, "awaiting_confirmation", False)
-                for doc in active_docs
+            verify_doc = next(
+                (doc for doc in active_docs
+                 if doc.computed_status == "pending_review"
+                 and not getattr(doc, "awaiting_confirmation", False)),
+                None,
             )
+            row["has_ocr_review"] = ocr_doc is not None
+            row["needs_verification"] = verify_doc is not None
+            # The exact document a status badge should jump to ("веди на проблему").
+            row["ocr_review_doc_id"] = ocr_doc.id if ocr_doc is not None else None
+            row["verification_doc_id"] = verify_doc.id if verify_doc is not None else None
 
         return status_list
 

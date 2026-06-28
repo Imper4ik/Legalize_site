@@ -114,8 +114,8 @@
               {% if item.is_uploaded %}<span class="badge bg-success me-1">{{ item.documents|length }} {% translate "шт." %}</span>{% endif %}
               {% if item.is_submitted %}<span class="badge bg-info text-dark me-1">{% translate "Сдано" %}</span>{% endif %}
               {% if not item.is_complete %}<span class="badge bg-danger me-1">{% translate "Отсутствует" %}</span>{% endif %}
-              {% if item.has_ocr_review %}<span class="badge bg-danger me-1" title="{% translate 'Распознанные OCR данные нужно подтвердить' %}"><i class="bi bi-cpu me-1"></i>{% translate "OCR-проверка" %}</span>{% endif %}
-              {% if item.needs_verification %}<span class="badge bg-warning text-dark me-1" title="{% translate 'Загруженный файл нужно проверить и подтвердить' %}"><i class="bi bi-hourglass-split me-1"></i>{% translate "Ждёт проверки" %}</span>{% endif %}
+              {% if item.has_ocr_review %}<span class="badge bg-danger me-1 checklist-jump" role="button" tabindex="0" data-jump-doc="{{ item.ocr_review_doc_id }}" data-jump-action="ocr" title="{% translate 'Перейти к документу: подтвердите распознанные OCR данные' %}"><i class="bi bi-cpu me-1"></i>{% translate "OCR-проверка" %}</span>{% endif %}
+              {% if item.needs_verification %}<span class="badge bg-warning text-dark me-1 checklist-jump" role="button" tabindex="0" data-jump-doc="{{ item.verification_doc_id }}" data-jump-action="verify" title="{% translate 'Перейти к документу: проверьте и подтвердите файл' %}"><i class="bi bi-hourglass-split me-1"></i>{% translate "Ждёт проверки" %}</span>{% endif %}
               {% if item.is_custom_submission %}<span class="badge bg-secondary me-1">{% translate "Свой" %}</span>{% endif %}
             </button>
           </h2>
@@ -124,7 +124,7 @@
               {% if item.documents %}
               <ul class="list-group list-group-flush">
                 {% for doc in item.documents %}
-                <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2 bg-transparent">
+                <li id="doc-row-{{ doc.id }}" class="list-group-item d-flex justify-content-between align-items-center flex-wrap gap-2 bg-transparent">
                   <span>
                     {% translate "Файл от" %} {{ doc.uploaded_at|date:"d.m.Y H:i" }}
                     <span class="badge {% if doc.verified %}bg-success{% else %}bg-warning text-dark{% endif %} ms-2">{% if doc.verified %}{% translate "Проверен" %}{% else %}{% translate "Ожидает проверки" %}{% endif %}</span>
@@ -286,4 +286,5 @@
 </div>
 
 <script src="{% static 'clients/js/pages/case_detail.js' %}"></script>
+<script src="{% static 'clients/js/client/checklist_jump.js' %}" defer></script>
 {% endblock %}

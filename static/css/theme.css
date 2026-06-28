@@ -354,3 +354,15 @@ a { color: var(--brand-1); }
   animation: attention-flash-pulse 1.6s ease-out 1;
   border-radius: 0.5rem;
 }
+
+/* Status badges that jump to the problematic document are clickable. */
+.checklist-jump {
+  cursor: pointer;
+  user-select: none;
+}
+.checklist-jump:hover,
+.checklist-jump:focus-visible {
+  filter: brightness(1.08);
+  outline: 2px solid rgba(13, 110, 253, 0.5);
+  outline-offset: 1px;
+}

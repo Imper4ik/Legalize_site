@@ -29,6 +29,10 @@ def _client_url(client_id: int, anchor: str = "") -> str:
     return f"{reverse('clients:client_detail', kwargs={'pk': client_id})}{anchor}"
 
 
+def _case_url(case_id: int) -> str:
+    return reverse("clients:case_detail", kwargs={"pk": case_id})
+
+
 def _section(key: str, title: str, description: str, icon: str, items: list[dict[str, Any]], action_url: str = "") -> dict[str, Any]:
     return {
         "key": key,
@@ -127,6 +131,7 @@ def _missing_zus_clients(user: AbstractBaseUser | AnonymousUser | None, today: d
                 "title": _("ZUS RCA"),
                 "detail": format_zus_months(months),
                 "case_label": case.display_number,
+                "case_url": _case_url(case.pk),
                 "url": _client_url(case.client_id, "#documentAccordion"),
                 "action_label": _("Запросить"),
             }
@@ -184,6 +189,7 @@ def _new_card_missing_case(user: AbstractBaseUser | AnonymousUser | None, limit:
                 "title": _("Новая подача без основного номера"),
                 "detail": " · ".join(str(part) for part in detail_parts),
                 "case_label": cast("Case", mos_data.case).display_number,
+                "case_url": _case_url(cast("Case", mos_data.case).pk),
                 "url": _client_url(client.pk, "#new-card-application-summary"),
                 "action_label": _("Проверить подачу"),
             }
@@ -209,6 +215,7 @@ def _fingerprints_followup(user: AbstractBaseUser | AnonymousUser | None, today:
             "title": _("После отпечатков без решения"),
             "detail": _("%(days)s дней после отпечатков") % {"days": (today - cast(date, case.fingerprints_date)).days},
             "case_label": case.display_number,
+            "case_url": _case_url(case.pk),
             "url": _client_url(case.client_id, "#overview"),
             "action_label": _("Проверить статус"),
         }
@@ -228,6 +235,7 @@ def _overdue_tasks(user: AbstractBaseUser | AnonymousUser | None, today: date, l
             "title": task.title,
             "detail": _("срок: %(date)s") % {"date": cast(date, task.due_date).strftime("%d.%m.%Y")},
             "case_label": task.case.display_number if task.case_id else None,
+            "case_url": _case_url(task.case_id) if task.case_id else None,
             "url": task.communication_url,
             "action_label": _("Открыть"),
         }
@@ -247,6 +255,7 @@ def _overdue_payments(user: AbstractBaseUser | AnonymousUser | None, today: date
             "title": payment.get_service_description_display(),
             "detail": _("к оплате: %(amount)s PLN") % {"amount": payment.amount_due},
             "case_label": payment.case.display_number if payment.case_id else None,
+            "case_url": _case_url(payment.case_id) if payment.case_id else None,
             "url": _client_url(payment.client_id, "#payment-list-container"),
             "action_label": _("Открыть финансы"),
         }
@@ -400,6 +409,7 @@ def build_workday_context(
                 # Which case the alert is about, so a client with several cases
                 # is not mistaken for a duplicate in the queue.
                 "case_label": item.get("case_label"),
+                "case_url": item.get("case_url"),
                 "url": item["url"],
                 "action_label": item.get("action_label") or _("Открыть"),
                 "priority": item["priority"],

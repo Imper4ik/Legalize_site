@@ -6,6 +6,7 @@ from __future__ import annotations
 from datetime import date
 
 from django.test import TestCase
+from django.urls import reverse
 
 from clients.services.workday import build_workday_context
 from clients.testing.factories import create_test_client, create_test_user
@@ -32,3 +33,8 @@ class WorkdayCaseLabelTests(TestCase):
         ]
         self.assertTrue(alerts)
         self.assertEqual(alerts[0]["case_label"], "WSC-II-P.6151.42.2026")
+        # The label links straight to the case it is about.
+        self.assertEqual(
+            alerts[0]["case_url"],
+            reverse("clients:case_detail", kwargs={"pk": case.pk}),
+        )

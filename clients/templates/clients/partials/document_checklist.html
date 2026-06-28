@@ -36,10 +36,10 @@
       <span class="badge bg-danger">{% translate "Отсутствует" %}</span>
       {% endif %}
       {% if item.has_ocr_review %}
-      <span class="badge bg-danger" title="{% translate 'Распознанные OCR данные нужно подтвердить' %}"><i class="bi bi-cpu me-1"></i>{% translate "OCR-проверка" %}</span>
+      <span class="badge bg-danger checklist-jump" role="button" tabindex="0" data-jump-doc="{{ item.ocr_review_doc_id }}" data-jump-action="ocr" title="{% translate 'Перейти к документу: подтвердите распознанные OCR данные' %}"><i class="bi bi-cpu me-1"></i>{% translate "OCR-проверка" %}</span>
       {% endif %}
       {% if item.needs_verification %}
-      <span class="badge bg-warning text-dark" title="{% translate 'Загруженный файл нужно проверить и подтвердить' %}"><i class="bi bi-hourglass-split me-1"></i>{% translate "Ждёт проверки" %}</span>
+      <span class="badge bg-warning text-dark checklist-jump" role="button" tabindex="0" data-jump-doc="{{ item.verification_doc_id }}" data-jump-action="verify" title="{% translate 'Перейти к документу: проверьте и подтвердите файл' %}"><i class="bi bi-hourglass-split me-1"></i>{% translate "Ждёт проверки" %}</span>
       {% endif %}
       {% if item.is_custom_submission %}
       <span class="badge bg-secondary">{% translate "Свой" %}</span>
@@ -52,7 +52,7 @@
       {% if item.is_uploaded %}
       <ul class="list-group list-group-flush mb-3">
         {% for doc in item.documents %}
-        <li class="list-group-item checklist-document-row">
+        <li id="doc-row-{{ doc.id }}" class="list-group-item checklist-document-row">
           <div>
             {% if doc.file_exists == False %}
             <span class="text-danger fw-bold">
