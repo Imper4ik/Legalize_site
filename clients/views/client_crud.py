@@ -242,6 +242,9 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
 
         context["case_form"] = CaseForm(initial={"workflow_stage": client.get_effective_workflow_stage()})
         context["cases"] = list(client.cases.all())
+        # Active cases power the case picker in the client-level payment/task
+        # forms so a record is always attached to a concrete case (spec §6).
+        context["active_cases"] = list(client.cases.filter(archived_at__isnull=True))
         context["payment_form"] = PaymentForm()
         context["document_upload_form"] = DocumentUploadForm()
         context["document_status_list"] = document_status_list

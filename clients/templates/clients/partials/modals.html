@@ -12,6 +12,7 @@
             <div class="modal-body">
                 <form method="post" action="{% url 'clients:add_payment' client_id=client.pk %}">
                     {% csrf_token %}
+                    {% include 'clients/partials/case_select_field.html' %}
 
                     <div class="mb-3">
                         <label for="id_service_description" class="form-label">{% translate "Услуга" %}</label>

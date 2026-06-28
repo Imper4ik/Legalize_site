@@ -1,0 +1,23 @@
+{% load i18n %}
+{% comment %}
+Case picker for client-level create forms (payment/task). When the client has a
+single active case it is submitted as a hidden field so the record is still
+attached to a concrete case (spec §6); with several active cases the staffer must
+choose, so a payment/task is never silently attached to the wrong case.
+Requires `active_cases` in context.
+{% endcomment %}
+{% if active_cases %}
+  {% if active_cases|length > 1 %}
+    <div class="mb-3">
+      <label class="form-label">{% translate "Дело" %}</label>
+      <select name="case_uuid" class="form-select" required>
+        <option value="" selected disabled>{% translate "Выберите дело" %}</option>
+        {% for c in active_cases %}
+          <option value="{{ c.uuid }}">{{ c.display_number }} · {{ c.get_workflow_stage_display }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  {% else %}
+    <input type="hidden" name="case_uuid" value="{{ active_cases.0.uuid }}">
+  {% endif %}
+{% endif %}

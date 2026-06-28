@@ -12,6 +12,7 @@
 
     <form method="post" action="{% url 'clients:add_task' client_id=client.pk %}" class="mb-3">
       {% csrf_token %}
+      {% include 'clients/partials/case_select_field.html' %}
       <div class="mb-2">
         <label class="form-label small mb-1" for="{{ task_form.title.id_for_label }}">{% translate "Задача" %}</label>
         {{ task_form.title }}
