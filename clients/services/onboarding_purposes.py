@@ -19,6 +19,16 @@ ONBOARDING_PURPOSE_LABELS = dict(ONBOARDING_PURPOSE_CHOICES)
 FAMILY_ONBOARDING_PURPOSES = {"family_spouse", "family_child"}
 FAMILY_REQUIREMENT_ROLES = FAMILY_ONBOARDING_PURPOSES | {"sponsor"}
 
+# Bump when the cached navbar-notification payload shape changes. Both the
+# producer (context processor) and the invalidator below build the key from this
+# single constant so they can never desync (a past bump to v5 left the clear
+# function deleting only v3/v4, so entered case numbers lingered in the navbar).
+ONBOARDING_NOTIFICATIONS_CACHE_VERSION = "v5"
+
+
+def onboarding_notifications_cache_key(user_id: int, language: str) -> str:
+    return f"onboarding_notifications:{ONBOARDING_NOTIFICATIONS_CACHE_VERSION}:user:{user_id}:lang:{language}"
+
 
 def normalize_onboarding_purpose(value: str | None) -> str:
     selected = (value or "").strip()
@@ -129,5 +139,4 @@ def clear_onboarding_notifications_cache(client: Client | None = None) -> None:
 
     for user_id in users.values_list("pk", flat=True).distinct():
         for language in _notification_cache_languages():
-            cache.delete(f"onboarding_notifications:v3:user:{user_id}:lang:{language}")
-            cache.delete(f"onboarding_notifications:v4:user:{user_id}:lang:{language}")
+            cache.delete(onboarding_notifications_cache_key(user_id, language))

@@ -11,7 +11,7 @@ from django.utils.translation import gettext as _
 
 from clients.services.activity import log_client_activity
 
-from .models import Client, Document, EmailLog, EmployeePermission, Payment, Reminder, StaffTask
+from .models import Case, Client, Document, EmailLog, EmployeePermission, Payment, Reminder, StaffTask
 
 if TYPE_CHECKING:
     pass
@@ -263,3 +263,12 @@ def clear_cache_on_document_delete(sender: Any, instance: Document, **kwargs: An
         except Exception:
             logger.warning("Failed to clear onboarding notifications cache on document delete")
 
+
+
+@receiver(post_save, sender=Case)
+def clear_attention_cache_on_case_save(sender: Any, instance: Case, **kwargs: Any) -> None:
+    # Case changes (e.g. entering the authority number, advancing the stage,
+    # setting the submission date) affect the navbar attention counts
+    # (wezwanie/legal-stay/…), so refresh the cache instead of waiting for it to
+    # expire.
+    _clear_attention_cache_for_client_id(instance.client_id, reason="case_save")

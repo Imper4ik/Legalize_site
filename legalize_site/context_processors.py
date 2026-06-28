@@ -50,10 +50,13 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
     from clients.models import Client, StaffTask
     from clients.services.access import accessible_clients_queryset, accessible_tasks_queryset
     from clients.services.attention import apply_client_attention_filter, count_client_attention_filters
-    from clients.services.onboarding_purposes import onboarding_purpose_mismatch_q
+    from clients.services.onboarding_purposes import (
+        onboarding_notifications_cache_key,
+        onboarding_purpose_mismatch_q,
+    )
 
     language = translation.get_language() or getattr(settings, "LANGUAGE_CODE", "")
-    cache_key = f"onboarding_notifications:v5:user:{request.user.pk}:lang:{language}"
+    cache_key = onboarding_notifications_cache_key(request.user.pk, language)
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
