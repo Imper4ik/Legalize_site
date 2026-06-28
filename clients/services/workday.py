@@ -126,6 +126,7 @@ def _missing_zus_clients(user: AbstractBaseUser | AnonymousUser | None, today: d
                 "client": case.client,
                 "title": _("ZUS RCA"),
                 "detail": format_zus_months(months),
+                "case_label": case.display_number,
                 "url": _client_url(case.client_id, "#documentAccordion"),
                 "action_label": _("Запросить"),
             }
@@ -182,6 +183,7 @@ def _new_card_missing_case(user: AbstractBaseUser | AnonymousUser | None, limit:
                 "client": client,
                 "title": _("Новая подача без основного номера"),
                 "detail": " · ".join(str(part) for part in detail_parts),
+                "case_label": cast("Case", mos_data.case).display_number,
                 "url": _client_url(client.pk, "#new-card-application-summary"),
                 "action_label": _("Проверить подачу"),
             }
@@ -206,6 +208,7 @@ def _fingerprints_followup(user: AbstractBaseUser | AnonymousUser | None, today:
             "client": case.client,
             "title": _("После отпечатков без решения"),
             "detail": _("%(days)s дней после отпечатков") % {"days": (today - cast(date, case.fingerprints_date)).days},
+            "case_label": case.display_number,
             "url": _client_url(case.client_id, "#overview"),
             "action_label": _("Проверить статус"),
         }
@@ -215,7 +218,7 @@ def _fingerprints_followup(user: AbstractBaseUser | AnonymousUser | None, today:
 
 def _overdue_tasks(user: AbstractBaseUser | AnonymousUser | None, today: date, limit: int) -> list[dict[str, Any]]:
     queryset = (
-        accessible_tasks_queryset(user, StaffTask.objects.select_related("client", "assignee"))
+        accessible_tasks_queryset(user, StaffTask.objects.select_related("client", "assignee", "case"))
         .filter(status__in=["open", "in_progress"], due_date__lt=today)
         .order_by("due_date", "-created_at")[:limit]
     )
@@ -224,6 +227,7 @@ def _overdue_tasks(user: AbstractBaseUser | AnonymousUser | None, today: date, l
             "client": task.client,
             "title": task.title,
             "detail": _("срок: %(date)s") % {"date": cast(date, task.due_date).strftime("%d.%m.%Y")},
+            "case_label": task.case.display_number if task.case_id else None,
             "url": task.communication_url,
             "action_label": _("Открыть"),
         }
@@ -233,7 +237,7 @@ def _overdue_tasks(user: AbstractBaseUser | AnonymousUser | None, today: date, l
 
 def _overdue_payments(user: AbstractBaseUser | AnonymousUser | None, today: date, limit: int) -> list[dict[str, Any]]:
     queryset = (
-        accessible_payments_queryset(user, Payment.objects.select_related("client"))
+        accessible_payments_queryset(user, Payment.objects.select_related("client", "case"))
         .filter(status__in=["pending", "partial"], due_date__isnull=False, due_date__lte=today, archived_at__isnull=True)
         .order_by("due_date", "-created_at")[:limit]
     )
@@ -242,6 +246,7 @@ def _overdue_payments(user: AbstractBaseUser | AnonymousUser | None, today: date
             "client": payment.client,
             "title": payment.get_service_description_display(),
             "detail": _("к оплате: %(amount)s PLN") % {"amount": payment.amount_due},
+            "case_label": payment.case.display_number if payment.case_id else None,
             "url": _client_url(payment.client_id, "#payment-list-container"),
             "action_label": _("Открыть финансы"),
         }
@@ -392,6 +397,9 @@ def build_workday_context(
                 "section_title": section_title,
                 "title": item["title"],
                 "detail": item.get("detail"),
+                # Which case the alert is about, so a client with several cases
+                # is not mistaken for a duplicate in the queue.
+                "case_label": item.get("case_label"),
                 "url": item["url"],
                 "action_label": item.get("action_label") or _("Открыть"),
                 "priority": item["priority"],
