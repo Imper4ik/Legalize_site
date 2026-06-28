@@ -114,6 +114,8 @@
               {% if item.is_uploaded %}<span class="badge bg-success me-1">{{ item.documents|length }} {% translate "шт." %}</span>{% endif %}
               {% if item.is_submitted %}<span class="badge bg-info text-dark me-1">{% translate "Сдано" %}</span>{% endif %}
               {% if not item.is_complete %}<span class="badge bg-danger me-1">{% translate "Отсутствует" %}</span>{% endif %}
+              {% if item.has_ocr_review %}<span class="badge bg-danger me-1" title="{% translate 'Распознанные OCR данные нужно подтвердить' %}"><i class="bi bi-cpu me-1"></i>{% translate "OCR-проверка" %}</span>{% endif %}
+              {% if item.needs_verification %}<span class="badge bg-warning text-dark me-1" title="{% translate 'Загруженный файл нужно проверить и подтвердить' %}"><i class="bi bi-hourglass-split me-1"></i>{% translate "Ждёт проверки" %}</span>{% endif %}
               {% if item.is_custom_submission %}<span class="badge bg-secondary me-1">{% translate "Свой" %}</span>{% endif %}
             </button>
           </h2>
@@ -126,6 +128,7 @@
                   <span>
                     {% translate "Файл от" %} {{ doc.uploaded_at|date:"d.m.Y H:i" }}
                     <span class="badge {% if doc.verified %}bg-success{% else %}bg-warning text-dark{% endif %} ms-2">{% if doc.verified %}{% translate "Проверен" %}{% else %}{% translate "Ожидает проверки" %}{% endif %}</span>
+                    {% if doc.awaiting_confirmation %}<span class="badge bg-danger ms-1" title="{% translate 'Подтвердите распознанные OCR данные' %}"><i class="bi bi-cpu me-1"></i>{% translate "OCR-проверка" %}</span>{% elif doc.ocr_status == "failed" %}<span class="badge bg-danger ms-1"><i class="bi bi-exclamation-triangle me-1"></i>{% translate "Ошибка OCR" %}</span>{% endif %}
                     {% if doc.zus_period_month %}<span class="badge bg-info text-dark ms-1"><i class="bi bi-calendar-month"></i> {{ doc.zus_period_month|date:"m.Y" }}</span>{% endif %}
                     {% if doc.expiry_date %}<small class="text-muted ms-2">{% translate "до" %} {{ doc.expiry_date|date:"d.m.Y" }}</small>{% endif %}
                     {% if doc.rejection_reason and not doc.verified %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-octagon-fill"></i> {{ doc.rejection_reason }}</div>{% endif %}

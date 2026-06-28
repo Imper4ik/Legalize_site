@@ -35,6 +35,12 @@
       {% if not item.is_complete %}
       <span class="badge bg-danger">{% translate "Отсутствует" %}</span>
       {% endif %}
+      {% if item.has_ocr_review %}
+      <span class="badge bg-danger" title="{% translate 'Распознанные OCR данные нужно подтвердить' %}"><i class="bi bi-cpu me-1"></i>{% translate "OCR-проверка" %}</span>
+      {% endif %}
+      {% if item.needs_verification %}
+      <span class="badge bg-warning text-dark" title="{% translate 'Загруженный файл нужно проверить и подтвердить' %}"><i class="bi bi-hourglass-split me-1"></i>{% translate "Ждёт проверки" %}</span>
+      {% endif %}
       {% if item.is_custom_submission %}
       <span class="badge bg-secondary">{% translate "Свой" %}</span>
       {% endif %}

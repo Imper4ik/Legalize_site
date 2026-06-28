@@ -686,6 +686,25 @@ class Client(SoftDeleteModel):
                     "is_custom_submission": True,
                 }
             )
+
+        # Flag, per checklist row, which uploaded documents need staff attention
+        # so the collapsed list distinguishes an OCR review from a plain manual
+        # verification (one badge each, never double-counting the same file).
+        for row in status_list:
+            active_docs = [
+                doc for doc in row.get("documents", [])
+                if getattr(doc, "archived_at", None) is None
+            ]
+            row["has_ocr_review"] = any(
+                getattr(doc, "awaiting_confirmation", False) or doc.ocr_status == "failed"
+                for doc in active_docs
+            )
+            row["needs_verification"] = any(
+                doc.computed_status == "pending_review"
+                and not getattr(doc, "awaiting_confirmation", False)
+                for doc in active_docs
+            )
+
         return status_list
 
     def get_case_step(self) -> int:
