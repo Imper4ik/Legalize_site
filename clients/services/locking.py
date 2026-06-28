@@ -93,6 +93,16 @@ def _update_instance_with_locking(
         else:
             update_kwargs[key] = value
 
+    # This bulk .update() bypasses Model.save(), so derived columns normally
+    # recomputed there are not refreshed. Case.authority_case_number_hash backs
+    # the navbar "wezwanie без номера дела" filter, so without this the number
+    # would be stored but the hash (and the alert) would stay stale forever.
+    if model_class is Case and "authority_case_number" in prepared_changes:
+        number = prepared_changes["authority_case_number"]
+        update_kwargs["authority_case_number_hash"] = (
+            Case.hash_case_number(number) if number else ""
+        )
+
     updated = model_class._base_manager.filter(**filter_kwargs).update(**update_kwargs)
     if updated == 0:
         raise ValidationError("Данные были изменены другим сотрудником. Проверьте актуальную версию перед сохранением.")
@@ -112,6 +122,16 @@ def _update_instance_with_locking(
                 "status_tag": "approved" if getattr(instance, "status", "") == "approved" else "submitted",
             }
         )
+
+    # The bulk .update() above bypasses post_save signals, so the navbar
+    # attention cache is not invalidated automatically — refresh it here so the
+    # edited record's counts (wezwanie/legal-stay/…) update immediately.
+    if client is not None:
+        from clients.services.onboarding_purposes import clear_onboarding_notifications_cache
+        try:
+            clear_onboarding_notifications_cache(client)
+        except Exception:
+            logger.warning("Failed to clear onboarding notifications cache after locked update")
 
     return model_class._base_manager.get(pk=instance_id)
 

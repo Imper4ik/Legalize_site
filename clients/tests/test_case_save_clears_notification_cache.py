@@ -36,3 +36,32 @@ class CaseSaveClearsNotificationCacheTests(TestCase):
 
         second = self.client.get(reverse("clients:client_list"))
         self.assertEqual(second.context["attention_counts"]["wezwanie_missing_case"], 0)
+
+    def test_form_path_recomputes_hash_and_drops_the_count(self) -> None:
+        # The real case-edit flow goes through update_case_with_version, which
+        # does a bulk .update() (bypassing Case.save()). The authority number
+        # hash — which backs the navbar filter — must still be refreshed.
+        from clients.services.locking import update_case_with_version
+
+        client = create_test_client(first_name="Form", last_name="Path")
+        case = client.cases.get()
+        create_test_document(client, case=case, doc_type=DocumentType.WEZWANIE.value)
+
+        first = self.client.get(reverse("clients:client_list"))
+        self.assertEqual(first.context["attention_counts"]["wezwanie_missing_case"], 1)
+
+        update_case_with_version(
+            case_id=case.id,
+            expected_version=case.version,
+            actor=self.staff,
+            changes_dict={
+                "authority_case_number": "WSC-II-P.6151.42.2026",
+                "workflow_stage": case.workflow_stage,
+            },
+        )
+
+        case.refresh_from_db()
+        self.assertTrue(case.authority_case_number_hash)
+
+        second = self.client.get(reverse("clients:client_list"))
+        self.assertEqual(second.context["attention_counts"]["wezwanie_missing_case"], 0)
