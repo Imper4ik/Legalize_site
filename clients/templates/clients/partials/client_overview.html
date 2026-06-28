@@ -38,6 +38,12 @@
         <i class="bi bi-file-earmark-check"></i>
         <span>{% translate "Загрузить подачу" %}</span>
       </button>
+      {% if client.active_case %}
+      <a href="{% url 'clients:case_edit' client.active_case.pk %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-briefcase"></i>
+        <span>{% translate "Редактировать дело" %}</span>
+      </a>
+      {% endif %}
       <a href="{% url 'clients:client_edit' client.pk %}" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-pencil-square"></i>
         <span>{% translate "Редактировать" %}</span>

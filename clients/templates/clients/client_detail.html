@@ -28,13 +28,18 @@
   </div>
   <div class="list-group">
     {% for case in cases %}
-      <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-start" href="{% url 'clients:case_detail' case.pk %}">
-        <span>
+      <div class="list-group-item d-flex justify-content-between align-items-start gap-3">
+        <a class="text-decoration-none flex-grow-1 min-w-0" href="{% url 'clients:case_detail' case.pk %}">
           <span class="fw-semibold">{{ case.display_number }}</span>
-          <span class="text-muted small d-block">{{ case.get_application_purpose_display|default:"-" }} · {{ case.get_workflow_stage_display }}</span>
-        </span>
-        <span class="text-muted small">{{ case.opened_at|date:"d.m.Y" }}</span>
-      </a>
+          <span class="text-muted small d-block">{{ case.get_application_purpose_display|default:"-" }} &middot; {{ case.get_workflow_stage_display }}</span>
+        </a>
+        <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
+          <span class="text-muted small">{{ case.opened_at|date:"d.m.Y" }}</span>
+          <a class="btn btn-outline-primary btn-sm" href="{% url 'clients:case_edit' case.pk %}" title="{% translate 'Редактировать дело' %}" aria-label="{% translate 'Редактировать дело' %}">
+            <i class="bi bi-pencil-square"></i><span class="d-none d-sm-inline ms-1">{% translate "Редактировать" %}</span>
+          </a>
+        </div>
+      </div>
     {% empty %}
       <div class="list-group-item text-muted">{% translate "No cases yet." %}</div>
     {% endfor %}
