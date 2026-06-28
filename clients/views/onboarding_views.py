@@ -137,9 +137,19 @@ def _require_portal_case(
     ``client_portal`` session, otherwise the MOS/Document lookups would fall back
     to the ambiguous legacy resolution.
     """
-    if session.scope == "client_portal" and _session_case(session) is None:
-        return redirect("clients:onboarding_select_case", token=token)
-    return None
+    if session.scope != "client_portal" or _session_case(session) is not None:
+        return None
+    # When the client has exactly one active case there is nothing to choose, so
+    # auto-select it instead of forcing the picker. This is safe: the
+    # ownership/archive re-validation in check_onboarding_session still runs on
+    # every request, and the picker is still shown for several active cases
+    # (spec §5). With zero active cases the picker shows the empty state.
+    active_cases = list(Case.objects.filter(client=session.client)[:2])
+    if len(active_cases) == 1:
+        request.session["case_id"] = active_cases[0].id
+        session.active_case = active_cases[0]  # type: ignore[attr-defined]
+        return None
+    return redirect("clients:onboarding_select_case", token=token)
 
 
 def _ensure_mos(client: Client, case: Any = None) -> tuple[MOSApplicationData, bool]:

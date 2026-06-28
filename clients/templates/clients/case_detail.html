@@ -160,7 +160,7 @@
         <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#caseAddTaskModal"><i class="bi bi-plus-lg me-1"></i>{% translate "Добавить задачу" %}</button>
       </div>
       <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>{% translate "Название" %}</th><th>{% translate "Статус" %}</th><th>{% translate "Срок" %}</th><th class="text-end">{% translate "Действия" %}</th></tr></thead><tbody>
-        {% for task in tasks %}<tr><td>{{ task.title }}</td><td><span class="badge bg-secondary">{{ task.status }}</span></td><td>{{ task.due_date|date:"d.m.Y"|default:"—" }}</td><td class="text-end text-nowrap">
+        {% for task in tasks %}<tr><td>{{ task.title }}</td><td><span class="badge bg-secondary">{{ task.get_status_display }}</span></td><td>{{ task.due_date|date:"d.m.Y"|default:"—" }}</td><td class="text-end text-nowrap">
           {% if task.status != "done" %}<form method="post" action="{% url 'clients:complete_task' task.id %}" class="d-inline m-0">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="btn btn-sm btn-outline-success" type="submit" title="{% translate 'Завершить' %}"><i class="bi bi-check-lg"></i></button></form>{% else %}<span class="text-muted small">—</span>{% endif %}
         </td></tr>
         {% empty %}<tr><td colspan="4" class="text-center text-muted">{% translate "Нет задач по этому делу." %}</td></tr>{% endfor %}
@@ -173,7 +173,7 @@
         <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#caseAddPaymentModal"><i class="bi bi-plus-lg me-1"></i>{% translate "Добавить платёж" %}</button>
       </div>
       <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>{% translate "Услуга" %}</th><th>{% translate "Сумма" %}</th><th>{% translate "Статус" %}</th><th>{% translate "Срок оплаты" %}</th><th class="text-end">{% translate "Действия" %}</th></tr></thead><tbody>
-        {% for payment in payments %}<tr><td>{{ payment.get_service_description_display }}</td><td>{{ payment.total_amount }}</td><td><span class="badge bg-secondary">{{ payment.status }}</span></td><td>{{ payment.due_date|date:"d.m.Y"|default:"—" }}</td><td class="text-end text-nowrap">
+        {% for payment in payments %}<tr><td>{{ payment.get_service_description_display }}</td><td>{{ payment.total_amount }}</td><td><span class="badge bg-secondary">{{ payment.get_status_display }}</span></td><td>{{ payment.due_date|date:"d.m.Y"|default:"—" }}</td><td class="text-end text-nowrap">
           <button type="button" class="btn btn-sm btn-outline-primary js-edit-payment" title="{% translate 'Изменить' %}"
             data-action="{% url 'clients:edit_payment' payment.id %}"
             data-service="{{ payment.service_description }}" data-total="{{ payment.total_amount }}"
@@ -192,8 +192,8 @@
 
     <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="mos-pesel" role="tabpanel" aria-labelledby="mos-pesel-tab">
       <h4 class="mb-3 case-section-heading">{% translate "Заявления MOS и PESEL" %}</h4>
-      <div class="mb-4"><h5>{% translate "Заявление в системе MOS" %}</h5>{% if case.mos_application_data %}<div class="row g-2"><div class="col-md-6"><strong>{% translate "Статус MOS" %}:</strong> {{ case.mos_application_data.status }}</div><div class="col-md-6"><strong>{% translate "Цель пребывания" %}:</strong> {{ case.mos_application_data.mos_purpose|default:"—" }}</div></div>{% else %}<p class="text-muted mb-0">{% translate "Данные заявления MOS отсутствуют." %}</p>{% endif %}</div>
-      <div><h5>{% translate "Заявления PESEL" %}</h5><div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>{% translate "ID" %}</th><th>{% translate "Статус" %}</th><th>{% translate "Правовое основание" %}</th></tr></thead><tbody>{% for pesel in case.pesel_applications.all %}<tr><td>{{ pesel.id }}</td><td>{{ pesel.status }}</td><td>{{ pesel.legal_basis|default:"—" }}</td></tr>{% empty %}<tr><td colspan="3" class="text-center text-muted">{% translate "Нет заявлений PESEL по этому делу." %}</td></tr>{% endfor %}</tbody></table></div></div>
+      <div class="mb-4"><h5>{% translate "Заявление в системе MOS" %}</h5>{% if case.mos_application_data %}<div class="row g-2"><div class="col-md-6"><strong>{% translate "Статус MOS" %}:</strong> {{ case.mos_application_data.get_status_display }}</div><div class="col-md-6"><strong>{% translate "Цель пребывания" %}:</strong> {{ case.mos_application_data.mos_purpose|default:"—" }}</div></div>{% else %}<p class="text-muted mb-0">{% translate "Данные заявления MOS отсутствуют." %}</p>{% endif %}</div>
+      <div><h5>{% translate "Заявления PESEL" %}</h5><div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>{% translate "ID" %}</th><th>{% translate "Статус" %}</th><th>{% translate "Правовое основание" %}</th></tr></thead><tbody>{% for pesel in case.pesel_applications.all %}<tr><td>{{ pesel.id }}</td><td>{{ pesel.get_status_display }}</td><td>{{ pesel.legal_basis|default:"—" }}</td></tr>{% empty %}<tr><td colspan="3" class="text-center text-muted">{% translate "Нет заявлений PESEL по этому делу." %}</td></tr>{% endfor %}</tbody></table></div></div>
     </div>
 
     <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="fingerprints" role="tabpanel" aria-labelledby="fingerprints-tab">

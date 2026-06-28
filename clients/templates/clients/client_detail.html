@@ -21,9 +21,9 @@
 
 <section id="client-cases" class="client-section border-0 p-0 shadow-none mb-4">
   <div class="client-section-header">
-    <h3 class="h4 mb-0">{% translate "Cases" %}</h3>
+    <h3 class="h4 mb-0">{% translate "Дела" %}</h3>
     <a class="btn btn-primary btn-sm" href="{% url 'clients:case_add' client.pk %}">
-      <i class="bi bi-plus-lg me-1"></i>{% translate "Create new case" %}
+      <i class="bi bi-plus-lg me-1"></i>{% translate "Новое дело" %}
     </a>
   </div>
   <div class="list-group">
@@ -36,7 +36,7 @@
         <span class="text-muted small">{{ case.opened_at|date:"d.m.Y" }}</span>
       </a>
     {% empty %}
-      <div class="list-group-item text-muted">{% translate "No cases yet." %}</div>
+      <div class="list-group-item text-muted">{% translate "Дел пока нет." %}</div>
     {% endfor %}
   </div>
 </section>
@@ -105,7 +105,7 @@
             method="post" class="m-0"
             data-confirm-text="{% blocktranslate count counter=pending_count %}Будет подтвержден {{ counter }} документ, ожидающий проверки. Отклонённые, архивные и уже проверенные документы не изменятся. Продолжить?{% plural %}Будет подтверждено {{ counter }} документов, ожидающих проверки. Отклонённые, архивные и уже проверенные документы не изменятся. Продолжить?{% endblocktranslate %}"
             data-verified-count-text="{% translate 'Подтверждено документов:' %}"
-            data-all-verified-text="{% translate 'Все active документы уже были проверены.' %}"
+            data-all-verified-text="{% translate 'Все активные документы уже были проверены.' %}"
             data-update-error-text="{% translate 'Не удалось обновить статус документов. Попробуйте ещё раз.' %}">
             {% csrf_token %}
             <button type="submit" class="btn btn-outline-success btn-sm">

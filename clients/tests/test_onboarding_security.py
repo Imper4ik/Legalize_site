@@ -132,18 +132,45 @@ class OnboardingSecurityTests(TestCase):
         self.client.force_login(user)
 
         # Try accessing with "me" token: self-onboarding resolves to a
-        # client_portal session and lands on the case-selection screen.
+        # client_portal session. The client has a single active case, so it is
+        # auto-selected and the onboarding page renders directly (no picker).
         url = reverse("clients:onboarding_start", kwargs={"token": "me"})
         response = self.client.get(url)
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(
-            response.headers["Location"],
-            reverse("clients:onboarding_select_case", kwargs={"token": "me"}),
-        )
+        self.assertEqual(response.status_code, 200)
         self.assertTrue(
             ClientOnboardingSession.objects.filter(
                 client=client, scope="client_portal"
             ).exists()
+        )
+
+    def test_portal_with_several_cases_still_shows_the_picker(self):
+        from clients.services.cases import create_case_for_client
+
+        User = get_user_model()
+        staff = User.objects.create_user(email="staff-picker@example.com", password="x", is_staff=True)
+        user = User.objects.create_user(email="client_multi@example.com", password="password123")
+        client = Client.objects.create(
+            first_name="Multi", last_name="Portal", email="client_multi@example.com",
+            user=user, application_purpose="work",
+        )
+        # Second active case → a real choice exists, so the picker must appear.
+        create_case_for_client(client=client, actor=staff)
+
+        _, hashed = generate_onboarding_token()
+        ClientOnboardingSession.objects.create(
+            client=client,
+            scope="client_portal",
+            token_hash=hashed,
+            status="active",
+            expires_at=timezone.now() + timedelta(days=1),
+        )
+
+        self.client.force_login(user)
+        response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": "me"}))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.headers["Location"],
+            reverse("clients:onboarding_select_case", kwargs={"token": "me"}),
         )
 
     def test_dashboard_redirect_for_client_user(self):
@@ -162,12 +189,11 @@ class OnboardingSecurityTests(TestCase):
         self.client.force_login(user)
         url = reverse("root_dashboard")
         response = self.client.get(url)
-        # The "me" target itself redirects on to the portal case-selection
-        # screen, so the immediate target returns 302 (spec §5).
+        # The client has a single active case, so "me" auto-selects it and the
+        # onboarding page renders (200).
         self.assertRedirects(
             response,
             reverse("clients:onboarding_start", kwargs={"token": "me"}),
-            target_status_code=302,
         )
 
     def test_onboarding_returning_client_reuse_user(self):
