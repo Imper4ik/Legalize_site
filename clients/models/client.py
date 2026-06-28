@@ -310,6 +310,24 @@ class Client(SoftDeleteModel):
         return case.fingerprints_date if case is not None else None
 
     @property
+    def has_submitted_case(self) -> bool:
+        """True once the client has submitted (złożenie) a case to the urząd.
+
+        Submission is marked by a submission date or a workflow stage at/after
+        "application_submitted". From that point the stamp legalises the stay, so
+        legal-stay (old card) expiry warnings should stop. Checked across all the
+        client's active cases so it works for multi-case clients too.
+        """
+        submitted_stages = [
+            "application_submitted", "fingerprints",
+            "waiting_decision", "decision_received", "closed",
+        ]
+        return self.cases.filter(
+            Q(submission_date__isnull=False) | Q(workflow_stage__in=submitted_stages),
+            archived_at__isnull=True,
+        ).exists()
+
+    @property
     def effective_decision_date(self) -> date | None:
         case = self.active_case
         return case.decision_date if case is not None else None
@@ -892,8 +910,9 @@ class Client(SoftDeleteModel):
         for key, value in stats.items():
             setattr(self, key, value)
 
-        # Check legal stay expiration only if client hasn't submitted yet
-        if self.get_effective_workflow_stage() in ["new_client", "document_collection"]:
+        # Check legal stay expiration only before submission: once the case is
+        # submitted to the urząd the stamp legalises the stay (spec/business rule).
+        if self.get_effective_workflow_stage() in ["new_client", "document_collection"] and not self.has_submitted_case:
             legal_stay_date = self.legal_basis_end_date or self._get_mos_legal_stay_until()
 
             if legal_stay_date:
@@ -999,58 +1018,70 @@ class Client(SoftDeleteModel):
                 }
             )
 
-        if getattr(self, "health_wezwanie_count", 0) > 0 and not effective_case_number:
+        if getattr(self, "health_wezwanie_count", 0) > 0:
             from django.utils.translation import gettext
             wezwanie_types = {DocumentType.WEZWANIE.value, DocumentType.WEZWANIE}
             wezwanie_docs = list(self.documents.filter(document_type__in=wezwanie_types, archived_at__isnull=True).select_related("case").order_by("-uploaded_at"))
-            actions = []
-            for doc in wezwanie_docs:
-                doc_label = gettext("wezwanie")
-                if doc.awaiting_confirmation:
+
+            def _case_unnumbered(case_obj: Any) -> bool:
+                # No case on the document → fall back to the client-level number.
+                if case_obj is None:
+                    return not effective_case_number
+                return not str(getattr(case_obj, "authority_case_number", "") or "").strip()
+
+            # Only a wezwanie whose OWN case still lacks an authority number is a
+            # problem; once the number is entered on that case the alert clears,
+            # for single- and multi-case clients alike.
+            unnumbered_docs = [
+                doc for doc in wezwanie_docs
+                if _case_unnumbered(doc.case if doc.case_id else None)
+            ]
+            if unnumbered_docs:
+                actions = []
+                for doc in unnumbered_docs:
+                    doc_label = gettext("wezwanie")
+                    if doc.awaiting_confirmation:
+                        actions.append({
+                            "label": f"{gettext('Проверить OCR')} ({doc_label})",
+                            "is_ocr_review": True,
+                            "doc_id": doc.id,
+                            "doc_type": doc.document_type,
+                        })
+                    else:
+                        actions.append({
+                            "label": f"{gettext('Открыть')} {doc_label}",
+                            "url": reverse("clients:document_preview", kwargs={"doc_id": doc.id}),
+                            "target": "_blank",
+                        })
+                # Direct "заполните case number вручную" path, tied to each
+                # still-unnumbered case (works for multi-case clients too).
+                fill_cases: list[Any] = []
+                seen_case_ids: set[int] = set()
+                for doc in unnumbered_docs:
+                    case_obj = doc.case if doc.case_id else None
+                    if case_obj is not None and case_obj.pk not in seen_case_ids:
+                        seen_case_ids.add(case_obj.pk)
+                        fill_cases.append(case_obj)
+                if not fill_cases and active_case is not None and _case_unnumbered(active_case):
+                    fill_cases.append(active_case)
+                for case_obj in fill_cases:
+                    label = gettext("Заполнить номер дела")
+                    if len(fill_cases) > 1:
+                        label = f"{label}: {case_obj.display_number}"
                     actions.append({
-                        "label": f"{gettext('Проверить OCR')} ({doc_label})",
-                        "is_ocr_review": True,
-                        "doc_id": doc.id,
-                        "doc_type": doc.document_type,
+                        "label": label,
+                        "url": reverse("clients:case_edit", kwargs={"pk": case_obj.pk}),
                     })
-                else:
-                    actions.append({
-                        "label": f"{gettext('Открыть')} {doc_label}",
-                        "url": reverse("clients:document_preview", kwargs={"doc_id": doc.id}),
-                        "target": "_blank",
-                    })
-            # Direct path to actually enter the number ("заполните case number
-            # вручную"): the case edit form. Tie it to the case each wezwanie
-            # belongs to so this works for multi-case clients too, not only
-            # single-case ones. Legacy docs without a case fall back to the
-            # client's single active case, if any.
-            fill_cases: list[Any] = []
-            seen_case_ids: set[int] = set()
-            for doc in wezwanie_docs:
-                case_obj = doc.case if doc.case_id else None
-                if case_obj is not None and case_obj.pk not in seen_case_ids:
-                    seen_case_ids.add(case_obj.pk)
-                    fill_cases.append(case_obj)
-            if not fill_cases and active_case is not None:
-                fill_cases.append(active_case)
-            for case_obj in fill_cases:
-                label = gettext("Заполнить номер дела")
-                if len(fill_cases) > 1:
-                    label = f"{label}: {case_obj.display_number}"
-                actions.append({
-                    "label": label,
-                    "url": reverse("clients:case_edit", kwargs={"pk": case_obj.pk}),
-                })
-            alerts.append(
-                {
-                    "level": "warning",
-                    "title": _("Есть wezwanie без номера дела"),
-                    "message": _("Проверьте распознавание или заполните case number вручную."),
-                    "action_label": _("Запросить номер дела у клиента"),
-                    "action_url": "#history",
-                    "actions": actions,
-                }
-            )
+                alerts.append(
+                    {
+                        "level": "warning",
+                        "title": _("Есть wezwanie без номера дела"),
+                        "message": _("Проверьте распознавание или заполните case number вручную."),
+                        "action_label": _("Запросить номер дела у клиента"),
+                        "action_url": "#history",
+                        "actions": actions,
+                    }
+                )
 
         # Case-safe and non-cached: a multi-case client yields None here rather
         # than an arbitrary record from another case (spec §8). A fresh lookup
@@ -1267,7 +1298,16 @@ class Client(SoftDeleteModel):
         # 1. Stay Validity
         legal_stay_date = self.legal_basis_end_date or self._get_mos_legal_stay_until()
 
-        if not legal_stay_date:
+        if self.has_submitted_case:
+            # Submitted to the urząd: the stamp legalises the stay, so the old
+            # card expiry is no longer a risk.
+            checks.append({
+                "label": _("Легальность пребывания"),
+                "status": "success",
+                "message": _("Дело подано в ужонд — пребывание легально по штампу"),
+                "tooltip": _("Дело подано в воеводский ужонд; пребывание легализовано штампом на время рассмотрения."),
+            })
+        elif not legal_stay_date:
             checks.append({
                 "label": _("Легальность пребывания"),
                 "status": "warning",

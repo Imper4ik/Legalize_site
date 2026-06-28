@@ -26,7 +26,10 @@ def _legal_stay_attention_q(today: date) -> Q:
     cutoff = today + timedelta(days=30)
     # Stage check reads the case (spec §4): in scope when the client has a case
     # still in an early stage.
-    return Q(cases__workflow_stage__in=["new_client", "document_collection"]) & (
+    return Q(
+        cases__workflow_stage__in=["new_client", "document_collection"],
+        cases__submission_date__isnull=True,
+    ) & (
         Q(legal_basis_end_date__isnull=False, legal_basis_end_date__lte=cutoff)
         | Q(
             legal_basis_end_date__isnull=True,
@@ -92,8 +95,12 @@ def apply_client_attention_filter(queryset: QuerySet[Any], attention_filter: str
             staff_tasks__due_date__lt=today,
         ).distinct()
     if attention_filter == "wezwanie_missing_case":
+        # Correlate the wezwanie to its OWN case: flag only when the case that
+        # the wezwanie belongs to still has no authority number, so entering the
+        # number clears it (also for multi-case clients).
         return queryset.filter(
-            _missing_case_number_q(),
+            Q(documents__case__authority_case_number_hash__isnull=True)
+            | Q(documents__case__authority_case_number_hash=""),
             documents__document_type__in=wezwanie_types,
             documents__archived_at__isnull=True,
         ).distinct()
