@@ -1002,7 +1002,7 @@ class Client(SoftDeleteModel):
         if getattr(self, "health_wezwanie_count", 0) > 0 and not effective_case_number:
             from django.utils.translation import gettext
             wezwanie_types = {DocumentType.WEZWANIE.value, DocumentType.WEZWANIE}
-            wezwanie_docs = list(self.documents.filter(document_type__in=wezwanie_types, archived_at__isnull=True).order_by("-uploaded_at"))
+            wezwanie_docs = list(self.documents.filter(document_type__in=wezwanie_types, archived_at__isnull=True).select_related("case").order_by("-uploaded_at"))
             actions = []
             for doc in wezwanie_docs:
                 doc_label = gettext("wezwanie")
@@ -1020,11 +1020,26 @@ class Client(SoftDeleteModel):
                         "target": "_blank",
                     })
             # Direct path to actually enter the number ("заполните case number
-            # вручную"): the case edit form, where authority_case_number lives.
-            if active_case is not None:
+            # вручную"): the case edit form. Tie it to the case each wezwanie
+            # belongs to so this works for multi-case clients too, not only
+            # single-case ones. Legacy docs without a case fall back to the
+            # client's single active case, if any.
+            fill_cases: list[Any] = []
+            seen_case_ids: set[int] = set()
+            for doc in wezwanie_docs:
+                case_obj = doc.case if doc.case_id else None
+                if case_obj is not None and case_obj.pk not in seen_case_ids:
+                    seen_case_ids.add(case_obj.pk)
+                    fill_cases.append(case_obj)
+            if not fill_cases and active_case is not None:
+                fill_cases.append(active_case)
+            for case_obj in fill_cases:
+                label = gettext("Заполнить номер дела")
+                if len(fill_cases) > 1:
+                    label = f"{label}: {case_obj.display_number}"
                 actions.append({
-                    "label": gettext("Заполнить номер дела"),
-                    "url": reverse("clients:case_edit", kwargs={"pk": active_case.pk}),
+                    "label": label,
+                    "url": reverse("clients:case_edit", kwargs={"pk": case_obj.pk}),
                 })
             alerts.append(
                 {

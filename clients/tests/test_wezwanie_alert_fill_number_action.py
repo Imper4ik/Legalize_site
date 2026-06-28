@@ -30,3 +30,25 @@ class WezwanieFillNumberActionTests(TestCase):
         edit_url = reverse("clients:case_edit", kwargs={"pk": case.pk})
         urls = [action.get("url") for action in wezwanie.get("actions", [])]
         self.assertIn(edit_url, urls)
+
+    def test_multi_case_client_gets_fill_action_per_wezwanie_case(self) -> None:
+        from clients.services.cases import create_case_for_client
+
+        staff = create_test_user(role="Staff")
+        client = create_test_client(first_name="Multi", last_name="Wez")
+        case_a = client.cases.get()
+        case_b = create_case_for_client(client=client, actor=staff)
+        # A wezwanie in each case (neither case has an authority number).
+        create_test_document(client, case=case_a, doc_type=DocumentType.WEZWANIE.value)
+        create_test_document(client, case=case_b, doc_type=DocumentType.WEZWANIE.value)
+
+        alerts = client.get_health_alerts()
+        wezwanie = next(
+            (a for a in alerts if str(a["title"]) == "Есть wezwanie без номера дела"),
+            None,
+        )
+        self.assertIsNotNone(wezwanie)
+        urls = [action.get("url") for action in wezwanie.get("actions", [])]
+        # The fill action exists for BOTH cases, not just one.
+        self.assertIn(reverse("clients:case_edit", kwargs={"pk": case_a.pk}), urls)
+        self.assertIn(reverse("clients:case_edit", kwargs={"pk": case_b.pk}), urls)
