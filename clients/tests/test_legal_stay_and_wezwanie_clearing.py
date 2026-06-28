@@ -10,12 +10,16 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 from django.test import TestCase
+from django.utils.translation import override
 
 from clients.constants import DocumentType
 from clients.models import Client
 from clients.services.attention import apply_client_attention_filter
 from clients.testing.factories import create_test_client, create_test_document, create_test_user
 
+# Alert/check titles are stored as Russian source strings (msgids). Render them
+# under a pinned Russian language so str() matches the source regardless of which
+# compiled catalogs (pl/en) exist in the environment.
 LEGAL_STAY_TITLES = {"Основание пребывания скоро истекает", "Основание пребывания уже истекло"}
 
 
@@ -30,7 +34,8 @@ class LegalStaySubmittedTests(TestCase):
         self.client_obj.save(update_fields=["legal_basis_end_date"])
 
     def _alert_titles(self):
-        return {str(a["title"]) for a in self.client_obj.get_health_alerts()}
+        with override("ru"):
+            return {str(a["title"]) for a in self.client_obj.get_health_alerts()}
 
     def test_legal_stay_risk_shown_before_submission(self) -> None:
         self.assertTrue(self._alert_titles() & LEGAL_STAY_TITLES)
@@ -44,10 +49,11 @@ class LegalStaySubmittedTests(TestCase):
 
         self.assertFalse(self._alert_titles() & LEGAL_STAY_TITLES)
         # The automatic check turns into a positive "submitted" status.
-        checks = self.client_obj.get_automatic_checks()
-        stay = next(c for c in checks if str(c["label"]) == "Легальность пребывания")
-        self.assertEqual(stay["status"], "success")
-        self.assertIn("подано", str(stay["message"]).lower())
+        with override("ru"):
+            checks = self.client_obj.get_automatic_checks()
+            stay = next(c for c in checks if str(c["label"]) == "Легальность пребывания")
+            self.assertEqual(stay["status"], "success")
+            self.assertIn("подано", str(stay["message"]).lower())
         # And it drops out of the navbar legal-stay filter.
         flagged = apply_client_attention_filter(Client.objects.all(), "legal_stay")
         self.assertNotIn(self.client_obj.pk, list(flagged.values_list("pk", flat=True)))
@@ -61,10 +67,11 @@ class WezwanieNumberClearsTests(TestCase):
         create_test_document(self.client_obj, case=self.case, doc_type=DocumentType.WEZWANIE.value)
 
     def _has_wezwanie_alert(self) -> bool:
-        return any(
-            str(a["title"]) == "Есть wezwanie без номера дела"
-            for a in self.client_obj.get_health_alerts()
-        )
+        with override("ru"):
+            return any(
+                str(a["title"]) == "Есть wezwanie без номера дела"
+                for a in self.client_obj.get_health_alerts()
+            )
 
     def test_alert_shown_without_number(self) -> None:
         self.assertEqual(self.case.authority_case_number, "")

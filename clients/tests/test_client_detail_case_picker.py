@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from django.test import TestCase
 from django.urls import reverse
+from django.utils.translation import override
 
 from clients.services.cases import create_case_for_client
 from clients.testing.factories import (
@@ -23,9 +24,12 @@ class ClientDetailCasePickerTests(TestCase):
     def _detail(self, client):
         # ?view=person keeps the client (person) view; without it a single-case
         # client is redirected straight to its case detail.
-        return self.client.get(
-            reverse("clients:client_detail", kwargs={"pk": client.pk}) + "?view=person"
-        )
+        # Pin Russian so the i18n URL prefix and rendered template text match the
+        # Russian source strings the assertions check, regardless of which
+        # compiled catalogs (pl/en) are present in the environment.
+        with override("ru"):
+            url = reverse("clients:client_detail", kwargs={"pk": client.pk}) + "?view=person"
+            return self.client.get(url)
 
     def test_single_case_uses_hidden_case_field(self) -> None:
         client = create_test_client(first_name="Solo", last_name="Detail")
