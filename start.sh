@@ -40,4 +40,5 @@ exec gunicorn legalize_site.wsgi:application \
   --max-requests "${GUNICORN_MAX_REQUESTS}" \
   --max-requests-jitter "${GUNICORN_MAX_REQUESTS_JITTER}" \
   --access-logfile - \
+  --logger-class legalize_site.gunicorn_logging.RedactingLogger \
   --preload

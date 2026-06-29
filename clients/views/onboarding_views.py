@@ -49,6 +49,12 @@ EDITABLE_MOS_STATUSES = {"draft", "client_filling", "needs_correction"}
 CONTACT_SYNC_FIELDS = ("first_name", "last_name", "phone", "email")
 logger = logging.getLogger(__name__)
 
+# Emailed onboarding links carry a raw bearer token in the URL. Keep their
+# lifetime short to bound the replay window if a link leaks via history, a
+# forwarded message, or logs (audit Q-1). The authenticated ``me`` portal
+# session is not an emailed token link and keeps a longer, separate lifetime.
+ONBOARDING_LINK_TTL = timedelta(hours=72)
+
 
 def _mos_data_is_editable(mos_data: MOSApplicationData | None) -> bool:
     return mos_data is None or mos_data.status in EDITABLE_MOS_STATUSES
@@ -775,7 +781,7 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
                 case=None,
                 token_hash=token_hash,
                 status="created",
-                expires_at=timezone.now() + timedelta(days=7),
+                expires_at=timezone.now() + ONBOARDING_LINK_TTL,
             )
         return _link_response()
 
@@ -834,7 +840,7 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
             case=mos_data.case,
             token_hash=token_hash,
             status="created",
-            expires_at=timezone.now() + timedelta(days=7),
+            expires_at=timezone.now() + ONBOARDING_LINK_TTL,
         )
 
     return _link_response()
@@ -915,7 +921,7 @@ def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
                 case=mos_data.case,
                 token_hash=token_hash,
                 status="created",
-                expires_at=timezone.now() + timedelta(days=7)
+                expires_at=timezone.now() + ONBOARDING_LINK_TTL
             )
 
         link = request.build_absolute_uri(
