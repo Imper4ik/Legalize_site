@@ -257,18 +257,18 @@
     let template = '';
     if (activeShareMode === 'intake') {
       if (lang === 'pl') {
-        template = `Dzien dobry! Prosze kliknac w link i wypelnic formularz wstepny do otwarcia sprawy: ${activeLink}`;
+        template = `Dzień dobry! Proszę kliknąć w link i wypełnić formularz wstępny, abyśmy mogli otworzyć sprawę: ${activeLink}`;
       } else if (lang === 'en') {
         template = `Hello! Please follow the link and complete the intake form so we can open your case: ${activeLink}`;
       } else {
-        template = `Hello! Please follow the link and complete the intake form so we can open your case: ${activeLink}`;
+        template = `Здравствуйте! Пожалуйста, перейдите по ссылке и заполните первичную анкету, чтобы мы могли открыть ваше дело: ${activeLink}`;
       }
     } else if (lang === 'pl') {
-      template = `Dzien dobry! Prosze kliknac w link, aby utworzyc haslo i przeslac dokumenty do sprawy: ${activeLink}`;
+      template = `Dzień dobry! Proszę kliknąć w link, utworzyć hasło i przesłać dokumenty do sprawy: ${activeLink}`;
     } else if (lang === 'en') {
       template = `Hello! Please follow the link to set up your password and upload documents for your case: ${activeLink}`;
     } else {
-      template = `Hello! Please follow the link to set up your password and upload documents for your case: ${activeLink}`;
+      template = `Здравствуйте! Пожалуйста, перейдите по ссылке, создайте пароль и загрузите документы по вашему делу: ${activeLink}`;
     }
 
     previewEl.textContent = template;
