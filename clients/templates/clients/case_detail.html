@@ -86,6 +86,9 @@
             </li>
           </ul>
         </div>
+        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#sendEmailModal">
+          <i class="bi bi-envelope-paper me-1"></i>{% translate "Написать email" %}
+        </button>
         {% if case.archived_at %}
           <form method="post" action="{% url 'clients:case_restore' case.pk %}" class="m-0">{% csrf_token %}<button class="btn btn-outline-success" type="submit">{% translate "Восстановить" %}</button></form>
         {% else %}
@@ -302,6 +305,15 @@
   </div>
 </div>
 
+{% include 'clients/partials/send_email_modal.html' with client=case.client %}
+
 <script src="{% static 'clients/js/pages/case_detail.js' %}"></script>
 <script src="{% static 'clients/js/client/checklist_jump.js' %}" defer></script>
+<script src="{% static 'clients/js/client/ajax.js' %}" defer></script>
+<script src="{% static 'clients/js/client/email_modal.js' %}" defer></script>
+<script nonce="{{ request.csp_nonce }}">
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof initSendEmailModal === 'function') { initSendEmailModal(); }
+  });
+</script>
 {% endblock %}
