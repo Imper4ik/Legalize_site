@@ -70,7 +70,29 @@ def cleanup_test_data(
     report = CleanupReport()
     _delete_document_files(report, extra_media_roots=extra_media_roots)
 
+    from clients.models import (
+        Case,
+        CaseArchiveBatch,
+        ClientArchiveBatch,
+        ClientDocumentRequirement,
+        ClientFamilyMemberMOS,
+        ClientOnboardingSession,
+        DocumentProcessingJob,
+        MOSApplicationData,
+        PeselApplication,
+        Reminder,
+        StaffTask,
+    )
+
     with transaction.atomic():
+        # Case-scoped rows PROTECT-reference Case, and Case PROTECT-references
+        # Client, so a test client can only be deleted after every case-scoped
+        # child and the cases themselves are removed first. (Each Client gets an
+        # auto-created primary Case via post_save, so this path is always hit.)
+        test_client_ids = list(
+            Client.all_objects.filter(is_test_data=True).values_list("pk", flat=True)
+        )
+
         document_count, _ = Document.all_objects.filter(is_test_data=True).hard_delete()
         report.add("documents", document_count)
 
@@ -79,6 +101,25 @@ def cleanup_test_data(
 
         email_count, _ = EmailLog.objects.filter(is_test_data=True).delete()
         report.add("email_logs", email_count)
+
+        if test_client_ids:
+            # Remaining PROTECT-to-Case children (documents/payments already gone).
+            Reminder.objects.filter(client_id__in=test_client_ids).delete()
+            StaffTask.objects.filter(client_id__in=test_client_ids).delete()
+            ClientDocumentRequirement.objects.filter(client_id__in=test_client_ids).delete()
+            ClientOnboardingSession.objects.filter(client_id__in=test_client_ids).delete()
+            PeselApplication.objects.filter(client_id__in=test_client_ids).delete()
+            ClientFamilyMemberMOS.objects.filter(client_id__in=test_client_ids).delete()
+            DocumentProcessingJob.objects.filter(case__client_id__in=test_client_ids).delete()
+            CaseArchiveBatch.objects.filter(case__client_id__in=test_client_ids).delete()
+            # MOSApplicationData/CaseParticipant/CaseArchiveSnapshot cascade from
+            # Case; delete the cases, then the client-level archive batches.
+            MOSApplicationData.objects.filter(client_id__in=test_client_ids).delete()
+            # Case is a SoftDeleteModel: its queryset .delete() archives instead
+            # of removing, so use hard_delete() to actually drop the rows.
+            case_count, _ = Case.all_objects.filter(client_id__in=test_client_ids).hard_delete()
+            report.add("cases", case_count)
+            ClientArchiveBatch.objects.filter(client_id__in=test_client_ids).delete()
 
         client_count, _ = Client.all_objects.filter(is_test_data=True).hard_delete()
         report.add("clients", client_count)
