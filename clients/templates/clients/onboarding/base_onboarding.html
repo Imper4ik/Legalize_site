@@ -611,18 +611,29 @@
     <!-- Sticky Top Toolbar -->
     <nav class="onboarding-navbar">
         <div class="onboarding-navbar-inner">
-            <!-- Left Side: Dropdown Menu -->
-            <div class="d-flex align-items-center gap-2">
+            <!-- Left Side: Brand Logo -->
+            <div class="d-flex align-items-center">
+                {% if session %}
+                    <a href="{% url 'clients:onboarding_start' token=session.token_hash %}" class="d-flex align-items-center gap-2 text-decoration-none fw-bold" style="color: var(--fg); font-size: 1.15rem; letter-spacing: -0.02em;">
+                        <i class="bi bi-shield-check-fill text-primary fs-4"></i>
+                        <span>Legalize</span>
+                    </a>
+                {% else %}
+                    <div class="d-flex align-items-center gap-2 fw-bold" style="color: var(--fg); font-size: 1.15rem; letter-spacing: -0.02em;">
+                        <i class="bi bi-shield-check-fill text-primary fs-4"></i>
+                        <span>Legalize</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Right Side: Actions, Theme & Language -->
+            <div class="d-flex align-items-center gap-3">
                 {% if session %}
                     <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 py-1 px-3 rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#askQuestionModal">
                         <i class="bi bi-question-circle"></i>
                         <span>{% trans "Задать вопрос" %}</span>
                     </button>
                 {% endif %}
-            </div>
-
-            <!-- Right Side: Theme & Language -->
-            <div class="d-flex align-items-center gap-3">
                 {% if request.user.is_authenticated %}
                     <div class="dropdown">
                         <button class="btn btn-sm btn-outline-primary dropdown-toggle d-flex align-items-center gap-1 py-1 px-3 rounded-pill fw-bold" type="button" id="cabinetDropdown" data-bs-toggle="dropdown" aria-expanded="false">
