@@ -92,6 +92,30 @@ security-baseline корректен, bandit по prod-коду чист.
 - **Последствия**: слабый info-leak. Низкий приоритет — staff и так имеет office-wide доступ по дизайну (§2.1).
 - **Исправление**: убрать email/phone из `search_fields` для пользователей без права (через `get_search_fields`), либо принять как осознанный компромисс.
 
+### N-5 — Test Center cleanup падал с ProtectedError `[BUG · Medium] — ИСПРАВЛЕНО`
+- **Где**: `clients/testing/cleanup.py` (`cleanup_test_data`).
+- **Доказательство**: функция удаляла Documents/Payments, затем сразу Clients. Но
+  каждый тест-Client авто-получает Case (post_save signal), а `Case.client=PROTECT`
+  → `ProtectedError`. Дополнительно `Case` — SoftDeleteModel, и его queryset
+  `.delete()` архивирует, а не удаляет. Найдено при реальном запуске встроенного
+  E2E-движка (`run_e2e_scenarios`) в этом проходе.
+- **Последствия**: встроенный Test Center и команда `clean_test_data` не могли
+  убрать за собой тест-данные — инструмент QA, которым валидируют пилот, был
+  непригоден.
+- **Исправление (выполнено)**: удалять case-scoped дочерние объекты (reminders,
+  tasks, custom requirements, onboarding-сессии, PESEL/MOS-family, OCR-jobs,
+  case-archive-batch) → затем Cases через `hard_delete()` → затем Clients. Добавлены
+  регресс-тесты `clients/tests/test_testcenter_cleanup.py`.
+
+### N-6 — Часть E2E-сценариев Test Center зависят от даты/seed `[DEBT · Low]`
+- **Где**: `clients/testing/scenarios.py` (zus/документы/права).
+- **Доказательство**: ZUS-сценарии сравнивают с захардкоженными датами месяцев →
+  падают при прогоне в произвольный день; document/permission-сценарии требуют
+  засеянных прав/валидных образов. На засеянном деплое с фиксированной датой
+  проходят; в голой тестовой БД — нет.
+- **Исправление**: заморозить дату (freezegun/фиксированный today) и явно засевать
+  нужные права/фикстуры в сценариях. Низкий приоритет — это тестовая оснастка.
+
 ### N-4 — Инварианты не на уровне БД (остаточный от P-01) `[ARCH · Medium]`
 - **Где**: те же 8 моделей + `workflow_transitions`.
 - **Доказательство**: `save()`-guard (P-01) и сервис-валидация переходов закрывают `.create()/.save()/transition_*`, но `QuerySet.update()` и raw SQL их минуют; нет триггеров/`CheckConstraint` на равенство `case.client == client`.
