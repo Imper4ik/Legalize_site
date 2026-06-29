@@ -644,6 +644,16 @@
                         </ul>
                     </div>
                 {% endif %}
+                {% if session %}
+                    <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 py-1 px-3 rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#askQuestionModal">
+                        <i class="bi bi-question-circle"></i>
+                        <span>{% trans "Задать вопрос" %}</span>
+                    </button>
+                {% endif %}
+            </div>
+
+            <!-- Right Side: Theme & Language -->
+            <div class="d-flex align-items-center gap-3">
                 <!-- Notification Bell for Onboarding Dashboard -->
                 {% if action_items %}
                     <div class="dropdown me-1">
@@ -654,7 +664,7 @@
                                 {{ action_required_count }}
                             </span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-start shadow-lg border-0 py-2 px-1" aria-labelledby="notificationDropdown" style="width: 290px; max-width: 90vw; background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); z-index: 1050;">
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-2 px-1" aria-labelledby="notificationDropdown" style="width: 290px; max-width: 90vw; background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); z-index: 1050;">
                             <li class="dropdown-header text-uppercase fw-bold text-muted px-3 py-2" style="font-size: 0.75rem; letter-spacing: 0.5px;">
                                 {% trans "Требуется внимание" %}
                             </li>
@@ -670,16 +680,6 @@
                     </div>
                 {% endif %}
 
-                {% if session %}
-                    <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 py-1 px-3 rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#askQuestionModal">
-                        <i class="bi bi-question-circle"></i>
-                        <span>{% trans "Задать вопрос" %}</span>
-                    </button>
-                {% endif %}
-            </div>
-
-            <!-- Right Side: Theme & Language -->
-            <div class="d-flex align-items-center gap-3">
                 <!-- Theme Toggle -->
                 <button class="btn btn-sm theme-toggle" type="button" aria-pressed="false"
                   aria-label="{% translate 'Переключить тему' %}" data-theme-toggle
