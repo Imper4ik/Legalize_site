@@ -663,6 +663,9 @@
         .navbar-icon-btn:focus-visible {
             outline: 3px solid rgba(59, 130, 246, 0.3) !important;
         }
+        .navbar-icon-btn.dropdown-toggle::after {
+            display: none !important;
+        }
 
         .notification-badge-nav {
             position: absolute;
@@ -730,8 +733,10 @@
             <div class="d-flex align-items-center gap-3">
                 <!-- 1. Language Dropdown -->
                 <div class="dropdown">
-                    <button class="navbar-icon-btn dropdown-toggle fw-bold" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.85rem;" aria-label="{% trans 'Выбор языка' %}">
-                        {{ LANGUAGE_CODE|upper }}
+                    {% get_current_language as LANGUAGE_CODE %}
+                    <button class="navbar-icon-btn dropdown-toggle fw-bold d-flex align-items-center justify-content-center gap-1" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.75rem;" aria-label="{% trans 'Выбор языка' %}">
+                        <span>{{ LANGUAGE_CODE|upper }}</span>
+                        <i class="bi bi-chevron-down" style="font-size: 0.55rem; opacity: 0.7;"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-1" aria-labelledby="languageDropdown" style="background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); min-width: 80px;">
                         {% get_available_languages as LANGUAGES %}
