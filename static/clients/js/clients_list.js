@@ -176,9 +176,11 @@
   }
 
   let activeLink = '';
+  let activeShareMode = 'onboarding';
 
-  function openShareModal(link) {
+  function openShareModal(link, mode = 'onboarding') {
     activeLink = link;
+    activeShareMode = mode;
     const modalEl = document.getElementById('onboardingShareModal');
     if (!modalEl) return;
 
@@ -253,11 +255,19 @@
     if (!previewEl) return;
 
     let template = '';
-    if (lang === 'ru') {
-      template = `Здравствуйте! Пожалуйста, перейдите по ссылке, чтобы создать пароль и загрузить документы для дела: ${activeLink}`;
+    if (activeShareMode === 'intake') {
+      if (lang === 'pl') {
+        template = `Dzien dobry! Prosze kliknac w link i wypelnic formularz wstepny do otwarcia sprawy: ${activeLink}`;
+      } else if (lang === 'en') {
+        template = `Hello! Please follow the link and complete the intake form so we can open your case: ${activeLink}`;
+      } else {
+        template = `Hello! Please follow the link and complete the intake form so we can open your case: ${activeLink}`;
+      }
     } else if (lang === 'pl') {
-      template = `Dzień dobry! Proszę kliknąć w link, aby utworzyć hasło i przesłać dokumenty do sprawy: ${activeLink}`;
+      template = `Dzien dobry! Prosze kliknac w link, aby utworzyc haslo i przeslac dokumenty do sprawy: ${activeLink}`;
     } else if (lang === 'en') {
+      template = `Hello! Please follow the link to set up your password and upload documents for your case: ${activeLink}`;
+    } else {
       template = `Hello! Please follow the link to set up your password and upload documents for your case: ${activeLink}`;
     }
 
@@ -421,6 +431,107 @@
           showAlert(errMsg, 'danger');
         }
       });
+    });
+  }
+
+  function initPublicIntakeLink(root) {
+    const btn = root.getElementById('btn-public-intake-link');
+    if (!btn) return;
+
+    const alertContainer = document.getElementById('ajax-alert-container');
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const purposeSelect = root.getElementById('quick-onboarding-purpose');
+    const modalEl = root.getElementById('quickOnboardingModal');
+    const modal = modalEl && window.bootstrap ? bootstrap.Modal.getOrCreateInstance(modalEl) : null;
+
+    function showAlert(message, type = 'success') {
+      if (!alertContainer) return;
+      const alert = document.createElement('div');
+      alert.className = `alert alert-${type} alert-dismissible fade show mt-2`;
+      alert.role = 'alert';
+      alert.textContent = message;
+
+      const closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'btn-close';
+      closeBtn.setAttribute('data-bs-dismiss', 'alert');
+      closeBtn.setAttribute('aria-label', 'Close');
+      alert.appendChild(closeBtn);
+      alertContainer.appendChild(alert);
+
+      setTimeout(() => {
+        const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+        if (bsAlert) bsAlert.close();
+      }, 3500);
+    }
+
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const url = btn.dataset.generateUrl;
+      if (!url) return;
+
+      btn.disabled = true;
+      const icon = btn.querySelector('i');
+      const originalClass = icon ? icon.className : '';
+      if (icon) {
+        icon.className = 'spinner-border spinner-border-sm';
+      }
+
+      try {
+        const formData = new FormData();
+        if (purposeSelect && purposeSelect.value) {
+          formData.append('application_purpose', purposeSelect.value);
+        }
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'X-CSRFToken': csrfToken,
+          },
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data.status === 'ok') {
+          if (icon) {
+            icon.className = 'bi bi-check-lg';
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-success');
+          }
+
+          if (modal && modalEl.classList.contains('show')) {
+            modalEl.addEventListener('hidden.bs.modal', () => {
+              openShareModal(data.link, 'intake');
+            }, { once: true });
+            modal.hide();
+          } else {
+            openShareModal(data.link, 'intake');
+          }
+
+          setTimeout(() => {
+            if (icon) {
+              icon.className = originalClass;
+              btn.classList.remove('btn-success');
+              btn.classList.add('btn-outline-primary');
+            }
+            btn.disabled = false;
+          }, 1500);
+        } else {
+          throw new Error(data.message || 'Generation failed');
+        }
+      } catch (error) {
+        console.error(error);
+        if (icon) {
+          icon.className = originalClass;
+        }
+        btn.disabled = false;
+        showAlert('Failed to generate intake link. Please try again.', 'danger');
+      }
     });
   }
 
@@ -636,6 +747,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     enhanceEditors(document);
     initOnboardingLinkGenerator(document);
+    initPublicIntakeLink(document);
     initQuickOnboardingLink(document);
     initAutocompleteSearch(document);
     initShareModalListeners();

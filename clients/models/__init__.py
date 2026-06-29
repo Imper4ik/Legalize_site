@@ -19,7 +19,7 @@ from .document_version import DocumentVersion
 from .email import EmailLog
 from .family import FamilyGroup
 from .family_mos import ClientFamilyMemberMOS
-from .onboarding import ClientDigitalAccess, ClientOnboardingSession, MOSApplicationData, PeselApplication
+from .onboarding import ClientDigitalAccess, ClientIntakeSubmission, ClientOnboardingSession, MOSApplicationData, PeselApplication
 from .payment import Payment
 from .permissions import EmployeePermission, StaffAuditEvent
 from .pricing import ServicePrice
@@ -58,6 +58,7 @@ __all__ = [
     'get_available_document_types',
     'translate_document_name',
     'is_default_document_label',
+    'ClientIntakeSubmission',
     'ClientOnboardingSession',
     'ClientDigitalAccess',
     'MOSApplicationData',

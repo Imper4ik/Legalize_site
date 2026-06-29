@@ -1,3 +1,5 @@
+import hashlib
+import hmac
 from typing import Any
 
 from django.conf import settings
@@ -9,6 +11,167 @@ from django.utils.translation import gettext_lazy as _
 
 from clients.models.consistency import assert_case_client_consistent
 from fernet_fields import EncryptedJSONField, EncryptedTextField
+
+
+def _normalize_intake_lookup_value(value: Any, *, field_name: str) -> str:
+    normalized = str(value or "").strip()
+    if not normalized:
+        return ""
+    if field_name == "email":
+        return normalized.casefold()
+    if field_name == "phone":
+        return "".join(char for char in normalized if char.isdigit() or char == "+")
+    if field_name == "passport":
+        return normalized.upper().replace(" ", "")
+    return normalized
+
+
+def _hash_intake_lookup_value(value: Any, *, field_name: str) -> str:
+    normalized = _normalize_intake_lookup_value(value, field_name=field_name)
+    if not normalized:
+        return ""
+    secret = str(getattr(settings, "SECRET_KEY", ""))
+    return hmac.new(secret.encode("utf-8"), normalized.encode("utf-8"), hashlib.sha256).hexdigest()
+
+
+class ClientIntakeSubmission(models.Model):
+    """Encrypted pre-client questionnaire submitted from a public intake link."""
+
+    STATUS_DRAFT = "draft"
+    STATUS_SUBMITTED = "submitted"
+    STATUS_NEEDS_REVIEW = "needs_review"
+    STATUS_CONVERTED = "converted"
+    STATUS_EXPIRED = "expired"
+    STATUS_REVOKED = "revoked"
+    STATUS_CHOICES = [
+        (STATUS_DRAFT, "Draft"),
+        (STATUS_SUBMITTED, "Submitted"),
+        (STATUS_NEEDS_REVIEW, "Needs staff review"),
+        (STATUS_CONVERTED, "Converted to client/case"),
+        (STATUS_EXPIRED, "Expired"),
+        (STATUS_REVOKED, "Revoked"),
+    ]
+
+    SOURCE_PUBLIC_LINK = "public_link"
+    SOURCE_STAFF_LINK = "staff_link"
+    SOURCE_IMPORT = "import"
+    SOURCE_CHOICES = [
+        (SOURCE_PUBLIC_LINK, "Public link"),
+        (SOURCE_STAFF_LINK, "Staff link"),
+        (SOURCE_IMPORT, "Import"),
+    ]
+
+    token_hash = models.CharField(max_length=64, unique=True, db_index=True)
+    status = models.CharField(max_length=32, choices=STATUS_CHOICES, default=STATUS_DRAFT, db_index=True)
+    source = models.CharField(max_length=32, choices=SOURCE_CHOICES, default=SOURCE_PUBLIC_LINK)
+
+    personal_data = EncryptedJSONField(default=dict, blank=True)
+    case_data = EncryptedJSONField(default=dict, blank=True)
+    staff_notes = models.TextField(blank=True)
+
+    email_hash = models.CharField(max_length=64, blank=True, default="", db_index=True)
+    phone_hash = models.CharField(max_length=64, blank=True, default="", db_index=True)
+    passport_hash = models.CharField(max_length=64, blank=True, default="", db_index=True)
+
+    created_client = models.ForeignKey(
+        "clients.Client",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="intake_submissions",
+    )
+    created_case = models.ForeignKey(
+        "clients.Case",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="intake_submissions",
+    )
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="created_intake_submissions",
+    )
+    converted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="converted_intake_submissions",
+    )
+
+    expires_at = models.DateTimeField(null=True, blank=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
+    converted_at = models.DateTimeField(null=True, blank=True)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+        indexes = [
+            models.Index(fields=["status", "created_at"], name="intake_status_created_idx"),
+            models.Index(fields=["email_hash", "status"], name="intake_email_status_idx"),
+            models.Index(fields=["phone_hash", "status"], name="intake_phone_status_idx"),
+            models.Index(fields=["passport_hash", "status"], name="intake_passport_status_idx"),
+        ]
+        constraints = [
+            models.CheckConstraint(
+                condition=(
+                    ~models.Q(status="converted")
+                    | (models.Q(created_client__isnull=False) & models.Q(created_case__isnull=False))
+                ),
+                name="intake_converted_has_client_case",
+            )
+        ]
+
+    def clean(self) -> None:
+        super().clean()
+        if self.created_client_id and self.created_case_id and self.created_case:
+            if self.created_case.client_id != self.created_client_id:
+                raise ValidationError("Client and case do not match.")
+        if self.status == self.STATUS_CONVERTED and (not self.created_client_id or not self.created_case_id):
+            raise ValidationError("Converted intake must reference the created client and case.")
+
+    def _assert_created_case_client_consistent(self) -> None:
+        if not self.created_client_id or not self.created_case_id:
+            return
+        fields_cache = getattr(getattr(self, "_state", None), "fields_cache", {})
+        if "created_case" in fields_cache and self.created_case is not None:
+            case_client_id = self.created_case.client_id
+        else:
+            from clients.models.case import Case
+
+            case_client_id = Case.all_objects.only("client_id").get(pk=self.created_case_id).client_id
+        if case_client_id != self.created_client_id:
+            raise ValidationError("Client and case do not match.")
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        personal_data = self.personal_data if isinstance(self.personal_data, dict) else {}
+        self.email_hash = _hash_intake_lookup_value(personal_data.get("email"), field_name="email")
+        self.phone_hash = _hash_intake_lookup_value(personal_data.get("phone"), field_name="phone")
+        passport_value = (
+            personal_data.get("passport_num")
+            or personal_data.get("passport_number")
+            or personal_data.get("document_number")
+        )
+        self.passport_hash = _hash_intake_lookup_value(passport_value, field_name="passport")
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None:
+            update_fields = set(update_fields)
+            update_fields.update({"email_hash", "phone_hash", "passport_hash"})
+            kwargs["update_fields"] = list(update_fields)
+        self._assert_created_case_client_consistent()
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        personal_data = self.personal_data if isinstance(self.personal_data, dict) else {}
+        first_name = str(personal_data.get("first_name") or "").strip()
+        last_name = str(personal_data.get("last_name") or "").strip()
+        full_name = " ".join(part for part in (first_name, last_name) if part)
+        return full_name or f"Intake #{self.pk or 'new'}"
 
 
 class ClientOnboardingSession(models.Model):

@@ -130,6 +130,10 @@ urlpatterns = [
     path('test-center/', views.testcenter_view, name='test_center'),
     path('demo-center/', views.democenter_view, name='demo_center'),
 
+    # Public Client Intake
+    path('intake/create-link/', views.create_public_intake_link, name='create_public_intake_link'),
+    path('intake/<str:token>/', views.public_intake, name='public_intake'),
+
     # Onboarding / MOS Intake
     path('client/<int:client_id>/generate-onboarding-link/', views.generate_onboarding_link, name='generate_onboarding_link'),
     path('client/quick-onboarding/', views.quick_create_client_onboarding, name='quick_create_client_onboarding'),

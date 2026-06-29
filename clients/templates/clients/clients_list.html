@@ -387,6 +387,10 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">{% translate "Отмена" %}</button>
+        <button type="button" class="btn btn-outline-primary" id="btn-public-intake-link"
+                data-generate-url="{% url 'clients:create_public_intake_link' %}">
+          <i class="bi bi-ui-checks-grid me-1"></i>{% translate "Intake only" %}
+        </button>
         <button type="button" class="btn btn-primary" id="btn-quick-onboarding-link"
                 data-generate-url="{% url 'clients:quick_create_client_onboarding' %}">
           <i class="bi bi-link-45deg me-1"></i>{% translate "Сгенерировать ссылку" %}

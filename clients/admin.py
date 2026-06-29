@@ -15,6 +15,7 @@ from .models import (
     ClientActivity,
     ClientDigitalAccess,
     ClientFamilyMemberMOS,
+    ClientIntakeSubmission,
     ClientOnboardingSession,
     Company,
     Document,
@@ -594,6 +595,52 @@ def mask_json_pii(data, keys_to_mask):
             else:
                 masked[k] = "***"
     return masked
+
+
+@admin.register(ClientIntakeSubmission)
+class ClientIntakeSubmissionAdmin(admin.ModelAdmin):
+    list_display = ("id", "status", "source", "created_client", "created_case", "submitted_at", "converted_at", "created_at")
+    list_filter = ("status", "source", "created_at", "submitted_at", "converted_at")
+    search_fields = ("created_client__first_name", "created_client__last_name", "created_client__email")
+    autocomplete_fields = ("created_client", "created_by", "converted_by")
+    readonly_fields = ("email_hash", "phone_hash", "passport_hash", "created_at", "updated_at")
+
+    def personal_data_masked(self, obj):
+        return self._render_json_masked(obj.personal_data, ["first_name", "last_name", "phone", "email", "birth_date", "passport_num", "passport_number", "document_number"])
+    personal_data_masked.short_description = "Personal data (Masked)"
+
+    def case_data_masked(self, obj):
+        return self._render_json_masked(obj.case_data, ["authority_case_number", "case_number"])
+    case_data_masked.short_description = "Case data (Masked)"
+
+    def _render_json_masked(self, data, mask_keys=None):
+        import json
+
+        if not data:
+            return "-"
+        if mask_keys:
+            data = mask_json_pii(data, mask_keys)
+        formatted = json.dumps(data, indent=2, ensure_ascii=False)
+        return format_html("<pre>{}</pre>", formatted)
+
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if not request.user.has_perm("clients.view_sensitive_data"):
+            for field_name in ("personal_data_masked", "case_data_masked"):
+                if field_name not in readonly:
+                    readonly.append(field_name)
+        return readonly
+
+    def get_fields(self, request, obj=None):
+        fields = list(super().get_fields(request, obj))
+        if not request.user.has_perm("clients.view_sensitive_data"):
+            return [
+                "personal_data_masked" if field_name == "personal_data" else
+                "case_data_masked" if field_name == "case_data" else
+                field_name
+                for field_name in fields
+            ]
+        return fields
 
 @admin.register(ClientDigitalAccess)
 class ClientDigitalAccessAdmin(admin.ModelAdmin):

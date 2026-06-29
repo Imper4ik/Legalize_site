@@ -1,0 +1,25 @@
+{% extends "clients/onboarding/base_onboarding.html" %}
+{% load i18n %}
+
+{% block title %}
+  {% if state == "invalid" %}{% trans "Link unavailable" %}{% elif state == "expired" %}{% trans "Link expired" %}{% else %}{% trans "Intake submitted" %}{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="text-center py-4">
+  {% if state == "invalid" %}
+    <i class="bi bi-exclamation-triangle text-warning display-5 d-block mb-3"></i>
+    <p class="lead mb-0">{% trans "This intake link is not available." %}</p>
+  {% elif state == "expired" %}
+    <i class="bi bi-clock-history text-warning display-5 d-block mb-3"></i>
+    <p class="lead mb-0">{% trans "This intake link has expired. Please contact the office for a new link." %}</p>
+  {% elif state == "review" %}
+    <i class="bi bi-shield-check text-primary display-5 d-block mb-3"></i>
+    <p class="lead mb-2">{% trans "Your intake form has been submitted." %}</p>
+    <p class="text-muted mb-0">{% trans "The office will review the data and contact you if anything else is needed." %}</p>
+  {% else %}
+    <i class="bi bi-check-circle text-success display-5 d-block mb-3"></i>
+    <p class="lead mb-0">{% trans "Your intake form has already been accepted." %}</p>
+  {% endif %}
+</div>
+{% endblock %}

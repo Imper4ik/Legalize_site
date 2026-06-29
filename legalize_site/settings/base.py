@@ -640,6 +640,19 @@ RATE_LIMITS = {
         "fail_closed": True,
         "message": _("Too many account creation attempts. Try again later."),
     },
+    "clients:create_public_intake_link": {
+        "limit": int(os.environ.get("RATE_LIMIT_CREATE_PUBLIC_INTAKE_LINK", "60")),
+        "window_seconds": int(os.environ.get("RATE_LIMIT_CREATE_PUBLIC_INTAKE_LINK_WINDOW", "3600")),
+        "message": _("Too many intake link requests. Try again later."),
+    },
+    "clients:public_intake": {
+        "limit": int(os.environ.get("RATE_LIMIT_PUBLIC_INTAKE", "20")),
+        "window_seconds": int(os.environ.get("RATE_LIMIT_PUBLIC_INTAKE_WINDOW", "3600")),
+        "by_user": False,
+        "by_ip": True,
+        "fail_closed": True,
+        "message": _("Too many intake submissions. Try again later."),
+    },
 }
 RATE_LIMIT_CACHE_FAILURE_MODE = os.environ.get(
     "RATE_LIMIT_CACHE_FAILURE_MODE",

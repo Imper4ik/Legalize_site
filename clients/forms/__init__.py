@@ -4,6 +4,9 @@ from clients.forms.case_client_forms import (
     CaseForm,
     ClientForm,
 )
+from clients.forms.intake_forms import (
+    ClientIntakeSubmissionForm,
+)
 from clients.forms.document_forms import (
     ClientDocumentRequirementForm,
     DocumentChecklistForm,
@@ -36,6 +39,7 @@ __all__ = [
     "CaseForm",
     "ClientDocumentRequirementForm",
     "ClientForm",
+    "ClientIntakeSubmissionForm",
     "DocumentChecklistForm",
     "DocumentRequirementAddForm",
     "DocumentRequirementEditForm",

@@ -11,6 +11,7 @@ from clients.views.documents import *  # noqa: F403
 from clients.views.emails import *  # noqa: F403
 from clients.views.export import *  # noqa: F403
 from clients.views.family import FamilyDashboardView
+from clients.views.intake import create_public_intake_link, public_intake
 from clients.views.logs import EmailLogsView, StaffActivityLogsView
 from clients.views.metrics import MetricsDashboardView
 from clients.views.onboarding_start_contact import onboarding_start_contact as onboarding_start
