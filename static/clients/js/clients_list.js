@@ -69,7 +69,7 @@
     const editors = root.querySelectorAll('[data-notes-editor]');
     const forms = root.querySelectorAll('.notes-form');
     const boldIndicator = root.querySelector('[data-bold-indicator]');
-    const boldButton = root.querySelector('[data-notes-bold]');
+    const boldButtons = root.querySelectorAll('[data-notes-bold]');
 
     function updateIndicator() {
       if (!boldIndicator) {
@@ -78,13 +78,17 @@
       boldIndicator.style.display = selectionHasBold() ? 'inline-block' : 'none';
     }
 
-    if (boldButton) {
-      boldButton.addEventListener('click', (event) => {
+    boldButtons.forEach((boldButton) => {
+      // Bind on mousedown + preventDefault so clicking the button never moves
+      // focus out of the contenteditable note and collapses the selection.
+      // The previous click handler routinely lost the selection — the main
+      // reason the single toolbar button felt unreliable.
+      boldButton.addEventListener('mousedown', (event) => {
         event.preventDefault();
         toggleBoldSelection();
         updateIndicator();
       });
-    }
+    });
 
     document.addEventListener('selectionchange', updateIndicator);
 
@@ -123,6 +127,17 @@
 
       editor.addEventListener('keyup', updateIndicator);
       editor.addEventListener('mouseup', updateIndicator);
+
+      // Bold the current selection in place with the standard Ctrl/Cmd+B
+      // shortcut, so staff no longer have to reach for the single toolbar
+      // button in the column header while editing a row far down the list.
+      editor.addEventListener('keydown', (event) => {
+        if ((event.ctrlKey || event.metaKey) && (event.key === 'b' || event.key === 'B')) {
+          event.preventDefault();
+          toggleBoldSelection();
+          updateIndicator();
+        }
+      });
     });
 
     forms.forEach((form) => {

@@ -271,10 +271,16 @@
                    data-notes-editor>
                 {{ client.notes|default_if_none:""|sanitize_html }}
               </div>
-              <button class="btn btn-outline-secondary btn-sm mt-2 notes-save-button" type="submit"
-                title="{% translate 'Сохранить заметку' %}" aria-label="{% translate 'Сохранить заметку' %}">
-                <i class="bi bi-save me-1"></i>{% translate "Сохранить" %}
-              </button>
+              <div class="d-flex gap-2 mt-2">
+                <button type="button" class="btn btn-light btn-sm notes-bold-button" data-notes-bold
+                  title="{% translate 'Жирный (Ctrl+B)' %}" aria-label="{% translate 'Жирный (Ctrl+B)' %}">
+                  <b>B</b>
+                </button>
+                <button class="btn btn-outline-secondary btn-sm notes-save-button" type="submit"
+                  title="{% translate 'Сохранить заметку' %}" aria-label="{% translate 'Сохранить заметку' %}">
+                  <i class="bi bi-save me-1"></i>{% translate "Сохранить" %}
+                </button>
+              </div>
             </form>
           </td>
           <td class="text-end" data-label="{% translate 'Действия' %}">
