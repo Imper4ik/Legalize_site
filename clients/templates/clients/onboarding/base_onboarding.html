@@ -573,18 +573,110 @@
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
             transition: background 0.3s ease, border-color 0.3s ease;
+            height: 72px;
         }
         html[data-theme="dark"] .onboarding-navbar {
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.25);
         }
         .onboarding-navbar-inner {
-            max-width: 960px;
+            max-width: 1140px;
+            height: 100%;
             margin: 0 auto;
-            padding: 10px 20px;
+            padding: 0 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 1rem;
+            gap: 1.5rem;
+        }
+
+        /* Buttons & Controls Design Rules */
+        .btn-cta-question {
+            background: var(--brand-gradient) !important;
+            border: none !important;
+            color: #fff !important;
+            font-weight: 700 !important;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.2) !important;
+            padding: 8px 18px !important;
+            font-size: 0.85rem !important;
+            border-radius: 99px !important;
+            transition: all 0.2s ease-in-out !important;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-cta-question:hover {
+            background: var(--brand-gradient-hover) !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3) !important;
+        }
+        .btn-cta-question:focus-visible {
+            outline: 3px solid rgba(59, 130, 246, 0.5) !important;
+            outline-offset: 1px !important;
+        }
+
+        .btn-secondary-cabinet {
+            background: var(--glass-bg) !important;
+            border: 1px solid var(--glass-border) !important;
+            color: var(--fg) !important;
+            font-weight: 600 !important;
+            padding: 8px 16px !important;
+            font-size: 0.85rem !important;
+            border-radius: 99px !important;
+            transition: all 0.2s ease-in-out !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02) !important;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-secondary-cabinet:hover {
+            background: rgba(37, 99, 235, 0.05) !important;
+            border-color: rgba(37, 99, 235, 0.2) !important;
+            color: var(--fg) !important;
+            transform: translateY(-1px) !important;
+        }
+        .btn-secondary-cabinet:focus-visible {
+            outline: 3px solid rgba(59, 130, 246, 0.3) !important;
+        }
+
+        .navbar-icon-btn {
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50% !important;
+            border: 1px solid var(--glass-border) !important;
+            background: var(--glass-bg) !important;
+            color: var(--muted) !important;
+            transition: all 0.2s ease-in-out !important;
+            padding: 0 !important;
+            position: relative;
+        }
+        .navbar-icon-btn:hover {
+            background: rgba(37, 99, 235, 0.05) !important;
+            border-color: rgba(37, 99, 235, 0.2) !important;
+            color: var(--fg) !important;
+            transform: translateY(-1px) !important;
+        }
+        .navbar-icon-btn:focus-visible {
+            outline: 3px solid rgba(59, 130, 246, 0.3) !important;
+        }
+
+        .notification-badge-nav {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background-color: #ef4444;
+            color: #ffffff;
+            font-size: 0.62rem;
+            font-weight: 700;
+            line-height: 1;
+            padding: 2px 4px;
+            border-radius: 99px;
+            border: 2px solid var(--bs-body-bg);
+            transform: translate(25%, -25%);
         }
 
         /* Centered Main Container */
@@ -610,9 +702,10 @@
 <body>
     <!-- Sticky Top Toolbar -->
     <nav class="onboarding-navbar">
-        <div class="onboarding-navbar-inner">
-            <!-- Left Side: Brand Logo -->
-            <div class="d-flex align-items-center">
+        <!-- Desktop Header Layout -->
+        <div class="d-none d-lg-flex onboarding-navbar-inner justify-content-between align-items-center">
+            <!-- Left Side: Brand Logo & CTA "Задать вопрос" -->
+            <div class="d-flex align-items-center gap-4">
                 {% if session %}
                     <a href="{% url 'clients:onboarding_start' token=session.token_hash %}" class="d-flex align-items-center gap-2 text-decoration-none fw-bold" style="color: var(--fg); font-size: 1.15rem; letter-spacing: -0.02em;">
                         <i class="bi bi-shield-check-fill text-primary fs-4"></i>
@@ -624,24 +717,55 @@
                         <span>Legalize</span>
                     </div>
                 {% endif %}
-            </div>
 
-            <!-- Right Side: Actions, Theme & Language -->
-            <div class="d-flex align-items-center gap-3">
                 {% if session %}
-                    <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 py-1 px-3 rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#askQuestionModal">
+                    <button type="button" class="btn btn-cta-question" data-bs-toggle="modal" data-bs-target="#askQuestionModal">
                         <i class="bi bi-question-circle"></i>
                         <span>{% trans "Задать вопрос" %}</span>
                     </button>
                 {% endif %}
+            </div>
 
-                <!-- Notification Bell for Onboarding Dashboard -->
+            <!-- Right Side: Language, Theme, Notifications & Cabinet -->
+            <div class="d-flex align-items-center gap-3">
+                <!-- 1. Language Dropdown -->
+                <div class="dropdown">
+                    <button class="navbar-icon-btn dropdown-toggle fw-bold" type="button" id="languageDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.85rem;" aria-label="{% trans 'Выбор языка' %}">
+                        {{ LANGUAGE_CODE|upper }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-1" aria-labelledby="languageDropdown" style="background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); min-width: 80px;">
+                        {% get_available_languages as LANGUAGES %}
+                        {% for lang in LANGUAGES %}
+                            {% if lang.0 != LANGUAGE_CODE %}
+                                <li>
+                                    <form action="{% url 'set_language' %}" method="post" class="m-0 p-0">
+                                        {% csrf_token %}
+                                        <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                                        <button type="submit" name="language" value="{{ lang.0 }}" class="dropdown-item py-2 px-3 fw-semibold text-center small">
+                                            {{ lang.0|upper }}
+                                        </button>
+                                    </form>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- 2. Theme Toggle (Sun/Moon only, with Tooltip) -->
+                <button class="navbar-icon-btn theme-toggle" type="button" aria-pressed="false"
+                  aria-label="{% translate 'Переключить тему' %}" data-theme-toggle
+                  data-bs-toggle="tooltip" data-bs-placement="bottom"
+                  title="{% translate 'Переключить тему' %}">
+                  <i class="bi bi-sun-fill theme-icon-sun"></i>
+                  <i class="bi bi-moon-stars-fill theme-icon-moon"></i>
+                </button>
+
+                <!-- 3. Notification Bell -->
                 {% if action_items %}
-                    <div class="dropdown me-1">
-                        <button class="btn btn-sm btn-link text-decoration-none position-relative p-1 d-flex align-items-center justify-content-center" 
-                                type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--muted); transition: color 0.2s ease;">
-                            <i class="bi bi-bell-fill fs-5 text-warning animate-bell"></i>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem; padding: 0.25em 0.4em; transform: translate(-30%, -30%) !important;">
+                    <div class="dropdown">
+                        <button class="navbar-icon-btn" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{% trans 'Уведомления' %}" data-bs-toggle="tooltip" data-bs-placement="bottom" title="{% trans 'Уведомления' %}">
+                            <i class="bi bi-bell-fill text-warning animate-bell"></i>
+                            <span class="notification-badge-nav">
                                 {{ action_required_count }}
                             </span>
                         </button>
@@ -661,33 +785,10 @@
                     </div>
                 {% endif %}
 
-                <!-- Theme Toggle -->
-                <button class="btn btn-sm theme-toggle" type="button" aria-pressed="false"
-                  aria-label="{% translate 'Переключить тему' %}" data-theme-toggle
-                  data-theme-light-text="{% translate 'Светлая тема' %}"
-                  data-theme-dark-text="{% translate 'Тёмная тема' %}">
-                  <i class="bi bi-sun-fill theme-icon-sun"></i>
-                  <i class="bi bi-moon-stars-fill theme-icon-moon"></i>
-                  <span class="theme-toggle-text d-none d-md-inline" data-theme-toggle-text></span>
-                </button>
-
-                <!-- Language Switcher -->
-                <form action="{% url 'set_language' %}" method="post" class="d-inline mb-0">
-                    {% csrf_token %}
-                    <input name="next" type="hidden" value="{{ request.get_full_path }}">
-                    {% get_current_language as LANGUAGE_CODE %}
-                    {% get_available_languages as LANGUAGES %}
-                    {% for lang in LANGUAGES %}
-                        <button type="submit" name="language" value="{{ lang.0 }}" class="{% if lang.0 == LANGUAGE_CODE %}lang-active{% else %}lang-btn{% endif %}">
-                            {{ lang.0|upper }}
-                        </button>
-                        {% if not forloop.last %}<span class="text-muted">|</span>{% endif %}
-                    {% endfor %}
-                </form>
-
+                <!-- 4. Personal Cabinet Dropdown -->
                 {% if request.user.is_authenticated %}
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-primary dropdown-toggle d-flex align-items-center gap-1 py-1 px-3 rounded-pill fw-bold" type="button" id="cabinetDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="btn btn-secondary-cabinet dropdown-toggle" type="button" id="cabinetDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle"></i>
                             <span>{% trans "Личный кабинет" %}</span>
                         </button>
@@ -716,6 +817,124 @@
                         </ul>
                     </div>
                 {% endif %}
+            </div>
+        </div>
+
+        <!-- Mobile Header Layout -->
+        <div class="d-flex d-lg-none onboarding-navbar-inner justify-content-between align-items-center py-2 px-3">
+            <!-- Left Side: Brand Logo -->
+            <div class="d-flex align-items-center">
+                {% if session %}
+                    <a href="{% url 'clients:onboarding_start' token=session.token_hash %}" class="d-flex align-items-center gap-2 text-decoration-none fw-bold" style="color: var(--fg); font-size: 1.1rem; letter-spacing: -0.02em;">
+                        <i class="bi bi-shield-check-fill text-primary fs-4"></i>
+                        <span>Legalize</span>
+                    </a>
+                {% else %}
+                    <div class="d-flex align-items-center gap-2 fw-bold" style="color: var(--fg); font-size: 1.1rem; letter-spacing: -0.02em;">
+                        <i class="bi bi-shield-check-fill text-primary fs-4"></i>
+                        <span>Legalize</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Right Side: Notifications Bell & Mobile Menu Toggle -->
+            <div class="d-flex align-items-center gap-2">
+                <!-- Notifications Bell -->
+                {% if action_items %}
+                    <div class="dropdown">
+                        <button class="navbar-icon-btn" type="button" id="mobileNotificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{% trans 'Уведомления' %}">
+                            <i class="bi bi-bell-fill text-warning animate-bell"></i>
+                            <span class="notification-badge-nav">
+                                {{ action_required_count }}
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-2 px-1" aria-labelledby="mobileNotificationDropdown" style="width: 290px; max-width: 90vw; background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); z-index: 1050;">
+                            <li class="dropdown-header text-uppercase fw-bold text-muted px-3 py-2" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                                {% trans "Требуется внимание" %}
+                            </li>
+                            {% for item in action_items %}
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-start gap-2 py-2 px-3 rounded-3" href="{{ item.url|default:'#' }}">
+                                        <i class="bi {{ item.icon }} text-{{ item.type }} mt-0.5" style="font-size: 1rem;"></i>
+                                        <span class="text-wrap small fw-semibold" style="line-height: 1.3;">{{ item.text }}</span>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+
+                <!-- Mobile Menu Dropdown -->
+                <div class="dropdown">
+                    <button class="navbar-icon-btn" type="button" id="mobileMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{% trans 'Меню' %}">
+                        <i class="bi bi-list fs-4"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-3 px-3 mt-2" aria-labelledby="mobileMenuDropdown" style="width: 280px; max-width: 85vw; background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); z-index: 1050; border-radius: 16px;">
+                        <!-- 1. CTA Button: Задать вопрос -->
+                        {% if session %}
+                            <li class="mb-3">
+                                <button type="button" class="btn btn-cta-question w-100 py-2 d-flex align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#askQuestionModal">
+                                    <i class="bi bi-question-circle"></i>
+                                    <span>{% trans "Задать вопрос" %}</span>
+                                </button>
+                            </li>
+                        {% endif %}
+
+                        <!-- 2. Личный кабинет (nested list) -->
+                        {% if request.user.is_authenticated %}
+                            <li class="dropdown-header text-uppercase fw-bold text-muted px-0 pb-2 mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px; border-bottom: 1px solid var(--glass-border);">
+                                {% trans "Личный кабинет" %}
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2 px-2 fw-semibold rounded-2" href="{% url 'clients:onboarding_start' token='me' %}">
+                                    <i class="bi bi-house-door me-2 text-primary"></i>{% trans "Главная кабинета" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2 px-2 fw-semibold rounded-2" href="{% url 'account_email' %}">
+                                    <i class="bi bi-envelope me-2 text-primary"></i>{% trans "Изменить E-mail" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2 px-2 fw-semibold rounded-2" href="{% url 'account_change_password' %}">
+                                    <i class="bi bi-key me-2 text-primary"></i>{% trans "Изменить пароль" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2 px-2 fw-semibold rounded-2 text-danger" href="{% url 'account_logout' %}">
+                                    <i class="bi bi-box-arrow-right me-2"></i>{% trans "Выйти" %}
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider my-2"></li>
+                        {% endif %}
+
+                        <!-- 3. Theme Toggle -->
+                        <li class="py-2 mb-2 d-flex align-items-center justify-content-between" style="border-bottom: 1px solid var(--glass-border);">
+                            <span class="small fw-bold text-muted">{% trans "Тёмная тема" %}</span>
+                            <button class="navbar-icon-btn theme-toggle" type="button" aria-pressed="false" aria-label="{% translate 'Переключить тему' %}" data-theme-toggle>
+                                <i class="bi bi-sun-fill theme-icon-sun"></i>
+                                <i class="bi bi-moon-stars-fill theme-icon-moon"></i>
+                            </button>
+                        </li>
+
+                        <!-- 4. Language Switcher -->
+                        <li class="py-2 d-flex align-items-center justify-content-between">
+                            <span class="small fw-bold text-muted">{% trans "Язык" %}</span>
+                            <div class="d-flex align-items-center gap-1 bg-body-tertiary p-1 rounded-pill" style="border: 1px solid var(--glass-border);">
+                                {% get_available_languages as LANGUAGES %}
+                                {% for lang in LANGUAGES %}
+                                    <form action="{% url 'set_language' %}" method="post" class="d-inline m-0">
+                                        {% csrf_token %}
+                                        <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                                        <button type="submit" name="language" value="{{ lang.0 }}" class="border-0 px-2 py-1 rounded-pill small fw-bold {% if lang.0 == LANGUAGE_CODE %}bg-primary text-white{% else %}bg-transparent text-muted{% endif %}" style="font-size: 0.75rem; transition: all 0.2s;">
+                                            {{ lang.0|upper }}
+                                        </button>
+                                    </form>
+                                {% endfor %}
+                            </div>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </nav>
