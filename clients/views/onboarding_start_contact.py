@@ -519,6 +519,7 @@ def _build_start_context(
         "new_card_confirmation_document": new_card_confirmation_document,
         "new_card_values": new_card_values or _new_card_values_from_mos(mos_data),
         "new_card_errors": new_card_errors or {},
+        "hide_new_card_block": case_step >= 7,
         "docs_total_count": docs_total_count,
         "docs_uploaded_count": docs_uploaded_count,
         "docs_required_pending_count": docs_required_pending_count,
@@ -527,7 +528,8 @@ def _build_start_context(
         "support_email": support_email,
         "rejected_count": sum(1 for doc in checklist if doc.get("is_rejected")),
         "missing_case_number": bool(
-            mos_data
+            case_step < 7
+            and mos_data
             and mos_data.new_residence_card_application_status == "yes"
             and not mos_data.new_residence_card_case_number
         ),
