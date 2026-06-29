@@ -1,0 +1,35 @@
+{% extends "account/auth_base.html" %}
+{% load i18n account %}
+
+{% block title %}{% translate "Выйти" %}{% endblock %}
+
+{% block body_class %}auth-page{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card card shadow-lg p-4 p-lg-5">
+    <div class="text-center mb-4">
+      <div class="icon-circle mx-auto mb-3" style="width: 72px; height: 72px; background: linear-gradient(135deg, #ef4444, #b91c1c); box-shadow: 0 14px 32px rgba(239, 68, 68, 0.2);">
+        <i class="bi bi-box-arrow-right fs-2"></i>
+      </div>
+      <h2 class="fw-bold mb-2">{% translate "Выход из системы" %}</h2>
+      <p class="text-muted mb-0">{% translate "Вы уверены, что хотите выйти?" %}</p>
+    </div>
+
+    <form method="post" action="{% url 'account_logout' %}">
+      {% csrf_token %}
+      {% if redirect_field_value %}
+        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+      {% endif %}
+      <div class="d-grid gap-2">
+        <button class="btn btn-danger btn-lg py-3 fw-bold rounded-3 shadow-sm" type="submit">
+          {% translate "Да, выйти" %}
+        </button>
+        <a href="javascript:history.back()" class="btn btn-outline-secondary btn-lg py-3 fw-bold rounded-3">
+          {% translate "Отмена" %}
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "account/auth_base.html" %}
+{% load i18n account %}
+
+{% block title %}{% translate "Адреса электронной почты" %}{% endblock %}
+
+{% block body_class %}auth-page{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper" style="max-width: 800px;">
+  <div class="auth-card card shadow-lg p-4 p-lg-5">
+    <div class="text-center mb-4">
+      <div class="icon-circle mx-auto mb-3" style="width: 72px; height: 72px;">
+        <i class="bi bi-envelope-fill fs-3"></i>
+      </div>
+      <h2 class="fw-bold mb-2">{% translate "Электронные адреса" %}</h2>
+      <p class="text-muted mb-0">{% translate "Управляйте адресами электронной почты, привязанными к вашему аккаунту." %}</p>
+    </div>
+
+    {% if user.emailaddress_set.all %}
+      <p class="mb-3 text-muted">{% translate "Следующие адреса связаны с вашим аккаунтом:" %}</p>
+      <form action="{% url 'account_email' %}" class="email_list" method="post">
+        {% csrf_token %}
+        <div class="list-group mb-4">
+          {% for emailaddress in user.emailaddress_set.all %}
+            <label class="list-group-item d-flex justify-content-between align-items-center p-3" for="email_radio_{{ forloop.counter }}">
+              <div class="d-flex align-items-center gap-3">
+                <input class="form-check-input" type="radio" name="email" id="email_radio_{{ forloop.counter }}" value="{{ emailaddress.email }}" {% if emailaddress.primary or user.emailaddress_set.count == 1 %}checked="checked"{% endif %}/>
+                <span class="fw-medium">{{ emailaddress.email }}</span>
+              </div>
+              <div class="d-flex gap-2 align-items-center">
+                {% if emailaddress.verified %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2 small">{% translate "Подтвержден" %}</span>
+                {% else %}
+                  <span class="badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-3 py-2 small">{% translate "Не подтвержден" %}</span>
+                {% endif %}
+                {% if emailaddress.primary %}
+                  <span class="badge bg-primary rounded-pill px-3 py-2 small">{% translate "Основной" %}</span>
+                {% endif %}
+              </div>
+            </label>
+          {% endfor %}
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mb-4">
+          <button class="btn btn-primary px-4 py-2 fw-semibold" type="submit" name="action_primary">
+            <i class="bi bi-star-fill me-2"></i>{% translate "Сделать основным" %}
+          </button>
+          <button class="btn btn-outline-secondary px-4 py-2 fw-semibold" type="submit" name="action_send">
+            <i class="bi bi-envelope-check-fill me-2"></i>{% translate "Подтвердить" %}
+          </button>
+          <button class="btn btn-outline-danger px-4 py-2 fw-semibold" type="submit" name="action_remove">
+            <i class="bi bi-trash-fill me-2"></i>{% translate "Удалить" %}
+          </button>
+        </div>
+      </form>
+    {% else %}
+      <div class="alert alert-warning mb-4">
+        {% translate "У вас не привязано ни одного адреса электронной почты!" %}
+      </div>
+    {% endif %}
+
+    <hr class="my-4" style="opacity: 0.15;"/>
+
+    <div class="mt-4">
+      <h4 class="fw-bold mb-3">{% translate "Добавить email" %}</h4>
+      <form method="post" action="{% url 'account_email' %}" class="add_email">
+        {% csrf_token %}
+        <div class="row g-3 align-items-end">
+          <div class="col-md-8">
+            <label for="id_email" class="form-label fw-semibold">{% translate "Новый адрес электронной почты" %}</label>
+            <input type="email" name="email" id="id_email" class="form-control form-control-lg" placeholder="example@mail.com" required autocomplete="email"/>
+          </div>
+          <div class="col-md-4 d-grid">
+            <button class="btn btn-secondary btn-lg py-2 fw-bold" name="action_add" type="submit">
+              <i class="bi bi-plus-lg me-2"></i>{% translate "Добавить" %}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="text-center mt-5">
+      <a href="javascript:history.back()" class="btn btn-link text-muted text-decoration-none fw-semibold">
+        <i class="bi bi-arrow-left me-1"></i>{% translate "Назад" %}
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
