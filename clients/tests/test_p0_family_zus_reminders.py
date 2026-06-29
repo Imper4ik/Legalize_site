@@ -616,7 +616,11 @@ class TestUpdateRemindersCommand:
         _make_doc(client, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value, zus_period_month=date(2026, 4, 1), verified=True)
         today = date(2026, 6, 17)
         iso_year, iso_week, _ = today.isocalendar()
-        expected_key = f"zus_rca_missing:{client.pk}:{iso_year}-W{iso_week:02d}"
+        # Idempotency key is scoped to the case (spec §9) so a multi-case client
+        # is never silently suppressed; for this single-case client it carries
+        # that one case's pk.
+        case = client.cases.get()
+        expected_key = f"zus_rca_missing:{client.pk}:{case.pk}:{iso_year}-W{iso_week:02d}"
         mail.outbox = []
 
         with patch("clients.management.commands.update_reminders.timezone.localdate", return_value=today):

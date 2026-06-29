@@ -5,6 +5,7 @@ from typing import Any, cast
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.db import transaction
 from django.http import HttpRequest, HttpResponse, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.utils import timezone, translation
@@ -283,53 +284,59 @@ def _handle_new_card_application_post(
         )
 
     case = _session_case(session)
-    _save_new_card_values(mos_data, values)
     from clients.models import StaffTask
-    from clients.services.tasks import create_auto_task
-    if values.get("status") == NEW_CARD_STATUS_SUBMITTED_NO_NUMBER:
-        create_auto_task(session.client, "case_number_missing", case=case, title=_("Запросить номер дела у клиента"))
-    elif values.get("status") == NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER and values.get("case_number"):
-        tasks = StaffTask.objects.filter(
-            client=session.client,
-            case=case,
-            task_type="case_number_missing",
-            status__in=["open", "in_progress"],
-        )
-        if tasks.exists():
-            tasks.update(
-                title=_("Проверить номер дела"),
-                description=_("Клиент указал номер дела новой подачи. Проверьте его и перенесите в основной номер дела.")
-            )
-        else:
-            create_auto_task(
-                session.client,
-                "case_number_missing",
-                case=case,
-                title=_("Проверить номер дела"),
-                description=_("Клиент указал номер дела новой подачи. Проверьте его и перенесите в основной номер дела.")
-            )
-
-    if upload_form is not None:
-        upload_client_document(
-            client=session.client,
-            doc_type=NEW_CARD_CONFIRMATION_DOC_TYPE,
-            uploaded_document=upload_form.save(commit=False),
-            actor=request.user if request.user.is_authenticated else None,
-            parse_requested=False,
-            case=case,
-        )
     from clients.services.activity import log_client_activity
-    log_client_activity(
-        client=session.client,
-        actor=request.user if request.user.is_authenticated else None,
-        event_type="new_card_application_updated",
-        summary="Клиент обновил информацию о новой подаче на карту побыту",
-        details="Клиент обновил информацию о новой подаче.",
-        metadata={
-            "status": values.get("status"),
-            "has_case_number": bool(values.get("case_number")),
-        }
-    )
+    from clients.services.tasks import create_auto_task
+
+    # Persist the new-card answers, the confirmation file, and the derived staff
+    # task as one unit. Without this, a failure while saving the uploaded file
+    # could leave the MOS record marked "submitted" with no confirmation
+    # document attached (or vice versa) — a half-saved state for client data.
+    with transaction.atomic():
+        _save_new_card_values(mos_data, values)
+        if values.get("status") == NEW_CARD_STATUS_SUBMITTED_NO_NUMBER:
+            create_auto_task(session.client, "case_number_missing", case=case, title=_("Запросить номер дела у клиента"))
+        elif values.get("status") == NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER and values.get("case_number"):
+            tasks = StaffTask.objects.filter(
+                client=session.client,
+                case=case,
+                task_type="case_number_missing",
+                status__in=["open", "in_progress"],
+            )
+            if tasks.exists():
+                tasks.update(
+                    title=_("Проверить номер дела"),
+                    description=_("Клиент указал номер дела новой подачи. Проверьте его и перенесите в основной номер дела.")
+                )
+            else:
+                create_auto_task(
+                    session.client,
+                    "case_number_missing",
+                    case=case,
+                    title=_("Проверить номер дела"),
+                    description=_("Клиент указал номер дела новой подачи. Проверьте его и перенесите в основной номер дела.")
+                )
+
+        if upload_form is not None:
+            upload_client_document(
+                client=session.client,
+                doc_type=NEW_CARD_CONFIRMATION_DOC_TYPE,
+                uploaded_document=upload_form.save(commit=False),
+                actor=request.user if request.user.is_authenticated else None,
+                parse_requested=False,
+                case=case,
+            )
+        log_client_activity(
+            client=session.client,
+            actor=request.user if request.user.is_authenticated else None,
+            event_type="new_card_application_updated",
+            summary="Клиент обновил информацию о новой подаче на карту побыту",
+            details="Клиент обновил информацию о новой подаче.",
+            metadata={
+                "status": values.get("status"),
+                "has_case_number": bool(values.get("case_number")),
+            }
+        )
 
     mos_data.refresh_from_db()
     confirmation_document = _latest_new_card_confirmation_document(session.client, case)

@@ -649,6 +649,7 @@ def _get_missing_documents_context(
     language: str | None = None,
     *,
     today: Any | None = None,
+    case: Any | None = None,
 ) -> dict[str, Any] | None:
     if language is None:
         language = _get_preferred_language(client)
@@ -663,11 +664,16 @@ def _get_missing_documents_context(
         include_optional=False,
         include_fallback=not has_db_records,
     )
-    uploaded_codes = set(client.documents.values_list("document_type", flat=True))
+    # When a specific case is supplied, the checklist is scoped to that case so a
+    # client with several active cases never has one case's documents counted
+    # against another (spec §9). Without a case the legacy client-wide view is
+    # kept for backwards compatibility.
+    documents = client.documents.filter(case=case) if case is not None else client.documents.all()
+    uploaded_codes = set(documents.values_list("document_type", flat=True))
     submitted_codes = get_submitted_document_codes(client)
     from clients.services.cases import resolve_single_active_case
 
-    zus_case = resolve_single_active_case(client)
+    zus_case = case or resolve_single_active_case(client)
     missing_zus = missing_zus_months(zus_case, today=today) if zus_case else []
     missing = []
     uploaded_with_expiry = []
@@ -678,7 +684,7 @@ def _get_missing_documents_context(
             continue
 
         if code in uploaded_codes or code in submitted_codes:
-            doc = client.documents.filter(document_type=code).order_by("-uploaded_at").first()
+            doc = documents.filter(document_type=code).order_by("-uploaded_at").first()
             expiry_date = getattr(doc, "expiry_date", None)
             if expiry_date:
                 uploaded_with_expiry.append(
@@ -700,6 +706,8 @@ def _get_missing_documents_context(
     custom_reqs = ClientDocumentRequirement.objects.filter(
         client=client, is_active=True, is_required=True,
     ).order_by("due_date", "created_at")
+    if case is not None:
+        custom_reqs = custom_reqs.filter(case=case)
     for req in custom_reqs:
         if req.document_type not in uploaded_codes and req.document_type not in submitted_codes:
             missing.append(
@@ -736,14 +744,20 @@ def send_missing_documents_email(
     weekly_key: str | None = None,
     idempotency_extra: str | None = None,
     today: Any | None = None,
+    case: Any | None = None,
 ) -> int:
-    """Send a reminder listing documents that are still missing for the client."""
+    """Send a reminder listing documents that are still missing for the client.
+
+    ``case`` scopes the checklist and the default idempotency key to a single
+    case, so a multi-case client receives a separate, correct reminder per case
+    instead of one merged email or a silently suppressed second case (spec §9).
+    """
 
     if not client.email:
         return 0
 
     language = _get_preferred_language(client)
-    context = _get_missing_documents_context(client, language, today=today)
+    context = _get_missing_documents_context(client, language, today=today, case=case)
     if not context:
         return 0
 
@@ -751,8 +765,9 @@ def send_missing_documents_email(
     body = _render_email_body("missing_documents", context, language)
     today = today or timezone.localdate()
     iso_year, iso_week, _iso_weekday = today.isocalendar()
+    case_segment = f"{case.pk}:" if case is not None else ""
     idempotency_key = weekly_key or idempotency_extra or (
-        f"missing_documents:{client.pk}:{iso_year}-W{iso_week:02d}"
+        f"missing_documents:{client.pk}:{case_segment}{iso_year}-W{iso_week:02d}"
     )
     return _send_email(
         subject,

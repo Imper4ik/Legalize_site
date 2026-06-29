@@ -13,6 +13,7 @@ from django.utils import translation
 from django.utils.translation import gettext_lazy as _
 
 from clients.constants import DOCUMENT_CHECKLIST, DocumentType
+from clients.models.consistency import assert_case_client_consistent
 from clients.validators import validate_uploaded_document
 from fernet_fields import EncryptedJSONField
 from legalize_site.soft_delete import SoftDeleteModel, SoftDeleteQuerySet
@@ -285,6 +286,7 @@ class Document(SoftDeleteModel):
             self.zus_period_month = _first_day_of_month(self.zus_period_month)
         else:
             self.zus_period_month = None
+        assert_case_client_consistent(self)
         super().save(*args, **kwargs)
 
     def on_archive(self) -> None:
@@ -534,6 +536,7 @@ class ClientDocumentRequirement(models.Model):
                 update_fields = set(update_fields)
                 update_fields.add("case")
                 kwargs["update_fields"] = list(update_fields)
+        assert_case_client_consistent(self)
         super().save(*args, **kwargs)
         if not self.document_type and self.pk:
             self.document_type = f"client_custom_{self.pk}"

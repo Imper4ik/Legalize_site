@@ -11,7 +11,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from clients.constants import FINISHED_WORKFLOW_STAGES
-from clients.models import Case, Client, ClientDocumentRequirement, Document, Payment, Reminder, StaffTask
+from clients.models import Case, ClientDocumentRequirement, Document, Payment, Reminder, StaffTask
 from clients.services.custom_document_requirements import sync_custom_document_requirement_reminder
 from clients.services.notifications import (
     _get_missing_documents_context,
@@ -107,34 +107,37 @@ class Command(BaseCommand):
 
     def send_missing_document_notifications(self, *, dry_run: bool = False) -> None:
         today = timezone.localdate()
-        # Case-first (spec §4): the client is in scope when one of their cases is
-        # in waiting_decision after fingerprints without a decision. The four
-        # conditions share one .filter() so they must match the same case.
-        clients = Client.objects.production().filter(
-            cases__workflow_stage="waiting_decision",
-            cases__fingerprints_date__isnull=False,
-            cases__fingerprints_date__lte=today,
-            cases__decision_date__isnull=True,
-        ).exclude(email="").distinct()
+        # Case-first (spec §4/§9): scope the reminder to each active case that is
+        # in waiting_decision after fingerprints without a decision. Iterating per
+        # case (rather than per client) means a client with several active cases
+        # gets one correct, case-scoped reminder per case instead of a single
+        # merged email — or a silently suppressed second case.
+        cases = Case.objects.production().select_related("client").filter(
+            workflow_stage="waiting_decision",
+            fingerprints_date__isnull=False,
+            fingerprints_date__lte=today,
+            decision_date__isnull=True,
+        ).exclude(client__email="")
 
         sent_count = 0
         skipped_count = 0
         iso_year, iso_week, _iso_weekday = today.isocalendar()
-        for client in clients.iterator():
-            weekly_key = f"waiting_decision_missing_docs:{client.pk}:{iso_year}-W{iso_week:02d}"
+        for case in cases.iterator():
+            client = case.client
+            weekly_key = f"waiting_decision_missing_docs:{client.pk}:{case.pk}:{iso_year}-W{iso_week:02d}"
             if dry_run:
-                sent = 1 if _get_missing_documents_context(client) else 0
+                sent = 1 if _get_missing_documents_context(client, case=case) else 0
             else:
-                sent = send_missing_documents_email(client, weekly_key=weekly_key)
+                sent = send_missing_documents_email(client, weekly_key=weekly_key, case=case)
 
             sent_count += sent
             if dry_run and sent:
-                logger.info("notification would send: template=missing_documents client_id=%s", client.pk)
+                logger.info("notification would send: template=missing_documents client_id=%s case_id=%s", client.pk, case.pk)
             elif sent:
-                logger.info("notification sent: template=missing_documents client_id=%s", client.pk)
+                logger.info("notification sent: template=missing_documents client_id=%s case_id=%s", client.pk, case.pk)
             else:
                 skipped_count += 1
-                logger.info("notification skipped: template=missing_documents client_id=%s", client.pk)
+                logger.info("notification skipped: template=missing_documents client_id=%s case_id=%s", client.pk, case.pk)
 
         prefix = "DRY RUN: would send" if dry_run else "Sent"
         self.stdout.write(f"{prefix} {sent_count} missing-document emails. skipped={skipped_count}")
@@ -172,11 +175,11 @@ class Command(BaseCommand):
                     )
                     continue
 
-                weekly_key = f"zus_rca_missing:{client.pk}:{iso_year}-W{iso_week:02d}"
+                weekly_key = f"zus_rca_missing:{client.pk}:{case.pk}:{iso_year}-W{iso_week:02d}"
                 if dry_run:
-                    sent = 1 if client.email and _get_missing_documents_context(client, today=today) else 0
+                    sent = 1 if client.email and _get_missing_documents_context(client, today=today, case=case) else 0
                 else:
-                    sent = send_missing_documents_email(client, weekly_key=weekly_key, today=today)
+                    sent = send_missing_documents_email(client, weekly_key=weekly_key, today=today, case=case)
 
                 sent_count += sent
                 if dry_run and sent:

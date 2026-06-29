@@ -22,7 +22,6 @@ from clients.views.onboarding_step_return import (
     onboarding_personal_extra,
     onboarding_travel,
 )
-from clients.views.onboarding_token_access import enable_token_link_access
 from clients.views.onboarding_views import (
     check_onboarding_session,
     generate_onboarding_link,
@@ -46,7 +45,5 @@ from clients.views.staff_views import *  # noqa: F403
 from clients.views.tasks import *  # noqa: F403
 from clients.views.testcenter import testcenter_view
 from clients.views.workday import WorkdayView
-
-enable_token_link_access()
 
 __all__ = [name for name in globals() if not name.startswith('_')]

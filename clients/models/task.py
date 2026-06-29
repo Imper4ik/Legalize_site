@@ -8,6 +8,8 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from clients.models.consistency import assert_case_client_consistent
+
 
 class StaffTaskQuerySet(models.QuerySet):
     def for_active_cases(self) -> Self:
@@ -178,6 +180,7 @@ class StaffTask(models.Model):
                 update_fields = set(update_fields)
                 update_fields.add("case")
                 kwargs["update_fields"] = list(update_fields)
+        assert_case_client_consistent(self)
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:

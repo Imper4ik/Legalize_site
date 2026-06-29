@@ -15,7 +15,7 @@ from clients.views import onboarding_views
 
 
 def _auth_redirect(request: HttpRequest, session: ClientOnboardingSession, token: str) -> HttpResponse | None:
-    return onboarding_views.check_client_auth(request, session, token)
+    return onboarding_views.check_client_auth_token_link(request, session, token)
 
 
 def _scoped_mos_get_or_404(session: ClientOnboardingSession) -> MOSApplicationData:

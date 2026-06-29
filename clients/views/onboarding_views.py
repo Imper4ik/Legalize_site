@@ -319,6 +319,23 @@ def check_client_auth(request: HttpRequest, session: ClientOnboardingSession, to
 
     return None
 
+
+def check_client_auth_token_link(
+    request: HttpRequest, session: ClientOnboardingSession, token: str
+) -> HttpResponse | None:
+    """Auth for raw-token onboarding links: the token itself is the credential.
+
+    ``check_onboarding_session`` has already validated the token hash, expiry and
+    status, so a valid raw token grants bearer access to the case-scoped steps
+    without a separate login. The ``token='me'`` flow still represents the
+    authenticated client's own dashboard and keeps the full login/password
+    requirement via ``check_client_auth``. Replaces the previous runtime
+    monkeypatch (enable_token_link_access), whose effect depended on import order.
+    """
+    if token != SELF_ONBOARDING_SLUG:
+        return None
+    return check_client_auth(request, session, token)
+
 def _validate_email_domain_dns(email: str) -> bool:
     import socket
 
@@ -525,7 +542,7 @@ def onboarding_select_case(request: HttpRequest, token: str) -> HttpResponse:
     if session.scope != "client_portal":
         return redirect("clients:onboarding_start", token=token)
 
-    auth_redirect = check_client_auth(request, session, token)
+    auth_redirect = check_client_auth_token_link(request, session, token)
     if auth_redirect:
         return auth_redirect
 
@@ -551,7 +568,7 @@ def onboarding_purpose(request: HttpRequest, token: str) -> HttpResponse:
     session = check_onboarding_session(token, request=request)
     if not session:
         return HttpResponseForbidden(_("Invalid or expired onboarding link."))
-    auth_redirect = check_client_auth(request, session, token)
+    auth_redirect = check_client_auth_token_link(request, session, token)
     if auth_redirect:
         return auth_redirect
     case_redirect = _require_portal_case(request, session, token)
@@ -588,7 +605,7 @@ def onboarding_document_upload(request: HttpRequest, token: str, doc_type: str) 
     session = check_onboarding_session(token, request=request)
     if not session:
         return HttpResponseForbidden(_("Invalid or expired onboarding link."))
-    auth_redirect = check_client_auth(request, session, token)
+    auth_redirect = check_client_auth_token_link(request, session, token)
     if auth_redirect:
         return auth_redirect
     case_redirect = _require_portal_case(request, session, token)
@@ -637,7 +654,7 @@ def onboarding_document_preview(request: HttpRequest, token: str, doc_id: int) -
     session = check_onboarding_session(token, request=request)
     if not session:
         return HttpResponseForbidden(_("Invalid or expired onboarding link."))
-    auth_redirect = check_client_auth(request, session, token)
+    auth_redirect = check_client_auth_token_link(request, session, token)
     if auth_redirect:
         return auth_redirect
     case_redirect = _require_portal_case(request, session, token)
@@ -656,7 +673,7 @@ def onboarding_document_delete(request: HttpRequest, token: str, doc_id: int) ->
     session = check_onboarding_session(token, request=request)
     if not session:
         return HttpResponseForbidden(_("Срок действия ссылки истёк или она недействительна."))
-    auth_redirect = check_client_auth(request, session, token)
+    auth_redirect = check_client_auth_token_link(request, session, token)
     if auth_redirect:
         return auth_redirect
     case_redirect = _require_portal_case(request, session, token)
@@ -685,7 +702,7 @@ def onboarding_review(request: HttpRequest, token: str) -> HttpResponse:
     session = check_onboarding_session(token, allowed_statuses=("created", "active", "completed"), request=request)
     if not session:
         return HttpResponseForbidden(_("Срок действия ссылки истёк или она недействительна."))
-    auth_redirect = check_client_auth(request, session, token)
+    auth_redirect = check_client_auth_token_link(request, session, token)
     if auth_redirect:
         return auth_redirect
     case_redirect = _require_portal_case(request, session, token)
@@ -923,7 +940,7 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
     session = check_onboarding_session(token, request=request)
     if not session:
         return JsonResponse({"status": "error", "message": _("Invalid token")}, status=403)
-    auth_redirect = check_client_auth(request, session, token)
+    auth_redirect = check_client_auth_token_link(request, session, token)
     if auth_redirect:
         return JsonResponse({"status": "error", "message": _("Authentication required")}, status=401)
 
@@ -1129,7 +1146,7 @@ def onboarding_ask_question(request: HttpRequest, token: str) -> HttpResponse:
     if not session:
         return HttpResponseForbidden(_("Срок действия ссылки истёк или она недействительна."))
 
-    auth_redirect = check_client_auth(request, session, token)
+    auth_redirect = check_client_auth_token_link(request, session, token)
     if auth_redirect:
         return auth_redirect
 

@@ -7,6 +7,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 
+from clients.models.consistency import assert_case_client_consistent
 from fernet_fields import EncryptedJSONField, EncryptedTextField
 
 
@@ -99,6 +100,7 @@ class ClientOnboardingSession(models.Model):
                 update_fields = set(update_fields)
                 update_fields.add("case")
                 kwargs["update_fields"] = list(update_fields)
+        assert_case_client_consistent(self)
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
@@ -238,6 +240,7 @@ class MOSApplicationData(models.Model):
                 update_fields = set(update_fields)
                 update_fields.add("case")
                 kwargs["update_fields"] = list(update_fields)
+        assert_case_client_consistent(self)
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
@@ -315,6 +318,7 @@ class PeselApplication(models.Model):
                 update_fields = set(update_fields)
                 update_fields.add("case")
                 kwargs["update_fields"] = list(update_fields)
+        assert_case_client_consistent(self)
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:

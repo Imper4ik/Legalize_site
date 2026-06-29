@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 
+from django.db import transaction
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
@@ -28,21 +29,54 @@ def create_auto_task(
     if client.archived_at is not None:
         return None
 
-    existing_query = StaffTask.objects.filter(
-        client=client,
-        task_type=task_type,
-        status__in=["open", "in_progress"],
-    )
-    if document:
-        existing_query = existing_query.filter(document=document)
-    if payment:
-        existing_query = existing_query.filter(payment=payment)
-    if case:
-        existing_query = existing_query.filter(case=case)
+    # Serialize check-then-create against concurrent cron runs (e.g.
+    # process_document_jobs racing update_reminders): without this, two workers
+    # both pass the `.exists()` check and both insert, producing duplicate auto
+    # tasks. Locking the client row makes the existence check and the insert
+    # atomic relative to any other auto-task creation for the same client.
+    # (select_for_update is a no-op on SQLite used in tests; it locks on
+    # PostgreSQL in production.)
+    with transaction.atomic():
+        Client.all_objects.select_for_update().filter(pk=client.pk).first()
 
-    if existing_query.exists():
-        return None
+        existing_query = StaffTask.objects.filter(
+            client=client,
+            task_type=task_type,
+            status__in=["open", "in_progress"],
+        )
+        if document:
+            existing_query = existing_query.filter(document=document)
+        if payment:
+            existing_query = existing_query.filter(payment=payment)
+        if case:
+            existing_query = existing_query.filter(case=case)
 
+        if existing_query.exists():
+            return None
+
+        return _create_auto_task(
+            client,
+            task_type,
+            document=document,
+            payment=payment,
+            case=case,
+            title=title,
+            description=description,
+            due_date=due_date,
+        )
+
+
+def _create_auto_task(
+    client: Client,
+    task_type: str,
+    *,
+    document: Document | None = None,
+    payment: Payment | None = None,
+    case: Case | None = None,
+    title: str | None = None,
+    description: str | None = None,
+    due_date: date | None = None,
+) -> StaffTask:
     if not title:
         titles = {
             "document_review": _("Проверить загруженный документ: %(doc_name)s") % {"doc_name": document.display_name if document else ""},
