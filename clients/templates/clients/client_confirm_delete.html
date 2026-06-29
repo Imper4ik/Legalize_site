@@ -4,25 +4,102 @@
 {% block title %}{% trans "Удаление клиента" %}{% endblock %}
 {% block page_header %}{% endblock %}
 
+{% block extra_head %}
+{{ block.super }}
+<style>
+  .delete-confirm-card {
+    overflow: hidden;
+  }
+
+  .delete-confirm-card .card-body {
+    color: var(--bs-body-color);
+  }
+
+  .delete-client-summary {
+    background: var(--bs-secondary-bg);
+    border-color: var(--bs-border-color);
+    color: var(--bs-body-color);
+  }
+
+  .delete-client-summary .alert-heading,
+  .delete-client-summary p {
+    color: inherit;
+    opacity: 1;
+  }
+
+  .delete-warning {
+    background: #fff3cd;
+    border-color: #ffca2c;
+    color: #332701;
+  }
+
+  .delete-warning .delete-warning-title,
+  .delete-warning .delete-warning-text {
+    color: inherit;
+  }
+
+  .delete-confirm-label {
+    color: var(--bs-body-color);
+    opacity: 1;
+  }
+
+  .delete-confirm-check .form-check-input {
+    border-color: #ffca2c;
+    box-shadow: 0 0 0 1px rgba(255, 202, 44, .35);
+  }
+
+  .delete-confirm-check .form-check-input:checked {
+    background-color: #dc3545;
+    border-color: #dc3545;
+  }
+
+  html[data-bs-theme="dark"] .delete-client-summary {
+    background: #111827;
+    border-color: #4b5563;
+    color: #f8fafc;
+  }
+
+  html[data-bs-theme="dark"] .delete-warning {
+    background: #4a3700;
+    border-color: #facc15;
+    color: #fff7cc;
+  }
+
+  html[data-bs-theme="dark"] .delete-warning .delete-warning-title {
+    color: #fff2a8;
+  }
+
+  html[data-bs-theme="dark"] .delete-warning .delete-warning-text,
+  html[data-bs-theme="dark"] .delete-confirm-label {
+    color: #f8fafc;
+  }
+
+  html[data-bs-theme="dark"] .delete-confirm-check .form-check-input {
+    background-color: #0f172a;
+    border-color: #facc15;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
+<div class="delete-confirm-shell row justify-content-center">
     <div class="col-md-8 col-lg-6">
-        <div class="card shadow-sm border-danger">
+        <div class="delete-confirm-card card shadow-sm border-danger">
             <div class="card-header bg-danger text-white">
                 <h4 class="mb-0">{% trans "Подтверждение удаления" %}</h4>
             </div>
             <div class="card-body p-4">
                 <p class="lead">{% trans "Вы уверены, что хотите навсегда удалить клиента?" %}</p>
 
-                <div class="alert alert-secondary">
+                <div class="delete-client-summary alert alert-secondary">
                     <h5 class="alert-heading">{{ client.first_name }} {{ client.last_name }}</h5>
                     <p class="mb-0">Email: {{ client.email }}</p>
                 </div>
 
                 {% if active_cases %}
-                <div class="alert alert-warning border-warning mt-3">
-                    <h5 class="alert-heading text-warning-emphasis"><i class="fas fa-exclamation-triangle me-2"></i>{% trans "Внимание: у клиента есть активные дела!" %}</h5>
-                    <p class="mb-0 text-dark">{% trans "Все активные дела клиента будут автоматически архивированы." %}</p>
+                <div class="delete-warning alert alert-warning border-warning mt-3">
+                    <h5 class="delete-warning-title alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>{% trans "Внимание: у клиента есть активные дела!" %}</h5>
+                    <p class="delete-warning-text mb-0">{% trans "Все активные дела клиента будут автоматически архивированы." %}</p>
                 </div>
                 {% else %}
                 <p class="text-danger fw-bold mt-3">
@@ -34,9 +111,9 @@
                 <form method="post">
                     {% csrf_token %}
                     {% if active_cases %}
-                    <div class="form-check my-4">
+                    <div class="delete-confirm-check form-check my-4">
                         <input class="form-check-input border-warning" type="checkbox" name="confirm_archive_all_cases" id="confirm_archive_all_cases" value="true" required>
-                        <label class="form-check-label text-dark fw-bold" for="confirm_archive_all_cases">
+                        <label class="delete-confirm-label form-check-label fw-bold" for="confirm_archive_all_cases">
                             {% trans "Я подтверждаю архивацию всех активных дел клиента" %}
                         </label>
                     </div>
