@@ -48,6 +48,10 @@
         <i class="bi bi-pencil-square"></i>
         <span>{% translate "Редактировать" %}</span>
       </a>
+      <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#sendEmailModal">
+        <i class="bi bi-envelope-paper"></i>
+        <span>{% translate "Написать email" %}</span>
+      </button>
       {% if show_family_dashboard_link %}
       <a href="{{ family_dashboard_url }}" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-people"></i>
