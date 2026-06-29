@@ -12375,3 +12375,31 @@ msgstr "users"
 
 #~ msgid "Сценарии:"
 #~ msgstr "Scenarios:"
+
+# Manual fixes for public intake/onboarding sharing UI
+msgid "Client intake form"
+msgstr "Client intake form"
+
+msgid "Personal data"
+msgstr "Personal data"
+
+msgid "First name"
+msgstr "First name"
+
+msgid "Last name"
+msgstr "Last name"
+
+msgid "Date of birth"
+msgstr "Date of birth"
+
+msgid "Citizenship"
+msgstr "Citizenship"
+
+msgid "Case data"
+msgstr "Case data"
+
+msgid "Submit"
+msgstr "Submit"
+
+msgid "Intake only"
+msgstr "Intake only"

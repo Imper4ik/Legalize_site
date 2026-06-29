@@ -12407,3 +12407,31 @@ msgstr "użytkownicy"
 
 #~ msgid "Сценарии:"
 #~ msgstr "Scenariusze:"
+
+# Manual fixes for public intake/onboarding sharing UI
+msgid "Client intake form"
+msgstr "Formularz wstępny klienta"
+
+msgid "Personal data"
+msgstr "Dane osobowe"
+
+msgid "First name"
+msgstr "Imię"
+
+msgid "Last name"
+msgstr "Nazwisko"
+
+msgid "Date of birth"
+msgstr "Data urodzenia"
+
+msgid "Citizenship"
+msgstr "Obywatelstwo"
+
+msgid "Case data"
+msgstr "Dane sprawy"
+
+msgid "Submit"
+msgstr "Wyślij"
+
+msgid "Intake only"
+msgstr "Tylko ankieta"
