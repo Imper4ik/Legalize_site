@@ -16,7 +16,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from fernet_fields import EncryptedJSONField, EncryptedTextField
+from fernet_fields import EncryptedTextField
 from legalize_site.soft_delete import SoftDeleteModel, SoftDeleteQuerySet
 
 logger = logging.getLogger(__name__)
@@ -132,7 +132,6 @@ class Case(SoftDeleteModel):
         related_name="cases",
         verbose_name=_("Работодатель"),
     )
-    new_card_application_data = EncryptedJSONField(default=dict, blank=True, verbose_name=_("Данные новой подачи"))
     closed_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Дата закрытия"))
     close_reason = models.TextField(blank=True, default="", verbose_name=_("Причина закрытия"))
     archived_by = models.ForeignKey(

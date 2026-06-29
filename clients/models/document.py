@@ -316,11 +316,7 @@ class Document(SoftDeleteModel):
         if hasattr(self, "_preloaded_requirement"):
             requirement = self._preloaded_requirement
         else:
-            purpose = self.client.get_document_requirement_purpose()
-            requirement = DocumentRequirement.objects.filter(
-                application_purpose=purpose,
-                document_type=self.document_type,
-            ).first()
+            requirement = self._requirement_for_display()
         if requirement:
             return resolve_document_label(
                 requirement.document_type,
@@ -334,6 +330,31 @@ class Document(SoftDeleteModel):
             self.document_type,
             language=translation.get_language() or self.client.language,
         )
+
+    def _requirement_for_display(self) -> DocumentRequirement | None:
+        """Resolve this document's DocumentRequirement, caching by purpose.
+
+        Without ``_preloaded_requirement`` (set by the checklist builder) every
+        ``display_name`` access used to issue its own query, an N+1 when rendering
+        document lists. The requirement only depends on (purpose, document_type),
+        so the full purpose→{type: requirement} map is built once and cached on
+        the shared client instance, making subsequent lookups query-free.
+        """
+        purpose = self.client.get_document_requirement_purpose()
+        cache: dict[str, dict[str, DocumentRequirement]] = getattr(
+            self.client, "_document_requirement_map_cache", None
+        )
+        if cache is None:
+            cache = {}
+            setattr(self.client, "_document_requirement_map_cache", cache)
+        requirement_map = cache.get(purpose)
+        if requirement_map is None:
+            requirement_map = {
+                requirement.document_type: requirement
+                for requirement in DocumentRequirement.objects.filter(application_purpose=purpose)
+            }
+            cache[purpose] = requirement_map
+        return requirement_map.get(self.document_type)
 
     @property
     def computed_status(self) -> str:
