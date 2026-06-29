@@ -90,6 +90,80 @@ class OnboardingSecurityTests(TestCase):
         self.assertTrue(email_address.primary)
         self.assertTrue(email_address.verified)
 
+    def test_onboarding_link_can_reset_existing_client_password(self):
+        User = get_user_model()
+        user = User.objects.create_user(
+            email="reset_existing@example.com",
+            password="oldpassword123",
+            first_name="Old",
+            last_name="Client",
+        )
+        client = Client.objects.create(
+            first_name="Old",
+            last_name="Client",
+            email="reset_existing@example.com",
+            user=user,
+            application_purpose="work",
+        )
+        raw, hashed = generate_onboarding_token()
+        ClientOnboardingSession.objects.create(
+            client=client,
+            token_hash=hashed,
+            status="created",
+            expires_at=timezone.now() + timedelta(days=1),
+        )
+
+        url = reverse("clients:onboarding_set_password", kwargs={"token": raw})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="password"')
+
+        response = self.client.post(url, {
+            "full_name": "Nowak Nina",
+            "email": "reset_existing@example.com",
+            "password": "newpassword123",
+            "password_confirm": "newpassword123",
+        })
+        self.assertRedirects(response, reverse("clients:onboarding_start", kwargs={"token": raw}))
+
+        user.refresh_from_db()
+        client.refresh_from_db()
+        self.assertTrue(user.check_password("newpassword123"))
+        self.assertEqual(client.user, user)
+        self.assertEqual(client.first_name, "Nina")
+        self.assertEqual(client.last_name, "Nowak")
+
+        portal_response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": "me"}))
+        self.assertEqual(portal_response.status_code, 200)
+
+    def test_onboarding_set_password_rejects_email_change_for_existing_client_email(self):
+        User = get_user_model()
+        client = Client.objects.create(
+            first_name="Email",
+            last_name="Locked",
+            email="locked@example.com",
+            application_purpose="work",
+        )
+        raw, hashed = generate_onboarding_token()
+        ClientOnboardingSession.objects.create(
+            client=client,
+            token_hash=hashed,
+            status="created",
+            expires_at=timezone.now() + timedelta(days=1),
+        )
+
+        response = self.client.post(reverse("clients:onboarding_set_password", kwargs={"token": raw}), {
+            "full_name": "Locked Email",
+            "email": "changed@example.com",
+            "password": "newpassword123",
+            "password_confirm": "newpassword123",
+        })
+
+        self.assertEqual(response.status_code, 200)
+        client.refresh_from_db()
+        self.assertIsNone(client.user)
+        self.assertFalse(User.objects.filter(email="changed@example.com").exists())
+
     def test_onboarding_set_password_requires_full_name(self):
         client = Client.objects.create(first_name="A", last_name="B", email="missing_name@example.com", application_purpose="work")
         raw, hashed = generate_onboarding_token()

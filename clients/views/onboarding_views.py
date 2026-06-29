@@ -4,6 +4,7 @@ from typing import Any, cast
 
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.db import transaction
 from django.http import (
     HttpRequest,
@@ -342,20 +343,16 @@ def check_client_auth_token_link(
         return None
     return check_client_auth(request, session, token)
 
-def _validate_email_domain_dns(email: str) -> bool:
-    import socket
-
-    from django.conf import settings
-    if getattr(settings, "TESTING", False):
-        return True
-    if "@" not in email:
-        return False
-    domain = email.split("@")[-1].strip()
+def _validate_portal_email(email: str, client: Client) -> str | None:
     try:
-        socket.getaddrinfo(domain, None)
-        return True
-    except Exception:
-        return False
+        validate_email(email)
+    except ValidationError:
+        return str(_("Введите корректный адрес электронной почты."))
+
+    expected_email = str(client.email or "").strip().casefold()
+    if expected_email and email.casefold() != expected_email:
+        return str(_("Email должен совпадать с адресом, указанным для этой ссылки. Если адрес неверный, обратитесь в офис."))
+    return None
 
 
 def _split_onboarding_full_name(full_name: str) -> tuple[str, str] | None:
@@ -392,7 +389,8 @@ def onboarding_set_password(request: HttpRequest, token: str) -> HttpResponse:
 
     client = session.client
 
-    if client.user and client.user.has_usable_password():
+    raw_token_can_reset_password = token != SELF_ONBOARDING_SLUG
+    if client.user and client.user.has_usable_password() and not raw_token_can_reset_password:
         if request.user.is_authenticated and request.user == client.user:
             return redirect("clients:onboarding_start", token=token)
         messages.info(request, _("У вас уже есть аккаунт. Пожалуйста, войдите в систему."))
@@ -418,13 +416,14 @@ def onboarding_set_password(request: HttpRequest, token: str) -> HttpResponse:
             error_message = _("Введите ФИО полностью: фамилия и имя.")
         elif not email_val:
             error_message = _("Пожалуйста, укажите адрес электронной почты.")
-        elif not _validate_email_domain_dns(email_val):
-            error_message = _("Не удалось подтвердить существование домена почты. Пожалуйста, проверьте адрес на опечатки.")
-        elif password != password_confirm:
-            error_message = _("Пароли не совпадают.")
-        elif len(password) < 8:
-            error_message = _("Пароль должен быть не менее 8 символов.")
         else:
+            error_message = _validate_portal_email(email_val, client)
+
+        if not error_message and password != password_confirm:
+            error_message = _("Пароли не совпадают.")
+        elif not error_message and len(password) < 8:
+            error_message = _("Пароль должен быть не менее 8 символов.")
+        elif not error_message:
             from django.contrib.auth import get_user_model
             User = get_user_model()
             first_name, last_name = parsed_name
