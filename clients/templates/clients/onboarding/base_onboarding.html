@@ -613,13 +613,23 @@
         <div class="onboarding-navbar-inner">
             <!-- Left Side: Dropdown Menu -->
             <div class="d-flex align-items-center gap-2">
+                {% if session %}
+                    <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 py-1 px-3 rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#askQuestionModal">
+                        <i class="bi bi-question-circle"></i>
+                        <span>{% trans "Задать вопрос" %}</span>
+                    </button>
+                {% endif %}
+            </div>
+
+            <!-- Right Side: Theme & Language -->
+            <div class="d-flex align-items-center gap-3">
                 {% if request.user.is_authenticated %}
                     <div class="dropdown">
                         <button class="btn btn-sm btn-outline-primary dropdown-toggle d-flex align-items-center gap-1 py-1 px-3 rounded-pill fw-bold" type="button" id="cabinetDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-person-circle"></i>
                             <span>{% trans "Личный кабинет" %}</span>
                         </button>
-                        <ul class="dropdown-menu shadow-lg border-0" aria-labelledby="cabinetDropdown">
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" aria-labelledby="cabinetDropdown" style="background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); z-index: 1050;">
                             <li>
                                 <a class="dropdown-item py-2 px-3 fw-semibold" href="{% url 'clients:onboarding_start' token='me' %}">
                                     <i class="bi bi-house-door me-2"></i>{% trans "Главная кабинета" %}
@@ -644,16 +654,7 @@
                         </ul>
                     </div>
                 {% endif %}
-                {% if session %}
-                    <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 py-1 px-3 rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#askQuestionModal">
-                        <i class="bi bi-question-circle"></i>
-                        <span>{% trans "Задать вопрос" %}</span>
-                    </button>
-                {% endif %}
-            </div>
 
-            <!-- Right Side: Theme & Language -->
-            <div class="d-flex align-items-center gap-3">
                 <!-- Notification Bell for Onboarding Dashboard -->
                 {% if action_items %}
                     <div class="dropdown me-1">
