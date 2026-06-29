@@ -112,8 +112,8 @@ def cleanup_test_data(
             ClientFamilyMemberMOS.objects.filter(client_id__in=test_client_ids).delete()
             DocumentProcessingJob.objects.filter(case__client_id__in=test_client_ids).delete()
             CaseArchiveBatch.objects.filter(case__client_id__in=test_client_ids).delete()
-            # MOSApplicationData/CaseParticipant/CaseArchiveSnapshot cascade from
-            # Case; delete the cases, then the client-level archive batches.
+            # MOSApplicationData/CaseParticipant cascade from Case; delete the
+            # cases, then the client-level archive batches.
             MOSApplicationData.objects.filter(client_id__in=test_client_ids).delete()
             # Case is a SoftDeleteModel: its queryset .delete() archives instead
             # of removing, so use hard_delete() to actually drop the rows.

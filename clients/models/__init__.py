@@ -1,7 +1,7 @@
 from .activity import ClientActivity
 from .app_settings import AppSettings
 from .campaign import EmailCampaign
-from .case import Case, CaseArchiveBatch, CaseArchiveSnapshot, CaseParticipant, ClientArchiveBatch
+from .case import Case, CaseArchiveBatch, CaseParticipant, ClientArchiveBatch
 from .client import Client
 from .company import Company
 from .document import (
@@ -31,7 +31,6 @@ from .wniosek import WniosekAttachment, WniosekSubmission
 __all__ = [
     'Client',
     'Case',
-    'CaseArchiveSnapshot',
     'ClientArchiveBatch',
     'CaseArchiveBatch',
     'CaseParticipant',

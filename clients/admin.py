@@ -274,6 +274,15 @@ class ClientAdmin(admin.ModelAdmin):
             return new_list_display
         return list_display
 
+    def get_search_fields(self, request):
+        # email/phone are masked for users without view_sensitive_data; keeping
+        # them searchable would let such users confirm a value by probing for a
+        # hit (an oracle). Drop them from search unless the permission is held.
+        fields = list(super().get_search_fields(request))
+        if not request.user.has_perm("clients.view_sensitive_data"):
+            fields = [f for f in fields if f not in ("email", "phone")]
+        return fields
+
     def get_fieldsets(self, request, obj=None):
         fieldsets = super().get_fieldsets(request, obj)
         if not request.user.has_perm("clients.view_sensitive_data"):

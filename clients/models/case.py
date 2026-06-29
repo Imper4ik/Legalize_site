@@ -245,56 +245,6 @@ class Case(SoftDeleteModel):
         return reverse("clients:case_detail", kwargs={"pk": self.pk})
 
 
-class CaseArchiveSnapshot(models.Model):
-    OBJECT_TYPE_DOCUMENT = "document"
-    OBJECT_TYPE_PAYMENT = "payment"
-    OBJECT_TYPE_REMINDER = "reminder"
-    OBJECT_TYPE_TASK = "task"
-    OBJECT_TYPE_PORTAL_USER = "portal_user"
-    OBJECT_TYPE_CHOICES = [
-        (OBJECT_TYPE_DOCUMENT, _("Документ")),
-        (OBJECT_TYPE_PAYMENT, _("Платёж")),
-        (OBJECT_TYPE_REMINDER, _("Напоминание")),
-        (OBJECT_TYPE_TASK, _("Задача")),
-        (OBJECT_TYPE_PORTAL_USER, _("Пользователь портала")),
-    ]
-
-    case = models.ForeignKey("clients.Case", on_delete=models.CASCADE, related_name="archive_snapshots")
-    client = models.ForeignKey("clients.Client", on_delete=models.CASCADE, related_name="case_archive_snapshots")
-    archive_batch_uuid = models.UUIDField(db_index=True)
-    object_type = models.CharField(max_length=32, choices=OBJECT_TYPE_CHOICES)
-    object_id = models.PositiveBigIntegerField()
-    was_active = models.BooleanField(default=True)
-    previous_archived_at = models.DateTimeField(null=True, blank=True)
-    previous_reminder_is_active = models.BooleanField(null=True, blank=True)
-    previous_task_status = models.CharField(max_length=20, blank=True, default="")
-    previous_user_is_active = models.BooleanField(null=True, blank=True)
-    created_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="case_archive_snapshots",
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["archive_batch_uuid", "object_type", "object_id"]
-        indexes = [
-            models.Index(fields=["case", "archive_batch_uuid"], name="case_snapshot_batch_idx"),
-            models.Index(fields=["object_type", "object_id"], name="case_snapshot_object_idx"),
-        ]
-        constraints = [
-            models.UniqueConstraint(
-                fields=["archive_batch_uuid", "object_type", "object_id"],
-                name="unique_case_archive_snapshot_object",
-            ),
-        ]
-
-    def __str__(self) -> str:
-        return f"{self.archive_batch_uuid}: {self.object_type}#{self.object_id}"
-
-
 class ClientArchiveBatch(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     client = models.ForeignKey("clients.Client", on_delete=models.PROTECT, related_name="archive_batches")
