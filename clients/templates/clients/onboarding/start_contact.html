@@ -262,7 +262,7 @@
 
 {% if not contact_complete or contact_errors %}
 <div class="card shadow-sm border-0 mb-4">
-  <div class="card-header bg-primary text-white fw-bold">{% trans "Ваши контактные данные" %}</div>
+  <div class="card-header fw-bold">{% trans "Ваши контактные данные" %}</div>
   <div class="card-body">
     {% if contact_errors %}<div class="alert alert-danger">{% trans "Проверьте обязательные поля." %}</div>{% endif %}
 
@@ -890,7 +890,7 @@
     </button>
     <div class="collapse mt-3 text-start mx-auto" id="contactEditFormBottom" style="max-width: 600px;">
       <div class="card shadow-sm border-0">
-        <div class="card-header bg-light fw-bold">{% trans "Редактирование контактных данных" %}</div>
+        <div class="card-header fw-bold">{% trans "Редактирование контактных данных" %}</div>
         <div class="card-body">
           <form method="post" data-no-autosave="true" novalidate>
             {% csrf_token %}

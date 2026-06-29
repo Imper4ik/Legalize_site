@@ -114,4 +114,18 @@
     </div>
   </div>
 </section>
+
+<script nonce="{{ request.csp_nonce }}">
+  document.addEventListener('DOMContentLoaded', () => {
+    const sessionEmail = "{{ prefilled_email|default:''|escapejs }}";
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailParam = sessionEmail || urlParams.get('email') || urlParams.get('login');
+    if (emailParam) {
+      const loginInput = document.querySelector('input[name="login"]');
+      if (loginInput && !loginInput.value) {
+        loginInput.value = emailParam;
+      }
+    }
+  });
+</script>
 {% endblock %}

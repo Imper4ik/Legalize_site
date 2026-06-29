@@ -322,7 +322,8 @@ def check_client_auth(request: HttpRequest, session: ClientOnboardingSession, to
     if not request.user.is_authenticated or request.user != client.user:
         messages.info(request, _("Пожалуйста, войдите в свой аккаунт для продолжения."))
         login_url = reverse("account_login")
-        return redirect(f"{login_url}?email={client.email}")
+        request.session["prefilled_email"] = client.email
+        return redirect(login_url)
 
     return None
 
@@ -330,17 +331,7 @@ def check_client_auth(request: HttpRequest, session: ClientOnboardingSession, to
 def check_client_auth_token_link(
     request: HttpRequest, session: ClientOnboardingSession, token: str
 ) -> HttpResponse | None:
-    """Auth for raw-token onboarding links: the token itself is the credential.
-
-    ``check_onboarding_session`` has already validated the token hash, expiry and
-    status, so a valid raw token grants bearer access to the case-scoped steps
-    without a separate login. The ``token='me'`` flow still represents the
-    authenticated client's own dashboard and keeps the full login/password
-    requirement via ``check_client_auth``. Replaces the previous runtime
-    monkeypatch (enable_token_link_access), whose effect depended on import order.
-    """
-    if token != SELF_ONBOARDING_SLUG:
-        return None
+    """Always require authentication/login/password setup, even for raw tokens."""
     return check_client_auth(request, session, token)
 
 def _validate_portal_email(email: str, client: Client) -> str | None:

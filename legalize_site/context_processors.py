@@ -362,3 +362,10 @@ def onboarding_progress(request: HttpRequest) -> dict[str, Any]:
     return {}
 
 
+def prefilled_email(request: HttpRequest) -> dict[str, Any]:
+    email = ""
+    if hasattr(request, "session"):
+        email = request.session.pop("prefilled_email", "")
+    return {"prefilled_email": email}
+
+

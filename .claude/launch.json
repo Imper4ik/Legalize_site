@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "legalize-audit",
+      "runtimeExecutable": "C:\\Users\\ninds\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+      "runtimeArgs": ["scratch/run_preview_server.py"],
+      "port": 8765
+    }
+  ]
+}
