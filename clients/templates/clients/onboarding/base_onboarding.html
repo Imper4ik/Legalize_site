@@ -634,37 +634,6 @@
                         <span>{% trans "Задать вопрос" %}</span>
                     </button>
                 {% endif %}
-                {% if request.user.is_authenticated %}
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-primary dropdown-toggle d-flex align-items-center gap-1 py-1 px-3 rounded-pill fw-bold" type="button" id="cabinetDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-person-circle"></i>
-                            <span>{% trans "Личный кабинет" %}</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" aria-labelledby="cabinetDropdown" style="background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); z-index: 1050;">
-                            <li>
-                                <a class="dropdown-item py-2 px-3 fw-semibold" href="{% url 'clients:onboarding_start' token='me' %}">
-                                    <i class="bi bi-house-door me-2"></i>{% trans "Главная кабинета" %}
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item py-2 px-3 fw-semibold" href="{% url 'account_email' %}">
-                                    <i class="bi bi-envelope me-2"></i>{% trans "Изменить E-mail" %}
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item py-2 px-3 fw-semibold" href="{% url 'account_change_password' %}">
-                                    <i class="bi bi-key me-2"></i>{% trans "Изменить пароль" %}
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item py-2 px-3 fw-semibold text-danger" href="{% url 'account_logout' %}">
-                                    <i class="bi bi-box-arrow-right me-2"></i>{% trans "Выйти" %}
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                {% endif %}
 
                 <!-- Notification Bell for Onboarding Dashboard -->
                 {% if action_items %}
@@ -715,6 +684,38 @@
                         {% if not forloop.last %}<span class="text-muted">|</span>{% endif %}
                     {% endfor %}
                 </form>
+
+                {% if request.user.is_authenticated %}
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-primary dropdown-toggle d-flex align-items-center gap-1 py-1 px-3 rounded-pill fw-bold" type="button" id="cabinetDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle"></i>
+                            <span>{% trans "Личный кабинет" %}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0" aria-labelledby="cabinetDropdown" style="background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); z-index: 1050;">
+                            <li>
+                                <a class="dropdown-item py-2 px-3 fw-semibold" href="{% url 'clients:onboarding_start' token='me' %}">
+                                    <i class="bi bi-house-door me-2"></i>{% trans "Главная кабинета" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2 px-3 fw-semibold" href="{% url 'account_email' %}">
+                                    <i class="bi bi-envelope me-2"></i>{% trans "Изменить E-mail" %}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2 px-3 fw-semibold" href="{% url 'account_change_password' %}">
+                                    <i class="bi bi-key me-2"></i>{% trans "Изменить пароль" %}
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item py-2 px-3 fw-semibold text-danger" href="{% url 'account_logout' %}">
+                                    <i class="bi bi-box-arrow-right me-2"></i>{% trans "Выйти" %}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </nav>
