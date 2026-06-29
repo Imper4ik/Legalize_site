@@ -7,6 +7,8 @@ from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from clients.models import Client
+
 
 class AuthViewsTests(TestCase):
     def setUp(self):
@@ -22,6 +24,35 @@ class AuthViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, reverse("account_signup"))
+
+    def test_client_user_can_login_from_public_account_login(self):
+        user = get_user_model().objects.create_user(
+            email="portal-client@example.com",
+            password="StrongPass123!",
+            first_name="Anna",
+            last_name="Kowalska",
+        )
+        Client.objects.create(
+            first_name="Anna",
+            last_name="Kowalska",
+            email=user.email,
+            user=user,
+            application_purpose="work",
+        )
+
+        response = self.client.post(
+            reverse("account_login"),
+            {"login": user.email, "password": "StrongPass123!"},
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("clients:onboarding_start", kwargs={"token": "me"}),
+            fetch_redirect_response=False,
+        )
+        email_address = EmailAddress.objects.get(user=user, email=user.email)
+        self.assertTrue(email_address.primary)
+        self.assertTrue(email_address.verified)
 
     def test_verification_sent_page_links_to_public_resend_view(self):
         response = self.client.get(reverse("account_email_verification_sent"))
