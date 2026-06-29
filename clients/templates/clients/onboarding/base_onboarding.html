@@ -97,8 +97,8 @@
 
         /* Glassmorphism page wrapper */
         .page-surface {
-            margin: clamp(1rem, 3vw, 2.5rem) auto;
-            padding: clamp(1.25rem, 4vw, 2.5rem);
+            margin: clamp(0.75rem, 2vw, 1.75rem) auto;
+            padding: clamp(1rem, 3vw, 2rem);
             background: var(--glass-bg) !important;
             border: 1px solid var(--glass-border) !important;
             backdrop-filter: blur(20px) saturate(180%) !important;
@@ -591,7 +591,19 @@
         .onboarding-main-container {
             max-width: 1140px;
             margin: 0 auto;
-            padding: 24px 20px 40px;
+            padding: 12px 20px 30px;
+        }
+
+        /* Bell Animation */
+        @keyframes bell-ring {
+            0%, 100% { transform: rotate(0); }
+            10%, 30%, 50%, 70%, 90% { transform: rotate(10deg); }
+            20%, 40%, 60%, 80% { transform: rotate(-10deg); }
+        }
+        .animate-bell {
+            animation: bell-ring 2.5s ease infinite;
+            transform-origin: top center;
+            display: inline-block;
         }
     </style>
 </head>
@@ -632,6 +644,32 @@
                         </ul>
                     </div>
                 {% endif %}
+                <!-- Notification Bell for Onboarding Dashboard -->
+                {% if action_items %}
+                    <div class="dropdown me-1">
+                        <button class="btn btn-sm btn-link text-decoration-none position-relative p-1 d-flex align-items-center justify-content-center" 
+                                type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--muted); transition: color 0.2s ease;">
+                            <i class="bi bi-bell-fill fs-5 text-warning animate-bell"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem; padding: 0.25em 0.4em; transform: translate(-30%, -30%) !important;">
+                                {{ action_required_count }}
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-start shadow-lg border-0 py-2 px-1" aria-labelledby="notificationDropdown" style="width: 290px; max-width: 90vw; background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); z-index: 1050;">
+                            <li class="dropdown-header text-uppercase fw-bold text-muted px-3 py-2" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                                {% trans "Требуется внимание" %}
+                            </li>
+                            {% for item in action_items %}
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-start gap-2 py-2 px-3 rounded-3" href="{{ item.url|default:'#' }}">
+                                        <i class="bi {{ item.icon }} text-{{ item.type }} mt-0.5" style="font-size: 1rem;"></i>
+                                        <span class="text-wrap small fw-semibold" style="line-height: 1.3;">{{ item.text }}</span>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+
                 {% if session %}
                     <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 py-1 px-3 rounded-pill fw-bold" data-bs-toggle="modal" data-bs-target="#askQuestionModal">
                         <i class="bi bi-question-circle"></i>

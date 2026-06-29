@@ -496,6 +496,86 @@ def _build_start_context(
 
     case_step = client.get_case_step()
 
+    # Build list of action items / notifications for the client
+    action_items = []
+    from django.urls import reverse
+    from clients.models import StaffTask
+
+    if not contact_complete:
+        action_items.append({
+            "type": "danger",
+            "icon": "bi-person-exclamation",
+            "text": str(_("Заполнить контактные данные")),
+            "url": "#contactEditForm" if contact_form_editable else None
+        })
+    if mos_data and mos_data.status == 'needs_correction':
+        action_items.append({
+            "type": "warning",
+            "icon": "bi-exclamation-triangle",
+            "text": str(_("Внести исправления в анкету")),
+            "url": reverse("clients:onboarding_digital_access", kwargs={"token": session.token_hash})
+        })
+    if contact_complete and not passport_complete:
+        action_items.append({
+            "type": "warning",
+            "icon": "bi-person-bounding-box",
+            "text": str(_("Заполнить личный профиль (паспорт)")),
+            "url": reverse("clients:onboarding_digital_access", kwargs={"token": session.token_hash})
+        })
+    if contact_complete and not travel_complete:
+        action_items.append({
+            "type": "warning",
+            "icon": "bi-airplane",
+            "text": str(_("Заполнить историю поездок")),
+            "url": reverse("clients:onboarding_digital_access", kwargs={"token": session.token_hash})
+        })
+    
+    missing_case_number = bool(
+        case_step < 7
+        and mos_data
+        and mos_data.new_residence_card_application_status == "yes"
+        and not mos_data.new_residence_card_case_number
+    )
+    if missing_case_number:
+        action_items.append({
+            "type": "danger",
+            "icon": "bi-file-earmark-diff",
+            "text": str(_("Указать номер дела")),
+            "url": "#new-card-application"
+        })
+
+    rejected_count = sum(1 for doc in checklist if doc.get("is_rejected"))
+    if rejected_count > 0:
+        action_items.append({
+            "type": "danger",
+            "icon": "bi-x-circle",
+            "text": str(_("Перезагрузить отклонённые документы ({} шт.)")).format(rejected_count),
+            "url": "#documents"
+        })
+    if docs_required_pending_count > 0:
+        action_items.append({
+            "type": "warning",
+            "icon": "bi-file-earmark-arrow-up",
+            "text": str(_("Загрузить недостающие документы ({} шт.)")).format(docs_required_pending_count),
+            "url": "#documents"
+        })
+
+    # Answered questions check
+    completed_questions_count = StaffTask.objects.filter(
+        client=client,
+        title__icontains="Вопрос от клиента",
+        status="completed"
+    ).count()
+    if completed_questions_count > 0:
+        action_items.append({
+            "type": "success",
+            "icon": "bi-chat-left-check-fill",
+            "text": str(_("Сотрудник ответил на ваш вопрос")),
+            "url": "#documents"  # Jump down to main view/support section
+        })
+
+    action_required_count = len(action_items)
+
     return {
         "session": session,
         "mos_data": mos_data,
@@ -526,13 +606,10 @@ def _build_start_context(
         "passport_complete": passport_complete,
         "travel_complete": travel_complete,
         "support_email": support_email,
-        "rejected_count": sum(1 for doc in checklist if doc.get("is_rejected")),
-        "missing_case_number": bool(
-            case_step < 7
-            and mos_data
-            and mos_data.new_residence_card_application_status == "yes"
-            and not mos_data.new_residence_card_case_number
-        ),
+        "rejected_count": rejected_count,
+        "missing_case_number": missing_case_number,
+        "action_items": action_items,
+        "action_required_count": action_required_count,
         **purpose_ctx,
     }
 
