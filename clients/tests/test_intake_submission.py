@@ -162,6 +162,8 @@ def _valid_public_post(**overrides):
         "application_purpose": "work",
         "application_type": "temporary_residence",
         "basis_of_stay": "employment",
+        "password": "SafePass123!",
+        "password_confirm": "SafePass123!",
     }
     data.update(overrides)
     return data
@@ -235,7 +237,10 @@ def test_public_intake_post_creates_client_case_and_onboarding_session():
     assert case.application_purpose == "work"
     assert case.application_type == "temporary_residence"
     assert case.basis_of_stay == "employment"
-    assert ClientOnboardingSession.objects.filter(client=client, case=case, scope="case_link").exists()
+    assert client.user is not None
+    assert client.user.has_usable_password()
+    session = ClientOnboardingSession.objects.get(client=client, case=case, scope="case_link")
+    assert session.status == "active"
 
 
 @pytest.mark.django_db

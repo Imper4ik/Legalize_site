@@ -12365,3 +12365,105 @@ msgstr "пользователи"
 
 #~ msgid "Сценарии:"
 #~ msgstr "Сценарии:"
+
+# Manual fixes for public intake/onboarding sharing UI
+msgid "Client intake form"
+msgstr "Форма первичной анкеты клиента"
+
+msgid "Personal data"
+msgstr "Личные данные"
+
+msgid "First name"
+msgstr "Имя"
+
+msgid "Last name"
+msgstr "Фамилия"
+
+msgid "Date of birth"
+msgstr "Дата рождения"
+
+msgid "Citizenship"
+msgstr "Гражданство"
+
+msgid "Case data"
+msgstr "Данные дела"
+
+msgid "Submit"
+msgstr "Отправить"
+
+msgid "Intake only"
+msgstr "Только анкета"
+
+# Additional public intake portal translations
+
+msgid "Passport number"
+msgstr "Номер паспорта"
+
+msgid "Communication language"
+msgstr "Язык общения"
+
+msgid "Application purpose"
+msgstr "Основание подачи"
+
+msgid "Application type"
+msgstr "Тип заявления"
+
+msgid "Basis of stay"
+msgstr "Основание пребывания"
+
+msgid "Link unavailable"
+msgstr "Ссылка недоступна"
+
+msgid "Link expired"
+msgstr "Срок действия ссылки истёк"
+
+msgid "Intake submitted"
+msgstr "Анкета отправлена"
+
+msgid "This intake link is not available."
+msgstr "Эта ссылка на анкету недоступна."
+
+msgid "This intake link has expired. Please contact the office for a new link."
+msgstr "Срок действия ссылки истёк. Пожалуйста, свяжитесь с офисом для получения новой ссылки."
+
+msgid "Your intake form has been submitted."
+msgstr "Ваша анкета отправлена."
+
+msgid "The office will review the data and contact you if anything else is needed."
+msgstr "Офис проверит данные и свяжется с вами, если потребуется что-то ещё."
+
+msgid "Your intake form has already been accepted."
+msgstr "Ваша анкета уже принята."
+
+msgid "Первичная анкета клиента"
+msgstr "Первичная анкета клиента"
+
+msgid "Данные дела"
+msgstr "Данные дела"
+
+msgid "Доступ в личный кабинет"
+msgstr "Доступ в личный кабинет"
+
+msgid "Создайте пароль сейчас. После отправки анкеты вы сможете войти в личный кабинет через сайт и продолжить заполнение без одноразовой ссылки."
+msgstr "Создайте пароль сейчас. После отправки анкеты вы сможете войти в личный кабинет через сайт и продолжить заполнение без одноразовой ссылки."
+
+msgid "Отправить анкету и войти"
+msgstr "Отправить анкету и войти"
+
+msgid "Пароль для личного кабинета"
+msgstr "Пароль для личного кабинета"
+
+msgid "Минимум 8 символов. Этот пароль нужен для входа на сайт без одноразовой ссылки."
+msgstr "Минимум 8 символов. Этот пароль нужен для входа на сайт без одноразовой ссылки."
+
+msgid "Повторите пароль"
+msgstr "Повторите пароль"
+
+msgid "работа, учёба, семья"
+msgstr "работа, учёба, семья"
+
+msgid "Анкета отправлена. Аккаунт создан, вы вошли в личный кабинет клиента."
+msgstr "Анкета отправлена. Аккаунт создан, вы вошли в личный кабинет клиента."
+
+msgid "We could not submit the intake form. Please check the data and try again."
+msgstr "Не удалось отправить анкету. Проверьте данные и попробуйте ещё раз."

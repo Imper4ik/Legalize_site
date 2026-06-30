@@ -12407,3 +12407,105 @@ msgstr "użytkownicy"
 
 #~ msgid "Сценарии:"
 #~ msgstr "Scenariusze:"
+
+# Manual fixes for public intake/onboarding sharing UI
+msgid "Client intake form"
+msgstr "Formularz wstępny klienta"
+
+msgid "Personal data"
+msgstr "Dane osobowe"
+
+msgid "First name"
+msgstr "Imię"
+
+msgid "Last name"
+msgstr "Nazwisko"
+
+msgid "Date of birth"
+msgstr "Data urodzenia"
+
+msgid "Citizenship"
+msgstr "Obywatelstwo"
+
+msgid "Case data"
+msgstr "Dane sprawy"
+
+msgid "Submit"
+msgstr "Wyślij"
+
+msgid "Intake only"
+msgstr "Tylko ankieta"
+
+# Additional public intake portal translations
+
+msgid "Passport number"
+msgstr "Numer paszportu"
+
+msgid "Communication language"
+msgstr "Język komunikacji"
+
+msgid "Application purpose"
+msgstr "Podstawa złożenia"
+
+msgid "Application type"
+msgstr "Typ wniosku"
+
+msgid "Basis of stay"
+msgstr "Podstawa pobytu"
+
+msgid "Link unavailable"
+msgstr "Link niedostępny"
+
+msgid "Link expired"
+msgstr "Link wygasł"
+
+msgid "Intake submitted"
+msgstr "Ankieta wysłana"
+
+msgid "This intake link is not available."
+msgstr "Ten link do ankiety jest niedostępny."
+
+msgid "This intake link has expired. Please contact the office for a new link."
+msgstr "Ten link do ankiety wygasł. Skontaktuj się z biurem, aby otrzymać nowy link."
+
+msgid "Your intake form has been submitted."
+msgstr "Twoja ankieta została wysłana."
+
+msgid "The office will review the data and contact you if anything else is needed."
+msgstr "Biuro sprawdzi dane i skontaktuje się z Tobą, jeśli będzie potrzebne coś jeszcze."
+
+msgid "Your intake form has already been accepted."
+msgstr "Twoja ankieta została już przyjęta."
+
+msgid "Первичная анкета клиента"
+msgstr "Formularz wstępny klienta"
+
+msgid "Данные дела"
+msgstr "Dane sprawy"
+
+msgid "Доступ в личный кабинет"
+msgstr "Dostęp do panelu klienta"
+
+msgid "Создайте пароль сейчас. После отправки анкеты вы сможете войти в личный кабинет через сайт и продолжить заполнение без одноразовой ссылки."
+msgstr "Utwórz hasło teraz. Po wysłaniu ankiety będziesz mógł zalogować się do panelu klienta przez stronę i kontynuować bez jednorazowego linku."
+
+msgid "Отправить анкету и войти"
+msgstr "Wyślij ankietę i zaloguj się"
+
+msgid "Пароль для личного кабинета"
+msgstr "Hasło do panelu klienta"
+
+msgid "Минимум 8 символов. Этот пароль нужен для входа на сайт без одноразовой ссылки."
+msgstr "Minimum 8 znaków. To hasło służy do logowania na stronie bez jednorazowego linku."
+
+msgid "Повторите пароль"
+msgstr "Powtórz hasło"
+
+msgid "работа, учёба, семья"
+msgstr "praca, nauka, rodzina"
+
+msgid "Анкета отправлена. Аккаунт создан, вы вошли в личный кабинет клиента."
+msgstr "Ankieta wysłana. Konto zostało utworzone i zalogowano Cię do panelu klienta."
+
+msgid "We could not submit the intake form. Please check the data and try again."
+msgstr "Nie udało się wysłać ankiety. Sprawdź dane i spróbuj ponownie."

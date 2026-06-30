@@ -682,6 +682,56 @@
             transform: translate(25%, -25%);
         }
 
+
+
+        @media (max-width: 991.98px) {
+            .onboarding-navbar {
+                height: 68px;
+                overflow: visible;
+            }
+            .onboarding-navbar-inner {
+                min-width: 0;
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            .onboarding-navbar .dropdown-menu {
+                background-color: var(--bs-body-bg) !important;
+                border-color: var(--border) !important;
+                backdrop-filter: none !important;
+                -webkit-backdrop-filter: none !important;
+                box-shadow: 0 18px 44px rgba(2, 6, 23, 0.35) !important;
+                color: var(--fg) !important;
+            }
+            html[data-theme="dark"] .onboarding-navbar .dropdown-menu {
+                background-color: #111827 !important;
+            }
+            .onboarding-mobile-menu {
+                position: fixed !important;
+                top: 76px !important;
+                right: 12px !important;
+                left: auto !important;
+                transform: none !important;
+                width: min(280px, calc(100vw - 24px)) !important;
+                max-height: calc(100vh - 92px);
+                overflow-y: auto;
+            }
+            .onboarding-mobile-menu .dropdown-item {
+                white-space: normal;
+            }
+            .onboarding-mobile-menu .mobile-language-switcher {
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
+            .onboarding-main-container {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+            .page-surface {
+                border-radius: 18px !important;
+                padding: 1rem;
+            }
+        }
+
         /* Centered Main Container */
         .onboarding-main-container {
             max-width: 1140px;
@@ -874,7 +924,7 @@
                     <button class="navbar-icon-btn" type="button" id="mobileMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="{% trans 'Меню' %}">
                         <i class="bi bi-list fs-4"></i>
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-3 px-3 mt-2" aria-labelledby="mobileMenuDropdown" style="width: 280px; max-width: 85vw; background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); z-index: 1050; border-radius: 16px;">
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-3 px-3 mt-2 onboarding-mobile-menu" aria-labelledby="mobileMenuDropdown" style="width: 280px; max-width: 85vw; background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); z-index: 1050; border-radius: 16px;">
                         <!-- 1. CTA Button: Задать вопрос -->
                         {% if session %}
                             <li class="mb-3">
@@ -925,7 +975,7 @@
                         <!-- 4. Language Switcher -->
                         <li class="py-2 d-flex align-items-center justify-content-between">
                             <span class="small fw-bold text-muted">{% trans "Язык" %}</span>
-                            <div class="d-flex align-items-center gap-1 bg-body-tertiary p-1 rounded-pill" style="border: 1px solid var(--glass-border);">
+                            <div class="d-flex align-items-center gap-1 bg-body-tertiary p-1 rounded-pill mobile-language-switcher" style="border: 1px solid var(--glass-border);">
                                 {% get_available_languages as LANGUAGES %}
                                 {% for lang in LANGUAGES %}
                                     <form action="{% url 'set_language' %}" method="post" class="d-inline m-0">
