@@ -4,6 +4,7 @@ from typing import Any
 
 from django import forms
 from django.conf import settings
+from django.contrib.auth.password_validation import validate_password
 from django.utils.translation import gettext_lazy as _
 
 from clients.services.onboarding_purposes import ONBOARDING_PURPOSE_CHOICES
@@ -25,6 +26,17 @@ class ClientIntakeSubmissionForm(forms.Form):
     application_purpose = forms.ChoiceField(label=_("Application purpose"), choices=ONBOARDING_PURPOSE_CHOICES)
     application_type = forms.CharField(label=_("Application type"), max_length=64, required=False)
     basis_of_stay = forms.CharField(label=_("Basis of stay"), max_length=100, required=False)
+    password = forms.CharField(
+        label=_("Пароль для личного кабинета"),
+        min_length=8,
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+        help_text=_("Минимум 8 символов. Этот пароль нужен для входа на сайт без одноразовой ссылки."),
+    )
+    password_confirm = forms.CharField(
+        label=_("Повторите пароль"),
+        min_length=8,
+        widget=forms.PasswordInput(attrs={"autocomplete": "new-password"}),
+    )
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -33,7 +45,20 @@ class ClientIntakeSubmissionForm(forms.Form):
             existing = field.widget.attrs.get("class", "")
             field.widget.attrs["class"] = f"{existing} {css_class}".strip()
         self.fields["application_type"].widget.attrs["placeholder"] = "temporary residence"
-        self.fields["basis_of_stay"].widget.attrs["placeholder"] = "work, study, family"
+        self.fields["basis_of_stay"].widget.attrs["placeholder"] = _("работа, учёба, семья")
+
+    def clean(self) -> dict[str, Any]:
+        cleaned = super().clean()
+        password = cleaned.get("password")
+        password_confirm = cleaned.get("password_confirm")
+        if password and password_confirm and password != password_confirm:
+            self.add_error("password_confirm", _("Пароли не совпадают."))
+        if password:
+            validate_password(password)
+        return cleaned
+
+    def password_value(self) -> str:
+        return self.cleaned_data["password"]
 
     def personal_payload(self) -> dict[str, Any]:
         return {

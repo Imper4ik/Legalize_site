@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from django.contrib import messages
+from django.contrib.auth import get_user_model, login
 from django.core.exceptions import ValidationError
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
@@ -105,16 +106,37 @@ def public_intake(request: HttpRequest, token: str) -> HttpResponse:
                     return render(request, "clients/intake/submitted.html", {"state": "review", "intake": intake})
                 form.add_error(None, _("We could not submit the intake form. Please check the data and try again."))
             else:
+                User = get_user_model()
+                email = form.cleaned_data["email"].strip().lower()
+                user = User.objects.filter(email__iexact=email).first()
+                if user is None:
+                    user = User.objects.create_user(
+                        email=email,
+                        password=form.password_value(),
+                        first_name=form.cleaned_data["first_name"].strip(),
+                        last_name=form.cleaned_data["last_name"].strip(),
+                    )
+                else:
+                    user.first_name = form.cleaned_data["first_name"].strip()
+                    user.last_name = form.cleaned_data["last_name"].strip()
+                    user.set_password(form.password_value())
+                    user.is_active = True
+                    user.save(update_fields=["first_name", "last_name", "password", "is_active"])
+
+                result.client.user = user
+                result.client.save(update_fields=["user", "updated_at"])
+                login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+
                 onboarding_token, onboarding_token_hash = generate_onboarding_token()
                 ClientOnboardingSession.objects.create(
                     client=result.client,
                     case=result.case,
                     scope="case_link",
                     token_hash=onboarding_token_hash,
-                    status="created",
+                    status="active",
                     expires_at=timezone.now() + PUBLIC_INTAKE_LINK_TTL,
                 )
-                messages.success(request, _("Your intake form has been submitted."))
+                messages.success(request, _("Анкета отправлена. Аккаунт создан, вы вошли в личный кабинет клиента."))
                 return redirect("clients:onboarding_start", token=onboarding_token)
     else:
         form = ClientIntakeSubmissionForm(initial=_initial_from_intake(intake))
