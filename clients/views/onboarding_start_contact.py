@@ -499,6 +499,7 @@ def _build_start_context(
     # Build list of action items / notifications for the client
     action_items = []
     from django.urls import reverse
+
     from clients.models import StaffTask
 
     if not contact_complete:
@@ -529,7 +530,7 @@ def _build_start_context(
             "text": str(_("Заполнить историю поездок")),
             "url": reverse("clients:onboarding_digital_access", kwargs={"token": session.token_hash})
         })
-    
+
     missing_case_number = bool(
         case_step < 7
         and mos_data

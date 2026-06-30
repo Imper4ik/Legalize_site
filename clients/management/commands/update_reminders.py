@@ -203,6 +203,7 @@ class Command(BaseCommand):
             expiry_date__gte=today,
             expiry_date__lte=cutoff,
             client__archived_at__isnull=True,
+            case__archived_at__isnull=True,
         )
 
         if not expiring_docs.exists():
@@ -239,6 +240,7 @@ class Command(BaseCommand):
             expiry_date__lte=reminder_period_end,
             reminder__isnull=True,
             client__archived_at__isnull=True,
+            case__archived_at__isnull=True,
         )
 
         if not expiring_docs.exists():
@@ -272,6 +274,7 @@ class Command(BaseCommand):
             due_date__lte=today,
             status__in=["pending", "partial"],
             client__archived_at__isnull=True,
+            case__archived_at__isnull=True,
         ).exclude(reminder__is_active=True)
 
         if not due_payments.exists():
@@ -313,6 +316,7 @@ class Command(BaseCommand):
             legal_stay_until__gte=today,
             legal_stay_until__lte=cutoff,
             case__workflow_stage__in=["new_client", "document_collection"],
+            case__archived_at__isnull=True,
             client__archived_at__isnull=True,
             client__is_demo_data=False,
             client__is_test_data=False,
@@ -387,6 +391,7 @@ class Command(BaseCommand):
             task_type="fingerprints_followup",
             status__in=["open", "in_progress"],
             is_auto_created=True,
+            case__archived_at__isnull=True,
         ).filter(
             Q(case__decision_date__isnull=False) | Q(case__workflow_stage__in=FINISHED_WORKFLOW_STAGES)
         )
@@ -413,6 +418,7 @@ class Command(BaseCommand):
                     case=case,
                     task_type="fingerprints_followup",
                     status__in=["open", "in_progress"],
+                    case__archived_at__isnull=True,
                 ).exists()
                 if not already:
                     created_count += 1
@@ -466,6 +472,7 @@ class Command(BaseCommand):
             legal_stay_until__gte=today,
             legal_stay_until__lte=cutoff,
             case__workflow_stage__in=["new_client", "document_collection"],
+            case__archived_at__isnull=True,
             client__archived_at__isnull=True,
         )
 

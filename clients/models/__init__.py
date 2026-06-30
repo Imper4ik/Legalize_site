@@ -19,7 +19,13 @@ from .document_version import DocumentVersion
 from .email import EmailLog
 from .family import FamilyGroup
 from .family_mos import ClientFamilyMemberMOS
-from .onboarding import ClientDigitalAccess, ClientIntakeSubmission, ClientOnboardingSession, MOSApplicationData, PeselApplication
+from .onboarding import (
+    ClientDigitalAccess,
+    ClientIntakeSubmission,
+    ClientOnboardingSession,
+    MOSApplicationData,
+    PeselApplication,
+)
 from .payment import Payment
 from .permissions import EmployeePermission, StaffAuditEvent
 from .pricing import ServicePrice
