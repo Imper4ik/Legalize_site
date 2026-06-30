@@ -4,9 +4,6 @@ from clients.forms.case_client_forms import (
     CaseForm,
     ClientForm,
 )
-from clients.forms.intake_forms import (
-    ClientIntakeSubmissionForm,
-)
 from clients.forms.document_forms import (
     ClientDocumentRequirementForm,
     DocumentChecklistForm,
@@ -14,6 +11,9 @@ from clients.forms.document_forms import (
     DocumentRequirementEditForm,
     DocumentUploadForm,
     FamilyGroupFinanceForm,
+)
+from clients.forms.intake_forms import (
+    ClientIntakeSubmissionForm,
 )
 from clients.forms.misc_forms import (
     CalculatorForm,

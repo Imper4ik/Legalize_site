@@ -234,7 +234,7 @@ class Case(SoftDeleteModel):
         if self.authority_case_number and self.client_id:
             try:
                 from clients.services.tasks import close_auto_task
-                close_auto_task(self.client, "case_number_missing")
+                close_auto_task(self.client, "case_number_missing", case=self)
             except Exception:
                 # Task auto-close is best-effort; never let it break the save.
                 logger.exception(

@@ -265,3 +265,13 @@ class OnboardingStartContactTests(TestCase):
         mos_data = MOSApplicationData.objects.get(client=client)
         self.assertEqual(mos_data.new_residence_card_application_status, "")
         self.assertIsNone(mos_data.new_residence_card_submitted_at)
+
+    def test_support_email_is_rendered_as_compact_help_block(self):
+        _client, token = self._client_with_session()
+        with self.settings(DEFAULT_FROM_EMAIL="support@example.test"):
+            response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Служба поддержки")
+        self.assertContains(response, "support@example.test")
+        self.assertContains(response, 'href="mailto:support@example.test"')

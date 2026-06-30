@@ -79,7 +79,7 @@ def _missing_document_clients(user: AbstractBaseUser | AnonymousUser | None, lim
             ).distinct().order_by("last_name", "first_name"),
         )
         .prefetch_related(
-            Prefetch("documents", queryset=Document.objects.order_by("-uploaded_at")),
+            Prefetch("documents", queryset=Document.objects.filter(case__archived_at__isnull=True).order_by("-uploaded_at")),
             Prefetch(
                 "custom_document_requirements",
                 queryset=ClientDocumentRequirement.objects.filter(is_active=True).order_by("due_date", "created_at"),
