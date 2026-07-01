@@ -7,13 +7,12 @@ from typing import TYPE_CHECKING, Any
 
 from clients.models import Client, Reminder
 from clients.services.activity import log_client_activity
-from clients.services.notifications import send_expiring_documents_email
+from clients.services.notifications import send_expiring_documents_email as default_reminder_notifier
 
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
-logger = logging.getLogger(__name__)
-DocumentReminderSender = Callable[..., int]
+ReminderNotifier = Callable[..., int]
 
 
 @dataclass(frozen=True)
@@ -64,17 +63,19 @@ def send_document_reminder_for_reminder(
     *,
     reminder: Reminder,
     actor: AbstractBaseUser | AnonymousUser | None,
-    send_email: DocumentReminderSender = send_expiring_documents_email,
+    notification_sender: ReminderNotifier = default_reminder_notifier,
 ) -> ReminderScenarioResult:
     documents = []
-    if reminder.document and reminder.document.expiry_date:
+    if reminder.document and reminder.document.expiry_date and reminder.case_id:
         documents.append(reminder.document)
 
-    sent = bool(send_email(reminder.client, documents, sent_by=actor, case=reminder.case))
+    sent_count = int(
+        notification_sender(reminder.client, documents, sent_by=actor, case=reminder.case) or 0
+    ) if documents else 0
     return ReminderScenarioResult(
         client=reminder.client,
         reminder=reminder,
-        email_sent=sent,
+        email_sent=bool(sent_count),
         affected_documents_count=len(documents),
         emails_sent_count=sent_count,
     )
@@ -84,23 +85,31 @@ def send_document_reminder_for_client(
     *,
     client: Client,
     actor: AbstractBaseUser | AnonymousUser | None,
-    send_email: DocumentReminderSender = send_expiring_documents_email,
+    notification_sender: ReminderNotifier = default_reminder_notifier,
 ) -> ReminderScenarioResult:
     reminders = (
         client.reminders.filter(reminder_type="document", is_active=True)
         .select_related("document", "document__case")
     )
-    documents = [
-        reminder.document
-        for reminder in reminders
-        if reminder.document and reminder.document.expiry_date
-    ]
+    documents_by_case: dict[int, list[Any]] = defaultdict(list)
+    for reminder in reminders:
+        document = reminder.document
+        if document is None or document.expiry_date is None or document.case_id is None:
+            continue
+        documents_by_case[document.case_id].append(document)
 
-    case = documents[0].case if documents and all(document.case_id == documents[0].case_id for document in documents) else None
-    sent = bool(send_email(client, documents, sent_by=actor, case=case))
+    sent_count = 0
+    affected_documents_count = 0
+    for documents in documents_by_case.values():
+        case = documents[0].case
+        if case is None:
+            continue
+        sent_count += int(notification_sender(client, documents, sent_by=actor, case=case) or 0)
+        affected_documents_count += len(documents)
+
     return ReminderScenarioResult(
         client=client,
         email_sent=bool(sent_count),
-        affected_documents_count=len(documents),
+        affected_documents_count=affected_documents_count,
         emails_sent_count=sent_count,
     )
