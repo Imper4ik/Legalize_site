@@ -45,6 +45,52 @@ function initTabAnchorLinks() {
   });
 }
 
+function parseGeneratedLinkResponse(data) {
+  const payload = data && typeof data === 'object' ? data : {};
+  const nested = payload.data && typeof payload.data === 'object' ? payload.data : {};
+  const status = payload.status || nested.status || '';
+  const message = payload.message || payload.error || nested.message || nested.error || 'Generation error';
+  const failed = (
+    (status && status !== 'ok' && status !== 'success') ||
+    payload.success === false ||
+    payload.ok === false ||
+    nested.success === false ||
+    nested.ok === false
+  );
+  if (failed) {
+    throw new Error(message);
+  }
+
+  const link = (
+    payload.link ||
+    payload.url ||
+    payload.onboarding_url ||
+    payload.onboardingUrl ||
+    payload.portal_url ||
+    payload.portalUrl ||
+    nested.link ||
+    nested.url ||
+    nested.onboarding_url ||
+    nested.onboardingUrl ||
+    nested.portal_url ||
+    nested.portalUrl ||
+    ''
+  );
+  const succeeded = (
+    status === 'ok' ||
+    status === 'success' ||
+    payload.success === true ||
+    payload.ok === true ||
+    nested.success === true ||
+    nested.ok === true ||
+    Boolean(link)
+  );
+  if (!succeeded || !link) {
+    throw new Error(message);
+  }
+
+  return link;
+}
 function initOnboardingPanelLinkGenerator() {
   const btn = document.getElementById('btn-generate-detail-onboarding');
   if (!btn) return;
@@ -58,7 +104,7 @@ function initOnboardingPanelLinkGenerator() {
     const lang = document.documentElement.lang || 'en';
     btn.disabled = true;
     const originalText = btn.textContent;
-    
+
     let genText = btn.dataset.textGeneratingEn || 'Generating...';
     if (lang.startsWith('ru')) {
       genText = btn.dataset.textGeneratingRu || genText;
@@ -67,7 +113,7 @@ function initOnboardingPanelLinkGenerator() {
     }
     btn.textContent = genText;
 
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
                       document.querySelector('[name=csrfmiddlewaretoken]')?.value;
 
     const intakeTypeSelect = document.getElementById('detail-onboarding-intake-type');
@@ -95,47 +141,44 @@ function initOnboardingPanelLinkGenerator() {
       }
 
       const data = await response.json();
-      if (data.status === 'ok') {
-        const linkInput = document.getElementById('onboardingLink');
-        const copyBtn = document.getElementById('btn-copy-onboarding-link');
-        const infoEl = document.getElementById('onboarding-session-info');
+      const generatedLink = parseGeneratedLinkResponse(data);
+      const linkInput = document.getElementById('onboardingLink');
+      const copyBtn = document.getElementById('btn-copy-onboarding-link');
+      const infoEl = document.getElementById('onboarding-session-info');
 
-        if (linkInput) {
-          linkInput.value = data.link;
-        }
-        if (copyBtn) {
-          copyBtn.disabled = false;
-        }
-        if (infoEl) {
-          // Update status message with +7 days from now
-          const now = new Date();
-          now.setDate(now.getDate() + 7);
-          const day = String(now.getDate()).padStart(2, '0');
-          const month = String(now.getMonth() + 1).padStart(2, '0');
-          const year = now.getFullYear();
-          const hour = String(now.getHours()).padStart(2, '0');
-          const minute = String(now.getMinutes()).padStart(2, '0');
-          const formattedDate = `${day}.${month}.${year} ${hour}:${minute}`;
-          
-          let template = infoEl.dataset.labelEn || 'Current session: <strong>Created</strong> (expires: {date})';
-          if (lang.startsWith('ru')) {
-            template = infoEl.dataset.labelRu || template;
-          } else if (lang.startsWith('pl')) {
-            template = infoEl.dataset.labelPl || template;
-          }
-          infoEl.innerHTML = template.replace('{date}', formattedDate);
-        }
-
-        // Copy to clipboard
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          await navigator.clipboard.writeText(data.link);
-        }
-
-        // Show alert
-        showAlert('onboarding-alerts', data.message || 'Link copied to clipboard!', 'success');
-      } else {
-        throw new Error(data.message || 'Generation error');
+      if (linkInput) {
+        linkInput.value = generatedLink;
       }
+      if (copyBtn) {
+        copyBtn.disabled = false;
+      }
+      if (infoEl) {
+        // Update status message with +7 days from now
+        const now = new Date();
+        now.setDate(now.getDate() + 7);
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear();
+        const hour = String(now.getHours()).padStart(2, '0');
+        const minute = String(now.getMinutes()).padStart(2, '0');
+        const formattedDate = `${day}.${month}.${year} ${hour}:${minute}`;
+
+        let template = infoEl.dataset.labelEn || 'Current session: <strong>Created</strong> (expires: {date})';
+        if (lang.startsWith('ru')) {
+          template = infoEl.dataset.labelRu || template;
+        } else if (lang.startsWith('pl')) {
+          template = infoEl.dataset.labelPl || template;
+        }
+        infoEl.innerHTML = template.replace('{date}', formattedDate);
+      }
+
+      // Copy to clipboard
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(generatedLink);
+      }
+
+      // Show alert
+      showAlert('onboarding-alerts', data.message || 'Link copied to clipboard!', 'success');
     } catch (error) {
       console.error(error);
       let errorMsg = btn.dataset.errorEn || 'Failed to generate link. Please try again.';

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -71,8 +70,7 @@ def send_document_reminder_for_reminder(
     if reminder.document and reminder.document.expiry_date:
         documents.append(reminder.document)
 
-    sent_count = send_email(reminder.client, documents, sent_by=actor, case=reminder.case)
-    sent = bool(sent_count)
+    sent = bool(send_email(reminder.client, documents, sent_by=actor, case=reminder.case))
     return ReminderScenarioResult(
         client=reminder.client,
         reminder=reminder,
@@ -98,23 +96,8 @@ def send_document_reminder_for_client(
         if reminder.document and reminder.document.expiry_date
     ]
 
-    documents_by_case: dict[int | None, list[Any]] = defaultdict(list)
-    for document in documents:
-        documents_by_case[document.case_id].append(document)
-
-    sent_count = 0
-    for case_id, case_documents in documents_by_case.items():
-        if not case_documents:
-            continue
-        case = case_documents[0].case if case_id is not None else None
-        if case is None:
-            logger.warning(
-                "Sending legacy client-level document reminder for client_id=%s with %s case-less documents",
-                client.pk,
-                len(case_documents),
-            )
-        sent_count += send_email(client, case_documents, sent_by=actor, case=case)
-
+    case = documents[0].case if documents and all(document.case_id == documents[0].case_id for document in documents) else None
+    sent = bool(send_email(client, documents, sent_by=actor, case=case))
     return ReminderScenarioResult(
         client=client,
         email_sent=bool(sent_count),

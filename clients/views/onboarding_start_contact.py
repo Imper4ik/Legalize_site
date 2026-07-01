@@ -589,14 +589,12 @@ def _build_start_context(
             }
         )
     if contact_complete and not travel_complete:
-        action_items.append(
-            {
-                "type": "warning",
-                "icon": "bi-airplane",
-                "text": str(_("Заполнить историю поездок")),
-                "url": reverse("clients:onboarding_digital_access", kwargs={"token": session.token_hash}),
-            }
-        )
+        action_items.append({
+            "type": "warning",
+            "icon": "bi-airplane",
+            "text": str(_("Заполнить историю поездок")),
+            "url": reverse("clients:onboarding_digital_access", kwargs={"token": session.token_hash})
+        })
 
     missing_case_number = bool(
         case_step < 7

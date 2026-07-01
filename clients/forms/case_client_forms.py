@@ -72,7 +72,7 @@ class CaseForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["company"].required = False
         self.fields["family_role"].required = False
-        self.fields["family_role"].choices = [("", _("Not a family case")), *Case.FAMILY_ROLE_CHOICES]
+        self.fields["family_role"].choices = [("", _("Not a family case")), ("sponsor", _("Sponsor")), ("family_spouse", _("Spouse")), ("family_child", _("Child"))]
 
     def clean(self) -> dict[str, Any]:
         cleaned_data = super().clean()

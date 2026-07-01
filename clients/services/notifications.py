@@ -21,7 +21,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from clients.constants import DocumentType
 from clients.models import Client, Document, StaffTask
-from clients.services.case_context import build_case_document_checklist, checklist_for_case, purpose_for_case
+from clients.services.case_context import checklist_for_case, purpose_for_case
 from clients.services.wniosek import get_submitted_document_codes
 from clients.services.zus import format_zus_months, missing_zus_months
 
@@ -833,7 +833,7 @@ def _get_expiring_documents_context(client: Client, documents: list[Document], *
     valid_documents = [doc for doc in all_client_docs if doc.expiry_date and doc.expiry_date > cutoff]
 
     # Missing documents from the checklist
-    checklist = build_case_document_checklist(case) if case is not None else client.get_document_checklist() or []
+    checklist = client.get_document_checklist(case=case) if case is not None else client.get_document_checklist() or []
     missing_documents = []
     for item in checklist:
         if item.get("is_complete"):
