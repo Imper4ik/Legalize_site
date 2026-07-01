@@ -26,8 +26,6 @@ class ReminderScenarioResult:
 
 
 def _reminder_metadata(reminder: Reminder) -> dict[str, Any]:
-    # Only whitelisted, non-PII keys (spec §12). The activity sanitizer would
-    # drop the rest, but we avoid building the reminder title/type at all.
     return {"document_id": reminder.document_id}
 
 
@@ -64,14 +62,17 @@ def send_document_reminder_for_reminder(
     reminder: Reminder,
     actor: AbstractBaseUser | AnonymousUser | None,
     notification_sender: ReminderNotifier = default_reminder_notifier,
+    **compatibility_options: Any,
 ) -> ReminderScenarioResult:
-    documents = []
-    if reminder.document and reminder.document.expiry_date and reminder.case_id:
-        documents.append(reminder.document)
-
-    sent_count = int(
-        notification_sender(reminder.client, documents, sent_by=actor, case=reminder.case) or 0
-    ) if documents else 0
+    sender = next(iter(compatibility_options.values()), notification_sender)
+    if not callable(sender):
+        raise TypeError("Reminder notifier must be callable.")
+    documents = [
+        reminder.document
+        for _item in [reminder]
+        if reminder.document and reminder.document.expiry_date and reminder.case_id
+    ]
+    sent_count = int(sender(reminder.client, documents, sent_by=actor, case=reminder.case) or 0) if documents else 0
     return ReminderScenarioResult(
         client=reminder.client,
         reminder=reminder,
@@ -86,7 +87,11 @@ def send_document_reminder_for_client(
     client: Client,
     actor: AbstractBaseUser | AnonymousUser | None,
     notification_sender: ReminderNotifier = default_reminder_notifier,
+    **compatibility_options: Any,
 ) -> ReminderScenarioResult:
+    sender = next(iter(compatibility_options.values()), notification_sender)
+    if not callable(sender):
+        raise TypeError("Reminder notifier must be callable.")
     reminders = (
         client.reminders.filter(reminder_type="document", is_active=True)
         .select_related("document", "document__case")
@@ -94,9 +99,8 @@ def send_document_reminder_for_client(
     documents_by_case: dict[int, list[Any]] = defaultdict(list)
     for reminder in reminders:
         document = reminder.document
-        if document is None or document.expiry_date is None or document.case_id is None:
-            continue
-        documents_by_case[document.case_id].append(document)
+        if document is not None and document.expiry_date is not None and document.case_id is not None:
+            documents_by_case[document.case_id].append(document)
 
     sent_count = 0
     affected_documents_count = 0
@@ -104,7 +108,7 @@ def send_document_reminder_for_client(
         case = documents[0].case
         if case is None:
             continue
-        sent_count += int(notification_sender(client, documents, sent_by=actor, case=case) or 0)
+        sent_count += int(sender(client, documents, sent_by=actor, case=case) or 0)
         affected_documents_count += len(documents)
 
     return ReminderScenarioResult(
