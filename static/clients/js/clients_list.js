@@ -175,6 +175,52 @@
     document.body.removeChild(textarea);
   }
 
+  function parseGeneratedLinkResponse(data) {
+    const payload = data && typeof data === 'object' ? data : {};
+    const nested = payload.data && typeof payload.data === 'object' ? payload.data : {};
+    const status = payload.status || nested.status || '';
+    const message = payload.message || payload.error || nested.message || nested.error || 'Generation failed';
+    const failed = (
+      (status && status !== 'ok' && status !== 'success') ||
+      payload.success === false ||
+      payload.ok === false ||
+      nested.success === false ||
+      nested.ok === false
+    );
+    if (failed) {
+      throw new Error(message);
+    }
+
+    const link = (
+      payload.link ||
+      payload.url ||
+      payload.onboarding_url ||
+      payload.onboardingUrl ||
+      payload.portal_url ||
+      payload.portalUrl ||
+      nested.link ||
+      nested.url ||
+      nested.onboarding_url ||
+      nested.onboardingUrl ||
+      nested.portal_url ||
+      nested.portalUrl ||
+      ''
+    );
+    const succeeded = (
+      status === 'ok' ||
+      status === 'success' ||
+      payload.success === true ||
+      payload.ok === true ||
+      nested.success === true ||
+      nested.ok === true ||
+      Boolean(link)
+    );
+    if (!succeeded || !link) {
+      throw new Error(message);
+    }
+
+    return link;
+  }
   let activeLink = '';
   let activeShareMode = 'onboarding';
 
@@ -190,10 +236,10 @@
     if (qrImg && qrSpinner) {
       qrImg.style.display = 'none';
       qrSpinner.style.display = 'block';
-      
+
       qrImg.onload = null;
       qrImg.onerror = null;
-      
+
       if (typeof QRious !== 'undefined') {
         try {
           const qr = new QRious({
@@ -342,7 +388,7 @@
 
     function showAlert(message, type = 'success') {
       if (!alertContainer) return;
-      
+
       const alert = document.createElement('div');
       alert.className = `alert alert-${type} alert-dismissible fade show mt-2`;
       alert.role = 'alert';
@@ -352,7 +398,7 @@
       closeBtn.type = 'button';
       closeBtn.className = 'btn-close';
       closeBtn.setAttribute('data-bs-dismiss', 'alert');
-      
+
       const lang = document.documentElement.lang || 'en';
       let closeLabel = 'Close';
       if (lang.startsWith('ru')) closeLabel = '\u0417\u0430\u043a\u0440\u044b\u0442\u044c';
@@ -396,38 +442,35 @@
           }
 
           const data = await response.json();
-          if (data.status === 'ok') {
-            if (icon) {
-              icon.className = 'bi bi-check-lg';
-              btn.classList.remove('btn-outline-success');
-              btn.classList.add('btn-success');
-            }
-            
-            openShareModal(data.link);
-
-            setTimeout(() => {
-              if (icon) {
-                icon.className = originalClass;
-                btn.classList.remove('btn-success');
-                btn.classList.add('btn-outline-success');
-              }
-              btn.disabled = false;
-            }, 2000);
-          } else {
-            throw new Error(data.message || 'Generation failed');
+          const generatedLink = parseGeneratedLinkResponse(data);
+          if (icon) {
+            icon.className = 'bi bi-check-lg';
+            btn.classList.remove('btn-outline-success');
+            btn.classList.add('btn-success');
           }
+
+          openShareModal(generatedLink);
+
+          setTimeout(() => {
+            if (icon) {
+              icon.className = originalClass;
+              btn.classList.remove('btn-success');
+              btn.classList.add('btn-outline-success');
+            }
+            btn.disabled = false;
+          }, 2000);
         } catch (error) {
           console.error(error);
           if (icon) {
             icon.className = originalClass;
           }
           btn.disabled = false;
-          
+
           const lang = document.documentElement.lang || 'en';
           let errMsg = 'Failed to generate link. Please try again.';
           if (lang.startsWith('ru')) errMsg = '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0441\u0433\u0435\u043d\u0435\u0440\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0441\u0441\u044b\u043b\u043a\u0443.';
           else if (lang.startsWith('pl')) errMsg = 'Nie uda\u0142o si\u0119 wygenerowa\u0107 linku.';
-          
+
           showAlert(errMsg, 'danger');
         }
       });
@@ -497,33 +540,30 @@
         }
 
         const data = await response.json();
-        if (data.status === 'ok') {
-          if (icon) {
-            icon.className = 'bi bi-check-lg';
-            btn.classList.remove('btn-outline-primary');
-            btn.classList.add('btn-success');
-          }
-
-          if (modal && modalEl.classList.contains('show')) {
-            modalEl.addEventListener('hidden.bs.modal', () => {
-              openShareModal(data.link, 'intake');
-            }, { once: true });
-            modal.hide();
-          } else {
-            openShareModal(data.link, 'intake');
-          }
-
-          setTimeout(() => {
-            if (icon) {
-              icon.className = originalClass;
-              btn.classList.remove('btn-success');
-              btn.classList.add('btn-outline-primary');
-            }
-            btn.disabled = false;
-          }, 1500);
-        } else {
-          throw new Error(data.message || 'Generation failed');
+        const generatedLink = parseGeneratedLinkResponse(data);
+        if (icon) {
+          icon.className = 'bi bi-check-lg';
+          btn.classList.remove('btn-outline-primary');
+          btn.classList.add('btn-success');
         }
+
+        if (modal && modalEl.classList.contains('show')) {
+          modalEl.addEventListener('hidden.bs.modal', () => {
+            openShareModal(generatedLink, 'intake');
+          }, { once: true });
+          modal.hide();
+        } else {
+          openShareModal(generatedLink, 'intake');
+        }
+
+        setTimeout(() => {
+          if (icon) {
+            icon.className = originalClass;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-primary');
+          }
+          btn.disabled = false;
+        }, 1500);
       } catch (error) {
         console.error(error);
         if (icon) {
@@ -538,7 +578,7 @@
   function initQuickOnboardingLink(root) {
     const btn = root.getElementById('btn-quick-onboarding-link');
     if (!btn) return;
-    
+
     const alertContainer = document.getElementById('ajax-alert-container');
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     const purposeSelect = root.getElementById('quick-onboarding-purpose');
@@ -556,7 +596,7 @@
       closeBtn.type = 'button';
       closeBtn.className = 'btn-close';
       closeBtn.setAttribute('data-bs-dismiss', 'alert');
-      
+
       const lang = document.documentElement.lang || 'en';
       let closeLabel = 'Close';
       if (lang.startsWith('ru')) closeLabel = '\u0417\u0430\u043a\u0440\u044b\u0442\u044c';
@@ -609,54 +649,51 @@
         }
 
         const data = await response.json();
-        if (data.status === 'ok') {
-          if (icon) {
-            icon.className = 'bi bi-check-lg';
-            btn.classList.remove('btn-outline-primary');
-            btn.classList.add('btn-success');
-          }
-          
-          if (modal && modalEl.classList.contains('show')) {
-            modalEl.addEventListener('hidden.bs.modal', () => {
-              openShareModal(data.link);
-            }, { once: true });
-            modal.hide();
-          } else {
-            openShareModal(data.link);
-          }
-
-          setTimeout(() => {
-            if (icon) {
-              icon.className = originalClass;
-              btn.classList.remove('btn-success');
-              btn.classList.add('btn-outline-primary');
-            }
-            btn.disabled = false;
-
-            const shareModalEl = document.getElementById('onboardingShareModal');
-            if (shareModalEl) {
-              shareModalEl.addEventListener('hidden.bs.modal', () => {
-                window.location.reload();
-              }, { once: true });
-            } else {
-              window.location.reload();
-            }
-          }, 1500);
-        } else {
-          throw new Error(data.message || 'Generation failed');
+        const generatedLink = parseGeneratedLinkResponse(data);
+        if (icon) {
+          icon.className = 'bi bi-check-lg';
+          btn.classList.remove('btn-outline-primary');
+          btn.classList.add('btn-success');
         }
+
+        if (modal && modalEl.classList.contains('show')) {
+          modalEl.addEventListener('hidden.bs.modal', () => {
+            openShareModal(generatedLink);
+          }, { once: true });
+          modal.hide();
+        } else {
+          openShareModal(generatedLink);
+        }
+
+        setTimeout(() => {
+          if (icon) {
+            icon.className = originalClass;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-primary');
+          }
+          btn.disabled = false;
+
+          const shareModalEl = document.getElementById('onboardingShareModal');
+          if (shareModalEl) {
+            shareModalEl.addEventListener('hidden.bs.modal', () => {
+              window.location.reload();
+            }, { once: true });
+          } else {
+            window.location.reload();
+          }
+        }, 1500);
       } catch (error) {
         console.error(error);
         if (icon) {
           icon.className = originalClass;
         }
         btn.disabled = false;
-        
+
         const lang = document.documentElement.lang || 'en';
         let errMsg = 'Failed to generate link. Please try again.';
         if (lang.startsWith('ru')) errMsg = '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0441\u0433\u0435\u043d\u0435\u0440\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0441\u0441\u044b\u043b\u043a\u0443.';
         else if (lang.startsWith('pl')) errMsg = 'Nie uda\u0142o si\u0119 wygenerowa\u0107 linku.';
-        
+
         showAlert(errMsg, 'danger');
       }
     });
@@ -681,7 +718,7 @@
       debounceTimer = setTimeout(async () => {
         const baseUrl = input.dataset.autocompleteUrl;
         if (!baseUrl) return;
-        
+
         try {
           const response = await fetch(`${baseUrl}?q=${encodeURIComponent(query)}`, {
             headers: {
@@ -690,7 +727,7 @@
             }
           });
           if (!response.ok) throw new Error('Network error');
-          
+
           const data = await response.json();
           renderSuggestions(data.results);
         } catch (err) {
@@ -724,7 +761,7 @@
         const item = document.createElement('a');
         item.href = client.url;
         item.className = 'dropdown-item d-flex flex-column py-2 border-bottom';
-        
+
         const nameSpan = document.createElement('span');
         nameSpan.className = 'fw-semibold text-primary';
         nameSpan.textContent = `${client.first_name} ${client.last_name}`;

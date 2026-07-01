@@ -50,26 +50,6 @@ def checklist_for_case(
     )
 
 
-def build_case_document_checklist(
-    case: Any,
-    *,
-    check_file_existence: bool = False,
-    requirements_cache: dict[str, Any] | None = None,
-) -> list[dict[str, Any]]:
-    """Build the required-document checklist for one concrete Case.
-
-    This is the Case-first entry point for process screens. It delegates row
-    construction to the legacy client method for now, but the purpose and
-    documents are both scoped to ``case``.
-    """
-
-    return case.client.get_document_checklist(
-        check_file_existence=check_file_existence,
-        requirements_cache=requirements_cache,
-        case=case,
-    )
-
-
 def purpose_context_for_case(case: Any, mos_data: Any | None = None) -> dict[str, str | bool]:
     effective_purpose = purpose_for_case(case)
     client_selected_purpose = str(getattr(mos_data, "mos_purpose", "") or "") if mos_data else ""
@@ -77,7 +57,6 @@ def purpose_context_for_case(case: Any, mos_data: Any | None = None) -> dict[str
     return {
         "effective_purpose": effective_purpose,
         "client_selected_purpose": client_selected_purpose,
-        "original_case_purpose": original_case_purpose,
         "original_client_purpose": original_case_purpose,
         "effective_purpose_label": purpose_label(effective_purpose),
         "client_selected_purpose_label": purpose_label(client_selected_purpose),

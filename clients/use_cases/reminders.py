@@ -93,15 +93,8 @@ def send_document_reminder_for_client(
         if reminder.document and reminder.document.expiry_date
     ]
 
-    documents_by_case: dict[int | None, list[Any]] = defaultdict(list)
-    for document in documents:
-        documents_by_case[document.case_id].append(document)
-
-    sent = False
-    for case_documents in documents_by_case.values():
-        case = case_documents[0].case if case_documents and case_documents[0].case_id else None
-        sent = bool(send_email(client, case_documents, sent_by=actor, case=case)) or sent
-
+    case = documents[0].case if documents and all(document.case_id == documents[0].case_id for document in documents) else None
+    sent = bool(send_email(client, documents, sent_by=actor, case=case))
     return ReminderScenarioResult(
         client=client,
         email_sent=sent,
