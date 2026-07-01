@@ -67,7 +67,7 @@ def send_document_reminder_for_reminder(
     if reminder.document and reminder.document.expiry_date:
         documents.append(reminder.document)
 
-    sent = bool(send_email(reminder.client, documents, sent_by=actor))
+    sent = bool(send_email(reminder.client, documents, sent_by=actor, case=reminder.case))
     return ReminderScenarioResult(
         client=reminder.client,
         reminder=reminder,
@@ -92,7 +92,8 @@ def send_document_reminder_for_client(
         if reminder.document and reminder.document.expiry_date
     ]
 
-    sent = bool(send_email(client, documents, sent_by=actor))
+    case = documents[0].case if documents and all(document.case_id == documents[0].case_id for document in documents) else None
+    sent = bool(send_email(client, documents, sent_by=actor, case=case))
     return ReminderScenarioResult(
         client=client,
         email_sent=sent,

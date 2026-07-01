@@ -258,6 +258,7 @@ def confirm_wezwanie_document(
     auto_updates.extend(
         _send_background_notifications(
             client=client,
+            case=case,
             parsed=notification_data,
             send_missing_email=send_missing_email,
             send_appointment_email=send_appointment_email,
@@ -1485,6 +1486,7 @@ def _finalize_successful_document_job(
         auto_updates.extend(
             _send_background_notifications(
                 client=client,
+                case=job.case,
                 parsed=parsed,
                 send_missing_email=send_missing_email,
                 send_appointment_email=send_appointment_email,
@@ -1543,24 +1545,31 @@ def reclaim_stale_document_jobs(*, now: datetime | None = None) -> int:
 def _send_background_notifications(
     *,
     client: Client,
+    case: Case | None,
     parsed: WezwanieData,
     send_missing_email: NotificationSender,
     send_appointment_email: NotificationSender,
 ) -> list[str]:
     auto_updates: list[str] = []
 
-    if _send_notification(send_missing_email, client, "missing-documents email"):
+    if _send_notification(send_missing_email, client, "missing-documents email", case=case):
         auto_updates.append(_("missing-documents email sent"))
 
     if parsed.wezwanie_type == "fingerprints" and parsed.fingerprints_date:
-        if _send_notification(send_appointment_email, client, "appointment notification"):
+        if _send_notification(send_appointment_email, client, "appointment notification", case=case):
             auto_updates.append(_("appointment notification sent"))
 
     return auto_updates
 
 
-def _send_notification(sender: NotificationSender, client: Client, label: str) -> bool:
+def _send_notification(sender: NotificationSender, client: Client, label: str, *, case: Case | None = None) -> bool:
     try:
+        if case is not None:
+            try:
+                return bool(sender(client, case=case))
+            except TypeError as exc:
+                if "case" not in str(exc):
+                    raise
         return bool(sender(client))
     except Exception as exc:
         logger.warning(

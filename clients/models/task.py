@@ -17,13 +17,18 @@ class StaffTaskQuerySet(models.QuerySet):
 
 
 class StaffTask(models.Model):
+    STATUS_OPEN = "open"
+    STATUS_IN_PROGRESS = "in_progress"
+    STATUS_DONE = "done"
+    STATUS_CANCELLED = "cancelled"
+
     objects = models.Manager.from_queryset(StaffTaskQuerySet)()
 
     STATUS_CHOICES = [
-        ("open", _("Открыта")),
-        ("in_progress", _("В работе")),
-        ("done", _("Завершена")),
-        ("cancelled", _("Отменена")),
+        (STATUS_OPEN, _("Открыта")),
+        (STATUS_IN_PROGRESS, _("В работе")),
+        (STATUS_DONE, _("Завершена")),
+        (STATUS_CANCELLED, _("Отменена")),
     ]
     PRIORITY_CHOICES = [
         ("low", _("Низкий")),
@@ -228,7 +233,7 @@ class StaffTask(models.Model):
         return badge_map.get(self.status, "bg-secondary")
 
     def mark_done(self, *, save: bool = True) -> None:
-        self.status = "done"
+        self.status = self.STATUS_DONE
         self.completed_at = timezone.now()
         if save:
             self.save(update_fields=["status", "completed_at", "updated_at"])

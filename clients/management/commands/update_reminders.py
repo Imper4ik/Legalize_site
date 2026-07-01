@@ -203,27 +203,29 @@ class Command(BaseCommand):
             expiry_date__gte=today,
             expiry_date__lte=cutoff,
             client__archived_at__isnull=True,
+            case__archived_at__isnull=True,
         )
 
         if not expiring_docs.exists():
             self.stdout.write("No documents expire within the email window.")
             return
 
-        docs_by_client: dict[int, list[Document]] = defaultdict(list)
+        docs_by_case: dict[tuple[int, int | None], list[Document]] = defaultdict(list)
         for document in expiring_docs.iterator():
-            docs_by_client[document.client_id].append(document)
+            docs_by_case[(document.client_id, document.case_id)].append(document)
 
         sent_count = 0
-        for documents in docs_by_client.values():
+        for (_client_id, _case_id), documents in docs_by_case.items():
             client = documents[0].client
+            case = documents[0].case
             if dry_run:
                 sent_count += 1
                 self.stdout.write(
-                    f"DRY RUN: would send expiring documents email client_id={client.pk} documents={len(documents)}"
+                    f"DRY RUN: would send expiring documents email client_id={client.pk} case_id={getattr(case, 'pk', None)} documents={len(documents)}"
                 )
                 continue
 
-            sent_count += send_expiring_documents_email(client, documents)
+            sent_count += send_expiring_documents_email(client, documents, case=case)
 
         if not dry_run:
             self.stdout.write(f"Sent {sent_count} expiring-document emails.")
@@ -239,6 +241,7 @@ class Command(BaseCommand):
             expiry_date__lte=reminder_period_end,
             reminder__isnull=True,
             client__archived_at__isnull=True,
+            case__archived_at__isnull=True,
         )
 
         if not expiring_docs.exists():
@@ -272,6 +275,7 @@ class Command(BaseCommand):
             due_date__lte=today,
             status__in=["pending", "partial"],
             client__archived_at__isnull=True,
+            case__archived_at__isnull=True,
         ).exclude(reminder__is_active=True)
 
         if not due_payments.exists():
@@ -313,6 +317,7 @@ class Command(BaseCommand):
             legal_stay_until__gte=today,
             legal_stay_until__lte=cutoff,
             case__workflow_stage__in=["new_client", "document_collection"],
+            case__archived_at__isnull=True,
             client__archived_at__isnull=True,
             client__is_demo_data=False,
             client__is_test_data=False,
@@ -387,6 +392,7 @@ class Command(BaseCommand):
             task_type="fingerprints_followup",
             status__in=["open", "in_progress"],
             is_auto_created=True,
+            case__archived_at__isnull=True,
         ).filter(
             Q(case__decision_date__isnull=False) | Q(case__workflow_stage__in=FINISHED_WORKFLOW_STAGES)
         )
@@ -413,6 +419,7 @@ class Command(BaseCommand):
                     case=case,
                     task_type="fingerprints_followup",
                     status__in=["open", "in_progress"],
+                    case__archived_at__isnull=True,
                 ).exists()
                 if not already:
                     created_count += 1
@@ -466,6 +473,7 @@ class Command(BaseCommand):
             legal_stay_until__gte=today,
             legal_stay_until__lte=cutoff,
             case__workflow_stage__in=["new_client", "document_collection"],
+            case__archived_at__isnull=True,
             client__archived_at__isnull=True,
         )
 

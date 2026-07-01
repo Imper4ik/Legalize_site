@@ -12403,3 +12403,19 @@ msgstr "Submit"
 
 msgid "Intake only"
 msgstr "Intake only"
+
+#: clients/templates/clients/onboarding/start_contact.html:342
+msgid "Если нужна помощь по onboarding, напишите нам."
+msgstr "If you need help with onboarding, write to us."
+
+#: clients/templates/clients/onboarding/start_contact.html:350
+msgid "Специалист"
+msgstr "Specialist"
+
+#: clients/templates/clients/onboarding/start_contact.html:351
+msgid "Контакты специалиста"
+msgstr "Specialist contact"
+
+#: clients/templates/clients/onboarding/start_contact.html:360
+msgid "Написать на email"
+msgstr "Write by email"

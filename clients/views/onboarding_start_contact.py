@@ -15,7 +15,9 @@ from django.utils.translation import gettext as _
 from clients.constants import DocumentType
 from clients.forms import DocumentUploadForm
 from clients.models import Client, ClientOnboardingSession, Document, DocumentRequirement, MOSApplicationData
+from clients.services.case_context import checklist_for_case, purpose_context_for_case
 from clients.services.document_workflow import upload_client_document
+from clients.services.onboarding_progress import get_case_onboarding_step
 from clients.views.onboarding_views import (
     _document_source_hint,
     _ensure_mos,
@@ -375,7 +377,7 @@ def _build_start_context(
     mos_data = MOSApplicationData.objects.filter(client=client, case=case).first()
     if mos_data is None:
         mos_data = MOSApplicationData(client=client, case=case)
-    purpose_ctx = _purpose_context(client, mos_data)
+    purpose_ctx = purpose_context_for_case(case, mos_data) if case is not None else _purpose_context(client, mos_data)
     effective_purpose = str(purpose_ctx["effective_purpose"])
     language = translation.get_language() or client.language
 
@@ -390,7 +392,11 @@ def _build_start_context(
         None,
     )
 
-    required_docs_catalog = DocumentRequirement.catalog_for(purpose=effective_purpose, language=language)
+    required_docs_catalog = (
+        checklist_for_case(case, language)
+        if case is not None
+        else DocumentRequirement.catalog_for(purpose=effective_purpose, language=language)
+    )
 
     import os
 
@@ -494,11 +500,12 @@ def _build_start_context(
         and mos_data.stay_data.get("stay_basis")
     )
 
-    case_step = client.get_case_step()
+    case_step = get_case_onboarding_step(client=client, case=case, mos_data=mos_data, checklist=checklist)
 
     # Build list of action items / notifications for the client
     action_items = []
     from django.urls import reverse
+
     from clients.models import StaffTask
 
     if not contact_complete:
@@ -529,7 +536,7 @@ def _build_start_context(
             "text": str(_("Заполнить историю поездок")),
             "url": reverse("clients:onboarding_digital_access", kwargs={"token": session.token_hash})
         })
-    
+
     missing_case_number = bool(
         case_step < 7
         and mos_data
@@ -561,11 +568,14 @@ def _build_start_context(
         })
 
     # Answered questions check
-    completed_questions_count = StaffTask.objects.filter(
+    completed_questions_qs = StaffTask.objects.filter(
         client=client,
         title__icontains="Вопрос от клиента",
-        status="completed"
-    ).count()
+        status=StaffTask.STATUS_DONE,
+    )
+    if case is not None:
+        completed_questions_qs = completed_questions_qs.filter(case=case)
+    completed_questions_count = completed_questions_qs.count()
     if completed_questions_count > 0:
         action_items.append({
             "type": "success",

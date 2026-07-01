@@ -202,16 +202,16 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
             ).prefetch_related(
                 "mos_applications",
                 Prefetch("cases", queryset=Case.objects.select_related("company").order_by("-opened_at", "-id")),
-                Prefetch("payments", queryset=Payment.objects.order_by("-created_at")),
+                Prefetch("payments", queryset=Payment.objects.filter(case__archived_at__isnull=True).order_by("-created_at")),
                 Prefetch(
                     "documents",
-                    queryset=Document.objects.annotate(
+                    queryset=Document.objects.filter(case__archived_at__isnull=True).annotate(
                         preloaded_version_count=Count("versions")
                     ).order_by("-uploaded_at"),
                 ),
                 Prefetch(
                     "staff_tasks",
-                    queryset=StaffTask.objects.select_related("assignee", "created_by").order_by(
+                    queryset=StaffTask.objects.filter(case__archived_at__isnull=True).select_related("assignee", "created_by").order_by(
                         "status",
                         "due_date",
                         "-created_at",

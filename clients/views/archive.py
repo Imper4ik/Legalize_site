@@ -41,7 +41,11 @@ def restore_document_view(request: HttpRequest, pk: int) -> HttpResponse:
         return redirect("clients:client_list")
 
     document = get_object_or_404(
-        accessible_documents_queryset(request.user, Document.all_objects.select_related("client")),
+        accessible_documents_queryset(
+            request.user,
+            Document.all_objects.select_related("client", "case"),
+            include_archived_cases=True,
+        ),
         pk=pk,
         archived_at__isnull=False,
     )
@@ -56,7 +60,11 @@ def restore_payment_view(request: HttpRequest, pk: int) -> HttpResponse:
         return redirect("clients:client_list")
 
     payment = get_object_or_404(
-        accessible_payments_queryset(request.user, Payment.all_objects.select_related("client")),
+        accessible_payments_queryset(
+            request.user,
+            Payment.all_objects.select_related("client", "case"),
+            include_archived_cases=True,
+        ),
         pk=pk,
         archived_at__isnull=False,
     )

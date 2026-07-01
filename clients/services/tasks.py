@@ -114,6 +114,7 @@ def close_auto_task(
     *,
     document: Document | None = None,
     payment: Payment | None = None,
+    case: Case | None = None,
 ) -> int:
     """Mark matching open auto tasks as done."""
     tasks = StaffTask.objects.filter(
@@ -126,9 +127,20 @@ def close_auto_task(
         tasks = tasks.filter(document=document)
     if payment:
         tasks = tasks.filter(payment=payment)
+    if case:
+        tasks = tasks.filter(case=case)
 
     updated_count = 0
     for task in tasks:
         task.mark_done()
+        from clients.services.activity import log_client_activity
+
+        log_client_activity(
+            client=task.client,
+            case=task.case,
+            event_type="task_completed",
+            summary="Автоматическая задача закрыта",
+            task=task,
+        )
         updated_count += 1
     return updated_count
