@@ -12396,7 +12396,7 @@ msgstr "Только анкета"
 
 #: clients/templates/clients/onboarding/start_contact.html:342
 msgid "Если нужна помощь по onboarding, напишите нам."
-msgstr "Если нужна помощь с онбордингом, напишите нам."
+msgstr "Если нужна помощь по onboarding, напишите нам."
 
 #: clients/templates/clients/onboarding/start_contact.html:350
 msgid "Специалист"

@@ -3,6 +3,7 @@
 A second case of the same client must never inherit the first case's number,
 MOS record or confirmed Wniosek submission, and vice versa.
 """
+
 from __future__ import annotations
 
 from django.db import IntegrityError, transaction
@@ -118,3 +119,50 @@ class WniosekCaseIsolationTests(TestCase):
         # If "passport" is a required code, it must not be marked submitted in A.
         for row in passport_rows_a:
             self.assertFalse(row["is_submitted"], row)
+
+    def test_find_matching_attachments_scopes_to_case(self) -> None:
+        from clients.constants import DocumentType
+        from clients.models import Document
+        from clients.services.wniosek import find_matching_attachments
+
+        # Create verified documents for case_a and case_b
+        _doc_a = Document.objects.create(
+            client=self.client_obj,
+            case=self.case_a,
+            document_type=DocumentType.PASSPORT.value,
+            file="passport_a.pdf",
+            verified=True,
+            is_test_data=True,
+        )
+        doc_b = Document.objects.create(
+            client=self.client_obj,
+            case=self.case_b,
+            document_type=DocumentType.PASSPORT.value,
+            file="passport_b.pdf",
+            verified=True,
+            is_test_data=True,
+        )
+
+        # Create a submission for case_b
+        submission_b = self._add_submission(self.case_b, DocumentType.PASSPORT.value)
+
+        # Match attachments for submission_b
+        matches = find_matching_attachments(self.client_obj, submission_b)
+
+        # Should only match doc_b, not doc_a!
+        attachment = submission_b.attachments.get()
+        self.assertEqual(matches[attachment.pk], doc_b)
+
+        # Create a submission, then update case_id to None in the DB to simulate a legacy record
+        submission_legacy = self._add_submission(self.case_a, DocumentType.PASSPORT.value)
+        WniosekSubmission.objects.filter(pk=submission_legacy.pk).update(case=None)
+
+        # Reload submission_legacy
+        submission_legacy.refresh_from_db()
+        self.assertIsNone(submission_legacy.case_id)
+
+        # Match attachments for submission_legacy. Since self.client_obj has two cases,
+        # get_legacy_compatibility_case will raise ValidationError, and find_matching_attachments will return no matches.
+        matches_legacy = find_matching_attachments(self.client_obj, submission_legacy)
+        attachment_legacy = submission_legacy.attachments.get()
+        self.assertIsNone(matches_legacy[attachment_legacy.pk])

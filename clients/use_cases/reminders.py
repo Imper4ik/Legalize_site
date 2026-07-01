@@ -44,7 +44,9 @@ def delete_reminder(*, reminder: Reminder, actor: AbstractBaseUser | AnonymousUs
     return ReminderScenarioResult(client=client, deleted_reminder_id=reminder_id)
 
 
-def deactivate_reminder(*, reminder: Reminder, actor: AbstractBaseUser | AnonymousUser | None) -> ReminderScenarioResult:
+def deactivate_reminder(
+    *, reminder: Reminder, actor: AbstractBaseUser | AnonymousUser | None
+) -> ReminderScenarioResult:
     reminder.is_active = False
     reminder.save(update_fields=["is_active"])
     log_client_activity(
@@ -62,17 +64,20 @@ def send_document_reminder_for_reminder(
     reminder: Reminder,
     actor: AbstractBaseUser | AnonymousUser | None,
     notification_sender: ReminderNotifier = default_reminder_notifier,
-    **compatibility_options: Any,
+    send_email: ReminderNotifier | None = None,
 ) -> ReminderScenarioResult:
-    sender = next(iter(compatibility_options.values()), notification_sender)
-    if not callable(sender):
+    if send_email is not None:
+        notification_sender = send_email
+    if not callable(notification_sender):
         raise TypeError("Reminder notifier must be callable.")
     documents = [
         reminder.document
         for _item in [reminder]
         if reminder.document and reminder.document.expiry_date and reminder.case_id
     ]
-    sent_count = int(sender(reminder.client, documents, sent_by=actor, case=reminder.case) or 0) if documents else 0
+    sent_count = (
+        int(notification_sender(reminder.client, documents, sent_by=actor, case=reminder.case) or 0) if documents else 0
+    )
     return ReminderScenarioResult(
         client=reminder.client,
         reminder=reminder,
@@ -87,14 +92,14 @@ def send_document_reminder_for_client(
     client: Client,
     actor: AbstractBaseUser | AnonymousUser | None,
     notification_sender: ReminderNotifier = default_reminder_notifier,
-    **compatibility_options: Any,
+    send_email: ReminderNotifier | None = None,
 ) -> ReminderScenarioResult:
-    sender = next(iter(compatibility_options.values()), notification_sender)
-    if not callable(sender):
+    if send_email is not None:
+        notification_sender = send_email
+    if not callable(notification_sender):
         raise TypeError("Reminder notifier must be callable.")
-    reminders = (
-        client.reminders.filter(reminder_type="document", is_active=True)
-        .select_related("document", "document__case")
+    reminders = client.reminders.filter(reminder_type="document", is_active=True).select_related(
+        "document", "document__case"
     )
     documents_by_case: dict[int, list[Any]] = defaultdict(list)
     for reminder in reminders:
@@ -108,7 +113,7 @@ def send_document_reminder_for_client(
         case = documents[0].case
         if case is None:
             continue
-        sent_count += int(sender(client, documents, sent_by=actor, case=case) or 0)
+        sent_count += int(notification_sender(client, documents, sent_by=actor, case=case) or 0)
         affected_documents_count += len(documents)
 
     return ReminderScenarioResult(

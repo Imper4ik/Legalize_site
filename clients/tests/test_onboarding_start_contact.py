@@ -15,6 +15,7 @@ from clients.services.onboarding_tokens import hash_onboarding_token
 class OnboardingStartContactTests(TestCase):
     def _client_with_session(self):
         from django.contrib.auth import get_user_model
+
         User = get_user_model()
         user = User.objects.create_user(email="test_contact_onb@example.com", password="secure_pwd_123")
         client = Client.objects.create(
@@ -40,7 +41,8 @@ class OnboardingStartContactTests(TestCase):
         _client, token = self._client_with_session()
 
         from django.utils import translation
-        with translation.override('ru'):
+
+        with translation.override("ru"):
             response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
 
             self.assertEqual(response.status_code, 200)
@@ -56,7 +58,8 @@ class OnboardingStartContactTests(TestCase):
         client, token = self._client_with_session()
 
         from django.utils import translation
-        with translation.override('ru'):
+
+        with translation.override("ru"):
             response = self.client.post(reverse("clients:onboarding_start", kwargs={"token": token}), {})
 
             self.assertEqual(response.status_code, 200)
@@ -94,8 +97,6 @@ class OnboardingStartContactTests(TestCase):
         self.assertEqual(mos_data.personal_data["email"], "anna.nowak@example.com")
         self.assertEqual(mos_data.personal_data["phone"], "+48123456789")
 
-
-
     def test_existing_contact_values_are_compact_and_editable(self):
         client, token = self._client_with_session()
         client.first_name = "Jan"
@@ -105,7 +106,8 @@ class OnboardingStartContactTests(TestCase):
         client.save(update_fields=["first_name", "last_name", "email", "phone"])
 
         from django.utils import translation
-        with translation.override('ru'):
+
+        with translation.override("ru"):
             response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
 
             self.assertEqual(response.status_code, 200)
@@ -123,7 +125,8 @@ class OnboardingStartContactTests(TestCase):
         mos_data.save(update_fields=["status"])
 
         from django.utils import translation
-        with translation.override('ru'):
+
+        with translation.override("ru"):
             response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
 
             self.assertEqual(response.status_code, 200)
@@ -166,7 +169,8 @@ class OnboardingStartContactTests(TestCase):
         self.assertEqual(mos_data.personal_data["phone"], "571 381 041")
 
         from django.utils import translation
-        with translation.override('ru'):
+
+        with translation.override("ru"):
             response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
             self.assertContains(response, "Контактные данные сохранены")
             self.assertNotContains(response, "Внимание: Заполните контактные данные")
@@ -197,6 +201,7 @@ class OnboardingStartContactTests(TestCase):
         client.refresh_from_db()
         self.assertEqual(client.first_name, "Existing")
         self.assertEqual(client.email, "existing@example.com")
+
     def _png_upload(self, name="confirmation.png"):
         image = Image.new("RGB", (8, 8), color="white")
         buffer = BytesIO()
@@ -207,6 +212,7 @@ class OnboardingStartContactTests(TestCase):
         _client, token = self._client_with_session()
 
         from django.utils import translation
+
         with translation.override("ru"):
             response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
 
@@ -250,6 +256,7 @@ class OnboardingStartContactTests(TestCase):
         future_date = timezone.localdate() + timedelta(days=1)
 
         from django.utils import translation
+
         with translation.override("ru"):
             response = self.client.post(
                 reverse("clients:onboarding_start", kwargs={"token": token}),
@@ -268,8 +275,11 @@ class OnboardingStartContactTests(TestCase):
 
     def test_support_email_is_rendered_as_compact_help_block(self):
         _client, token = self._client_with_session()
+        from django.utils import translation
+
         with self.settings(DEFAULT_FROM_EMAIL="support@example.test"):
-            response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
+            with translation.override("ru"):
+                response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Служба поддержки")

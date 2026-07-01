@@ -55,7 +55,9 @@ def _candidate_labels_for_code(code: str, label: str) -> set[str]:
     return {_normalize_attachment_label(candidate) for candidate in candidates if candidate}
 
 
-def match_attachment_to_document_type(client: Client, entered_name: str, language: str | None = None, case: Any = None) -> str:
+def match_attachment_to_document_type(
+    client: Client, entered_name: str, language: str | None = None, case: Any = None
+) -> str:
     """Map a free-form wniosek attachment label back to a checklist code."""
 
     normalized_name = _normalize_attachment_label(entered_name)
@@ -93,9 +95,11 @@ def match_attachment_to_document_type(client: Client, entered_name: str, languag
             for candidate in _candidate_labels_for_code(code, str(item["label"])):
                 if normalized_name == candidate:
                     return code
-                if len(candidate) >= 4 and (
-                    normalized_name in candidate or candidate in normalized_name
-                ) and len(candidate) > best_match_length:
+                if (
+                    len(candidate) >= 4
+                    and (normalized_name in candidate or candidate in normalized_name)
+                    and len(candidate) > best_match_length
+                ):
                     best_match = code
                     best_match_length = len(candidate)
 
@@ -138,6 +142,7 @@ def create_wniosek_submission(
     # ambiguous multi-case client raises rather than guessing.
     if case is None:
         from clients.services.cases import get_legacy_compatibility_case
+
         case = get_legacy_compatibility_case(client.pk, WniosekSubmission.__name__)
 
     with transaction.atomic():
@@ -163,6 +168,7 @@ def create_wniosek_submission(
             )
 
     return submission
+
 
 # Alias for compatibility with existing code
 record_wniosek_submission = create_wniosek_submission
@@ -190,7 +196,24 @@ def find_matching_attachments(client: Client, submission: WniosekSubmission) -> 
     Returns a dict mapping attachment ID to the matched Document object or None.
     """
     matches: dict[int, Any] = {}
-    docs = list(client.documents.filter(verified=True))
+
+    case = submission.case
+    if not case:
+        from django.core.exceptions import ValidationError
+
+        from clients.services.cases import get_legacy_compatibility_case
+
+        try:
+            case = get_legacy_compatibility_case(client.pk, "WniosekSubmission")
+        except ValidationError:
+            return {att.pk: None for att in submission.attachments.all()}
+
+    docs = list(
+        client.documents.filter(
+            verified=True,
+            case=case,
+        )
+    )
 
     for attachment in submission.attachments.all():
         best_match = None
@@ -254,9 +277,9 @@ def build_submitted_document_summary(client: Client, case: Any = None) -> dict[s
         if case_id is not None:
             submissions_filter["submission__case_id"] = case_id
         attachments = list(
-            WniosekAttachment.objects.filter(
-                **submissions_filter
-            ).select_related("submission", "submission__confirmed_by")
+            WniosekAttachment.objects.filter(**submissions_filter).select_related(
+                "submission", "submission__confirmed_by"
+            )
         )
 
     codes: dict[str, list[dict[str, Any]]] = {}

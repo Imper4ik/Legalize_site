@@ -126,7 +126,13 @@ class Case(SoftDeleteModel):
         verbose_name=_("Этап workflow"),
     )
     application_purpose = models.CharField(max_length=64, blank=True, default="", verbose_name=_("Основание легализации"))
-    family_role = models.CharField(max_length=32, blank=True, default="", verbose_name=_("Роль в семейном деле"))
+    family_role = models.CharField(
+        max_length=32,
+        blank=True,
+        default="",
+        choices=FAMILY_ROLE_CHOICES,
+        verbose_name=_("Роль в семейном деле"),
+    )
     application_type = models.CharField(max_length=64, blank=True, default="", verbose_name=_("Тип заявления"))
     basis_of_stay = models.CharField(max_length=100, blank=True, default="", verbose_name=_("Основание пребывания"))
     opened_at = models.DateField(default=timezone.localdate, verbose_name=_("Дата открытия дела"))

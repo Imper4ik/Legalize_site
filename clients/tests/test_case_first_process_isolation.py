@@ -119,3 +119,81 @@ class CaseFirstProcessIsolationTests(TestCase):
 
         with self.assertRaises(ValueError):
             send_expiring_documents_email(self.client_obj, [document], case=self.case_b)
+
+    def test_send_required_documents_email_scopes_to_case(self) -> None:
+        from clients.models import ClientDocumentRequirement, DocumentRequirement, EmailLog
+        from clients.services.notifications import send_required_documents_email
+
+        # Create distinct requirements for work and study
+        DocumentRequirement.objects.create(
+            application_purpose="work",
+            document_type="work_req",
+            custom_name_en="Work Requirement",
+            is_required=True,
+        )
+        DocumentRequirement.objects.create(
+            application_purpose="study",
+            document_type="study_req",
+            custom_name_en="Study Requirement",
+            is_required=True,
+        )
+
+        # Create custom requirement for case_a
+        ClientDocumentRequirement.objects.create(
+            client=self.client_obj,
+            case=self.case_a,
+            document_type="custom_a",
+            name="Custom Req Case A",
+            is_required=True,
+            is_active=True,
+        )
+        # Create custom requirement for case_b
+        ClientDocumentRequirement.objects.create(
+            client=self.client_obj,
+            case=self.case_b,
+            document_type="custom_b",
+            name="Custom Req Case B",
+            is_required=True,
+            is_active=True,
+        )
+
+        # 1. Send for Case A
+        EmailLog.objects.all().delete()
+        send_required_documents_email(self.client_obj, case=self.case_a)
+
+        # Verify EmailLog was created, points to case_a, and has work_req & custom_a but NOT study_req & custom_b
+        log_a = EmailLog.objects.get()
+        self.assertEqual(log_a.case_id, self.case_a.pk)
+        self.assertIn("Work Requirement", log_a.body)
+        self.assertIn("Custom Req Case A", log_a.body)
+        self.assertNotIn("Study Requirement", log_a.body)
+        self.assertNotIn("Custom Req Case B", log_a.body)
+
+        # 2. Send for Case B
+        EmailLog.objects.all().delete()
+        send_required_documents_email(self.client_obj, case=self.case_b)
+
+        log_b = EmailLog.objects.get()
+        self.assertEqual(log_b.case_id, self.case_b.pk)
+        self.assertIn("Study Requirement", log_b.body)
+        self.assertIn("Custom Req Case B", log_b.body)
+        self.assertNotIn("Work Requirement", log_b.body)
+        self.assertNotIn("Custom Req Case A", log_b.body)
+
+        # Verify different idempotency keys are created (they contain case.pk)
+        self.assertNotEqual(log_a.idempotency_key, log_b.idempotency_key)
+
+        # 3. Test legacy calls without Case. Since client has multiple active cases, it must raise ValidationError
+        with self.assertRaises(ValidationError):
+            send_required_documents_email(self.client_obj)
+
+        # If client has only one active case, legacy call should succeed.
+        # Let's archive case_b so client has only one active case (case_a).
+        self.case_b.archived_at = timezone.now()
+        self.case_b.save()
+
+        # Now legacy call should succeed and target case_a
+        EmailLog.objects.all().delete()
+        send_required_documents_email(self.client_obj)
+        log_legacy = EmailLog.objects.get()
+        self.assertEqual(log_legacy.case_id, self.case_a.pk)

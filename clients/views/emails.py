@@ -50,19 +50,30 @@ def email_preview_api(request: HttpRequest, pk: int) -> HttpResponseBase:
         return json_no_store({"subject": "", "body": ""})
 
     context = None
-    if template_type == "missing_documents":
-        context = _get_missing_documents_context(client, language)
-    elif template_type == "expiring_documents":
-        documents = list(client.documents.filter(expiry_date__isnull=False))
-        context = _get_expiring_documents_context(client, documents)
-    elif template_type == "required_documents":
-        context = _get_required_documents_context(client, language)
-    elif template_type == "appointment_notification":
-        context = _get_appointment_context(client)
-    elif template_type == "expired_documents":
-        from clients.services.notifications import _get_expired_documents_context
+    from django.core.exceptions import ValidationError
 
-        context = _get_expired_documents_context(client)
+    try:
+        if template_type == "missing_documents":
+            context = _get_missing_documents_context(client, language)
+        elif template_type == "expiring_documents":
+            documents = list(client.documents.filter(expiry_date__isnull=False))
+            context = _get_expiring_documents_context(client, documents)
+        elif template_type == "required_documents":
+            context = _get_required_documents_context(client, language)
+        elif template_type == "appointment_notification":
+            context = _get_appointment_context(client)
+        elif template_type == "expired_documents":
+            from clients.services.notifications import _get_expired_documents_context
+
+            context = _get_expired_documents_context(client)
+    except ValidationError as exc:
+        error_msg = exc.messages[0] if hasattr(exc, "messages") and exc.messages else str(exc)
+        return json_no_store(
+            {
+                "subject": _get_subject(template_type, language),
+                "body": error_msg,
+            }
+        )
 
     if not context:
         subject = _get_subject(template_type, language)
@@ -92,15 +103,14 @@ def send_custom_email(request: HttpRequest, pk: int) -> HttpResponseBase:
 
     rate_limit = int(getattr(settings, "EMAIL_RATE_LIMIT_PER_HOUR", 50))
     # User ID can be int or str, ensure it's usable in cache key
-    user_id = getattr(request.user, 'pk', 'unknown')
+    user_id = getattr(request.user, "pk", "unknown")
     cache_key = f"email_rate_limit_{user_id}"
     sent_this_hour = int(cache.get(cache_key, 0))
 
     if sent_this_hour >= rate_limit:
         messages.error(
             request,
-            _("Превышен лимит отправки писем (%(limit)s в час). Попробуйте позже.")
-            % {"limit": rate_limit},
+            _("Превышен лимит отправки писем (%(limit)s в час). Попробуйте позже.") % {"limit": rate_limit},
         )
         return redirect("clients:client_detail", pk=client.pk)
 
@@ -114,7 +124,7 @@ def send_custom_email(request: HttpRequest, pk: int) -> HttpResponseBase:
     try:
         idempotency_key = build_email_idempotency_key(
             "custom_email",
-            cast('int', request.user.pk),
+            cast("int", request.user.pk),
             client.pk,
             client.email,
             subject,

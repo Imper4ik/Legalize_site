@@ -79,9 +79,9 @@ def create_case_for_client(
             "is_demo_data": client.is_demo_data,
         }
         values.update(overrides)
-        if values.get("application_purpose") != "family":
-            values["family_role"] = ""
-        case = Case.objects.create(**values)
+        case = Case(**values)
+        case.full_clean()
+        case.save()
 
         from clients.models.case import CaseParticipant
         CaseParticipant.objects.create(

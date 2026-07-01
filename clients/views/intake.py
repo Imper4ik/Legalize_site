@@ -124,7 +124,7 @@ def public_intake(request: HttpRequest, token: str) -> HttpResponse:
                     user.save(update_fields=["first_name", "last_name", "password", "is_active"])
 
                 result.client.user = user
-                result.client.save(update_fields=["user", "updated_at"])
+                result.client.save(update_fields=["user"])
                 login(request, user, backend="django.contrib.auth.backends.ModelBackend")
 
                 onboarding_token, onboarding_token_hash = generate_onboarding_token()

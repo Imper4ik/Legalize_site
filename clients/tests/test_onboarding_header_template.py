@@ -2,7 +2,7 @@ from pathlib import Path
 
 
 def test_desktop_notification_button_has_only_dropdown_toggle() -> None:
-    template = Path("clients/templates/clients/onboarding/base_onboarding.html").read_text()
+    template = Path("clients/templates/clients/onboarding/base_onboarding.html").read_text(encoding="utf-8")
     marker = 'id="notificationDropdown"'
     start = template.index(marker)
     button_start = template.rfind("<button", 0, start)

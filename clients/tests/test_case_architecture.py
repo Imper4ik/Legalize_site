@@ -248,6 +248,62 @@ class CaseArchitectureTests(TestCase):
         self.assertNotIn("AA123456", str(raw_value))
         self.assertEqual(document.parsed_data["safe"], "value")
 
+    def test_create_case_validation(self) -> None:
+        # Create a new client. Note that the post_save signal immediately creates a primary case.
+        from clients.testing.factories import create_test_client
+        client = create_test_client(purpose="work")
+
+        # Deleting the primary case first to test first case creation rules
+        client.cases.all().delete()
+
+        # cannot create family case without family_role
+        with self.assertRaises(ValidationError):
+            create_case_for_client(
+                client=client,
+                actor=self.staff,
+                application_purpose="family",
+                family_role="",
+            )
+
+        # cannot create work case with family_role
+        with self.assertRaises(ValidationError):
+            create_case_for_client(
+                client=client,
+                actor=self.staff,
+                application_purpose="work",
+                family_role="sponsor",
+            )
+
+        # can create with valid family roles
+        for role in ["sponsor", "family_spouse", "family_child"]:
+            case = create_case_for_client(
+                client=client,
+                actor=self.staff,
+                application_purpose="family",
+                family_role=role,
+            )
+            self.assertEqual(case.family_role, role)
+            # Clean up the case so we can test first case creation for others
+            client.cases.all().delete()
+
+        # Re-create a case so we can test second case validation
+        create_case_for_client(
+            client=client,
+            actor=self.staff,
+            application_purpose="family",
+            family_role="sponsor",
+        )
+
+        # second case is validated as strictly as first
+        with self.assertRaises(ValidationError):
+            create_case_for_client(
+                client=client,
+                actor=self.staff,
+                application_purpose="family",
+                family_role="",
+            )
+
+
 class CaseFamilyRoleBackfillMigrationTests(TransactionTestCase):
     migrate_from = [("clients", "0110_case_family_role")]
     migrate_to = [("clients", "0111_backfill_case_family_role")]

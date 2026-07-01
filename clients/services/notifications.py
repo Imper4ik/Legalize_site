@@ -1,4 +1,5 @@
 """Email notification helpers for client lifecycle events."""
+
 from __future__ import annotations
 
 import hashlib
@@ -118,11 +119,7 @@ def _reserve_idempotent_email_send(
 
     try:
         with transaction.atomic():
-            existing = (
-                EmailLog.objects.select_for_update()
-                .filter(idempotency_key=idempotency_key)
-                .first()
-            )
+            existing = EmailLog.objects.select_for_update().filter(idempotency_key=idempotency_key).first()
             if existing is not None and existing.delivery_status in blocking_statuses:
                 return False
 
@@ -152,7 +149,9 @@ def _send_mail_with_retry(
 ) -> int:
     attempts_setting = max_attempts if max_attempts is not None else getattr(settings, "EMAIL_SEND_RETRY_ATTEMPTS", 3)
     attempts = max(1, int(attempts_setting or 3))
-    backoff = float(backoff_seconds if backoff_seconds is not None else getattr(settings, "EMAIL_SEND_RETRY_BACKOFF_SECONDS", 0.25))
+    backoff = float(
+        backoff_seconds if backoff_seconds is not None else getattr(settings, "EMAIL_SEND_RETRY_BACKOFF_SECONDS", 0.25)
+    )
     last_error_type = ""
     for attempt in range(1, attempts + 1):
         try:
@@ -187,9 +186,7 @@ def _send_email(
     # autonomous reminder loop processes every active client, including Demo and
     # Test Center data; sending to those would bounce, pollute delivery metrics,
     # or leak. Log the attempt (so the Demo Center still shows it) but skip SMTP.
-    if client is not None and (
-        getattr(client, "is_demo_data", False) or getattr(client, "is_test_data", False)
-    ):
+    if client is not None and (getattr(client, "is_demo_data", False) or getattr(client, "is_test_data", False)):
         from clients.models import EmailLog
 
         _log_email(
@@ -278,6 +275,7 @@ def _send_email(
                 delivery_status="failed",
                 error_message="send failed",
             )
+
     _do_send()
     return result["sent_count"]
 
@@ -426,12 +424,8 @@ def _get_pdf_font_path() -> Path | None:
     nix_store = Path("/nix/store")
     nix_candidates: list[Path] = []
     if nix_store.exists():
-        nix_candidates.extend(
-            nix_store.glob("**/share/fonts/truetype/dejavu/DejaVuSans.ttf")
-        )
-        nix_candidates.extend(
-            nix_store.glob("**/share/fonts/truetype/noto/NotoSans-Regular.ttf")
-        )
+        nix_candidates.extend(nix_store.glob("**/share/fonts/truetype/dejavu/DejaVuSans.ttf"))
+        nix_candidates.extend(nix_store.glob("**/share/fonts/truetype/noto/NotoSans-Regular.ttf"))
     candidate_paths = [
         Path(str(settings.BASE_DIR)) / "static" / "fonts" / "DejaVuSans.ttf",
         Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
@@ -508,7 +502,7 @@ def _render_email_pdf(text: str) -> bytes:
         page = Image.new("RGB", (page_width, page_height), "white")
         page_draw = ImageDraw.Draw(page)
         y = margin
-        for line in lines[start:start + max_lines_per_page]:
+        for line in lines[start : start + max_lines_per_page]:
             page_draw.text((margin, y), line, font=font, fill="black")
             y += line_height
         pages.append(page)
@@ -539,11 +533,10 @@ def _send_confirmation_email(subject: str, body: str, recipients: list[str]) -> 
     )
     pdf_bytes = _render_email_pdf(pdf_text)
     confirmation_subject = str(_("Подтверждение отправки письма клиенту"))
-    confirmation_body = str(_(
-        "Письмо клиенту было отправлено. Во вложении находится текст отправленного письма."
-    ))
+    confirmation_body = str(_("Письмо клиенту было отправлено. Во вложении находится текст отправленного письма."))
     try:
         from django.core.mail import EmailMultiAlternatives
+
         message = EmailMultiAlternatives(
             confirmation_subject,
             confirmation_body,
@@ -557,13 +550,24 @@ def _send_confirmation_email(subject: str, body: str, recipients: list[str]) -> 
         logger.warning("Failed to send confirmation email: error_type=%s", type(exc).__name__)
 
 
-def _get_required_documents_context(client: Client, language: str | None = None) -> dict[str, Any] | None:
+def _get_required_documents_context(
+    client: Client,
+    language: str | None = None,
+    *,
+    case: Any | None = None,
+) -> dict[str, Any] | None:
     if language is None:
         language = _get_preferred_language(client)
-    from clients.models import ClientDocumentRequirement, DocumentRequirement
-    purpose = client.get_document_requirement_purpose()
-    catalog = DocumentRequirement.catalog_for(
-        purpose,
+    if case is None:
+        from clients.services.cases import get_legacy_compatibility_case
+
+        case = get_legacy_compatibility_case(client.pk, "required_documents")
+
+    from clients.models import ClientDocumentRequirement
+    from clients.services.case_context import checklist_for_case
+
+    catalog = checklist_for_case(
+        case,
         language,
         include_optional=False,
         include_fallback=True,
@@ -571,7 +575,10 @@ def _get_required_documents_context(client: Client, language: str | None = None)
     documents = [item.get("label") for item in catalog] if catalog else []
     # Append case-specific custom requirements
     custom_reqs = ClientDocumentRequirement.objects.filter(
-        client=client, is_active=True, is_required=True,
+        client=client,
+        case=case,
+        is_active=True,
+        is_required=True,
     ).order_by("due_date", "created_at")
     for req in custom_reqs:
         documents.append(req.name)
@@ -583,12 +590,22 @@ def _get_required_documents_context(client: Client, language: str | None = None)
     }
 
 
-def send_required_documents_email(client: Client, *, sent_by: AbstractBaseUser | AnonymousUser | None = None) -> int:
+def send_required_documents_email(
+    client: Client,
+    *,
+    case: Any | None = None,
+    sent_by: AbstractBaseUser | AnonymousUser | None = None,
+) -> int:
     """Send the required document checklist to the client upon account creation."""
     if not client.email:
         return 0
 
-    context = _get_required_documents_context(client)
+    if case is None:
+        from clients.services.cases import get_legacy_compatibility_case
+
+        case = get_legacy_compatibility_case(client.pk, "send_required_documents_email")
+
+    context = _get_required_documents_context(client, case=case)
     if not context:
         return 0
 
@@ -600,9 +617,10 @@ def send_required_documents_email(client: Client, *, sent_by: AbstractBaseUser |
         body,
         [client.email],
         client=client,
+        case=case,
         template_type="required_documents",
         sent_by=sent_by,
-        idempotency_key=build_email_idempotency_key("required_documents", client.pk, client.email),
+        idempotency_key=build_email_idempotency_key("required_documents", client.pk, client.email, case.pk),
     )
 
 
@@ -627,7 +645,9 @@ def _get_expired_documents_context(client: Client, *, case: Any | None = None) -
     }
 
 
-def send_expired_documents_email(client: Client, *, sent_by: AbstractBaseUser | AnonymousUser | None = None, case: Any | None = None) -> int:
+def send_expired_documents_email(
+    client: Client, *, sent_by: AbstractBaseUser | AnonymousUser | None = None, case: Any | None = None
+) -> int:
     """Send a summary of expired documents after fingerprints are submitted."""
     if not client.email:
         return 0
@@ -669,6 +689,7 @@ def _get_missing_documents_context(
     if language is None:
         language = _get_preferred_language(client)
     from clients.models import ClientDocumentRequirement, DocumentRequirement
+
     purpose = purpose_for_case(case) if case is not None else client.get_document_requirement_purpose()
     has_db_records = DocumentRequirement.objects.filter(application_purpose=purpose).exists()
     catalog = (
@@ -721,7 +742,9 @@ def _get_missing_documents_context(
 
     # Append case-specific custom requirements that are still missing
     custom_reqs = ClientDocumentRequirement.objects.filter(
-        client=client, is_active=True, is_required=True,
+        client=client,
+        is_active=True,
+        is_required=True,
     ).order_by("due_date", "created_at")
     if case is not None:
         custom_reqs = custom_reqs.filter(case=case)
@@ -738,8 +761,7 @@ def _get_missing_documents_context(
         with override(language):
             missing.append(
                 {
-                    "name": _("Нет ZUS RCA за месяцы: %(months)s.")
-                    % {"months": format_zus_months(missing_zus)},
+                    "name": _("Нет ZUS RCA за месяцы: %(months)s.") % {"months": format_zus_months(missing_zus)},
                     "expiry_date": None,
                 }
             )
@@ -783,8 +805,8 @@ def send_missing_documents_email(
     today = today or timezone.localdate()
     iso_year, iso_week, _iso_weekday = today.isocalendar()
     case_segment = f"{case.pk}:" if case is not None else ""
-    idempotency_key = weekly_key or idempotency_extra or (
-        f"missing_documents:{client.pk}:{case_segment}{iso_year}-W{iso_week:02d}"
+    idempotency_key = (
+        weekly_key or idempotency_extra or (f"missing_documents:{client.pk}:{case_segment}{iso_year}-W{iso_week:02d}")
     )
     return _send_email(
         subject,
@@ -798,7 +820,9 @@ def send_missing_documents_email(
     )
 
 
-def _get_expiring_documents_context(client: Client, documents: list[Document], *, case: Any | None = None) -> dict[str, Any] | None:
+def _get_expiring_documents_context(
+    client: Client, documents: list[Document], *, case: Any | None = None
+) -> dict[str, Any] | None:
     if not documents:
         return None
 
@@ -818,12 +842,8 @@ def _get_expiring_documents_context(client: Client, documents: list[Document], *
         else:
             expiring_documents.append(document)
 
-    expiring_soon_documents = [
-        doc for doc in expiring_documents if doc.expiry_date and doc.expiry_date <= soon_cutoff
-    ]
-    expiring_later_documents = [
-        doc for doc in expiring_documents if doc.expiry_date and doc.expiry_date > soon_cutoff
-    ]
+    expiring_soon_documents = [doc for doc in expiring_documents if doc.expiry_date and doc.expiry_date <= soon_cutoff]
+    expiring_later_documents = [doc for doc in expiring_documents if doc.expiry_date and doc.expiry_date > soon_cutoff]
 
     # All documents with expiry from the client (for valid/expired context)
     all_client_docs = client.documents.filter(expiry_date__isnull=False)
@@ -860,7 +880,13 @@ def _get_expiring_documents_context(client: Client, documents: list[Document], *
     }
 
 
-def send_expiring_documents_email(client: Client, documents: list[Document], *, sent_by: AbstractBaseUser | AnonymousUser | None = None, case: Any | None = None) -> int:
+def send_expiring_documents_email(
+    client: Client,
+    documents: list[Document],
+    *,
+    sent_by: AbstractBaseUser | AnonymousUser | None = None,
+    case: Any | None = None,
+) -> int:
     """Send a notice about documents expiring soon (within the next week)."""
 
     if not client.email or not documents:
@@ -918,7 +944,9 @@ def _get_appointment_context(client: Client, *, case: Any | None = None) -> dict
     }
 
 
-def send_appointment_notification_email(client: Client, *, sent_by: AbstractBaseUser | AnonymousUser | None = None, case: Any | None = None) -> int:
+def send_appointment_notification_email(
+    client: Client, *, sent_by: AbstractBaseUser | AnonymousUser | None = None, case: Any | None = None
+) -> int:
     """Send a notification about a fingerprint appointment."""
     if not client.email:
         return 0
@@ -961,23 +989,23 @@ def send_onboarding_completed_email(client: Client) -> int:
     review_path = reverse("clients:admin_mos_review", kwargs={"client_id": client.id})
     base_url = getattr(settings, "PUBLIC_BASE_URL", "") or getattr(settings, "SITE_URL", "")
     review_url = f"{base_url.rstrip('/')}{review_path}" if base_url else review_path
-    body = (
-        _("Клиент %(name)s завершил заполнение анкеты онбординга.\n\n"
-          "Данные клиента:\n"
-          "Имя: %(first_name)s\n"
-          "Фамилия: %(last_name)s\n"
-          "Почта: %(email)s\n"
-          "Телефон: %(phone)s\n\n"
-          "Просмотреть анкету и утвердить ее вы можете в панели управления по ссылке:\n"
-          "%(review_url)s\n") % {
-              "name": client.get_full_name(),
-              "first_name": client.first_name,
-              "last_name": client.last_name,
-              "email": client.email or _("не указана"),
-              "phone": client.phone or _("не указан"),
-              "review_url": review_url,
-          }
-    )
+    body = _(
+        "Клиент %(name)s завершил заполнение анкеты онбординга.\n\n"
+        "Данные клиента:\n"
+        "Имя: %(first_name)s\n"
+        "Фамилия: %(last_name)s\n"
+        "Почта: %(email)s\n"
+        "Телефон: %(phone)s\n\n"
+        "Просмотреть анкету и утвердить ее вы можете в панели управления по ссылке:\n"
+        "%(review_url)s\n"
+    ) % {
+        "name": client.get_full_name(),
+        "first_name": client.first_name,
+        "last_name": client.last_name,
+        "email": client.email or _("не указана"),
+        "phone": client.phone or _("не указан"),
+        "review_url": review_url,
+    }
     try:
         return _send_email(
             subject,

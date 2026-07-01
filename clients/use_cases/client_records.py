@@ -49,9 +49,25 @@ def finalize_client_creation(
     *,
     client: Client,
     actor: AbstractBaseUser | AnonymousUser | None,
-    send_required_email: ClientNotificationSender = send_required_documents_email,
+    send_required_email: Any = send_required_documents_email,
 ) -> ClientRecordScenarioResult:
-    required_documents_email_sent = bool(send_required_email(client))
+    import inspect
+
+    from clients.services.cases import resolve_single_active_case
+
+    case = resolve_single_active_case(client)
+
+    supports_case = False
+    try:
+        sig = inspect.signature(send_required_email)
+        supports_case = "case" in sig.parameters
+    except (ValueError, TypeError):
+        supports_case = False
+
+    if supports_case:
+        required_documents_email_sent = bool(send_required_email(client, case=case))
+    else:
+        required_documents_email_sent = bool(send_required_email(client))
     with transaction.atomic():
         log_client_activity(
             client=client,
@@ -77,11 +93,7 @@ def finalize_client_update(
 
     # Process state (workflow stage, dates) lives on the Case (spec §4): the
     # client form no longer edits it, so this only tracks permanent attributes.
-    changed_fields = tuple(
-        field
-        for field, old_value in previous_values.items()
-        if getattr(client, field) != old_value
-    )
+    changed_fields = tuple(field for field, old_value in previous_values.items() if getattr(client, field) != old_value)
 
     with transaction.atomic():
         if changed_fields:
