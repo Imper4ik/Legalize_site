@@ -54,7 +54,7 @@ def validate_case_workflow_transition(*, case: Case, previous_stage: str | None,
                 _("Сначала сохраните дело, затем загрузите обязательные документы и переведите его к этапу подачи."),
             )
 
-        checklist = case.client.get_document_checklist(check_file_existence=True, case=case)
+        checklist = case.get_document_checklist(check_file_existence=True)
         missing_required = [
             item
             for item in checklist

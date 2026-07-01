@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -11,6 +13,7 @@ from clients.services.notifications import send_expiring_documents_email
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
+logger = logging.getLogger(__name__)
 DocumentReminderSender = Callable[..., int]
 
 
@@ -20,6 +23,7 @@ class ReminderScenarioResult:
     reminder: Reminder | None = None
     email_sent: bool = False
     affected_documents_count: int = 0
+    emails_sent_count: int = 0
     deleted_reminder_id: int | None = None
 
 
@@ -67,12 +71,14 @@ def send_document_reminder_for_reminder(
     if reminder.document and reminder.document.expiry_date:
         documents.append(reminder.document)
 
-    sent = bool(send_email(reminder.client, documents, sent_by=actor))
+    sent_count = send_email(reminder.client, documents, sent_by=actor, case=reminder.case)
+    sent = bool(sent_count)
     return ReminderScenarioResult(
         client=reminder.client,
         reminder=reminder,
         email_sent=sent,
         affected_documents_count=len(documents),
+        emails_sent_count=sent_count,
     )
 
 
@@ -84,7 +90,7 @@ def send_document_reminder_for_client(
 ) -> ReminderScenarioResult:
     reminders = (
         client.reminders.filter(reminder_type="document", is_active=True)
-        .select_related("document")
+        .select_related("document", "document__case")
     )
     documents = [
         reminder.document
@@ -92,9 +98,26 @@ def send_document_reminder_for_client(
         if reminder.document and reminder.document.expiry_date
     ]
 
-    sent = bool(send_email(client, documents, sent_by=actor))
+    documents_by_case: dict[int | None, list[Any]] = defaultdict(list)
+    for document in documents:
+        documents_by_case[document.case_id].append(document)
+
+    sent_count = 0
+    for case_id, case_documents in documents_by_case.items():
+        if not case_documents:
+            continue
+        case = case_documents[0].case if case_id is not None else None
+        if case is None:
+            logger.warning(
+                "Sending legacy client-level document reminder for client_id=%s with %s case-less documents",
+                client.pk,
+                len(case_documents),
+            )
+        sent_count += send_email(client, case_documents, sent_by=actor, case=case)
+
     return ReminderScenarioResult(
         client=client,
-        email_sent=sent,
+        email_sent=bool(sent_count),
         affected_documents_count=len(documents),
+        emails_sent_count=sent_count,
     )

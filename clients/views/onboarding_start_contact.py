@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
+from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -15,7 +16,9 @@ from django.utils.translation import gettext as _
 from clients.constants import DocumentType
 from clients.forms import DocumentUploadForm
 from clients.models import Client, ClientOnboardingSession, Document, DocumentRequirement, MOSApplicationData
+from clients.services.case_context import checklist_for_case, purpose_context_for_case
 from clients.services.document_workflow import upload_client_document
+from clients.services.onboarding_progress import get_case_onboarding_step
 from clients.views.onboarding_views import (
     _document_source_hint,
     _ensure_mos,
@@ -53,6 +56,21 @@ NEW_CARD_CONFIRMATION_UPLOAD_STATUSES = {
 }
 
 
+def _request_language(request: HttpRequest) -> str | None:
+    """Return the language selected for this onboarding request.
+
+    LocaleMiddleware is not guaranteed to set ``LANGUAGE_CODE`` in every test
+    path, so prefer the URL prefix when it matches a configured language.  This
+    keeps context strings computed before template rendering in the same locale
+    as the translated page itself.
+    """
+    valid_languages = {code for code, _label in settings.LANGUAGES}
+    prefix = request.path_info.strip("/").split("/", 1)[0]
+    if prefix in valid_languages:
+        return prefix
+    return getattr(request, "LANGUAGE_CODE", None) or translation.get_language()
+
+
 def _clean_placeholder_contact_value(field_name: str, value: str, *, first_name: str, last_name: str) -> str:
     if (first_name.strip().lower(), last_name.strip().lower()) in CONTACT_PLACEHOLDER_PAIRS:
         if field_name in {"first_name", "last_name"}:
@@ -62,15 +80,17 @@ def _clean_placeholder_contact_value(field_name: str, value: str, *, first_name:
 
 def _contact_values_from_client(client: Client, mos_data: MOSApplicationData | None) -> dict[str, str]:
     personal_data: dict[str, Any] = (
-        cast("dict[str, Any]", mos_data.personal_data)
-        if mos_data and isinstance(mos_data.personal_data, dict)
-        else {}
+        cast("dict[str, Any]", mos_data.personal_data) if mos_data and isinstance(mos_data.personal_data, dict) else {}
     )
     raw_first_name = str(client.first_name or personal_data.get("first_name") or "").strip()
     raw_last_name = str(client.last_name or personal_data.get("last_name") or "").strip()
     return {
-        "first_name": _clean_placeholder_contact_value("first_name", raw_first_name, first_name=raw_first_name, last_name=raw_last_name),
-        "last_name": _clean_placeholder_contact_value("last_name", raw_last_name, first_name=raw_first_name, last_name=raw_last_name),
+        "first_name": _clean_placeholder_contact_value(
+            "first_name", raw_first_name, first_name=raw_first_name, last_name=raw_last_name
+        ),
+        "last_name": _clean_placeholder_contact_value(
+            "last_name", raw_last_name, first_name=raw_first_name, last_name=raw_last_name
+        ),
         "email": str(client.email or personal_data.get("email") or "").strip(),
         "phone": str(client.phone or personal_data.get("phone") or "").strip(),
     }
@@ -191,7 +211,9 @@ def _validate_new_card_values(values: dict[str, str]) -> dict[str, str]:
         if submitted_at and parsed_submitted_at is None:
             errors["submitted_at"] = str(_("Podaj poprawną datę / Укажите корректную дату."))
         elif parsed_submitted_at and parsed_submitted_at > timezone.localdate():
-            errors["submitted_at"] = str(_("Data złożenia nie może być w przyszłości. / Дата подачи не может быть в будущем."))
+            errors["submitted_at"] = str(
+                _("Data złożenia nie może być w przyszłości. / Дата подачи не может быть в будущем.")
+            )
         if status == NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER:
             if not values.get("case_number", "").strip():
                 errors["case_number"] = str(_("Podaj numer sprawy / Укажите номер дела."))
@@ -231,15 +253,37 @@ def _new_card_missing_warnings(mos_data: MOSApplicationData, confirmation_docume
     if mos_data.new_residence_card_application_status == MOSApplicationData.NEW_CARD_STATUS_YES:
         warnings = []
         if not mos_data.new_residence_card_case_number:
-            warnings.append(str(_("Prosimy o uzupełnienie numeru sprawy, jeśli jest już dostępny. / Пожалуйста, добавьте номер дела, если он уже доступен.")))
+            warnings.append(
+                str(
+                    _(
+                        "Prosimy o uzupełnienie numeru sprawy, jeśli jest już dostępny. / Пожалуйста, добавьте номер дела, если он уже доступен."
+                    )
+                )
+            )
         if not confirmation_document:
-            warnings.append(str(_("Prosimy o załadowanie potwierdzenia złożenia wniosku o kartę pobytu. / Пожалуйста, загрузите подтверждение подачи заявления на карту пребывания.")))
+            warnings.append(
+                str(
+                    _(
+                        "Prosimy o załadowanie potwierdzenia złożenia wniosku o kartę pobytu. / Пожалуйста, загрузите подтверждение подачи заявления на карту пребывания."
+                    )
+                )
+            )
         if not mos_data.new_residence_card_submitted_at:
-            warnings.append(str(_("Jeśli znasz datę złożenia wniosku, dodaj ją w tym bloku. / Если знаете дату подачи заявления, добавьте её в этом блоке.")))
+            warnings.append(
+                str(
+                    _(
+                        "Jeśli znasz datę złożenia wniosku, dodaj ją w tym bloku. / Если знаете дату подачи заявления, добавьте её в этом блоке."
+                    )
+                )
+            )
         return warnings
     if mos_data.new_residence_card_application_status == MOSApplicationData.NEW_CARD_STATUS_UNKNOWN:
         return [
-            str(_("Prosimy o sprawdzenie, czy posiada Pan/Pani potwierdzenie złożenia wniosku, pieczątkę w paszporcie lub wiadomość z urzędu. / Пожалуйста, проверьте, есть ли у вас подтверждение подачи заявления, печать в паспорте или сообщение из управления (urząd)."))
+            str(
+                _(
+                    "Prosimy o sprawdzenie, czy posiada Pan/Pani potwierdzenie złożenia wniosku, pieczątkę w paszporcie lub wiadomość z urzędu. / Пожалуйста, проверьте, есть ли у вас подтверждение подачи заявления, печать в паспорте или сообщение из управления (urząd)."
+                )
+            )
         ]
     return []
 
@@ -273,13 +317,13 @@ def _handle_new_card_application_post(
             )
 
     if errors:
-        return render(
+        return _render_start_page(
             request,
-            START_TEMPLATE,
             _build_start_context(
                 session=session,
                 new_card_values=values,
                 new_card_errors=errors,
+                language=_request_language(request),
             ),
         )
 
@@ -295,7 +339,9 @@ def _handle_new_card_application_post(
     with transaction.atomic():
         _save_new_card_values(mos_data, values)
         if values.get("status") == NEW_CARD_STATUS_SUBMITTED_NO_NUMBER:
-            create_auto_task(session.client, "case_number_missing", case=case, title=_("Запросить номер дела у клиента"))
+            create_auto_task(
+                session.client, "case_number_missing", case=case, title=_("Запросить номер дела у клиента")
+            )
         elif values.get("status") == NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER and values.get("case_number"):
             tasks = StaffTask.objects.filter(
                 client=session.client,
@@ -306,7 +352,9 @@ def _handle_new_card_application_post(
             if tasks.exists():
                 tasks.update(
                     title=_("Проверить номер дела"),
-                    description=_("Клиент указал номер дела новой подачи. Проверьте его и перенесите в основной номер дела.")
+                    description=_(
+                        "Клиент указал номер дела новой подачи. Проверьте его и перенесите в основной номер дела."
+                    ),
                 )
             else:
                 create_auto_task(
@@ -314,7 +362,9 @@ def _handle_new_card_application_post(
                     "case_number_missing",
                     case=case,
                     title=_("Проверить номер дела"),
-                    description=_("Клиент указал номер дела новой подачи. Проверьте его и перенесите в основной номер дела.")
+                    description=_(
+                        "Клиент указал номер дела новой подачи. Проверьте его и перенесите в основной номер дела."
+                    ),
                 )
 
         if upload_form is not None:
@@ -335,12 +385,14 @@ def _handle_new_card_application_post(
             metadata={
                 "status": values.get("status"),
                 "has_case_number": bool(values.get("case_number")),
-            }
+            },
         )
 
     mos_data.refresh_from_db()
     confirmation_document = _latest_new_card_confirmation_document(session.client, case)
-    messages.success(request, _("Informacja o nowym wniosku została zapisana. / Информация о новом заявлении сохранена."))
+    messages.success(
+        request, _("Informacja o nowym wniosku została zapisana. / Информация о новом заявлении сохранена.")
+    )
     for warning in _new_card_missing_warnings(mos_data, confirmation_document):
         messages.warning(request, warning)
     return redirect("clients:onboarding_start", token=token)
@@ -369,15 +421,16 @@ def _build_start_context(
     contact_errors: dict[str, str] | None = None,
     new_card_values: dict[str, str] | None = None,
     new_card_errors: dict[str, str] | None = None,
+    language: str | None = None,
 ) -> dict[str, Any]:
     client = session.client
     case = _session_case(session)
     mos_data = MOSApplicationData.objects.filter(client=client, case=case).first()
     if mos_data is None:
         mos_data = MOSApplicationData(client=client, case=case)
-    purpose_ctx = _purpose_context(client, mos_data)
+    purpose_ctx = purpose_context_for_case(case, mos_data) if case is not None else _purpose_context(client, mos_data)
     effective_purpose = str(purpose_ctx["effective_purpose"])
-    language = translation.get_language() or client.language
+    language = language or translation.get_language() or client.language
 
     fingerprint_invitation_doc_type = DocumentType.WEZWANIE.value
     documents_qs = Document.objects.filter(client=client, archived_at__isnull=True)
@@ -390,14 +443,20 @@ def _build_start_context(
         None,
     )
 
-    required_docs_catalog = DocumentRequirement.catalog_for(purpose=effective_purpose, language=language)
+    required_docs_catalog = (
+        checklist_for_case(case, language)
+        if case is not None
+        else DocumentRequirement.catalog_for(purpose=effective_purpose, language=language)
+    )
 
     import os
 
     from django.conf import settings
+
     support_email = str(getattr(settings, "DEFAULT_FROM_EMAIL", "support@example.com"))
 
     from datetime import date
+
     today = date.today()
     checklist = []
     checklist_codes = set()
@@ -425,23 +484,25 @@ def _build_start_context(
             is_verified = bool(doc_obj.verified)
             is_awaiting_verification = bool(not doc_obj.verified and not doc_obj.rejection_reason)
 
-        checklist.append({
-            "code": doc_type,
-            "label": item["label"],
-            "is_required": item["is_required"],
-            "is_uploaded": is_uploaded,
-            "doc_id": doc_obj.id if doc_obj else None,
-            "verified": doc_obj.verified if doc_obj else False,
-            "rejection_reason": doc_obj.rejection_reason if doc_obj else "",
-            "is_expired": is_expired,
-            "is_rejected": is_rejected,
-            "is_verified": is_verified,
-            "is_awaiting_verification": is_awaiting_verification,
-            "ocr_status": doc_obj.ocr_status if doc_obj else None,
-            "ocr_status_badge": doc_obj.ocr_status_badge if doc_obj else "",
-            "source_hint": _document_source_hint(doc_type),
-            "sample_image_url": sample_image_url,
-        })
+        checklist.append(
+            {
+                "code": doc_type,
+                "label": item["label"],
+                "is_required": item["is_required"],
+                "is_uploaded": is_uploaded,
+                "doc_id": doc_obj.id if doc_obj else None,
+                "verified": doc_obj.verified if doc_obj else False,
+                "rejection_reason": doc_obj.rejection_reason if doc_obj else "",
+                "is_expired": is_expired,
+                "is_rejected": is_rejected,
+                "is_verified": is_verified,
+                "is_awaiting_verification": is_awaiting_verification,
+                "ocr_status": doc_obj.ocr_status if doc_obj else None,
+                "ocr_status_badge": doc_obj.ocr_status_badge if doc_obj else "",
+                "source_hint": _document_source_hint(doc_type),
+                "sample_image_url": sample_image_url,
+            }
+        )
 
     fingerprint_invitation_document = next(
         (document for document in existing_documents if document.document_type == fingerprint_invitation_doc_type),
@@ -489,47 +550,54 @@ def _build_start_context(
         and mos_data.address_data.get("city")
     )
     travel_complete = status_completed or bool(
-        mos_data
-        and isinstance(mos_data.stay_data, dict)
-        and mos_data.stay_data.get("stay_basis")
+        mos_data and isinstance(mos_data.stay_data, dict) and mos_data.stay_data.get("stay_basis")
     )
 
-    case_step = client.get_case_step()
+    case_step = get_case_onboarding_step(client=client, case=case, mos_data=mos_data, checklist=checklist)
 
     # Build list of action items / notifications for the client
     action_items = []
     from django.urls import reverse
+
     from clients.models import StaffTask
 
     if not contact_complete:
-        action_items.append({
-            "type": "danger",
-            "icon": "bi-person-exclamation",
-            "text": str(_("Заполнить контактные данные")),
-            "url": "#contactEditForm" if contact_form_editable else None
-        })
-    if mos_data and mos_data.status == 'needs_correction':
-        action_items.append({
-            "type": "warning",
-            "icon": "bi-exclamation-triangle",
-            "text": str(_("Внести исправления в анкету")),
-            "url": reverse("clients:onboarding_digital_access", kwargs={"token": session.token_hash})
-        })
+        action_items.append(
+            {
+                "type": "danger",
+                "icon": "bi-person-exclamation",
+                "text": str(_("Заполнить контактные данные")),
+                "url": "#contactEditForm" if contact_form_editable else None,
+            }
+        )
+    if mos_data and mos_data.status == "needs_correction":
+        action_items.append(
+            {
+                "type": "warning",
+                "icon": "bi-exclamation-triangle",
+                "text": str(_("Внести исправления в анкету")),
+                "url": reverse("clients:onboarding_digital_access", kwargs={"token": session.token_hash}),
+            }
+        )
     if contact_complete and not passport_complete:
-        action_items.append({
-            "type": "warning",
-            "icon": "bi-person-bounding-box",
-            "text": str(_("Заполнить личный профиль (паспорт)")),
-            "url": reverse("clients:onboarding_digital_access", kwargs={"token": session.token_hash})
-        })
+        action_items.append(
+            {
+                "type": "warning",
+                "icon": "bi-person-bounding-box",
+                "text": str(_("Заполнить личный профиль (паспорт)")),
+                "url": reverse("clients:onboarding_digital_access", kwargs={"token": session.token_hash}),
+            }
+        )
     if contact_complete and not travel_complete:
-        action_items.append({
-            "type": "warning",
-            "icon": "bi-airplane",
-            "text": str(_("Заполнить историю поездок")),
-            "url": reverse("clients:onboarding_digital_access", kwargs={"token": session.token_hash})
-        })
-    
+        action_items.append(
+            {
+                "type": "warning",
+                "icon": "bi-airplane",
+                "text": str(_("Заполнить историю поездок")),
+                "url": reverse("clients:onboarding_digital_access", kwargs={"token": session.token_hash}),
+            }
+        )
+
     missing_case_number = bool(
         case_step < 7
         and mos_data
@@ -537,42 +605,53 @@ def _build_start_context(
         and not mos_data.new_residence_card_case_number
     )
     if missing_case_number:
-        action_items.append({
-            "type": "danger",
-            "icon": "bi-file-earmark-diff",
-            "text": str(_("Указать номер дела")),
-            "url": "#new-card-application"
-        })
+        action_items.append(
+            {
+                "type": "danger",
+                "icon": "bi-file-earmark-diff",
+                "text": str(_("Указать номер дела")),
+                "url": "#new-card-application",
+            }
+        )
 
     rejected_count = sum(1 for doc in checklist if doc.get("is_rejected"))
     if rejected_count > 0:
-        action_items.append({
-            "type": "danger",
-            "icon": "bi-x-circle",
-            "text": str(_("Перезагрузить отклонённые документы ({} шт.)")).format(rejected_count),
-            "url": "#documents"
-        })
+        action_items.append(
+            {
+                "type": "danger",
+                "icon": "bi-x-circle",
+                "text": str(_("Перезагрузить отклонённые документы ({} шт.)")).format(rejected_count),
+                "url": "#documents",
+            }
+        )
     if docs_required_pending_count > 0:
-        action_items.append({
-            "type": "warning",
-            "icon": "bi-file-earmark-arrow-up",
-            "text": str(_("Загрузить недостающие документы ({} шт.)")).format(docs_required_pending_count),
-            "url": "#documents"
-        })
+        action_items.append(
+            {
+                "type": "warning",
+                "icon": "bi-file-earmark-arrow-up",
+                "text": str(_("Загрузить недостающие документы ({} шт.)")).format(docs_required_pending_count),
+                "url": "#documents",
+            }
+        )
 
     # Answered questions check
-    completed_questions_count = StaffTask.objects.filter(
+    completed_questions_qs = StaffTask.objects.filter(
         client=client,
         title__icontains="Вопрос от клиента",
-        status="completed"
-    ).count()
+        status=StaffTask.STATUS_DONE,
+    )
+    if case is not None:
+        completed_questions_qs = completed_questions_qs.filter(case=case)
+    completed_questions_count = completed_questions_qs.count()
     if completed_questions_count > 0:
-        action_items.append({
-            "type": "success",
-            "icon": "bi-chat-left-check-fill",
-            "text": str(_("Сотрудник ответил на ваш вопрос")),
-            "url": "#documents"  # Jump down to main view/support section
-        })
+        action_items.append(
+            {
+                "type": "success",
+                "icon": "bi-chat-left-check-fill",
+                "text": str(_("Сотрудник ответил на ваш вопрос")),
+                "url": "#documents",  # Jump down to main view/support section
+            }
+        )
 
     action_required_count = len(action_items)
 
@@ -614,6 +693,12 @@ def _build_start_context(
     }
 
 
+def _render_start_page(request: HttpRequest, context: dict[str, Any]) -> HttpResponse:
+    language = _request_language(request)
+    with translation.override(language):
+        return render(request, START_TEMPLATE, context)
+
+
 def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
     session = check_onboarding_session(token, request=request)
     if not session:
@@ -646,13 +731,13 @@ def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
         contact_values = _contact_values_from_post(request)
         contact_errors = _validate_contact_values(contact_values)
         if contact_errors:
-            return render(
+            return _render_start_page(
                 request,
-                START_TEMPLATE,
                 _build_start_context(
                     session=session,
                     contact_values=contact_values,
                     contact_errors=contact_errors,
+                    language=_request_language(request),
                 ),
             )
 
@@ -661,4 +746,7 @@ def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
             return redirect("clients:onboarding_start", token=token)
         return redirect("clients:onboarding_digital_access", token=token)
 
-    return render(request, START_TEMPLATE, _build_start_context(session=session))
+    return _render_start_page(
+        request,
+        _build_start_context(session=session, language=_request_language(request)),
+    )

@@ -59,6 +59,11 @@ class CaseAllManager(models.Manager.from_queryset(CaseQuerySet)):  # type: ignor
                 status=getattr(client, "status", "new") or "new",
                 workflow_stage=getattr(client, "workflow_stage", "new_client") or "new_client",
                 application_purpose=getattr(client, "application_purpose", "") or "",
+                family_role=(
+                    getattr(client, "family_role", "") or ""
+                    if getattr(client, "application_purpose", "") == "family"
+                    else ""
+                ),
                 basis_of_stay=getattr(client, "basis_of_stay", "") or "",
                 submission_date=getattr(client, "submission_date", None),
                 fingerprints_date=getattr(client, "fingerprints_date", None),
@@ -98,6 +103,16 @@ class Case(SoftDeleteModel):
         ("closed", _("Закрыто")),
     ]
 
+    FAMILY_ROLE_SPONSOR = "sponsor"
+    FAMILY_ROLE_SPOUSE = "family_spouse"
+    FAMILY_ROLE_CHILD = "family_child"
+    FAMILY_ROLE_CHOICES = [
+        (FAMILY_ROLE_SPONSOR, _("Sponsor")),
+        (FAMILY_ROLE_SPOUSE, _("Spouse")),
+        (FAMILY_ROLE_CHILD, _("Child")),
+    ]
+    FAMILY_ROLE_VALUES = {FAMILY_ROLE_SPONSOR, FAMILY_ROLE_SPOUSE, FAMILY_ROLE_CHILD}
+
     uuid = models.UUIDField(default=uuid4, unique=True, editable=False, verbose_name=_("UUID дела"))
     client = models.ForeignKey("clients.Client", related_name="cases", on_delete=models.PROTECT)
     internal_number = EncryptedTextField(blank=True, default="", verbose_name=_("Внутренний номер дела"))
@@ -111,6 +126,13 @@ class Case(SoftDeleteModel):
         verbose_name=_("Этап workflow"),
     )
     application_purpose = models.CharField(max_length=64, blank=True, default="", verbose_name=_("Основание легализации"))
+    family_role = models.CharField(
+        max_length=32,
+        choices=FAMILY_ROLE_CHOICES,
+        blank=True,
+        default="",
+        verbose_name=_("Роль в семейном деле"),
+    )
     application_type = models.CharField(max_length=64, blank=True, default="", verbose_name=_("Тип заявления"))
     basis_of_stay = models.CharField(max_length=100, blank=True, default="", verbose_name=_("Основание пребывания"))
     opened_at = models.DateField(default=timezone.localdate, verbose_name=_("Дата открытия дела"))
@@ -173,6 +195,17 @@ class Case(SoftDeleteModel):
             )
         ]
 
+    def clean(self) -> None:
+        super().clean()
+        role = str(self.family_role or "").strip()
+        purpose = str(self.application_purpose or "").strip()
+        if role and role not in self.FAMILY_ROLE_VALUES:
+            raise ValidationError({"family_role": _("Unknown family role.")})
+        if purpose == "family" and not role:
+            raise ValidationError({"family_role": _("Family role is required for family cases.")})
+        if purpose != "family" and role:
+            raise ValidationError({"family_role": _("Family role is only allowed for family cases.")})
+
     def __str__(self) -> str:
         return f"{self.display_number} / {self.client}"
 
@@ -193,6 +226,20 @@ class Case(SoftDeleteModel):
         if legacy:
             return legacy
         return str(_("Дело без номера"))
+
+    def get_document_checklist(
+        self,
+        *,
+        check_file_existence: bool = False,
+        requirements_cache: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
+        from clients.services.case_context import build_case_document_checklist
+
+        return build_case_document_checklist(
+            self,
+            check_file_existence=check_file_existence,
+            requirements_cache=requirements_cache,
+        )
 
     def get_application_purpose_display(self) -> str:
         """Localized purpose label; never a raw code like "work" (spec §15).
@@ -234,7 +281,7 @@ class Case(SoftDeleteModel):
         if self.authority_case_number and self.client_id:
             try:
                 from clients.services.tasks import close_auto_task
-                close_auto_task(self.client, "case_number_missing")
+                close_auto_task(self.client, "case_number_missing", case=self)
             except Exception:
                 # Task auto-close is best-effort; never let it break the save.
                 logger.exception(

@@ -80,43 +80,76 @@ def accessible_cases_queryset(user: AbstractBaseUser | AnonymousUser | None, que
         client__in=accessible_clients_queryset(user, Client.objects.all())
     )
 
-def accessible_documents_queryset(user: AbstractBaseUser | AnonymousUser | None, queryset: QuerySet[Document] | None = None) -> QuerySet[Document]:
-    if queryset is None:
-        queryset = Document.objects.select_related("client")
 
-    return queryset.filter(
-        client__in=accessible_clients_queryset(user, Client.objects.all())
+def accessible_documents_queryset(
+    user: AbstractBaseUser | AnonymousUser | None,
+    queryset: QuerySet[Document] | None = None,
+    *,
+    include_archived_cases: bool = False,
+) -> QuerySet[Document]:
+    if queryset is None:
+        queryset = Document.objects.select_related("client", "case")
+
+    queryset = queryset.filter(
+        client__in=accessible_clients_queryset(user, Client.objects.all()),
     )
+    if not include_archived_cases:
+        queryset = queryset.filter(case__archived_at__isnull=True)
+    return queryset
 
 
-def accessible_payments_queryset(user: AbstractBaseUser | AnonymousUser | None, queryset: QuerySet[Payment] | None = None) -> QuerySet[Payment]:
+def accessible_payments_queryset(
+    user: AbstractBaseUser | AnonymousUser | None,
+    queryset: QuerySet[Payment] | None = None,
+    *,
+    include_archived_cases: bool = False,
+) -> QuerySet[Payment]:
     if queryset is None:
-        queryset = Payment.objects.select_related("client")
+        queryset = Payment.objects.select_related("client", "case")
 
-    return queryset.filter(
-        client__in=accessible_clients_queryset(user, Client.objects.all())
+    queryset = queryset.filter(
+        client__in=accessible_clients_queryset(user, Client.objects.all()),
     )
+    if not include_archived_cases:
+        queryset = queryset.filter(case__archived_at__isnull=True)
+    return queryset
 
 
-def accessible_reminders_queryset(user: AbstractBaseUser | AnonymousUser | None, queryset: QuerySet[Reminder] | None = None) -> QuerySet[Reminder]:
+def accessible_reminders_queryset(
+    user: AbstractBaseUser | AnonymousUser | None,
+    queryset: QuerySet[Reminder] | None = None,
+    *,
+    include_archived_cases: bool = False,
+) -> QuerySet[Reminder]:
     if queryset is None:
-        queryset = Reminder.objects.select_related("client", "payment", "document")
+        queryset = Reminder.objects.select_related("client", "case", "payment", "document")
 
-    return queryset.filter(
-        client__in=accessible_clients_queryset(user, Client.objects.all())
+    queryset = queryset.filter(
+        client__in=accessible_clients_queryset(user, Client.objects.all()),
     )
+    if not include_archived_cases:
+        queryset = queryset.filter(case__archived_at__isnull=True)
+    return queryset
 
 
-def accessible_tasks_queryset(user: AbstractBaseUser | AnonymousUser | None, queryset: QuerySet[StaffTask] | None = None) -> QuerySet[StaffTask]:
+def accessible_tasks_queryset(
+    user: AbstractBaseUser | AnonymousUser | None,
+    queryset: QuerySet[StaffTask] | None = None,
+    *,
+    include_archived_cases: bool = False,
+) -> QuerySet[StaffTask]:
     if queryset is None:
-        queryset = StaffTask.objects.select_related("client", "assignee", "created_by")
+        queryset = StaffTask.objects.select_related("client", "assignee", "created_by", "case")
 
     if not is_internal_staff_user(user):
         return queryset.none()
 
-    return queryset.filter(
-        client__in=accessible_clients_queryset(user, Client.objects.all())
+    queryset = queryset.filter(
+        client__in=accessible_clients_queryset(user, Client.objects.all()),
     )
+    if not include_archived_cases:
+        queryset = queryset.filter(case__archived_at__isnull=True)
+    return queryset
 
 
 def accessible_campaigns_queryset(user: AbstractBaseUser | AnonymousUser | None, queryset: QuerySet[EmailCampaign] | None = None) -> QuerySet[EmailCampaign]:

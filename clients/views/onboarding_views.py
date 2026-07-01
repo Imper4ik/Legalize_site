@@ -1151,6 +1151,7 @@ def onboarding_ask_question(request: HttpRequest, token: str) -> HttpResponse:
         return HttpResponseBadRequest(_("Текст вопроса не может быть пустым."))
 
     client = session.client
+    case = _session_case(session)
 
     from django.urls import reverse
 
@@ -1158,10 +1159,11 @@ def onboarding_ask_question(request: HttpRequest, token: str) -> HttpResponse:
 
     task = StaffTask.objects.create(
         client=client,
+        case=case,
         title=f"Вопрос от клиента: {client.get_full_name()}",
         description=f"Клиент задал вопрос через приложение:\n\n{question_text}",
         priority="high",
-        status="open",
+        status=StaffTask.STATUS_OPEN,
         assignee=None,
         created_by=client.user,
     )
@@ -1169,6 +1171,7 @@ def onboarding_ask_question(request: HttpRequest, token: str) -> HttpResponse:
     from clients.services.activity import log_client_activity
     log_client_activity(
         client=client,
+        case=case,
         actor=client.user,
         event_type="comment",
         summary="Клиент задал вопрос сотруднику",

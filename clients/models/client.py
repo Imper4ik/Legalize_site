@@ -524,11 +524,18 @@ class Client(SoftDeleteModel):
         so multi-case clients are not cross-contaminated (case-first). Without a
         case the legacy client-wide view is returned for backward compatibility.
         """
+        if case is not None:
+            from clients.services.case_context import build_case_document_checklist
+
+            return build_case_document_checklist(
+                case,
+                check_file_existence=check_file_existence,
+                requirements_cache=requirements_cache,
+            )
+
         from clients.services.document_helpers import document_file_exists
 
         from .document import DocumentRequirement, resolve_document_label
-
-        case_id = getattr(case, "pk", None)
 
         current_language = translation.get_language() or self.language
         purpose = self.get_document_requirement_purpose()
@@ -549,19 +556,12 @@ class Client(SoftDeleteModel):
         uploaded_docs: list[Document] | models.QuerySet[Document]
         if prefetched_documents is None:
             documents_qs = self.documents.all()
-            if case_id is not None:
-                documents_qs = documents_qs.filter(case_id=case_id)
             uploaded_docs = documents_qs.annotate(
                 preloaded_version_count=models.Count("versions")
             ).order_by("-uploaded_at")
         else:
-            filtered_prefetched = (
-                [doc for doc in prefetched_documents if doc.case_id == case_id]
-                if case_id is not None
-                else prefetched_documents
-            )
             uploaded_docs = sorted(
-                filtered_prefetched,
+                prefetched_documents,
                 key=lambda document: document.uploaded_at,
                 reverse=True,
             )
@@ -579,7 +579,7 @@ class Client(SoftDeleteModel):
         # Scope Wniosek submissions to the same case as the documents so a
         # submission from another case cannot complete this case's checklist
         # (spec §7).
-        submitted_summary = self.get_submitted_document_summary(case=case)
+        submitted_summary = self.get_submitted_document_summary()
         submitted_by_code = submitted_summary.get("codes", {})
         custom_submissions = submitted_summary.get("custom", [])
 
@@ -715,10 +715,8 @@ class Client(SoftDeleteModel):
             from clients.services.zus import missing_zus_months
 
             zus_code = DocumentType.ZUS_RCA_OR_INSURANCE.value
-            zus_subject = case
-            if zus_subject is None:
-                from clients.services.cases import resolve_single_active_case
-                zus_subject = resolve_single_active_case(self)
+            from clients.services.cases import resolve_single_active_case
+            zus_subject = resolve_single_active_case(self)
             if zus_subject is not None:
                 zus_missing = list(missing_zus_months(zus_subject))
         except Exception:

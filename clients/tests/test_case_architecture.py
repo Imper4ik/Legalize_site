@@ -247,3 +247,87 @@ class CaseArchitectureTests(TestCase):
         self.assertTrue(str(raw_value).startswith("gAAAA"))
         self.assertNotIn("AA123456", str(raw_value))
         self.assertEqual(document.parsed_data["safe"], "value")
+
+class CaseFamilyRoleBackfillMigrationTests(TransactionTestCase):
+    migrate_from = [("clients", "0110_case_family_role")]
+    migrate_to = [("clients", "0111_backfill_case_family_role")]
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.executor = MigrationExecutor(connection)
+        self.executor.migrate(self.migrate_from)
+        old_apps = self.executor.loader.project_state(self.migrate_from).apps
+
+        Client = old_apps.get_model("clients", "Client")
+        Case = old_apps.get_model("clients", "Case")
+
+        self.single_client = Client.objects.create(
+            first_name="Single",
+            last_name="Family",
+            email="single-family@example.test",
+            phone="+48000000001",
+            application_purpose="family",
+            family_role="family_spouse",
+            language="en",
+            is_test_data=True,
+        )
+        self.single_case = Case.objects.create(
+            client=self.single_client,
+            application_purpose="family",
+            family_role="",
+            is_test_data=True,
+        )
+        self.multi_client = Client.objects.create(
+            first_name="Multi",
+            last_name="Family",
+            email="multi-family@example.test",
+            phone="+48000000002",
+            application_purpose="family",
+            family_role="family_child",
+            language="en",
+            is_test_data=True,
+        )
+        self.multi_case_a = Case.objects.create(
+            client=self.multi_client,
+            application_purpose="family",
+            family_role="",
+            is_test_data=True,
+        )
+        self.multi_case_b = Case.objects.create(
+            client=self.multi_client,
+            application_purpose="family",
+            family_role="",
+            is_test_data=True,
+        )
+        self.prefilled_client = Client.objects.create(
+            first_name="Prefilled",
+            last_name="Family",
+            email="prefilled-family@example.test",
+            phone="+48000000003",
+            application_purpose="family",
+            family_role="family_child",
+            language="en",
+            is_test_data=True,
+        )
+        self.prefilled_case = Case.objects.create(
+            client=self.prefilled_client,
+            application_purpose="family",
+            family_role="sponsor",
+            is_test_data=True,
+        )
+
+        self.executor.loader.build_graph()
+        self.executor.migrate(self.migrate_to)
+        self.apps = self.executor.loader.project_state(self.migrate_to).apps
+
+    def tearDown(self) -> None:
+        self.executor.migrate(self.migrate_to)
+        super().tearDown()
+
+    def test_backfill_copies_role_only_for_single_unambiguous_family_case(self) -> None:
+        CaseModel = self.apps.get_model("clients", "Case")
+
+        self.assertEqual(CaseModel.objects.get(pk=self.single_case.pk).family_role, "family_spouse")
+        self.assertEqual(CaseModel.objects.get(pk=self.multi_case_a.pk).family_role, "")
+        self.assertEqual(CaseModel.objects.get(pk=self.multi_case_b.pk).family_role, "")
+        self.assertEqual(CaseModel.objects.get(pk=self.prefilled_case.pk).family_role, "sponsor")
