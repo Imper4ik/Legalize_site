@@ -111,6 +111,7 @@ class Case(SoftDeleteModel):
         verbose_name=_("Этап workflow"),
     )
     application_purpose = models.CharField(max_length=64, blank=True, default="", verbose_name=_("Основание легализации"))
+    family_role = models.CharField(max_length=32, blank=True, default="", verbose_name=_("Роль в семейном деле"))
     application_type = models.CharField(max_length=64, blank=True, default="", verbose_name=_("Тип заявления"))
     basis_of_stay = models.CharField(max_length=100, blank=True, default="", verbose_name=_("Основание пребывания"))
     opened_at = models.DateField(default=timezone.localdate, verbose_name=_("Дата открытия дела"))
@@ -193,6 +194,20 @@ class Case(SoftDeleteModel):
         if legacy:
             return legacy
         return str(_("Дело без номера"))
+
+    def get_document_checklist(
+        self,
+        *,
+        check_file_existence: bool = False,
+        requirements_cache: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
+        from clients.services.case_context import build_case_document_checklist
+
+        return build_case_document_checklist(
+            self,
+            check_file_existence=check_file_existence,
+            requirements_cache=requirements_cache,
+        )
 
     def get_application_purpose_display(self) -> str:
         """Localized purpose label; never a raw code like "work" (spec §15).
