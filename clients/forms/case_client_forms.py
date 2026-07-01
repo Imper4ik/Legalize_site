@@ -90,6 +90,15 @@ class CaseForm(forms.ModelForm):
             if hasattr(temp_case, field_name):
                 setattr(temp_case, field_name, value)
 
+        family_role = cleaned_data.get("family_role") or ""
+        application_purpose = cleaned_data.get("application_purpose") or ""
+        if family_role and family_role not in Case.FAMILY_ROLE_VALUES:
+            self.add_error("family_role", _("Unknown family role."))
+        if application_purpose == "family" and not family_role:
+            self.add_error("family_role", _("Family role is required for family cases."))
+        if application_purpose != "family" and family_role:
+            self.add_error("family_role", _("Family role is only allowed for family cases."))
+
         transition_result = validate_case_workflow_transition(
             case=temp_case,
             previous_stage=previous_stage,

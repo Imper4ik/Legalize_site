@@ -61,17 +61,26 @@ def create_case_for_client(
     **overrides: Any,
 ) -> Case:
     with transaction.atomic():
+        has_existing_case = Case.all_objects.filter(client=client).exists()
+        legacy_family_role = (
+            getattr(client, "family_role", "") or ""
+            if not has_existing_case and getattr(client, "application_purpose", "") == "family"
+            else ""
+        )
         values = {
             "client": client,
             "status": client.status,
             "workflow_stage": "new_client",
             "application_purpose": client.application_purpose,
+            "family_role": legacy_family_role,
             "basis_of_stay": client.basis_of_stay or "",
             "company": client.company,
             "is_test_data": client.is_test_data,
             "is_demo_data": client.is_demo_data,
         }
         values.update(overrides)
+        if values.get("application_purpose") != "family":
+            values["family_role"] = ""
         case = Case.objects.create(**values)
 
         from clients.models.case import CaseParticipant

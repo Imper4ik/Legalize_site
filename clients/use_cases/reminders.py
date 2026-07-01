@@ -12,6 +12,7 @@ from clients.services.notifications import send_expiring_documents_email
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractBaseUser, AnonymousUser
 
+logger = logging.getLogger(__name__)
 DocumentReminderSender = Callable[..., int]
 
 
@@ -21,6 +22,7 @@ class ReminderScenarioResult:
     reminder: Reminder | None = None
     email_sent: bool = False
     affected_documents_count: int = 0
+    emails_sent_count: int = 0
     deleted_reminder_id: int | None = None
 
 
@@ -74,6 +76,7 @@ def send_document_reminder_for_reminder(
         reminder=reminder,
         email_sent=sent,
         affected_documents_count=len(documents),
+        emails_sent_count=sent_count,
     )
 
 
@@ -85,7 +88,7 @@ def send_document_reminder_for_client(
 ) -> ReminderScenarioResult:
     reminders = (
         client.reminders.filter(reminder_type="document", is_active=True)
-        .select_related("document")
+        .select_related("document", "document__case")
     )
     documents = [
         reminder.document
@@ -97,6 +100,7 @@ def send_document_reminder_for_client(
     sent = bool(send_email(client, documents, sent_by=actor, case=case))
     return ReminderScenarioResult(
         client=client,
-        email_sent=sent,
+        email_sent=bool(sent_count),
         affected_documents_count=len(documents),
+        emails_sent_count=sent_count,
     )

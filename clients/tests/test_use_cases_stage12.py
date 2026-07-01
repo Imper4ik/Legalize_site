@@ -238,7 +238,8 @@ class UseCasesStage12Tests(TestCase):
 
         self.assertTrue(result.email_sent)
         self.assertEqual(result.affected_documents_count, 1)
-        send_email.assert_called_once_with(self.client_obj, [document], sent_by=self.staff)
+        self.assertEqual(result.emails_sent_count, 1)
+        send_email.assert_called_once_with(self.client_obj, [document], sent_by=self.staff, case=document.case)
 
     def test_send_document_reminder_for_client_uses_only_active_documents_with_expiry(self):
         valid_document = Document.objects.create(
@@ -293,4 +294,10 @@ class UseCasesStage12Tests(TestCase):
 
         self.assertTrue(result.email_sent)
         self.assertEqual(result.affected_documents_count, 1)
-        send_email.assert_called_once_with(self.client_obj, [valid_document], sent_by=self.staff)
+        self.assertEqual(result.emails_sent_count, 1)
+        send_email.assert_called_once_with(
+            self.client_obj,
+            [valid_document],
+            sent_by=self.staff,
+            case=valid_document.case,
+        )
