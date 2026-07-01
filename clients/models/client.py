@@ -531,7 +531,12 @@ class Client(SoftDeleteModel):
         case_id = getattr(case, "pk", None)
 
         current_language = translation.get_language() or self.language
-        purpose = self.get_document_requirement_purpose()
+        if case is not None:
+            from clients.services.case_context import purpose_for_case
+
+            purpose = purpose_for_case(case)
+        else:
+            purpose = self.get_document_requirement_purpose()
 
         if requirements_cache is not None:
             cache_key = f"{purpose}:{current_language}"

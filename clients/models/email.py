@@ -8,6 +8,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
+from clients.models.consistency import assert_case_client_consistent
 from fernet_fields import EncryptedTextField
 
 
@@ -99,6 +100,7 @@ class EmailLog(models.Model):
                 update_fields = set(update_fields)
                 update_fields.add("case")
                 kwargs["update_fields"] = list(update_fields)
+        assert_case_client_consistent(self)
         super().save(*args, **kwargs)
 
     class Meta:

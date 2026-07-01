@@ -15,9 +15,8 @@ def assert_case_client_consistent(instance: Any) -> None:
     bypassable. This helper mirrors the check so a record of one client can never
     be persisted against another client's case through raw ORM access.
 
-    To keep routine partial updates cheap, the FK is only inspected when the row
-    is being inserted or the ``case`` relation is already loaded — an
-    already-validated row updated via ``update_fields`` triggers no extra query.
+    The FK pair is checked even for partial ``save(update_fields=...)`` calls, so
+    direct ``case_id`` or ``client_id`` edits cannot persist a mismatched pair.
     """
 
     case_id = getattr(instance, "case_id", None)
@@ -25,12 +24,17 @@ def assert_case_client_consistent(instance: Any) -> None:
     if not case_id or not client_id:
         return
 
+    case = None
     state = getattr(instance, "_state", None)
-    adding = getattr(state, "adding", True) if state is not None else True
     fields_cache = getattr(state, "fields_cache", {}) if state is not None else {}
-    if not adding and "case" not in fields_cache:
-        return
+    if "case" in fields_cache:
+        case = instance.case
+        case_client_id = case.client_id if case is not None else None
+    else:
+        from django.apps import apps
 
-    case = instance.case
-    if case is not None and case.client_id != client_id:
+        Case = apps.get_model("clients", "Case")
+        case_client_id = Case.all_objects.filter(pk=case_id).values_list("client_id", flat=True).first()
+
+    if case_client_id is not None and case_client_id != client_id:
         raise ValidationError("Клиент и дело не согласованы.")

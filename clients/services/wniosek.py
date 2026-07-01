@@ -55,7 +55,7 @@ def _candidate_labels_for_code(code: str, label: str) -> set[str]:
     return {_normalize_attachment_label(candidate) for candidate in candidates if candidate}
 
 
-def match_attachment_to_document_type(client: Client, entered_name: str, language: str | None = None) -> str:
+def match_attachment_to_document_type(client: Client, entered_name: str, language: str | None = None, case: Any = None) -> str:
     """Map a free-form wniosek attachment label back to a checklist code."""
 
     normalized_name = _normalize_attachment_label(entered_name)
@@ -73,7 +73,12 @@ def match_attachment_to_document_type(client: Client, entered_name: str, languag
         languages.append(client.language)
     languages.extend(code for code, _label in getattr(settings, "LANGUAGES", []) if code not in languages)
 
-    purpose = client.get_document_requirement_purpose()
+    if case is not None:
+        from clients.services.case_context import purpose_for_case
+
+        purpose = purpose_for_case(case)
+    else:
+        purpose = client.get_document_requirement_purpose()
     best_match = ""
     best_match_length = 0
     language_codes: list[str | None] = [*languages] or [None]
@@ -151,6 +156,7 @@ def create_wniosek_submission(
                     client,
                     entered_name,
                     language,
+                    case=case,
                 ),
                 entered_name=entered_name,
                 position=position,
@@ -200,10 +206,13 @@ def find_matching_attachments(client: Client, submission: WniosekSubmission) -> 
     return matches
 
 
-def get_submitted_document_codes(client: Client) -> set[str]:
-    """Get document codes submitted via all wnioseks."""
+def get_submitted_document_codes(client: Client, case: Any = None) -> set[str]:
+    """Get document codes submitted via Wnioseks.
 
-    return set(build_submitted_document_summary(client)["codes"].keys())
+    Passing ``case`` scopes the submitted-code set to that legal process.
+    """
+
+    return set(build_submitted_document_summary(client, case=case)["codes"].keys())
 
 
 def _submitted_record(attachment: WniosekAttachment, document_type: str = "") -> dict[str, Any]:

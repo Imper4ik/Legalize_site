@@ -39,9 +39,7 @@ class CaseDetailView(RoleRequiredMixin, DetailView):
         context["documents"] = Document.all_objects.filter(case=case).order_by("-uploaded_at")[:200]
         # Checklist grouped by required document (the pre-refactor view): one row
         # per requirement with status, missing items flagged, files nested inside.
-        context["document_status_list"] = case.client.get_document_checklist(
-            check_file_existence=True, case=case
-        )
+        context["document_status_list"] = case.get_document_checklist(check_file_existence=True)
         context["payments"] = Payment.all_objects.filter(case=case).order_by("-created_at")[:50]
         context["tasks"] = StaffTask.objects.filter(case=case).select_related("assignee").order_by("status", "due_date")[:50]
         context["reminders"] = Reminder.objects.filter(case=case).order_by("-is_active", "due_date")[:50]
@@ -89,6 +87,7 @@ class CaseCreateView(RoleRequiredMixin, CreateView):
             actor=self.request.user,
             authority_case_number=(form.cleaned_data.get("authority_case_number") or "").strip(),
             application_purpose=form.cleaned_data.get("application_purpose") or "",
+            family_role=form.cleaned_data.get("family_role") or "",
             application_type=form.cleaned_data.get("application_type") or "",
             basis_of_stay=form.cleaned_data.get("basis_of_stay") or "",
             workflow_stage=form.cleaned_data.get("workflow_stage") or "new_client",
@@ -122,6 +121,7 @@ class CaseUpdateView(RoleRequiredMixin, UpdateView):
         changes_dict: dict[str, Any] = {
             "authority_case_number": authority_case_number,
             "application_purpose": form.cleaned_data.get("application_purpose") or "",
+            "family_role": form.cleaned_data.get("family_role") or "",
             "application_type": form.cleaned_data.get("application_type") or "",
             "basis_of_stay": form.cleaned_data.get("basis_of_stay") or "",
             "workflow_stage": form.cleaned_data.get("workflow_stage") or case.workflow_stage,

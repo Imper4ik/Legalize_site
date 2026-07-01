@@ -12435,3 +12435,19 @@ msgstr "Wyślij"
 
 msgid "Intake only"
 msgstr "Tylko ankieta"
+
+#: clients/templates/clients/onboarding/start_contact.html:342
+msgid "Если нужна помощь по onboarding, напишите нам."
+msgstr "Jeśli potrzebujesz pomocy przy onboardingu, napisz do nas."
+
+#: clients/templates/clients/onboarding/start_contact.html:350
+msgid "Специалист"
+msgstr "Specjalista"
+
+#: clients/templates/clients/onboarding/start_contact.html:351
+msgid "Контакты специалиста"
+msgstr "Kontakt do specjalisty"
+
+#: clients/templates/clients/onboarding/start_contact.html:360
+msgid "Написать на email"
+msgstr "Napisz e-mail"

@@ -12393,3 +12393,19 @@ msgstr "Отправить"
 
 msgid "Intake only"
 msgstr "Только анкета"
+
+#: clients/templates/clients/onboarding/start_contact.html:342
+msgid "Если нужна помощь по onboarding, напишите нам."
+msgstr "Если нужна помощь с онбордингом, напишите нам."
+
+#: clients/templates/clients/onboarding/start_contact.html:350
+msgid "Специалист"
+msgstr "Специалист"
+
+#: clients/templates/clients/onboarding/start_contact.html:351
+msgid "Контакты специалиста"
+msgstr "Контакты специалиста"
+
+#: clients/templates/clients/onboarding/start_contact.html:360
+msgid "Написать на email"
+msgstr "Написать на email"

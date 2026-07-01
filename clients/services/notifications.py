@@ -21,6 +21,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 from clients.constants import DocumentType
 from clients.models import Client, Document, StaffTask
+from clients.services.case_context import build_case_document_checklist, checklist_for_case, purpose_for_case
 from clients.services.wniosek import get_submitted_document_codes
 from clients.services.zus import format_zus_months, missing_zus_months
 
@@ -85,6 +86,7 @@ def _reserve_idempotent_email_send(
     recipients: list[str],
     *,
     client: Client | None = None,
+    case: Any | None = None,
     template_type: str = "",
     sent_by: AbstractBaseUser | AnonymousUser | None = None,
     idempotency_key: str = "",
@@ -98,6 +100,7 @@ def _reserve_idempotent_email_send(
 
     payload: dict[str, Any] = {
         "client": client,
+        "case": case,
         "subject": subject,
         "body": body,
         "recipients": ", ".join(recipients),
@@ -173,6 +176,7 @@ def _send_email(
     recipients: Iterable[str],
     *,
     client: Client | None = None,
+    case: Any | None = None,
     template_type: str = "",
     sent_by: AbstractBaseUser | AnonymousUser | None = None,
     idempotency_key: str = "",
@@ -193,6 +197,7 @@ def _send_email(
             body,
             recipient_list,
             client=client,
+            case=case,
             template_type=template_type,
             sent_by=sent_by,
             idempotency_key=idempotency_key,
@@ -206,6 +211,7 @@ def _send_email(
         body,
         recipient_list,
         client=client,
+        case=case,
         template_type=template_type,
         sent_by=sent_by,
         idempotency_key=idempotency_key,
@@ -233,6 +239,7 @@ def _send_email(
                     body,
                     recipient_list,
                     client=client,
+                    case=case,
                     template_type=template_type,
                     sent_by=sent_by,
                     idempotency_key=idempotency_key,
@@ -244,6 +251,7 @@ def _send_email(
                     body,
                     recipient_list,
                     client=client,
+                    case=case,
                     template_type=template_type,
                     sent_by=sent_by,
                     idempotency_key=idempotency_key,
@@ -263,6 +271,7 @@ def _send_email(
                 body,
                 recipient_list,
                 client=client,
+                case=case,
                 template_type=template_type,
                 sent_by=sent_by,
                 idempotency_key=idempotency_key,
@@ -279,6 +288,7 @@ def _log_email(
     recipients: list[str],
     *,
     client: Client | None = None,
+    case: Any | None = None,
     template_type: str = "",
     sent_by: AbstractBaseUser | AnonymousUser | None = None,
     idempotency_key: str = "",
@@ -292,6 +302,7 @@ def _log_email(
     try:
         payload = {
             "client": client,
+            "case": case,
             "subject": subject,
             "body": body,
             "recipients": ", ".join(recipients),
@@ -595,17 +606,19 @@ def send_required_documents_email(client: Client, *, sent_by: AbstractBaseUser |
     )
 
 
-def _get_expired_documents_context(client: Client) -> dict[str, Any] | None:
+def _get_expired_documents_context(client: Client, *, case: Any | None = None) -> dict[str, Any] | None:
     today = timezone.localdate()
-    expired_documents = client.documents.filter(expiry_date__isnull=False, expiry_date__lt=today).order_by(
-        "expiry_date"
-    )
+    expired_documents = client.documents.filter(expiry_date__isnull=False, expiry_date__lt=today)
+    if case is not None:
+        expired_documents = expired_documents.filter(case=case)
+    expired_documents = expired_documents.order_by("expiry_date")
     if not expired_documents.exists():
         return None
 
-    from clients.services.cases import resolve_single_active_case
+    if case is None:
+        from clients.services.cases import resolve_single_active_case
 
-    case = resolve_single_active_case(client)
+        case = resolve_single_active_case(client)
     return {
         "client": client,
         "fingerprints_date": case.fingerprints_date if case else None,
@@ -614,13 +627,13 @@ def _get_expired_documents_context(client: Client) -> dict[str, Any] | None:
     }
 
 
-def send_expired_documents_email(client: Client, *, sent_by: AbstractBaseUser | AnonymousUser | None = None) -> int:
+def send_expired_documents_email(client: Client, *, sent_by: AbstractBaseUser | AnonymousUser | None = None, case: Any | None = None) -> int:
     """Send a summary of expired documents after fingerprints are submitted."""
     if not client.email:
         return 0
 
     language = _get_preferred_language(client)
-    context = _get_expired_documents_context(client)
+    context = _get_expired_documents_context(client, case=case)
     if not context:
         return 0
 
@@ -634,11 +647,13 @@ def send_expired_documents_email(client: Client, *, sent_by: AbstractBaseUser | 
         client=client,
         template_type="expired_documents",
         sent_by=sent_by,
+        case=case,
         idempotency_key=build_email_idempotency_key(
             "expired_documents",
             client.pk,
             client.email,
-            client.effective_fingerprints_date,
+            getattr(case, "pk", None),
+            getattr(case, "fingerprints_date", None) or client.effective_fingerprints_date,
             timezone.localdate(),
         ),
     )
@@ -654,15 +669,17 @@ def _get_missing_documents_context(
     if language is None:
         language = _get_preferred_language(client)
     from clients.models import ClientDocumentRequirement, DocumentRequirement
-    purpose = client.get_document_requirement_purpose()
-    has_db_records = DocumentRequirement.objects.filter(
-        application_purpose=purpose
-    ).exists()
-    catalog = DocumentRequirement.catalog_for(
-        purpose,
-        language,
-        include_optional=False,
-        include_fallback=not has_db_records,
+    purpose = purpose_for_case(case) if case is not None else client.get_document_requirement_purpose()
+    has_db_records = DocumentRequirement.objects.filter(application_purpose=purpose).exists()
+    catalog = (
+        checklist_for_case(case, language, include_optional=False, include_fallback=not has_db_records)
+        if case is not None
+        else DocumentRequirement.catalog_for(
+            purpose,
+            language,
+            include_optional=False,
+            include_fallback=not has_db_records,
+        )
     )
     # When a specific case is supplied, the checklist is scoped to that case so a
     # client with several active cases never has one case's documents counted
@@ -670,7 +687,7 @@ def _get_missing_documents_context(
     # kept for backwards compatibility.
     documents = client.documents.filter(case=case) if case is not None else client.documents.all()
     uploaded_codes = set(documents.values_list("document_type", flat=True))
-    submitted_codes = get_submitted_document_codes(client)
+    submitted_codes = get_submitted_document_codes(client, case=case)
     from clients.services.cases import resolve_single_active_case
 
     zus_case = case or resolve_single_active_case(client)
@@ -776,11 +793,12 @@ def send_missing_documents_email(
         client=client,
         template_type="missing_documents",
         sent_by=sent_by,
+        case=case,
         idempotency_key=idempotency_key,
     )
 
 
-def _get_expiring_documents_context(client: Client, documents: list[Document]) -> dict[str, Any] | None:
+def _get_expiring_documents_context(client: Client, documents: list[Document], *, case: Any | None = None) -> dict[str, Any] | None:
     if not documents:
         return None
 
@@ -808,11 +826,14 @@ def _get_expiring_documents_context(client: Client, documents: list[Document]) -
     ]
 
     # All documents with expiry from the client (for valid/expired context)
-    all_client_docs = client.documents.filter(expiry_date__isnull=False).order_by("expiry_date")
+    all_client_docs = client.documents.filter(expiry_date__isnull=False)
+    if case is not None:
+        all_client_docs = all_client_docs.filter(case=case)
+    all_client_docs = all_client_docs.order_by("expiry_date")
     valid_documents = [doc for doc in all_client_docs if doc.expiry_date and doc.expiry_date > cutoff]
 
     # Missing documents from the checklist
-    checklist = client.get_document_checklist() or []
+    checklist = build_case_document_checklist(case) if case is not None else client.get_document_checklist() or []
     missing_documents = []
     for item in checklist:
         if item.get("is_complete"):
@@ -839,14 +860,23 @@ def _get_expiring_documents_context(client: Client, documents: list[Document]) -
     }
 
 
-def send_expiring_documents_email(client: Client, documents: list[Document], *, sent_by: AbstractBaseUser | AnonymousUser | None = None) -> int:
+def send_expiring_documents_email(client: Client, documents: list[Document], *, sent_by: AbstractBaseUser | AnonymousUser | None = None, case: Any | None = None) -> int:
     """Send a notice about documents expiring soon (within the next week)."""
 
     if not client.email or not documents:
         return 0
 
+    if case is None:
+        case_ids = {document.case_id for document in documents if document.case_id}
+        if len(case_ids) == 1:
+            from clients.models import Case
+
+            case = Case.objects.filter(pk=case_ids.pop()).first()
+    elif any(document.case_id and document.case_id != case.pk for document in documents):
+        raise ValueError("All expiring documents must belong to the supplied case.")
+
     language = _get_preferred_language(client)
-    context = _get_expiring_documents_context(client, documents)
+    context = _get_expiring_documents_context(client, documents, case=case)
     if not context:
         return 0
 
@@ -859,21 +889,24 @@ def send_expiring_documents_email(client: Client, documents: list[Document], *, 
         client=client,
         template_type="expiring_documents",
         sent_by=sent_by,
+        case=case,
         idempotency_key=build_email_idempotency_key(
             "expiring_documents",
             client.pk,
             client.email,
+            getattr(case, "pk", None),
             sorted(f"{doc.pk}:{doc.expiry_date}" for doc in documents if doc.expiry_date),
         ),
     )
 
 
-def _get_appointment_context(client: Client) -> dict[str, Any] | None:
-    # Fingerprints data lives on the case; source it from the client's single
-    # active case (spec section 5). Ambiguous multi-case clients are skipped.
-    from clients.services.cases import resolve_single_active_case
+def _get_appointment_context(client: Client, *, case: Any | None = None) -> dict[str, Any] | None:
+    # Fingerprints data lives on the case. New callers pass it explicitly; the
+    # legacy fallback is kept only for unambiguous single-case flows.
+    if case is None:
+        from clients.services.cases import resolve_single_active_case
 
-    case = resolve_single_active_case(client)
+        case = resolve_single_active_case(client)
     if case is None or not case.fingerprints_date:
         return None
 
@@ -885,13 +918,13 @@ def _get_appointment_context(client: Client) -> dict[str, Any] | None:
     }
 
 
-def send_appointment_notification_email(client: Client, *, sent_by: AbstractBaseUser | AnonymousUser | None = None) -> int:
+def send_appointment_notification_email(client: Client, *, sent_by: AbstractBaseUser | AnonymousUser | None = None, case: Any | None = None) -> int:
     """Send a notification about a fingerprint appointment."""
     if not client.email:
         return 0
 
     language = _get_preferred_language(client)
-    context = _get_appointment_context(client)
+    context = _get_appointment_context(client, case=case)
     if not context:
         return 0
 
@@ -904,10 +937,12 @@ def send_appointment_notification_email(client: Client, *, sent_by: AbstractBase
         client=client,
         template_type="appointment_notification",
         sent_by=sent_by,
+        case=case,
         idempotency_key=build_email_idempotency_key(
             "appointment_notification",
             client.pk,
             client.email,
+            getattr(case, "pk", None),
             context["fingerprints_date"],
             context["fingerprints_time"],
             context["fingerprints_location"],

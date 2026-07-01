@@ -47,6 +47,7 @@ class CaseForm(forms.ModelForm):
         fields = [
             "authority_case_number",
             "application_purpose",
+            "family_role",
             "application_type",
             "basis_of_stay",
             "workflow_stage",
@@ -60,6 +61,7 @@ class CaseForm(forms.ModelForm):
                 attrs={"class": "form-control", "placeholder": "WSC-II-P.6151.138285.2025"}
             ),
             "application_purpose": forms.TextInput(attrs={"class": "form-control"}),
+            "family_role": forms.Select(attrs={"class": "form-select"}),
             "application_type": forms.TextInput(attrs={"class": "form-control"}),
             "basis_of_stay": forms.TextInput(attrs={"class": "form-control"}),
             "workflow_stage": forms.Select(attrs={"class": "form-select"}),
@@ -69,6 +71,8 @@ class CaseForm(forms.ModelForm):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.fields["company"].required = False
+        self.fields["family_role"].required = False
+        self.fields["family_role"].choices = [("", _("Not a family case")), ("sponsor", _("Sponsor")), ("family_spouse", _("Spouse")), ("family_child", _("Child"))]
 
     def clean(self) -> dict[str, Any]:
         cleaned_data = super().clean()

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -67,7 +68,7 @@ def send_document_reminder_for_reminder(
     if reminder.document and reminder.document.expiry_date:
         documents.append(reminder.document)
 
-    sent = bool(send_email(reminder.client, documents, sent_by=actor))
+    sent = bool(send_email(reminder.client, documents, sent_by=actor, case=reminder.case))
     return ReminderScenarioResult(
         client=reminder.client,
         reminder=reminder,
@@ -92,7 +93,15 @@ def send_document_reminder_for_client(
         if reminder.document and reminder.document.expiry_date
     ]
 
-    sent = bool(send_email(client, documents, sent_by=actor))
+    documents_by_case: dict[int | None, list[Any]] = defaultdict(list)
+    for document in documents:
+        documents_by_case[document.case_id].append(document)
+
+    sent = False
+    for case_documents in documents_by_case.values():
+        case = case_documents[0].case if case_documents and case_documents[0].case_id else None
+        sent = bool(send_email(client, case_documents, sent_by=actor, case=case)) or sent
+
     return ReminderScenarioResult(
         client=client,
         email_sent=sent,
