@@ -280,9 +280,11 @@ class OnboardingPurposeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         raw_token = response.json()["link"].rstrip("/").split("/")[-1]
         client.refresh_from_db()
-        self.assertEqual(client.application_purpose, "family")
-        self.assertEqual(client.family_role, "family_spouse")
-        self.assertEqual(client.get_document_requirement_purpose(), "family_spouse")
+        case = client.cases.first()
+        self.assertEqual(case.application_purpose, "family")
+        self.assertEqual(case.family_role, "family_spouse")
+        from clients.services.case_context import purpose_for_case
+        self.assertEqual(purpose_for_case(case), "family_spouse")
         self.assertTrue(ClientOnboardingSession.objects.filter(client=client, token_hash=hash_onboarding_token(raw_token)).exists())
         self.assertEqual(MOSApplicationData.objects.get(client=client).mos_purpose, "")
 
@@ -325,9 +327,11 @@ class OnboardingPurposeTests(TestCase):
 
         self.assertEqual(response.status_code, 302)
         client.refresh_from_db()
-        self.assertEqual(client.application_purpose, "family")
-        self.assertEqual(client.family_role, "family_child")
-        self.assertEqual(client.get_document_requirement_purpose(), "family_child")
+        case = client.cases.first()
+        self.assertEqual(case.application_purpose, "family")
+        self.assertEqual(case.family_role, "family_child")
+        from clients.services.case_context import purpose_for_case
+        self.assertEqual(purpose_for_case(case), "family_child")
 
     def test_staff_gets_attention_notification_for_client_purpose_change(self):
         cache.clear()

@@ -35,6 +35,7 @@ from clients.services.notifications import notify_staff_about_fingerprint_invita
 from clients.services.onboarding_purposes import (
     ONBOARDING_PURPOSE_CHOICES,
     apply_onboarding_purpose_to_client,
+    apply_onboarding_purpose_to_case,
     clear_onboarding_notifications_cache,
     normalize_onboarding_purpose,
     purpose_label,
@@ -779,7 +780,14 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
         mos_data, _created = _ensure_mos(client, target_case)
         ClientDigitalAccess.objects.get_or_create(client=client)
         if selected_purpose:
-            changed_fields = apply_onboarding_purpose_to_client(client, selected_purpose)
+            if target_case is not None:
+                changed_fields = apply_onboarding_purpose_to_case(target_case, selected_purpose)
+                event_type = "onboarding_link_case_purpose_set"
+                summary = "Onboarding link case purpose set by staff"
+            else:
+                changed_fields = apply_onboarding_purpose_to_client(client, selected_purpose)
+                event_type = "onboarding_link_purpose_set"
+                summary = "Onboarding link purpose set by staff"
             if mos_data.mos_purpose:
                 mos_data.mos_purpose = ""
                 mos_data.save(update_fields=["mos_purpose", "updated_at"])
@@ -788,9 +796,10 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
                 from clients.services.activity import log_client_activity
                 log_client_activity(
                     client=client,
+                    case=target_case,
                     actor=request.user,
-                    event_type="onboarding_link_purpose_set",
-                    summary="Onboarding link purpose set by staff",
+                    event_type=event_type,
+                    summary=summary,
                     metadata={"selected_purpose": selected_purpose, "changed_fields": changed_fields},
                 )
 

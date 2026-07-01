@@ -303,6 +303,57 @@ class CaseArchitectureTests(TestCase):
                 family_role="",
             )
 
+    def test_create_case_secondary_defaults_and_view_initial(self) -> None:
+        from clients.services.cases import create_case_for_client
+        from clients.models import Case, Client, Company
+        from clients.views.cases import CaseCreateView
+        from django.test import RequestFactory
+        
+        company = Company.objects.create(name="Test Company")
+        client = Client.objects.create(
+            first_name="Sergey",
+            last_name="Petrov",
+            citizenship="UA",
+            phone="+48777777777",
+            status="pending",
+            application_purpose="work",
+            basis_of_stay="visa",
+            company=company,
+        )
+
+        # Delete auto-created primary case completely
+        Case.all_objects.filter(client=client).hard_delete()
+
+        # First case should inherit attributes
+        case_a = create_case_for_client(client=client, actor=self.staff)
+        self.assertEqual(case_a.status, "pending")
+        self.assertEqual(case_a.application_purpose, "work")
+        self.assertEqual(case_a.basis_of_stay, "visa")
+        self.assertEqual(case_a.company, company)
+
+        # Second case should NOT inherit attributes by default, receiving empty/safe defaults
+        case_b = create_case_for_client(client=client, actor=self.staff)
+        self.assertEqual(case_b.status, "new")
+        self.assertEqual(case_b.application_purpose, "")
+        self.assertEqual(case_b.basis_of_stay, "")
+        self.assertIsNone(case_b.company)
+
+        # Check that CaseCreateView returns clean initial values for second case
+        factory = RequestFactory()
+        request = factory.get("/")
+        request.user = self.staff
+
+        view = CaseCreateView()
+        view.request = request
+        view.kwargs = {"pk": client.pk}
+        view.client_obj = client
+
+        initial = view.get_initial()
+        self.assertEqual(initial["application_purpose"], "")
+        self.assertEqual(initial["basis_of_stay"], "")
+        self.assertIsNone(initial["company"])
+        self.assertEqual(initial["workflow_stage"], "new_client")
+
 
 class CaseFamilyRoleBackfillMigrationTests(TransactionTestCase):
     migrate_from = [("clients", "0110_case_family_role")]

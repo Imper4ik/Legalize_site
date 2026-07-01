@@ -19,6 +19,13 @@
   }
 </style>
 
+{% if has_multiple_active_cases %}
+<div class="alert alert-warning mb-0">
+  <i class="bi bi-exclamation-triangle-fill me-2"></i>
+  {% translate "У этого клиента несколько активных дел. Пожалуйста, откройте конкретное дело выше, чтобы увидеть чеклист документов." %}
+</div>
+{% endif %}
+
 {% for item in document_status_list %}
 <div class="accordion-item">
   <h2 class="accordion-header" id="heading{{ item.code }}">

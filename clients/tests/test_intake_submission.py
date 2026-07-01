@@ -263,3 +263,69 @@ def test_public_intake_conflict_goes_to_review_without_merging():
     assert intake.status == ClientIntakeSubmission.STATUS_NEEDS_REVIEW
     assert intake.created_client_id is None
     assert Client.objects.filter(email="public-applicant@example.com").count() == 1
+
+
+@pytest.mark.django_db
+def test_public_intake_hijack_prevention():
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    
+    # Create staff user
+    staff_user = User.objects.create_user(
+        email="staff-member@example.com",
+        password="old-secure-password",
+        is_staff=True,
+    )
+    # Create regular user
+    regular_user = User.objects.create_user(
+        email="client-user@example.com",
+        password="client-secure-password",
+    )
+
+    raw_token, token_hash = generate_onboarding_token()
+    intake = ClientIntakeSubmission.objects.create(
+        token_hash=token_hash,
+        status=ClientIntakeSubmission.STATUS_DRAFT,
+        expires_at=timezone.now() + timezone.timedelta(hours=1),
+    )
+
+    # 1. Attempt to hijack staff user
+    payload = _valid_public_post()
+    payload["email"] = "staff-member@example.com"
+    payload["password"] = "new-insecure-password"
+    payload["password_confirm"] = "new-insecure-password"
+
+    from django.utils import translation
+    with translation.override("ru"):
+        response = DjangoClient().post(
+            reverse("clients:public_intake", kwargs={"token": raw_token}),
+            payload,
+        )
+
+    assert response.status_code == 200
+    form = response.context["form"]
+    assert "email" in form.errors
+    assert "Этот email зарегистрирован для служебного аккаунта. Пожалуйста, используйте другой email." in form.errors["email"]
+    
+    # Verify password was NOT changed
+    staff_user.refresh_from_db()
+    assert staff_user.check_password("old-secure-password")
+    assert not staff_user.check_password("new-insecure-password")
+
+    # 2. Attempt to hijack regular user
+    payload["email"] = "client-user@example.com"
+    with translation.override("ru"):
+        response = DjangoClient().post(
+            reverse("clients:public_intake", kwargs={"token": raw_token}),
+            payload,
+        )
+
+    assert response.status_code == 200
+    form = response.context["form"]
+    assert "email" in form.errors
+    assert "Пользователь с таким email уже зарегистрирован. Пожалуйста, войдите в систему или восстановите пароль." in form.errors["email"]
+    
+    # Verify password was NOT changed
+    regular_user.refresh_from_db()
+    assert regular_user.check_password("client-secure-password")
+    assert not regular_user.check_password("new-insecure-password")

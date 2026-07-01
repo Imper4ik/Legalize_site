@@ -62,22 +62,35 @@ def create_case_for_client(
 ) -> Case:
     with transaction.atomic():
         has_existing_case = Case.all_objects.filter(client=client).exists()
-        legacy_family_role = (
-            getattr(client, "family_role", "") or ""
-            if not has_existing_case and getattr(client, "application_purpose", "") == "family"
-            else ""
-        )
-        values = {
-            "client": client,
-            "status": client.status,
-            "workflow_stage": "new_client",
-            "application_purpose": client.application_purpose,
-            "family_role": legacy_family_role,
-            "basis_of_stay": client.basis_of_stay or "",
-            "company": client.company,
-            "is_test_data": client.is_test_data,
-            "is_demo_data": client.is_demo_data,
-        }
+        if not has_existing_case:
+            legacy_family_role = (
+                getattr(client, "family_role", "") or ""
+                if getattr(client, "application_purpose", "") == "family"
+                else ""
+            )
+            values = {
+                "client": client,
+                "status": client.status,
+                "workflow_stage": "new_client",
+                "application_purpose": client.application_purpose,
+                "family_role": legacy_family_role,
+                "basis_of_stay": client.basis_of_stay or "",
+                "company": client.company,
+                "is_test_data": client.is_test_data,
+                "is_demo_data": client.is_demo_data,
+            }
+        else:
+            values = {
+                "client": client,
+                "status": "new",
+                "workflow_stage": "new_client",
+                "application_purpose": "",
+                "family_role": "",
+                "basis_of_stay": "",
+                "company": None,
+                "is_test_data": client.is_test_data,
+                "is_demo_data": client.is_demo_data,
+            }
         values.update(overrides)
         case = Case(**values)
         case.full_clean()

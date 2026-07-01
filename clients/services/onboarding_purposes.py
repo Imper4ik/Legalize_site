@@ -119,6 +119,26 @@ def apply_onboarding_purpose_to_client(client: Client, selected_purpose: str) ->
     return changed_fields
 
 
+def apply_onboarding_purpose_to_case(case: Any, selected_purpose: str) -> list[str]:
+    """Apply a document-requirement purpose to the Case card."""
+    purpose = normalize_onboarding_purpose(selected_purpose)
+    changed_fields: list[str] = []
+
+    if purpose in FAMILY_ONBOARDING_PURPOSES:
+        updates = {"application_purpose": "family", "family_role": purpose}
+    else:
+        updates = {"application_purpose": purpose, "family_role": ""}
+
+    for field_name, value in updates.items():
+        if getattr(case, field_name) != value:
+            setattr(case, field_name, value)
+            changed_fields.append(field_name)
+
+    if changed_fields:
+        case.save(update_fields=changed_fields)
+    return changed_fields
+
+
 def _notification_cache_languages() -> set[str]:
     languages = {str(getattr(settings, "LANGUAGE_CODE", "ru") or "ru")}
     languages.update({"ru", "pl", "en"})

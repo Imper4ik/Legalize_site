@@ -474,14 +474,23 @@ def client_overview_partial(request: HttpRequest, pk: int) -> HttpResponseBase:
 @staff_required_view
 def client_checklist_partial(request: HttpRequest, pk: int) -> HttpResponseBase:
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
-    document_status_list = client.get_document_checklist(check_file_existence=True)
     active_case = resolve_single_active_case(client)
+    
+    active_cases_count = client.cases.filter(archived_at__isnull=True).count()
+    if active_cases_count > 1:
+        document_status_list: list[Any] = []
+        has_multiple_active_cases = True
+    else:
+        document_status_list = client.get_document_checklist(check_file_existence=True, case=active_case)
+        has_multiple_active_cases = False
+
     response = render(
         request,
         "clients/partials/document_checklist.html",
         {
             "client": client,
             "document_status_list": document_status_list,
+            "has_multiple_active_cases": has_multiple_active_cases,
             "missing_zus_months_for_upload": (missing_zus_month_upload_options(active_case) if active_case else []),
         },
     )

@@ -66,14 +66,21 @@ class CaseCreateView(RoleRequiredMixin, CreateView):
 
     def get_initial(self) -> dict[str, Any]:
         initial = super().get_initial()
-        initial.update({
-            "application_purpose": self.client_obj.application_purpose,
-            "basis_of_stay": self.client_obj.basis_of_stay or "",
-            # New cases start at the initial stage; process state lives on the
-            # Case now, not the Client (spec §4).
-            "workflow_stage": "new_client",
-            "company": self.client_obj.company_id,
-        })
+        has_existing_case = self.client_obj.cases.exists()
+        if not has_existing_case:
+            initial.update({
+                "application_purpose": self.client_obj.application_purpose,
+                "basis_of_stay": self.client_obj.basis_of_stay or "",
+                "workflow_stage": "new_client",
+                "company": self.client_obj.company_id,
+            })
+        else:
+            initial.update({
+                "application_purpose": "",
+                "basis_of_stay": "",
+                "workflow_stage": "new_client",
+                "company": None,
+            })
         return initial
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:

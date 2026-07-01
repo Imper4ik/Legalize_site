@@ -18,6 +18,7 @@ from clients.services.mos_eligibility import evaluate_mos_eligibility
 from clients.services.onboarding_purposes import (
     ALLOWED_ONBOARDING_PURPOSES,
     apply_onboarding_purpose_to_client,
+    apply_onboarding_purpose_to_case,
     clear_onboarding_notifications_cache,
     purpose_label,
 )
@@ -164,16 +165,24 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
             if selected_purpose not in ALLOWED_ONBOARDING_PURPOSES:
                 messages.error(request, _("Cannot apply this purpose to the client card."))
                 return redirect("clients:admin_mos_review", client_id=client.id)
-            changed_fields = apply_onboarding_purpose_to_client(client, selected_purpose)
+            if case is not None:
+                changed_fields = apply_onboarding_purpose_to_case(case, selected_purpose)
+                event_type = "mos_case_purpose_applied"
+                summary = "Client-selected MOS purpose applied to Case"
+            else:
+                changed_fields = apply_onboarding_purpose_to_client(client, selected_purpose)
+                event_type = "mos_purpose_applied"
+                summary = "Client-selected MOS purpose applied to client card"
             clear_onboarding_notifications_cache(client)
             log_client_activity(
                 client=client,
+                case=case,
                 actor=request.user,
-                event_type="mos_purpose_applied",
-                summary="Client-selected MOS purpose applied to client card",
+                event_type=event_type,
+                summary=summary,
                 metadata={"selected_purpose": selected_purpose, "changed_fields": changed_fields},
             )
-            messages.success(request, _("Client-selected purpose applied to the client card."))
+            messages.success(request, _("Client-selected purpose applied."))
             return redirect("clients:admin_mos_review", client_id=client.id)
         elif action == "request_correction":
             mos_data.status = "needs_correction"

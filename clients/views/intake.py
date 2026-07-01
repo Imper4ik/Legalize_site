@@ -93,51 +93,49 @@ def public_intake(request: HttpRequest, token: str) -> HttpResponse:
     if request.method == "POST":
         form = ClientIntakeSubmissionForm(request.POST)
         if form.is_valid():
-            intake.personal_data = form.personal_payload()
-            intake.case_data = form.case_payload()
-            intake.status = ClientIntakeSubmission.STATUS_SUBMITTED
-            intake.submitted_at = timezone.now()
-            intake.save(update_fields=["personal_data", "case_data", "status", "submitted_at", "updated_at"])
-            try:
-                result = convert_intake_submission(intake)
-            except ValidationError:
-                intake.refresh_from_db()
-                if intake.status == ClientIntakeSubmission.STATUS_NEEDS_REVIEW:
-                    return render(request, "clients/intake/submitted.html", {"state": "review", "intake": intake})
-                form.add_error(None, _("We could not submit the intake form. Please check the data and try again."))
+            User = get_user_model()
+            email = form.cleaned_data["email"].strip().lower()
+            existing_user = User.objects.filter(email__iexact=email).first()
+            if existing_user is not None:
+                if existing_user.is_staff or existing_user.is_superuser:
+                    form.add_error("email", _("Этот email зарегистрирован для служебного аккаунта. Пожалуйста, используйте другой email."))
+                else:
+                    form.add_error("email", _("Пользователь с таким email уже зарегистрирован. Пожалуйста, войдите в систему или восстановите пароль."))
             else:
-                User = get_user_model()
-                email = form.cleaned_data["email"].strip().lower()
-                user = User.objects.filter(email__iexact=email).first()
-                if user is None:
+                intake.personal_data = form.personal_payload()
+                intake.case_data = form.case_payload()
+                intake.status = ClientIntakeSubmission.STATUS_SUBMITTED
+                intake.submitted_at = timezone.now()
+                intake.save(update_fields=["personal_data", "case_data", "status", "submitted_at", "updated_at"])
+                try:
+                    result = convert_intake_submission(intake)
+                except ValidationError:
+                    intake.refresh_from_db()
+                    if intake.status == ClientIntakeSubmission.STATUS_NEEDS_REVIEW:
+                        return render(request, "clients/intake/submitted.html", {"state": "review", "intake": intake})
+                    form.add_error(None, _("We could not submit the intake form. Please check the data and try again."))
+                else:
                     user = User.objects.create_user(
                         email=email,
                         password=form.password_value(),
                         first_name=form.cleaned_data["first_name"].strip(),
                         last_name=form.cleaned_data["last_name"].strip(),
                     )
-                else:
-                    user.first_name = form.cleaned_data["first_name"].strip()
-                    user.last_name = form.cleaned_data["last_name"].strip()
-                    user.set_password(form.password_value())
-                    user.is_active = True
-                    user.save(update_fields=["first_name", "last_name", "password", "is_active"])
+                    result.client.user = user
+                    result.client.save(update_fields=["user"])
+                    login(request, user, backend="django.contrib.auth.backends.ModelBackend")
 
-                result.client.user = user
-                result.client.save(update_fields=["user"])
-                login(request, user, backend="django.contrib.auth.backends.ModelBackend")
-
-                onboarding_token, onboarding_token_hash = generate_onboarding_token()
-                ClientOnboardingSession.objects.create(
-                    client=result.client,
-                    case=result.case,
-                    scope="case_link",
-                    token_hash=onboarding_token_hash,
-                    status="active",
-                    expires_at=timezone.now() + PUBLIC_INTAKE_LINK_TTL,
-                )
-                messages.success(request, _("Анкета отправлена. Аккаунт создан, вы вошли в личный кабинет клиента."))
-                return redirect("clients:onboarding_start", token=onboarding_token)
+                    onboarding_token, onboarding_token_hash = generate_onboarding_token()
+                    ClientOnboardingSession.objects.create(
+                        client=result.client,
+                        case=result.case,
+                        scope="case_link",
+                        token_hash=onboarding_token_hash,
+                        status="active",
+                        expires_at=timezone.now() + PUBLIC_INTAKE_LINK_TTL,
+                    )
+                    messages.success(request, _("Анкета отправлена. Аккаунт создан, вы вошли в личный кабинет клиента."))
+                    return redirect("clients:onboarding_start", token=onboarding_token)
     else:
         form = ClientIntakeSubmissionForm(initial=_initial_from_intake(intake))
 

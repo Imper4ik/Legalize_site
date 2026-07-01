@@ -238,7 +238,23 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         client = self.object
-        document_status_list = client.get_document_checklist(check_file_existence=True) if hasattr(client, "get_document_checklist") else []
+        from clients.services.cases import resolve_single_active_case
+        from django.core.exceptions import ValidationError
+        active_case = None
+        try:
+            active_case = resolve_single_active_case(client)
+        except ValidationError:
+            pass
+
+        active_cases_count = client.cases.filter(archived_at__isnull=True).count()
+        if active_cases_count > 1:
+            document_status_list = []
+            has_multiple_active_cases = True
+        else:
+            document_status_list = client.get_document_checklist(check_file_existence=True, case=active_case) if hasattr(client, "get_document_checklist") else []
+            has_multiple_active_cases = False
+
+        context["has_multiple_active_cases"] = has_multiple_active_cases
 
         context["case_form"] = CaseForm(initial={"workflow_stage": client.get_effective_workflow_stage()})
         context["cases"] = list(client.cases.all())
