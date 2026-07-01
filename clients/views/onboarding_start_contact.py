@@ -15,6 +15,7 @@ from django.utils.translation import gettext as _
 from clients.constants import DocumentType
 from clients.forms import DocumentUploadForm
 from clients.models import Client, ClientOnboardingSession, Document, DocumentRequirement, MOSApplicationData
+from clients.services.case_context import checklist_for_case, purpose_context_for_case
 from clients.services.document_workflow import upload_client_document
 from clients.services.onboarding_progress import get_case_onboarding_step
 from clients.views.onboarding_views import (
@@ -376,7 +377,7 @@ def _build_start_context(
     mos_data = MOSApplicationData.objects.filter(client=client, case=case).first()
     if mos_data is None:
         mos_data = MOSApplicationData(client=client, case=case)
-    purpose_ctx = _purpose_context(client, mos_data)
+    purpose_ctx = purpose_context_for_case(case, mos_data) if case is not None else _purpose_context(client, mos_data)
     effective_purpose = str(purpose_ctx["effective_purpose"])
     language = translation.get_language() or client.language
 
@@ -391,7 +392,11 @@ def _build_start_context(
         None,
     )
 
-    required_docs_catalog = DocumentRequirement.catalog_for(purpose=effective_purpose, language=language)
+    required_docs_catalog = (
+        checklist_for_case(case, language)
+        if case is not None
+        else DocumentRequirement.catalog_for(purpose=effective_purpose, language=language)
+    )
 
     import os
 

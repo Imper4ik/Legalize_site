@@ -210,21 +210,22 @@ class Command(BaseCommand):
             self.stdout.write("No documents expire within the email window.")
             return
 
-        docs_by_client: dict[int, list[Document]] = defaultdict(list)
+        docs_by_case: dict[tuple[int, int | None], list[Document]] = defaultdict(list)
         for document in expiring_docs.iterator():
-            docs_by_client[document.client_id].append(document)
+            docs_by_case[(document.client_id, document.case_id)].append(document)
 
         sent_count = 0
-        for documents in docs_by_client.values():
+        for (_client_id, _case_id), documents in docs_by_case.items():
             client = documents[0].client
+            case = documents[0].case
             if dry_run:
                 sent_count += 1
                 self.stdout.write(
-                    f"DRY RUN: would send expiring documents email client_id={client.pk} documents={len(documents)}"
+                    f"DRY RUN: would send expiring documents email client_id={client.pk} case_id={getattr(case, 'pk', None)} documents={len(documents)}"
                 )
                 continue
 
-            sent_count += send_expiring_documents_email(client, documents)
+            sent_count += send_expiring_documents_email(client, documents, case=case)
 
         if not dry_run:
             self.stdout.write(f"Sent {sent_count} expiring-document emails.")

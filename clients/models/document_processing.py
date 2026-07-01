@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -98,14 +99,33 @@ class DocumentProcessingJob(models.Model):
         verbose_name = _("Document processing job")
         verbose_name_plural = _("Document processing jobs")
 
+    def _document_case_id(self) -> int | None:
+        if not self.document_id:
+            return None
+        cached_document = self._state.fields_cache.get("document")
+        if cached_document is not None:
+            return cached_document.case_id
+        from clients.models import Document
+
+        return Document.all_objects.filter(pk=self.document_id).values_list("case_id", flat=True).first()
+
+    def clean(self) -> None:
+        super().clean()
+        document_case_id = self._document_case_id()
+        if self.case_id is not None and document_case_id is not None and self.case_id != document_case_id:
+            raise ValidationError({"case": _("OCR job case must match the document case.")})
+
     def save(self, *args: Any, **kwargs: Any) -> None:
         update_fields = kwargs.get("update_fields")
-        if self.case_id is None and self.document_id and self.document.case_id:
-            self.case_id = self.document.case_id
+        document_case_id = self._document_case_id()
+        if self.case_id is None and document_case_id:
+            self.case_id = document_case_id
             if update_fields is not None:
                 update_fields = set(update_fields)
                 update_fields.add("case")
                 kwargs["update_fields"] = list(update_fields)
+        elif self.case_id is not None and document_case_id is not None and self.case_id != document_case_id:
+            raise ValidationError({"case": _("OCR job case must match the document case.")})
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:

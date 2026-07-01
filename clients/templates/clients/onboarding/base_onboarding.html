@@ -791,17 +791,15 @@
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0 py-1" aria-labelledby="languageDropdown" style="background: var(--glass-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); min-width: 80px;">
                         {% get_available_languages as LANGUAGES %}
                         {% for lang in LANGUAGES %}
-                            {% if lang.0 != LANGUAGE_CODE %}
-                                <li>
-                                    <form action="{% url 'set_language' %}" method="post" class="m-0 p-0">
-                                        {% csrf_token %}
-                                        <input name="next" type="hidden" value="{{ request.get_full_path }}">
-                                        <button type="submit" name="language" value="{{ lang.0 }}" class="dropdown-item py-2 px-3 fw-semibold text-center small">
-                                            {{ lang.0|upper }}
-                                        </button>
-                                    </form>
-                                </li>
-                            {% endif %}
+                            <li>
+                                <form action="{% url 'set_language' %}" method="post" class="m-0 p-0">
+                                    {% csrf_token %}
+                                    <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                                    <button type="submit" name="language" value="{{ lang.0 }}" class="dropdown-item py-2 px-3 fw-semibold text-center small{% if lang.0 == LANGUAGE_CODE %} active{% endif %}"{% if lang.0 == LANGUAGE_CODE %} aria-current="true"{% endif %}>
+                                        {{ lang.0|upper }}
+                                    </button>
+                                </form>
+                            </li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -964,9 +962,8 @@
                         {% endif %}
 
                         <!-- 3. Theme Toggle -->
-                        <li class="py-2 mb-2 d-flex align-items-center justify-content-between" style="border-bottom: 1px solid var(--glass-border);">
-                            <span class="small fw-bold text-muted">{% trans "Тёмная тема" %}</span>
-                            <button class="navbar-icon-btn theme-toggle" type="button" aria-pressed="false" aria-label="{% translate 'Переключить тему' %}" data-theme-toggle>
+                        <li class="py-2 mb-2 d-flex align-items-center justify-content-end" style="border-bottom: 1px solid var(--glass-border);">
+                            <button class="navbar-icon-btn theme-toggle" type="button" aria-pressed="false" aria-label="{% translate 'Переключить тему' %}" title="{% translate 'Переключить тему' %}" data-theme-toggle>
                                 <i class="bi bi-sun-fill theme-icon-sun"></i>
                                 <i class="bi bi-moon-stars-fill theme-icon-moon"></i>
                             </button>
