@@ -45,6 +45,7 @@ Before doing broad work, read:
 - Project docs: `docs/`
 - Templates: `templates/` and app-level `templates/`
 - Static assets: `static/`
+- **Case Creation Policy**: Always create new cases via `create_case_for_client` service in [cases.py](file:///E:/Anigravity/Legalize_site/clients/services/cases.py) to guarantee model validation (`full_clean()`) is run and family purpose constraints are enforced. Do not call `Case.objects.create` directly.
 
 ## Deployment Notes
 
