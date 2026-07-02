@@ -29,7 +29,9 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
         first_name="Jan",
         last_name="Kowalski",
         purpose="work",
-        workflow_stage="mos_package_ready",
+        # Case stages use Case.WORKFLOW_STAGE_CHOICES; "mos_package_ready" is a
+        # MOS questionnaire status and would leak a raw enum into the UI.
+        workflow_stage="document_collection",
         language="pl",
         assigned_staff=staff_user,
     )
@@ -107,7 +109,7 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
         first_name="Piotr",
         last_name="Wisniewski",
         purpose="work",
-        workflow_stage="submitted_in_mos",
+        workflow_stage="application_submitted",
         language="pl",
         assigned_staff=staff_user,
     )
@@ -142,7 +144,7 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
         first_name="Elena",
         last_name="Petrova",
         purpose="work",
-        workflow_stage="submitted_in_mos",
+        workflow_stage="application_submitted",
         language="ru",
         assigned_staff=staff_user,
     )

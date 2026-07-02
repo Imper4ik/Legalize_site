@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from io import BytesIO
+
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client as DjangoClient
 from django.urls import reverse
@@ -13,6 +15,21 @@ from clients.testing.factories import (
     create_test_document,
     create_test_user,
 )
+
+
+def _valid_pdf_bytes(text: str = "test document") -> bytes:
+    """A one-page PDF that passes the pypdf-based upload validation.
+
+    The old minimal ``%PDF-1.4 ... %%EOF`` stub has no pages, so the upload
+    validator now rejects it as corrupted.
+    """
+    from reportlab.pdfgen import canvas  # type: ignore[import-untyped]
+
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer)
+    pdf.drawString(72, 720, text)
+    pdf.save()
+    return buffer.getvalue()
 
 
 def run_document_access_scenarios(recorder: ScenarioRecorder) -> None:
@@ -132,7 +149,7 @@ def run_document_access_scenarios(recorder: ScenarioRecorder) -> None:
     )
 
     # 4. Cyrillic/Polish file encodings
-    cyrillic_file = SimpleUploadedFile("załącznik_№1_паспорт.pdf", b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n", content_type="application/pdf")
+    cyrillic_file = SimpleUploadedFile("załącznik_№1_паспорт.pdf", _valid_pdf_bytes("cyrillic filename"), content_type="application/pdf")
     cyrillic_upload_resp = browser.post(
         reverse("clients:add_document", kwargs={"client_id": client_1.pk, "doc_type": DocumentType.PASSPORT.value}),
         {"file": cyrillic_file},
@@ -176,7 +193,14 @@ def run_document_access_scenarios(recorder: ScenarioRecorder) -> None:
         related=RelatedObjects(client=client_1, document=doc_missing),
     )
 
-    # 6. Deleted files
+    # 6. Deleted files. Deletions are off for the Staff role by default: the
+    # admin grants them per employee (can_delete_documents), so the scenario
+    # grants the flag explicitly before deleting.
+    from clients.models import EmployeePermission
+
+    EmployeePermission.objects.update_or_create(
+        user=staff_1, defaults={"can_delete_documents": True}
+    )
     doc_to_delete = create_test_document(client_1, doc_type=DocumentType.PASSPORT.value, filename="to_delete.pdf")
     delete_resp = browser.post(reverse("clients:document_delete", kwargs={"pk": doc_to_delete.pk}))
     doc_to_delete.refresh_from_db()
@@ -201,14 +225,20 @@ def run_document_access_scenarios(recorder: ScenarioRecorder) -> None:
         related=RelatedObjects(client=client_1, document=doc_versioned),
     )
 
-    new_file = SimpleUploadedFile("version2.pdf", b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF\n", content_type="application/pdf")
+    old_name = doc_versioned.file.name
+    new_file = SimpleUploadedFile("version2.pdf", _valid_pdf_bytes("version 2"), content_type="application/pdf")
     replace_document_file(doc_versioned, uploaded_file=new_file)
     doc_versioned.refresh_from_db()
+    # Uploaded filenames are anonymised to a UUID (privacy), so the check
+    # asserts the stored file changed rather than that the original name is
+    # preserved.
     recorder.check(
         "documents.file_replaced",
-        "version2" in (doc_versioned.file.name or "") and doc_versioned.ocr_status == "skipped",
-        expected="file name updated, status reset",
-        actual=f"name={doc_versioned.file.name}, ocr={doc_versioned.ocr_status}",
+        bool(doc_versioned.file.name)
+        and doc_versioned.file.name != old_name
+        and doc_versioned.ocr_status == "skipped",
+        expected="stored file replaced (new name), status reset",
+        actual=f"name={doc_versioned.file.name}, old={old_name}, ocr={doc_versioned.ocr_status}",
         related=RelatedObjects(client=client_1, document=doc_versioned),
     )
 

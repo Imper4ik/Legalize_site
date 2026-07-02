@@ -81,10 +81,13 @@ class EmailPreviewMultiCaseTests(TestCase):
         self.client.force_login(self.staff)
 
     def test_multi_case_preview_refuses_ambiguous_aggregation(self) -> None:
-        response = self.client.get(
-            reverse("clients:email_preview_api", kwargs={"pk": self.client_record.pk}),
-            {"template_type": "missing_documents"},
-        )
+        from django.utils import translation
+
+        with translation.override("ru"):
+            response = self.client.get(
+                reverse("clients:email_preview_api", kwargs={"pk": self.client_record.pk}),
+                {"template_type": "missing_documents"},
+            )
         self.assertEqual(response.status_code, 200)
         self.assertIn("несколько активных дел", response.json()["body"])
 
@@ -101,9 +104,12 @@ class ManualReminderRunLockTests(TestCase):
         cache.delete(UPDATE_REMINDERS_LOCK_KEY)
 
     def test_locked_run_is_skipped_with_warning(self) -> None:
+        from django.utils import translation
+
         cache.add(UPDATE_REMINDERS_LOCK_KEY, timezone.now().isoformat(), timeout=600)
 
-        response = self.client.post(reverse("clients:run_update_reminders"), follow=True)
+        with translation.override("ru"):
+            response = self.client.post(reverse("clients:run_update_reminders"), follow=True)
 
         messages = [str(m) for m in response.context["messages"]]
         self.assertTrue(any("уже выполняется" in m for m in messages), messages)
@@ -163,3 +169,58 @@ class OnboardingAskQuestionRedirectTests(TestCase):
         )
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response["Location"], local_next)
+
+
+class StaffEmailVerificationTests(TestCase):
+    """Admin-created staff must get a verified EmailAddress (allauth is
+    mandatory-verification, so otherwise the new employee is locked on the
+    confirm-email page until a verification email arrives)."""
+
+    def test_create_form_marks_email_verified(self) -> None:
+        from allauth.account.models import EmailAddress
+
+        from clients.forms import StaffUserCreateForm
+
+        form = StaffUserCreateForm(
+            {
+                "create-email": "new-staff-verified@example.com",
+                "create-first_name": "New",
+                "create-last_name": "Staff",
+                "create-is_staff": "on",
+                "create-is_active": "on",
+                "create-password1": "S3cure-pass-123",
+                "create-password2": "S3cure-pass-123",
+            },
+            prefix="create",
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        user = form.save()
+
+        email_address = EmailAddress.objects.get(user=user)
+        self.assertTrue(email_address.verified)
+        self.assertTrue(email_address.primary)
+        self.assertEqual(email_address.email, "new-staff-verified@example.com")
+
+    def test_update_form_keeps_changed_email_verified(self) -> None:
+        from allauth.account.models import EmailAddress
+
+        from clients.forms import StaffUserUpdateForm
+
+        staff = _make_staff("update-email-staff@example.com")
+        form = StaffUserUpdateForm(
+            {
+                "u-email": "renamed-staff@example.com",
+                "u-first_name": "Re",
+                "u-last_name": "Named",
+                "u-is_staff": "on",
+                "u-is_active": "on",
+            },
+            instance=staff,
+            prefix="u",
+        )
+        self.assertTrue(form.is_valid(), form.errors)
+        form.save()
+
+        email_address = EmailAddress.objects.get(user=staff, email="renamed-staff@example.com")
+        self.assertTrue(email_address.verified)
+        self.assertTrue(email_address.primary)

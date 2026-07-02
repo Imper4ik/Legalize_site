@@ -93,10 +93,21 @@ def cleanup_test_data(
             Client.all_objects.filter(is_test_data=True).values_list("pk", flat=True)
         )
 
-        document_count, _ = Document.all_objects.filter(is_test_data=True).hard_delete()
+        # Match by flag OR by owning test client: documents uploaded through the
+        # views historically missed the is_test_data flag, and such leftovers
+        # PROTECT-block the Case deletion below.
+        from django.db.models import Q
+
+        document_filter = Q(is_test_data=True)
+        payment_filter = Q(is_test_data=True)
+        if test_client_ids:
+            document_filter |= Q(client_id__in=test_client_ids)
+            payment_filter |= Q(client_id__in=test_client_ids)
+
+        document_count, _ = Document.all_objects.filter(document_filter).hard_delete()
         report.add("documents", document_count)
 
-        payment_count, _ = Payment.all_objects.filter(is_test_data=True).hard_delete()
+        payment_count, _ = Payment.all_objects.filter(payment_filter).hard_delete()
         report.add("payments", payment_count)
 
         email_count, _ = EmailLog.objects.filter(is_test_data=True).delete()

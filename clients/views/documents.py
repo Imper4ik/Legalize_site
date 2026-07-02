@@ -106,7 +106,7 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
             )
             if helper.expects_json:
                 return helper.error(
-                    message=str(_("\u041f\u0440\u043e\u0432\u0435\u0440\u044c\u0442\u0435 \u043f\u0440\u0430\u0432\u0438\u043b\u044c\u043d\u043e\u0441\u0442\u044c \u0437\u0430\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u044f \u0444\u043e\u0440\u043c\u044b.")),
+                    message=str(_("Проверьте правильность заполнения формы.")),
                     errors=errors,
             )
             return redirect("clients:client_detail", pk=client.id)

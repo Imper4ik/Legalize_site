@@ -212,7 +212,7 @@ def _validate_new_card_values(values: dict[str, str]) -> dict[str, str]:
             errors["submitted_at"] = str(_("Podaj poprawną datę / Укажите корректную дату."))
         elif parsed_submitted_at and parsed_submitted_at > timezone.localdate():
             errors["submitted_at"] = str(
-                _("Data złożenia nie może być w przyszłości. / Дата подачи не может быть в будущем.")
+                _("Дата подачи не может быть в будущем.")
             )
         if status == NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER:
             if not values.get("case_number", "").strip():
@@ -256,7 +256,7 @@ def _new_card_missing_warnings(mos_data: MOSApplicationData, confirmation_docume
             warnings.append(
                 str(
                     _(
-                        "Prosimy o uzupełnienie numeru sprawy, jeśli jest już dostępny. / Пожалуйста, добавьте номер дела, если он уже доступен."
+                        "Пожалуйста, добавьте номер дела, если он уже доступен."
                     )
                 )
             )
@@ -264,7 +264,7 @@ def _new_card_missing_warnings(mos_data: MOSApplicationData, confirmation_docume
             warnings.append(
                 str(
                     _(
-                        "Prosimy o załadowanie potwierdzenia złożenia wniosku o kartę pobytu. / Пожалуйста, загрузите подтверждение подачи заявления на карту пребывания."
+                        "Пожалуйста, загрузите подтверждение подачи заявления на карту пребывания."
                     )
                 )
             )
@@ -272,7 +272,7 @@ def _new_card_missing_warnings(mos_data: MOSApplicationData, confirmation_docume
             warnings.append(
                 str(
                     _(
-                        "Jeśli znasz datę złożenia wniosku, dodaj ją w tym bloku. / Если знаете дату подачи заявления, добавьте её в этом блоке."
+                        "Если знаете дату подачи заявления, добавьте её в этом блоке."
                     )
                 )
             )
@@ -281,7 +281,7 @@ def _new_card_missing_warnings(mos_data: MOSApplicationData, confirmation_docume
         return [
             str(
                 _(
-                    "Prosimy o sprawdzenie, czy posiada Pan/Pani potwierdzenie złożenia wniosku, pieczątkę w paszporcie lub wiadomość z urzędu. / Пожалуйста, проверьте, есть ли у вас подтверждение подачи заявления, печать в паспорте или сообщение из управления (urząd)."
+                    "Пожалуйста, проверьте, есть ли у вас подтверждение подачи заявления, печать в паспорте или сообщение из управления (urząd)."
                 )
             )
         ]
@@ -391,7 +391,7 @@ def _handle_new_card_application_post(
     mos_data.refresh_from_db()
     confirmation_document = _latest_new_card_confirmation_document(session.client, case)
     messages.success(
-        request, _("Informacja o nowym wniosku została zapisana. / Информация о новом заявлении сохранена.")
+        request, _("Информация о новом заявлении сохранена.")
     )
     for warning in _new_card_missing_warnings(mos_data, confirmation_document):
         messages.warning(request, warning)

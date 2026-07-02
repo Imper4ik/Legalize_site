@@ -269,7 +269,7 @@ def test_public_intake_conflict_goes_to_review_without_merging():
 def test_public_intake_hijack_prevention():
     from django.contrib.auth import get_user_model
     User = get_user_model()
-    
+
     # Create staff user
     staff_user = User.objects.create_user(
         email="staff-member@example.com",
@@ -306,7 +306,7 @@ def test_public_intake_hijack_prevention():
     form = response.context["form"]
     assert "email" in form.errors
     assert "Этот email зарегистрирован для служебного аккаунта. Пожалуйста, используйте другой email." in form.errors["email"]
-    
+
     # Verify password was NOT changed
     staff_user.refresh_from_db()
     assert staff_user.check_password("old-secure-password")
@@ -324,7 +324,7 @@ def test_public_intake_hijack_prevention():
     form = response.context["form"]
     assert "email" in form.errors
     assert "Пользователь с таким email уже зарегистрирован. Пожалуйста, войдите в систему или восстановите пароль." in form.errors["email"]
-    
+
     # Verify password was NOT changed
     regular_user.refresh_from_db()
     assert regular_user.check_password("client-secure-password")

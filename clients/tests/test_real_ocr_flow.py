@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import os
+import shutil
 from datetime import date
 
+import pytest
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
@@ -20,6 +22,10 @@ from clients.services.wezwanie_parser import parse_wezwanie
 from clients.services.zus_parser import parse_zus_doc
 
 
+@pytest.mark.skipif(
+    shutil.which("tesseract") is None or shutil.which("pdftoppm") is None,
+    reason="Real OCR flow requires the Tesseract and Poppler binaries.",
+)
 @override_settings(ASYNC_OCR_PROCESSING=True)
 class RealOCRFlowTests(TestCase):
     def setUp(self):

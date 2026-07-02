@@ -304,11 +304,12 @@ class CaseArchitectureTests(TestCase):
             )
 
     def test_create_case_secondary_defaults_and_view_initial(self) -> None:
-        from clients.services.cases import create_case_for_client
-        from clients.models import Case, Client, Company
-        from clients.views.cases import CaseCreateView
         from django.test import RequestFactory
-        
+
+        from clients.models import Case, Client, Company
+        from clients.services.cases import create_case_for_client
+        from clients.views.cases import CaseCreateView
+
         company = Company.objects.create(name="Test Company")
         client = Client.objects.create(
             first_name="Sergey",

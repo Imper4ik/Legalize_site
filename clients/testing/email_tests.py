@@ -37,11 +37,17 @@ def run_email_scenarios(recorder: ScenarioRecorder) -> None:
     key = f"{client.pk}:case:{'missing_documents'}:required"
     first_send = send_missing_documents_email(client, weekly_key=key)
     log = EmailLog.objects.filter(client=client, template_type="missing_documents").order_by("-sent_at").first()
+    # Test-data clients never trigger a real SMTP send (autonomy guard):
+    # send() returns 0 and the pipeline records a SKIPPED EmailLog instead.
+    # The check therefore validates that the reminder email is *generated*
+    # for the affected client, not that it was dispatched.
     recorder.check(
         "email.missing_documents.sent_for_real_problem",
-        first_send == 1 and log is not None,
-        expected="one missing_documents email log for the affected test client",
-        actual=f"sent={first_send}, log_id={getattr(log, 'pk', None)}",
+        first_send == 0
+        and log is not None
+        and log.delivery_status == EmailLog.DELIVERY_STATUS_SKIPPED,
+        expected="skipped missing_documents email log for the affected test client",
+        actual=f"sent={first_send}, log_id={getattr(log, 'pk', None)}, status={getattr(log, 'delivery_status', None)}",
         related=RelatedObjects(client=client),
     )
     if log is not None:

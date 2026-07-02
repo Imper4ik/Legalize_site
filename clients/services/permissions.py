@@ -74,6 +74,26 @@ def user_can_run_ocr_review(user: AbstractBaseUser | AnonymousUser | None) -> bo
     )
 
 
+def user_can_delete_clients(user: AbstractBaseUser | AnonymousUser | None) -> bool:
+    """Mirror of the ClientDeleteView gate for template button visibility."""
+    from clients.services.roles import CLIENT_DELETE_ROLES
+
+    return (
+        user_has_any_role(user, *CLIENT_DELETE_ROLES)
+        or has_employee_permission(user, "can_delete_clients")
+    )
+
+
+def user_can_delete_documents(user: AbstractBaseUser | AnonymousUser | None) -> bool:
+    """Mirror of the document_delete gate for template button visibility."""
+    from clients.services.roles import DOCUMENT_DELETE_ROLES
+
+    return (
+        user_has_any_role(user, *DOCUMENT_DELETE_ROLES)
+        or has_employee_permission(user, "can_delete_documents")
+    )
+
+
 def feature_permission_required(permission_name: str) -> Callable[[Callable[..., HttpResponse]], Callable[..., HttpResponse]]:
     def decorator(view_func: Callable[..., HttpResponse]) -> Callable[..., HttpResponse]:
         @wraps(view_func)

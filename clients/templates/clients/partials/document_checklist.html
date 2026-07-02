@@ -391,6 +391,7 @@
             <a href="{% url 'clients:document_versions' doc.pk %}" class="btn btn-sm btn-outline-info" title="{% translate 'Versions' %}">
               <i class="fas fa-history"></i>
             </a>
+            {% if user_can_delete_documents %}
             <form action="{% url 'clients:document_delete' doc.pk %}" method="post"
               class="d-inline delete-document-form">
               {% csrf_token %}
@@ -399,6 +400,7 @@
                 <i class="bi bi-trash"></i>
               </button>
             </form>
+            {% endif %}
           </div>
         </li>
         {% endfor %}

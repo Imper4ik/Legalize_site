@@ -98,11 +98,20 @@ def run_smoke_scenario(recorder: ScenarioRecorder) -> None:
     )
     missing_email_sent = send_missing_documents_email(client, weekly_key=f"{client.pk}:smoke:missing")
     email_log = EmailLog.objects.filter(client=client, template_type="missing_documents").first()
+    # Test-data clients never trigger a real SMTP send (autonomy guard): the
+    # pipeline records a SKIPPED EmailLog and returns 0. The smoke check
+    # validates that the email is generated and logged for test data.
     recorder.check(
         "smoke.missing_documents_email_created_for_incomplete_checklist",
-        missing_email_sent == 1 and email_log is not None and email_log.is_test_data,
-        expected="one test EmailLog for missing documents",
-        actual=f"sent={missing_email_sent}, log_id={getattr(email_log, 'pk', None)}",
+        missing_email_sent == 0
+        and email_log is not None
+        and email_log.is_test_data
+        and email_log.delivery_status == EmailLog.DELIVERY_STATUS_SKIPPED,
+        expected="one skipped test EmailLog for missing documents",
+        actual=(
+            f"sent={missing_email_sent}, log_id={getattr(email_log, 'pk', None)}, "
+            f"status={getattr(email_log, 'delivery_status', None)}"
+        ),
         related=RelatedObjects(client=client, document=passport),
     )
 
@@ -111,13 +120,17 @@ def run_smoke_scenario(recorder: ScenarioRecorder) -> None:
         target_stage="fingerprints",
         submission_date=date(2026, 6, 1),
     )
-    client.refresh_from_db()
+    # Re-fetch: client.active_case is a cached_property, so the instance used
+    # above would keep the pre-transition Case object and misreport the stage.
+    from clients.models import Client as ClientModel
+
+    fresh_client = ClientModel.objects.get(pk=client.pk)
     activity_exists = ClientActivity.objects.filter(client=client, event_type="workflow_stage_changed").exists()
     recorder.check(
         "smoke.workflow_transition_updates_stage_and_audit",
-        client.get_effective_workflow_stage() == "fingerprints" and activity_exists,
+        fresh_client.get_effective_workflow_stage() == "fingerprints" and activity_exists,
         expected="workflow_stage=fingerprints and audit activity exists",
-        actual=f"stage={client.get_effective_workflow_stage()}, audit={activity_exists}",
+        actual=f"stage={fresh_client.get_effective_workflow_stage()}, audit={activity_exists}",
         related=RelatedObjects(client=client),
     )
 
@@ -133,8 +146,19 @@ def run_smoke_scenario(recorder: ScenarioRecorder) -> None:
 
 def run_real_ocr_fixture_scenarios(recorder: ScenarioRecorder) -> None:
     import os
+    import shutil
 
     from django.core.files.uploadedfile import SimpleUploadedFile
+
+    if shutil.which("tesseract") is None or shutil.which("pdftoppm") is None:
+        # Real-fixture OCR needs the Tesseract and Poppler binaries. Without
+        # them extraction degrades (embedded text only) and the strict field
+        # assertions below would report false failures.
+        recorder.skip(
+            "ocr_fixtures.real_fixture_scenarios",
+            reason="tesseract/poppler binaries are not available in this environment",
+        )
+        return
 
     from clients.constants import DocumentType
     from clients.models import Client, Document, DocumentProcessingJob

@@ -74,14 +74,23 @@ def cleanup_demo_data(extra_media_roots: list[str] | None = None) -> dict[str, i
     files_deleted = delete_demo_document_files(extra_media_roots=extra_media_roots)
     report["files_deleted"] = files_deleted
 
-    # 2. Hard delete database records
+    # 2. Hard delete database records. Rows created for demo clients through
+    # the regular UI (e.g. an onboarding link generated from the client card)
+    # may miss the is_demo_data flag, so demo-client ownership is matched too —
+    # otherwise a PROTECT FK to Case aborts the whole reset.
+    from django.db.models import Q
+
     with transaction.atomic():
         # DocumentProcessingJob
-        dpj_count, _ = DocumentProcessingJob.objects.filter(is_demo_data=True).delete()
+        dpj_count, _ = DocumentProcessingJob.objects.filter(
+            Q(is_demo_data=True) | Q(document__client__is_demo_data=True)
+        ).delete()
         report["document_processing_jobs"] = dpj_count
 
         # ClientActivity
-        activity_count, _ = ClientActivity.objects.filter(is_demo_data=True).delete()
+        activity_count, _ = ClientActivity.objects.filter(
+            Q(is_demo_data=True) | Q(client__is_demo_data=True)
+        ).delete()
         report["client_activities"] = activity_count
 
         # StaffAuditEvent
@@ -89,7 +98,9 @@ def cleanup_demo_data(extra_media_roots: list[str] | None = None) -> dict[str, i
         report["staff_audit_events"] = audit_count
 
         # ClientOnboardingSession
-        session_count, _ = ClientOnboardingSession.objects.filter(is_demo_data=True).delete()
+        session_count, _ = ClientOnboardingSession.objects.filter(
+            Q(is_demo_data=True) | Q(client__is_demo_data=True)
+        ).delete()
         report["onboarding_sessions"] = session_count
 
         # Reminder
@@ -121,15 +132,21 @@ def cleanup_demo_data(extra_media_roots: list[str] | None = None) -> dict[str, i
         report["mos_application_data"] = mos_count
 
         # Document
-        doc_count, _ = Document.all_objects.filter(is_demo_data=True).hard_delete()
+        doc_count, _ = Document.all_objects.filter(
+            Q(is_demo_data=True) | Q(client__is_demo_data=True)
+        ).hard_delete()
         report["documents"] = doc_count
 
         # Payment
-        payment_count, _ = Payment.all_objects.filter(is_demo_data=True).hard_delete()
+        payment_count, _ = Payment.all_objects.filter(
+            Q(is_demo_data=True) | Q(client__is_demo_data=True)
+        ).hard_delete()
         report["payments"] = payment_count
 
         # EmailLog
-        email_count, _ = EmailLog.objects.filter(is_demo_data=True).delete()
+        email_count, _ = EmailLog.objects.filter(
+            Q(is_demo_data=True) | Q(client__is_demo_data=True)
+        ).delete()
         report["email_logs"] = email_count
 
         # Case

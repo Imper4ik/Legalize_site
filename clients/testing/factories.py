@@ -57,13 +57,25 @@ def create_test_user(
 ) -> User:
     ensure_predefined_roles()
     user_model = get_user_model()
-    user = user_model.objects.create_user(
-        email=email or unique_email(f"{TEST_USER_PREFIX}{role.lower()}"),
-        password=TEST_USER_CREDENTIAL,
-        is_staff=True,
-        is_superuser=is_superuser,
-        is_active=True,
-    )
+    resolved_email = email or unique_email(f"{TEST_USER_PREFIX}{role.lower()}")
+    # Idempotent for reruns: a crashed previous run may have left the user
+    # behind (cleanup runs at the end), and a UNIQUE violation here would fail
+    # the whole scenario group instead of the check that actually regressed.
+    user = user_model.objects.filter(email__iexact=resolved_email).first()
+    if user is None:
+        user = user_model.objects.create_user(
+            email=resolved_email,
+            password=TEST_USER_CREDENTIAL,
+            is_staff=True,
+            is_superuser=is_superuser,
+            is_active=True,
+        )
+    else:
+        user.is_staff = True
+        user.is_superuser = is_superuser
+        user.is_active = True
+        user.set_password(TEST_USER_CREDENTIAL)
+        user.save()
     if role:
         user.groups.add(Group.objects.get(name=role))
     return user
@@ -71,8 +83,16 @@ def create_test_user(
 
 def create_client_user(*, email: str | None = None) -> User:
     user_model = get_user_model()
+    resolved_email = email or unique_email(f"{TEST_USER_PREFIX}client")
+    user = user_model.objects.filter(email__iexact=resolved_email).first()
+    if user is not None:
+        user.is_staff = False
+        user.is_active = True
+        user.set_password(TEST_USER_CREDENTIAL)
+        user.save()
+        return user
     return user_model.objects.create_user(
-        email=email or unique_email(f"{TEST_USER_PREFIX}client"),
+        email=resolved_email,
         password=TEST_USER_CREDENTIAL,
         is_staff=False,
         is_active=True,

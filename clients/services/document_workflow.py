@@ -1303,6 +1303,14 @@ def _save_client_document(
     uploaded_document.document_type = doc_type
     if case is not None:
         uploaded_document.case = case
+    # Inherit the data-classification flags from the client: a document uploaded
+    # for a Test Center/Demo client via a view (staff UI or client portal) must
+    # never be treated as production data — otherwise cleanup leaves it behind
+    # (Case is PROTECT-referenced) and metrics count it as real.
+    if client.is_test_data:
+        uploaded_document.is_test_data = True
+    if client.is_demo_data:
+        uploaded_document.is_demo_data = True
     uploaded_document.save()
     return uploaded_document
 

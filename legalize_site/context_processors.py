@@ -45,11 +45,23 @@ def staff_capabilities(request: HttpRequest) -> dict[str, Any]:
     """
     user = getattr(request, "user", None)
     if user is None or not getattr(user, "is_authenticated", False):
-        return {"user_can_run_ocr_review": False}
+        return {
+            "user_can_run_ocr_review": False,
+            "user_can_delete_clients": False,
+            "user_can_delete_documents": False,
+        }
 
-    from clients.services.permissions import user_can_run_ocr_review
+    from clients.services.permissions import (
+        user_can_delete_clients,
+        user_can_delete_documents,
+        user_can_run_ocr_review,
+    )
 
-    return {"user_can_run_ocr_review": user_can_run_ocr_review(user)}
+    return {
+        "user_can_run_ocr_review": user_can_run_ocr_review(user),
+        "user_can_delete_clients": user_can_delete_clients(user),
+        "user_can_delete_documents": user_can_delete_documents(user),
+    }
 
 
 def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:

@@ -238,7 +238,6 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         client = self.object
-        from clients.services.cases import resolve_single_active_case
         from django.core.exceptions import ValidationError
         active_case = None
         try:

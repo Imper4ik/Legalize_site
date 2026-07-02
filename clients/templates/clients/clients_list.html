@@ -250,7 +250,7 @@
           </td>
           <td data-label="{% translate 'Основание' %}">
             <a href="{% url 'clients:client_detail' pk=client.pk %}" class="client-cell-link text-decoration-none">
-              <span>{{ client.basis_of_stay|default:"—" }}</span>
+              <span>{% if client.basis_of_stay %}{{ client.basis_of_stay }}{% elif client.active_case %}{{ client.active_case.get_application_purpose_display|default:"—" }}{% else %}—{% endif %}</span>
               {% if client.legal_basis_end_date %}
                 <br>
                 <small class="text-muted">
@@ -298,7 +298,7 @@
                 <i class="bi bi-link-45deg"></i>
               </button>
               {% endif %}
-              {% if user|has_any_role:"Admin,Manager,Staff" %}
+              {% if user_can_delete_clients %}
               <a href="{% url 'clients:client_delete' pk=client.pk %}" class="btn btn-outline-danger btn-sm"
                 title="{% translate 'Удалить' %}" aria-label="{% translate 'Удалить' %}" id="btn-delete-{{ client.pk }}">
                 <i class="bi bi-trash"></i>

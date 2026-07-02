@@ -303,9 +303,9 @@ class MOSApplicationData(models.Model):
     NEW_CARD_STATUS_UNKNOWN = "unknown"
     NEW_CARD_STATUS_CHOICES = [
         ("", _("Not provided")),
-        (NEW_CARD_STATUS_YES, _("Tak / Да")),
-        (NEW_CARD_STATUS_NO, _("Nie / Нет")),
-        (NEW_CARD_STATUS_UNKNOWN, _("Nie wiem / Не знаю")),
+        (NEW_CARD_STATUS_YES, _("Да")),
+        (NEW_CARD_STATUS_NO, _("Нет")),
+        (NEW_CARD_STATUS_UNKNOWN, _("Не знаю")),
     ]
 
     client = models.ForeignKey("clients.Client", on_delete=models.CASCADE, related_name="mos_applications")

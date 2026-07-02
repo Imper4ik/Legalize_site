@@ -34,34 +34,35 @@ def _zus_client(email: str) -> Client:
 
 
 def run_zus_scenarios(recorder: ScenarioRecorder) -> None:
+    from clients.services.zus import expected_zus_months
+
     today = date(2026, 5, 15)
-    expected_missing = [date(2026, 3, 1), date(2026, 4, 1)]
+    # Current business rule (services/zus.expected_zus_months): the two months
+    # before fingerprints, the fingerprints month, and later months up to the
+    # last available report (previous month from the 17th, otherwise two
+    # months back). For fingerprints 2026-02-10 and today 2026-05-15 that is
+    # Dec 2025 .. Mar 2026.
+    expected_missing = expected_zus_months(date(2026, 2, 10), today=today)
 
     missing_client = _zus_client("client_missing_zus@example.test")
     missing = missing_zus_months(_case_of(missing_client), today=today)
     recorder.check(
         "zus.missing_zus_months_detected",
-        missing == expected_missing,
+        missing == expected_missing and len(expected_missing) > 0,
         expected=expected_missing,
         actual=missing,
         related=RelatedObjects(client=missing_client),
     )
 
     good_client = _zus_client("client_zus_good@example.test")
-    create_test_document(
-        good_client,
-        doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
-        verified=True,
-        zus_period_month=date(2026, 3, 1),
-        filename="zus-march.pdf",
-    )
-    create_test_document(
-        good_client,
-        doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
-        verified=True,
-        zus_period_month=date(2026, 4, 1),
-        filename="zus-april.pdf",
-    )
+    for index, month in enumerate(expected_missing, start=1):
+        create_test_document(
+            good_client,
+            doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+            verified=True,
+            zus_period_month=month,
+            filename=f"zus-window-{index}.pdf",
+        )
     recorder.check(
         "zus.approved_zus_rca_closes_missing_problem",
         missing_zus_months(_case_of(good_client), today=today) == [],
@@ -79,10 +80,11 @@ def run_zus_scenarios(recorder: ScenarioRecorder) -> None:
         filename="zus-wrong-month.pdf",
     )
     wrong_month_missing = missing_zus_months(_case_of(wrong_month_client), today=today)
+    still_expected = [month for month in expected_missing if month != date(2026, 1, 1)]
     recorder.check(
         "zus.wrong_month_does_not_close_expected_periods",
-        wrong_month_missing == expected_missing,
-        expected=expected_missing,
+        wrong_month_missing == still_expected,
+        expected=still_expected,
         actual=wrong_month_missing,
         related=RelatedObjects(client=wrong_month_client),
     )

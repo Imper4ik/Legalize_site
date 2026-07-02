@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache

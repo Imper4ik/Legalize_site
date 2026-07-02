@@ -43,6 +43,29 @@ def _build_permission_fields() -> dict[str, forms.BooleanField]:
     }
 
 
+def _sync_verified_email_address(user: Any) -> None:
+    """Keep the allauth EmailAddress verified for admin-managed staff accounts.
+
+    ACCOUNT_EMAIL_VERIFICATION is mandatory, so a staff user created here
+    without a verified EmailAddress would be locked on the "confirm your
+    email" page until a verification email arrives. The admin created the
+    account in person, so the address is treated as verified.
+    """
+    from allauth.account.models import EmailAddress
+
+    email_address, _created = EmailAddress.objects.get_or_create(
+        user=user,
+        email__iexact=user.email,
+        defaults={"email": user.email, "primary": True, "verified": True},
+    )
+    if not email_address.verified or not email_address.primary or email_address.email != user.email:
+        email_address.email = user.email
+        email_address.verified = True
+        email_address.primary = True
+        email_address.save(update_fields=["email", "verified", "primary"])
+    EmailAddress.objects.filter(user=user).exclude(pk=email_address.pk).update(primary=False)
+
+
 class AppSettingsForm(forms.ModelForm):
     class Meta:
         model = AppSettings
@@ -149,6 +172,7 @@ class StaffUserCreateForm(forms.ModelForm):
         if commit:
             user.save()
             self.save_m2m()
+            _sync_verified_email_address(user)
         return user
 
 
@@ -184,6 +208,8 @@ class StaffUserUpdateForm(forms.ModelForm):
 
     def save(self, commit: bool = True) -> Any:
         user = super().save(commit=commit)
+        if commit:
+            _sync_verified_email_address(user)
         permission_object, _ = EmployeePermission.objects.get_or_create(user=user)
         updated_fields: list[str] = []
         for field_name, _label in EMPLOYEE_PERMISSION_FIELD_LABELS:
