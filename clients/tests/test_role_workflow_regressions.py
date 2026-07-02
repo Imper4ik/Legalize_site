@@ -71,13 +71,22 @@ class StaffRoleRegressionTests(TestCase):
         document.restore()
         self.assertEqual(self.client.get(reverse("clients:get_document_parsed_data", kwargs={"doc_id": document.pk})).status_code, 403)
 
-    def test_staff_can_review_ocr_without_employee_permission_flag(self):
+    def test_staff_needs_employee_permission_flag_for_ocr_review(self):
+        """OCR review is not a Staff role capability (spec §1): the
+        per-employee can_run_ocr_review grant is required."""
         document = create_test_document(self.client_obj, doc_type=DocumentType.WEZWANIE.value, awaiting_confirmation=True, ocr_status="success")
         document.parsed_data = {"safe": "value"}
         document.save(update_fields=["parsed_data"])
         self.client.force_login(self.staff)
-        response = self.client.get(reverse("clients:get_document_parsed_data", kwargs={"doc_id": document.pk}))
-        self.assertEqual(response.status_code, 200)
+        url = reverse("clients:get_document_parsed_data", kwargs={"doc_id": document.pk})
+        self.assertEqual(self.client.get(url).status_code, 403)
+
+        from clients.models import EmployeePermission
+
+        EmployeePermission.objects.update_or_create(
+            user=self.staff, defaults={"can_run_ocr_review": True}
+        )
+        self.assertEqual(self.client.get(url).status_code, 200)
 
     def test_staff_cannot_manage_roles_staff_or_critical_settings(self):
         self.client.force_login(self.staff)

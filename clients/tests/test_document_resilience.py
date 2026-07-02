@@ -46,12 +46,19 @@ def test_document_download_uses_safe_content_disposition(logged_in_staff, sample
 
 
 @pytest.mark.django_db
-def test_archived_document_cannot_be_downloaded(logged_in_staff, sample_document):
+def test_archived_document_can_be_downloaded_by_staff(logged_in_staff, sample_document):
+    """Staff must be able to open archived documents (audit M-2).
+
+    The case detail page lists documents of archived cases with
+    preview/download buttons, and staff need the file to decide about a
+    restore; the download is still access-scoped and logged.
+    """
     sample_document.archive()
 
     response = logged_in_staff.get(reverse("clients:document_download", kwargs={"doc_id": sample_document.pk}))
 
-    assert response.status_code == 404
+    assert response.status_code == 200
+    assert sample_document.client.activities.filter(event_type="document_downloaded").exists()
 
 @pytest.mark.django_db
 def test_document_download_missing_physical_file(logged_in_staff, sample_document, caplog):
