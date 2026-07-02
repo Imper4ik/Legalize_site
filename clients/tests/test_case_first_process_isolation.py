@@ -183,9 +183,13 @@ class CaseFirstProcessIsolationTests(TestCase):
         # Verify different idempotency keys are created (they contain case.pk)
         self.assertNotEqual(log_a.idempotency_key, log_b.idempotency_key)
 
-        # 3. Test legacy calls without Case. Since client has multiple active cases, it must raise ValidationError
-        with self.assertRaises(ValidationError):
-            send_required_documents_email(self.client_obj)
+        # 3. Legacy call without a Case: a multi-case client is ambiguous, so
+        # the email is safely skipped (0 sent, no EmailLog) instead of raising
+        # through the retired legacy resolver (shim-exit, spec §4).
+        EmailLog.objects.all().delete()
+        sent_ambiguous = send_required_documents_email(self.client_obj)
+        self.assertEqual(sent_ambiguous, 0)
+        self.assertFalse(EmailLog.objects.exists())
 
         # If client has only one active case, legacy call should succeed.
         # Let's archive case_b so client has only one active case (case_a).
