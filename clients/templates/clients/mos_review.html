@@ -319,22 +319,22 @@
                     <form method="post">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="mark_submitted">
-                        <button type="submit" class="btn btn-outline-primary w-100">{% translate "Подано в MOS" %}</button>
+                        <button type="submit" class="btn {% if mos_data.status == 'submitted_in_mos' %}btn-primary{% else %}btn-outline-primary{% endif %} w-100">{% translate "Подано в MOS" %}</button>
                     </form>
                     <form method="post">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="mark_fingerprints">
-                        <button type="submit" class="btn btn-outline-primary w-100">{% translate "Отпечатки сданы" %}</button>
+                        <button type="submit" class="btn {% if mos_data.status == 'fingerprints' %}btn-primary{% else %}btn-outline-primary{% endif %} w-100">{% translate "Отпечатки сданы" %}</button>
                     </form>
                     <form method="post">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="mark_waiting">
-                        <button type="submit" class="btn btn-outline-primary w-100">{% translate "Ожидание решения" %}</button>
+                        <button type="submit" class="btn {% if mos_data.status == 'waiting_decision' %}btn-primary{% else %}btn-outline-primary{% endif %} w-100">{% translate "Ожидание решения" %}</button>
                     </form>
                     <form method="post">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="mark_decision">
-                        <button type="submit" class="btn btn-outline-success w-100">{% translate "Децизия получена" %}</button>
+                        <button type="submit" class="btn {% if mos_data.status == 'decision_received' %}btn-success{% else %}btn-outline-success{% endif %} w-100">{% translate "Решение получено (Decyzja)" %}</button>
                     </form>
                 </div>
 

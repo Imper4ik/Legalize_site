@@ -663,6 +663,8 @@ def _build_start_context(
         "allow_delete": bool(mos_data and allow_doc_edit),
         "case_step": case_step,
         "is_post_fingerprints": case_step >= 5,
+        "is_waiting_decision": case_step == 9,
+        "is_decision_received": case_step >= 10,
         "additional_documents": additional_documents,
         "fingerprint_invitation_doc_type": fingerprint_invitation_doc_type,
         "fingerprint_invitation_document": fingerprint_invitation_document,
@@ -700,6 +702,24 @@ def _render_start_page(request: HttpRequest, context: dict[str, Any]) -> HttpRes
 def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
     session = check_onboarding_session(token, request=request)
     if not session:
+        # A completed link is not an intrusion attempt: clients re-open the
+        # emailed link after submitting the questionnaire. Route them to their
+        # portal (or login) instead of a dead-end 403.
+        completed_session = check_onboarding_session(
+            token, allowed_statuses=("created", "active", "completed"), request=request
+        )
+        if completed_session is not None:
+            from django.urls import reverse
+
+            from clients.constants import SELF_ONBOARDING_SLUG
+
+            client_user_id = getattr(completed_session.client, "user_id", None)
+            if request.user.is_authenticated and client_user_id == request.user.pk:
+                return redirect("clients:onboarding_start", token=SELF_ONBOARDING_SLUG)
+            login_url = reverse("account_login")
+            client_email = completed_session.client.email or ""
+            messages.info(request, _("Анкета по этой ссылке уже отправлена. Войдите в личный кабинет, чтобы продолжить."))
+            return redirect(f"{login_url}?email={client_email}" if client_email else login_url)
         return HttpResponseForbidden(_("Срок действия ссылки истёк или она недействительна."))
 
     auth_redirect = check_client_auth(request, session, token)

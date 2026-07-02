@@ -311,7 +311,13 @@ class ClientCreateView(RoleRequiredMixin, CreateView):
     model = Client
     form_class = ClientForm
     template_name = "clients/client_form.html"
-    success_url = reverse_lazy("clients:client_list")
+
+    def get_success_url(self) -> str:
+        # Straight to the new client's card: the next staff actions (onboarding
+        # link, documents, payments) all start there, not in the general list.
+        if self.object is not None and self.object.pk:
+            return reverse("clients:client_detail", kwargs={"pk": self.object.pk})
+        return str(reverse_lazy("clients:client_list"))
 
     def get_initial(self) -> dict[str, Any]:
         initial = super().get_initial() or {}

@@ -6577,7 +6577,7 @@ msgstr "Fingerprints"
 
 #: clients/templates/clients/mos_review.html:337
 msgid "Децизия получена"
-msgstr "Total recipients"
+msgstr "Decision received"
 
 #: clients/templates/clients/mos_review.html:347
 msgid "Комментарий для клиента"
@@ -12381,3 +12381,7 @@ msgstr "user"
 #: users/models.py:87
 msgid "users"
 msgstr "users"
+
+#: clients/templates/clients/mos_review.html:337
+msgid "Решение получено (Decyzja)"
+msgstr "Decision received (decyzja)"

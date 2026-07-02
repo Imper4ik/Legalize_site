@@ -19,6 +19,10 @@
       <i class="bi bi-exclamation-triangle-fill" aria-hidden="true"></i>
     {% elif allow_edit %}
       <i class="bi bi-pencil-square" aria-hidden="true"></i>
+    {% elif is_decision_received %}
+      <i class="bi bi-award-fill" aria-hidden="true"></i>
+    {% elif is_waiting_decision %}
+      <i class="bi bi-hourglass-split" aria-hidden="true"></i>
     {% elif is_post_fingerprints %}
       <i class="bi bi-folder2-open" aria-hidden="true"></i>
     {% else %}
@@ -39,6 +43,14 @@
       <h3 class="client-next-action-title">{% trans "Продолжить анкету на карту пребывания" %}</h3>
       <p class="client-next-action-text">{% trans "Заполните оставшиеся данные. Можно сохранить шаг и вернуться в кабинет в любой момент." %}</p>
       <a href="{% url 'clients:onboarding_digital_access' session.token_hash %}" class="btn btn-primary btn-sm fw-bold mt-3"><i class="bi bi-arrow-right-circle me-1"></i>{% trans "Продолжить анкету" %}</a>
+    {% elif is_decision_received %}
+      <h3 class="client-next-action-title">{% trans "Решение по делу получено" %}</h3>
+      <p class="client-next-action-text">{% trans "Управление вынесло решение по вашему делу. Сотрудник свяжется с вами и подскажет дальнейшие шаги — в том числе, когда и где получить карту пребывания." %}</p>
+      <a href="#documents" class="btn btn-outline-primary btn-sm fw-bold mt-3"><i class="bi bi-folder2-open me-1"></i>{% trans "Посмотреть документы" %}</a>
+    {% elif is_waiting_decision %}
+      <h3 class="client-next-action-title">{% trans "Ожидаем решение управления" %}</h3>
+      <p class="client-next-action-text">{% trans "Отпечатки сданы, дело рассматривается. Если из управления придёт новое письмо (wezwanie), загрузите его здесь — и продолжайте добавлять ежемесячные отчёты ZUS RCA." %}</p>
+      <a href="#documents" class="btn btn-outline-primary btn-sm fw-bold mt-3"><i class="bi bi-folder2-open me-1"></i>{% trans "Перейти к документам" %}</a>
     {% elif is_post_fingerprints %}
       <h3 class="client-next-action-title">{% trans "Дослать документы после отпечатков" %}</h3>
       <p class="client-next-action-text">{% trans "Если дело уже после отпечатков или присоединено к делу после них, загружайте здесь новые письма из управления (urząd) и ежемесячные отчёты ZUS RCA." %}</p>

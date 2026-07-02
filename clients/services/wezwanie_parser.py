@@ -610,16 +610,22 @@ def _find_decision_date(text: str) -> date | None:
     """Extract decision date from second wezwanie."""
     # Patterns for decision date with keywords
     decision_patterns = [
+        # Issued decisions first — they are more specific than the deadline
+        # phrasings below and appear on the actual decyzja letter.
+        # Pattern: "decyzja (nr ...) z dnia DD.MM.YYYY"
+        re.compile(r"decyzj\w*\s+(?:nr\s+\S+\s+)?z\s+dnia\s+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
+        # Pattern: "wydano decyzję dnia / w dniu DD.MM.YYYY"
+        re.compile(r"wydan[oa]\s+decyzj\w*\s+(?:w\s+dniu|dnia)\s+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
         # Pattern: "zostanie podjęta do dnia DD.MM.YYYY"
-        re.compile(r"zostanie\s+podjęta\s+do\s+dnia\s+([\d./-]+)", re.IGNORECASE),
+        re.compile(r"zostanie\s+podjęta\s+do\s+dnia\s+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
         # Pattern: "podjęta do dnia DD.MM.YYYY"
-        re.compile(r"podjęta\s+do\s+dnia\s+([\d./-]+)", re.IGNORECASE),
+        re.compile(r"podjęta\s+do\s+dnia\s+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
         # Pattern: "powinna być podjęta do dnia DD.MM.YYYY"
-        re.compile(r"powinna być podjęta do dnia\s+([\d./-]+)", re.IGNORECASE),
+        re.compile(r"powinna być podjęta do dnia\s+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
         # Pattern: "termin wydania decyzji: DD.MM.YYYY"
-        re.compile(r"termin wydania decyzji[:\s]+([\d./-]+)", re.IGNORECASE),
+        re.compile(r"termin wydania decyzji[:\s]+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
         # Pattern: "decyzja ... do dnia DD.MM.YYYY"
-        re.compile(r"decyzj[aiy].*?do dnia\s+([\d./-]+)", re.IGNORECASE),
+        re.compile(r"decyzj[aiy].*?do dnia\s+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
         # General fallback
         re.compile(r"(?:rozpatrzenie|termin).*?do[:\s]+([\d./-]+)", re.IGNORECASE),
     ]

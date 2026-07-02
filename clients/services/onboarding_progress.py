@@ -47,13 +47,16 @@ def get_case_onboarding_step(
             return 5
         return 6
 
-    if status == "submitted_in_mos":
-        return 7
-    if status == "fingerprints" or (case is not None and case.fingerprints_date):
-        return 8
-    if status == "waiting_decision":
-        return 9
+    # Terminal statuses first: a case that reached the decision keeps its
+    # fingerprints_date, so the date-based shortcut below must not pin the
+    # timeline to the fingerprints step forever.
     if status in ["decision_received", "closed"]:
         return 10
+    if status == "waiting_decision":
+        return 9
+    if status == "fingerprints" or (case is not None and case.fingerprints_date):
+        return 8
+    if status == "submitted_in_mos":
+        return 7
 
     return 1

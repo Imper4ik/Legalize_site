@@ -12367,3 +12367,7 @@ msgstr "пользователь"
 #: users/models.py:87
 msgid "users"
 msgstr "пользователи"
+
+#: clients/templates/clients/mos_review.html:337
+msgid "Решение получено (Decyzja)"
+msgstr "Решение получено (Decyzja)"

@@ -41,6 +41,15 @@ class CaseForm(forms.ModelForm):
         input_formats=["%d.%m.%Y", "%d-%m-%Y", "%Y-%m-%d"],
         widget=forms.TextInput(attrs={"class": "form-control", "placeholder": _("дд.мм.гггг")}),
     )
+    # Decisions often arrive by post or in person: without this field the OCR
+    # confirmation of a scanned letter would be the only way to record the
+    # decision date, blocking the decision_received transition.
+    decision_date = forms.DateField(
+        label=_("Дата решения (Decyzja)"),
+        required=False,
+        input_formats=["%d.%m.%Y", "%d-%m-%Y", "%Y-%m-%d"],
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": _("дд.мм.гггг")}),
+    )
 
     class Meta:
         model = Case
@@ -53,6 +62,7 @@ class CaseForm(forms.ModelForm):
             "workflow_stage",
             "submission_date",
             "fingerprints_date",
+            "decision_date",
             "company",
             "version",
         ]
