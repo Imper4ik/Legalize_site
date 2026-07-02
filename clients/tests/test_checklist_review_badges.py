@@ -55,8 +55,14 @@ class ChecklistReviewBadgeTests(TestCase):
         self.assertEqual(rows["oryginaly_umow_o_prace"]["verification_doc_id"], self.review_doc.id)
 
     def test_case_detail_renders_both_badges(self) -> None:
+        from django.utils import translation
+
         self.client.login(email=self.staff.email, password=TEST_USER_CREDENTIAL)
-        resp = self.client.get(reverse("clients:case_detail", kwargs={"pk": self.case.pk}))
+        # Request the Russian locale explicitly: the badge labels are now
+        # translated, so the default (Polish) page no longer contains the
+        # Russian source strings.
+        with translation.override("ru"):
+            resp = self.client.get(reverse("clients:case_detail", kwargs={"pk": self.case.pk}))
         self.assertEqual(resp.status_code, 200)
         body = resp.content.decode()
         self.assertIn("OCR-проверка", body)

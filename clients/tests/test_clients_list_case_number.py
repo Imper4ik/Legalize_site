@@ -38,7 +38,13 @@ class ClientsListCaseNumberTests(TestCase):
         case.legacy_case_number = "WSC-II-P.6151.138285.2025"
         case.save(update_fields=["authority_case_number", "legacy_case_number"])
 
-        resp = self._get_list()
+        from django.utils import translation
+
+        # Request the Russian locale explicitly: the legacy-number tooltip is
+        # now translated, so the default (Polish) page no longer contains the
+        # Russian source string.
+        with translation.override("ru"):
+            resp = self._get_list()
         # The legacy number is visible (not "—") ...
         self.assertContains(resp, "WSC-II-P.6151.138285.2025")
         # ... and marked as coming from the previous card.

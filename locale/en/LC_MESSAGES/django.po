@@ -35,7 +35,6 @@ msgid "Дата сдачи отпечатков"
 msgstr "Date of fingerprints submission"
 
 #: clients/forms/case_client_forms.py:75
-#| msgid "Select a family role."
 msgid "Not a family case"
 msgstr "Not a family case"
 
@@ -52,7 +51,6 @@ msgid "Child"
 msgstr "Child"
 
 #: clients/forms/case_client_forms.py:96 clients/models/case.py:203
-#| msgid "Select a family role."
 msgid "Unknown family role."
 msgstr "Unknown family role."
 
@@ -159,7 +157,6 @@ msgid "Citizenship"
 msgstr "Citizenship"
 
 #: clients/forms/intake_forms.py:24
-#| msgid "Passport"
 msgid "Passport number"
 msgstr "Passport number"
 
@@ -168,12 +165,10 @@ msgid "Communication language"
 msgstr "Communication language"
 
 #: clients/forms/intake_forms.py:26
-#| msgid "Invalid application purpose"
 msgid "Application purpose"
 msgstr "Application purpose"
 
 #: clients/forms/intake_forms.py:27
-#| msgid "Application & Stage"
 msgid "Application type"
 msgstr "Application type"
 
@@ -182,7 +177,6 @@ msgid "Basis of stay"
 msgstr "Basis of stay"
 
 #: clients/forms/intake_forms.py:30
-#| msgid "Создание аккаунта личного кабинета"
 msgid "Пароль для личного кабинета"
 msgstr "Password for the client portal"
 
@@ -195,12 +189,10 @@ msgstr ""
 "one-time link."
 
 #: clients/forms/intake_forms.py:36
-#| msgid "Подтвердите пароль"
 msgid "Повторите пароль"
 msgstr "Repeat password"
 
 #: clients/forms/intake_forms.py:48
-#| msgid "NIP работодателя:"
 msgid "работа, учёба, семья"
 msgstr "work, study, family"
 
@@ -716,7 +708,6 @@ msgid "Основание легализации"
 msgstr "Legalization basis"
 
 #: clients/models/case.py:134
-#| msgid "Роль в семье"
 msgid "Роль в семейном деле"
 msgstr "Family role"
 
@@ -1059,7 +1050,6 @@ msgid "wezwanie"
 msgstr "summons"
 
 #: clients/models/client.py:1071 clients/models/client.py:1116
-#| msgid "Проверить номер дела"
 msgid "Заполнить номер дела"
 msgstr "Fill in the case number"
 
@@ -1794,7 +1784,6 @@ msgstr "Document Versions"
 
 #: clients/models/document_processing.py:116
 #: clients/models/document_processing.py:128
-#| msgid "Client name not matched in the ZUS document."
 msgid "OCR job case must match the document case."
 msgstr "OCR job case must match the document case."
 
@@ -1938,7 +1927,6 @@ msgid "Нет"
 msgstr "No"
 
 #: clients/models/onboarding.py:308
-#| msgid "Nie wiem / Не знаю"
 msgid "Не знаю"
 msgstr "I don't know"
 
@@ -4105,18 +4093,16 @@ msgstr "Delivered"
 
 #: clients/templates/clients/case_detail.html:136
 #: clients/templates/clients/partials/document_checklist.html:43
-#| msgid "Отсутствует"
 msgid "Отсутствуют месяцы ZUS RCA:"
 msgstr "Missing ZUS RCA months:"
 
 #: clients/templates/clients/case_detail.html:136
 #: clients/templates/clients/partials/document_checklist.html:43
-#, fuzzy, python-format
-#| msgid "Не хватает: %(amount)s zł"
+#, python-format
 msgid "Не хватает %(counter)s месяца"
 msgid_plural "Не хватает %(counter)s месяцев"
-msgstr[0] "Missing: %(amount)s zł"
-msgstr[1] "Missing: %(amount)s zł"
+msgstr[0] "Missing %(counter)s month"
+msgstr[1] "Missing %(counter)s months"
 
 #: clients/templates/clients/case_detail.html:136
 #: clients/templates/clients/partials/document_checklist.html:45
@@ -4125,26 +4111,22 @@ msgstr "Missing"
 
 #: clients/templates/clients/case_detail.html:137
 #: clients/templates/clients/partials/document_checklist.html:48
-#| msgid "Нет документов, ожидающих проверки распознанных данных."
 msgid "Перейти к документу: подтвердите распознанные OCR данные"
 msgstr "Go to the document: confirm the recognised OCR data"
 
 #: clients/templates/clients/case_detail.html:137
 #: clients/templates/clients/case_detail.html:151
 #: clients/templates/clients/partials/document_checklist.html:48
-#| msgid "Проверка"
 msgid "OCR-проверка"
 msgstr "OCR review"
 
 #: clients/templates/clients/case_detail.html:138
 #: clients/templates/clients/partials/document_checklist.html:51
-#| msgid "Истекшие документы после сдачи отпечатков"
 msgid "Перейти к документу: проверьте и подтвердите файл"
 msgstr "Go to the document: check and confirm the file"
 
 #: clients/templates/clients/case_detail.html:138
 #: clients/templates/clients/partials/document_checklist.html:51
-#| msgid "Ждет проверки"
 msgid "Ждёт проверки"
 msgstr "Awaiting review"
 
@@ -4175,7 +4157,6 @@ msgid "Ожидает проверки"
 msgstr "Pending verification"
 
 #: clients/templates/clients/case_detail.html:151
-#| msgid "Проверьте распознанные данные"
 msgid "Подтвердите распознанные OCR данные"
 msgstr "Confirm the recognised OCR data"
 
@@ -4501,7 +4482,6 @@ msgid "Детали клиента: %(client_name)s"
 msgstr "Client details: %(client_name)s"
 
 #: clients/templates/clients/client_detail.html:26
-#| msgid "Номер дела"
 msgid "Новое дело"
 msgstr "New case"
 
@@ -4999,9 +4979,6 @@ msgid "Спонсор: %(count)s"
 msgstr "Sponsor: %(count)s"
 
 #: clients/templates/clients/clients_list.html:247
-#| msgid ""
-#| "Номер из предыдущей карточки; проверьте и перенесите его в поле «Номер в "
-#| "ужонде»."
 msgid ""
 "Номер из предыдущей карточки — подтвердите и сохраните как номер дела в "
 "ужонде"
@@ -5019,7 +4996,6 @@ msgid "до %(date)s"
 msgstr "until %(date)s"
 
 #: clients/templates/clients/clients_list.html:276
-#| msgid "Жирный"
 msgid "Жирный (Ctrl+B)"
 msgstr "Bold (Ctrl+B)"
 
@@ -6023,7 +5999,6 @@ msgid "В процессе"
 msgstr "In progress"
 
 #: clients/templates/clients/intake/public_form.html:4
-#| msgid "Личный кабинет клиента"
 msgid "Первичная анкета клиента"
 msgstr "Initial client form"
 
@@ -6033,12 +6008,10 @@ msgid "Личные данные"
 msgstr "Personal data"
 
 #: clients/templates/clients/intake/public_form.html:60
-#| msgid "Активные дела"
 msgid "Данные дела"
 msgstr "Case details"
 
 #: clients/templates/clients/intake/public_form.html:81
-#| msgid "Вернуться в Личный кабинет"
 msgid "Доступ в личный кабинет"
 msgstr "Client portal access"
 
@@ -6051,12 +6024,10 @@ msgstr ""
 " to the client portal on the site and continue without a one-time link."
 
 #: clients/templates/clients/intake/public_form.html:100
-#| msgid "Исправить анкету"
 msgid "Отправить анкету и войти"
 msgstr "Submit the form and sign in"
 
 #: clients/templates/clients/intake/submitted.html:5
-#| msgid "All available"
 msgid "Link unavailable"
 msgstr "Link unavailable"
 
@@ -6069,7 +6040,6 @@ msgid "Intake submitted"
 msgstr "Intake submitted"
 
 #: clients/templates/clients/intake/submitted.html:12
-#| msgid "Test Center is not available."
 msgid "This intake link is not available."
 msgstr "This intake link is not available."
 
@@ -6618,8 +6588,6 @@ msgid "Запросить исправления"
 msgstr "Date sent"
 
 #: clients/templates/clients/mos_review_select_case.html:13
-#| msgid ""
-#| "Клиент изменил основание подачи. Нажмите, чтобы подтвердить или проверить."
 msgid ""
 "У клиента несколько анкет по разным делам. Выберите дело, анкету которого "
 "нужно проверить."
@@ -6628,7 +6596,6 @@ msgstr ""
 "whose questionnaire you want to review."
 
 #: clients/templates/clients/mos_review_select_case.html:24
-#| msgid "Архивировал"
 msgid "Архив"
 msgstr "Archive"
 
@@ -6637,7 +6604,6 @@ msgid "Без дела (legacy)"
 msgstr "No case (legacy)"
 
 #: clients/templates/clients/mos_review_select_case.html:31
-#| msgid "Обновлено"
 msgid "Обновлено:"
 msgstr "Updated:"
 
@@ -6737,7 +6703,6 @@ msgid "Задать вопрос"
 msgstr "Ask a question"
 
 #: clients/templates/clients/onboarding/base_onboarding.html:787
-#| msgid "Выбор языка интерфейса"
 msgid "Выбор языка"
 msgstr "Language selection"
 
@@ -6751,13 +6716,11 @@ msgstr "Toggle theme"
 
 #: clients/templates/clients/onboarding/base_onboarding.html:819
 #: clients/templates/clients/onboarding/base_onboarding.html:898
-#| msgid "Тип заявления"
 msgid "Уведомления"
 msgstr "Notifications"
 
 #: clients/templates/clients/onboarding/base_onboarding.html:827
 #: clients/templates/clients/onboarding/base_onboarding.html:906
-#| msgid "Требует внимания"
 msgid "Требуется внимание"
 msgstr "Needs attention"
 
@@ -6771,21 +6734,18 @@ msgstr "Client portal"
 #: clients/templates/clients/onboarding/base_onboarding.html:851
 #: clients/templates/clients/onboarding/base_onboarding.html:943
 #: templates/account/auth_base.html:772
-#| msgid "Главная проблема"
 msgid "Главная кабинета"
 msgstr "Portal home"
 
 #: clients/templates/clients/onboarding/base_onboarding.html:856
 #: clients/templates/clients/onboarding/base_onboarding.html:948
 #: templates/account/auth_base.html:777
-#| msgid "Изменить"
 msgid "Изменить E-mail"
 msgstr "Change email"
 
 #: clients/templates/clients/onboarding/base_onboarding.html:861
 #: clients/templates/clients/onboarding/base_onboarding.html:953
 #: templates/account/auth_base.html:782
-#| msgid "Заполнить профиль"
 msgid "Изменить пароль"
 msgstr "Change password"
 
@@ -7457,14 +7417,10 @@ msgstr ""
 "staff member."
 
 #: clients/templates/clients/onboarding/set_password.html:4
-#| msgid "Создание аккаунта личного кабинета"
 msgid "Пароль личного кабинета"
 msgstr "Client portal password"
 
 #: clients/templates/clients/onboarding/set_password.html:77
-#| msgid ""
-#| "Пожалуйста, установите пароль, чтобы вы могли заходить в свой личный кабинет"
-#| " с любого устройства по электронной почте."
 msgid ""
 "Установите или обновите пароль, чтобы заходить в личный кабинет по "
 "электронной почте."
@@ -7503,7 +7459,6 @@ msgid "Пароли не совпадают"
 msgstr "Passwords do not match"
 
 #: clients/templates/clients/onboarding/set_password.html:144
-#| msgid "Сохранить и продолжить"
 msgid "Сохранить пароль и войти"
 msgstr "Save the password and sign in"
 
@@ -8065,7 +8020,6 @@ msgid "Изменения через менеджера"
 msgstr "Changes via manager"
 
 #: clients/templates/clients/onboarding/start_contact.html:326
-#| msgid "Ждет проверки сотрудником"
 msgid "Цель подтверждена сотрудником"
 msgstr "Purpose confirmed by staff"
 
@@ -9912,7 +9866,6 @@ msgid "Недопустимый MIME-тип файла: %(type)s."
 msgstr "Invalid MIME file type: %(type)s."
 
 #: clients/views/admin_mos_review.py:200
-#| msgid "Не удалось определить дело для заявки."
 msgid ""
 "Не удалось определить дело для этой анкеты. Выберите дело в карточке "
 "клиента."
@@ -9933,7 +9886,6 @@ msgid "Cannot apply this purpose to the client card."
 msgstr "Cannot apply this purpose to the client card."
 
 #: clients/views/admin_mos_review.py:238
-#| msgid "Client-selected purpose applied to the client card."
 msgid "Client-selected purpose applied."
 msgstr "Client-selected purpose applied."
 
@@ -10394,7 +10346,6 @@ msgstr ""
 "address."
 
 #: clients/views/intake.py:103
-#| msgid "У вас уже есть аккаунт. Пожалуйста, войдите в систему."
 msgid ""
 "Пользователь с таким email уже зарегистрирован. Пожалуйста, войдите в "
 "систему или восстановите пароль."
@@ -10409,7 +10360,6 @@ msgstr ""
 "We could not submit the intake form. Please check the data and try again."
 
 #: clients/views/intake.py:137
-#| msgid "Аккаунт успешно создан. Вы вошли в личный кабинет клиента."
 msgid "Анкета отправлена. Аккаунт создан, вы вошли в личный кабинет клиента."
 msgstr ""
 "The form has been submitted. Your account was created and you are signed in "
@@ -10448,9 +10398,6 @@ msgid "Podaj poprawną datę / Укажите корректную дату."
 msgstr "Provide a valid date."
 
 #: clients/views/onboarding_start_contact.py:215
-#| msgid ""
-#| "Data złożenia nie może być w przyszłości. / Дата подачи не может быть в "
-#| "будущем."
 msgid "Дата подачи не может быть в будущем."
 msgstr "The submission date cannot be in the future."
 
@@ -10459,25 +10406,16 @@ msgid "Podaj numer sprawy / Укажите номер дела."
 msgstr "Provide the case number."
 
 #: clients/views/onboarding_start_contact.py:259
-#| msgid ""
-#| "Prosimy o uzupełnienie numeru sprawy, jeśli jest już dostępny. / Пожалуйста,"
-#| " добавьте номер дела, если он уже доступен."
 msgid "Пожалуйста, добавьте номер дела, если он уже доступен."
 msgstr "Please add the case number if it is already available."
 
 #: clients/views/onboarding_start_contact.py:267
-#| msgid ""
-#| "Prosimy o załadowanie potwierdzenia złożenia wniosku o kartę pobytu. / "
-#| "Пожалуйста, загрузите подтверждение подачи заявления на карту пребывания."
 msgid ""
 "Пожалуйста, загрузите подтверждение подачи заявления на карту пребывания."
 msgstr ""
 "Please upload the confirmation of the residence card application submission."
 
 #: clients/views/onboarding_start_contact.py:275
-#| msgid ""
-#| "Jeśli znasz datę złożenia wniosku, dodaj ją w tym bloku. / Если знаете дату "
-#| "подачи заявления, добавьте её в этом блоке."
 msgid "Если знаете дату подачи заявления, добавьте её в этом блоке."
 msgstr "If you know the application submission date, add it in this block."
 
@@ -10496,34 +10434,26 @@ msgstr ""
 "move it to the main case number."
 
 #: clients/views/onboarding_start_contact.py:394
-#| msgid ""
-#| "Informacja o nowym wniosku została zapisana. / Информация о новом заявлении "
-#| "сохранена."
 msgid "Информация о новом заявлении сохранена."
 msgstr "The information about the new application has been saved."
 
 #: clients/views/onboarding_start_contact.py:587
-#| msgid "Заполнить личный профиль"
 msgid "Заполнить личный профиль (паспорт)"
 msgstr "Fill in your personal profile (passport)"
 
 #: clients/views/onboarding_start_contact.py:595
-#| msgid "Заполнить личный профиль"
 msgid "Заполнить историю поездок"
 msgstr "Fill in your travel history"
 
 #: clients/views/onboarding_start_contact.py:621
-#| msgid "Перезагрузить отклонённые документы"
 msgid "Перезагрузить отклонённые документы ({} шт.)"
 msgstr "Re-upload the rejected documents ({})"
 
 #: clients/views/onboarding_start_contact.py:630
-#| msgid "Загрузить недостающие документы"
 msgid "Загрузить недостающие документы ({} шт.)"
 msgstr "Upload the missing documents ({})"
 
 #: clients/views/onboarding_start_contact.py:649
-#| msgid "Сотрудник обновлён."
 msgid "Сотрудник ответил на ваш вопрос"
 msgstr "A staff member replied to your question"
 
@@ -10573,7 +10503,6 @@ msgid "Пожалуйста, войдите в свой аккаунт для п
 msgstr "Please log in to your account to continue."
 
 #: clients/views/onboarding_views.py:343
-#| msgid "Пожалуйста, укажите адрес электронной почты."
 msgid "Введите корректный адрес электронной почты."
 msgstr "Enter a valid email address."
 
@@ -11005,7 +10934,6 @@ msgstr ""
 "Wniosek confirmed. Submitted attachments were saved to the client checklist."
 
 #: clients/views/reminders.py:249
-#| msgid "Проверьте логин и пароль и попробуйте снова."
 msgid "Проверка напоминаний уже выполняется. Попробуйте позже."
 msgstr "The reminder check is already running. Try again later."
 
@@ -11374,12 +11302,10 @@ msgid "Too many account creation attempts. Try again later."
 msgstr "Too many login attempts. Try again later."
 
 #: legalize_site/settings/base.py:648
-#| msgid "Too many reminder refresh requests. Try again later."
 msgid "Too many intake link requests. Try again later."
 msgstr "Too many intake link requests. Try again later."
 
 #: legalize_site/settings/base.py:656
-#| msgid "Too many email sends. Try again later."
 msgid "Too many intake submissions. Try again later."
 msgstr "Too many intake submissions. Try again later."
 
@@ -11608,63 +11534,50 @@ msgid "Переключить на светлую тему"
 msgstr "Switch to light theme"
 
 #: templates/account/email.html:4
-#| msgid "Адрес электронной почты"
 msgid "Адреса электронной почты"
 msgstr "Email addresses"
 
 #: templates/account/email.html:15
-#| msgid "Активные дела"
 msgid "Электронные адреса"
 msgstr "Email addresses"
 
 #: templates/account/email.html:16
-#| msgid ""
-#| "Введите электронную почту, привязанную к аккаунту, и мы отправим инструкции."
 msgid "Управляйте адресами электронной почты, привязанными к вашему аккаунту."
 msgstr "Manage the email addresses linked to your account."
 
 #: templates/account/email.html:20
-#| msgid "Выйти и войти под другим аккаунтом"
 msgid "Следующие адреса связаны с вашим аккаунтом:"
 msgstr "The following addresses are linked to your account:"
 
 #: templates/account/email.html:32
-#| msgid "Подтверждено"
 msgid "Подтвержден"
 msgstr "Verified"
 
 #: templates/account/email.html:34
-#| msgid "нет подтверждения"
 msgid "Не подтвержден"
 msgstr "Unverified"
 
 #: templates/account/email.html:37
-#| msgid "Основание"
 msgid "Основной"
 msgstr "Primary"
 
 #: templates/account/email.html:46
-#| msgid "Смена основания"
 msgid "Сделать основным"
 msgstr "Make primary"
 
 #: templates/account/email.html:49
-#| msgid "Подтвердить почту"
 msgid "Подтвердить"
 msgstr "Confirm"
 
 #: templates/account/email.html:58
-#| msgid "Пожалуйста, укажите адрес электронной почты."
 msgid "У вас не привязано ни одного адреса электронной почты!"
 msgstr "You have no email addresses linked!"
 
 #: templates/account/email.html:65
-#| msgid "Добавить"
 msgid "Добавить email"
 msgstr "Add email"
 
 #: templates/account/email.html:70
-#| msgid "Адрес электронной почты"
 msgid "Новый адрес электронной почты"
 msgstr "New email address"
 
@@ -11828,7 +11741,6 @@ msgid "Добро пожаловать обратно"
 msgstr "Welcome back"
 
 #: templates/account/login.html:17
-#| msgid "Аккаунт успешно создан. Вы вошли в личный кабинет клиента."
 msgid "Войдите, чтобы открыть CRM или личный кабинет клиента."
 msgstr "Sign in to open the CRM or the client portal."
 
@@ -11845,9 +11757,6 @@ msgid "Понятная аналитика"
 msgstr "Clear analytics"
 
 #: templates/account/login.html:35
-#| msgid ""
-#| "Зарегистрируйтесь, чтобы следить за документами, платежами и клиентами в "
-#| "одном месте."
 msgid "Отслеживайте документы, платежи и этапы дела в одном месте."
 msgstr "Track documents, payments and case stages in one place."
 
@@ -11860,7 +11769,6 @@ msgid "Сотрудники и клиенты получают доступ то
 msgstr "Staff and clients only get access to their own sections."
 
 #: templates/account/login.html:52
-#| msgid "Используйте письмо"
 msgid "Используйте email и пароль."
 msgstr "Use your email and password."
 
@@ -11874,33 +11782,27 @@ msgstr ""
 "Clients sign in with the same email and password created via the link."
 
 #: templates/account/logout.html:15
-#| msgid "Вход в систему"
 msgid "Выход из системы"
 msgstr "Sign out"
 
 #: templates/account/logout.html:16
-#| msgid "Вы уверены, что хотите удалить этот документ?"
 msgid "Вы уверены, что хотите выйти?"
 msgstr "Are you sure you want to sign out?"
 
 #: templates/account/logout.html:26
-#| msgid "Выйти"
 msgid "Да, выйти"
 msgstr "Yes, sign out"
 
 #: templates/account/password_change.html:4
 #: templates/account/password_change.html:15
-#| msgid "Восстановление пароля"
 msgid "Изменение пароля"
 msgstr "Change password"
 
 #: templates/account/password_change.html:16
-#| msgid "Добавить документ только для этого клиента"
 msgid "Задайте новый безопасный пароль для вашего аккаунта."
 msgstr "Set a new secure password for your account."
 
 #: templates/account/password_change.html:49
-#| msgid "Заполнить профиль"
 msgid "Сменить пароль"
 msgstr "Change password"
 
