@@ -32,6 +32,34 @@ Ensure the following variables are set in production:
 3. The release command (`release.sh`) applies database migrations and runs preparations.
 4. The start command (`start.sh`) runs the application server (gunicorn).
 
+## Scheduled Jobs (cron)
+
+All background work is exposed as token-protected HTTP endpoints so any external
+scheduler (Railway cron, GitHub Actions, cron-job.org, …) can drive it. Every
+endpoint requires `POST` with the token in `X-CRON-TOKEN: <CRON_TOKEN>` (or
+`Authorization: Bearer <CRON_TOKEN>`); optionally restrict callers with
+`CRON_ALLOWED_IPS` (comma-separated IPs/CIDRs, checked against the direct peer
+address).
+
+| Endpoint | What it does | Suggested schedule |
+| --- | --- | --- |
+| `/cron/process-document-jobs/` | OCR queue: reclaims stale jobs, parses uploaded wezwania | every 5–15 min |
+| `/cron/process-email-campaigns/` | Sends queued email campaigns | every 5–15 min |
+| `/cron/update-reminders/` | Rebuilds document/payment/deadline reminders and sends notifications (`only=documents|payments|...` to scope) | daily |
+| `/cron/run-maintenance/` | GDPR retention: strips email-log bodies past `EMAIL_LOG_BODY_RETENTION_DAYS`; anonymizes clients older than `ANONYMIZE_CLIENTS_AFTER_YEARS` (dry-run report unless `AUTO_ANONYMIZE_OLD_CLIENTS=True`) | daily |
+| `/cron/db-backup/` | `pg_dump` backup, optionally encrypted/uploaded (also accepts legacy `BACKUP_TRIGGER_SECRET`) | daily |
+
+Alternative without an external scheduler: run
+`python manage.py run_background_automation_loop --loop` as a second Railway
+service/worker. Each cycle (default 300 s) it processes OCR jobs and email
+campaigns, runs the daily reminder pass (deduplicated per day inside the
+command), and once per day the same retention maintenance as
+`/cron/run-maintenance/`. The only job it does NOT cover is `/cron/db-backup/`,
+which needs `pg_dump` and should stay on an external schedule.
+
+Anonymization is destructive (PII overwritten, documents deleted), so it stays
+a dry-run report until you explicitly set `AUTO_ANONYMIZE_OLD_CLIENTS=True`.
+
 ## Rollback Basics
 - Standard Git revert: `git revert <commit>` and push.
 - Monitor Railway logs carefully for migration drifts.

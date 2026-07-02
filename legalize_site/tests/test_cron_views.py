@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import os
+from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.test import Client as DjangoClient
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
-from clients.models import EmailCampaign
+from clients.models import Client, EmailCampaign, EmailLog
 from legalize_site.backups import BackupResult
 
 
@@ -343,3 +345,100 @@ class CronViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         process_mock.assert_called_once()
+
+
+class RunMaintenanceCronTests(TestCase):
+    """/cron/run-maintenance/ — GDPR retention wiring (cleanup + anonymization)."""
+
+    @staticmethod
+    def _make_old_client(email: str, years: int = 6) -> Client:
+        client = Client.objects.create(
+            first_name="Old",
+            last_name="Client",
+            citizenship="UA",
+            phone="+48111111111",
+            email=email,
+        )
+        Client.all_objects.filter(pk=client.pk).update(
+            created_at=timezone.now() - timedelta(days=years * 365 + 30)
+        )
+        client.refresh_from_db()
+        return client
+
+    def _post(self, **extra):
+        return self.client.post(
+            reverse("run_maintenance_cron"),
+            HTTP_X_CRON_TOKEN="secret",
+            REMOTE_ADDR="127.0.0.1",
+            **extra,
+        )
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    def test_run_maintenance_cron_requires_token(self):
+        response = self.client.post(reverse("run_maintenance_cron"))
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json(), {"error": "forbidden"})
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    def test_default_run_cleans_email_logs_but_only_dry_runs_anonymization(self):
+        old_client = self._make_old_client("old-dryrun@example.com")
+        log = EmailLog.objects.create(
+            client=old_client,
+            subject="Old email",
+            body="sensitive body",
+            recipients="old-dryrun@example.com",
+        )
+        EmailLog.objects.filter(pk=log.pk).update(sent_at=timezone.now() - timedelta(days=400))
+
+        response = self._post()
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["ok"])
+        self.assertEqual(payload["command"], "run_maintenance")
+        self.assertFalse(payload["anonymize_enabled"])
+        self.assertEqual(payload["anonymize_years"], 5)
+
+        log.refresh_from_db()
+        self.assertEqual(log.body, "")
+        self.assertEqual(log.recipients, "")
+
+        old_client.refresh_from_db()
+        self.assertEqual(old_client.first_name, "Old")
+        self.assertEqual(old_client.email, "old-dryrun@example.com")
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    @override_settings(AUTO_ANONYMIZE_OLD_CLIENTS=True, ANONYMIZE_CLIENTS_AFTER_YEARS=5)
+    def test_opt_in_flag_anonymizes_old_clients_and_keeps_recent_ones(self):
+        old_client = self._make_old_client("old-live@example.com")
+        recent_client = Client.objects.create(
+            first_name="Recent",
+            last_name="Client",
+            citizenship="UA",
+            phone="+48222222222",
+            email="recent-live@example.com",
+        )
+
+        response = self._post()
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["anonymize_enabled"])
+
+        old_client.refresh_from_db()
+        self.assertEqual(old_client.first_name, f"Anonymized_{old_client.pk}")
+        self.assertEqual(old_client.email, f"deleted_{old_client.pk}@example.com")
+
+        recent_client.refresh_from_db()
+        self.assertEqual(recent_client.first_name, "Recent")
+        self.assertEqual(recent_client.email, "recent-live@example.com")
+
+    @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
+    @patch("legalize_site.cron_views._alert_cron_failure")
+    @patch("django.core.management.call_command", side_effect=RuntimeError("db unavailable"))
+    def test_run_maintenance_cron_exception_is_generic_and_alerts(self, _call_mock, alert_mock):
+        response = self._post()
+
+        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.json(), {"error": "retention maintenance failed"})
+        alert_mock.assert_called_once()

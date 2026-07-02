@@ -127,7 +127,9 @@ class ProductionSettingsTests(SimpleTestCase):
         self.assertIn("default-src 'self'", settings_module.LEGALIZE_CONTENT_SECURITY_POLICY)
         self.assertIn("object-src 'none'", settings_module.LEGALIZE_CONTENT_SECURITY_POLICY)
         self.assertIn("frame-ancestors 'none'", settings_module.LEGALIZE_CONTENT_SECURITY_POLICY)
-        self.assertIn("https://cdn.jsdelivr.net", settings_module.LEGALIZE_CONTENT_SECURITY_POLICY)
+        self.assertNotIn("https://cdn.jsdelivr.net", settings_module.LEGALIZE_CONTENT_SECURITY_POLICY)
+        self.assertNotIn("https://cdnjs.cloudflare.com", settings_module.LEGALIZE_CONTENT_SECURITY_POLICY)
+        self.assertIn("script-src 'self'", settings_module.LEGALIZE_CONTENT_SECURITY_POLICY)
         self.assertFalse(settings_module.LEGALIZE_CSP_REPORT_ONLY)
 
     def test_production_uses_single_sentry_init_with_redaction(self):

@@ -316,7 +316,25 @@ def test_background_automation_loop_runs_core_background_tasks():
         call("process_document_jobs", "--limit", "50"),
         call("process_email_campaigns", "--limit", "50"),
         call("run_weekly_document_reminders"),
+        call("cleanup_email_logs"),
+        call("anonymize_old_clients", "--years", "5", "--dry-run"),
     ]
+
+
+@pytest.mark.django_db
+def test_background_automation_loop_runs_maintenance_once_per_day():
+    from django.core.cache import cache as real_cache
+
+    real_cache.delete(f"background_automation_loop:maintenance:{timezone.localdate().isoformat()}")
+    try:
+        with patch("clients.management.commands.run_background_automation_loop.call_command") as call_mock:
+            call_command("run_background_automation_loop")
+            call_command("run_background_automation_loop")
+    finally:
+        real_cache.delete(f"background_automation_loop:maintenance:{timezone.localdate().isoformat()}")
+
+    maintenance_calls = [c for c in call_mock.call_args_list if c.args and c.args[0] == "cleanup_email_logs"]
+    assert len(maintenance_calls) == 1
 
 
 @pytest.mark.django_db

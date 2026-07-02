@@ -125,15 +125,16 @@ CONTENT_SECURITY_POLICY = {
     "frame-ancestors": ("'none'",),
     "form-action": ("'self'",),
     "img-src": ("'self'", "data:", "blob:"),
-    "font-src": ("'self'", "data:", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"),
-    "style-src": ("'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"),
-    # script-src no longer relies on 'unsafe-inline': every inline <script> in our
-    # own templates (and allauth) carries nonce="{{ request.csp_nonce }}", and the
-    # CSP middleware injects that per-request nonce into this directive. Verified
-    # that staff pages, allauth, and Django admin have no un-nonced executable
-    # inline scripts. style-src keeps 'unsafe-inline' until inline style="" usages
-    # are refactored. (audit P-02)
-    "script-src": ("'self'", "https://cdn.jsdelivr.net"),
+    # All CSS/JS/fonts are vendored under static/vendor/, so no CDN hosts are
+    # allowed anywhere. script-src does not rely on 'unsafe-inline': every inline
+    # <script> in our own templates (and allauth) carries
+    # nonce="{{ request.csp_nonce }}", and the CSP middleware injects that
+    # per-request nonce into this directive. Verified that staff pages, allauth,
+    # and Django admin have no un-nonced executable inline scripts. style-src
+    # keeps 'unsafe-inline' until inline style="" usages are refactored. (audit P-02)
+    "font-src": ("'self'", "data:"),
+    "style-src": ("'self'", "'unsafe-inline'"),
+    "script-src": ("'self'",),
     "connect-src": ("'self'",),
 }
 LEGALIZE_CONTENT_SECURITY_POLICY = "; ".join(
@@ -151,8 +152,8 @@ LEGALIZE_CONTENT_SECURITY_POLICY_REPORT_ONLY = ""
 if LEGALIZE_CSP_STRICT_REPORT_ONLY:
     STRICT_CONTENT_SECURITY_POLICY = {
         **CONTENT_SECURITY_POLICY,
-        "style-src": ("'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"),
-        "script-src": ("'self'", "https://cdn.jsdelivr.net"),
+        "style-src": ("'self'",),
+        "script-src": ("'self'",),
     }
     LEGALIZE_CONTENT_SECURITY_POLICY_REPORT_ONLY = "; ".join(
         f"{directive} {' '.join(sources)}"

@@ -283,7 +283,7 @@ def test_public_intake_hijack_prevention():
     )
 
     raw_token, token_hash = generate_onboarding_token()
-    intake = ClientIntakeSubmission.objects.create(
+    ClientIntakeSubmission.objects.create(
         token_hash=token_hash,
         status=ClientIntakeSubmission.STATUS_DRAFT,
         expires_at=timezone.now() + timezone.timedelta(hours=1),

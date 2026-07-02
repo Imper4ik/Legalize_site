@@ -293,6 +293,56 @@ def process_document_jobs_cron(request: HttpRequest) -> JsonResponse:
 
 @csrf_exempt
 @require_POST
+def run_maintenance_cron(request: HttpRequest) -> JsonResponse:
+    """GDPR retention maintenance: email-log body cleanup + client anonymization.
+
+    ``cleanup_email_logs`` always runs (it only strips bodies/recipients older
+    than EMAIL_LOG_BODY_RETENTION_DAYS). ``anonymize_old_clients`` is
+    destructive, so it runs for real only when AUTO_ANONYMIZE_OLD_CLIENTS is
+    enabled; otherwise a dry-run report is produced so operators can see what
+    *would* be anonymized before opting in.
+    """
+    from django.core.management import call_command
+
+    started_at = time.perf_counter()
+    try:
+        forbidden_response = _authorize_cron_request(request, action_name="retention maintenance")
+        if forbidden_response is not None:
+            return forbidden_response
+
+        call_command("cleanup_email_logs")
+
+        anonymize_enabled = bool(getattr(settings, "AUTO_ANONYMIZE_OLD_CLIENTS", False))
+        anonymize_years = int(getattr(settings, "ANONYMIZE_CLIENTS_AFTER_YEARS", 5))
+        anonymize_args = ["--years", str(anonymize_years)]
+        if not anonymize_enabled:
+            anonymize_args.append("--dry-run")
+        call_command("anonymize_old_clients", *anonymize_args)
+
+        logger.info(
+            "Executed retention maintenance via cron: anonymize_enabled=%s years=%s",
+            anonymize_enabled,
+            anonymize_years,
+        )
+        return JsonResponse(
+            {
+                "status": "processed",
+                "ok": True,
+                "command": "run_maintenance",
+                "anonymize_enabled": anonymize_enabled,
+                "anonymize_years": anonymize_years,
+                "errors": [],
+                "duration_ms": round((time.perf_counter() - started_at) * 1000),
+            }
+        )
+    except Exception as e:
+        logger.exception("Unexpected error during retention maintenance")
+        _alert_cron_failure("run_maintenance", e)
+        return JsonResponse({"error": "retention maintenance failed"}, status=500)
+
+
+@csrf_exempt
+@require_POST
 def update_reminders_cron(request: HttpRequest) -> JsonResponse:
     from django.core.management import call_command
 

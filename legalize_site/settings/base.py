@@ -482,6 +482,11 @@ BREVO_SMTP_PASSWORD = os.getenv("BREVO_SMTP_PASSWORD")
 BREVO_SMTP_USER = os.getenv("BREVO_SMTP_USER", "apikey")
 BREVO_SMTP_HOST = os.getenv("BREVO_SMTP_HOST", "smtp-relay.brevo.com")
 EMAIL_LOG_BODY_RETENTION_DAYS = int(os.environ.get("EMAIL_LOG_BODY_RETENTION_DAYS", "180"))
+# GDPR retention automation (cron/run-maintenance and the background loop):
+# email-log body cleanup always runs; client anonymization is destructive and
+# therefore opt-in — without the flag it only logs a dry-run report.
+AUTO_ANONYMIZE_OLD_CLIENTS = env_flag("AUTO_ANONYMIZE_OLD_CLIENTS", "False")
+ANONYMIZE_CLIENTS_AFTER_YEARS = int(os.environ.get("ANONYMIZE_CLIENTS_AFTER_YEARS", "5"))
 
 EMAIL_FALLBACK_TO_CONSOLE = env_flag(
     "EMAIL_FALLBACK_TO_CONSOLE",

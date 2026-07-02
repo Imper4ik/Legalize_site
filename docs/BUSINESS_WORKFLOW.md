@@ -36,6 +36,8 @@ Wezwanie OCR can detect fingerprints appointments, ticket/list fields, decision 
 
 Daily reminders cover overdue payments, expiring/expired documents, missing documents for clients waiting after fingerprints, and missing ZUS RCA months. Email idempotency keys prevent duplicate messages for the same logical reminder window.
 
+The automated checks *run* daily (via `/cron/update-reminders/` or the background automation loop), but each logical reminder is *sent* at most once per its window — e.g. missing-document nudges deduplicate per week via idempotency keys, so a daily schedule does not spam clients. The spec's "weekly checks" are therefore implemented as daily runs with weekly send deduplication, which also catches new cases at most one day late instead of up to a week.
+
 ## Roles
 
 - Admin: full operational access.

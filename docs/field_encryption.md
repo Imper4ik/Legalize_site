@@ -42,6 +42,20 @@ If `FERNET_KEYS` is not provided, a deterministic key derived from `SECRET_KEY` 
 *   **Avoid logging PII fields** (`passport_num`, `case_number`) directly.
 *   The system includes a log filter that redacts known PII field names in log messages to prevent accidental leakage.
 
+## Deliberate Trade-off: Searchable Plaintext Fields
+
+Not every PII field is encrypted, by design. `Client.first_name`,
+`last_name`, `email` and `phone` are stored in plaintext so the staff
+client-list search (`icontains` lookups) and unique-email checks keep
+working — Fernet ciphertexts cannot be substring-searched or indexed.
+High-sensitivity values (passport number, questionnaire payloads, email
+bodies/recipients, onboarding answers — 25 fields in total) are encrypted,
+and identifiers used for lookups (onboarding tokens, authority case
+numbers) additionally carry HMAC hashes for exact-match search. If the
+plaintext name/contact fields ever need encryption too, staff search must
+first be reworked (e.g. dedicated search hashes or an external index);
+until then this trade-off is accepted and documented here.
+
 ---
 
 # Polski <a name="polski"></a>
@@ -84,6 +98,18 @@ Jeśli `FERNET_KEYS` nie zostanie podany, używany jest deterministyczny klucz p
 *   **Unikaj logowania pól PII** (`passport_num`, `case_number`) bezpośrednio.
 *   System zawiera filtr logów, który redaguje (ukrywa) znane nazwy pól PII w wiadomościach logowania, aby zapobiec przypadkowemu wyciekowi.
 
+## Świadomy kompromis: pola przeszukiwalne w postaci jawnej
+
+Nie każde pole PII jest szyfrowane — celowo. `Client.first_name`,
+`last_name`, `email` i `phone` są przechowywane jawnie, aby wyszukiwarka
+listy klientów (`icontains`) i kontrola unikalności e-maila działały —
+szyfrogramów Fernet nie da się przeszukiwać po fragmencie ani indeksować.
+Dane wysokiego ryzyka (numer paszportu, ankiety, treści e-maili — łącznie
+25 pól) są szyfrowane, a identyfikatory używane do wyszukiwania (tokeny
+onboardingu, numery spraw urzędu) mają dodatkowo hasze HMAC do dopasowań
+dokładnych. Zaszyfrowanie pól imienia/kontaktu wymagałoby najpierw
+przebudowy wyszukiwarki — do tego czasu kompromis jest zaakceptowany.
+
 ---
 
 # Русский <a name="русский"></a>
@@ -125,3 +151,15 @@ export FERNET_KEYS="новейший_ключ,предыдущий_ключ"
 
 *   **Избегайте прямого логирования полей PII** (`passport_num`, `case_number`).
 *   Система включает фильтр логов, который скрывает известные имена полей PII в сообщениях логов, чтобы предотвратить случайную утечку.
+
+## Осознанный компромисс: поля, доступные для поиска в открытом виде
+
+Не все поля PII шифруются — это сделано намеренно. `Client.first_name`,
+`last_name`, `email` и `phone` хранятся в открытом виде, чтобы работал
+поиск по списку клиентов (`icontains`) и проверка уникальности e-mail —
+шифртексты Fernet нельзя искать по подстроке или индексировать.
+Высокочувствительные данные (номер паспорта, анкеты, тексты писем — всего
+25 полей) зашифрованы, а идентификаторы для поиска (токены онбординга,
+номера дел ужонда) дополнительно имеют HMAC-хэши для точного совпадения.
+Если понадобится шифровать и поля имени/контактов, сначала придётся
+переделать поиск — до этого компромисс принят и зафиксирован здесь.
