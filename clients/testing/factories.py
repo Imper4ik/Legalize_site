@@ -99,9 +99,21 @@ def create_client_user(*, email: str | None = None) -> User:
     )
 
 
+def _single_case_of(client: Client):
+    """Explicit case for factory-created records (shim-exit, spec §4).
+
+    Factory clients always have exactly one auto-created case; passing it
+    explicitly keeps the deprecated model-level legacy fallback silent.
+    """
+    from clients.services.cases import resolve_single_active_case
+
+    return resolve_single_active_case(client)
+
+
 def create_paid_payment(client: Client) -> Payment:
     return Payment.objects.create(
         client=client,
+        case=_single_case_of(client),
         service_description="work_service",
         total_amount=Decimal("1000.00"),
         amount_paid=Decimal("1000.00"),
@@ -115,6 +127,7 @@ def create_paid_payment(client: Client) -> Payment:
 def create_pending_payment(client: Client, *, service_description: str = "work_service") -> Payment:
     return Payment.objects.create(
         client=client,
+        case=_single_case_of(client),
         service_description=service_description,
         total_amount=Decimal("1000.00"),
         amount_paid=Decimal("0.00"),
@@ -146,7 +159,7 @@ def create_test_document(
 ) -> Document:
     return Document.objects.create(
         client=client,
-        case=case,
+        case=case or _single_case_of(client),
         document_type=doc_type,
         file=build_pdf_upload(filename),
         verified=verified,
@@ -162,6 +175,7 @@ def create_onboarding_session(client: Client, *, days: int = 7) -> tuple[str, Cl
     raw_token, token_hash = generate_onboarding_token()
     session = ClientOnboardingSession.objects.create(
         client=client,
+        case=_single_case_of(client),
         payment=client.payments.filter(status__in=["paid", "partial"]).first(),
         token_hash=token_hash,
         status="created",

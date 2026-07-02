@@ -9,7 +9,7 @@ from django.utils import timezone
 
 from clients.forms import ClientForm, PaymentForm
 from clients.models import Client, ClientActivity, Payment
-from clients.services.workflow import validate_client_workflow_transition
+from clients.services.workflow import validate_case_workflow_transition
 from clients.tests.factories import create_manager_user, create_staff_user
 from clients.use_cases.client_records import finalize_client_update, snapshot_client_update_state
 from clients.use_cases.payments import create_payment_for_client
@@ -179,8 +179,8 @@ def test_workflow_cannot_close_with_open_payments():
         status="pending",
     )
 
-    result = validate_client_workflow_transition(
-        client=client,
+    result = validate_case_workflow_transition(
+        case=client.cases.get(),
         previous_stage="decision_received",
         next_stage="closed",
     )

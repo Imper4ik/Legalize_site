@@ -6,6 +6,7 @@ from typing import Any
 
 from clients.constants import DocumentType
 from clients.demo.demo_factory import (
+    _single_case_of,
     create_demo_activity,
     create_demo_client,
     create_demo_document,
@@ -37,6 +38,7 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
     )
     MOSApplicationData.objects.update_or_create(
         client=jan,
+        case=_single_case_of(jan),
         defaults={
             "status": "client_completed",
             "mos_purpose": "work",
@@ -84,6 +86,7 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
     anna.save(update_fields=["family_role"])
     MOSApplicationData.objects.update_or_create(
         client=anna,
+        case=_single_case_of(anna),
         defaults={
             "status": "client_filling",
             "mos_purpose": "work",
@@ -115,6 +118,7 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
     )
     MOSApplicationData.objects.update_or_create(
         client=piotr,
+        case=_single_case_of(piotr),
         defaults={
             "status": "client_completed",
             "mos_purpose": "work",
@@ -150,6 +154,7 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
     )
     MOSApplicationData.objects.update_or_create(
         client=elena,
+        case=_single_case_of(elena),
         defaults={
             "status": "client_completed",
             "mos_purpose": "work",
@@ -172,6 +177,7 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
     # Авто-задача: запросить номер дела у клиента
     StaffTask.objects.create(
         client=elena,
+        case=_single_case_of(elena),
         title="Запросить номер дела у клиента (Elena Petrova)",
         description="Клиент указал подачу на карту, но оставил номер дела пустым.",
         status="todo",
@@ -199,6 +205,7 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
 
     MOSApplicationData.objects.update_or_create(
         client=dmitry,
+        case=_single_case_of(dmitry),
         defaults={
             "status": "client_completed",
             "mos_purpose": "work",
@@ -232,6 +239,7 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
     )
     MOSApplicationData.objects.update_or_create(
         client=aliaksandr,
+        case=_single_case_of(aliaksandr),
         defaults={
             "status": "client_filling",
             "mos_purpose": "work",
@@ -266,6 +274,7 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
     # Создадим авто-задачу
     StaffTask.objects.create(
         client=aliaksandr,
+        case=_single_case_of(aliaksandr),
         title="Проверить отклонённый документ: passport",
         description="У клиента Aliaksandr Ivanov отклонён документ passport. Причина: Фото паспорта размыто.",
         status="todo",
@@ -276,6 +285,7 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
     # Имитация отправки email-лога
     EmailLog.objects.create(
         client=aliaksandr,
+        case=_single_case_of(aliaksandr),
         subject="Отклонённый документ: passport",
         body="Действие требуется: фото паспорта размыто.",
         recipients=aliaksandr.email,
@@ -302,6 +312,7 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
 
     MOSApplicationData.objects.update_or_create(
         client=volodymyr,
+        case=_single_case_of(volodymyr),
         defaults={
             "status": "client_completed",
             "mos_purpose": "work",
@@ -322,6 +333,7 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
     # Задача: запросить новый ZUS RCA за май 2026
     StaffTask.objects.create(
         client=volodymyr,
+        case=_single_case_of(volodymyr),
         title="Запросить новый ZUS RCA за май 2026",
         description="Последний ZUS RCA у Volodymyr Shevchenko за апрель 2026. Требуется обновление.",
         status="todo",
@@ -344,6 +356,7 @@ def prepare_demo_scenarios(staff_user: Any) -> list[dict[str, Any]]:
     )
     MOSApplicationData.objects.update_or_create(
         client=yuki,
+        case=_single_case_of(yuki),
         defaults={
             "status": "draft",
             "mos_purpose": "work",

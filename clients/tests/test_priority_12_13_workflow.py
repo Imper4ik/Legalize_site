@@ -27,7 +27,7 @@ from clients.services.notifications import (
     send_expired_documents_email,
 )
 from clients.services.wniosek import match_attachment_to_document_type
-from clients.services.workflow import validate_client_workflow_transition
+from clients.services.workflow import validate_case_workflow_transition
 from clients.services.zus import expected_zus_months, missing_zus_months
 from clients.tests.factories import create_admin_user, create_staff_user
 from clients.use_cases.client_records import finalize_client_update, snapshot_client_update_state
@@ -615,8 +615,8 @@ def test_family_role_checklist_used_for_workflow_notifications_and_wniosek():
         position=0,
     )
 
-    result = validate_client_workflow_transition(
-        client=spouse,
+    result = validate_case_workflow_transition(
+        case=spouse.cases.get(),
         previous_stage="document_collection",
         next_stage="application_submitted",
     )
@@ -634,8 +634,8 @@ def test_family_role_checklist_used_for_workflow_notifications_and_wniosek():
             document_type=code,
             defaults={"file": build_pdf_upload(f"{code}.pdf")}
         )
-    result = validate_client_workflow_transition(
-        client=spouse,
+    result = validate_case_workflow_transition(
+        case=spouse.cases.get(),
         previous_stage="document_collection",
         next_stage="application_submitted",
     )

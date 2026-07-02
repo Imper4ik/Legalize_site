@@ -5,10 +5,10 @@ from datetime import date
 from django.utils import timezone
 
 from clients.constants import DocumentType
-from clients.models import ClientActivity, ClientOnboardingSession, EmailLog, MOSApplicationData
+from clients.models import Case, ClientActivity, ClientOnboardingSession, EmailLog, MOSApplicationData
 from clients.services.notifications import send_missing_documents_email
 from clients.services.onboarding_tokens import hash_onboarding_token
-from clients.services.workflow_transitions import transition_client_workflow
+from clients.services.workflow_transitions import transition_case_workflow
 from clients.testing.assertions import RelatedObjects, ScenarioRecorder
 from clients.testing.document_tests import run_document_access_scenarios
 from clients.testing.email_tests import run_email_scenarios
@@ -115,8 +115,8 @@ def run_smoke_scenario(recorder: ScenarioRecorder) -> None:
         related=RelatedObjects(client=client, document=passport),
     )
 
-    transition_client_workflow(
-        client=client,
+    transition_case_workflow(
+        case=Case.objects.get(client=client),
         target_stage="fingerprints",
         submission_date=date(2026, 6, 1),
     )

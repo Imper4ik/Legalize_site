@@ -93,9 +93,27 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
         if parse_requested and not _can_run_ocr_review(request.user):
             return helper.forbidden()
 
+        # Uploads are stored against a concrete case (spec §1/§5, shim-exit):
+        # an explicit case_uuid wins; otherwise the client's single active case
+        # is used. With several active cases and no explicit choice the upload
+        # is refused with a message instead of the model-level legacy fallback
+        # raising an unhandled ValidationError (HTTP 500).
+        from clients.services.cases import resolve_active_case_for_client
+
+        case_uuid = request.POST.get("case_uuid")
+        case = resolve_active_case_for_client(client, case_uuid) if case_uuid else resolve_single_active_case(client)
+        if case is None:
+            message = _("Для этой операции необходимо выбрать дело.")
+            if case_uuid:
+                message = _("Дело не найдено.")
+            if helper.expects_json:
+                return helper.error(message=str(message))
+            messages.error(request, message)
+            return redirect("clients:client_detail", pk=client.id)
+
         files = request.FILES.getlist('file')
         if not files:
-            form = DocumentUploadForm(request.POST, request.FILES, doc_type=doc_type, client=client)
+            form = DocumentUploadForm(request.POST, request.FILES, doc_type=doc_type, client=client, case=case)
             errors = form.errors.get_json_data()
             logger.warning(
                 "Document upload rejected: client_id=%s doc_type=%s errors=%s files=%s",
@@ -130,13 +148,14 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
 
         for f in files:
             file_dict = {'file': f}
-            form = DocumentUploadForm(request.POST, file_dict, doc_type=doc_type, client=client)
+            form = DocumentUploadForm(request.POST, file_dict, doc_type=doc_type, client=client, case=case)
             if form.is_valid():
                 result = upload_client_document(
                     client=client,
                     doc_type=doc_type,
                     uploaded_document=form.save(commit=False),
                     actor=request.user,
+                    case=case,
                     parse_requested=parse_requested,
                     parser=parse_wezwanie,
                     send_missing_email=send_missing_documents_email,

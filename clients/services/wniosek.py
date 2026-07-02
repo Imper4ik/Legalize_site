@@ -141,9 +141,13 @@ def create_wniosek_submission(
     # caller does not pass one, the client's single active case is resolved; an
     # ambiguous multi-case client raises rather than guessing.
     if case is None:
-        from clients.services.cases import get_legacy_compatibility_case
+        from django.core.exceptions import ValidationError
 
-        case = get_legacy_compatibility_case(client.pk, WniosekSubmission.__name__)
+        from clients.services.cases import resolve_single_active_case
+
+        case = resolve_single_active_case(client)
+        if case is None:
+            raise ValidationError("Для этой операции необходимо выбрать дело.")
 
     with transaction.atomic():
         submission = WniosekSubmission.objects.create(
@@ -199,13 +203,12 @@ def find_matching_attachments(client: Client, submission: WniosekSubmission) -> 
 
     case = submission.case
     if not case:
-        from django.core.exceptions import ValidationError
+        # Legacy rows without a case: match against the single active case if
+        # one exists; an ambiguous multi-case client yields no matches.
+        from clients.services.cases import resolve_single_active_case
 
-        from clients.services.cases import get_legacy_compatibility_case
-
-        try:
-            case = get_legacy_compatibility_case(client.pk, "WniosekSubmission")
-        except ValidationError:
+        case = resolve_single_active_case(client)
+        if case is None:
             return {att.pk: None for att in submission.attachments.all()}
 
     docs = list(

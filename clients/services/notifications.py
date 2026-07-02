@@ -559,9 +559,18 @@ def _get_required_documents_context(
     if language is None:
         language = _get_preferred_language(client)
     if case is None:
-        from clients.services.cases import get_legacy_compatibility_case
+        # Shim-exit (spec §4): resolve the single active case without the
+        # deprecated legacy fallback. With zero or several active cases the
+        # checklist is ambiguous, so no email content is produced.
+        from clients.services.cases import resolve_single_active_case
 
-        case = get_legacy_compatibility_case(client.pk, "required_documents")
+        case = resolve_single_active_case(client)
+        if case is None:
+            logger.warning(
+                "required_documents context skipped: client_id=%s has no single active case",
+                client.pk,
+            )
+            return None
 
     from clients.models import ClientDocumentRequirement
     from clients.services.case_context import checklist_for_case
@@ -601,9 +610,17 @@ def send_required_documents_email(
         return 0
 
     if case is None:
-        from clients.services.cases import get_legacy_compatibility_case
+        # Shim-exit (spec §4): the ambiguous multi-case client is skipped (0
+        # emails) instead of raising through the deprecated legacy resolver.
+        from clients.services.cases import resolve_single_active_case
 
-        case = get_legacy_compatibility_case(client.pk, "send_required_documents_email")
+        case = resolve_single_active_case(client)
+        if case is None:
+            logger.warning(
+                "required_documents email skipped: client_id=%s has no single active case",
+                client.pk,
+            )
+            return 0
 
     context = _get_required_documents_context(client, case=case)
     if not context:
@@ -794,6 +811,15 @@ def send_missing_documents_email(
 
     if not client.email:
         return 0
+
+    if case is None:
+        # Scope the EmailLog to the single active case when the caller did not
+        # pass one (shim-exit): the context below already treats a multi-case
+        # client as client-wide legacy behaviour, but the log row must not go
+        # through the deprecated model-level case fallback.
+        from clients.services.cases import resolve_single_active_case
+
+        case = resolve_single_active_case(client)
 
     language = _get_preferred_language(client)
     context = _get_missing_documents_context(client, language, today=today, case=case)

@@ -6,7 +6,7 @@ from typing import Any
 
 from django.core.exceptions import ValidationError
 
-from clients.models import Case, Client
+from clients.models import Case
 from clients.services.activity import log_client_activity
 from clients.services.workflow import validate_case_workflow_transition
 
@@ -50,24 +50,6 @@ def transition_case_workflow(*, case: Case, target_stage: str, actor: Any = None
     return WorkflowTransitionResult(ok=True)
 
 
-def transition_client_workflow(*, client: Client, target_stage: str, actor: Any = None, submission_date: date | None = None, fingerprints_date: date | None = None, decision_date: date | None = None, save: bool = True) -> WorkflowTransitionResult:
-    """DEPRECATED compatibility shim. Transition the client's single case.
-
-    Process state (workflow stage, submission/fingerprints/decision dates) lives
-    on the case, so this shim no longer mirrors it onto the Client. It resolves
-    the client's single active case and delegates to
-    :func:`transition_case_workflow`, raising (via the resolver) when the client
-    has zero or several active cases — callers with a known case must call
-    ``transition_case_workflow`` directly (spec §4).
-    """
-    from clients.services.cases import get_primary_case_for_client
-    case = get_primary_case_for_client(client)
-    return transition_case_workflow(
-        case=case,
-        target_stage=target_stage,
-        actor=actor,
-        submission_date=submission_date,
-        fingerprints_date=fingerprints_date,
-        decision_date=decision_date,
-        save=save,
-    )
+# The client-level shim ``transition_client_workflow`` is gone (spec §4):
+# process state lives on the Case, and every caller now passes the case
+# explicitly to :func:`transition_case_workflow`.

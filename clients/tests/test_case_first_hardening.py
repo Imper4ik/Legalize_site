@@ -626,26 +626,6 @@ class WorkflowTransitionDoesNotMirrorToClientTests(TestCase):
         # Process state lives on the case; the client no longer carries a stage.
         self.assertEqual(refreshed_case.workflow_stage, "document_collection")
 
-    def test_client_wrapper_delegates_without_writing_client(self) -> None:
-        from clients.services.workflow_transitions import transition_client_workflow
-
-        transition_client_workflow(
-            client=self.client_obj, target_stage="document_collection", actor=self.staff
-        )
-
-        refreshed_case = Case.all_objects.get(pk=self.case.pk)
-        self.assertEqual(refreshed_case.workflow_stage, "document_collection")
-
-    def test_client_wrapper_raises_on_ambiguous_cases(self) -> None:
-        from clients.services.workflow_transitions import transition_client_workflow
-
-        create_case_for_client(
-            client=self.client_obj, actor=self.staff, application_purpose="study"
-        )
-        with self.assertRaises(ValidationError):
-            transition_client_workflow(
-                client=self.client_obj, target_stage="document_collection", actor=self.staff
-            )
 
 
 class OcrDoesNotMirrorProcessStateToClientTests(TestCase):

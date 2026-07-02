@@ -135,6 +135,7 @@ def run_document_access_scenarios(recorder: ScenarioRecorder) -> None:
     # 3. Test downloads (DOCX) - if a docx file is present in database
     doc_docx = Document.objects.create(
         client=client_1,
+        case=client_1.cases.get(),
         document_type=DocumentType.PASSPORT.value,
         file=SimpleUploadedFile("manual.docx", b"docx contents", content_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
         is_test_data=True,
@@ -177,6 +178,7 @@ def run_document_access_scenarios(recorder: ScenarioRecorder) -> None:
     # 5. Missing files handling
     doc_missing = Document.objects.create(
         client=client_1,
+        case=client_1.cases.get(),
         document_type=DocumentType.PASSPORT.value,
         file=SimpleUploadedFile("missing.pdf", b"dummy"),
         is_test_data=True,

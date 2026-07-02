@@ -48,6 +48,13 @@ def create_demo_client(
     )
 
 
+def _single_case_of(client: Client):
+    """Explicit case for demo records (shim-exit, spec §4)."""
+    from clients.services.cases import resolve_single_active_case
+
+    return resolve_single_active_case(client)
+
+
 def create_demo_payment(
     client: Client,
     *,
@@ -59,6 +66,7 @@ def create_demo_payment(
 ) -> Payment:
     return Payment.objects.create(
         client=client,
+        case=_single_case_of(client),
         service_description=service_description,
         total_amount=total_amount,
         amount_paid=amount_paid,
@@ -93,6 +101,7 @@ def create_demo_document(
 ) -> Document:
     return Document.objects.create(
         client=client,
+        case=_single_case_of(client),
         document_type=doc_type,
         file=build_demo_pdf(filename),
         verified=verified,
@@ -124,6 +133,7 @@ def create_demo_onboarding_session(
     token_hash = hash_onboarding_token(raw_token)
     session = ClientOnboardingSession.objects.create(
         client=client,
+        case=_single_case_of(client),
         payment=client.payments.filter(status__in=["paid", "partial"]).first(),
         token_hash=token_hash,
         status="active",

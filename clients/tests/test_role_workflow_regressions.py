@@ -12,8 +12,8 @@ from django.utils import timezone
 from clients.constants import DocumentType
 from clients.models import Client, Document, DocumentRequirement, MOSApplicationData, Payment, Reminder, StaffTask
 from clients.services.access import accessible_tasks_queryset
-from clients.services.workflow import validate_client_workflow_transition
-from clients.services.workflow_transitions import transition_client_workflow
+from clients.services.workflow import validate_case_workflow_transition
+from clients.services.workflow_transitions import transition_case_workflow
 from clients.testing.factories import create_test_client, create_test_document, create_test_user
 
 
@@ -162,7 +162,7 @@ class WorkflowDocumentEligibilityTests(TestCase):
         DocumentRequirement.objects.create(application_purpose=purpose, document_type=DocumentType.PASSPORT.value, is_required=True)
 
     def _transition_allowed(self):
-        return validate_client_workflow_transition(client=self.client_obj, previous_stage="document_collection", next_stage="application_submitted").allowed
+        return validate_case_workflow_transition(case=self.client_obj.cases.get(), previous_stage="document_collection", next_stage="application_submitted").allowed
 
     def test_rejected_expired_missing_file_and_archived_documents_block_submission(self):
         cases = [
@@ -198,7 +198,7 @@ class OnboardingTransitionConsistencyTests(TestCase):
         create_test_document(client, doc_type=DocumentType.PASSPORT.value)
         mos = MOSApplicationData.objects.update_or_create(client=client, defaults={"status": "mos_package_ready"})[0]
         case = client.cases.get()
-        transition_client_workflow(client=client, target_stage="application_submitted")
+        transition_case_workflow(case=client.cases.get(), target_stage="application_submitted")
         mos.status = "submitted_in_mos"
         mos.save(update_fields=["status"])
         case.refresh_from_db()
@@ -215,7 +215,7 @@ class OnboardingTransitionConsistencyTests(TestCase):
         DocumentRequirement.objects.create(application_purpose=purpose, document_type=DocumentType.PASSPORT.value, is_required=True)
         mos = MOSApplicationData.objects.update_or_create(client=client, defaults={"status": "mos_package_ready"})[0]
         with self.assertRaises(ValidationError):
-            transition_client_workflow(client=client, target_stage="application_submitted")
+            transition_case_workflow(case=client.cases.get(), target_stage="application_submitted")
         client.refresh_from_db()
         mos.refresh_from_db()
         self.assertEqual(client.cases.get().workflow_stage, "document_collection")
@@ -232,7 +232,7 @@ class OnboardingTransitionConsistencyTests(TestCase):
             with self.assertRaises(RuntimeError):
                 from django.db import transaction
                 with transaction.atomic():
-                    transition_client_workflow(client=client, target_stage="application_submitted")
+                    transition_case_workflow(case=client.cases.get(), target_stage="application_submitted")
                     mos.status = "submitted_in_mos"
         mos.save(update_fields=["status"])
         client.refresh_from_db()

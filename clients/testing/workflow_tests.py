@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 
 from clients.constants import DocumentType
 from clients.models import ClientActivity
-from clients.services.workflow_transitions import transition_client_workflow
+from clients.services.workflow_transitions import transition_case_workflow
 from clients.testing.assertions import RelatedObjects, ScenarioRecorder
 from clients.testing.factories import (
     create_paid_payment,
@@ -24,7 +24,7 @@ def run_workflow_scenarios(recorder: ScenarioRecorder) -> None:
         workflow_stage="new_client",
     )
     try:
-        transition_client_workflow(client=client, target_stage="decision_received")
+        transition_case_workflow(case=client.cases.get(), target_stage="decision_received")
         rejected = False
     except ValidationError:
         rejected = True
@@ -43,13 +43,13 @@ def run_workflow_scenarios(recorder: ScenarioRecorder) -> None:
         workflow_stage="document_collection",
     )
     create_paid_payment(paid_client)
-    transition_client_workflow(
-        client=paid_client,
+    transition_case_workflow(
+        case=paid_client.cases.get(),
         target_stage="fingerprints",
         submission_date=date(2026, 6, 1),
     )
-    transition_client_workflow(
-        client=paid_client,
+    transition_case_workflow(
+        case=paid_client.cases.get(),
         target_stage="waiting_decision",
         fingerprints_date=date(2026, 6, 5),
     )

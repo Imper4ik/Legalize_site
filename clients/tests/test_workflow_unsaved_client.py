@@ -3,7 +3,6 @@ from __future__ import annotations
 import pytest
 
 from clients.forms import ClientForm
-from clients.services.workflow import validate_client_workflow_transition
 
 
 def client_form_data(**overrides):
@@ -35,20 +34,3 @@ def test_unsaved_client_form_ignores_workflow_stage_without_500():
     assert "workflow_stage" not in form.fields
     assert form.is_valid(), form.errors
 
-
-@pytest.mark.django_db
-def test_workflow_validation_rejects_unsaved_application_submitted_client():
-    from django.utils import translation
-    with translation.override("ru"):
-        form = ClientForm(data=client_form_data(workflow_stage="new_client"))
-        assert form.is_valid(), form.errors
-        client = form.save(commit=False)
-
-        result = validate_client_workflow_transition(
-            client=client,
-            previous_stage="document_collection",
-            next_stage="application_submitted",
-        )
-
-        assert not result.allowed
-        assert "Сначала сохраните клиента" in result.message
