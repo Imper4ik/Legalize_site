@@ -223,14 +223,18 @@ def _send_email(
         try:
             sent_count = _send_mail_with_retry(subject, body, recipient_list)
             result["sent_count"] = sent_count
-            if sent_count and template_type != "onboarding_completed":
-                try:
-                    _send_confirmation_email(subject, body, recipient_list)
-                except Exception as exc:
-                    logger.warning(
-                        "Failed to send staff confirmation email: error_type=%s",
-                        type(exc).__name__,
-                    )
+            if sent_count:
+                # onboarding_completed already goes to the office mailbox, so a
+                # separate staff confirmation copy would be a duplicate — but the
+                # delivery itself must still be logged as sent.
+                if template_type != "onboarding_completed":
+                    try:
+                        _send_confirmation_email(subject, body, recipient_list)
+                    except Exception as exc:
+                        logger.warning(
+                            "Failed to send staff confirmation email: error_type=%s",
+                            type(exc).__name__,
+                        )
                 _log_email(
                     subject,
                     body,

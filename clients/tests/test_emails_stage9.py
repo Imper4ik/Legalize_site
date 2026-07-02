@@ -169,6 +169,30 @@ class EmailViewsStage9Tests(TestCase):
         email_log = EmailLog.objects.get(idempotency_key=key)
         self.assertEqual(email_log.delivery_status, EmailLog.DELIVERY_STATUS_SENT)
 
+    @patch("clients.services.notifications._send_confirmation_email")
+    @patch("clients.services.notifications.send_mail", return_value=1)
+    def test_onboarding_completed_email_is_logged_as_sent(self, send_mail_mock, confirm_mock):
+        # Regression: the "skip staff confirmation copy" special case must not
+        # route a successful onboarding_completed send into the failed branch.
+        key = build_email_idempotency_key("onboarding-completed-log", self.client_obj.pk)
+
+        sent_count = _send_email(
+            "Client completed onboarding",
+            "Body",
+            ["office@example.com"],
+            client=self.client_obj,
+            template_type="onboarding_completed",
+            sent_by=self.staff,
+            idempotency_key=key,
+        )
+
+        self.assertEqual(sent_count, 1)
+        send_mail_mock.assert_called_once()
+        confirm_mock.assert_not_called()  # no duplicate staff copy
+        email_log = EmailLog.objects.get(idempotency_key=key)
+        self.assertEqual(email_log.delivery_status, EmailLog.DELIVERY_STATUS_SENT)
+        self.assertEqual(email_log.error_message, "")
+
     @patch("clients.views.emails.send_mail", return_value=1)
     def test_send_custom_email_requires_subject_and_body(self, send_mail_mock):
         response = self.client.post(
