@@ -17,8 +17,8 @@ from clients.services.activity import log_client_activity
 from clients.services.mos_eligibility import evaluate_mos_eligibility
 from clients.services.onboarding_purposes import (
     ALLOWED_ONBOARDING_PURPOSES,
-    apply_onboarding_purpose_to_client,
     apply_onboarding_purpose_to_case,
+    apply_onboarding_purpose_to_client,
     clear_onboarding_notifications_cache,
     purpose_label,
 )
@@ -137,15 +137,68 @@ def _apply_mos_data_to_client(*, client: Client, mos_data: MOSApplicationData, a
     return changed_fields
 
 
+def _resolve_review_mos_data(
+    request: HttpRequest, client: Client
+) -> MOSApplicationData | None:
+    """Resolve the case-scoped MOS record this review acts on.
+
+    MOSApplicationData is one-per-case, so a client with several cases has
+    several records; ``get(client=client)`` would raise MultipleObjectsReturned
+    (HTTP 500). An explicit ``case`` uuid (GET or POST) selects the record;
+    with exactly one record it is used directly; otherwise the caller shows a
+    case picker instead of guessing.
+    """
+    mos_records = MOSApplicationData.objects.filter(client=client).select_related("case")
+    case_uuid = (request.POST.get("case") or request.GET.get("case") or "").strip()
+    if case_uuid:
+        return get_object_or_404(mos_records, case__uuid=case_uuid)
+
+    records = list(mos_records[:2])
+    if not records:
+        from django.http import Http404
+
+        raise Http404("No MOS application data for this client.")
+    if len(records) == 1:
+        return records[0]
+    return None
+
+
+def _review_redirect(client: Client, mos_data: MOSApplicationData) -> HttpResponse:
+    from django.urls import reverse
+
+    url = reverse("clients:admin_mos_review", kwargs={"client_id": client.id})
+    if mos_data.case is not None:
+        url = f"{url}?case={mos_data.case.uuid}"
+    return redirect(url)
+
+
 @role_required_view("Admin", "Manager", "Staff")
 def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.defer("passport_num")), id=client_id)
-    mos_data = get_object_or_404(MOSApplicationData, client=client)
+    mos_data = _resolve_review_mos_data(request, client)
+    if mos_data is None:
+        # Several case-scoped questionnaires: let the staffer pick the case
+        # explicitly instead of failing or silently choosing one.
+        mos_records = (
+            MOSApplicationData.objects.filter(client=client)
+            .select_related("case")
+            .order_by("-updated_at")
+        )
+        return render(
+            request,
+            "clients/mos_review_select_case.html",
+            {"client": client, "mos_records": mos_records},
+        )
     # Process transitions act on the MOS record's case (spec §4); the client is
     # never used as the process carrier.
-    from clients.services.cases import get_primary_case_for_client
+    case = mos_data.case
+    if case is None:
+        from clients.services.cases import resolve_single_active_case
 
-    case = mos_data.case or get_primary_case_for_client(client)
+        case = resolve_single_active_case(client)
+    if case is None:
+        messages.error(request, _("Не удалось определить дело для этой анкеты. Выберите дело в карточке клиента."))
+        return redirect("clients:client_detail", pk=client.id)
 
     if request.method == "POST":
         action = request.POST.get("action")
@@ -164,7 +217,7 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
             selected_purpose = mos_data.mos_purpose
             if selected_purpose not in ALLOWED_ONBOARDING_PURPOSES:
                 messages.error(request, _("Cannot apply this purpose to the client card."))
-                return redirect("clients:admin_mos_review", client_id=client.id)
+                return _review_redirect(client, mos_data)
             if case is not None:
                 changed_fields = apply_onboarding_purpose_to_case(case, selected_purpose)
                 event_type = "mos_case_purpose_applied"
@@ -183,7 +236,7 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
                 metadata={"selected_purpose": selected_purpose, "changed_fields": changed_fields},
             )
             messages.success(request, _("Client-selected purpose applied."))
-            return redirect("clients:admin_mos_review", client_id=client.id)
+            return _review_redirect(client, mos_data)
         elif action == "request_correction":
             mos_data.status = "needs_correction"
             mos_data.correction_message = request.POST.get("correction_message", "")
@@ -198,13 +251,13 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
                     mos_data.save(update_fields=["status"])
             except ValidationError as exc:
                 messages.error(request, str(exc))
-                return redirect("clients:admin_mos_review", client_id=client.id)
+                return _review_redirect(client, mos_data)
             except Exception:
                 logger.exception("Unexpected error while marking MOS application submitted", extra={"client_id": client.id})
                 messages.error(request, _("Unexpected error while updating application status."))
-                return redirect("clients:admin_mos_review", client_id=client.id)
+                return _review_redirect(client, mos_data)
             messages.success(request, _("Status: submitted in MOS."))
-            return redirect("clients:admin_mos_review", client_id=client.id)
+            return _review_redirect(client, mos_data)
         elif action == "mark_fingerprints":
             try:
                 with transaction.atomic():
@@ -214,17 +267,17 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
                     mos_data.save(update_fields=["status"])
             except ValidationError as exc:
                 messages.error(request, str(exc))
-                return redirect("clients:admin_mos_review", client_id=client.id)
+                return _review_redirect(client, mos_data)
             except Exception:
                 logger.exception("Unexpected error while marking MOS fingerprints", extra={"client_id": client.id})
                 messages.error(request, _("Unexpected error while updating application status."))
-                return redirect("clients:admin_mos_review", client_id=client.id)
+                return _review_redirect(client, mos_data)
             messages.success(request, _("Status: fingerprints completed."))
-            return redirect("clients:admin_mos_review", client_id=client.id)
+            return _review_redirect(client, mos_data)
         elif action == "mark_waiting":
             if not case.fingerprints_date:
                 messages.error(request, _("Cannot mark waiting decision without fingerprints date."))
-                return redirect("clients:admin_mos_review", client_id=client.id)
+                return _review_redirect(client, mos_data)
             try:
                 with transaction.atomic():
                     transition_case_workflow(case=case, target_stage="waiting_decision", actor=request.user)
@@ -232,13 +285,13 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
                     mos_data.save(update_fields=["status"])
             except ValidationError as exc:
                 messages.error(request, str(exc))
-                return redirect("clients:admin_mos_review", client_id=client.id)
+                return _review_redirect(client, mos_data)
             messages.success(request, _("Status: waiting for decision."))
-            return redirect("clients:admin_mos_review", client_id=client.id)
+            return _review_redirect(client, mos_data)
         elif action == "mark_decision":
             if not case.decision_date:
                 messages.error(request, _("Cannot mark decision received without decision date."))
-                return redirect("clients:admin_mos_review", client_id=client.id)
+                return _review_redirect(client, mos_data)
             try:
                 with transaction.atomic():
                     transition_case_workflow(case=case, target_stage="decision_received", actor=request.user)
@@ -246,9 +299,9 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
                     mos_data.save(update_fields=["status"])
             except ValidationError as exc:
                 messages.error(request, str(exc))
-                return redirect("clients:admin_mos_review", client_id=client.id)
+                return _review_redirect(client, mos_data)
             messages.success(request, _("Status: decision received."))
-            return redirect("clients:admin_mos_review", client_id=client.id)
+            return _review_redirect(client, mos_data)
 
     passport_doc = client.documents.filter(document_type="passport").order_by("-uploaded_at").first()
     mos_eligibility = evaluate_mos_eligibility(client, mos_data)

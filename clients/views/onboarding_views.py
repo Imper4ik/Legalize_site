@@ -17,6 +17,7 @@ from django.http import (
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 
 from clients.constants import SELF_ONBOARDING_SLUG, DocumentType
@@ -34,8 +35,8 @@ from clients.services.document_workflow import upload_client_document
 from clients.services.notifications import notify_staff_about_fingerprint_invitation_upload
 from clients.services.onboarding_purposes import (
     ONBOARDING_PURPOSE_CHOICES,
-    apply_onboarding_purpose_to_client,
     apply_onboarding_purpose_to_case,
+    apply_onboarding_purpose_to_client,
     clear_onboarding_notifications_cache,
     normalize_onboarding_purpose,
     purpose_label,
@@ -1190,5 +1191,13 @@ def onboarding_ask_question(request: HttpRequest, token: str) -> HttpResponse:
 
     messages.success(request, _("Ваш вопрос успешно отправлен. Сотрудник свяжется с вами!"))
 
-    next_url = request.POST.get("next") or reverse("clients:onboarding_start", kwargs={"token": token})
-    return redirect(next_url)
+    # Validate the client-supplied "next" so this POST endpoint cannot be used
+    # as an open redirect off-site.
+    next_url = (request.POST.get("next") or "").strip()
+    if next_url and not url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        next_url = ""
+    return redirect(next_url or reverse("clients:onboarding_start", kwargs={"token": token}))

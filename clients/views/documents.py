@@ -18,7 +18,6 @@ from clients.security.encrypted import safe_encrypted_attr
 from clients.services.access import (
     accessible_clients_queryset,
     accessible_documents_queryset,
-    user_has_internal_role,
 )
 from clients.services.cases import resolve_single_active_case
 from clients.services.custom_document_requirements import sync_custom_document_requirement_reminder
@@ -28,7 +27,7 @@ from clients.services.notifications import (
     send_appointment_notification_email,
     send_missing_documents_email,
 )
-from clients.services.permissions import has_employee_permission
+from clients.services.permissions import user_can_run_ocr_review
 from clients.services.responses import ResponseHelper, apply_no_store
 from clients.services.roles import DOCUMENT_DELETE_ROLES, DOCUMENT_EDIT_ROLES, OCR_REVIEW_ALLOWED_ROLES
 from clients.services.wezwanie_parser import parse_wezwanie
@@ -62,10 +61,7 @@ def _uploaded_file_log_payload(files: list[Any]) -> list[dict[str, Any]]:
 
 
 def _can_run_ocr_review(user: AbstractBaseUser | AnonymousUser | None) -> bool:
-    return (
-        user_has_internal_role(user, *OCR_REVIEW_ALLOWED_ROLES)
-        or has_employee_permission(user, "can_run_ocr_review")
-    )
+    return user_can_run_ocr_review(user)
 
 
 @role_required_view(*DOCUMENT_EDIT_ROLES)
@@ -390,8 +386,17 @@ def _serve_document_file(request: HttpRequest, doc_id: int, *, as_attachment: bo
     action = "download" if as_attachment else "preview"
     logger.info("Document %s requested: doc_id=%s, user_id=%s", action, doc_id, getattr(request.user, 'pk', 'None'))
 
+    # Serve archived documents too: the case detail page lists documents of
+    # archived cases (Document.all_objects) with preview/download buttons, and
+    # staff must be able to open a file to decide about restoring it. Access is
+    # still scoped by accessible_documents_queryset and every download is
+    # logged via record_document_download.
     document = get_object_or_404(
-        accessible_documents_queryset(request.user, Document.objects.select_related("client")),
+        accessible_documents_queryset(
+            request.user,
+            Document.all_objects.select_related("client"),
+            include_archived_cases=True,
+        ),
         pk=doc_id,
     )
 
@@ -437,6 +442,7 @@ def client_status_api(request: HttpRequest, pk: int) -> HttpResponseBase:
             "missing_zus_months_for_upload": (missing_zus_month_upload_options(active_case) if active_case else []),
             "client": client,
         },
+        request=request,
     )
     helper = ResponseHelper(request)
     return helper.success(checklist_html=checklist_html)
@@ -475,7 +481,7 @@ def client_overview_partial(request: HttpRequest, pk: int) -> HttpResponseBase:
 def client_checklist_partial(request: HttpRequest, pk: int) -> HttpResponseBase:
     client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), pk=pk)
     active_case = resolve_single_active_case(client)
-    
+
     active_cases_count = client.cases.filter(archived_at__isnull=True).count()
     if active_cases_count > 1:
         document_status_list: list[Any] = []

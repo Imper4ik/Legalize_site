@@ -307,6 +307,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "legalize_site.context_processors.feature_flags",
+                "legalize_site.context_processors.staff_capabilities",
                 "legalize_site.context_processors.onboarding_notifications",
                 "legalize_site.context_processors.onboarding_progress",
                 "legalize_site.context_processors.prefilled_email",

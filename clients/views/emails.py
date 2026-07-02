@@ -52,20 +52,40 @@ def email_preview_api(request: HttpRequest, pk: int) -> HttpResponseBase:
     context = None
     from django.core.exceptions import ValidationError
 
+    from clients.services.cases import resolve_single_active_case
+
+    # Case-scope the preview: without it a multi-case client's preview would
+    # merge documents of all cases into one checklist (spec §9). With several
+    # active cases the single-case resolution returns None and the ambiguous
+    # aggregation is refused below instead of silently mixing cases.
+    case = resolve_single_active_case(client)
+    if case is None and client.cases.filter(archived_at__isnull=True).count() > 1:
+        return json_no_store(
+            {
+                "subject": _get_subject(template_type, language),
+                "body": _(
+                    "У клиента несколько активных дел — предпросмотр шаблона по клиенту неоднозначен. "
+                    "Откройте конкретное дело, чтобы работать с его документами."
+                ),
+            }
+        )
+
     try:
         if template_type == "missing_documents":
-            context = _get_missing_documents_context(client, language)
+            context = _get_missing_documents_context(client, language, case=case)
         elif template_type == "expiring_documents":
-            documents = list(client.documents.filter(expiry_date__isnull=False))
-            context = _get_expiring_documents_context(client, documents)
+            documents_qs = client.documents.filter(expiry_date__isnull=False)
+            if case is not None:
+                documents_qs = documents_qs.filter(case=case)
+            context = _get_expiring_documents_context(client, list(documents_qs), case=case)
         elif template_type == "required_documents":
-            context = _get_required_documents_context(client, language)
+            context = _get_required_documents_context(client, language, case=case)
         elif template_type == "appointment_notification":
-            context = _get_appointment_context(client)
+            context = _get_appointment_context(client, case=case)
         elif template_type == "expired_documents":
             from clients.services.notifications import _get_expired_documents_context
 
-            context = _get_expired_documents_context(client)
+            context = _get_expired_documents_context(client, case=case)
     except ValidationError as exc:
         error_msg = exc.messages[0] if hasattr(exc, "messages") and exc.messages else str(exc)
         return json_no_store(

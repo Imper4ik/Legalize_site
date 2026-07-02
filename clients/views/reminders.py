@@ -233,14 +233,28 @@ class PaymentReminderListView(ReminderListView):
     title = _lazy("Напоминания по оплатам")
 
 
+UPDATE_REMINDERS_LOCK_KEY = "manual_update_reminders_lock"
+
+
 @role_required_view(*REPORT_MUTATION_ROLES)
 def run_update_reminders(request: HttpRequest) -> HttpResponseBase:
     if request.method == "POST":
-        try:
-            call_command("update_reminders")
-            messages.success(request, _("Проверка завершена. Новые напоминания, если были найдены, успешно созданы!"))
-        except Exception as e:
-            messages.error(request, _("Произошла ошибка при создании напоминаний: %(err)s") % {"err": e})
+        from django.core.cache import cache
+
+        # Serialize manual runs: the command walks every active case/document/
+        # payment and sends emails, so a double-click or a run overlapping the
+        # cron contour must not start a second pass. Idempotency keys make a
+        # duplicate pass mostly harmless, but it still burns worker time.
+        if not cache.add(UPDATE_REMINDERS_LOCK_KEY, timezone.now().isoformat(), timeout=15 * 60):
+            messages.warning(request, _("Проверка напоминаний уже выполняется. Попробуйте позже."))
+        else:
+            try:
+                call_command("update_reminders")
+                messages.success(request, _("Проверка завершена. Новые напоминания, если были найдены, успешно созданы!"))
+            except Exception as e:
+                messages.error(request, _("Произошла ошибка при создании напоминаний: %(err)s") % {"err": e})
+            finally:
+                cache.delete(UPDATE_REMINDERS_LOCK_KEY)
         next_page = request.POST.get("next", "documents")
         if next_page == "payments":
             return redirect("clients:payment_reminder_list")

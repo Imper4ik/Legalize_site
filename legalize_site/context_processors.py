@@ -37,6 +37,21 @@ def feature_flags(request: HttpRequest) -> dict[str, Any]:
     }
 
 
+def staff_capabilities(request: HttpRequest) -> dict[str, Any]:
+    """Expose per-user capability flags so templates can hide unavailable actions.
+
+    Keeps the frontend consistent with the backend gates: OCR review is
+    Admin/Manager by role and Staff only via EmployeePermission.can_run_ocr_review.
+    """
+    user = getattr(request, "user", None)
+    if user is None or not getattr(user, "is_authenticated", False):
+        return {"user_can_run_ocr_review": False}
+
+    from clients.services.permissions import user_can_run_ocr_review
+
+    return {"user_can_run_ocr_review": user_can_run_ocr_review(user)}
+
+
 def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
     if not hasattr(request, "user") or not request.user.is_authenticated:
         return {}

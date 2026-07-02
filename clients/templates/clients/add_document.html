@@ -44,7 +44,7 @@
           {% endif %}
 
           <div class="mt-4">
-            {% if document_type_display == "Wezwanie" or doc_type == "wezwanie" %}
+            {% if user_can_run_ocr_review and document_type_display == "Wezwanie" or user_can_run_ocr_review and doc_type == "wezwanie" %}
               <button type="submit" name="parse_wezwanie" value="0" class="btn btn-outline-primary btn-lg me-2">{% trans "Просто загрузить" %}</button>
               <button type="submit" name="parse_wezwanie" value="1" class="btn btn-primary btn-lg">
                 <i class="bi bi-magic"></i> {% trans "Загрузить и распознать" %}

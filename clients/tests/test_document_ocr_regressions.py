@@ -155,7 +155,7 @@ class DocumentOCRRegressionTests(TestCase):
         self.assertNotIn("raw_text", document.parsed_data)
         self.assertEqual(document.parsed_data["confirmed"], True)
 
-    def test_staff_role_can_access_parsed_ocr_data_without_feature_flag(self):
+    def test_staff_role_needs_feature_flag_for_parsed_ocr_data(self):
         document = Document.objects.create(
             client=self.client_record,
             document_type=DocumentType.WEZWANIE.value,
@@ -165,10 +165,10 @@ class DocumentOCRRegressionTests(TestCase):
         )
         url = reverse("clients:get_document_parsed_data", kwargs={"doc_id": document.pk})
 
+        # Staff without can_run_ocr_review must NOT reach OCR review (spec §1).
         self.client.force_login(self.staff)
         response = self.client.get(url, HTTP_X_REQUESTED_WITH="XMLHttpRequest")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()["parsed_data"]["case_number"], "WSC-II-P.123.2026")
+        self.assertEqual(response.status_code, 403)
 
         reviewer = get_user_model().objects.create_user(
             email="ocr-reviewer@example.com",
@@ -218,9 +218,9 @@ class DocumentOCRRegressionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["parsed_data"]["case_number"], "SECRET")
 
-    def test_staff_role_can_start_parse_via_upload_without_feature_flag(self):
+    def test_staff_role_needs_feature_flag_to_start_parse_via_upload(self):
+        # Staff without can_run_ocr_review: parse request is rejected (spec §1).
         self.client.force_login(self.staff)
-
         response = self.client.post(
             reverse(
                 "clients:add_document",
@@ -229,11 +229,26 @@ class DocumentOCRRegressionTests(TestCase):
             data={"file": _pdf_upload("wezwanie.pdf"), "parse_wezwanie": "1"},
             HTTP_X_REQUESTED_WITH="XMLHttpRequest",
         )
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(Document.objects.filter(client=self.client_record).exists())
 
+        # With the flag granted the same staff user can start the parse.
+        EmployeePermission.objects.update_or_create(
+            user=self.staff,
+            defaults={"can_run_ocr_review": True},
+        )
+        response = self.client.post(
+            reverse(
+                "clients:add_document",
+                kwargs={"client_id": self.client_record.pk, "doc_type": DocumentType.WEZWANIE.value},
+            ),
+            data={"file": _pdf_upload("wezwanie.pdf"), "parse_wezwanie": "1"},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
         self.assertEqual(response.status_code, 200)
         self.assertTrue(Document.objects.filter(client=self.client_record).exists())
 
-    def test_staff_role_can_confirm_parse_without_feature_flag(self):
+    def test_staff_role_needs_feature_flag_to_confirm_parse(self):
         document = Document.objects.create(
             client=self.client_record,
             document_type=DocumentType.WEZWANIE.value,
@@ -241,14 +256,29 @@ class DocumentOCRRegressionTests(TestCase):
             awaiting_confirmation=True,
             parsed_data={"case_number": "WSC-II-P.123.2026"},
         )
-        self.client.force_login(self.staff)
+        confirm_url = reverse("clients:confirm_wezwanie_parse", kwargs={"doc_id": document.pk})
 
+        # Staff without can_run_ocr_review: confirmation is forbidden (spec §1).
+        self.client.force_login(self.staff)
         response = self.client.post(
-            reverse("clients:confirm_wezwanie_parse", kwargs={"doc_id": document.pk}),
+            confirm_url,
             data={"case_number": "WSC-II-P.123.2026"},
             HTTP_X_REQUESTED_WITH="XMLHttpRequest",
         )
+        document.refresh_from_db()
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(document.awaiting_confirmation)
 
+        # With the flag granted the same staff user can confirm.
+        EmployeePermission.objects.update_or_create(
+            user=self.staff,
+            defaults={"can_run_ocr_review": True},
+        )
+        response = self.client.post(
+            confirm_url,
+            data={"case_number": "WSC-II-P.123.2026"},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
         document.refresh_from_db()
         self.assertEqual(response.status_code, 200)
         self.assertFalse(document.awaiting_confirmation)

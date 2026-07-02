@@ -60,6 +60,20 @@ def has_employee_permission(user: AbstractBaseUser | AnonymousUser | None, permi
     return bool(getattr(permission_object, permission_name, False))
 
 
+def user_can_run_ocr_review(user: AbstractBaseUser | AnonymousUser | None) -> bool:
+    """OCR review capability check (spec §1).
+
+    Admin/Manager have it by role; Staff only via the per-employee
+    ``EmployeePermission.can_run_ocr_review`` grant.
+    """
+    from clients.services.roles import OCR_REVIEW_ALLOWED_ROLES
+
+    return (
+        user_has_any_role(user, *OCR_REVIEW_ALLOWED_ROLES)
+        or has_employee_permission(user, "can_run_ocr_review")
+    )
+
+
 def feature_permission_required(permission_name: str) -> Callable[[Callable[..., HttpResponse]], Callable[..., HttpResponse]]:
     def decorator(view_func: Callable[..., HttpResponse]) -> Callable[..., HttpResponse]:
         @wraps(view_func)

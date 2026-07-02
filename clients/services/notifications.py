@@ -978,8 +978,12 @@ def send_appointment_notification_email(
     )
 
 
-def send_onboarding_completed_email(client: Client) -> int:
-    """Send an email notification to the office staff when a client completes onboarding."""
+def send_onboarding_completed_email(client: Client, *, case: Any | None = None) -> int:
+    """Send an email notification to the office staff when a client completes onboarding.
+
+    ``case`` scopes the review link so a multi-case client's email opens the
+    right questionnaire directly instead of the case picker.
+    """
     recipients = _get_staff_recipients()
 
     if not recipients:
@@ -987,6 +991,8 @@ def send_onboarding_completed_email(client: Client) -> int:
 
     subject = _("Клиент %(name)s заполнил анкету онбординга") % {"name": client.get_full_name()}
     review_path = reverse("clients:admin_mos_review", kwargs={"client_id": client.id})
+    if case is not None and getattr(case, "uuid", None):
+        review_path = f"{review_path}?case={case.uuid}"
     base_url = getattr(settings, "PUBLIC_BASE_URL", "") or getattr(settings, "SITE_URL", "")
     review_url = f"{base_url.rstrip('/')}{review_path}" if base_url else review_path
     body = _(
@@ -1012,8 +1018,11 @@ def send_onboarding_completed_email(client: Client) -> int:
             body,
             recipients,
             client=client,
+            case=case,
             template_type="onboarding_completed",
-            idempotency_key=build_email_idempotency_key("onboarding_completed", client.pk, client.created_at),
+            idempotency_key=build_email_idempotency_key(
+                "onboarding_completed", client.pk, getattr(case, "pk", None), client.created_at
+            ),
         )
     except Exception:
         logger.exception("Failed to send onboarding completed email for client_id=%s", client.pk)

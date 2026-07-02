@@ -410,7 +410,7 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
 
         try:
             from clients.services.notifications import send_onboarding_completed_email
-            send_onboarding_completed_email(session.client)
+            send_onboarding_completed_email(session.client, case=mos_data.case)
         except Exception:
             import logging
             logger = logging.getLogger(__name__)

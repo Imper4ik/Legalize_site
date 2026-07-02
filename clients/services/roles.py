@@ -44,7 +44,9 @@ CLIENT_EDIT_ROLES = CLIENT_MUTATION_ROLES
 CLIENT_DELETE_ROLES = ("Admin", "Manager")
 CHECKLIST_MANAGE_ROLES = ("Admin", "Manager", "Staff")
 RESTORE_ALLOWED_ROLES = ("Admin", "Manager", "Staff")
-OCR_REVIEW_ALLOWED_ROLES = ("Admin", "Manager", "Staff")
+# OCR review is NOT a Staff role capability: Staff gets it only via the
+# per-employee EmployeePermission.can_run_ocr_review grant (spec §1).
+OCR_REVIEW_ALLOWED_ROLES = ("Admin", "Manager")
 
 
 def user_has_any_role(user: AbstractBaseUser | AnonymousUser | None, *role_names: str) -> bool:

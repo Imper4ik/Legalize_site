@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Проверка анкеты MOS 2.0" %}: {{ client.first_name }} {{ client.last_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>{% translate "Анкета MOS 2.0" %}: {{ client.first_name }} {{ client.last_name }}</h2>
+    <a href="{% url 'clients:client_detail' client.id %}" class="btn btn-outline-secondary">{% translate "Вернуться к клиенту" %}</a>
+</div>
+
+<div class="alert alert-info" role="alert">
+    {% translate "У клиента несколько анкет по разным делам. Выберите дело, анкету которого нужно проверить." %}
+</div>
+
+<div class="list-group">
+    {% for mos in mos_records %}
+    <a href="{% url 'clients:admin_mos_review' client_id=client.id %}{% if mos.case %}?case={{ mos.case.uuid }}{% endif %}"
+       class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+        <span>
+            {% if mos.case %}
+                <strong>{{ mos.case.display_number }}</strong>
+                <span class="text-muted ms-2">{{ mos.case.get_application_purpose_display }}</span>
+                {% if mos.case.archived_at %}<span class="badge bg-secondary ms-2">{% translate "Архив" %}</span>{% endif %}
+            {% else %}
+                <strong>{% translate "Без дела (legacy)" %}</strong>
+            {% endif %}
+        </span>
+        <span>
+            <span class="badge bg-info me-2">{{ mos.get_status_display }}</span>
+            <small class="text-muted">{% translate "Обновлено:" %} {{ mos.updated_at|date:"d.m.Y H:i" }}</small>
+        </span>
+    </a>
+    {% endfor %}
+</div>
+{% endblock %}

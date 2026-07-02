@@ -116,7 +116,7 @@
               OCR: {{ doc.get_ocr_status_display }}
             </span>
             {% endif %}
-            {% if doc.awaiting_confirmation %}
+            {% if doc.awaiting_confirmation and user_can_run_ocr_review %}
             <button type="button" class="btn btn-sm btn-outline-success review-ocr-data-btn ms-2" data-doc-id="{{ doc.id }}" data-doc-type="{{ doc.document_type }}">
               {% translate "Проверить OCR" %}
             </button>

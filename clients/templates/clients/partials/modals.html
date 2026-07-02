@@ -244,9 +244,11 @@
 
                         <div id="uploadDocumentActions">
                             <button type="submit" name="parse_wezwanie" value="0" class="btn btn-primary" id="uploadDocumentSubmitButton">{% translate "Загрузить" %}</button>
+                            {% if user_can_run_ocr_review %}
                             <button type="submit" name="parse_wezwanie" value="1" class="btn btn-success d-none" id="wezwanieParseButton">
                                 <i class="bi bi-magic"></i> {% translate "Загрузить и распознать" %}
                             </button>
+                            {% endif %}
                         </div>
 
                         <div id="wezwanieConfirmActions" class="d-none">
