@@ -114,25 +114,7 @@ def resolve_single_active_case(client: Client) -> Case | None:
     return None
 
 
-def get_legacy_compatibility_case(client_id: int, model_name: str) -> Case:
-    """
-    DEPRECATED: Compatibility fallback that resolves a client's single ACTIVE case.
-
-    Allowed only when the client has exactly one active (non-archived) case. With
-    zero active cases (including archived-only) or several active cases it raises,
-    never creating a case, guessing one, or binding to an archived case.
-    """
-    from django.core.exceptions import ValidationError
-
-    from clients.models import Case
-    logger.warning(
-        "Legacy fallback invoked for model %s, client_id %s. This fallback is deprecated.",
-        model_name,
-        client_id,
-    )
-    # Case.objects excludes archived cases, so this only ever returns an active one.
-    active_cases = list(Case.objects.filter(client_id=client_id)[:2])
-    if len(active_cases) == 1:
-        return active_cases[0]
-    raise ValidationError("Для этой операции необходимо выбрать дело.")
+# ``get_legacy_compatibility_case`` is retired (spec §4). Case-scoped models
+# use :func:`clients.models.consistency.resolve_required_case` as the write
+# backstop; services and views pass the case explicitly.
 

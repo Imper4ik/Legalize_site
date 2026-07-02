@@ -726,24 +726,24 @@ class CompatibilityHelperTests(TestCase):
         self.client_obj = create_test_client(assigned_staff=self.staff)
 
     def test_single_case_resolves(self) -> None:
-        from clients.services.cases import get_legacy_compatibility_case
+        from clients.models.consistency import resolve_required_case
 
         case = self.client_obj.cases.get()
-        resolved = get_legacy_compatibility_case(self.client_obj.pk, "Document")
+        resolved = resolve_required_case(self.client_obj.pk, "Document")
         self.assertEqual(resolved.pk, case.pk)
 
     def test_multiple_cases_raise(self) -> None:
-        from clients.services.cases import get_legacy_compatibility_case
+        from clients.models.consistency import resolve_required_case
 
         create_case_for_client(client=self.client_obj, actor=self.staff, application_purpose="study")
         with self.assertRaises(ValidationError):
-            get_legacy_compatibility_case(self.client_obj.pk, "Document")
+            resolve_required_case(self.client_obj.pk, "Document")
 
     def test_archived_only_case_raises_and_is_not_returned(self) -> None:
         # The fallback considers active cases only; it must not bind to an
         # archived case (spec section 1/3).
-        from clients.services.cases import get_legacy_compatibility_case
+        from clients.models.consistency import resolve_required_case
 
         self.client_obj.cases.get().archive(save=True)
         with self.assertRaises(ValidationError):
-            get_legacy_compatibility_case(self.client_obj.pk, "Document")
+            resolve_required_case(self.client_obj.pk, "Document")

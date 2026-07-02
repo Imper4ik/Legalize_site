@@ -31,9 +31,9 @@ class ClientFamilyMemberMOS(models.Model):
         super().clean()
         if self.case_id is None:
             if self.client_id:
-                from clients.services.cases import get_legacy_compatibility_case
+                from clients.models.consistency import resolve_required_case
                 try:
-                    self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
+                    self.case = resolve_required_case(self.client_id, self.__class__.__name__)
                 except ValidationError as e:
                     raise ValidationError(e.message)
             else:
@@ -44,8 +44,8 @@ class ClientFamilyMemberMOS(models.Model):
     def save(self, *args: Any, **kwargs: Any) -> None:
         update_fields = kwargs.get("update_fields")
         if self.case_id is None and self.client_id:
-            from clients.services.cases import get_legacy_compatibility_case
-            self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
+            from clients.models.consistency import resolve_required_case
+            self.case = resolve_required_case(self.client_id, self.__class__.__name__)
             if update_fields is not None:
                 update_fields = set(update_fields)
                 update_fields.add("case")

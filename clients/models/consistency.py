@@ -1,8 +1,30 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from django.core.exceptions import ValidationError
+
+logger = logging.getLogger(__name__)
+
+
+def resolve_required_case(client_id: int, model_name: str) -> Any:
+    """Resolve the client's single active case for a case-scoped write.
+
+    Case-scoped rows are created against a concrete case and every production
+    caller passes it explicitly. This resolver is the model-level backstop for
+    legacy rows and direct ORM writes: it succeeds only when the client has
+    exactly one active case; with zero or several active cases the write is
+    ambiguous and raises instead of guessing or binding to an archived case.
+    """
+    from clients.models.case import Case
+
+    logger.debug("Model-level case resolution for %s, client_id=%s", model_name, client_id)
+    # Case.objects excludes archived cases, so this only returns an active one.
+    active_cases = list(Case.objects.filter(client_id=client_id)[:2])
+    if len(active_cases) == 1:
+        return active_cases[0]
+    raise ValidationError("Для этой операции необходимо выбрать дело.")
 
 
 def assert_case_client_consistent(instance: Any) -> None:

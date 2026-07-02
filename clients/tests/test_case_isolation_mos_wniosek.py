@@ -162,7 +162,7 @@ class WniosekCaseIsolationTests(TestCase):
         self.assertIsNone(submission_legacy.case_id)
 
         # Match attachments for submission_legacy. Since self.client_obj has two cases,
-        # get_legacy_compatibility_case will raise ValidationError, and find_matching_attachments will return no matches.
+        # The single-active-case resolution is ambiguous, so find_matching_attachments returns no matches.
         matches_legacy = find_matching_attachments(self.client_obj, submission_legacy)
         attachment_legacy = submission_legacy.attachments.get()
         self.assertIsNone(matches_legacy[attachment_legacy.pk])

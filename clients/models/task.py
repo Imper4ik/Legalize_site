@@ -161,9 +161,9 @@ class StaffTask(models.Model):
             if source_case_id is not None:
                 self.case_id = source_case_id
             elif self.client_id:
-                from clients.services.cases import get_legacy_compatibility_case
+                from clients.models.consistency import resolve_required_case
                 try:
-                    self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
+                    self.case = resolve_required_case(self.client_id, self.__class__.__name__)
                 except ValidationError as e:
                     raise ValidationError(e.message)
             else:
@@ -179,8 +179,8 @@ class StaffTask(models.Model):
             if source_case_id is not None:
                 self.case_id = source_case_id
             elif self.client_id:
-                from clients.services.cases import get_legacy_compatibility_case
-                self.case = get_legacy_compatibility_case(self.client_id, self.__class__.__name__)
+                from clients.models.consistency import resolve_required_case
+                self.case = resolve_required_case(self.client_id, self.__class__.__name__)
             if self.case_id is not None and update_fields is not None:
                 update_fields = set(update_fields)
                 update_fields.add("case")
