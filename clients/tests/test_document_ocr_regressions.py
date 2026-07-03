@@ -21,6 +21,7 @@ from clients.constants import DocumentType
 from clients.forms import DocumentUploadForm
 from clients.models import (
     Client,
+    ClientActivity,
     Document,
     DocumentProcessingJob,
     DocumentRequirement,
@@ -225,6 +226,70 @@ class DocumentOCRRegressionTests(TestCase):
         self.assertEqual(document_case.fingerprints_date, date(2026, 5, 4))
         self.assertNotIn("raw_text", document.parsed_data)
         self.assertEqual(document.parsed_data["confirmed"], True)
+
+    def test_reviewer_can_confirm_decision_date_when_case_waits_for_decision(self):
+        EmployeePermission.objects.update_or_create(
+            user=self.staff,
+            defaults={"can_run_ocr_review": True},
+        )
+        self.staff.refresh_from_db()
+        document = Document.objects.create(
+            client=self.client_record,
+            document_type=DocumentType.WEZWANIE.value,
+            file=SimpleUploadedFile("decision-wezwanie.pdf", b"file"),
+            awaiting_confirmation=True,
+            ocr_status="success",
+        )
+        case = document.case
+        case.workflow_stage = "waiting_decision"
+        case.fingerprints_date = date(2026, 6, 1)
+        case.save(update_fields=["workflow_stage", "fingerprints_date"])
+
+        confirm_wezwanie_document(
+            document=document,
+            actor=self.staff,
+            confirmation_data={"decision_date": "2026-07-20"},
+            send_missing_email=lambda _client: 0,
+            send_appointment_email=lambda _client: 0,
+        )
+
+        case.refresh_from_db()
+        self.assertEqual(case.workflow_stage, "waiting_decision")
+        self.assertEqual(case.decision_date, date(2026, 7, 20))
+        activity = ClientActivity.objects.get(
+            client=self.client_record,
+            case=case,
+            event_type="case_updated",
+        )
+        self.assertEqual(activity.metadata["changed_fields"], ["decision_date"])
+
+    def test_decision_date_confirmation_does_not_skip_workflow(self):
+        EmployeePermission.objects.update_or_create(
+            user=self.staff,
+            defaults={"can_run_ocr_review": True},
+        )
+        self.staff.refresh_from_db()
+        document = Document.objects.create(
+            client=self.client_record,
+            document_type=DocumentType.WEZWANIE.value,
+            file=SimpleUploadedFile("early-decision-wezwanie.pdf", b"file"),
+            awaiting_confirmation=True,
+            ocr_status="success",
+        )
+        case = document.case
+        self.assertNotEqual(case.workflow_stage, "waiting_decision")
+
+        confirm_wezwanie_document(
+            document=document,
+            actor=self.staff,
+            confirmation_data={"decision_date": "2026-07-20"},
+            send_missing_email=lambda _client: 0,
+            send_appointment_email=lambda _client: 0,
+        )
+
+        case.refresh_from_db()
+        self.assertIsNone(case.decision_date)
+        self.assertNotEqual(case.workflow_stage, "decision_received")
 
     def test_staff_role_needs_feature_flag_for_parsed_ocr_data(self):
         document = Document.objects.create(

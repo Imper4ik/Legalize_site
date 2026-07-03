@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 DATE_FORMATS = ("%d.%m.%Y", "%d-%m-%Y", "%d/%m/%Y", "%Y-%m-%d")
+DATE_COMPONENT_CHARS = "0-9OoIl|SsB"
+DATE_TOKEN_PATTERN = rf"[{DATE_COMPONENT_CHARS}]{{1,4}}[./-][{DATE_COMPONENT_CHARS}]{{1,2}}[./-][{DATE_COMPONENT_CHARS}]{{2,4}}"
 CASE_NUMBER_PATTERNS = (
     # 0. NEW: Strict WSC Pattern (High Priority)
     # Matches: WSC-II-S.6151.97770.2023
@@ -49,8 +51,8 @@ CASE_NUMBER_PATTERNS = (
     re.compile(r"\b([A-Z]{1,3}[ \t]?/[ \t]?\d{1,5}[ \t]?/[ \t]?\d{2,4})\b"),
 )
 DATE_PATTERNS = (
-    re.compile(r"(?:dniu|dnia|dn\.)?\s*(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
-    re.compile(r"(\d{4}-\d{2}-\d{2})"),
+    re.compile(rf"(?:dniu|dnia|dn\.)?\s*({DATE_TOKEN_PATTERN})", re.IGNORECASE),
+    re.compile(rf"({DATE_TOKEN_PATTERN})"),
 )
 IMAGE_SUFFIXES = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp", ".webp"}
 
@@ -113,7 +115,14 @@ def _parse_date(raw: str | None) -> date | None:
     if not raw:
         return None
 
-    cleaned = raw.strip()
+    cleaned = raw.strip().rstrip(".,;:")
+    if re.fullmatch(rf"[{DATE_COMPONENT_CHARS}./-]+", cleaned):
+        cleaned = cleaned.translate(str.maketrans({
+            "O": "0", "o": "0",
+            "I": "1", "l": "1", "|": "1",
+            "S": "5", "s": "5",
+            "B": "8",
+        }))
     for fmt in DATE_FORMATS:
         try:
             return datetime.strptime(cleaned, fmt).date()
@@ -438,8 +447,8 @@ def _find_case_number(text: str) -> str | None:
 def _find_first_date(text: str) -> date | None:
     # Prioritize date after "termin", "dzień", "dnia" but specifically for appointment
     appt_date_patterns = [
-        re.compile(r"(?:dzień|godzinę|termin|wizyty)[:\s,]+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
-        re.compile(r"dnia\s+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
+        re.compile(rf"(?:dzień|godzinę|termin|wizyty)[:\s,]+({DATE_TOKEN_PATTERN})", re.IGNORECASE),
+        re.compile(rf"dnia\s+({DATE_TOKEN_PATTERN})", re.IGNORECASE),
     ]
     for pattern in appt_date_patterns:
         match = pattern.search(text)
@@ -490,7 +499,7 @@ def _find_fingerprints_time(text: str) -> str | None:
         re.compile(r"godzinie\s*(\d{1,2}[:.]\d{2})", re.IGNORECASE),
         re.compile(r"at\s*(\d{1,2}[:.]\d{2})", re.IGNORECASE),
         # 4.05.2026, 10:30 or 4.05.2026r. godz. 10:30
-        re.compile(r"\d{1,2}[./-]\d{1,2}[./-]\d{2,4}(?:r\.)?[,\s]+(?:godz\.\s*)?(\d{1,2}[:.]\d{2})", re.IGNORECASE),
+        re.compile(rf"{DATE_TOKEN_PATTERN}(?:r\.)?[,\s]+(?:godz\.\s*)?(\d{{1,2}}[:.]\d{{2}})", re.IGNORECASE),
     ]
     for pattern in time_patterns:
         match = pattern.search(text)
@@ -505,12 +514,12 @@ def _find_fingerprints_datetime(text: str) -> tuple[date | None, str | None]:
     # Covers: "dzień i godzinę: 4.05.2026, 10:30" or similar
     combined_patterns = [
         re.compile(
-            r"(?:dzień i godzinę|dzien i godzine|termin|wyznaczony na|wizyty)[:\s,]+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})(?:r\.)?[,\s]+(?:godz\.\s*)?(\d{1,2}[:.]\d{2})",
+            rf"(?:dzień i godzinę|dzien i godzine|termin|wyznaczony na|wizyty)[:\s,]+({DATE_TOKEN_PATTERN})(?:r\.)?[,\s]+(?:godz\.\s*)?(\d{{1,2}}[:.]\d{{2}})",
             re.IGNORECASE
         ),
         # Proximity check: Date and Time within ~80 characters
         re.compile(
-            r"(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})(?:r\.)?.{0,80}?(?:godz\.|godzinie|at)[:\s]+(\d{1,2}[:.]\d{2})",
+            rf"({DATE_TOKEN_PATTERN})(?:r\.)?.{{0,80}}?(?:godz\.|godzinie|at)[:\s]+(\d{{1,2}}[:.]\d{{2}})",
             re.IGNORECASE | re.DOTALL
         ),
     ]
@@ -613,21 +622,21 @@ def _find_decision_date(text: str) -> date | None:
         # Issued decisions first — they are more specific than the deadline
         # phrasings below and appear on the actual decyzja letter.
         # Pattern: "decyzja (nr ...) z dnia DD.MM.YYYY"
-        re.compile(r"decyzj\w*\s+(?:nr\s+\S+\s+)?z\s+dnia\s+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
+        re.compile(rf"decyzj\w*\s+(?:nr\s+\S+\s+)?z\s+dnia\s+({DATE_TOKEN_PATTERN})", re.IGNORECASE),
         # Pattern: "wydano decyzję dnia / w dniu DD.MM.YYYY"
-        re.compile(r"wydan[oa]\s+decyzj\w*\s+(?:w\s+dniu|dnia)\s+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
+        re.compile(rf"wydan[oa]\s+decyzj\w*\s+(?:w\s+dniu|dnia)\s+({DATE_TOKEN_PATTERN})", re.IGNORECASE),
         # Pattern: "zostanie podjęta do dnia DD.MM.YYYY"
-        re.compile(r"zostanie\s+podjęta\s+do\s+dnia\s+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
+        re.compile(rf"zostanie\s+podjęta\s+do\s+dnia\s+({DATE_TOKEN_PATTERN})", re.IGNORECASE),
         # Pattern: "podjęta do dnia DD.MM.YYYY"
-        re.compile(r"podjęta\s+do\s+dnia\s+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
+        re.compile(rf"podjęta\s+do\s+dnia\s+({DATE_TOKEN_PATTERN})", re.IGNORECASE),
         # Pattern: "powinna być podjęta do dnia DD.MM.YYYY"
-        re.compile(r"powinna być podjęta do dnia\s+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
+        re.compile(rf"powinna być podjęta do dnia\s+({DATE_TOKEN_PATTERN})", re.IGNORECASE),
         # Pattern: "termin wydania decyzji: DD.MM.YYYY"
-        re.compile(r"termin wydania decyzji[:\s]+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
+        re.compile(rf"termin wydania decyzji[:\s]+({DATE_TOKEN_PATTERN})", re.IGNORECASE),
         # Pattern: "decyzja ... do dnia DD.MM.YYYY"
-        re.compile(r"decyzj[aiy].*?do dnia\s+(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})", re.IGNORECASE),
+        re.compile(rf"decyzj[aiy].*?do dnia\s+({DATE_TOKEN_PATTERN})", re.IGNORECASE),
         # General fallback
-        re.compile(r"(?:rozpatrzenie|termin).*?do[:\s]+([\d./-]+)", re.IGNORECASE),
+        re.compile(rf"(?:rozpatrzenie|termin).*?do[:\s]+({DATE_TOKEN_PATTERN})", re.IGNORECASE),
     ]
 
     for pattern in decision_patterns:

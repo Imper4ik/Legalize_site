@@ -233,3 +233,19 @@ class WezwanieOCRStage19Tests(TestCase):
             data = parse_wezwanie("fake.pdf")
             self.assertEqual(data.fingerprints_date, date(2025, 12, 12))
             self.assertEqual(data.fingerprints_time, "09:15")
+
+    def test_parser_extracts_decision_date_common_and_ocr_formats(self):
+        cases = {
+            "dot": "20.07.2026",
+            "slash": "20/07/2026",
+            "sentence_period": "20.07.2026.",
+            "ocr_o_zero": "2O.O7.2O26",
+        }
+
+        for label, raw_date in cases.items():
+            with self.subTest(label=label):
+                text = f"Termin wydania decyzji: {raw_date}"
+                with patch("clients.services.wezwanie_parser.extract_text", return_value=text):
+                    data = parse_wezwanie("fake.pdf")
+                self.assertEqual(data.wezwanie_type, "decision")
+                self.assertEqual(data.decision_date, date(2026, 7, 20))

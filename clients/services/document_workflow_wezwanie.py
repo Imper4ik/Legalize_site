@@ -16,6 +16,7 @@ from django.utils.translation import gettext as _
 
 from clients.constants import DocumentType
 from clients.models import Client
+from clients.services.permissions import user_can_run_ocr_review
 from clients.services.wezwanie_parser import WezwanieData
 
 
@@ -97,8 +98,25 @@ def _append_required_documents_update_from_codes(doc_codes: list[str] | None, au
         )
 
 
+DECISION_DATE_WRITABLE_STAGES = {"waiting_decision", "decision_received", "closed"}
+
+
+def _can_apply_decision_date(case: Any, actor: Any) -> bool:
+    if case is None or not user_can_run_ocr_review(actor):
+        return False
+    if case.workflow_stage not in DECISION_DATE_WRITABLE_STAGES:
+        return False
+    if case.workflow_stage == "waiting_decision" and not case.fingerprints_date:
+        return False
+    return True
+
+
 def _apply_parsed_client_updates(
-    case: Any, client: Client, parsed: WezwanieData
+    case: Any,
+    client: Client,
+    parsed: WezwanieData,
+    *,
+    actor: Any = None,
 ) -> tuple[list[str], list[str], list[str]]:
     """Apply parsed wezwanie data case-first.
 
@@ -137,11 +155,14 @@ def _apply_parsed_client_updates(
             case_fields.append("fingerprints_location")
 
         if parsed.decision_date and parsed.decision_date != case.decision_date:
-            case.decision_date = parsed.decision_date
-            case_fields.append("decision_date")
-            auto_updates.append(
-                _("decision date: %(val)s") % {"val": parsed.decision_date.strftime("%d.%m.%Y")}
-            )
+            if _can_apply_decision_date(case, actor):
+                case.decision_date = parsed.decision_date
+                case_fields.append("decision_date")
+                auto_updates.append(
+                    _("decision date: %(val)s") % {"val": parsed.decision_date.strftime("%d.%m.%Y")}
+                )
+            else:
+                auto_updates.append(_("decision date skipped: case must already be waiting for decision"))
 
         if parsed.ticket_number and parsed.ticket_number != case.fingerprints_ticket:
             case.fingerprints_ticket = parsed.ticket_number
@@ -213,6 +234,8 @@ def _apply_confirmation_updates(
     case: Any,
     client: Client,
     confirmation_data: Mapping[str, str],
+    *,
+    actor: Any = None,
 ) -> tuple[list[str], list[str], list[str]]:
     """Apply confirmed wezwanie data case-first.
 
@@ -282,10 +305,13 @@ def _apply_confirmation_updates(
 
         decision_date = parse_date(decision_date_raw) if decision_date_raw else None
         if decision_date and decision_date != case.decision_date:
-            case.decision_date = decision_date
-            case_fields.append("decision_date")
-            auto_updates.append(
-                _("decision date: %(val)s") % {"val": decision_date.strftime("%d.%m.%Y")}
-            )
+            if _can_apply_decision_date(case, actor):
+                case.decision_date = decision_date
+                case_fields.append("decision_date")
+                auto_updates.append(
+                    _("decision date: %(val)s") % {"val": decision_date.strftime("%d.%m.%Y")}
+                )
+            else:
+                auto_updates.append(_("decision date skipped: case must already be waiting for decision"))
 
     return case_fields, client_fields, auto_updates

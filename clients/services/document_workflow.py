@@ -256,9 +256,23 @@ def confirm_wezwanie_document(
 
     client = document.client
     case = document.case if document.case_id else None
-    case_fields, client_fields, auto_updates = _apply_confirmation_updates(case, client, confirmation_data)
+    case_fields, client_fields, auto_updates = _apply_confirmation_updates(
+        case,
+        client,
+        confirmation_data,
+        actor=actor,
+    )
     if case is not None and case_fields:
         case.save(update_fields=case_fields)
+        log_client_activity(
+            client=client,
+            case=case,
+            actor=actor,
+            event_type="case_updated",
+            summary="Case updated from confirmed wezwanie data",
+            metadata={"case_id": str(case.uuid), "changed_fields": case_fields},
+            document=document,
+        )
     if client_fields:
         client.save(update_fields=client_fields)
 
@@ -1416,7 +1430,12 @@ def _finalize_successful_document_job(
             document.save(update_fields=["parsed_data", "ocr_status", "awaiting_confirmation", "ocr_name_mismatch"])
         else:
             case = document.case if document.case_id else None
-            case_fields, client_fields, parsed_updates = _apply_parsed_client_updates(case, client, parsed)
+            case_fields, client_fields, parsed_updates = _apply_parsed_client_updates(
+                case,
+                client,
+                parsed,
+                actor=actor,
+            )
             auto_updates.extend(parsed_updates)
             _append_required_documents_update(parsed, auto_updates)
 
