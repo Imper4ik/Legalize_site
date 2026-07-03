@@ -47,19 +47,27 @@ def purpose_label(purpose: str | None) -> str:
 
 def onboarding_purpose_mismatch_q() -> Q:
     selected_allowed = Q(mos_applications__mos_purpose__in=ALLOWED_ONBOARDING_PURPOSES)
+    case_missing_mismatch = Q(mos_applications__case__isnull=True)
     family_member_mismatch = (
-        Q(application_purpose="family", family_role__in=FAMILY_ONBOARDING_PURPOSES)
-        & ~Q(mos_applications__mos_purpose=F("family_role"))
+        Q(
+            mos_applications__case__application_purpose="family",
+            mos_applications__case__family_role__in=FAMILY_ONBOARDING_PURPOSES,
+        )
+        & ~Q(mos_applications__mos_purpose=F("mos_applications__case__family_role"))
     )
-    family_sponsor_mismatch = Q(application_purpose="family", family_role="sponsor") & ~Q(
-        mos_applications__mos_purpose="work"
+    family_sponsor_mismatch = Q(
+        mos_applications__case__application_purpose="family",
+        mos_applications__case__family_role="sponsor",
+    ) & ~Q(mos_applications__mos_purpose="work")
+    family_unresolved_mismatch = Q(mos_applications__case__application_purpose="family") & ~Q(
+        mos_applications__case__family_role__in=FAMILY_REQUIREMENT_ROLES
     )
-    family_unresolved_mismatch = Q(application_purpose="family") & ~Q(family_role__in=FAMILY_REQUIREMENT_ROLES)
-    direct_purpose_mismatch = ~Q(application_purpose="family") & ~Q(
-        mos_applications__mos_purpose=F("application_purpose")
+    direct_purpose_mismatch = ~Q(mos_applications__case__application_purpose="family") & ~Q(
+        mos_applications__mos_purpose=F("mos_applications__case__application_purpose")
     )
     return selected_allowed & (
-        family_member_mismatch
+        case_missing_mismatch
+        | family_member_mismatch
         | family_sponsor_mismatch
         | family_unresolved_mismatch
         | direct_purpose_mismatch
@@ -83,17 +91,28 @@ def _unambiguous_mos(client: Client) -> MOSApplicationData | None:
     return items[0] if len(items) == 1 else None
 
 
+def _purpose_for_mos_or_client(client: Client, mos_data: MOSApplicationData | None) -> str:
+    case = getattr(mos_data, "case", None) if mos_data else None
+    if case is not None:
+        from clients.services.case_context import purpose_for_case
+
+        return purpose_for_case(case)
+    return client.get_document_requirement_purpose()
+
+
 def onboarding_purpose_requires_review(client: Client) -> bool:
     mos_data = _unambiguous_mos(client)
     selected = getattr(mos_data, "mos_purpose", "") if mos_data else ""
-    return bool(selected in ALLOWED_ONBOARDING_PURPOSES and selected != client.get_document_requirement_purpose())
+    current = _purpose_for_mos_or_client(client, mos_data)
+    return bool(selected in ALLOWED_ONBOARDING_PURPOSES and selected != current)
 
 
 def attach_onboarding_purpose_review_state(client: Client) -> Client:
     mos_data = _unambiguous_mos(client)
     selected = getattr(mos_data, "mos_purpose", "") if mos_data else ""
-    current = client.get_document_requirement_purpose()
-    setattr(client, "onboarding_purpose_requires_review", onboarding_purpose_requires_review(client))
+    current = _purpose_for_mos_or_client(client, mos_data)
+    requires_review = bool(selected in ALLOWED_ONBOARDING_PURPOSES and selected != current)
+    setattr(client, "onboarding_purpose_requires_review", requires_review)
     setattr(client, "onboarding_selected_purpose", selected)
     setattr(client, "onboarding_selected_purpose_label", purpose_label(selected))
     setattr(client, "onboarding_card_purpose", current)

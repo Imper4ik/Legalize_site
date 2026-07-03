@@ -292,6 +292,7 @@ def build_submitted_document_summary(client: Client, case: Any = None) -> dict[s
             client,
             att.entered_name,
             client.language,
+            case=case,
         )
         record = _submitted_record(att, document_type)
         if document_type:

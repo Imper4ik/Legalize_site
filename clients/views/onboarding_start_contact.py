@@ -13,7 +13,7 @@ from django.utils import timezone, translation
 from django.utils.dateparse import parse_date
 from django.utils.translation import gettext as _
 
-from clients.constants import DocumentType, is_recurring_document_type
+from clients.constants import SELF_ONBOARDING_SLUG, DocumentType, is_recurring_document_type
 from clients.forms import DocumentUploadForm
 from clients.models import Client, ClientOnboardingSession, Document, DocumentRequirement, MOSApplicationData
 from clients.services.case_context import checklist_for_case, purpose_context_for_case
@@ -429,6 +429,8 @@ def _build_start_context(
     if mos_data is None:
         mos_data = MOSApplicationData(client=client, case=case)
     purpose_ctx = purpose_context_for_case(case, mos_data) if case is not None else _purpose_context(client, mos_data)
+    # A case purpose is authoritative once staff set it; until then the
+    # client's questionnaire selection is the working purpose.
     effective_purpose = str(purpose_ctx["effective_purpose"])
     language = language or translation.get_language() or client.language
 
@@ -444,7 +446,7 @@ def _build_start_context(
     )
 
     required_docs_catalog = (
-        checklist_for_case(case, language)
+        checklist_for_case(case, language, purpose=effective_purpose)
         if case is not None
         else DocumentRequirement.catalog_for(purpose=effective_purpose, language=language)
     )
@@ -598,7 +600,13 @@ def _build_start_context(
         mos_data and isinstance(mos_data.stay_data, dict) and mos_data.stay_data.get("stay_basis")
     )
 
-    case_step = get_case_onboarding_step(client=client, case=case, mos_data=mos_data, checklist=checklist)
+    case_step = get_case_onboarding_step(
+        client=client,
+        case=case,
+        mos_data=mos_data,
+        checklist=checklist,
+        purpose=effective_purpose if case is not None else None,
+    )
 
     # Build list of action items / notifications for the client
     action_items = []
@@ -606,6 +614,16 @@ def _build_start_context(
 
     from clients.models import StaffTask
 
+    purpose_missing = case is not None and not effective_purpose
+    if purpose_missing and allow_edit:
+        action_items.append(
+            {
+                "type": "danger",
+                "icon": "bi-signpost-split",
+                "text": str(_("Выбрать цель заявления")),
+                "url": reverse("clients:onboarding_purpose", kwargs={"token": session.token_hash}),
+            }
+        )
     if not contact_complete:
         action_items.append(
             {
@@ -732,6 +750,7 @@ def _build_start_context(
         "support_email": support_email,
         "rejected_count": rejected_count,
         "missing_case_number": missing_case_number,
+        "purpose_missing": purpose_missing,
         "action_items": action_items,
         "action_required_count": action_required_count,
         **purpose_ctx,
@@ -744,28 +763,42 @@ def _render_start_page(request: HttpRequest, context: dict[str, Any]) -> HttpRes
         return render(request, START_TEMPLATE, context)
 
 
+def _completed_session_redirect(
+    request: HttpRequest,
+    session: ClientOnboardingSession,
+    token: str,
+) -> HttpResponse | None:
+    if session.status != "completed" or token == SELF_ONBOARDING_SLUG:
+        return None
+
+    if request.user.is_authenticated and not request.user.is_staff:
+        if session.client.user_id and request.user == session.client.user:
+            if session.case_id:
+                request.session["case_id"] = session.case_id
+            return redirect("clients:onboarding_start", token=SELF_ONBOARDING_SLUG)
+        return HttpResponseForbidden(_("Invalid or expired onboarding link."))
+
+    auth_redirect = check_client_auth(request, session, token)
+    if auth_redirect:
+        return auth_redirect
+
+    if session.case_id:
+        request.session["case_id"] = session.case_id
+    return redirect("clients:onboarding_review", token=token)
+
+
 def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
-    session = check_onboarding_session(token, request=request)
+    session = check_onboarding_session(
+        token,
+        allowed_statuses=("created", "active", "completed"),
+        request=request,
+    )
     if not session:
-        # A completed link is not an intrusion attempt: clients re-open the
-        # emailed link after submitting the questionnaire. Route them to their
-        # portal (or login) instead of a dead-end 403.
-        completed_session = check_onboarding_session(
-            token, allowed_statuses=("created", "active", "completed"), request=request
-        )
-        if completed_session is not None:
-            from django.urls import reverse
-
-            from clients.constants import SELF_ONBOARDING_SLUG
-
-            client_user_id = getattr(completed_session.client, "user_id", None)
-            if request.user.is_authenticated and client_user_id == request.user.pk:
-                return redirect("clients:onboarding_start", token=SELF_ONBOARDING_SLUG)
-            login_url = reverse("account_login")
-            client_email = completed_session.client.email or ""
-            messages.info(request, _("Анкета по этой ссылке уже отправлена. Войдите в личный кабинет, чтобы продолжить."))
-            return redirect(f"{login_url}?email={client_email}" if client_email else login_url)
         return HttpResponseForbidden(_("Срок действия ссылки истёк или она недействительна."))
+
+    completed_redirect = _completed_session_redirect(request, session, token)
+    if completed_redirect:
+        return completed_redirect
 
     auth_redirect = check_client_auth(request, session, token)
     if auth_redirect:

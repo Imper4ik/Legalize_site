@@ -10,7 +10,7 @@ from django.db import IntegrityError, transaction
 from django.test import TestCase
 from django.utils import translation
 
-from clients.models import Case, MOSApplicationData
+from clients.models import Case, DocumentRequirement, MOSApplicationData
 from clients.models.wniosek import WniosekAttachment, WniosekSubmission
 from clients.services.cases import create_case_for_client
 from clients.services.wniosek import build_submitted_document_summary
@@ -110,6 +110,43 @@ class WniosekCaseIsolationTests(TestCase):
 
         self.assertNotIn("passport", summary_a.get("codes", {}))
         self.assertIn("passport", summary_b.get("codes", {}))
+
+    def test_empty_attachment_type_rematches_against_selected_case_purpose(self) -> None:
+        self.case_a.application_purpose = "work"
+        self.case_a.save(update_fields=["application_purpose"])
+        self.case_b.application_purpose = "study"
+        self.case_b.save(update_fields=["application_purpose"])
+        DocumentRequirement.objects.create(
+            application_purpose="work",
+            document_type="work_req_case_rematch",
+            custom_name_en="Work Evidence Rematch",
+            is_required=True,
+        )
+        DocumentRequirement.objects.create(
+            application_purpose="study",
+            document_type="study_req_case_rematch",
+            custom_name_en="Study Certificate Rematch",
+            is_required=True,
+        )
+        submission = WniosekSubmission.objects.create(
+            client=self.client_obj,
+            case=self.case_b,
+            document_kind=WniosekSubmission.DocumentKind.MAZOWIECKI_APPLICATION,
+            attachment_count=1,
+        )
+        WniosekAttachment.objects.create(
+            submission=submission,
+            document_type="",
+            entered_name="Study Certificate Rematch",
+            position=0,
+        )
+
+        summary_a = build_submitted_document_summary(self.client_obj, case=self.case_a)
+        summary_b = build_submitted_document_summary(self.client_obj, case=self.case_b)
+
+        self.assertNotIn("study_req_case_rematch", summary_a.get("codes", {}))
+        self.assertIn("study_req_case_rematch", summary_b.get("codes", {}))
+        self.assertNotIn("work_req_case_rematch", summary_b.get("codes", {}))
 
     def test_checklist_for_case_a_ignores_case_b_submission(self) -> None:
         self._add_submission(self.case_b, "passport")

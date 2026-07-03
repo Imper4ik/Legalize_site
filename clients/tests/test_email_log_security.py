@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from io import StringIO
 
 from django.core.management import call_command
 from django.db import connection
@@ -31,13 +32,26 @@ class EmailLogSecurityTests(TestCase):
         self.assertEqual(log.recipients, "person@example.com")
 
     @override_settings(EMAIL_LOG_BODY_RETENTION_DAYS=180)
-    def test_retention_command_cleans_old_logs_and_new_logs_still_work(self):
+    def test_retention_command_reports_by_default_without_clearing_logs(self):
+        old_log = EmailLog.objects.create(subject="Old", body="Old body", recipients="old@example.com")
+        EmailLog.objects.filter(pk=old_log.pk).update(sent_at=timezone.now() - timedelta(days=181))
+        out = StringIO()
+
+        call_command("cleanup_email_logs", stdout=out)
+
+        old_log.refresh_from_db()
+        self.assertIn("Report only", out.getvalue())
+        self.assertEqual(old_log.body, "Old body")
+        self.assertEqual(old_log.recipients, "old@example.com")
+
+    @override_settings(EMAIL_LOG_BODY_RETENTION_DAYS=180)
+    def test_retention_command_cleans_old_logs_only_when_confirmed(self):
         old_log = EmailLog.objects.create(subject="Old", body="Old body", recipients="old@example.com")
         EmailLog.objects.filter(pk=old_log.pk).update(sent_at=timezone.now() - timedelta(days=181))
 
         fresh_log = EmailLog.objects.create(subject="Fresh", body="Fresh body", recipients="fresh@example.com")
 
-        call_command("cleanup_email_logs")
+        call_command("cleanup_email_logs", "--execute", "--confirm")
 
         old_log.refresh_from_db()
         fresh_log.refresh_from_db()

@@ -11,6 +11,7 @@ def get_case_onboarding_step(
     case: Case | None,
     mos_data: MOSApplicationData | None,
     checklist: Iterable[dict[str, Any]] | None = None,
+    purpose: str | None = None,
 ) -> int:
     """Calculate the onboarding timeline step for one selected Case.
 
@@ -27,6 +28,12 @@ def get_case_onboarding_step(
         return 2
 
     if status in ["client_completed", "needs_correction", "staff_review"]:
+        # A case without a resolved purpose has an unknown requirement set:
+        # an empty checklist must read as "still collecting", never as
+        # "everything collected" (purpose is None when the caller does not
+        # track purposes and keeps the checklist-only behaviour).
+        if purpose is not None and not purpose:
+            return 3
         if checklist is None:
             checklist = []
         has_missing_required = any(

@@ -27,8 +27,19 @@ class AnonymizeOldClientsTests(TestCase):
             created_at=timezone.now() - timedelta(days=6 * 365)
         )
 
+    def test_default_run_is_report_only(self) -> None:
+        out = StringIO()
+
+        call_command("anonymize_old_clients", stdout=out)
+
+        self.assertIn("Report only", out.getvalue())
+        self.assertEqual(
+            Client.all_objects.get(pk=self.client_obj.pk).first_name,
+            "Zlatan",
+        )
+
     def test_anonymisation_clears_client_and_case_pii(self) -> None:
-        call_command("anonymize_old_clients")
+        call_command("anonymize_old_clients", "--execute", "--confirm")
 
         client = Client.all_objects.get(pk=self.client_obj.pk)
         self.assertTrue(client.first_name.startswith("Anonymized"))
@@ -64,7 +75,7 @@ class AnonymizeOldClientsTests(TestCase):
             archived_at=timezone.now(),
         )
 
-        call_command("anonymize_old_clients")
+        call_command("anonymize_old_clients", "--execute", "--confirm")
 
         refreshed = Client.all_objects.get(pk=archived.pk)
         self.assertTrue(refreshed.first_name.startswith("Anonymized"))

@@ -10,7 +10,11 @@ from clients.constants import DocumentType
 from clients.models import DocumentProcessingJob, DocumentRequirement, EmailLog
 from clients.services.case_context import checklist_for_case, purpose_for_case
 from clients.services.cases import create_case_for_client
-from clients.services.notifications import _get_missing_documents_context, send_expiring_documents_email
+from clients.services.notifications import (
+    _get_missing_documents_context,
+    build_email_idempotency_key,
+    send_expiring_documents_email,
+)
 from clients.services.wniosek import create_wniosek_submission, get_submitted_document_codes
 from clients.testing.factories import create_test_client, create_test_document
 
@@ -42,6 +46,36 @@ class CaseFirstProcessIsolationTests(TestCase):
         self.assertEqual(purpose_for_case(self.case_b), "study")
         self.assertIn("study_only_certificate", case_b_codes)
         self.assertNotIn("work_only_contract", case_b_codes)
+
+    def test_blank_secondary_case_does_not_inherit_client_purpose(self) -> None:
+        DocumentRequirement.objects.create(
+            application_purpose="work",
+            document_type="work_only_contract_blank_case",
+            custom_name_en="Work-only contract for blank case",
+            is_required=True,
+        )
+        blank_case = create_case_for_client(client=self.client_obj)
+
+        self.assertEqual(blank_case.application_purpose, "")
+        self.assertEqual(purpose_for_case(blank_case), "")
+
+        blank_case_codes = {item["code"] for item in checklist_for_case(blank_case, "en", include_fallback=False)}
+        self.assertNotIn("work_only_contract_blank_case", blank_case_codes)
+
+    def test_blank_case_never_borrows_client_purpose(self) -> None:
+        """The Case is the sole purpose owner: no client-level fallback.
+
+        Legacy single-case rows were backfilled by migration 0122, so a blank
+        case purpose at runtime means "not chosen yet" and must yield ""
+        (forcing an explicit purpose selection) rather than silently borrowing
+        Client.application_purpose.
+        """
+        legacy_client = create_test_client(purpose="study", language="en")
+        legacy_case = legacy_client.cases.get()
+        legacy_case.application_purpose = ""
+        legacy_case.save(update_fields=["application_purpose"])
+
+        self.assertEqual(purpose_for_case(legacy_case), "")
 
     def test_wniosek_submitted_documents_are_scoped_to_selected_case(self) -> None:
         create_wniosek_submission(
@@ -108,7 +142,16 @@ class CaseFirstProcessIsolationTests(TestCase):
         self.assertEqual(sent_count, 0)
         log = EmailLog.objects.get(client=self.client_obj, template_type="expiring_documents")
         self.assertEqual(log.case_id, self.case_b.pk)
-        self.assertIn(str(self.case_b.pk), log.idempotency_key)
+        self.assertEqual(
+            log.idempotency_key,
+            build_email_idempotency_key(
+                "expiring_documents",
+                self.client_obj.pk,
+                self.client_obj.email,
+                self.case_b.pk,
+                [f"{document.pk}:{document.expiry_date}"],
+            ),
+        )
 
     def test_expiring_documents_email_rejects_documents_from_other_case(self) -> None:
         document = create_test_document(

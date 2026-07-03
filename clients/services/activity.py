@@ -64,6 +64,7 @@ ALLOWED_METADATA_SCHEMA = {
         "submitted",
         "approved",
         "rejected",
+        "anonymized",
     },
     "changed_fields": "safe_field_names_list",
 }

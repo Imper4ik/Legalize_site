@@ -439,3 +439,96 @@ class CaseFamilyRoleBackfillMigrationTests(TransactionTestCase):
         self.assertEqual(CaseModel.objects.get(pk=self.multi_case_a.pk).family_role, "")
         self.assertEqual(CaseModel.objects.get(pk=self.multi_case_b.pk).family_role, "")
         self.assertEqual(CaseModel.objects.get(pk=self.prefilled_case.pk).family_role, "sponsor")
+
+
+class CaseApplicationPurposeBackfillMigrationTests(TransactionTestCase):
+    migrate_from = [("clients", "0121_backfill_reminder_case")]
+    migrate_to = [("clients", "0122_backfill_case_application_purpose")]
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.executor = MigrationExecutor(connection)
+        self.executor.migrate(self.migrate_from)
+        old_apps = self.executor.loader.project_state(self.migrate_from).apps
+
+        Client = old_apps.get_model("clients", "Client")
+        Case = old_apps.get_model("clients", "Case")
+
+        self.single_client = Client.objects.create(
+            first_name="Single",
+            last_name="Purpose",
+            email="single-purpose@example.test",
+            phone="+48000000011",
+            application_purpose="study",
+            language="en",
+            is_test_data=True,
+        )
+        self.single_case = Case.objects.create(
+            client=self.single_client,
+            application_purpose="",
+            is_test_data=True,
+        )
+        self.family_client = Client.objects.create(
+            first_name="Family",
+            last_name="Purpose",
+            email="family-purpose@example.test",
+            phone="+48000000012",
+            application_purpose="family",
+            family_role="family_spouse",
+            language="en",
+            is_test_data=True,
+        )
+        self.family_case = Case.objects.create(
+            client=self.family_client,
+            application_purpose="",
+            family_role="",
+            is_test_data=True,
+        )
+        self.multi_client = Client.objects.create(
+            first_name="Multi",
+            last_name="Purpose",
+            email="multi-purpose@example.test",
+            phone="+48000000013",
+            application_purpose="work",
+            language="en",
+            is_test_data=True,
+        )
+        self.multi_case_a = Case.objects.create(
+            client=self.multi_client, application_purpose="", is_test_data=True
+        )
+        self.multi_case_b = Case.objects.create(
+            client=self.multi_client, application_purpose="", is_test_data=True
+        )
+        self.prefilled_client = Client.objects.create(
+            first_name="Prefilled",
+            last_name="Purpose",
+            email="prefilled-purpose@example.test",
+            phone="+48000000014",
+            application_purpose="study",
+            language="en",
+            is_test_data=True,
+        )
+        self.prefilled_case = Case.objects.create(
+            client=self.prefilled_client,
+            application_purpose="work",
+            is_test_data=True,
+        )
+
+        self.executor.loader.build_graph()
+        self.executor.migrate(self.migrate_to)
+        self.apps = self.executor.loader.project_state(self.migrate_to).apps
+
+    def tearDown(self) -> None:
+        self.executor.migrate(self.migrate_to)
+        super().tearDown()
+
+    def test_backfill_copies_purpose_only_for_single_blank_case(self) -> None:
+        CaseModel = self.apps.get_model("clients", "Case")
+
+        self.assertEqual(CaseModel.objects.get(pk=self.single_case.pk).application_purpose, "study")
+        family_case = CaseModel.objects.get(pk=self.family_case.pk)
+        self.assertEqual(family_case.application_purpose, "family")
+        self.assertEqual(family_case.family_role, "family_spouse")
+        self.assertEqual(CaseModel.objects.get(pk=self.multi_case_a.pk).application_purpose, "")
+        self.assertEqual(CaseModel.objects.get(pk=self.multi_case_b.pk).application_purpose, "")
+        self.assertEqual(CaseModel.objects.get(pk=self.prefilled_case.pk).application_purpose, "work")

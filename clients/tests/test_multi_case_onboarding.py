@@ -90,6 +90,44 @@ class MultiCaseOnboardingIsolationTests(TestCase):
         self.assertIn("case_b_only_document", additional_codes)
         self.assertNotIn("case_a_only_document", additional_codes)
 
+    def test_unresolved_second_case_purpose_forces_purpose_step(self) -> None:
+        """A second case with no purpose must read as "still collecting", not "done".
+
+        The requirement set is unknown until a purpose is chosen, so the empty
+        checklist may never advance the timeline past the documents step.
+        """
+        client, _case_a, case_b = self._client_with_two_cases()
+        MOSApplicationData.objects.update_or_create(
+            client=client, case=case_b, defaults={"status": "client_completed"}
+        )
+        token = self._case_link_session(client, case_b)
+
+        with translation.override("ru"):
+            response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["case_step"], 3)
+        self.assertTrue(response.context["purpose_missing"])
+        self.assertEqual(response.context["checklist"], [])
+
+    def test_client_selected_purpose_drives_checklist_until_staff_apply(self) -> None:
+        client, _case_a, case_b = self._client_with_two_cases()
+        MOSApplicationData.objects.update_or_create(
+            client=client,
+            case=case_b,
+            defaults={"status": "client_completed", "mos_purpose": "study"},
+        )
+        token = self._case_link_session(client, case_b)
+
+        with translation.override("ru"):
+            response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context["purpose_missing"])
+        self.assertEqual(response.context["effective_purpose"], "study")
+        self.assertTrue(response.context["checklist"])
+        self.assertFalse(response.context["purpose_mismatch"])
+
     def test_case_number_save_closes_only_matching_case_auto_task_and_logs_that_case(self) -> None:
         client, case_a, case_b = self._client_with_two_cases()
         task_a = create_auto_task(client, "case_number_missing", case=case_a)

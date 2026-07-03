@@ -14,6 +14,7 @@ from clients.models import Client, MOSApplicationData
 from clients.security.encrypted import safe_encrypted_attr
 from clients.services.access import accessible_clients_queryset
 from clients.services.activity import log_client_activity
+from clients.services.case_context import purpose_for_case
 from clients.services.mos_eligibility import evaluate_mos_eligibility
 from clients.services.onboarding_purposes import (
     ALLOWED_ONBOARDING_PURPOSES,
@@ -38,15 +39,23 @@ APPLY_TO_CLIENT_FIELDS = (
     "basis_of_stay",
     "legal_basis_end_date",
 )
-def _purpose_review_context(client: Client, mos_data: MOSApplicationData) -> dict[str, object]:
-    client_requirement_purpose = client.get_document_requirement_purpose()
+
+
+def _purpose_review_context(
+    client: Client,
+    mos_data: MOSApplicationData,
+    case: Any = None,
+) -> dict[str, object]:
+    card_requirement_purpose = purpose_for_case(case) if case is not None else client.get_document_requirement_purpose()
     client_selected_purpose = mos_data.mos_purpose
     return {
-        "client_card_purpose": client.application_purpose,
-        "client_card_purpose_label": purpose_label(client_requirement_purpose),
+        "client_card_purpose": getattr(case, "application_purpose", client.application_purpose),
+        "client_card_purpose_label": purpose_label(card_requirement_purpose),
         "client_selected_purpose": client_selected_purpose,
         "client_selected_purpose_label": purpose_label(client_selected_purpose),
-        "purpose_mismatch": bool(client_selected_purpose and client_selected_purpose != client_requirement_purpose),
+        "purpose_mismatch": bool(
+            client_selected_purpose and client_selected_purpose != card_requirement_purpose
+        ),
         "can_accept_client_purpose": client_selected_purpose in ALLOWED_ONBOARDING_PURPOSES,
     }
 
@@ -312,10 +321,11 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
         {
             "client": client,
             "mos_data": mos_data,
+            "case": case,
             "review_diffs": _build_review_diffs(client, mos_data),
             "passport_doc": passport_doc,
             "mos_eligibility": mos_eligibility,
-            **_purpose_review_context(client, mos_data),
+            **_purpose_review_context(client, mos_data, case),
         },
     )
 

@@ -7,16 +7,17 @@ from django.db import models
 from django.utils import translation
 
 from clients.models import DocumentRequirement
-from clients.services.onboarding_purposes import purpose_label
+from clients.services.onboarding_purposes import ALLOWED_ONBOARDING_PURPOSES, purpose_label
 
 
 def purpose_for_case(case: Any) -> str:
     """Return the document-requirement purpose for a concrete Case.
 
-    Case is the owner of process data. The client-level application purpose is
-    retained only as a legacy fallback for old cases that have not been
-    backfilled yet; new process code should pass the selected case instead of
-    reading Client.application_purpose directly.
+    Case is the sole owner of the process purpose (spec §4): new clients get it
+    copied onto their first case at creation, legacy single-case rows were
+    backfilled by migration 0122, and a case without a purpose deliberately
+    yields "" so callers force an explicit purpose selection instead of
+    borrowing one from the client or a sibling case.
     """
 
     case_purpose = str(getattr(case, "application_purpose", "") or "").strip()
@@ -27,10 +28,24 @@ def purpose_for_case(case: Any) -> str:
         if case_purpose == "family" and family_role == "sponsor":
             return "work"
         return case_purpose
+    return ""
 
-    client = getattr(case, "client", None)
-    if client is not None:
-        return str(client.get_document_requirement_purpose())
+
+def working_purpose_for_case(case: Any, mos_data: Any | None = None) -> str:
+    """Purpose that drives the client portal for one Case.
+
+    The Case purpose is authoritative once staff set it. Until then the
+    client's own questionnaire selection (``mos_purpose``) drives their
+    checklist, so a second case never silently borrows another case's
+    purpose and the client is not shown an empty "all collected" list.
+    """
+
+    purpose = purpose_for_case(case)
+    if purpose:
+        return purpose
+    selected = str(getattr(mos_data, "mos_purpose", "") or "").strip()
+    if selected in ALLOWED_ONBOARDING_PURPOSES:
+        return selected
     return ""
 
 
@@ -40,10 +55,12 @@ def checklist_for_case(
     *,
     include_optional: bool = True,
     include_fallback: bool = True,
+    purpose: str | None = None,
 ) -> list[dict[str, Any]]:
     """Return document requirements for the selected Case only."""
 
-    purpose = purpose_for_case(case)
+    if purpose is None:
+        purpose = purpose_for_case(case)
     return DocumentRequirement.catalog_for(
         purpose,
         language or translation.get_language(),
@@ -291,7 +308,8 @@ def build_case_document_checklist(
 
 
 def purpose_context_for_case(case: Any, mos_data: Any | None = None) -> dict[str, str | bool]:
-    effective_purpose = purpose_for_case(case)
+    case_purpose = purpose_for_case(case)
+    effective_purpose = working_purpose_for_case(case, mos_data)
     client_selected_purpose = str(getattr(mos_data, "mos_purpose", "") or "") if mos_data else ""
     original_case_purpose = str(getattr(case, "application_purpose", "") or "")
     return {
@@ -301,5 +319,10 @@ def purpose_context_for_case(case: Any, mos_data: Any | None = None) -> dict[str
         "effective_purpose_label": purpose_label(effective_purpose),
         "client_selected_purpose_label": purpose_label(client_selected_purpose),
         "original_case_purpose_label": purpose_label(original_case_purpose or effective_purpose),
-        "purpose_mismatch": bool(client_selected_purpose and client_selected_purpose != effective_purpose),
+        # A mismatch exists only against a purpose staff actually set on the
+        # case; a not-yet-applied client selection is the working purpose, not
+        # a conflict (staff review still confirms it before submission).
+        "purpose_mismatch": bool(
+            client_selected_purpose and case_purpose and client_selected_purpose != case_purpose
+        ),
     }

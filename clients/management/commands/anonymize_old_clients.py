@@ -2,7 +2,7 @@ import logging
 from datetime import timedelta
 from typing import Any
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
 from clients.models import Client
@@ -24,10 +24,27 @@ class Command(BaseCommand):
             action='store_true',
             help='Run the command without making any actual changes to the database.',
         )
+        parser.add_argument(
+            '--execute',
+            action='store_true',
+            help='Actually anonymize eligible clients. Requires --confirm.',
+        )
+        parser.add_argument(
+            '--confirm',
+            action='store_true',
+            help='Required together with --execute to confirm the destructive operation.',
+        )
 
     def handle(self, *args: Any, **options: Any) -> None:
         years = options['years']
-        dry_run = options['dry_run']
+        dry_run = bool(options['dry_run'])
+        execute = bool(options['execute'])
+        confirm = bool(options['confirm'])
+
+        if dry_run and execute:
+            raise CommandError('--dry-run cannot be combined with --execute.')
+        if execute and not confirm:
+            raise CommandError('Refusing to anonymize without --confirm.')
 
         cutoff_date = timezone.now().date() - timedelta(days=years * 365)
 
@@ -60,11 +77,17 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.WARNING(f'Found {count} clients older than {years} years.'))
 
-        if dry_run:
-            self.stdout.write(self.style.SUCCESS('[DRY RUN] Would have anonymized the following:'))
+        if dry_run or not execute:
+            heading = '[DRY RUN] Would have anonymized the following:' if dry_run else 'Report only. Eligible client IDs:'
+            self.stdout.write(self.style.SUCCESS(heading))
             for client in clients_to_anonymize:
                 # Do not print PII (names) to the console (GDPR / spec §13).
                 self.stdout.write(f' - ID {client.id}')
+            self.stdout.write(
+                self.style.SUCCESS(
+                    'No data was changed. Re-run with --execute --confirm to anonymize eligible records.'
+                )
+            )
             return
 
         from clients.services.anonymization import anonymize_client

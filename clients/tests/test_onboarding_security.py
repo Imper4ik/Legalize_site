@@ -247,6 +247,66 @@ class OnboardingSecurityTests(TestCase):
             reverse("clients:onboarding_select_case", kwargs={"token": "me"}),
         )
 
+    def _completed_session(self):
+        User = get_user_model()
+        user = User.objects.create_user(email="completed-owner@example.com", password="password123")
+        client = Client.objects.create(
+            first_name="Completed",
+            last_name="Owner",
+            email="completed-owner@example.com",
+            user=user,
+            application_purpose="work",
+        )
+        raw, hashed = generate_onboarding_token()
+        session = ClientOnboardingSession.objects.create(
+            client=client,
+            case=client.cases.get(),
+            token_hash=hashed,
+            status="completed",
+            completed_at=timezone.now(),
+            expires_at=timezone.now() + timedelta(days=1),
+        )
+        return user, client, raw, session
+
+    def test_completed_onboarding_link_requires_login_when_anonymous(self):
+        _user, _client, raw, _session = self._completed_session()
+
+        response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": raw}))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers["Location"], reverse("account_login"))
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_completed_onboarding_link_redirects_owner_to_portal(self):
+        user, _client, raw, session = self._completed_session()
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": raw}))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.headers["Location"],
+            reverse("clients:onboarding_start", kwargs={"token": "me"}),
+        )
+        self.assertEqual(self.client.session["case_id"], session.case_id)
+
+    def test_completed_onboarding_link_forbids_other_client_user(self):
+        _user, _client, raw, _session = self._completed_session()
+        User = get_user_model()
+        other_user = User.objects.create_user(email="completed-other@example.com", password="password123")
+        Client.objects.create(
+            first_name="Other",
+            last_name="Client",
+            email="completed-other@example.com",
+            user=other_user,
+            application_purpose="work",
+        )
+        self.client.force_login(other_user)
+
+        response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": raw}))
+
+        self.assertEqual(response.status_code, 403)
+
     def test_dashboard_redirect_for_client_user(self):
         User = get_user_model()
         user = User.objects.create_user(email="client_redirect@example.com", password="password123")

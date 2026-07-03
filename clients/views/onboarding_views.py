@@ -31,6 +31,7 @@ from clients.models import (
     MOSApplicationData,
 )
 from clients.services.access import accessible_clients_queryset
+from clients.services.case_context import working_purpose_for_case
 from clients.services.document_workflow import upload_client_document
 from clients.services.notifications import notify_staff_about_fingerprint_invitation_upload
 from clients.services.onboarding_purposes import (
@@ -106,22 +107,32 @@ def _sync_contact_fields_to_client(client: Client, **values: str) -> None:
         client.save(update_fields=update_fields)
 
 
-def _get_effective_document_purpose(client: Client, mos_data: MOSApplicationData | None = None) -> str:
+def _get_effective_document_purpose(
+    client: Client,
+    mos_data: MOSApplicationData | None = None,
+    case: Case | None = None,
+) -> str:
+    if case is not None:
+        return working_purpose_for_case(case, mos_data)
     return client.get_document_requirement_purpose()
 
 
-def _purpose_context(client: Client, mos_data: MOSApplicationData | None) -> dict[str, str | bool]:
-    effective_purpose = _get_effective_document_purpose(client, mos_data)
+def _purpose_context(
+    client: Client,
+    mos_data: MOSApplicationData | None,
+    case: Case | None = None,
+) -> dict[str, str | bool]:
+    effective_purpose = _get_effective_document_purpose(client, mos_data, case)
     client_selected_purpose = mos_data.mos_purpose if mos_data else ""
-    original_client_purpose = client.application_purpose
+    original_client_purpose = getattr(case, "application_purpose", client.application_purpose)
     return {
         "effective_purpose": effective_purpose,
         "client_selected_purpose": client_selected_purpose,
         "original_client_purpose": original_client_purpose,
         "effective_purpose_label": purpose_label(effective_purpose),
         "client_selected_purpose_label": purpose_label(client_selected_purpose),
-        "original_client_purpose_label": purpose_label(client.get_document_requirement_purpose()),
-        "purpose_mismatch": bool(client_selected_purpose and client_selected_purpose != client.get_document_requirement_purpose()),
+        "original_client_purpose_label": purpose_label(effective_purpose),
+        "purpose_mismatch": bool(client_selected_purpose and client_selected_purpose != effective_purpose),
     }
 
 
@@ -576,12 +587,14 @@ def onboarding_purpose(request: HttpRequest, token: str) -> HttpResponse:
         return case_redirect
 
     client = session.client
-    mos_data, _created = _ensure_mos(client, _session_case(session))
+    case = _session_case(session)
+    mos_data, _created = _ensure_mos(client, case)
 
     if not _mos_data_is_editable(mos_data):
         return _locked_response(request, session)
 
-    current_purpose = mos_data.mos_purpose or client.get_document_requirement_purpose()
+    effective_purpose = _get_effective_document_purpose(client, mos_data, case)
+    current_purpose = mos_data.mos_purpose or effective_purpose
 
     if request.method == "POST":
         try:
@@ -596,8 +609,8 @@ def onboarding_purpose(request: HttpRequest, token: str) -> HttpResponse:
         "mos_data": mos_data,
         "purpose_choices": ONBOARDING_PURPOSE_CHOICES,
         "current_purpose": current_purpose,
-        "original_client_purpose": client.application_purpose,
-        "original_client_purpose_label": purpose_label(client.get_document_requirement_purpose()),
+        "original_client_purpose": getattr(case, "application_purpose", client.application_purpose),
+        "original_client_purpose_label": purpose_label(effective_purpose),
     })
 
 

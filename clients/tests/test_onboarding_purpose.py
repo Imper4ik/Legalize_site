@@ -261,6 +261,34 @@ class OnboardingPurposeTests(TestCase):
         self.assertContains(response, "Цель, выбранная клиентом")
         self.assertContains(response, "Клиент выбрал другую цель подачи")
 
+    def test_admin_mos_review_requires_case_uuid_for_multi_case_client(self):
+        from clients.services.cases import create_case_for_client
+
+        client, _token = self._client_with_session(application_purpose="study")
+        case_a = client.cases.get()
+        case_b = create_case_for_client(client=client)
+        mos_b = MOSApplicationData.objects.create(
+            client=client,
+            case=case_b,
+            mos_purpose="work",
+            status="staff_review",
+        )
+
+        self.client.login(email="manager-purpose@example.com", password="securepassword")
+        review_url = reverse("clients:admin_mos_review", kwargs={"client_id": client.pk})
+        ambiguous_response = self.client.get(review_url)
+
+        self.assertEqual(ambiguous_response.status_code, 302)
+        self.assertIn(reverse("clients:client_detail", kwargs={"pk": client.pk}), ambiguous_response["Location"])
+        self.assertIn("view=person", ambiguous_response["Location"])
+
+        selected_response = self.client.get(f"{review_url}?case_uuid={case_b.uuid}")
+
+        self.assertEqual(selected_response.status_code, 200)
+        self.assertEqual(selected_response.context["case"], case_b)
+        self.assertEqual(selected_response.context["mos_data"], mos_b)
+        self.assertNotEqual(selected_response.context["case"], case_a)
+
     def test_staff_can_generate_existing_client_link_with_family_purpose(self):
         client = Client.objects.create(
             first_name="Existing",
@@ -332,6 +360,19 @@ class OnboardingPurposeTests(TestCase):
         self.assertEqual(case.family_role, "family_child")
         from clients.services.case_context import purpose_for_case
         self.assertEqual(purpose_for_case(case), "family_child")
+
+        from clients.services.onboarding_purposes import attach_onboarding_purpose_review_state
+        cache.clear()
+        attach_onboarding_purpose_review_state(client)
+        self.assertFalse(client.onboarding_purpose_requires_review)
+
+        list_response = self.client.get(reverse("clients:client_list"))
+        self.assertEqual(list_response.status_code, 200)
+        self.assertEqual(list_response.context["purpose_change_count"], 0)
+
+        filtered_response = self.client.get(reverse("clients:client_list"), {"onboarding": "purpose_change"})
+        self.assertEqual(filtered_response.status_code, 200)
+        self.assertNotContains(filtered_response, "Purpose")
 
     def test_staff_gets_attention_notification_for_client_purpose_change(self):
         cache.clear()
