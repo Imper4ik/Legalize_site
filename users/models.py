@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import secrets
 from typing import TYPE_CHECKING, Any, cast
 
 from django.contrib.auth.models import AbstractUser, Group, Permission
@@ -93,7 +94,15 @@ class User(AbstractUser):
         slug = slugify(local_part) or "user"
         digest = hashlib.sha1(normalized_email.encode("utf-8"), usedforsecurity=False).hexdigest()[:12]
         max_slug_length = 150 - len(digest) - 1
-        return f"{slug[:max_slug_length]}-{digest}"
+        candidate = f"{slug[:max_slug_length]}-{digest}"
+        # The digest is deterministic per email. If another account once used
+        # this email (and later changed it away), its username still occupies
+        # the deterministic value and account creation would die with a UNIQUE
+        # error - so disambiguate with a random suffix instead.
+        if cls.objects.filter(username=candidate).exists():
+            suffix = secrets.token_hex(3)
+            candidate = f"{candidate[: 150 - len(suffix) - 1]}-{suffix}"
+        return candidate
 
     def clean(self) -> None:
         super().clean()

@@ -137,7 +137,13 @@ function initOnboardingPanelLinkGenerator() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        let serverMessage = '';
+        try {
+          serverMessage = (await response.json()).message || '';
+        } catch (parseError) {
+          serverMessage = '';
+        }
+        throw new Error(serverMessage || `HTTP ${response.status}`);
       }
 
       const data = await response.json();
@@ -186,6 +192,11 @@ function initOnboardingPanelLinkGenerator() {
         errorMsg = btn.dataset.errorRu || errorMsg;
       } else if (lang.startsWith('pl')) {
         errorMsg = btn.dataset.errorPl || errorMsg;
+      }
+      // Prefer the concrete server-side reason (e.g. a workflow validation
+      // message) over the generic text when the API returned one.
+      if (error instanceof Error && error.message && !/^HTTP \d+$/.test(error.message)) {
+        errorMsg = error.message;
       }
       showAlert('onboarding-alerts', errorMsg, 'danger');
     } finally {

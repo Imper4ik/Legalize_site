@@ -5,7 +5,7 @@ from typing import Any, cast
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.http import (
     HttpRequest,
     HttpResponse,
@@ -369,19 +369,14 @@ def _split_onboarding_full_name(full_name: str) -> tuple[str, str] | None:
 def _mark_user_email_verified(user: Any, email: str) -> None:
     from allauth.account.models import EmailAddress
 
-    email_address = EmailAddress.objects.filter(user=user, email__iexact=email).first()
-    if email_address is None:
-        email_address = EmailAddress.objects.create(
-            user=user,
-            email=email,
-            primary=True,
-            verified=True,
-        )
-    else:
-        email_address.email = email
-        email_address.primary = True
-        email_address.verified = True
-        email_address.save(update_fields=["email", "primary", "verified"])
+    # The email is globally unique in allauth. A stale row may still point at
+    # an account that has since changed its email away (staff typo fixes); the
+    # address must follow its rightful current owner instead of crashing
+    # account creation with a UNIQUE error.
+    email_address, _created = EmailAddress.objects.update_or_create(
+        email__iexact=email,
+        defaults={"user": user, "email": email, "primary": True, "verified": True},
+    )
 
     EmailAddress.objects.filter(user=user).exclude(pk=email_address.pk).update(primary=False)
 
@@ -480,8 +475,13 @@ def onboarding_set_password(request: HttpRequest, token: str) -> HttpResponse:
 
                         messages.success(request, _("Аккаунт успешно создан. Вы вошли в личный кабинет клиента."))
                         return redirect("clients:onboarding_start", token=token)
-            except Exception as e:
-                error_message = _("Произошла ошибка при сохранении аккаунта: {error}").format(error=str(e))
+            except IntegrityError:
+                # Never leak raw database/schema details to the public portal.
+                logger.exception("Onboarding set-password hit an integrity error", extra={"client_id": client.pk})
+                error_message = _("Такой аккаунт уже существует. Попробуйте войти или обратитесь к сотруднику.")
+            except Exception:
+                logger.exception("Onboarding set-password failed", extra={"client_id": client.pk})
+                error_message = _("Не удалось сохранить аккаунт. Попробуйте ещё раз или обратитесь к сотруднику.")
 
     return render(request, "clients/onboarding/set_password.html", {
         "session": session,
@@ -826,7 +826,10 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
             # Smart transition logic based on the case's existing dates (§4).
             case = mos_data.case
             if case is None:
-                messages.error(request, _("Не удалось определить дело для заявки."))
+                message = _("Не удалось определить дело для заявки.")
+                if request_is_ajax(request):
+                    return JsonResponse({"status": "error", "message": str(message)}, status=400)
+                messages.error(request, message)
                 return redirect("clients:client_detail", pk=client.pk)
             target_stage = "waiting_decision" if case.fingerprints_date else "fingerprints"
             try:
@@ -836,11 +839,19 @@ def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpRespon
                     mos_data.status = target_stage
                     mos_data.save(update_fields=["new_residence_card_application_status", "new_residence_card_updated_at", "status", "updated_at"])
             except ValidationError as exc:
-                messages.error(request, str(exc))
+                # The AJAX caller must see the real validation reason instead of
+                # a redirect it can only render as "failed to generate link".
+                message = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)
+                if request_is_ajax(request):
+                    return JsonResponse({"status": "error", "message": message}, status=400)
+                messages.error(request, message)
                 return redirect("clients:client_detail", pk=client.pk)
             except Exception:
                 logger.exception("Unexpected error while preparing join onboarding", extra={"client_id": client.pk})
-                messages.error(request, _("Unexpected error while updating application status."))
+                message = _("Unexpected error while updating application status.")
+                if request_is_ajax(request):
+                    return JsonResponse({"status": "error", "message": str(message)}, status=500)
+                messages.error(request, message)
                 return redirect("clients:client_detail", pk=client.pk)
         elif intake_type == "new":
             mos_data.new_residence_card_application_status = "no"
