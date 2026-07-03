@@ -293,14 +293,12 @@ def process_document_jobs_cron(request: HttpRequest) -> JsonResponse:
 
 @csrf_exempt
 @require_POST
-def run_maintenance_cron(request: HttpRequest) -> JsonResponse:
-    """GDPR retention maintenance: email-log body cleanup + client anonymization.
+def retention_maintenance_cron(request: HttpRequest) -> JsonResponse:
+    """Run guarded retention maintenance.
 
-    ``cleanup_email_logs`` always runs (it only strips bodies/recipients older
-    than EMAIL_LOG_BODY_RETENTION_DAYS). ``anonymize_old_clients`` is
-    destructive, so it runs for real only when AUTO_ANONYMIZE_OLD_CLIENTS is
-    enabled; otherwise a dry-run report is produced so operators can see what
-    *would* be anonymized before opting in.
+    The command performs weekly email-payload cleanup and a monthly
+    anonymization report. Actual client anonymization remains a separate,
+    explicitly confirmed operator action.
     """
     from django.core.management import call_command
 
@@ -310,34 +308,21 @@ def run_maintenance_cron(request: HttpRequest) -> JsonResponse:
         if forbidden_response is not None:
             return forbidden_response
 
-        call_command("cleanup_email_logs")
-
-        anonymize_enabled = bool(getattr(settings, "AUTO_ANONYMIZE_OLD_CLIENTS", False))
-        anonymize_years = int(getattr(settings, "ANONYMIZE_CLIENTS_AFTER_YEARS", 5))
-        anonymize_args = ["--years", str(anonymize_years)]
-        if not anonymize_enabled:
-            anonymize_args.append("--dry-run")
-        call_command("anonymize_old_clients", *anonymize_args)
-
-        logger.info(
-            "Executed retention maintenance via cron: anonymize_enabled=%s years=%s",
-            anonymize_enabled,
-            anonymize_years,
-        )
+        call_command("run_retention_maintenance")
+        logger.info("Executed run_retention_maintenance via cron")
         return JsonResponse(
             {
                 "status": "processed",
                 "ok": True,
-                "command": "run_maintenance",
-                "anonymize_enabled": anonymize_enabled,
-                "anonymize_years": anonymize_years,
+                "command": "run_retention_maintenance",
+                "processed_count": None,
                 "errors": [],
                 "duration_ms": round((time.perf_counter() - started_at) * 1000),
             }
         )
     except Exception as e:
         logger.exception("Unexpected error during retention maintenance")
-        _alert_cron_failure("run_maintenance", e)
+        _alert_cron_failure("run_retention_maintenance", e)
         return JsonResponse({"error": "retention maintenance failed"}, status=500)
 
 

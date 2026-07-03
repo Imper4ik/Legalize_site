@@ -76,39 +76,19 @@ class Command(BaseCommand):
             timeout=interval_seconds,
             task=lambda: call_command("run_weekly_document_reminders"),
         )
-        self._run_daily_maintenance()
-
-    def _run_daily_maintenance(self) -> None:
-        """GDPR retention maintenance, once per day (mirrors /cron/run-maintenance/).
-
-        Email-log body cleanup always runs; client anonymization is destructive
-        and stays a dry-run report until AUTO_ANONYMIZE_OLD_CLIENTS is enabled.
-        """
-        from django.conf import settings
-
-        cache_key = f"background_automation_loop:maintenance:{timezone.localdate().isoformat()}"
-        try:
-            if not cache.add(cache_key, timezone.now().isoformat(), timeout=25 * 60 * 60):
-                return
-        except Exception:
-            logger.warning("Maintenance cache guard failed; running anyway.", exc_info=True)
-
-        try:
-            call_command("cleanup_email_logs")
-            anonymize_args = ["--years", str(int(getattr(settings, "ANONYMIZE_CLIENTS_AFTER_YEARS", 5)))]
-            if not getattr(settings, "AUTO_ANONYMIZE_OLD_CLIENTS", False):
-                anonymize_args.append("--dry-run")
-            call_command("anonymize_old_clients", *anonymize_args)
-        except Exception:
-            logger.exception("Background automation task failed: maintenance")
+        self._run_locked(
+            "retention-maintenance",
+            timeout=interval_seconds,
+            task=lambda: call_command("run_retention_maintenance"),
+        )
 
     def _run_locked(self, name: str, *, timeout: int, task: Callable[[], Any]) -> bool:
         cache_key = f"background_automation_loop:{name}"
         try:
             acquired = cache.add(cache_key, timezone.now().isoformat(), timeout=timeout)
         except Exception:
-            logger.warning("Automation lock failed for %s; running task anyway.", name, exc_info=True)
-            acquired = True
+            logger.error("Automation lock failed for %s; skipping task.", name, exc_info=True)
+            return False
 
         if not acquired:
             logger.info("Skipping %s because another automation loop holds the lock.", name)

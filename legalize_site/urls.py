@@ -16,7 +16,7 @@ from .cron_views import (
     db_backup,
     process_document_jobs_cron,
     process_email_campaigns_cron,
-    run_maintenance_cron,
+    retention_maintenance_cron,
     update_reminders_cron,
 )
 
@@ -30,7 +30,8 @@ urlpatterns = [
     path('cron/process-email-campaigns/', process_email_campaigns_cron, name='process_email_campaigns_cron'),
     path('cron/process-document-jobs/', process_document_jobs_cron, name='process_document_jobs_cron'),
     path('cron/update-reminders/', update_reminders_cron, name='update_reminders_cron'),
-    path('cron/run-maintenance/', run_maintenance_cron, name='run_maintenance_cron'),
+    path('cron/run-maintenance/', retention_maintenance_cron, name='run_maintenance_cron'),
+    path('cron/retention-maintenance/', retention_maintenance_cron, name='retention_maintenance_cron'),
 ]
 
 if getattr(settings, "ENABLE_TRANSLATION_TOOLING", False):

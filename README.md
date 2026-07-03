@@ -62,6 +62,7 @@ Railway does not support native cron. You must configure an external ping servic
 - **Email Campaigns**: `POST /cron/process-email-campaigns/`
 - **Background OCR**: `POST /cron/process-document-jobs/`
 - **Daily Reminders**: `POST /cron/update-reminders/`
+- **Retention Maintenance**: `POST /cron/retention-maintenance/` (safe to ping daily; internally weekly email-log cleanup + monthly GDPR anonymization report)
 
 Secure these endpoints by setting `CRON_TOKEN` and passing it via the `Authorization: Bearer <TOKEN>` header. You can also restrict access by IP using `CRON_ALLOWED_IPS`.
 
@@ -144,17 +145,22 @@ pytest
 - `process_email_campaigns`: every 5-15 minutes.
 - `update_reminders`: once daily in the morning.
 - `db_backup`: once daily.
+- `retention-maintenance`: daily ping; the command itself enforces a weekly
+  email-log payload cleanup and a monthly GDPR anonymization report.
 - `scrub_ocr_pii`: manually after deploy or after OCR cleanup changes.
 
-Background automation also runs from the web service startup script. `start.sh`
-launches `python manage.py run_background_automation_loop --loop` by default. The
-loop processes queued OCR jobs and queued email campaigns every 5 minutes, and
+The web service can also run this automation in-process. `start.sh` starts
+`python manage.py run_background_automation_loop --loop` **only when**
+`ENABLE_BACKGROUND_AUTOMATION_LOOP=true` (default is `false`, so an external
+scheduler is required unless you enable it). The loop processes queued OCR jobs
+and queued email campaigns every 5 minutes, runs retention maintenance, and
 checks missing checklist documents, missing ZUS RCA months, expiring documents, and
 regular reminder records daily after 08:00 Europe/Warsaw time with a same-day retry
 slot after 17:10. Missing-document and missing-ZUS RCA emails use weekly
 idempotency keys per client, so they can be checked daily but are sent at most once
-per week for the same reminder type. Set `ENABLE_BACKGROUND_AUTOMATION_LOOP=false`
-to disable the built-in loop and use an external scheduler instead.
+per week for the same reminder type. Either the loop or the external cron pings
+must be configured in production — with neither, no reminders, OCR jobs, emails,
+backups, or retention maintenance run at all.
 
 Example:
 

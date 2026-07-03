@@ -316,25 +316,26 @@ def test_background_automation_loop_runs_core_background_tasks():
         call("process_document_jobs", "--limit", "50"),
         call("process_email_campaigns", "--limit", "50"),
         call("run_weekly_document_reminders"),
-        call("cleanup_email_logs"),
-        call("anonymize_old_clients", "--years", "5", "--dry-run"),
+        call("run_retention_maintenance"),
     ]
 
 
-@pytest.mark.django_db
-def test_background_automation_loop_runs_maintenance_once_per_day():
-    from django.core.cache import cache as real_cache
+def test_background_automation_loop_skips_task_when_lock_backend_fails():
+    from clients.management.commands.run_background_automation_loop import Command
 
-    real_cache.delete(f"background_automation_loop:maintenance:{timezone.localdate().isoformat()}")
-    try:
-        with patch("clients.management.commands.run_background_automation_loop.call_command") as call_mock:
-            call_command("run_background_automation_loop")
-            call_command("run_background_automation_loop")
-    finally:
-        real_cache.delete(f"background_automation_loop:maintenance:{timezone.localdate().isoformat()}")
+    task = Mock()
+    with patch(
+        "clients.management.commands.run_background_automation_loop.cache.add",
+        side_effect=RuntimeError("cache down"),
+    ):
+        with patch(
+            "clients.management.commands.run_background_automation_loop.cache.delete"
+        ) as cache_delete:
+            result = Command()._run_locked("document-jobs", timeout=60, task=task)
 
-    maintenance_calls = [c for c in call_mock.call_args_list if c.args and c.args[0] == "cleanup_email_logs"]
-    assert len(maintenance_calls) == 1
+    assert result is False
+    task.assert_not_called()
+    cache_delete.assert_not_called()
 
 
 @pytest.mark.django_db
