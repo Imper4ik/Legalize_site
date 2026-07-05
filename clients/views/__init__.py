@@ -20,6 +20,7 @@ from clients.views.onboarding_step_return import (
     onboarding_consent,
     onboarding_declarations,
     onboarding_digital_access,
+    onboarding_my_data,
     onboarding_passport,
     onboarding_personal_extra,
     onboarding_travel,

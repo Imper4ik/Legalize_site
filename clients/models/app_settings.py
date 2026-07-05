@@ -108,6 +108,22 @@ class AppSettings(models.Model):
             "доказать, с какой редакцией политики согласился субъект данных."
         ),
     )
+    privacy_policy_body = models.TextField(
+        blank=True,
+        default="",
+        verbose_name=_("Текст политики конфиденциальности"),
+        help_text=_(
+            "Необязательно. Дополнительный текст политики, который показывается "
+            "на публичной странице под стандартными разделами RODO."
+        ),
+    )
+    data_retention_summary = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name=_("Срок хранения данных"),
+        help_text=_("Кратко: как долго хранятся данные. Показывается в политике."),
+    )
 
     class Meta:
         verbose_name = _("Настройки приложения")

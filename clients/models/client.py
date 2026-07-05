@@ -233,6 +233,12 @@ class Client(SoftDeleteModel):
     )
     is_test_data = models.BooleanField(default=False, db_index=True)
     is_demo_data = models.BooleanField(default=False, db_index=True)
+    # RODO art. 17: the subject requested erasure; staff action it out of band.
+    erasure_requested_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("Запрос на удаление данных"),
+    )
     archived_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

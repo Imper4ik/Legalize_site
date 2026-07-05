@@ -83,6 +83,8 @@ class AppSettingsForm(forms.ModelForm):
             "representative_name",
             "dpo_contact",
             "privacy_policy_version",
+            "data_retention_summary",
+            "privacy_policy_body",
             "mazowiecki_office_template",
             "mazowiecki_proxy_template",
         ]
@@ -133,6 +135,12 @@ class AppSettingsForm(forms.ModelForm):
             ),
             "privacy_policy_version": forms.TextInput(
                 attrs={"class": "form-control", "placeholder": "2026-01"}
+            ),
+            "data_retention_summary": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": _("5 лет после закрытия дела")}
+            ),
+            "privacy_policy_body": forms.Textarea(
+                attrs={"class": "form-control", "rows": 6}
             ),
             "mazowiecki_office_template": forms.Textarea(
                 attrs={

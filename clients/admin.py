@@ -145,7 +145,7 @@ class ClientAdmin(admin.ModelAdmin):
         "archived_at",
         "created_at",
     )
-    list_filter = ("company", "status", "application_purpose", "family_role", "language", "is_test_data", "archived_at")
+    list_filter = ("company", "status", "application_purpose", "family_role", "language", "is_test_data", "archived_at", "erasure_requested_at")
     search_fields = ("first_name", "last_name", "email", "phone", "notes", "company__name")
     fieldsets = (
         (
@@ -162,9 +162,11 @@ class ClientAdmin(admin.ModelAdmin):
         ),
         ("Семья", {"fields": ("family_role", "sponsor_client")}),
         ("Статус и заметки", {"fields": ("status", "notes", "archived_at")}),
+        ("RODO", {"fields": ("erasure_requested_at",)}),
     )
     readonly_fields = (
         "archived_at",
+        "erasure_requested_at",
         "new_residence_card_application_summary",
         "new_residence_card_application_summary_masked",
     )

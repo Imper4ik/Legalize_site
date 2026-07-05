@@ -61,6 +61,7 @@
                 {% blocktrans with dpo=app_settings.dpo_contact %}Контакт по защите данных: {{ dpo }}.{% endblocktrans %}
             {% endif %}
             {% trans "Согласие можно отозвать в любой момент в личном кабинете; отзыв не влияет на законность обработки до отзыва." %}
+            <a href="{% url 'privacy_policy' %}" target="_blank" rel="noopener">{% trans "Политика конфиденциальности" %}</a>.
         </div>
         {% if consent_error %}
         <div class="text-danger small mt-2">{% trans "Отметьте согласие, чтобы продолжить." %}</div>

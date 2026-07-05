@@ -91,6 +91,15 @@
               {{ form.privacy_policy_version }}
               <div class="form-text">{% translate "Фиксируется в записи согласия." %}</div>
             </div>
+            <div class="col-12 col-lg-6">
+              <label for="{{ form.data_retention_summary.id_for_label }}" class="form-label fw-semibold">{% translate "Срок хранения данных" %}</label>
+              {{ form.data_retention_summary }}
+            </div>
+            <div class="col-12">
+              <label for="{{ form.privacy_policy_body.id_for_label }}" class="form-label fw-semibold">{% translate "Текст политики конфиденциальности" %}</label>
+              {{ form.privacy_policy_body }}
+              <div class="form-text">{% translate "Показывается на публичной странице политики под стандартными разделами RODO." %}</div>
+            </div>
           </div>
         </div>
       </div>

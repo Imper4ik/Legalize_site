@@ -44,5 +44,9 @@
     {% endfor %}
 </div>
 
-<a href="{% url 'clients:onboarding_start' session.token_hash %}" class="btn btn-outline-secondary">{% trans "Назад в кабинет" %}</a>
+<div class="d-flex gap-2 flex-wrap">
+    <a href="{% url 'clients:onboarding_start' session.token_hash %}" class="btn btn-outline-secondary">{% trans "Назад в кабинет" %}</a>
+    <a href="{% url 'clients:onboarding_my_data' session.token_hash %}" class="btn btn-outline-primary">{% trans "Мои данные и удаление" %}</a>
+    <a href="{% url 'privacy_policy' %}" target="_blank" rel="noopener" class="btn btn-link">{% trans "Политика конфиденциальности" %}</a>
+</div>
 {% endblock %}

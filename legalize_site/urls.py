@@ -48,6 +48,7 @@ urlpatterns += i18n_patterns(
         name="account_resend_verification",
     ),
     path('accounts/', include('allauth.urls')),
+    path('privacy/', views.privacy_policy_view, name='privacy_policy'),
     path('staff/', include('clients.urls', namespace='clients')),
     path('submissions/', include('submissions.urls', namespace='submissions')),
 

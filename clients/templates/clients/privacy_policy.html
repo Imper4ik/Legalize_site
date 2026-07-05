@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% translate "Политика конфиденциальности" %}{% endblock %}
+{% block page_title %}{% translate "Политика конфиденциальности (RODO)" %}{% endblock %}
+{% block page_subtitle %}
+  {% if app_settings.privacy_policy_version %}{% translate "Версия" %} {{ app_settings.privacy_policy_version }}{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body">
+
+    <section class="mb-4">
+      <h5 class="fw-semibold">{% translate "1. Администратор данных" %}</h5>
+      {% if app_settings.legal_entity_name %}
+        <p class="mb-1"><strong>{{ app_settings.legal_entity_name }}</strong></p>
+      {% else %}
+        <p class="text-muted">{% translate "Реквизиты администратора данных уточняются в офисе." %}</p>
+      {% endif %}
+      {% if app_settings.representative_name %}<p class="mb-1">{% translate "Представитель:" %} {{ app_settings.representative_name }}</p>{% endif %}
+      {% if app_settings.legal_address %}<p class="mb-1" style="white-space: pre-line;">{{ app_settings.legal_address }}</p>{% endif %}
+      <p class="mb-1 small text-muted">
+        {% if app_settings.data_controller_nip %}NIP: {{ app_settings.data_controller_nip }} {% endif %}
+        {% if app_settings.data_controller_regon %}REGON: {{ app_settings.data_controller_regon }} {% endif %}
+        {% if app_settings.data_controller_krs %}KRS: {{ app_settings.data_controller_krs }}{% endif %}
+      </p>
+      {% if app_settings.contact_email %}<p class="mb-1">{% translate "Контакт:" %} {{ app_settings.contact_email }} {{ app_settings.contact_phone }}</p>{% endif %}
+      {% if app_settings.dpo_contact %}<p class="mb-0">{% translate "Инспектор по защите данных (IOD/DPO):" %} {{ app_settings.dpo_contact }}</p>{% endif %}
+    </section>
+
+    <section class="mb-4">
+      <h5 class="fw-semibold">{% translate "2. Цели и правовая основа обработки" %}</h5>
+      <ul class="mb-0">
+        <li>{% translate "Оказание услуг по ведению дела о легализации пребывания — исполнение договора (art. 6 ust. 1 lit. b RODO)." %}</li>
+        <li>{% translate "Обработка персональных данных, необходимых для подготовки заявлений и документов — согласие субъекта (art. 6 ust. 1 lit. a RODO) и правовые обязанности (lit. c)." %}</li>
+        <li>{% translate "Маркетинговые сообщения — только при отдельном согласии (art. 6 ust. 1 lit. a RODO)." %}</li>
+      </ul>
+    </section>
+
+    <section class="mb-4">
+      <h5 class="fw-semibold">{% translate "3. Категории данных" %}</h5>
+      <p class="mb-0">{% translate "Имя и фамилия, контактные данные, гражданство, дата рождения, номер паспорта, номер дела, данные о занятости и документы, необходимые для ведения дела." %}</p>
+    </section>
+
+    <section class="mb-4">
+      <h5 class="fw-semibold">{% translate "4. Срок хранения" %}</h5>
+      <p class="mb-0">
+        {% if app_settings.data_retention_summary %}{{ app_settings.data_retention_summary }}{% else %}{% translate "Данные хранятся в течение срока ведения дела и последующего периода, установленного законом и договором, после чего анонимизируются или удаляются." %}{% endif %}
+      </p>
+    </section>
+
+    <section class="mb-4">
+      <h5 class="fw-semibold">{% translate "5. Ваши права" %}</h5>
+      <ul class="mb-0">
+        <li>{% translate "Доступ к своим данным и получение их копии (art. 15)." %}</li>
+        <li>{% translate "Исправление данных (art. 16)." %}</li>
+        <li>{% translate "Удаление данных / «право быть забытым» (art. 17)." %}</li>
+        <li>{% translate "Ограничение обработки (art. 18) и переносимость данных (art. 20)." %}</li>
+        <li>{% translate "Отзыв согласия в любой момент без влияния на законность обработки до отзыва (art. 7 ust. 3)." %}</li>
+        <li>{% translate "Жалоба в надзорный орган (Prezes UODO)." %}</li>
+      </ul>
+    </section>
+
+    {% if app_settings.privacy_policy_body %}
+    <section class="mb-0">
+      <h5 class="fw-semibold">{% translate "6. Дополнительно" %}</h5>
+      <div style="white-space: pre-line;">{{ app_settings.privacy_policy_body }}</div>
+    </section>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

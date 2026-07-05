@@ -152,6 +152,7 @@ urlpatterns = [
     path('onboarding/<str:token>/travel/', views.onboarding_travel, name='onboarding_travel'),
     path('onboarding/<str:token>/declarations/', views.onboarding_declarations, name='onboarding_declarations'),
     path('onboarding/<str:token>/consent/', views.onboarding_consent, name='onboarding_consent'),
+    path('onboarding/<str:token>/my-data/', views.onboarding_my_data, name='onboarding_my_data'),
     path('onboarding/<str:token>/review/', views.onboarding_review, name='onboarding_review'),
     path('onboarding/<str:token>/auto-save/', views.onboarding_auto_save, name='onboarding_auto_save'),
     path('onboarding/<str:token>/ask-question/', views.onboarding_ask_question, name='onboarding_ask_question'),

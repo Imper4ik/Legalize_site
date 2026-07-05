@@ -525,3 +525,73 @@ def onboarding_consent(request: HttpRequest, token: str) -> HttpResponse:
             "consent_rows": consent_rows,
         },
     )
+
+
+def onboarding_my_data(request: HttpRequest, token: str) -> HttpResponse:
+    """Subject-facing data-rights centre: download own data or request erasure.
+
+    Implements RODO art. 15/20 (access + portability, JSON export) and art. 17
+    (right to erasure — recorded as a request that staff action out of band).
+    """
+    import json
+
+    from django.contrib import messages
+    from django.http import HttpResponse as DjangoHttpResponse
+    from django.utils import timezone
+
+    from clients.services.data_export import build_subject_data
+
+    session = onboarding_views.check_onboarding_session(token, request=request)
+    if not session:
+        return HttpResponseForbidden(_("Срок действия ссылки истёк или она недействительна."))
+    auth_redirect = _auth_redirect(request, session, token)
+    if auth_redirect:
+        return auth_redirect
+
+    client = session.client
+
+    if request.method == "POST":
+        action = request.POST.get("action", "")
+        if action == "export":
+            payload = build_subject_data(client)
+            response = DjangoHttpResponse(
+                json.dumps(payload, ensure_ascii=False, indent=2),
+                content_type="application/json",
+            )
+            response["Content-Disposition"] = f'attachment; filename="my-data-{client.pk}.json"'
+            return response
+        if action == "erasure_request":
+            if client.erasure_requested_at is None:
+                client.erasure_requested_at = timezone.now()
+                client.save(update_fields=["erasure_requested_at"])
+                _create_erasure_task(session)
+            messages.success(
+                request,
+                _("Запрос на удаление данных получен. Мы свяжемся с вами."),
+            )
+            return redirect("clients:onboarding_my_data", token=token)
+        return HttpResponseBadRequest(_("Некорректный запрос."))
+
+    return render(
+        request,
+        "clients/onboarding/my_data.html",
+        {
+            "session": session,
+            "erasure_requested_at": client.erasure_requested_at,
+        },
+    )
+
+
+def _create_erasure_task(session: ClientOnboardingSession) -> None:
+    from clients.models import StaffTask
+
+    case = onboarding_views._session_case(session)
+    StaffTask.objects.create(
+        client=session.client,
+        case=case,
+        task_type="internal_note",
+        title=str(_("Запрос на удаление данных (RODO art. 17)")),
+        description=str(_("Субъект данных запросил удаление своих данных через личный кабинет.")),
+        priority="high",
+        is_auto_created=True,
+    )

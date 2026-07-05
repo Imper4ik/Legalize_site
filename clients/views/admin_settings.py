@@ -146,6 +146,20 @@ class DocumentTemplateHubView(RoleRequiredMixin, TemplateView):
     allowed_roles = list(SETTINGS_ALLOWED_ROLES)
 
 
+def privacy_policy_view(request: HttpRequest) -> HttpResponse:
+    """Public RODO privacy notice (art. 13/14).
+
+    Renders the standard sections plus the data-controller identity and
+    retention summary that the client maintains in AppSettings, so the notice
+    always reflects the current controller without a code change.
+    """
+    return render(
+        request,
+        "clients/privacy_policy.html",
+        {"app_settings": AppSettings.get_solo()},
+    )
+
+
 @role_required_view(*SETTINGS_ALLOWED_ROLES)
 def service_price_manage_view(request: HttpRequest) -> HttpResponse:
     existing_by_code = {item.service_code: item for item in ServicePrice.objects.all()}

@@ -212,3 +212,84 @@ class DeclarationsConsentGateTests(TestCase):
         self.assertTrue(
             ConsentRecord.is_granted(self.client_record, ConsentRecord.Purpose.DATA_PROCESSING)
         )
+
+
+class PrivacyPolicyPageTests(TestCase):
+    def test_public_page_renders_controller_identity(self) -> None:
+        settings = AppSettings.get_solo()
+        settings.legal_entity_name = "Kancelaria XYZ Sp. z o.o."
+        settings.privacy_policy_version = "2026-01"
+        settings.save()
+
+        response = self.client.get(reverse("privacy_policy"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Kancelaria XYZ Sp. z o.o.")
+        self.assertContains(response, "2026-01")
+
+
+class MyDataRightsTests(TestCase):
+    def setUp(self) -> None:
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
+            email="rights@example.com", password="securepassword123"
+        )
+        self.client_record = Client.objects.create(
+            first_name="Nina",
+            last_name="Sokolova",
+            email="rights@example.com",
+            application_purpose="work",
+            user=self.user,
+        )
+        raw, hashed = generate_onboarding_token()
+        from clients.models import ClientOnboardingSession
+
+        ClientOnboardingSession.objects.create(
+            client=self.client_record,
+            token_hash=hashed,
+            status="created",
+            expires_at=timezone.now() + timedelta(days=1),
+        )
+        self.client.force_login(self.user)
+        self.url = reverse("clients:onboarding_my_data", kwargs={"token": raw})
+
+    def test_export_returns_json_attachment(self) -> None:
+        ConsentRecord.record(
+            client=self.client_record,
+            purpose=ConsentRecord.Purpose.DATA_PROCESSING,
+            granted=True,
+        )
+        response = self.client.post(self.url, {"action": "export"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/json")
+        self.assertIn("attachment", response["Content-Disposition"])
+        import json
+
+        payload = json.loads(response.content)
+        self.assertEqual(payload["personal"]["first_name"], "Nina")
+        self.assertEqual(len(payload["consents"]), 1)
+
+    def test_erasure_request_stamps_client_and_opens_task(self) -> None:
+        from clients.models import StaffTask
+
+        response = self.client.post(self.url, {"action": "erasure_request"})
+        self.assertEqual(response.status_code, 302)
+        self.client_record.refresh_from_db()
+        self.assertIsNotNone(self.client_record.erasure_requested_at)
+        self.assertTrue(
+            StaffTask.objects.filter(
+                client=self.client_record, title__icontains="удаление"
+            ).exists()
+        )
+
+    def test_erasure_request_is_idempotent(self) -> None:
+        from clients.models import StaffTask
+
+        self.client.post(self.url, {"action": "erasure_request"})
+        first_stamp = Client.objects.get(pk=self.client_record.pk).erasure_requested_at
+        self.client.post(self.url, {"action": "erasure_request"})
+        second_stamp = Client.objects.get(pk=self.client_record.pk).erasure_requested_at
+        self.assertEqual(first_stamp, second_stamp)
+        self.assertEqual(
+            StaffTask.objects.filter(client=self.client_record, title__icontains="удаление").count(),
+            1,
+        )
