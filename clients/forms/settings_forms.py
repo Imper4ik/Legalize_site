@@ -75,6 +75,14 @@ class AppSettingsForm(forms.ModelForm):
             "contact_phone",
             "office_address",
             "default_proxy_name",
+            "legal_entity_name",
+            "data_controller_nip",
+            "data_controller_regon",
+            "data_controller_krs",
+            "legal_address",
+            "representative_name",
+            "dpo_contact",
+            "privacy_policy_version",
             "mazowiecki_office_template",
             "mazowiecki_proxy_template",
         ]
@@ -97,6 +105,34 @@ class AppSettingsForm(forms.ModelForm):
             ),
             "default_proxy_name": forms.TextInput(
                 attrs={"class": "form-control", "placeholder": "Imie Nazwisko"}
+            ),
+            "legal_entity_name": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": _("ООО / Sp. z o.o. — полное наименование")}
+            ),
+            "data_controller_nip": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "0000000000"}
+            ),
+            "data_controller_regon": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "000000000"}
+            ),
+            "data_controller_krs": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "0000000000"}
+            ),
+            "legal_address": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 3,
+                    "placeholder": "UL. PRZYKLADOWA 1/2\n00-000 WARSZAWA",
+                }
+            ),
+            "representative_name": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": _("Imie Nazwisko, должность")}
+            ),
+            "dpo_contact": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "iod@example.com"}
+            ),
+            "privacy_policy_version": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "2026-01"}
             ),
             "mazowiecki_office_template": forms.Textarea(
                 attrs={

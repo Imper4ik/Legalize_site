@@ -55,6 +55,48 @@
 
       <div class="col-12">
         <div class="border rounded p-3 h-100">
+          <h6 class="fw-semibold mb-3">{% translate "Администратор данных (RODO)" %}</h6>
+          <p class="text-muted mb-3">{% translate "Реквизиты контролёра персональных данных. Подставляются в информационную оговорку и запись согласия." %}</p>
+          <div class="row g-3">
+            <div class="col-12 col-lg-6">
+              <label for="{{ form.legal_entity_name.id_for_label }}" class="form-label fw-semibold">{% translate "Администратор данных (юр. лицо)" %}</label>
+              {{ form.legal_entity_name }}
+            </div>
+            <div class="col-12 col-lg-6">
+              <label for="{{ form.representative_name.id_for_label }}" class="form-label fw-semibold">{% translate "Представитель" %}</label>
+              {{ form.representative_name }}
+            </div>
+            <div class="col-12 col-lg-4">
+              <label for="{{ form.data_controller_nip.id_for_label }}" class="form-label fw-semibold">{% translate "NIP" %}</label>
+              {{ form.data_controller_nip }}
+            </div>
+            <div class="col-12 col-lg-4">
+              <label for="{{ form.data_controller_regon.id_for_label }}" class="form-label fw-semibold">{% translate "REGON" %}</label>
+              {{ form.data_controller_regon }}
+            </div>
+            <div class="col-12 col-lg-4">
+              <label for="{{ form.data_controller_krs.id_for_label }}" class="form-label fw-semibold">{% translate "KRS" %}</label>
+              {{ form.data_controller_krs }}
+            </div>
+            <div class="col-12 col-lg-6">
+              <label for="{{ form.legal_address.id_for_label }}" class="form-label fw-semibold">{% translate "Юридический адрес" %}</label>
+              {{ form.legal_address }}
+            </div>
+            <div class="col-12 col-lg-3">
+              <label for="{{ form.dpo_contact.id_for_label }}" class="form-label fw-semibold">{% translate "Контакт IOD/DPO" %}</label>
+              {{ form.dpo_contact }}
+            </div>
+            <div class="col-12 col-lg-3">
+              <label for="{{ form.privacy_policy_version.id_for_label }}" class="form-label fw-semibold">{% translate "Версия политики" %}</label>
+              {{ form.privacy_policy_version }}
+              <div class="form-text">{% translate "Фиксируется в записи согласия." %}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="border rounded p-3 h-100">
           <h6 class="fw-semibold mb-3">{% translate "Wniosek Mazowiecki" %}</h6>
           <p class="text-muted mb-3">{% translate "Эти поля будут автоматически подставляться всем клиентам этой базы." %}</p>
           <div class="row g-3">

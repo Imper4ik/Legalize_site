@@ -3,6 +3,7 @@ from .app_settings import AppSettings
 from .campaign import EmailCampaign
 from .case import Case, CaseArchiveBatch, CaseParticipant, ClientArchiveBatch
 from .client import Client
+from .consent import ConsentRecord
 from .company import Company
 from .document import (
     ClientDocumentRequirement,
@@ -41,6 +42,7 @@ __all__ = [
     'CaseArchiveBatch',
     'CaseParticipant',
     'AppSettings',
+    'ConsentRecord',
     'ClientActivity',
     'Company',
     'Document',

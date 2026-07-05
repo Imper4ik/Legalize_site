@@ -401,6 +401,35 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
             mos_data.save()
             return redirect("clients:onboarding_start", token=token)
 
+        # RODO: completing the questionnaire requires the subject to accept the
+        # data-processing consent. Do not finalise without it.
+        from clients.models import AppSettings, ConsentRecord
+        from clients.services.consent import record_onboarding_consent
+
+        consent_given = request.POST.get("rodo_consent") == "on" or ConsentRecord.is_granted(
+            session.client, ConsentRecord.Purpose.DATA_PROCESSING
+        )
+        if not consent_given:
+            from django.contrib import messages
+
+            messages.error(
+                request,
+                _("Чтобы завершить анкету, необходимо согласие на обработку персональных данных."),
+            )
+            return render(
+                request,
+                "clients/onboarding/declarations.html",
+                {
+                    "session": session,
+                    "mos_data": mos_data,
+                    "consent_error": True,
+                    "app_settings": AppSettings.get_solo(),
+                    "consent_already_given": False,
+                },
+            )
+
+        record_onboarding_consent(client=session.client, case=mos_data.case, request=request)
+
         mos_data.status = "client_completed"
         mos_data.client_confirmed_at = timezone.now()
         mos_data.save()
@@ -418,4 +447,81 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
 
         return redirect("clients:onboarding_review", token=token)
 
-    return render(request, "clients/onboarding/declarations.html", {"session": session, "mos_data": mos_data})
+    from clients.models import AppSettings, ConsentRecord
+
+    return render(
+        request,
+        "clients/onboarding/declarations.html",
+        {
+            "session": session,
+            "mos_data": mos_data,
+            "app_settings": AppSettings.get_solo(),
+            "consent_already_given": ConsentRecord.is_granted(
+                session.client, ConsentRecord.Purpose.DATA_PROCESSING
+            ),
+        },
+    )
+
+
+def onboarding_consent(request: HttpRequest, token: str) -> HttpResponse:
+    """Subject-facing consent centre: view current consents, grant or withdraw.
+
+    Implements art. 7(3) RODO — withdrawing consent is as easy as giving it.
+    Each action appends an immutable row to the consent log.
+    """
+    from django.contrib import messages
+
+    from clients.models import AppSettings, ConsentRecord
+    from clients.services.consent import current_policy_version
+
+    session = onboarding_views.check_onboarding_session(token, request=request)
+    if not session:
+        return HttpResponseForbidden(_("Срок действия ссылки истёк или она недействительна."))
+    auth_redirect = _auth_redirect(request, session, token)
+    if auth_redirect:
+        return auth_redirect
+
+    client = session.client
+    valid_purposes = {choice for choice, _label in ConsentRecord.Purpose.choices}
+
+    if request.method == "POST":
+        purpose = request.POST.get("purpose", "")
+        action = request.POST.get("action", "")
+        if purpose not in valid_purposes or action not in {"grant", "withdraw"}:
+            return HttpResponseBadRequest(_("Некорректный запрос."))
+        granted = action == "grant"
+        # Only append a row when the decision actually changes.
+        if ConsentRecord.is_granted(client, purpose) != granted:
+            ConsentRecord.record(
+                client=client,
+                purpose=purpose,
+                granted=granted,
+                policy_version=current_policy_version(),
+                channel=ConsentRecord.Channel.PORTAL,
+                request=request,
+            )
+            messages.success(
+                request,
+                _("Согласие обновлено.") if granted else _("Согласие отозвано."),
+            )
+        return redirect("clients:onboarding_consent", token=token)
+
+    status = ConsentRecord.current_status(client)
+    consent_rows = [
+        {
+            "purpose": choice,
+            "label": label,
+            "granted": ConsentRecord.is_granted(client, choice),
+            "record": status.get(choice),
+        }
+        for choice, label in ConsentRecord.Purpose.choices
+    ]
+    return render(
+        request,
+        "clients/onboarding/consent.html",
+        {
+            "session": session,
+            "app_settings": AppSettings.get_solo(),
+            "consent_rows": consent_rows,
+        },
+    )

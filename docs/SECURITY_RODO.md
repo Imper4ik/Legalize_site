@@ -51,6 +51,19 @@ Critical actions are recorded through client activity logging:
 
 For a larger commercial version, add immutable append-only audit retention and export controls.
 
+## Data controller identity
+
+The data controller (administrator danych) is configured in `AppSettings` and edited by the client in the UI (`/settings/templates/`), not hardcoded: legal entity name, NIP/REGON/KRS, legal address, representative, DPO/IOD contact, and the current privacy-policy version. These values are surfaced to the data subject in the consent screens (art. 13 RODO).
+
+## Consent
+
+Consent is recorded in the append-only `ConsentRecord` model. Each grant or withdrawal is a new immutable row capturing purpose, granted/withdrawn, policy version, channel, IP, user-agent, and timestamp, so the controller can demonstrate consent (art. 7(1)) and prove that withdrawal was as easy as granting (art. 7(3)).
+
+- Completing onboarding requires the data-processing consent checkbox (`clients/onboarding/declarations.html`); the required purposes are written via `clients.services.consent.record_onboarding_consent`.
+- The subject manages and withdraws consent at any time in the portal at `onboarding/<token>/consent/`.
+- Staff can review the consent trail read-only in Django admin (`ConsentRecordAdmin` — add/change/delete disabled).
+- `ConsentRecord.is_granted(client, purpose)` is the single source of truth for the current state; marketing is opt-in and never auto-granted.
+
 ## Retention recommendations
 
 - Remove stale raw OCR PII immediately with `scrub_ocr_pii`.

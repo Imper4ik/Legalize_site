@@ -17,6 +17,7 @@ from clients.views.metrics import MetricsDashboardView
 from clients.views.onboarding_start_contact import onboarding_start_contact as onboarding_start
 from clients.views.onboarding_step_return import (
     onboarding_address,
+    onboarding_consent,
     onboarding_declarations,
     onboarding_digital_access,
     onboarding_passport,

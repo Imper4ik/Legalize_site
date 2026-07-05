@@ -252,6 +252,7 @@ class QuickOnboardingTests(TestCase):
         response = self.client_agent.post(declarations_url, {
             "criminal_record": "no",
             "tax_arrears": "no",
+            "rodo_consent": "on",  # RODO: completing onboarding now requires consent.
         })
         self.assertEqual(response.status_code, 302) # Redirect to review
         review_response = self.client_agent.get(response["Location"])

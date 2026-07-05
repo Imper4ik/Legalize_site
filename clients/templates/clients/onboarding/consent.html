@@ -1,0 +1,48 @@
+{% extends "clients/onboarding/base_onboarding.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Согласия на обработку данных" %}{% endblock %}
+
+{% block content %}
+{% if app_settings.legal_entity_name %}
+<div class="alert alert-secondary">
+    <div><strong>{% trans "Администратор данных:" %}</strong> {{ app_settings.legal_entity_name }}</div>
+    {% if app_settings.representative_name %}<div>{% trans "Представитель:" %} {{ app_settings.representative_name }}</div>{% endif %}
+    {% if app_settings.dpo_contact %}<div>{% trans "Контакт по защите данных:" %} {{ app_settings.dpo_contact }}</div>{% endif %}
+</div>
+{% endif %}
+
+<p class="text-muted">
+    {% trans "Здесь вы можете в любой момент отозвать или заново дать согласие. Отзыв согласия не влияет на законность обработки, осуществлённой до отзыва." %}
+</p>
+
+<div class="list-group mb-4">
+    {% for row in consent_rows %}
+    <div class="list-group-item d-flex justify-content-between align-items-center gap-3 flex-wrap">
+        <div>
+            <div class="fw-semibold">{{ row.label }}</div>
+            {% if row.record %}
+            <div class="small text-muted">
+                {% if row.granted %}{% trans "Дано" %}{% else %}{% trans "Отозвано" %}{% endif %}
+                — {{ row.record.created_at|date:"d.m.Y H:i" }}
+                {% if row.record.policy_version %}· {% trans "версия политики" %} {{ row.record.policy_version }}{% endif %}
+            </div>
+            {% else %}
+            <div class="small text-muted">{% trans "Решение ещё не зафиксировано" %}</div>
+            {% endif %}
+        </div>
+        <form method="post" class="m-0">
+            {% csrf_token %}
+            <input type="hidden" name="purpose" value="{{ row.purpose }}">
+            {% if row.granted %}
+            <button type="submit" name="action" value="withdraw" class="btn btn-outline-danger btn-sm">{% trans "Отозвать" %}</button>
+            {% else %}
+            <button type="submit" name="action" value="grant" class="btn btn-outline-success btn-sm">{% trans "Дать согласие" %}</button>
+            {% endif %}
+        </form>
+    </div>
+    {% endfor %}
+</div>
+
+<a href="{% url 'clients:onboarding_start' session.token_hash %}" class="btn btn-outline-secondary">{% trans "Назад в кабинет" %}</a>
+{% endblock %}

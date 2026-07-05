@@ -18,6 +18,7 @@ from .models import (
     ClientIntakeSubmission,
     ClientOnboardingSession,
     Company,
+    ConsentRecord,
     Document,
     DocumentProcessingJob,
     DocumentRequirement,
@@ -564,6 +565,35 @@ class ClientActivityAdmin(admin.ModelAdmin):
     search_fields = ("summary", "details", "client__first_name", "client__last_name", "actor__email")
     autocomplete_fields = ("client", "actor", "document", "payment", "task")
     readonly_fields = ("created_at",)
+
+
+@admin.register(ConsentRecord)
+class ConsentRecordAdmin(admin.ModelAdmin):
+    list_display = ("created_at", "client", "purpose", "granted", "channel", "policy_version")
+    list_filter = ("purpose", "granted", "channel", "created_at")
+    search_fields = ("client__first_name", "client__last_name", "client__email")
+    autocomplete_fields = ("client",)
+    readonly_fields = (
+        "client",
+        "case",
+        "purpose",
+        "granted",
+        "policy_version",
+        "channel",
+        "ip_address",
+        "user_agent",
+        "created_at",
+    )
+
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        # Consent rows are an append-only audit trail written by the app, not by hand.
+        return False
+
+    def has_change_permission(self, request: HttpRequest, obj: Any = None) -> bool:
+        return False
+
+    def has_delete_permission(self, request: HttpRequest, obj: Any = None) -> bool:
+        return False
 
 
 @admin.register(StaffAuditEvent)

@@ -49,6 +49,66 @@ class AppSettings(models.Model):
         help_text=_("Одна строка на строку. Подставляется по умолчанию в шаблон wniosek mazowiecki для всей базы."),
     )
 
+    # --- Реквизиты администратора данных (RODO / GDPR art. 13) ---
+    # Кто является контролёром персональных данных: юр. лицо и его представитель.
+    # Значения редактируются клиентом в интерфейсе и подставляются в информационную
+    # оговорку и запись согласия вместо хардкода.
+    legal_entity_name = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name=_("Администратор данных (юр. лицо)"),
+        help_text=_("Полное юридическое наименование администратора персональных данных."),
+    )
+    data_controller_nip = models.CharField(
+        max_length=32,
+        blank=True,
+        default="",
+        verbose_name=_("NIP"),
+    )
+    data_controller_regon = models.CharField(
+        max_length=32,
+        blank=True,
+        default="",
+        verbose_name=_("REGON"),
+    )
+    data_controller_krs = models.CharField(
+        max_length=32,
+        blank=True,
+        default="",
+        verbose_name=_("KRS"),
+    )
+    legal_address = models.TextField(
+        blank=True,
+        default="",
+        verbose_name=_("Юридический адрес"),
+        help_text=_("Одна строка на строку. Юридический адрес администратора данных."),
+    )
+    representative_name = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name=_("Представитель"),
+        help_text=_("ФИО и должность лица, представляющего администратора данных."),
+    )
+    dpo_contact = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name=_("Контакт инспектора по защите данных (IOD/DPO)"),
+        help_text=_("Email или иной контакт инспектора по защите данных, если назначен."),
+    )
+    privacy_policy_version = models.CharField(
+        max_length=32,
+        blank=True,
+        default="",
+        verbose_name=_("Версия политики конфиденциальности"),
+        help_text=_(
+            "Например, 2026-01. Фиксируется в записи согласия, чтобы можно было "
+            "доказать, с какой редакцией политики согласился субъект данных."
+        ),
+    )
+
     class Meta:
         verbose_name = _("Настройки приложения")
         verbose_name_plural = _("Настройки приложения")
