@@ -239,6 +239,13 @@ class Client(SoftDeleteModel):
         blank=True,
         verbose_name=_("Запрос на удаление данных"),
     )
+    # Stamped when the erasure request is fulfilled (client anonymized), so the
+    # request → fulfilment trail is auditable (RODO accountability).
+    erasure_fulfilled_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("Дата исполнения удаления"),
+    )
     archived_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,

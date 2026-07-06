@@ -3,7 +3,6 @@ from datetime import timedelta
 from typing import Any
 
 from django.core.management.base import BaseCommand
-from django.db import transaction
 from django.utils import timezone
 
 from clients.models import Client
@@ -60,53 +59,14 @@ class Command(BaseCommand):
                 self.stdout.write(f' - ID {client.id}')
             return
 
+        from clients.services.anonymization import anonymize_client
+
         anonymized_count = 0
-        with transaction.atomic():
-            for client in clients_to_anonymize:
-                client_id = client.id
-
-                # Anonymize client PII. Process state (incl. the case number) now
-                # lives on the Case, not the Client, so it is anonymized below per
-                # case (spec §9); the removed Client.case_number is never touched.
-                client.first_name = f'Anonymized_{client_id}'
-                client.last_name = 'User'
-                client.email = f'deleted_{client_id}@example.com'
-                client.phone = '000000000'
-                client.company = None
-
-                # Anonymize the case-level numbers and free-text process PII for
-                # every case of the client (active or archived).
-                from clients.models import Case
-
-                for case in Case.all_objects.filter(client=client):
-                    case.authority_case_number = ''
-                    case.authority_case_number_hash = ''
-                    case.legacy_case_number = ''
-                    case.internal_number = ''
-                    case.fingerprints_location = ''
-                    case.fingerprints_ticket = ''
-                    case.fingerprints_list = ''
-                    case.fingerprints_info = ''
-                    case.decision = ''
-                    case.save(update_fields=[
-                        'authority_case_number', 'authority_case_number_hash',
-                        'legacy_case_number', 'internal_number',
-                        'fingerprints_location', 'fingerprints_ticket',
-                        'fingerprints_list', 'fingerprints_info', 'decision',
-                    ])
-
-                # We do not delete financial records to keep aggregate statistics intact,
-                # but we should delete any uploaded documents.
-                documents = client.documents.all()
-                docs_deleted = 0
-                for doc in documents:
-                    if doc.file:
-                        doc.file.delete(save=False) # Physical file deletion
-                    doc.delete(hard=True) # Database record deletion
-                    docs_deleted += 1
-
-                client.save()
-                anonymized_count += 1
-                logger.info("Anonymized client ID %s and deleted %s documents (GDPR).", client_id, docs_deleted)
+        for client in clients_to_anonymize:
+            # Per-client transaction lives in the service (spec §9): process state
+            # is anonymized at the case level; the removed Client.case_number is
+            # never touched.
+            anonymize_client(client)
+            anonymized_count += 1
 
         self.stdout.write(self.style.SUCCESS(f'Successfully anonymized {anonymized_count} clients.'))

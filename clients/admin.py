@@ -57,6 +57,17 @@ def restore_selected(modeladmin: Any, request: HttpRequest, queryset: QuerySet) 
             obj.restore()
 
 
+@admin.action(description="Fulfil erasure request (anonymize) — RODO art. 17")
+def fulfill_erasure_requests(modeladmin: Any, request: HttpRequest, queryset: QuerySet) -> None:
+    from clients.services.anonymization import anonymize_client
+
+    count = 0
+    for client in queryset:
+        anonymize_client(client, mark_erasure_fulfilled=True)
+        count += 1
+    modeladmin.message_user(request, f"Anonymized {count} client(s).")
+
+
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
     list_display = ("name", "created_at")
@@ -162,15 +173,16 @@ class ClientAdmin(admin.ModelAdmin):
         ),
         ("Семья", {"fields": ("family_role", "sponsor_client")}),
         ("Статус и заметки", {"fields": ("status", "notes", "archived_at")}),
-        ("RODO", {"fields": ("erasure_requested_at",)}),
+        ("RODO", {"fields": ("erasure_requested_at", "erasure_fulfilled_at")}),
     )
     readonly_fields = (
         "archived_at",
         "erasure_requested_at",
+        "erasure_fulfilled_at",
         "new_residence_card_application_summary",
         "new_residence_card_application_summary_masked",
     )
-    actions = [archive_selected, restore_selected]
+    actions = [archive_selected, restore_selected, fulfill_erasure_requests]
 
     def passport_num_masked(self, obj):
         from clients.security.encrypted import safe_encrypted_attr
