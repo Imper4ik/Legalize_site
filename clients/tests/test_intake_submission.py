@@ -244,6 +244,37 @@ def test_public_intake_post_creates_client_case_and_onboarding_session():
 
 
 @pytest.mark.django_db
+def test_public_intake_user_creation_failure_leaves_no_orphan_client():
+    from unittest import mock
+
+    from django.contrib.auth import get_user_model
+    from django.db import IntegrityError
+
+    raw_token, token_hash = generate_onboarding_token()
+    ClientIntakeSubmission.objects.create(
+        token_hash=token_hash,
+        status=ClientIntakeSubmission.STATUS_DRAFT,
+        expires_at=timezone.now() + timezone.timedelta(hours=1),
+    )
+
+    user_model = get_user_model()
+    with mock.patch.object(user_model.objects, "create_user", side_effect=IntegrityError("boom")):
+        response = DjangoClient().post(
+            reverse("clients:public_intake", kwargs={"token": raw_token}),
+            _valid_public_post(),
+        )
+
+    # The account failed, so the whole creation is rolled back: the form is
+    # re-rendered and no orphaned client/case/user is left behind.
+    assert response.status_code == 200
+    assert not Client.all_objects.filter(email="public-applicant@example.com").exists()
+    assert not user_model.objects.filter(email="public-applicant@example.com").exists()
+    intake = ClientIntakeSubmission.objects.get(token_hash=token_hash)
+    assert intake.status == ClientIntakeSubmission.STATUS_SUBMITTED
+    assert intake.created_client_id is None
+
+
+@pytest.mark.django_db
 def test_public_intake_conflict_goes_to_review_without_merging():
     Client.objects.create(first_name="Existing", last_name="Client", email="public-applicant@example.com")
     raw_token, token_hash = generate_onboarding_token()

@@ -246,12 +246,19 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
             pass
 
         active_cases_count = client.cases.filter(archived_at__isnull=True).count()
-        if active_cases_count > 1:
-            document_status_list: list[Any] = []
-            has_multiple_active_cases = True
-        else:
-            document_status_list = client.get_document_checklist(check_file_existence=True, case=active_case) if hasattr(client, "get_document_checklist") else []
+        # Show the checklist only when there is exactly one active case, so it is
+        # always scoped to a concrete case. With zero active cases we render an
+        # empty checklist rather than falling back to the retired case=None path.
+        if active_cases_count == 1 and active_case is not None:
+            document_status_list: list[Any] = (
+                client.get_document_checklist(check_file_existence=True, case=active_case)
+                if hasattr(client, "get_document_checklist")
+                else []
+            )
             has_multiple_active_cases = False
+        else:
+            document_status_list = []
+            has_multiple_active_cases = active_cases_count > 1
 
         context["has_multiple_active_cases"] = has_multiple_active_cases
 

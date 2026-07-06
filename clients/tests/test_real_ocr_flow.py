@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import shutil
+import unittest
 from datetime import date
 
 import pytest
@@ -21,10 +22,20 @@ from clients.services.rental_parser import parse_rental_doc
 from clients.services.wezwanie_parser import parse_wezwanie
 from clients.services.zus_parser import parse_zus_doc
 
+# Both binaries are required for the real OCR flow. pytest honours the marker
+# below, but Django's own test runner (manage.py test) ignores pytest markers,
+# so a unittest-level skip is needed for the suite to skip — not fail — when the
+# binaries are absent (e.g. a dev box without Tesseract/Poppler installed).
+_OCR_BINARIES_AVAILABLE = shutil.which("tesseract") is not None and shutil.which("pdftoppm") is not None
+
 
 @pytest.mark.skipif(
-    shutil.which("tesseract") is None or shutil.which("pdftoppm") is None,
+    not _OCR_BINARIES_AVAILABLE,
     reason="Real OCR flow requires the Tesseract and Poppler binaries.",
+)
+@unittest.skipUnless(
+    _OCR_BINARIES_AVAILABLE,
+    "Real OCR flow requires the Tesseract and Poppler binaries.",
 )
 @override_settings(ASYNC_OCR_PROCESSING=True)
 class RealOCRFlowTests(TestCase):
