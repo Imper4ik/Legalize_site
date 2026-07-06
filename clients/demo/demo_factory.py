@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from clients.constants import DocumentType
 from clients.models import (
+    Case,
     Client,
     ClientActivity,
     ClientOnboardingSession,
@@ -48,7 +49,7 @@ def create_demo_client(
     )
 
 
-def _single_case_of(client: Client):
+def _single_case_of(client: Client) -> Case | None:
     """Explicit case for demo records (shim-exit, spec §4)."""
     from clients.services.cases import resolve_single_active_case
 

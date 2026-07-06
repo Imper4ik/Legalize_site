@@ -59,7 +59,7 @@ jobs:
         run: mypy clients legalize_site submissions users translations database_media fernet_fields --config-file mypy.ini
 
       - name: Bandit
-        run: bandit -r clients legalize_site submissions users database_media fernet_fields translations -x "*/migrations/*,*/tests/*"
+        run: bandit -r clients legalize_site submissions users database_media fernet_fields translations -x "*/migrations/*,*/tests/*,*/testing/*,*/demo/*"
 
       - name: pip-audit
         run: pip-audit

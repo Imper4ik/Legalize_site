@@ -48,7 +48,7 @@ class ClientIntakeSubmissionForm(forms.Form):
         self.fields["basis_of_stay"].widget.attrs["placeholder"] = _("работа, учёба, семья")
 
     def clean(self) -> dict[str, Any]:
-        cleaned = super().clean()
+        cleaned = super().clean() or {}
         password = cleaned.get("password")
         password_confirm = cleaned.get("password_confirm")
         if password and password_confirm and password != password_confirm:

@@ -12,12 +12,15 @@ Wire this logger in via ``--logger-class legalize_site.gunicorn_logging.Redactin
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-try:  # pragma: no cover - gunicorn is only importable in the server environment
+if TYPE_CHECKING:
     from gunicorn.glogging import Logger as _GunicornLogger
-except Exception:  # pragma: no cover
-    _GunicornLogger = object  # type: ignore[assignment,misc]
+else:
+    try:  # pragma: no cover - gunicorn is only importable in the server environment
+        from gunicorn.glogging import Logger as _GunicornLogger
+    except Exception:  # pragma: no cover
+        _GunicornLogger = object
 
 # Match the path segment immediately after ``/onboarding/`` (the token) up to the
 # next ``/``, whitespace or query separator, and replace it with a placeholder.
@@ -45,7 +48,7 @@ def redact_atoms(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
-class RedactingLogger(_GunicornLogger):  # type: ignore[misc,valid-type]
+class RedactingLogger(_GunicornLogger):
     """Gunicorn ``Logger`` that strips onboarding tokens from access-log atoms."""
 
     def atoms(self, resp: Any, req: Any, environ: Any, request_time: Any) -> dict[str, Any]:

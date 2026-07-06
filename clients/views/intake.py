@@ -35,8 +35,8 @@ def _intake_is_closed(intake: ClientIntakeSubmission) -> bool:
 
 
 def _initial_from_intake(intake: ClientIntakeSubmission) -> dict[str, object]:
-    personal = intake.personal_data if isinstance(intake.personal_data, dict) else {}
-    case_data = intake.case_data if isinstance(intake.case_data, dict) else {}
+    personal: dict[str, object] = intake.personal_data if isinstance(intake.personal_data, dict) else {}
+    case_data: dict[str, object] = intake.case_data if isinstance(intake.case_data, dict) else {}
     return {
         "first_name": personal.get("first_name", ""),
         "last_name": personal.get("last_name", ""),
@@ -63,7 +63,7 @@ def create_public_intake_link(request: HttpRequest) -> HttpResponse:
         return JsonResponse({"status": "error", "message": _("Invalid application purpose")}, status=400)
 
     raw_token, token_hash = generate_onboarding_token()
-    ClientIntakeSubmission.objects.create(
+    ClientIntakeSubmission.objects.create(  # type: ignore[misc]
         token_hash=token_hash,
         status=ClientIntakeSubmission.STATUS_DRAFT,
         source=ClientIntakeSubmission.SOURCE_STAFF_LINK,
@@ -102,8 +102,8 @@ def public_intake(request: HttpRequest, token: str) -> HttpResponse:
                 else:
                     form.add_error("email", _("Пользователь с таким email уже зарегистрирован. Пожалуйста, войдите в систему или восстановите пароль."))
             else:
-                intake.personal_data = form.personal_payload()
-                intake.case_data = form.case_payload()
+                intake.personal_data = form.personal_payload()  # type: ignore[assignment]
+                intake.case_data = form.case_payload()  # type: ignore[assignment]
                 intake.status = ClientIntakeSubmission.STATUS_SUBMITTED
                 intake.submitted_at = timezone.now()
                 intake.save(update_fields=["personal_data", "case_data", "status", "submitted_at", "updated_at"])

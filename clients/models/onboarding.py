@@ -149,7 +149,7 @@ class ClientIntakeSubmission(models.Model):
             raise ValidationError("Client and case do not match.")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
-        personal_data = self.personal_data if isinstance(self.personal_data, dict) else {}
+        personal_data: dict[str, Any] = self.personal_data if isinstance(self.personal_data, dict) else {}
         self.email_hash = _hash_intake_lookup_value(personal_data.get("email"), field_name="email")
         self.phone_hash = _hash_intake_lookup_value(personal_data.get("phone"), field_name="phone")
         passport_value = (
@@ -167,7 +167,7 @@ class ClientIntakeSubmission(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        personal_data = self.personal_data if isinstance(self.personal_data, dict) else {}
+        personal_data: dict[str, Any] = self.personal_data if isinstance(self.personal_data, dict) else {}
         first_name = str(personal_data.get("first_name") or "").strip()
         last_name = str(personal_data.get("last_name") or "").strip()
         full_name = " ".join(part for part in (first_name, last_name) if part)

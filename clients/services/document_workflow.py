@@ -54,7 +54,10 @@ MANUAL_WEZWANIE_REVIEW_MESSAGE = _(
 )
 
 Parser = Callable[[str], WezwanieData]
-NotificationSender = Callable[[Client], int]
+# Senders are called as ``sender(client)`` and, when supported, ``sender(client,
+# case=...)``; ``_send_notification`` falls back on TypeError. Use an open
+# signature so the optional keyword is well-typed.
+NotificationSender = Callable[..., int]
 
 
 def _document_file_identity(document: Document) -> str:

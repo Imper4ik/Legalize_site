@@ -425,7 +425,7 @@ class Command(BaseCommand):
                     created_count += 1
                 continue
 
-            task = create_auto_task(
+            created_task = create_auto_task(
                 case.client,
                 "fingerprints_followup",
                 case=case,
@@ -435,7 +435,7 @@ class Command(BaseCommand):
                     "Проверьте статус в urzędzie и обновите карточку дела."
                 ),
             )
-            if task is not None:
+            if created_task is not None:
                 created_count += 1
                 logger.info(
                     "notification created: task=fingerprints_followup case_pk=%s client_id=%s days_waiting=%s",

@@ -3,8 +3,8 @@ from .app_settings import AppSettings
 from .campaign import EmailCampaign
 from .case import Case, CaseArchiveBatch, CaseParticipant, ClientArchiveBatch
 from .client import Client
-from .consent import ConsentRecord
 from .company import Company
+from .consent import ConsentRecord
 from .document import (
     ClientDocumentRequirement,
     Document,

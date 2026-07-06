@@ -419,7 +419,9 @@ def onboarding_set_password(request: HttpRequest, token: str) -> HttpResponse:
         elif not error_message:
             from django.contrib.auth import get_user_model
             User = get_user_model()
-            first_name, last_name = parsed_name
+            # parsed_name is guaranteed non-None here: the branch above sets
+            # error_message when it is None, and this elif requires no error.
+            first_name, last_name = cast("tuple[str, str]", parsed_name)
             existing_user = User.objects.filter(email__iexact=email_val).first()
             user = None
 

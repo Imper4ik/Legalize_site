@@ -14,7 +14,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 
 from clients.constants import DocumentType
-from clients.models import Client, ClientOnboardingSession, Document, Payment
+from clients.models import Case, Client, ClientOnboardingSession, Document, Payment
 from clients.services.onboarding_tokens import generate_onboarding_token
 from clients.services.roles import ensure_predefined_roles
 
@@ -99,7 +99,7 @@ def create_client_user(*, email: str | None = None) -> User:
     )
 
 
-def _single_case_of(client: Client):
+def _single_case_of(client: Client) -> Case | None:
     """Explicit case for factory-created records (shim-exit, spec §4).
 
     Factory clients always have exactly one auto-created case; passing it

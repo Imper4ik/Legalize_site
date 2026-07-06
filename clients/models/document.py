@@ -341,7 +341,7 @@ class Document(SoftDeleteModel):
         the shared client instance, making subsequent lookups query-free.
         """
         purpose = self.client.get_document_requirement_purpose()
-        cache: dict[str, dict[str, DocumentRequirement]] = getattr(
+        cache: dict[str, dict[str, DocumentRequirement]] | None = getattr(
             self.client, "_document_requirement_map_cache", None
         )
         if cache is None:

@@ -247,7 +247,7 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
 
         active_cases_count = client.cases.filter(archived_at__isnull=True).count()
         if active_cases_count > 1:
-            document_status_list = []
+            document_status_list: list[Any] = []
             has_multiple_active_cases = True
         else:
             document_status_list = client.get_document_checklist(check_file_existence=True, case=active_case) if hasattr(client, "get_document_checklist") else []

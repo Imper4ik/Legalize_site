@@ -23,7 +23,7 @@ def _valid_pdf_bytes(text: str = "test document") -> bytes:
     The old minimal ``%PDF-1.4 ... %%EOF`` stub has no pages, so the upload
     validator now rejects it as corrupted.
     """
-    from reportlab.pdfgen import canvas  # type: ignore[import-untyped]
+    from reportlab.pdfgen import canvas
 
     buffer = BytesIO()
     pdf = canvas.Canvas(buffer)
