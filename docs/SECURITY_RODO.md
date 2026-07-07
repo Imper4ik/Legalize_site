@@ -75,6 +75,7 @@ The subject manages their rights from the portal:
 - Access + portability (art. 15/20): `onboarding/<token>/my-data/` returns a JSON snapshot built by `clients.services.data_export.build_subject_data` (the subject's own record only, never a bulk export).
 - Rectification (art. 16): existing onboarding edit steps.
 - Erasure (art. 17): the subject requests deletion at `my-data/`; this stamps `Client.erasure_requested_at` and opens a high-priority `StaffTask`. Staff action the erasure out of band (archive/anonymize) — see the anonymization command below. Requests are visible/filterable in Django admin.
+  - Response deadline (art. 12(3)): the CRM tracks the statutory one-month clock. While a request is pending (`erasure_requested_at` set, `erasure_fulfilled_at` empty), the client health panel and automatic checks surface a `RODO: запрос на удаление` item — a warning in the last 7 days before the deadline and a danger once it is breached — so staff act in time (`RODO_ERASURE_RESPONSE_DAYS`, `clients/models/_client_health.py`).
 - Withdrawal of consent (art. 7(3)): `onboarding/<token>/consent/`.
 
 ## Records of processing (RoPA, art. 30)

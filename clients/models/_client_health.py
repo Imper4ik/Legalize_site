@@ -12,6 +12,33 @@ from clients.constants import DocumentType
 if TYPE_CHECKING:
     from clients.models import Client
 
+# RODO art. 12(3): the controller must respond to a data-subject request (incl.
+# erasure, art. 17) "without undue delay and in any event within one month" of
+# receipt. We track that statutory clock so staff act before it is breached.
+RODO_ERASURE_RESPONSE_DAYS = 30
+# Start warning one week before the deadline so there is time to act.
+RODO_ERASURE_WARNING_LEAD_DAYS = 7
+
+
+def _erasure_deadline_state(client: "Client", today: Any) -> tuple[str, int] | None:
+    """Return (severity, days_left) for a pending erasure request, or None.
+
+    ``days_left`` is negative once the statutory one-month deadline has passed.
+    Returns None when there is no open request (never requested, or already
+    fulfilled), so callers only surface the check when it is actionable.
+    """
+    requested_at = getattr(client, "erasure_requested_at", None)
+    if requested_at is None or getattr(client, "erasure_fulfilled_at", None) is not None:
+        return None
+    deadline = timezone.localtime(requested_at).date() + timedelta(days=RODO_ERASURE_RESPONSE_DAYS)
+    days_left = (deadline - today).days
+    if days_left < 0:
+        return "danger", days_left
+    if days_left <= RODO_ERASURE_WARNING_LEAD_DAYS:
+        return "warning", days_left
+    return "info", days_left
+
+
 def build_health_alerts(client: "Client", document_status_list: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
     alerts: list[dict[str, Any]] = []
     today = timezone.localdate()
@@ -376,6 +403,35 @@ def build_health_alerts(client: "Client", document_status_list: list[dict[str, A
             }
         )
 
+    # RODO art. 17/12(3): a pending erasure request has a one-month statutory
+    # response clock. Surface it to staff before the deadline is breached.
+    erasure_state = _erasure_deadline_state(client, today)
+    if erasure_state is not None:
+        severity, days_left = erasure_state
+        if severity == "danger":
+            alerts.append(
+                {
+                    "level": "danger",
+                    "title": _("RODO: срок ответа на запрос об удалении истёк"),
+                    "message": _("Запрос на удаление данных (RODO art. 17) просрочен на %(days)s дн. "
+                                 "Требуется немедленно обработать (анонимизация/удаление).")
+                    % {"days": abs(days_left)},
+                    "action_label": _("Обработать запрос на удаление"),
+                    "action_url": "#overview",
+                }
+            )
+        elif severity == "warning":
+            alerts.append(
+                {
+                    "level": "warning",
+                    "title": _("RODO: приближается срок ответа на запрос об удалении"),
+                    "message": _("До законного срока ответа на запрос об удалении осталось %(days)s дн.")
+                    % {"days": days_left},
+                    "action_label": _("Обработать запрос на удаление"),
+                    "action_url": "#overview",
+                }
+            )
+
     # Check inactivity 30+ days
     if client.get_effective_workflow_stage() not in ["closed", "decision_received"]:
         latest_act = client.activities.exclude(event_type="client_viewed").order_by("-created_at").first()
@@ -680,5 +736,35 @@ def build_automatic_checks(client: "Client", document_status_list: list[dict[str
             "message": _("Не применимо"),
             "tooltip": _("Проверка доходов активна только для членов семейных групп."),
         })
+
+    # 11. RODO erasure request (art. 17). Only shown while a request is open, so
+    # the dashboard is not cluttered for the common case with no pending request.
+    erasure_state = _erasure_deadline_state(client, today)
+    if erasure_state is not None:
+        severity, days_left = erasure_state
+        if severity == "danger":
+            checks.append({
+                "label": _("RODO: запрос на удаление"),
+                "status": "danger",
+                "message": _("Просрочен на %s дн.") % abs(days_left),
+                "tooltip": _("Истёк законный срок (1 месяц) ответа на запрос об удалении данных (RODO art. 12(3))."),
+                "action_url": "#overview",
+            })
+        elif severity == "warning":
+            checks.append({
+                "label": _("RODO: запрос на удаление"),
+                "status": "warning",
+                "message": _("Осталось %s дн.") % days_left,
+                "tooltip": _("Приближается законный срок ответа на запрос об удалении данных (RODO art. 12(3))."),
+                "action_url": "#overview",
+            })
+        else:
+            checks.append({
+                "label": _("RODO: запрос на удаление"),
+                "status": "success",
+                "message": _("В обработке (%s дн.)") % days_left,
+                "tooltip": _("Открыт запрос на удаление данных; срок ответа соблюдается."),
+                "action_url": "#overview",
+            })
 
     return checks
