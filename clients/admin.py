@@ -597,6 +597,8 @@ class ConsentRecordAdmin(admin.ModelAdmin):
         "ip_address",
         "user_agent",
         "created_at",
+        "prev_hash",
+        "entry_hash",
     )
 
     def has_add_permission(self, request: HttpRequest) -> bool:

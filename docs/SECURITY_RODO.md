@@ -59,6 +59,11 @@ The data controller (administrator danych) is configured in `AppSettings` and ed
 
 Consent is recorded in the append-only `ConsentRecord` model. Each grant or withdrawal is a new immutable row capturing purpose, granted/withdrawn, policy version, channel, IP, user-agent, and timestamp, so the controller can demonstrate consent (art. 7(1)) and prove that withdrawal was as easy as granting (art. 7(3)).
 
+Integrity is enforced in code, not just by convention:
+
+- **Append-only**: `ConsentRecord.save()` rejects any modification of an existing row and `delete()` is blocked, so a recorded decision cannot be silently rewritten or removed.
+- **Tamper-evident hash chain**: every row stores `entry_hash` — an HMAC-SHA256 (keyed by `SECRET_KEY`) over its content plus the previous row's hash for that client (`prev_hash`). Modifying, deleting, reordering, or back-dating any row breaks the chain. `ConsentRecord.verify_chain(client)` recomputes it and points at the first broken row, giving the controller demonstrable evidence for art. 7(1)/5(2) accountability. Note: because the key is `SECRET_KEY`, rotating it invalidates verification of pre-rotation rows (same trust model as the case-number hashes).
+
 - Completing onboarding requires the data-processing consent checkbox (`clients/onboarding/declarations.html`); the required purposes are written via `clients.services.consent.record_onboarding_consent`.
 - The subject manages and withdraws consent at any time in the portal at `onboarding/<token>/consent/`.
 - Staff can review the consent trail read-only in Django admin (`ConsentRecordAdmin` — add/change/delete disabled).

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+import hashlib
+import hmac
+from typing import TYPE_CHECKING, Any
 
-from django.db import models
+from django.conf import settings
+from django.db import models, transaction
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -10,6 +13,10 @@ if TYPE_CHECKING:
     from django.http import HttpRequest
 
     from clients.models import Case, Client
+
+# Field separator that cannot appear in the hashed values (ASCII unit separator),
+# so the canonical payload is unambiguous and not forgeable by value collision.
+_HASH_SEP = "\x1f"
 
 
 def _request_ip(request: HttpRequest | None) -> str | None:
@@ -27,12 +34,24 @@ def _request_ip(request: HttpRequest | None) -> str | None:
 
 
 class ConsentRecord(models.Model):
-    """Append-only log of RODO/GDPR consent events for a data subject.
+    """Append-only, tamper-evident log of RODO/GDPR consent events.
 
     Each grant or withdrawal is written as a new immutable row so the
     controller can demonstrate *when* and *to what* the subject consented
     (art. 7(1) RODO) and that withdrawal is as easy as granting (art. 7(3)).
     The current state for a purpose is the most recent row by ``created_at``.
+
+    Integrity is enforced, not merely documented:
+
+    - **Append-only**: :meth:`save` refuses to modify an existing row and
+      :meth:`delete` refuses instance deletion, so a consent decision cannot be
+      silently rewritten or erased once recorded.
+    - **Tamper-evident hash chain**: every row stores ``entry_hash`` — an
+      HMAC-SHA256 over its content plus the previous row's hash for the same
+      client (``prev_hash``). Altering, deleting, reordering, or back-dating any
+      row breaks the chain, which :meth:`verify_chain` detects. The HMAC key is
+      ``SECRET_KEY`` (same trust model as the case-number hashes), so a party
+      with only database access cannot forge a valid chain.
     """
 
     class Purpose(models.TextChoices):
@@ -72,6 +91,10 @@ class ConsentRecord(models.Model):
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.CharField(max_length=512, blank=True, default="")
     created_at = models.DateTimeField(default=timezone.now, editable=False)
+    # Tamper-evidence: per-client hash chain. prev_hash links to the previous
+    # row's entry_hash; entry_hash covers this row's content plus prev_hash.
+    prev_hash = models.CharField(max_length=64, blank=True, default="", editable=False)
+    entry_hash = models.CharField(max_length=64, blank=True, default="", editable=False, db_index=True)
 
     class Meta:
         ordering = ["-created_at"]
@@ -84,6 +107,74 @@ class ConsentRecord(models.Model):
     def __str__(self) -> str:
         state = "granted" if self.granted else "withdrawn"
         return f"Consent[{self.purpose}={state}] client={self.client_id}"
+
+    # --- Tamper-evident hash chain -------------------------------------------
+
+    def _canonical_payload(self, prev_hash: str) -> str:
+        """Deterministic string of the immutable fields, for hashing."""
+        return _HASH_SEP.join(
+            [
+                str(self.client_id or ""),
+                str(self.purpose or ""),
+                "1" if self.granted else "0",
+                str(self.policy_version or ""),
+                str(self.channel or ""),
+                str(self.ip_address or ""),
+                str(self.user_agent or ""),
+                self.created_at.isoformat() if self.created_at else "",
+                prev_hash or "",
+            ]
+        )
+
+    @staticmethod
+    def _hash(canonical: str) -> str:
+        secret = str(getattr(settings, "SECRET_KEY", ""))
+        return hmac.new(secret.encode("utf-8"), canonical.encode("utf-8"), hashlib.sha256).hexdigest()
+
+    def compute_entry_hash(self, prev_hash: str) -> str:
+        return self._hash(self._canonical_payload(prev_hash))
+
+    def _latest_prev_hash(self) -> str:
+        return (
+            type(self)
+            .objects.filter(client_id=self.client_id)
+            .order_by("-created_at", "-id")
+            .values_list("entry_hash", flat=True)
+            .first()
+            or ""
+        )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        # Append-only: an already-persisted row can never be rewritten.
+        if not self._state.adding:
+            raise ValueError(
+                "ConsentRecord is append-only; existing rows cannot be modified."
+            )
+        if self.created_at is None:
+            self.created_at = timezone.now()
+        if not self.entry_hash:
+            self.prev_hash = self._latest_prev_hash()
+            self.entry_hash = self.compute_entry_hash(self.prev_hash)
+        super().save(*args, **kwargs)
+
+    def delete(self, using: Any = None, keep_parents: bool = False) -> tuple[int, dict[str, int]]:
+        raise ValueError("ConsentRecord is append-only; rows cannot be deleted.")
+
+    @classmethod
+    def verify_chain(cls, client: Client) -> tuple[bool, ConsentRecord | None]:
+        """Recompute the hash chain for a client.
+
+        Returns ``(True, None)`` when intact, or ``(False, row)`` pointing at the
+        first row whose stored hash does not match — evidence of tampering,
+        deletion, or reordering.
+        """
+        prev = ""
+        for row in cls.objects.filter(client=client).order_by("created_at", "id"):
+            expected = row.compute_entry_hash(prev)
+            if row.prev_hash != prev or row.entry_hash != expected:
+                return False, row
+            prev = row.entry_hash
+        return True, None
 
     @classmethod
     def record(
@@ -101,16 +192,19 @@ class ConsentRecord(models.Model):
         user_agent = ""
         if request is not None:
             user_agent = str(request.META.get("HTTP_USER_AGENT", ""))[:512]
-        return cls.objects.create(
-            client=client,
-            case=case,
-            purpose=purpose,
-            granted=granted,
-            policy_version=policy_version,
-            channel=channel,
-            ip_address=_request_ip(request),
-            user_agent=user_agent,
-        )
+        # Atomic so the hash-chain read (previous row) and this insert cannot
+        # interleave with a concurrent write for the same client.
+        with transaction.atomic():
+            return cls.objects.create(
+                client=client,
+                case=case,
+                purpose=purpose,
+                granted=granted,
+                policy_version=policy_version,
+                channel=channel,
+                ip_address=_request_ip(request),
+                user_agent=user_agent,
+            )
 
     @classmethod
     def current_status(cls, client: Client) -> dict[str, ConsentRecord]:
