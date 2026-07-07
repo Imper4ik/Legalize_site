@@ -46,6 +46,10 @@ class Command(BaseCommand):
             legal_basis_end_date__gte=cutoff_date
         ).exclude(
             first_name__startswith='Anonymized'
+        ).exclude(
+            # A legal hold blocks age-based erasure too (active case, accounting,
+            # or the firm's legal-defence needs).
+            legal_hold=True
         )
 
         count = clients_to_anonymize.count()

@@ -196,6 +196,8 @@ def anonymize_client(client: Client, *, mark_erasure_fulfilled: bool = False) ->
         _assert_erasure_complete(client)
         if client.erasure_fulfilled_at is None:
             client.erasure_fulfilled_at = timezone.now()
+        from clients.models import Client as ClientModel
+        client.erasure_status = ClientModel.ErasureStatus.FULFILLED
 
     client.save()
     logger.info("Anonymized client ID %s and deleted %s documents (GDPR).", client.id, docs_deleted)

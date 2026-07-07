@@ -58,14 +58,59 @@ def restore_selected(modeladmin: Any, request: HttpRequest, queryset: QuerySet) 
 
 
 @admin.action(description="Fulfil erasure request (anonymize) — RODO art. 17")
+def approve_selected_erasures(modeladmin: Any, request: HttpRequest, queryset: QuerySet) -> None:
+    """Approve reviewed erasure requests (requested → approved), skipping holds."""
+    from clients.models import Client
+    from clients.services.erasure import ErasureWorkflowError, approve_erasure
+
+    approved = skipped = 0
+    for client in queryset:
+        if client.erasure_status != Client.ErasureStatus.REQUESTED or client.legal_hold:
+            skipped += 1
+            continue
+        try:
+            approve_erasure(client, actor=request.user, reason="Approved via admin review")
+            approved += 1
+        except ErasureWorkflowError:
+            skipped += 1
+    modeladmin.message_user(request, f"Approved {approved} erasure(s); skipped {skipped}.")
+
+
 def fulfill_erasure_requests(modeladmin: Any, request: HttpRequest, queryset: QuerySet) -> None:
+    """Fulfil only APPROVED, non-held requests — never erase on request alone."""
+    from clients.models import Client
     from clients.services.anonymization import anonymize_client
+
+    count = skipped = 0
+    for client in queryset:
+        if client.erasure_status != Client.ErasureStatus.APPROVED or client.legal_hold:
+            skipped += 1
+            continue
+        anonymize_client(client, mark_erasure_fulfilled=True)
+        count += 1
+    modeladmin.message_user(
+        request, f"Anonymized {count} approved client(s); skipped {skipped} (not approved or on hold)."
+    )
+
+
+def place_legal_hold_action(modeladmin: Any, request: HttpRequest, queryset: QuerySet) -> None:
+    from clients.services.erasure import place_legal_hold
 
     count = 0
     for client in queryset:
-        anonymize_client(client, mark_erasure_fulfilled=True)
+        place_legal_hold(client, reason="Placed via admin")
         count += 1
-    modeladmin.message_user(request, f"Anonymized {count} client(s).")
+    modeladmin.message_user(request, f"Placed legal hold on {count} client(s).")
+
+
+def release_legal_hold_action(modeladmin: Any, request: HttpRequest, queryset: QuerySet) -> None:
+    from clients.services.erasure import release_legal_hold
+
+    count = 0
+    for client in queryset:
+        release_legal_hold(client)
+        count += 1
+    modeladmin.message_user(request, f"Released legal hold on {count} client(s).")
 
 
 @admin.register(Company)
@@ -156,7 +201,7 @@ class ClientAdmin(admin.ModelAdmin):
         "archived_at",
         "created_at",
     )
-    list_filter = ("company", "status", "application_purpose", "family_role", "language", "is_test_data", "archived_at", "erasure_requested_at")
+    list_filter = ("company", "status", "application_purpose", "family_role", "language", "is_test_data", "archived_at", "erasure_status", "legal_hold", "erasure_requested_at")
     search_fields = ("first_name", "last_name", "email", "phone", "notes", "company__name")
     fieldsets = (
         (
@@ -173,16 +218,40 @@ class ClientAdmin(admin.ModelAdmin):
         ),
         ("Семья", {"fields": ("family_role", "sponsor_client")}),
         ("Статус и заметки", {"fields": ("status", "notes", "archived_at")}),
-        ("RODO", {"fields": ("erasure_requested_at", "erasure_fulfilled_at")}),
+        (
+            "RODO",
+            {
+                "fields": (
+                    "erasure_status",
+                    "erasure_requested_at",
+                    "erasure_approved_at",
+                    "erasure_approved_by",
+                    "erasure_decision_reason",
+                    "erasure_fulfilled_at",
+                    "legal_hold",
+                    "legal_hold_reason",
+                )
+            },
+        ),
     )
     readonly_fields = (
         "archived_at",
+        "erasure_status",
         "erasure_requested_at",
+        "erasure_approved_at",
+        "erasure_approved_by",
         "erasure_fulfilled_at",
         "new_residence_card_application_summary",
         "new_residence_card_application_summary_masked",
     )
-    actions = [archive_selected, restore_selected, fulfill_erasure_requests]
+    actions = [
+        archive_selected,
+        restore_selected,
+        approve_selected_erasures,
+        fulfill_erasure_requests,
+        place_legal_hold_action,
+        release_legal_hold_action,
+    ]
 
     def passport_num_masked(self, obj):
         from clients.security.encrypted import safe_encrypted_attr

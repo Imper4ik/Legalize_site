@@ -232,18 +232,65 @@ class Client(SoftDeleteModel):
     )
     is_test_data = models.BooleanField(default=False, db_index=True)
     is_demo_data = models.BooleanField(default=False, db_index=True)
-    # RODO art. 17: the subject requested erasure; staff action it out of band.
+    # RODO art. 17 erasure workflow. Erasure is irreversible, so it is never
+    # automatic on request: staff must review (incl. verifying the requester's
+    # identity out of band) and explicitly approve before fulfilment. A legal
+    # hold blocks both approval and the automatic retention sweep.
+    class ErasureStatus(models.TextChoices):
+        NONE = "none", _("Нет запроса")
+        REQUESTED = "requested", _("Запрошено субъектом")
+        APPROVED = "approved", _("Одобрено к стиранию")
+        REJECTED = "rejected", _("Отклонено")
+        FULFILLED = "fulfilled", _("Выполнено")
+
+    erasure_status = models.CharField(
+        max_length=16,
+        choices=ErasureStatus.choices,
+        default=ErasureStatus.NONE,
+        db_index=True,
+        verbose_name=_("Статус запроса на удаление"),
+    )
     erasure_requested_at = models.DateTimeField(
         null=True,
         blank=True,
         verbose_name=_("Запрос на удаление данных"),
     )
+    erasure_approved_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name=_("Дата одобрения удаления"),
+    )
+    erasure_approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="approved_erasures",
+        verbose_name=_("Одобрил удаление"),
+    )
+    erasure_decision_reason = models.CharField(
+        max_length=500,
+        blank=True,
+        default="",
+        verbose_name=_("Причина решения по удалению"),
+    )
     # Stamped when the erasure request is fulfilled (client anonymized), so the
-    # request → fulfilment trail is auditable (RODO accountability).
+    # request → approval → fulfilment trail is auditable (RODO accountability).
     erasure_fulfilled_at = models.DateTimeField(
         null=True,
         blank=True,
         verbose_name=_("Дата исполнения удаления"),
+    )
+    legal_hold = models.BooleanField(
+        default=False,
+        db_index=True,
+        verbose_name=_("Юридическая блокировка (legal hold)"),
+    )
+    legal_hold_reason = models.CharField(
+        max_length=500,
+        blank=True,
+        default="",
+        verbose_name=_("Причина юридической блокировки"),
     )
     archived_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

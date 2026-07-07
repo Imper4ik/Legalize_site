@@ -9,8 +9,9 @@ from clients.models import Client
 
 class Command(BaseCommand):
     help = (
-        "Fulfil pending RODO art. 17 erasure requests by anonymizing clients "
-        "who requested deletion (Client.erasure_requested_at set, not yet fulfilled)."
+        "Fulfil RODO art. 17 erasure requests that staff have reviewed and "
+        "APPROVED (erasure_status='approved'), skipping any client under a legal "
+        "hold. A request alone never triggers erasure — approval is required."
     )
 
     def add_arguments(self, parser: Any) -> None:
@@ -23,8 +24,10 @@ class Command(BaseCommand):
     def handle(self, *args: Any, **options: Any) -> None:
         dry_run = options["dry_run"]
 
+        # Only approved requests are fulfilled; legal holds are never erased.
         pending = Client.all_objects.filter(
-            erasure_requested_at__isnull=False,
+            erasure_status=Client.ErasureStatus.APPROVED,
+            legal_hold=False,
             erasure_fulfilled_at__isnull=True,
         )
         count = pending.count()

@@ -537,7 +537,6 @@ def onboarding_my_data(request: HttpRequest, token: str) -> HttpResponse:
 
     from django.contrib import messages
     from django.http import HttpResponse as DjangoHttpResponse
-    from django.utils import timezone
 
     from clients.services.data_export import build_subject_data
 
@@ -561,9 +560,12 @@ def onboarding_my_data(request: HttpRequest, token: str) -> HttpResponse:
             response["Content-Disposition"] = f'attachment; filename="my-data-{client.pk}.json"'
             return response
         if action == "erasure_request":
-            if client.erasure_requested_at is None:
-                client.erasure_requested_at = timezone.now()
-                client.save(update_fields=["erasure_requested_at"])
+            from clients.services.erasure import request_erasure
+
+            was_open = client.erasure_requested_at is not None
+            request_erasure(client)
+            if not was_open:
+                # First request for this subject → open the staff review task.
                 _create_erasure_task(session)
             messages.success(
                 request,

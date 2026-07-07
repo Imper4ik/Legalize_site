@@ -7,30 +7,47 @@ from io import StringIO
 
 from django.core.management import call_command
 from django.test import TestCase
-from django.utils import timezone
 
 from clients.models import Client
 from clients.services.anonymization import anonymize_client, is_anonymized
+from clients.services.erasure import approve_erasure, place_legal_hold, request_erasure
 from clients.testing.factories import create_test_client
 
 
 class ProcessErasureRequestsCommandTests(TestCase):
     def setUp(self) -> None:
-        self.requested = create_test_client(first_name="Erasure", last_name="Wanted")
-        self.requested.erasure_requested_at = timezone.now()
-        self.requested.save(update_fields=["erasure_requested_at"])
+        # Approved request → the command should fulfil it.
+        self.approved = create_test_client(first_name="Erasure", last_name="Wanted")
+        request_erasure(self.approved)
+        approve_erasure(self.approved, actor=None, reason="verified")
+        # Requested but not yet approved → must be left alone.
+        self.requested_only = create_test_client(first_name="Pending", last_name="Review")
+        request_erasure(self.requested_only)
+        # Approved but under legal hold → must be left alone.
+        self.held = create_test_client(first_name="Held", last_name="Case")
+        request_erasure(self.held)
+        approve_erasure(self.held, actor=None, reason="verified")
+        place_legal_hold(self.held, reason="ongoing case")
+        # No request at all.
         self.untouched = create_test_client(first_name="Keep", last_name="Me")
 
-    def test_command_anonymizes_only_requested_clients(self) -> None:
+    def test_command_fulfils_only_approved_non_held(self) -> None:
         call_command("process_erasure_requests")
 
-        requested = Client.all_objects.get(pk=self.requested.pk)
-        self.assertTrue(is_anonymized(requested))
-        self.assertIsNotNone(requested.erasure_fulfilled_at)
+        approved = Client.all_objects.get(pk=self.approved.pk)
+        self.assertTrue(is_anonymized(approved))
+        self.assertIsNotNone(approved.erasure_fulfilled_at)
+        self.assertEqual(approved.erasure_status, Client.ErasureStatus.FULFILLED)
 
-        untouched = Client.all_objects.get(pk=self.untouched.pk)
-        self.assertFalse(is_anonymized(untouched))
-        self.assertEqual(untouched.first_name, "Keep")
+        # Requested-only, held, and untouched are all left intact.
+        for pk, name in (
+            (self.requested_only.pk, "Pending"),
+            (self.held.pk, "Held"),
+            (self.untouched.pk, "Keep"),
+        ):
+            client = Client.all_objects.get(pk=pk)
+            self.assertFalse(is_anonymized(client))
+            self.assertEqual(client.first_name, name)
 
     def test_dry_run_changes_nothing_and_prints_no_pii(self) -> None:
         out = StringIO()
@@ -38,16 +55,15 @@ class ProcessErasureRequestsCommandTests(TestCase):
         output = out.getvalue()
 
         self.assertNotIn("Erasure", output)
-        self.assertIn(str(self.requested.id), output)
-        self.assertFalse(is_anonymized(Client.all_objects.get(pk=self.requested.pk)))
+        self.assertIn(str(self.approved.id), output)
+        self.assertFalse(is_anonymized(Client.all_objects.get(pk=self.approved.pk)))
 
     def test_is_idempotent(self) -> None:
         call_command("process_erasure_requests")
-        first = Client.all_objects.get(pk=self.requested.pk).erasure_fulfilled_at
-        # A second run finds nothing pending (already fulfilled) and does not
-        # re-stamp or re-anonymize.
+        first = Client.all_objects.get(pk=self.approved.pk).erasure_fulfilled_at
+        # A second run finds nothing approved-and-pending and does not re-stamp.
         call_command("process_erasure_requests")
-        second = Client.all_objects.get(pk=self.requested.pk).erasure_fulfilled_at
+        second = Client.all_objects.get(pk=self.approved.pk).erasure_fulfilled_at
         self.assertEqual(first, second)
 
 
