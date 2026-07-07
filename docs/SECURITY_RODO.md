@@ -109,6 +109,7 @@ On a suspected personal-data breach:
 
 ## Retention recommendations
 
+- Erasure (art. 17) is irreversible and store-complete: `anonymize_client` clears client identity (incl. passport number, birth date, citizenship, notes), and purges PESEL (`ClientDigitalAccess`), the MOS questionnaire, PESEL applications (with their PDFs/scans on disk), intake submissions, and email-log PII — keeping only a non-PII audit shell and financial rows for accounting. Encrypted-at-rest PII is treated as reversible (the controller holds the keys), so it is deleted rather than left encrypted.
 - Remove stale raw OCR PII immediately with `scrub_ocr_pii`.
 - Keep email bodies only as long as needed; use `EMAIL_LOG_BODY_RETENTION_DAYS`.
 - Define a client data deletion/archive policy in the service contract.
