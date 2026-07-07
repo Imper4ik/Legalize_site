@@ -54,3 +54,18 @@ class AnonymizeOldClientsTests(TestCase):
         self.assertEqual(
             Client.all_objects.get(pk=self.client_obj.pk).first_name, "Zlatan"
         )
+
+    def test_archived_client_past_retention_is_anonymized(self) -> None:
+        # Regression: the retention sweep must use all_objects, or archived
+        # (soft-deleted) clients keep their PII forever.
+        archived = create_test_client(first_name="Archie", last_name="Ved")
+        Client.all_objects.filter(pk=archived.pk).update(
+            created_at=timezone.now() - timedelta(days=6 * 365),
+            archived_at=timezone.now(),
+        )
+
+        call_command("anonymize_old_clients")
+
+        refreshed = Client.all_objects.get(pk=archived.pk)
+        self.assertTrue(refreshed.first_name.startswith("Anonymized"))
+        self.assertNotIn("Archie", refreshed.first_name)

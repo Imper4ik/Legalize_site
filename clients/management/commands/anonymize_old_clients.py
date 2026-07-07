@@ -36,7 +36,11 @@ class Command(BaseCommand):
         # But for simplicity, we will query based on created_at for absolute age,
         # and ensure legal_basis_end_date (if exists) is also past the cutoff.
 
-        clients_to_anonymize = Client.objects.filter(
+        # Use all_objects: archived (soft-deleted) clients are exactly the ones
+        # most likely to be past retention, and the default manager would skip
+        # them, silently leaving their PII in place. Already-anonymized rows are
+        # excluded so the run is idempotent.
+        clients_to_anonymize = Client.all_objects.filter(
             created_at__date__lte=cutoff_date
         ).exclude(
             legal_basis_end_date__gte=cutoff_date
