@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 from datetime import date, timedelta
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Self, cast
@@ -16,6 +17,8 @@ from django.utils.translation import gettext_lazy as _
 from clients.constants import DocumentType
 from fernet_fields import EncryptedTextField
 from legalize_site.soft_delete import SoftDeleteModel, SoftDeleteQuerySet
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from .case import Case
@@ -103,11 +106,28 @@ _CASE_PROCESS_CREATE_KWARGS = {
 
 
 def _apply_case_process_kwargs(client: "Client", case_kwargs: dict[str, Any]) -> None:
+    """Transfer legacy process fields passed to ``create()`` onto the case.
+
+    At creation the post_save signal has made exactly one primary case, so that
+    single case is the unambiguous target. If a client somehow already has more
+    than one case, we refuse to guess rather than write one process's data onto
+    an arbitrary case (the old ``.first()`` behaviour) — callers in that
+    situation must set the target case explicitly on the Case.
+    """
     if not case_kwargs:
         return
-    case = client.cases.order_by("opened_at", "id").first()
-    if case is None:
+    cases = list(client.cases.order_by("opened_at", "id")[:2])
+    if not cases:
         return
+    if len(cases) > 1:
+        logger.warning(
+            "Skipping legacy process-field transfer for client %s: expected a "
+            "single case at creation but found multiple; set the target case "
+            "explicitly instead of relying on create() kwargs.",
+            client.pk,
+        )
+        return
+    case = cases[0]
     if "case_number" in case_kwargs:
         case_kwargs["authority_case_number"] = case_kwargs.pop("case_number") or ""
     for name, value in case_kwargs.items():
