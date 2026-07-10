@@ -12443,3 +12443,12 @@ msgstr "Prześlij dokument"
 
 msgid "Загружен %(d)s"
 msgstr "Przesłano %(d)s"
+
+msgid "Заменить"
+msgstr "Zmień"
+
+msgid "Заменить файл"
+msgstr "Zmień plik"
+
+msgid "После загрузки документ повторно проверит специалист."
+msgstr "Po przesłaniu dokument ponownie sprawdzi specjalista."

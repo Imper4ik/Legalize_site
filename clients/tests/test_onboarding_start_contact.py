@@ -215,6 +215,46 @@ class OnboardingStartContactTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Обновить документ")
 
+    def test_replacing_accepted_document_requires_staff_confirmation(self):
+        from io import BytesIO
+
+        from django.utils import translation
+        from PIL import Image
+
+        from clients.models import StaffTask
+        from clients.testing.factories import create_test_document
+
+        client, token = self._work_client_with_session(token="resupply-token-3")
+        mos_data, _ = MOSApplicationData.objects.get_or_create(client=client)
+        mos_data.status = "fingerprints"
+        mos_data.save(update_fields=["status"])
+
+        contract = DocumentType.EMPLOYMENT_CONTRACT.value
+        create_test_document(client, doc_type=contract, verified=True)
+
+        with translation.override("ru"):
+            response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
+            self.assertContains(response, "Заменить")
+
+            buffer = BytesIO()
+            Image.new("RGB", (20, 20), "white").save(buffer, format="PNG")
+            upload = SimpleUploadedFile("contract_new.png", buffer.getvalue(), content_type="image/png")
+            self.client.post(
+                reverse("clients:onboarding_document_upload", kwargs={"token": token, "doc_type": contract}),
+                {"file": upload},
+            )
+
+        docs = Document.objects.filter(client=client, document_type=contract).order_by("-uploaded_at")
+        self.assertEqual(docs.count(), 2)
+        # The replacement is stored unverified, so it never silently overrides the
+        # accepted copy — a staff review task is raised for confirmation.
+        self.assertFalse(docs.first().verified)
+        self.assertTrue(
+            StaffTask.objects.filter(
+                client=client, task_type="document_review", status__in=["open", "in_progress"]
+            ).exists()
+        )
+
     def test_locked_post_fingerprints_contact_gap_can_be_completed(self):
         client, token = self._client_with_session()
         mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)

@@ -506,10 +506,12 @@ def _build_start_context(
             is_awaiting_verification = bool(not doc_obj.verified and not doc_obj.rejection_reason)
 
         is_recurring = is_recurring_document_type(doc_type)
-        # A document can be re-supplied when it is missing, expired, rejected, or
-        # recurring (e.g. a new ZUS RCA month). An accepted, still-valid document
-        # keeps its upload control hidden to avoid accidental duplicates.
-        allow_resupply = (not is_uploaded) or is_expired or is_rejected or is_recurring
+        # A document can always be (re-)supplied from the portal: missing,
+        # expired, rejected, recurring (a new ZUS RCA month), or a replacement of
+        # an accepted one. Every client upload is stored unverified and raises a
+        # staff "document_review" task, so a replacement never silently overrides
+        # an accepted document — a specialist confirms it first.
+        allow_resupply = True
         if not is_uploaded:
             resupply_label = _("Загрузить")
         elif is_recurring:
@@ -518,8 +520,10 @@ def _build_start_context(
             resupply_label = _("Загрузить заново")
         elif is_expired:
             resupply_label = _("Обновить документ")
+        elif is_verified:
+            resupply_label = _("Заменить")
         else:
-            resupply_label = _("Загрузить")
+            resupply_label = _("Заменить файл")
 
         checklist.append(
             {

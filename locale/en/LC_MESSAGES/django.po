@@ -12400,3 +12400,12 @@ msgstr "Upload document"
 
 msgid "Загружен %(d)s"
 msgstr "Uploaded %(d)s"
+
+msgid "Заменить"
+msgstr "Replace"
+
+msgid "Заменить файл"
+msgstr "Replace file"
+
+msgid "После загрузки документ повторно проверит специалист."
+msgstr "After upload the document will be re-checked by a specialist."
