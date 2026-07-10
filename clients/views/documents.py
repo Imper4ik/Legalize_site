@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from django.contrib import messages
+from django.db import transaction
 from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
@@ -142,28 +143,15 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
             messages.error(request, message)
             return redirect("clients:client_detail", pk=client.id)
 
-        upload_results = []
-        success_count = 0
+        # Validate every file before persisting any of them. Previously a bad
+        # file mid-batch broke the loop after earlier files were already saved,
+        # leaving a partial, non-atomic upload. Validate first, then persist the
+        # whole batch inside a single transaction so it is all-or-nothing.
+        validated_forms = []
         errors = {}
-
         for f in files:
-            file_dict = {'file': f}
-            form = DocumentUploadForm(request.POST, file_dict, doc_type=doc_type, client=client, case=case)
-            if form.is_valid():
-                result = upload_client_document(
-                    client=client,
-                    doc_type=doc_type,
-                    uploaded_document=form.save(commit=False),
-                    actor=request.user,
-                    case=case,
-                    parse_requested=parse_requested,
-                    parser=parse_wezwanie,
-                    send_missing_email=send_missing_documents_email,
-                    send_appointment_email=send_appointment_notification_email,
-                )
-                upload_results.append(result)
-                success_count += 1
-            else:
+            form = DocumentUploadForm(request.POST, {'file': f}, doc_type=doc_type, client=client, case=case)
+            if not form.is_valid():
                 errors = form.errors.get_json_data()
                 logger.warning(
                     "Document upload rejected: client_id=%s doc_type=%s errors=%s files=%s",
@@ -173,6 +161,26 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
                     _uploaded_file_log_payload([f]),
                 )
                 break
+            validated_forms.append(form)
+
+        upload_results = []
+        success_count = 0
+        if not errors and validated_forms:
+            with transaction.atomic():
+                for form in validated_forms:
+                    result = upload_client_document(
+                        client=client,
+                        doc_type=doc_type,
+                        uploaded_document=form.save(commit=False),
+                        actor=request.user,
+                        case=case,
+                        parse_requested=parse_requested,
+                        parser=parse_wezwanie,
+                        send_missing_email=send_missing_documents_email,
+                        send_appointment_email=send_appointment_notification_email,
+                    )
+                    upload_results.append(result)
+                    success_count += 1
 
         if success_count > 0 and success_count == len(files):
             custom_requirement = ClientDocumentRequirement.objects.filter(

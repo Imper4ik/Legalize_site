@@ -10,15 +10,25 @@ from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from PIL import Image
 
-Image.MAX_IMAGE_PIXELS = None
-
 logger = logging.getLogger(__name__)
 
 # Default settings
 DEFAULT_QUALITY = 85
 DEFAULT_MAX_WIDTH = 2000
 DEFAULT_MAX_HEIGHT = 2000
+DEFAULT_MAX_IMAGE_PIXELS = 300_000_000
 SUPPORTED_FORMATS = {'.jpg', '.jpeg', '.png', '.tiff', '.tif', '.bmp'}
+
+
+def _configure_decompression_bomb_guard() -> None:
+    """Bound Pillow's decompression-bomb guard to the configured maximum.
+
+    Never disable it (MAX_IMAGE_PIXELS=None): decoding an attacker-supplied
+    image without a pixel ceiling can exhaust memory before any resize runs.
+    """
+    Image.MAX_IMAGE_PIXELS = int(
+        getattr(settings, "MAX_IMAGE_PIXELS", DEFAULT_MAX_IMAGE_PIXELS)
+    )
 
 
 def get_compression_settings() -> dict[str, Any]:
@@ -65,6 +75,7 @@ def compress_image(
 
     # Open image
     try:
+        _configure_decompression_bomb_guard()
         img: Image.Image = Image.open(image_file)
 
         # Convert RGBA to RGB if needed (for JPEG/WEBP)

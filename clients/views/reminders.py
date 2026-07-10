@@ -73,6 +73,13 @@ class ReminderListView(StaffRequiredMixin, ListView):
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
         reminders = context["reminders"]
+        paginator = context.get("paginator")
+        if paginator is not None:
+            reminders_count = paginator.count
+        elif hasattr(reminders, "count"):
+            reminders_count = reminders.count()
+        else:
+            reminders_count = len(reminders)
         context.update(
             {
                 "title": self.title,
@@ -82,7 +89,7 @@ class ReminderListView(StaffRequiredMixin, ListView):
                 ),
                 "filter_values": self.request.GET,
                 "client_filter_id": getattr(self, "client_filter_id", None),
-                "reminders_count": reminders.count() if hasattr(reminders, "count") else len(reminders),
+                "reminders_count": reminders_count,
             }
         )
         return context
@@ -231,6 +238,10 @@ class PaymentReminderListView(ReminderListView):
     reminder_type = "payment"
     template_name = "clients/payment_reminder_list.html"
     title = _lazy("Напоминания по оплатам")
+    # Payment reminders render one card per row with no client grouping, so a
+    # large active caseload previously loaded every reminder into a single
+    # page. Paginate to bound the query volume and page weight.
+    paginate_by = 50
 
 
 UPDATE_REMINDERS_LOCK_KEY = "manual_update_reminders_lock"

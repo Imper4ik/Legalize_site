@@ -112,7 +112,12 @@ def _validate_image_file(uploaded_file: Any, *, allowed_formats: set[str], label
     start_position = uploaded_file.tell()
     try:
         from PIL import Image, UnidentifiedImageError
-        Image.MAX_IMAGE_PIXELS = None
+        from PIL.Image import DecompressionBombError
+        # Keep Pillow's built-in decompression-bomb guard active. Align its
+        # threshold with the configured maximum so oversized images raise
+        # instead of being decoded, and never disable it (MAX_IMAGE_PIXELS=None).
+        max_pixels = int(getattr(settings, "MAX_IMAGE_PIXELS", DEFAULT_MAX_IMAGE_PIXELS))
+        Image.MAX_IMAGE_PIXELS = max_pixels
     except ImportError as exc:  # pragma: no cover - dependency is installed in app/runtime
         raise ValidationError(_("Проверка изображений сейчас недоступна.")) from exc
 
@@ -121,7 +126,6 @@ def _validate_image_file(uploaded_file: Any, *, allowed_formats: set[str], label
         with Image.open(uploaded_file) as image:
             image_format = (image.format or "").upper()
             width, height = image.size
-            max_pixels = int(getattr(settings, "MAX_IMAGE_PIXELS", DEFAULT_MAX_IMAGE_PIXELS))
             if width * height > max_pixels:
                 raise ValidationError(
                     _("Разрешение изображения слишком большое. Максимум: %(pixels)s пикселей.")
@@ -132,6 +136,11 @@ def _validate_image_file(uploaded_file: Any, *, allowed_formats: set[str], label
             raise ValidationError(_("Загрузите корректный файл %(label)s.") % {"label": label})
     except ValidationError:
         raise
+    except DecompressionBombError as exc:
+        raise ValidationError(
+            _("Разрешение изображения слишком большое. Максимум: %(pixels)s пикселей.")
+            % {"pixels": max_pixels}
+        ) from exc
     except UnidentifiedImageError as exc:
         raise ValidationError(_("Загрузите корректное изображение %(label)s.") % {"label": label}) from exc
     except Exception as exc:

@@ -15,6 +15,12 @@ case "${RUN_MIGRATIONS_ON_START}" in
   1|true|TRUE|yes|YES|on|ON)
     echo "Running migrations before starting the web server..."
     python manage.py migrate --no-input
+    # Ensure the DatabaseCache table exists even when the release phase was
+    # skipped. Login/verification rate limits fail closed, so a missing
+    # cache table would otherwise lock every user out with HTTP 429.
+    # Idempotent, and a no-op when the default cache is not DatabaseCache.
+    echo "Ensuring cache table exists..."
+    python manage.py createcachetable
     ;;
 esac
 

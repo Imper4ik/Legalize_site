@@ -47,3 +47,11 @@ class Command(BaseCommand):
             for result in test_run.results.filter(status="failed").order_by("created_at"):
                 self.stdout.write(f"- {result.scenario_name}: {result.error_message}")
 
+        # Exit non-zero when the run did not fully pass so CI/scripts fail
+        # loudly instead of treating a broken scenario as success.
+        if test_run.status != test_run.STATUS_PASSED:
+            raise CommandError(
+                f"E2E run #{test_run.pk} finished with status "
+                f"'{test_run.status}' ({test_run.failed_checks} failed check(s))."
+            )
+
