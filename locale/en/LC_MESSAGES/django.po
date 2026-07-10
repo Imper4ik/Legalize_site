@@ -12385,3 +12385,6 @@ msgstr "users"
 #: clients/templates/clients/mos_review.html:337
 msgid "Решение получено (Decyzja)"
 msgstr "Decision received (decyzja)"
+
+msgid "Загрузить ещё месяц"
+msgstr "Upload another month"

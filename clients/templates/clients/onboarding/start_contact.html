@@ -608,6 +608,8 @@
                               {% endif %}
                             {% endif %}
                             <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
+                            {# ZUS RCA is a monthly document: let the client keep uploading later months even after one is accepted. #}
+                            {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}"><i class="bi bi-upload"></i> {% trans "Загрузить ещё месяц" %}</button>{% endif %}
                           {% else %}
                             <span class="badge bg-secondary" style="font-size: 0.75rem;">{% trans "Не загружен (ожидается)" %}</span>
                             {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}"><i class="bi bi-upload"></i> {% trans "Загрузить" %}</button>{% endif %}
@@ -850,6 +852,12 @@
                               <i class="bi bi-pencil-square"></i> {% trans "Данные" %}
                             </a>
                           {% endif %}
+                          {# ZUS RCA is a monthly document: keep the upload control after acceptance so later months can be added. #}
+                          {% if doc.code == 'zus_rca_or_insurance' and allow_doc_edit %}
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">
+                              <i class="bi bi-upload"></i> {% trans "Загрузить ещё месяц" %}
+                            </button>
+                          {% endif %}
                         {% else %}
                           <span class="badge bg-secondary" style="font-size: 0.75rem;">{% trans "Не загружен (ожидается)" %}</span>
                           {% if allow_doc_edit %}
@@ -981,7 +989,8 @@
 </div>
 {% endif %}
 {% for doc in checklist %}
-  {% if not doc.is_uploaded and allow_doc_edit %}
+  {# Render the upload modal when the doc is not yet uploaded, and always for ZUS RCA (a monthly document that accepts additional months after acceptance). #}
+  {% if allow_doc_edit and not doc.is_uploaded or allow_doc_edit and doc.code == 'zus_rca_or_insurance' %}
     <div class="modal fade" id="uploadModal{{ doc.code|slugify }}" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
