@@ -4,7 +4,15 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, SimpleTestCase, TestCase
 
-from clients.models import Client, DocumentProcessingJob, EmailCampaign, EmailLog, MOSApplicationData, Reminder, StaffAuditEvent
+from clients.models import (
+    Client,
+    DocumentProcessingJob,
+    EmailCampaign,
+    EmailLog,
+    MOSApplicationData,
+    Reminder,
+    StaffAuditEvent,
+)
 
 
 class AdminRegistrationTests(SimpleTestCase):
