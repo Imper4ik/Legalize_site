@@ -94,7 +94,13 @@ class Reminder(models.Model):
             }
         if self.reminder_type == 'legal_stay' and self.client:
             try:
-                mos = self.client.mos_applications.first()
+                # Scope to this reminder's own case: a multi-case client must not
+                # show another case's legal-stay date via an arbitrary .first().
+                mos = None
+                if self.case_id:
+                    mos = self.client.mos_applications.filter(case_id=self.case_id).first()
+                if mos is None and not self.case_id:
+                    mos = self.client.mos_applications.first()
                 if mos and mos.legal_stay_until:
                     stay_str = mos.legal_stay_until.strftime('%d.%m.%Y')
                     due_str = self.due_date.strftime('%d.%m.%Y') if self.due_date else ""
