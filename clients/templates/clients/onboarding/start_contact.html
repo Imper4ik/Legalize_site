@@ -589,34 +589,35 @@
                             </button>
                           {% endif %}
                           {% if doc.is_uploaded %}
-                            {% if doc.is_expired %}
-                              <span class="badge bg-danger" style="font-size: 0.75rem;">{% trans "Истёк" %}</span>
-                            {% elif doc.is_verified %}
-                              <span class="badge bg-success" style="font-size: 0.75rem;">{% trans "Принят" %}</span>
-                            {% elif doc.is_rejected %}
-                              <span class="badge bg-danger" style="font-size: 0.75rem;">{% trans "Отклонён" %}</span>
-                            {% else %}
-                              <span class="badge bg-warning text-dark" style="font-size: 0.75rem;">{% trans "Ожидает проверки" %}</span>
-                            {% endif %}
-                            {% if doc.ocr_status %}
-                              {% if doc.ocr_status == 'pending' %}
-                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 0.75rem;">{% trans "Проверяем файл..." %}</span>
-                              {% elif doc.ocr_status == 'success' %}
-                                <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Данные считаны" %}</span>
-                              {% elif doc.ocr_status == 'failed' %}
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle" style="font-size: 0.75rem;">{% trans "Проверим вручную" %}</span>
-                              {% endif %}
-                            {% endif %}
-                            <a class="btn btn-sm btn-outline-secondary" href="{% url 'clients:onboarding_document_preview' session.token_hash doc.doc_id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
-                            {# ZUS RCA is a monthly document: let the client keep uploading later months even after one is accepted. #}
-                            {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}"><i class="bi bi-upload"></i> {% trans "Загрузить ещё месяц" %}</button>{% endif %}
+                            <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.75rem;">{% trans "Загружено месяцев:" %} {{ doc.documents|length }}</span>
                           {% else %}
                             <span class="badge bg-secondary" style="font-size: 0.75rem;">{% trans "Не загружен (ожидается)" %}</span>
-                            {% if allow_doc_edit %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}"><i class="bi bi-upload"></i> {% trans "Загрузить" %}</button>{% endif %}
                           {% endif %}
+                          {% if allow_doc_edit and doc.allow_resupply %}<button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}"><i class="bi bi-upload"></i> {{ doc.resupply_label }}</button>{% endif %}
                         </div>
                       </div>
                     </div>
+                    {# Recurring ZUS RCA: list every uploaded month with its own status and preview. #}
+                    {% if doc.documents %}
+                      <ul class="list-group list-group-flush mt-2 border-top">
+                        {% for m in doc.documents %}
+                          <li class="list-group-item px-0 py-2 d-flex align-items-center justify-content-between gap-2 flex-wrap bg-transparent">
+                            <span class="small">
+                              <i class="bi bi-calendar3 me-1"></i>
+                              {% if m.period_month %}{{ m.period_month|date:"F Y" }}{% else %}{% blocktrans with d=m.uploaded_at|date:"d.m.Y" %}Загружен {{ d }}{% endblocktrans %}{% endif %}
+                            </span>
+                            <span class="d-flex align-items-center gap-2">
+                              {% if m.is_expired %}<span class="badge bg-danger" style="font-size: 0.7rem;">{% trans "Истёк" %}</span>
+                              {% elif m.is_verified %}<span class="badge bg-success" style="font-size: 0.7rem;">{% trans "Принят" %}</span>
+                              {% elif m.is_rejected %}<span class="badge bg-danger" style="font-size: 0.7rem;">{% trans "Отклонён" %}</span>
+                              {% else %}<span class="badge bg-warning text-dark" style="font-size: 0.7rem;">{% trans "Ожидает проверки" %}</span>{% endif %}
+                              {% if m.ocr_status == 'success' %}<span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.7rem;">{% trans "Данные считаны" %}</span>{% endif %}
+                              <a class="btn btn-sm btn-outline-secondary py-0 px-1" href="{% url 'clients:onboarding_document_preview' session.token_hash m.id %}" target="_blank" rel="noopener"><i class="bi bi-eye"></i></a>
+                            </span>
+                          </li>
+                        {% endfor %}
+                      </ul>
+                    {% endif %}
                   </li>
                 {% endif %}
               {% endfor %}
@@ -702,6 +703,12 @@
                                       <a href="{% url 'clients:onboarding_passport' session.token_hash %}" class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-pencil-square"></i> {% trans "Данные" %}
                                       </a>
+                                    {% endif %}
+                                    {# Re-supply control for expired / rejected / recurring documents. #}
+                                    {% if allow_doc_edit and doc.allow_resupply %}
+                                      <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">
+                                        <i class="bi bi-upload"></i> {{ doc.resupply_label }}
+                                      </button>
                                     {% endif %}
                                   {% else %}
                                     <span class="badge bg-secondary" style="font-size: 0.75rem;">{% trans "Не загружен (ожидается)" %}</span>
@@ -852,10 +859,10 @@
                               <i class="bi bi-pencil-square"></i> {% trans "Данные" %}
                             </a>
                           {% endif %}
-                          {# ZUS RCA is a monthly document: keep the upload control after acceptance so later months can be added. #}
-                          {% if doc.code == 'zus_rca_or_insurance' and allow_doc_edit %}
+                          {# Re-supply control for expired / rejected / recurring documents (e.g. a new ZUS RCA month). #}
+                          {% if allow_doc_edit and doc.allow_resupply %}
                             <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal{{ doc.code|slugify }}">
-                              <i class="bi bi-upload"></i> {% trans "Загрузить ещё месяц" %}
+                              <i class="bi bi-upload"></i> {{ doc.resupply_label }}
                             </button>
                           {% endif %}
                         {% else %}
@@ -989,8 +996,8 @@
 </div>
 {% endif %}
 {% for doc in checklist %}
-  {# Render the upload modal when the doc is not yet uploaded, and always for ZUS RCA (a monthly document that accepts additional months after acceptance). #}
-  {% if allow_doc_edit and not doc.is_uploaded or allow_doc_edit and doc.code == 'zus_rca_or_insurance' %}
+  {# Render the upload modal whenever the document can be (re-)supplied: missing, expired, rejected, or recurring (ZUS RCA months). #}
+  {% if allow_doc_edit and doc.allow_resupply %}
     <div class="modal fade" id="uploadModal{{ doc.code|slugify }}" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">

@@ -106,3 +106,12 @@ def is_insurance_document_type(doc_type: str | None) -> bool:
     if not doc_type:
         return False
     return str(doc_type).lower() == DocumentType.HEALTH_INSURANCE.value
+
+
+def is_recurring_document_type(doc_type: str | None) -> bool:
+    """Recurring documents are re-supplied over time (e.g. the monthly ZUS RCA
+    declaration), so the portal keeps their upload control available even after
+    a period has been accepted."""
+    if not doc_type:
+        return False
+    return str(doc_type).lower() == DocumentType.ZUS_RCA_OR_INSURANCE.value

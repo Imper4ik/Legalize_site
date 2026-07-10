@@ -12431,3 +12431,15 @@ msgstr "Decyzja otrzymana"
 
 msgid "Загрузить ещё месяц"
 msgstr "Prześlij kolejny miesiąc"
+
+msgid "Обновить документ"
+msgstr "Zaktualizuj dokument"
+
+msgid "Загружено месяцев:"
+msgstr "Przesłane miesiące:"
+
+msgid "Загрузить документ"
+msgstr "Prześlij dokument"
+
+msgid "Загружен %(d)s"
+msgstr "Przesłano %(d)s"

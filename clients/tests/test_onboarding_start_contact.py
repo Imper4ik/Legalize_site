@@ -138,6 +138,83 @@ class OnboardingStartContactTests(TestCase):
             self.assertContains(response, "uploadFingerprintInvitationModal")
             self.assertContains(response, "Сохранить контактные данные")
 
+    def _work_client_with_session(self, token="resupply-token-1"):
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
+        user = User.objects.create_user(email=f"{token}@example.com", password="secure_pwd_123")
+        client = Client.objects.create(
+            first_name="Re",
+            last_name="Supply",
+            email="",
+            phone="",
+            user=user,
+            application_purpose="work",
+            language="ru",
+        )
+        ClientOnboardingSession.objects.create(
+            client=client,
+            token_hash=hash_onboarding_token(token),
+            status="created",
+            expires_at=timezone.now() + timedelta(days=7),
+        )
+        self.client.force_login(user)
+        return client, token
+
+    def test_recurring_zus_keeps_upload_and_lists_all_months(self):
+        from datetime import date
+
+        from django.utils import translation
+
+        from clients.testing.factories import create_test_document
+
+        client, token = self._work_client_with_session()
+        mos_data, _ = MOSApplicationData.objects.get_or_create(client=client)
+        mos_data.status = "fingerprints"
+        mos_data.save(update_fields=["status"])
+
+        zus = DocumentType.ZUS_RCA_OR_INSURANCE.value
+        d1 = create_test_document(client, doc_type=zus, verified=True, zus_period_month=date(2026, 4, 1))
+        d2 = create_test_document(client, doc_type=zus, verified=True, zus_period_month=date(2026, 5, 1))
+
+        with translation.override("ru"):
+            response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
+
+        self.assertEqual(response.status_code, 200)
+        # Upload control stays available even though a month is already accepted.
+        self.assertContains(response, "Загрузить ещё месяц")
+        self.assertContains(response, "Загружено месяцев:")
+        # Every uploaded month is listed (one calendar row per month).
+        self.assertContains(response, "bi-calendar3", count=2)
+        # And the upload modal is rendered despite the document being uploaded.
+        self.assertContains(response, 'id="uploadModal')
+        self.assertTrue(d1.pk and d2.pk)
+
+    def test_expired_document_offers_resupply(self):
+        from datetime import date, timedelta as _td
+
+        from django.utils import translation
+
+        from clients.testing.factories import create_test_document
+
+        client, token = self._work_client_with_session(token="resupply-token-2")
+        mos_data, _ = MOSApplicationData.objects.get_or_create(client=client)
+        mos_data.status = "fingerprints"
+        mos_data.save(update_fields=["status"])
+
+        create_test_document(
+            client,
+            doc_type=DocumentType.EMPLOYMENT_CONTRACT.value,
+            verified=True,
+            expiry_date=date.today() - _td(days=1),
+        )
+
+        with translation.override("ru"):
+            response = self.client.get(reverse("clients:onboarding_start", kwargs={"token": token}))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Обновить документ")
+
     def test_locked_post_fingerprints_contact_gap_can_be_completed(self):
         client, token = self._client_with_session()
         mos_data, _created = MOSApplicationData.objects.get_or_create(client=client)

@@ -12388,3 +12388,15 @@ msgstr "Decision received (decyzja)"
 
 msgid "Загрузить ещё месяц"
 msgstr "Upload another month"
+
+msgid "Обновить документ"
+msgstr "Update document"
+
+msgid "Загружено месяцев:"
+msgstr "Months uploaded:"
+
+msgid "Загрузить документ"
+msgstr "Upload document"
+
+msgid "Загружен %(d)s"
+msgstr "Uploaded %(d)s"

@@ -13,7 +13,7 @@ from django.utils import timezone, translation
 from django.utils.dateparse import parse_date
 from django.utils.translation import gettext as _
 
-from clients.constants import DocumentType
+from clients.constants import DocumentType, is_recurring_document_type
 from clients.forms import DocumentUploadForm
 from clients.models import Client, ClientOnboardingSession, Document, DocumentRequirement, MOSApplicationData
 from clients.services.case_context import checklist_for_case, purpose_context_for_case
@@ -458,6 +458,23 @@ def _build_start_context(
     from datetime import date
 
     today = date.today()
+
+    def _doc_state(document: Document) -> dict[str, Any]:
+        expired = bool(document.expiry_date and document.expiry_date < today)
+        rejected = bool(document.rejection_reason and not document.verified)
+        return {
+            "id": document.id,
+            "uploaded_at": document.uploaded_at,
+            "period_month": document.zus_period_month,
+            "expiry_date": document.expiry_date,
+            "is_verified": bool(document.verified),
+            "is_rejected": rejected,
+            "is_expired": expired,
+            "is_awaiting_verification": bool(not document.verified and not document.rejection_reason),
+            "ocr_status": document.ocr_status,
+            "rejection_reason": document.rejection_reason or "",
+        }
+
     checklist = []
     checklist_codes = set()
     for item in required_docs_catalog:
@@ -465,7 +482,11 @@ def _build_start_context(
         checklist_codes.add(doc_type)
         is_uploaded = doc_type in existing_map
 
-        doc_obj = next((d for d in existing_documents if d.document_type == doc_type), None)
+        # All documents of this type (most recent first). Recurring documents
+        # such as the monthly ZUS RCA can have several, so the portal lists each
+        # one instead of collapsing them into a single row.
+        docs_for_type = [d for d in existing_documents if d.document_type == doc_type]
+        doc_obj = docs_for_type[0] if docs_for_type else None
 
         sample_image_url = item.get("sample_image_url")
         if not sample_image_url:
@@ -484,6 +505,22 @@ def _build_start_context(
             is_verified = bool(doc_obj.verified)
             is_awaiting_verification = bool(not doc_obj.verified and not doc_obj.rejection_reason)
 
+        is_recurring = is_recurring_document_type(doc_type)
+        # A document can be re-supplied when it is missing, expired, rejected, or
+        # recurring (e.g. a new ZUS RCA month). An accepted, still-valid document
+        # keeps its upload control hidden to avoid accidental duplicates.
+        allow_resupply = (not is_uploaded) or is_expired or is_rejected or is_recurring
+        if not is_uploaded:
+            resupply_label = _("Загрузить")
+        elif is_recurring:
+            resupply_label = _("Загрузить ещё месяц")
+        elif is_rejected:
+            resupply_label = _("Загрузить заново")
+        elif is_expired:
+            resupply_label = _("Обновить документ")
+        else:
+            resupply_label = _("Загрузить")
+
         checklist.append(
             {
                 "code": doc_type,
@@ -501,6 +538,10 @@ def _build_start_context(
                 "ocr_status_badge": doc_obj.ocr_status_badge if doc_obj else "",
                 "source_hint": _document_source_hint(doc_type),
                 "sample_image_url": sample_image_url,
+                "is_recurring": is_recurring,
+                "allow_resupply": allow_resupply,
+                "resupply_label": resupply_label,
+                "documents": [_doc_state(d) for d in docs_for_type],
             }
         )
 
