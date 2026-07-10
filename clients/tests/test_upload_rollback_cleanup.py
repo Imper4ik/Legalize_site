@@ -95,6 +95,46 @@ class BatchUploadRollbackCleanupTests(TestCase):
             msg="A failed batch upload left an orphaned media file on disk",
         )
 
+    def test_failure_after_document_saved_still_cleans_the_file(self) -> None:
+        # Failure happens INSIDE upload_client_document, after the physical file
+        # is written (during document.save) but before it returns — here by
+        # making the activity log raise on the second document. Both files must
+        # be cleaned up, not just fully-completed ones.
+        from unittest import mock
+
+        url = reverse(
+            "clients:add_document",
+            kwargs={
+                "client_id": self.client_obj.pk,
+                "doc_type": DocumentType.EMPLOYMENT_CONTRACT.value,
+            },
+        )
+        state = {"calls": 0}
+        real_log = documents_view.upload_client_document.__globals__["log_client_activity"]
+
+        def flaky_log(*args, **kwargs):
+            state["calls"] += 1
+            if state["calls"] == 2:
+                raise RuntimeError("activity log failed after file was written")
+            return real_log(*args, **kwargs)
+
+        with mock.patch(
+            "clients.services.document_workflow.log_client_activity", side_effect=flaky_log
+        ):
+            with self.assertRaises(RuntimeError):
+                self.client.post(
+                    url,
+                    data={"file": [_png_upload("one.png"), _png_upload("two.png")]},
+                    HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+                )
+
+        self.assertEqual(Document.objects.filter(client=self.client_obj).count(), 0)
+        self.assertEqual(
+            _media_file_count(),
+            0,
+            msg="A file written before a post-save failure was left orphaned",
+        )
+
     def test_successful_batch_persists_all_files(self) -> None:
         url = reverse(
             "clients:add_document",
