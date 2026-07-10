@@ -112,8 +112,11 @@ class ClientActivity(models.Model):
 
     @property
     def actor_display(self) -> str:
-        if not self.actor:
-            return str(_("Система"))
+        if self.actor is None:
+            # Actor account was deleted (FK is SET_NULL): fall back to the
+            # write-once snapshot so the UI still shows who acted; only a truly
+            # system-initiated event (no actor, no snapshot) reads as "Система".
+            return self.actor_label or str(_("Система"))
         full_name = self.actor.get_full_name().strip()
         return full_name or getattr(self.actor, "email", str(self.actor))
 
