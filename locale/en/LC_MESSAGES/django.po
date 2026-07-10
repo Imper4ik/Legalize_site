@@ -10,6 +10,7 @@ msgstr ""
 "Language: en\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: clients/demo/demo_runner.py:23
 msgid "Demo Center requires a superuser."
