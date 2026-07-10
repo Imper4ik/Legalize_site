@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from django.conf import settings
 from django.db import models
 
@@ -50,11 +52,19 @@ class StaffAuditEvent(models.Model):
         blank=True,
         related_name="staff_audit_events",
     )
+    # SET_NULL (not CASCADE): deleting the targeted employee must never erase the
+    # audit events about them. Null-safe because target_label keeps the identity.
     target = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="targeted_staff_audit_events",
     )
+    # Write-once identity snapshots so the event still says who acted on whom
+    # after either account is deleted or deactivated.
+    actor_label = models.CharField(max_length=255, blank=True, default="")
+    target_label = models.CharField(max_length=255, blank=True, default="")
     event_type = models.CharField(max_length=64, choices=EVENT_TYPE_CHOICES)
     summary = models.CharField(max_length=255)
     metadata = models.JSONField(default=dict, blank=True)
@@ -70,5 +80,25 @@ class StaffAuditEvent(models.Model):
         verbose_name = "Staff audit event"
         verbose_name_plural = "Staff audit events"
 
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        # Capture the identity snapshots once, at creation, and never overwrite
+        # them afterwards (write-once immutability).
+        if self._state.adding:
+            from clients.services.activity import describe_actor
+
+            if not self.actor_label:
+                self.actor_label = describe_actor(self.actor)
+            if not self.target_label:
+                self.target_label = describe_actor(self.target)
+        super().save(*args, **kwargs)
+
+    @property
+    def actor_display(self) -> str:
+        return self.actor_label or (str(self.actor) if self.actor_id else "") or "—"
+
+    @property
+    def target_display(self) -> str:
+        return self.target_label or (str(self.target) if self.target_id else "") or "—"
+
     def __str__(self) -> str:
-        return f"{self.event_type} target={self.target_id}"
+        return f"{self.event_type} target={self.target_display}"

@@ -9,3 +9,5 @@ bandit==1.8.2
 pip-audit==2.8.0
 django-stubs[compatible-mypy]
 # Pillow >=10.3 ships type information; no external Pillow stubs are needed.
+# Used only by the generate_stress_data management command (dev/QA load data).
+Faker==40.28.1

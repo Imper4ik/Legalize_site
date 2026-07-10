@@ -643,11 +643,16 @@ class StaffTaskAdmin(admin.ModelAdmin):
 
 @admin.register(ClientActivity)
 class ClientActivityAdmin(admin.ModelAdmin):
-    list_display = ("created_at", "client", "event_type", "summary", "actor")
+    list_display = ("created_at", "client", "event_type", "summary", "actor_display")
     list_filter = ("event_type", "created_at")
-    search_fields = ("summary", "details", "client__first_name", "client__last_name", "actor__email")
+    search_fields = ("summary", "details", "client__first_name", "client__last_name", "actor__email", "actor_label")
     autocomplete_fields = ("client", "actor", "document", "payment", "task")
-    readonly_fields = ("created_at",)
+    # actor_label is a write-once identity snapshot; keep it read-only.
+    readonly_fields = ("created_at", "actor_label")
+
+    @admin.display(description="Actor")
+    def actor_display(self, obj: ClientActivity) -> str:
+        return obj.actor_display
 
 
 @admin.register(ConsentRecord)
@@ -683,11 +688,37 @@ class ConsentRecordAdmin(admin.ModelAdmin):
 
 @admin.register(StaffAuditEvent)
 class StaffAuditEventAdmin(admin.ModelAdmin):
-    list_display = ("created_at", "event_type", "target", "actor", "summary")
+    list_display = ("created_at", "event_type", "target_display", "actor_display", "summary")
     list_filter = ("event_type", "created_at")
-    search_fields = ("summary", "target__email", "actor__email")
-    autocomplete_fields = ("target", "actor")
-    readonly_fields = ("created_at",)
+    search_fields = ("summary", "target__email", "actor__email", "target_label", "actor_label")
+    readonly_fields = (
+        "created_at",
+        "actor",
+        "actor_label",
+        "target",
+        "target_label",
+        "event_type",
+        "summary",
+        "metadata",
+        "is_demo_data",
+    )
+
+    @admin.display(description="Target")
+    def target_display(self, obj: StaffAuditEvent) -> str:
+        return obj.target_display
+
+    @admin.display(description="Actor")
+    def actor_display(self, obj: StaffAuditEvent) -> str:
+        return obj.actor_display
+
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        return False
+
+    def has_change_permission(self, request: HttpRequest, obj: Any = None) -> bool:
+        return False
+
+    def has_delete_permission(self, request: HttpRequest, obj: Any = None) -> bool:
+        return False
 
 
 @admin.register(ClientOnboardingSession)

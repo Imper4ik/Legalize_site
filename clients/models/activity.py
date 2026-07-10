@@ -56,6 +56,15 @@ class ClientActivity(models.Model):
         related_name="client_activities",
         verbose_name=_("Сотрудник"),
     )
+    # Immutable snapshot of who performed the action. The actor FK is SET_NULL so
+    # the audit row survives employee deletion/deactivation, but that alone loses
+    # "who did it"; this label preserves the actor identity independently.
+    actor_label = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name=_("Кто выполнил"),
+    )
     event_type = models.CharField(max_length=50, choices=EVENT_TYPE_CHOICES, verbose_name=_("Тип события"))
     summary = models.CharField(max_length=255, verbose_name=_("Краткое описание"))
     details = models.TextField(blank=True, verbose_name=_("Детали"))
@@ -103,8 +112,11 @@ class ClientActivity(models.Model):
 
     @property
     def actor_display(self) -> str:
-        if not self.actor:
-            return str(_("Система"))
+        if self.actor is None:
+            # Actor account was deleted (FK is SET_NULL): fall back to the
+            # write-once snapshot so the UI still shows who acted; only a truly
+            # system-initiated event (no actor, no snapshot) reads as "Система".
+            return self.actor_label or str(_("Система"))
         full_name = self.actor.get_full_name().strip()
         return full_name or getattr(self.actor, "email", str(self.actor))
 

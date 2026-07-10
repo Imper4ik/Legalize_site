@@ -61,10 +61,11 @@ def user_has_any_role(user: AbstractBaseUser | AnonymousUser | None, *role_names
     if not role_names:
         return bool(getattr(user, "is_staff", False))
 
-    groups = getattr(user, "groups", None)
-    if groups:
-        return bool(groups.filter(name__in=role_names).exists())
-    return False
+    # Use the request-memoized group-name set so repeated role checks on one
+    # page (navigation, guards, templatetags) do not each hit auth_group.
+    from clients.services.access import _user_group_names
+
+    return bool(_user_group_names(user) & frozenset(role_names))
 
 
 def ensure_predefined_roles() -> list[Group]:

@@ -1,24 +1,38 @@
 from __future__ import annotations
 
 import json
+import shutil
 from datetime import date
 from io import BytesIO
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template.loader import get_template
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
+from PIL import Image
 from reportlab.pdfgen import canvas  # type: ignore[import-untyped]
 
 from clients.constants import DocumentType
-from clients.models import Client, Document, DocumentProcessingJob, DocumentRequirement, EmployeePermission
+from clients.forms import DocumentUploadForm
+from clients.models import (
+    Client,
+    ClientActivity,
+    Document,
+    DocumentProcessingJob,
+    DocumentRequirement,
+    EmployeePermission,
+)
 from clients.services.document_workflow import confirm_wezwanie_document, upload_client_document
 from clients.services.roles import ensure_predefined_roles
 from clients.use_cases.documents import verify_all_client_documents
+
+
+TEST_MEDIA_ROOT = Path(__file__).resolve().parents[2] / "generated_media_test" / "document_upload_cleanup"
 
 
 def _pdf_upload(name: str, text: str = "test document") -> SimpleUploadedFile:
@@ -29,9 +43,68 @@ def _pdf_upload(name: str, text: str = "test document") -> SimpleUploadedFile:
     return SimpleUploadedFile(name, buffer.getvalue(), content_type="application/pdf")
 
 
+def _png_upload(name: str) -> SimpleUploadedFile:
+    buffer = BytesIO()
+    image = Image.new("RGB", (2, 2), "white")
+    image.save(buffer, format="PNG")
+    return SimpleUploadedFile(name, buffer.getvalue(), content_type="image/png")
+
+
 def _assign_role(user, role_name: str = "Staff") -> None:
     ensure_predefined_roles()
     user.groups.add(Group.objects.get(name=role_name))
+
+
+@override_settings(MEDIA_ROOT=TEST_MEDIA_ROOT)
+class DocumentUploadCleanupTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.staff = user_model.objects.create_user(email="cleanup-regression@example.com", password="pass", is_staff=True)
+        self.client_record = Client.objects.create(
+            first_name="Anna",
+            last_name="Cleanup",
+            citizenship="PL",
+            phone="+48123123124",
+            email="anna-cleanup-regression@example.com",
+            application_purpose="work",
+        )
+
+    def tearDown(self):
+        shutil.rmtree(TEST_MEDIA_ROOT, ignore_errors=True)
+        super().tearDown()
+
+    def test_uncommitted_pending_document_file_is_not_deleted_after_early_save_failure(self):
+        TEST_MEDIA_ROOT.mkdir(parents=True, exist_ok=True)
+        storage = Document._meta.get_field("file").storage
+        existing_name = "early-failure.png"
+        if storage.exists(existing_name):
+            storage.delete(existing_name)
+        storage.save(existing_name, ContentFile(b"existing file"))
+
+        form = DocumentUploadForm(
+            {"expiry_date": ""},
+            {"file": _png_upload(existing_name)},
+            doc_type=DocumentType.PASSPORT.value,
+            client=self.client_record,
+        )
+        self.assertTrue(form.is_valid(), form.errors.as_json())
+        pending_document = form.save(commit=False)
+        self.assertEqual(pending_document.file.name, existing_name)
+        self.assertFalse(getattr(pending_document.file, "_committed", True))
+
+        with patch.object(Document, "save", side_effect=RuntimeError("early failure")):
+            with self.assertRaises(RuntimeError):
+                upload_client_document(
+                    client=self.client_record,
+                    doc_type=DocumentType.PASSPORT.value,
+                    uploaded_document=pending_document,
+                    actor=self.staff,
+                    parse_requested=False,
+                )
+
+        self.assertTrue(storage.exists(existing_name))
+        with storage.open(existing_name, "rb") as fh:
+            self.assertEqual(fh.read(), b"existing file")
 
 
 class DocumentOCRRegressionTests(TestCase):

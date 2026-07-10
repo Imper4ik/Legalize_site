@@ -191,7 +191,8 @@ class OnboardingStartContactTests(TestCase):
         self.assertTrue(d1.pk and d2.pk)
 
     def test_expired_document_offers_resupply(self):
-        from datetime import date, timedelta as _td
+        from datetime import date
+        from datetime import timedelta as _td
 
         from django.utils import translation
 

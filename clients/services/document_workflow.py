@@ -1232,14 +1232,39 @@ def _save_client_document(
         uploaded_document.case = case
     # Inherit the data-classification flags from the client: a document uploaded
     # for a Test Center/Demo client via a view (staff UI or client portal) must
-    # never be treated as production data — otherwise cleanup leaves it behind
+    # never be treated as production data; otherwise cleanup leaves it behind
     # (Case is PROTECT-referenced) and metrics count it as real.
     if client.is_test_data:
         uploaded_document.is_test_data = True
     if client.is_demo_data:
         uploaded_document.is_demo_data = True
-    uploaded_document.save()
+    try:
+        uploaded_document.save()
+    except Exception:
+        _cleanup_saved_document_files([uploaded_document])
+        raise
     return uploaded_document
+
+
+def _cleanup_saved_document_files(pending_documents: list[Document]) -> None:
+    for pending_document in pending_documents:
+        saved_file = getattr(pending_document, "file", None)
+        if not saved_file or not getattr(saved_file, "_committed", False):
+            continue
+
+        file_name = getattr(saved_file, "name", "")
+        if not file_name:
+            continue
+
+        try:
+            if saved_file.storage.exists(file_name):
+                saved_file.delete(save=False)
+        except Exception:
+            logger.warning(
+                "Failed to clean up uploaded document file after save failure: document_id=%s",
+                getattr(pending_document, "pk", None),
+                exc_info=True,
+            )
 
 
 def _process_upload_job_inline(

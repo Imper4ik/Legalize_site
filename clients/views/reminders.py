@@ -243,6 +243,13 @@ class PaymentReminderListView(ReminderListView):
     # page. Paginate to bound the query volume and page weight.
     paginate_by = 50
 
+    def get_queryset(self) -> Any:
+        # display_title / display_notes for a payment reminder read the related
+        # payment (amount_due, service description) on every row. Join it up
+        # front so the page stays at a constant query count regardless of how
+        # many reminders are shown, instead of one extra query per row.
+        return super().get_queryset().select_related("payment")
+
 
 UPDATE_REMINDERS_LOCK_KEY = "manual_update_reminders_lock"
 

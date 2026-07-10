@@ -14,6 +14,25 @@ OFFICE_WIDE_ACCESS_ROLES = ("Admin", "Manager", "Staff")
 PRIVILEGED_INTERNAL_ROLES = OFFICE_WIDE_ACCESS_ROLES
 
 
+def _user_group_names(user: AbstractBaseUser | AnonymousUser) -> frozenset[str]:
+    """Group names for ``user``, memoized on the user object for the request.
+
+    Role checks run many times per request (navigation, context processors,
+    per-view guards). Without this cache each call issues a fresh ``auth_group``
+    query, which on list pages showed up as dozens of identical lookups.
+    """
+    cached = getattr(user, "_cached_group_names", None)
+    if cached is not None:
+        return cached
+    groups = getattr(user, "groups", None)
+    names: frozenset[str] = frozenset(groups.values_list("name", flat=True)) if groups is not None else frozenset()
+    try:
+        user._cached_group_names = names  # type: ignore[union-attr]
+    except (AttributeError, TypeError):  # pragma: no cover - exotic user objects
+        pass
+    return names
+
+
 def is_internal_staff_user(user: AbstractBaseUser | AnonymousUser | None) -> bool:
     if user is None:
         return False
@@ -26,11 +45,7 @@ def is_internal_staff_user(user: AbstractBaseUser | AnonymousUser | None) -> boo
     if getattr(user, "is_superuser", False):
         return True
 
-    # Check groups if it's a real user object
-    groups = getattr(user, "groups", None)
-    if groups:
-        return bool(groups.filter(name__in=ADMIN_PANEL_ALLOWED_ROLES).exists())
-    return False
+    return bool(_user_group_names(user) & frozenset(ADMIN_PANEL_ALLOWED_ROLES))
 
 
 def user_has_internal_role(user: AbstractBaseUser | AnonymousUser | None, *role_names: str) -> bool:
@@ -43,10 +58,7 @@ def user_has_internal_role(user: AbstractBaseUser | AnonymousUser | None, *role_
     if not role_names:
         return True
 
-    groups = getattr(user, "groups", None)
-    if groups:
-        return bool(groups.filter(name__in=role_names).exists())
-    return False
+    return bool(_user_group_names(user) & frozenset(role_names))
 
 
 def can_access_all_clients(user: AbstractBaseUser | AnonymousUser | None) -> bool:

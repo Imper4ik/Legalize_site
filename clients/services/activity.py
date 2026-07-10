@@ -19,6 +19,29 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+
+def describe_actor(user: AbstractBaseUser | AnonymousUser | None) -> str:
+    """Human-readable snapshot of the actor for the audit trail.
+
+    Stored alongside the actor FK so the identity survives even after the
+    employee is deleted or deactivated (the FK is SET_NULL).
+    """
+    if user is None or not getattr(user, "is_authenticated", False):
+        return ""
+    email = (getattr(user, "email", "") or "").strip()
+    name = ""
+    get_full_name = getattr(user, "get_full_name", None)
+    if callable(get_full_name):
+        name = (get_full_name() or "").strip()
+    if name and email:
+        return f"{name} <{email}>"
+    if email:
+        return email
+    if name:
+        return name
+    return f"user#{getattr(user, 'pk', '')}"
+
+
 SAFE_FIELD_NAMES = {
     "status", "workflow_stage", "application_purpose", "application_type", "basis_of_stay",
     "opened_at", "submission_date", "fingerprints_date", "fingerprints_time", "fingerprints_location",
@@ -136,6 +159,7 @@ def log_client_activity(
     real_actor = actor if actor and actor.is_authenticated else None
 
     resolved_case = case
+    actor_label = describe_actor(real_actor)
     if resolved_case is None:
         for source in (document, payment, task):
             source_case = getattr(source, "case", None) if source is not None else None
@@ -147,6 +171,7 @@ def log_client_activity(
         client=client,
         case=resolved_case,
         actor=cast(Any, real_actor),
+        actor_label=actor_label,
         event_type=event_type,
         summary=summary,
         details=details,

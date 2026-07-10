@@ -8,6 +8,7 @@ from clients.views.checklist_views import *  # noqa: F403
 from clients.views.client_crud import *  # noqa: F403
 from clients.views.demo_center import democenter_view
 from clients.views.documents import *  # noqa: F403
+from clients.views.document_upload_safe import add_document
 from clients.views.emails import *  # noqa: F403
 from clients.views.export import *  # noqa: F403
 from clients.views.family import FamilyDashboardView

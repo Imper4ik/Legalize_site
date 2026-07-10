@@ -166,21 +166,51 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
         upload_results = []
         success_count = 0
         if not errors and validated_forms:
-            with transaction.atomic():
-                for form in validated_forms:
-                    result = upload_client_document(
-                        client=client,
-                        doc_type=doc_type,
-                        uploaded_document=form.save(commit=False),
-                        actor=request.user,
-                        case=case,
-                        parse_requested=parse_requested,
-                        parser=parse_wezwanie,
-                        send_missing_email=send_missing_documents_email,
-                        send_appointment_email=send_appointment_notification_email,
-                    )
-                    upload_results.append(result)
-                    success_count += 1
+            # A DB rollback does not remove files already written to storage
+            # (django-cleanup only fires on model delete). Keep a reference to
+            # every Document instance passed into the workflow *before* the call,
+            # because upload_client_document writes the physical file during
+            # document.save() and may then raise (auto-task, activity log, OCR
+            # enqueue) before returning. On failure we delete the file of any of
+            # those documents that actually reached storage, so a failed batch
+            # leaves neither DB rows nor orphaned media.
+            pending_documents: list[Document] = []
+            try:
+                with transaction.atomic():
+                    for form in validated_forms:
+                        pending_document = form.save(commit=False)
+                        pending_documents.append(pending_document)
+                        result = upload_client_document(
+                            client=client,
+                            doc_type=doc_type,
+                            uploaded_document=pending_document,
+                            actor=request.user,
+                            case=case,
+                            parse_requested=parse_requested,
+                            parser=parse_wezwanie,
+                            send_missing_email=send_missing_documents_email,
+                            send_appointment_email=send_appointment_notification_email,
+                        )
+                        upload_results.append(result)
+                        success_count += 1
+            except Exception:
+                for pending_document in pending_documents:
+                    saved_file = getattr(pending_document, "file", None)
+                    if not saved_file:
+                        continue
+                    name = getattr(saved_file, "name", "")
+                    if not name:
+                        continue
+                    try:
+                        if saved_file.storage.exists(name):
+                            saved_file.storage.delete(name)
+                    except Exception:  # pragma: no cover - best-effort cleanup
+                        logger.warning(
+                            "Failed to remove orphaned upload after rollback: client_id=%s name=%s",
+                            client.pk,
+                            name,
+                        )
+                raise
 
         if success_count > 0 and success_count == len(files):
             custom_requirement = ClientDocumentRequirement.objects.filter(
