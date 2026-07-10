@@ -691,9 +691,17 @@ class StaffAuditEventAdmin(admin.ModelAdmin):
     list_display = ("created_at", "event_type", "target_display", "actor_display", "summary")
     list_filter = ("event_type", "created_at")
     search_fields = ("summary", "target__email", "actor__email", "target_label", "actor_label")
-    autocomplete_fields = ("target", "actor")
-    # Snapshots are write-once identity records and must not be edited by hand.
-    readonly_fields = ("created_at", "actor_label", "target_label")
+    readonly_fields = (
+        "created_at",
+        "actor",
+        "actor_label",
+        "target",
+        "target_label",
+        "event_type",
+        "summary",
+        "metadata",
+        "is_demo_data",
+    )
 
     @admin.display(description="Target")
     def target_display(self, obj: StaffAuditEvent) -> str:
@@ -702,6 +710,15 @@ class StaffAuditEventAdmin(admin.ModelAdmin):
     @admin.display(description="Actor")
     def actor_display(self, obj: StaffAuditEvent) -> str:
         return obj.actor_display
+
+    def has_add_permission(self, request: HttpRequest) -> bool:
+        return False
+
+    def has_change_permission(self, request: HttpRequest, obj: Any = None) -> bool:
+        return False
+
+    def has_delete_permission(self, request: HttpRequest, obj: Any = None) -> bool:
+        return False
 
 
 @admin.register(ClientOnboardingSession)

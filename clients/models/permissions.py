@@ -94,11 +94,11 @@ class StaffAuditEvent(models.Model):
 
     @property
     def actor_display(self) -> str:
-        return str(self.actor) if self.actor_id else (self.actor_label or "—")
+        return self.actor_label or (str(self.actor) if self.actor_id else "") or "—"
 
     @property
     def target_display(self) -> str:
-        return str(self.target) if self.target_id else (self.target_label or "—")
+        return self.target_label or (str(self.target) if self.target_id else "") or "—"
 
     def __str__(self) -> str:
         return f"{self.event_type} target={self.target_display}"
