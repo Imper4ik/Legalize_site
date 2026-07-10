@@ -11,7 +11,7 @@ from datetime import date
 from django.test import TestCase, override_settings
 
 from clients.constants import DocumentType
-from clients.models import Case, Reminder, StaffTask
+from clients.models import Case, MOSApplicationData, Reminder, StaffTask
 from clients.services.document_workflow import upload_client_document
 from clients.testing.factories import create_test_client, create_test_document, create_test_user
 
@@ -81,3 +81,50 @@ class CaseIsolationDocumentTests(TestCase):
         self.assertEqual(Reminder.objects.filter(case=self.study_case).count(), study_reminders_before)
         # Any created task is scoped to the work case.
         self.assertFalse(StaffTask.objects.filter(case=self.study_case).exists())
+
+
+class LegalStayReminderCaseScopingTests(TestCase):
+    def setUp(self) -> None:
+        self.client_obj = create_test_client(purpose="work")
+        self.work_case = self.client_obj.cases.get()
+        self.study_case = Case.objects.create(
+            client=self.client_obj,
+            application_purpose="study",
+            workflow_stage="document_collection",
+            status="active",
+        )
+        self.work_mos, _ = MOSApplicationData.objects.get_or_create(
+            client=self.client_obj, case=self.work_case
+        )
+        self.work_mos.legal_stay_until = date(2026, 7, 31)
+        self.work_mos.save(update_fields=["legal_stay_until"])
+        self.study_mos, _ = MOSApplicationData.objects.get_or_create(
+            client=self.client_obj, case=self.study_case
+        )
+        self.study_mos.legal_stay_until = date(2027, 1, 15)
+        self.study_mos.save(update_fields=["legal_stay_until"])
+
+    def _legal_stay_reminder(self, case: Case) -> Reminder:
+        return Reminder.objects.create(
+            client=self.client_obj,
+            case=case,
+            reminder_type="legal_stay",
+            due_date=date(2026, 7, 30),
+            title="Legal stay filing deadline",
+        )
+
+    def test_note_uses_own_case_mos_not_arbitrary(self) -> None:
+        reminder = self._legal_stay_reminder(self.work_case)
+        notes = reminder.display_notes
+        self.assertIn("31.07.2026", notes)      # work case's legal-stay date
+        self.assertNotIn("15.01.2027", notes)   # not the study case's
+
+    def test_legacy_null_case_on_multi_case_client_does_not_guess(self) -> None:
+        reminder = self._legal_stay_reminder(self.work_case)
+        # Simulate a legacy row that predates case-scoping.
+        Reminder.objects.filter(pk=reminder.pk).update(case=None)
+        reminder.refresh_from_db()
+        notes = reminder.display_notes
+        # Ambiguous (2 cases, no case on reminder): must not pick an arbitrary MOS.
+        self.assertNotIn("31.07.2026", notes)
+        self.assertNotIn("15.01.2027", notes)

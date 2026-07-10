@@ -97,10 +97,15 @@ class Reminder(models.Model):
                 # Scope to this reminder's own case: a multi-case client must not
                 # show another case's legal-stay date via an arbitrary .first().
                 mos = None
-                if self.case_id:
-                    mos = self.client.mos_applications.filter(case_id=self.case_id).first()
-                if mos is None and not self.case_id:
-                    mos = self.client.mos_applications.first()
+                case_id = self.case_id
+                if case_id is None:
+                    # Legacy reminder without a case is only unambiguous when the
+                    # client has exactly one case; with several we do not guess.
+                    case_ids = list(self.client.cases.values_list("id", flat=True))
+                    if len(case_ids) == 1:
+                        case_id = case_ids[0]
+                if case_id is not None:
+                    mos = self.client.mos_applications.filter(case_id=case_id).first()
                 if mos and mos.legal_stay_until:
                     stay_str = mos.legal_stay_until.strftime('%d.%m.%Y')
                     due_str = self.due_date.strftime('%d.%m.%Y') if self.due_date else ""
