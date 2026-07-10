@@ -21,7 +21,6 @@ from clients.constants import DocumentType
 from clients.forms import DocumentUploadForm
 from clients.models import (
     Client,
-    ClientActivity,
     Document,
     DocumentProcessingJob,
     DocumentRequirement,
@@ -30,7 +29,6 @@ from clients.models import (
 from clients.services.document_workflow import confirm_wezwanie_document, upload_client_document
 from clients.services.roles import ensure_predefined_roles
 from clients.use_cases.documents import verify_all_client_documents
-
 
 TEST_MEDIA_ROOT = Path(__file__).resolve().parents[2] / "generated_media_test" / "document_upload_cleanup"
 
