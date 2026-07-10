@@ -1,3 +1,4 @@
+from clients.views import document_upload_safe as _document_upload_safe
 from clients.views.admin_dashboard import AdminDashboardView
 from clients.views.admin_mos_review import admin_mos_review
 from clients.views.admin_settings import *  # noqa: F403
@@ -7,7 +8,6 @@ from clients.views.cases import *  # noqa: F403
 from clients.views.checklist_views import *  # noqa: F403
 from clients.views.client_crud import *  # noqa: F403
 from clients.views.demo_center import democenter_view
-from clients.views.document_upload_safe import add_document
 from clients.views.documents import *  # noqa: F403
 from clients.views.emails import *  # noqa: F403
 from clients.views.export import *  # noqa: F403
@@ -49,5 +49,10 @@ from clients.views.staff_views import *  # noqa: F403
 from clients.views.tasks import *  # noqa: F403
 from clients.views.testcenter import testcenter_view
 from clients.views.workday import WorkdayView
+
+# ``documents`` exports the legacy implementation via ``import *``. Assign the
+# hardened view after all imports so URL resolution always receives the safe
+# rollback implementation while keeping imports deterministically sorted.
+add_document = _document_upload_safe.add_document
 
 __all__ = [name for name in globals() if not name.startswith('_')]
