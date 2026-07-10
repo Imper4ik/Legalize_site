@@ -75,18 +75,18 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
                 client=client,
                 case=case,
             )
-            errors = form.errors.get_json_data()
+            form_errors = form.errors.get_json_data()
             documents_module.logger.warning(
                 "Document upload rejected: client_id=%s doc_type=%s errors=%s files=%s",
                 client.pk,
                 doc_type,
-                errors,
+                form_errors,
                 documents_module._uploaded_file_log_payload(files),
             )
             if helper.expects_json:
                 return helper.error(
                     message=str(_("Проверьте правильность заполнения формы.")),
-                    errors=errors,
+                    errors=form_errors,
                 )
             return redirect("clients:client_detail", pk=client.id)
 
