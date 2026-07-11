@@ -156,6 +156,12 @@
                   <span class="text-nowrap">
                     {% if doc.file %}<a href="{% url 'clients:document_preview' doc.id %}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="{% translate 'Просмотр' %}"><i class="bi bi-eye"></i></a>
                     <a href="{% url 'clients:document_download' doc.id %}" class="btn btn-sm btn-outline-secondary" title="{% translate 'Скачать' %}"><i class="bi bi-download"></i></a>{% endif %}
+                    {% if user_can_delete_documents %}
+                    <form method="post" action="{% url 'clients:document_delete' pk=doc.id %}" class="d-inline m-0 js-confirm-delete-doc">
+                      {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                      <button type="submit" class="btn btn-sm btn-outline-danger" title="{% translate 'Удалить' %}" aria-label="{% translate 'Удалить' %}"><i class="bi bi-trash"></i></button>
+                    </form>
+                    {% endif %}
                   </span>
                 </li>
                 {% endfor %}
@@ -164,6 +170,23 @@
               <p class="text-muted mb-0">{% translate "Покрыт поданным Wnioskiem." %}</p>
               {% else %}
               <p class="text-danger mb-0"><i class="bi bi-exclamation-triangle"></i> {% translate "Документ ещё не загружен." %}</p>
+              {% endif %}
+              {% if not item.is_custom_submission %}
+              <form method="post" action="{% url 'clients:add_document' client_id=case.client.pk doc_type=item.code %}" enctype="multipart/form-data" class="mt-3 border-top pt-3">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <input type="hidden" name="case_uuid" value="{{ case.uuid }}">
+                <div class="input-group input-group-sm">
+                  <input type="file" name="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.webp" required multiple aria-label="{% translate 'Файл' %}">
+                  {% if item.code == 'zus_rca_or_insurance' %}
+                  <input type="date" name="zus_period_month" class="form-control" style="max-width:160px;" title="{% translate 'ZUS RCA — месяц отчёта' %}" aria-label="{% translate 'ZUS RCA — месяц отчёта' %}">
+                  {% endif %}
+                  <button type="submit" class="btn btn-primary"><i class="bi bi-upload me-1"></i>{% translate "Добавить файл" %}</button>
+                </div>
+                {% if item.code == 'zus_rca_or_insurance' %}
+                <div class="form-text">{% translate "Для ZUS RCA укажите месяц отчёта (для страхового полиса можно оставить пустым)." %}</div>
+                {% endif %}
+              </form>
               {% endif %}
             </div>
           </div>
@@ -314,6 +337,12 @@
 <script nonce="{{ request.csp_nonce }}">
   document.addEventListener('DOMContentLoaded', () => {
     if (typeof initSendEmailModal === 'function') { initSendEmailModal(); }
+    const confirmText = '{% translate "Удалить этот документ?" %}';
+    document.querySelectorAll('.js-confirm-delete-doc').forEach((form) => {
+      form.addEventListener('submit', (event) => {
+        if (!window.confirm(confirmText)) { event.preventDefault(); }
+      });
+    });
   });
 </script>
 {% endblock %}

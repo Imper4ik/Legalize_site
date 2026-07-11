@@ -41,7 +41,12 @@ from clients.use_cases.documents import (
     update_client_notes_for_client,
     verify_all_client_documents,
 )
-from clients.views.base import role_or_feature_required_view, role_required_view, staff_required_view
+from clients.views.base import (
+    role_or_feature_required_view,
+    role_required_view,
+    safe_redirect_target,
+    staff_required_view,
+)
 from legalize_site.utils.files import build_protected_file_response
 
 if TYPE_CHECKING:
@@ -344,7 +349,9 @@ def document_delete(request: HttpRequest, pk: int) -> HttpResponseBase:
     else:
         messages.warning(request, _("Удаление возможно только через кнопку."))
 
-    return redirect("clients:client_detail", pk=client_id)
+    return redirect(
+        safe_redirect_target(request) or reverse("clients:client_detail", kwargs={"pk": client_id})
+    )
 
 
 @role_or_feature_required_view("can_delete_documents", *DOCUMENT_DELETE_ROLES)

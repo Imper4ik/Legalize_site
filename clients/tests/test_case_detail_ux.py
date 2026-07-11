@@ -3,13 +3,26 @@ from __future__ import annotations
 import pytest
 from django.urls import reverse
 
-from clients.models import Client
+from io import BytesIO
+
+from django.core.files.uploadedfile import SimpleUploadedFile
+from reportlab.pdfgen import canvas  # type: ignore[import-untyped]
+
+from clients.models import Client, Document
 from clients.services.cases import create_case_for_client
 from clients.testing.factories import (
     TEST_USER_CREDENTIAL,
     create_test_document,
     create_test_user,
 )
+
+
+def _valid_pdf_upload(name: str = "upload.pdf") -> SimpleUploadedFile:
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer)
+    pdf.drawString(72, 720, "case upload test")
+    pdf.save()
+    return SimpleUploadedFile(name, buffer.getvalue(), content_type="application/pdf")
 
 
 @pytest.mark.django_db
@@ -79,6 +92,86 @@ def test_add_payment_returns_to_case_via_next(client):
 
     assert response.status_code == 302
     assert response.url == case_url
+
+
+@pytest.mark.django_db
+def test_case_detail_shows_document_add_and_delete_controls(client):
+    staff = create_test_user(role="Staff")
+    client.login(email=staff.email, password=TEST_USER_CREDENTIAL)
+
+    customer = Client.objects.create(first_name="Darya", last_name="A", citizenship="BY")
+    case = create_case_for_client(client=customer, actor=staff)
+    doc = create_test_document(client=customer, doc_type="passport", case=case)
+
+    response = client.get(reverse("clients:case_detail", kwargs={"pk": case.pk}))
+    body = response.content.decode()
+
+    assert response.status_code == 200
+    # Upload form posts to add_document for this case.
+    assert reverse("clients:add_document", kwargs={"client_id": customer.pk, "doc_type": "passport"}) in body
+    # Delete control is present for a Staff user (who can now delete documents).
+    assert reverse("clients:document_delete", kwargs={"pk": doc.id}) in body
+
+
+@pytest.mark.django_db
+def test_add_document_returns_to_case_via_next(client):
+    staff = create_test_user(role="Staff")
+    client.login(email=staff.email, password=TEST_USER_CREDENTIAL)
+
+    customer = Client.objects.create(first_name="Darya", last_name="A", citizenship="BY")
+    case = create_case_for_client(client=customer, actor=staff)
+    case_url = reverse("clients:case_detail", kwargs={"pk": case.pk})
+
+    response = client.post(
+        reverse("clients:add_document", kwargs={"client_id": customer.pk, "doc_type": "passport"}),
+        data={
+            "file": _valid_pdf_upload("passport-upload.pdf"),
+            "case_uuid": str(case.uuid),
+            "next": case_url,
+        },
+    )
+
+    assert response.status_code == 302
+    assert response.url == case_url
+    assert Document.objects.filter(client=customer, document_type="passport").exists()
+
+
+@pytest.mark.django_db
+def test_staff_delete_document_returns_to_case_via_next(client):
+    staff = create_test_user(role="Staff")
+    client.login(email=staff.email, password=TEST_USER_CREDENTIAL)
+
+    customer = Client.objects.create(first_name="Darya", last_name="A", citizenship="BY")
+    case = create_case_for_client(client=customer, actor=staff)
+    doc = create_test_document(client=customer, doc_type="passport", case=case)
+    case_url = reverse("clients:case_detail", kwargs={"pk": case.pk})
+
+    response = client.post(
+        reverse("clients:document_delete", kwargs={"pk": doc.id}),
+        data={"next": case_url},
+    )
+
+    assert response.status_code == 302
+    assert response.url == case_url
+    assert not Document.objects.filter(pk=doc.id).exists()
+
+
+@pytest.mark.django_db
+def test_document_delete_rejects_offsite_next(client):
+    staff = create_test_user(role="Staff")
+    client.login(email=staff.email, password=TEST_USER_CREDENTIAL)
+
+    customer = Client.objects.create(first_name="Darya", last_name="A", citizenship="BY")
+    case = create_case_for_client(client=customer, actor=staff)
+    doc = create_test_document(client=customer, doc_type="passport", case=case)
+
+    response = client.post(
+        reverse("clients:document_delete", kwargs={"pk": doc.id}),
+        data={"next": "https://evil.example.com/phish"},
+    )
+
+    assert response.status_code == 302
+    assert "evil.example.com" not in response.url
 
 
 @pytest.mark.django_db

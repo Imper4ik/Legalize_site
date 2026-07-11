@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from django.contrib import messages
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from clients.constants import DocumentType
@@ -20,7 +21,7 @@ from clients.services.notifications import (
 from clients.services.responses import ResponseHelper
 from clients.services.roles import DOCUMENT_EDIT_ROLES
 from clients.views import documents as documents_module
-from clients.views.base import role_required_view
+from clients.views.base import role_required_view, safe_redirect_target
 
 if TYPE_CHECKING:
     from django.http import HttpRequest
@@ -64,7 +65,9 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
             if helper.expects_json:
                 return helper.error(message=str(message))
             messages.error(request, message)
-            return redirect("clients:client_detail", pk=client.id)
+            return redirect(
+                safe_redirect_target(request) or reverse("clients:client_detail", kwargs={"pk": client.id})
+            )
 
         files = request.FILES.getlist("file")
         if not files:
@@ -88,7 +91,9 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
                     message=str(_("Проверьте правильность заполнения формы.")),
                     errors=form_errors,
                 )
-            return redirect("clients:client_detail", pk=client.id)
+            return redirect(
+                safe_redirect_target(request) or reverse("clients:client_detail", kwargs={"pk": client.id})
+            )
 
         if doc_type == DocumentType.ZUS_RCA_OR_INSURANCE.value and len(files) > 1:
             message = _("ZUS RCA can be uploaded only one month at a time.")
@@ -104,7 +109,9 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
                     errors={"file": [{"message": str(message)}]},
                 )
             messages.error(request, message)
-            return redirect("clients:client_detail", pk=client.id)
+            return redirect(
+                safe_redirect_target(request) or reverse("clients:client_detail", kwargs={"pk": client.id})
+            )
 
         validated_forms: list[DocumentUploadForm] = []
         errors: dict = {}
@@ -219,7 +226,9 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
                     else last_result.message
                 )
                 messages.success(request, message)
-            return redirect("clients:client_detail", pk=client.id)
+            return redirect(
+                safe_redirect_target(request) or reverse("clients:client_detail", kwargs={"pk": client.id})
+            )
 
         if helper.expects_json:
             return helper.error(
