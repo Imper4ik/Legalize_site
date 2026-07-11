@@ -277,7 +277,9 @@ class MyDataRightsTests(TestCase):
         self.assertIsNotNone(self.client_record.erasure_requested_at)
         self.assertTrue(
             StaffTask.objects.filter(
-                client=self.client_record, title__icontains="удаление"
+                client=self.client_record,
+                task_type="internal_note",
+                is_auto_created=True,
             ).exists()
         )
 
@@ -290,6 +292,10 @@ class MyDataRightsTests(TestCase):
         second_stamp = Client.objects.get(pk=self.client_record.pk).erasure_requested_at
         self.assertEqual(first_stamp, second_stamp)
         self.assertEqual(
-            StaffTask.objects.filter(client=self.client_record, title__icontains="удаление").count(),
+            StaffTask.objects.filter(
+                client=self.client_record,
+                task_type="internal_note",
+                is_auto_created=True,
+            ).count(),
             1,
         )
