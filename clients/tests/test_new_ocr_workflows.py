@@ -205,6 +205,52 @@ class NewOcrWorkflowsTests(TestCase):
 
         self.assertIsNone(parsed.insurance_code)
 
+    def test_zus_parser_extracts_period_from_real_rca_layout(self):
+        # Real ZUS RCA bank prints the period in the "Identyfikator raportu"
+        # field as "nr miesiac rok" (e.g. 01 05 2026), space-separated and
+        # without a "za miesiac" keyword.
+        text = (
+            "ZUS RCA\nImienny raport miesieczny o naleznych skladkach\n"
+            "III. Identyfikator raportu\n01 05 2026\nPlatnik: FIRMA"
+        )
+        with patch("clients.services.zus_parser.extract_text", return_value=text):
+            parsed = parse_zus_doc("fake-zus.pdf")
+        self.assertEqual(parsed.period_month, date(2026, 5, 1))
+
+    def test_zus_parser_extracts_period_from_labelled_month_year(self):
+        text = "ZUS RCA imienny raport miesieczny\nMiesiac 05 Rok 2026\nJan Kowalski"
+        with patch("clients.services.zus_parser.extract_text", return_value=text):
+            parsed = parse_zus_doc("fake-zus.pdf")
+        self.assertEqual(parsed.period_month, date(2026, 5, 1))
+
+    def test_zus_rca_not_misdetected_as_rsa(self):
+        # The official ZUS RCA title contains "wyplaconych swiadczeniach", so a
+        # "swiadczeniach" keyword must not by itself classify the form as RSA.
+        text = (
+            "ZUS P RCA\nImienny raport miesieczny o naleznych skladkach "
+            "i wyplaconych swiadczeniach\nUbezpieczenia spoleczne\n"
+            "Ubezpieczenie zdrowotne\nAfanasenka Darya"
+        )
+        with patch("clients.services.zus_parser.extract_text", return_value=text):
+            parsed = parse_zus_doc("fake-zus.pdf")
+        self.assertEqual(parsed.zus_form_type, "RCA")
+
+    def test_zus_rsa_still_detected_by_przerwach(self):
+        text = (
+            "ZUS RSA\nImienny raport miesieczny o wyplaconych swiadczeniach "
+            "i przerwach w oplacaniu skladek"
+        )
+        with patch("clients.services.zus_parser.extract_text", return_value=text):
+            parsed = parse_zus_doc("fake-zus.pdf")
+        self.assertEqual(parsed.zus_form_type, "RSA")
+
+    def test_zus_parser_ignores_print_date_as_period(self):
+        # A full print/upload date must not be mistaken for the reporting period.
+        text = "ZUS RCA\nData druku 25.05.2026\nJan Kowalski"
+        with patch("clients.services.zus_parser.extract_text", return_value=text):
+            parsed = parse_zus_doc("fake-zus.pdf")
+        self.assertIsNone(parsed.period_month)
+
     @patch("clients.services.zus_parser.parse_zus_doc")
     def test_zus_document_processing(self, parse_mock):
         # Upload a completed company doc first to have NIP in database
@@ -482,3 +528,52 @@ class NewOcrWorkflowsTests(TestCase):
         self.assertTrue(any("Client name not matched" in w for w in warnings))
         self.assertTrue(any("below the statutory minimum" in w for w in warnings))
         self.assertTrue(any("expired on" in w for w in warnings))
+
+    @patch("clients.services.zus_parser.parse_zus_doc")
+    @patch("clients.services.insurance_parser.parse_insurance_doc")
+    def test_zus_rca_without_month_is_not_treated_as_insurance(self, insurance_mock, zus_mock):
+        """A ZUS RCA uploaded to the combined slot without a manually selected month
+        is routed to the insurance parser, but must be re-detected as a ZUS form
+        and processed by the ZUS parser instead of producing insurance warnings."""
+        insurance_mock.return_value = InsuranceDocData(
+            text=(
+                "ZUS RCA\nImienny raport miesieczny o naleznych skladkach\n"
+                "Jan Kowalski\nKod tytulu ubezpieczenia: 01 10 00\nZa miesiac 05.2026"
+            ),
+            valid_until=None,
+            coverage_amount=None,
+            currency=None,
+            detected_names=["Jan Kowalski"],
+        )
+        zus_mock.return_value = ZusDocData(
+            text="ZUS RCA Imienny raport miesieczny",
+            employer_nip=None,
+            insurance_code="011000",
+            period_month=date(2026, 5, 1),
+            detected_names=["Jan Kowalski"],
+            zus_form_type="RCA",
+        )
+
+        doc = Document.objects.create(
+            client=self.client_obj,
+            document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+            file=build_pdf_upload("zus_rca_no_month.pdf"),
+            ocr_status="pending",
+            zus_period_month=None,
+        )
+        DocumentProcessingJob.objects.create(
+            document=doc,
+            created_by=self.staff,
+            status=DocumentProcessingJob.STATUS_PENDING,
+            job_type=DocumentProcessingJob.JOB_TYPE_INSURANCE_OCR,
+        )
+
+        call_command("process_document_jobs")
+
+        doc.refresh_from_db()
+        # ZUS parser handled it: form type recorded, no bogus insurance warnings.
+        self.assertEqual(doc.parsed_data.get("zus_form_type"), "RCA")
+        zus_mock.assert_called_once()
+        warnings = doc.parsed_data.get("warnings", [])
+        self.assertFalse(any("insurance coverage" in w.lower() for w in warnings))
+        self.assertFalse(any("insurance expiration" in w.lower() for w in warnings))

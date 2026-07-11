@@ -82,7 +82,20 @@ def _detect_zus_form_type(text: str) -> str | None:
     if "wyrejestrowanie z ubezpieczen" in normalized:
         return "ZWUA"
     if "imienny raport miesieczny" in normalized:
-        if "swiadczeniach" in normalized or "przerwach" in normalized:
+        # The three monthly reports share the "imienny raport miesieczny" opening,
+        # so disambiguate by the distinctive part of each official title:
+        #   RCA -> "...o naleznych skladkach i wyplaconych swiadczeniach"
+        #   RZA -> "...o naleznych skladkach na ubezpieczenie zdrowotne"
+        #   RSA -> "...o wyplaconych swiadczeniach i przerwach w oplacaniu skladek"
+        # "swiadczeniach" alone is NOT an RSA signal because RCA's title contains
+        # it too; only "przerwach" (or an explicit ZUS RSA marker) means RSA.
+        if re.search(r"\bZUS\s+(?:[A-Z]\s+)?RSA\b", upper) or "przerwach" in normalized:
+            return "RSA"
+        if "naleznych skladkach" in normalized:
+            if "zdrowotne" in normalized and "spoleczne" not in normalized:
+                return "RZA"
+            return "RCA"
+        if "swiadczeniach" in normalized:
             return "RSA"
         if "zdrowotne" in normalized and "spoleczne" not in normalized:
             return "RZA"
@@ -165,6 +178,12 @@ def _find_zus_period_month(text: str) -> date | None:
     contextual_patterns = [
         rf"{context}[^\d]{{0,50}}{month}\s*[./\-\s]+{year}",
         rf"{context}[^\d]{{0,50}}{year}\s*[./\-\s]+{month}",
+        # Real ZUS RCA/DRA layout: the reporting period is printed in the
+        # "Identyfikator raportu/deklaracji" field as "nr miesiac rok",
+        # e.g. "01 05 2026" (space-separated, no za miesiac keyword).
+        rf"identyfikator[^\d]{{0,40}}(?:raportu|deklaracji)[^\d]{{0,30}}\d{{2}}[.\-\s]+{month}[.\-\s]+{year}",
+        # Labelled month/year fields: "Miesiac 05 ... Rok 2026".
+        rf"miesiac[^\d]{{0,20}}{month}[^\d]{{0,20}}rok[^\d]{{0,20}}{year}",
     ]
     for pattern in contextual_patterns:
         match = re.search(pattern, normalized, flags=re.IGNORECASE)

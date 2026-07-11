@@ -1160,6 +1160,22 @@ def _process_insurance_doc_job_internal(
             error_message=str(_("Could not extract any text from the insurance document.")),
         )
 
+    # The "ZUS RCA or insurance" slot routes to the insurance parser whenever the
+    # ZUS reporting month has not been selected manually. A ZUS RCA (or any other
+    # ZUS form) uploaded without a month would otherwise be verified as a private
+    # insurance policy and produce misleading "missing coverage/expiry" warnings.
+    # Re-route to the ZUS parser when the OCR text clearly identifies a ZUS form.
+    if job.document.document_type == DocumentType.ZUS_RCA_OR_INSURANCE.value:
+        from clients.services.zus_parser import _detect_zus_form_type
+
+        if _detect_zus_form_type(parsed.text):
+            logger.info(
+                "Re-routing ZUS_RCA_OR_INSURANCE job %s from insurance to ZUS parsing "
+                "(detected ZUS form in OCR text).",
+                job.id,
+            )
+            return _process_zus_doc_job_internal(job, source_file_name, document_file)
+
     client = job.document.client
     warnings = []
 
