@@ -147,7 +147,7 @@
                         </label>
                         <div class="input-group">
                             {{ form.legal_basis_end_date }}
-                            <button class="btn btn-outline-secondary" type="button" id="toggle_legal_basis_end_date"><i class="bi bi-calendar3"></i></button>
+                            <button class="btn btn-outline-secondary" type="button" id="toggle_legal_basis_end_date" aria-label="{% trans 'Открыть календарь' %}" title="{% trans 'Открыть календарь' %}"><i class="bi bi-calendar3" aria-hidden="true"></i></button>
                         </div>
                         {% for error in form.legal_basis_end_date.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
@@ -159,7 +159,7 @@
                         </label>
                         <div class="input-group">
                             {{ form.submission_date }}
-                            <button class="btn btn-outline-secondary" type="button" id="toggle_submission_date"><i class="bi bi-calendar3"></i></button>
+                            <button class="btn btn-outline-secondary" type="button" id="toggle_submission_date" aria-label="{% trans 'Открыть календарь' %}" title="{% trans 'Открыть календарь' %}"><i class="bi bi-calendar3" aria-hidden="true"></i></button>
                         </div>
                         {% for error in form.submission_date.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
@@ -172,7 +172,7 @@
                         </label>
                         <div class="input-group">
                             {{ form.fingerprints_date }}
-                            <button class="btn btn-outline-secondary" type="button" id="toggle_fingerprints_date"><i class="bi bi-calendar3"></i></button>
+                            <button class="btn btn-outline-secondary" type="button" id="toggle_fingerprints_date" aria-label="{% trans 'Открыть календарь' %}" title="{% trans 'Открыть календарь' %}"><i class="bi bi-calendar3" aria-hidden="true"></i></button>
                         </div>
                         {% for error in form.fingerprints_date.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
                     </div>
