@@ -68,16 +68,16 @@
     <div class="mb-4">
         <h5>{% trans "Адрес постоянного проживания на родине" %}</h5>
         <div class="mb-3">
-            <label class="form-label fw-bold">{% trans "Страна" %}</label>
-            <input type="text" name="home_country" class="form-control" value="{{ mos_data.address_data.home_country|default:'' }}" required>
+            <label class="form-label fw-bold" for="home_country">{% trans "Страна" %}</label>
+            <input type="text" id="home_country" name="home_country" class="form-control" value="{{ mos_data.address_data.home_country|default:'' }}" required>
         </div>
         <div class="mb-3">
-            <label class="form-label fw-bold">{% trans "Город" %}</label>
-            <input type="text" name="home_city" class="form-control" value="{{ mos_data.address_data.home_city|default:'' }}" required>
+            <label class="form-label fw-bold" for="home_city">{% trans "Город" %}</label>
+            <input type="text" id="home_city" name="home_city" class="form-control" value="{{ mos_data.address_data.home_city|default:'' }}" required>
         </div>
         <div class="mb-3">
-            <label class="form-label fw-bold">{% trans "Улица, дом, квартира" %}</label>
-            <input type="text" name="home_street" class="form-control" value="{{ mos_data.address_data.home_street|default:'' }}" required>
+            <label class="form-label fw-bold" for="home_street">{% trans "Улица, дом, квартира" %}</label>
+            <input type="text" id="home_street" name="home_street" class="form-control" value="{{ mos_data.address_data.home_street|default:'' }}" required>
         </div>
     </div>
 
