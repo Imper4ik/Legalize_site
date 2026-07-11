@@ -405,7 +405,9 @@ def toggle_document_verification(request: HttpRequest, doc_id: int) -> HttpRespo
             request,
             _("Статус изменен: %(status)s.") % {"status": status} + str(message_suffix),
         )
-    return redirect("clients:client_detail", pk=document.client.id)
+    return redirect(
+        safe_redirect_target(request) or reverse("clients:client_detail", kwargs={"pk": document.client.id})
+    )
 
 
 @role_required_view(*DOCUMENT_EDIT_ROLES)

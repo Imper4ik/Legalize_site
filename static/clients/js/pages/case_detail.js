@@ -35,4 +35,39 @@
       new bootstrap.Modal(document.getElementById("caseEditPaymentModal")).show();
     });
   });
+
+  // Upload control: the visible button opens the hidden file picker; selecting
+  // a file submits the form immediately, so it behaves like the other row
+  // action buttons (no separate file/date bar). OCR determines the ZUS month.
+  document.querySelectorAll(".js-case-upload-trigger").forEach(function (btn) {
+    var form = btn.closest(".js-case-upload-form");
+    if (!form) return;
+    var input = form.querySelector(".js-case-upload-input");
+    if (!input) return;
+    btn.addEventListener("click", function () { input.click(); });
+    input.addEventListener("change", function () {
+      if (input.files && input.files.length > 0) {
+        if (typeof form.requestSubmit === "function") { form.requestSubmit(); }
+        else { form.submit(); }
+      }
+    });
+  });
+
+  // Keep the active tab across reloads and post-action redirects by mirroring it
+  // in the URL hash. Without this a refresh (or an upload/delete redirect) always
+  // snapped back to the Overview tab.
+  var tabButtons = document.querySelectorAll('#caseTabs button[data-bs-toggle="tab"]');
+  if (tabButtons.length && window.bootstrap && bootstrap.Tab) {
+    var hash = window.location.hash;
+    if (hash) {
+      var target = document.querySelector('#caseTabs button[data-bs-target="' + hash + '"]');
+      if (target) { bootstrap.Tab.getOrCreateInstance(target).show(); }
+    }
+    tabButtons.forEach(function (btn) {
+      btn.addEventListener("shown.bs.tab", function (event) {
+        var id = event.target.getAttribute("data-bs-target");
+        if (id) { history.replaceState(null, "", id); }
+      });
+    });
+  }
 })();

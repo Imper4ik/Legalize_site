@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Legalize Site\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-12 00:58+0200\n"
+"POT-Creation-Date: 2026-07-12 01:09+0200\n"
 "PO-Revision-Date: 2026-07-10 23:42+0200\n"
 "Last-Translator: Legalize Site Team\n"
 "Language-Team: Polish\n"
@@ -728,7 +728,7 @@ msgstr "Numer sprawy"
 
 #: clients/models/_client_health.py:604
 #: clients/templates/clients/partials/client_overview.html:10
-#: clients/views/client_crud.py:273 clients/views/documents.py:529
+#: clients/views/client_crud.py:273 clients/views/documents.py:531
 msgid "Не указан"
 msgstr "Nie podano"
 
@@ -1715,7 +1715,7 @@ msgid "Тип документа"
 msgstr "Typ dokumentu"
 
 #: clients/models/document.py:181
-#: clients/templates/clients/case_detail.html:183
+#: clients/templates/clients/case_detail.html:184
 #: clients/templates/clients/onboarding/start.html:566
 #: clients/templates/clients/onboarding/start.html:607
 #: clients/templates/clients/onboarding/start_contact.html:980
@@ -3164,6 +3164,7 @@ msgid "Автоматическая задача"
 msgstr "Zadanie automatyczne"
 
 #: clients/services/workday.py:66
+#: clients/templates/clients/case_detail.html:161
 #: clients/templates/clients/partials/document_checklist.html:374
 #: clients/templates/clients/partials/document_checklist.html:377
 #: clients/views/documents.py:398
@@ -4281,7 +4282,13 @@ msgstr "Podgląd"
 msgid "Скачать"
 msgstr "Pobierz"
 
-#: clients/templates/clients/case_detail.html:162
+#: clients/templates/clients/case_detail.html:161
+#: clients/templates/clients/partials/document_checklist.html:374
+#: clients/views/documents.py:398
+msgid "Снять отметку"
+msgstr "Cofnij weryfikację"
+
+#: clients/templates/clients/case_detail.html:166
 #: clients/templates/clients/clients_list.html:305
 #: clients/templates/clients/clients_list.html:307
 #: clients/templates/clients/document_checklist_manage.html:100
@@ -4297,23 +4304,16 @@ msgstr "Pobierz"
 msgid "Удалить"
 msgstr "Usuń"
 
-#: clients/templates/clients/case_detail.html:170
+#: clients/templates/clients/case_detail.html:174
 msgid "Покрыт поданным Wnioskiem."
 msgstr "Pokryty złożonym wnioskiem."
 
-#: clients/templates/clients/case_detail.html:172
+#: clients/templates/clients/case_detail.html:176
 msgid "Документ ещё не загружен."
 msgstr "Dokument nie został jeszcze przesłany."
 
-#: clients/templates/clients/case_detail.html:180
-msgid "Для ZUS RCA укажите месяц отчёта (для страхового полиса можно оставить пустым)."
-msgstr "W przypadku ZUS RCA podaj miesiąc sprawozdawczy (dla polisy ubezpieczeniowej pole można pozostawić puste)."
-
 #: clients/templates/clients/case_detail.html:185
-msgid "ZUS RCA — месяц отчёта"
-msgstr "ZUS RCA — miesiąc sprawozdawczy"
-
-#: clients/templates/clients/case_detail.html:187
+#: clients/templates/clients/case_detail.html:186
 msgid "Добавить файл"
 msgstr "Dodaj plik"
 
@@ -4653,7 +4653,7 @@ msgid "Подтверждено документов:"
 msgstr "Potwierdzono dokumentów:"
 
 #: clients/templates/clients/client_detail.html:113
-#: clients/views/documents.py:432 clients/views/documents.py:444
+#: clients/views/documents.py:434 clients/views/documents.py:446
 msgid "Все активные документы уже были проверены."
 msgstr "Wszystkie aktywne dokumenty zostały już sprawdzone."
 
@@ -8671,11 +8671,6 @@ msgstr "Automatyczna archiwizacja podczas przesyłania nowego pliku"
 msgid "Сумма покрытия:"
 msgstr "Kwota opłaty"
 
-#: clients/templates/clients/partials/document_checklist.html:374
-#: clients/views/documents.py:398
-msgid "Снять отметку"
-msgstr "Cofnij weryfikację"
-
 #: clients/templates/clients/partials/document_checklist.html:377
 msgid "Снять"
 msgstr "Startować"
@@ -9666,7 +9661,7 @@ msgstr "Nieznany tryb Test Center: %(mode)s"
 msgid "for"
 msgstr "dla"
 
-#: clients/tests/test_document_resilience.py:78 clients/views/documents.py:475
+#: clients/tests/test_document_resilience.py:78 clients/views/documents.py:477
 msgid "Файл отсутствует в хранилище. Загрузите файл заново."
 msgstr "Pliku brakuje w magazynie. Prześlij plik ponownie."
 
@@ -10125,32 +10120,32 @@ msgstr "Brakujące dokumenty w checkliście"
 msgid "Статус изменен: %(status)s."
 msgstr "Status zmieniony: %(status)s."
 
-#: clients/views/documents.py:430 clients/views/documents.py:439
+#: clients/views/documents.py:432 clients/views/documents.py:441
 #, python-format
 msgid "Подтверждено %(count)s документов, ожидающих проверки."
 msgstr "Potwierdzono %(count)s dokumentów oczekujących na sprawdzenie."
 
-#: clients/views/documents.py:441
+#: clients/views/documents.py:443
 msgid "Письмо с недостающими документами отправлено."
 msgstr "Brakujące dokumenty w checkliście"
 
-#: clients/views/documents.py:581
+#: clients/views/documents.py:583
 msgid "Document not found."
 msgstr "Wersje dokumentu"
 
-#: clients/views/documents.py:583
+#: clients/views/documents.py:585
 msgid "Document is not awaiting confirmation."
 msgstr "Dokumenty oczekują na weryfikację"
 
-#: clients/views/documents.py:617
+#: clients/views/documents.py:619
 msgid "Документ успешно отклонён."
 msgstr "Dokument został pomyślnie odrzucony."
 
-#: clients/views/documents.py:619
+#: clients/views/documents.py:621
 msgid "Документ отклонён."
 msgstr "Dokument odrzucony."
 
-#: clients/views/documents.py:622 clients/views/documents.py:623
+#: clients/views/documents.py:624 clients/views/documents.py:625
 msgid "Укажите причину отклонения."
 msgstr "Podaj powód odrzucenia."
 
@@ -12054,6 +12049,12 @@ msgstr "użytkownik"
 #: users/models.py:87
 msgid "users"
 msgstr "użytkownicy"
+
+#~ msgid "Для ZUS RCA укажите месяц отчёта (для страхового полиса можно оставить пустым)."
+#~ msgstr "W przypadku ZUS RCA podaj miesiąc sprawozdawczy (dla polisy ubezpieczeniowej pole można pozostawić puste)."
+
+#~ msgid "ZUS RCA — месяц отчёта"
+#~ msgstr "ZUS RCA — miesiąc sprawozdawczy"
 
 #~ msgid "Сначала сохраните клиента, затем переведите дело на следующий этап."
 #~ msgstr "Najpierw zapisz klienta, następnie przenieś sprawę do kolejnego etapu."

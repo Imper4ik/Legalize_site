@@ -114,6 +114,43 @@ def test_case_detail_shows_document_add_and_delete_controls(client):
 
 
 @pytest.mark.django_db
+def test_case_detail_shows_verify_control(client):
+    staff = create_test_user(role="Staff")
+    client.login(email=staff.email, password=TEST_USER_CREDENTIAL)
+
+    customer = Client.objects.create(first_name="Darya", last_name="A", citizenship="BY")
+    case = create_case_for_client(client=customer, actor=staff)
+    doc = create_test_document(client=customer, doc_type="passport", case=case)
+
+    response = client.get(reverse("clients:case_detail", kwargs={"pk": case.pk}))
+    body = response.content.decode()
+
+    assert response.status_code == 200
+    assert reverse("clients:toggle_document_verification", kwargs={"doc_id": doc.id}) in body
+
+
+@pytest.mark.django_db
+def test_verify_document_returns_to_case_via_next(client):
+    staff = create_test_user(role="Staff")
+    client.login(email=staff.email, password=TEST_USER_CREDENTIAL)
+
+    customer = Client.objects.create(first_name="Darya", last_name="A", citizenship="BY")
+    case = create_case_for_client(client=customer, actor=staff)
+    doc = create_test_document(client=customer, doc_type="passport", case=case, verified=False)
+    case_url = reverse("clients:case_detail", kwargs={"pk": case.pk})
+
+    response = client.post(
+        reverse("clients:toggle_document_verification", kwargs={"doc_id": doc.id}),
+        data={"next": f"{case_url}#documents"},
+    )
+
+    assert response.status_code == 302
+    assert response.url == f"{case_url}#documents"
+    doc.refresh_from_db()
+    assert doc.verified is True
+
+
+@pytest.mark.django_db
 def test_add_document_returns_to_case_via_next(client):
     staff = create_test_user(role="Staff")
     client.login(email=staff.email, password=TEST_USER_CREDENTIAL)
