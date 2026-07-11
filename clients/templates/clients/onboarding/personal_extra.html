@@ -10,18 +10,18 @@
     <div class="mb-4">
         <h5>{% trans "Данные родителей" %}</h5>
         <div class="mb-3">
-            <label class="form-label fw-bold">{% trans "Имя отца" %}</label>
-            <input type="text" name="father_name" class="form-control" value="{{ mos_data.personal_data.father_name|default:'' }}" required>
+            <label class="form-label fw-bold" for="father_name">{% trans "Имя отца" %}</label>
+            <input type="text" id="father_name" name="father_name" class="form-control" value="{{ mos_data.personal_data.father_name|default:'' }}" required>
             <div class="form-text text-muted">{% trans "Только первое имя отца латиницей (например: IVAN, без отчества)." %}</div>
         </div>
         <div class="mb-3">
-            <label class="form-label fw-bold">{% trans "Имя матери" %}</label>
-            <input type="text" name="mother_name" class="form-control" value="{{ mos_data.personal_data.mother_name|default:'' }}" required>
+            <label class="form-label fw-bold" for="mother_name">{% trans "Имя матери" %}</label>
+            <input type="text" id="mother_name" name="mother_name" class="form-control" value="{{ mos_data.personal_data.mother_name|default:'' }}" required>
             <div class="form-text text-muted">{% trans "Только первое имя матери латиницей (например: MARIIA, без отчества)." %}</div>
         </div>
         <div class="mb-3">
-            <label class="form-label fw-bold">{% trans "Девичья фамилия матери" %}</label>
-            <input type="text" name="mother_maiden_name" class="form-control" value="{{ mos_data.personal_data.mother_maiden_name|default:'' }}" required>
+            <label class="form-label fw-bold" for="mother_maiden_name">{% trans "Девичья фамилия матери" %}</label>
+            <input type="text" id="mother_maiden_name" name="mother_maiden_name" class="form-control" value="{{ mos_data.personal_data.mother_maiden_name|default:'' }}" required>
             <div class="form-text text-muted">{% trans "Фамилия матери при рождении (до замужества) латиницей." %}</div>
         </div>
     </div>
@@ -29,20 +29,20 @@
     <div class="mb-4">
         <h5>{% trans "Физические характеристики" %}</h5>
         <div class="mb-3">
-            <label class="form-label fw-bold">{% trans "Рост (в сантиметрах)" %}</label>
-            <input type="number" name="height" class="form-control" value="{{ mos_data.personal_data.height|default:'' }}" placeholder="{% trans 'Например: 175' %}" required>
+            <label class="form-label fw-bold" for="height">{% trans "Рост (в сантиметрах)" %}</label>
+            <input type="number" id="height" name="height" class="form-control" value="{{ mos_data.personal_data.height|default:'' }}" placeholder="{% trans 'Например: 175' %}" required>
         </div>
         <div class="mb-3">
-            <label class="form-label fw-bold">{% trans "Цвет глаз" %}</label>
-            <input type="text" name="eye_color" class="form-control" value="{{ mos_data.personal_data.eye_color|default:'' }}" placeholder="{% trans 'Например: Карие, Голубые, Зеленые' %}" required>
+            <label class="form-label fw-bold" for="eye_color">{% trans "Цвет глаз" %}</label>
+            <input type="text" id="eye_color" name="eye_color" class="form-control" value="{{ mos_data.personal_data.eye_color|default:'' }}" placeholder="{% trans 'Например: Карие, Голубые, Зеленые' %}" required>
         </div>
     </div>
 
     <div class="mb-4">
         <h5>{% trans "Образование и статус" %}</h5>
         <div class="mb-3">
-            <label class="form-label fw-bold">{% trans "Уровень образования" %}</label>
-            <select name="education" class="form-select" required>
+            <label class="form-label fw-bold" for="education">{% trans "Уровень образования" %}</label>
+            <select id="education" name="education" class="form-select" required>
                 <option value="">{% trans "Выберите..." %}</option>
                 <option value="Высшее" {% if mos_data.personal_data.education == 'Высшее' %}selected{% endif %}>{% trans "Высшее (Университет)" %}</option>
                 <option value="Среднее" {% if mos_data.personal_data.education == 'Среднее' %}selected{% endif %}>{% trans "Среднее (Школа/Лицей)" %}</option>
@@ -51,8 +51,8 @@
             </select>
         </div>
         <div class="mb-3">
-            <label class="form-label fw-bold">{% trans "Семейное положение" %}</label>
-            <select name="marital_status" class="form-select" required>
+            <label class="form-label fw-bold" for="marital_status">{% trans "Семейное положение" %}</label>
+            <select id="marital_status" name="marital_status" class="form-select" required>
                 <option value="">{% trans "Выберите..." %}</option>
                 <option value="Холост/Не замужем" {% if mos_data.personal_data.marital_status == 'Холост/Не замужем' %}selected{% endif %}>{% trans "Холост / Не замужем" %}</option>
                 <option value="Женат/Замужем" {% if mos_data.personal_data.marital_status == 'Женат/Замужем' %}selected{% endif %}>{% trans "Женат / Замужем" %}</option>
@@ -65,12 +65,12 @@
     <div class="mb-4">
         <h5>{% trans "Деятельность и особенности" %}</h5>
         <div class="mb-3">
-            <label class="form-label fw-bold">{% trans "Выполняемая профессия / род занятий" %}</label>
-            <input type="text" name="profession" class="form-control" value="{{ mos_data.personal_data.profession|default:'' }}" required placeholder="{% trans 'Например: Программист, Студент, Домохозяйка' %}">
+            <label class="form-label fw-bold" for="profession">{% trans "Выполняемая профессия / род занятий" %}</label>
+            <input type="text" id="profession" name="profession" class="form-control" value="{{ mos_data.personal_data.profession|default:'' }}" required placeholder="{% trans 'Например: Программист, Студент, Домохозяйка' %}">
         </div>
         <div class="mb-3">
-            <label class="form-label fw-bold">{% trans "Особые приметы" %}</label>
-            <input type="text" name="special_marks" class="form-control" value="{{ mos_data.personal_data.special_marks|default:'' }}" placeholder="{% trans 'Например: Шрамы, татуировки. Если примет нет, напишите Brak.' %}">
+            <label class="form-label fw-bold" for="special_marks">{% trans "Особые приметы" %}</label>
+            <input type="text" id="special_marks" name="special_marks" class="form-control" value="{{ mos_data.personal_data.special_marks|default:'' }}" placeholder="{% trans 'Например: Шрамы, татуировки. Если примет нет, напишите Brak.' %}">
         </div>
     </div>
 
