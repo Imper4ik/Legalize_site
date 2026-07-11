@@ -223,6 +223,27 @@ class NewOcrWorkflowsTests(TestCase):
             parsed = parse_zus_doc("fake-zus.pdf")
         self.assertEqual(parsed.period_month, date(2026, 5, 1))
 
+    def test_zus_rca_not_misdetected_as_rsa(self):
+        # The official ZUS RCA title contains "wyplaconych swiadczeniach", so a
+        # "swiadczeniach" keyword must not by itself classify the form as RSA.
+        text = (
+            "ZUS P RCA\nImienny raport miesieczny o naleznych skladkach "
+            "i wyplaconych swiadczeniach\nUbezpieczenia spoleczne\n"
+            "Ubezpieczenie zdrowotne\nAfanasenka Darya"
+        )
+        with patch("clients.services.zus_parser.extract_text", return_value=text):
+            parsed = parse_zus_doc("fake-zus.pdf")
+        self.assertEqual(parsed.zus_form_type, "RCA")
+
+    def test_zus_rsa_still_detected_by_przerwach(self):
+        text = (
+            "ZUS RSA\nImienny raport miesieczny o wyplaconych swiadczeniach "
+            "i przerwach w oplacaniu skladek"
+        )
+        with patch("clients.services.zus_parser.extract_text", return_value=text):
+            parsed = parse_zus_doc("fake-zus.pdf")
+        self.assertEqual(parsed.zus_form_type, "RSA")
+
     def test_zus_parser_ignores_print_date_as_period(self):
         # A full print/upload date must not be mistaken for the reporting period.
         text = "ZUS RCA\nData druku 25.05.2026\nJan Kowalski"
