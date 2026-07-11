@@ -35,6 +35,9 @@
         </a>
         <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
           <span class="text-muted small">{{ case.opened_at|date:"d.m.Y" }}</span>
+          <a class="btn btn-primary btn-sm" href="{% url 'clients:case_detail' case.pk %}" title="{% translate 'Открыть дело' %}" aria-label="{% translate 'Открыть дело' %}">
+            <i class="bi bi-folder2-open"></i><span class="d-none d-sm-inline ms-1">{% translate "Открыть дело" %}</span>
+          </a>
           <a class="btn btn-outline-primary btn-sm" href="{% url 'clients:case_edit' case.pk %}" title="{% translate 'Редактировать дело' %}" aria-label="{% translate 'Редактировать дело' %}">
             <i class="bi bi-pencil-square"></i><span class="d-none d-sm-inline ms-1">{% translate "Редактировать" %}</span>
           </a>

@@ -11,6 +11,11 @@
   .case-detail-hero, .case-tab-panel, .case-tabs { background: var(--surface) !important; color: var(--fg); border: 1px solid var(--border); }
   .case-detail-hero, .case-tab-panel { box-shadow: var(--shadow-1); }
   .case-detail-title, .case-section-heading { color: var(--fg); }
+  .case-breadcrumb { --bs-breadcrumb-divider-color: var(--muted); margin-bottom: .4rem; }
+  .case-breadcrumb .breadcrumb-item a { color: var(--brand-1); text-decoration: none; font-weight: 600; }
+  .case-breadcrumb .breadcrumb-item a:hover { text-decoration: underline; }
+  .case-breadcrumb .breadcrumb-item.active { color: var(--muted); }
+  .case-eyebrow { display: inline-flex; align-items: center; text-transform: uppercase; letter-spacing: .06em; font-size: .72rem; font-weight: 700; color: var(--brand-1); background: rgba(29, 78, 216, .12); border-radius: 999px; padding: .12rem .6rem; margin-bottom: .35rem; }
   .case-detail-meta, .case-detail-number-hint, .case-detail-page .text-muted { color: var(--muted) !important; }
   .case-detail-number-hint { font-size: .8125rem; }
   .case-next-action-inline { font-size: .9rem; }
@@ -33,7 +38,19 @@
   <div class="card shadow-sm border-0 mb-3 case-detail-hero">
     <div class="card-body p-3 d-flex flex-wrap justify-content-between align-items-start gap-3">
       <div>
-        <a href="{% url 'clients:client_detail' case.client.pk %}?view=person" class="text-decoration-none small text-primary">&larr; {{ case.client.get_full_name }}</a>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb case-breadcrumb small mb-2">
+            <li class="breadcrumb-item">
+              <a href="{% url 'clients:client_detail' case.client.pk %}?view=person">
+                <i class="bi bi-person-vcard me-1"></i>{% translate "Карточка клиента" %}: {{ case.client.get_full_name }}
+              </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+              <i class="bi bi-folder2-open me-1"></i>{% translate "Дело" %}
+            </li>
+          </ol>
+        </nav>
+        <div class="case-eyebrow"><i class="bi bi-folder2-open me-1"></i>{% translate "Страница дела" %}</div>
         <h1 class="h4 mb-1 mt-1 fw-bold case-detail-title">
           {% if case.authority_case_number %}
             {{ case.authority_case_number }}
