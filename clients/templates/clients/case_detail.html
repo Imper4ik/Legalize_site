@@ -172,20 +172,20 @@
               <p class="text-danger mb-0"><i class="bi bi-exclamation-triangle"></i> {% translate "Документ ещё не загружен." %}</p>
               {% endif %}
               {% if not item.is_custom_submission %}
-              <form method="post" action="{% url 'clients:add_document' client_id=case.client.pk doc_type=item.code %}" enctype="multipart/form-data" class="mt-3 border-top pt-3">
+              <form method="post" action="{% url 'clients:add_document' client_id=case.client.pk doc_type=item.code %}" enctype="multipart/form-data" class="mt-3 border-top pt-3 d-flex flex-wrap justify-content-end align-items-center gap-2">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
                 <input type="hidden" name="case_uuid" value="{{ case.uuid }}">
-                <div class="input-group input-group-sm">
-                  <input type="file" name="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.webp" required multiple aria-label="{% translate 'Файл' %}">
-                  {% if item.code == 'zus_rca_or_insurance' %}
-                  <input type="date" name="zus_period_month" class="form-control" style="max-width:160px;" title="{% translate 'ZUS RCA — месяц отчёта' %}" aria-label="{% translate 'ZUS RCA — месяц отчёта' %}">
-                  {% endif %}
-                  <button type="submit" class="btn btn-primary"><i class="bi bi-upload me-1"></i>{% translate "Добавить файл" %}</button>
-                </div>
                 {% if item.code == 'zus_rca_or_insurance' %}
-                <div class="form-text">{% translate "Для ZUS RCA укажите месяц отчёта (для страхового полиса можно оставить пустым)." %}</div>
+                <span class="form-text me-auto mb-0">{% translate "Для ZUS RCA укажите месяц отчёта (для страхового полиса можно оставить пустым)." %}</span>
                 {% endif %}
+                <div class="input-group input-group-sm w-auto">
+                  <input type="file" name="file" class="form-control" style="max-width:220px;" accept=".pdf,.jpg,.jpeg,.png,.webp" required multiple aria-label="{% translate 'Файл' %}">
+                  {% if item.code == 'zus_rca_or_insurance' %}
+                  <input type="date" name="zus_period_month" class="form-control" style="max-width:150px;" title="{% translate 'ZUS RCA — месяц отчёта' %}" aria-label="{% translate 'ZUS RCA — месяц отчёта' %}">
+                  {% endif %}
+                  <button type="submit" class="btn btn-primary text-nowrap"><i class="bi bi-upload me-1"></i>{% translate "Добавить файл" %}</button>
+                </div>
               </form>
               {% endif %}
             </div>
