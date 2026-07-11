@@ -7,7 +7,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="addPaymentModalLabel">{% translate "Добавить счёт на оплату" %}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
             </div>
             <div class="modal-body">
                 <form method="post" action="{% url 'clients:add_payment' client_id=client.pk %}">
@@ -69,7 +69,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="editPaymentModalLabel">{% translate "Редактировать счёт" %}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
             </div>
             <div class="modal-body">
                 <form method="post" id="editPaymentForm">
@@ -161,7 +161,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="uploadDocumentModalLabel">{% translate "Загрузка документа" %}</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
             </div>
             <div class="modal-body">
                 <p id="uploadDocumentDescription" class="mb-3 text-muted"></p>
@@ -314,7 +314,7 @@
         <div class="modal-content bg-dark text-light border-secondary">
             <div class="modal-header border-secondary">
                 <h5 class="modal-title" id="rejectDocumentModalLabel">{% translate "Отклонить документ" %}</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
             </div>
             <div class="modal-body">
                 <form method="post" id="rejectDocumentForm">
@@ -362,7 +362,7 @@
         <div class="modal-content bg-dark text-light border-secondary">
             <div class="modal-header border-secondary">
                 <h5 class="modal-title" id="messageTemplatesModalLabel">{% translate "Шаблоны сообщений клиенту" %}</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
             </div>
             <div class="modal-body">
                 <!-- Helper data markers -->
@@ -423,5 +423,4 @@
         </div>
     </div>
 </div>
-
 

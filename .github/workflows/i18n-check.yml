@@ -28,15 +28,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Compile messages (Verification)
-        run: python manage.py compilemessages --ignore "venv" --ignore ".venv"
+      - name: Verify catalogs include every source string
+        run: |
+          python manage.py makemessages -l pl -l en -l ru --ignore "venv" --ignore ".venv" --no-wrap
+          # makemessages refreshes POT-Creation-Date even when the catalog is
+          # otherwise identical; ignore timestamp-only hunks.
+          if ! git diff --exit-code -I '^"POT-Creation-Date:' -- locale; then
+            echo "::error::Translation catalogs are not synchronized with source templates/code."
+            exit 1
+          fi
 
       - name: Check for fuzzy translations
         run: |
           FUZZY_COUNT=$(grep -r '#, fuzzy' locale/ --include='*.po' | wc -l)
           if [ "$FUZZY_COUNT" -gt 0 ]; then
-            echo "::warning::Found $FUZZY_COUNT fuzzy translation(s) that need review:"
+            echo "::error::Found $FUZZY_COUNT fuzzy translation(s) that need review:"
             grep -rn '#, fuzzy' locale/ --include='*.po'
+            exit 1
           fi
 
       - name: Check for untranslated strings
@@ -46,12 +54,16 @@ jobs:
             LANG_DIR=$(echo "$PO_FILE" | grep -oP 'locale/\K[^/]+')
             COUNT=$(msgfmt --statistics -o /dev/null "$PO_FILE" 2>&1 | grep -oP '\d+ untranslated' | grep -oP '\d+' || echo 0)
             if [ "$COUNT" -gt 0 ] 2>/dev/null; then
-              echo "::warning file=$PO_FILE::$COUNT untranslated string(s) in $LANG_DIR"
+              echo "::error file=$PO_FILE::$COUNT untranslated string(s) in $LANG_DIR"
               UNTRANSLATED=$((UNTRANSLATED + COUNT))
             fi
           done
           if [ "$UNTRANSLATED" -gt 0 ]; then
-            echo "::warning::Total $UNTRANSLATED untranslated string(s) across all locales"
+            echo "::error::Total $UNTRANSLATED untranslated string(s) across all locales"
+            exit 1
           else
             echo "All translations are complete ✓"
           fi
+
+      - name: Compile messages
+        run: python manage.py compilemessages --ignore "venv" --ignore ".venv"

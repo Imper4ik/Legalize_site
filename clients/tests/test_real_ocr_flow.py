@@ -4,6 +4,7 @@ import os
 import shutil
 import unittest
 from datetime import date
+from unittest.mock import patch
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -186,7 +187,19 @@ class RealOCRFlowTests(TestCase):
         self.assertEqual(doc.ocr_status, "success")
         self.assertTrue(doc.ocr_name_mismatch)
 
-    def test_e2e_company_doc_job_processing(self):
+    @patch("clients.services.document_workflow.verify_employer")
+    def test_e2e_company_doc_job_processing(self, verify_employer_mock):
+        verify_employer_mock.return_value = {
+            "registry_source": "KRS",
+            "company_name": "TEST COMPANY",
+            "is_employer_active": True,
+            "nip": "5260250481",
+            "krs": "0000225587",
+            "representatives": [],
+            "signer_authorized": False,
+            "matched_signer": None,
+            "warnings": [],
+        }
         doc = Document.objects.create(
             client=self.client_obj,
             document_type=DocumentType.ZALACZNIK_NR_1.value,

@@ -121,7 +121,8 @@
 {% if attention_filter %}<input type="hidden" name="attention" value="{{ attention_filter }}">{% endif %}
   <div class="row g-2 align-items-center">
     <div class="col-12 col-md-3">
-    <select name="company" class="form-select">
+    <label class="visually-hidden" for="client-company-filter">{% translate "Компания" %}</label>
+    <select name="company" id="client-company-filter" class="form-select">
       <option value="">{% translate "Все компании" %}</option>
       {% for company in companies %}
         <option value="{{ company.id }}" {% if selected_company == company.id|stringformat:"s" %}selected{% endif %}>
@@ -134,6 +135,7 @@
     <input type="text"
            name="q"
            id="client-search-input"
+           aria-label="{% translate 'Поиск клиентов' %}"
            class="form-control"
            placeholder="{% translate 'Поиск по имени, почте, телефону или номеру дела...' %}"
            value="{{ query }}"

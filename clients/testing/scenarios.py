@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from unittest.mock import patch
 
 from django.utils import timezone
 
@@ -222,14 +223,14 @@ def run_real_ocr_fixture_scenarios(recorder: ScenarioRecorder) -> None:
     has_case_number = doc_wezwanie.parsed_data.get("case_number") == "WSC-II-S.6151.97770.2026" if doc_wezwanie.parsed_data else False
     has_fingerprints_date = doc_wezwanie.parsed_data.get("fingerprints_date") == "2026-08-15" if doc_wezwanie.parsed_data else False
     required_docs = doc_wezwanie.parsed_data.get("required_documents", []) if doc_wezwanie.parsed_data else []
-    has_zus = "zus_rca_or_insurance" in required_docs
+    has_passport = "passport" in required_docs
     has_address = "address_proof" in required_docs
     has_photos = "photos" in required_docs
 
     recorder.check(
         "ocr_fixtures.wezwanie_clean_parsed_fields",
-        has_case_number and has_fingerprints_date and has_zus and has_address and has_photos,
-        expected="case=WSC-II-S.6151.97770.2026, date=2026-08-15, docs has zus, address, photos",
+        has_case_number and has_fingerprints_date and has_passport and has_address and has_photos,
+        expected="case=WSC-II-S.6151.97770.2026, date=2026-08-15, docs has passport, address, photos",
         actual=f"has_case={has_case_number}, has_date={has_fingerprints_date}, required={required_docs}",
         related=RelatedObjects(client=client, document=doc_wezwanie),
     )
@@ -246,7 +247,21 @@ def run_real_ocr_fixture_scenarios(recorder: ScenarioRecorder) -> None:
         requires_confirmation=False,
         job_type=DocumentProcessingJob.JOB_TYPE_COMPANY_DOC_OCR,
     )
-    res_krs = process_document_processing_job(job_id=job_krs.pk)
+    # Test Center must be deterministic and must never depend on, or send test
+    # document data to, an external registry.
+    registry_result = {
+        "registry_source": "KRS",
+        "company_name": "TEST COMPANY",
+        "is_employer_active": True,
+        "nip": "5260250481",
+        "krs": "0000225587",
+        "representatives": [],
+        "signer_authorized": False,
+        "matched_signer": None,
+        "warnings": [],
+    }
+    with patch("clients.services.document_workflow.verify_employer", return_value=registry_result):
+        res_krs = process_document_processing_job(job_id=job_krs.pk)
     doc_krs.refresh_from_db()
 
     # We reuse 'zus_rca_good_matched' check for KRS real document parsing
