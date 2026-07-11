@@ -46,6 +46,10 @@ The web service runs a built-in automation loop (`start.sh` →
 - `POST /cron/process-document-jobs/` (every 5–15 min)
 - `POST /cron/process-email-campaigns/` (every 5–15 min)
 - `POST /cron/update-reminders/` (daily, morning)
+
+Database backup is not part of the in-process loop and must always be scheduled
+externally:
+
 - `POST /cron/db-backup/` (daily)
 
 All require `Authorization: Bearer <CRON_TOKEN>`.
@@ -62,13 +66,12 @@ Supported purposes: **work, study, family reunification** (spouse/child/sponsor)
 Not yet modelled: pobyt stały, EU long-term resident, CUKR.
 
 ## 6. Deferred (post-pilot, not launch blockers)
-- **A3 — strict CSP:** drop `script-src 'unsafe-inline'`. Requires migrating 17 inline
-  scripts to nonces and refactoring ~41 inline event handlers to `addEventListener`,
-  with full browser verification. Current CSP is active with `unsafe-inline`; combined
-  with `nh3` HTML sanitization this is acceptable for a pilot.
-  **First step is available now:** set `LEGALIZE_CSP_STRICT_REPORT_ONLY=True` to emit a
-  strict policy in Report-Only mode (zero UI risk) and collect the violation inventory
-  from the browser console before doing the enforcing refactor.
+- **A3 — strict style CSP:** `script-src` already requires per-request nonces.
+  Remaining template styles still require `style-src 'unsafe-inline'`. Set
+  `LEGALIZE_CSP_STRICT_REPORT_ONLY=True`, collect the style violation inventory,
+  then move those declarations into static stylesheets before enforcing it.
+- **A4 — staff 2FA:** the authentication and recovery policy (TOTP versus email,
+  recovery codes and support procedure) must be approved before implementation.
 - **B1 — MOS 2 detailed fields:** structured `karalność`, tax obligations, and the
   professional-qualifications section. Needs the official `wzór` (Dz.U. 2025 poz. 1647)
   to map fields exactly rather than guess. Core applicant/passport/family/address data
