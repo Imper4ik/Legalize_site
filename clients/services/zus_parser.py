@@ -165,6 +165,12 @@ def _find_zus_period_month(text: str) -> date | None:
     contextual_patterns = [
         rf"{context}[^\d]{{0,50}}{month}\s*[./\-\s]+{year}",
         rf"{context}[^\d]{{0,50}}{year}\s*[./\-\s]+{month}",
+        # Real ZUS RCA/DRA layout: the reporting period is printed in the
+        # "Identyfikator raportu/deklaracji" field as "nr miesiac rok",
+        # e.g. "01 05 2026" (space-separated, no za miesiac keyword).
+        rf"identyfikator\s+(?:raportu|deklaracji)[^\d]{{0,30}}\d{{2}}[.\-\s]+{month}[.\-\s]+{year}",
+        # Labelled month/year fields: "Miesiac 05 ... Rok 2026".
+        rf"miesiac[^\d]{{0,20}}{month}[^\d]{{0,20}}rok[^\d]{{0,20}}{year}",
     ]
     for pattern in contextual_patterns:
         match = re.search(pattern, normalized, flags=re.IGNORECASE)

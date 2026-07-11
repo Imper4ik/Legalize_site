@@ -205,6 +205,31 @@ class NewOcrWorkflowsTests(TestCase):
 
         self.assertIsNone(parsed.insurance_code)
 
+    def test_zus_parser_extracts_period_from_real_rca_layout(self):
+        # Real ZUS RCA bank prints the period in the "Identyfikator raportu"
+        # field as "nr miesiac rok" (e.g. 01 05 2026), space-separated and
+        # without a "za miesiac" keyword.
+        text = (
+            "ZUS RCA\nImienny raport miesieczny o naleznych skladkach\n"
+            "III. Identyfikator raportu\n01 05 2026\nPlatnik: FIRMA"
+        )
+        with patch("clients.services.zus_parser.extract_text", return_value=text):
+            parsed = parse_zus_doc("fake-zus.pdf")
+        self.assertEqual(parsed.period_month, date(2026, 5, 1))
+
+    def test_zus_parser_extracts_period_from_labelled_month_year(self):
+        text = "ZUS RCA imienny raport miesieczny\nMiesiac 05 Rok 2026\nJan Kowalski"
+        with patch("clients.services.zus_parser.extract_text", return_value=text):
+            parsed = parse_zus_doc("fake-zus.pdf")
+        self.assertEqual(parsed.period_month, date(2026, 5, 1))
+
+    def test_zus_parser_ignores_print_date_as_period(self):
+        # A full print/upload date must not be mistaken for the reporting period.
+        text = "ZUS RCA\nData druku 25.05.2026\nJan Kowalski"
+        with patch("clients.services.zus_parser.extract_text", return_value=text):
+            parsed = parse_zus_doc("fake-zus.pdf")
+        self.assertIsNone(parsed.period_month)
+
     @patch("clients.services.zus_parser.parse_zus_doc")
     def test_zus_document_processing(self, parse_mock):
         # Upload a completed company doc first to have NIP in database
