@@ -32,8 +32,20 @@ class RemainingAuditHardeningTests(TestCase):
         self.admin.groups.add(Group.objects.get(name="Admin"))
 
 
-    def test_background_automation_loop_defaults_to_disabled(self):
-        self.assertIn('ENABLE_BACKGROUND_AUTOMATION_LOOP:=false', Path("start.sh").read_text())
+    def test_background_automation_loop_defaults_to_enabled(self):
+        self.assertIn('ENABLE_BACKGROUND_AUTOMATION_LOOP:=true', Path("start.sh").read_text())
+
+    def test_qr_generation_never_sends_portal_tokens_to_third_party(self):
+        source = Path("static/clients/js/clients_list.js").read_text()
+        self.assertNotIn("api.qrserver.com", source)
+
+    def test_client_pages_publish_the_active_language(self):
+        self.client.login(email="staff-audit@example.com", password="securepassword")
+        for language in ("pl", "en", "ru"):
+            with self.subTest(language=language), translation.override(language):
+                response = self.client.get(reverse("clients:client_list"))
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, f'<html lang="{language}">')
 
     def test_querystring_replace_preserves_and_encodes_filters(self):
         request = RequestFactory().get("/staff/?q=A%26B&company=7&document=ocr_review&page=2")
@@ -377,5 +389,3 @@ class RemainingAuditHardeningTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("support_email", response.context)
         self.assertContains(response, "Служба поддержки")
-
-
