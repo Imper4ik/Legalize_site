@@ -482,3 +482,52 @@ class NewOcrWorkflowsTests(TestCase):
         self.assertTrue(any("Client name not matched" in w for w in warnings))
         self.assertTrue(any("below the statutory minimum" in w for w in warnings))
         self.assertTrue(any("expired on" in w for w in warnings))
+
+    @patch("clients.services.zus_parser.parse_zus_doc")
+    @patch("clients.services.insurance_parser.parse_insurance_doc")
+    def test_zus_rca_without_month_is_not_treated_as_insurance(self, insurance_mock, zus_mock):
+        """A ZUS RCA uploaded to the combined slot without a manually selected month
+        is routed to the insurance parser, but must be re-detected as a ZUS form
+        and processed by the ZUS parser instead of producing insurance warnings."""
+        insurance_mock.return_value = InsuranceDocData(
+            text=(
+                "ZUS RCA\nImienny raport miesieczny o naleznych skladkach\n"
+                "Jan Kowalski\nKod tytulu ubezpieczenia: 01 10 00\nZa miesiac 05.2026"
+            ),
+            valid_until=None,
+            coverage_amount=None,
+            currency=None,
+            detected_names=["Jan Kowalski"],
+        )
+        zus_mock.return_value = ZusDocData(
+            text="ZUS RCA Imienny raport miesieczny",
+            employer_nip=None,
+            insurance_code="011000",
+            period_month=date(2026, 5, 1),
+            detected_names=["Jan Kowalski"],
+            zus_form_type="RCA",
+        )
+
+        doc = Document.objects.create(
+            client=self.client_obj,
+            document_type=DocumentType.ZUS_RCA_OR_INSURANCE.value,
+            file=build_pdf_upload("zus_rca_no_month.pdf"),
+            ocr_status="pending",
+            zus_period_month=None,
+        )
+        DocumentProcessingJob.objects.create(
+            document=doc,
+            created_by=self.staff,
+            status=DocumentProcessingJob.STATUS_PENDING,
+            job_type=DocumentProcessingJob.JOB_TYPE_INSURANCE_OCR,
+        )
+
+        call_command("process_document_jobs")
+
+        doc.refresh_from_db()
+        # ZUS parser handled it: form type recorded, no bogus insurance warnings.
+        self.assertEqual(doc.parsed_data.get("zus_form_type"), "RCA")
+        zus_mock.assert_called_once()
+        warnings = doc.parsed_data.get("warnings", [])
+        self.assertFalse(any("insurance coverage" in w.lower() for w in warnings))
+        self.assertFalse(any("insurance expiration" in w.lower() for w in warnings))
