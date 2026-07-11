@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 PREDEFINED_ROLES: dict[str, str] = {
     "Admin": "All permissions (Superuser equivalent)",
     "Manager": "CRUD clients, documents, payments, tasks; send emails; view metrics",
-    "Staff": "Office access: clients, documents, payments, tasks, emails, reports, exports. No settings/templates, no action logs, no deletions by default (the admin can grant deletions per employee).",
+    "Staff": "Office access: clients, documents, payments, tasks, emails, reports, exports. Can add and delete documents. No settings/templates, no action logs, no client deletions by default (the admin can grant client deletions per employee).",
     "ReadOnly": "View clients and documents only",
     "Translator": "Access to Translation Studio only",
 }
@@ -31,9 +31,11 @@ DOCUMENT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
 SUBMISSION_EDIT_ROLES = ("Admin", "Manager", "Staff")
 SUBMISSION_DELETE_ROLES = ("Admin", "Manager")
 DOCUMENT_EDIT_ROLES = ("Admin", "Manager", "Staff")
-# Deletions are off for Staff by default; the admin grants them per employee
-# (can_delete_documents / can_delete_clients) via staff management.
-DOCUMENT_DELETE_ROLES = ("Admin", "Manager")
+# Staff can add and delete documents. Client deletions remain off for Staff by
+# default; the admin grants those per employee (can_delete_clients) via staff
+# management. The per-employee can_delete_documents grant still lets a
+# non-Staff role (e.g. an individually trusted account) delete documents.
+DOCUMENT_DELETE_ROLES = ("Admin", "Manager", "Staff")
 TASK_MUTATION_ROLES = ("Admin", "Manager", "Staff")
 PAYMENT_MUTATION_ROLES = ("Admin", "Manager", "Staff")
 EMAIL_MUTATION_ROLES = ("Admin", "Manager", "Staff")
@@ -85,14 +87,16 @@ def ensure_predefined_roles() -> list[Group]:
         manager_perms.extend(Permission.objects.filter(content_type=ct))
     groups["Manager"].permissions.set(manager_perms)
 
-    # Staff: add/change/view but NOT delete by default. Deletions are granted
-    # per employee through EmployeePermission (can_delete_clients/documents).
+    # Staff: add/change/view for all office models, plus document deletion.
+    # Client/payment/task deletions stay off by default and are granted per
+    # employee through EmployeePermission (can_delete_clients).
     staff_perms: list[Permission] = []
     for model in [Client, Document, Payment, StaffTask]:
         ct = ContentType.objects.get_for_model(model)
-        staff_perms.extend(
-            Permission.objects.filter(content_type=ct).exclude(codename__startswith="delete_")
-        )
+        model_perms = Permission.objects.filter(content_type=ct)
+        if model is not Document:
+            model_perms = model_perms.exclude(codename__startswith="delete_")
+        staff_perms.extend(model_perms)
     groups["Staff"].permissions.set(staff_perms)
 
     readonly_perms: list[Permission] = []

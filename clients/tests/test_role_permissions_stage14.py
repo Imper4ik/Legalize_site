@@ -95,11 +95,12 @@ class RolePermissionMatrixTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertFalse(Client.objects.filter(pk=self.client_obj.pk).exists())
 
-    def test_staff_cannot_delete_document_by_default(self):
+    def test_staff_can_delete_document(self):
+        # Staff can delete documents by role (client deletions stay restricted).
         self.client.force_login(self.staff)
         response = self.client.post(reverse("clients:document_delete", kwargs={"pk": self.document.pk}))
-        self.assertEqual(response.status_code, 403)
-        self.assertTrue(Document.objects.filter(pk=self.document.pk).exists())
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Document.objects.filter(pk=self.document.pk).exists())
 
     def test_manager_can_delete_document(self):
         self.client.force_login(self.manager)
@@ -135,6 +136,14 @@ class RolePermissionMatrixTests(TestCase):
         self.assertEqual(manage_response.status_code, 200)
         self.assertEqual(add_response.status_code, 302)
         self.assertEqual(edit_response.status_code, 302)
+
+    def test_staff_group_can_delete_documents_but_not_clients(self):
+        staff_perms = set(
+            Group.objects.get(name="Staff").permissions.values_list("codename", flat=True)
+        )
+        self.assertIn("delete_document", staff_perms)
+        self.assertNotIn("delete_client", staff_perms)
+        self.assertNotIn("delete_payment", staff_perms)
 
     def test_manager_can_manage_document_requirements_and_checklists(self):
         self.client.force_login(self.manager)
