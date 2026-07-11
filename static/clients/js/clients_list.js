@@ -256,27 +256,16 @@
           };
           qrImg.src = qr.toDataURL();
         } catch (err) {
-          console.error('QRious error, using fallback API', err);
-          const qrData = encodeURIComponent(link);
-          qrImg.onload = () => {
-            qrSpinner.style.display = 'none';
-            qrImg.style.display = 'block';
-          };
-          qrImg.onerror = () => {
-            qrSpinner.style.display = 'none';
-          };
-          qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrData}`;
+          console.error('Local QR generation failed', err);
+          qrSpinner.style.display = 'none';
+          qrImg.removeAttribute('src');
+          qrImg.style.display = 'none';
         }
       } else {
-        const qrData = encodeURIComponent(link);
-        qrImg.onload = () => {
-          qrSpinner.style.display = 'none';
-          qrImg.style.display = 'block';
-        };
-        qrImg.onerror = () => {
-          qrSpinner.style.display = 'none';
-        };
-        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${qrData}`;
+        console.error('Local QR library is unavailable');
+        qrSpinner.style.display = 'none';
+        qrImg.removeAttribute('src');
+        qrImg.style.display = 'none';
       }
     }
 
@@ -790,4 +779,3 @@
     initShareModalListeners();
   });
 })();
-
