@@ -1,27 +1,33 @@
-# Security Hardening TODO
+# Security hardening status
 
-## Future Security Improvements
-The following are planned security improvements for the next iterations:
+## Implemented
 
-- [ ] **Content Security Policy (CSP)**: Add `django-csp` and configure strict CSP headers.
-- [ ] **Subresource Integrity (SRI)**: Remove CDNs or add SRI attributes and `crossorigin` to all external script/style tags.
-- [ ] **Two-Factor Authentication (2FA)**: Enable 2FA for all staff/admin accounts.
-- [ ] **Audit Events**: Split document preview and document download audit events for better traceability.
-- [ ] **Storage Infrastructure**: Move away from `DatabaseMediaStorage` and consider Cloudflare R2 or AWS S3 for media storage to prevent database bloat and improve file serving performance.
+- Production responses include an enforced Content Security Policy.
+- `script-src` is restricted to the application origin; executable inline
+  scripts require a per-request nonce.
+- Browser assets are vendored under `static/vendor/`; the application does not
+  load fonts, scripts, styles, or QR images from public CDNs.
+- Uploaded client files are private and may use database or S3-compatible
+  storage.
+- Sensitive model fields, authorization checks, rate limits and security audit
+  events are covered by automated tests.
 
-## CSP inline script/style migration
+## Remaining improvements
 
-Production CSP still allows `'unsafe-inline'` for `script-src` and `style-src` to avoid breaking legacy templates that contain inline JavaScript and CSS. Treat this as a temporary compatibility mode.
+- [ ] **Two-factor authentication:** choose and enable a 2FA flow for all
+  staff/admin accounts. This needs an owner decision on email versus TOTP,
+  recovery policy and support process.
+- [ ] **Strict style CSP:** move the remaining template `<style>` blocks and
+  `style=` attributes into static stylesheets, then remove `'unsafe-inline'`
+  from `style-src`. `script-src` is already nonce-protected.
+- [ ] **Audit events:** split document preview and download events if the
+  business requires separate reporting.
+- [ ] **Storage at scale:** use S3/R2/B2 instead of database media storage when
+  file volume makes database backups or restores too slow.
 
-Migration plan:
-
-1. Inventory inline `<script>` and `<style>` blocks in templates.
-2. Move stable inline JavaScript/CSS to static files.
-3. For unavoidable inline snippets, use per-request nonces or hashes.
-4. Enable CSP report-only first (`LEGALIZE_CSP_REPORT_ONLY=True`) and review reports.
-5. Remove `'unsafe-inline'` once reports show no required inline execution.
-
-Validation:
+To inventory style-policy violations without breaking the UI, enable
+`LEGALIZE_CSP_STRICT_REPORT_ONLY=True`, review browser reports, and then migrate
+the reported styles. Validate production settings with:
 
 ```bash
 python manage.py check --deploy
