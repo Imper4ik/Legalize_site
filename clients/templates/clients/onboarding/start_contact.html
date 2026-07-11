@@ -973,11 +973,11 @@
     <div class="modal-content">
       <form action="{% url 'clients:onboarding_document_upload' session.token_hash fingerprint_invitation_doc_type %}" method="post" enctype="multipart/form-data" class="onboarding-upload-form" data-no-autosave="true">
         {% csrf_token %}
-        <div class="modal-header"><h5 class="modal-title">{% trans "Загрузка письма из управления (urząd)" %}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-header"><h5 class="modal-title">{% trans "Загрузка письма из управления (urząd)" %}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Закрыть' %}"></button></div>
         <div class="modal-body">
           <div class="alert alert-info py-2 px-3 small mb-3"><i class="bi bi-info-circle-fill me-2"></i>{% trans "Загрузите письмо/wezwanie из управления (urząd). Проверьте, что видны номер дела, дата и страницы с требованиями." %}</div>
           <p class="text-muted small">{% trans "PDF, JPG, JPEG, PNG или WebP. Перед отправкой проверьте предпросмотр: документ должен быть читаемым и относиться к этому пункту." %}</p>
-          <input type="file" name="file" class="form-control onboarding-upload-input" accept="application/pdf,image/jpeg,image/png,image/webp" required>
+          <input type="file" name="file" class="form-control onboarding-upload-input" accept="application/pdf,image/jpeg,image/png,image/webp" aria-label="{% trans 'Файл' %}" required>
           <div class="onboarding-upload-preview d-none mt-3 border rounded p-2">
             <div class="small fw-bold mb-2" data-file-name></div>
             <img class="img-fluid rounded d-none" data-image-preview alt="{% trans 'Предпросмотр выбранного файла' %}">
@@ -1003,12 +1003,12 @@
         <div class="modal-content">
           <form action="{% url 'clients:onboarding_document_upload' session.token_hash doc.code %}" method="post" enctype="multipart/form-data" class="onboarding-upload-form" data-no-autosave="true">
             {% csrf_token %}
-            <div class="modal-header"><h5 class="modal-title">{% trans "Загрузка:" %} {{ doc.label }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-header"><h5 class="modal-title">{% trans "Загрузка:" %} {{ doc.label }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% trans 'Закрыть' %}"></button></div>
             <div class="modal-body">
               {% if doc.source_hint %}<div class="alert alert-info py-2 px-3 small mb-3"><i class="bi bi-info-circle-fill me-2"></i>{{ doc.source_hint }}</div>{% endif %}
               {% if doc.is_uploaded %}<div class="alert alert-warning py-2 px-3 small mb-3"><i class="bi bi-info-circle-fill me-2"></i>{% trans "После загрузки документ повторно проверит специалист." %}</div>{% endif %}
               <p class="text-muted small">{% trans "PDF, JPG, JPEG, PNG или WebP. Перед отправкой проверьте предпросмотр: документ должен быть читаемым и относиться к этому пункту." %}</p>
-              <input type="file" name="file" class="form-control onboarding-upload-input" accept="application/pdf,image/jpeg,image/png,image/webp" required>
+              <input type="file" name="file" class="form-control onboarding-upload-input" accept="application/pdf,image/jpeg,image/png,image/webp" aria-label="{% trans 'Файл' %}: {{ doc.label }}" required>
               <div class="onboarding-upload-preview d-none mt-3 border rounded p-2">
                 <div class="small fw-bold mb-2" data-file-name></div>
                 <img class="img-fluid rounded d-none" data-image-preview alt="{% trans 'Предпросмотр выбранного файла' %}">
