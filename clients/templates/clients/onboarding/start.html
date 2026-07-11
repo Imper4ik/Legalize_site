@@ -563,7 +563,7 @@
             {% trans "Загрузите wezwanie / вызов из ужонда с датой или информацией о сдаче отпечатков пальцев. После отправки сотрудник получит уведомление." %}
           </div>
           <p class="text-muted small">{% trans "PDF, JPG, JPEG, PNG или WebP. Проверьте предпросмотр перед отправкой." %}</p>
-          <input type="file" name="file" class="form-control onboarding-upload-input" accept="application/pdf,image/jpeg,image/png,image/webp" required>
+          <input type="file" name="file" class="form-control onboarding-upload-input" accept="application/pdf,image/jpeg,image/png,image/webp" aria-label="{% trans 'Файл' %}" required>
           <div class="onboarding-upload-preview d-none mt-3 border rounded p-2">
             <div class="small fw-bold mb-2" data-file-name></div>
             <img class="img-fluid rounded d-none" data-image-preview alt="Selected file preview">
@@ -604,7 +604,7 @@
                         </div>
                     {% endif %}
                     <p class="text-muted small">{% trans "PDF, JPG, JPEG, PNG или WebP. Если фото с телефона не отправляется, сохраните его как JPG/PNG или загрузите PDF." %}</p>
-                    <input type="file" name="file" class="form-control onboarding-upload-input" accept="application/pdf,image/jpeg,image/png,image/webp" required>
+                    <input type="file" name="file" class="form-control onboarding-upload-input" accept="application/pdf,image/jpeg,image/png,image/webp" aria-label="{% trans 'Файл' %}: {{ doc.label }}" required>
                     <div class="onboarding-upload-preview d-none mt-3 border rounded p-2">
                       <div class="small fw-bold mb-2" data-file-name></div>
                       <img class="img-fluid rounded d-none" data-image-preview alt="Selected file preview">
