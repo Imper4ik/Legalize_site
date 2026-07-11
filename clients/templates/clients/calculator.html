@@ -23,7 +23,7 @@
               <label class="form-label">{% translate "Когда заканчивается основание пребывания?" %}</label>
               <div class="input-group" id="date-picker-wrapper">
                 <input type="text" class="form-control" name="total_end_date" id="id_total_end_date" value="{{ form_data.total_end_date }}" placeholder="{% translate 'дд-мм-гггг' %}" required>
-                <button class="btn btn-outline-secondary" type="button" id="date-picker-button"><i class="bi bi-calendar3"></i></button>
+                <button class="btn btn-outline-secondary" type="button" id="date-picker-button" aria-label="{% trans 'Открыть календарь' %}" title="{% trans 'Открыть календарь' %}"><i class="bi bi-calendar3" aria-hidden="true"></i></button>
               </div>
             </div>
             <div class="mb-3">
