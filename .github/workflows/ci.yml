@@ -37,7 +37,15 @@ jobs:
       - name: Django check
         run: python manage.py check
 
-      - name: Django deploy check
+      - name: Django production deploy check
+        env:
+          DJANGO_SETTINGS_MODULE: legalize_site.settings.production
+          SECRET_KEY: ci-only-deploy-check-secret-key-not-for-production
+          FERNET_KEYS: dCaMQOkEYCg-HvvtlWX7ZK4cT_BcrbaL1HPkMff3-nk=
+          ALLOWED_HOSTS: ci.example.test
+          CSRF_TRUSTED_ORIGINS: https://ci.example.test
+          CRON_TOKEN: ci-only-cron-token
+          ALLOW_PRODUCTION_LOCAL_MEDIA: "true"
         run: python manage.py check --deploy
 
       - name: Migration drift check
@@ -59,7 +67,7 @@ jobs:
         run: mypy clients legalize_site submissions users translations database_media fernet_fields --config-file mypy.ini
 
       - name: Bandit
-        run: bandit -r clients legalize_site submissions users database_media fernet_fields translations -x "*/migrations/*,*/tests/*,*/testing/*,*/demo/*"
+        run: bandit -r clients legalize_site submissions users database_media fernet_fields translations -x "*/migrations/*,*/tests/*,*/testing/*,*/demo/*,users/test_models.py"
 
       - name: pip-audit
         run: pip-audit
