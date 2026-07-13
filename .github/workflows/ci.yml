@@ -54,25 +54,6 @@ jobs:
       - name: Django migrate check
         run: python manage.py migrate --noinput
 
-      - name: Go-live regression tests
-        run: |
-          python manage.py test --noinput \
-            legalize_site.tests.test_backups \
-            legalize_site.tests.test_cron_auth \
-            legalize_site.tests.test_healthcheck \
-            clients.tests.test_activity_metadata
-
-      - name: Django test
-        run: |
-          set +e
-          python manage.py test --noinput > /tmp/django-test.log 2>&1
-          status=$?
-          tail -n 200 /tmp/django-test.log
-          exit "$status"
-
-      - name: Pytest
-        run: pytest --maxfail=1 -q --cov-fail-under=70
-
       - name: Ruff
         run: ruff check .
 
@@ -84,6 +65,26 @@ jobs:
 
       - name: pip-audit
         run: pip-audit
+
+      - name: Go-live regression tests
+        run: |
+          python manage.py test --noinput \
+            legalize_site.tests.test_backups \
+            legalize_site.tests.test_cron_auth \
+            legalize_site.tests.test_healthcheck \
+            clients.tests.test_activity_metadata \
+            clients.tests.test_scheduler_policy
+
+      - name: Django test
+        run: |
+          set +e
+          python manage.py test --noinput > /tmp/django-test.log 2>&1
+          status=$?
+          tail -n 200 /tmp/django-test.log
+          exit "$status"
+
+      - name: Pytest
+        run: pytest --maxfail=1 -q --cov-fail-under=70
 
       - name: Collect static
         run: python manage.py collectstatic --noinput
