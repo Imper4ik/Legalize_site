@@ -101,7 +101,7 @@ def _encrypt_file(path: Path) -> Path:
     try:
         os.chmod(encrypted_path, 0o600)
     except OSError:
-        pass
+        logger.warning("Could not restrict permissions (0600) on %s", encrypted_path)
     # Remove plaintext original
     path.unlink(missing_ok=True)
     logger.info("Encrypted backup %s -> %s", path.name, encrypted_path.name)
@@ -198,7 +198,7 @@ def create_db_backup() -> BackupResult:
     try:
         os.chmod(backup_path, 0o600)
     except OSError:
-        pass
+        logger.warning("Could not restrict permissions (0600) on %s", backup_path)
 
     plaintext_sha256 = _sha256_for_file(backup_path)
 

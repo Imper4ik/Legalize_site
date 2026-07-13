@@ -59,7 +59,8 @@ class TranslationStudioMiddleware:
 
         try:
             content = response.content.decode("utf-8")
-        except Exception:
+        except UnicodeDecodeError:
+            # Binary/non-UTF8 body: nothing to inject the overlay into.
             return
 
         script_src = "/static/translations/js/translation_overlay.js"

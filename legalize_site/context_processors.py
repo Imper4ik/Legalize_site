@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from django.conf import settings
@@ -8,6 +9,8 @@ from django.http import HttpRequest
 from django.urls import get_resolver, reverse
 from django.utils import translation
 from django.utils.translation import gettext as _
+
+logger = logging.getLogger(__name__)
 
 
 def _attention_item_url(filtered_qs: Any, list_url: str, count: int, anchor: str) -> str:
@@ -359,6 +362,9 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
         cache.set(cache_key, context, int(getattr(settings, "ONBOARDING_NOTIFICATIONS_CACHE_SECONDS", 45)))
         return context
     except Exception:
+        # Navbar badges must never break page rendering, but a permanent silent
+        # failure here would hide attention counts from staff indefinitely.
+        logger.exception("onboarding_notifications context processor failed")
         return {}
 
 def onboarding_progress(request: HttpRequest) -> dict[str, Any]:
