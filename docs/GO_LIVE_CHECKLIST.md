@@ -30,6 +30,9 @@ These must be set or `check --deploy` fails (by design):
 - `CRON_ALLOWED_IPS` — secondary control if the scheduler has stable IPs (advisory W009 if empty).
 - `SENTRY_DSN` — error reporting (PII is scrubbed in `before_send`).
 - Real email: `DEFAULT_FROM_EMAIL` (verified sender) + SendGrid/Brevo/SMTP credentials.
+- Malware scanning: run a `clamd` instance, set `CLAMD_TCP_ADDR`/`CLAMD_TCP_PORT` and
+  `MALWARE_SCAN_ENABLED=True`. Scanning is **fail-closed** once enabled; while off,
+  production `check --deploy` emits advisory **W014**.
 
 ## 2. Deploy steps
 1. `python manage.py migrate`

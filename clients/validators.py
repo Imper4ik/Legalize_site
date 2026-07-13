@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from importlib import import_module
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -10,6 +11,8 @@ from django.utils.translation import gettext_lazy as _
 
 if TYPE_CHECKING:
     pass
+
+logger = logging.getLogger(__name__)
 
 FILE_INPUT_ACCEPT = ".pdf,.jpg,.jpeg,.png,.webp"
 DEFAULT_MAX_IMAGE_PIXELS = 300_000_000
@@ -180,4 +183,39 @@ def validate_uploaded_document(uploaded_file: Any) -> Any:
             label=str(config["label"]),
         )
 
+    _scan_for_malware(uploaded_file)
+
     return uploaded_file
+
+
+def _scan_for_malware(uploaded_file: Any) -> None:
+    """Reject the upload unless the configured scanner returns a clean verdict.
+
+    Fail-closed by design: when MALWARE_SCAN_ENABLED is on, a scanner outage
+    blocks uploads instead of letting unscanned files through."""
+    from legalize_site.malware_scan import (
+        MalwareDetectedError,
+        MalwareScanError,
+        malware_scan_enabled,
+        scan_fileobj,
+    )
+
+    if not malware_scan_enabled():
+        return
+
+    start_position = uploaded_file.tell()
+    uploaded_file.seek(0)
+    try:
+        scan_fileobj(uploaded_file)
+    except MalwareDetectedError as exc:
+        logger.warning(
+            "Rejected upload flagged by malware scanner: signature=%s", exc.signature
+        )
+        raise ValidationError(_("Файл отклонён антивирусной проверкой.")) from exc
+    except MalwareScanError as exc:
+        logger.error("Malware scanner unavailable: %s", exc)
+        raise ValidationError(
+            _("Антивирусная проверка временно недоступна. Попробуйте позже.")
+        ) from exc
+    finally:
+        _reset_position(uploaded_file, start_position)

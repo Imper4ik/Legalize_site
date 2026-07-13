@@ -267,6 +267,30 @@ def rate_limit_cache_check(app_configs: Any = None, **kwargs: Any) -> list[Error
     return messages
 
 
+MALWARE_SCAN_WARNING_ID = "legalize_site.W014"
+
+
+@register("legalize_site")
+def malware_scan_check(app_configs: Any = None, **kwargs: Any) -> list[Error | Warning]:
+    """Warn while production accepts client uploads without malware scanning."""
+    messages: list[Error | Warning] = []
+    if not getattr(settings, "IS_PRODUCTION", False):
+        return messages
+    if getattr(settings, "MALWARE_SCAN_ENABLED", False):
+        return messages
+    messages.append(
+        Warning(
+            "Uploads are accepted without malware scanning.",
+            hint=(
+                "Run a clamd instance, point CLAMD_TCP_ADDR/CLAMD_TCP_PORT at it and "
+                "set MALWARE_SCAN_ENABLED=True. Scanning is fail-closed once enabled."
+            ),
+            id=MALWARE_SCAN_WARNING_ID,
+        )
+    )
+    return messages
+
+
 @register("legalize_site")
 def production_storage_safety_check(app_configs: Any = None, **kwargs: Any) -> list[Error | Warning]:
     messages: list[Error | Warning] = []
