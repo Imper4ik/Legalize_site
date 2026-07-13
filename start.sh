@@ -30,6 +30,7 @@ esac
 : "${GUNICORN_TIMEOUT:=120}"
 : "${GUNICORN_MAX_REQUESTS:=1200}"
 : "${GUNICORN_MAX_REQUESTS_JITTER:=200}"
+# Security note: the legacy default was ENABLE_BACKGROUND_AUTOMATION_LOOP:=true.
 # Keep the in-process scheduler opt-in. Production must use exactly one
 # automation contour: either this loop or external cron endpoints, never both.
 : "${ENABLE_BACKGROUND_AUTOMATION_LOOP:=false}"
