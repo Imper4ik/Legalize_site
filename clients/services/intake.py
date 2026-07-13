@@ -175,12 +175,12 @@ def convert_intake_submission(
 
         CaseParticipant.objects.get_or_create(case=case, client=client, defaults={"role": "principal"})
         mos_data, _created_mos = MOSApplicationData.objects.get_or_create(client=client, case=case)
-        mos_data.personal_data = {**_dict_value(mos_data.personal_data), **personal_data}  # type: ignore[assignment]
+        mos_data.personal_data = {**_dict_value(mos_data.personal_data), **personal_data}
         passport_value = personal_data.get("passport_num") or personal_data.get("passport_number") or personal_data.get("document_number")
         if passport_value:
             passport_data = _dict_value(mos_data.passport_data)
             passport_data.setdefault("document_number", passport_value)
-            mos_data.passport_data = passport_data  # type: ignore[assignment]
+            mos_data.passport_data = passport_data
         selected_mos_purpose = str(case_data.get("mos_purpose") or case_data.get("application_purpose") or "").strip()
         if selected_mos_purpose:
             mos_data.mos_purpose = selected_mos_purpose

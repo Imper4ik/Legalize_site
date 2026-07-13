@@ -242,7 +242,7 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
                 actor=request.user,
                 event_type=event_type,
                 summary=summary,
-                metadata={"selected_purpose": selected_purpose, "changed_fields": changed_fields},
+                metadata={"changed_fields": changed_fields},
             )
             messages.success(request, _("Client-selected purpose applied."))
             return _review_redirect(client, mos_data)

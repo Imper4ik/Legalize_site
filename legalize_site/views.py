@@ -73,7 +73,12 @@ def readiness(request: HttpRequest) -> HttpResponse:
         logger.exception("Readiness database check failed")
         components["database"] = {"status": "error", "error": exc.__class__.__name__}
 
-    cache_required = bool(getattr(settings, "REDIS_URL", ""))
+    # Production rate limiting and other cross-process safeguards depend on the
+    # configured default cache even when DatabaseCache is used instead of Redis.
+    cache_required = bool(
+        getattr(settings, "IS_PRODUCTION", False)
+        or getattr(settings, "REDIS_URL", "")
+    )
     try:
         cache_key = "readiness:cache"
         cache.set(cache_key, "ok", timeout=30)

@@ -55,9 +55,8 @@ def pre_fill_mos_data_from_ocr(mos_data: MOSApplicationData) -> bool:
                 updated = True
 
         if updated:
-            # EncryptedJSONField stores dicts but django-stubs types it as text.
-            mos_data.personal_data = personal_data  # type: ignore[assignment]
-            mos_data.passport_data = passport_data  # type: ignore[assignment]
+            mos_data.personal_data = personal_data
+            mos_data.passport_data = passport_data
             mos_data.save(update_fields=["personal_data", "passport_data", "updated_at"])
 
     return updated

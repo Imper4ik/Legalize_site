@@ -34,7 +34,8 @@ Ensure the following variables are set in production:
 
 ## Scheduled Jobs (cron)
 
-All background work is exposed as token-protected HTTP endpoints so any external
+Token-protected HTTP endpoints can drive background work when the built-in loop
+is disabled. Any external
 scheduler (Railway cron, GitHub Actions, cron-job.org, …) can drive it. Every
 endpoint requires `POST` with the token in `X-CRON-TOKEN: <CRON_TOKEN>` (or
 `Authorization: Bearer <CRON_TOKEN>`); optionally restrict callers with
@@ -49,9 +50,11 @@ address).
 | `/cron/run-maintenance/` | GDPR retention: strips email-log bodies past `EMAIL_LOG_BODY_RETENTION_DAYS`; anonymizes clients older than `ANONYMIZE_CLIENTS_AFTER_YEARS` (dry-run report unless `AUTO_ANONYMIZE_OLD_CLIENTS=True`) | daily |
 | `/cron/db-backup/` | `pg_dump` backup, optionally encrypted/uploaded (also accepts legacy `BACKUP_TRIGGER_SECRET`) | daily |
 
-Alternative without an external scheduler: run
-`python manage.py run_background_automation_loop --loop` as a second Railway
-service/worker. Each cycle (default 300 s) it processes OCR jobs and email
+By default, `start.sh` runs
+`python manage.py run_background_automation_loop --loop` alongside the web
+process. It can instead run as a dedicated Railway service/worker when
+`ENABLE_BACKGROUND_AUTOMATION_LOOP=false` on the web service. Each cycle
+(default 300 s) processes OCR jobs and email
 campaigns, runs the daily reminder pass (deduplicated per day inside the
 command), and once per day the same retention maintenance as
 `/cron/run-maintenance/`. The only job it does NOT cover is `/cron/db-backup/`,

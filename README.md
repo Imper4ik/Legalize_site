@@ -56,7 +56,10 @@ See `docs/deployment.md` for more details.
 
 ### Automated Tasks (Cron)
 
-Railway does not support native cron. You must configure an external ping service (like cron-job.org) to hit the CRM's secure webhook endpoints:
+The web service starts its built-in automation loop by default. If you disable
+it, configure an external scheduler (for example Railway Cron or cron-job.org)
+to call the CRM's secure webhook endpoints. Database backups always require an
+external schedule:
 
 - **Database Backup**: `POST /cron/db-backup/`
 - **Email Campaigns**: `POST /cron/process-email-campaigns/`
@@ -149,10 +152,11 @@ pytest
   email-log payload cleanup and a monthly GDPR anonymization report.
 - `scrub_ocr_pii`: manually after deploy or after OCR cleanup changes.
 
-The web service can also run this automation in-process. `start.sh` starts
-`python manage.py run_background_automation_loop --loop` **only when**
-`ENABLE_BACKGROUND_AUTOMATION_LOOP=true` (default is `false`, so an external
-scheduler is required unless you enable it). The loop processes queued OCR jobs
+The web service runs this automation in-process by default. `start.sh` starts
+`python manage.py run_background_automation_loop --loop` when
+`ENABLE_BACKGROUND_AUTOMATION_LOOP=true` (the default). Set it to `false` only
+when an external scheduler or a dedicated worker runs the same jobs. The loop
+processes queued OCR jobs
 and queued email campaigns every 5 minutes, runs retention maintenance, and
 checks missing checklist documents, missing ZUS RCA months, expiring documents, and
 regular reminder records daily after 08:00 Europe/Warsaw time with a same-day retry

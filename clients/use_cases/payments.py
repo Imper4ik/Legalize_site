@@ -69,10 +69,7 @@ def create_payment_for_client(
             actor=actor,
             event_type="payment_created",
             summary="Платёж создан",
-            metadata={
-                "payment_id": payment.id,
-                "status": payment.status,
-            },
+            metadata={"payment_status": payment.status},
             payment=payment,
         )
     return PaymentScenarioResult(client=client, payment=payment)
@@ -95,7 +92,10 @@ def update_payment_for_client(
                 event_type="payment_updated",
                 summary="Платёж обновлён",
                 details="",
-                metadata={"payment_id": payment.id, "changed_fields": list(changed_fields)},
+                metadata={
+                    "changed_fields": list(changed_fields),
+                    **({"payment_status": payment.status} if "status" in changed_fields else {}),
+                },
                 payment=payment,
             )
 
@@ -116,7 +116,6 @@ def delete_payment_for_client(*, payment: Payment, actor: AbstractBaseUser | Ano
             actor=actor,
             event_type="payment_deleted",
             summary="Платёж удалён",
-            metadata={"payment_id": payment_id},
             payment=payment,
         )
         payment.archive()

@@ -135,7 +135,7 @@ def upload_client_document(
         actor=actor,
         event_type="document_uploaded",
         summary="Uploaded document",
-        metadata={"document_id": document.id, "document_type": document.document_type},
+        metadata={"document_id": document.id},
         document=document,
     )
 
@@ -282,7 +282,10 @@ def confirm_wezwanie_document(
         actor=actor,
         event_type="document_confirmed",
         summary="Confirmed wezwanie data",
-        metadata={"document_id": str(document.id), "case_id": str(case.uuid) if case else None},
+        metadata={
+            "document_id": document.id,
+            **({"case_id": str(case.uuid)} if case else {}),
+        },
         document=document,
     )
 

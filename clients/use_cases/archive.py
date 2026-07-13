@@ -71,7 +71,6 @@ def restore_client_payment(*, payment: Payment, actor: AbstractBaseUser | Anonym
             actor=actor,
             event_type="payment_updated",
             summary="Платёж восстановлен из архива",
-            metadata={"payment_id": payment.pk},
             payment=payment,
         )
     return RestoreScenarioResult(

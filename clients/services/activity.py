@@ -54,10 +54,40 @@ SAFE_FIELD_NAMES = {
 ALLOWED_METADATA_SCHEMA = {
     "case_id": "uuid",
     "document_id": "uuid_or_int",
+    "document_version_id": "uuid_or_int",
     "archive_batch_uuid": "uuid",
     "document_count": "int",
     "payment_count": "int",
     "task_count": "int",
+    "verified_count": "int",
+    "version_number": "int",
+    "verified": "bool",
+    "has_case_number": "bool",
+    "workflow_stage": {
+        "new_client",
+        "document_collection",
+        "application_submitted",
+        "fingerprints",
+        "waiting_decision",
+        "decision_received",
+        "closed",
+    },
+    "case_status": {"new", "pending", "approved", "rejected"},
+    "client_status": {"new", "pending", "approved", "rejected"},
+    "old_status": {"new", "pending", "approved", "rejected"},
+    "new_status": {"new", "pending", "approved", "rejected"},
+    "payment_status": {"pending", "partial", "paid", "refunded"},
+    "new_card_application_status": {
+        "no",
+        "submitted_no_number",
+        "submitted_with_number",
+        "unknown",
+    },
+    "export_type": {
+        "pdf_preview",
+        "zip",
+        "document_version_download",
+    },
     "status_tag": {
         "archived",
         "restored",
@@ -113,6 +143,12 @@ def sanitize_activity_metadata(metadata: dict[str, Any] | None) -> dict[str, Any
                 sanitized[key] = value
             elif isinstance(value, str) and value.isdigit():
                 sanitized[key] = int(value)
+            else:
+                logger.warning("Metadata key '%s' rejected due to type mismatch", key)
+
+        elif expected_type == "bool":
+            if isinstance(value, bool):
+                sanitized[key] = value
             else:
                 logger.warning("Metadata key '%s' rejected due to type mismatch", key)
 

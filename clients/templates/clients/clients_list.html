@@ -24,9 +24,21 @@
     <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#quickOnboardingModal">
       <i class="bi bi-link-45deg me-1"></i>{% translate "Быстрая ссылка" %}
     </button>
-    <a href="{% url 'clients:client_add' %}" class="btn btn-gradient">
-      <i class="bi bi-plus-lg me-1"></i>{% translate "Новый клиент" %}
-    </a>
+    <div class="btn-group">
+      <a href="{% url 'clients:client_add' %}" class="btn btn-gradient">
+        <i class="bi bi-plus-lg me-1"></i>{% translate "Новый клиент" %}
+      </a>
+      <button type="button" class="btn btn-gradient dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+        <span class="visually-hidden">{% translate "Другие действия" %}</span>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li>
+          <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#newCaseClientModal">
+            <i class="bi bi-folder-plus me-1"></i>{% translate "Новое дело существующему клиенту" %}
+          </button>
+        </li>
+      </ul>
+    </div>
     {% endif %}
   </div>
 </div>
@@ -397,6 +409,29 @@
                 data-generate-url="{% url 'clients:quick_create_client_onboarding' %}">
           <i class="bi bi-link-45deg me-1"></i>{% translate "Сгенерировать ссылку" %}
         </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="newCaseClientModal" tabindex="-1" aria-labelledby="newCaseClientModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="newCaseClientModalLabel">{% translate "Новое дело: выберите клиента" %}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{% translate 'Закрыть' %}"></button>
+      </div>
+      <div class="modal-body">
+        <input type="text"
+               id="new-case-client-search"
+               class="form-control"
+               autocomplete="off"
+               placeholder="{% translate 'Поиск по имени, почте, телефону или номеру дела...' %}"
+               data-autocomplete-url="{% url 'clients:client_autocomplete_api' %}"
+               data-cases-label="{% translate 'Активных дел' %}"
+               data-empty-label="{% translate 'Ничего не найдено.' %}">
+        <div id="new-case-client-results" class="list-group mt-2" style="max-height: 300px; overflow-y: auto;"></div>
+        <div class="form-text mt-2">{% translate "Выберите клиента — откроется форма нового дела." %}</div>
       </div>
     </div>
   </div>

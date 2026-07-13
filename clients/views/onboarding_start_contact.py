@@ -139,8 +139,7 @@ def _save_contact_values(client: Client, mos_data: MOSApplicationData, values: d
     personal_data = dict(cast("dict[str, Any]", mos_data.personal_data) or {})
     for field_name in CONTACT_REQUIRED_FIELDS:
         personal_data[field_name] = values[field_name]
-    # EncryptedJSONField stores dicts but django-stubs types it as text.
-    mos_data.personal_data = personal_data  # type: ignore[assignment]
+    mos_data.personal_data = personal_data
 
     update_fields = ["personal_data", "updated_at"]
     if mos_data.status == "draft":
@@ -383,7 +382,7 @@ def _handle_new_card_application_post(
             summary="Клиент обновил информацию о новой подаче на карту побыту",
             details="Клиент обновил информацию о новой подаче.",
             metadata={
-                "status": values.get("status"),
+                "new_card_application_status": values["status"],
                 "has_case_number": bool(values.get("case_number")),
             },
         )
@@ -609,7 +608,7 @@ def _build_start_context(
     )
 
     # Build list of action items / notifications for the client
-    action_items = []
+    action_items: list[dict[str, str | None]] = []
     from django.urls import reverse
 
     from clients.models import StaffTask

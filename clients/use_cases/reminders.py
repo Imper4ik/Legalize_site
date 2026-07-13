@@ -26,7 +26,7 @@ class ReminderScenarioResult:
 
 
 def _reminder_metadata(reminder: Reminder) -> dict[str, Any]:
-    return {"document_id": reminder.document_id}
+    return {"document_id": reminder.document_id} if reminder.document_id is not None else {}
 
 
 def delete_reminder(*, reminder: Reminder, actor: AbstractBaseUser | AnonymousUser | None) -> ReminderScenarioResult:

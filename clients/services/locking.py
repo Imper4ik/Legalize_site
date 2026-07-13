@@ -118,9 +118,9 @@ def _update_instance_with_locking(
             event_type=event_type,
             summary="Запись обновлена",
             metadata={
-                "case_id": str(case.uuid) if case else None,
+                **({"case_id": str(case.uuid)} if case else {}),
                 "status_tag": "approved" if getattr(instance, "status", "") == "approved" else "submitted",
-            }
+            },
         )
 
     # The bulk .update() above bypasses post_save signals, so the navbar

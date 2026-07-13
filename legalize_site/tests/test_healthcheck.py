@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from clients.models import Client, Document, DocumentProcessingJob, EmailCampaign
@@ -79,3 +81,28 @@ class HealthcheckViewTests(TestCase):
         self.assertIn("cache", payload["components"])
         self.assertIn("runtime", payload["components"])
         self.assertEqual(payload["components"]["database"]["status"], "ok")
+
+    @override_settings(
+        DEBUG=True,
+        IS_PRODUCTION=True,
+        REDIS_URL="",
+        CACHES={
+            "default": {
+                "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+                "LOCATION": "cache_table",
+            }
+        },
+    )
+    @patch("legalize_site.views.cache.set", side_effect=RuntimeError("cache unavailable"))
+    def test_production_readiness_fails_closed_when_database_cache_is_unavailable(self, _cache_set):
+        response = self.client.get(reverse("readiness"))
+
+        self.assertEqual(response.status_code, 503)
+        payload = response.json()
+        self.assertEqual(payload["status"], "degraded")
+        self.assertEqual(payload["components"]["cache"]["status"], "error")
+        self.assertTrue(payload["components"]["cache"]["required"])
+        self.assertEqual(
+            payload["components"]["cache"]["backend"],
+            "django.core.cache.backends.db.DatabaseCache",
+        )

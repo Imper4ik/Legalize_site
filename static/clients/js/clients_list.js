@@ -770,12 +770,101 @@
     }
   }
 
+  function initNewCaseClientPicker(root) {
+    const modal = root.getElementById('newCaseClientModal');
+    const input = root.getElementById('new-case-client-search');
+    const results = root.getElementById('new-case-client-results');
+    if (!modal || !input || !results) return;
+
+    let debounceTimer;
+
+    modal.addEventListener('shown.bs.modal', () => {
+      input.focus();
+    });
+
+    modal.addEventListener('hidden.bs.modal', () => {
+      input.value = '';
+      results.innerHTML = '';
+    });
+
+    input.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      const query = input.value.trim();
+      if (query.length < 2) {
+        results.innerHTML = '';
+        return;
+      }
+
+      debounceTimer = setTimeout(async () => {
+        const baseUrl = input.dataset.autocompleteUrl;
+        if (!baseUrl) return;
+
+        try {
+          const response = await fetch(`${baseUrl}?q=${encodeURIComponent(query)}`, {
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              'Accept': 'application/json'
+            }
+          });
+          if (!response.ok) throw new Error('Network error');
+
+          const data = await response.json();
+          renderResults(data.results);
+        } catch (err) {
+          console.error('New case client picker error:', err);
+        }
+      }, 250);
+    });
+
+    function renderResults(clients) {
+      results.innerHTML = '';
+      if (!clients || clients.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'list-group-item text-muted small';
+        empty.textContent = input.dataset.emptyLabel || '';
+        results.appendChild(empty);
+        return;
+      }
+
+      clients.forEach((client) => {
+        const item = document.createElement('a');
+        item.href = client.case_add_url;
+        item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-2';
+
+        const info = document.createElement('div');
+        info.className = 'd-flex flex-column';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'fw-semibold';
+        nameSpan.textContent = `${client.first_name} ${client.last_name}`;
+        info.appendChild(nameSpan);
+
+        if (client.email || client.phone) {
+          const detailSpan = document.createElement('span');
+          detailSpan.className = 'small text-muted';
+          detailSpan.textContent = [client.email, client.phone].filter(Boolean).join(' | ');
+          info.appendChild(detailSpan);
+        }
+        item.appendChild(info);
+
+        const count = client.active_cases_count || 0;
+        const badge = document.createElement('span');
+        badge.className = count > 0 ? 'badge bg-warning text-dark' : 'badge bg-secondary';
+        badge.textContent = `${input.dataset.casesLabel || ''}: ${count}`;
+        item.appendChild(badge);
+
+        results.appendChild(item);
+      });
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     enhanceEditors(document);
     initOnboardingLinkGenerator(document);
     initPublicIntakeLink(document);
     initQuickOnboardingLink(document);
     initAutocompleteSearch(document);
+    initNewCaseClientPicker(document);
     initShareModalListeners();
   });
 })();

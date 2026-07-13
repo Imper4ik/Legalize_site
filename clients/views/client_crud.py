@@ -512,7 +512,7 @@ def calculator_view(request: HttpRequest) -> HttpResponseBase:
 
 @role_required_view("Admin", "Manager", "Staff")
 def client_autocomplete_api(request: HttpRequest) -> HttpResponse:
-    from django.db.models import Q
+    from django.db.models import Count, Q
     from django.http import JsonResponse
 
     from clients.models import Client
@@ -534,6 +534,14 @@ def client_autocomplete_api(request: HttpRequest) -> HttpResponse:
         | Q(email__icontains=query)
         | Q(phone__icontains=query)
         | Q(cases__authority_case_number_hash=case_number_hash)
+    ).annotate(
+        # The reverse "cases" join bypasses the archived-excluding default
+        # manager, so filter archived rows out explicitly.
+        active_cases_count=Count(
+            "cases",
+            filter=Q(cases__archived_at__isnull=True),
+            distinct=True,
+        ),
     )
 
     results = []
@@ -544,7 +552,9 @@ def client_autocomplete_api(request: HttpRequest) -> HttpResponse:
             "last_name": client.last_name,
             "email": client.email or "",
             "phone": client.phone or "",
-            "url": reverse("clients:client_detail", kwargs={"pk": client.id})
+            "url": reverse("clients:client_detail", kwargs={"pk": client.id}),
+            "active_cases_count": client.active_cases_count,
+            "case_add_url": reverse("clients:case_add", kwargs={"pk": client.id}),
         })
 
     return JsonResponse({"results": results})

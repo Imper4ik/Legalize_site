@@ -11002,6 +11002,25 @@ msgstr "użytkownicy"
 #~ msgid "ZUS RCA — месяц отчёта"
 #~ msgstr "ZUS RCA — miesiąc sprawozdawczy"
 
+# Additional client-list and case-creation actions.
+msgid "Client intake form"
+msgstr "Formularz wstępny klienta"
+
+msgid "Другие действия"
+msgstr "Inne działania"
+
+msgid "Новое дело существующему клиенту"
+msgstr "Nowa sprawa dla istniejącego klienta"
+
+msgid "Новое дело: выберите клиента"
+msgstr "Nowa sprawa: wybierz klienta"
+
+msgid "Активных дел"
+msgstr "Aktywne sprawy"
+
+msgid "Выберите клиента — откроется форма нового дела."
+msgstr "Wybierz klienta — otworzy się formularz nowej sprawy."
+
 #~ msgid "Сначала сохраните клиента, затем переведите дело на следующий этап."
 #~ msgstr "Najpierw zapisz klienta, następnie przenieś sprawę do kolejnego etapu."
 

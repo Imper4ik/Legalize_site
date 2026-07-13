@@ -261,7 +261,7 @@ class OnboardingPurposeTests(TestCase):
         self.assertContains(response, "Цель, выбранная клиентом")
         self.assertContains(response, "Клиент выбрал другую цель подачи")
 
-    def test_admin_mos_review_requires_case_uuid_for_multi_case_client(self):
+    def test_admin_mos_review_shows_case_picker_for_multi_case_client(self):
         from clients.services.cases import create_case_for_client
 
         client, _token = self._client_with_session(application_purpose="study")
@@ -278,11 +278,12 @@ class OnboardingPurposeTests(TestCase):
         review_url = reverse("clients:admin_mos_review", kwargs={"client_id": client.pk})
         ambiguous_response = self.client.get(review_url)
 
-        self.assertEqual(ambiguous_response.status_code, 302)
-        self.assertIn(reverse("clients:client_detail", kwargs={"pk": client.pk}), ambiguous_response["Location"])
-        self.assertIn("view=person", ambiguous_response["Location"])
+        self.assertEqual(ambiguous_response.status_code, 200)
+        self.assertTemplateUsed(ambiguous_response, "clients/mos_review_select_case.html")
+        self.assertContains(ambiguous_response, f"case={case_a.uuid}")
+        self.assertContains(ambiguous_response, f"case={case_b.uuid}")
 
-        selected_response = self.client.get(f"{review_url}?case_uuid={case_b.uuid}")
+        selected_response = self.client.get(f"{review_url}?case={case_b.uuid}")
 
         self.assertEqual(selected_response.status_code, 200)
         self.assertEqual(selected_response.context["case"], case_b)

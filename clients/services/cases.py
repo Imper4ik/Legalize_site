@@ -95,7 +95,11 @@ def create_case_for_client(
             actor=actor,
             event_type="client_updated",
             summary="Создано новое дело клиента",
-            metadata={"case_id": str(case.uuid), "workflow_stage": case.workflow_stage, "status": case.status},
+            metadata={
+                "case_id": str(case.uuid),
+                "workflow_stage": case.workflow_stage,
+                "case_status": case.status,
+            },
         )
     return case
 

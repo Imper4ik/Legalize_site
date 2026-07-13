@@ -155,8 +155,13 @@ class ConfiguredBackupStorage:
             logger.info("Successfully uploaded backup to remote storage: %s", remote_path)
             return True
         except Exception as exc:
-            logger.error("Failed to upload backup to remote storage: %s", exc)
-            return False
+            logger.error(
+                "Failed to upload backup to remote storage (error_type=%s)",
+                exc.__class__.__name__,
+            )
+            raise BackupError(
+                "Failed to upload database backup to remote storage; local backup retained."
+            ) from exc
 
 def _get_storage_backend() -> BackupStorageBackend:
     if _remote_storage_enabled():

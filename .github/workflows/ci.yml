@@ -38,7 +38,25 @@ jobs:
         run: python manage.py check
 
       - name: Django deploy check
-        run: python manage.py check --deploy
+        env:
+          DJANGO_SETTINGS_MODULE: legalize_site.settings.production
+          APP_ENV: production
+          DEBUG: "False"
+          SECRET_KEY: ci-only-production-secret-key-for-deploy-system-check-2026
+          FERNET_KEYS: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
+          ALLOWED_HOSTS: ci.example.test
+          CSRF_TRUSTED_ORIGINS: https://ci.example.test
+          DATABASE_URL: "sqlite:///:memory:"
+          USE_DATABASE_MEDIA_STORAGE: "True"
+          DATABASE_MEDIA_FALLBACK_TO_FILE_SYSTEM: "False"
+          EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
+          EMAIL_HOST: smtp.example.test
+          EMAIL_HOST_USER: ci-system-check
+          EMAIL_HOST_PASSWORD: ci-only-placeholder
+          DEFAULT_FROM_EMAIL: noreply@ci.example.test
+          CRON_TOKEN: ci-only-cron-token
+          CRON_ALLOWED_IPS: 127.0.0.1
+        run: python manage.py check --deploy --fail-level ERROR
 
       - name: Migration drift check
         run: python manage.py makemigrations --check --dry-run
@@ -59,7 +77,7 @@ jobs:
         run: mypy clients legalize_site submissions users translations database_media fernet_fields --config-file mypy.ini
 
       - name: Bandit
-        run: bandit -r clients legalize_site submissions users database_media fernet_fields translations -x "*/migrations/*,*/tests/*,*/testing/*,*/demo/*"
+        run: bandit -r clients legalize_site submissions users database_media fernet_fields translations -x "*/migrations/*,*/tests/*,*/testing/*,*/demo/*,*/test_*.py,*/tests.py"
 
       - name: pip-audit
         run: pip-audit

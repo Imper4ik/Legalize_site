@@ -74,7 +74,10 @@ def finalize_client_creation(
             actor=actor,
             event_type="client_created",
             summary="Клиент создан",
-            metadata={"workflow_stage": client.get_effective_workflow_stage(), "status": client.status},
+            metadata={
+                "workflow_stage": client.get_effective_workflow_stage(),
+                "client_status": client.status,
+            },
         )
     return ClientRecordScenarioResult(
         client=client,

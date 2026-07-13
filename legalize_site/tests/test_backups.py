@@ -9,7 +9,7 @@ from uuid import uuid4
 from django.conf import settings
 from django.test import SimpleTestCase, override_settings
 
-from legalize_site.backups import ConfiguredBackupStorage, create_db_backup
+from legalize_site.backups import BackupError, ConfiguredBackupStorage, create_db_backup
 
 
 class BackupTests(SimpleTestCase):
@@ -112,6 +112,51 @@ class BackupTests(SimpleTestCase):
         self.assertTrue(uploaded)
         self.assertEqual(dummy_storage.saved_path, "backup-test.sql")
         self.assertEqual(dummy_storage.saved_content, b"-- dump --")
+
+    @override_settings(FERNET_KEYS=[], BACKUP_STORAGE_ALIAS="backups")
+    @patch("legalize_site.backups.storages")
+    @patch("legalize_site.backups.shutil.which", return_value="/usr/bin/pg_dump")
+    @patch("legalize_site.backups.subprocess.run")
+    @patch("legalize_site.backups._backup_dir")
+    def test_remote_upload_failure_raises_and_retains_local_backup(
+        self,
+        backup_dir_mock,
+        run_mock,
+        _which,
+        storages_mock,
+    ):
+        class FailingStorage:
+            def save(self, path, content):
+                raise OSError("provider-specific failure")
+
+        storages_mock.__getitem__.return_value = FailingStorage()
+
+        with self._temporary_backup_dir() as tmp_dir_name:
+            tmp_dir = Path(tmp_dir_name)
+            backup_dir_mock.return_value = tmp_dir
+
+            def _fake_run(cmd, check, capture_output, text):
+                Path(cmd[-1]).write_text("-- dump --")
+
+            run_mock.side_effect = _fake_run
+
+            with patch.dict(
+                "os.environ",
+                {
+                    "DATABASE_URL": "postgresql://user:pass@localhost/db",
+                    "BACKUP_REMOTE_STORAGE": "true",
+                },
+                clear=False,
+            ):
+                with self.assertRaisesRegex(
+                    BackupError,
+                    "Failed to upload database backup to remote storage; local backup retained",
+                ):
+                    create_db_backup()
+
+            retained_backups = list(tmp_dir.glob("backup-*.sql"))
+            self.assertEqual(len(retained_backups), 1)
+            self.assertEqual(retained_backups[0].read_text(), "-- dump --")
 
     @override_settings(FERNET_KEYS=[])
     @patch("legalize_site.backups.shutil.which", return_value="/usr/bin/pg_dump")

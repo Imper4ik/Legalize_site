@@ -113,6 +113,44 @@ class MetadataSanitizerTests(TestCase):
         ):
             self.assertNotIn(forbidden, sanitized)
 
+    def test_controlled_operational_metadata_is_preserved(self) -> None:
+        sanitized = sanitize_activity_metadata(
+            {
+                "workflow_stage": "document_collection",
+                "case_status": "approved",
+                "client_status": "pending",
+                "old_status": "new",
+                "new_status": "approved",
+                "payment_status": "partial",
+                "new_card_application_status": "submitted_with_number",
+                "export_type": "zip",
+                "verified": True,
+                "has_case_number": False,
+                "document_version_id": 42,
+                "version_number": "3",
+            }
+        )
+
+        self.assertEqual(sanitized["workflow_stage"], "document_collection")
+        self.assertEqual(sanitized["payment_status"], "partial")
+        self.assertEqual(sanitized["export_type"], "zip")
+        self.assertIs(sanitized["verified"], True)
+        self.assertIs(sanitized["has_case_number"], False)
+        self.assertEqual(sanitized["document_version_id"], "42")
+        self.assertEqual(sanitized["version_number"], 3)
+
+    def test_invalid_controlled_metadata_values_are_dropped(self) -> None:
+        sanitized = sanitize_activity_metadata(
+            {
+                "workflow_stage": "client@example.test",
+                "payment_status": "transaction-123",
+                "verified": "yes",
+                "export_type": "../../secret",
+            }
+        )
+
+        self.assertEqual(sanitized, {})
+
 
 class EncryptedDataValidatorTests(TestCase):
     """Acceptance tests 21-22: exit codes and no-PII output."""

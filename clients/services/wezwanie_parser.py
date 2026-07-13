@@ -117,12 +117,9 @@ def _parse_date(raw: str | None) -> date | None:
 
     cleaned = raw.strip().rstrip(".,;:")
     if re.fullmatch(rf"[{DATE_COMPONENT_CHARS}./-]+", cleaned):
-        cleaned = cleaned.translate(str.maketrans({
-            "O": "0", "o": "0",
-            "I": "1", "l": "1", "|": "1",
-            "S": "5", "s": "5",
-            "B": "8",
-        }))
+        cleaned = cleaned.translate(
+            str.maketrans("OoIl|SsB", "00111558")
+        )
     for fmt in DATE_FORMATS:
         try:
             return datetime.strptime(cleaned, fmt).date()

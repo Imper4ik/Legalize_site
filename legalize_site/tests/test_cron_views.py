@@ -145,6 +145,7 @@ class CronViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "backup created")
+        self.assertIs(response.json()["stored_remotely"], True)
         create_backup_mock.assert_called_once()
 
     @patch.dict(os.environ, {"BACKUP_TRIGGER_SECRET": "legacy-secret"}, clear=True)
@@ -170,6 +171,23 @@ class CronViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["status"], "backup created")
         create_backup_mock.assert_called_once()
+
+    @patch.dict(
+        os.environ,
+        {"CRON_TOKEN": "cron-secret", "BACKUP_TRIGGER_SECRET": "legacy-secret"},
+        clear=True,
+    )
+    @patch("legalize_site.cron_views.process_pending_document_jobs")
+    def test_backup_trigger_secret_cannot_authorize_non_backup_cron(self, process_mock):
+        response = self.client.post(
+            reverse("process_document_jobs_cron"),
+            HTTP_X_CRON_TOKEN="legacy-secret",
+            REMOTE_ADDR="127.0.0.1",
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json(), {"error": "forbidden"})
+        process_mock.assert_not_called()
 
     @patch.dict(os.environ, {"CRON_TOKEN": "secret"}, clear=False)
     def test_process_document_jobs_cron_requires_token(self):

@@ -8,6 +8,16 @@ from django.test import SimpleTestCase
 
 
 class ReleaseScriptTests(SimpleTestCase):
+    def test_render_blueprint_uses_docker_release_and_readiness(self):
+        blueprint = (Path(__file__).resolve().parents[2] / "render.yaml").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("preDeployCommand: bash release.sh", blueprint)
+        self.assertIn("runtime: docker", blueprint)
+        self.assertIn("dockerfilePath: ./Dockerfile", blueprint)
+        self.assertIn("healthCheckPath: /readyz/", blueprint)
+
     def test_release_script_syntax_is_valid(self):
         bash = shutil.which("bash")
         if bash is None:

@@ -62,3 +62,33 @@ class ClientAutocompleteTests(TestCase):
         self.assertEqual(results[0]["email"], "alexander@example.com")
         self.assertEqual(results[0]["phone"], "+48111111111")
         self.assertEqual(results[0]["url"], reverse("clients:client_detail", kwargs={"pk": self.client_a.id}))
+
+    def test_autocomplete_reports_active_cases_and_case_add_url(self):
+        from django.utils import timezone
+
+        from clients.models import Case
+        from clients.services.cases import create_case_for_client
+
+        # Every new Client gets a primary case from the post_save signal, so
+        # client_a starts with 1 active case and client_b keeps exactly 1.
+        create_case_for_client(client=self.client_a, application_purpose="work", is_test_data=True)
+        archived = create_case_for_client(client=self.client_a, application_purpose="study", is_test_data=True)
+        Case.all_objects.filter(pk=archived.pk).update(archived_at=timezone.now())
+
+        self.client.login(email="staff@example.com", password="password")
+        url = reverse("clients:client_autocomplete_api")
+
+        response = self.client.get(url, {"q": "Alex"})
+        self.assertEqual(response.status_code, 200)
+        results = response.json()["results"]
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["active_cases_count"], 2)
+        self.assertEqual(
+            results[0]["case_add_url"],
+            reverse("clients:case_add", kwargs={"pk": self.client_a.id}),
+        )
+
+        response = self.client.get(url, {"q": "Gogol"})
+        results = response.json()["results"]
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["active_cases_count"], 1)

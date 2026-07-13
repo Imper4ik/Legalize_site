@@ -93,15 +93,18 @@ def _request_ip_allowed(request: HttpRequest) -> bool:
     return False
 
 
-def _authorize_cron_request(request: HttpRequest, *, action_name: str) -> JsonResponse | None:
-    expected_tokens = [
-        token
-        for token in {
-            os.environ.get("CRON_TOKEN"),
-            os.environ.get("BACKUP_TRIGGER_SECRET"),
-        }
-        if token
-    ]
+def _authorize_cron_request(
+    request: HttpRequest,
+    *,
+    action_name: str,
+    allow_backup_trigger_secret: bool = False,
+) -> JsonResponse | None:
+    cron_token = os.environ.get("CRON_TOKEN")
+    expected_tokens = [cron_token] if cron_token else []
+    if allow_backup_trigger_secret:
+        backup_trigger_secret = os.environ.get("BACKUP_TRIGGER_SECRET")
+        if backup_trigger_secret:
+            expected_tokens.append(backup_trigger_secret)
     supplied_token = request.headers.get("X-CRON-TOKEN")
     authorization = request.headers.get("Authorization", "")
     if not supplied_token and authorization.startswith("Bearer "):
@@ -128,18 +131,25 @@ def _authorize_cron_request(request: HttpRequest, *, action_name: str) -> JsonRe
 def db_backup(request: HttpRequest) -> JsonResponse:
     started_at = time.perf_counter()
     try:
-        forbidden_response = _authorize_cron_request(request, action_name="database backup")
+        forbidden_response = _authorize_cron_request(
+            request,
+            action_name="database backup",
+            allow_backup_trigger_secret=True,
+        )
         if forbidden_response is not None:
             return forbidden_response
 
         request_ip = _get_request_ip(request)
         backup_result = create_db_backup()
         logger.info(
-            "Database backup created: backup_id=%s ip=%s size_bytes=%s encrypted=%s plaintext_sha256=%s stored_file_sha256=%s",
+            "Database backup created: backup_id=%s ip=%s size_bytes=%s "
+            "encrypted=%s stored_remotely=%s plaintext_sha256=%s "
+            "stored_file_sha256=%s",
             backup_result.backup_id,
             request_ip,
             backup_result.size_bytes,
             backup_result.encrypted,
+            backup_result.stored_remotely,
             backup_result.plaintext_sha256,
             backup_result.stored_file_sha256,
         )
@@ -151,6 +161,7 @@ def db_backup(request: HttpRequest) -> JsonResponse:
                 "plaintext_sha256": backup_result.plaintext_sha256,
                 "stored_file_sha256": backup_result.stored_file_sha256,
                 "encrypted": backup_result.encrypted,
+                "stored_remotely": backup_result.stored_remotely,
                 "ok": True,
                 "command": "db_backup",
                 "duration_ms": round((time.perf_counter() - started_at) * 1000),

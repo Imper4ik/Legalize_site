@@ -334,9 +334,10 @@ class P0FixesVerificationTests(TestCase):
         self.assertIsNotNone(act)
         self.assertNotIn("WSC-CASE-12345", act.details)
         self.assertEqual(act.details, "Клиент обновил информацию о новой подаче.")
-        # The raw case number must never appear in metadata; the has_case_number
-        # flag is not a whitelisted key and is intentionally dropped.
+        # Keep only a typed presence flag and a controlled status, never the raw number.
         self.assertNotIn("WSC-CASE-12345", act.metadata.values())
+        self.assertIs(act.metadata["has_case_number"], True)
+        self.assertEqual(act.metadata["new_card_application_status"], "submitted_with_number")
 
         # 3. Staff registers the case authority number -> closes the task (§4).
         case = self.client_obj.cases.get()
@@ -353,7 +354,7 @@ class P0FixesVerificationTests(TestCase):
             client=self.client_obj,
             event_type="new_card_application_updated",
             details="Клиент обновил информацию о новой подаче.",
-            metadata={"status": "submitted_with_number", "has_case_number": True}
+            metadata={"new_card_application_status": "submitted_with_number", "has_case_number": True}
         )
         with translation.override("ru"):
             self.assertEqual(act.get_event_type_display(), "Новая подача обновлена")

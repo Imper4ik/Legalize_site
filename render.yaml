@@ -1,9 +1,10 @@
 services:
   - type: web
     name: legalize-site
-    env: python
-    buildCommand: ./build.sh
-    startCommand: ./start.sh
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /readyz/
+    preDeployCommand: bash release.sh
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -13,8 +14,6 @@ services:
         value: legalize_site.settings.production
       - key: ENABLE_TRANSLATION_TOOLING
         value: "False"
-      - key: PYTHON_VERSION
-        value: 3.12.6
 
 databases:
   - name: legalize-site-postgres
