@@ -238,6 +238,7 @@ INSTALLED_APPS = [
     "legalize_site",
     "allauth",
     "allauth.account",
+    "allauth.mfa",
     "allauth.socialaccount",
     "allauth.socialaccount.providers.google",
     "anymail",
@@ -568,6 +569,12 @@ SOCIALACCOUNT_ADAPTER = "users.adapters.InternalSocialAccountAdapter"
 # Email-only authentication settings for django-allauth 65+.
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
+
+# Two-factor authentication (allauth.mfa): TOTP authenticator apps plus
+# single-use recovery codes. Enrollment lives at /accounts/2fa/; production
+# check W015 nags while staff accounts remain unenrolled.
+MFA_SUPPORTED_TYPES = ["totp", "recovery_codes"]
+MFA_TOTP_ISSUER = os.environ.get("MFA_TOTP_ISSUER", "Legalize")
 
 # Редиректы
 ACCOUNT_ALLOW_SIGNUPS = False

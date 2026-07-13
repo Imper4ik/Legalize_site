@@ -11050,3 +11050,9 @@ msgstr "Potwierdza złożenie"
 
 msgid "Подача (wniosek), позиции которой закрывает этот штамп/подтверждение подачи."
 msgstr "Złożenie (wniosek), którego pozycje zamyka ta pieczęć / potwierdzenie złożenia."
+
+msgid "Безопасность (2FA)"
+msgstr "Bezpieczeństwo (2FA)"
+
+msgid "Двухфакторная аутентификация (TOTP) и коды восстановления"
+msgstr "Uwierzytelnianie dwuskładnikowe (TOTP) i kody odzyskiwania"

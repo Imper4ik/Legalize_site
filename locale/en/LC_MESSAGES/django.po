@@ -11046,3 +11046,9 @@ msgstr "Confirms submission"
 
 msgid "Подача (wniosek), позиции которой закрывает этот штамп/подтверждение подачи."
 msgstr "The submission (wniosek) whose positions this stamp / proof of submission closes."
+
+msgid "Безопасность (2FA)"
+msgstr "Security (2FA)"
+
+msgid "Двухфакторная аутентификация (TOTP) и коды восстановления"
+msgstr "Two-factor authentication (TOTP) and recovery codes"

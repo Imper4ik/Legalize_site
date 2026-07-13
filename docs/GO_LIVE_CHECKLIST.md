@@ -73,8 +73,11 @@ Not yet modelled: pobyt stały, EU long-term resident, CUKR.
   Remaining template styles still require `style-src 'unsafe-inline'`. Set
   `LEGALIZE_CSP_STRICT_REPORT_ONLY=True`, collect the style violation inventory,
   then move those declarations into static stylesheets before enforcing it.
-- **A4 — staff 2FA:** the authentication and recovery policy (TOTP versus email,
-  recovery codes and support procedure) must be approved before implementation.
+- **A4 — staff 2FA:** opt-in TOTP + recovery codes are live (`allauth.mfa`,
+  enrollment at `/accounts/2fa/`, "Безопасность (2FA)" in the user menu).
+  Production `check --deploy` emits advisory **W015** while active staff remain
+  unenrolled. Remaining decision: whether to make enrollment mandatory
+  (enforcement middleware) and the support/recovery procedure.
 - **B1 — MOS 2 detailed fields:** structured `karalność`, tax obligations, and the
   professional-qualifications section. Needs the official `wzór` (Dz.U. 2025 poz. 1647)
   to map fields exactly rather than guess. Core applicant/passport/family/address data

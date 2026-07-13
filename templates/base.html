@@ -241,6 +241,11 @@
 <li><hr class="dropdown-divider"></li>
                 {% endif %}
                 <li>
+                  <a class="dropdown-item" href="{% url 'mfa_index' %}" title="{% translate 'Двухфакторная аутентификация (TOTP) и коды восстановления' %}">
+                    <i class="bi bi-shield-lock me-2 text-muted"></i>{% translate "Безопасность (2FA)" %}
+                  </a>
+                </li>
+                <li>
                   <form id="logout-form" method="post" action="{% url 'account_logout' %}">
                     {% csrf_token %}
                     <button type="submit" class="dropdown-item">

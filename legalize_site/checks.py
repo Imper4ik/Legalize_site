@@ -268,6 +268,37 @@ def rate_limit_cache_check(app_configs: Any = None, **kwargs: Any) -> list[Error
 
 
 MALWARE_SCAN_WARNING_ID = "legalize_site.W014"
+STAFF_MFA_WARNING_ID = "legalize_site.W015"
+
+
+@register("legalize_site")
+def staff_mfa_check(app_configs: Any = None, **kwargs: Any) -> list[Error | Warning]:
+    """Warn while active staff accounts can sign in without a second factor."""
+    from django.db import OperationalError, ProgrammingError
+
+    messages: list[Error | Warning] = []
+    if not getattr(settings, "IS_PRODUCTION", False):
+        return messages
+    try:
+        from allauth.mfa.models import Authenticator
+        from django.contrib.auth import get_user_model
+
+        staff = get_user_model().objects.filter(is_staff=True, is_active=True)
+        unenrolled = staff.exclude(
+            pk__in=Authenticator.objects.values_list("user_id", flat=True)
+        ).count()
+    except (ImportError, OperationalError, ProgrammingError):
+        # allauth.mfa disabled or tables not migrated yet (initial deploy).
+        return messages
+    if unenrolled:
+        messages.append(
+            Warning(
+                f"{unenrolled} active staff account(s) have no two-factor authentication enrolled.",
+                hint="Staff can enroll a TOTP app and recovery codes at /accounts/2fa/.",
+                id=STAFF_MFA_WARNING_ID,
+            )
+        )
+    return messages
 
 
 @register("legalize_site")
