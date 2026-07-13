@@ -59,8 +59,26 @@ _ACCENT_TRANSLATION = str.maketrans({
 })
 
 
+_OCR_DIGIT_CONFUSIONS = str.maketrans("oil|sb", "011158")
+# Tokens made of digits plus common OCR letter/digit confusions ("2O26", "O5"),
+# matched after lowercasing. At least one real digit is required so ordinary
+# words are never rewritten.
+_OCR_NUMERIC_TOKEN = re.compile(r"\b(?=[oil|sb]*\d)[\doil|sb]{2,4}\b")
+
+
+def _repair_ocr_digits(text: str) -> str:
+    """Rewrite numeric-looking tokens where OCR misread digits as letters.
+
+    Photos of ZUS forms routinely come back as "za miesiac O5 2O26"; the month
+    patterns match digit classes only, so these tokens must be repaired before
+    matching."""
+    return _OCR_NUMERIC_TOKEN.sub(
+        lambda match: match.group(0).translate(_OCR_DIGIT_CONFUSIONS), text
+    )
+
+
 def _normalize_zus_text(text: str) -> str:
-    return text.lower().translate(_ACCENT_TRANSLATION)
+    return _repair_ocr_digits(text.lower().translate(_ACCENT_TRANSLATION))
 
 
 def _compact_insurance_code(raw_code: str) -> str:
@@ -160,12 +178,15 @@ def _period_month(year: str, month: str) -> date | None:
     return None
 
 
-def _find_zus_period_month(text: str) -> date | None:
+def _find_zus_period_month(text: str, *, assume_rca: bool = False) -> date | None:
     """Extract the ZUS RCA reporting month and normalize it to the first day.
 
     The parser prefers context-rich patterns to avoid treating normal dates such
     as upload/print dates as the RCA period. It still falls back to standalone
-    MM.YYYY / YYYY-MM when the text looks like a ZUS report.
+    MM.YYYY / YYYY-MM when the text looks like a ZUS report — or when the caller
+    already knows the document sits in the ZUS RCA checklist slot
+    (``assume_rca``), which matters for photos where OCR garbles the literal
+    "RCA" marker.
     """
     normalized = _normalize_zus_text(text)
     month = r"(0?[1-9]|1[0-2])"
@@ -200,7 +221,7 @@ def _find_zus_period_month(text: str) -> date | None:
                 return parsed
 
     looks_like_zus_rca = "zus" in normalized and bool(re.search(r"\brca\b", normalized))
-    if not looks_like_zus_rca:
+    if not (looks_like_zus_rca or assume_rca):
         return None
 
     # Avoid matching inside full dates like 25.05.2026 by requiring no digit/dot
@@ -246,8 +267,12 @@ def _find_zcna_family_members(text: str) -> list[str]:
     return names
 
 
-def parse_zus_doc(file_path: str | Path) -> ZusDocData:
-    """Parse ZUS document scan (supports ZUA, ZCNA, RCA, and other ZUS forms)."""
+def parse_zus_doc(file_path: str | Path, *, assume_rca: bool = False) -> ZusDocData:
+    """Parse ZUS document scan (supports ZUA, ZCNA, RCA, and other ZUS forms).
+
+    ``assume_rca`` tells the period-month extractor that the document was
+    uploaded into the ZUS RCA checklist slot, enabling the standalone MM.YYYY
+    fallback even when photo OCR garbles the literal "RCA" marker."""
     raw_text = extract_text(file_path)
     cleaned_text = raw_text.replace('\ufffe', '-').replace('\u00ad', '').replace('\ufeff', '')
     cleaned_text = cleaned_text.replace('\u00a0', ' ').replace('\t', ' ')
@@ -259,7 +284,7 @@ def parse_zus_doc(file_path: str | Path) -> ZusDocData:
     zus_form_type = _detect_zus_form_type(cleaned_text)
     employer_nip = _find_nip(cleaned_text)
     insurance_code = _find_insurance_code(cleaned_text)
-    period_month = _find_zus_period_month(cleaned_text)
+    period_month = _find_zus_period_month(cleaned_text, assume_rca=assume_rca)
     detected_names = _find_detected_names(cleaned_text)
 
     # For ZCNA, also try to extract family member names

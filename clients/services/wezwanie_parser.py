@@ -136,7 +136,10 @@ def _extract_pdf_text(path: Path) -> str:
     try:
         from pypdf import PdfReader
         reader = PdfReader(str(path))
-        pages = reader.pages[:2]
+        # ZUS RCA/DRA print the reporting period below the header block, which
+        # can land on page 2+; read a few more pages of native text before
+        # deciding OCR is needed.
+        pages = reader.pages[:4]
         extracted = [page.extract_text() or "" for page in pages]
         text_content = "\n".join(extracted).strip()
     except Exception as exc:
@@ -151,9 +154,12 @@ def _extract_pdf_text(path: Path) -> str:
                 logger.warning("Tesseract binary is not available; skipping PDF OCR for %s", path)
                 return text_content
 
-            # Convert PDF to images (up to 10 pages for longer documents like Załącznik)
+            # Convert PDF to images (up to 10 pages for longer documents like
+            # Załącznik). 300 dpi noticeably improves tesseract accuracy on the
+            # small ZUS form print; OCR runs in the job queue, so the extra
+            # rasterization cost stays off the request path.
             try:
-                convert_kwargs: dict[str, Any] = {"first_page": 1, "last_page": 10}
+                convert_kwargs: dict[str, Any] = {"first_page": 1, "last_page": 10, "dpi": 300}
                 poppler_path = _get_poppler_path()
                 if poppler_path:
                     convert_kwargs["poppler_path"] = poppler_path

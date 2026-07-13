@@ -1054,7 +1054,14 @@ def _process_zus_doc_job_internal(
                     tmp.write(chunk)
                 tmp_path = tmp.name
         try:
-            parsed = parse_zus_doc(tmp_path)
+            # The checklist slot is trusted context: a document in the RCA slot
+            # gets the month fallback even when photo OCR mangles "RCA" itself.
+            parsed = parse_zus_doc(
+                tmp_path,
+                assume_rca=(
+                    job.document.document_type == DocumentType.ZUS_RCA_OR_INSURANCE.value
+                ),
+            )
         finally:
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)
