@@ -5,13 +5,14 @@ import os
 import secrets
 from collections.abc import Callable
 from functools import wraps
+from typing import Any
 
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
 logger = logging.getLogger(__name__)
 
-CronView = Callable[[HttpRequest], HttpResponse]
+CronView = Callable[..., HttpResponse]
 
 
 def primary_cron_token_required(view_func: CronView) -> CronView:
@@ -25,14 +26,19 @@ def primary_cron_token_required(view_func: CronView) -> CronView:
 
     @csrf_exempt
     @wraps(view_func)
-    def wrapped(request: HttpRequest, *args: object, **kwargs: object) -> HttpResponse:
+    def wrapped(request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         expected_token = os.environ.get("CRON_TOKEN", "").strip()
         supplied_token = request.headers.get("X-CRON-TOKEN", "").strip()
         authorization = request.headers.get("Authorization", "")
         if not supplied_token and authorization.startswith("Bearer "):
             supplied_token = authorization.removeprefix("Bearer ").strip()
 
-        if not expected_token or not supplied_token or not secrets.compare_digest(supplied_token, expected_token):
+        valid_token = (
+            bool(expected_token)
+            and bool(supplied_token)
+            and secrets.compare_digest(supplied_token, expected_token)
+        )
+        if not valid_token:
             logger.warning("Rejected non-backup cron request without a valid CRON_TOKEN")
             return JsonResponse({"error": "forbidden"}, status=403)
 
