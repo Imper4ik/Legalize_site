@@ -1,9 +1,12 @@
 services:
   - type: web
     name: legalize-site
-    env: python
+    runtime: python
     buildCommand: ./build.sh
+    preDeployCommand: ./release.sh
     startCommand: ./start.sh
+    healthCheckPath: /readyz/
+    autoDeployTrigger: checksPass
     envVars:
       - key: DATABASE_URL
         fromDatabase:
