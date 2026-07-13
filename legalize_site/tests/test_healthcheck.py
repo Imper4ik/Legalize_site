@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from clients.models import Client, Document, DocumentProcessingJob, EmailCampaign
@@ -79,3 +81,11 @@ class HealthcheckViewTests(TestCase):
         self.assertIn("cache", payload["components"])
         self.assertIn("runtime", payload["components"])
         self.assertEqual(payload["components"]["database"]["status"], "ok")
+
+    @override_settings(IS_PRODUCTION=True)
+    @patch("legalize_site.views.cache.set", side_effect=RuntimeError("cache unavailable"))
+    def test_production_readiness_fails_when_cache_is_unavailable(self, _cache_set_mock):
+        response = self.client.get(reverse("readiness"))
+
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json(), {"status": "degraded"})
