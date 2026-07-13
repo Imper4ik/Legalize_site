@@ -249,7 +249,18 @@ def upload_client_document(
             job_type=job_type,
         )
 
-        if not getattr(settings, "ASYNC_OCR_PROCESSING", False):
+        # Heavy OCR (tesseract over multi-page PDFs) must not hold a web worker
+        # hostage on every routine upload. Auto-recognition job types therefore
+        # default to the queue (ASYNC_AUTO_OCR_PROCESSING) and are picked up by
+        # the automation loop / cron webhook. The interactive wezwanie parse is
+        # the exception: staff explicitly clicked "recognize" and the modal
+        # shows the parsed fields inline, so it stays synchronous unless the
+        # global ASYNC_OCR_PROCESSING override queues everything.
+        force_async = getattr(settings, "ASYNC_OCR_PROCESSING", False)
+        auto_async = getattr(settings, "ASYNC_AUTO_OCR_PROCESSING", False)
+        queue_job = force_async or (auto_async and not requires_confirmation)
+
+        if not queue_job:
             if not requires_confirmation:
                 return _process_company_upload_job_inline(
                     job_id=job.pk,

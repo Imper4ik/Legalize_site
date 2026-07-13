@@ -62,6 +62,18 @@ TRANSLATION_STUDIO_STORAGE = os.environ.get("TRANSLATION_STUDIO_STORAGE", "datab
 TRANSLATION_DB_OVERRIDES_ENABLED = env_flag("TRANSLATION_DB_OVERRIDES_ENABLED", "True")
 AUTO_COMPILE_TRANSLATIONS_ON_STARTUP = env_flag("AUTO_COMPILE_TRANSLATIONS_ON_STARTUP", "False")
 ASYNC_OCR_PROCESSING = env_flag("ASYNC_OCR_PROCESSING", "False")
+# Auto-recognition OCR (passport/ZUS/rental/insurance/company uploads) runs in
+# the job queue by default so tesseract never blocks a web request; the queue is
+# drained by the in-process automation loop or the /cron/process-document-jobs/
+# webhook. The interactive staff wezwanie parse stays inline regardless.
+ASYNC_AUTO_OCR_PROCESSING = env_flag("ASYNC_AUTO_OCR_PROCESSING", "True")
+# ClamAV scanning of uploads (fail-closed when enabled). Point CLAMD_TCP_ADDR at
+# a clamd instance and flip MALWARE_SCAN_ENABLED=True; production check W014
+# warns while scanning stays off.
+MALWARE_SCAN_ENABLED = env_flag("MALWARE_SCAN_ENABLED", "False")
+CLAMD_TCP_ADDR = os.environ.get("CLAMD_TCP_ADDR", "127.0.0.1")
+CLAMD_TCP_PORT = int(os.environ.get("CLAMD_TCP_PORT", "3310"))
+CLAMD_TIMEOUT_SECONDS = float(os.environ.get("CLAMD_TIMEOUT_SECONDS", "15"))
 ENABLE_TEST_CENTER = env_flag("ENABLE_TEST_CENTER", "True")
 TEST_CENTER_MEDIA_ROOT = os.environ.get("TEST_CENTER_MEDIA_ROOT", "")
 DEMO_MODE_ENABLED = env_flag("DEMO_MODE_ENABLED", "True")

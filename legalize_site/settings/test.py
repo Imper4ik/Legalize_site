@@ -9,6 +9,10 @@ from .base import *  # noqa: F403
 ENABLE_TRANSLATION_TOOLING = True
 TESTING = True
 
+# Tests exercise the synchronous OCR path by default (like CELERY_TASK_ALWAYS_EAGER);
+# async-pipeline tests opt in with override_settings.
+ASYNC_AUTO_OCR_PROCESSING = False
+
 if "translations" not in INSTALLED_APPS:  # noqa: F405
     INSTALLED_APPS.append("translations")  # noqa: F405
 
