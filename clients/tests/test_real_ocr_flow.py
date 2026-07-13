@@ -187,7 +187,7 @@ class RealOCRFlowTests(TestCase):
         self.assertEqual(doc.ocr_status, "success")
         self.assertTrue(doc.ocr_name_mismatch)
 
-    @patch("clients.services.document_workflow.verify_employer")
+    @patch("clients.services.document_job_processors.verify_employer")
     def test_e2e_company_doc_job_processing(self, verify_employer_mock):
         verify_employer_mock.return_value = {
             "registry_source": "KRS",

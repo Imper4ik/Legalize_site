@@ -260,7 +260,7 @@ def run_real_ocr_fixture_scenarios(recorder: ScenarioRecorder) -> None:
         "matched_signer": None,
         "warnings": [],
     }
-    with patch("clients.services.document_workflow.verify_employer", return_value=registry_result):
+    with patch("clients.services.document_job_processors.verify_employer", return_value=registry_result):
         res_krs = process_document_processing_job(job_id=job_krs.pk)
     doc_krs.refresh_from_db()
 

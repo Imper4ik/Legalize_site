@@ -63,8 +63,8 @@ class CompanyDocWorkflowTests(TestCase):
         self.assertEqual(job.job_type, DocumentProcessingJob.JOB_TYPE_COMPANY_DOC_OCR)
         self.assertEqual(job.status, DocumentProcessingJob.STATUS_PENDING)
 
-    @patch("clients.services.document_workflow.verify_employer")
-    @patch("clients.services.document_workflow.parse_company_doc")
+    @patch("clients.services.document_job_processors.verify_employer")
+    @patch("clients.services.document_job_processors.parse_company_doc")
     def test_company_document_successful_processing_with_krs(self, parse_mock, verify_mock):
         # Mock parser output for a company with valid KRS and representatives
         # Google Poland Sp. z o.o.
@@ -121,7 +121,7 @@ class CompanyDocWorkflowTests(TestCase):
         self.assertTrue(doc.ocr_name_mismatch)
         self.assertTrue(any("Signer not found" in w for w in registry["warnings"]))
 
-    @patch("clients.services.document_workflow.parse_company_doc")
+    @patch("clients.services.document_job_processors.parse_company_doc")
     def test_company_document_without_krs_verifies_employer_with_ceidg_nip(self, parse_mock):
         parse_mock.return_value = CompanyDocData(
             text="CEIDG employer document, NIP 525-23-44-078, salary 5000 PLN",
@@ -159,8 +159,8 @@ class CompanyDocWorkflowTests(TestCase):
         self.assertEqual(registry["matched_signer"], "Jan Kowalski")
         self.assertFalse(doc.ocr_name_mismatch)
 
-    @patch("clients.services.document_workflow.verify_employer")
-    @patch("clients.services.document_workflow.parse_company_doc")
+    @patch("clients.services.document_job_processors.verify_employer")
+    @patch("clients.services.document_job_processors.parse_company_doc")
     def test_company_document_processing_low_salary_warning(self, parse_mock, verify_mock):
         # Mock parser output with salary below 4300 PLN
         parse_mock.return_value = CompanyDocData(
