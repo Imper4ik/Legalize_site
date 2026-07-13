@@ -16,8 +16,8 @@ from django.core.files.storage import storages
 
 logger = logging.getLogger(__name__)
 
-# Maximum age (in hours) for backup files.  Older files are purged
-# automatically when a new backup is created.
+# Maximum age (in hours) for backup files. Older files are purged
+automatically when a new backup is created.
 MAX_BACKUP_AGE_HOURS = int(os.environ.get("MAX_BACKUP_AGE_HOURS", "24"))
 
 
@@ -62,7 +62,7 @@ def _sha256_for_file(path: Path) -> str:
 
 
 def _purge_old_backups(backup_dir: Path) -> int:
-    """Remove backup files older than MAX_BACKUP_AGE_HOURS.  Returns count removed."""
+    """Remove backup files older than MAX_BACKUP_AGE_HOURS. Returns count removed."""
     if MAX_BACKUP_AGE_HOURS <= 0:
         return 0
     cutoff = datetime.now(timezone.utc).timestamp() - MAX_BACKUP_AGE_HOURS * 3600
@@ -80,7 +80,7 @@ def _purge_old_backups(backup_dir: Path) -> int:
 
 
 def _encrypt_file(path: Path) -> Path:
-    """Encrypt file in-place with Fernet if keys are available.  Returns new path."""
+    """Encrypt file in-place with Fernet if keys are available. Returns new path."""
     fernet_keys = getattr(settings, "FERNET_KEYS", [])
     if not fernet_keys:
         return path
@@ -124,10 +124,12 @@ class BackupStorageBackend(Protocol):
     def upload(self, local_path: Path) -> bool:
         ...
 
+
 class LocalBackupStorage:
     def upload(self, local_path: Path) -> bool:
         logger.info("Backup retained locally at %s", local_path)
         return False
+
 
 class ConfiguredBackupStorage:
     def upload(self, local_path: Path) -> bool:
@@ -148,15 +150,20 @@ class ConfiguredBackupStorage:
                 f"BACKUP_REMOTE_STORAGE is enabled but STORAGES[{storage_alias!r}] is not configured."
             ) from exc
 
+        remote_path = local_path.name
         try:
-            with local_path.open("rb") as f:
-                remote_path = local_path.name
-                backup_storage.save(remote_path, File(f))
-            logger.info("Successfully uploaded backup to remote storage: %s", remote_path)
-            return True
+            with local_path.open("rb") as backup_file:
+                stored_name = backup_storage.save(remote_path, File(backup_file))
         except Exception as exc:
-            logger.error("Failed to upload backup to remote storage: %s", exc)
-            return False
+            logger.exception("Failed to upload backup to remote storage")
+            raise BackupError("Failed to upload database backup to remote storage.") from exc
+
+        if not stored_name:
+            raise BackupError("Remote backup storage did not confirm the stored object name.")
+
+        logger.info("Successfully uploaded backup to remote storage: %s", stored_name)
+        return True
+
 
 def _get_storage_backend() -> BackupStorageBackend:
     if _remote_storage_enabled():
@@ -208,6 +215,9 @@ def create_db_backup() -> BackupResult:
 
     storage_backend = _get_storage_backend()
     stored_remotely = storage_backend.upload(final_path)
+
+    if _remote_storage_enabled() and not stored_remotely:
+        raise BackupError("Remote backup storage is enabled, but the backup was not stored remotely.")
 
     if stored_remotely:
         _cleanup_local_file(final_path)
