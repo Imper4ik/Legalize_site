@@ -17,7 +17,7 @@ from django.core.files.storage import storages
 logger = logging.getLogger(__name__)
 
 # Maximum age (in hours) for backup files. Older files are purged
-automatically when a new backup is created.
+# automatically when a new backup is created.
 MAX_BACKUP_AGE_HOURS = int(os.environ.get("MAX_BACKUP_AGE_HOURS", "24"))
 
 
