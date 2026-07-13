@@ -1,13 +1,27 @@
 from __future__ import annotations
 
+import io
+
+import segno
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
+from django.urls import reverse
 
 from clients.constants import DocumentType
 from clients.models import Document, WniosekAttachment, WniosekSubmission
 from clients.services.cases import resolve_single_active_case
 from clients.services.document_workflow import upload_client_document
+from clients.services.proof_qr import build_proof_token, parse_proof_token
 from clients.services.wniosek import build_submitted_document_summary
-from clients.testing.factories import build_pdf_upload, create_test_client, create_test_user
+from clients.testing.factories import TEST_USER_CREDENTIAL, build_pdf_upload, create_test_client, create_test_user
+
+
+def _qr_png_upload(submission_id: int) -> SimpleUploadedFile:
+    buffer = io.BytesIO()
+    segno.make(build_proof_token(submission_id), error="m").save(
+        buffer, kind="png", scale=6, border=4
+    )
+    return SimpleUploadedFile("stamp.png", buffer.getvalue(), content_type="image/png")
 
 
 class ProofOfSubmissionTests(TestCase):
@@ -92,6 +106,45 @@ class ProofOfSubmissionTests(TestCase):
         self.assertTrue(records)
         self.assertFalse(records[0]["stamped"])
         self.assertIsNone(records[0]["stamped_at"])
+
+    def test_cover_sheet_embeds_qr_marker_when_submission_present(self):
+        submission = self._make_submission(document_type=DocumentType.PASSPORT.value)
+        self.client.login(email=self.staff.email, password=TEST_USER_CREDENTIAL)
+
+        response = self.client.get(
+            reverse(
+                "clients:client_document_print",
+                kwargs={"pk": self.client_obj.pk, "doc_type": "mazowiecki_application"},
+            ),
+            {"submission_id": submission.pk},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "data:image/svg+xml")
+
+    def test_qr_token_roundtrip_and_rejects_tampering(self):
+        token = build_proof_token(7)
+        self.assertEqual(parse_proof_token(token), 7)
+        self.assertIsNone(parse_proof_token(None))
+        self.assertIsNone(parse_proof_token("LZS1:not-a-valid-signature"))
+        self.assertIsNone(parse_proof_token("plain text without prefix"))
+
+    def test_qr_marker_links_encoded_submission_over_latest(self):
+        older = self._make_submission(document_type=DocumentType.PASSPORT.value)
+        newer = self._make_submission(document_type=DocumentType.HEALTH_INSURANCE.value)
+        self.assertGreater(newer.pk, older.pk)  # newer is the "latest" default
+
+        pending = Document(file=_qr_png_upload(older.pk), is_test_data=True)
+        result = upload_client_document(
+            client=self.client_obj,
+            doc_type=DocumentType.PROOF_OF_SUBMISSION.value,
+            uploaded_document=pending,
+            actor=self.staff,
+            parse_requested=False,
+            case=self.case,
+        )
+        # The QR wins over the "latest submission" heuristic.
+        self.assertEqual(result.document.confirms_submission_id, older.pk)
 
     def test_submission_stamp_properties_ignore_archived_proofs(self):
         submission = self._make_submission(document_type=DocumentType.PASSPORT.value)

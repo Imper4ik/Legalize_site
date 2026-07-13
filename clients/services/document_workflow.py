@@ -96,6 +96,33 @@ class DocumentProcessingRunResult:
     auto_updates: list[str] = field(default_factory=list)
 
 
+def _resolve_proof_submission_from_qr(client: Client, case: Case | None, document: Document) -> Any:
+    """Decode the cover-sheet QR marker (if any) to link the stamp to the exact
+    submission it was printed for. Returns ``None`` when the marker is missing,
+    unreadable, or points at a submission outside this client/case scope, so the
+    caller falls back to the latest-submission heuristic."""
+    from clients.models.wniosek import WniosekSubmission
+    from clients.services.proof_qr import decode_proof_submission_id
+
+    try:
+        name = (document.file.name or "").lower()
+        with document.file.open("rb") as handle:
+            file_bytes = handle.read()
+    except Exception as exc:  # pragma: no cover - defensive I/O guard
+        logger.info("Could not read proof file for QR decode: %s", exc)
+        return None
+
+    submission_id = decode_proof_submission_id(file_bytes, is_pdf=name.endswith(".pdf"))
+    if submission_id is None:
+        return None
+
+    queryset = WniosekSubmission.objects.filter(pk=submission_id, client=client)
+    case_id = getattr(case, "pk", None)
+    if case_id is not None:
+        queryset = queryset.filter(case_id=case_id)
+    return queryset.first()
+
+
 def _resolve_confirmed_submission(client: Client, case: Case | None) -> Any:
     """Pick the submission a freshly uploaded proof-of-submission stamp confirms.
 
@@ -147,7 +174,8 @@ def upload_client_document(
     from clients.constants import is_proof_of_submission_document_type
 
     if is_proof_of_submission_document_type(doc_type):
-        submission = confirms_submission or _resolve_confirmed_submission(client, case)
+        submission = confirms_submission or _resolve_proof_submission_from_qr(client, case, document)
+        submission = submission or _resolve_confirmed_submission(client, case)
         if submission is not None and document.confirms_submission_id != submission.pk:
             document.confirms_submission = submission
             document.save(update_fields=["confirms_submission"])

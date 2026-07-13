@@ -93,6 +93,15 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                 filled_attachments = [name for name in attachment_names if name]
                 attachment_count = len(filled_attachments) if filled_attachments else ""
 
+            # Small QR marker linking the stamped return of this sheet back to
+            # its submission (see clients.services.proof_qr).
+            proof_qr_data_uri = ""
+            raw_submission_id = self.request.GET.get("submission_id")
+            if raw_submission_id and str(raw_submission_id).isdigit():
+                from clients.services.proof_qr import build_proof_qr_svg_data_uri
+
+                proof_qr_data_uri = build_proof_qr_svg_data_uri(int(raw_submission_id)) or ""
+
             context.update(
                 {
                     "current_date": timezone.localdate(),
@@ -114,6 +123,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                     ),
                     "auto_print": self.request.GET.get("auto_print") == "1",
                     "last_submission_id": self.request.GET.get("submission_id") or "",
+                    "proof_qr_data_uri": proof_qr_data_uri,
                     "other_text": (client.basis_of_stay or "").strip(),
                     "check_pobyt_czasowy": client.application_purpose in {"study", "work", "family"},
                     "check_pobyt_staly": False,

@@ -413,6 +413,14 @@
             </div>
         </div>
 
+        {% if proof_qr_data_uri %}
+        <div style="position: absolute; right: 8mm; bottom: 6mm; text-align: center; opacity: 0.55;"
+            aria-hidden="true">
+            <img src="{{ proof_qr_data_uri }}" alt=""
+                style="width: 15mm; height: 15mm; display: block;">
+        </div>
+        {% endif %}
+
         <script nonce="{{ request.csp_nonce }}">
             document.addEventListener('DOMContentLoaded', () => {
                 const attachmentContainer = document.querySelector('.attachment-inputs');
