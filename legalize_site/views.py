@@ -35,8 +35,7 @@ def healthcheck(request: HttpRequest) -> HttpResponse:
     user = getattr(request, "user", None)
     show_details = (
         request.GET.get("details") == "1"
-        and user
-        and getattr(user, "is_authenticated", False)
+        and user and getattr(user, "is_authenticated", False)
         and getattr(user, "is_staff", False)
     )
     if show_details:
@@ -61,8 +60,7 @@ def readiness(request: HttpRequest) -> HttpResponse:
         getattr(settings, "DEBUG", False)
         or (
             request.GET.get("details") == "1"
-            and user
-            and getattr(user, "is_authenticated", False)
+            and user and getattr(user, "is_authenticated", False)
             and getattr(user, "is_staff", False)
         )
     )
@@ -75,17 +73,15 @@ def readiness(request: HttpRequest) -> HttpResponse:
         logger.exception("Readiness database check failed")
         components["database"] = {"status": "error", "error": exc.__class__.__name__}
 
-    cache_backend = str(settings.CACHES["default"]["BACKEND"])
     cache_required = bool(getattr(settings, "IS_PRODUCTION", False))
     try:
         cache_key = "readiness:cache"
         cache.set(cache_key, "ok", timeout=30)
         cache_ok = cache.get(cache_key) == "ok"
-        cache.delete(cache_key)
         components["cache"] = {
             "status": "ok" if cache_ok else "error",
             "required": cache_required,
-            "backend": cache_backend,
+            "backend": settings.CACHES["default"]["BACKEND"],
         }
         if cache_required and not cache_ok:
             overall_ok = False
@@ -94,7 +90,7 @@ def readiness(request: HttpRequest) -> HttpResponse:
         components["cache"] = {
             "status": "error",
             "required": cache_required,
-            "backend": cache_backend,
+            "backend": settings.CACHES["default"]["BACKEND"],
             "error": exc.__class__.__name__,
         }
         if cache_required:
