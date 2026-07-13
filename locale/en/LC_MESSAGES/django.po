@@ -11025,3 +11025,24 @@ msgstr "Select a client — the new case form will open."
 
 #~ msgid "Загрузить документ"
 #~ msgstr "Upload document"
+
+msgid "Подтверждение подачи (штамп urzędu)"
+msgstr "Proof of submission (urząd stamp)"
+
+msgid "Подтверждено штампом urzędu"
+msgstr "Confirmed by urząd stamp"
+
+msgid "Подтверждено штампом"
+msgstr "Stamp-confirmed"
+
+msgid "Загрузить подтверждение подачи (штамп)"
+msgstr "Upload proof of submission (stamp)"
+
+msgid "Штампованный бланк из urzędu закрывает позиции последней подачи (wniosek) этого дела"
+msgstr "The stamped cover sheet from the urząd closes the positions of this case's latest submission (wniosek)."
+
+msgid "Подтверждает подачу"
+msgstr "Confirms submission"
+
+msgid "Подача (wniosek), позиции которой закрывает этот штамп/подтверждение подачи."
+msgstr "The submission (wniosek) whose positions this stamp / proof of submission closes."

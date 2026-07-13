@@ -108,6 +108,17 @@ def is_insurance_document_type(doc_type: str | None) -> bool:
     return str(doc_type).lower() == DocumentType.HEALTH_INSURANCE.value
 
 
+def is_proof_of_submission_document_type(doc_type: str | None) -> bool:
+    """A proof-of-submission is the stamped cover sheet returned by the urząd.
+
+    It confirms that one or more documents were physically submitted, so it is
+    never run through document-specific OCR (e.g. the ZUS RCA month parser) and
+    is generic across any document type."""
+    if not doc_type:
+        return False
+    return str(doc_type).lower() == DocumentType.PROOF_OF_SUBMISSION.value
+
+
 def is_recurring_document_type(doc_type: str | None) -> bool:
     """Recurring documents are re-supplied over time (e.g. the monthly ZUS RCA
     declaration), so the portal keeps their upload control available even after

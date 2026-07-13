@@ -218,6 +218,15 @@ class Document(SoftDeleteModel):
         related_name="copies",
         verbose_name=_("Скопировано из документа"),
     )
+    confirms_submission = models.ForeignKey(
+        "clients.WniosekSubmission",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="proof_documents",
+        verbose_name=_("Подтверждает подачу"),
+        help_text=_("Подача (wniosek), позиции которой закрывает этот штамп/подтверждение подачи."),
+    )
     is_test_data = models.BooleanField(default=False, db_index=True)
     is_demo_data = models.BooleanField(default=False, db_index=True)
 

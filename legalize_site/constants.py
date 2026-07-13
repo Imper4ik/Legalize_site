@@ -36,6 +36,7 @@ class DocumentType(models.TextChoices):
     WEZWANIE = 'wezwanie', _('Wezwanie')
     FINGERPRINT_CONFIRMATION = 'fingerprint_confirmation', _('Potwierdzenie złożenia odcisków palców')
     NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION = 'new_residence_card_application_confirmation', _('Potwierdzenie złożenia nowego wniosku o kartę pobytu')
+    PROOF_OF_SUBMISSION = 'proof_of_submission', _('Подтверждение подачи (штамп urzędu)')
 
 
 def doc_entry(doc_type: DocumentType) -> tuple[str, Any]:

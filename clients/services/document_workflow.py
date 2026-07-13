@@ -96,6 +96,21 @@ class DocumentProcessingRunResult:
     auto_updates: list[str] = field(default_factory=list)
 
 
+def _resolve_confirmed_submission(client: Client, case: Case | None) -> Any:
+    """Pick the submission a freshly uploaded proof-of-submission stamp confirms.
+
+    Defaults to the most recent Wniosek submission for the case (falling back to
+    the client when no case is scoped), which matches the real workflow: staff
+    print the cover sheet, submit the package, get it stamped, then upload it."""
+    from clients.models.wniosek import WniosekSubmission
+
+    queryset = WniosekSubmission.objects.filter(client=client)
+    case_id = getattr(case, "pk", None)
+    if case_id is not None:
+        queryset = queryset.filter(case_id=case_id)
+    return queryset.order_by("-confirmed_at", "-id").first()
+
+
 def upload_client_document(
     *,
     client: Client,
@@ -107,6 +122,7 @@ def upload_client_document(
     parser: Parser = parse_wezwanie,
     send_missing_email: NotificationSender = send_missing_documents_email,
     send_appointment_email: NotificationSender = send_appointment_notification_email,
+    confirms_submission: Any = None,
 ) -> DocumentUploadResult:
     """Persist an uploaded document and route wezwanie handling through services.
 
@@ -114,6 +130,10 @@ def upload_client_document(
     omitted the Document model falls back to the client's single active case;
     portal callers must always pass it so a multi-case client cannot trigger the
     ambiguous legacy fallback.
+
+    ``confirms_submission`` links a proof-of-submission stamp to the submission
+    whose checklist positions it closes; when omitted for that document type the
+    latest submission for the case is resolved automatically.
     """
 
     document = _save_client_document(
@@ -123,6 +143,14 @@ def upload_client_document(
         actor=actor,
         case=case,
     )
+
+    from clients.constants import is_proof_of_submission_document_type
+
+    if is_proof_of_submission_document_type(doc_type):
+        submission = confirms_submission or _resolve_confirmed_submission(client, case)
+        if submission is not None and document.confirms_submission_id != submission.pk:
+            document.confirms_submission = submission
+            document.save(update_fields=["confirms_submission"])
 
     if not actor or not getattr(actor, "is_staff", False):
         from clients.constants import is_wezwanie_document_type

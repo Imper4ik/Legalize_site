@@ -69,6 +69,15 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
                 safe_redirect_target(request) or reverse("clients:client_detail", kwargs={"pk": client.id})
             )
 
+        confirms_submission = None
+        submission_id = request.POST.get("submission_id")
+        if submission_id and doc_type == DocumentType.PROOF_OF_SUBMISSION.value:
+            from clients.models.wniosek import WniosekSubmission
+
+            confirms_submission = WniosekSubmission.objects.filter(
+                pk=submission_id, client=client, case=case
+            ).first()
+
         files = request.FILES.getlist("file")
         if not files:
             form = DocumentUploadForm(
@@ -154,6 +163,7 @@ def add_document(request: HttpRequest, client_id: int, doc_type: str) -> HttpRes
                             parser=documents_module.parse_wezwanie,
                             send_missing_email=send_missing_documents_email,
                             send_appointment_email=send_appointment_notification_email,
+                            confirms_submission=confirms_submission,
                         )
                         upload_results.append(result)
                         success_count += 1

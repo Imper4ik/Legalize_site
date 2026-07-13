@@ -76,6 +76,29 @@ class WniosekSubmission(models.Model):
     def __str__(self) -> str:
         return f"{self.client} / {self.get_document_kind_display()} / {self.confirmed_at:%Y-%m-%d %H:%M}"
 
+    @property
+    def stamped_at(self) -> Any:
+        """Earliest upload time of a non-archived proof-of-submission document
+        linked to this submission, or ``None`` when no stamp was uploaded yet."""
+        prefetched = getattr(self, "_prefetched_objects_cache", {}).get("proof_documents")
+        if prefetched is not None:
+            uploads = [
+                doc.uploaded_at
+                for doc in prefetched
+                if getattr(doc, "archived_at", None) is None
+            ]
+        else:
+            uploads = list(
+                self.proof_documents.filter(archived_at__isnull=True).values_list(
+                    "uploaded_at", flat=True
+                )
+            )
+        return min(uploads) if uploads else None
+
+    @property
+    def has_stamped_proof(self) -> bool:
+        return self.stamped_at is not None
+
 
 class WniosekAttachment(models.Model):
     submission = models.ForeignKey(

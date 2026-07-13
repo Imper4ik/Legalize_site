@@ -243,6 +243,7 @@ def get_submitted_document_codes(client: Client, case: Any = None) -> set[str]:
 
 def _submitted_record(attachment: WniosekAttachment, document_type: str = "") -> dict[str, Any]:
     submission = attachment.submission
+    stamped_at = submission.stamped_at
     return {
         "attachment_id": attachment.pk,
         "submission_id": submission.pk,
@@ -250,6 +251,8 @@ def _submitted_record(attachment: WniosekAttachment, document_type: str = "") ->
         "confirmed_by": submission.confirmed_by,
         "entered_name": attachment.entered_name,
         "document_type": document_type or attachment.document_type,
+        "stamped": stamped_at is not None,
+        "stamped_at": stamped_at,
     }
 
 

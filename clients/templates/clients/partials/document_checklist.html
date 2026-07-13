@@ -26,6 +26,15 @@
 </div>
 {% endif %}
 
+<div class="d-flex justify-content-end mb-2">
+  <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal"
+    data-bs-target="#uploadDocumentModal" data-doc-type="proof_of_submission"
+    data-doc-name="{% translate 'Подтверждение подачи (штамп urzędu)' %}"
+    title="{% translate 'Штампованный бланк из urzędu закрывает позиции последней подачи (wniosek) этого дела' %}">
+    <i class="bi bi-patch-check me-1"></i>{% translate "Загрузить подтверждение подачи (штамп)" %}
+  </button>
+</div>
+
 {% for item in document_status_list %}
 <div class="accordion-item">
   <h2 class="accordion-header" id="heading{{ item.code }}">
@@ -424,6 +433,12 @@
               {{ submission.submitted_at|date:"d.m.Y H:i" }}
               {% if submission.confirmed_by %}
               · {{ submission.confirmed_by }}
+              {% endif %}
+              {% if submission.stamped %}
+              <span class="badge bg-success ms-1" title="{% translate 'Подтверждено штампом urzędu' %}">
+                <i class="bi bi-patch-check"></i>
+                {% translate "Подтверждено штампом" %}{% if submission.stamped_at %} {{ submission.stamped_at|date:"d.m.Y" }}{% endif %}
+              </span>
               {% endif %}
               {% if submission.entered_name and submission.entered_name != item.name %}
               <br><small class="text-muted">{{ submission.entered_name }}</small>

@@ -227,7 +227,15 @@ class ClientDetailView(StaffRequiredMixin, DetailView):
                 Prefetch(
                     "wniosek_submissions",
                     queryset=WniosekSubmission.objects.select_related("confirmed_by")
-                    .prefetch_related("attachments")
+                    .prefetch_related(
+                        "attachments",
+                        Prefetch(
+                            "proof_documents",
+                            queryset=Document.objects.filter(archived_at__isnull=True).only(
+                                "id", "confirms_submission", "uploaded_at", "archived_at"
+                            ),
+                        ),
+                    )
                     .order_by("-confirmed_at"),
                 ),
                 "reminders",

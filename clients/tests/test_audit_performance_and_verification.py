@@ -54,7 +54,8 @@ def test_build_submitted_document_summary_zero_queries_with_prefetch(db):
 
     # Fetch client with prefetch
     client_prefetched = Client.objects.prefetch_related(
-        "wniosek_submissions__attachments"
+        "wniosek_submissions__attachments",
+        "wniosek_submissions__proof_documents",
     ).get(pk=client.pk)
 
     # Run and count queries

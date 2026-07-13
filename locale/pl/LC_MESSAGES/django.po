@@ -11029,3 +11029,24 @@ msgstr "Wybierz klienta — otworzy się formularz nowej sprawy."
 
 #~ msgid "Загрузить документ"
 #~ msgstr "Prześlij dokument"
+
+msgid "Подтверждение подачи (штамп urzędu)"
+msgstr "Potwierdzenie złożenia (pieczęć urzędu)"
+
+msgid "Подтверждено штампом urzędu"
+msgstr "Potwierdzone pieczęcią urzędu"
+
+msgid "Подтверждено штампом"
+msgstr "Potwierdzone pieczęcią"
+
+msgid "Загрузить подтверждение подачи (штамп)"
+msgstr "Wgraj potwierdzenie złożenia (pieczęć)"
+
+msgid "Штампованный бланк из urzędu закрывает позиции последней подачи (wniosek) этого дела"
+msgstr "Podstemplowany blankiet z urzędu zamyka pozycje ostatniego złożenia (wniosku) tej sprawy."
+
+msgid "Подтверждает подачу"
+msgstr "Potwierdza złożenie"
+
+msgid "Подача (wniosek), позиции которой закрывает этот штамп/подтверждение подачи."
+msgstr "Złożenie (wniosek), którego pozycje zamyka ta pieczęć / potwierdzenie złożenia."

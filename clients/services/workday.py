@@ -86,6 +86,7 @@ def _missing_document_clients(user: AbstractBaseUser | AnonymousUser | None, lim
             ),
             "wniosek_submissions__confirmed_by",
             "wniosek_submissions__attachments",
+            "wniosek_submissions__proof_documents",
         )[:50]
     )
     items: list[dict[str, Any]] = []
