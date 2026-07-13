@@ -43,21 +43,53 @@ def describe_actor(user: AbstractBaseUser | AnonymousUser | None) -> str:
 
 
 SAFE_FIELD_NAMES = {
-    "status", "workflow_stage", "application_purpose", "application_type", "basis_of_stay",
-    "opened_at", "submission_date", "fingerprints_date", "fingerprints_time", "fingerprints_location",
-    "decision_date", "decision_valid_until", "company", "is_test_data", "is_demo_data",
-    "due_date", "is_active", "notes", "description", "title", "document_type", "expiry_date",
-    "total_amount", "amount_paid", "payment_method", "payment_date", "rejection_reason",
-    "document_kind", "attachment_count", "metadata_version", "ocr_version", "version"
+    "status",
+    "workflow_stage",
+    "application_purpose",
+    "application_type",
+    "basis_of_stay",
+    "opened_at",
+    "submission_date",
+    "fingerprints_date",
+    "fingerprints_time",
+    "fingerprints_location",
+    "decision_date",
+    "decision_valid_until",
+    "company",
+    "is_test_data",
+    "is_demo_data",
+    "due_date",
+    "is_active",
+    "notes",
+    "description",
+    "title",
+    "document_type",
+    "expiry_date",
+    "total_amount",
+    "amount_paid",
+    "payment_method",
+    "payment_date",
+    "rejection_reason",
+    "document_kind",
+    "attachment_count",
+    "metadata_version",
+    "ocr_version",
+    "version",
 }
 
 ALLOWED_METADATA_SCHEMA = {
     "case_id": "uuid",
     "document_id": "uuid_or_int",
+    "payment_id": "uuid_or_int",
     "archive_batch_uuid": "uuid",
     "document_count": "int",
     "payment_count": "int",
     "task_count": "int",
+    "workflow_stage": "safe_short_string",
+    "status": "safe_short_string",
+    "document_type": "safe_short_string",
+    "selected_purpose": "safe_short_string",
+    "application_purpose": "safe_short_string",
     "status_tag": {
         "archived",
         "restored",
@@ -114,6 +146,12 @@ def sanitize_activity_metadata(metadata: dict[str, Any] | None) -> dict[str, Any
                 sanitized[key] = int(value)
             else:
                 logger.warning("Metadata key '%s' rejected due to type mismatch", key)
+
+        elif expected_type == "safe_short_string":
+            if isinstance(value, str) and len(value) <= 100:
+                sanitized[key] = value
+            else:
+                logger.warning("Metadata key '%s' rejected due to type or string length", key)
 
         elif isinstance(expected_type, set):
             if isinstance(value, str) and value in expected_type:
@@ -181,7 +219,13 @@ def log_client_activity(
         task=task,
     )
 
-def log_client_view(*, client: Client, actor: AbstractBaseUser | AnonymousUser | None, request: HttpRequest | None = None) -> ClientActivity | None:
+
+def log_client_view(
+    *,
+    client: Client,
+    actor: AbstractBaseUser | AnonymousUser | None,
+    request: HttpRequest | None = None,
+) -> ClientActivity | None:
     if actor is None or not actor.is_authenticated:
         return None
 
