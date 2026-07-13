@@ -27,16 +27,58 @@ jobs:
           pip install --quiet -r requirements-dev.txt
 
       - name: Ruff
-        run: ruff check .
+        id: ruff
+        continue-on-error: true
+        run: ruff check . 2>&1 | tee ruff.log
 
       - name: Mypy
-        run: mypy clients legalize_site submissions users translations database_media fernet_fields --config-file mypy.ini
+        id: mypy
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          mypy clients legalize_site submissions users translations database_media fernet_fields --config-file mypy.ini 2>&1 | tee mypy.log
 
       - name: Bandit
-        run: bandit -r clients legalize_site submissions users database_media fernet_fields translations -x "*/migrations/*,*/tests/*,*/testing/*,*/demo/*,users/test_models.py"
+        id: bandit
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          bandit -r clients legalize_site submissions users database_media fernet_fields translations -x "*/migrations/*,*/tests/*,*/testing/*,*/demo/*,users/test_models.py" 2>&1 | tee bandit.log
 
       - name: pip-audit
-        run: pip-audit
+        id: pip_audit
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          pip-audit 2>&1 | tee pip-audit.log
+
+      - name: Upload quality diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-diagnostics
+          path: |
+            ruff.log
+            mypy.log
+            bandit.log
+            pip-audit.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Enforce quality gate
+        if: always()
+        env:
+          RUFF_OUTCOME: ${{ steps.ruff.outcome }}
+          MYPY_OUTCOME: ${{ steps.mypy.outcome }}
+          BANDIT_OUTCOME: ${{ steps.bandit.outcome }}
+          PIP_AUDIT_OUTCOME: ${{ steps.pip_audit.outcome }}
+        run: |
+          printf 'ruff=%s mypy=%s bandit=%s pip-audit=%s\n' \
+            "$RUFF_OUTCOME" "$MYPY_OUTCOME" "$BANDIT_OUTCOME" "$PIP_AUDIT_OUTCOME"
+          test "$RUFF_OUTCOME" = success
+          test "$MYPY_OUTCOME" = success
+          test "$BANDIT_OUTCOME" = success
+          test "$PIP_AUDIT_OUTCOME" = success
 
   test-and-security:
     runs-on: ubuntu-latest
