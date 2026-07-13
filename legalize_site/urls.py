@@ -8,6 +8,7 @@ from django.urls import include, path
 
 from clients import views
 from clients.views.admin_views import update_translations_view
+from legalize_site.cron_auth import primary_cron_token_required
 from legalize_site.views import healthcheck, readiness
 from users.security_views import SignupDisabledView
 from users.views import ResendVerificationEmailView
@@ -27,10 +28,26 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('i18n/', include('django.conf.urls.i18n')),
     path('cron/db-backup/', db_backup, name='db_backup'),
-    path('cron/process-email-campaigns/', process_email_campaigns_cron, name='process_email_campaigns_cron'),
-    path('cron/process-document-jobs/', process_document_jobs_cron, name='process_document_jobs_cron'),
-    path('cron/update-reminders/', update_reminders_cron, name='update_reminders_cron'),
-    path('cron/run-maintenance/', run_maintenance_cron, name='run_maintenance_cron'),
+    path(
+        'cron/process-email-campaigns/',
+        primary_cron_token_required(process_email_campaigns_cron),
+        name='process_email_campaigns_cron',
+    ),
+    path(
+        'cron/process-document-jobs/',
+        primary_cron_token_required(process_document_jobs_cron),
+        name='process_document_jobs_cron',
+    ),
+    path(
+        'cron/update-reminders/',
+        primary_cron_token_required(update_reminders_cron),
+        name='update_reminders_cron',
+    ),
+    path(
+        'cron/run-maintenance/',
+        primary_cron_token_required(run_maintenance_cron),
+        name='run_maintenance_cron',
+    ),
 ]
 
 if getattr(settings, "ENABLE_TRANSLATION_TOOLING", False):
