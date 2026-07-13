@@ -9,7 +9,7 @@ from uuid import uuid4
 from django.conf import settings
 from django.test import SimpleTestCase, override_settings
 
-from legalize_site.backups import ConfiguredBackupStorage, create_db_backup
+from legalize_site.backups import BackupError, ConfiguredBackupStorage, create_db_backup
 
 
 class BackupTests(SimpleTestCase):
@@ -82,7 +82,11 @@ class BackupTests(SimpleTestCase):
 
             run_mock.side_effect = _fake_run
 
-            with patch.dict("os.environ", {"DATABASE_URL": "postgresql://u:p@h/db", "BACKUP_REMOTE_STORAGE": "false"}, clear=False):
+            with patch.dict(
+                "os.environ",
+                {"DATABASE_URL": "postgresql://u:p@h/db", "BACKUP_REMOTE_STORAGE": "false"},
+                clear=False,
+            ):
                 result = create_db_backup()
 
             self.assertTrue(Path(result.path).exists())
@@ -112,6 +116,22 @@ class BackupTests(SimpleTestCase):
         self.assertTrue(uploaded)
         self.assertEqual(dummy_storage.saved_path, "backup-test.sql")
         self.assertEqual(dummy_storage.saved_content, b"-- dump --")
+
+    @override_settings(BACKUP_STORAGE_ALIAS="backups")
+    @patch("legalize_site.backups.storages")
+    def test_configured_backup_storage_raises_when_upload_fails(self, storages_mock):
+        class FailingStorage:
+            def save(self, path, content):
+                raise OSError("object storage unavailable")
+
+        storages_mock.__getitem__.return_value = FailingStorage()
+
+        with self._temporary_backup_dir() as tmp_dir_name:
+            local_path = Path(tmp_dir_name) / "backup-test.sql.enc"
+            local_path.write_bytes(b"encrypted backup")
+
+            with self.assertRaisesRegex(BackupError, "Failed to upload database backup"):
+                ConfiguredBackupStorage().upload(local_path)
 
     @override_settings(FERNET_KEYS=[])
     @patch("legalize_site.backups.shutil.which", return_value="/usr/bin/pg_dump")
@@ -156,4 +176,3 @@ class BackupTests(SimpleTestCase):
             self.assertTrue(result.stored_file_sha256)
             self.assertNotEqual(result.plaintext_sha256, result.stored_file_sha256)
             self.assertTrue(result.encrypted)
-
