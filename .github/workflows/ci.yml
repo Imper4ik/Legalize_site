@@ -63,7 +63,12 @@ jobs:
             clients.tests.test_activity_metadata
 
       - name: Django test
-        run: python manage.py test --noinput
+        run: |
+          set +e
+          python manage.py test --noinput > /tmp/django-test.log 2>&1
+          status=$?
+          tail -n 200 /tmp/django-test.log
+          exit "$status"
 
       - name: Pytest
         run: pytest --maxfail=1 -q --cov-fail-under=70
