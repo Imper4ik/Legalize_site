@@ -121,13 +121,13 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
     if client.birth_date and ("birth_date" not in personal_data or not personal_data["birth_date"]):
         personal_data["birth_date"] = client.birth_date.isoformat()
 
-    mos_data.personal_data = personal_data
+    mos_data.personal_data = personal_data  # type: ignore[assignment]
 
     passport_data = dict(cast("dict[str, Any]", mos_data.passport_data) or {})
     passport_num_val = safe_encrypted_attr(client, "passport_num")
     if passport_num_val and ("document_number" not in passport_data or not passport_data["document_number"]):
         passport_data["document_number"] = passport_num_val
-    mos_data.passport_data = passport_data
+    mos_data.passport_data = passport_data  # type: ignore[assignment]
 
     if request.method == "POST":
         # Ensure mos_data is saved to DB
@@ -196,14 +196,14 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         personal_data["birth_place"] = birth_place
         personal_data["birth_country"] = birth_country
         personal_data["origin_country"] = origin_country
-        mos_data.personal_data = personal_data
+        mos_data.personal_data = personal_data  # type: ignore[assignment]
 
         passport_data = cast("dict[str, Any]", mos_data.passport_data) or {}
         passport_data["document_number"] = doc_num
         passport_data["expiry_date"] = expiry_date
         passport_data["issue_date"] = request.POST.get("issue_date", "").strip()
         passport_data["issuing_authority"] = request.POST.get("issuing_authority", "").strip()
-        mos_data.passport_data = passport_data
+        mos_data.passport_data = passport_data  # type: ignore[assignment]
 
         mos_data.save()
         onboarding_views._sync_contact_fields_to_client(
@@ -261,7 +261,7 @@ def onboarding_personal_extra(request: HttpRequest, token: str) -> HttpResponse:
         personal_data["marital_status"] = request.POST.get("marital_status", "")
         personal_data["profession"] = request.POST.get("profession", "").strip()
         personal_data["special_marks"] = request.POST.get("special_marks", "").strip()
-        mos_data.personal_data = personal_data
+        mos_data.personal_data = personal_data  # type: ignore[assignment]
         mos_data.save()
         return _next_or_dashboard(request, token, "clients:onboarding_address")
 
@@ -298,7 +298,7 @@ def onboarding_address(request: HttpRequest, token: str) -> HttpResponse:
         address_data["gmina"] = request.POST.get("gmina", "").strip()
         address_data["house_number"] = request.POST.get("house_number", "").strip()
         address_data["apartment_number"] = request.POST.get("apartment_number", "").strip()
-        mos_data.address_data = address_data
+        mos_data.address_data = address_data  # type: ignore[assignment]
         mos_data.save()
         return _next_or_dashboard(request, token, "clients:onboarding_travel")
 
@@ -350,16 +350,16 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
         stay_data["was_in_poland_before"] = request.POST.get("was_in_poland_before") == "yes"
         stay_data["has_insurance"] = request.POST.get("has_insurance") == "yes"
         stay_data["has_stable_income"] = request.POST.get("has_stable_income") == "yes"
-        mos_data.stay_data = stay_data
+        mos_data.stay_data = stay_data  # type: ignore[assignment]
 
         personal_data = cast("dict[str, Any]", mos_data.personal_data) or {}
         personal_data["employer_email"] = request.POST.get("employer_email", "").strip()
         personal_data["university_email"] = request.POST.get("university_email", "").strip()
-        mos_data.personal_data = personal_data
+        mos_data.personal_data = personal_data  # type: ignore[assignment]
 
         previous_stays_detail = request.POST.get("previous_stays", "").strip()
-        mos_data.previous_stays = [previous_stays_detail]
-        mos_data.travel_history = [request.POST.get("travel_history", "")]
+        mos_data.previous_stays = [previous_stays_detail]  # type: ignore[assignment]
+        mos_data.travel_history = [request.POST.get("travel_history", "")]  # type: ignore[assignment]
         mos_data.save()
         if purpose_updated:
             clear_onboarding_notifications_cache(session.client)
@@ -393,7 +393,7 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
         declarations = cast("dict[str, Any]", mos_data.legal_declarations) or {}
         declarations["criminal_record"] = request.POST.get("criminal_record") == "yes"
         declarations["tax_arrears"] = request.POST.get("tax_arrears") == "yes"
-        mos_data.legal_declarations = declarations
+        mos_data.legal_declarations = declarations  # type: ignore[assignment]
 
         if _save_return_requested(request):
             if mos_data.status == "draft":

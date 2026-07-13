@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import pytest
-from django.urls import reverse
-
 from io import BytesIO
 
+import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.urls import reverse
 from reportlab.pdfgen import canvas  # type: ignore[import-untyped]
 
 from clients.models import Client, Document

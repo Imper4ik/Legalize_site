@@ -139,7 +139,7 @@ def _save_contact_values(client: Client, mos_data: MOSApplicationData, values: d
     personal_data = dict(cast("dict[str, Any]", mos_data.personal_data) or {})
     for field_name in CONTACT_REQUIRED_FIELDS:
         personal_data[field_name] = values[field_name]
-    mos_data.personal_data = personal_data
+    mos_data.personal_data = personal_data  # type: ignore[assignment]
 
     update_fields = ["personal_data", "updated_at"]
     if mos_data.status == "draft":

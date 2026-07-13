@@ -1077,9 +1077,9 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
             personal_dirty = True
 
     if personal_dirty:
-        mos_data.personal_data = personal_data
+        mos_data.personal_data = personal_data  # type: ignore[assignment]
     if passport_dirty:
-        mos_data.passport_data = passport_data
+        mos_data.passport_data = passport_data  # type: ignore[assignment]
 
     # Process address fields
     address_dirty = False
@@ -1092,7 +1092,7 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         address_data["meldunek"] = request.POST.get("meldunek") == "yes"
         address_dirty = True
     if address_dirty:
-        mos_data.address_data = address_data
+        mos_data.address_data = address_data  # type: ignore[assignment]
 
     # Process travel fields
     purpose_updated = False
@@ -1131,19 +1131,19 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         stay_dirty = True
 
     if stay_dirty:
-        mos_data.stay_data = stay_data
+        mos_data.stay_data = stay_data  # type: ignore[assignment]
 
     if "employer_email" in request.POST:
         personal_data["employer_email"] = request.POST.get("employer_email", "").strip()
-        mos_data.personal_data = personal_data
+        mos_data.personal_data = personal_data  # type: ignore[assignment]
     if "university_email" in request.POST:
         personal_data["university_email"] = request.POST.get("university_email", "").strip()
-        mos_data.personal_data = personal_data
+        mos_data.personal_data = personal_data  # type: ignore[assignment]
     if "previous_stays" in request.POST:
-        mos_data.previous_stays = [request.POST.get("previous_stays", "").strip()]
+        mos_data.previous_stays = [request.POST.get("previous_stays", "").strip()]  # type: ignore[assignment]
 
     if "travel_history" in request.POST:
-        mos_data.travel_history = [request.POST.get("travel_history", "")]
+        mos_data.travel_history = [request.POST.get("travel_history", "")]  # type: ignore[assignment]
 
     # Process declarations fields
     declarations_dirty = False
@@ -1155,7 +1155,7 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         declarations["tax_arrears"] = request.POST.get("tax_arrears") == "yes"
         declarations_dirty = True
     if declarations_dirty:
-        mos_data.legal_declarations = declarations
+        mos_data.legal_declarations = declarations  # type: ignore[assignment]
 
     # Set status to client_filling if not already filled or completed
     if mos_data.status not in ["client_completed", "staff_review", "approved_by_staff", "mos_package_ready", "submitted_in_mos", "fingerprints", "waiting_decision", "decision_received", "closed"]:
