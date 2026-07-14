@@ -1,10 +1,7 @@
 import logging
-from datetime import timedelta
 from typing import Any, cast
 
 from django.contrib import messages
-from django.core.exceptions import ValidationError
-from django.core.validators import validate_email
 from django.db import IntegrityError, transaction
 from django.http import (
     HttpRequest,
@@ -16,7 +13,6 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _
 
@@ -26,359 +22,56 @@ from clients.models import (
     Case,
     Client,
     ClientDigitalAccess,
-    ClientOnboardingSession,
     Document,
     MOSApplicationData,
 )
-from clients.services.access import accessible_clients_queryset
-from clients.services.case_context import working_purpose_for_case
 from clients.services.document_workflow import upload_client_document
 from clients.services.notifications import notify_staff_about_fingerprint_invitation_upload
 from clients.services.onboarding_purposes import (
     ONBOARDING_PURPOSE_CHOICES,
-    apply_onboarding_purpose_to_case,
-    apply_onboarding_purpose_to_client,
     clear_onboarding_notifications_cache,
     normalize_onboarding_purpose,
     purpose_label,
 )
-from clients.services.onboarding_tokens import generate_onboarding_token, hash_onboarding_token
-from clients.services.workflow_transitions import transition_case_workflow
-from clients.use_cases.client_records import finalize_client_creation
-from clients.views.base import role_required_view
-from legalize_site.utils.files import build_protected_file_response
-from legalize_site.utils.http import request_is_ajax
 
-EDITABLE_MOS_STATUSES = {"draft", "client_filling", "needs_correction"}
-CONTACT_SYNC_FIELDS = ("first_name", "last_name", "phone", "email")
+# --- split modules ------------------------------------------------------------
+# Session/auth helpers and staff entry points were extracted; re-export them so
+# sibling views (onboarding_step_return accesses them as module attributes),
+# clients.views.__init__ and the URLconf keep working unchanged.
+from clients.views.onboarding_access import (  # noqa: F401
+    EDITABLE_MOS_STATUSES,
+    ONBOARDING_LINK_TTL,
+    OnboardingLinkExpired,
+    _document_source_hint,
+    _ensure_mos,
+    _get_effective_document_purpose,
+    _get_scoped_mos,
+    _locked_response,
+    _mark_user_email_verified,
+    _mos_data_is_editable,
+    _mos_documents_are_editable,
+    _purpose_context,
+    _require_portal_case,
+    _save_onboarding_purpose,
+    _session_case,
+    _should_bypass_client_auth,
+    _split_onboarding_full_name,
+    _sync_contact_fields_to_client,
+    _validate_portal_email,
+    check_client_auth,
+    check_client_auth_token_link,
+    check_onboarding_session,
+)
+from clients.views.onboarding_staff_views import (  # noqa: F401
+    generate_onboarding_link,
+    quick_create_client_onboarding,
+)
+from legalize_site.utils.files import build_protected_file_response
+
 logger = logging.getLogger(__name__)
 
-# Emailed onboarding links carry a raw bearer token in the URL. Keep their
-# lifetime short to bound the replay window if a link leaks via history, a
-# forwarded message, or logs (audit Q-1). The authenticated ``me`` portal
-# session is not an emailed token link and keeps a longer, separate lifetime.
-ONBOARDING_LINK_TTL = timedelta(hours=72)
 
 
-def _mos_data_is_editable(mos_data: MOSApplicationData | None) -> bool:
-    return mos_data is None or mos_data.status in EDITABLE_MOS_STATUSES
-
-
-def _mos_documents_are_editable(mos_data: MOSApplicationData | None) -> bool:
-    return mos_data is None or mos_data.status in {
-        "draft",
-        "client_filling",
-        "client_completed",
-        "staff_review",
-        "needs_correction",
-        "submitted_in_mos",
-        "fingerprints",
-        "waiting_decision",
-    }
-
-
-def _locked_response(request: HttpRequest, session: ClientOnboardingSession) -> HttpResponse:
-    mos_data = _get_scoped_mos(session)
-    status_display = mos_data.get_status_display() if mos_data else ""
-
-    if (
-        request_is_ajax(request)
-        or request.headers.get("x-requested-with") == "XMLHttpRequest"
-        or "application/json" in request.headers.get("Accept", "")
-    ):
-        return JsonResponse({"status": "locked", "message": _("This onboarding form is locked.")}, status=403)
-
-    response = render(request, "clients/onboarding/locked.html", {
-        "session": session,
-        "status_display": status_display,
-    })
-    response.status_code = 403
-    return response
-
-
-def _sync_contact_fields_to_client(client: Client, **values: str) -> None:
-    update_fields: list[str] = []
-    for field_name in CONTACT_SYNC_FIELDS:
-        value = (values.get(field_name) or "").strip()
-        if value and getattr(client, field_name) != value:
-            setattr(client, field_name, value)
-            update_fields.append(field_name)
-    if update_fields:
-        client.save(update_fields=update_fields)
-
-
-def _get_effective_document_purpose(
-    client: Client,
-    mos_data: MOSApplicationData | None = None,
-    case: Case | None = None,
-) -> str:
-    if case is not None:
-        return working_purpose_for_case(case, mos_data)
-    return client.get_document_requirement_purpose()
-
-
-def _purpose_context(
-    client: Client,
-    mos_data: MOSApplicationData | None,
-    case: Case | None = None,
-) -> dict[str, str | bool]:
-    effective_purpose = _get_effective_document_purpose(client, mos_data, case)
-    client_selected_purpose = mos_data.mos_purpose if mos_data else ""
-    original_client_purpose = getattr(case, "application_purpose", client.application_purpose)
-    return {
-        "effective_purpose": effective_purpose,
-        "client_selected_purpose": client_selected_purpose,
-        "original_client_purpose": original_client_purpose,
-        "effective_purpose_label": purpose_label(effective_purpose),
-        "client_selected_purpose_label": purpose_label(client_selected_purpose),
-        "original_client_purpose_label": purpose_label(effective_purpose),
-        "purpose_mismatch": bool(client_selected_purpose and client_selected_purpose != effective_purpose),
-    }
-
-
-def _session_case(session: ClientOnboardingSession) -> Case | None:
-    """The Case the current portal/onboarding request operates on.
-
-    ``case_link`` sessions are bound to a single case; ``client_portal`` sessions
-    carry the case the client picked for this Django session. The value is set by
-    :func:`check_onboarding_session` after the ownership/archive re-validation, so
-    it is always either ``None`` or a case that belongs to the session's client
-    and is not archived (spec section 1).
-    """
-    return getattr(session, "active_case", None)
-
-
-def _require_portal_case(
-    request: HttpRequest, session: ClientOnboardingSession, token: str
-) -> HttpResponse | None:
-    """Redirect portal users to the case picker until they have chosen a case.
-
-    Case-scoped steps must never run without a selected case for a
-    ``client_portal`` session, otherwise the MOS/Document lookups would fall back
-    to the ambiguous legacy resolution.
-    """
-    if session.scope != "client_portal" or _session_case(session) is not None:
-        return None
-    # When the client has exactly one active case there is nothing to choose, so
-    # auto-select it instead of forcing the picker. This is safe: the
-    # ownership/archive re-validation in check_onboarding_session still runs on
-    # every request, and the picker is still shown for several active cases
-    # (spec §5). With zero active cases the picker shows the empty state.
-    active_cases = list(Case.objects.filter(client=session.client)[:2])
-    if len(active_cases) == 1:
-        request.session["case_id"] = active_cases[0].id
-        session.active_case = active_cases[0]  # type: ignore[attr-defined]
-        return None
-    return redirect("clients:onboarding_select_case", token=token)
-
-
-def _ensure_mos(client: Client, case: Any = None) -> tuple[MOSApplicationData, bool]:
-    """Create/fetch the MOS record for a specific case (spec §8).
-
-    MOS data is always scoped to a Case, never the bare Client. When the caller
-    already knows the case it is used directly; otherwise the client's single
-    active case is resolved. A client with zero or several active cases is
-    ambiguous, so this raises instead of guessing or creating a case-less MOS.
-    """
-    from django.core.exceptions import ValidationError
-
-    from clients.services.cases import resolve_single_active_case
-
-    resolved_case = case or resolve_single_active_case(client)
-    if resolved_case is None:
-        raise ValidationError("Для этой операции необходимо выбрать дело.")
-    return MOSApplicationData.objects.get_or_create(client=client, case=resolved_case)
-
-
-def _get_scoped_mos(session: ClientOnboardingSession) -> MOSApplicationData | None:
-    """Return the MOS record for the session's active case, or None.
-
-    Strictly case-scoped (spec §8): without a case in scope there is no MOS to
-    show, so this returns ``None`` rather than falling back to an arbitrary
-    client-level record that could belong to another case.
-    """
-    case = _session_case(session)
-    if case is None:
-        return None
-    return MOSApplicationData.objects.filter(client=session.client, case=case).first()
-
-
-def _save_onboarding_purpose(mos_data: MOSApplicationData, selected_purpose: str) -> None:
-    mos_data.mos_purpose = selected_purpose
-    update_fields = ["mos_purpose", "updated_at"]
-    if mos_data.status == "draft":
-        mos_data.status = "client_filling"
-        update_fields.append("status")
-    mos_data.save(update_fields=update_fields)
-    clear_onboarding_notifications_cache(mos_data.client)
-
-
-class OnboardingLinkExpired(Exception):
-    pass
-
-
-def check_onboarding_session(
-    token: str,
-    allowed_statuses: tuple[str, ...] = ("created", "active"),
-    request: HttpRequest | None = None,
-) -> ClientOnboardingSession | None:
-    if token == SELF_ONBOARDING_SLUG:
-        if request and request.user.is_authenticated and hasattr(request.user, "client_profile"):
-            client = request.user.client_profile
-            # Self-onboarding is strictly a client_portal session. Filter by scope
-            # so an older case_link session (bound to a specific case) is never
-            # picked up as the portal session (spec §5).
-            session = ClientOnboardingSession.objects.filter(
-                client=client,
-                scope="client_portal",
-                expires_at__gt=timezone.now()
-            ).exclude(status__in=["revoked", "expired"]).first()
-            if not session:
-                from clients.services.onboarding_tokens import generate_onboarding_token
-                _, token_hash = generate_onboarding_token()
-                # Self-onboarding is a client portal: it must never carry/auto-pick
-                # a Case. The case is chosen per-request and kept server-side. MOS
-                # data is created lazily once a case is selected (spec section 1).
-                session = ClientOnboardingSession.objects.create(
-                    client=client,
-                    scope="client_portal",
-                    case=None,
-                    token_hash=token_hash,
-                    status="active",
-                    expires_at=timezone.now() + timedelta(days=7),
-                )
-                ClientDigitalAccess.objects.get_or_create(client=client)
-            elif session.status == "created" and "active" in allowed_statuses:
-                session.status = "active"
-                session.save(update_fields=["status"])
-                ClientDigitalAccess.objects.get_or_create(client=client)
-            session.token_hash = SELF_ONBOARDING_SLUG
-            session.client = client
-        else:
-            return None
-    else:
-        token_h = hash_onboarding_token(token)
-        session_any = ClientOnboardingSession.objects.filter(token_hash=token_h).first()
-        if session_any:
-            if session_any.expires_at <= timezone.now() or session_any.status in ("revoked", "expired"):
-                raise OnboardingLinkExpired()
-
-        session = ClientOnboardingSession.objects.filter(token_hash=token_h, expires_at__gt=timezone.now()).first()
-        if not session or session.status not in allowed_statuses:
-            return None
-        if session.status == "created" and "active" in allowed_statuses:
-            session.status = "active"
-            session.save(update_fields=["status"])
-        session.token_hash = token
-        session.client = Client.objects.defer("passport_num").get(pk=session.client_id)
-
-    # An archived client never has an accessible portal/onboarding context.
-    if session.client.archived_at is not None:
-        return None
-
-    # Валидация scope и согласованности дела. The resolved case is attached to
-    # the session as ``active_case`` for the view layer to consume.
-    session.active_case = None  # type: ignore[attr-defined]
-    case_id: Any = None
-    if session.scope == "case_link":
-        # case_link sessions are permanently bound to one case; without it there
-        # is nothing to show.
-        if not session.case_id:
-            return None
-        case_id = session.case_id
-    elif session.scope == "client_portal":
-        # Never auto-assign a Case for the portal: the client picks one and it
-        # is kept server-side in the Django session. An untrusted GET/POST value
-        # is only honoured after the ownership/archive checks below.
-        if request:
-            case_id = request.session.get("case_id")
-
-    if case_id:
-        case = Case.all_objects.filter(pk=case_id).first()
-        case_is_valid = (
-            case is not None
-            and case.client_id == session.client_id
-            and case.archived_at is None
-        )
-        if case_is_valid:
-            session.active_case = case  # type: ignore[attr-defined]
-            # Only the portal persists the chosen case in the Django session;
-            # case_link derives it from the session row itself.
-            if request and session.scope == "client_portal":
-                request.session["case_id"] = case.id
-        else:
-            if session.scope == "case_link":
-                # The bound case vanished/was archived: the link is dead.
-                return None
-            # Portal: drop the stale/forged selection and ask again (no leak).
-            if request:
-                request.session.pop("case_id", None)
-
-    return session
-
-def _should_bypass_client_auth(request: HttpRequest) -> bool:
-    if not request.user.is_authenticated:
-        return False
-    if request.user.is_staff:
-        return True
-    from clients.services.roles import user_has_any_role
-    return user_has_any_role(request.user, "Admin", "Manager", "Staff")
-
-def check_client_auth(request: HttpRequest, session: ClientOnboardingSession, token: str) -> HttpResponse | None:
-    if _should_bypass_client_auth(request):
-        return None
-
-    client = session.client
-    if not client.user or not client.user.has_usable_password():
-        return redirect("clients:onboarding_set_password", token=token)
-
-    if not request.user.is_authenticated or request.user != client.user:
-        messages.info(request, _("Пожалуйста, войдите в свой аккаунт для продолжения."))
-        login_url = reverse("account_login")
-        request.session["prefilled_email"] = client.email
-        return redirect(login_url)
-
-    return None
-
-
-def check_client_auth_token_link(
-    request: HttpRequest, session: ClientOnboardingSession, token: str
-) -> HttpResponse | None:
-    """Always require authentication/login/password setup, even for raw tokens."""
-    return check_client_auth(request, session, token)
-
-def _validate_portal_email(email: str, client: Client) -> str | None:
-    try:
-        validate_email(email)
-    except ValidationError:
-        return str(_("Введите корректный адрес электронной почты."))
-
-    expected_email = str(client.email or "").strip().casefold()
-    if expected_email and email.casefold() != expected_email:
-        return str(_("Email должен совпадать с адресом, указанным для этой ссылки. Если адрес неверный, обратитесь в офис."))
-    return None
-
-
-def _split_onboarding_full_name(full_name: str) -> tuple[str, str] | None:
-    parts = full_name.split()
-    if len(parts) < 2:
-        return None
-    return " ".join(parts[1:]), parts[0]
-
-
-def _mark_user_email_verified(user: Any, email: str) -> None:
-    from allauth.account.models import EmailAddress
-
-    # The email is globally unique in allauth. A stale row may still point at
-    # an account that has since changed its email away (staff typo fixes); the
-    # address must follow its rightful current owner instead of crashing
-    # account creation with a UNIQUE error.
-    email_address, _created = EmailAddress.objects.update_or_create(
-        email__iexact=email,
-        defaults={"user": user, "email": email, "primary": True, "verified": True},
-    )
-
-    EmailAddress.objects.filter(user=user).exclude(pk=email_address.pk).update(primary=False)
 
 
 def onboarding_set_password(request: HttpRequest, token: str) -> HttpResponse:
@@ -490,51 +183,6 @@ def onboarding_set_password(request: HttpRequest, token: str) -> HttpResponse:
         "full_name": full_name_val,
         "error_message": error_message,
     })
-
-
-def _document_source_hint(doc_type: str) -> str:
-    hints = {
-        DocumentType.PHOTOS.value: _("Фото 45x35 мм можно сделать в фотоателье или фотокабине. Попросите формат do karty pobytu."),
-        DocumentType.PAYMENT_CONFIRMATION.value: _("Сделайте оплату банковским переводом или в кассе, затем загрузите подтверждение платежа."),
-        DocumentType.STUDY_APPLICATION_FEE.value: _("Оплату можно сделать банковским переводом на счёт управления (urząd); сохраните подтверждение из банка."),
-        DocumentType.WORK_PERMIT_FEE.value: _("Оплату можно сделать банковским переводом на счёт управления (urząd); сохраните подтверждение 440 zł и 17 zł за доверенность, если она нужна."),
-        "family_reunification_fee": _("Оплату можно сделать банковским переводом на счёт управления (urząd); сохраните подтверждение платежа и доверенности, если она нужна."),
-        DocumentType.PASSPORT.value: _("Отсканируйте или сфотографируйте действующий паспорт. Если паспорт нужно оформить заново, обратитесь в консульство или орган вашей страны."),
-        DocumentType.RESIDENCE_CARD.value: _("Отсканируйте или сфотографируйте текущую карту побыту с двух сторон, если она у вас есть."),
-        DocumentType.ENROLLMENT_CERTIFICATE.value: _("Закажите справку в деканате, student office или личном кабинете вашей учёбы."),
-        DocumentType.TUITION_FEE_STATEMENT.value: _("Запросите справку о стоимости обучения в деканате, student office или бухгалтерии учебного заведения."),
-        DocumentType.TUITION_FEE_PROOF.value: _("Возьмите подтверждение оплаты обучения в банковском приложении или в бухгалтерии учебного заведения."),
-        DocumentType.GRADES.value: _("Оценки или свидетельства можно получить в деканате, student office, школе или в электронном кабинете ученика/студента."),
-        DocumentType.HEALTH_INSURANCE.value: _("Полис можно получить у страховщика, работодателя, в ZUS/eZUS или NFZ. Подойдёт документ с подтверждением активной страховки."),
-        DocumentType.ADDRESS_PROOF.value: _("Обычно это договор аренды от владельца жилья, подтверждение meldunek из управления (urząd) или документы об оплате проживания."),
-        DocumentType.FINANCIAL_PROOF.value: _("Подготовьте выписку из банка, справку о доходах, документы спонсора или другое подтверждение средств на проживание."),
-        DocumentType.ZALACZNIK_NR_1.value: _("Załącznik nr 1 заполняет и подписывает работодатель. Обратитесь в отдел кадров, HR или бухгалтерию."),
-        DocumentType.EMPLOYMENT_CONTRACT.value: _("Копию договора о работе или zlecenie можно получить у работодателя, в HR или бухгалтерии."),
-        DocumentType.WORK_PERMISSION.value: _("Oświadczenie или zezwolenie na pracę выдаёт работодатель. Если у вас польский диплом, загрузите диплом и suplement."),
-        DocumentType.PIT_PROOF.value: _("PIT-37 с подтверждением подачи можно скачать в e-Urząd Skarbowy на podatki.gov.pl или получить у бухгалтера."),
-        DocumentType.TAX_CLEARANCE_EMPLOYER.value: _("Этот документ работодатель получает в ZUS/eZUS. Попросите HR или бухгалтерию подготовить справку."),
-        DocumentType.TAX_CLEARANCE_FOREIGNER.value: _("Справку о взносах можно получить в ZUS/eZUS или запросить у работодателя/бухгалтерии."),
-        DocumentType.NO_DEPENDENTS_STATEMENT.value: _("Справку об отсутствии налоговой задолженности можно получить в e-Urząd Skarbowy или в налоговом ужонде."),
-        DocumentType.ZUS_RCA_OR_INSURANCE.value: _("ZUS RCA можно скачать в ZUS PUE/eZUS в разделе Ubezpieczony -> Raporty или запросить у бухгалтера работодателя."),
-        DocumentType.ZUS_CONTRIBUTION_HISTORY.value: _("Справку о przebiegu ubezpieczenia можно заказать в ZUS/eZUS или в отделении ZUS."),
-        DocumentType.EMPLOYER_TAX_RETURN.value: _("CIT/PIT работодателя подготовит бухгалтерия работодателя."),
-        DocumentType.ZUS_EMPLOYEE_COUNT.value: _("Справку о количестве сотрудников и взносах работодатель получает в ZUS/eZUS. Обратитесь в HR или бухгалтерию."),
-        DocumentType.STATEMENT_X.value: _("Шаблон заявления выдаёт менеджер или юрист. Заполните и подпишите его после проверки данных."),
-        DocumentType.MAINTENANCE_STATEMENT.value: _("Заявление об обеспечении заполняет и подписывает человек, который будет вас содержать. Шаблон можно получить у менеджера."),
-        DocumentType.WEZWANIE.value: _("Загрузите письмо/wezwanie из управления (urząd), которое пришло по почте, ePUAP или MOS: дата отпечатков, требования или номер дела."),
-        DocumentType.FINGERPRINT_CONFIRMATION.value: _("Подтверждение выдаёт ужонд после сдачи отпечатков пальцев."),
-        "sponsor_residence_decision_or_card": _("Спонсор должен отсканировать свою карту побыту, решение о побыте или другой документ, подтверждающий легальное пребывание."),
-        "sponsor_income_proof": _("Документы о доходе спонсора можно получить у работодателя, в бухгалтерии, банке, ZUS или налоговом ужонде."),
-        "marriage_certificate": _("Свидетельство о браке получите в ЗАГСе/USC страны регистрации брака; для Польши обычно нужен присяжный перевод."),
-        "joint_family_life_evidence": _("Подойдут договор аренды, счета, совместные документы, фото или другие доказательства совместной семейной жизни."),
-        "outside_poland_consent": _("Согласие можно оформить у нотариуса или в консульстве; при необходимости добавьте присяжный перевод."),
-        "birth_certificate": _("Свидетельство о рождении получите в ЗАГСе/USC страны рождения; для Польши обычно нужен присяжный перевод."),
-        "parental_authority_docs": _("Документы об опеке или родительских правах можно получить в суде, ЗАГСе/USC или у нотариуса; при необходимости добавьте перевод."),
-        "second_parent_consent": _("Согласие второго родителя оформляется у нотариуса или в консульстве. Решение суда также подойдёт, если оно заменяет согласие."),
-        "school_certificate": _("Справку из школы можно получить в секретариате школы или электронном кабинете."),
-        "outside_poland_child_consent": _("Согласие законного представителя можно оформить у нотариуса или в консульстве; при необходимости добавьте перевод."),
-    }
-    return hints.get(doc_type, _("Если не знаете, где получить этот документ, напишите менеджеру, и мы подскажем точное место."))
 
 
 def onboarding_select_case(request: HttpRequest, token: str) -> HttpResponse:
@@ -728,241 +376,9 @@ def onboarding_review(request: HttpRequest, token: str) -> HttpResponse:
 
     return render(request, "clients/onboarding/review.html", {"session": session, "mos_data": mos_data})
 
-@role_required_view("Admin", "Manager", "Staff")
-def generate_onboarding_link(request: HttpRequest, client_id: int) -> HttpResponse:
-    client = get_object_or_404(accessible_clients_queryset(request.user, Client.objects.all()), id=client_id)
-    selected_purpose = (request.POST.get("application_purpose", "").strip() or None) if request.method == "POST" else None
-    if selected_purpose:
-        try:
-            selected_purpose = normalize_onboarding_purpose(selected_purpose)
-        except ValueError:
-            if request_is_ajax(request):
-                return JsonResponse({"status": "error", "message": _("Invalid application purpose")}, status=400)
-            return HttpResponseBadRequest(_("Invalid application purpose."))
-
-    intake_type = request.POST.get("intake_type", "").strip() if request.method == "POST" else ""
-    if not intake_type:
-        # Default guess reads progress from the client's single active case (§4).
-        from clients.services.cases import resolve_single_active_case
-
-        active_case = resolve_single_active_case(client)
-        has_progress = bool(active_case and (active_case.submission_date or active_case.fingerprints_date))
-        intake_type = "join" if has_progress else "new"
-
-    token, token_hash = generate_onboarding_token()
-    payment = client.payments.filter(status__in=["paid", "partial"]).first()
-
-    def _link_response() -> HttpResponse:
-        if request_is_ajax(request):
-            link = request.build_absolute_uri(
-                reverse("clients:onboarding_start", kwargs={"token": token})
-            )
-            return JsonResponse({
-                "status": "ok",
-                "link": link,
-                "message": _("Ссылка на онбординг скопирована!"),
-            })
-        messages.success(request, _("Ссылка на онбординг успешно создана."))
-        return redirect("clients:client_detail", pk=client.id)
-
-    # Two explicit modes (spec §5). Staff may pass a concrete case; otherwise the
-    # client's single active case is used. When the case is ambiguous (zero or
-    # several active cases) we never silently pick one: a client_portal link is
-    # issued and the client chooses the case in the portal.
-    from clients.services.cases import resolve_active_case_for_client, resolve_single_active_case
-
-    case_uuid = request.POST.get("case_uuid") if request.method == "POST" else None
-    target_case = (
-        resolve_active_case_for_client(client, case_uuid)
-        if case_uuid
-        else resolve_single_active_case(client)
-    )
-
-    if target_case is None:
-        with transaction.atomic():
-            ClientDigitalAccess.objects.get_or_create(client=client)
-            ClientOnboardingSession.objects.create(
-                client=client,
-                payment=payment,
-                scope="client_portal",
-                case=None,
-                token_hash=token_hash,
-                status="created",
-                expires_at=timezone.now() + ONBOARDING_LINK_TTL,
-            )
-        return _link_response()
-
-    with transaction.atomic():
-        mos_data, _created = _ensure_mos(client, target_case)
-        ClientDigitalAccess.objects.get_or_create(client=client)
-        if selected_purpose:
-            if target_case is not None:
-                changed_fields = apply_onboarding_purpose_to_case(target_case, selected_purpose)
-                event_type = "onboarding_link_case_purpose_set"
-                summary = "Onboarding link case purpose set by staff"
-            else:
-                changed_fields = apply_onboarding_purpose_to_client(client, selected_purpose)
-                event_type = "onboarding_link_purpose_set"
-                summary = "Onboarding link purpose set by staff"
-            if mos_data.mos_purpose:
-                mos_data.mos_purpose = ""
-                mos_data.save(update_fields=["mos_purpose", "updated_at"])
-            clear_onboarding_notifications_cache(client)
-            if changed_fields:
-                from clients.services.activity import log_client_activity
-                log_client_activity(
-                    client=client,
-                    case=target_case,
-                    actor=request.user,
-                    event_type=event_type,
-                    summary=summary,
-                    metadata={"changed_fields": changed_fields},
-                )
-
-        if intake_type == "join":
-            mos_data.new_residence_card_application_status = "yes"
-            mos_data.new_residence_card_updated_at = timezone.now()
-
-            # Smart transition logic based on the case's existing dates (§4).
-            case = mos_data.case
-            if case is None:
-                message = _("Не удалось определить дело для заявки.")
-                if request_is_ajax(request):
-                    return JsonResponse({"status": "error", "message": str(message)}, status=400)
-                messages.error(request, message)
-                return redirect("clients:client_detail", pk=client.pk)
-            target_stage = "waiting_decision" if case.fingerprints_date else "fingerprints"
-            try:
-                with transaction.atomic():
-                    if case.workflow_stage != target_stage:
-                        transition_case_workflow(case=case, target_stage=target_stage, actor=request.user, save=True)
-                    mos_data.status = target_stage
-                    mos_data.save(update_fields=["new_residence_card_application_status", "new_residence_card_updated_at", "status", "updated_at"])
-            except ValidationError as exc:
-                # The AJAX caller must see the real validation reason instead of
-                # a redirect it can only render as "failed to generate link".
-                message = "; ".join(exc.messages) if hasattr(exc, "messages") else str(exc)
-                if request_is_ajax(request):
-                    return JsonResponse({"status": "error", "message": message}, status=400)
-                messages.error(request, message)
-                return redirect("clients:client_detail", pk=client.pk)
-            except Exception:
-                logger.exception("Unexpected error while preparing join onboarding", extra={"client_id": client.pk})
-                message = _("Unexpected error while updating application status.")
-                if request_is_ajax(request):
-                    return JsonResponse({"status": "error", "message": str(message)}, status=500)
-                messages.error(request, message)
-                return redirect("clients:client_detail", pk=client.pk)
-        elif intake_type == "new":
-            mos_data.new_residence_card_application_status = "no"
-            mos_data.save(update_fields=["new_residence_card_application_status", "updated_at"])
-
-        # Staff-generated links are case-scoped (case_link): they point at the
-        # specific case the MOS data was resolved for (spec section 1).
-        ClientOnboardingSession.objects.create(
-            client=client,
-            payment=payment,
-            scope="case_link",
-            case=mos_data.case,
-            token_hash=token_hash,
-            status="created",
-            expires_at=timezone.now() + ONBOARDING_LINK_TTL,
-        )
-
-    return _link_response()
 
 def onboarding_personal_data(request: HttpRequest, token: str) -> HttpResponse:
     return redirect("clients:onboarding_passport", token=token)
-
-
-@role_required_view("Admin", "Manager", "Staff")
-def quick_create_client_onboarding(request: HttpRequest) -> HttpResponse:
-    if request.method != "POST":
-        return JsonResponse({"status": "error", "message": _("Method not allowed")}, status=405)
-
-    first_name = request.POST.get("first_name", "").strip() or "Новый"
-    last_name = request.POST.get("last_name", "").strip() or "Клиент"
-    email = request.POST.get("email", "").strip()
-    phone = request.POST.get("phone", "").strip()
-    language = request.POST.get("language", "pl").strip()
-    try:
-        selected_purpose = normalize_onboarding_purpose(request.POST.get("application_purpose", "study") or "study")
-    except ValueError:
-        return JsonResponse({"status": "error", "message": _("Invalid application purpose")}, status=400)
-    application_purpose = "family" if selected_purpose in {"family_spouse", "family_child"} else selected_purpose
-    family_role = selected_purpose if application_purpose == "family" else ""
-
-    intake_type = request.POST.get("intake_type", "new").strip()
-
-    try:
-        with transaction.atomic():
-            client = Client.objects.create(
-                first_name=first_name,
-                last_name=last_name,
-                email=email,
-                phone=phone,
-                citizenship="",
-                language=language,
-                application_purpose=application_purpose,
-                family_role=family_role,
-                status="new",
-                workflow_stage="new_client",
-            )
-            finalize_client_creation(
-                client=client,
-                actor=request.user,
-            )
-
-            mos_data, _created = _ensure_mos(client)
-            if intake_type == "join":
-                mos_data.new_residence_card_application_status = "yes"
-                mos_data.new_residence_card_updated_at = timezone.now()
-                target_stage = "fingerprints"
-                case = mos_data.case
-                if case is None:
-                    messages.error(request, _("Не удалось определить дело для заявки."))
-                    return redirect("clients:client_add")
-                try:
-                    with transaction.atomic():
-                        transition_case_workflow(case=case, target_stage=target_stage, actor=request.user, save=True)
-                        mos_data.status = target_stage
-                        mos_data.save(update_fields=["new_residence_card_application_status", "new_residence_card_updated_at", "status", "updated_at"])
-                except ValidationError as exc:
-                    messages.error(request, str(exc))
-                    return redirect("clients:client_add")
-                except Exception:
-                    logger.exception("Unexpected error while quick-creating join onboarding", extra={"client_id": client.pk})
-                    messages.error(request, _("Unexpected error while updating application status."))
-                    return redirect("clients:client_add")
-            elif intake_type == "new":
-                mos_data.new_residence_card_application_status = "no"
-                mos_data.save(update_fields=["new_residence_card_application_status", "updated_at"])
-
-            token, token_hash = generate_onboarding_token()
-            # A freshly created client has exactly one case: the staff link is
-            # case-scoped to it (spec section 1).
-            ClientOnboardingSession.objects.create(
-                client=client,
-                scope="case_link",
-                case=mos_data.case,
-                token_hash=token_hash,
-                status="created",
-                expires_at=timezone.now() + ONBOARDING_LINK_TTL
-            )
-
-        link = request.build_absolute_uri(
-            reverse("clients:onboarding_start", kwargs={"token": token})
-        )
-        return JsonResponse({
-            "status": "ok",
-            "link": link,
-            "message": _("Клиент добавлен и ссылка скопирована!")
-        })
-    except Exception as e:
-        return JsonResponse({
-            "status": "error",
-            "message": str(e)
-        }, status=500)
 
 
 def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
