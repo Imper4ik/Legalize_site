@@ -108,9 +108,10 @@ class RealOCRFlowTests(TestCase):
         parsed = parse_passport_doc(filepath)
 
         self.assertIsNone(parsed.error)
-        self.assertIsNone(parsed.passport_number)
-        self.assertEqual(parsed.first_name, "Republic")
-        self.assertEqual(parsed.last_name, "Of")
+        # Since OCR rasterizes at 300 dpi the MRZ of the specimen passport is
+        # readable and the document number extracts correctly. The specimen's
+        # name fields are filler text, so OCR noise there is not asserted.
+        self.assertEqual(parsed.passport_number, "Z50000177")
 
     def test_real_wezwanie_parsing(self):
         filepath = os.path.join(self.fixtures_dir, "wezwanie_real.pdf")
@@ -156,7 +157,9 @@ class RealOCRFlowTests(TestCase):
         self.client_obj.refresh_from_db()
 
         self.assertEqual(doc.ocr_status, "success")
-        self.assertEqual(self.client_obj.passport_num, "")
+        # The 300 dpi OCR pass reads the specimen MRZ, so the missing passport
+        # number is auto-filled from the parsed document.
+        self.assertEqual(self.client_obj.passport_num, "Z50000177")
         self.assertTrue(doc.ocr_name_mismatch)
 
     def test_e2e_rental_agreement_job_processing(self):

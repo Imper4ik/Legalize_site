@@ -6,23 +6,24 @@ viewport wide (the bug fixed in commit 1be09db). This test drives real pages
 in headless chromium at an iPhone-sized viewport and fails on any horizontal
 page overflow.
 
-The test auto-skips when playwright or a chromium binary is unavailable
-(plain CI); run `playwright install chromium` locally to enable it.
+Skips cleanly under both pytest and the Django/unittest runner when playwright
+or a chromium binary is unavailable (plain CI); run `playwright install
+chromium` locally to enable it.
 """
 from __future__ import annotations
 
 import glob
 import os
+import unittest
 
-import pytest
+try:
+    from playwright.sync_api import sync_playwright
+except ImportError:  # pragma: no cover - exercised only without playwright
+    sync_playwright = None  # type: ignore[assignment]
 
-playwright_sync = pytest.importorskip(
-    "playwright.sync_api", reason="playwright is not installed"
-)
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase  # noqa: E402
-
-from clients.testing.factories import create_test_client, create_test_user  # noqa: E402
+from clients.testing.factories import create_test_client, create_test_user
 
 VIEWPORT = {"width": 390, "height": 844}
 
@@ -32,33 +33,43 @@ def _find_chromium() -> str | None:
     roots = [
         os.environ.get("PLAYWRIGHT_BROWSERS_PATH", ""),
         os.path.expanduser("~/.cache/ms-playwright"),
+        os.path.expanduser("~/Library/Caches/ms-playwright"),
     ]
+    patterns = (
+        "chromium-*/chrome-linux/chrome",
+        "chromium*/chrome-linux/chrome",
+        "chromium-*/chrome-mac*/Chromium.app/Contents/MacOS/Chromium",
+    )
     for root in roots:
         if not root:
             continue
-        for pattern in ("chromium-*/chrome-linux/chrome", "chromium*/chrome-linux/chrome"):
+        for pattern in patterns:
             matches = sorted(glob.glob(os.path.join(root, pattern)))
             if matches:
                 return matches[-1]
     return None
 
 
-def _launch(pw):  # type: ignore[no-untyped-def]
-    try:
-        return pw.chromium.launch()
-    except Exception:
-        executable = _find_chromium()
-        if not executable:
-            pytest.skip("no chromium binary available for playwright")
-        return pw.chromium.launch(executable_path=executable)
+CHROMIUM_PATH = _find_chromium() if sync_playwright is not None else None
 
 
+@unittest.skipUnless(
+    sync_playwright is not None and CHROMIUM_PATH,
+    "playwright and a chromium binary are required (run `playwright install chromium`)",
+)
 class MobileOverflowTests(StaticLiveServerTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
         # Sync playwright drives its own event loop inside the test thread.
         os.environ.setdefault("DJANGO_ALLOW_ASYNC_UNSAFE", "true")
+
+    def _launch(self, pw):  # type: ignore[no-untyped-def]
+        try:
+            return pw.chromium.launch()
+        except Exception:
+            # Package build id mismatch: fall back to the located binary.
+            return pw.chromium.launch(executable_path=CHROMIUM_PATH)
 
     def _assert_no_horizontal_scroll(self, page, url_path: str) -> None:
         page.goto(f"{self.live_server_url}{url_path}", wait_until="networkidle")
@@ -81,8 +92,8 @@ class MobileOverflowTests(StaticLiveServerTestCase):
         self.client.force_login(staff)
         session_cookie = self.client.cookies["sessionid"]
 
-        with playwright_sync.sync_playwright() as pw:
-            browser = _launch(pw)
+        with sync_playwright() as pw:
+            browser = self._launch(pw)
             context = browser.new_context(viewport=VIEWPORT, is_mobile=True)
             context.add_cookies(
                 [
