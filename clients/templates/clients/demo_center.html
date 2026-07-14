@@ -6,7 +6,7 @@
 {% block page_subtitle %}{% translate "Безопасная демо-среда для презентации CRM и клиентского портала." %}{% endblock %}
 
 {% block extra_head %}
-<style>
+<style nonce="{{ request.csp_nonce }}">
   .demo-workbench {
     display: grid;
     gap: 1rem;

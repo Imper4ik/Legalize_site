@@ -9,7 +9,7 @@
     <title>{% block title %}Legalize{% endblock %}</title>
     <link href="{% static 'vendor/bootstrap/bootstrap.min.css' %}" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
-    <style>
+    <style nonce="{{ request.csp_nonce }}">
         :root {
             color-scheme: light;
             --auth-radius: 24px;

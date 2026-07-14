@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Prośba o przyśpieszenie - {{ client.first_name }} {{ client.last_name }}</title>
-  <style>
+  <style nonce="{{ request.csp_nonce }}">
     :root {
       --ink: #1e1e1e;
       --accent: #2f4f84;

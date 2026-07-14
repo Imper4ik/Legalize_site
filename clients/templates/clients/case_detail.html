@@ -5,7 +5,7 @@
 {% block body_class %}case-detail-body{% endblock %}
 
 {% block extra_head %}
-<style>
+<style nonce="{{ request.csp_nonce }}">
   .case-detail-body main.page-surface { background: transparent; border: 0; box-shadow: none; backdrop-filter: none; padding: 0; }
   .case-detail-page { color: var(--fg); }
   .case-detail-hero, .case-tab-panel, .case-tabs { background: var(--surface) !important; color: var(--fg); border: 1px solid var(--border); }

@@ -6,7 +6,7 @@
 {% block extrastyle %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
-    <style>
+    <style nonce="{{ request.csp_nonce }}">
         :root {
             --admin-primary: #2563eb;
             --admin-secondary: #8b5cf6;

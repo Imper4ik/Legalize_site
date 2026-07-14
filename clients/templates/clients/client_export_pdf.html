@@ -126,7 +126,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
+<style nonce="{{ request.csp_nonce }}">
     @media print {
         body { background: white !important; }
         .theme-navbar, .footer, .d-print-none { display: none !important; }

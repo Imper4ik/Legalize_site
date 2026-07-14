@@ -175,9 +175,14 @@ class ContentSecurityPolicyMiddleware:
         # enforced, to avoid emitting two competing Report-Only headers.
         if self.strict_report_only_value and not self.report_only:
             if "Content-Security-Policy-Report-Only" not in response:
-                response["Content-Security-Policy-Report-Only"] = (
-                    self.strict_report_only_value.replace(
-                        "script-src 'self'", f"script-src 'self' 'nonce-{nonce}'"
-                    )
+                strict_policy = self.strict_report_only_value.replace(
+                    "script-src 'self'", f"script-src 'self' 'nonce-{nonce}'"
                 )
+                # Nonced <style> blocks pass the strict policy the same way
+                # nonced scripts do, so the remaining style telemetry is only
+                # about style="..." attributes (the A3 migration backlog).
+                strict_policy = strict_policy.replace(
+                    "style-src 'self'", f"style-src 'self' 'nonce-{nonce}'"
+                )
+                response["Content-Security-Policy-Report-Only"] = strict_policy
         return response

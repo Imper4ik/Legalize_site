@@ -6,7 +6,7 @@
 {% block page_subtitle %}{% translate "Общие E2E проверки на безопасных тестовых данных." %}{% endblock %}
 
 {% block extra_head %}
-<style>
+<style nonce="{{ request.csp_nonce }}">
   .test-workbench {
     display: grid;
     gap: 1rem;

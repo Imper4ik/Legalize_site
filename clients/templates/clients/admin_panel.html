@@ -7,7 +7,7 @@
 {% block page_subtitle %}{% translate "Рабочий центр для настроек, контроля рисков, демо и тестов." %}{% endblock %}
 
 {% block extra_head %}
-<style>
+<style nonce="{{ request.csp_nonce }}">
   .ops-shell {
     display: grid;
     gap: 1.25rem;

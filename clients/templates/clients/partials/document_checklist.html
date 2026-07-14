@@ -1,6 +1,6 @@
 {% load i18n %}
 
-<style>
+<style nonce="{{ request.csp_nonce }}">
   .ocr-details-container summary::-webkit-details-marker {
     display: none;
   }

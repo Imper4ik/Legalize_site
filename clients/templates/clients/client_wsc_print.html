@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
 {% load i18n %}
     <title>{% translate "Obłożka akt" %} - {{ client.first_name }} {{ client.last_name }}</title>
-    <style>
+    <style nonce="{{ request.csp_nonce }}">
         /* Используем современный шрифт без засечек */
         body {
             background-color: #f0f0f0;

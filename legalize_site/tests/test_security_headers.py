@@ -72,6 +72,26 @@ class ContentSecurityPolicyMiddlewareTests(SimpleTestCase):
         )
 
     @override_settings(
+        LEGALIZE_CONTENT_SECURITY_POLICY="default-src 'self'; style-src 'self' 'unsafe-inline'",
+        LEGALIZE_CSP_REPORT_ONLY=False,
+        LEGALIZE_CONTENT_SECURITY_POLICY_REPORT_ONLY="default-src 'self'; style-src 'self'; script-src 'self'",
+    )
+    def test_strict_report_only_binds_nonce_to_style_src(self):
+        # Templates carry <style nonce="{{ request.csp_nonce }}">, so the strict
+        # report-only policy must whitelist them the same way it does scripts —
+        # leaving only style="..." attributes in the violation telemetry.
+        middleware = ContentSecurityPolicyMiddleware(lambda request: HttpResponse("ok"))
+
+        request = self.factory.get("/")
+        response = middleware(request)
+
+        nonce = request.csp_nonce
+        self.assertEqual(
+            response["Content-Security-Policy-Report-Only"],
+            f"default-src 'self'; style-src 'self' 'nonce-{nonce}'; script-src 'self' 'nonce-{nonce}'",
+        )
+
+    @override_settings(
         LEGALIZE_CONTENT_SECURITY_POLICY="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net",
         LEGALIZE_CSP_REPORT_ONLY=False,
     )

@@ -31,7 +31,7 @@
 
 {% block content %}
 
-<style>
+<style nonce="{{ request.csp_nonce }}">
   /* Карточка фильтров с лёгким стеклянным эффектом */
   .filters-card {
     border-radius: 16px;
