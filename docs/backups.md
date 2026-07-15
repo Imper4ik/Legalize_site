@@ -110,3 +110,20 @@ Recommended env:
 - `BACKUP_REMOTE_STORAGE=true` when S3/R2/B2 uploader is configured.
 - `MAX_BACKUP_AGE_HOURS=24` (or your policy).
 - `DB_BACKUP_DIR=/data/backups` for persistent Railway Volume when remote upload is not yet enabled.
+
+## Restore drill
+
+Provision an empty disposable PostgreSQL database that is separate from production,
+then run:
+
+```bash
+RESTORE_TEST_DATABASE_URL=postgresql://.../legalize_restore_test \
+python manage.py test_restore
+```
+
+Use `--backup /path/to/backup.sql.enc` when the artifact was downloaded from
+remote storage. The command decrypts encrypted artifacts with the configured
+`FERNET_KEYS`, restores through `psql` with `ON_ERROR_STOP` and a single
+transaction, and verifies that the restored `django_migrations` table is
+non-empty. It refuses a target matching `DATABASE_URL` or
+`RAILWAY_DATABASE_URL`.
