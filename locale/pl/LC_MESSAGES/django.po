@@ -1569,7 +1569,7 @@ msgstr "Podstawa pobytu (wiza, Karta Pobytu itp.)"
 msgid "Язык документов"
 msgstr "Język dokumentów"
 
-#: clients/models/client.py:212 clients/models/company.py:23
+#: clients/models/client.py:212 clients/models/company.py:24
 #: clients/templates/clients/partials/modals.html:33 submissions/models.py:30
 #: submissions/models.py:93
 #: submissions/templates/submissions/submission_list.html:21
@@ -1665,17 +1665,17 @@ msgstr "Oczekiwanie na działanie klienta lub urzędu"
 msgid "Проверить подачу"
 msgstr "Sprawdź zgłoszenie"
 
-#: clients/models/company.py:18
+#: clients/models/company.py:19
 #: clients/templates/clients/onboarding/travel.html:33
 msgid "Название компании"
 msgstr "Nazwa firmy"
 
-#: clients/models/company.py:26 clients/templates/clients/case_detail.html:197
+#: clients/models/company.py:27 clients/templates/clients/case_detail.html:197
 #: clients/templates/clients/clients_list.html:136
 msgid "Компания"
 msgstr "Firma"
 
-#: clients/models/company.py:27
+#: clients/models/company.py:28
 msgid "Компании"
 msgstr "Firmy"
 
@@ -3006,56 +3006,50 @@ msgstr "ZUS RCA dla %(month)s już istnieje. Miesiąc OCR jest pokazany poniżej
 msgid "ZUS month was saved automatically: %(month)s"
 msgstr "Miesiąc ZUS został zapisany automatycznie: %(month)s"
 
-#: clients/services/employers.py:65
+#: clients/services/employers.py:68
 msgid "Уточнить работодателя до отпечатков"
 msgstr "Uzupełnij pracodawcę przed odciskami palców"
 
-#: clients/services/employers.py:66
-msgid ""
-"Работодатель не был указан при подаче. Его можно внести при проверке анкеты "
-"или на этапе отпечатков."
+#: clients/services/employers.py:69
+msgid "Работодатель не был указан при подаче. Его можно внести при проверке анкеты или на этапе отпечатков."
 msgstr "Pracodawca nie został podany przy składaniu. Można go uzupełnić podczas weryfikacji ankiety lub na etapie odcisków palców."
 
-#: clients/services/employers.py:144
+#: clients/services/employers.py:151
 #, python-format
 msgid "Проверить нового работодателя: %(employer)s"
 msgstr "Sprawdź nowego pracodawcę: %(employer)s"
 
-#: clients/services/employers.py:145
+#: clients/services/employers.py:152
 #, python-format
 msgid "Подтвердить работодателя: %(employer)s"
 msgstr "Potwierdź pracodawcę: %(employer)s"
 
-#: clients/services/employers.py:148
-msgid ""
-"Система обнаружила работодателя, отличающегося от указанного в деле. Текущий "
-"работодатель не изменён."
+#: clients/services/employers.py:155
+msgid "Система обнаружила работодателя, отличающегося от указанного в деле. Текущий работодатель не изменён."
 msgstr "System wykrył pracodawcę innego niż zapisany w sprawie. Obecny pracodawca nie został zmieniony."
 
-#: clients/services/employers.py:149
+#: clients/services/employers.py:156
 msgid "Работодатель указан впервые и требует проверки сотрудником."
 msgstr "Pracodawca został podany po raz pierwszy i wymaga weryfikacji przez pracownika."
 
-#: clients/services/employers.py:168
+#: clients/services/employers.py:175
 msgid "Неизвестное решение по работодателю."
 msgstr "Nieznana decyzja dotycząca pracodawcy."
 
-#: clients/services/employers.py:176
+#: clients/services/employers.py:183
 msgid "Эта проверка работодателя уже обработана."
 msgstr "Ta weryfikacja pracodawcy została już obsłużona."
 
-#: clients/services/employers.py:179
+#: clients/services/employers.py:186
 msgid "Нельзя изменить работодателя в архивном деле."
 msgstr "Nie można zmienić pracodawcy w zarchiwizowanej sprawie."
 
-#: clients/services/employers.py:183
+#: clients/services/employers.py:190
 msgid "Нельзя подтвердить работодателя для закрытого или нерабочего дела."
 msgstr "Nie można potwierdzić pracodawcy dla zamkniętej sprawy lub sprawy niezwiązanej z pracą."
 
-#: clients/services/employers.py:185
-msgid ""
-"Нельзя отметить работодателя как прежнего: в деле ещё нет подтверждённого "
-"работодателя."
+#: clients/services/employers.py:192
+msgid "Нельзя отметить работодателя как прежнего: в деле ещё нет подтверждённого работодателя."
 msgstr "Nie można oznaczyć pracodawcy jako niezmienionego, ponieważ w sprawie nie ma jeszcze potwierdzonego pracodawcy."
 
 #: clients/services/family.py:132 clients/services/family.py:139
@@ -4718,9 +4712,7 @@ msgid "Работодатель по этому делу"
 msgstr "Pracodawca w tej sprawie"
 
 #: clients/templates/clients/case_form.html:74
-msgid ""
-"Выберите существующую компанию или введите новую. Новое название сначала "
-"попадёт сотруднику на проверку."
+msgid "Выберите существующую компанию или введите новую. Новое название сначала попадёт сотруднику на проверку."
 msgstr "Wybierz istniejącą firmę lub wpisz nową. Nowa nazwa zostanie najpierw przekazana pracownikowi do weryfikacji."
 
 #: clients/templates/clients/case_form.html:79
@@ -6838,9 +6830,7 @@ msgid "Подано в MOS"
 msgstr "Utwórz"
 
 #: clients/templates/clients/mos_review.html:331
-msgid ""
-"В деле ещё нет подтверждённого работодателя. Укажите его сейчас — сотрудник "
-"получит задачу на проверку."
+msgid "В деле ещё нет подтверждённого работодателя. Укажите его сейчас — сотрудник получит задачу на проверку."
 msgstr "W sprawie nie ma jeszcze potwierdzonego pracodawcy. Podaj go teraz, a pracownik otrzyma zadanie weryfikacji."
 
 #: clients/templates/clients/mos_review.html:335
@@ -8512,9 +8502,7 @@ msgid "Ваш текущий работодатель"
 msgstr "Twój obecny pracodawca"
 
 #: clients/templates/clients/onboarding/travel.html:28
-msgid ""
-"Эти данные помогут заметить смену работодателя в документах. Если вы пока не "
-"знаете точное название, сможете указать его позже при сдаче отпечатков."
+msgid "Эти данные помогут заметить смену работодателя в документах. Если вы пока не знаете точное название, сможете указать его позже при сдаче отпечатков."
 msgstr "Te dane pomogą wykryć zmianę pracodawcy w dokumentach. Jeśli nie znasz jeszcze dokładnej nazwy, możesz podać ją później podczas składania odcisków palców."
 
 #: clients/templates/clients/onboarding/travel.html:34
@@ -10886,9 +10874,9 @@ msgstr "Link wygasł lub jest nieprawidłowy."
 #: clients/views/onboarding_step_return.py:240
 #: clients/views/onboarding_step_return.py:274
 #: clients/views/onboarding_step_return.py:311
-#: clients/views/onboarding_step_return.py:390
-#: clients/views/onboarding_step_return.py:490
-#: clients/views/onboarding_step_return.py:556
+#: clients/views/onboarding_step_return.py:392
+#: clients/views/onboarding_step_return.py:492
+#: clients/views/onboarding_step_return.py:558
 #: clients/views/onboarding_views.py:80 clients/views/onboarding_views.py:198
 #: clients/views/onboarding_views.py:336 clients/views/onboarding_views.py:365
 #: clients/views/onboarding_views.py:599
@@ -10909,32 +10897,32 @@ msgstr "Nie udało się przesłać pliku: %(errors)s"
 msgid "Invalid date format for legal stay. Expected YYYY-MM-DD."
 msgstr "Nieprawidłowy format daty legalnego pobytu. Oczekiwany format: RRRR-MM-DD."
 
-#: clients/views/onboarding_step_return.py:428
+#: clients/views/onboarding_step_return.py:430
 msgid "Чтобы завершить анкету, необходимо согласие на обработку персональных данных."
 msgstr "Aby zakończyć formularz, wymagana jest zgoda na przetwarzanie danych osobowych."
 
-#: clients/views/onboarding_step_return.py:502
-#: clients/views/onboarding_step_return.py:586
+#: clients/views/onboarding_step_return.py:504
+#: clients/views/onboarding_step_return.py:588
 msgid "Некорректный запрос."
 msgstr "Nieprawidłowe żądanie."
 
-#: clients/views/onboarding_step_return.py:516
+#: clients/views/onboarding_step_return.py:518
 msgid "Согласие обновлено."
 msgstr "Zgoda została zaktualizowana."
 
-#: clients/views/onboarding_step_return.py:516
+#: clients/views/onboarding_step_return.py:518
 msgid "Согласие отозвано."
 msgstr "Zgoda została wycofana."
 
-#: clients/views/onboarding_step_return.py:583
+#: clients/views/onboarding_step_return.py:585
 msgid "Запрос на удаление данных получен. Мы свяжемся с вами."
 msgstr "Otrzymaliśmy wniosek o usunięcie danych. Skontaktujemy się z Tobą."
 
-#: clients/views/onboarding_step_return.py:606
+#: clients/views/onboarding_step_return.py:608
 msgid "Запрос на удаление данных (RODO art. 17)"
 msgstr "Wniosek o usunięcie danych (art. 17 RODO)"
 
-#: clients/views/onboarding_step_return.py:607
+#: clients/views/onboarding_step_return.py:609
 msgid "Субъект данных запросил удаление своих данных через личный кабинет."
 msgstr "Osoba, której dane dotyczą, złożyła wniosek o usunięcie danych przez konto klienta."
 
@@ -12380,4 +12368,3 @@ msgstr "użytkownik"
 #: users/models.py:88
 msgid "users"
 msgstr "użytkownicy"
-
