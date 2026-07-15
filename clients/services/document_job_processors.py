@@ -718,7 +718,10 @@ def _finalize_successful_company_job(
         document = job.document
         document.parsed_data = parsed_payload
         document.ocr_status = "success"
-        document.ocr_name_mismatch = bool(warnings)
+        # ``ocr_name_mismatch`` is a dedicated name-check flag.  Other OCR
+        # warnings (missing month, expiry, amount, address, etc.) must not turn
+        # into the misleading red "name mismatch" badge.
+        document.ocr_name_mismatch = bool(parsed_payload.get("has_name_mismatch", False))
         document.save(update_fields=["parsed_data", "ocr_status", "ocr_name_mismatch"])
 
     from clients.services.employers import propose_employer
@@ -795,7 +798,10 @@ def _finalize_successful_ocr_job(
         document = job.document
         document.parsed_data = parsed_payload
         document.ocr_status = "success"
-        document.ocr_name_mismatch = bool(warnings)
+        # Keep the name flag separate from the generic warning list.  The old
+        # ``bool(warnings)`` assignment labelled every OCR warning as a client
+        # name mismatch (notably a missing ZUS month).
+        document.ocr_name_mismatch = bool(parsed_payload.get("has_name_mismatch", False))
         document.scrub_parsed_pii()
         document.save(update_fields=["parsed_data", "ocr_status", "ocr_name_mismatch"])
 
