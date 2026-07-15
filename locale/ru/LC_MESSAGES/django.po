@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Legalize Site\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-15 12:37+0200\n"
+"POT-Creation-Date: 2026-07-15 12:52+0200\n"
 "PO-Revision-Date: 2026-07-10 23:42+0200\n"
 "Last-Translator: Legalize Site Team\n"
 "Language-Team: Russian\n"
@@ -3176,9 +3176,7 @@ msgstr "Уточнить работодателя до отпечатков"
 msgid ""
 "Работодатель не был указан при подаче. Его можно внести при проверке анкеты "
 "или на этапе отпечатков."
-msgstr ""
-"Работодатель не был указан при подаче. Его можно внести при проверке анкеты "
-"или на этапе отпечатков."
+msgstr "Работодатель не был указан при подаче. Его можно внести при проверке анкеты или на этапе отпечатков."
 
 #: clients/services/employers.py:144
 #, python-format
@@ -3194,9 +3192,7 @@ msgstr "Подтвердить работодателя: %(employer)s"
 msgid ""
 "Система обнаружила работодателя, отличающегося от указанного в деле. Текущий "
 "работодатель не изменён."
-msgstr ""
-"Система обнаружила работодателя, отличающегося от указанного в деле. Текущий "
-"работодатель не изменён."
+msgstr "Система обнаружила работодателя, отличающегося от указанного в деле. Текущий работодатель не изменён."
 
 #: clients/services/employers.py:149
 msgid "Работодатель указан впервые и требует проверки сотрудником."
@@ -3222,9 +3218,7 @@ msgstr "Нельзя подтвердить работодателя для за
 msgid ""
 "Нельзя отметить работодателя как прежнего: в деле ещё нет подтверждённого "
 "работодателя."
-msgstr ""
-"Нельзя отметить работодателя как прежнего: в деле ещё нет подтверждённого "
-"работодателя."
+msgstr "Нельзя отметить работодателя как прежнего: в деле ещё нет подтверждённого работодателя."
 
 #: clients/services/family.py:132 clients/services/family.py:139
 #: clients/templates/clients/family_dashboard.html:175
@@ -4943,9 +4937,7 @@ msgstr "Работодатель по этому делу"
 msgid ""
 "Выберите существующую компанию или введите новую. Новое название сначала "
 "попадёт сотруднику на проверку."
-msgstr ""
-"Выберите существующую компанию или введите новую. Новое название сначала "
-"попадёт сотруднику на проверку."
+msgstr "Выберите существующую компанию или введите новую. Новое название сначала попадёт сотруднику на проверку."
 
 #: clients/templates/clients/case_form.html:79
 msgid "Используйте этот вариант, если компания уже есть в базе."
@@ -7177,9 +7169,7 @@ msgstr "Подано в MOS"
 msgid ""
 "В деле ещё нет подтверждённого работодателя. Укажите его сейчас — сотрудник "
 "получит задачу на проверку."
-msgstr ""
-"В деле ещё нет подтверждённого работодателя. Укажите его сейчас — сотрудник "
-"получит задачу на проверку."
+msgstr "В деле ещё нет подтверждённого работодателя. Укажите его сейчас — сотрудник получит задачу на проверку."
 
 #: clients/templates/clients/mos_review.html:335
 msgid "Отпечатки сданы"
@@ -9117,9 +9107,7 @@ msgstr "Ваш текущий работодатель"
 msgid ""
 "Эти данные помогут заметить смену работодателя в документах. Если вы пока не "
 "знаете точное название, сможете указать его позже при сдаче отпечатков."
-msgstr ""
-"Эти данные помогут заметить смену работодателя в документах. Если вы пока не "
-"знаете точное название, сможете указать его позже при сдаче отпечатков."
+msgstr "Эти данные помогут заметить смену работодателя в документах. Если вы пока не знаете точное название, сможете указать его позже при сдаче отпечатков."
 
 #: clients/templates/clients/onboarding/travel.html:34
 msgid "Например: ABC Polska Sp. z o.o."
@@ -10885,63 +10873,63 @@ msgstr "Платёж восстановлен из архива."
 msgid "Доступ запрещен (требуется роль: %s)"
 msgstr "Доступ запрещен (требуется роль: %s)"
 
-#: clients/views/cases.py:117
+#: clients/views/cases.py:131
 msgid "Case created."
 msgstr "Case created."
 
-#: clients/views/cases.py:173
+#: clients/views/cases.py:187
 msgid "Case updated."
 msgstr "Case updated."
 
-#: clients/views/cases.py:186
+#: clients/views/cases.py:200
 msgid "Case archived."
 msgstr "Дело заархивировано."
 
-#: clients/views/cases.py:197
+#: clients/views/cases.py:211
 msgid "No active archive batch found for this case."
 msgstr "Активная архивная партия для этого дела не найдена."
 
-#: clients/views/cases.py:200
+#: clients/views/cases.py:214
 msgid "Case restored."
 msgstr "Дело восстановлено."
 
-#: clients/views/cases.py:214
+#: clients/views/cases.py:228
 msgid "Invalid employer effective date."
 msgstr "Некорректная дата начала работы у работодателя."
 
-#: clients/views/cases.py:225
+#: clients/views/cases.py:239
 msgid "Employer review saved."
-msgstr "Проверка работодателя сохранена."
+msgstr "Решение по работодателю сохранено."
 
-#: clients/views/cases.py:231
+#: clients/views/cases.py:245
 msgid "Collect basic case data."
 msgstr "Соберите основные данные по делу."
 
-#: clients/views/cases.py:232
+#: clients/views/cases.py:246
 msgid "Collect and verify required documents."
 msgstr "Соберите и проверьте обязательные документы."
 
-#: clients/views/cases.py:233
+#: clients/views/cases.py:247
 msgid "Track authority confirmation and prepare fingerprints."
 msgstr "Отслеживайте подтверждение ведомства и подготовьте отпечатки."
 
-#: clients/views/cases.py:234
+#: clients/views/cases.py:248
 msgid "Confirm fingerprints appointment."
 msgstr "Подтвердите запись на отпечатки."
 
-#: clients/views/cases.py:235
+#: clients/views/cases.py:249
 msgid "Monitor decision deadline."
 msgstr "Контролируйте срок принятия решения."
 
-#: clients/views/cases.py:236
+#: clients/views/cases.py:250
 msgid "Review decision and close follow-up tasks."
 msgstr "Проверьте решение и закройте последующие задачи."
 
-#: clients/views/cases.py:237
+#: clients/views/cases.py:251
 msgid "No active action."
 msgstr "Нет активного действия."
 
-#: clients/views/cases.py:238
+#: clients/views/cases.py:252
 msgid "Review case status."
 msgstr "Проверьте статус дела."
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Legalize Site\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-15 12:37+0200\n"
+"POT-Creation-Date: 2026-07-15 12:52+0200\n"
 "PO-Revision-Date: 2026-07-10 23:42+0200\n"
 "Last-Translator: Legalize Site Team\n"
 "Language-Team: English\n"
@@ -39,7 +39,7 @@ msgstr "Employer name"
 
 #: clients/forms/case_client_forms.py:37
 msgid "Введите название, если компании ещё нет в списке"
-msgstr "Enter the name if the company is not listed yet"
+msgstr "Enter a name if the company is not yet in the list."
 
 #: clients/forms/case_client_forms.py:40
 msgid "NIP работодателя"
@@ -3170,9 +3170,7 @@ msgstr "Confirm employer before fingerprints"
 msgid ""
 "Работодатель не был указан при подаче. Его можно внести при проверке анкеты "
 "или на этапе отпечатков."
-msgstr ""
-"The employer was not provided when the application was filed. It can be "
-"added while reviewing the form or at the fingerprints stage."
+msgstr "The employer was not provided on submission. It can be added during form review or at the fingerprints stage."
 
 #: clients/services/employers.py:144
 #, python-format
@@ -3188,9 +3186,7 @@ msgstr "Confirm employer: %(employer)s"
 msgid ""
 "Система обнаружила работодателя, отличающегося от указанного в деле. Текущий "
 "работодатель не изменён."
-msgstr ""
-"The system detected an employer different from the one recorded in the case. "
-"The current employer has not been changed."
+msgstr "The system detected an employer different from the one recorded in the case. The current employer was not changed."
 
 #: clients/services/employers.py:149
 msgid "Работодатель указан впервые и требует проверки сотрудником."
@@ -3216,9 +3212,7 @@ msgstr "An employer cannot be confirmed for a closed or non-work case."
 msgid ""
 "Нельзя отметить работодателя как прежнего: в деле ещё нет подтверждённого "
 "работодателя."
-msgstr ""
-"The employer cannot be marked as unchanged because the case has no confirmed "
-"employer yet."
+msgstr "The employer cannot be marked as unchanged because the case has no confirmed employer yet."
 
 #: clients/services/family.py:132 clients/services/family.py:139
 #: clients/templates/clients/family_dashboard.html:175
@@ -4942,9 +4936,7 @@ msgstr "Employer for this case"
 msgid ""
 "Выберите существующую компанию или введите новую. Новое название сначала "
 "попадёт сотруднику на проверку."
-msgstr ""
-"Select an existing company or enter a new one. A new name will first be sent "
-"to a staff member for review."
+msgstr "Select an existing company or enter a new one. A new name will first be sent to staff for review."
 
 #: clients/templates/clients/case_form.html:79
 msgid "Используйте этот вариант, если компания уже есть в базе."
@@ -7170,9 +7162,7 @@ msgstr "Create"
 msgid ""
 "В деле ещё нет подтверждённого работодателя. Укажите его сейчас — сотрудник "
 "получит задачу на проверку."
-msgstr ""
-"The case has no confirmed employer yet. Enter it now and a staff member will "
-"receive a review task."
+msgstr "The case has no confirmed employer yet. Provide it now and a staff member will receive a review task."
 
 #: clients/templates/clients/mos_review.html:335
 msgid "Отпечатки сданы"
@@ -9132,9 +9122,7 @@ msgstr "Your current employer"
 msgid ""
 "Эти данные помогут заметить смену работодателя в документах. Если вы пока не "
 "знаете точное название, сможете указать его позже при сдаче отпечатков."
-msgstr ""
-"These details help detect an employer change in documents. If you do not know "
-"the exact name yet, you can provide it later at the fingerprints stage."
+msgstr "These details help detect an employer change in documents. If you do not know the exact name yet, you can provide it later at the fingerprints appointment."
 
 #: clients/templates/clients/onboarding/travel.html:34
 msgid "Например: ABC Polska Sp. z o.o."
@@ -10908,63 +10896,63 @@ msgstr "The payment has been restored from the archive."
 msgid "Доступ запрещен (требуется роль: %s)"
 msgstr "Access denied (role required: %s)"
 
-#: clients/views/cases.py:117
+#: clients/views/cases.py:131
 msgid "Case created."
 msgstr "Case created."
 
-#: clients/views/cases.py:173
+#: clients/views/cases.py:187
 msgid "Case updated."
 msgstr "Case updated."
 
-#: clients/views/cases.py:186
+#: clients/views/cases.py:200
 msgid "Case archived."
 msgstr "Case archived."
 
-#: clients/views/cases.py:197
+#: clients/views/cases.py:211
 msgid "No active archive batch found for this case."
 msgstr "No active archive batch found for this case."
 
-#: clients/views/cases.py:200
+#: clients/views/cases.py:214
 msgid "Case restored."
 msgstr "Case restored."
 
-#: clients/views/cases.py:214
+#: clients/views/cases.py:228
 msgid "Invalid employer effective date."
 msgstr "Invalid employer effective date."
 
-#: clients/views/cases.py:225
+#: clients/views/cases.py:239
 msgid "Employer review saved."
 msgstr "Employer review saved."
 
-#: clients/views/cases.py:231
+#: clients/views/cases.py:245
 msgid "Collect basic case data."
 msgstr "Collect basic case data."
 
-#: clients/views/cases.py:232
+#: clients/views/cases.py:246
 msgid "Collect and verify required documents."
 msgstr "Collect and verify required documents."
 
-#: clients/views/cases.py:233
+#: clients/views/cases.py:247
 msgid "Track authority confirmation and prepare fingerprints."
 msgstr "Track authority confirmation and prepare fingerprints."
 
-#: clients/views/cases.py:234
+#: clients/views/cases.py:248
 msgid "Confirm fingerprints appointment."
 msgstr "Confirm fingerprints appointment."
 
-#: clients/views/cases.py:235
+#: clients/views/cases.py:249
 msgid "Monitor decision deadline."
 msgstr "Monitor decision deadline."
 
-#: clients/views/cases.py:236
+#: clients/views/cases.py:250
 msgid "Review decision and close follow-up tasks."
 msgstr "Review decision and close follow-up tasks."
 
-#: clients/views/cases.py:237
+#: clients/views/cases.py:251
 msgid "No active action."
 msgstr "No active action."
 
-#: clients/views/cases.py:238
+#: clients/views/cases.py:252
 msgid "Review case status."
 msgstr "Review case status."
 

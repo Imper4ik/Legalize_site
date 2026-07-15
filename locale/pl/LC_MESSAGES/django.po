@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Legalize Site\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-15 12:37+0200\n"
+"POT-Creation-Date: 2026-07-15 12:52+0200\n"
 "PO-Revision-Date: 2026-07-10 23:42+0200\n"
 "Last-Translator: Legalize Site Team\n"
 "Language-Team: Polish\n"
@@ -40,7 +40,7 @@ msgstr "Nazwa pracodawcy"
 
 #: clients/forms/case_client_forms.py:37
 msgid "Введите название, если компании ещё нет в списке"
-msgstr "Wpisz nazwę, jeśli firmy nie ma jeszcze na liście"
+msgstr "Wpisz nazwę, jeśli firmy nie ma jeszcze na liście."
 
 #: clients/forms/case_client_forms.py:40
 msgid "NIP работодателя"
@@ -3184,9 +3184,7 @@ msgstr "Uzupełnij pracodawcę przed odciskami palców"
 msgid ""
 "Работодатель не был указан при подаче. Его можно внести при проверке анкеты "
 "или на этапе отпечатков."
-msgstr ""
-"Pracodawca nie został podany przy składaniu wniosku. Można go dodać podczas "
-"weryfikacji ankiety lub na etapie odcisków palców."
+msgstr "Pracodawca nie został podany przy składaniu. Można go uzupełnić podczas weryfikacji ankiety lub na etapie odcisków palców."
 
 #: clients/services/employers.py:144
 #, python-format
@@ -3202,9 +3200,7 @@ msgstr "Potwierdź pracodawcę: %(employer)s"
 msgid ""
 "Система обнаружила работодателя, отличающегося от указанного в деле. Текущий "
 "работодатель не изменён."
-msgstr ""
-"System wykrył pracodawcę innego niż wskazany w sprawie. Obecny pracodawca nie "
-"został zmieniony."
+msgstr "System wykrył pracodawcę innego niż zapisany w sprawie. Obecny pracodawca nie został zmieniony."
 
 #: clients/services/employers.py:149
 msgid "Работодатель указан впервые и требует проверки сотрудником."
@@ -3224,15 +3220,13 @@ msgstr "Nie można zmienić pracodawcy w zarchiwizowanej sprawie."
 
 #: clients/services/employers.py:183
 msgid "Нельзя подтвердить работодателя для закрытого или нерабочего дела."
-msgstr "Nie można potwierdzić pracodawcy w zamkniętej sprawie ani w sprawie niezwiązanej z pracą."
+msgstr "Nie można potwierdzić pracodawcy dla zamkniętej sprawy lub sprawy niezwiązanej z pracą."
 
 #: clients/services/employers.py:185
 msgid ""
 "Нельзя отметить работодателя как прежнего: в деле ещё нет подтверждённого "
 "работодателя."
-msgstr ""
-"Nie można oznaczyć pracodawcy jako dotychczasowego, ponieważ w sprawie nie ma "
-"jeszcze potwierdzonego pracodawcy."
+msgstr "Nie można oznaczyć pracodawcy jako niezmienionego, ponieważ w sprawie nie ma jeszcze potwierdzonego pracodawcy."
 
 #: clients/services/family.py:132 clients/services/family.py:139
 #: clients/templates/clients/family_dashboard.html:175
@@ -4553,7 +4547,7 @@ msgstr "Faktyczna data zmiany"
 
 #: clients/templates/clients/case_detail.html:162
 msgid "Что проверили или что нужно уточнить"
-msgstr "Co sprawdzono lub co należy wyjaśnić"
+msgstr "Co sprawdzono lub co wymaga wyjaśnienia"
 
 #: clients/templates/clients/case_detail.html:165
 msgid "Подтвердить нового"
@@ -4967,9 +4961,7 @@ msgstr "Pracodawca w tej sprawie"
 msgid ""
 "Выберите существующую компанию или введите новую. Новое название сначала "
 "попадёт сотруднику на проверку."
-msgstr ""
-"Wybierz istniejącą firmę lub wpisz nową. Nowa nazwa zostanie najpierw "
-"przekazana pracownikowi do weryfikacji."
+msgstr "Wybierz istniejącą firmę lub wpisz nową. Nowa nazwa zostanie najpierw przekazana pracownikowi do weryfikacji."
 
 #: clients/templates/clients/case_form.html:79
 msgid "Используйте этот вариант, если компания уже есть в базе."
@@ -7210,9 +7202,7 @@ msgstr "Utwórz"
 msgid ""
 "В деле ещё нет подтверждённого работодателя. Укажите его сейчас — сотрудник "
 "получит задачу на проверку."
-msgstr ""
-"W sprawie nie ma jeszcze potwierdzonego pracodawcy. Podaj go teraz, a "
-"pracownik otrzyma zadanie weryfikacji."
+msgstr "W sprawie nie ma jeszcze potwierdzonego pracodawcy. Podaj go teraz, a pracownik otrzyma zadanie weryfikacji."
 
 #: clients/templates/clients/mos_review.html:335
 msgid "Отпечатки сданы"
@@ -9167,9 +9157,7 @@ msgstr "Twój obecny pracodawca"
 msgid ""
 "Эти данные помогут заметить смену работодателя в документах. Если вы пока не "
 "знаете точное название, сможете указать его позже при сдаче отпечатков."
-msgstr ""
-"Te dane pomogą wykryć zmianę pracodawcy w dokumentach. Jeśli nie znasz jeszcze "
-"dokładnej nazwy, możesz podać ją później na etapie odcisków palców."
+msgstr "Te dane pomogą wykryć zmianę pracodawcy w dokumentach. Jeśli nie znasz jeszcze dokładnej nazwy, możesz podać ją później podczas składania odcisków palców."
 
 #: clients/templates/clients/onboarding/travel.html:34
 msgid "Например: ABC Polska Sp. z o.o."
@@ -10950,63 +10938,63 @@ msgstr "Płatność została przywrócona z archiwum."
 msgid "Доступ запрещен (требуется роль: %s)"
 msgstr "Odmowa dostępu (wymagana rola: %s)"
 
-#: clients/views/cases.py:117
+#: clients/views/cases.py:131
 msgid "Case created."
 msgstr "Sprawa utworzona."
 
-#: clients/views/cases.py:173
+#: clients/views/cases.py:187
 msgid "Case updated."
 msgstr "Sprawa zaktualizowana."
 
-#: clients/views/cases.py:186
+#: clients/views/cases.py:200
 msgid "Case archived."
 msgstr "Sprawa zarchiwizowana."
 
-#: clients/views/cases.py:197
+#: clients/views/cases.py:211
 msgid "No active archive batch found for this case."
 msgstr "Nie znaleziono aktywnej paczki archiwizacji dla tej sprawy."
 
-#: clients/views/cases.py:200
+#: clients/views/cases.py:214
 msgid "Case restored."
 msgstr "Sprawa przywrócona."
 
-#: clients/views/cases.py:214
+#: clients/views/cases.py:228
 msgid "Invalid employer effective date."
-msgstr "Nieprawidłowa data rozpoczęcia pracy u pracodawcy."
+msgstr "Nieprawidłowa data obowiązywania pracodawcy."
 
-#: clients/views/cases.py:225
+#: clients/views/cases.py:239
 msgid "Employer review saved."
-msgstr "Weryfikacja pracodawcy została zapisana."
+msgstr "Zapisano weryfikację pracodawcy."
 
-#: clients/views/cases.py:231
+#: clients/views/cases.py:245
 msgid "Collect basic case data."
 msgstr "Zbierz podstawowe dane sprawy."
 
-#: clients/views/cases.py:232
+#: clients/views/cases.py:246
 msgid "Collect and verify required documents."
 msgstr "Zbierz i zweryfikuj wymagane dokumenty."
 
-#: clients/views/cases.py:233
+#: clients/views/cases.py:247
 msgid "Track authority confirmation and prepare fingerprints."
 msgstr "Śledź potwierdzenie urzędu i przygotuj odciski palców."
 
-#: clients/views/cases.py:234
+#: clients/views/cases.py:248
 msgid "Confirm fingerprints appointment."
 msgstr "Potwierdź termin pobrania odcisków palców."
 
-#: clients/views/cases.py:235
+#: clients/views/cases.py:249
 msgid "Monitor decision deadline."
 msgstr "Monitoruj termin decyzji."
 
-#: clients/views/cases.py:236
+#: clients/views/cases.py:250
 msgid "Review decision and close follow-up tasks."
 msgstr "Sprawdź decyzję i zamknij zadania następcze."
 
-#: clients/views/cases.py:237
+#: clients/views/cases.py:251
 msgid "No active action."
 msgstr "Brak aktywnego działania."
 
-#: clients/views/cases.py:238
+#: clients/views/cases.py:252
 msgid "Review case status."
 msgstr "Sprawdź status sprawy."
 
