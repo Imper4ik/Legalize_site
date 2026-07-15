@@ -523,12 +523,19 @@ def client_overview_partial(request: HttpRequest, pk: int) -> HttpResponseBase:
         pk=pk,
     )
     document_status_list = client.get_document_checklist(check_file_existence=True)
+    active_case = resolve_single_active_case(client)
+    active_case_number = (
+        safe_encrypted_attr(active_case, "authority_case_number", default="")
+        if active_case is not None
+        else ""
+    )
     overview_html = render_to_string(
         "clients/partials/client_overview.html",
         {
             "client": client,
             "workflow_summary": client.get_workflow_summary(document_status_list=document_status_list),
-            "safe_case_number": (safe_encrypted_attr(client.active_case, "authority_case_number", default=_("Не указан")) if client.active_case is not None else _("Не указан")),
+            "active_case_number": active_case_number,
+            "safe_case_number": active_case_number or _("Не указан"),
             "show_family_dashboard_link": bool(
                 client.family_role
                 or client.sponsor_client_id
