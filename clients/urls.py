@@ -24,6 +24,7 @@ urlpatterns = [
     path('client/<int:pk>/cases/add/', views.CaseCreateView.as_view(), name='case_add'),
     path('case/<int:pk>/archive/', views.archive_case_view, name='case_archive'),
     path('case/<int:pk>/restore/', views.restore_case_view, name='case_restore'),
+    path('case/<int:pk>/employer/<int:candidate_id>/review/', views.review_employer_view, name='employer_review'),
     path('client/<int:pk>/family/', views.FamilyDashboardView.as_view(), name='family_dashboard'),
     path('client/add/', views.ClientCreateView.as_view(), name='client_add'),
     path('client/<int:pk>/edit/', views.ClientUpdateView.as_view(), name='client_edit'),

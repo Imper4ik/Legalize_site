@@ -268,6 +268,17 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
             messages.success(request, _("Status: submitted in MOS."))
             return _review_redirect(client, mos_data)
         elif action == "mark_fingerprints":
+            if case.application_purpose == "work" and not case.company_id:
+                employer_name = request.POST.get("employer_name", "").strip()
+                employer_nip = request.POST.get("employer_nip", "").strip()
+                if not employer_name:
+                    messages.error(request, _("Enter the employer name before confirming fingerprints."))
+                    return _review_redirect(client, mos_data)
+                from clients.services.employers import propose_employer
+                propose_employer(
+                    case=case, name=employer_name, nip=employer_nip,
+                    source="fingerprints_check",
+                )
             try:
                 with transaction.atomic():
                     next_stage = "waiting_decision" if case.fingerprints_date and case.fingerprints_date <= timezone.localdate() else "fingerprints"
@@ -328,4 +339,3 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
             **_purpose_review_context(client, mos_data, case),
         },
     )
-

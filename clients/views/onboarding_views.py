@@ -552,6 +552,10 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
     if "employer_email" in request.POST:
         personal_data["employer_email"] = request.POST.get("employer_email", "").strip()
         mos_data.personal_data = personal_data  # type: ignore[assignment]
+    if "employer_name" in request.POST or "employer_nip" in request.POST:
+        personal_data["employer_name"] = request.POST.get("employer_name", "").strip()
+        personal_data["employer_nip"] = request.POST.get("employer_nip", "").strip()
+        mos_data.personal_data = personal_data  # type: ignore[assignment]
     if "university_email" in request.POST:
         personal_data["university_email"] = request.POST.get("university_email", "").strip()
         mos_data.personal_data = personal_data  # type: ignore[assignment]

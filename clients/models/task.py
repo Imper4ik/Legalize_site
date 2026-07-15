@@ -47,6 +47,7 @@ class StaffTask(models.Model):
         ("client_question", _("Вопрос клиента")),
         ("internal_note", _("Внутренняя заметка")),
         ("deadline_check", _("Контроль дедлайна")),
+        ("employer_review", _("Проверка работодателя")),
     ]
 
     client = models.ForeignKey(

@@ -104,7 +104,11 @@ class AdminMOSReviewActionTests(TestCase):
         self.case.submission_date = timezone.localdate()
         self.case.save(update_fields=["workflow_stage", "submission_date"])
 
-        response = self._post("mark_fingerprints")
+        response = self._post(
+            "mark_fingerprints",
+            employer_name="Example Employer sp. z o.o.",
+            employer_nip="5252344078",
+        )
 
         self.assertEqual(response.status_code, 302)
         self.case.refresh_from_db()
@@ -118,11 +122,26 @@ class AdminMOSReviewActionTests(TestCase):
         self.case.fingerprints_date = timezone.localdate() - timedelta(days=1)
         self.case.save(update_fields=["workflow_stage", "submission_date", "fingerprints_date"])
 
-        response = self._post("mark_fingerprints")
+        response = self._post(
+            "mark_fingerprints",
+            employer_name="Example Employer sp. z o.o.",
+            employer_nip="5252344078",
+        )
 
         self.assertEqual(response.status_code, 302)
         self.case.refresh_from_db()
         self.assertEqual(self.case.workflow_stage, "waiting_decision")
+
+    def test_mark_fingerprints_requires_employer_for_work_case(self) -> None:
+        self.case.workflow_stage = "application_submitted"
+        self.case.submission_date = timezone.localdate()
+        self.case.save(update_fields=["workflow_stage", "submission_date"])
+
+        response = self._post("mark_fingerprints")
+
+        self.assertEqual(response.status_code, 302)
+        self.case.refresh_from_db()
+        self.assertEqual(self.case.workflow_stage, "application_submitted")
 
     def test_mark_waiting_requires_fingerprints_date(self) -> None:
         self.case.workflow_stage = "fingerprints"

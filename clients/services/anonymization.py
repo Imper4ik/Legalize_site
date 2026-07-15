@@ -54,7 +54,7 @@ def _purge_subject_stores(client: Client) -> int:
 
     Returns the number of document rows deleted.
     """
-    from clients.models import Case, ClientDigitalAccess, Document
+    from clients.models import Case, CaseEmployerAssignment, ClientDigitalAccess, Document, EmployerChangeCandidate
 
     for case in Case.all_objects.filter(client=client):
         case.authority_case_number = ""
@@ -66,12 +66,18 @@ def _purge_subject_stores(client: Client) -> int:
         case.fingerprints_list = ""
         case.fingerprints_info = ""
         case.decision = ""
+        case.company = None
         case.save(update_fields=[
             "authority_case_number", "authority_case_number_hash",
             "legacy_case_number", "internal_number",
             "fingerprints_location", "fingerprints_ticket",
-            "fingerprints_list", "fingerprints_info", "decision",
+            "fingerprints_list", "fingerprints_info", "decision", "company",
         ])
+        EmployerChangeCandidate.objects.filter(case=case).delete()
+        CaseEmployerAssignment.objects.filter(case=case).delete()
+        case.staff_tasks.filter(task_type="employer_review").update(
+            title="Employer review (anonymized)", description="", status="cancelled"
+        )
 
     # Documents: use all_objects so archived/soft-deleted rows and their files are
     # removed too — otherwise archived scans would survive the erasure.
@@ -117,7 +123,7 @@ def _assert_erasure_complete(client: Client) -> None:
     This gates ``erasure_fulfilled_at`` so a request is never marked fulfilled
     while recoverable PII remains.
     """
-    from clients.models import ClientDigitalAccess, Document
+    from clients.models import Case, CaseEmployerAssignment, ClientDigitalAccess, Document, EmployerChangeCandidate
 
     problems: list[str] = []
     if Document.all_objects.filter(client=client).exists():
@@ -130,6 +136,13 @@ def _assert_erasure_complete(client: Client) -> None:
         problems.append("pesel_applications")
     if client.intake_submissions.exists():
         problems.append("intake_submissions")
+    client_cases = Case.all_objects.filter(client=client)
+    if client_cases.filter(company_id__isnull=False).exists():
+        problems.append("case_employer")
+    if EmployerChangeCandidate.objects.filter(case__in=client_cases).exists():
+        problems.append("employer_candidates")
+    if CaseEmployerAssignment.objects.filter(case__in=client_cases).exists():
+        problems.append("employer_history")
     # EmailLog body/recipients are Fernet-encrypted, so they cannot be filtered by
     # value in SQL; decrypt in Python (few rows per client) to confirm the wipe.
     if any((log.body or "") or (log.recipients or "") for log in client.email_logs.all()):
@@ -159,7 +172,7 @@ def anonymize_client(client: Client, *, mark_erasure_fulfilled: bool = False) ->
     - The portal login account (deactivated, password made unusable, email /
       username / name anonymized, unlinked) — internal/staff accounts untouched.
     - Case identifiers (authority/legacy/internal numbers, fingerprints details,
-      decision text).
+      decision text) and employer history/review candidates.
     - Uploaded documents, **including archived/soft-deleted ones**: files + rows
       are hard-deleted via ``Document.all_objects``.
     - PESEL and the whole MOS questionnaire, incl. PESEL-application PDFs/scans.
