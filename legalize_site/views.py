@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from typing import Any
 
 from django.conf import settings
@@ -11,6 +12,7 @@ from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils.translation import gettext as _
 
+from clients.management.commands.run_background_automation_loop import HEARTBEAT_CACHE_KEY
 from clients.models import DocumentProcessingJob, EmailCampaign
 from legalize_site.runtime import runtime_dependency_summary
 from legalize_site.utils.http import request_is_ajax
@@ -99,6 +101,31 @@ def readiness(request: HttpRequest) -> HttpResponse:
             "error": exc.__class__.__name__,
         }
         if cache_required:
+            overall_ok = False
+
+    automation_enabled = os.environ.get("ENABLE_BACKGROUND_AUTOMATION_LOOP", "true").lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+    automation_required = bool(getattr(settings, "IS_PRODUCTION", False) and automation_enabled)
+    try:
+        heartbeat = cache.get(HEARTBEAT_CACHE_KEY)
+        components["background_automation"] = {
+            "status": "ok" if heartbeat else "error",
+            "required": automation_required,
+        }
+        if automation_required and not heartbeat:
+            overall_ok = False
+    except Exception as exc:
+        logger.exception("Readiness background heartbeat check failed")
+        components["background_automation"] = {
+            "status": "error",
+            "required": automation_required,
+            "error": exc.__class__.__name__,
+        }
+        if automation_required:
             overall_ok = False
 
     runtime = runtime_dependency_summary()

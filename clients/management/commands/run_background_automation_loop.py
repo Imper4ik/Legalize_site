@@ -10,6 +10,7 @@ from django.core.management import BaseCommand, call_command
 from django.utils import timezone
 
 logger = logging.getLogger(__name__)
+HEARTBEAT_CACHE_KEY = "background_automation_loop:heartbeat"
 
 
 class Command(BaseCommand):
@@ -61,6 +62,8 @@ class Command(BaseCommand):
         document_job_limit: int,
         email_campaign_limit: int,
     ) -> None:
+        heartbeat_timeout = max(180, interval_seconds * 3)
+        self._record_heartbeat(timeout=heartbeat_timeout)
         self._run_locked(
             "document-jobs",
             timeout=interval_seconds,
@@ -81,6 +84,13 @@ class Command(BaseCommand):
             timeout=interval_seconds,
             task=lambda: call_command("run_retention_maintenance"),
         )
+        self._record_heartbeat(timeout=heartbeat_timeout)
+
+    def _record_heartbeat(self, *, timeout: int) -> None:
+        try:
+            cache.set(HEARTBEAT_CACHE_KEY, timezone.now().isoformat(), timeout=timeout)
+        except Exception:
+            logger.error("Failed to publish background automation heartbeat.", exc_info=True)
 
     def _run_locked(self, name: str, *, timeout: int, task: Callable[[], Any]) -> bool:
         cache_key = f"background_automation_loop:{name}"

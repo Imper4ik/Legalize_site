@@ -3,13 +3,13 @@
 ## Infrastructure Overview
 - **Production Environment**: Railway (via Nixpacks builder)
 - **Database**: PostgreSQL
-- **Caching/Rate-Limiting**: Redis
+- **Caching/Rate-Limiting**: Redis when `REDIS_URL` is set; otherwise PostgreSQL `DatabaseCache`
 - **Storage**: DatabaseMediaStorage for MVP, but should move to S3/R2 for large files.
 - **Docker**: The `Dockerfile` is provided as an alternative/local option. Railway uses Nixpacks natively.
 
 ## Shell Scripts
-- `release.sh`: **One-time deploy preparation.** Responsible for migrations, cache tables, and bootstrapping superuser.
-- `start.sh`: **Runtime server only.** Responsible for starting gunicorn. No migrations or side effects.
+- `release.sh`: idempotent deploy preparation: integrity checks, migrations, tenant configuration, cache table, and optional superuser bootstrap.
+- `start.sh`: runtime entrypoint. By default it also applies migrations, ensures the cache table, starts the background automation loop, and then executes Gunicorn. Set `RUN_MIGRATIONS_ON_START=false` or `ENABLE_BACKGROUND_AUTOMATION_LOOP=false` only when those responsibilities are guaranteed by separate services.
 
 ## Required Environment Variables
 Ensure the following variables are set in production:
@@ -18,7 +18,7 @@ Ensure the following variables are set in production:
 - `DATABASE_URL`
 - `ALLOWED_HOSTS`
 - `CSRF_TRUSTED_ORIGINS`
-- `REDIS_URL`
+- `REDIS_URL` (optional)
 - `FERNET_KEYS`
 - `EMAIL_*` (or provider API keys)
 - `CRON_TOKEN`
@@ -71,6 +71,10 @@ a dry-run report until you explicitly set `AUTO_ANONYMIZE_OLD_CLIENTS=True`.
 - Backups are periodically uploaded using `db_backup.py`.
 - They may be encrypted depending on `FERNET_KEYS`.
 - Do not set `BACKUP_STORAGE_ALIAS` to point to `DatabaseMediaStorage`.
+- A restore drill requires an empty disposable PostgreSQL database:
+  `RESTORE_TEST_DATABASE_URL=postgresql://.../restore_test python manage.py test_restore`.
+  The command decrypts `.sql.enc`, restores with `psql --single-transaction`,
+  verifies `django_migrations`, and refuses the configured production database.
 
 ## Media Storage
 `DatabaseMediaStorage` is acceptable for MVP and small volume file handling, but should be replaced with `USE_S3_MEDIA_STORAGE=true` (e.g., Cloudflare R2 or AWS S3) for proper production deployment handling large case files.
