@@ -108,7 +108,7 @@ msgstr "Basis end date"
 #: clients/forms/case_client_forms.py:177 clients/models/client.py:190
 #: clients/templates/clients/mos_review.html:55
 #: clients/templates/clients/onboarding/passport.html:92
-#: clients/templates/clients/partials/client_overview.html:268
+#: clients/templates/clients/partials/client_overview.html:270
 #: clients/views/admin_mos_review.py:99
 msgid "Дата рождения"
 msgstr "Date of birth"
@@ -269,12 +269,12 @@ msgstr "Family reunification"
 
 #: clients/forms/misc_forms.py:75 clients/models/campaign.py:36
 #: clients/models/case.py:121 clients/models/client.py:211
-#: clients/models/task.py:90 clients/templates/clients/case_detail.html:291
-#: clients/templates/clients/case_detail.html:304
-#: clients/templates/clients/case_detail.html:325
-#: clients/templates/clients/case_detail.html:359
-#: clients/templates/clients/case_detail.html:384
-#: clients/templates/clients/case_detail.html:407
+#: clients/models/task.py:90 clients/templates/clients/case_detail.html:293
+#: clients/templates/clients/case_detail.html:306
+#: clients/templates/clients/case_detail.html:327
+#: clients/templates/clients/case_detail.html:361
+#: clients/templates/clients/case_detail.html:386
+#: clients/templates/clients/case_detail.html:409
 #: clients/templates/clients/document_checklist_manage.html:235
 #: clients/templates/clients/document_checklist_manage.html:264
 #: clients/templates/clients/fingerprints_schedule.html:116
@@ -410,7 +410,7 @@ msgid "Проверить документ: %s"
 msgstr "Review document: %s"
 
 #: clients/models/_client_health.py:119
-#: clients/templates/clients/partials/document_checklist.html:130
+#: clients/templates/clients/partials/document_checklist.html:133
 msgid "Проверить OCR"
 msgstr "Check OCR"
 
@@ -436,7 +436,7 @@ msgstr "Open checklist"
 
 #: clients/models/_client_health.py:143
 #: clients/templates/clients/admin_panel.html:315
-#: legalize_site/context_processors.py:156
+#: legalize_site/context_processors.py:167
 msgid "Просроченные документы"
 msgstr "Expired documents"
 
@@ -512,7 +512,7 @@ msgstr "Send an email to the client"
 
 #: clients/models/_client_health.py:304
 #: clients/tests/test_priority_12_13_workflow.py:358
-#: legalize_site/context_processors.py:195
+#: legalize_site/context_processors.py:206
 msgid "Просроченные оплаты"
 msgstr "Overdue payments"
 
@@ -744,13 +744,14 @@ msgstr "There are no documents waiting for recognition data to be verified."
 #: clients/templates/clients/clients_list.html:257
 #: clients/templates/clients/onboarding/partials/new_card_application_block.html:58
 #: clients/templates/clients/partials/client_overview.html:227
+#: clients/templates/clients/partials/client_overview.html:229
 #: clients/templates/clients/partials/modals.html:202
 msgid "Номер дела"
 msgstr "Case number"
 
 #: clients/models/_client_health.py:604
 #: clients/templates/clients/partials/client_overview.html:10
-#: clients/views/client_crud.py:281 clients/views/documents.py:531
+#: clients/views/client_crud.py:287 clients/views/documents.py:538
 msgid "Не указан"
 msgstr "Not specified"
 
@@ -831,7 +832,7 @@ msgid "Проверка ZUS RCA активна только на этапе ож
 msgstr "The ZUS RCA check is only active during the waiting phase after prints."
 
 #: clients/models/_client_health.py:694 clients/models/_client_health.py:702
-#: clients/templates/clients/case_detail.html:288
+#: clients/templates/clients/case_detail.html:290
 msgid "Задачи по делу"
 msgstr "Client tasks"
 
@@ -1361,10 +1362,10 @@ msgstr "Reason for stay"
 msgid "Дата открытия дела"
 msgstr "Case opening date"
 
-#: clients/models/case.py:139 clients/templates/clients/case_detail.html:319
+#: clients/models/case.py:139 clients/templates/clients/case_detail.html:321
 #: clients/templates/clients/onboarding/partials/new_card_application_block.html:53
 #: clients/templates/clients/partials/client_overview.html:224
-#: clients/templates/clients/partials/client_overview.html:250
+#: clients/templates/clients/partials/client_overview.html:252
 msgid "Дата подачи"
 msgstr "Submission date"
 
@@ -1386,7 +1387,7 @@ msgid "Номер билета"
 msgstr "Ticket number"
 
 #: clients/models/case.py:144
-#: clients/templates/clients/partials/client_overview.html:262
+#: clients/templates/clients/partials/client_overview.html:264
 msgid "Lista"
 msgstr "Lista"
 
@@ -1394,13 +1395,13 @@ msgstr "Lista"
 msgid "Информация об отпечатках"
 msgstr "Fingerprints information"
 
-#: clients/models/case.py:146 clients/templates/clients/case_detail.html:319
+#: clients/models/case.py:146 clients/templates/clients/case_detail.html:321
 #: clients/templates/clients/onboarding/start.html:89
 #: clients/templates/clients/onboarding/start_contact.html:147
 msgid "Решение"
 msgstr "Decision"
 
-#: clients/models/case.py:147 clients/templates/clients/case_detail.html:319
+#: clients/models/case.py:147 clients/templates/clients/case_detail.html:321
 msgid "Дата решения"
 msgstr "Decision date"
 
@@ -1739,7 +1740,7 @@ msgid "Тип документа"
 msgstr "Document type"
 
 #: clients/models/document.py:181
-#: clients/templates/clients/case_detail.html:270
+#: clients/templates/clients/case_detail.html:272
 #: clients/templates/clients/onboarding/start.html:566
 #: clients/templates/clients/onboarding/start.html:607
 #: clients/templates/clients/onboarding/start_contact.html:980
@@ -1828,8 +1829,8 @@ msgid "Документы"
 msgstr "Documents"
 
 #: clients/models/document.py:438
-#: clients/templates/clients/case_detail.html:291
-#: clients/templates/clients/case_detail.html:403
+#: clients/templates/clients/case_detail.html:293
+#: clients/templates/clients/case_detail.html:405
 #: clients/templates/clients/document_checklist_manage.html:231
 #: clients/templates/clients/document_checklist_manage.html:260
 #: clients/templates/clients/submission_manage.html:22
@@ -2072,14 +2073,14 @@ msgstr "Sender"
 msgid "Журнал email"
 msgstr "Email log"
 
-#: clients/models/employer.py:43 clients/templates/clients/case_detail.html:236
+#: clients/models/employer.py:43 clients/templates/clients/case_detail.html:237
 #: clients/templates/clients/onboarding/start.html:248
 #: clients/templates/clients/onboarding/start.html:326
 #: clients/templates/clients/onboarding/start.html:471
 #: clients/templates/clients/onboarding/start_contact.html:613
 #: clients/templates/clients/onboarding/start_contact.html:690
 #: clients/templates/clients/onboarding/start_contact.html:845
-#: clients/templates/clients/partials/document_checklist.html:111
+#: clients/templates/clients/partials/document_checklist.html:114
 msgid "Ожидает проверки"
 msgstr "Pending verification"
 
@@ -2195,13 +2196,13 @@ msgstr "Client filling"
 
 #: clients/models/onboarding.py:325
 #: clients/templates/clients/clients_list.html:57
-#: legalize_site/context_processors.py:276
+#: legalize_site/context_processors.py:287
 msgid "Client completed"
 msgstr "Client completed"
 
 #: clients/models/onboarding.py:326
 #: clients/templates/clients/clients_list.html:59
-#: legalize_site/context_processors.py:284
+#: legalize_site/context_processors.py:295
 msgid "Staff review"
 msgstr "Staff review"
 
@@ -2219,7 +2220,7 @@ msgstr "MOS package ready"
 
 #: clients/models/onboarding.py:330
 #: clients/templates/clients/clients_list.html:63
-#: legalize_site/context_processors.py:292
+#: legalize_site/context_processors.py:303
 msgid "Submitted in MOS"
 msgstr "Submitted in MOS"
 
@@ -2296,8 +2297,8 @@ msgstr "Amount paid"
 msgid "Статус оплаты"
 msgstr "Payment status"
 
-#: clients/models/payment.py:59 clients/templates/clients/case_detail.html:360
-#: clients/templates/clients/case_detail.html:385
+#: clients/models/payment.py:59 clients/templates/clients/case_detail.html:362
+#: clients/templates/clients/case_detail.html:387
 #: clients/templates/clients/partials/modals.html:43
 #: clients/templates/clients/partials/modals.html:105
 msgid "Способ оплаты"
@@ -2308,9 +2309,9 @@ msgstr "Payment method"
 msgid "Дата оплаты"
 msgstr "Payment date"
 
-#: clients/models/payment.py:61 clients/templates/clients/case_detail.html:304
-#: clients/templates/clients/case_detail.html:362
-#: clients/templates/clients/case_detail.html:387
+#: clients/models/payment.py:61 clients/templates/clients/case_detail.html:306
+#: clients/templates/clients/case_detail.html:364
+#: clients/templates/clients/case_detail.html:389
 #: clients/templates/clients/partials/modals.html:38
 #: clients/templates/clients/partials/modals.html:117
 #: templates/clients/partials/payment_item.html:20
@@ -2530,20 +2531,20 @@ msgstr "Task type"
 msgid "Создана автоматически"
 msgstr "Created automatically"
 
-#: clients/models/task.py:78 clients/templates/clients/case_detail.html:404
+#: clients/models/task.py:78 clients/templates/clients/case_detail.html:406
 #: clients/templates/clients/partials/client_tasks.html:21
 msgid "Описание"
 msgstr "Description"
 
-#: clients/models/task.py:79 clients/templates/clients/case_detail.html:291
-#: clients/templates/clients/case_detail.html:409
+#: clients/models/task.py:79 clients/templates/clients/case_detail.html:293
+#: clients/templates/clients/case_detail.html:411
 #: clients/templates/clients/partials/client_tasks.html:34
 #: clients/templates/clients/partials/client_tasks.html:58
 #: clients/templates/clients/tasks_list.html:50
 msgid "Срок"
 msgstr "Term"
 
-#: clients/models/task.py:84 clients/templates/clients/case_detail.html:406
+#: clients/models/task.py:84 clients/templates/clients/case_detail.html:408
 #: clients/templates/clients/partials/client_tasks.html:26
 #: clients/templates/clients/tasks_list.html:49
 msgid "Приоритет"
@@ -2832,47 +2833,47 @@ msgstr "Could not extract insurance coverage amount or currency (min 30,000 EUR 
 msgid "Health Insurance"
 msgstr "Health Insurance"
 
-#: clients/services/document_job_processors.py:737
+#: clients/services/document_job_processors.py:740
 #, python-format
 msgid "Company document verified successfully with %(warning_count)s warnings."
 msgstr "Company document verified successfully with %(warning_count)s warnings."
 
-#: clients/services/document_job_processors.py:741
+#: clients/services/document_job_processors.py:744
 msgid "Company document verified successfully."
 msgstr "Company document verified successfully."
 
-#: clients/services/document_job_processors.py:818
+#: clients/services/document_job_processors.py:824
 #, python-format
 msgid "%(doc_type)s verified with %(warning_count)s warnings."
 msgstr "%(doc_type)s verified with %(warning_count)s warnings."
 
-#: clients/services/document_job_processors.py:823
+#: clients/services/document_job_processors.py:829
 #, python-format
 msgid "%(doc_type)s verified successfully."
 msgstr "%(doc_type)s verified successfully."
 
-#: clients/services/document_job_processors.py:852
-#: clients/services/document_job_processors.py:915
+#: clients/services/document_job_processors.py:858
+#: clients/services/document_job_processors.py:921
 msgid "Job was superseded by a newer upload."
 msgstr "Job was superseded by a newer upload."
 
-#: clients/services/document_job_processors.py:888
+#: clients/services/document_job_processors.py:894
 msgid "OCR job requeued for retry."
 msgstr "OCR job requeued for retry."
 
-#: clients/services/document_job_processors.py:993
+#: clients/services/document_job_processors.py:999
 msgid "Queued OCR job completed and awaits confirmation."
 msgstr "Queued OCR job completed and awaits confirmation."
 
-#: clients/services/document_job_processors.py:1012
+#: clients/services/document_job_processors.py:1018
 msgid "missing-documents email sent"
 msgstr "Missing documents"
 
-#: clients/services/document_job_processors.py:1016
+#: clients/services/document_job_processors.py:1022
 msgid "appointment notification sent"
 msgstr "appointment notification sent"
 
-#: clients/services/document_job_processors.py:1046
+#: clients/services/document_job_processors.py:1052
 #: clients/services/document_workflow.py:191
 #: clients/services/document_workflow.py:265
 #, python-format
@@ -3084,7 +3085,7 @@ msgstr "Expired documents after fingerprints"
 msgid "Список недостающих документов"
 msgstr "Missing documents checklist"
 
-#: clients/services/notifications.py:44 legalize_site/context_processors.py:169
+#: clients/services/notifications.py:44 legalize_site/context_processors.py:180
 msgid "Документы скоро истекают"
 msgstr "Documents expiring soon"
 
@@ -3092,7 +3093,7 @@ msgstr "Documents expiring soon"
 msgid "Уведомление о встрече"
 msgstr "Appointment notification"
 
-#: clients/services/notifications.py:46 legalize_site/context_processors.py:143
+#: clients/services/notifications.py:46 legalize_site/context_processors.py:154
 msgid "Истекает легальное пребывание"
 msgstr "Legal stay expires"
 
@@ -3250,7 +3251,7 @@ msgstr "not selected"
 
 #: clients/services/permissions.py:106 clients/services/responses.py:63
 #: clients/views/base.py:53 clients/views/base.py:103
-#: clients/views/client_crud.py:482 templates/403.html:4
+#: clients/views/client_crud.py:488 templates/403.html:4
 msgid "Доступ запрещен"
 msgstr "Access denied"
 
@@ -3292,9 +3293,9 @@ msgid "Автоматическая задача"
 msgstr "Automatic task"
 
 #: clients/services/workday.py:66
-#: clients/templates/clients/case_detail.html:247
-#: clients/templates/clients/partials/document_checklist.html:383
+#: clients/templates/clients/case_detail.html:249
 #: clients/templates/clients/partials/document_checklist.html:386
+#: clients/templates/clients/partials/document_checklist.html:389
 #: clients/views/documents.py:398
 msgid "Проверить"
 msgstr "Review"
@@ -3327,7 +3328,7 @@ msgstr "no confirmation"
 msgid "номер есть в блоке подачи"
 msgstr "number is present in the submission block"
 
-#: clients/services/workday.py:190 legalize_site/context_processors.py:255
+#: clients/services/workday.py:190 legalize_site/context_processors.py:266
 msgid "Новая подача без основного номера"
 msgstr "New submission without the main case number"
 
@@ -3357,8 +3358,8 @@ msgstr "due: %(date)s"
 #: clients/templates/clients/admin_panel.html:401
 #: clients/templates/clients/admin_panel.html:438
 #: clients/templates/clients/document_versions.html:33
-#: clients/templates/clients/partials/document_checklist.html:369
-#: clients/templates/clients/partials/document_checklist.html:371
+#: clients/templates/clients/partials/document_checklist.html:372
+#: clients/templates/clients/partials/document_checklist.html:374
 #: submissions/templates/submissions/submission_detail.html:42
 #: submissions/templates/submissions/submission_list.html:32
 msgid "Открыть"
@@ -3397,7 +3398,7 @@ msgstr "The client reported a submission, but the main case number in the card i
 msgid "Прошло больше 90 дней после отпечатков, решения в карточке нет."
 msgstr "More than 90 days have passed since fingerprints, and there is no decision in the card."
 
-#: clients/services/workday.py:354 legalize_site/context_processors.py:229
+#: clients/services/workday.py:354 legalize_site/context_processors.py:240
 msgid "Просроченные задачи"
 msgstr "Overdue tasks"
 
@@ -3498,9 +3499,9 @@ msgstr "Upload and save"
 
 #: clients/templates/clients/add_document.html:55
 #: clients/templates/clients/app_settings_form.html:133
-#: clients/templates/clients/case_detail.html:364
-#: clients/templates/clients/case_detail.html:389
-#: clients/templates/clients/case_detail.html:411
+#: clients/templates/clients/case_detail.html:366
+#: clients/templates/clients/case_detail.html:391
+#: clients/templates/clients/case_detail.html:413
 #: clients/templates/clients/case_form.html:100
 #: clients/templates/clients/case_form.html:102
 #: clients/templates/clients/client_add.html:99
@@ -3846,7 +3847,7 @@ msgstr "Access confirmation"
 #: clients/templates/clients/admin_panel.html:380
 #: clients/templates/clients/staff_manage.html:4
 #: clients/templates/clients/staff_manage.html:5
-#: clients/tests/test_view_edge_cases.py:622
+#: clients/tests/test_view_edge_cases.py:628
 msgid "Сотрудники"
 msgstr "Staff"
 
@@ -3905,8 +3906,8 @@ msgid "Email history и действия сотрудников по клиен�
 msgstr "Email history and staff actions on clients."
 
 #: clients/templates/clients/admin_panel.html:447
-#: clients/templates/clients/case_detail.html:291
-#: clients/templates/clients/case_detail.html:304
+#: clients/templates/clients/case_detail.html:293
+#: clients/templates/clients/case_detail.html:306
 #: clients/templates/clients/clients_list.html:185
 #: clients/templates/clients/clients_list.html:300
 #: clients/templates/clients/document_checklist_manage.html:86
@@ -4013,9 +4014,9 @@ msgid "Можно оставить пустые строки или вообще
 msgstr "You can leave blank lines or clear the block entirely."
 
 #: clients/templates/clients/app_settings_form.html:134
-#: clients/templates/clients/case_detail.html:364
-#: clients/templates/clients/case_detail.html:389
-#: clients/templates/clients/case_detail.html:411
+#: clients/templates/clients/case_detail.html:366
+#: clients/templates/clients/case_detail.html:391
+#: clients/templates/clients/case_detail.html:413
 #: clients/templates/clients/case_form.html:94
 #: clients/templates/clients/client_add.html:98
 #: clients/templates/clients/client_form.html:208
@@ -4307,10 +4308,6 @@ msgstr "What was checked or what needs clarification"
 msgid "Подтвердить нового"
 msgstr "Confirm new employer"
 
-#: clients/templates/clients/case_detail.html:165
-msgid "Подтвердить работодателя"
-msgstr "Confirm employer"
-
 #: clients/templates/clients/case_detail.html:166
 msgid "Это тот же работодатель"
 msgstr "This is the same employer"
@@ -4343,7 +4340,7 @@ msgstr "MOS/PESEL"
 #: clients/templates/clients/case_detail.html:183
 #: clients/templates/clients/onboarding/start.html:81
 #: clients/templates/clients/onboarding/start_contact.html:139
-#: clients/templates/clients/partials/client_overview.html:256
+#: clients/templates/clients/partials/client_overview.html:258
 #: templates/base.html:127 templates/base.html:333
 msgid "Отпечатки"
 msgstr "Fingerprints"
@@ -4420,41 +4417,53 @@ msgid "Перейти к документу: подтвердите распоз
 msgstr "Go to the document: confirm the recognised OCR data"
 
 #: clients/templates/clients/case_detail.html:223
-#: clients/templates/clients/case_detail.html:237
+#: clients/templates/clients/case_detail.html:238
 #: clients/templates/clients/partials/document_checklist.html:57
 msgid "OCR-проверка"
 msgstr "OCR review"
 
 #: clients/templates/clients/case_detail.html:224
 #: clients/templates/clients/partials/document_checklist.html:60
-msgid "Перейти к документу: проверьте и подтвердите файл"
-msgstr "Go to the document: check and confirm the file"
+#| msgid "Перейти к документу: проверьте и подтвердите файл"
+msgid "Перейти к документу с предупреждением OCR"
+msgstr "Go to the document with an OCR warning"
 
 #: clients/templates/clients/case_detail.html:224
 #: clients/templates/clients/partials/document_checklist.html:60
-msgid "Ждёт проверки"
-msgstr "Awaiting review"
+#| msgid "OCR предупреждения"
+msgid "OCR-предупреждение"
+msgstr "OCR warning"
 
 #: clients/templates/clients/case_detail.html:225
 #: clients/templates/clients/partials/document_checklist.html:63
+msgid "Перейти к документу: проверьте и подтвердите файл"
+msgstr "Go to the document: check and confirm the file"
+
+#: clients/templates/clients/case_detail.html:225
+#: clients/templates/clients/partials/document_checklist.html:63
+msgid "Ждёт проверки"
+msgstr "Awaiting review"
+
+#: clients/templates/clients/case_detail.html:226
+#: clients/templates/clients/partials/document_checklist.html:66
 msgid "Свой"
 msgstr "Mine"
 
-#: clients/templates/clients/case_detail.html:235
-#: clients/templates/clients/partials/document_checklist.html:81
+#: clients/templates/clients/case_detail.html:236
+#: clients/templates/clients/partials/document_checklist.html:84
 msgid "Файл от"
 msgstr "File from"
 
-#: clients/templates/clients/case_detail.html:236
-#: clients/templates/clients/partials/document_checklist.html:111
+#: clients/templates/clients/case_detail.html:237
+#: clients/templates/clients/partials/document_checklist.html:114
 msgid "Проверен"
 msgstr "Verified"
 
-#: clients/templates/clients/case_detail.html:237
+#: clients/templates/clients/case_detail.html:238
 msgid "Подтвердите распознанные OCR данные"
 msgstr "Confirm the recognised OCR data"
 
-#: clients/templates/clients/case_detail.html:237
+#: clients/templates/clients/case_detail.html:238
 #: clients/templates/clients/onboarding/passport.html:30
 #: clients/templates/clients/onboarding/start.html:256
 #: clients/templates/clients/onboarding/start.html:334
@@ -4463,37 +4472,48 @@ msgid "Ошибка OCR"
 msgstr "OCR Error"
 
 #: clients/templates/clients/case_detail.html:239
+#: clients/templates/clients/partials/document_checklist.html:122
+msgid "OCR не смог надёжно подтвердить совпадение имени с профилем. Проверьте документ вручную."
+msgstr "OCR could not reliably confirm that the name matches the profile. Check the document manually."
+
+#: clients/templates/clients/case_detail.html:239
+#: clients/templates/clients/partials/document_checklist.html:123
+#| msgid "Не подтвержден"
+msgid "Имя не подтверждено OCR"
+msgstr "Name not confirmed by OCR"
+
+#: clients/templates/clients/case_detail.html:241
 msgid "до"
 msgstr "until"
 
-#: clients/templates/clients/case_detail.html:243
+#: clients/templates/clients/case_detail.html:245
 msgid "Просмотр"
 msgstr "View"
 
-#: clients/templates/clients/case_detail.html:244
+#: clients/templates/clients/case_detail.html:246
 #: clients/templates/clients/document_versions.html:36
 #: clients/templates/clients/document_versions.html:73
 #: clients/templates/clients/onboarding/my_data.html:19
-#: clients/templates/clients/partials/document_checklist.html:374
-#: clients/templates/clients/partials/document_checklist.html:376
+#: clients/templates/clients/partials/document_checklist.html:377
+#: clients/templates/clients/partials/document_checklist.html:379
 msgid "Скачать"
 msgstr "Download"
 
-#: clients/templates/clients/case_detail.html:247
-#: clients/templates/clients/partials/document_checklist.html:383
+#: clients/templates/clients/case_detail.html:249
+#: clients/templates/clients/partials/document_checklist.html:386
 #: clients/views/documents.py:398
 msgid "Снять отметку"
 msgstr "Unverify"
 
-#: clients/templates/clients/case_detail.html:252
+#: clients/templates/clients/case_detail.html:254
 #: clients/templates/clients/clients_list.html:317
 #: clients/templates/clients/clients_list.html:319
 #: clients/templates/clients/document_checklist_manage.html:100
 #: clients/templates/clients/onboarding/start.html:263
 #: clients/templates/clients/onboarding/start.html:346
 #: clients/templates/clients/onboarding/start.html:491
-#: clients/templates/clients/partials/document_checklist.html:408
-#: clients/templates/clients/partials/document_checklist.html:451
+#: clients/templates/clients/partials/document_checklist.html:411
+#: clients/templates/clients/partials/document_checklist.html:454
 #: clients/templates/clients/partials/reminder_item.html:95
 #: clients/templates/clients/submission_manage.html:101
 #: submissions/templates/submissions/submission_detail.html:52
@@ -4501,179 +4521,179 @@ msgstr "Unverify"
 msgid "Удалить"
 msgstr "Delete"
 
-#: clients/templates/clients/case_detail.html:260
+#: clients/templates/clients/case_detail.html:262
 msgid "Покрыт поданным Wnioskiem."
 msgstr "Covered by the submitted Wniosek."
 
-#: clients/templates/clients/case_detail.html:262
+#: clients/templates/clients/case_detail.html:264
 msgid "Документ ещё не загружен."
 msgstr "The document has not been uploaded yet."
 
-#: clients/templates/clients/case_detail.html:271
-#: clients/templates/clients/case_detail.html:272
+#: clients/templates/clients/case_detail.html:273
+#: clients/templates/clients/case_detail.html:274
 msgid "Добавить файл"
 msgstr "Add file"
 
-#: clients/templates/clients/case_detail.html:281
+#: clients/templates/clients/case_detail.html:283
 msgid "Чек-лист документов пуст."
 msgstr "The document checklist is empty."
 
-#: clients/templates/clients/case_detail.html:289
-#: clients/templates/clients/case_detail.html:399
+#: clients/templates/clients/case_detail.html:291
+#: clients/templates/clients/case_detail.html:401
 msgid "Добавить задачу"
 msgstr "Add task"
 
-#: clients/templates/clients/case_detail.html:293
+#: clients/templates/clients/case_detail.html:295
 msgid "Завершить"
 msgstr "Complete"
 
-#: clients/templates/clients/case_detail.html:295
+#: clients/templates/clients/case_detail.html:297
 msgid "Нет задач по этому делу."
 msgstr "No tasks for this case."
 
-#: clients/templates/clients/case_detail.html:301
+#: clients/templates/clients/case_detail.html:303
 msgid "Платежи и счета"
 msgstr "Payments and invoices"
 
-#: clients/templates/clients/case_detail.html:302
-#: clients/templates/clients/case_detail.html:348
+#: clients/templates/clients/case_detail.html:304
+#: clients/templates/clients/case_detail.html:350
 msgid "Добавить платёж"
 msgstr "Add payment"
 
-#: clients/templates/clients/case_detail.html:304
-#: clients/templates/clients/case_detail.html:353
-#: clients/templates/clients/case_detail.html:378
+#: clients/templates/clients/case_detail.html:306
+#: clients/templates/clients/case_detail.html:355
+#: clients/templates/clients/case_detail.html:380
 #: clients/templates/clients/partials/modals.html:18
 #: clients/templates/clients/partials/modals.html:79
 #: clients/templates/clients/service_price_manage.html:23
 msgid "Услуга"
 msgstr "Service"
 
-#: clients/templates/clients/case_detail.html:304
+#: clients/templates/clients/case_detail.html:306
 msgid "Сумма"
 msgstr "Amount"
 
-#: clients/templates/clients/case_detail.html:306
+#: clients/templates/clients/case_detail.html:308
 msgid "Изменить"
 msgstr "Edit"
 
-#: clients/templates/clients/case_detail.html:313
+#: clients/templates/clients/case_detail.html:315
 msgid "Нет платежей по этому делу."
 msgstr "No payments for this case."
 
-#: clients/templates/clients/case_detail.html:318
+#: clients/templates/clients/case_detail.html:320
 msgid "Информация о подаче"
 msgstr "Submission information"
 
-#: clients/templates/clients/case_detail.html:323
+#: clients/templates/clients/case_detail.html:325
 msgid "Заявления MOS и PESEL"
 msgstr "MOS and PESEL applications"
 
-#: clients/templates/clients/case_detail.html:324
+#: clients/templates/clients/case_detail.html:326
 msgid "Заявление в системе MOS"
 msgstr "Application in the MOS system"
 
-#: clients/templates/clients/case_detail.html:324
+#: clients/templates/clients/case_detail.html:326
 msgid "Статус MOS"
 msgstr "MOS status"
 
-#: clients/templates/clients/case_detail.html:324
+#: clients/templates/clients/case_detail.html:326
 msgid "Цель пребывания"
 msgstr "Purpose of stay"
 
-#: clients/templates/clients/case_detail.html:324
+#: clients/templates/clients/case_detail.html:326
 msgid "Данные заявления MOS отсутствуют."
 msgstr "No MOS application data."
 
-#: clients/templates/clients/case_detail.html:325
+#: clients/templates/clients/case_detail.html:327
 msgid "Заявления PESEL"
 msgstr "PESEL applications"
 
-#: clients/templates/clients/case_detail.html:325
+#: clients/templates/clients/case_detail.html:327
 msgid "ID"
 msgstr "ID"
 
-#: clients/templates/clients/case_detail.html:325
+#: clients/templates/clients/case_detail.html:327
 msgid "Правовое основание"
 msgstr "Legal basis"
 
-#: clients/templates/clients/case_detail.html:325
+#: clients/templates/clients/case_detail.html:327
 msgid "Нет заявлений PESEL по этому делу."
 msgstr "No PESEL applications for this case."
 
-#: clients/templates/clients/case_detail.html:329
+#: clients/templates/clients/case_detail.html:331
 msgid "Сдача отпечатков пальцев"
 msgstr "Fingerprints submission"
 
-#: clients/templates/clients/case_detail.html:330
+#: clients/templates/clients/case_detail.html:332
 msgid "Дата сдачи"
 msgstr "Submission date"
 
-#: clients/templates/clients/case_detail.html:330
+#: clients/templates/clients/case_detail.html:332
 #: clients/templates/clients/logs/staff_activity_logs.html:40
 #: clients/templates/clients/logs/staff_activity_logs.html:49
 #: clients/templates/clients/partials/modals.html:211
 msgid "Время"
 msgstr "Time"
 
-#: clients/templates/clients/case_detail.html:330
+#: clients/templates/clients/case_detail.html:332
 #: clients/templates/clients/fingerprints_schedule.html:37
 #: clients/templates/clients/fingerprints_schedule.html:115
 #: clients/templates/clients/partials/modals.html:215
 msgid "Место"
 msgstr "Place"
 
-#: clients/templates/clients/case_detail.html:330
+#: clients/templates/clients/case_detail.html:332
 msgid "Номер талона"
 msgstr "Ticket number"
 
-#: clients/templates/clients/case_detail.html:330
+#: clients/templates/clients/case_detail.html:332
 msgid "Список"
 msgstr "List"
 
-#: clients/templates/clients/case_detail.html:330
+#: clients/templates/clients/case_detail.html:332
 msgid "Дополнительная информация"
 msgstr "Additional information"
 
-#: clients/templates/clients/case_detail.html:335
+#: clients/templates/clients/case_detail.html:337
 msgid "История активности по делу"
 msgstr "Case activity history"
 
-#: clients/templates/clients/case_detail.html:336
+#: clients/templates/clients/case_detail.html:338
 msgid "Поиск по истории…"
 msgstr "Search history…"
 
-#: clients/templates/clients/case_detail.html:338
+#: clients/templates/clients/case_detail.html:340
 msgid "Автор"
 msgstr "Author"
 
-#: clients/templates/clients/case_detail.html:338
+#: clients/templates/clients/case_detail.html:340
 msgid "История активности пуста."
 msgstr "Activity history is empty."
 
-#: clients/templates/clients/case_detail.html:339
+#: clients/templates/clients/case_detail.html:341
 #: clients/templates/clients/clients_list.html:432
 msgid "Ничего не найдено."
 msgstr "Nothing found."
 
-#: clients/templates/clients/case_detail.html:355
-#: clients/templates/clients/case_detail.html:380
+#: clients/templates/clients/case_detail.html:357
+#: clients/templates/clients/case_detail.html:382
 #: clients/templates/clients/partials/modals.html:28
 #: clients/templates/clients/partials/modals.html:89
 msgid "Сумма (PLN)"
 msgstr "Amount (PLN)"
 
-#: clients/templates/clients/case_detail.html:356
-#: clients/templates/clients/case_detail.html:381
+#: clients/templates/clients/case_detail.html:358
+#: clients/templates/clients/case_detail.html:383
 #: clients/templates/clients/partials/modals.html:93
 msgid "Оплачено (PLN)"
 msgstr "Paid (PLN)"
 
-#: clients/templates/clients/case_detail.html:374
+#: clients/templates/clients/case_detail.html:376
 msgid "Редактировать платёж"
 msgstr "Edit payment"
 
-#: clients/templates/clients/case_detail.html:426
+#: clients/templates/clients/case_detail.html:428
 msgid "Удалить этот документ?"
 msgstr "Delete this document?"
 
@@ -4738,7 +4758,7 @@ msgid "Создание новой карточки клиента"
 msgstr "Create new client card"
 
 #: clients/templates/clients/client_add.html:16
-#: clients/views/client_crud.py:362
+#: clients/views/client_crud.py:368
 msgid "Добавить нового клиента"
 msgstr "Add new client"
 
@@ -5306,7 +5326,7 @@ msgid "Клиент изменил основание подачи. Нажмит
 msgstr "The client has changed the basis for filing. Click to confirm or check."
 
 #: clients/templates/clients/clients_list.html:230
-#: legalize_site/context_processors.py:268
+#: legalize_site/context_processors.py:279
 msgid "Смена основания"
 msgstr "Creation date"
 
@@ -6054,7 +6074,7 @@ msgid "Открыть чеклисты"
 msgstr "Open checklist"
 
 #: clients/templates/clients/document_versions.html:4
-#: clients/templates/clients/partials/document_checklist.html:400
+#: clients/templates/clients/partials/document_checklist.html:403
 msgid "Versions"
 msgstr "Versions"
 
@@ -7834,7 +7854,7 @@ msgstr "Sample"
 #: clients/templates/clients/onboarding/start_contact.html:747
 #: clients/templates/clients/onboarding/start_contact.html:780
 #: clients/templates/clients/onboarding/start_contact.html:906
-#: clients/templates/clients/partials/client_overview.html:233
+#: clients/templates/clients/partials/client_overview.html:235
 msgid "Загружено"
 msgstr "Uploaded"
 
@@ -8716,24 +8736,24 @@ msgstr[1] "issue types"
 msgid "Клиент не уверен"
 msgstr "Client is not sure"
 
-#: clients/templates/clients/partials/client_overview.html:229
+#: clients/templates/clients/partials/client_overview.html:231
 msgid "Номер дела не указан; если были отпечатки, проверьте присоединение к делу"
 msgstr "Case number is missing; if fingerprints were already given, check joining to the existing case"
 
-#: clients/templates/clients/partials/client_overview.html:233
 #: clients/templates/clients/partials/client_overview.html:235
+#: clients/templates/clients/partials/client_overview.html:237
 msgid "Подтверждение"
 msgstr "Confirmation"
 
-#: clients/templates/clients/partials/client_overview.html:235
+#: clients/templates/clients/partials/client_overview.html:237
 msgid "Не загружено"
 msgstr "Not uploaded"
 
-#: clients/templates/clients/partials/client_overview.html:244
+#: clients/templates/clients/partials/client_overview.html:246
 msgid "Основание до"
 msgstr "Base up"
 
-#: clients/templates/clients/partials/client_overview.html:259
+#: clients/templates/clients/partials/client_overview.html:261
 msgid "Билет"
 msgstr "Ticket"
 
@@ -8778,214 +8798,210 @@ msgstr "The stamped cover sheet from the urząd closes the positions of this cas
 msgid "Загрузить подтверждение подачи (штамп)"
 msgstr "Upload proof of submission (stamp)"
 
-#: clients/templates/clients/partials/document_checklist.html:77
+#: clients/templates/clients/partials/document_checklist.html:80
 msgid "Файл отсутствует"
 msgstr "File missing"
 
-#: clients/templates/clients/partials/document_checklist.html:86
+#: clients/templates/clients/partials/document_checklist.html:89
 msgid "Регистрационная форма ZUS"
 msgstr "Consultation"
 
-#: clients/templates/clients/partials/document_checklist.html:90
+#: clients/templates/clients/partials/document_checklist.html:93
 msgid "Месяц отчета ZUS"
 msgstr "ZUS report month"
 
-#: clients/templates/clients/partials/document_checklist.html:91
+#: clients/templates/clients/partials/document_checklist.html:94
 msgid "ZUS за месяц:"
 msgstr "per month"
 
-#: clients/templates/clients/partials/document_checklist.html:94
-#: clients/templates/clients/partials/document_checklist.html:98
+#: clients/templates/clients/partials/document_checklist.html:97
+#: clients/templates/clients/partials/document_checklist.html:101
 msgid "Месяц ZUS найден OCR, но не сохранён как основной месяц файла"
 msgstr "Month ZUS found by OCR, but not saved as the main month of the file"
 
-#: clients/templates/clients/partials/document_checklist.html:95
-#: clients/templates/clients/partials/document_checklist.html:99
+#: clients/templates/clients/partials/document_checklist.html:98
+#: clients/templates/clients/partials/document_checklist.html:102
 msgid "OCR месяц:"
 msgstr "per month"
 
-#: clients/templates/clients/partials/document_checklist.html:102
+#: clients/templates/clients/partials/document_checklist.html:105
 msgid "Для страхового полиса месяц может быть пустым"
 msgstr "Document Name"
 
-#: clients/templates/clients/partials/document_checklist.html:103
+#: clients/templates/clients/partials/document_checklist.html:106
 msgid "Месяц ZUS не указан"
 msgstr "not specified"
 
-#: clients/templates/clients/partials/document_checklist.html:108
+#: clients/templates/clients/partials/document_checklist.html:111
 msgid "Действителен до:"
 msgstr "Valid until:"
 
-#: clients/templates/clients/partials/document_checklist.html:115
+#: clients/templates/clients/partials/document_checklist.html:118
 msgid "Отклонен:"
 msgstr "Rejected:"
 
-#: clients/templates/clients/partials/document_checklist.html:119
-msgid "Имя в документе не совпадает с профилем"
-msgstr "Document name does not match profile"
-
-#: clients/templates/clients/partials/document_checklist.html:124
+#: clients/templates/clients/partials/document_checklist.html:127
 msgid "OCR Status"
 msgstr "OCR Status"
 
-#: clients/templates/clients/partials/document_checklist.html:135
+#: clients/templates/clients/partials/document_checklist.html:138
 msgid "History"
 msgstr "History"
 
-#: clients/templates/clients/partials/document_checklist.html:143
+#: clients/templates/clients/partials/document_checklist.html:146
 msgid "Проверка работодателя (KRS/CEIDG):"
 msgstr "Employer phone"
 
-#: clients/templates/clients/partials/document_checklist.html:149
+#: clients/templates/clients/partials/document_checklist.html:152
 msgid "Компания:"
 msgstr "Company"
 
-#: clients/templates/clients/partials/document_checklist.html:156
+#: clients/templates/clients/partials/document_checklist.html:159
 msgid "Зарплата:"
 msgstr "Payment"
 
-#: clients/templates/clients/partials/document_checklist.html:161
-#: clients/templates/clients/partials/document_checklist.html:205
-#: clients/templates/clients/partials/document_checklist.html:255
-#: clients/templates/clients/partials/document_checklist.html:349
+#: clients/templates/clients/partials/document_checklist.html:164
+#: clients/templates/clients/partials/document_checklist.html:208
+#: clients/templates/clients/partials/document_checklist.html:258
+#: clients/templates/clients/partials/document_checklist.html:352
 msgid "Действует до:"
 msgstr "Valid until:"
 
-#: clients/templates/clients/partials/document_checklist.html:165
+#: clients/templates/clients/partials/document_checklist.html:168
 msgid "Статус представительства:"
 msgstr "Valid until"
 
-#: clients/templates/clients/partials/document_checklist.html:167
+#: clients/templates/clients/partials/document_checklist.html:170
 msgid "Подписант подтвержден"
 msgstr "Pending verification"
 
-#: clients/templates/clients/partials/document_checklist.html:169
+#: clients/templates/clients/partials/document_checklist.html:172
 msgid "Подписант не подтвержден"
 msgstr "Pending verification"
 
-#: clients/templates/clients/partials/document_checklist.html:174
-#: clients/templates/clients/partials/document_checklist.html:214
-#: clients/templates/clients/partials/document_checklist.html:260
-#: clients/templates/clients/partials/document_checklist.html:320
-#: clients/templates/clients/partials/document_checklist.html:354
+#: clients/templates/clients/partials/document_checklist.html:177
+#: clients/templates/clients/partials/document_checklist.html:217
+#: clients/templates/clients/partials/document_checklist.html:263
+#: clients/templates/clients/partials/document_checklist.html:323
+#: clients/templates/clients/partials/document_checklist.html:357
 msgid "Предупреждения:"
 msgstr "Date of birth"
 
-#: clients/templates/clients/partials/document_checklist.html:190
+#: clients/templates/clients/partials/document_checklist.html:193
 msgid "Автоматическая проверка паспорта (OCR):"
 msgstr "Automatic archive on new file upload"
 
-#: clients/templates/clients/partials/document_checklist.html:196
+#: clients/templates/clients/partials/document_checklist.html:199
 msgid "Имя / Фамилия:"
 msgstr "Last Name"
 
-#: clients/templates/clients/partials/document_checklist.html:199
+#: clients/templates/clients/partials/document_checklist.html:202
 msgid "Номер паспорта:"
 msgstr "Passport number"
 
-#: clients/templates/clients/partials/document_checklist.html:202
+#: clients/templates/clients/partials/document_checklist.html:205
 msgid "Дата рождения:"
 msgstr "Date of birth"
 
-#: clients/templates/clients/partials/document_checklist.html:209
+#: clients/templates/clients/partials/document_checklist.html:212
 msgid "Страна:"
 msgstr "Page"
 
-#: clients/templates/clients/partials/document_checklist.html:224
+#: clients/templates/clients/partials/document_checklist.html:227
 msgid "Автоматические обновления:"
 msgstr "Note updated"
 
-#: clients/templates/clients/partials/document_checklist.html:240
+#: clients/templates/clients/partials/document_checklist.html:243
 msgid "Автоматическая проверка договора аренды (OCR):"
 msgstr "Automatic archive on new file upload"
 
-#: clients/templates/clients/partials/document_checklist.html:246
+#: clients/templates/clients/partials/document_checklist.html:249
 msgid "Адрес:"
 msgstr "Office address"
 
-#: clients/templates/clients/partials/document_checklist.html:250
+#: clients/templates/clients/partials/document_checklist.html:253
 msgid "Стоимость аренды:"
 msgstr "Housing cost"
 
-#: clients/templates/clients/partials/document_checklist.html:277
+#: clients/templates/clients/partials/document_checklist.html:280
 msgid "Автоматическая проверка ZUS (OCR):"
 msgstr "Automatic ZUS check (OCR):"
 
-#: clients/templates/clients/partials/document_checklist.html:286
+#: clients/templates/clients/partials/document_checklist.html:289
 msgid "Месяц ZUS по OCR:"
 msgstr "Month of ZUS by OCR:"
 
-#: clients/templates/clients/partials/document_checklist.html:296
+#: clients/templates/clients/partials/document_checklist.html:299
 msgid "Месяц файла в системе:"
 msgstr "Log in to the system"
 
-#: clients/templates/clients/partials/document_checklist.html:297
+#: clients/templates/clients/partials/document_checklist.html:300
 msgid "не сохранён"
 msgstr "Upload and save"
 
-#: clients/templates/clients/partials/document_checklist.html:300
+#: clients/templates/clients/partials/document_checklist.html:303
 msgid "NIP работодателя:"
 msgstr "Employer phone"
 
-#: clients/templates/clients/partials/document_checklist.html:304
+#: clients/templates/clients/partials/document_checklist.html:307
 msgid "Код страхования:"
 msgstr "Log in again"
 
-#: clients/templates/clients/partials/document_checklist.html:308
+#: clients/templates/clients/partials/document_checklist.html:311
 msgid "Информация:"
 msgstr "Basic Information"
 
-#: clients/templates/clients/partials/document_checklist.html:337
+#: clients/templates/clients/partials/document_checklist.html:340
 msgid "Автоматическая проверка страховки (OCR):"
 msgstr "Automatic archive on new file upload"
 
-#: clients/templates/clients/partials/document_checklist.html:344
+#: clients/templates/clients/partials/document_checklist.html:347
 msgid "Сумма покрытия:"
 msgstr "Payment amount"
 
-#: clients/templates/clients/partials/document_checklist.html:386
+#: clients/templates/clients/partials/document_checklist.html:389
 msgid "Снять"
 msgstr "Take off"
 
-#: clients/templates/clients/partials/document_checklist.html:394
 #: clients/templates/clients/partials/document_checklist.html:397
+#: clients/templates/clients/partials/document_checklist.html:400
 #: clients/templates/clients/partials/modals.html:328
 msgid "Отклонить"
 msgstr "Reject"
 
-#: clients/templates/clients/partials/document_checklist.html:420
+#: clients/templates/clients/partials/document_checklist.html:423
 msgid "По этому пункту нет загруженного файла, но документ уже отмечен как сданный."
 msgstr "There is no uploaded file for this item, but the document has already been marked as submitted."
 
-#: clients/templates/clients/partials/document_checklist.html:422
+#: clients/templates/clients/partials/document_checklist.html:425
 msgid "Документы этого типа еще не загружены."
 msgstr "Documents of this type have not been uploaded yet."
 
-#: clients/templates/clients/partials/document_checklist.html:428
+#: clients/templates/clients/partials/document_checklist.html:431
 msgid "Отмечено по wniosek"
 msgstr "Marked by wniosek"
 
-#: clients/templates/clients/partials/document_checklist.html:438
+#: clients/templates/clients/partials/document_checklist.html:441
 msgid "Подтверждено штампом urzędu"
 msgstr "Confirmed by urząd stamp"
 
-#: clients/templates/clients/partials/document_checklist.html:440
+#: clients/templates/clients/partials/document_checklist.html:443
 msgid "Подтверждено штампом"
 msgstr "Stamp-confirmed"
 
-#: clients/templates/clients/partials/document_checklist.html:462
+#: clients/templates/clients/partials/document_checklist.html:465
 msgid "Нет ZUS RCA за месяцы:"
 msgstr "No ZUS RCA for months:"
 
-#: clients/templates/clients/partials/document_checklist.html:475
+#: clients/templates/clients/partials/document_checklist.html:478
 msgid "Кастомная строка из wniosek уже сохранена в истории подачи."
 msgstr "The custom string from wniosek is already saved in the submission history."
 
-#: clients/templates/clients/partials/document_checklist.html:479
+#: clients/templates/clients/partials/document_checklist.html:482
 msgid "Добавить еще один файл"
 msgstr "Add another file"
 
-#: clients/templates/clients/partials/document_checklist.html:487
+#: clients/templates/clients/partials/document_checklist.html:490
 #, python-format
 msgid ""
 "\n"
@@ -9675,7 +9691,7 @@ msgid "Мои задачи"
 msgstr "My tasks"
 
 #: clients/templates/clients/tasks_list.html:22
-#: legalize_site/context_processors.py:135
+#: legalize_site/context_processors.py:146
 msgid "Вопросы клиентов"
 msgstr "Client questions"
 
@@ -10285,32 +10301,32 @@ msgstr "Document deleted: %(name)s."
 msgid "Удаление доступно только через POST-запрос."
 msgstr "Removal is only available via a POST request."
 
-#: clients/views/client_crud.py:366
+#: clients/views/client_crud.py:372
 msgid "Клиент успешно добавлен!"
 msgstr "No clients found."
 
-#: clients/views/client_crud.py:379 clients/views/client_crud.py:422
+#: clients/views/client_crud.py:385 clients/views/client_crud.py:428
 msgid "Не удалось сохранить клиента. Проверьте выделенные поля и попробуйте снова."
 msgstr "Failed to save client. Check the highlighted fields and try again."
 
-#: clients/views/client_crud.py:403
+#: clients/views/client_crud.py:409
 msgid "Редактировать данные клиента"
 msgstr "Edit data"
 
-#: clients/views/client_crud.py:408
+#: clients/views/client_crud.py:414
 msgid "Данные клиента успешно обновлены!"
 msgstr "Last update date"
 
-#: clients/views/client_crud.py:449
+#: clients/views/client_crud.py:455
 msgid "Вы должны подтвердить архивацию всех активных дел клиента."
 msgstr "You must confirm archiving all of the client's active cases."
 
-#: clients/views/client_crud.py:459
+#: clients/views/client_crud.py:465
 #, python-format
 msgid "Клиент %(name)s и все его дела были успешно заархивированы."
 msgstr "Client %(name)s and all their cases have been archived successfully."
 
-#: clients/views/client_crud.py:506
+#: clients/views/client_crud.py:512
 msgid "Ошибка. Пожалуйста, заполните все поля корректными значениями."
 msgstr "Error. Please fill in all fields with correct values."
 
@@ -10429,23 +10445,23 @@ msgstr "Confirmed %(count)s documents awaiting review."
 msgid "Письмо с недостающими документами отправлено."
 msgstr "Missing documents checklist"
 
-#: clients/views/documents.py:583
+#: clients/views/documents.py:590
 msgid "Document not found."
 msgstr "Document Versions"
 
-#: clients/views/documents.py:585
+#: clients/views/documents.py:592
 msgid "Document is not awaiting confirmation."
 msgstr "Documents awaiting verification"
 
-#: clients/views/documents.py:619
+#: clients/views/documents.py:626
 msgid "Документ успешно отклонён."
 msgstr "The document has been rejected successfully."
 
-#: clients/views/documents.py:621
+#: clients/views/documents.py:628
 msgid "Документ отклонён."
 msgstr "Document rejected."
 
-#: clients/views/documents.py:624 clients/views/documents.py:625
+#: clients/views/documents.py:631 clients/views/documents.py:632
 msgid "Укажите причину отклонения."
 msgstr "Please specify the rejection reason."
 
@@ -11265,35 +11281,35 @@ msgstr "Zaświadczenie ze szkoły, jeśli dziecko jest w wieku szkolnym"
 msgid "Zgoda przedstawiciela ustawowego na złożenie wniosku przez sponsora, jeśli dziecko przebywa poza Polską"
 msgstr "Zgoda przedstawiciela ustawowego na złożenie wniosku przez sponsora, jeśli dziecko przebywa poza Polską"
 
-#: legalize_site/context_processors.py:182
+#: legalize_site/context_processors.py:193
 msgid "Документы ждут проверки"
 msgstr "Documents awaiting review"
 
-#: legalize_site/context_processors.py:208
+#: legalize_site/context_processors.py:219
 msgid "Ошибки отправки email"
 msgstr "Email delivery errors"
 
-#: legalize_site/context_processors.py:216
+#: legalize_site/context_processors.py:227
 msgid "Письмо по отпечаткам не отправлено"
 msgstr "Fingerprints email not sent"
 
-#: legalize_site/context_processors.py:242
+#: legalize_site/context_processors.py:253
 msgid "Wezwanie без номера дела"
 msgstr "Wezwanie without a case number"
 
-#: legalize_site/context_processors.py:300
+#: legalize_site/context_processors.py:311
 msgid "OCR требует подтверждения"
 msgstr "Pending verification"
 
-#: legalize_site/context_processors.py:313
+#: legalize_site/context_processors.py:324
 msgid "OCR предупреждения"
 msgstr "Clients with OCR warnings"
 
-#: legalize_site/context_processors.py:326
+#: legalize_site/context_processors.py:338
 msgid "OCR обрабатывается"
 msgstr "OCR is processed"
 
-#: legalize_site/context_processors.py:340
+#: legalize_site/context_processors.py:352
 msgid "OCR с ошибкой"
 msgstr "OCR failed"
 
@@ -12364,3 +12380,9 @@ msgstr "user"
 #: users/models.py:88
 msgid "users"
 msgstr "users"
+
+#~ msgid "Подтвердить работодателя"
+#~ msgstr "Confirm employer"
+
+#~ msgid "Имя в документе не совпадает с профилем"
+#~ msgstr "Document name does not match profile"
