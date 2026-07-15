@@ -320,7 +320,9 @@ class NewOcrWorkflowsTests(TestCase):
         call_command("process_document_jobs")
 
         doc.refresh_from_db()
-        self.assertTrue(doc.ocr_name_mismatch)
+        # Generic ZUS warnings are not a client-name mismatch: Jan Kowalski
+        # was matched successfully in this fixture.
+        self.assertFalse(doc.ocr_name_mismatch)
         warnings = doc.parsed_data["warnings"]
         self.assertTrue(any("does not match contract NIP" in w for w in warnings))
         self.assertTrue(any("non-standard employment type" in w for w in warnings))
