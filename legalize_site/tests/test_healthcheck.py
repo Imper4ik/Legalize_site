@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from clients.management.commands.run_background_automation_loop import HEARTBEAT_CACHE_KEY
 from clients.models import Client, Document, DocumentProcessingJob, EmailCampaign
 
 
@@ -79,6 +80,7 @@ class HealthcheckViewTests(TestCase):
         self.assertEqual(payload["status"], "ok")
         self.assertIn("database", payload["components"])
         self.assertIn("cache", payload["components"])
+        self.assertIn("background_automation", payload["components"])
         self.assertIn("runtime", payload["components"])
         self.assertEqual(payload["components"]["database"]["status"], "ok")
 
@@ -106,3 +108,25 @@ class HealthcheckViewTests(TestCase):
             payload["components"]["cache"]["backend"],
             "django.core.cache.backends.db.DatabaseCache",
         )
+
+    @override_settings(DEBUG=True, IS_PRODUCTION=True)
+    @patch.dict("os.environ", {"ENABLE_BACKGROUND_AUTOMATION_LOOP": "true"}, clear=False)
+    def test_production_readiness_fails_when_background_heartbeat_is_missing(self):
+        from django.core.cache import cache
+
+        cache.delete(HEARTBEAT_CACHE_KEY)
+        response = self.client.get(reverse("readiness"))
+
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json()["components"]["background_automation"]["status"], "error")
+
+    @override_settings(DEBUG=True, IS_PRODUCTION=True)
+    @patch.dict("os.environ", {"ENABLE_BACKGROUND_AUTOMATION_LOOP": "true"}, clear=False)
+    def test_production_readiness_accepts_fresh_background_heartbeat(self):
+        from django.core.cache import cache
+
+        cache.set(HEARTBEAT_CACHE_KEY, "2026-07-15T12:00:00+00:00", timeout=300)
+        response = self.client.get(reverse("readiness"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["components"]["background_automation"]["status"], "ok")
