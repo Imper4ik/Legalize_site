@@ -4424,13 +4424,11 @@ msgstr "OCR review"
 
 #: clients/templates/clients/case_detail.html:224
 #: clients/templates/clients/partials/document_checklist.html:60
-#| msgid "Перейти к документу: проверьте и подтвердите файл"
 msgid "Перейти к документу с предупреждением OCR"
 msgstr "Go to the document with an OCR warning"
 
 #: clients/templates/clients/case_detail.html:224
 #: clients/templates/clients/partials/document_checklist.html:60
-#| msgid "OCR предупреждения"
 msgid "OCR-предупреждение"
 msgstr "OCR warning"
 
@@ -4478,7 +4476,6 @@ msgstr "OCR could not reliably confirm that the name matches the profile. Check 
 
 #: clients/templates/clients/case_detail.html:239
 #: clients/templates/clients/partials/document_checklist.html:123
-#| msgid "Не подтвержден"
 msgid "Имя не подтверждено OCR"
 msgstr "Name not confirmed by OCR"
 
