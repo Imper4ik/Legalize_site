@@ -80,4 +80,4 @@ class EmployerChangeCandidate(models.Model):
 
     @property
     def proposed_label(self) -> str:
-        return self.proposed_name or (f"NIP {self.proposed_nip}" if self.proposed_nip else _("Не определён"))
+        return str(self.proposed_name or (f"NIP {self.proposed_nip}" if self.proposed_nip else _("Не определён")))
