@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Legalize Site\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-15 16:23+0200\n"
+"POT-Creation-Date: 2026-07-14 11:59+0200\n"
 "PO-Revision-Date: 2026-07-10 23:42+0200\n"
 "Last-Translator: Legalize Site Team\n"
 "Language-Team: English\n"
@@ -25,91 +25,87 @@ msgstr "Demo Center requires a superuser."
 msgid "Another Demo Center run or cleanup is already in progress."
 msgstr "Another Demo Center run or cleanup is already in progress."
 
-#: clients/forms/case_client_forms.py:32 clients/forms/case_client_forms.py:162
+#: clients/forms/case_client_forms.py:32 clients/forms/case_client_forms.py:163
 #: clients/models/client.py:197 clients/models/document.py:436
 #: clients/templates/clients/case_detail.html:194
 #: clients/templates/clients/document_checklist_manage.html:72
 msgid "Цель подачи"
 msgstr "Purpose of application"
 
-#: clients/forms/case_client_forms.py:35
-#: clients/templates/clients/mos_review.html:332
-#, fuzzy
-#| msgid "Телефон работодателя"
-msgid "Название работодателя"
-msgstr "Employer phone"
-
 #: clients/forms/case_client_forms.py:36
+#: clients/templates/clients/mos_review.html:332
+msgid "Название работодателя"
+msgstr "Employer name"
+
+#: clients/forms/case_client_forms.py:37
 msgid "Введите название, если компании ещё нет в списке"
-msgstr ""
+msgstr "Enter a name if the company is not yet in the list."
 
-#: clients/forms/case_client_forms.py:39
-#, fuzzy
-#| msgid "NIP работодателя:"
+#: clients/forms/case_client_forms.py:40
 msgid "NIP работодателя"
-msgstr "Employer phone"
+msgstr "Employer NIP"
 
-#: clients/forms/case_client_forms.py:45
+#: clients/forms/case_client_forms.py:46
 msgid "Дата подачи (Złożone)"
 msgstr "Submission date (Złożone)"
 
-#: clients/forms/case_client_forms.py:48 clients/forms/case_client_forms.py:54
-#: clients/forms/case_client_forms.py:63 clients/forms/case_client_forms.py:173
-#: clients/forms/case_client_forms.py:179
-#: clients/forms/case_client_forms.py:251
+#: clients/forms/case_client_forms.py:49 clients/forms/case_client_forms.py:55
+#: clients/forms/case_client_forms.py:64 clients/forms/case_client_forms.py:174
+#: clients/forms/case_client_forms.py:180
+#: clients/forms/case_client_forms.py:252
 msgid "дд.мм.гггг"
 msgstr "dd.mm.yyyy"
 
-#: clients/forms/case_client_forms.py:51
+#: clients/forms/case_client_forms.py:52
 msgid "Дата сдачи отпечатков"
 msgstr "Date of fingerprints submission"
 
-#: clients/forms/case_client_forms.py:60
+#: clients/forms/case_client_forms.py:61
 msgid "Дата решения (Decyzja)"
 msgstr "Decision date (Decyzja)"
 
-#: clients/forms/case_client_forms.py:96
+#: clients/forms/case_client_forms.py:97
 #: clients/templates/clients/onboarding/purpose.html:10
 msgid "Выберите цель подачи"
 msgstr "Choose the application purpose"
 
-#: clients/forms/case_client_forms.py:112
+#: clients/forms/case_client_forms.py:113
 msgid "Not a family case"
 msgstr "Not a family case"
 
-#: clients/forms/case_client_forms.py:112 clients/models/case.py:110
+#: clients/forms/case_client_forms.py:113 clients/models/case.py:110
 msgid "Sponsor"
 msgstr "Sponsor"
 
-#: clients/forms/case_client_forms.py:112 clients/models/case.py:111
+#: clients/forms/case_client_forms.py:113 clients/models/case.py:111
 msgid "Spouse"
 msgstr "Spouse"
 
-#: clients/forms/case_client_forms.py:112 clients/models/case.py:112
+#: clients/forms/case_client_forms.py:113 clients/models/case.py:112
 msgid "Child"
 msgstr "Child"
 
-#: clients/forms/case_client_forms.py:133 clients/models/case.py:203
+#: clients/forms/case_client_forms.py:134 clients/models/case.py:203
 msgid "Unknown family role."
 msgstr "Unknown family role."
 
-#: clients/forms/case_client_forms.py:135 clients/models/case.py:205
+#: clients/forms/case_client_forms.py:136 clients/models/case.py:205
 msgid "Family role is required for family cases."
 msgstr "Family role is required for family cases."
 
-#: clients/forms/case_client_forms.py:137 clients/models/case.py:207
+#: clients/forms/case_client_forms.py:138 clients/models/case.py:207
 msgid "Family role is only allowed for family cases."
 msgstr "Family role is only allowed for family cases."
 
-#: clients/forms/case_client_forms.py:156
+#: clients/forms/case_client_forms.py:157
 msgid "NIP должен содержать 10 цифр."
-msgstr ""
+msgstr "NIP must contain 10 digits."
 
-#: clients/forms/case_client_forms.py:170 clients/models/client.py:213
+#: clients/forms/case_client_forms.py:171 clients/models/client.py:213
 msgid "Дата окончания основания"
 msgstr "Basis end date"
 
-#: clients/forms/case_client_forms.py:176 clients/models/client.py:190
+#: clients/forms/case_client_forms.py:177 clients/models/client.py:190
 #: clients/templates/clients/mos_review.html:55
 #: clients/templates/clients/onboarding/passport.html:92
 #: clients/templates/clients/partials/client_overview.html:268
@@ -117,23 +113,23 @@ msgstr "Basis end date"
 msgid "Дата рождения"
 msgstr "Date of birth"
 
-#: clients/forms/case_client_forms.py:281
+#: clients/forms/case_client_forms.py:282
 msgid "Select a family role."
 msgstr "Select a family role."
 
-#: clients/forms/case_client_forms.py:286
+#: clients/forms/case_client_forms.py:287
 msgid "Select a sponsor."
 msgstr "Select a sponsor."
 
-#: clients/forms/case_client_forms.py:290
+#: clients/forms/case_client_forms.py:291
 msgid "Family members must be spouse or child."
 msgstr "Family members must be spouse or child."
 
-#: clients/forms/case_client_forms.py:306 clients/models/client.py:534
+#: clients/forms/case_client_forms.py:307 clients/models/client.py:534
 msgid "A client cannot sponsor themselves."
 msgstr "A client cannot sponsor themselves."
 
-#: clients/forms/case_client_forms.py:316 clients/models/client.py:540
+#: clients/forms/case_client_forms.py:317 clients/models/client.py:540
 msgid "Sponsor relationship cannot create a cycle."
 msgstr "Sponsor relationship cannot create a cycle."
 
@@ -1573,7 +1569,7 @@ msgstr "Basis of stay (visa, TRC, etc.)"
 msgid "Язык документов"
 msgstr "Document language"
 
-#: clients/models/client.py:212 clients/models/company.py:24
+#: clients/models/client.py:212 clients/models/company.py:23
 #: clients/templates/clients/partials/modals.html:33 submissions/models.py:30
 #: submissions/models.py:93
 #: submissions/templates/submissions/submission_list.html:21
@@ -1669,17 +1665,17 @@ msgstr "Awaiting action from the client or the authority"
 msgid "Проверить подачу"
 msgstr "Review submission"
 
-#: clients/models/company.py:19
+#: clients/models/company.py:18
 #: clients/templates/clients/onboarding/travel.html:33
 msgid "Название компании"
 msgstr "Company name"
 
-#: clients/models/company.py:27 clients/templates/clients/case_detail.html:197
+#: clients/models/company.py:26 clients/templates/clients/case_detail.html:197
 #: clients/templates/clients/clients_list.html:136
 msgid "Компания"
 msgstr "Company"
 
-#: clients/models/company.py:28
+#: clients/models/company.py:27
 msgid "Компании"
 msgstr "Companies"
 
@@ -2088,40 +2084,28 @@ msgid "Ожидает проверки"
 msgstr "Pending verification"
 
 #: clients/models/employer.py:44
-#, fuzzy
-#| msgid "Подписант не подтвержден"
 msgid "Новый работодатель подтверждён"
-msgstr "Pending verification"
+msgstr "New employer confirmed"
 
 #: clients/models/employer.py:45
-#, fuzzy
-#| msgid "Телефон работодателя"
 msgid "Тот же работодатель"
-msgstr "Employer phone"
+msgstr "Same employer"
 
 #: clients/models/employer.py:46 clients/templates/clients/case_detail.html:167
-#, fuzzy
-#| msgid "Распознавание..."
 msgid "Ошибка распознавания"
-msgstr "Recognizing..."
+msgstr "Recognition error"
 
 #: clients/models/employer.py:47
-#, fuzzy
-#| msgid "Основная информация"
 msgid "Нужна информация"
-msgstr "Basic Information"
+msgstr "Information required"
 
 #: clients/models/employer.py:48
-#, fuzzy
-#| msgid "Загружено"
 msgid "Отложено"
-msgstr "Uploaded"
+msgstr "Deferred"
 
 #: clients/models/employer.py:83
-#, fuzzy
-#| msgid "Не отправлено"
 msgid "Не определён"
-msgstr "Sent"
+msgstr "Not identified"
 
 #: clients/models/family.py:21
 msgid "Доход спонсора"
@@ -2535,10 +2519,8 @@ msgid "Контроль дедлайна"
 msgstr "Deadline control"
 
 #: clients/models/task.py:50
-#, fuzzy
-#| msgid "Проверка работодателя (KRS/CEIDG):"
 msgid "Проверка работодателя"
-msgstr "Employer phone"
+msgstr "Employer review"
 
 #: clients/models/task.py:71
 msgid "Тип задачи"
@@ -3024,57 +3006,57 @@ msgstr "ZUS RCA for %(month)s already exists. OCR month is shown below but was n
 msgid "ZUS month was saved automatically: %(month)s"
 msgstr "ZUS month was saved automatically: %(month)s"
 
-#: clients/services/employers.py:68
-#, fuzzy
-#| msgid "Дослать документы после отпечатков"
+#: clients/services/employers.py:65
 msgid "Уточнить работодателя до отпечатков"
-msgstr "Submit documents after fingerprints"
+msgstr "Confirm employer before fingerprints"
 
-#: clients/services/employers.py:69
-msgid "Работодатель не был указан при подаче. Его можно внести при проверке анкеты или на этапе отпечатков."
-msgstr ""
+#: clients/services/employers.py:66
+msgid ""
+"Работодатель не был указан при подаче. Его можно внести при проверке анкеты "
+"или на этапе отпечатков."
+msgstr "The employer was not provided on submission. It can be added during form review or at the fingerprints stage."
 
-#: clients/services/employers.py:151
-#, fuzzy, python-format
-#| msgid "Проверка работодателя (KRS/CEIDG):"
+#: clients/services/employers.py:144
+#, python-format
 msgid "Проверить нового работодателя: %(employer)s"
-msgstr "Employer phone"
+msgstr "Review new employer: %(employer)s"
 
-#: clients/services/employers.py:152
-#, fuzzy, python-format
-#| msgid "Проверка работодателя (KRS/CEIDG):"
+#: clients/services/employers.py:145
+#, python-format
 msgid "Подтвердить работодателя: %(employer)s"
-msgstr "Employer phone"
+msgstr "Confirm employer: %(employer)s"
 
-#: clients/services/employers.py:155
-msgid "Система обнаружила работодателя, отличающегося от указанного в деле. Текущий работодатель не изменён."
-msgstr ""
+#: clients/services/employers.py:148
+msgid ""
+"Система обнаружила работодателя, отличающегося от указанного в деле. Текущий "
+"работодатель не изменён."
+msgstr "The system detected an employer different from the one recorded in the case. The current employer was not changed."
 
-#: clients/services/employers.py:156
-#, fuzzy
-#| msgid "Новая подача требует проверки дела"
+#: clients/services/employers.py:149
 msgid "Работодатель указан впервые и требует проверки сотрудником."
-msgstr "New application requires case review"
+msgstr "The employer was provided for the first time and requires staff review."
 
-#: clients/services/employers.py:175
-#, fuzzy
-#| msgid "Телефон работодателя"
+#: clients/services/employers.py:168
 msgid "Неизвестное решение по работодателю."
-msgstr "Employer phone"
+msgstr "Unknown employer review decision."
+
+#: clients/services/employers.py:176
+msgid "Эта проверка работодателя уже обработана."
+msgstr "This employer review has already been processed."
+
+#: clients/services/employers.py:179
+msgid "Нельзя изменить работодателя в архивном деле."
+msgstr "The employer cannot be changed in an archived case."
 
 #: clients/services/employers.py:183
-#, fuzzy
-#| msgid "Проверка работодателя (KRS/CEIDG):"
-msgid "Эта проверка работодателя уже обработана."
-msgstr "Employer phone"
-
-#: clients/services/employers.py:186
-msgid "Нельзя изменить работодателя в архивном деле."
-msgstr ""
-
-#: clients/services/employers.py:190
 msgid "Нельзя подтвердить работодателя для закрытого или нерабочего дела."
-msgstr ""
+msgstr "An employer cannot be confirmed for a closed or non-work case."
+
+#: clients/services/employers.py:185
+msgid ""
+"Нельзя отметить работодателя как прежнего: в деле ещё нет подтверждённого "
+"работодателя."
+msgstr "The employer cannot be marked as unchanged because the case has no confirmed employer yet."
 
 #: clients/services/family.py:132 clients/services/family.py:139
 #: clients/templates/clients/family_dashboard.html:175
@@ -3308,10 +3290,8 @@ msgid "Контроль дедлайна по везванию"
 msgstr "Wezwanie deadline control"
 
 #: clients/services/tasks.py:90
-#, fuzzy
-#| msgid "Проверка работодателя (KRS/CEIDG):"
 msgid "Проверить работодателя"
-msgstr "Employer phone"
+msgstr "Review employer"
 
 #: clients/services/tasks.py:92
 msgid "Автоматическая задача"
@@ -4294,80 +4274,60 @@ msgid "Архивировать"
 msgstr "Archive"
 
 #: clients/templates/clients/case_detail.html:139
-#, fuzzy
-#| msgid "Компания / Работодатель"
 msgid "Возможный новый работодатель"
-msgstr "Company / Employer"
+msgstr "Possible new employer"
 
 #: clients/templates/clients/case_detail.html:139
-#, fuzzy
-#| msgid "Ожидает подтверждения"
 msgid "Работодатель ожидает подтверждения"
-msgstr "Pending verification"
+msgstr "Employer awaiting confirmation"
 
 #: clients/templates/clients/case_detail.html:140
-#, fuzzy
-#| msgid "Подтверждение отправки письма клиенту."
 msgid "До подтверждения работодатель в деле не изменится."
-msgstr "Confirmation of email sent to the client."
+msgstr "The employer recorded in the case will not change until confirmation."
 
 #: clients/templates/clients/case_detail.html:142
-#, fuzzy
-#| msgid "Требуется сотрудник"
 msgid "Требуется решение сотрудника"
-msgstr "All staff"
+msgstr "Staff decision required"
 
 #: clients/templates/clients/case_detail.html:146
-#, fuzzy
-#| msgid "Сейчас от вас нужно"
 msgid "Сейчас в деле"
-msgstr "Required from you now"
+msgstr "Currently in the case"
 
 #: clients/templates/clients/case_detail.html:151
-#, fuzzy
-#| msgid "Хранение документов в облаке"
 msgid "Найдено в документе или анкете"
-msgstr "Cloud document storage"
+msgstr "Found in document or form"
 
 #: clients/templates/clients/case_detail.html:154
-#, fuzzy
-#| msgid "Открыть чеклисты"
 msgid "Открыть документ-источник"
-msgstr "Open checklist"
+msgstr "Open source document"
 
 #: clients/templates/clients/case_detail.html:161
-#, fuzzy
-#| msgid "Ключевая дата изменена"
 msgid "Фактическая дата смены"
-msgstr "Key date changed"
+msgstr "Actual change date"
 
 #: clients/templates/clients/case_detail.html:162
 msgid "Что проверили или что нужно уточнить"
-msgstr ""
+msgstr "What was checked or what needs clarification"
 
 #: clients/templates/clients/case_detail.html:165
-#, fuzzy
-#| msgid "Подтвердить данные"
 msgid "Подтвердить нового"
-msgstr "Edit data"
+msgstr "Confirm new employer"
+
+#: clients/templates/clients/case_detail.html:165
+msgid "Подтвердить работодателя"
+msgstr "Confirm employer"
 
 #: clients/templates/clients/case_detail.html:166
-#, fuzzy
-#| msgid "Телефон работодателя"
 msgid "Это тот же работодатель"
-msgstr "Employer phone"
+msgstr "This is the same employer"
 
 #: clients/templates/clients/case_detail.html:168
-#, fuzzy
-#| msgid "Запросить исправления"
 msgid "Запросить информацию"
-msgstr "Date sent"
+msgstr "Request information"
 
 #: clients/templates/clients/case_detail.html:169
-#, fuzzy
-#| msgid "Завершить заполнение"
 msgid "Решить позже"
-msgstr "Complete the form"
+msgstr "Decide later"
 
 #: clients/templates/clients/case_detail.html:177
 #: clients/templates/clients/client_detail.html:55
@@ -4413,26 +4373,20 @@ msgid "Номер из предыдущей карточки"
 msgstr "Number from the previous record"
 
 #: clients/templates/clients/case_detail.html:200
-#, fuzzy
-#| msgid "Телефон работодателя"
 msgid "История работодателей"
-msgstr "Employer phone"
+msgstr "Employer history"
 
 #: clients/templates/clients/case_detail.html:205
-#, fuzzy
-#| msgid "Действует до:"
 msgid "действует с"
-msgstr "Valid until:"
+msgstr "effective from"
 
 #: clients/templates/clients/case_detail.html:205
-#, fuzzy
-#| msgid "Подтверждено"
 msgid "подтверждено"
-msgstr "Confirm deletion"
+msgstr "confirmed"
 
 #: clients/templates/clients/case_detail.html:205
 msgid "текущий"
-msgstr ""
+msgstr "current"
 
 #: clients/templates/clients/case_detail.html:213
 msgid "Документы по делу"
@@ -4759,26 +4713,22 @@ msgid "Назад"
 msgstr "Back"
 
 #: clients/templates/clients/case_form.html:74
-#, fuzzy
-#| msgid "Нет платежей по этому делу."
 msgid "Работодатель по этому делу"
-msgstr "No payments for this case."
+msgstr "Employer for this case"
 
 #: clients/templates/clients/case_form.html:74
-msgid "Выберите существующую компанию или введите новую. Новое название сначала попадёт сотруднику на проверку."
-msgstr ""
+msgid ""
+"Выберите существующую компанию или введите новую. Новое название сначала "
+"попадёт сотруднику на проверку."
+msgstr "Select an existing company or enter a new one. A new name will first be sent to staff for review."
 
 #: clients/templates/clients/case_form.html:79
-#, fuzzy
-#| msgid "Используйте корпоративные учетные данные для входа."
 msgid "Используйте этот вариант, если компания уже есть в базе."
-msgstr "Use your corporate login credentials."
+msgstr "Use this option if the company is already in the database."
 
 #: clients/templates/clients/case_form.html:86
-#, fuzzy
-#| msgid "Управление типами подачи и их локализованными названиями."
 msgid "NIP помогает отличить компании с похожими названиями."
-msgstr "Manage submission types and their localized names."
+msgstr "NIP helps distinguish companies with similar names."
 
 #: clients/templates/clients/case_form.html:96
 #: clients/templates/clients/document_checklist_manage.html:241
@@ -6886,8 +6836,10 @@ msgid "Подано в MOS"
 msgstr "Create"
 
 #: clients/templates/clients/mos_review.html:331
-msgid "В деле ещё нет подтверждённого работодателя. Укажите его сейчас — сотрудник получит задачу на проверку."
-msgstr ""
+msgid ""
+"В деле ещё нет подтверждённого работодателя. Укажите его сейчас — сотрудник "
+"получит задачу на проверку."
+msgstr "The case has no confirmed employer yet. Provide it now and a staff member will receive a review task."
 
 #: clients/templates/clients/mos_review.html:335
 msgid "Отпечатки сданы"
@@ -8554,42 +8506,34 @@ msgid "Текущее пребывание в Польше"
 msgstr "Current stay in Poland"
 
 #: clients/templates/clients/onboarding/travel.html:27
-#, fuzzy
-#| msgid "Телефон работодателя"
 msgid "Ваш текущий работодатель"
-msgstr "Employer phone"
+msgstr "Your current employer"
 
 #: clients/templates/clients/onboarding/travel.html:28
-msgid "Эти данные помогут заметить смену работодателя в документах. Если вы пока не знаете точное название, сможете указать его позже при сдаче отпечатков."
-msgstr ""
+msgid ""
+"Эти данные помогут заметить смену работодателя в документах. Если вы пока не "
+"знаете точное название, сможете указать его позже при сдаче отпечатков."
+msgstr "These details help detect an employer change in documents. If you do not know the exact name yet, you can provide it later at the fingerprints appointment."
 
 #: clients/templates/clients/onboarding/travel.html:34
-#, fuzzy
-#| msgid "Например: Marszałkowska"
 msgid "Например: ABC Polska Sp. z o.o."
-msgstr "For example: Marszałkowska"
+msgstr "Example: ABC Polska Sp. z o.o."
 
 #: clients/templates/clients/onboarding/travel.html:37
-#, fuzzy
-#| msgid "Компании"
 msgid "NIP компании"
-msgstr "Companies"
+msgstr "Company NIP"
 
 #: clients/templates/clients/onboarding/travel.html:37
-#, fuzzy
-#| msgid "Вы вышли из системы"
 msgid "если известен"
-msgstr "You have been logged out"
+msgstr "if known"
 
 #: clients/templates/clients/onboarding/travel.html:39
 msgid "10 цифр, можно ввести с дефисами."
-msgstr ""
+msgstr "10 digits; hyphens are allowed."
 
 #: clients/templates/clients/onboarding/travel.html:42
-#, fuzzy
-#| msgid "необязательный"
 msgid "необязательно"
-msgstr "Required Document"
+msgstr "optional"
 
 #: clients/templates/clients/onboarding/travel.html:43
 msgid "email@employer.com"
@@ -10160,7 +10104,7 @@ msgstr "Status: submitted in MOS."
 
 #: clients/views/admin_mos_review.py:275
 msgid "Enter the employer name before confirming fingerprints."
-msgstr ""
+msgstr "Enter the employer name before confirming fingerprints."
 
 #: clients/views/admin_mos_review.py:295
 msgid "Status: fingerprints completed."
@@ -10245,63 +10189,63 @@ msgstr "The payment has been restored from the archive."
 msgid "Доступ запрещен (требуется роль: %s)"
 msgstr "Access denied (role required: %s)"
 
-#: clients/views/cases.py:117
+#: clients/views/cases.py:131
 msgid "Case created."
 msgstr "Case created."
 
-#: clients/views/cases.py:173
+#: clients/views/cases.py:187
 msgid "Case updated."
 msgstr "Case updated."
 
-#: clients/views/cases.py:186
+#: clients/views/cases.py:200
 msgid "Case archived."
 msgstr "Case archived."
 
-#: clients/views/cases.py:197
+#: clients/views/cases.py:211
 msgid "No active archive batch found for this case."
 msgstr "No active archive batch found for this case."
 
-#: clients/views/cases.py:200
+#: clients/views/cases.py:214
 msgid "Case restored."
 msgstr "Case restored."
 
-#: clients/views/cases.py:214
+#: clients/views/cases.py:228
 msgid "Invalid employer effective date."
-msgstr ""
+msgstr "Invalid employer effective date."
 
-#: clients/views/cases.py:225
+#: clients/views/cases.py:239
 msgid "Employer review saved."
-msgstr ""
+msgstr "Employer review saved."
 
-#: clients/views/cases.py:231
+#: clients/views/cases.py:245
 msgid "Collect basic case data."
 msgstr "Collect basic case data."
 
-#: clients/views/cases.py:232
+#: clients/views/cases.py:246
 msgid "Collect and verify required documents."
 msgstr "Collect and verify required documents."
 
-#: clients/views/cases.py:233
+#: clients/views/cases.py:247
 msgid "Track authority confirmation and prepare fingerprints."
 msgstr "Track authority confirmation and prepare fingerprints."
 
-#: clients/views/cases.py:234
+#: clients/views/cases.py:248
 msgid "Confirm fingerprints appointment."
 msgstr "Confirm fingerprints appointment."
 
-#: clients/views/cases.py:235
+#: clients/views/cases.py:249
 msgid "Monitor decision deadline."
 msgstr "Monitor decision deadline."
 
-#: clients/views/cases.py:236
+#: clients/views/cases.py:250
 msgid "Review decision and close follow-up tasks."
 msgstr "Review decision and close follow-up tasks."
 
-#: clients/views/cases.py:237
+#: clients/views/cases.py:251
 msgid "No active action."
 msgstr "No active action."
 
-#: clients/views/cases.py:238
+#: clients/views/cases.py:252
 msgid "Review case status."
 msgstr "Review case status."
 
@@ -10938,9 +10882,9 @@ msgstr "Invalid or expired onboarding link."
 #: clients/views/onboarding_step_return.py:240
 #: clients/views/onboarding_step_return.py:274
 #: clients/views/onboarding_step_return.py:311
-#: clients/views/onboarding_step_return.py:392
-#: clients/views/onboarding_step_return.py:492
-#: clients/views/onboarding_step_return.py:558
+#: clients/views/onboarding_step_return.py:390
+#: clients/views/onboarding_step_return.py:490
+#: clients/views/onboarding_step_return.py:556
 #: clients/views/onboarding_views.py:80 clients/views/onboarding_views.py:198
 #: clients/views/onboarding_views.py:336 clients/views/onboarding_views.py:365
 #: clients/views/onboarding_views.py:599
@@ -10961,32 +10905,32 @@ msgstr "File upload failed: %(errors)s"
 msgid "Invalid date format for legal stay. Expected YYYY-MM-DD."
 msgstr "Invalid date format for legal stay. Expected YYYY-MM-DD."
 
-#: clients/views/onboarding_step_return.py:430
+#: clients/views/onboarding_step_return.py:428
 msgid "Чтобы завершить анкету, необходимо согласие на обработку персональных данных."
 msgstr "Consent to the processing of personal data is required to complete the form."
 
-#: clients/views/onboarding_step_return.py:504
-#: clients/views/onboarding_step_return.py:588
+#: clients/views/onboarding_step_return.py:502
+#: clients/views/onboarding_step_return.py:586
 msgid "Некорректный запрос."
 msgstr "Invalid request."
 
-#: clients/views/onboarding_step_return.py:518
+#: clients/views/onboarding_step_return.py:516
 msgid "Согласие обновлено."
 msgstr "Consent updated."
 
-#: clients/views/onboarding_step_return.py:518
+#: clients/views/onboarding_step_return.py:516
 msgid "Согласие отозвано."
 msgstr "Consent withdrawn."
 
-#: clients/views/onboarding_step_return.py:585
+#: clients/views/onboarding_step_return.py:583
 msgid "Запрос на удаление данных получен. Мы свяжемся с вами."
 msgstr "We received your erasure request and will contact you."
 
-#: clients/views/onboarding_step_return.py:608
+#: clients/views/onboarding_step_return.py:606
 msgid "Запрос на удаление данных (RODO art. 17)"
 msgstr "Data erasure request (GDPR Art. 17)"
 
-#: clients/views/onboarding_step_return.py:609
+#: clients/views/onboarding_step_return.py:607
 msgid "Субъект данных запросил удаление своих данных через личный кабинет."
 msgstr "The data subject requested erasure of their data through the client portal."
 
@@ -12433,31 +12377,3 @@ msgstr "user"
 msgid "users"
 msgstr "users"
 
-#~ msgid "Укажите контактный email отдела кадров или вашего работодателя."
-#~ msgstr "Enter the contact email of the HR department or your employer."
-
-#~ msgid "Анкета по этой ссылке уже отправлена. Войдите в личный кабинет, чтобы продолжить."
-#~ msgstr "The form at this link has already been submitted. Log in to the client portal to continue."
-
-#, python-brace-format
-#~ msgid "Произошла ошибка при сохранении аккаунта: {error}"
-#~ msgstr "An error occurred while saving the account: {error}"
-
-#~ msgid "Для ZUS RCA укажите месяц отчёта (для страхового полиса можно оставить пустым)."
-#~ msgstr "For ZUS RCA, specify the reporting month (for an insurance policy it can be left blank)."
-
-#~ msgid "ZUS RCA — месяц отчёта"
-#~ msgstr "ZUS RCA — reporting month"
-
-# Additional client-list and case-creation actions.
-#~ msgid "Client intake form"
-#~ msgstr "Client intake form"
-
-#~ msgid "Сначала сохраните клиента, затем переведите дело на следующий этап."
-#~ msgstr "Save the client first, then move the case to the next stage."
-
-#~ msgid "Децизия получена"
-#~ msgstr "Decision received"
-
-#~ msgid "Загрузить документ"
-#~ msgstr "Upload document"
