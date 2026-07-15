@@ -293,10 +293,25 @@ def build_case_document_checklist(
             ),
             None,
         )
+        warning_document = next(
+            (
+                document
+                for document in active_documents
+                if not getattr(document, "awaiting_confirmation", False)
+                and document.ocr_status != "failed"
+                and (
+                    getattr(document, "ocr_name_mismatch", False)
+                    or bool((getattr(document, "parsed_data", None) or {}).get("warnings"))
+                )
+            ),
+            None,
+        )
         row["has_ocr_review"] = ocr_document is not None
         row["needs_verification"] = verification_document is not None
+        row["has_ocr_warning"] = warning_document is not None
         row["ocr_review_doc_id"] = ocr_document.id if ocr_document is not None else None
         row["verification_doc_id"] = verification_document.id if verification_document is not None else None
+        row["ocr_warning_doc_id"] = warning_document.id if warning_document is not None else None
         row["zus_missing_count"] = 0
         if zus_missing and row.get("code") == zus_code:
             row["is_complete"] = False

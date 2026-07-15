@@ -201,5 +201,6 @@ class CompanyDocWorkflowTests(TestCase):
         registry = doc.parsed_data["registry_verification"]
 
         # Verify low salary warning
-        self.assertTrue(doc.ocr_name_mismatch) # Indicates warnings
+        # A salary warning must not be presented as a person's name mismatch.
+        self.assertFalse(doc.ocr_name_mismatch)
         self.assertTrue(any("below the statutory minimum" in w for w in registry["warnings"]))

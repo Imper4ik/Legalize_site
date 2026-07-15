@@ -56,6 +56,9 @@
       {% if item.has_ocr_review %}
       <span class="badge bg-danger checklist-jump" role="button" tabindex="0" data-jump-doc="{{ item.ocr_review_doc_id }}" data-jump-action="ocr" title="{% translate 'Перейти к документу: подтвердите распознанные OCR данные' %}"><i class="bi bi-cpu me-1"></i>{% translate "OCR-проверка" %}</span>
       {% endif %}
+      {% if item.has_ocr_warning %}
+      <span class="badge bg-danger checklist-jump" role="button" tabindex="0" data-jump-doc="{{ item.ocr_warning_doc_id }}" data-jump-action="warning" title="{% translate 'Перейти к документу с предупреждением OCR' %}"><i class="bi bi-exclamation-triangle me-1"></i>{% translate "OCR-предупреждение" %}</span>
+      {% endif %}
       {% if item.needs_verification %}
       <span class="badge bg-warning text-dark checklist-jump" role="button" tabindex="0" data-jump-doc="{{ item.verification_doc_id }}" data-jump-action="verify" title="{% translate 'Перейти к документу: проверьте и подтвердите файл' %}"><i class="bi bi-hourglass-split me-1"></i>{% translate "Ждёт проверки" %}</span>
       {% endif %}
@@ -116,8 +119,8 @@
             </div>
             {% endif %}
             {% if doc.ocr_name_mismatch %}
-            <span class="badge bg-danger ms-2" title="{% translate 'Имя в документе не совпадает с профилем' %}">
-              <i class="bi bi-exclamation-triangle"></i> OCR Mismatch
+            <span class="badge bg-danger ms-2" title="{% translate 'OCR не смог надёжно подтвердить совпадение имени с профилем. Проверьте документ вручную.' %}">
+              <i class="bi bi-exclamation-triangle"></i> {% translate "Имя не подтверждено OCR" %}
             </span>
             {% endif %}
             {% if doc.ocr_status != 'skipped' %}

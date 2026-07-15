@@ -38,6 +38,17 @@ class ChecklistReviewBadgeTests(TestCase):
         self.review_doc.verified = False
         self.review_doc.save(update_fields=["awaiting_confirmation", "verified"])
 
+        self.warning_doc = create_test_document(
+            self.client_obj, case=self.case, doc_type=DocumentType.ZUS_RCA_OR_INSURANCE.value
+        )
+        self.warning_doc.verified = True
+        self.warning_doc.ocr_status = "success"
+        self.warning_doc.ocr_name_mismatch = True
+        self.warning_doc.parsed_data = {"warnings": ["Name needs manual review"]}
+        self.warning_doc.save(
+            update_fields=["verified", "ocr_status", "ocr_name_mismatch", "parsed_data"]
+        )
+
     def test_checklist_flags_separate_ocr_from_verification(self) -> None:
         rows = {r["code"]: r for r in self.client_obj.get_document_checklist(case=self.case)}
         passport = rows[DocumentType.PASSPORT.value]
@@ -48,6 +59,9 @@ class ChecklistReviewBadgeTests(TestCase):
 
         self.assertFalse(umowa["has_ocr_review"])
         self.assertTrue(umowa["needs_verification"])
+        zus = rows[DocumentType.ZUS_RCA_OR_INSURANCE.value]
+        self.assertTrue(zus["has_ocr_warning"])
+        self.assertEqual(zus["ocr_warning_doc_id"], self.warning_doc.id)
 
     def test_checklist_rows_expose_the_problem_document_ids(self) -> None:
         rows = {r["code"]: r for r in self.client_obj.get_document_checklist(case=self.case)}
@@ -67,7 +81,12 @@ class ChecklistReviewBadgeTests(TestCase):
         body = resp.content.decode()
         self.assertIn("OCR-проверка", body)
         self.assertIn("Ждёт проверки", body)
+        self.assertIn("OCR-предупреждение", body)
         # The badges are clickable and point at the exact problem document.
         self.assertIn('data-jump-doc="%d" data-jump-action="ocr"' % self.ocr_doc.id, body)
         self.assertIn('data-jump-doc="%d" data-jump-action="verify"' % self.review_doc.id, body)
         self.assertIn('id="doc-row-%d"' % self.ocr_doc.id, body)
+        self.assertIn(
+            'data-jump-doc="%d" data-jump-action="warning"' % self.warning_doc.id,
+            body,
+        )

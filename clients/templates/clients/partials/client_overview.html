@@ -225,6 +225,8 @@
       {% endif %}
       {% if new_card.new_residence_card_case_number %}
       <span class="client-summary-note">{% translate "Номер дела" %}: {{ new_card.new_residence_card_case_number }}</span>
+      {% elif active_case_number %}
+      <span class="client-summary-note">{% translate "Номер дела" %}: {{ active_case_number }}</span>
       {% elif new_card.new_residence_card_application_status == "yes" %}
       <span class="client-summary-note">{% translate "Номер дела не указан; если были отпечатки, проверьте присоединение к делу" %}</span>
       {% endif %}

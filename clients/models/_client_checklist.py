@@ -243,11 +243,26 @@ def build_document_checklist(
              and not getattr(doc, "awaiting_confirmation", False)),
             None,
         )
+        warning_doc = next(
+            (
+                doc
+                for doc in active_docs
+                if not getattr(doc, "awaiting_confirmation", False)
+                and doc.ocr_status != "failed"
+                and (
+                    getattr(doc, "ocr_name_mismatch", False)
+                    or bool((getattr(doc, "parsed_data", None) or {}).get("warnings"))
+                )
+            ),
+            None,
+        )
         row["has_ocr_review"] = ocr_doc is not None
         row["needs_verification"] = verify_doc is not None
+        row["has_ocr_warning"] = warning_doc is not None
         # The exact document a status badge should jump to ("веди на проблему").
         row["ocr_review_doc_id"] = ocr_doc.id if ocr_doc is not None else None
         row["verification_doc_id"] = verify_doc.id if verify_doc is not None else None
+        row["ocr_warning_doc_id"] = warning_doc.id if warning_doc is not None else None
 
         # ZUS RCA: a missing required month keeps the row incomplete (not green)
         # even when some months are already uploaded.

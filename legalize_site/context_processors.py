@@ -13,7 +13,14 @@ from django.utils.translation import gettext as _
 logger = logging.getLogger(__name__)
 
 
-def _attention_item_url(filtered_qs: Any, list_url: str, count: int, anchor: str) -> str:
+def _attention_item_url(
+    filtered_qs: Any,
+    list_url: str,
+    count: int,
+    anchor: str,
+    *,
+    document_filter: dict[str, Any] | None = None,
+) -> str:
     """URL for a client-attention notification.
 
     With a single matching client, link straight to that client's relevant tab
@@ -24,6 +31,10 @@ def _attention_item_url(filtered_qs: Any, list_url: str, count: int, anchor: str
     if count == 1:
         client = filtered_qs.only("pk").first()
         if client is not None:
+            if document_filter:
+                document = client.documents.filter(**document_filter).order_by("-uploaded_at").only("pk").first()
+                if document is not None:
+                    anchor = f"#doc-row-{document.pk}"
             return f"{reverse('clients:client_detail', kwargs={'pk': client.pk})}?view=person{anchor}"
     return list_url
 
@@ -317,6 +328,7 @@ def onboarding_notifications(request: HttpRequest) -> dict[str, Any]:
                     f"{client_list_url}?document=ocr_warning",
                     ocr_warning_count,
                     "#documentAccordion",
+                    document_filter={"ocr_name_mismatch": True, "archived_at__isnull": True},
                 ),
                 "icon": "bi-exclamation-triangle",
                 "level": "danger",
@@ -400,5 +412,4 @@ def prefilled_email(request: HttpRequest) -> dict[str, Any]:
     if hasattr(request, "session"):
         email = request.session.pop("prefilled_email", "")
     return {"prefilled_email": email}
-
 
