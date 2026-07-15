@@ -511,7 +511,7 @@ msgid "Отправить письмо клиенту"
 msgstr "Send an email to the client"
 
 #: clients/models/_client_health.py:304
-#: clients/tests/test_priority_12_13_workflow.py:356
+#: clients/tests/test_priority_12_13_workflow.py:358
 #: legalize_site/context_processors.py:195
 msgid "Просроченные оплаты"
 msgstr "Overdue payments"
@@ -539,7 +539,7 @@ msgid "Открыть историю писем"
 msgstr "Email history"
 
 #: clients/models/_client_health.py:337
-#: clients/tests/test_priority_12_13_workflow.py:355 clients/views/family.py:68
+#: clients/tests/test_priority_12_13_workflow.py:357 clients/views/family.py:68
 msgid "Не все документы собраны"
 msgstr "Not all documents collected"
 
@@ -11345,11 +11345,11 @@ msgstr "Too many intake link requests. Try again later."
 msgid "Too many intake submissions. Try again later."
 msgstr "Too many intake submissions. Try again later."
 
-#: legalize_site/views.py:132 legalize_site/views.py:149
+#: legalize_site/views.py:159 legalize_site/views.py:176
 msgid "Сессия истекла или защитный токен недействителен. Обновите страницу и повторите действие."
 msgstr "The session has expired or the security token is invalid. Refresh the page and repeat the action."
 
-#: legalize_site/views.py:147
+#: legalize_site/views.py:174
 msgid "Ошибка безопасности"
 msgstr "Security error"
 
