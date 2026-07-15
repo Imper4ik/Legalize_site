@@ -162,8 +162,8 @@
             <div><label class="form-label small fw-semibold" for="employer-note-{{ candidate.pk }}">{% translate "Комментарий" %}</label><input id="employer-note-{{ candidate.pk }}" type="text" name="note" class="form-control form-control-sm" value="{{ candidate.review_note }}" maxlength="1000" placeholder="{% translate 'Что проверили или что нужно уточнить' %}"></div>
           </div>
           <div class="employer-review-actions">
-            <button class="btn btn-sm btn-danger" name="decision" value="confirmed"><i class="bi bi-check-circle me-1" aria-hidden="true"></i>{% if candidate.current_company %}{% translate "Подтвердить нового" %}{% else %}{% translate "Подтвердить работодателя" %}{% endif %}</button>
-            {% if candidate.current_company %}<button class="btn btn-sm btn-outline-success" name="decision" value="same">{% translate "Это тот же работодатель" %}</button>{% endif %}
+            <button class="btn btn-sm btn-danger" name="decision" value="confirmed"><i class="bi bi-check-circle me-1" aria-hidden="true"></i>{% translate "Подтвердить нового" %}</button>
+            <button class="btn btn-sm btn-outline-success" name="decision" value="same">{% translate "Это тот же работодатель" %}</button>
             <button class="btn btn-sm btn-outline-secondary" name="decision" value="ocr_error">{% translate "Ошибка распознавания" %}</button>
             <button class="btn btn-sm btn-outline-warning" name="decision" value="needs_info">{% translate "Запросить информацию" %}</button>
             <button class="btn btn-sm btn-outline-secondary" name="decision" value="deferred">{% translate "Решить позже" %}</button>
@@ -221,6 +221,7 @@
               {% if item.is_submitted %}<span class="badge bg-info text-dark me-1">{% translate "Сдано" %}</span>{% endif %}
               {% if item.zus_missing_count %}<span class="badge bg-danger me-1" title="{% translate 'Отсутствуют месяцы ZUS RCA:' %} {{ item.zus_missing_label }}"><i class="bi bi-calendar-x me-1"></i>{% blocktranslate count counter=item.zus_missing_count %}Не хватает {{ counter }} месяца{% plural %}Не хватает {{ counter }} месяцев{% endblocktranslate %}</span>{% elif not item.is_complete %}<span class="badge bg-danger me-1">{% translate "Отсутствует" %}</span>{% endif %}
               {% if item.has_ocr_review %}<span class="badge bg-danger me-1 checklist-jump" role="button" tabindex="0" data-jump-doc="{{ item.ocr_review_doc_id }}" data-jump-action="ocr" title="{% translate 'Перейти к документу: подтвердите распознанные OCR данные' %}"><i class="bi bi-cpu me-1"></i>{% translate "OCR-проверка" %}</span>{% endif %}
+              {% if item.has_ocr_warning %}<span class="badge bg-danger me-1 checklist-jump" role="button" tabindex="0" data-jump-doc="{{ item.ocr_warning_doc_id }}" data-jump-action="warning" title="{% translate 'Перейти к документу с предупреждением OCR' %}"><i class="bi bi-exclamation-triangle me-1"></i>{% translate "OCR-предупреждение" %}</span>{% endif %}
               {% if item.needs_verification %}<span class="badge bg-warning text-dark me-1 checklist-jump" role="button" tabindex="0" data-jump-doc="{{ item.verification_doc_id }}" data-jump-action="verify" title="{% translate 'Перейти к документу: проверьте и подтвердите файл' %}"><i class="bi bi-hourglass-split me-1"></i>{% translate "Ждёт проверки" %}</span>{% endif %}
               {% if item.is_custom_submission %}<span class="badge bg-secondary me-1">{% translate "Свой" %}</span>{% endif %}
             </button>
@@ -235,6 +236,7 @@
                     {% translate "Файл от" %} {{ doc.uploaded_at|date:"d.m.Y H:i" }}
                     <span class="badge {% if doc.verified %}bg-success{% else %}bg-warning text-dark{% endif %} ms-2">{% if doc.verified %}{% translate "Проверен" %}{% else %}{% translate "Ожидает проверки" %}{% endif %}</span>
                     {% if doc.awaiting_confirmation %}<span class="badge bg-danger ms-1" title="{% translate 'Подтвердите распознанные OCR данные' %}"><i class="bi bi-cpu me-1"></i>{% translate "OCR-проверка" %}</span>{% elif doc.ocr_status == "failed" %}<span class="badge bg-danger ms-1"><i class="bi bi-exclamation-triangle me-1"></i>{% translate "Ошибка OCR" %}</span>{% endif %}
+                    {% if doc.ocr_name_mismatch %}<span class="badge bg-danger ms-1" title="{% translate 'OCR не смог надёжно подтвердить совпадение имени с профилем. Проверьте документ вручную.' %}"><i class="bi bi-person-exclamation me-1"></i>{% translate "Имя не подтверждено OCR" %}</span>{% endif %}
                     {% if doc.zus_period_month %}<span class="badge bg-info text-dark ms-1"><i class="bi bi-calendar-month"></i> {{ doc.zus_period_month|date:"m.Y" }}</span>{% endif %}
                     {% if doc.expiry_date %}<small class="text-muted ms-2">{% translate "до" %} {{ doc.expiry_date|date:"d.m.Y" }}</small>{% endif %}
                     {% if doc.rejection_reason and not doc.verified %}<div class="text-danger small mt-1"><i class="bi bi-exclamation-octagon-fill"></i> {{ doc.rejection_reason }}</div>{% endif %}
