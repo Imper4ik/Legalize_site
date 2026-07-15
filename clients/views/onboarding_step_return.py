@@ -365,13 +365,15 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
         mos_data.save()
         if mos_data.mos_purpose == "work":
             from clients.services.employers import ensure_employer_capture_task, propose_employer
+            case = mos_data.case
             propose_employer(
-                case=mos_data.case,
+                case=case,
                 name=personal_data["employer_name"],
                 nip=personal_data["employer_nip"],
                 source="client_onboarding",
             )
-            ensure_employer_capture_task(mos_data.case)
+            if case is not None:
+                ensure_employer_capture_task(case)
         if purpose_updated:
             clear_onboarding_notifications_cache(session.client)
         return _next_or_dashboard(request, token, "clients:onboarding_declarations")
