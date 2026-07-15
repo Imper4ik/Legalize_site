@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from typing import Any
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
@@ -30,7 +31,7 @@ class Company(models.Model):
     def __str__(self) -> str:
         return str(self.name)
 
-    def save(self, *args, **kwargs) -> None:
+    def save(self, *args: Any, **kwargs: Any) -> None:
         self.name = " ".join((self.name or "").split())
         self.normalized_name = normalize_company_name(self.name)
         self.nip = re.sub(r"\D", "", self.nip or "")[:10]
