@@ -4425,13 +4425,11 @@ msgstr "OCR-проверка"
 
 #: clients/templates/clients/case_detail.html:224
 #: clients/templates/clients/partials/document_checklist.html:60
-#| msgid "Перейти к документу: проверьте и подтвердите файл"
 msgid "Перейти к документу с предупреждением OCR"
 msgstr "Перейти к документу с предупреждением OCR"
 
 #: clients/templates/clients/case_detail.html:224
 #: clients/templates/clients/partials/document_checklist.html:60
-#| msgid "OCR предупреждения"
 msgid "OCR-предупреждение"
 msgstr "OCR-предупреждение"
 
@@ -4479,7 +4477,6 @@ msgstr "OCR не смог надёжно подтвердить совпаден
 
 #: clients/templates/clients/case_detail.html:239
 #: clients/templates/clients/partials/document_checklist.html:123
-#| msgid "Не подтвержден"
 msgid "Имя не подтверждено OCR"
 msgstr "Имя не подтверждено OCR"
 
