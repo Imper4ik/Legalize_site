@@ -240,12 +240,11 @@
       qrImg.onload = null;
       qrImg.onerror = null;
 
-      if (typeof QRious !== 'undefined') {
+      if (typeof qrcode === 'function') {
         try {
-          const qr = new QRious({
-            value: link,
-            size: 150
-          });
+          const qr = qrcode(0, 'M');
+          qr.addData(link);
+          qr.make();
           qrImg.onload = () => {
             qrSpinner.style.display = 'none';
             qrImg.style.display = 'block';
@@ -254,7 +253,7 @@
             qrSpinner.style.display = 'none';
             qrImg.style.display = 'block';
           };
-          qrImg.src = qr.toDataURL();
+          qrImg.src = qr.createDataURL(4, 4);
         } catch (err) {
           console.error('Local QR generation failed', err);
           qrSpinner.style.display = 'none';
