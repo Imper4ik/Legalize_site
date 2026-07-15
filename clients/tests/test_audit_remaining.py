@@ -38,6 +38,10 @@ class RemainingAuditHardeningTests(TestCase):
     def test_qr_generation_never_sends_portal_tokens_to_third_party(self):
         source = Path("static/clients/js/clients_list.js").read_text()
         self.assertNotIn("api.qrserver.com", source)
+        self.assertNotIn("QRious", source)
+        self.assertIn("qr.createDataURL", source)
+        self.assertFalse(Path("static/clients/js/qrious.min.js").exists())
+        self.assertTrue(Path("static/clients/js/qrcode-generator.js").exists())
 
     def test_client_pages_publish_the_active_language(self):
         self.client.login(email="staff-audit@example.com", password="securepassword")
