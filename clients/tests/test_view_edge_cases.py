@@ -238,9 +238,15 @@ class ClientViewEdgeCaseTests(TestCase):
         self.assertEqual(response.status_code, 200)
         # Each category has a single matching client, so the menu links straight
         # to that client's documents tab instead of a filtered list.
-        for client in (review_client, pending_client, warning_client, failed_client):
+        for client in (review_client, pending_client, failed_client):
             deep = reverse("clients:client_detail", kwargs={"pk": client.pk}) + "?view=person#documentAccordion"
             self.assertContains(response, deep)
+        warning_document = warning_client.documents.get()
+        warning_deep = (
+            reverse("clients:client_detail", kwargs={"pk": warning_client.pk})
+            + f"?view=person#doc-row-{warning_document.pk}"
+        )
+        self.assertContains(response, warning_deep)
         self.assertEqual(response.context["client_attention_count"], 4)
 
         filtered_response = self.client.get(list_url, {"document": "ocr_review"})
