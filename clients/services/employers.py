@@ -44,8 +44,11 @@ def ensure_assignment(case: Case, *, actor: Any = None, source: str = "manual", 
     if active:
         active.ended_at = timezone.now()
         active.save(update_fields=["ended_at"])
+    company = case.company
+    if company is None:
+        return
     CaseEmployerAssignment.objects.create(
-        case=case, company=case.company, source=source, source_document=document, confirmed_by=actor
+        case=case, company=company, source=source, source_document=document, confirmed_by=actor
     )
 
 
@@ -85,7 +88,8 @@ def propose_employer(
     krs = krs if len(krs) == 10 else ""
     if not any((name, nip, regon, krs)):
         return None
-    if case.company_id and company_matches(case.company, name=name, nip=nip, regon=regon, krs=krs):
+    current_company = case.company
+    if current_company is not None and company_matches(current_company, name=name, nip=nip, regon=regon, krs=krs):
         ensure_assignment(case, source="existing")
         return None
 
@@ -124,7 +128,10 @@ def propose_employer(
         case = Case.all_objects.select_for_update().select_related("client", "company").get(pk=case.pk)
         if case.archived_at is not None or case.workflow_stage == "closed" or case.application_purpose != "work":
             return None
-        if case.company_id and company_matches(case.company, name=name, nip=nip, regon=regon, krs=krs):
+        current_company = case.company
+        if current_company is not None and company_matches(
+            current_company, name=name, nip=nip, regon=regon, krs=krs
+        ):
             ensure_assignment(case, source="existing")
             return None
         candidate, created = EmployerChangeCandidate.objects.get_or_create(
