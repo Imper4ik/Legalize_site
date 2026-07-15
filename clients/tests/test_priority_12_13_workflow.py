@@ -309,8 +309,9 @@ def test_weekly_document_reminder_loop_allows_1710_retry_slot():
 def test_background_automation_loop_runs_core_background_tasks():
     with patch("clients.management.commands.run_background_automation_loop.cache.add", return_value=True):
         with patch("clients.management.commands.run_background_automation_loop.cache.delete"):
-            with patch("clients.management.commands.run_background_automation_loop.call_command") as call_mock:
-                call_command("run_background_automation_loop")
+            with patch("clients.management.commands.run_background_automation_loop.cache.set") as cache_set:
+                with patch("clients.management.commands.run_background_automation_loop.call_command") as call_mock:
+                    call_command("run_background_automation_loop")
 
     assert call_mock.call_args_list == [
         call("process_document_jobs", "--limit", "50"),
@@ -318,6 +319,7 @@ def test_background_automation_loop_runs_core_background_tasks():
         call("run_weekly_document_reminders"),
         call("run_retention_maintenance"),
     ]
+    assert cache_set.call_count == 2
 
 
 def test_background_automation_loop_skips_task_when_lock_backend_fails():
