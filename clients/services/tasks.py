@@ -87,6 +87,7 @@ def _create_auto_task(
             "payment_followup": _("Контроль оплаты счёта"),
             "client_question": _("Ответить на вопрос клиента"),
             "deadline_check": _("Контроль дедлайна по везванию"),
+            "employer_review": _("Проверить работодателя"),
         }
         title = titles.get(task_type, _("Автоматическая задача"))
 
@@ -100,7 +101,7 @@ def _create_auto_task(
         title=title,
         description=description or "",
         due_date=due_date,
-        priority="high" if task_type in ("document_review", "case_number_missing", "deadline_check") else "medium",
+        priority="high" if task_type in ("document_review", "case_number_missing", "deadline_check", "employer_review") else "medium",
         assignee=None,
         document=document,
         payment=payment,

@@ -24,8 +24,24 @@
   .case-tabs .nav-link:hover, .case-tabs .nav-link:focus-visible { color: var(--brand-1); background: rgba(29, 78, 216, .10); }
   .case-tabs .nav-link.active { color: #fff; background: var(--brand-1); }
   .case-tab-panel .table { --bs-table-bg: transparent; --bs-table-color: var(--fg); --bs-table-border-color: var(--border); --bs-table-hover-bg: rgba(15, 118, 110, .08); --bs-table-hover-color: var(--fg); }
+  .employer-review-card { background: var(--surface); background: color-mix(in srgb, var(--surface) 92%, #f59e0b 8%); color: var(--fg); border: 1px solid #d9a72e; border-color: color-mix(in srgb, var(--border) 55%, #f59e0b 45%); }
+  .employer-review-comparison { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: .75rem; align-items: stretch; }
+  .employer-review-company { background: var(--surface); border: 1px solid var(--border); border-radius: .65rem; padding: .75rem; min-width: 0; overflow-wrap: anywhere; }
+  .employer-review-arrow { align-self: center; color: var(--muted); font-size: 1.25rem; }
+  .employer-review-fields { display: grid; grid-template-columns: minmax(10rem, .7fr) minmax(14rem, 1.3fr); gap: .65rem; }
+  .employer-review-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
   tr.doc-archived { opacity: .55; }
-  @media (max-width: 767.98px) { .case-detail-hero .card-body { padding: 1rem; } .case-tabs { padding: .4rem !important; } }
+  @media (max-width: 767.98px) {
+    .case-detail-hero .card-body { padding: 1rem; }
+    .case-tabs { padding: .4rem !important; }
+    .employer-review-comparison { grid-template-columns: 1fr; gap: .5rem; }
+    .employer-review-arrow { transform: rotate(90deg); justify-self: center; }
+    .employer-review-fields { grid-template-columns: 1fr; }
+    .employer-review-actions { display: grid; grid-template-columns: 1fr 1fr; }
+    .employer-review-actions .btn { min-height: 2.75rem; white-space: normal; }
+    .employer-history-row { align-items: flex-start !important; flex-direction: column; gap: .2rem; }
+  }
+  @media (max-width: 420px) { .employer-review-actions { grid-template-columns: 1fr; } }
 </style>
 {% endblock %}
 
@@ -115,6 +131,48 @@
     </div>
   </div>
 
+  {% for candidate in employer_candidates %}
+    {% if candidate.status == 'pending' or candidate.status == 'needs_info' or candidate.status == 'deferred' %}
+      <section class="employer-review-card rounded shadow-sm p-3 mb-3" aria-labelledby="employer-review-title-{{ candidate.pk }}">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+          <div>
+            <h2 class="h6 mb-1" id="employer-review-title-{{ candidate.pk }}">{% if candidate.current_company %}{% translate "Возможный новый работодатель" %}{% else %}{% translate "Работодатель ожидает подтверждения" %}{% endif %}</h2>
+            <p class="small text-muted mb-0">{% translate "До подтверждения работодатель в деле не изменится." %}</p>
+          </div>
+          <span class="badge bg-warning text-dark">{% translate "Требуется решение сотрудника" %}</span>
+        </div>
+        <div class="employer-review-comparison mb-3">
+          <div class="employer-review-company">
+            <div class="small text-muted mb-1">{% translate "Сейчас в деле" %}</div>
+            <strong>{{ candidate.current_company|default:"—" }}</strong>
+          </div>
+          <i class="bi bi-arrow-right employer-review-arrow" aria-hidden="true"></i>
+          <div class="employer-review-company">
+            <div class="small text-muted mb-1">{% translate "Найдено в документе или анкете" %}</div>
+            <strong>{{ candidate.proposed_label }}</strong>
+            {% if candidate.proposed_nip %}<div class="small text-muted mt-1">NIP {{ candidate.proposed_nip }}</div>{% endif %}
+            {% if candidate.source_document %}<a class="small d-inline-block mt-1" href="{% url 'clients:document_preview' candidate.source_document.pk %}" target="_blank" rel="noopener">{% translate "Открыть документ-источник" %}</a>{% endif %}
+          </div>
+        </div>
+        {% if candidate.status != 'pending' %}<p class="small mb-2"><span class="badge bg-secondary">{{ candidate.get_status_display }}</span>{% if candidate.review_note %} {{ candidate.review_note }}{% endif %}</p>{% endif %}
+        <form method="post" action="{% url 'clients:employer_review' case.pk candidate.pk %}">
+          {% csrf_token %}
+          <div class="employer-review-fields mb-2">
+            <div><label class="form-label small fw-semibold" for="effective-from-{{ candidate.pk }}">{% translate "Фактическая дата смены" %}</label><input id="effective-from-{{ candidate.pk }}" type="date" name="effective_from" class="form-control form-control-sm" value="{{ candidate.effective_from|date:'Y-m-d' }}"></div>
+            <div><label class="form-label small fw-semibold" for="employer-note-{{ candidate.pk }}">{% translate "Комментарий" %}</label><input id="employer-note-{{ candidate.pk }}" type="text" name="note" class="form-control form-control-sm" value="{{ candidate.review_note }}" maxlength="1000" placeholder="{% translate 'Что проверили или что нужно уточнить' %}"></div>
+          </div>
+          <div class="employer-review-actions">
+            <button class="btn btn-sm btn-danger" name="decision" value="confirmed"><i class="bi bi-check-circle me-1" aria-hidden="true"></i>{% if candidate.current_company %}{% translate "Подтвердить нового" %}{% else %}{% translate "Подтвердить работодателя" %}{% endif %}</button>
+            {% if candidate.current_company %}<button class="btn btn-sm btn-outline-success" name="decision" value="same">{% translate "Это тот же работодатель" %}</button>{% endif %}
+            <button class="btn btn-sm btn-outline-secondary" name="decision" value="ocr_error">{% translate "Ошибка распознавания" %}</button>
+            <button class="btn btn-sm btn-outline-warning" name="decision" value="needs_info">{% translate "Запросить информацию" %}</button>
+            <button class="btn btn-sm btn-outline-secondary" name="decision" value="deferred">{% translate "Решить позже" %}</button>
+          </div>
+        </form>
+      </section>
+    {% endif %}
+  {% endfor %}
+
   <ul class="nav nav-pills mb-3 shadow-sm p-1 rounded case-tabs" id="caseTabs" role="tablist">
     <li class="nav-item" role="presentation"><button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">{% translate "Обзор" %}</button></li>
     <li class="nav-item" role="presentation"><button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button" role="tab" aria-controls="documents" aria-selected="false">{% translate "Документы" %}</button></li>
@@ -138,6 +196,17 @@
         <div class="col-md-6"><strong>{% translate "Основание пребывания" %}:</strong> {{ case.basis_of_stay|default:"—" }}</div>
         <div class="col-md-6"><strong>{% translate "Компания" %}:</strong> {{ case.company|default:"—" }}</div>
       </div>
+      {% if employer_history %}
+        <h5 class="h6 mt-4">{% translate "История работодателей" %}</h5>
+        <ul class="list-group list-group-flush">
+          {% for assignment in employer_history %}
+            <li class="list-group-item px-0 d-flex justify-content-between employer-history-row">
+              <span>{{ assignment.company }} <span class="text-muted small">({{ assignment.source }})</span></span>
+              <span class="text-muted small">{% if assignment.effective_from %}{% translate "действует с" %} {{ assignment.effective_from|date:"d.m.Y" }} · {% endif %}{% translate "подтверждено" %} {{ assignment.started_at|date:"d.m.Y H:i" }}{% if assignment.ended_at %} — {{ assignment.ended_at|date:"d.m.Y H:i" }}{% else %} — {% translate "текущий" %}{% endif %}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
     </div>
 
     <div class="tab-pane fade p-3 rounded shadow-sm case-tab-panel" id="documents" role="tabpanel" aria-labelledby="documents-tab">

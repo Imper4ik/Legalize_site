@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import logging
+import re
 from typing import TYPE_CHECKING, Any, cast
 
 from django import forms
@@ -27,6 +28,18 @@ User = get_user_model()
 
 class CaseForm(forms.ModelForm):
     version = forms.IntegerField(widget=forms.HiddenInput(), required=False)
+    application_purpose = forms.ChoiceField(
+        label=_("Цель подачи"), choices=[], required=False,
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
+    employer_name = forms.CharField(
+        label=_("Название работодателя"), required=False, max_length=255,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": _("Введите название, если компании ещё нет в списке")}),
+    )
+    employer_nip = forms.CharField(
+        label=_("NIP работодателя"), required=False, max_length=20,
+        widget=forms.TextInput(attrs={"class": "form-control", "inputmode": "numeric", "placeholder": "10 cyfr"}),
+    )
     # Process dates live on the case (spec §4); accept the same dd.mm.yyyy input
     # the client form used to offer.
     submission_date = forms.DateField(
@@ -80,6 +93,21 @@ class CaseForm(forms.ModelForm):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+        submissions = Submission.objects.exclude(slug__in=Client.FAMILY_MEMBER_REQUIREMENT_PURPOSES)
+        purpose_choices = [("", str(_("Выберите цель подачи")))] + [
+            (submission.slug, str(submission.localized_name)) for submission in submissions
+        ]
+        known = {value for value, _label in purpose_choices}
+        for value, label in Client.APPLICATION_PURPOSE_CHOICES:
+            if value not in known:
+                purpose_choices.append((str(value), str(label)))
+                known.add(value)
+        current = self.data.get(self.add_prefix("application_purpose")) or getattr(
+            self.instance, "application_purpose", ""
+        ) or self.initial.get("application_purpose")
+        if current and current not in known:
+            purpose_choices.append((str(current), str(current)))
+        cast(forms.ChoiceField, self.fields["application_purpose"]).choices = purpose_choices
         self.fields["company"].required = False
         self.fields["family_role"].required = False
         cast(forms.TypedChoiceField, self.fields["family_role"]).choices = [("", _("Not a family case")), ("sponsor", _("Sponsor")), ("family_spouse", _("Spouse")), ("family_child", _("Child"))]
@@ -118,6 +146,16 @@ class CaseForm(forms.ModelForm):
             self.add_error("workflow_stage", transition_result.message)
 
         return cleaned_data
+
+    def clean_employer_name(self) -> str:
+        return " ".join((self.cleaned_data.get("employer_name") or "").split())
+
+    def clean_employer_nip(self) -> str:
+        raw = self.cleaned_data.get("employer_nip") or ""
+        nip = re.sub(r"\D", "", raw)
+        if nip and len(nip) != 10:
+            raise forms.ValidationError(_("NIP должен содержать 10 цифр."))
+        return nip
 
 
 class ClientForm(forms.ModelForm):

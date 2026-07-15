@@ -14,12 +14,14 @@ from django.utils.html import format_html, format_html_join
 from clients.constants import DocumentType
 from clients.models import (
     AppSettings,
+    CaseEmployerAssignment,
     Client,
     ClientActivity,
     Company,
     Document,
     DocumentRequirement,
     EmailLog,
+    EmployerChangeCandidate,
     FamilyGroup,
     MOSApplicationData,
     Payment,
@@ -44,8 +46,22 @@ from clients.admin.actions import (
 
 @admin.register(Company)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ("name", "created_at")
-    search_fields = ("name",)
+    list_display = ("name", "nip", "regon", "krs", "created_at")
+    search_fields = ("name", "nip", "regon", "krs")
+
+
+@admin.register(EmployerChangeCandidate)
+class EmployerChangeCandidateAdmin(admin.ModelAdmin):
+    list_display = ("case", "proposed_name", "proposed_nip", "effective_from", "status", "source", "detected_at")
+    list_filter = ("status", "source")
+    search_fields = ("proposed_name", "proposed_nip", "case__client__first_name", "case__client__last_name")
+    readonly_fields = ("fingerprint", "detected_at", "reviewed_at")
+
+
+@admin.register(CaseEmployerAssignment)
+class CaseEmployerAssignmentAdmin(admin.ModelAdmin):
+    list_display = ("case", "company", "effective_from", "started_at", "ended_at", "source")
+    list_filter = ("source",)
 
 
 @admin.register(AppSettings)
@@ -467,7 +483,7 @@ class FamilyGroupAdmin(admin.ModelAdmin):
 @admin.register(StaffTask)
 class StaffTaskAdmin(admin.ModelAdmin):
     list_display = ("title", "client", "assignee", "priority", "status", "due_date", "created_at")
-    list_filter = ("priority", "status", "due_date")
+    list_filter = ("task_type", "priority", "status", "due_date")
     search_fields = ("title", "description", "client__first_name", "client__last_name", "assignee__email")
     autocomplete_fields = ("client", "assignee", "created_by", "document", "payment")
 

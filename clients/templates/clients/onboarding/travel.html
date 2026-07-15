@@ -19,10 +19,31 @@
             {% endif %}
         </div>
 
-        <div class="mb-3" id="employerEmailContainer" {% if effective_purpose != 'work' %}style="display: none;"{% endif %}>
-            <label for="employer_email" class="form-label fw-bold">{% trans "Email работодателя" %}</label>
-            <input type="email" class="form-control" id="employer_email" name="employer_email" value="{{ mos_data.personal_data.employer_email|default:'' }}" placeholder="{% trans 'email@employer.com' %}">
-            <div class="form-text text-muted">{% trans "Укажите контактный email отдела кадров или вашего работодателя." %}</div>
+        <div class="card border-primary-subtle mb-3" id="employerEmailContainer" {% if effective_purpose != 'work' %}style="display: none;"{% endif %}>
+            <div class="card-body">
+                <div class="d-flex gap-2 align-items-start mb-3">
+                    <i class="bi bi-building text-primary fs-4" aria-hidden="true"></i>
+                    <div>
+                        <h6 class="mb-1">{% trans "Ваш текущий работодатель" %}</h6>
+                        <p class="small text-muted mb-0">{% trans "Эти данные помогут заметить смену работодателя в документах. Если вы пока не знаете точное название, сможете указать его позже при сдаче отпечатков." %}</p>
+                    </div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-12 col-md-7">
+                        <label for="employer_name" class="form-label fw-bold">{% trans "Название компании" %}</label>
+                        <input type="text" class="form-control" id="employer_name" name="employer_name" maxlength="255" autocomplete="organization" value="{{ mos_data.personal_data.employer_name|default:'' }}" placeholder="{% trans 'Например: ABC Polska Sp. z o.o.' %}">
+                    </div>
+                    <div class="col-12 col-md-5">
+                        <label for="employer_nip" class="form-label fw-bold">{% trans "NIP компании" %} <span class="fw-normal text-muted">({% trans "если известен" %})</span></label>
+                        <input type="text" class="form-control" id="employer_nip" name="employer_nip" inputmode="numeric" maxlength="20" pattern="[0-9 .-]{10,20}" autocomplete="off" value="{{ mos_data.personal_data.employer_nip|default:'' }}" placeholder="0000000000" aria-describedby="employerNipHelp">
+                        <div class="form-text" id="employerNipHelp">{% trans "10 цифр, можно ввести с дефисами." %}</div>
+                    </div>
+                    <div class="col-12">
+                        <label for="employer_email" class="form-label fw-bold">{% trans "Email работодателя" %} <span class="fw-normal text-muted">({% trans "необязательно" %})</span></label>
+                        <input type="email" class="form-control" id="employer_email" name="employer_email" autocomplete="email" value="{{ mos_data.personal_data.employer_email|default:'' }}" placeholder="{% trans 'email@employer.com' %}">
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="mb-3" id="universityEmailContainer" {% if effective_purpose != 'study' %}style="display: none;"{% endif %}>

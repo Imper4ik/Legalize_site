@@ -18,6 +18,7 @@ from .document import (
 from .document_processing import DocumentProcessingJob
 from .document_version import DocumentVersion
 from .email import EmailLog
+from .employer import CaseEmployerAssignment, EmployerChangeCandidate
 from .family import FamilyGroup
 from .family_mos import ClientFamilyMemberMOS
 from .onboarding import (
@@ -45,6 +46,8 @@ __all__ = [
     'ConsentRecord',
     'ClientActivity',
     'Company',
+    'CaseEmployerAssignment',
+    'EmployerChangeCandidate',
     'Document',
     'DocumentProcessingJob',
     'DocumentRequirement',

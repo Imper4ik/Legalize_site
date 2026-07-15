@@ -542,13 +542,23 @@ def _process_zus_doc_job_internal(
         "has_name_mismatch": not name_matched,
     }
 
-    return _finalize_successful_ocr_job(
+    result = _finalize_successful_ocr_job(
         job_id=job.id,
         source_file_name=source_file_name,
         parsed_payload=parsed_payload,
         warnings=warnings,
         doc_type_display=doc_type_label,
     )
+    if parsed.employer_nip:
+        from clients.services.employers import propose_employer
+        propose_employer(
+            case=document.case,
+            nip=parsed.employer_nip,
+            document=document,
+            source="zus_ocr",
+            confidence="ocr",
+        )
+    return result
 
 
 def _process_insurance_doc_job_internal(
@@ -710,6 +720,18 @@ def _finalize_successful_company_job(
         document.ocr_status = "success"
         document.ocr_name_mismatch = bool(warnings)
         document.save(update_fields=["parsed_data", "ocr_status", "ocr_name_mismatch"])
+
+    from clients.services.employers import propose_employer
+    registry = parsed_payload.get("registry_verification") or {}
+    propose_employer(
+        case=document.case,
+        name=str(registry.get("company_name") or ""),
+        nip=str(parsed_payload.get("nip") or ""),
+        krs=str(parsed_payload.get("krs") or ""),
+        document=document,
+        source="company_document_ocr",
+        confidence="registry" if registry.get("company_name") else "ocr",
+    )
 
     msg = (
         _("Company document verified successfully with %(warning_count)s warnings.") % {

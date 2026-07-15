@@ -353,6 +353,8 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
         mos_data.stay_data = stay_data  # type: ignore[assignment]
 
         personal_data = cast("dict[str, Any]", mos_data.personal_data) or {}
+        personal_data["employer_name"] = request.POST.get("employer_name", "").strip()
+        personal_data["employer_nip"] = request.POST.get("employer_nip", "").strip()
         personal_data["employer_email"] = request.POST.get("employer_email", "").strip()
         personal_data["university_email"] = request.POST.get("university_email", "").strip()
         mos_data.personal_data = personal_data  # type: ignore[assignment]
@@ -361,6 +363,15 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
         mos_data.previous_stays = [previous_stays_detail]  # type: ignore[assignment]
         mos_data.travel_history = [request.POST.get("travel_history", "")]  # type: ignore[assignment]
         mos_data.save()
+        if mos_data.mos_purpose == "work":
+            from clients.services.employers import ensure_employer_capture_task, propose_employer
+            propose_employer(
+                case=mos_data.case,
+                name=personal_data["employer_name"],
+                nip=personal_data["employer_nip"],
+                source="client_onboarding",
+            )
+            ensure_employer_capture_task(mos_data.case)
         if purpose_updated:
             clear_onboarding_notifications_cache(session.client)
         return _next_or_dashboard(request, token, "clients:onboarding_declarations")

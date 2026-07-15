@@ -218,6 +218,9 @@
                 {% if mos_data.personal_data.employer_email %}
                     <p><strong>{% translate "Email работодателя" %}:</strong> {{ mos_data.personal_data.employer_email }}</p>
                 {% endif %}
+                {% if mos_data.personal_data.employer_name %}
+                    <p><strong>{% translate "Работодатель" %}:</strong> {{ mos_data.personal_data.employer_name }}{% if mos_data.personal_data.employer_nip %} (NIP {{ mos_data.personal_data.employer_nip }}){% endif %}</p>
+                {% endif %}
                 {% if mos_data.personal_data.university_email %}
                     <p><strong>{% translate "Email университета" %}:</strong> {{ mos_data.personal_data.university_email }}</p>
                 {% endif %}
@@ -324,6 +327,11 @@
                     <form method="post">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="mark_fingerprints">
+                        {% if case.application_purpose == 'work' and not case.company %}
+                            <div class="alert alert-warning p-2 small mb-2">{% translate "В деле ещё нет подтверждённого работодателя. Укажите его сейчас — сотрудник получит задачу на проверку." %}</div>
+                            <input type="text" name="employer_name" class="form-control form-control-sm mb-2" required maxlength="255" value="{{ mos_data.personal_data.employer_name|default:'' }}" placeholder="{% translate 'Название работодателя' %}">
+                            <input type="text" name="employer_nip" class="form-control form-control-sm mb-2" inputmode="numeric" maxlength="20" pattern="[0-9 .-]{10,20}" value="{{ mos_data.personal_data.employer_nip|default:'' }}" placeholder="NIP (10 cyfr)">
+                        {% endif %}
                         <button type="submit" class="btn {% if mos_data.status == 'fingerprints' %}btn-primary{% else %}btn-outline-primary{% endif %} w-100">{% translate "Отпечатки сданы" %}</button>
                     </form>
                     <form method="post">

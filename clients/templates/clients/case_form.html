@@ -10,6 +10,17 @@
 {% endblock %}
 
 {% block content %}
+<style nonce="{{ request.csp_nonce }}">
+  .case-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+  .case-form-field label { display: block; font-weight: 600; margin-bottom: .35rem; }
+  .case-form-field .errorlist { color: var(--bs-danger); font-size: .875rem; margin: .35rem 0 0; padding-left: 1.1rem; }
+  .case-employer-section { background: color-mix(in srgb, var(--bs-body-bg) 94%, var(--bs-primary) 6%); border: 1px solid var(--bs-border-color); border-radius: .75rem; padding: 1rem; }
+  @media (max-width: 767.98px) {
+    .case-form-grid { grid-template-columns: 1fr; }
+    .case-form-actions { display: grid !important; grid-template-columns: 1fr; }
+    .case-form-actions .btn { min-height: 2.75rem; }
+  }
+</style>
 <div class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
@@ -36,6 +47,7 @@
   </div>
   <form method="post" class="card card-body shadow-sm">
     {% csrf_token %}
+    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
     {% if form.non_field_errors %}
       <div class="alert alert-danger shadow-sm border-0">
         {% for error in form.non_field_errors %}
@@ -43,8 +55,40 @@
         {% endfor %}
       </div>
     {% endif %}
-    {{ form.as_p }}
-    <div class="d-flex gap-2">
+    <div class="case-form-grid mb-4">
+      {% for field in form.visible_fields %}
+        {% if field.name != 'company' and field.name != 'employer_name' and field.name != 'employer_nip' %}
+          <div class="case-form-field">
+            <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="text-danger" aria-hidden="true">*</span>{% endif %}</label>
+            {{ field }}
+            {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+            {{ field.errors }}
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <section class="case-employer-section mb-4" id="caseEmployerSection" {% if form.application_purpose.value != 'work' %}hidden{% endif %}>
+      <div class="d-flex align-items-start gap-2 mb-3">
+        <i class="bi bi-building text-primary fs-4" aria-hidden="true"></i>
+        <div><h2 class="h6 mb-1">{% translate "Работодатель по этому делу" %}</h2><p class="small text-muted mb-0">{% translate "Выберите существующую компанию или введите новую. Новое название сначала попадёт сотруднику на проверку." %}</p></div>
+      </div>
+      <div class="case-form-grid">
+        <div class="case-form-field">
+          <label for="{{ form.company.id_for_label }}">{{ form.company.label }}</label>{{ form.company }}{{ form.company.errors }}
+          <div class="form-text">{% translate "Используйте этот вариант, если компания уже есть в базе." %}</div>
+        </div>
+        <div class="case-form-field">
+          <label for="{{ form.employer_name.id_for_label }}">{{ form.employer_name.label }}</label>{{ form.employer_name }}{{ form.employer_name.errors }}
+        </div>
+        <div class="case-form-field">
+          <label for="{{ form.employer_nip.id_for_label }}">{{ form.employer_nip.label }}</label>{{ form.employer_nip }}{{ form.employer_nip.errors }}
+          <div class="form-text">{% translate "NIP помогает отличить компании с похожими названиями." %}</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="d-flex gap-2 case-form-actions">
       <button type="submit" class="btn btn-primary">
         {% if object.pk %}
           {% translate "Сохранить" %}
@@ -60,4 +104,15 @@
     </div>
   </form>
 </div>
+<script nonce="{{ request.csp_nonce }}">
+  document.addEventListener('DOMContentLoaded', function () {
+    const purpose = document.getElementById('id_application_purpose');
+    const employer = document.getElementById('caseEmployerSection');
+    if (!purpose || !employer) return;
+    const syncEmployer = function () { employer.hidden = purpose.value.trim() !== 'work'; };
+    purpose.addEventListener('input', syncEmployer);
+    purpose.addEventListener('change', syncEmployer);
+    syncEmployer();
+  });
+</script>
 {% endblock %}

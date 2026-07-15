@@ -6,15 +6,31 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.http import HttpRequest, HttpResponse, HttpResponseBase
 from django.shortcuts import get_object_or_404, redirect
+from django.utils.dateparse import parse_date
 from django.utils.translation import gettext as _
 from django.views.generic import CreateView, DetailView, UpdateView
 
 from clients.forms import CaseForm
-from clients.models import Case, CaseArchiveBatch, ClientActivity, Document, Payment, Reminder, StaffTask
+from clients.models import (
+    Case,
+    CaseArchiveBatch,
+    ClientActivity,
+    Document,
+    EmployerChangeCandidate,
+    Payment,
+    Reminder,
+    StaffTask,
+)
 from clients.services.access import accessible_cases_queryset, accessible_clients_queryset
 from clients.services.archive import archive_case as archive_case_service
 from clients.services.archive import restore_case as restore_case_service
 from clients.services.cases import create_case_for_client
+from clients.services.employers import (
+    ensure_assignment,
+    ensure_employer_capture_task,
+    propose_employer,
+    review_employer_candidate,
+)
 from clients.services.locking import update_case_with_version
 from clients.services.roles import CLIENT_MUTATION_ROLES, RESTORE_ALLOWED_ROLES
 from clients.views.base import RoleRequiredMixin, role_required_view
@@ -44,6 +60,10 @@ class CaseDetailView(RoleRequiredMixin, DetailView):
         context["tasks"] = StaffTask.objects.filter(case=case).select_related("assignee").order_by("status", "due_date")[:50]
         context["reminders"] = Reminder.objects.filter(case=case).order_by("-is_active", "due_date")[:50]
         context["activities"] = ClientActivity.objects.filter(case=case).select_related("actor").order_by("-created_at")[:50]
+        context["employer_candidates"] = case.employer_change_candidates.select_related(
+            "current_company", "source_document", "reviewed_by"
+        )[:20]
+        context["employer_history"] = case.employer_assignments.select_related("company", "confirmed_by")[:20]
         context["next_action"] = _case_next_action(case)
         from clients.forms import PaymentForm, StaffTaskForm
         context["payment_form"] = PaymentForm()
@@ -102,6 +122,12 @@ class CaseCreateView(RoleRequiredMixin, CreateView):
             fingerprints_date=form.cleaned_data.get("fingerprints_date"),
             company=form.cleaned_data.get("company"),
         )
+        ensure_assignment(case, actor=self.request.user, source="case_form")
+        propose_employer(
+            case=case, name=form.cleaned_data.get("employer_name") or "",
+            nip=form.cleaned_data.get("employer_nip") or "", source="case_form",
+        )
+        ensure_employer_capture_task(case)
         messages.success(self.request, _("Case created."))
         return redirect(case.get_absolute_url())
 
@@ -120,6 +146,7 @@ class CaseUpdateView(RoleRequiredMixin, UpdateView):
 
     def form_valid(self, form: CaseForm) -> HttpResponse:
         case = self.object
+        previous_company_id = case.company_id
         expected_version = form.cleaned_data.get("version")
         if expected_version is None:
             expected_version = case.version
@@ -149,6 +176,14 @@ class CaseUpdateView(RoleRequiredMixin, UpdateView):
                 actor=self.request.user,
                 changes_dict=changes_dict,
             )
+            case.refresh_from_db()
+            if case.company_id != previous_company_id:
+                ensure_assignment(case, actor=self.request.user, source="case_form")
+            propose_employer(
+                case=case, name=form.cleaned_data.get("employer_name") or "",
+                nip=form.cleaned_data.get("employer_nip") or "", source="case_form",
+            )
+            ensure_employer_capture_task(case)
             messages.success(self.request, _("Case updated."))
         except ValidationError as e:
             form.add_error(None, e)
@@ -177,6 +212,31 @@ def restore_case_view(request: HttpRequest, pk: int) -> HttpResponse:
         return redirect("clients:case_detail", pk=case.pk)
     restore_case_service(case=case, actor=request.user, batch=batch)
     messages.success(request, _("Case restored."))
+    return redirect("clients:case_detail", pk=case.pk)
+
+
+@role_required_view(*CLIENT_MUTATION_ROLES)
+def review_employer_view(request: HttpRequest, pk: int, candidate_id: int) -> HttpResponse:
+    case = get_object_or_404(accessible_cases_queryset(request.user, Case.objects), pk=pk)
+    candidate = get_object_or_404(EmployerChangeCandidate, pk=candidate_id, case=case)
+    if request.method != "POST":
+        return redirect("clients:case_detail", pk=case.pk)
+    try:
+        effective_from_raw = request.POST.get("effective_from", "").strip()
+        effective_from = parse_date(effective_from_raw) if effective_from_raw else None
+        if effective_from_raw and effective_from is None:
+            raise ValidationError(_("Invalid employer effective date."))
+        review_employer_candidate(
+            candidate_id=candidate.pk,
+            decision=request.POST.get("decision", ""),
+            actor=request.user,
+            note=request.POST.get("note", ""),
+            effective_from=effective_from,
+        )
+    except ValidationError as exc:
+        messages.error(request, str(exc))
+    else:
+        messages.success(request, _("Employer review saved."))
     return redirect("clients:case_detail", pk=case.pk)
 
 
