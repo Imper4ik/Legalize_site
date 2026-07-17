@@ -14,6 +14,11 @@ from django.utils.translation import gettext as _
 
 from clients.forms import ClientIntakeSubmissionForm
 from clients.models import ClientIntakeSubmission, ClientOnboardingSession
+from clients.security.encrypted import (
+    EncryptedJSONUnavailableError,
+    read_encrypted_json_dict,
+    require_encrypted_json_dict,
+)
 from clients.services.intake import convert_intake_submission, find_existing_client_conflicts
 from clients.services.onboarding_purposes import normalize_onboarding_purpose
 from clients.services.onboarding_tokens import generate_onboarding_token, hash_onboarding_token
@@ -35,9 +40,11 @@ def _intake_is_closed(intake: ClientIntakeSubmission) -> bool:
     }
 
 
-def _initial_from_intake(intake: ClientIntakeSubmission) -> dict[str, object]:
-    personal: dict[str, object] = intake.personal_data if isinstance(intake.personal_data, dict) else {}
-    case_data: dict[str, object] = intake.case_data if isinstance(intake.case_data, dict) else {}
+def _initial_from_intake(
+    intake: ClientIntakeSubmission,
+) -> tuple[dict[str, object], bool]:
+    personal, personal_unavailable = read_encrypted_json_dict(intake, "personal_data")
+    case_data, case_unavailable = read_encrypted_json_dict(intake, "case_data")
     return {
         "first_name": personal.get("first_name", ""),
         "last_name": personal.get("last_name", ""),
@@ -50,7 +57,7 @@ def _initial_from_intake(intake: ClientIntakeSubmission) -> dict[str, object]:
         "application_purpose": case_data.get("application_purpose", "work"),
         "application_type": case_data.get("application_type", ""),
         "basis_of_stay": case_data.get("basis_of_stay", ""),
-    }
+    }, personal_unavailable or case_unavailable
 
 
 @role_required_view("Admin", "Manager", "Staff")
@@ -91,7 +98,16 @@ def public_intake(request: HttpRequest, token: str) -> HttpResponse:
     if intake.status == ClientIntakeSubmission.STATUS_CONVERTED:
         return render(request, "clients/intake/submitted.html", {"state": "converted", "intake": intake})
 
+    encrypted_data_unavailable = False
     if request.method == "POST":
+        try:
+            require_encrypted_json_dict(intake, "personal_data")
+            require_encrypted_json_dict(intake, "case_data")
+        except EncryptedJSONUnavailableError:
+            return HttpResponse(
+                _("Saved form data is temporarily unavailable. Please contact support before continuing."),
+                status=409,
+            )
         form = ClientIntakeSubmissionForm(request.POST)
         if form.is_valid():
             User = get_user_model()
@@ -103,8 +119,8 @@ def public_intake(request: HttpRequest, token: str) -> HttpResponse:
                 else:
                     form.add_error("email", _("Пользователь с таким email уже зарегистрирован. Пожалуйста, войдите в систему или восстановите пароль."))
             else:
-                intake.personal_data = form.personal_payload()  # type: ignore[assignment]
-                intake.case_data = form.case_payload()  # type: ignore[assignment]
+                intake.personal_data = form.personal_payload()
+                intake.case_data = form.case_payload()
                 intake.status = ClientIntakeSubmission.STATUS_SUBMITTED
                 intake.submitted_at = timezone.now()
                 intake.save(update_fields=["personal_data", "case_data", "status", "submitted_at", "updated_at"])
@@ -140,6 +156,11 @@ def public_intake(request: HttpRequest, token: str) -> HttpResponse:
                             status="active",
                             expires_at=timezone.now() + PUBLIC_INTAKE_LINK_TTL,
                         )
+                except EncryptedJSONUnavailableError:
+                    return HttpResponse(
+                        _("Saved form data is temporarily unavailable. Please contact support before continuing."),
+                        status=409,
+                    )
                 except (ValidationError, IntegrityError):
                     intake.refresh_from_db()
                     form.add_error(None, _("We could not submit the intake form. Please check the data and try again."))
@@ -148,6 +169,17 @@ def public_intake(request: HttpRequest, token: str) -> HttpResponse:
                     messages.success(request, _("Анкета отправлена. Аккаунт создан, вы вошли в личный кабинет клиента."))
                     return redirect("clients:onboarding_start", token=onboarding_token)
     else:
-        form = ClientIntakeSubmissionForm(initial=_initial_from_intake(intake))
+        initial, encrypted_data_unavailable = _initial_from_intake(intake)
+        form = ClientIntakeSubmissionForm(initial=initial)
+        if encrypted_data_unavailable:
+            messages.error(
+                request,
+                _("Saved form data is temporarily unavailable. Please contact support before continuing."),
+            )
 
-    return render(request, "clients/intake/public_form.html", {"form": form, "intake": intake})
+    return render(
+        request,
+        "clients/intake/public_form.html",
+        {"form": form, "intake": intake},
+        status=409 if encrypted_data_unavailable else 200,
+    )

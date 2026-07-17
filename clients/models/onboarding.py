@@ -149,20 +149,26 @@ class ClientIntakeSubmission(models.Model):
             raise ValidationError("Client and case do not match.")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
-        personal_data: dict[str, Any] = self.personal_data if isinstance(self.personal_data, dict) else {}
-        self.email_hash = _hash_intake_lookup_value(personal_data.get("email"), field_name="email")
-        self.phone_hash = _hash_intake_lookup_value(personal_data.get("phone"), field_name="phone")
-        passport_value = (
-            personal_data.get("passport_num")
-            or personal_data.get("passport_number")
-            or personal_data.get("document_number")
-        )
-        self.passport_hash = _hash_intake_lookup_value(passport_value, field_name="passport")
-        update_fields = kwargs.get("update_fields")
-        if update_fields is not None:
-            update_fields = set(update_fields)
-            update_fields.update({"email_hash", "phone_hash", "passport_hash"})
-            kwargs["update_fields"] = list(update_fields)
+        # Only a real mapping is authoritative for the deterministic lookup
+        # hashes. An unreadable token is exposed as a string subclass, while
+        # valid Fernet ciphertext containing malformed/non-object JSON is
+        # exposed as another non-dict value. In both cases an unrelated save
+        # must preserve the last known hashes instead of clearing them.
+        if isinstance(self.personal_data, dict):
+            personal_data: dict[str, Any] = self.personal_data
+            self.email_hash = _hash_intake_lookup_value(personal_data.get("email"), field_name="email")
+            self.phone_hash = _hash_intake_lookup_value(personal_data.get("phone"), field_name="phone")
+            passport_value = (
+                personal_data.get("passport_num")
+                or personal_data.get("passport_number")
+                or personal_data.get("document_number")
+            )
+            self.passport_hash = _hash_intake_lookup_value(passport_value, field_name="passport")
+            update_fields = kwargs.get("update_fields")
+            if update_fields is not None:
+                update_fields = set(update_fields)
+                update_fields.update({"email_hash", "phone_hash", "passport_hash"})
+                kwargs["update_fields"] = list(update_fields)
         self._assert_created_case_client_consistent()
         super().save(*args, **kwargs)
 
@@ -219,8 +225,7 @@ class ClientOnboardingSession(models.Model):
         constraints = [
             models.CheckConstraint(
                 condition=(
-                    models.Q(scope="case_link", case__isnull=False)
-                    | models.Q(scope="client_portal", case__isnull=True)
+                    models.Q(scope="case_link", case__isnull=False) | models.Q(scope="client_portal", case__isnull=True)
                 ),
                 name="onboarding_scope_matches_case",
             )
@@ -240,6 +245,7 @@ class ClientOnboardingSession(models.Model):
                 self.case_id = payment.case_id
             elif self.client_id:
                 from clients.models.consistency import resolve_required_case
+
                 try:
                     self.case = resolve_required_case(self.client_id, self.__class__.__name__)
                 except ValidationError as e:
@@ -258,6 +264,7 @@ class ClientOnboardingSession(models.Model):
                 self.case_id = payment.case_id
             elif self.client_id:
                 from clients.models.consistency import resolve_required_case
+
                 self.case = resolve_required_case(self.client_id, self.__class__.__name__)
             if self.case_id is not None and update_fields is not None:
                 update_fields = set(update_fields)
@@ -385,6 +392,7 @@ class MOSApplicationData(models.Model):
         if self.case_id is None:
             if self.client_id:
                 from clients.models.consistency import resolve_required_case
+
                 try:
                     self.case = resolve_required_case(self.client_id, self.__class__.__name__)
                 except ValidationError as e:
@@ -398,6 +406,7 @@ class MOSApplicationData(models.Model):
         update_fields = kwargs.get("update_fields")
         if self.case_id is None and self.client_id:
             from clients.models.consistency import resolve_required_case
+
             self.case = resolve_required_case(self.client_id, self.__class__.__name__)
             if update_fields is not None:
                 update_fields = set(update_fields)
@@ -463,6 +472,7 @@ class PeselApplication(models.Model):
         if self.case_id is None:
             if self.client_id:
                 from clients.models.consistency import resolve_required_case
+
                 try:
                     self.case = resolve_required_case(self.client_id, self.__class__.__name__)
                 except ValidationError as e:
@@ -476,6 +486,7 @@ class PeselApplication(models.Model):
         update_fields = kwargs.get("update_fields")
         if self.case_id is None and self.client_id:
             from clients.models.consistency import resolve_required_case
+
             self.case = resolve_required_case(self.client_id, self.__class__.__name__)
             if update_fields is not None:
                 update_fields = set(update_fields)

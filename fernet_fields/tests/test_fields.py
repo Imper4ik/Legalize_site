@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from cryptography.fernet import Fernet, InvalidToken, MultiFernet
+from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase, override_settings
 
 from fernet_fields.fields import (
     ENCRYPTED_VALUE_UNAVAILABLE,
+    EncryptedJSONField,
     EncryptedTextField,
     EncryptedValueUnavailable,
     _build_fernet,
@@ -81,6 +83,14 @@ class EncryptedTextFieldTests(SimpleTestCase):
             with self.assertRaises(InvalidToken):
                 Fernet(old_key).decrypt(rotated_token.encode())
 
+    def test_reserved_unavailable_literal_is_rejected_during_prep(self):
+        field = EncryptedTextField()
+        with self.assertRaises(ValidationError):
+            field.get_prep_value(ENCRYPTED_VALUE_UNAVAILABLE)
+
+        unavailable = EncryptedValueUnavailable("gAAAA-corrupted-token")
+        self.assertEqual(field.get_prep_value(unavailable), unavailable.raw_value)
+
     @override_settings(FERNET_KEYS=["dummy"])
     def test_none_and_empty_values_stay_unchanged(self):
         key = Fernet.generate_key().decode()
@@ -88,3 +98,33 @@ class EncryptedTextFieldTests(SimpleTestCase):
             field = EncryptedTextField()
             self.assertIsNone(field.get_prep_value(None))
             self.assertEqual(field.get_prep_value(""), "")
+
+
+class EncryptedJSONFieldTests(SimpleTestCase):
+    def test_dict_roundtrip_and_corrupted_token_preservation(self):
+        key = Fernet.generate_key().decode()
+        raw_corrupted = "gAAAA-corrupted-token"
+        with override_settings(FERNET_KEYS=[key]):
+            field = EncryptedJSONField()
+            payload = {"warnings": ["manual review"]}
+            encrypted = field.get_prep_value(payload)
+
+            self.assertEqual(field.from_db_value(encrypted, None, None), payload)
+
+            unavailable = field.from_db_value(raw_corrupted, None, None)
+            self.assertIsInstance(unavailable, EncryptedValueUnavailable)
+            self.assertEqual(field.get_prep_value(unavailable), raw_corrupted)
+
+    def test_clean_rejects_unavailable_marker_before_it_can_overwrite_ciphertext(self):
+        field = EncryptedJSONField()
+        unavailable = EncryptedValueUnavailable("gAAAA-corrupted-token")
+
+        with self.assertRaises(ValidationError):
+            field.clean(unavailable, None)
+
+        # Reject the literal placeholder too: a crafted form must not persist
+        # it as a new, valid ciphertext and destroy the recoverable raw token.
+        with self.assertRaises(ValidationError):
+            field.clean(ENCRYPTED_VALUE_UNAVAILABLE, None)
+        with self.assertRaises(ValidationError):
+            field.get_prep_value(ENCRYPTED_VALUE_UNAVAILABLE)

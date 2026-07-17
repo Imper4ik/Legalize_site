@@ -12,7 +12,7 @@ import os
 import re
 import tempfile
 from datetime import date, timedelta
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from django.db import transaction
 from django.utils import timezone
@@ -20,6 +20,7 @@ from django.utils.translation import gettext as _
 
 from clients.constants import DocumentType
 from clients.models import Case, Client, Document, DocumentProcessingJob
+from clients.security.encrypted import read_encrypted_json_dict
 from clients.services.activity import log_client_activity
 from clients.services.company_parser import parse_company_doc
 from clients.services.document_processing_common import (
@@ -321,8 +322,25 @@ def _process_rental_doc_job_internal(
         if job.document.case_id
         else None
     )
-    if mos_data and mos_data.address_data:
-        address_data = cast("dict[str, Any]", mos_data.address_data)
+    address_data: dict[str, Any] = {}
+    if mos_data:
+        address_data, address_data_unavailable = read_encrypted_json_dict(
+            mos_data,
+            "address_data",
+        )
+        if address_data_unavailable:
+            logger.warning(
+                "Rental OCR job blocked because onboarding address data is unavailable: job_id=%s mos_data_id=%s",
+                job.id,
+                mos_data.id,
+            )
+            return _finalize_failed_document_job(
+                job_id=job.id,
+                source_file_name=source_file_name,
+                error_message=str(_("Onboarding address data is temporarily unavailable.")),
+            )
+
+    if address_data:
         street = address_data.get("street", "").strip()
         city = address_data.get("city", "").strip()
         postal_code = address_data.get("postal_code", "").strip()

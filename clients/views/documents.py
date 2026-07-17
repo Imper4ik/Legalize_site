@@ -15,7 +15,11 @@ from django.utils.translation import gettext as _
 from clients.constants import DocumentType, is_wezwanie_document_type
 from clients.forms import ClientDocumentRequirementForm, DocumentUploadForm
 from clients.models import Client, ClientDocumentRequirement, Document, WniosekAttachment
-from clients.security.encrypted import safe_encrypted_attr
+from clients.security.encrypted import (
+    EncryptedFieldUnavailableError,
+    read_encrypted_json_dict,
+    safe_encrypted_attr,
+)
 from clients.services.access import (
     accessible_clients_queryset,
     accessible_documents_queryset,
@@ -311,14 +315,24 @@ def confirm_wezwanie_parse(request: HttpRequest, doc_id: int) -> HttpResponseBas
         messages.error(request, _("Документ не является wezwanie."))
         return redirect("clients:client_detail", pk=document.client.id)
 
-    result = confirm_wezwanie_document(
-        document=document,
-        actor=request.user,
-        confirmation_data=request.POST,
-        parser=parse_wezwanie,
-        send_missing_email=send_missing_documents_email,
-        send_appointment_email=send_appointment_notification_email,
-    )
+    try:
+        result = confirm_wezwanie_document(
+            document=document,
+            actor=request.user,
+            confirmation_data=request.POST,
+            parser=parse_wezwanie,
+            send_missing_email=send_missing_documents_email,
+            send_appointment_email=send_appointment_notification_email,
+        )
+    except EncryptedFieldUnavailableError:
+        message = _(
+            "Recognized document data is temporarily unavailable. "
+            "Restore the encryption key before confirming this document."
+        )
+        if helper.expects_json:
+            return helper.error(message=str(message), status=409)
+        messages.error(request, message)
+        return redirect("clients:client_detail", pk=document.client.id)
 
     if helper.expects_json:
         return helper.success(
@@ -591,7 +605,16 @@ def get_document_parsed_data(request: HttpRequest, doc_id: int) -> HttpResponseB
     if not document.awaiting_confirmation:
         return JsonResponse({"error": str(_("Document is not awaiting confirmation."))}, status=400)
 
-    return JsonResponse({"parsed_data": document.parsed_data or {}})
+    payload, encrypted_data_unavailable = read_encrypted_json_dict(document, "parsed_data")
+    if encrypted_data_unavailable:
+        return apply_no_store(
+            JsonResponse(
+                {"error": str(_("Recognized document data is temporarily unavailable."))},
+                status=409,
+            )
+        )
+
+    return apply_no_store(JsonResponse({"parsed_data": payload}))
 
 
 @role_required_view(*DOCUMENT_EDIT_ROLES)

@@ -30,7 +30,7 @@ def build_document_checklist(
             requirements_cache=requirements_cache,
         )
 
-    from clients.services.document_helpers import document_file_exists
+    from clients.services.document_helpers import document_file_exists, document_has_ocr_warning
 
     from .document import DocumentRequirement, resolve_document_label
 
@@ -249,10 +249,7 @@ def build_document_checklist(
                 for doc in active_docs
                 if not getattr(doc, "awaiting_confirmation", False)
                 and doc.ocr_status != "failed"
-                and (
-                    getattr(doc, "ocr_name_mismatch", False)
-                    or bool((getattr(doc, "parsed_data", None) or {}).get("warnings"))
-                )
+                and document_has_ocr_warning(doc)
             ),
             None,
         )

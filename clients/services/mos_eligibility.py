@@ -16,6 +16,8 @@ from typing import Any
 
 from django.utils.translation import gettext_lazy as _
 
+from clients.security.encrypted import read_encrypted_json_dict
+
 # Roles that represent a sponsored family member (not the principal/sponsor).
 FAMILY_MEMBER_ROLES = {"family_spouse", "family_child"}
 
@@ -39,7 +41,11 @@ class MosEligibilityResult:
 def _resident_outside_poland(mos_data: Any) -> bool:
     """Return True only when the foreigner is explicitly recorded as abroad."""
 
-    stay_data = getattr(mos_data, "stay_data", None) or {}
+    if mos_data is None:
+        return False
+    stay_data, unavailable = read_encrypted_json_dict(mos_data, "stay_data")
+    if unavailable:
+        return False
     return stay_data.get("is_in_poland") is False
 
 

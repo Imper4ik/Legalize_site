@@ -1,5 +1,6 @@
 import logging
 import os
+from collections.abc import Mapping
 from typing import Any
 
 from django.core.files.base import ContentFile
@@ -7,6 +8,22 @@ from django.core.files.base import ContentFile
 from clients.models import Case, Document
 
 logger = logging.getLogger(__name__)
+
+
+def document_has_ocr_warning(document: Any) -> bool:
+    """Return whether a document contains an actionable OCR warning.
+
+    ``EncryptedJSONField`` deliberately returns a non-dict unavailable marker
+    when its ciphertext cannot be decrypted. Treat that marker (and malformed
+    legacy values) as unreadable, not as an OCR warning, so callers can keep
+    scanning other document versions without calling ``.get`` on a string.
+    """
+    if bool(getattr(document, "ocr_name_mismatch", False)):
+        return True
+
+    parsed_data = getattr(document, "parsed_data", None)
+    return isinstance(parsed_data, Mapping) and bool(parsed_data.get("warnings"))
+
 
 def document_file_exists(document: Any) -> bool:
     """Check if the physical file for a document exists in storage."""

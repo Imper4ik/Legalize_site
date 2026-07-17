@@ -85,7 +85,7 @@ def build_case_document_checklist(
 
     from clients.constants import DocumentType
     from clients.models.document import ClientDocumentRequirement, Document, resolve_document_label
-    from clients.services.document_helpers import document_file_exists
+    from clients.services.document_helpers import document_file_exists, document_has_ocr_warning
     from clients.services.zus import format_zus_months, missing_zus_months
 
     client = case.client
@@ -299,10 +299,7 @@ def build_case_document_checklist(
                 for document in active_documents
                 if not getattr(document, "awaiting_confirmation", False)
                 and document.ocr_status != "failed"
-                and (
-                    getattr(document, "ocr_name_mismatch", False)
-                    or bool((getattr(document, "parsed_data", None) or {}).get("warnings"))
-                )
+                and document_has_ocr_warning(document)
             ),
             None,
         )

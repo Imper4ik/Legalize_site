@@ -8,6 +8,7 @@ from typing import Any
 
 from cryptography.fernet import Fernet, InvalidToken, MultiFernet
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.utils.encoding import force_str
@@ -32,6 +33,14 @@ class EncryptedValueUnavailable(str):
         return obj
 
 
+def _reject_unavailable_placeholder(value: Any) -> None:
+    if value == ENCRYPTED_VALUE_UNAVAILABLE:
+        raise ValidationError(
+            "This value is currently unavailable due to decryption failure. "
+            "Saving it would permanently overwrite and lose the original data."
+        )
+
+
 def _build_fernet() -> Fernet | MultiFernet:
     keys = getattr(settings, "FERNET_KEYS", [])
     if not keys:
@@ -50,17 +59,13 @@ class EncryptedTextField(models.TextField):
         return _build_fernet()
 
     def clean(self, value: Any, model_instance: models.Model | None) -> Any:
-        if value == ENCRYPTED_VALUE_UNAVAILABLE:
-            from django.core.exceptions import ValidationError
-            raise ValidationError(
-                "This value is currently unavailable due to decryption failure. "
-                "Saving it would permanently overwrite and lose the original data."
-            )
+        _reject_unavailable_placeholder(value)
         return super().clean(value, model_instance)
 
     def get_prep_value(self, value: Any) -> Any:
         if isinstance(value, EncryptedValueUnavailable):
             return value.raw_value
+        _reject_unavailable_placeholder(value)
         value = super().get_prep_value(value)
         if value is None or value == "":
             return value
@@ -127,9 +132,14 @@ class EncryptedJSONField(models.TextField):
     def _fernet(self) -> Fernet | MultiFernet:
         return _build_fernet()
 
+    def clean(self, value: Any, model_instance: models.Model | None) -> Any:
+        _reject_unavailable_placeholder(value)
+        return super().clean(value, model_instance)
+
     def get_prep_value(self, value: Any) -> Any:
         if isinstance(value, EncryptedValueUnavailable):
             return value.raw_value
+        _reject_unavailable_placeholder(value)
         if value is None or value == "":
             return value
         json_value = json.dumps(value, cls=DjangoJSONEncoder, ensure_ascii=False, separators=(",", ":"))

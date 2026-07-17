@@ -16,6 +16,7 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from clients.models import Document, DocumentProcessingJob
+from clients.security.encrypted import EncryptedFieldUnavailableError, read_encrypted_json_dict
 from clients.services.document_processing_common import (
     DEFAULT_JOB_LEASE_SECONDS,
     DEFAULT_JOB_MAX_ATTEMPTS,
@@ -165,6 +166,22 @@ def process_document_processing_job(
         )
         document_file = job.document.file
 
+    _parsed_data, parsed_data_unavailable = read_encrypted_json_dict(
+        job.document,
+        "parsed_data",
+    )
+    if parsed_data_unavailable:
+        logger.warning(
+            "Document OCR job blocked because existing parsed data is unavailable: job_id=%s document_id=%s",
+            job.id,
+            job.document_id,
+        )
+        return _finalize_failed_document_job(
+            job_id=job.id,
+            source_file_name=source_file_name,
+            error_message=str(_("Existing OCR data is temporarily unavailable.")),
+        )
+
     if job.job_type == DocumentProcessingJob.JOB_TYPE_COMPANY_DOC_OCR:
         return _process_company_doc_job_internal(job, source_file_name, document_file)
     elif job.job_type == DocumentProcessingJob.JOB_TYPE_PASSPORT_OCR:
@@ -206,13 +223,24 @@ def process_document_processing_job(
             error_message=_("Parsed wezwanie data was empty."),
         )
 
-    return _finalize_successful_document_job(
-        job_id=job_id,
-        source_file_name=source_file_name,
-        parsed=parsed,
-        send_missing_email=send_missing_email,
-        send_appointment_email=send_appointment_email,
-    )
+    try:
+        return _finalize_successful_document_job(
+            job_id=job_id,
+            source_file_name=source_file_name,
+            parsed=parsed,
+            send_missing_email=send_missing_email,
+            send_appointment_email=send_appointment_email,
+        )
+    except EncryptedFieldUnavailableError:
+        logger.warning(
+            "Wezwanie OCR job blocked because an encrypted destination is unavailable: job_id=%s",
+            job.id,
+        )
+        return _finalize_failed_document_job(
+            job_id=job.id,
+            source_file_name=source_file_name,
+            error_message=str(_("Existing case data is temporarily unavailable.")),
+        )
 
 
 

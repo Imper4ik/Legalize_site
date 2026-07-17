@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from clients.constants import DocumentType
 from clients.models import Case, ClientActivity, ClientOnboardingSession, EmailLog, MOSApplicationData
+from clients.security.encrypted import read_encrypted_json_dict
 from clients.services.notifications import send_missing_documents_email
 from clients.services.onboarding_tokens import hash_onboarding_token
 from clients.services.workflow_transitions import transition_case_workflow
@@ -219,10 +220,11 @@ def run_real_ocr_fixture_scenarios(recorder: ScenarioRecorder) -> None:
         related=RelatedObjects(client=client, document=doc_wezwanie),
     )
 
-    # Check parsed fields
-    has_case_number = doc_wezwanie.parsed_data.get("case_number") == "WSC-II-S.6151.97770.2026" if doc_wezwanie.parsed_data else False
-    has_fingerprints_date = doc_wezwanie.parsed_data.get("fingerprints_date") == "2026-08-15" if doc_wezwanie.parsed_data else False
-    required_docs = doc_wezwanie.parsed_data.get("required_documents", []) if doc_wezwanie.parsed_data else []
+    # Check parsed fields without allowing a missing encryption key to crash Test Center.
+    wezwanie_data, _wezwanie_unavailable = read_encrypted_json_dict(doc_wezwanie, "parsed_data")
+    has_case_number = wezwanie_data.get("case_number") == "WSC-II-S.6151.97770.2026"
+    has_fingerprints_date = wezwanie_data.get("fingerprints_date") == "2026-08-15"
+    required_docs = wezwanie_data.get("required_documents", [])
     has_passport = "passport" in required_docs
     has_address = "address_proof" in required_docs
     has_photos = "photos" in required_docs
@@ -265,14 +267,15 @@ def run_real_ocr_fixture_scenarios(recorder: ScenarioRecorder) -> None:
     doc_krs.refresh_from_db()
 
     # We reuse 'zus_rca_good_matched' check for KRS real document parsing
-    has_nip = doc_krs.parsed_data.get("nip") == "5260250481" if doc_krs.parsed_data else False
-    has_krs = doc_krs.parsed_data.get("krs") == "0000225587" if doc_krs.parsed_data else False
+    krs_data, _krs_unavailable = read_encrypted_json_dict(doc_krs, "parsed_data")
+    has_nip = krs_data.get("nip") == "5260250481"
+    has_krs = krs_data.get("krs") == "0000225587"
 
     recorder.check(
         "ocr_fixtures.zus_rca_good_matched",
         res_krs.status == DocumentProcessingJob.STATUS_COMPLETED and has_nip and has_krs,
         expected="KRS parsed successfully with correct NIP and KRS number",
-        actual=f"job={res_krs.status}, nip={doc_krs.parsed_data.get('nip') if doc_krs.parsed_data else None}, krs={doc_krs.parsed_data.get('krs') if doc_krs.parsed_data else None}",
+        actual=f"job={res_krs.status}, nip={krs_data.get('nip')}, krs={krs_data.get('krs')}",
         related=RelatedObjects(client=client, document=doc_krs),
     )
 
