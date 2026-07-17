@@ -12,9 +12,11 @@ from django.utils.translation import gettext as _
 
 from clients.models import Client, MOSApplicationData
 from clients.security.encrypted import (
-    EncryptedJSONUnavailableError,
+    EncryptedFieldUnavailableError,
     read_encrypted_json_dict,
     require_encrypted_json_dict,
+    require_encrypted_json_list,
+    require_encrypted_text,
     safe_encrypted_attr,
 )
 from clients.services.access import accessible_clients_queryset
@@ -136,7 +138,24 @@ def _build_review_diffs(client: Client, mos_data: MOSApplicationData) -> list[di
 
 
 def _apply_mos_data_to_client(*, client: Client, mos_data: MOSApplicationData, actor: Any) -> list[str]:
+    for field_name in (
+        "personal_data",
+        "passport_data",
+        "address_data",
+        "stay_data",
+        "insurance_data",
+        "financial_data",
+        "legal_declarations",
+    ):
+        require_encrypted_json_dict(mos_data, field_name)
+    for field_name in ("previous_stays", "travel_history"):
+        require_encrypted_json_list(mos_data, field_name)
+
     values = _mos_client_update_values(mos_data, require_available=True)
+    if "passport_num" in values:
+        # Do not replace ciphertext that is unreadable under the active keyring.
+        require_encrypted_text(client, "passport_num")
+
     changed_fields: list[str] = []
     for field_name in APPLY_TO_CLIENT_FIELDS:
         if field_name not in values:
@@ -231,7 +250,7 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
                     mos_data=mos_data,
                     actor=request.user,
                 )
-            except EncryptedJSONUnavailableError:
+            except EncryptedFieldUnavailableError:
                 logger.warning(
                     "MOS approval blocked because encrypted questionnaire data is unavailable: client_id=%s mos_data_id=%s",
                     client.id,

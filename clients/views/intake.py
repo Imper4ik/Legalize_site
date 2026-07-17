@@ -119,8 +119,8 @@ def public_intake(request: HttpRequest, token: str) -> HttpResponse:
                 else:
                     form.add_error("email", _("Пользователь с таким email уже зарегистрирован. Пожалуйста, войдите в систему или восстановите пароль."))
             else:
-                intake.personal_data = form.personal_payload()  # type: ignore[assignment]
-                intake.case_data = form.case_payload()  # type: ignore[assignment]
+                intake.personal_data = form.personal_payload()
+                intake.case_data = form.case_payload()
                 intake.status = ClientIntakeSubmission.STATUS_SUBMITTED
                 intake.submitted_at = timezone.now()
                 intake.save(update_fields=["personal_data", "case_data", "status", "submitted_at", "updated_at"])

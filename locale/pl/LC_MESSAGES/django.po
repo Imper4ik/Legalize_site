@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Legalize Site\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-14 11:59+0200\n"
+"POT-Creation-Date: 2026-07-17 09:58+0200\n"
 "PO-Revision-Date: 2026-07-10 23:42+0200\n"
 "Last-Translator: Legalize Site Team\n"
 "Language-Team: Polish\n"
@@ -26,7 +26,7 @@ msgid "Another Demo Center run or cleanup is already in progress."
 msgstr "Inne uruchomienie lub czyszczenie Demo Center jest już w toku."
 
 #: clients/forms/case_client_forms.py:32 clients/forms/case_client_forms.py:163
-#: clients/models/client.py:197 clients/models/document.py:436
+#: clients/models/client.py:197 clients/models/document.py:438
 #: clients/templates/clients/case_detail.html:194
 #: clients/templates/clients/document_checklist_manage.html:72
 msgid "Цель подачи"
@@ -109,7 +109,7 @@ msgstr "Data zakończenia podstawy pobytu"
 #: clients/templates/clients/mos_review.html:55
 #: clients/templates/clients/onboarding/passport.html:92
 #: clients/templates/clients/partials/client_overview.html:270
-#: clients/views/admin_mos_review.py:99
+#: clients/views/admin_mos_review.py:114
 msgid "Дата рождения"
 msgstr "Data urodzenia"
 
@@ -165,7 +165,7 @@ msgstr "Nazwisko"
 #: clients/templates/clients/client_export_pdf.html:38
 #: clients/templates/clients/onboarding/passport.html:85
 #: clients/templates/clients/test_center.html:375
-#: clients/views/admin_mos_review.py:97 users/forms.py:22 users/forms.py:26
+#: clients/views/admin_mos_review.py:112 users/forms.py:22 users/forms.py:26
 msgid "Email"
 msgstr "E-mail"
 
@@ -219,7 +219,7 @@ msgstr "Powtórz hasło"
 msgid "работа, учёба, семья"
 msgstr "praca, studia, rodzina"
 
-#: clients/forms/intake_forms.py:55 clients/views/onboarding_views.py:115
+#: clients/forms/intake_forms.py:55 clients/views/onboarding_views.py:151
 msgid "Пароли не совпадают."
 msgstr "Hasła nie pasują do siebie."
 
@@ -404,12 +404,20 @@ msgstr "Twój pobyt wkrótce dobiegnie końca"
 msgid "До окончания основания пребывания осталось меньше 30 дней."
 msgstr "Do końca pobytu pozostało niecałe 30 dni."
 
+#: clients/models/_client_health.py:109 clients/services/workday.py:66
+#: clients/templates/clients/case_detail.html:249
+#: clients/templates/clients/partials/document_checklist.html:386
+#: clients/templates/clients/partials/document_checklist.html:389
+#: clients/views/documents.py:412
+msgid "Проверить"
+msgstr "Sprawdź"
+
 #: clients/models/_client_health.py:117
 #, python-format
 msgid "Проверить документ: %s"
 msgstr "Sprawdź dokument: %s"
 
-#: clients/models/_client_health.py:119
+#: clients/models/_client_health.py:119 clients/models/_client_health.py:207
 #: clients/templates/clients/partials/document_checklist.html:133
 msgid "Проверить OCR"
 msgstr "Sprawdź OCR"
@@ -469,6 +477,22 @@ msgstr "Odrzucone dokumenty: %(count)s."
 msgid "wezwanie"
 msgstr "wezwanie"
 
+#: clients/models/_client_health.py:214 clients/services/workday.py:241
+#: clients/services/workday.py:415
+#: clients/templates/clients/admin_panel.html:343
+#: clients/templates/clients/admin_panel.html:352
+#: clients/templates/clients/admin_panel.html:361
+#: clients/templates/clients/admin_panel.html:369
+#: clients/templates/clients/admin_panel.html:401
+#: clients/templates/clients/admin_panel.html:438
+#: clients/templates/clients/document_versions.html:33
+#: clients/templates/clients/partials/document_checklist.html:372
+#: clients/templates/clients/partials/document_checklist.html:374
+#: submissions/templates/submissions/submission_detail.html:42
+#: submissions/templates/submissions/submission_list.html:32
+msgid "Открыть"
+msgstr "Otwórz"
+
 #: clients/models/_client_health.py:230 clients/models/_client_health.py:275
 msgid "Заполнить номер дела"
 msgstr "Uzupełnij numer sprawy"
@@ -482,7 +506,7 @@ msgid "Проверьте распознавание или заполните c
 msgstr "Sprawdź rozpoznanie lub wpisz numer sprawy ręcznie."
 
 #: clients/models/_client_health.py:242 clients/models/_client_health.py:283
-#: clients/services/tasks.py:85 clients/views/onboarding_start_contact.py:342
+#: clients/services/tasks.py:85 clients/views/onboarding_start_contact.py:366
 msgid "Запросить номер дела у клиента"
 msgstr "Poproś klienta o numer sprawy"
 
@@ -751,7 +775,7 @@ msgstr "Numer sprawy"
 
 #: clients/models/_client_health.py:604
 #: clients/templates/clients/partials/client_overview.html:10
-#: clients/views/client_crud.py:287 clients/views/documents.py:538
+#: clients/views/client_crud.py:287 clients/views/documents.py:552
 msgid "Не указан"
 msgstr "Nie podano"
 
@@ -1354,7 +1378,7 @@ msgstr "Typ wniosku"
 #: clients/models/case.py:137 clients/templates/clients/calculator.html:30
 #: clients/templates/clients/case_detail.html:196
 #: clients/templates/clients/partials/client_overview.html:205
-#: clients/views/admin_mos_review.py:102
+#: clients/views/admin_mos_review.py:117
 msgid "Основание пребывания"
 msgstr "Powód pobytu"
 
@@ -1529,7 +1553,7 @@ msgstr "Rosyjski"
 #: clients/templates/clients/partials/modals.html:194
 #: clients/templates/clients/staff_manage.html:26
 #: clients/templates/clients/staff_manage.html:66
-#: clients/views/admin_mos_review.py:95
+#: clients/views/admin_mos_review.py:110
 msgid "Имя"
 msgstr "Imię"
 
@@ -1539,26 +1563,26 @@ msgstr "Imię"
 #: clients/templates/clients/partials/modals.html:198
 #: clients/templates/clients/staff_manage.html:30
 #: clients/templates/clients/staff_manage.html:67
-#: clients/views/admin_mos_review.py:96
+#: clients/views/admin_mos_review.py:111
 msgid "Фамилия"
 msgstr "Nazwisko"
 
 #: clients/models/client.py:189 clients/templates/clients/mos_review.html:71
 #: clients/templates/clients/onboarding/passport.html:97
-#: clients/views/admin_mos_review.py:100
+#: clients/views/admin_mos_review.py:115
 msgid "Гражданство"
 msgstr "Obywatelstwo"
 
 #: clients/models/client.py:191
 #: clients/templates/clients/onboarding/start_contact.html:301
 #: clients/templates/clients/onboarding/start_contact.html:949
-#: clients/views/admin_mos_review.py:98
+#: clients/views/admin_mos_review.py:113
 msgid "Телефон"
 msgstr "Telefon"
 
 #: clients/models/client.py:193 clients/templates/clients/mos_review.html:126
 #: clients/templates/clients/onboarding/passport.html:151
-#: clients/views/admin_mos_review.py:101
+#: clients/views/admin_mos_review.py:116
 msgid "Номер паспорта"
 msgstr "Numer paszportu"
 
@@ -1735,7 +1759,7 @@ msgstr "Skutecznie"
 msgid "Ожидает"
 msgstr "Czekanie"
 
-#: clients/models/document.py:180 clients/models/document.py:437
+#: clients/models/document.py:180 clients/models/document.py:439
 msgid "Тип документа"
 msgstr "Typ dokumentu"
 
@@ -1828,7 +1852,14 @@ msgstr "Złożenie (wniosek), którego pozycje zamyka ta pieczęć / potwierdzen
 msgid "Документы"
 msgstr "Dokumenty"
 
-#: clients/models/document.py:438
+#: clients/models/document.py:269
+#: clients/tests/test_critical_translations.py:180
+#: clients/tests/test_critical_translations.py:182
+#: clients/tests/test_critical_translations.py:184
+msgid "for"
+msgstr "dla"
+
+#: clients/models/document.py:440
 #: clients/templates/clients/case_detail.html:293
 #: clients/templates/clients/case_detail.html:405
 #: clients/templates/clients/document_checklist_manage.html:231
@@ -1843,19 +1874,19 @@ msgstr "Dokumenty"
 msgid "Название"
 msgstr "Nazwa"
 
-#: clients/models/document.py:439
+#: clients/models/document.py:441
 msgid "Название (PL)"
 msgstr "Nazwa"
 
-#: clients/models/document.py:440
+#: clients/models/document.py:442
 msgid "Название (EN)"
 msgstr "Nazwa"
 
-#: clients/models/document.py:441
+#: clients/models/document.py:443
 msgid "Название (RU)"
 msgstr "Nazwa"
 
-#: clients/models/document.py:442
+#: clients/models/document.py:444
 #: clients/templates/clients/document_checklist_manage.html:311
 #: clients/templates/clients/onboarding/start.html:219
 #: clients/templates/clients/onboarding/start.html:297
@@ -1864,11 +1895,11 @@ msgstr "Nazwa"
 msgid "Обязательный документ"
 msgstr "Dokument obowiązkowy"
 
-#: clients/models/document.py:443
+#: clients/models/document.py:445
 msgid "Порядок отображения"
 msgstr "Kolejność wyświetlania"
 
-#: clients/models/document.py:448
+#: clients/models/document.py:450
 #: clients/templates/clients/onboarding/start.html:639
 #: clients/templates/clients/onboarding/start.html:655
 #: clients/templates/clients/onboarding/start_contact.html:1040
@@ -1876,11 +1907,11 @@ msgstr "Kolejność wyświetlania"
 msgid "Образец документа"
 msgstr "Wzór dokumentu"
 
-#: clients/models/document.py:454
+#: clients/models/document.py:456
 msgid "Требование к документу"
 msgstr "Nazwa dokumentu"
 
-#: clients/models/document.py:455
+#: clients/models/document.py:457
 msgid "Требования к документам"
 msgstr "Przypomnienia o dokumentach"
 
@@ -2137,11 +2168,11 @@ msgstr "Grupa rodzinna"
 msgid "Семейные группы"
 msgstr "Grupy rodzinne"
 
-#: clients/models/onboarding.py:305
+#: clients/models/onboarding.py:312
 msgid "Not provided"
 msgstr "Nie podano"
 
-#: clients/models/onboarding.py:306
+#: clients/models/onboarding.py:313
 #: clients/templates/clients/mos_review.html:183
 #: clients/templates/clients/mos_review.html:233
 #: clients/templates/clients/mos_review.html:245
@@ -2160,7 +2191,7 @@ msgstr "Nie podano"
 msgid "Да"
 msgstr "Tak"
 
-#: clients/models/onboarding.py:307
+#: clients/models/onboarding.py:314
 #: clients/templates/clients/mos_review.html:183
 #: clients/templates/clients/mos_review.html:233
 #: clients/templates/clients/mos_review.html:245
@@ -2182,61 +2213,61 @@ msgstr "Tak"
 msgid "Нет"
 msgstr "Nie"
 
-#: clients/models/onboarding.py:308
+#: clients/models/onboarding.py:315
 msgid "Не знаю"
 msgstr "Nie wiem"
 
-#: clients/models/onboarding.py:323
+#: clients/models/onboarding.py:330
 msgid "Draft"
 msgstr "Szkic"
 
-#: clients/models/onboarding.py:324
+#: clients/models/onboarding.py:331
 msgid "Client filling"
 msgstr "Wypełnianie przez klienta"
 
-#: clients/models/onboarding.py:325
+#: clients/models/onboarding.py:332
 #: clients/templates/clients/clients_list.html:57
 #: legalize_site/context_processors.py:287
 msgid "Client completed"
 msgstr "Formularz wypełniony przez klienta"
 
-#: clients/models/onboarding.py:326
+#: clients/models/onboarding.py:333
 #: clients/templates/clients/clients_list.html:59
 #: legalize_site/context_processors.py:295
 msgid "Staff review"
 msgstr "Oczekuje na weryfikację"
 
-#: clients/models/onboarding.py:327
+#: clients/models/onboarding.py:334
 msgid "Needs correction"
 msgstr "Wymaga poprawek"
 
-#: clients/models/onboarding.py:328
+#: clients/models/onboarding.py:335
 msgid "Approved by staff"
 msgstr "Zatwierdzony przez pracownika"
 
-#: clients/models/onboarding.py:329
+#: clients/models/onboarding.py:336
 msgid "MOS package ready"
 msgstr "Pakiet MOS gotowy"
 
-#: clients/models/onboarding.py:330
+#: clients/models/onboarding.py:337
 #: clients/templates/clients/clients_list.html:63
 #: legalize_site/context_processors.py:303
 msgid "Submitted in MOS"
 msgstr "Wysłano do MOS"
 
-#: clients/models/onboarding.py:331
+#: clients/models/onboarding.py:338
 msgid "Fingerprints"
 msgstr "Odciski palców"
 
-#: clients/models/onboarding.py:332
+#: clients/models/onboarding.py:339
 msgid "Waiting decision"
 msgstr "Oczekiwanie na decyzję"
 
-#: clients/models/onboarding.py:333
+#: clients/models/onboarding.py:340
 msgid "Decision received"
 msgstr "Decyzja otrzymana"
 
-#: clients/models/onboarding.py:334
+#: clients/models/onboarding.py:341
 msgid "Closed"
 msgstr "Zamknięte"
 
@@ -2649,250 +2680,262 @@ msgstr "Wniosek attachment"
 msgid "Wniosek attachments"
 msgstr "Wniosek attachments"
 
-#: clients/services/document_job_processors.py:99
+#: clients/services/document_job_processors.py:100
 msgid "Automatic company doc parsing failed."
 msgstr "Automatyczne analizowanie wezwanie nie powiodło się."
 
-#: clients/services/document_job_processors.py:132
+#: clients/services/document_job_processors.py:133
 #, python-format
 msgid "Salary %(salary)s PLN is below the statutory minimum of %(min)s PLN."
 msgstr "Wynagrodzenie %(salary)s zł jest niższe od ustawowego minimum wynoszącego %(min)s zł."
 
-#: clients/services/document_job_processors.py:138
+#: clients/services/document_job_processors.py:139
 msgid "Could not extract salary from the document."
 msgstr "Nie można wyodrębnić wynagrodzenia z dokumentu."
 
-#: clients/services/document_job_processors.py:187
+#: clients/services/document_job_processors.py:188
 msgid "Automatic passport parsing failed."
 msgstr "Automatyczne analizowanie wezwanie nie powiodło się."
 
-#: clients/services/document_job_processors.py:194
+#: clients/services/document_job_processors.py:195
 msgid "Could not extract any text from the passport."
 msgstr "Nie można wyodrębnić żadnego tekstu z paszportu."
 
-#: clients/services/document_job_processors.py:208
+#: clients/services/document_job_processors.py:209
 msgid "Client name not matched in the passport."
 msgstr "Imię i nazwisko klienta nie zgadza się w paszporcie."
 
-#: clients/services/document_job_processors.py:214
+#: clients/services/document_job_processors.py:215
 #, python-format
 msgid "Passport Date of Birth (%(passport_dob)s) does not match Client DOB (%(client_dob)s)."
 msgstr "Data urodzenia w paszporcie ( %(passport_dob)s) nie jest zgodna z datą urodzenia Klienta (%(client_dob)s)."
 
-#: clients/services/document_job_processors.py:220
+#: clients/services/document_job_processors.py:221
 msgid "Could not extract Date of Birth from the passport."
 msgstr "Nie można wyodrębnić daty urodzenia z paszportu."
 
-#: clients/services/document_job_processors.py:226
+#: clients/services/document_job_processors.py:227
 #, python-format
 msgid "Passport has expired on %(expiry)s."
 msgstr "Paszport utracił ważność w dniu %(expiry)s ."
 
-#: clients/services/document_job_processors.py:230
+#: clients/services/document_job_processors.py:231
 #, python-format
 msgid "Passport expires soon (%(expiry)s), in less than 3 months."
 msgstr "Paszport wkrótce straci ważność ( %(expiry)s ), za niecałe 3 miesiące."
 
-#: clients/services/document_job_processors.py:233
+#: clients/services/document_job_processors.py:234
 msgid "Could not extract Passport expiration date."
 msgstr "Nie można wyodrębnić daty ważności paszportu."
 
-#: clients/services/document_job_processors.py:244
+#: clients/services/document_job_processors.py:245
 #, python-format
 msgid "Passport number in document (%(doc_num)s) does not match profile (%(profile_num)s)."
 msgstr "Numer paszportu w dokumencie ( %(doc_num)s) nie pasuje do profilu (%(profile_num)s)."
 
-#: clients/services/document_job_processors.py:267
+#: clients/services/document_job_processors.py:268
 msgid "Passport"
 msgstr "Paszport"
 
-#: clients/services/document_job_processors.py:299
+#: clients/services/document_job_processors.py:300
 msgid "Automatic rental agreement parsing failed."
 msgstr "Automatyczne analizowanie wezwanie nie powiodło się."
 
-#: clients/services/document_job_processors.py:306
+#: clients/services/document_job_processors.py:307
 msgid "Could not extract any text from the rental agreement."
 msgstr "Nie można wyodrębnić żadnego tekstu z umowy najmu."
 
-#: clients/services/document_job_processors.py:315
+#: clients/services/document_job_processors.py:316
 msgid "Client name not matched in the rental agreement."
 msgstr "Imię i nazwisko klienta nie jest zgodne z umową najmu."
 
-#: clients/services/document_job_processors.py:343
+#: clients/services/document_job_processors.py:340
+msgid "Onboarding address data is temporarily unavailable."
+msgstr "Dane adresowe z formularza są tymczasowo niedostępne."
+
+#: clients/services/document_job_processors.py:361
 #, python-format
 msgid "Agreement address does not match onboarding address: %(onboarding_addr)s."
 msgstr "Adres umowy nie jest zgodny z adresem wdrożenia: %(onboarding_addr)s ."
 
-#: clients/services/document_job_processors.py:348
+#: clients/services/document_job_processors.py:366
 msgid "Address details are not filled in onboarding profile."
 msgstr "Dane adresowe nie są wpisane w profilu wprowadzającym."
 
-#: clients/services/document_job_processors.py:350
+#: clients/services/document_job_processors.py:368
 msgid "Onboarding address data not found."
 msgstr "Nie znaleziono danych adresowych wejścia na pokład."
 
-#: clients/services/document_job_processors.py:356
+#: clients/services/document_job_processors.py:374
 #, python-format
 msgid "Rental agreement has expired on %(expiry)s."
 msgstr "Umowa najmu wygasła w dniu %(expiry)s ."
 
-#: clients/services/document_job_processors.py:373
+#: clients/services/document_job_processors.py:391
 msgid "Rental Agreement"
 msgstr "Umowa wynajmu"
 
-#: clients/services/document_job_processors.py:415
+#: clients/services/document_job_processors.py:433
 msgid "Automatic ZUS document parsing failed."
 msgstr "Automatyczne analizowanie wezwanie nie powiodło się."
 
-#: clients/services/document_job_processors.py:422
+#: clients/services/document_job_processors.py:440
 msgid "Could not extract any text from the ZUS document."
 msgstr "Nie udało się wyodrębnić żadnego tekstu z dokumentu ZUS."
 
-#: clients/services/document_job_processors.py:433
+#: clients/services/document_job_processors.py:451
 msgid "Client name not matched in the ZUS document."
 msgstr "Niezgodna nazwa klienta w dokumencie ZUS."
 
-#: clients/services/document_job_processors.py:490
+#: clients/services/document_job_processors.py:508
 #, python-format
 msgid "ZUS employer NIP (%(zus_nip)s) does not match contract NIP (%(contract_nip)s)."
 msgstr "NIP pracodawcy ZUS ( %(zus_nip)s ) nie jest zgodny z NIP umowy ( %(contract_nip)s )."
 
-#: clients/services/document_job_processors.py:499
+#: clients/services/document_job_processors.py:517
 #, python-format
 msgid "Extracted employer NIP %(nip)s is invalid."
 msgstr "Wyodrębniony NIP pracodawcy %(nip)s jest nieprawidłowy."
 
-#: clients/services/document_job_processors.py:503
+#: clients/services/document_job_processors.py:521
 msgid "Could not extract employer NIP from the ZUS document."
 msgstr "Nie udało się wyodrębnić NIP pracodawcy z dokumentu ZUS."
 
-#: clients/services/document_job_processors.py:510
+#: clients/services/document_job_processors.py:528
 #, python-format
 msgid "Insurance code '%(code)s' indicates non-standard employment type (expected Umowa o pracę/zlecenie)."
 msgstr "Kod ubezpieczenia ' %(code)s' oznacza niestandardowy rodzaj zatrudnienia (oczekiwana umowa o pracę/zlecenie)."
 
-#: clients/services/document_job_processors.py:516
+#: clients/services/document_job_processors.py:534
 #, python-format
 msgid "Insurance code %(code)s accepted."
 msgstr "Kod ubezpieczenia %(code)s zaakceptowany."
 
-#: clients/services/document_job_processors.py:519
+#: clients/services/document_job_processors.py:537
 msgid "Could not extract insurance code (e.g. 011000) from ZUS."
 msgstr "Nie udało się wyodrębnić kodu ubezpieczenia (np. 011000) z ZUS."
 
-#: clients/services/document_job_processors.py:523
+#: clients/services/document_job_processors.py:541
 #, python-format
 msgid "ZUS %(form_type)s"
 msgstr "ZUS %(form_type)s"
 
-#: clients/services/document_job_processors.py:525
+#: clients/services/document_job_processors.py:543
 msgid "ZUS Document"
 msgstr "Wersje dokumentu"
 
-#: clients/services/document_job_processors.py:592
+#: clients/services/document_job_processors.py:610
 msgid "Automatic insurance parsing failed."
 msgstr "Automatyczne analizowanie wezwanie nie powiodło się."
 
-#: clients/services/document_job_processors.py:599
+#: clients/services/document_job_processors.py:617
 msgid "Could not extract any text from the insurance document."
 msgstr "Nie można wyodrębnić żadnego tekstu z dokumentu ubezpieczenia."
 
-#: clients/services/document_job_processors.py:624
+#: clients/services/document_job_processors.py:642
 msgid "Client name not matched in the insurance policy."
 msgstr "Imię i nazwisko klienta nie zgadza się z polisą ubezpieczeniową."
 
-#: clients/services/document_job_processors.py:630
+#: clients/services/document_job_processors.py:648
 #, python-format
 msgid "Insurance policy has expired on %(expiry)s."
 msgstr "Polisa ubezpieczeniowa wygasła w dniu %(expiry)s ."
 
-#: clients/services/document_job_processors.py:633
+#: clients/services/document_job_processors.py:651
 msgid "Could not extract insurance expiration date."
 msgstr "Nie udało się wyodrębnić daty ważności ubezpieczenia."
 
-#: clients/services/document_job_processors.py:639
+#: clients/services/document_job_processors.py:657
 #, python-format
 msgid "Insurance coverage limit (%(amount)s EUR) is below the statutory minimum of 30,000 EUR."
 msgstr "Limit ochrony ubezpieczeniowej (%(amount)s EUR) jest niższy od ustawowego minimum 30 000 EUR."
 
-#: clients/services/document_job_processors.py:645
+#: clients/services/document_job_processors.py:663
 #, python-format
 msgid "Insurance coverage limit (%(amount)s PLN) is below the statutory minimum of 120,000 PLN."
 msgstr "Limit ochrony ubezpieczeniowej (%(amount)s zł) jest niższy od ustawowego minimum 120 000 zł."
 
-#: clients/services/document_job_processors.py:651
+#: clients/services/document_job_processors.py:669
 #, python-format
 msgid "Insurance coverage currency is '%(curr)s' (expected EUR or PLN). Cannot verify coverage limit."
 msgstr "Walutą ubezpieczenia jest „%(curr)s” (oczekiwane EUR lub PLN). Nie można zweryfikować limitu zasięgu."
 
-#: clients/services/document_job_processors.py:656
+#: clients/services/document_job_processors.py:674
 msgid "Could not extract insurance coverage amount or currency (min 30,000 EUR / 120,000 PLN)."
 msgstr "Nie udało się wyodrębnić kwoty lub waluty ubezpieczenia (min. 30 000 EUR / 120 000 PLN)."
 
-#: clients/services/document_job_processors.py:672
+#: clients/services/document_job_processors.py:690
 msgid "Health Insurance"
 msgstr "Ubezpieczenie zdrowotne"
 
-#: clients/services/document_job_processors.py:740
+#: clients/services/document_job_processors.py:758
 #, python-format
 msgid "Company document verified successfully with %(warning_count)s warnings."
 msgstr "Dokument firmowy zweryfikowany pomyślnie z ostrzeżeniami %(warning_count)s."
 
-#: clients/services/document_job_processors.py:744
+#: clients/services/document_job_processors.py:762
 msgid "Company document verified successfully."
 msgstr "Dokument firmowy zweryfikowany pomyślnie."
 
-#: clients/services/document_job_processors.py:824
+#: clients/services/document_job_processors.py:842
 #, python-format
 msgid "%(doc_type)s verified with %(warning_count)s warnings."
 msgstr "%(doc_type)s zweryfikowane za pomocą %(warning_count)s ostrzeżeń."
 
-#: clients/services/document_job_processors.py:829
+#: clients/services/document_job_processors.py:847
 #, python-format
 msgid "%(doc_type)s verified successfully."
 msgstr "%(doc_type)s zweryfikowano pomyślnie."
 
-#: clients/services/document_job_processors.py:858
-#: clients/services/document_job_processors.py:921
+#: clients/services/document_job_processors.py:876
+#: clients/services/document_job_processors.py:939
 msgid "Job was superseded by a newer upload."
 msgstr "Zadanie zostało zastąpione nowszym przesyłaniem."
 
-#: clients/services/document_job_processors.py:894
+#: clients/services/document_job_processors.py:912
 msgid "OCR job requeued for retry."
 msgstr "Zadanie OCR ponownie umieszczono w kolejce do ponownej próby."
 
-#: clients/services/document_job_processors.py:999
+#: clients/services/document_job_processors.py:1017
 msgid "Queued OCR job completed and awaits confirmation."
 msgstr "Zadanie umieszczone w kolejce OCR zostało ukończone i oczekuje na potwierdzenie."
 
-#: clients/services/document_job_processors.py:1018
+#: clients/services/document_job_processors.py:1036
 msgid "missing-documents email sent"
 msgstr "Brakujące dokumenty"
 
-#: clients/services/document_job_processors.py:1022
+#: clients/services/document_job_processors.py:1040
 msgid "appointment notification sent"
 msgstr "appointment notification wysłane"
 
-#: clients/services/document_job_processors.py:1052
-#: clients/services/document_workflow.py:191
-#: clients/services/document_workflow.py:265
+#: clients/services/document_job_processors.py:1070
+#: clients/services/document_workflow.py:200
+#: clients/services/document_workflow.py:274
 #, python-format
 msgid "Document '%(name)s' uploaded successfully."
 msgstr "Dokument „%(name)s” został przesłany pomyślnie."
 
-#: clients/services/document_jobs.py:146
+#: clients/services/document_jobs.py:147
 msgid "Job is not pending."
 msgstr "Zadanie nie jest oczekujące."
 
-#: clients/services/document_jobs.py:199
+#: clients/services/document_jobs.py:182
+msgid "Existing OCR data is temporarily unavailable."
+msgstr "Istniejące dane OCR są tymczasowo niedostępne."
+
+#: clients/services/document_jobs.py:216
 msgid "Automatic wezwanie parsing failed."
 msgstr "Automatyczne analizowanie wezwanie nie powiodło się."
 
-#: clients/services/document_jobs.py:206
+#: clients/services/document_jobs.py:223
 msgid "Parsed wezwanie data was empty."
 msgstr "Przeanalizowane dane wezwanie były puste."
 
-#: clients/services/document_jobs.py:233
+#: clients/services/document_jobs.py:242
+msgid "Existing case data is temporarily unavailable."
+msgstr "Istniejące dane sprawy są tymczasowo niedostępne."
+
+#: clients/services/document_jobs.py:261
 msgid "Job lease expired before completion."
 msgstr "Umowa najmu wygasła przed zakończeniem."
 
@@ -2905,70 +2948,74 @@ msgstr "Dokument przesłano, ale automatyczne analizowanie wezwanie nie powiodł
 msgid "Automatic archive before restoring version %(num)s"
 msgstr "Automatyczna archiwizacja przed przywróceniem wersji %(num)s"
 
-#: clients/services/document_workflow.py:253
+#: clients/services/document_workflow.py:262
 msgid "Document uploaded. OCR and automatic verification were queued; review details after processing completes."
 msgstr "Dokument przesłany. Przetwarzanie OCR znalazło się w kolejce; przejrzyj rozpoznane dane po zakończeniu przetwarzania."
 
-#: clients/services/document_workflow.py:255
+#: clients/services/document_workflow.py:264
 msgid "Document uploaded. OCR processing was queued; review recognized data after processing completes."
 msgstr "Dokument przesłany. Przetwarzanie OCR znalazło się w kolejce; przejrzyj rozpoznane dane po zakończeniu przetwarzania."
 
-#: clients/services/document_workflow.py:284
+#: clients/services/document_workflow.py:293
 msgid "Selected document type cannot be confirmed as a wezwanie."
 msgstr "Wybrany rodzaj dokumentu nie może zostać potwierdzony w formie wezwania."
 
-#: clients/services/document_workflow.py:365
+#: clients/services/document_workflow.py:382
 #, python-format
 msgid "Document '%(name)s' uploaded and verified: %(msg)s"
 msgstr "Dokument „%(name)s” przesłany i zweryfikowany: %(msg)s"
 
-#: clients/services/document_workflow.py:443
+#: clients/services/document_workflow.py:463
+msgid "Recognized document data is temporarily unavailable. Restore the encryption key before confirming it."
+msgstr "Rozpoznane dane dokumentu są tymczasowo niedostępne. Przywróć klucz szyfrowania przed ich potwierdzeniem."
+
+#: clients/services/document_workflow.py:472
 msgid "Document uploaded. Review recognized data before applying it."
 msgstr "Dokument przesłany. Przejrzyj rozpoznane dane przed ich zastosowaniem."
 
-#: clients/services/document_workflow_wezwanie.py:97
+#: clients/services/document_workflow_wezwanie.py:98
 #, python-format
 msgid "required documents detected: %(val)s"
 msgstr "wykryto wymagane dokumenty: %(val)s"
 
-#: clients/services/document_workflow_wezwanie.py:138
-#: clients/services/document_workflow_wezwanie.py:269
+#: clients/services/document_workflow_wezwanie.py:144
+#: clients/services/document_workflow_wezwanie.py:280
 msgid "case number updated"
 msgstr "numer sprawy zaktualizowany"
 
-#: clients/services/document_workflow_wezwanie.py:144
-#: clients/services/document_workflow_wezwanie.py:276
+#: clients/services/document_workflow_wezwanie.py:150
+#: clients/services/document_workflow_wezwanie.py:287
 #, python-format
 msgid "fingerprints date: %(val)s"
 msgstr "fingerprints data: %(val)s"
 
-#: clients/services/document_workflow_wezwanie.py:162
-#: clients/services/document_workflow_wezwanie.py:312
+#: clients/services/document_workflow_wezwanie.py:168
+#: clients/services/document_workflow_wezwanie.py:323
 #, python-format
 msgid "decision date: %(val)s"
 msgstr "data decyzji: %(val)s"
 
-#: clients/services/document_workflow_wezwanie.py:165
-#: clients/services/document_workflow_wezwanie.py:315
+#: clients/services/document_workflow_wezwanie.py:171
+#: clients/services/document_workflow_wezwanie.py:326
 msgid "decision date skipped: case must already be waiting for decision"
 msgstr "pominięto datę decyzji: sprawa musi już oczekiwać na decyzję"
 
-#: clients/services/document_workflow_wezwanie.py:170
+#: clients/services/document_workflow_wezwanie.py:176
 #, python-format
 msgid "ticket number: %(val)s"
 msgstr "numer biletu: %(val)s"
 
-#: clients/services/document_workflow_wezwanie.py:175
+#: clients/services/document_workflow_wezwanie.py:181
 #, python-format
 msgid "list: %(val)s"
 msgstr "lista: %(val)s"
 
-#: clients/services/document_workflow_wezwanie.py:184
+#: clients/services/document_workflow_wezwanie.py:190
 #, python-format
 msgid "application purpose set to: %(val)s"
 msgstr "cel aplikacji ustawiony na: %(val)s"
 
-#: clients/services/document_workflow_wezwanie.py:193
+#: clients/services/document_workflow_wezwanie.py:199
 msgid "client name updated"
 msgstr "nazwa klienta została zaktualizowana"
 
@@ -3067,7 +3114,7 @@ msgstr "Dochód sponsora nie jest określony."
 msgid "Не хватает: %(amount)s zł"
 msgstr "Brakuje: %(amount)s zł"
 
-#: clients/services/mos_eligibility.py:69
+#: clients/services/mos_eligibility.py:75
 msgid "Family reunification cannot be submitted online in MOS while the foreigner resides outside Poland — a consular/paper route is required."
 msgstr "Wniosku o łączenie rodzin nie można złożyć online w MOS, gdy cudzoziemiec przebywa poza Polską — wymagana jest droga konsularna/papierowa."
 
@@ -3292,14 +3339,6 @@ msgstr "Sprawdź pracodawcę"
 msgid "Автоматическая задача"
 msgstr "Zadanie automatyczne"
 
-#: clients/services/workday.py:66
-#: clients/templates/clients/case_detail.html:249
-#: clients/templates/clients/partials/document_checklist.html:386
-#: clients/templates/clients/partials/document_checklist.html:389
-#: clients/views/documents.py:398
-msgid "Проверить"
-msgstr "Sprawdź"
-
 #: clients/services/workday.py:101 clients/services/workday.py:323
 #: clients/templates/clients/admin_panel.html:301
 #: clients/templates/clients/document_reminder_list.html:94
@@ -3349,21 +3388,6 @@ msgstr "Sprawdź status"
 #, python-format
 msgid "срок: %(date)s"
 msgstr "termin: %(date)s"
-
-#: clients/services/workday.py:241 clients/services/workday.py:415
-#: clients/templates/clients/admin_panel.html:343
-#: clients/templates/clients/admin_panel.html:352
-#: clients/templates/clients/admin_panel.html:361
-#: clients/templates/clients/admin_panel.html:369
-#: clients/templates/clients/admin_panel.html:401
-#: clients/templates/clients/admin_panel.html:438
-#: clients/templates/clients/document_versions.html:33
-#: clients/templates/clients/partials/document_checklist.html:372
-#: clients/templates/clients/partials/document_checklist.html:374
-#: submissions/templates/submissions/submission_detail.html:42
-#: submissions/templates/submissions/submission_list.html:32
-msgid "Открыть"
-msgstr "Otwórz"
 
 #: clients/services/workday.py:257
 #, python-format
@@ -4499,7 +4523,7 @@ msgstr "Pobierz"
 
 #: clients/templates/clients/case_detail.html:249
 #: clients/templates/clients/partials/document_checklist.html:386
-#: clients/views/documents.py:398
+#: clients/views/documents.py:412
 msgid "Снять отметку"
 msgstr "Cofnij weryfikację"
 
@@ -4890,7 +4914,7 @@ msgid "Подтверждено документов:"
 msgstr "Potwierdzono dokumentów:"
 
 #: clients/templates/clients/client_detail.html:116
-#: clients/views/documents.py:434 clients/views/documents.py:446
+#: clients/views/documents.py:448 clients/views/documents.py:460
 msgid "Все активные документы уже были проверены."
 msgstr "Wszystkie aktywne dokumenty zostały już sprawdzone."
 
@@ -6766,7 +6790,7 @@ msgid "Email университета"
 msgstr "E-mail uczelni"
 
 #: clients/templates/clients/mos_review.html:227
-#: clients/views/admin_mos_review.py:103
+#: clients/views/admin_mos_review.py:118
 msgid "Легальное пребывание до"
 msgstr "Legalny pobyt do"
 
@@ -7398,7 +7422,7 @@ msgid "Открыть файл"
 msgstr "Otwórz plik"
 
 #: clients/templates/clients/onboarding/partials/new_card_application_block.html:78
-#: clients/views/onboarding_start_contact.py:283
+#: clients/views/onboarding_start_contact.py:302
 msgid "Пожалуйста, проверьте, есть ли у вас подтверждение подачи заявления, печать в паспорте или сообщение из управления (urząd)."
 msgstr "Prosimy sprawdzić, czy posiada Pan/Pani potwierdzenie złożenia wniosku, pieczątkę w paszporcie lub wiadomość z urzędu."
 
@@ -7890,7 +7914,7 @@ msgstr "Jeśli otrzymano"
 #: clients/templates/clients/onboarding/start_contact.html:880
 #: clients/templates/clients/partials/modals.html:142
 #: clients/templates/clients/partials/modals.html:246
-#: clients/views/onboarding_start_contact.py:517
+#: clients/views/onboarding_start_contact.py:555
 msgid "Загрузить"
 msgstr "Prześlij"
 
@@ -8041,7 +8065,7 @@ msgstr "Wymagane od Ciebie teraz"
 #: clients/templates/clients/onboarding/start_contact.html:35
 #: clients/templates/clients/onboarding/start_contact.html:175
 #: clients/templates/clients/onboarding/start_contact.html:473
-#: clients/views/onboarding_start_contact.py:631
+#: clients/views/onboarding_start_contact.py:674
 msgid "Заполнить контактные данные"
 msgstr "Uzupełnij dane kontaktowe"
 
@@ -8054,7 +8078,7 @@ msgid "Перейти к контактам"
 msgstr "Przejdź do kontaktów"
 
 #: clients/templates/clients/onboarding/start_contact.html:39
-#: clients/views/onboarding_start_contact.py:640
+#: clients/views/onboarding_start_contact.py:683
 msgid "Внести исправления в анкету"
 msgstr "Popraw kwestionariusz"
 
@@ -8161,7 +8185,7 @@ msgid "Заполнить профиль"
 msgstr "Wypełnij profil"
 
 #: clients/templates/clients/onboarding/start_contact.html:211
-#: clients/views/onboarding_start_contact.py:672
+#: clients/views/onboarding_start_contact.py:715
 msgid "Указать номер дела"
 msgstr "Podaj numer sprawy"
 
@@ -8194,7 +8218,7 @@ msgid "Причина:"
 msgstr "Powód:"
 
 #: clients/templates/clients/onboarding/start_contact.html:256
-#: clients/views/onboarding_start_contact.py:521
+#: clients/views/onboarding_start_contact.py:559
 msgid "Загрузить заново"
 msgstr "Prześlij ponownie"
 
@@ -9951,13 +9975,7 @@ msgstr "Inne uruchomienie lub czyszczenie Test Center jest już w toku."
 msgid "Unknown Test Center mode: %(mode)s"
 msgstr "Nieznany tryb Test Center: %(mode)s"
 
-#: clients/tests/test_critical_translations.py:180
-#: clients/tests/test_critical_translations.py:182
-#: clients/tests/test_critical_translations.py:184
-msgid "for"
-msgstr "dla"
-
-#: clients/tests/test_document_resilience.py:78 clients/views/documents.py:477
+#: clients/tests/test_document_resilience.py:78 clients/views/documents.py:491
 msgid "Файл отсутствует в хранилище. Загрузите файл заново."
 msgstr "Pliku brakuje w magazynie. Prześlij plik ponownie."
 
@@ -10046,8 +10064,8 @@ msgstr "Prześlij poprawny obraz %(label)s."
 msgid "Файл изображения повреждён или не читается."
 msgstr "Plik obrazu jest uszkodzony lub nieczytelny."
 
-#: clients/validators.py:157 clients/views/onboarding_step_return.py:164
-#: clients/views/onboarding_views.py:282
+#: clients/validators.py:157 clients/views/onboarding_step_return.py:225
+#: clients/views/onboarding_views.py:330
 msgid "Выберите файл для загрузки."
 msgstr "Wybierz plik do przesłania."
 
@@ -10073,61 +10091,65 @@ msgstr "Plik został odrzucony przez skanowanie antywirusowe."
 msgid "Антивирусная проверка временно недоступна. Попробуйте позже."
 msgstr "Skanowanie antywirusowe jest chwilowo niedostępne. Spróbuj ponownie później."
 
-#: clients/views/admin_mos_review.py:209
+#: clients/views/admin_mos_review.py:241
 msgid "Не удалось определить дело для этой анкеты. Выберите дело в карточке клиента."
 msgstr "Nie udało się ustalić sprawy dla tego kwestionariusza. Wybierz sprawę w karcie klienta."
 
-#: clients/views/admin_mos_review.py:221
+#: clients/views/admin_mos_review.py:261
+msgid "Questionnaire data is temporarily unavailable. Restore the encryption key before approval."
+msgstr "Dane ankiety są tymczasowo niedostępne. Przywróć klucz szyfrowania przed zatwierdzeniem."
+
+#: clients/views/admin_mos_review.py:269
 msgid "Questionnaire approved and client card updated."
 msgstr "Kwestionariusz zatwierdzony, dane klienta zaktualizowane."
 
-#: clients/views/admin_mos_review.py:223
+#: clients/views/admin_mos_review.py:271
 msgid "Questionnaire approved. No client card fields changed."
 msgstr "Kwestionariusz zatwierdzony. Pola karty klienta bez zmian."
 
-#: clients/views/admin_mos_review.py:228
+#: clients/views/admin_mos_review.py:276
 msgid "Cannot apply this purpose to the client card."
 msgstr "Nie można zastosować tego celu do karty klienta."
 
-#: clients/views/admin_mos_review.py:247
+#: clients/views/admin_mos_review.py:295
 msgid "Client-selected purpose applied."
 msgstr "Cel wybrany przez klienta został zastosowany."
 
-#: clients/views/admin_mos_review.py:253
+#: clients/views/admin_mos_review.py:301
 msgid "Correction requested from client."
 msgstr "Poproszono klienta o korektę."
 
-#: clients/views/admin_mos_review.py:266 clients/views/admin_mos_review.py:293
+#: clients/views/admin_mos_review.py:314 clients/views/admin_mos_review.py:341
 #: clients/views/onboarding_staff_views.py:167
 #: clients/views/onboarding_staff_views.py:248
 msgid "Unexpected error while updating application status."
 msgstr "Nieoczekiwany błąd podczas aktualizacji statusu wniosku."
 
-#: clients/views/admin_mos_review.py:268
+#: clients/views/admin_mos_review.py:316
 msgid "Status: submitted in MOS."
 msgstr "Status: złożono w MOS."
 
-#: clients/views/admin_mos_review.py:275
+#: clients/views/admin_mos_review.py:323
 msgid "Enter the employer name before confirming fingerprints."
 msgstr "Wpisz nazwę pracodawcy przed potwierdzeniem odcisków palców."
 
-#: clients/views/admin_mos_review.py:295
+#: clients/views/admin_mos_review.py:343
 msgid "Status: fingerprints completed."
 msgstr "Status: odciski palców pobrane."
 
-#: clients/views/admin_mos_review.py:299
+#: clients/views/admin_mos_review.py:347
 msgid "Cannot mark waiting decision without fingerprints date."
 msgstr "Nie można oznaczyć oczekiwania na decyzję bez daty pobrania odcisków palców."
 
-#: clients/views/admin_mos_review.py:309
+#: clients/views/admin_mos_review.py:357
 msgid "Status: waiting for decision."
 msgstr "Status: oczekiwanie na decyzję."
 
-#: clients/views/admin_mos_review.py:313
+#: clients/views/admin_mos_review.py:361
 msgid "Cannot mark decision received without decision date."
 msgstr "Nie można oznaczyć otrzymania decyzji bez daty wydania decyzji."
 
-#: clients/views/admin_mos_review.py:323
+#: clients/views/admin_mos_review.py:371
 msgid "Status: decision received."
 msgstr "Status: decyzja otrzymana."
 
@@ -10351,118 +10373,126 @@ msgstr "Środowisko demonstracyjne zostało przygotowane pomyślnie."
 msgid "Failed to prepare demo environment: "
 msgstr "Nie udało się przygotować środowiska demonstracyjnego: "
 
-#: clients/views/document_upload_safe.py:62 clients/views/documents.py:112
+#: clients/views/document_upload_safe.py:62 clients/views/documents.py:116
 #: clients/views/print_views.py:203
 msgid "Для этой операции необходимо выбрать дело."
 msgstr "Do tej operacji należy wybrać sprawę."
 
-#: clients/views/document_upload_safe.py:64 clients/views/documents.py:114
+#: clients/views/document_upload_safe.py:64 clients/views/documents.py:118
 #: clients/views/payments.py:42 clients/views/payments.py:43
 #: clients/views/tasks.py:73
 msgid "Дело не найдено."
 msgstr "Nie znaleziono sprawy."
 
 #: clients/views/document_upload_safe.py:100
-#: clients/views/document_upload_safe.py:245 clients/views/documents.py:133
-#: clients/views/documents.py:266 clients/views/payments.py:66
+#: clients/views/document_upload_safe.py:245 clients/views/documents.py:137
+#: clients/views/documents.py:270 clients/views/payments.py:66
 #: clients/views/payments.py:97
 msgid "Проверьте правильность заполнения формы."
 msgstr "Sprawdź, czy formularz jest poprawnie wypełniony."
 
-#: clients/views/document_upload_safe.py:108 clients/views/documents.py:139
+#: clients/views/document_upload_safe.py:108 clients/views/documents.py:143
 msgid "ZUS RCA can be uploaded only one month at a time."
 msgstr "ZUS RCA można przesłać tylko przez jeden miesiąc na raz."
 
 # Email subjects
 #: clients/views/document_upload_safe.py:216
-#: clients/views/document_upload_safe.py:234 clients/views/documents.py:245
-#: clients/views/documents.py:260
+#: clients/views/document_upload_safe.py:234 clients/views/documents.py:249
+#: clients/views/documents.py:264
 #, python-format
 msgid "Загружено документов: %(count)s"
 msgstr "Przesłane dokumenty: %(count)s"
 
-#: clients/views/documents.py:85
+#: clients/views/documents.py:89
 msgid "Заметка сохранена"
 msgstr "Prześlij i zapisz"
 
-#: clients/views/documents.py:86
+#: clients/views/documents.py:90
 msgid "Заметка сохранена."
 msgstr "Prześlij i zapisz"
 
-#: clients/views/documents.py:294
+#: clients/views/documents.py:298
 msgid "Индивидуальный документ добавлен."
 msgstr "Nazwa dokumentu"
 
-#: clients/views/documents.py:305
+#: clients/views/documents.py:309
 msgid "Недопустимый метод запроса."
 msgstr "Nieprawidłowa metoda żądania."
 
-#: clients/views/documents.py:310 clients/views/documents.py:311
+#: clients/views/documents.py:314 clients/views/documents.py:315
 msgid "Документ не является wezwanie."
 msgstr "Dokument nie jest wezwanie."
 
-#: clients/views/documents.py:344
+#: clients/views/documents.py:329
+msgid "Recognized document data is temporarily unavailable. Restore the encryption key before confirming this document."
+msgstr "Rozpoznane dane dokumentu są tymczasowo niedostępne. Przywróć klucz szyfrowania przed potwierdzeniem tego dokumentu."
+
+#: clients/views/documents.py:358
 #, python-format
 msgid "Документ '%(name)s' удалён."
 msgstr "Dokument „%(name)s” został usunięty."
 
-#: clients/views/documents.py:348
+#: clients/views/documents.py:362
 #, python-format
 msgid "Документ '%(name)s' успешно удалён."
 msgstr "Dokument „%(name)s” został pomyślnie usunięty."
 
-#: clients/views/documents.py:350 clients/views/documents.py:377
+#: clients/views/documents.py:364 clients/views/documents.py:391
 msgid "Удаление возможно только через кнопку."
 msgstr "Usunięcie możliwe jest wyłącznie za pomocą przycisku."
 
-#: clients/views/documents.py:371
+#: clients/views/documents.py:385
 #, python-format
 msgid "Отметка '%(name)s' удалена."
 msgstr "Znak „%(name)s” został usunięty."
 
-#: clients/views/documents.py:402
+#: clients/views/documents.py:416
 msgid "проверен"
 msgstr "Zweryfikowano"
 
-#: clients/views/documents.py:402
+#: clients/views/documents.py:416
 msgid "не проверен"
 msgstr "Zweryfikowano"
 
-#: clients/views/documents.py:403
+#: clients/views/documents.py:417
 msgid " Письмо с недостающими документами отправлено."
 msgstr "Brakujące dokumenty w checkliście"
 
-#: clients/views/documents.py:406
+#: clients/views/documents.py:420
 #, python-format
 msgid "Статус изменен: %(status)s."
 msgstr "Status zmieniony: %(status)s."
 
-#: clients/views/documents.py:432 clients/views/documents.py:441
+#: clients/views/documents.py:446 clients/views/documents.py:455
 #, python-format
 msgid "Подтверждено %(count)s документов, ожидающих проверки."
 msgstr "Potwierdzono %(count)s dokumentów oczekujących na sprawdzenie."
 
-#: clients/views/documents.py:443
+#: clients/views/documents.py:457
 msgid "Письмо с недостающими документами отправлено."
 msgstr "Brakujące dokumenty w checkliście"
 
-#: clients/views/documents.py:590
+#: clients/views/documents.py:604
 msgid "Document not found."
 msgstr "Wersje dokumentu"
 
-#: clients/views/documents.py:592
+#: clients/views/documents.py:606
 msgid "Document is not awaiting confirmation."
 msgstr "Dokumenty oczekują na weryfikację"
 
-#: clients/views/documents.py:626
+#: clients/views/documents.py:612
+msgid "Recognized document data is temporarily unavailable."
+msgstr "Rozpoznane dane dokumentu są tymczasowo niedostępne."
+
+#: clients/views/documents.py:649
 msgid "Документ успешно отклонён."
 msgstr "Dokument został pomyślnie odrzucony."
 
-#: clients/views/documents.py:628
+#: clients/views/documents.py:651
 msgid "Документ отклонён."
 msgstr "Dokument odrzucony."
 
-#: clients/views/documents.py:631 clients/views/documents.py:632
+#: clients/views/documents.py:654 clients/views/documents.py:655
 msgid "Укажите причину отклонения."
 msgstr "Podaj powód odrzucenia."
 
@@ -10543,34 +10573,43 @@ msgstr "Zaktualizowano adekwatność finansową."
 msgid "Бесплатное жильё требует подтверждения."
 msgstr "Bezpłatne zakwaterowanie wymaga potwierdzenia."
 
-#: clients/views/intake.py:59 clients/views/onboarding_staff_views.py:194
-#: clients/views/onboarding_views.py:386
+#: clients/views/intake.py:66 clients/views/onboarding_staff_views.py:194
+#: clients/views/onboarding_views.py:432
 msgid "Method not allowed"
 msgstr "Niedozwolona metoda"
 
-#: clients/views/intake.py:64 clients/views/onboarding_staff_views.py:56
+#: clients/views/intake.py:71 clients/views/onboarding_staff_views.py:56
 #: clients/views/onboarding_staff_views.py:204
-#: clients/views/onboarding_views.py:519
+#: clients/views/onboarding_views.py:457
 msgid "Invalid application purpose"
 msgstr "Nieprawidłowy cel składania wniosku"
 
-#: clients/views/intake.py:102
+#: clients/views/intake.py:108 clients/views/intake.py:161
+#: clients/views/intake.py:177 clients/views/onboarding_start_contact.py:142
+#: clients/views/onboarding_start_contact.py:650
+#: clients/views/onboarding_step_return.py:59
+#: clients/views/onboarding_views.py:82
+msgid "Saved form data is temporarily unavailable. Please contact support before continuing."
+msgstr "Zapisane dane formularza są tymczasowo niedostępne. Skontaktuj się z pomocą techniczną przed kontynuowaniem."
+
+#: clients/views/intake.py:118
 msgid "Этот email зарегистрирован для служебного аккаунта. Пожалуйста, используйте другой email."
 msgstr "Ten adres e-mail jest zarejestrowany dla konta służbowego. Użyj innego adresu e-mail."
 
-#: clients/views/intake.py:104
+#: clients/views/intake.py:120
 msgid "Пользователь с таким email уже зарегистрирован. Пожалуйста, войдите в систему или восстановите пароль."
 msgstr "Użytkownik z tym adresem e-mail jest już zarejestrowany. Zaloguj się lub odzyskaj hasło."
 
-#: clients/views/intake.py:145
+#: clients/views/intake.py:166
 msgid "We could not submit the intake form. Please check the data and try again."
 msgstr "Nie udało się wysłać formularza. Sprawdź dane i spróbuj ponownie."
 
-#: clients/views/intake.py:148
+#: clients/views/intake.py:169
 msgid "Анкета отправлена. Аккаунт создан, вы вошли в личный кабинет клиента."
 msgstr "Formularz został wysłany. Konto utworzone, jesteś zalogowany(-a) do konta klienta."
 
-#: clients/views/onboarding_access.py:79 clients/views/onboarding_views.py:401
+#: clients/views/onboarding_access.py:79 clients/views/onboarding_views.py:450
+#: clients/views/onboarding_views.py:481
 msgid "This onboarding form is locked."
 msgstr "Ten formularz rejestracji jest zablokowany."
 
@@ -10747,8 +10786,8 @@ msgid "Если не знаете, где получить этот докуме
 msgstr "Jeśli nie wiesz, gdzie uzyskać ten dokument, napisz do managera, a wskażemy dokładne miejsce."
 
 #: clients/views/onboarding_staff_views.py:57
-#: clients/views/onboarding_step_return.py:331
-#: clients/views/onboarding_views.py:251
+#: clients/views/onboarding_step_return.py:410
+#: clients/views/onboarding_views.py:295
 msgid "Invalid application purpose."
 msgstr "Nieprawidłowy cel składania wniosku."
 
@@ -10769,245 +10808,247 @@ msgstr "Nie udało się ustalić sprawy dla wniosku."
 msgid "Клиент добавлен и ссылка скопирована!"
 msgstr "Klient został dodany, a link skopiowany!"
 
-#: clients/views/onboarding_start_contact.py:111
+#: clients/views/onboarding_start_contact.py:119
 msgid "Укажите имя."
 msgstr "Podaj imię."
 
-#: clients/views/onboarding_start_contact.py:113
+#: clients/views/onboarding_start_contact.py:121
 msgid "Укажите фамилию."
 msgstr "Podaj nazwisko."
 
-#: clients/views/onboarding_start_contact.py:115
+#: clients/views/onboarding_start_contact.py:123
 msgid "Укажите email."
 msgstr "Podaj adres e-mail."
 
-#: clients/views/onboarding_start_contact.py:120
+#: clients/views/onboarding_start_contact.py:128
 msgid "Введите корректный email."
 msgstr "Podaj poprawny adres e-mail."
 
-#: clients/views/onboarding_start_contact.py:122
+#: clients/views/onboarding_start_contact.py:130
 msgid "Укажите телефон."
 msgstr "Podaj numer telefonu."
 
-#: clients/views/onboarding_start_contact.py:124
+#: clients/views/onboarding_start_contact.py:132
 msgid "Телефон должен содержать минимум 6 символов."
 msgstr "Numer telefonu musi mieć co najmniej 6 znaków."
 
-#: clients/views/onboarding_start_contact.py:205
+#: clients/views/onboarding_start_contact.py:223
 msgid "Wybierz odpowiedź / Выберите ответ."
 msgstr "Wybierz odpowiedź."
 
-#: clients/views/onboarding_start_contact.py:211
+#: clients/views/onboarding_start_contact.py:229
 msgid "Podaj poprawną datę / Укажите корректную дату."
 msgstr "Wprowadź poprawną datę."
 
-#: clients/views/onboarding_start_contact.py:214
+#: clients/views/onboarding_start_contact.py:232
 msgid "Дата подачи не может быть в будущем."
 msgstr "Data złożenia nie może być w przyszłości."
 
-#: clients/views/onboarding_start_contact.py:218
+#: clients/views/onboarding_start_contact.py:236
 msgid "Podaj numer sprawy / Укажите номер дела."
 msgstr "Podaj numer sprawy."
 
-#: clients/views/onboarding_start_contact.py:258
+#: clients/views/onboarding_start_contact.py:277
 msgid "Пожалуйста, добавьте номер дела, если он уже доступен."
 msgstr "Prosimy o uzupełnienie numeru sprawy, jeśli jest już dostępny."
 
-#: clients/views/onboarding_start_contact.py:266
+#: clients/views/onboarding_start_contact.py:285
 msgid "Пожалуйста, загрузите подтверждение подачи заявления на карту пребывания."
 msgstr "Prosimy o przesłanie potwierdzenia złożenia wniosku o kartę pobytu."
 
-#: clients/views/onboarding_start_contact.py:274
+#: clients/views/onboarding_start_contact.py:293
 msgid "Если знаете дату подачи заявления, добавьте её в этом блоке."
 msgstr "Jeśli znasz datę złożenia wniosku, dodaj ją w tym bloku."
 
-#: clients/views/onboarding_start_contact.py:353
-#: clients/views/onboarding_start_contact.py:363
+#: clients/views/onboarding_start_contact.py:377
+#: clients/views/onboarding_start_contact.py:387
 msgid "Проверить номер дела"
 msgstr "Sprawdź numer sprawy"
 
-#: clients/views/onboarding_start_contact.py:355
-#: clients/views/onboarding_start_contact.py:365
+#: clients/views/onboarding_start_contact.py:379
+#: clients/views/onboarding_start_contact.py:389
 msgid "Клиент указал номер дела новой подачи. Проверьте его и перенесите в основной номер дела."
 msgstr "Klient podał numer sprawy nowego złożenia. Sprawdź go i przenieś do głównego numeru sprawy."
 
-#: clients/views/onboarding_start_contact.py:393
+#: clients/views/onboarding_start_contact.py:417
 msgid "Информация о новом заявлении сохранена."
 msgstr "Informacja o nowym wniosku została zapisana."
 
-#: clients/views/onboarding_start_contact.py:519
+#: clients/views/onboarding_start_contact.py:557
 msgid "Загрузить ещё месяц"
 msgstr "Prześlij kolejny miesiąc"
 
-#: clients/views/onboarding_start_contact.py:523
+#: clients/views/onboarding_start_contact.py:561
 msgid "Обновить документ"
 msgstr "Zaktualizuj dokument"
 
-#: clients/views/onboarding_start_contact.py:525
+#: clients/views/onboarding_start_contact.py:563
 msgid "Заменить"
 msgstr "Zmień"
 
-#: clients/views/onboarding_start_contact.py:527
+#: clients/views/onboarding_start_contact.py:565
 msgid "Заменить файл"
 msgstr "Zmień plik"
 
-#: clients/views/onboarding_start_contact.py:622
+#: clients/views/onboarding_start_contact.py:665
 msgid "Выбрать цель заявления"
 msgstr "Wybierz cel wniosku"
 
-#: clients/views/onboarding_start_contact.py:649
+#: clients/views/onboarding_start_contact.py:692
 msgid "Заполнить личный профиль (паспорт)"
 msgstr "Wypełnij profil osobowy (paszport)"
 
-#: clients/views/onboarding_start_contact.py:657
+#: clients/views/onboarding_start_contact.py:700
 msgid "Заполнить историю поездок"
 msgstr "Wypełnij historię podróży"
 
-#: clients/views/onboarding_start_contact.py:683
+#: clients/views/onboarding_start_contact.py:726
+#, python-brace-format
 msgid "Перезагрузить отклонённые документы ({} шт.)"
 msgstr "Prześlij ponownie odrzucone dokumenty ({} szt.)"
 
-#: clients/views/onboarding_start_contact.py:692
+#: clients/views/onboarding_start_contact.py:735
+#, python-brace-format
 msgid "Загрузить недостающие документы ({} шт.)"
 msgstr "Prześlij brakujące dokumenty ({} szt.)"
 
-#: clients/views/onboarding_start_contact.py:711
+#: clients/views/onboarding_start_contact.py:754
 msgid "Сотрудник ответил на ваш вопрос"
 msgstr "Pracownik odpowiedział na Twoje pytanie"
 
-#: clients/views/onboarding_start_contact.py:778
-#: clients/views/onboarding_step_return.py:94
-#: clients/views/onboarding_views.py:229 clients/views/onboarding_views.py:268
-#: clients/views/onboarding_views.py:317
+#: clients/views/onboarding_start_contact.py:822
+#: clients/views/onboarding_step_return.py:143
+#: clients/views/onboarding_views.py:273 clients/views/onboarding_views.py:316
+#: clients/views/onboarding_views.py:366
 msgid "Invalid or expired onboarding link."
 msgstr "Link wygasł lub jest nieprawidłowy."
 
-#: clients/views/onboarding_start_contact.py:796
-#: clients/views/onboarding_step_return.py:53
-#: clients/views/onboarding_step_return.py:240
-#: clients/views/onboarding_step_return.py:274
-#: clients/views/onboarding_step_return.py:311
-#: clients/views/onboarding_step_return.py:392
-#: clients/views/onboarding_step_return.py:492
-#: clients/views/onboarding_step_return.py:558
-#: clients/views/onboarding_views.py:80 clients/views/onboarding_views.py:198
-#: clients/views/onboarding_views.py:336 clients/views/onboarding_views.py:365
-#: clients/views/onboarding_views.py:599
+#: clients/views/onboarding_start_contact.py:840
+#: clients/views/onboarding_step_return.py:90
+#: clients/views/onboarding_step_return.py:297
+#: clients/views/onboarding_step_return.py:338
+#: clients/views/onboarding_step_return.py:382
+#: clients/views/onboarding_step_return.py:493
+#: clients/views/onboarding_step_return.py:609
+#: clients/views/onboarding_step_return.py:675
+#: clients/views/onboarding_views.py:116 clients/views/onboarding_views.py:242
+#: clients/views/onboarding_views.py:383 clients/views/onboarding_views.py:411
+#: clients/views/onboarding_views.py:723
 msgid "Срок действия ссылки истёк или она недействительна."
 msgstr "Link wygasł lub jest nieprawidłowy."
 
-#: clients/views/onboarding_step_return.py:158
+#: clients/views/onboarding_step_return.py:218
 msgid "Скан паспорта успешно загружен. Данные распознаются."
 msgstr "Skan paszportu został pomyślnie przesłany. Dane są rozpoznawane."
 
-#: clients/views/onboarding_step_return.py:161
-#: clients/views/onboarding_views.py:309
+#: clients/views/onboarding_step_return.py:221
+#: clients/views/onboarding_views.py:357
 #, python-format
 msgid "Не удалось загрузить файл: %(errors)s"
 msgstr "Nie udało się przesłać pliku: %(errors)s"
 
-#: clients/views/onboarding_step_return.py:342
+#: clients/views/onboarding_step_return.py:422
 msgid "Invalid date format for legal stay. Expected YYYY-MM-DD."
 msgstr "Nieprawidłowy format daty legalnego pobytu. Oczekiwany format: RRRR-MM-DD."
 
-#: clients/views/onboarding_step_return.py:430
+#: clients/views/onboarding_step_return.py:542
 msgid "Чтобы завершить анкету, необходимо согласие на обработку персональных данных."
 msgstr "Aby zakończyć formularz, wymagana jest zgoda na przetwarzanie danych osobowych."
 
-#: clients/views/onboarding_step_return.py:504
-#: clients/views/onboarding_step_return.py:588
+#: clients/views/onboarding_step_return.py:621
+#: clients/views/onboarding_step_return.py:705
 msgid "Некорректный запрос."
 msgstr "Nieprawidłowe żądanie."
 
-#: clients/views/onboarding_step_return.py:518
+#: clients/views/onboarding_step_return.py:635
 msgid "Согласие обновлено."
 msgstr "Zgoda została zaktualizowana."
 
-#: clients/views/onboarding_step_return.py:518
+#: clients/views/onboarding_step_return.py:635
 msgid "Согласие отозвано."
 msgstr "Zgoda została wycofana."
 
-#: clients/views/onboarding_step_return.py:585
+#: clients/views/onboarding_step_return.py:702
 msgid "Запрос на удаление данных получен. Мы свяжемся с вами."
 msgstr "Otrzymaliśmy wniosek o usunięcie danych. Skontaktujemy się z Tobą."
 
-#: clients/views/onboarding_step_return.py:608
+#: clients/views/onboarding_step_return.py:725
 msgid "Запрос на удаление данных (RODO art. 17)"
 msgstr "Wniosek o usunięcie danych (art. 17 RODO)"
 
-#: clients/views/onboarding_step_return.py:609
+#: clients/views/onboarding_step_return.py:726
 msgid "Субъект данных запросил удаление своих данных через личный кабинет."
 msgstr "Osoba, której dane dotyczą, złożyła wniosek o usunięcie danych przez konto klienta."
 
-#: clients/views/onboarding_views.py:88
+#: clients/views/onboarding_views.py:124
 msgid "У вас уже есть аккаунт. Пожалуйста, войдите в систему."
 msgstr "Masz już konto. Zaloguj się."
 
-#: clients/views/onboarding_views.py:106
+#: clients/views/onboarding_views.py:142
 msgid "Пожалуйста, укажите ФИО."
 msgstr "Podaj imię i nazwisko."
 
-#: clients/views/onboarding_views.py:108
+#: clients/views/onboarding_views.py:144
 msgid "Введите ФИО полностью: фамилия и имя."
 msgstr "Wpisz pełne imię i nazwisko: nazwisko i imię."
 
-#: clients/views/onboarding_views.py:110
+#: clients/views/onboarding_views.py:146
 msgid "Пожалуйста, укажите адрес электронной почты."
 msgstr "Podaj adres e-mail."
 
-#: clients/views/onboarding_views.py:117
+#: clients/views/onboarding_views.py:153
 msgid "Пароль должен быть не менее 8 символов."
 msgstr "Hasło musi mieć co najmniej 8 znaków."
 
-#: clients/views/onboarding_views.py:138
+#: clients/views/onboarding_views.py:176
 msgid "Этот адрес электронной почты уже используется в системе другим активным клиентом."
 msgstr "Ten adres e-mail jest już używany przez innego aktywnego klienta."
 
-#: clients/views/onboarding_views.py:169
+#: clients/views/onboarding_views.py:209
 msgid "Аккаунт успешно создан. Вы вошли в личный кабинет клиента."
 msgstr "Konto zostało utworzone. Jesteś zalogowany do panelu klienta."
 
-#: clients/views/onboarding_views.py:174
+#: clients/views/onboarding_views.py:214
 msgid "Такой аккаунт уже существует. Попробуйте войти или обратитесь к сотруднику."
 msgstr "Takie konto już istnieje. Spróbuj się zalogować lub skontaktuj się z pracownikiem."
 
-#: clients/views/onboarding_views.py:177
+#: clients/views/onboarding_views.py:217
 msgid "Не удалось сохранить аккаунт. Попробуйте ещё раз или обратитесь к сотруднику."
 msgstr "Nie udało się zapisać konta. Spróbuj ponownie lub skontaktuj się z pracownikiem."
 
-#: clients/views/onboarding_views.py:214
+#: clients/views/onboarding_views.py:258
 msgid "Выберите дело из списка."
 msgstr "Wybierz sprawę z listy."
 
-#: clients/views/onboarding_views.py:304
+#: clients/views/onboarding_views.py:352
 msgid "Файл загружен. Сотрудник получил уведомление."
 msgstr "Plik został przesłany. Pracownik otrzymał powiadomienie."
 
-#: clients/views/onboarding_views.py:306
+#: clients/views/onboarding_views.py:354
 msgid "Файл загружен. Мы сохранили его в вашем кабинете."
 msgstr "Plik został przesłany. Zapisaliśmy go w panelu klienta."
 
-#: clients/views/onboarding_views.py:390
+#: clients/views/onboarding_views.py:436
 msgid "Invalid token"
 msgstr "Nieprawidłowy token"
 
-#: clients/views/onboarding_views.py:393
+#: clients/views/onboarding_views.py:439
 msgid "Authentication required"
 msgstr "Wymagana autoryzacja"
 
-#: clients/views/onboarding_views.py:396
+#: clients/views/onboarding_views.py:442
 msgid "Select a case first"
 msgstr "Najpierw wybierz sprawę"
 
-#: clients/views/onboarding_views.py:590
+#: clients/views/onboarding_views.py:714
 msgid "Draft auto-saved"
 msgstr "Szkic został automatycznie zapisany"
 
-#: clients/views/onboarding_views.py:607
+#: clients/views/onboarding_views.py:731
 msgid "Текст вопроса не может быть пустым."
 msgstr "Treść pytania nie może być pusta."
 
-#: clients/views/onboarding_views.py:638
+#: clients/views/onboarding_views.py:763
 msgid "Ваш вопрос успешно отправлен. Сотрудник свяжется с вами!"
 msgstr "Twoje pytanie zostało wysłane. Pracownik skontaktuje się z Tobą!"
 

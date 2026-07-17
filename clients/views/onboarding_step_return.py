@@ -67,6 +67,23 @@ def _show_encrypted_json_unavailable(request: HttpRequest) -> None:
     messages.error(request, _encrypted_json_unavailable_message())
 
 
+def _require_mos_completion_json(mos_data: MOSApplicationData) -> None:
+    """Refuse final completion while any questionnaire section is unreadable."""
+
+    for field_name in (
+        "personal_data",
+        "passport_data",
+        "address_data",
+        "stay_data",
+        "insurance_data",
+        "financial_data",
+        "legal_declarations",
+    ):
+        require_encrypted_json_dict(mos_data, field_name)
+    for field_name in ("previous_stays", "travel_history"):
+        require_encrypted_json_list(mos_data, field_name)
+
+
 def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
     session = onboarding_views.check_onboarding_session(token, request=request)
     if not session:
@@ -97,9 +114,7 @@ def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
                 passport_data = require_encrypted_json_dict(mos_data, "passport_data")
                 personal_data = require_encrypted_json_dict(mos_data, "personal_data")
 
-                digital_access, _created_access = ClientDigitalAccess.objects.get_or_create(
-                    client=session.client
-                )
+                digital_access, _created_access = ClientDigitalAccess.objects.get_or_create(client=session.client)
                 digital_access.has_pesel = request.POST.get("has_pesel") == "yes"
                 digital_access.has_trusted_profile = request.POST.get("has_trusted_profile") == "yes"
                 digital_access.has_mos_account = request.POST.get("has_mos_account") == "yes"
@@ -112,10 +127,14 @@ def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
 
         return _next_or_dashboard(request, token, "clients:onboarding_passport")
 
-    return render(request, "clients/onboarding/digital_access.html", {
-        "session": session,
-        "digital_access": digital_access,
-    })
+    return render(
+        request,
+        "clients/onboarding/digital_access.html",
+        {
+            "session": session,
+            "digital_access": digital_access,
+        },
+    )
 
 
 def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
@@ -160,8 +179,8 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         if passport_num_val and ("document_number" not in passport_data or not passport_data["document_number"]):
             passport_data["document_number"] = passport_num_val
 
-        mos_data.personal_data = personal_data  # type: ignore[assignment]
-        mos_data.passport_data = passport_data  # type: ignore[assignment]
+        mos_data.personal_data = personal_data
+        mos_data.passport_data = passport_data
         if personal_unavailable or passport_unavailable or passport_num_unavailable:
             _show_encrypted_json_unavailable(request)
 
@@ -202,6 +221,7 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
                     messages.error(request, _("Не удалось загрузить файл: %(errors)s") % {"errors": error_text})
             else:
                 from django.contrib import messages
+
                 messages.error(request, _("Выберите файл для загрузки."))
             return redirect("clients:onboarding_passport", token=token)
 
@@ -236,13 +256,13 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         personal_data["birth_place"] = birth_place
         personal_data["birth_country"] = birth_country
         personal_data["origin_country"] = origin_country
-        mos_data.personal_data = personal_data  # type: ignore[assignment]
+        mos_data.personal_data = personal_data
 
         passport_data["document_number"] = doc_num
         passport_data["expiry_date"] = expiry_date
         passport_data["issue_date"] = request.POST.get("issue_date", "").strip()
         passport_data["issuing_authority"] = request.POST.get("issuing_authority", "").strip()
-        mos_data.passport_data = passport_data  # type: ignore[assignment]
+        mos_data.passport_data = passport_data
 
         mos_data.save()
         onboarding_views._sync_contact_fields_to_client(
@@ -256,9 +276,7 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         return _next_or_dashboard(request, token, "clients:onboarding_personal_extra")
 
     passport_doc = (
-        client.documents.filter(
-            document_type="passport", case=onboarding_views._session_case(session)
-        )
+        client.documents.filter(document_type="passport", case=onboarding_views._session_case(session))
         .order_by("-uploaded_at")
         .first()
     )
@@ -303,12 +321,12 @@ def onboarding_personal_extra(request: HttpRequest, token: str) -> HttpResponse:
         personal_data["marital_status"] = request.POST.get("marital_status", "")
         personal_data["profession"] = request.POST.get("profession", "").strip()
         personal_data["special_marks"] = request.POST.get("special_marks", "").strip()
-        mos_data.personal_data = personal_data  # type: ignore[assignment]
+        mos_data.personal_data = personal_data
         mos_data.save()
         return _next_or_dashboard(request, token, "clients:onboarding_address")
 
     personal_data, unavailable = read_encrypted_json_dict(mos_data, "personal_data")
-    mos_data.personal_data = personal_data  # type: ignore[assignment]
+    mos_data.personal_data = personal_data
     if unavailable:
         _show_encrypted_json_unavailable(request)
     return render(request, "clients/onboarding/personal_extra.html", {"session": session, "mos_data": mos_data})
@@ -347,12 +365,12 @@ def onboarding_address(request: HttpRequest, token: str) -> HttpResponse:
         address_data["gmina"] = request.POST.get("gmina", "").strip()
         address_data["house_number"] = request.POST.get("house_number", "").strip()
         address_data["apartment_number"] = request.POST.get("apartment_number", "").strip()
-        mos_data.address_data = address_data  # type: ignore[assignment]
+        mos_data.address_data = address_data
         mos_data.save()
         return _next_or_dashboard(request, token, "clients:onboarding_travel")
 
     address_data, unavailable = read_encrypted_json_dict(mos_data, "address_data")
-    mos_data.address_data = address_data  # type: ignore[assignment]
+    mos_data.address_data = address_data
     if unavailable:
         _show_encrypted_json_unavailable(request)
     return render(request, "clients/onboarding/address.html", {"session": session, "mos_data": mos_data})
@@ -396,6 +414,7 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
         legal_stay_str = request.POST.get("legal_stay_until", "").strip()
         if legal_stay_str:
             from django.utils.dateparse import parse_date
+
             parsed_date = parse_date(legal_stay_str)
             if parsed_date:
                 mos_data.legal_stay_until = parsed_date
@@ -410,20 +429,21 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
         stay_data["was_in_poland_before"] = request.POST.get("was_in_poland_before") == "yes"
         stay_data["has_insurance"] = request.POST.get("has_insurance") == "yes"
         stay_data["has_stable_income"] = request.POST.get("has_stable_income") == "yes"
-        mos_data.stay_data = stay_data  # type: ignore[assignment]
+        mos_data.stay_data = stay_data
 
         personal_data["employer_name"] = request.POST.get("employer_name", "").strip()
         personal_data["employer_nip"] = request.POST.get("employer_nip", "").strip()
         personal_data["employer_email"] = request.POST.get("employer_email", "").strip()
         personal_data["university_email"] = request.POST.get("university_email", "").strip()
-        mos_data.personal_data = personal_data  # type: ignore[assignment]
+        mos_data.personal_data = personal_data
 
         previous_stays_detail = request.POST.get("previous_stays", "").strip()
-        mos_data.previous_stays = [previous_stays_detail]  # type: ignore[assignment]
-        mos_data.travel_history = [request.POST.get("travel_history", "")]  # type: ignore[assignment]
+        mos_data.previous_stays = [previous_stays_detail]
+        mos_data.travel_history = [request.POST.get("travel_history", "")]
         mos_data.save()
         if mos_data.mos_purpose == "work":
             from clients.services.employers import ensure_employer_capture_task, propose_employer
+
             case = mos_data.case
             propose_employer(
                 case=case,
@@ -441,10 +461,10 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
     stay_data, stay_unavailable = read_encrypted_json_dict(mos_data, "stay_data")
     previous_stays, previous_stays_unavailable = read_encrypted_json_list(mos_data, "previous_stays")
     travel_history, travel_history_unavailable = read_encrypted_json_list(mos_data, "travel_history")
-    mos_data.personal_data = personal_data  # type: ignore[assignment]
-    mos_data.stay_data = stay_data  # type: ignore[assignment]
-    mos_data.previous_stays = previous_stays  # type: ignore[assignment]
-    mos_data.travel_history = travel_history  # type: ignore[assignment]
+    mos_data.personal_data = personal_data
+    mos_data.stay_data = stay_data
+    mos_data.previous_stays = previous_stays
+    mos_data.travel_history = travel_history
     if any(
         (
             personal_unavailable,
@@ -455,12 +475,16 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
     ):
         _show_encrypted_json_unavailable(request)
 
-    return render(request, "clients/onboarding/travel.html", {
-        "session": session,
-        "mos_data": mos_data,
-        "can_change_purpose": True,
-        **onboarding_views._purpose_context(session.client, mos_data),
-    })
+    return render(
+        request,
+        "clients/onboarding/travel.html",
+        {
+            "session": session,
+            "mos_data": mos_data,
+            "can_change_purpose": True,
+            **onboarding_views._purpose_context(session.client, mos_data),
+        },
+    )
 
 
 def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
@@ -486,13 +510,21 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
             return _encrypted_json_unavailable_response()
         declarations["criminal_record"] = request.POST.get("criminal_record") == "yes"
         declarations["tax_arrears"] = request.POST.get("tax_arrears") == "yes"
-        mos_data.legal_declarations = declarations  # type: ignore[assignment]
+        mos_data.legal_declarations = declarations
 
         if _save_return_requested(request):
             if mos_data.status == "draft":
                 mos_data.status = "client_filling"
             mos_data.save()
             return redirect("clients:onboarding_start", token=token)
+
+        # Completion is a semantic write over the whole questionnaire. A
+        # partially unreadable profile must not be marked complete merely
+        # because the declarations section itself still decrypts.
+        try:
+            _require_mos_completion_json(mos_data)
+        except EncryptedJSONUnavailableError:
+            return _encrypted_json_unavailable_response()
 
         # RODO: completing the questionnaire requires the subject to accept the
         # data-processing consent. Do not finalise without it.
@@ -532,9 +564,11 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
 
         try:
             from clients.services.notifications import send_onboarding_completed_email
+
             send_onboarding_completed_email(session.client, case=mos_data.case)
         except Exception:
             import logging
+
             logger = logging.getLogger(__name__)
             logger.exception("Failed to send onboarding completion email")
 
@@ -543,7 +577,7 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
     from clients.models import AppSettings, ConsentRecord
 
     declarations, unavailable = read_encrypted_json_dict(mos_data, "legal_declarations")
-    mos_data.legal_declarations = declarations  # type: ignore[assignment]
+    mos_data.legal_declarations = declarations
     if unavailable:
         _show_encrypted_json_unavailable(request)
 
@@ -554,9 +588,7 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
             "session": session,
             "mos_data": mos_data,
             "app_settings": AppSettings.get_solo(),
-            "consent_already_given": ConsentRecord.is_granted(
-                session.client, ConsentRecord.Purpose.DATA_PROCESSING
-            ),
+            "consent_already_given": ConsentRecord.is_granted(session.client, ConsentRecord.Purpose.DATA_PROCESSING),
         },
     )
 

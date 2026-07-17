@@ -10,7 +10,11 @@ from django.utils.translation import gettext as _
 
 from clients.constants import DocumentType
 from clients.models import Case, Client, Document, DocumentProcessingJob
-from clients.security.encrypted import read_encrypted_json_dict, require_encrypted_json_dict
+from clients.security.encrypted import (
+    read_encrypted_json_dict,
+    require_encrypted_json_dict,
+    require_encrypted_text,
+)
 from clients.services.activity import log_client_activity
 from clients.services.document_workflow_wezwanie import (
     _apply_confirmation_updates,
@@ -291,6 +295,11 @@ def confirm_wezwanie_document(
         )
 
     require_encrypted_json_dict(document, "parsed_data")
+    client = document.client
+    case = document.case if document.case_id else None
+    if case is not None and (confirmation_data.get("case_number") or "").strip():
+        # Guard the encrypted destination before confirming or replacing OCR data.
+        require_encrypted_text(case, "authority_case_number")
 
     payload = _build_confirmed_wezwanie_payload(confirmation_data)
 
@@ -300,8 +309,6 @@ def confirm_wezwanie_document(
         document.ocr_status = "success"
         document.save(update_fields=["awaiting_confirmation", "parsed_data", "ocr_status"])
 
-    client = document.client
-    case = document.case if document.case_id else None
     case_fields, client_fields, auto_updates = _apply_confirmation_updates(
         case,
         client,

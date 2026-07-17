@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.db import connection
 from django.test import TestCase, override_settings
 from django.urls import include, path, reverse
 from django.utils import timezone
+from django.utils.translation import gettext
 
 from clients.constants import DocumentType
 from clients.models import (
@@ -18,6 +20,7 @@ from clients.models import (
 )
 from clients.security.encrypted import read_encrypted_json_dict
 from clients.services.onboarding_tokens import hash_onboarding_token
+from clients.views.onboarding_access import _ensure_mos
 
 CORRUPTED_FERNET_TOKEN = "gAAAA-onboarding-corrupted-token"
 
@@ -172,14 +175,126 @@ class OnboardingEncryptedJSONFailClosedTests(TestCase):
     def test_passport_get_renders_generic_unavailable_state_without_overwrite(self) -> None:
         self._corrupt_personal_data()
 
-        response = self.client.get(
-            reverse("clients:onboarding_passport", kwargs={"token": self.token})
-        )
+        response = self.client.get(reverse("clients:onboarding_passport", kwargs={"token": self.token}))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Saved form data is temporarily unavailable")
+        self.assertContains(
+            response,
+            gettext("Saved form data is temporarily unavailable. Please contact support before continuing."),
+        )
         self.assertEqual(
             _get_raw_json_field(self.mos_data, "personal_data"),
+            CORRUPTED_FERNET_TOKEN,
+        )
+
+    def test_completion_preflights_every_encrypted_questionnaire_section(self) -> None:
+        session = ClientOnboardingSession.objects.get(client=self.client_record)
+        reset_fields = [
+            "personal_data",
+            "passport_data",
+            "address_data",
+            "stay_data",
+            "previous_stays",
+            "travel_history",
+            "insurance_data",
+            "financial_data",
+            "legal_declarations",
+        ]
+
+        for field_name, empty_value in (("address_data", {}), ("previous_stays", [])):
+            with self.subTest(field_name=field_name):
+                self.mos_data.refresh_from_db()
+                for dict_field in (
+                    "personal_data",
+                    "passport_data",
+                    "address_data",
+                    "stay_data",
+                    "insurance_data",
+                    "financial_data",
+                    "legal_declarations",
+                ):
+                    setattr(self.mos_data, dict_field, {})
+                self.mos_data.previous_stays = []  # type: ignore[assignment]
+                self.mos_data.travel_history = []  # type: ignore[assignment]
+                self.mos_data.status = "draft"
+                self.mos_data.save(update_fields=[*reset_fields, "status", "updated_at"])
+                _set_raw_json_field(self.mos_data, field_name, CORRUPTED_FERNET_TOKEN)
+
+                response = self.client.post(
+                    reverse("clients:onboarding_declarations", kwargs={"token": self.token}),
+                    {
+                        "criminal_record": "no",
+                        "tax_arrears": "no",
+                        "rodo_consent": "on",
+                    },
+                )
+
+                self.assertEqual(response.status_code, 409)
+                self.mos_data.refresh_from_db()
+                session.refresh_from_db()
+                self.assertEqual(self.mos_data.status, "draft")
+                self.assertNotEqual(session.status, "completed")
+                self.assertIsNone(session.completed_at)
+                self.assertEqual(
+                    _get_raw_json_field(self.mos_data, field_name),
+                    CORRUPTED_FERNET_TOKEN,
+                )
+                setattr(self.mos_data, field_name, empty_value)
+
+    def test_autosave_uses_conflict_safe_creation_for_missing_scoped_rows(self) -> None:
+        case = self.client_record.cases.get()
+        self.mos_data.delete()
+        ClientDigitalAccess.objects.filter(client=self.client_record).delete()
+
+        with patch(
+            "clients.views.onboarding_views._ensure_mos",
+            wraps=_ensure_mos,
+        ) as ensure_mos:
+            response = self.client.post(
+                reverse("clients:onboarding_auto_save", kwargs={"token": self.token}),
+                {"first_name": "Autosaved", "has_pesel": "yes"},
+                HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        ensure_mos.assert_called_once_with(self.client_record, case)
+        mos_data = MOSApplicationData.objects.get(client=self.client_record, case=case)
+        self.assertEqual(mos_data.personal_data["first_name"], "Autosaved")
+        digital_access = ClientDigitalAccess.objects.get(client=self.client_record)
+        self.assertTrue(digital_access.has_pesel)
+
+    def test_new_card_post_preserves_unavailable_case_number_ciphertext(self) -> None:
+        self.mos_data.new_residence_card_application_status = MOSApplicationData.NEW_CARD_STATUS_YES
+        self.mos_data.new_residence_card_case_number = "OLD-CARD-CASE"
+        self.mos_data.save(
+            update_fields=[
+                "new_residence_card_application_status",
+                "new_residence_card_case_number",
+                "updated_at",
+            ]
+        )
+        _set_raw_json_field(
+            self.mos_data,
+            "new_residence_card_case_number",
+            CORRUPTED_FERNET_TOKEN,
+        )
+
+        response = self.client.post(
+            reverse("clients:onboarding_start", kwargs={"token": self.token}),
+            {
+                "action": "new_card_application",
+                "new_card_application_status": MOSApplicationData.NEW_CARD_STATUS_NO,
+            },
+        )
+
+        self.assertEqual(response.status_code, 409)
+        self.mos_data.refresh_from_db()
+        self.assertEqual(
+            self.mos_data.new_residence_card_application_status,
+            MOSApplicationData.NEW_CARD_STATUS_YES,
+        )
+        self.assertEqual(
+            _get_raw_json_field(self.mos_data, "new_residence_card_case_number"),
             CORRUPTED_FERNET_TOKEN,
         )
 

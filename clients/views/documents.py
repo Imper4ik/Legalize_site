@@ -16,7 +16,7 @@ from clients.constants import DocumentType, is_wezwanie_document_type
 from clients.forms import ClientDocumentRequirementForm, DocumentUploadForm
 from clients.models import Client, ClientDocumentRequirement, Document, WniosekAttachment
 from clients.security.encrypted import (
-    EncryptedJSONUnavailableError,
+    EncryptedFieldUnavailableError,
     read_encrypted_json_dict,
     safe_encrypted_attr,
 )
@@ -324,7 +324,7 @@ def confirm_wezwanie_parse(request: HttpRequest, doc_id: int) -> HttpResponseBas
             send_missing_email=send_missing_documents_email,
             send_appointment_email=send_appointment_notification_email,
         )
-    except EncryptedJSONUnavailableError:
+    except EncryptedFieldUnavailableError:
         message = _(
             "Recognized document data is temporarily unavailable. "
             "Restore the encryption key before confirming this document."

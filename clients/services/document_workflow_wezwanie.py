@@ -16,6 +16,7 @@ from django.utils.translation import gettext as _
 
 from clients.constants import DocumentType
 from clients.models import Client
+from clients.security.encrypted import require_encrypted_text
 from clients.services.permissions import user_can_run_ocr_review
 from clients.services.wezwanie_parser import WezwanieData
 
@@ -132,7 +133,12 @@ def _apply_parsed_client_updates(
     auto_updates: list[str] = []
 
     if case is not None:
-        if parsed.case_number and parsed.case_number != case.authority_case_number:
+        current_case_number = (
+            require_encrypted_text(case, "authority_case_number")
+            if parsed.case_number
+            else None
+        )
+        if parsed.case_number and parsed.case_number != current_case_number:
             case.authority_case_number = parsed.case_number
             case_fields.append("authority_case_number")
             auto_updates.append(_("case number updated"))
@@ -263,7 +269,12 @@ def _apply_confirmation_updates(
         client_fields.append("last_name")
 
     if case is not None:
-        if case_number and case_number != case.authority_case_number:
+        current_case_number = (
+            require_encrypted_text(case, "authority_case_number")
+            if case_number
+            else None
+        )
+        if case_number and case_number != current_case_number:
             case.authority_case_number = case_number
             case_fields.append("authority_case_number")
             auto_updates.append(_("case number updated"))

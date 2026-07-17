@@ -12,16 +12,30 @@ ENCRYPTED_VALUE_UNAVAILABLE = "[encrypted value unavailable]"
 logger = logging.getLogger(__name__)
 
 
-class EncryptedJSONUnavailableError(RuntimeError):
-    """Raised when a write path cannot safely read an encrypted JSON value."""
+class EncryptedFieldUnavailableError(RuntimeError):
+    """Raised when a write path cannot safely read an encrypted value."""
+
+    field_kind = "field"
 
     def __init__(self, instance: Any, field_name: str) -> None:
         self.model_label, self.object_pk = _encrypted_field_metadata(instance)
         self.field_name = field_name
         super().__init__(
-            f"Encrypted JSON field is unavailable: "
+            f"Encrypted {self.field_kind} is unavailable: "
             f"model={self.model_label} pk={self.object_pk} field={field_name}"
         )
+
+
+class EncryptedJSONUnavailableError(EncryptedFieldUnavailableError):
+    """Raised when a write path cannot safely read encrypted JSON."""
+
+    field_kind = "JSON field"
+
+
+class EncryptedTextUnavailableError(EncryptedFieldUnavailableError):
+    """Raised when a write path cannot safely replace encrypted text."""
+
+    field_kind = "text field"
 
 
 def _encrypted_field_metadata(instance: Any) -> tuple[str, Any]:
@@ -103,6 +117,35 @@ def require_encrypted_json_list(instance: Any, field_name: str) -> list[Any]:
     value, unavailable = read_encrypted_json_list(instance, field_name)
     if unavailable:
         raise EncryptedJSONUnavailableError(instance, field_name)
+    return value
+
+
+def require_encrypted_text(instance: Any, field_name: str) -> Any:
+    """Return encrypted text or refuse a write that could destroy ciphertext."""
+
+    try:
+        value = getattr(instance, field_name)
+    except EncryptedFieldDecryptionError:
+        model_label, object_pk = _encrypted_field_metadata(instance)
+        logger.warning(
+            "Encrypted text field unavailable: model=%s pk=%s field=%s reason=%s",
+            model_label,
+            object_pk,
+            field_name,
+            "decryption_error",
+        )
+        raise EncryptedTextUnavailableError(instance, field_name) from None
+
+    if isinstance(value, EncryptedValueUnavailable) or value == ENCRYPTED_VALUE_UNAVAILABLE:
+        model_label, object_pk = _encrypted_field_metadata(instance)
+        logger.warning(
+            "Encrypted text field unavailable: model=%s pk=%s field=%s reason=%s",
+            model_label,
+            object_pk,
+            field_name,
+            "decryption_unavailable",
+        )
+        raise EncryptedTextUnavailableError(instance, field_name)
     return value
 
 

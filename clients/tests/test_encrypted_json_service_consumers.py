@@ -4,14 +4,21 @@ from datetime import date
 from unittest.mock import Mock, patch
 
 import pytest
+from cryptography.fernet import Fernet
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
 from django.urls import reverse
+from django.utils.translation import gettext
 
 from clients.constants import DocumentType
 from clients.models import Client, ClientIntakeSubmission, Document, MOSApplicationData
-from clients.security.encrypted import EncryptedJSONUnavailableError
+from clients.security.encrypted import (
+    EncryptedJSONUnavailableError,
+    EncryptedTextUnavailableError,
+)
 from clients.services.document_workflow import (
+    confirm_wezwanie_document,
     enqueue_document_processing_job,
     process_pending_document_jobs,
 )
@@ -20,12 +27,17 @@ from clients.services.intake_extraction import pre_fill_mos_data_from_ocr
 from clients.services.mos_eligibility import evaluate_mos_eligibility
 from clients.services.onboarding_tokens import hash_onboarding_token
 from clients.services.rental_parser import RentalDocData
+from clients.services.wezwanie_parser import WezwanieData
 from clients.tests.factories import create_manager_user
 
 CORRUPTED_FERNET_TOKEN = "gAAAA-corrupted-json-token"
 
 
-def _corrupt_json_field(instance: object, field_name: str) -> None:
+def _corrupt_json_field(
+    instance: object,
+    field_name: str,
+    raw_value: str = CORRUPTED_FERNET_TOKEN,
+) -> None:
     meta = instance._meta  # type: ignore[attr-defined]
     table = connection.ops.quote_name(meta.db_table)
     column = connection.ops.quote_name(meta.get_field(field_name).column)
@@ -33,7 +45,7 @@ def _corrupt_json_field(instance: object, field_name: str) -> None:
     with connection.cursor() as cursor:
         cursor.execute(
             f"UPDATE {table} SET {column} = %s WHERE {pk_column} = %s",
-            [CORRUPTED_FERNET_TOKEN, instance.pk],  # type: ignore[attr-defined]
+            [raw_value, instance.pk],  # type: ignore[attr-defined]
         )
 
 
@@ -227,12 +239,15 @@ def test_rental_ocr_retries_unavailable_address_and_continues_batch(parse_mock) 
     assert blocked_job.attempts == 1
     assert blocked_job.status == "pending"
     assert blocked_job.next_attempt_at is not None
-    assert "temporarily unavailable" in blocked_job.error_message
+    assert blocked_job.error_message == gettext(
+        "Onboarding address data is temporarily unavailable."
+    )
     assert blocked_document.ocr_status == "failed"
     assert blocked_document.parsed_data == {"previous": "keep"}
     assert healthy_job.status == "completed"
     assert healthy_document.ocr_status == "success"
     assert _raw_json_field(blocked_mos, "address_data") == CORRUPTED_FERNET_TOKEN
+
 
 @pytest.mark.django_db
 def test_intake_status_save_preserves_hashes_when_personal_data_is_unavailable() -> None:
@@ -263,6 +278,39 @@ def test_intake_status_save_preserves_hashes_when_personal_data_is_unavailable()
         submission.passport_hash,
     ) == original_hashes
     assert _raw_json_field(submission, "personal_data") == CORRUPTED_FERNET_TOKEN
+
+
+@pytest.mark.django_db
+def test_intake_status_save_preserves_hashes_for_malformed_encrypted_json() -> None:
+    submission = ClientIntakeSubmission.objects.create(
+        token_hash="b" * 64,
+        personal_data={
+            "email": "malformed@example.com",
+            "phone": "+48111222333",
+            "document_number": "CD98765",
+        },
+        case_data={"application_purpose": "work"},
+    )
+    original_hashes = (
+        submission.email_hash,
+        submission.phone_hash,
+        submission.passport_hash,
+    )
+    malformed_token = Fernet(settings.FERNET_KEYS[0]).encrypt(b"not-json").decode()
+    _corrupt_json_field(submission, "personal_data", malformed_token)
+    submission = ClientIntakeSubmission.objects.get(pk=submission.pk)
+    assert submission.personal_data == "not-json"
+
+    submission.status = ClientIntakeSubmission.STATUS_REVOKED
+    submission.save(update_fields=["status", "updated_at"])
+
+    submission.refresh_from_db()
+    assert (
+        submission.email_hash,
+        submission.phone_hash,
+        submission.passport_hash,
+    ) == original_hashes
+    assert _raw_json_field(submission, "personal_data") == malformed_token
 
 
 @pytest.mark.django_db
@@ -311,5 +359,120 @@ def test_document_job_refuses_to_overwrite_unavailable_existing_parsed_data() ->
     parser.assert_not_called()
     job.refresh_from_db()
     assert job.attempts == 1
-    assert "temporarily unavailable" in job.error_message
+    assert job.error_message == gettext("Existing OCR data is temporarily unavailable.")
     assert _raw_json_field(document, "parsed_data") == CORRUPTED_FERNET_TOKEN
+
+
+@pytest.mark.django_db
+def test_mos_approval_preserves_unavailable_client_passport_ciphertext(client) -> None:
+    manager = create_manager_user(email="encrypted-passport-review@example.com")
+    crm_client = Client.objects.create(
+        first_name="Passport",
+        last_name="Owner",
+        passport_num="OLD-PASSPORT",
+    )
+    case = crm_client.cases.get()
+    mos_data = MOSApplicationData.objects.get(case=case)
+    mos_data.status = "client_completed"
+    mos_data.passport_data = {"document_number": "NEW-PASSPORT"}
+    mos_data.save(update_fields=["status", "passport_data"])
+    _corrupt_json_field(crm_client, "passport_num")
+
+    client.force_login(manager)
+    response = client.post(
+        reverse("clients:admin_mos_review", kwargs={"client_id": crm_client.pk}),
+        {"action": "approve"},
+    )
+
+    assert response.status_code == 302
+    mos_data.refresh_from_db()
+    assert mos_data.status == "client_completed"
+    assert mos_data.staff_reviewed_at is None
+    assert _raw_json_field(crm_client, "passport_num") == CORRUPTED_FERNET_TOKEN
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "field_name",
+    ["address_data", "previous_stays", "travel_history", "legal_declarations"],
+)
+def test_mos_approval_preflights_all_encrypted_payloads(client, field_name: str) -> None:
+    manager = create_manager_user(email=f"encrypted-{field_name}@example.com")
+    crm_client = Client.objects.create(first_name="MOS", last_name="Review")
+    mos_data = MOSApplicationData.objects.get(case=crm_client.cases.get())
+    mos_data.status = "client_completed"
+    mos_data.save(update_fields=["status"])
+    _corrupt_json_field(mos_data, field_name)
+
+    client.force_login(manager)
+    response = client.post(
+        reverse("clients:admin_mos_review", kwargs={"client_id": crm_client.pk}),
+        {"action": "approve"},
+    )
+
+    assert response.status_code == 302
+    mos_data.refresh_from_db()
+    assert mos_data.status == "client_completed"
+    assert mos_data.staff_reviewed_at is None
+    assert _raw_json_field(mos_data, field_name) == CORRUPTED_FERNET_TOKEN
+
+
+@pytest.mark.django_db
+def test_wezwanie_confirmation_preserves_unavailable_case_number() -> None:
+    crm_client = Client.objects.create(first_name="Case", last_name="Owner")
+    case = crm_client.cases.get()
+    case.authority_case_number = "OLD-CASE-NUMBER"
+    case.save(update_fields=["authority_case_number"])
+    document = Document.objects.create(
+        client=crm_client,
+        case=case,
+        document_type=DocumentType.WEZWANIE.value,
+        file=_pdf_upload("confirm-wezwanie.pdf"),
+        awaiting_confirmation=True,
+        parsed_data={"existing": "preserve"},
+    )
+    parsed_before = _raw_json_field(document, "parsed_data")
+    _corrupt_json_field(case, "authority_case_number")
+    case.refresh_from_db()
+    document.refresh_from_db()
+
+    with pytest.raises(EncryptedTextUnavailableError):
+        confirm_wezwanie_document(
+            document=document,
+            actor=None,
+            confirmation_data={"case_number": "NEW-CASE-NUMBER"},
+        )
+
+    document.refresh_from_db()
+    assert document.awaiting_confirmation is True
+    assert _raw_json_field(document, "parsed_data") == parsed_before
+    assert _raw_json_field(case, "authority_case_number") == CORRUPTED_FERNET_TOKEN
+
+
+@pytest.mark.django_db
+def test_wezwanie_ocr_retries_when_case_number_ciphertext_is_unavailable() -> None:
+    crm_client = Client.objects.create(first_name="OCR", last_name="Case")
+    case = crm_client.cases.get()
+    case.authority_case_number = "OLD-CASE-NUMBER"
+    case.save(update_fields=["authority_case_number"])
+    document = Document.objects.create(
+        client=crm_client,
+        case=case,
+        document_type=DocumentType.WEZWANIE.value,
+        file=_pdf_upload("queued-wezwanie.pdf"),
+        parsed_data={"existing": "preserve"},
+    )
+    parsed_before = _raw_json_field(document, "parsed_data")
+    job = enqueue_document_processing_job(document=document)
+    _corrupt_json_field(case, "authority_case_number")
+    parser = Mock(return_value=WezwanieData(text="parsed", case_number="NEW-CASE-NUMBER"))
+
+    results = process_pending_document_jobs(limit=1, parser=parser)
+
+    assert len(results) == 1
+    assert results[0].status == "pending"
+    job.refresh_from_db()
+    assert job.status == "pending"
+    assert job.error_message == gettext("Existing case data is temporarily unavailable.")
+    assert _raw_json_field(document, "parsed_data") == parsed_before
+    assert _raw_json_field(case, "authority_case_number") == CORRUPTED_FERNET_TOKEN

@@ -17,10 +17,12 @@ from clients.constants import SELF_ONBOARDING_SLUG, DocumentType, is_recurring_d
 from clients.forms import DocumentUploadForm
 from clients.models import Client, ClientOnboardingSession, Document, DocumentRequirement, MOSApplicationData
 from clients.security.encrypted import (
+    EncryptedFieldUnavailableError,
     EncryptedJSONUnavailableError,
     read_encrypted_json_dict,
     read_encrypted_json_list,
     require_encrypted_json_dict,
+    require_encrypted_text,
 )
 from clients.services.case_context import checklist_for_case, purpose_context_for_case
 from clients.services.document_workflow import upload_client_document
@@ -155,7 +157,7 @@ def _save_contact_values(client: Client, mos_data: MOSApplicationData, values: d
 
         for field_name in CONTACT_REQUIRED_FIELDS:
             personal_data[field_name] = values[field_name]
-        mos_data.personal_data = personal_data  # type: ignore[assignment]
+        mos_data.personal_data = personal_data
 
         update_fields = ["personal_data", "updated_at"]
         if mos_data.status == "draft":
@@ -236,6 +238,7 @@ def _validate_new_card_values(values: dict[str, str]) -> dict[str, str]:
 
 
 def _save_new_card_values(mos_data: MOSApplicationData, values: dict[str, str]) -> None:
+    require_encrypted_text(mos_data, "new_residence_card_case_number")
     status = values["status"]
     if status in (NEW_CARD_STATUS_SUBMITTED_NO_NUMBER, NEW_CARD_STATUS_SUBMITTED_WITH_NUMBER):
         mos_data.new_residence_card_application_status = MOSApplicationData.NEW_CARD_STATUS_YES
@@ -312,6 +315,11 @@ def _handle_new_card_application_post(
 ) -> HttpResponse:
     if not _mos_documents_are_editable(mos_data):
         return _locked_response(request, session)
+
+    try:
+        require_encrypted_text(mos_data, "new_residence_card_case_number")
+    except EncryptedFieldUnavailableError:
+        return _encrypted_json_unavailable_response()
 
     values = _new_card_values_from_post(request)
     errors = _validate_new_card_values(values)
@@ -449,10 +457,10 @@ def _build_start_context(
     stay_data, stay_unavailable = read_encrypted_json_dict(mos_data, "stay_data")
     extra_unavailable: list[bool] = []
     for field_name in ("insurance_data", "financial_data", "legal_declarations"):
-        _value, unavailable = read_encrypted_json_dict(mos_data, field_name)
+        _dict_value, unavailable = read_encrypted_json_dict(mos_data, field_name)
         extra_unavailable.append(unavailable)
     for field_name in ("previous_stays", "travel_history"):
-        _value, unavailable = read_encrypted_json_list(mos_data, field_name)
+        _list_value, unavailable = read_encrypted_json_list(mos_data, field_name)
         extra_unavailable.append(unavailable)
     encrypted_data_unavailable = any(
         (personal_unavailable, passport_unavailable, address_unavailable, stay_unavailable, *extra_unavailable)

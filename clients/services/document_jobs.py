@@ -16,7 +16,7 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from clients.models import Document, DocumentProcessingJob
-from clients.security.encrypted import read_encrypted_json_dict
+from clients.security.encrypted import EncryptedFieldUnavailableError, read_encrypted_json_dict
 from clients.services.document_processing_common import (
     DEFAULT_JOB_LEASE_SECONDS,
     DEFAULT_JOB_MAX_ATTEMPTS,
@@ -223,13 +223,24 @@ def process_document_processing_job(
             error_message=_("Parsed wezwanie data was empty."),
         )
 
-    return _finalize_successful_document_job(
-        job_id=job_id,
-        source_file_name=source_file_name,
-        parsed=parsed,
-        send_missing_email=send_missing_email,
-        send_appointment_email=send_appointment_email,
-    )
+    try:
+        return _finalize_successful_document_job(
+            job_id=job_id,
+            source_file_name=source_file_name,
+            parsed=parsed,
+            send_missing_email=send_missing_email,
+            send_appointment_email=send_appointment_email,
+        )
+    except EncryptedFieldUnavailableError:
+        logger.warning(
+            "Wezwanie OCR job blocked because an encrypted destination is unavailable: job_id=%s",
+            job.id,
+        )
+        return _finalize_failed_document_job(
+            job_id=job.id,
+            source_file_name=source_file_name,
+            error_message=str(_("Existing case data is temporarily unavailable.")),
+        )
 
 
 
