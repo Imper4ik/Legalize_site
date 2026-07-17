@@ -1,6 +1,7 @@
-from typing import Any, cast
+from typing import Any
 
 from clients.models import MOSApplicationData
+from clients.security.encrypted import require_encrypted_json_dict
 
 
 def pre_fill_mos_data_from_ocr(mos_data: MOSApplicationData) -> bool:
@@ -13,17 +14,24 @@ def pre_fill_mos_data_from_ocr(mos_data: MOSApplicationData) -> bool:
     client = mos_data.client
 
     # Find a completed passport document
-    passport_doc = client.documents.filter(
-        document_type="passport",
-        ocr_status="success",
-        parsed_data__isnull=False
-    ).first()
+    passport_doc = (
+        client.documents.filter(
+            case=mos_data.case,
+            document_type="passport",
+            ocr_status="success",
+            parsed_data__isnull=False,
+        )
+        .order_by("-uploaded_at", "-pk")
+        .first()
+    )
 
-    if passport_doc and passport_doc.parsed_data:
-        parsed = passport_doc.parsed_data
+    if passport_doc:
+        parsed = require_encrypted_json_dict(passport_doc, "parsed_data")
+        if not parsed:
+            return False
 
-        personal_data: dict[str, Any] = dict(cast("dict[str, Any]", mos_data.personal_data) or {})
-        passport_data: dict[str, Any] = dict(cast("dict[str, Any]", mos_data.passport_data) or {})
+        personal_data: dict[str, Any] = require_encrypted_json_dict(mos_data, "personal_data")
+        passport_data: dict[str, Any] = require_encrypted_json_dict(mos_data, "passport_data")
 
         # Fill missing personal data fields if empty
         if "first_name" in parsed and parsed["first_name"]:

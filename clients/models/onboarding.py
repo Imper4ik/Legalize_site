@@ -10,7 +10,7 @@ from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 
 from clients.models.consistency import assert_case_client_consistent
-from fernet_fields import EncryptedJSONField, EncryptedTextField
+from fernet_fields import EncryptedJSONField, EncryptedTextField, EncryptedValueUnavailable
 
 
 def _normalize_intake_lookup_value(value: Any, *, field_name: str) -> str:
@@ -149,20 +149,22 @@ class ClientIntakeSubmission(models.Model):
             raise ValidationError("Client and case do not match.")
 
     def save(self, *args: Any, **kwargs: Any) -> None:
-        personal_data: dict[str, Any] = self.personal_data if isinstance(self.personal_data, dict) else {}
-        self.email_hash = _hash_intake_lookup_value(personal_data.get("email"), field_name="email")
-        self.phone_hash = _hash_intake_lookup_value(personal_data.get("phone"), field_name="phone")
-        passport_value = (
-            personal_data.get("passport_num")
-            or personal_data.get("passport_number")
-            or personal_data.get("document_number")
-        )
-        self.passport_hash = _hash_intake_lookup_value(passport_value, field_name="passport")
-        update_fields = kwargs.get("update_fields")
-        if update_fields is not None:
-            update_fields = set(update_fields)
-            update_fields.update({"email_hash", "phone_hash", "passport_hash"})
-            kwargs["update_fields"] = list(update_fields)
+        personal_data_unavailable = isinstance(self.personal_data, EncryptedValueUnavailable)
+        if not personal_data_unavailable:
+            personal_data: dict[str, Any] = self.personal_data if isinstance(self.personal_data, dict) else {}
+            self.email_hash = _hash_intake_lookup_value(personal_data.get("email"), field_name="email")
+            self.phone_hash = _hash_intake_lookup_value(personal_data.get("phone"), field_name="phone")
+            passport_value = (
+                personal_data.get("passport_num")
+                or personal_data.get("passport_number")
+                or personal_data.get("document_number")
+            )
+            self.passport_hash = _hash_intake_lookup_value(passport_value, field_name="passport")
+            update_fields = kwargs.get("update_fields")
+            if update_fields is not None:
+                update_fields = set(update_fields)
+                update_fields.update({"email_hash", "phone_hash", "passport_hash"})
+                kwargs["update_fields"] = list(update_fields)
         self._assert_created_case_client_consistent()
         super().save(*args, **kwargs)
 

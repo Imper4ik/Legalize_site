@@ -11,7 +11,12 @@ from django.utils.dateparse import parse_date
 from django.utils.translation import gettext as _
 
 from clients.models import Client, MOSApplicationData
-from clients.security.encrypted import safe_encrypted_attr
+from clients.security.encrypted import (
+    EncryptedJSONUnavailableError,
+    read_encrypted_json_dict,
+    require_encrypted_json_dict,
+    safe_encrypted_attr,
+)
 from clients.services.access import accessible_clients_queryset
 from clients.services.activity import log_client_activity
 from clients.services.case_context import purpose_for_case
@@ -60,11 +65,19 @@ def _purpose_review_context(
     }
 
 
-def _mos_client_update_values(mos_data: MOSApplicationData) -> dict[str, object]:
-    # EncryptedJSONField stores dicts but django-stubs types it as text.
-    personal_data = cast("dict[str, Any]", mos_data.personal_data) or {}
-    passport_data = cast("dict[str, Any]", mos_data.passport_data) or {}
-    stay_data = cast("dict[str, Any]", mos_data.stay_data) or {}
+def _mos_client_update_values(
+    mos_data: MOSApplicationData,
+    *,
+    require_available: bool = False,
+) -> dict[str, object]:
+    if require_available:
+        personal_data = require_encrypted_json_dict(mos_data, "personal_data")
+        passport_data = require_encrypted_json_dict(mos_data, "passport_data")
+        stay_data = require_encrypted_json_dict(mos_data, "stay_data")
+    else:
+        personal_data, _personal_unavailable = read_encrypted_json_dict(mos_data, "personal_data")
+        passport_data, _passport_unavailable = read_encrypted_json_dict(mos_data, "passport_data")
+        stay_data, _stay_unavailable = read_encrypted_json_dict(mos_data, "stay_data")
 
     values: dict[str, object] = {}
     for field_name in ("first_name", "last_name", "email", "phone", "citizenship"):
@@ -123,7 +136,7 @@ def _build_review_diffs(client: Client, mos_data: MOSApplicationData) -> list[di
 
 
 def _apply_mos_data_to_client(*, client: Client, mos_data: MOSApplicationData, actor: Any) -> list[str]:
-    values = _mos_client_update_values(mos_data)
+    values = _mos_client_update_values(mos_data, require_available=True)
     changed_fields: list[str] = []
     for field_name in APPLY_TO_CLIENT_FIELDS:
         if field_name not in values:
@@ -212,7 +225,23 @@ def admin_mos_review(request: HttpRequest, client_id: int) -> HttpResponse:
     if request.method == "POST":
         action = request.POST.get("action")
         if action == "approve":
-            changed_fields = _apply_mos_data_to_client(client=client, mos_data=mos_data, actor=request.user)
+            try:
+                changed_fields = _apply_mos_data_to_client(
+                    client=client,
+                    mos_data=mos_data,
+                    actor=request.user,
+                )
+            except EncryptedJSONUnavailableError:
+                logger.warning(
+                    "MOS approval blocked because encrypted questionnaire data is unavailable: client_id=%s mos_data_id=%s",
+                    client.id,
+                    mos_data.id,
+                )
+                messages.error(
+                    request,
+                    _("Questionnaire data is temporarily unavailable. Restore the encryption key before approval."),
+                )
+                return _review_redirect(client, mos_data)
             mos_data.status = "mos_package_ready"
             mos_data.staff_reviewed_at = timezone.now()
             mos_data.staff_reviewed_by = cast(Any, request.user)

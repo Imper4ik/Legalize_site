@@ -1,14 +1,22 @@
 from __future__ import annotations
 
-from typing import Any, cast
-
+from django.contrib import messages
+from django.db import transaction
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
 from clients.models import ClientDigitalAccess, ClientOnboardingSession, MOSApplicationData
-from clients.security.encrypted import safe_encrypted_attr
+from clients.security.encrypted import (
+    ENCRYPTED_VALUE_UNAVAILABLE,
+    EncryptedJSONUnavailableError,
+    read_encrypted_json_dict,
+    read_encrypted_json_list,
+    require_encrypted_json_dict,
+    require_encrypted_json_list,
+    safe_encrypted_attr,
+)
 from clients.services.intake_extraction import pre_fill_mos_data_from_ocr
 from clients.services.onboarding_purposes import clear_onboarding_notifications_cache, normalize_onboarding_purpose
 from clients.views import onboarding_views
@@ -47,6 +55,18 @@ def _next_or_dashboard(request: HttpRequest, token: str, next_view_name: str) ->
     return redirect(next_view_name, token=token)
 
 
+def _encrypted_json_unavailable_message() -> str:
+    return str(_("Saved form data is temporarily unavailable. Please contact support before continuing."))
+
+
+def _encrypted_json_unavailable_response() -> HttpResponse:
+    return HttpResponse(_encrypted_json_unavailable_message(), status=409)
+
+
+def _show_encrypted_json_unavailable(request: HttpRequest) -> None:
+    messages.error(request, _encrypted_json_unavailable_message())
+
+
 def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
     session = onboarding_views.check_onboarding_session(token, request=request)
     if not session:
@@ -69,16 +89,26 @@ def onboarding_digital_access(request: HttpRequest, token: str) -> HttpResponse:
         digital_access = ClientDigitalAccess(client=session.client)
 
     if request.method == "POST":
-        mos_data, created = onboarding_views._ensure_mos(session.client, onboarding_views._session_case(session))
-        digital_access, created_access = ClientDigitalAccess.objects.get_or_create(client=session.client)
+        try:
+            with transaction.atomic():
+                mos_data, created = onboarding_views._ensure_mos(
+                    session.client, onboarding_views._session_case(session)
+                )
+                passport_data = require_encrypted_json_dict(mos_data, "passport_data")
+                personal_data = require_encrypted_json_dict(mos_data, "personal_data")
 
-        digital_access.has_pesel = request.POST.get("has_pesel") == "yes"
-        digital_access.has_trusted_profile = request.POST.get("has_trusted_profile") == "yes"
-        digital_access.has_mos_account = request.POST.get("has_mos_account") == "yes"
-        digital_access.save()
+                digital_access, _created_access = ClientDigitalAccess.objects.get_or_create(
+                    client=session.client
+                )
+                digital_access.has_pesel = request.POST.get("has_pesel") == "yes"
+                digital_access.has_trusted_profile = request.POST.get("has_trusted_profile") == "yes"
+                digital_access.has_mos_account = request.POST.get("has_mos_account") == "yes"
+                digital_access.save()
 
-        if created or (not mos_data.passport_data and not mos_data.personal_data):
-            pre_fill_mos_data_from_ocr(mos_data)
+                if created or (not passport_data and not personal_data):
+                    pre_fill_mos_data_from_ocr(mos_data)
+        except EncryptedJSONUnavailableError:
+            return _encrypted_json_unavailable_response()
 
         return _next_or_dashboard(request, token, "clients:onboarding_passport")
 
@@ -105,33 +135,44 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
     if mos_data.pk and not onboarding_views._mos_data_is_editable(mos_data):
         return onboarding_views._locked_response(request, session)
 
-    # Prefill in-memory only (without saving) for rendering form.
-    # EncryptedJSONField stores dicts but django-stubs types it as text.
-    personal_data = dict(cast("dict[str, Any]", mos_data.personal_data) or {})
-    for key, val in [
-        ("first_name", client.first_name),
-        ("last_name", client.last_name),
-        ("phone", client.phone),
-        ("email", client.email),
-        ("citizenship", client.citizenship),
-    ]:
-        if val and (key not in personal_data or not personal_data[key]):
-            personal_data[key] = val
+    if request.method != "POST":
+        # Prefill detached values in-memory only; never attach an unavailable
+        # marker to a model that a later write path could save.
+        personal_data, personal_unavailable = read_encrypted_json_dict(mos_data, "personal_data")
+        passport_data, passport_unavailable = read_encrypted_json_dict(mos_data, "passport_data")
+        for key, val in [
+            ("first_name", client.first_name),
+            ("last_name", client.last_name),
+            ("phone", client.phone),
+            ("email", client.email),
+            ("citizenship", client.citizenship),
+        ]:
+            if val and (key not in personal_data or not personal_data[key]):
+                personal_data[key] = val
 
-    if client.birth_date and ("birth_date" not in personal_data or not personal_data["birth_date"]):
-        personal_data["birth_date"] = client.birth_date.isoformat()
+        if client.birth_date and ("birth_date" not in personal_data or not personal_data["birth_date"]):
+            personal_data["birth_date"] = client.birth_date.isoformat()
 
-    mos_data.personal_data = personal_data  # type: ignore[assignment]
+        passport_num_val = safe_encrypted_attr(client, "passport_num")
+        passport_num_unavailable = passport_num_val == ENCRYPTED_VALUE_UNAVAILABLE
+        if passport_num_unavailable:
+            passport_num_val = ""
+        if passport_num_val and ("document_number" not in passport_data or not passport_data["document_number"]):
+            passport_data["document_number"] = passport_num_val
 
-    passport_data = dict(cast("dict[str, Any]", mos_data.passport_data) or {})
-    passport_num_val = safe_encrypted_attr(client, "passport_num")
-    if passport_num_val and ("document_number" not in passport_data or not passport_data["document_number"]):
-        passport_data["document_number"] = passport_num_val
-    mos_data.passport_data = passport_data  # type: ignore[assignment]
+        mos_data.personal_data = personal_data  # type: ignore[assignment]
+        mos_data.passport_data = passport_data  # type: ignore[assignment]
+        if personal_unavailable or passport_unavailable or passport_num_unavailable:
+            _show_encrypted_json_unavailable(request)
 
     if request.method == "POST":
-        # Ensure mos_data is saved to DB
         mos_data, _created = onboarding_views._ensure_mos(client, onboarding_views._session_case(session))
+        try:
+            personal_data = require_encrypted_json_dict(mos_data, "personal_data")
+            passport_data = require_encrypted_json_dict(mos_data, "passport_data")
+        except EncryptedJSONUnavailableError:
+            return _encrypted_json_unavailable_response()
+
         action = request.POST.get("action", "")
         if action == "upload_passport" or request.FILES.get("passport_file"):
             passport_file = request.FILES.get("passport_file")
@@ -182,7 +223,6 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         birth_country = request.POST.get("birth_country", "").strip()
         origin_country = request.POST.get("origin_country", "").strip()
 
-        personal_data = cast("dict[str, Any]", mos_data.personal_data) or {}
         personal_data["first_name"] = first_name
         personal_data["last_name"] = last_name
         personal_data["phone"] = phone
@@ -198,7 +238,6 @@ def onboarding_passport(request: HttpRequest, token: str) -> HttpResponse:
         personal_data["origin_country"] = origin_country
         mos_data.personal_data = personal_data  # type: ignore[assignment]
 
-        passport_data = cast("dict[str, Any]", mos_data.passport_data) or {}
         passport_data["document_number"] = doc_num
         passport_data["expiry_date"] = expiry_date
         passport_data["issue_date"] = request.POST.get("issue_date", "").strip()
@@ -251,7 +290,10 @@ def onboarding_personal_extra(request: HttpRequest, token: str) -> HttpResponse:
         return onboarding_views._locked_response(request, session)
 
     if request.method == "POST":
-        personal_data = cast("dict[str, Any]", mos_data.personal_data) or {}
+        try:
+            personal_data = require_encrypted_json_dict(mos_data, "personal_data")
+        except EncryptedJSONUnavailableError:
+            return _encrypted_json_unavailable_response()
         personal_data["father_name"] = request.POST.get("father_name", "")
         personal_data["mother_name"] = request.POST.get("mother_name", "")
         personal_data["mother_maiden_name"] = request.POST.get("mother_maiden_name", "")
@@ -265,6 +307,10 @@ def onboarding_personal_extra(request: HttpRequest, token: str) -> HttpResponse:
         mos_data.save()
         return _next_or_dashboard(request, token, "clients:onboarding_address")
 
+    personal_data, unavailable = read_encrypted_json_dict(mos_data, "personal_data")
+    mos_data.personal_data = personal_data  # type: ignore[assignment]
+    if unavailable:
+        _show_encrypted_json_unavailable(request)
     return render(request, "clients/onboarding/personal_extra.html", {"session": session, "mos_data": mos_data})
 
 
@@ -285,7 +331,10 @@ def onboarding_address(request: HttpRequest, token: str) -> HttpResponse:
         return onboarding_views._locked_response(request, session)
 
     if request.method == "POST":
-        address_data = cast("dict[str, Any]", mos_data.address_data) or {}
+        try:
+            address_data = require_encrypted_json_dict(mos_data, "address_data")
+        except EncryptedJSONUnavailableError:
+            return _encrypted_json_unavailable_response()
         address_data["street"] = request.POST.get("street", "")
         address_data["city"] = request.POST.get("city", "")
         address_data["postal_code"] = request.POST.get("postal_code", "")
@@ -302,6 +351,10 @@ def onboarding_address(request: HttpRequest, token: str) -> HttpResponse:
         mos_data.save()
         return _next_or_dashboard(request, token, "clients:onboarding_travel")
 
+    address_data, unavailable = read_encrypted_json_dict(mos_data, "address_data")
+    mos_data.address_data = address_data  # type: ignore[assignment]
+    if unavailable:
+        _show_encrypted_json_unavailable(request)
     return render(request, "clients/onboarding/address.html", {"session": session, "mos_data": mos_data})
 
 
@@ -322,6 +375,14 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
         return onboarding_views._locked_response(request, session)
 
     if request.method == "POST":
+        try:
+            stay_data = require_encrypted_json_dict(mos_data, "stay_data")
+            personal_data = require_encrypted_json_dict(mos_data, "personal_data")
+            require_encrypted_json_list(mos_data, "previous_stays")
+            require_encrypted_json_list(mos_data, "travel_history")
+        except EncryptedJSONUnavailableError:
+            return _encrypted_json_unavailable_response()
+
         purpose_updated = False
 
         if "mos_purpose" in request.POST:
@@ -343,7 +404,6 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
         else:
             mos_data.legal_stay_until = None
 
-        stay_data = cast("dict[str, Any]", mos_data.stay_data) or {}
         stay_data["is_in_poland"] = request.POST.get("is_in_poland") == "yes"
         stay_data["last_entry_date"] = request.POST.get("last_entry_date", "")
         stay_data["stay_basis"] = request.POST.get("stay_basis", "")
@@ -352,7 +412,6 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
         stay_data["has_stable_income"] = request.POST.get("has_stable_income") == "yes"
         mos_data.stay_data = stay_data  # type: ignore[assignment]
 
-        personal_data = cast("dict[str, Any]", mos_data.personal_data) or {}
         personal_data["employer_name"] = request.POST.get("employer_name", "").strip()
         personal_data["employer_nip"] = request.POST.get("employer_nip", "").strip()
         personal_data["employer_email"] = request.POST.get("employer_email", "").strip()
@@ -377,6 +436,24 @@ def onboarding_travel(request: HttpRequest, token: str) -> HttpResponse:
         if purpose_updated:
             clear_onboarding_notifications_cache(session.client)
         return _next_or_dashboard(request, token, "clients:onboarding_declarations")
+
+    personal_data, personal_unavailable = read_encrypted_json_dict(mos_data, "personal_data")
+    stay_data, stay_unavailable = read_encrypted_json_dict(mos_data, "stay_data")
+    previous_stays, previous_stays_unavailable = read_encrypted_json_list(mos_data, "previous_stays")
+    travel_history, travel_history_unavailable = read_encrypted_json_list(mos_data, "travel_history")
+    mos_data.personal_data = personal_data  # type: ignore[assignment]
+    mos_data.stay_data = stay_data  # type: ignore[assignment]
+    mos_data.previous_stays = previous_stays  # type: ignore[assignment]
+    mos_data.travel_history = travel_history  # type: ignore[assignment]
+    if any(
+        (
+            personal_unavailable,
+            stay_unavailable,
+            previous_stays_unavailable,
+            travel_history_unavailable,
+        )
+    ):
+        _show_encrypted_json_unavailable(request)
 
     return render(request, "clients/onboarding/travel.html", {
         "session": session,
@@ -403,7 +480,10 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
         return onboarding_views._locked_response(request, session)
 
     if request.method == "POST":
-        declarations = cast("dict[str, Any]", mos_data.legal_declarations) or {}
+        try:
+            declarations = require_encrypted_json_dict(mos_data, "legal_declarations")
+        except EncryptedJSONUnavailableError:
+            return _encrypted_json_unavailable_response()
         declarations["criminal_record"] = request.POST.get("criminal_record") == "yes"
         declarations["tax_arrears"] = request.POST.get("tax_arrears") == "yes"
         mos_data.legal_declarations = declarations  # type: ignore[assignment]
@@ -461,6 +541,11 @@ def onboarding_declarations(request: HttpRequest, token: str) -> HttpResponse:
         return redirect("clients:onboarding_review", token=token)
 
     from clients.models import AppSettings, ConsentRecord
+
+    declarations, unavailable = read_encrypted_json_dict(mos_data, "legal_declarations")
+    mos_data.legal_declarations = declarations  # type: ignore[assignment]
+    if unavailable:
+        _show_encrypted_json_unavailable(request)
 
     return render(
         request,

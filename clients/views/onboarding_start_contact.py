@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from django.conf import settings
 from django.contrib import messages
@@ -16,6 +16,12 @@ from django.utils.translation import gettext as _
 from clients.constants import SELF_ONBOARDING_SLUG, DocumentType, is_recurring_document_type
 from clients.forms import DocumentUploadForm
 from clients.models import Client, ClientOnboardingSession, Document, DocumentRequirement, MOSApplicationData
+from clients.security.encrypted import (
+    EncryptedJSONUnavailableError,
+    read_encrypted_json_dict,
+    read_encrypted_json_list,
+    require_encrypted_json_dict,
+)
 from clients.services.case_context import checklist_for_case, purpose_context_for_case
 from clients.services.document_workflow import upload_client_document
 from clients.services.onboarding_progress import get_case_onboarding_step
@@ -79,8 +85,8 @@ def _clean_placeholder_contact_value(field_name: str, value: str, *, first_name:
 
 
 def _contact_values_from_client(client: Client, mos_data: MOSApplicationData | None) -> dict[str, str]:
-    personal_data: dict[str, Any] = (
-        cast("dict[str, Any]", mos_data.personal_data) if mos_data and isinstance(mos_data.personal_data, dict) else {}
+    personal_data, _unavailable = (
+        read_encrypted_json_dict(mos_data, "personal_data") if mos_data is not None else ({}, False)
     )
     raw_first_name = str(client.first_name or personal_data.get("first_name") or "").strip()
     raw_last_name = str(client.last_name or personal_data.get("last_name") or "").strip()
@@ -129,23 +135,33 @@ def _contact_is_complete(values: dict[str, str]) -> bool:
     return all(values.get(field_name) for field_name in CONTACT_REQUIRED_FIELDS)
 
 
+def _encrypted_json_unavailable_response() -> HttpResponse:
+    return HttpResponse(
+        _("Saved form data is temporarily unavailable. Please contact support before continuing."),
+        status=409,
+    )
+
+
 def _contact_form_is_editable(mos_data: MOSApplicationData | None, contact_values: dict[str, str]) -> bool:
     return _mos_data_is_editable(mos_data) or not _contact_is_complete(contact_values)
 
 
 def _save_contact_values(client: Client, mos_data: MOSApplicationData, values: dict[str, str]) -> None:
-    _sync_contact_fields_to_client(client, **values)
+    # Preflight before syncing the Client: a missing Fernet key must never leave
+    # contact columns updated while the encrypted MOS payload stays unchanged.
+    with transaction.atomic():
+        personal_data = require_encrypted_json_dict(mos_data, "personal_data")
+        _sync_contact_fields_to_client(client, **values)
 
-    personal_data = dict(cast("dict[str, Any]", mos_data.personal_data) or {})
-    for field_name in CONTACT_REQUIRED_FIELDS:
-        personal_data[field_name] = values[field_name]
-    mos_data.personal_data = personal_data  # type: ignore[assignment]
+        for field_name in CONTACT_REQUIRED_FIELDS:
+            personal_data[field_name] = values[field_name]
+        mos_data.personal_data = personal_data  # type: ignore[assignment]
 
-    update_fields = ["personal_data", "updated_at"]
-    if mos_data.status == "draft":
-        mos_data.status = "client_filling"
-        update_fields.append("status")
-    mos_data.save(update_fields=update_fields)
+        update_fields = ["personal_data", "updated_at"]
+        if mos_data.status == "draft":
+            mos_data.status = "client_filling"
+            update_fields.append("status")
+        mos_data.save(update_fields=update_fields)
 
 
 def _latest_new_card_confirmation_document(client: Client, case: Any = None) -> Document | None:
@@ -427,6 +443,20 @@ def _build_start_context(
     mos_data = MOSApplicationData.objects.filter(client=client, case=case).first()
     if mos_data is None:
         mos_data = MOSApplicationData(client=client, case=case)
+    _personal_data, personal_unavailable = read_encrypted_json_dict(mos_data, "personal_data")
+    passport_data, passport_unavailable = read_encrypted_json_dict(mos_data, "passport_data")
+    address_data, address_unavailable = read_encrypted_json_dict(mos_data, "address_data")
+    stay_data, stay_unavailable = read_encrypted_json_dict(mos_data, "stay_data")
+    extra_unavailable: list[bool] = []
+    for field_name in ("insurance_data", "financial_data", "legal_declarations"):
+        _value, unavailable = read_encrypted_json_dict(mos_data, field_name)
+        extra_unavailable.append(unavailable)
+    for field_name in ("previous_stays", "travel_history"):
+        _value, unavailable = read_encrypted_json_list(mos_data, field_name)
+        extra_unavailable.append(unavailable)
+    encrypted_data_unavailable = any(
+        (personal_unavailable, passport_unavailable, address_unavailable, stay_unavailable, *extra_unavailable)
+    )
     purpose_ctx = purpose_context_for_case(case, mos_data) if case is not None else _purpose_context(client, mos_data)
     # A case purpose is authoritative once staff set it; until then the
     # client's questionnaire selection is the working purpose.
@@ -589,15 +619,9 @@ def _build_start_context(
         "approved_by_staff",
     }
     passport_complete = status_completed or bool(
-        mos_data
-        and isinstance(mos_data.passport_data, dict)
-        and mos_data.passport_data.get("document_number")
-        and isinstance(mos_data.address_data, dict)
-        and mos_data.address_data.get("city")
+        passport_data.get("document_number") and address_data.get("city")
     )
-    travel_complete = status_completed or bool(
-        mos_data and isinstance(mos_data.stay_data, dict) and mos_data.stay_data.get("stay_basis")
-    )
+    travel_complete = status_completed or bool(stay_data.get("stay_basis"))
 
     case_step = get_case_onboarding_step(
         client=client,
@@ -609,6 +633,17 @@ def _build_start_context(
 
     # Build list of action items / notifications for the client
     action_items: list[dict[str, str | None]] = []
+    if encrypted_data_unavailable:
+        action_items.append(
+            {
+                "type": "danger",
+                "icon": "bi-shield-exclamation",
+                "text": str(
+                    _("Saved form data is temporarily unavailable. Please contact support before continuing.")
+                ),
+                "url": None,
+            }
+        )
     from django.urls import reverse
 
     from clients.models import StaffTask
@@ -752,6 +787,7 @@ def _build_start_context(
         "purpose_missing": purpose_missing,
         "action_items": action_items,
         "action_required_count": action_required_count,
+        "encrypted_data_unavailable": encrypted_data_unavailable,
         **purpose_ctx,
     }
 
@@ -836,7 +872,10 @@ def onboarding_start_contact(request: HttpRequest, token: str) -> HttpResponse:
                 ),
             )
 
-        _save_contact_values(client, mos_data, contact_values)
+        try:
+            _save_contact_values(client, mos_data, contact_values)
+        except EncryptedJSONUnavailableError:
+            return _encrypted_json_unavailable_response()
         if not _mos_data_is_editable(mos_data):
             return redirect("clients:onboarding_start", token=token)
         return redirect("clients:onboarding_digital_access", token=token)

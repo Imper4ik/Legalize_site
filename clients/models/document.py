@@ -401,7 +401,9 @@ class Document(SoftDeleteModel):
 
     def scrub_parsed_pii(self) -> bool:
         """Remove PII and raw text from parsed_data, keeping only metadata."""
-        if not self.parsed_data:
+        # An unreadable EncryptedJSONField is represented by a str subclass
+        # that retains the original ciphertext. Never mutate or save over it.
+        if not isinstance(self.parsed_data, dict):
             return False
 
         scrubbed = False

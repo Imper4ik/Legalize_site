@@ -1,5 +1,5 @@
 import logging
-from typing import Any, cast
+from typing import cast
 
 from django.contrib import messages
 from django.db import IntegrityError, transaction
@@ -24,6 +24,13 @@ from clients.models import (
     ClientDigitalAccess,
     Document,
     MOSApplicationData,
+)
+from clients.security.encrypted import (
+    EncryptedJSONUnavailableError,
+    read_encrypted_json_dict,
+    read_encrypted_json_list,
+    require_encrypted_json_dict,
+    require_encrypted_json_list,
 )
 from clients.services.document_workflow import upload_client_document
 from clients.services.notifications import notify_staff_about_fingerprint_invitation_upload
@@ -70,6 +77,37 @@ from legalize_site.utils.files import build_protected_file_response
 
 logger = logging.getLogger(__name__)
 
+
+def _encrypted_json_unavailable_message() -> str:
+    return str(_("Saved form data is temporarily unavailable. Please contact support before continuing."))
+
+
+def _encrypted_json_unavailable_json_response() -> JsonResponse:
+    return JsonResponse(
+        {"status": "unavailable", "message": _encrypted_json_unavailable_message()},
+        status=409,
+    )
+
+
+def _prepare_mos_json_for_display(mos_data: MOSApplicationData) -> bool:
+    unavailable = False
+    for field_name in (
+        "personal_data",
+        "passport_data",
+        "address_data",
+        "stay_data",
+        "insurance_data",
+        "financial_data",
+        "legal_declarations",
+    ):
+        value, field_unavailable = read_encrypted_json_dict(mos_data, field_name)
+        setattr(mos_data, field_name, value)
+        unavailable = unavailable or field_unavailable
+    for field_name in ("previous_stays", "travel_history"):
+        value, field_unavailable = read_encrypted_json_list(mos_data, field_name)
+        setattr(mos_data, field_name, value)
+        unavailable = unavailable or field_unavailable
+    return unavailable
 
 
 
@@ -373,6 +411,8 @@ def onboarding_review(request: HttpRequest, token: str) -> HttpResponse:
     mos_data = get_object_or_404(
         MOSApplicationData, client=session.client, case=_session_case(session)
     )
+    if _prepare_mos_json_for_display(mos_data):
+        messages.error(request, _encrypted_json_unavailable_message())
 
     return render(request, "clients/onboarding/review.html", {"session": session, "mos_data": mos_data})
 
@@ -396,33 +436,57 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         return JsonResponse({"status": "error", "message": _("Select a case first")}, status=409)
 
     client = session.client
-    mos_data, created_mos = _ensure_mos(client, _session_case(session))
+    case = _session_case(session)
+    mos_data = MOSApplicationData.objects.filter(client=client, case=case).first()
+    if mos_data is None:
+        mos_data = MOSApplicationData(client=client, case=case)
     if not _mos_data_is_editable(mos_data):
         return JsonResponse({"status": "locked", "message": _("This onboarding form is locked.")}, status=423)
 
+    selected_purpose: str | None = None
+    if "mos_purpose" in request.POST:
+        try:
+            selected_purpose = normalize_onboarding_purpose(request.POST.get("mos_purpose"))
+        except ValueError:
+            return JsonResponse({"status": "error", "message": _("Invalid application purpose")}, status=400)
+
+    # Complete the encrypted preflight before saving digital access, Client, or
+    # MOS fields. Otherwise a bad key could leave an autosave half-applied.
+    try:
+        personal_data = require_encrypted_json_dict(mos_data, "personal_data")
+        passport_data = require_encrypted_json_dict(mos_data, "passport_data")
+        address_data = require_encrypted_json_dict(mos_data, "address_data")
+        stay_data = require_encrypted_json_dict(mos_data, "stay_data")
+        require_encrypted_json_dict(mos_data, "insurance_data")
+        require_encrypted_json_dict(mos_data, "financial_data")
+        declarations = require_encrypted_json_dict(mos_data, "legal_declarations")
+        require_encrypted_json_list(mos_data, "previous_stays")
+        require_encrypted_json_list(mos_data, "travel_history")
+    except EncryptedJSONUnavailableError:
+        return _encrypted_json_unavailable_json_response()
+
     # Process digital access fields if any
-    digital_access_updated = False
+    digital_access: ClientDigitalAccess | None = None
+    digital_access_update_fields: list[str] = []
     if any(k in request.POST for k in ["has_pesel", "has_trusted_profile", "has_mos_account"]):
-        digital_access, created_access = ClientDigitalAccess.objects.defer("pesel").get_or_create(client=client)
+        digital_access = ClientDigitalAccess.objects.defer("pesel").filter(client=client).first()
+        if digital_access is None:
+            digital_access = ClientDigitalAccess(client=client)
         if "has_pesel" in request.POST:
             digital_access.has_pesel = request.POST.get("has_pesel") == "yes"
-            digital_access_updated = True
+            digital_access_update_fields.append("has_pesel")
         if "has_trusted_profile" in request.POST:
             digital_access.has_trusted_profile = request.POST.get("has_trusted_profile") == "yes"
-            digital_access_updated = True
+            digital_access_update_fields.append("has_trusted_profile")
         if "has_mos_account" in request.POST:
             digital_access.has_mos_account = request.POST.get("has_mos_account") == "yes"
-            digital_access_updated = True
-        if digital_access_updated:
-            digital_access.save()
+            digital_access_update_fields.append("has_mos_account")
 
     # Process passport/personal fields (Step 1)
     personal_dirty = False
     passport_dirty = False
     client_dirty = False
 
-    personal_data = cast("dict[str, Any]", mos_data.personal_data) or {}
-    passport_data = cast("dict[str, Any]", mos_data.passport_data) or {}
 
     if "first_name" in request.POST:
         val = request.POST.get("first_name", "").strip()
@@ -499,7 +563,6 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
 
     # Process address fields
     address_dirty = False
-    address_data = cast("dict[str, Any]", mos_data.address_data) or {}
     for field in ["street", "city", "postal_code", "home_country", "home_city", "home_street", "voivodeship", "powiat", "gmina", "house_number", "apartment_number"]:
         if field in request.POST:
             address_data[field] = request.POST.get(field, "")
@@ -512,11 +575,7 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
 
     # Process travel fields
     purpose_updated = False
-    if "mos_purpose" in request.POST:
-        try:
-            selected_purpose = normalize_onboarding_purpose(request.POST.get("mos_purpose"))
-        except ValueError:
-            return JsonResponse({"status": "error", "message": _("Invalid application purpose")}, status=400)
+    if selected_purpose is not None:
         if mos_data.mos_purpose != selected_purpose:
             mos_data.mos_purpose = selected_purpose
             purpose_updated = True
@@ -525,7 +584,6 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
         if val:
             mos_data.legal_stay_until = val
 
-    stay_data = cast("dict[str, Any]", mos_data.stay_data) or {}
     stay_dirty = False
     if "is_in_poland" in request.POST:
         stay_data["is_in_poland"] = request.POST.get("is_in_poland") == "yes"
@@ -567,7 +625,6 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
 
     # Process declarations fields
     declarations_dirty = False
-    declarations = cast("dict[str, Any]", mos_data.legal_declarations) or {}
     if "criminal_record" in request.POST:
         declarations["criminal_record"] = request.POST.get("criminal_record") == "yes"
         declarations_dirty = True
@@ -581,12 +638,18 @@ def onboarding_auto_save(request: HttpRequest, token: str) -> HttpResponse:
     if mos_data.status not in ["client_completed", "staff_review", "approved_by_staff", "mos_package_ready", "submitted_in_mos", "fingerprints", "waiting_decision", "decision_received", "closed"]:
         mos_data.status = "client_filling"
 
-    mos_data.save()
+    with transaction.atomic():
+        if digital_access is not None and digital_access_update_fields:
+            if digital_access.pk:
+                digital_access.save(update_fields=digital_access_update_fields)
+            else:
+                digital_access.save()
+        mos_data.save()
+        if client_dirty:
+            client.save()
+
     if purpose_updated:
         clear_onboarding_notifications_cache(client)
-    if client_dirty:
-        client.save()
-
     return JsonResponse({"status": "ok", "message": _("Draft auto-saved")})
 
 

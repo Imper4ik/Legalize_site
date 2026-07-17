@@ -4,9 +4,10 @@ import logging
 import sys
 from typing import Any
 
-from cryptography.fernet import InvalidToken
+from cryptography.fernet import Fernet, InvalidToken
 from django.apps import apps
-from django.core.management.base import BaseCommand, CommandParser
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.db import connection, models
 
 from fernet_fields.fields import EncryptedFieldDecryptionError
@@ -47,6 +48,11 @@ class Command(BaseCommand):
             default=DEFAULT_BATCH_SIZE,
             help=f"Number of rows to fetch per batch (default: {DEFAULT_BATCH_SIZE}).",
         )
+        parser.add_argument(
+            "--primary-key-only",
+            action="store_true",
+            help="Validate that every token decrypts with FERNET_KEYS[0] alone.",
+        )
 
     def handle(self, *args: Any, **options: Any) -> None:
         batch_size = options["batch_size"]
@@ -60,6 +66,7 @@ class Command(BaseCommand):
             sys.exit(2)
 
         self.stdout.write(self.style.SUCCESS("Validating encrypted data..."))
+        primary_fernet = self._primary_fernet() if options.get("primary_key_only") else None
 
         totals = {
             STATUS_OK: 0,
@@ -82,11 +89,9 @@ class Command(BaseCommand):
 
             for field in encrypted_fields:
                 self.stdout.write(
-                    self.style.HTTP_INFO(
-                        f"Checking {model.__name__}.{field.name} (table: {table_name})..."
-                    )
+                    self.style.HTTP_INFO(f"Checking {model.__name__}.{field.name} (table: {table_name})...")
                 )
-                fernet_obj = getattr(field, "_fernet", None)
+                fernet_obj = primary_fernet or getattr(field, "_fernet", None)
                 field_totals = self._check_field(
                     table_name=table_name,
                     pk_col=str(pk_col),
@@ -104,6 +109,17 @@ class Command(BaseCommand):
 
         if any(totals[status] for status in FAILURE_STATUSES):
             sys.exit(1)
+
+    @staticmethod
+    def _primary_fernet() -> Fernet:
+        keys = getattr(settings, "FERNET_KEYS", [])
+        if not keys:
+            raise CommandError("FERNET_KEYS must contain at least one key")
+        try:
+            return Fernet(keys[0])
+        except (TypeError, ValueError):
+            # Do not echo the invalid setting value.
+            raise CommandError("FERNET_KEYS[0] is not a valid Fernet key") from None
 
     def _select_models(self, model_filter: str | None) -> list[type[models.Model]]:
         all_models = list(apps.get_models())

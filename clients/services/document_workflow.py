@@ -10,6 +10,7 @@ from django.utils.translation import gettext as _
 
 from clients.constants import DocumentType
 from clients.models import Case, Client, Document, DocumentProcessingJob
+from clients.security.encrypted import read_encrypted_json_dict, require_encrypted_json_dict
 from clients.services.activity import log_client_activity
 from clients.services.document_workflow_wezwanie import (
     _apply_confirmation_updates,
@@ -66,6 +67,10 @@ from clients.services.document_processing_common import (  # noqa: F401
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _document_parsed_payload(document: Document) -> tuple[dict[str, Any], bool]:
+    return read_encrypted_json_dict(document, "parsed_data")
 
 
 def _resolve_proof_submission_from_qr(client: Client, case: Case | None, document: Document) -> Any:
@@ -285,6 +290,8 @@ def confirm_wezwanie_document(
             manual_review_required=True,
         )
 
+    require_encrypted_json_dict(document, "parsed_data")
+
     payload = _build_confirmed_wezwanie_payload(confirmation_data)
 
     with transaction.atomic():
@@ -359,7 +366,10 @@ def _process_company_upload_job_inline(
     result = process_document_processing_job(job_id=job_id)
     document.refresh_from_db()
 
-    manual_review_required = result.manual_review_required or document.ocr_status == "failed"
+    parsed_payload, encrypted_data_unavailable = _document_parsed_payload(document)
+    manual_review_required = (
+        result.manual_review_required or document.ocr_status == "failed" or encrypted_data_unavailable
+    )
     return DocumentUploadResult(
         document=document,
         message=_("Document '%(name)s' uploaded and verified: %(msg)s") % {
@@ -367,7 +377,7 @@ def _process_company_upload_job_inline(
             "msg": result.message,
         },
         manual_review_required=manual_review_required,
-        parsed_payload=document.parsed_data or {},
+        parsed_payload=parsed_payload,
     )
 
 
@@ -438,11 +448,23 @@ def _process_upload_job_inline(
     document.refresh_from_db()
 
     if document.awaiting_confirmation:
+        parsed_payload, encrypted_data_unavailable = _document_parsed_payload(document)
+        if encrypted_data_unavailable:
+            return DocumentUploadResult(
+                document=document,
+                message=_(
+                    "Recognized document data is temporarily unavailable. "
+                    "Restore the encryption key before confirming it."
+                ),
+                manual_review_required=True,
+                pending_confirmation=False,
+                parsed_payload={},
+            )
         return DocumentUploadResult(
             document=document,
             message=_("Document uploaded. Review recognized data before applying it."),
             pending_confirmation=True,
-            parsed_payload=document.parsed_data or {},
+            parsed_payload=parsed_payload,
         )
 
     manual_review_required = result.manual_review_required or document.ocr_status == "failed"

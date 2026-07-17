@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -17,6 +17,7 @@ from clients.models import (
     Company,
     MOSApplicationData,
 )
+from clients.security.encrypted import read_encrypted_json_dict, require_encrypted_json_dict
 from clients.services.activity import log_client_activity
 from clients.services.onboarding_purposes import normalize_onboarding_purpose
 
@@ -32,8 +33,18 @@ class IntakeConversionResult:
     mos_data: MOSApplicationData
 
 
-def _dict_value(data: Any) -> dict[str, Any]:
-    return dict(cast(dict[str, Any], data)) if isinstance(data, dict) else {}
+def _conflicts_for_personal_data(personal_data: dict[str, Any]) -> QuerySet[Client]:
+    email = str(personal_data.get("email") or "").strip()
+    phone = str(personal_data.get("phone") or "").strip()
+
+    query = Q()
+    if email:
+        query |= Q(email__iexact=email)
+    if phone:
+        query |= Q(phone=phone)
+    if not query:
+        return Client.objects.none()
+    return Client.objects.filter(query)
 
 
 def _parse_optional_date(value: Any) -> Any:
@@ -59,18 +70,8 @@ def _normalized_case_purpose(case_data: dict[str, Any]) -> tuple[str, str]:
 
 
 def find_existing_client_conflicts(submission: ClientIntakeSubmission) -> QuerySet[Client]:
-    personal_data = _dict_value(submission.personal_data)
-    email = str(personal_data.get("email") or "").strip()
-    phone = str(personal_data.get("phone") or "").strip()
-
-    query = Q()
-    if email:
-        query |= Q(email__iexact=email)
-    if phone:
-        query |= Q(phone=phone)
-    if not query:
-        return Client.objects.none()
-    return Client.objects.filter(query)
+    personal_data, _unavailable = read_encrypted_json_dict(submission, "personal_data")
+    return _conflicts_for_personal_data(personal_data)
 
 
 def convert_intake_submission(
@@ -101,19 +102,22 @@ def convert_intake_submission(
     }:
         raise ValidationError("Only submitted intake rows can be converted.")
 
+    # Refuse before changing submission state or creating CRM rows when the
+    # encrypted conversion source cannot be read safely.
+    personal_data = require_encrypted_json_dict(submission, "personal_data")
+    case_data = require_encrypted_json_dict(submission, "case_data")
+
     if submission.expires_at is not None and submission.expires_at <= timezone.now():
         submission.status = ClientIntakeSubmission.STATUS_EXPIRED
         submission.save(update_fields=["status", "updated_at"])
         raise ValidationError("Intake submission has expired.")
 
-    conflicts = find_existing_client_conflicts(submission)
+    conflicts = _conflicts_for_personal_data(personal_data)
     if conflicts.exists() and not allow_conflicts:
         submission.status = ClientIntakeSubmission.STATUS_NEEDS_REVIEW
         submission.save(update_fields=["status", "updated_at"])
         raise ValidationError("Intake matches an existing client and requires staff review.")
 
-    personal_data = _dict_value(submission.personal_data)
-    case_data = _dict_value(submission.case_data)
     first_name = str(personal_data.get("first_name") or "").strip()
     last_name = str(personal_data.get("last_name") or "").strip()
     if not first_name or not last_name:
@@ -175,12 +179,13 @@ def convert_intake_submission(
 
         CaseParticipant.objects.get_or_create(case=case, client=client, defaults={"role": "principal"})
         mos_data, _created_mos = MOSApplicationData.objects.get_or_create(client=client, case=case)
-        mos_data.personal_data = {**_dict_value(mos_data.personal_data), **personal_data}  # type: ignore[assignment]
+        existing_personal_data = require_encrypted_json_dict(mos_data, "personal_data")
+        passport_data = require_encrypted_json_dict(mos_data, "passport_data")
+        mos_data.personal_data = {**existing_personal_data, **personal_data}  # type: ignore[assignment]
         passport_value = personal_data.get("passport_num") or personal_data.get("passport_number") or personal_data.get("document_number")
         if passport_value:
-            passport_data = _dict_value(mos_data.passport_data)
             passport_data.setdefault("document_number", passport_value)
-            mos_data.passport_data = passport_data  # type: ignore[assignment]
+        mos_data.passport_data = passport_data  # type: ignore[assignment]
         selected_mos_purpose = str(case_data.get("mos_purpose") or case_data.get("application_purpose") or "").strip()
         if selected_mos_purpose:
             mos_data.mos_purpose = selected_mos_purpose
