@@ -3038,41 +3038,41 @@ msgstr "Uzupełnij pracodawcę przed odciskami palców"
 msgid "Работодатель не был указан при подаче. Его можно внести при проверке анкеты или на этапе отпечатков."
 msgstr "Pracodawca nie został podany przy składaniu. Można go uzupełnić podczas weryfikacji ankiety lub na etapie odcisków palców."
 
-#: clients/services/employers.py:151
+#: clients/services/employers.py:155
 #, python-format
 msgid "Проверить нового работодателя: %(employer)s"
 msgstr "Sprawdź nowego pracodawcę: %(employer)s"
 
-#: clients/services/employers.py:152
+#: clients/services/employers.py:156
 #, python-format
 msgid "Подтвердить работодателя: %(employer)s"
 msgstr "Potwierdź pracodawcę: %(employer)s"
 
-#: clients/services/employers.py:155
+#: clients/services/employers.py:159
 msgid "Система обнаружила работодателя, отличающегося от указанного в деле. Текущий работодатель не изменён."
 msgstr "System wykrył pracodawcę innego niż zapisany w sprawie. Obecny pracodawca nie został zmieniony."
 
-#: clients/services/employers.py:156
+#: clients/services/employers.py:160
 msgid "Работодатель указан впервые и требует проверки сотрудником."
 msgstr "Pracodawca został podany po raz pierwszy i wymaga weryfikacji przez pracownika."
 
-#: clients/services/employers.py:175
+#: clients/services/employers.py:179
 msgid "Неизвестное решение по работодателю."
 msgstr "Nieznana decyzja dotycząca pracodawcy."
 
-#: clients/services/employers.py:183
+#: clients/services/employers.py:187
 msgid "Эта проверка работодателя уже обработана."
 msgstr "Ta weryfikacja pracodawcy została już obsłużona."
 
-#: clients/services/employers.py:186
+#: clients/services/employers.py:190
 msgid "Нельзя изменить работодателя в архивном деле."
 msgstr "Nie można zmienić pracodawcy w zarchiwizowanej sprawie."
 
-#: clients/services/employers.py:190
+#: clients/services/employers.py:194
 msgid "Нельзя подтвердить работодателя для закрытого или нерабочего дела."
 msgstr "Nie można potwierdzić pracodawcy dla zamkniętej sprawy lub sprawy niezwiązanej z pracą."
 
-#: clients/services/employers.py:192
+#: clients/services/employers.py:196
 msgid "Нельзя отметить работодателя как прежнего: в деле ещё нет подтверждённого работодателя."
 msgstr "Nie można oznaczyć pracodawcy jako niezmienionego, ponieważ w sprawie nie ma jeszcze potwierdzonego pracodawcy."
 

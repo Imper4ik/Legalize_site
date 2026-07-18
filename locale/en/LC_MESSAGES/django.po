@@ -3038,41 +3038,41 @@ msgstr "Confirm employer before fingerprints"
 msgid "Работодатель не был указан при подаче. Его можно внести при проверке анкеты или на этапе отпечатков."
 msgstr "The employer was not provided on submission. It can be added during form review or at the fingerprints stage."
 
-#: clients/services/employers.py:151
+#: clients/services/employers.py:155
 #, python-format
 msgid "Проверить нового работодателя: %(employer)s"
 msgstr "Review new employer: %(employer)s"
 
-#: clients/services/employers.py:152
+#: clients/services/employers.py:156
 #, python-format
 msgid "Подтвердить работодателя: %(employer)s"
 msgstr "Confirm employer: %(employer)s"
 
-#: clients/services/employers.py:155
+#: clients/services/employers.py:159
 msgid "Система обнаружила работодателя, отличающегося от указанного в деле. Текущий работодатель не изменён."
 msgstr "The system detected an employer different from the one recorded in the case. The current employer was not changed."
 
-#: clients/services/employers.py:156
+#: clients/services/employers.py:160
 msgid "Работодатель указан впервые и требует проверки сотрудником."
 msgstr "The employer was provided for the first time and requires staff review."
 
-#: clients/services/employers.py:175
+#: clients/services/employers.py:179
 msgid "Неизвестное решение по работодателю."
 msgstr "Unknown employer review decision."
 
-#: clients/services/employers.py:183
+#: clients/services/employers.py:187
 msgid "Эта проверка работодателя уже обработана."
 msgstr "This employer review has already been processed."
 
-#: clients/services/employers.py:186
+#: clients/services/employers.py:190
 msgid "Нельзя изменить работодателя в архивном деле."
 msgstr "The employer cannot be changed in an archived case."
 
-#: clients/services/employers.py:190
+#: clients/services/employers.py:194
 msgid "Нельзя подтвердить работодателя для закрытого или нерабочего дела."
 msgstr "An employer cannot be confirmed for a closed or non-work case."
 
-#: clients/services/employers.py:192
+#: clients/services/employers.py:196
 msgid "Нельзя отметить работодателя как прежнего: в деле ещё нет подтверждённого работодателя."
 msgstr "The employer cannot be marked as unchanged because the case has no confirmed employer yet."
 
