@@ -37,6 +37,31 @@ class SeedDemoDataCommandTests(TestCase):
         self.assertTrue(EmailLog.objects.filter(idempotency_key="demo:missing-documents").exists())
         self.assertIn("Demo data created/updated.", out.getvalue())
 
+    @override_settings(
+        IS_PRODUCTION=False,
+        STORAGES={
+            "default": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
+            "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+        },
+    )
+    def test_rebinds_stale_idempotent_email_log_to_demo_case(self):
+        call_command("seed_demo_data", "--confirm", stdout=StringIO())
+        stale_owner = Client.objects.create(
+            email="stale-demo-owner@example.test",
+            first_name="Stale",
+            last_name="Owner",
+        )
+        EmailLog.objects.filter(idempotency_key="demo:missing-documents").update(
+            client=stale_owner,
+            case=stale_owner.active_case,
+        )
+
+        call_command("seed_demo_data", "--confirm", stdout=StringIO())
+
+        log = EmailLog.objects.get(idempotency_key="demo:missing-documents")
+        self.assertEqual(log.client.email, "demo.waiting@example.test")
+        self.assertEqual(log.case.client_id, log.client_id)
+
     @override_settings(IS_PRODUCTION=True)
     def test_blocks_production_without_explicit_override(self):
         with self.assertRaises(CommandError):

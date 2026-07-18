@@ -12,6 +12,12 @@ from django.utils.translation import gettext as _
 
 logger = logging.getLogger(__name__)
 
+def support_contact(request: HttpRequest) -> dict[str, str]:
+    """Expose the configured support address on generic error pages."""
+
+    return {"support_email": str(getattr(settings, "DEFAULT_FROM_EMAIL", ""))}
+
+
 
 def _attention_item_url(
     filtered_qs: Any,

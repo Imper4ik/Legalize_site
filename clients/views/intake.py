@@ -71,7 +71,7 @@ def create_public_intake_link(request: HttpRequest) -> HttpResponse:
         return JsonResponse({"status": "error", "message": _("Invalid application purpose")}, status=400)
 
     raw_token, token_hash = generate_onboarding_token()
-    ClientIntakeSubmission.objects.create(  # type: ignore[misc]
+    ClientIntakeSubmission.objects.create(
         token_hash=token_hash,
         status=ClientIntakeSubmission.STATUS_DRAFT,
         source=ClientIntakeSubmission.SOURCE_STAFF_LINK,

@@ -28,6 +28,7 @@ mkdir -p "${MEDIA_ROOT:-/app/media}"
 python manage.py bootstrap_user_model_migration
 python manage.py audit_payment_integrity
 python manage.py migrate --no-input
+python manage.py setup_roles
 
 # Seed this tenant's organization + RODO identity from TENANT_* env vars.
 # Idempotent; only applies vars that are set, so UI-edited values are preserved.

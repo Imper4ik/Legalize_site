@@ -24,7 +24,9 @@ TEST_CENTER_LOCK_KEY = "test_center:run_or_cleanup"
 
 
 def ensure_test_center_enabled(*, user: Any | None = None) -> None:
-    """Only superusers can use the Test Center — no env flag needed."""
+    """Allow explicitly enabled superusers to use the Test Center."""
+    if not getattr(settings, "ENABLE_TEST_CENTER", False):
+        raise PermissionDenied(_("Test Center is disabled."))
     if user is not None and not getattr(user, "is_superuser", False):
         raise PermissionDenied(_("Test Center requires a superuser."))
 

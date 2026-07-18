@@ -3,7 +3,7 @@
 ## Infrastructure Overview
 - **Production Environment**: Railway (via Nixpacks builder)
 - **Database**: PostgreSQL
-- **Caching/Rate-Limiting**: Redis when `REDIS_URL` is set; otherwise PostgreSQL `DatabaseCache`
+- **Caching/Rate-Limiting**: Redis (required for atomic cross-worker counters)
 - **Storage**: DatabaseMediaStorage for MVP, but should move to S3/R2 for large files.
 - **Docker**: The `Dockerfile` is provided as an alternative/local option. Railway uses Nixpacks natively.
 
@@ -18,13 +18,14 @@ Ensure the following variables are set in production:
 - `DATABASE_URL`
 - `ALLOWED_HOSTS`
 - `CSRF_TRUSTED_ORIGINS`
-- `REDIS_URL` (optional)
+- `REDIS_URL`
 - `FERNET_KEYS`
 - `EMAIL_*` (or provider API keys)
 - `CRON_TOKEN`
 - `BACKUP_TRIGGER_SECRET`
 - `MAX_TOTAL_CLIENT_EXPORT_MB`
-- `BACKUP_REMOTE_STORAGE` (if using external backups)
+- `BACKUP_REMOTE_STORAGE=True` with external object storage
+- `DJANGO_ADMIN_EMAILS` for monitored cron failure alerts
 
 ## Deploy Flow
 1. Code is pushed to the target branch.

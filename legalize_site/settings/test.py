@@ -1,5 +1,7 @@
 import os
 
+import dj_database_url
+
 os.environ.setdefault("ENABLE_TRANSLATION_TOOLING", "True")
 if not os.environ.get("FERNET_KEYS"):
     os.environ["FERNET_KEYS"] = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY="
@@ -20,13 +22,18 @@ if "translations.middleware.TranslationStudioMiddleware" not in MIDDLEWARE:  # n
     insert_at = MIDDLEWARE.index("allauth.account.middleware.AccountMiddleware")  # noqa: F405
     MIDDLEWARE.insert(insert_at, "translations.middleware.TranslationStudioMiddleware")  # noqa: F405
 
-# Force in-memory SQLite for tests to ignore Railway's DATABASE_URL during build phase
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": ":memory:",
+# Local tests stay fast on SQLite. CI can opt into PostgreSQL explicitly so
+# production-only database behavior and migrations are exercised as well.
+TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL", "").strip()
+if TEST_DATABASE_URL:
+    DATABASES = {"default": dj_database_url.parse(TEST_DATABASE_URL, conn_max_age=0)}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": ":memory:",
+        }
     }
-}
 
 # Use in-memory email backend for tests
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"

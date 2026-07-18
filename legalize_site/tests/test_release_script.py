@@ -9,9 +9,7 @@ from django.test import SimpleTestCase
 
 class ReleaseScriptTests(SimpleTestCase):
     def test_render_blueprint_uses_docker_release_and_readiness(self):
-        blueprint = (Path(__file__).resolve().parents[2] / "render.yaml").read_text(
-            encoding="utf-8"
-        )
+        blueprint = (Path(__file__).resolve().parents[2] / "render.yaml").read_text(encoding="utf-8")
 
         self.assertIn("preDeployCommand: bash release.sh", blueprint)
         self.assertIn("runtime: docker", blueprint)
@@ -32,6 +30,16 @@ class ReleaseScriptTests(SimpleTestCase):
         )
 
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_release_script_sets_up_roles_after_migrations(self):
+        script = (Path(__file__).resolve().parents[2] / "release.sh").read_text(encoding="utf-8")
+
+        self.assertIn("python manage.py migrate --no-input", script)
+        self.assertIn("python manage.py setup_roles", script)
+        self.assertLess(
+            script.index("python manage.py migrate --no-input"),
+            script.index("python manage.py setup_roles"),
+        )
 
     def test_release_script_skips_translation_import_when_tooling_is_disabled(self):
         script = (Path(__file__).resolve().parents[2] / "release.sh").read_text(encoding="utf-8")

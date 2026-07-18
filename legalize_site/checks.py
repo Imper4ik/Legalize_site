@@ -13,6 +13,7 @@ from legalize_site.runtime import collect_runtime_dependency_statuses
 EMAIL_ERROR_ID = "legalize_site.E001"
 EMAIL_WARNING_ID = "legalize_site.W001"
 EMAIL_CONSOLE_WARNING_ID = "legalize_site.W002"
+EMAIL_CONSOLE_ERROR_ID = "legalize_site.E009"
 SECRET_KEY_ERROR_ID = "legalize_site.E002"  # nosec B105
 FERNET_KEYS_ERROR_ID = "legalize_site.E003"
 SECRET_KEY_WARNING_ID = "legalize_site.W003"  # nosec B105
@@ -28,6 +29,11 @@ CRON_TOKEN_ERROR_ID = "legalize_site.E006"  # nosec B105
 UPLOAD_LIMIT_ERROR_ID = "legalize_site.E007"
 UPLOAD_TYPES_ERROR_ID = "legalize_site.E008"
 TRANSLATION_TOOLING_WARNING_ID = "legalize_site.W010"
+DATABASE_ENGINE_ERROR_ID = "legalize_site.E010"
+ALERT_RECIPIENTS_ERROR_ID = "legalize_site.E011"
+BACKUP_STORAGE_ERROR_ID = "legalize_site.E012"
+TEST_CENTER_PRODUCTION_ERROR_ID = "legalize_site.E013"
+DEMO_CENTER_PRODUCTION_ERROR_ID = "legalize_site.E014"
 
 BACKENDS = {
     "django.core.mail.backends.smtp.EmailBackend": {
@@ -72,13 +78,15 @@ def email_configuration_check(app_configs: Any = None, **kwargs: Any) -> list[Er
     messages: list[Error | Warning] = []
 
     if settings.EMAIL_BACKEND == "django.core.mail.backends.console.EmailBackend":
+        message_class = Error if getattr(settings, "IS_PRODUCTION", False) else Warning
+        message_id = EMAIL_CONSOLE_ERROR_ID if getattr(settings, "IS_PRODUCTION", False) else EMAIL_CONSOLE_WARNING_ID
         messages.append(
-            Warning(
+            message_class(
                 "EMAIL_BACKEND is set to the console backend, so messages are only printed to logs and never delivered.",
                 hint=(
                     "Set SENDGRID_API_KEY, BREVO_API_KEY or SMTP credentials via environment variables to enable real email sending."
                 ),
-                id=EMAIL_CONSOLE_WARNING_ID,
+                id=message_id,
             )
         )
 
@@ -123,15 +131,11 @@ def email_configuration_check(app_configs: Any = None, **kwargs: Any) -> list[Er
 
     if mode == "api":
         api_key = getattr(settings, "ANYMAIL", {}).get(str(env_var)) or os.getenv(str(env_var))
-        hint = (
-            f"Set the {env_var} environment variable so the anymail {provider_label} backend can authenticate against the provider API."
-        )
+        hint = f"Set the {env_var} environment variable so the anymail {provider_label} backend can authenticate against the provider API."
         provider_label = f"{provider_label} API key"
     else:
         api_key = getattr(settings, "EMAIL_HOST_PASSWORD", None) or os.getenv(str(env_var))
-        hint = (
-            f"Set the {env_var} environment variable or provide a value for settings.EMAIL_HOST_PASSWORD so Django can authenticate with {host_label}."
-        )
+        hint = f"Set the {env_var} environment variable or provide a value for settings.EMAIL_HOST_PASSWORD so Django can authenticate with {host_label}."
         provider_label = f"{provider_label} SMTP password" if provider_label != "Email" else "SMTP password"
 
     if not api_key:
@@ -155,6 +159,52 @@ def email_configuration_check(app_configs: Any = None, **kwargs: Any) -> list[Er
             )
         )
 
+    return messages
+
+
+@register("legalize_site")
+def production_operations_check(app_configs: Any = None, **kwargs: Any) -> list[Error | Warning]:
+    """Reject production configurations that cannot safely serve real clients."""
+
+    if not getattr(settings, "IS_PRODUCTION", False):
+        return []
+
+    messages: list[Error | Warning] = []
+    engine = str(getattr(settings, "DATABASES", {}).get("default", {}).get("ENGINE", ""))
+    if engine != "django.db.backends.postgresql":
+        messages.append(
+            Error(
+                "Production must use PostgreSQL; SQLite is not supported for live client data.",
+                hint="Set DATABASE_URL (or Railway PostgreSQL variables) to a PostgreSQL database.",
+                id=DATABASE_ENGINE_ERROR_ID,
+            )
+        )
+
+    if getattr(settings, "ENABLE_TEST_CENTER", False):
+        messages.append(
+            Error(
+                "Test Center must be disabled in production.",
+                hint="Set ENABLE_TEST_CENTER=False for the production service.",
+                id=TEST_CENTER_PRODUCTION_ERROR_ID,
+            )
+        )
+    if getattr(settings, "DEMO_MODE_ENABLED", False):
+        messages.append(
+            Error(
+                "Demo Center must be disabled in production.",
+                hint="Set DEMO_MODE_ENABLED=False for the production service.",
+                id=DEMO_CENTER_PRODUCTION_ERROR_ID,
+            )
+        )
+
+    if getattr(settings, "CRON_FAILURE_EMAIL_ALERTS", False) and not getattr(settings, "ADMINS", ()):
+        messages.append(
+            Error(
+                "Cron failure email alerts are enabled but ADMINS has no recipients.",
+                hint="Set DJANGO_ADMIN_EMAILS to one or more monitored email addresses.",
+                id=ALERT_RECIPIENTS_ERROR_ID,
+            )
+        )
     return messages
 
 
@@ -191,9 +241,7 @@ def encryption_configuration_check(app_configs: Any = None, **kwargs: Any) -> li
         messages.append(
             Error(
                 "FERNET_KEYS must be configured explicitly in production.",
-                hint=(
-                    "Set FERNET_KEYS to one or more Fernet keys and do not rely on keys derived from SECRET_KEY."
-                ),
+                hint=("Set FERNET_KEYS to one or more Fernet keys and do not rely on keys derived from SECRET_KEY."),
                 id=FERNET_KEYS_ERROR_ID,
             )
         )
@@ -236,30 +284,21 @@ def rate_limit_cache_check(app_configs: Any = None, **kwargs: Any) -> list[Error
         return messages
 
     active_limits = [
-        name
-        for name, rule in getattr(settings, "RATE_LIMITS", {}).items()
-        if int(rule.get("limit", 0)) > 0
+        name for name, rule in getattr(settings, "RATE_LIMITS", {}).items() if int(rule.get("limit", 0)) > 0
     ]
     if not active_limits:
         return messages
 
-    cache_backend = str(
-        getattr(settings, "CACHES", {})
-        .get("default", {})
-        .get("BACKEND", "")
-    )
-    if cache_backend in {
-        "django.core.cache.backends.redis.RedisCache",
-        "django.core.cache.backends.db.DatabaseCache",
-    }:
+    cache_backend = str(getattr(settings, "CACHES", {}).get("default", {}).get("BACKEND", ""))
+    if cache_backend == "django.core.cache.backends.redis.RedisCache":
         return messages
 
     messages.append(
         Error(
             "Production rate limits need a shared cache backend.",
             hint=(
-                "Set REDIS_URL for RedisCache, or use Django's DatabaseCache backed by "
-                "the PostgreSQL cache table created during release."
+                "Set REDIS_URL for RedisCache. DatabaseCache increments are not atomic "
+                "and cannot reliably enforce brute-force limits under concurrency."
             ),
             id=RATE_LIMIT_CACHE_ERROR_ID,
         )
@@ -284,9 +323,7 @@ def staff_mfa_check(app_configs: Any = None, **kwargs: Any) -> list[Error | Warn
         from django.contrib.auth import get_user_model
 
         staff = get_user_model().objects.filter(is_staff=True, is_active=True)
-        unenrolled = staff.exclude(
-            pk__in=Authenticator.objects.values_list("user_id", flat=True)
-        ).count()
+        unenrolled = staff.exclude(pk__in=Authenticator.objects.values_list("user_id", flat=True)).count()
     except (ImportError, OperationalError, ProgrammingError):
         # allauth.mfa disabled or tables not migrated yet (initial deploy).
         return messages
@@ -348,10 +385,10 @@ def production_storage_safety_check(app_configs: Any = None, **kwargs: Any) -> l
     backup_remote = os.environ.get("BACKUP_REMOTE_STORAGE", "").lower() in {"1", "true", "yes", "on"}
     if not backup_remote:
         messages.append(
-            Warning(
+            Error(
                 "Remote backup storage is not enabled in production.",
                 hint="Enable BACKUP_REMOTE_STORAGE and configure remote object storage, or ensure persistent volume retention.",
-                id=BACKUP_STORAGE_WARNING_ID,
+                id=BACKUP_STORAGE_ERROR_ID,
             )
         )
     else:
@@ -545,4 +582,3 @@ def check_database_schema(app_configs: Any = None, **kwargs: Any) -> list[Error 
         )
 
     return messages
-

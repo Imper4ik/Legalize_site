@@ -16,6 +16,7 @@ if DEBUG:
 
 ENABLE_TRANSLATION_TOOLING = env_flag("ENABLE_TRANSLATION_TOOLING", "False")
 
+
 # --- HOSTS AND SECURITY ---
 def _env_list(name: str) -> list[str]:
     return [item.strip() for item in os.environ.get(name, "").split(",") if item.strip()]
@@ -42,6 +43,13 @@ def _origin_from_value(value: str | None, *, default_scheme: str = "https") -> s
 
 ALLOWED_HOSTS = _env_list("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = _env_list("CSRF_TRUSTED_ORIGINS")
+TRUSTED_PROXY_IPS = _env_list("TRUSTED_PROXY_IPS")
+TRUST_RAILWAY_CLIENT_IP = env_flag(
+    "TRUST_RAILWAY_CLIENT_IP",
+    "True"
+    if any(os.environ.get(name) for name in ("RAILWAY_ENVIRONMENT_ID", "RAILWAY_PROJECT_ID", "RAILWAY_ENVIRONMENT"))
+    else "False",
+)
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
 render_hostname = _hostname_from_value(RENDER_EXTERNAL_HOSTNAME)
@@ -138,8 +146,7 @@ CONTENT_SECURITY_POLICY = {
     "connect-src": ("'self'",),
 }
 LEGALIZE_CONTENT_SECURITY_POLICY = "; ".join(
-    f"{directive} {' '.join(sources)}"
-    for directive, sources in CONTENT_SECURITY_POLICY.items()
+    f"{directive} {' '.join(sources)}" for directive, sources in CONTENT_SECURITY_POLICY.items()
 )
 LEGALIZE_CSP_REPORT_ONLY = env_flag("LEGALIZE_CSP_REPORT_ONLY", "False")
 
@@ -156,8 +163,7 @@ if LEGALIZE_CSP_STRICT_REPORT_ONLY:
         "script-src": ("'self'",),
     }
     LEGALIZE_CONTENT_SECURITY_POLICY_REPORT_ONLY = "; ".join(
-        f"{directive} {' '.join(sources)}"
-        for directive, sources in STRICT_CONTENT_SECURITY_POLICY.items()
+        f"{directive} {' '.join(sources)}" for directive, sources in STRICT_CONTENT_SECURITY_POLICY.items()
     )
 
 if SESSION_COOKIE_SAMESITE.lower() == "none" and not SESSION_COOKIE_SECURE:

@@ -126,7 +126,7 @@ class Command(BaseCommand):
         quote = connection.ops.quote_name
         selected_columns = [str(pk_field.column), *(str(field.column) for field in encrypted_fields)]
         query = (
-            f"SELECT {', '.join(quote(column) for column in selected_columns)} "
+            f"SELECT {', '.join(quote(column) for column in selected_columns)} "  # nosec B608
             f"FROM {quote(model._meta.db_table)} "
             f"ORDER BY {quote(str(pk_field.column))}"
         )
@@ -245,7 +245,7 @@ class Command(BaseCommand):
     ) -> bool:
         quote = connection.ops.quote_name
         query = (
-            f"UPDATE {quote(model._meta.db_table)} "
+            f"UPDATE {quote(model._meta.db_table)} "  # nosec B608
             f"SET {quote(str(field.column))} = %s "
             f"WHERE {quote(str(pk_field.column))} = %s "
             f"AND {quote(str(field.column))} = %s"
