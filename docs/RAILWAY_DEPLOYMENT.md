@@ -84,9 +84,11 @@ For production growth, use S3/R2/B2 and set the S3-compatible variables. A Railw
 
 Run daily DB backups and verify restore with `python manage.py test_restore`. If media is in PostgreSQL, DB backups include files. If media is local or S3, backup media separately.
 
-Production checks require `BACKUP_REMOTE_STORAGE=true`, keep `BACKUP_STORAGE_ALIAS=backups`, set `BACKUP_STORAGE_LOCATION=db_backups`, and configure S3/R2/B2 credentials including `AWS_STORAGE_BUCKET_NAME`. Backups must not use `DatabaseMediaStorage`.
+For a full public launch, set `BACKUP_REMOTE_STORAGE=true`, keep `BACKUP_STORAGE_ALIAS=backups`, set `BACKUP_STORAGE_LOCATION=db_backups`, and configure S3/R2/B2 credentials including `AWS_STORAGE_BUCKET_NAME`. Backups must not use `DatabaseMediaStorage`.
 
-A deploy must fail if PostgreSQL, Redis, real email delivery, alert recipients, persistent media, or remote backup storage are missing. Run `python manage.py check --deploy --fail-level ERROR` before every release.
+When a Railway Volume is attached, local encrypted backups default to `$RAILWAY_VOLUME_MOUNT_PATH/db_backups` if `DB_BACKUP_DIR` is unset. This is accepted for the MVP with a production warning; external storage and a restore drill remain required before full launch.
+
+A deploy must fail if PostgreSQL, Redis, real email delivery, persistent media, or all persistent backup storage is missing. Missing alert recipients remains a visible warning. Run `python manage.py check --deploy --fail-level ERROR` before every release.
 
 ## Health and readiness
 

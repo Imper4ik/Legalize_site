@@ -6,8 +6,9 @@ from django.core.checks import Error, Warning
 from django.test import SimpleTestCase, override_settings
 
 from legalize_site.checks import (
-    ALERT_RECIPIENTS_ERROR_ID,
+    ALERT_RECIPIENTS_WARNING_ID,
     BACKUP_STORAGE_ERROR_ID,
+    BACKUP_STORAGE_WARNING_ID,
     CRON_TOKEN_ERROR_ID,
     DATABASE_ENGINE_ERROR_ID,
     DEMO_CENTER_PRODUCTION_ERROR_ID,
@@ -157,7 +158,8 @@ class ProductionOperationsCheckTests(SimpleTestCase):
         messages = production_operations_check()
 
         self.assertEqual(len(messages), 1)
-        self.assertEqual(messages[0].id, ALERT_RECIPIENTS_ERROR_ID)
+        self.assertIsInstance(messages[0], Warning)
+        self.assertEqual(messages[0].id, ALERT_RECIPIENTS_WARNING_ID)
 
     @override_settings(
         IS_PRODUCTION=True,
@@ -297,6 +299,24 @@ class ProductionStorageSafetyCheckTests(SimpleTestCase):
         self.assertEqual(len(messages), 1)
         self.assertIsInstance(messages[0], Error)
         self.assertEqual(messages[0].id, BACKUP_STORAGE_ERROR_ID)
+
+    @override_settings(IS_PRODUCTION=True, USE_S3_MEDIA_STORAGE=False, USE_DATABASE_MEDIA_STORAGE=True)
+    @patch.dict(
+        "os.environ",
+        {
+            "BACKUP_REMOTE_STORAGE": "false",
+            "RAILWAY_VOLUME_MOUNT_PATH": "/data",
+            "DB_BACKUP_DIR": "",
+        },
+        clear=False,
+    )
+    def test_railway_volume_backup_is_a_non_blocking_warning(self):
+        messages = production_storage_safety_check()
+
+        self.assertEqual(len(messages), 1)
+        self.assertIsInstance(messages[0], Warning)
+        self.assertEqual(messages[0].id, BACKUP_STORAGE_WARNING_ID)
+        self.assertIn("Railway Volume", messages[0].msg)
 
     @override_settings(
         IS_PRODUCTION=True,
