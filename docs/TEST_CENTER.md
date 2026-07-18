@@ -28,6 +28,8 @@ ENABLE_TEST_CENTER=True
 TEST_CENTER_MEDIA_ROOT=
 ```
 
+The Test Center is enabled by default only outside production. Production startup checks reject `ENABLE_TEST_CENTER=True`; keep it disabled on every live service.
+
 ## Running Scenarios
 
 ### Via UI

@@ -109,7 +109,7 @@ def run_email_scenarios(recorder: ScenarioRecorder) -> None:
         workflow_stage="closed",
     )
     before = EmailLog.objects.filter(client=closed).count()
-    call_command("update_reminders", "--only", "missing-docs")
+    call_command("update_reminders", "--only", "missing-docs", "--test-data-only")
     after = EmailLog.objects.filter(client=closed).count()
     recorder.check(
         "email.closed_case_not_processed_by_weekly_missing_docs",

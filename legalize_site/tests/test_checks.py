@@ -10,6 +10,7 @@ from legalize_site.checks import (
     BACKUP_STORAGE_ERROR_ID,
     CRON_TOKEN_ERROR_ID,
     DATABASE_ENGINE_ERROR_ID,
+    DEMO_CENTER_PRODUCTION_ERROR_ID,
     EMAIL_CONSOLE_ERROR_ID,
     EMAIL_CONSOLE_WARNING_ID,
     EMAIL_ERROR_ID,
@@ -19,6 +20,7 @@ from legalize_site.checks import (
     RATE_LIMIT_CACHE_ERROR_ID,
     RUNTIME_DEPENDENCY_WARNING_ID,
     SECRET_KEY_ERROR_ID,
+    TEST_CENTER_PRODUCTION_ERROR_ID,
     TRANSLATION_TOOLING_WARNING_ID,
     UPLOAD_LIMIT_ERROR_ID,
     cron_token_check,
@@ -133,6 +135,8 @@ class ProductionOperationsCheckTests(SimpleTestCase):
         IS_PRODUCTION=True,
         DATABASES={"default": {"ENGINE": "django.db.backends.sqlite3"}},
         CRON_FAILURE_EMAIL_ALERTS=False,
+        ENABLE_TEST_CENTER=False,
+        DEMO_MODE_ENABLED=False,
     )
     def test_production_rejects_sqlite(self):
         messages = production_operations_check()
@@ -146,6 +150,8 @@ class ProductionOperationsCheckTests(SimpleTestCase):
         DATABASES={"default": {"ENGINE": "django.db.backends.postgresql"}},
         CRON_FAILURE_EMAIL_ALERTS=True,
         ADMINS=[],
+        ENABLE_TEST_CENTER=False,
+        DEMO_MODE_ENABLED=False,
     )
     def test_enabled_cron_alerts_require_recipients(self):
         messages = production_operations_check()
@@ -158,9 +164,26 @@ class ProductionOperationsCheckTests(SimpleTestCase):
         DATABASES={"default": {"ENGINE": "django.db.backends.postgresql"}},
         CRON_FAILURE_EMAIL_ALERTS=True,
         ADMINS=[("Alerts", "alerts@example.com")],
+        ENABLE_TEST_CENTER=False,
+        DEMO_MODE_ENABLED=False,
     )
     def test_postgresql_and_alert_recipient_pass(self):
         self.assertEqual(production_operations_check(), [])
+
+    @override_settings(
+        IS_PRODUCTION=True,
+        DATABASES={"default": {"ENGINE": "django.db.backends.postgresql"}},
+        CRON_FAILURE_EMAIL_ALERTS=False,
+        ENABLE_TEST_CENTER=True,
+        DEMO_MODE_ENABLED=True,
+    )
+    def test_production_rejects_test_and_demo_centers(self):
+        messages = production_operations_check()
+
+        self.assertEqual(
+            {message.id for message in messages},
+            {TEST_CENTER_PRODUCTION_ERROR_ID, DEMO_CENTER_PRODUCTION_ERROR_ID},
+        )
 
 
 class RuntimeDependencyCheckTests(SimpleTestCase):

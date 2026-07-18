@@ -32,6 +32,8 @@ TRANSLATION_TOOLING_WARNING_ID = "legalize_site.W010"
 DATABASE_ENGINE_ERROR_ID = "legalize_site.E010"
 ALERT_RECIPIENTS_ERROR_ID = "legalize_site.E011"
 BACKUP_STORAGE_ERROR_ID = "legalize_site.E012"
+TEST_CENTER_PRODUCTION_ERROR_ID = "legalize_site.E013"
+DEMO_CENTER_PRODUCTION_ERROR_ID = "legalize_site.E014"
 
 BACKENDS = {
     "django.core.mail.backends.smtp.EmailBackend": {
@@ -175,6 +177,23 @@ def production_operations_check(app_configs: Any = None, **kwargs: Any) -> list[
                 "Production must use PostgreSQL; SQLite is not supported for live client data.",
                 hint="Set DATABASE_URL (or Railway PostgreSQL variables) to a PostgreSQL database.",
                 id=DATABASE_ENGINE_ERROR_ID,
+            )
+        )
+
+    if getattr(settings, "ENABLE_TEST_CENTER", False):
+        messages.append(
+            Error(
+                "Test Center must be disabled in production.",
+                hint="Set ENABLE_TEST_CENTER=False for the production service.",
+                id=TEST_CENTER_PRODUCTION_ERROR_ID,
+            )
+        )
+    if getattr(settings, "DEMO_MODE_ENABLED", False):
+        messages.append(
+            Error(
+                "Demo Center must be disabled in production.",
+                hint="Set DEMO_MODE_ENABLED=False for the production service.",
+                id=DEMO_CENTER_PRODUCTION_ERROR_ID,
             )
         )
 

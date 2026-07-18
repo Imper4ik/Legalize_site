@@ -74,9 +74,9 @@ MALWARE_SCAN_ENABLED = env_flag("MALWARE_SCAN_ENABLED", "False")
 CLAMD_TCP_ADDR = os.environ.get("CLAMD_TCP_ADDR", "127.0.0.1")
 CLAMD_TCP_PORT = int(os.environ.get("CLAMD_TCP_PORT", "3310"))
 CLAMD_TIMEOUT_SECONDS = float(os.environ.get("CLAMD_TIMEOUT_SECONDS", "15"))
-ENABLE_TEST_CENTER = env_flag("ENABLE_TEST_CENTER", "True")
+ENABLE_TEST_CENTER = env_flag("ENABLE_TEST_CENTER", "False" if IS_PRODUCTION else "True")
 TEST_CENTER_MEDIA_ROOT = os.environ.get("TEST_CENTER_MEDIA_ROOT", "")
-DEMO_MODE_ENABLED = env_flag("DEMO_MODE_ENABLED", "True")
+DEMO_MODE_ENABLED = env_flag("DEMO_MODE_ENABLED", "False" if IS_PRODUCTION else "True")
 DEMO_CENTER_MEDIA_ROOT = os.environ.get("DEMO_CENTER_MEDIA_ROOT", "")
 
 # --- БАЗОВЫЕ НАСТРОЙКИ ---
@@ -318,6 +318,7 @@ TEMPLATES = [
                 "django.template.context_processors.i18n",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "legalize_site.context_processors.support_contact",
                 "legalize_site.context_processors.feature_flags",
                 "legalize_site.context_processors.staff_capabilities",
                 "legalize_site.context_processors.onboarding_notifications",

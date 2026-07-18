@@ -38,6 +38,11 @@ class Command(BaseCommand):
             help="Show what would be created or sent without mutating data.",
         )
         parser.add_argument(
+            "--test-data-only",
+            action="store_true",
+            help="Restrict the missing-documents section to Test Center records.",
+        )
+        parser.add_argument(
             "--only",
             action="append",
             choices=self.SECTIONS,
@@ -46,7 +51,10 @@ class Command(BaseCommand):
 
     def handle(self, *args: Any, **options: Any) -> None:
         dry_run = bool(options.get("dry_run"))
+        test_data_only = bool(options.get("test_data_only"))
         selected_sections = set(options.get("only") or self.SECTIONS)
+        if test_data_only and selected_sections != {"missing-docs"}:
+            raise CommandError("--test-data-only can only be used with --only missing-docs")
 
         self.stdout.write(self.style.SUCCESS("--- Starting reminder update ---"))
         if dry_run:
@@ -55,7 +63,7 @@ class Command(BaseCommand):
         try:
             if "missing-docs" in selected_sections:
                 self.stdout.write(self.style.HTTP_INFO("-> Checking waiting-decision missing documents..."))
-                self.send_missing_document_notifications(dry_run=dry_run)
+                self.send_missing_document_notifications(dry_run=dry_run, test_data_only=test_data_only)
 
             if "zus" in selected_sections:
                 self.stdout.write(self.style.HTTP_INFO("-> Checking missing ZUS RCA months..."))
@@ -105,14 +113,17 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR(f"update_reminders failed: {exc}"))
             raise CommandError("update_reminders failed") from exc
 
-    def send_missing_document_notifications(self, *, dry_run: bool = False) -> None:
+    def send_missing_document_notifications(
+        self, *, dry_run: bool = False, test_data_only: bool = False
+    ) -> None:
         today = timezone.localdate()
         # Case-first (spec §4/§9): scope the reminder to each active case that is
         # in waiting_decision after fingerprints without a decision. Iterating per
         # case (rather than per client) means a client with several active cases
         # gets one correct, case-scoped reminder per case instead of a single
         # merged email — or a silently suppressed second case.
-        cases = Case.objects.production().select_related("client").filter(
+        case_queryset = Case.objects.filter(is_test_data=True) if test_data_only else Case.objects.production()
+        cases = case_queryset.select_related("client").filter(
             workflow_stage="waiting_decision",
             fingerprints_date__isnull=False,
             fingerprints_date__lte=today,

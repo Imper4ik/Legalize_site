@@ -3705,7 +3705,7 @@ msgstr "Готово"
 
 #: clients/templates/clients/admin_dashboard.html:211
 msgid "Running"
-msgstr "Бег"
+msgstr "Выполняется"
 
 #: clients/templates/clients/admin_dashboard.html:213
 msgid "Queued"
@@ -9790,7 +9790,7 @@ msgstr "Сохранять данные в БД для ручной провер
 
 #: clients/templates/clients/test_center.html:393
 msgid "Run"
-msgstr "Бег"
+msgstr "Запустить"
 
 #: clients/templates/clients/test_center.html:401
 msgid "Clean Test Data"
