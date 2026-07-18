@@ -16,7 +16,7 @@ A modern CRM built with Django for managing client applications, documents, appo
 This application is ready for deployment on [Railway](https://railway.app/). 
 
 ### Quick Start
-1. Provision a PostgreSQL database. Redis is optional; without `REDIS_URL`, rate limiting uses PostgreSQL `DatabaseCache`.
+1. Provision PostgreSQL and Redis. Both are required by production release checks; Redis provides atomic cross-worker rate limits.
 2. Connect the GitHub repository to a new Railway service.
 3. Configure Environment Variables (see below).
 4. Deploy! Railway uses `nixpacks.toml` to automatically install required system dependencies (`tesseract-ocr`, `poppler-utils`, etc.).
@@ -28,8 +28,10 @@ At a minimum, configure the following variables in Railway:
 - `FERNET_KEYS`: A comma-separated list of 32-byte url-safe base64-encoded keys for field encryption.
 - `ALLOWED_HOSTS` & `CSRF_TRUSTED_ORIGINS`: Explicit hostnames, or allow Railway to inject `RAILWAY_PUBLIC_DOMAIN`.
 - `DATABASE_URL`: Automatically provided by Railway Postgres.
-- `REDIS_URL`: Optional Railway Redis URL. If omitted, production uses PostgreSQL `DatabaseCache` for rate-limiting.
-- `DJANGO_CACHE_TABLE`: Optional cache table name, defaults to `cache_table`; `release.sh` creates it.
+- `REDIS_URL`: Required Railway Redis URL for atomic cross-worker rate limiting.
+- `DJANGO_ADMIN_EMAILS`: Comma-separated monitored recipients for cron failure alerts.
+- `BACKUP_REMOTE_STORAGE=True`: Required with external S3/R2/B2 backup storage and a daily schedule.
+- `TRUST_RAILWAY_CLIENT_IP=True`: Enabled automatically when Railway platform variables are present; uses Railway `X-Real-IP` for per-client limits.
 - `APP_ENV`: Set to `production`.
 - `PDF_FONT_PATH`: Set to `/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf`.
 

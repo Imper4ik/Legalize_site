@@ -122,6 +122,27 @@ class HealthcheckViewTests(TestCase):
 
     @override_settings(DEBUG=True, IS_PRODUCTION=True)
     @patch.dict("os.environ", {"ENABLE_BACKGROUND_AUTOMATION_LOOP": "true"}, clear=False)
+    def test_production_readiness_rejects_failed_automation_cycle(self):
+        from django.core.cache import cache
+
+        cache.set(
+            HEARTBEAT_CACHE_KEY,
+            {
+                "status": "error",
+                "checked_at": "2026-07-18T12:00:00+00:00",
+                "failed_tasks": ["email-campaigns"],
+            },
+            timeout=300,
+        )
+        response = self.client.get(reverse("readiness"))
+
+        self.assertEqual(response.status_code, 503)
+        component = response.json()["components"]["background_automation"]
+        self.assertEqual(component["status"], "error")
+        self.assertEqual(component["failed_tasks"], ["email-campaigns"])
+
+    @override_settings(DEBUG=True, IS_PRODUCTION=True)
+    @patch.dict("os.environ", {"ENABLE_BACKGROUND_AUTOMATION_LOOP": "true"}, clear=False)
     def test_production_readiness_accepts_fresh_background_heartbeat(self):
         from django.core.cache import cache
 

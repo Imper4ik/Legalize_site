@@ -14,7 +14,7 @@ For production, you must set the `PDF_FONT_PATH` variable with the absolute path
 
 Set `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` explicitly. Railway deployments may also provide `RAILWAY_PUBLIC_DOMAIN` and `RAILWAY_STATIC_URL`; Render deployments may provide `RENDER_EXTERNAL_HOSTNAME`. The app derives host and CSRF entries from these platform variables, but it no longer ships with a hardcoded Railway hostname.
 
-`REDIS_URL` is optional. When it is set, rate limiting uses Django `RedisCache`; when it is omitted, production uses Django `DatabaseCache` on the PostgreSQL cache table named by `DJANGO_CACHE_TABLE` (default `cache_table`). `release.sh` runs `python manage.py createcachetable` so the cache table exists before the app starts.
+`REDIS_URL` is required in production. Authentication and public-intake limits need Redis atomic increments across workers; `DatabaseCache` remains only a local/degraded fallback. On Railway, `TRUST_RAILWAY_CLIENT_IP` defaults to true when Railway platform variables are present and uses Railway platform `X-Real-IP`. For another trusted proxy, configure `TRUSTED_PROXY_IPS` explicitly.
 
 Runtime OCR preprocessing depends on both `opencv-python-headless` and `numpy`; they are installed from `requirements.txt` during Docker and Railway/Nixpacks builds. The image also needs Tesseract and Poppler binaries, which are installed by the Dockerfile/Nixpacks configuration.
 

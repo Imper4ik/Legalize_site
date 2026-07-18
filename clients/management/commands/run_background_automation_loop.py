@@ -63,32 +63,39 @@ class Command(BaseCommand):
         email_campaign_limit: int,
     ) -> None:
         heartbeat_timeout = max(180, interval_seconds * 3)
-        self._record_heartbeat(timeout=heartbeat_timeout)
-        self._run_locked(
-            "document-jobs",
-            timeout=interval_seconds,
-            task=lambda: call_command("process_document_jobs", "--limit", str(document_job_limit)),
-        )
-        self._run_locked(
-            "email-campaigns",
-            timeout=interval_seconds,
-            task=lambda: call_command("process_email_campaigns", "--limit", str(email_campaign_limit)),
-        )
-        self._run_locked(
-            "weekly-document-reminders",
-            timeout=interval_seconds,
-            task=lambda: call_command("run_weekly_document_reminders"),
-        )
-        self._run_locked(
-            "retention-maintenance",
-            timeout=interval_seconds,
-            task=lambda: call_command("run_retention_maintenance"),
-        )
-        self._record_heartbeat(timeout=heartbeat_timeout)
+        results = {
+            "document-jobs": self._run_locked(
+                "document-jobs",
+                timeout=interval_seconds,
+                task=lambda: call_command("process_document_jobs", "--limit", str(document_job_limit)),
+            ),
+            "email-campaigns": self._run_locked(
+                "email-campaigns",
+                timeout=interval_seconds,
+                task=lambda: call_command("process_email_campaigns", "--limit", str(email_campaign_limit)),
+            ),
+            "weekly-document-reminders": self._run_locked(
+                "weekly-document-reminders",
+                timeout=interval_seconds,
+                task=lambda: call_command("run_weekly_document_reminders"),
+            ),
+            "retention-maintenance": self._run_locked(
+                "retention-maintenance",
+                timeout=interval_seconds,
+                task=lambda: call_command("run_retention_maintenance"),
+            ),
+        }
+        failures = sorted(name for name, succeeded in results.items() if not succeeded)
+        self._record_heartbeat(timeout=heartbeat_timeout, failures=failures)
 
-    def _record_heartbeat(self, *, timeout: int) -> None:
+    def _record_heartbeat(self, *, timeout: int, failures: list[str]) -> None:
+        payload = {
+            "status": "error" if failures else "ok",
+            "checked_at": timezone.now().isoformat(),
+            "failed_tasks": failures,
+        }
         try:
-            cache.set(HEARTBEAT_CACHE_KEY, timezone.now().isoformat(), timeout=timeout)
+            cache.set(HEARTBEAT_CACHE_KEY, payload, timeout=timeout)
         except Exception:
             logger.error("Failed to publish background automation heartbeat.", exc_info=True)
 

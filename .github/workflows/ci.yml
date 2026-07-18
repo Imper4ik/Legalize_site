@@ -7,9 +7,24 @@ on:
 jobs:
   test-and-security:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: legalize
+          POSTGRES_PASSWORD: legalize-test
+          POSTGRES_DB: legalize_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       DJANGO_SETTINGS_MODULE: legalize_site.settings.test
       PYTHONDONTWRITEBYTECODE: "1"
+      TEST_DATABASE_URL: postgresql://legalize:legalize-test@127.0.0.1:5432/legalize_test
     steps:
       - uses: actions/checkout@v4
 
@@ -46,7 +61,7 @@ jobs:
           FERNET_KEYS: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
           ALLOWED_HOSTS: ci.example.test
           CSRF_TRUSTED_ORIGINS: https://ci.example.test
-          DATABASE_URL: "sqlite:///:memory:"
+          DATABASE_URL: postgresql://legalize:legalize-test@127.0.0.1:5432/legalize_test
           USE_DATABASE_MEDIA_STORAGE: "True"
           DATABASE_MEDIA_FALLBACK_TO_FILE_SYSTEM: "False"
           EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
@@ -56,6 +71,10 @@ jobs:
           DEFAULT_FROM_EMAIL: noreply@ci.example.test
           CRON_TOKEN: ci-only-cron-token
           CRON_ALLOWED_IPS: 127.0.0.1
+          DJANGO_ADMIN_EMAILS: alerts@ci.example.test
+          REDIS_URL: redis://ci.example.test:6379/0
+          BACKUP_REMOTE_STORAGE: "True"
+          AWS_STORAGE_BUCKET_NAME: ci-backups
         run: python manage.py check --deploy --fail-level ERROR
 
       - name: Migration drift check

@@ -37,7 +37,8 @@ def healthcheck(request: HttpRequest) -> HttpResponse:
     user = getattr(request, "user", None)
     show_details = (
         request.GET.get("details") == "1"
-        and user and getattr(user, "is_authenticated", False)
+        and user
+        and getattr(user, "is_authenticated", False)
         and getattr(user, "is_staff", False)
     )
     if show_details:
@@ -58,13 +59,11 @@ def readiness(request: HttpRequest) -> HttpResponse:
     components: dict[str, Any] = {}
     overall_ok = True
     user = getattr(request, "user", None)
-    show_details = (
-        getattr(settings, "DEBUG", False)
-        or (
-            request.GET.get("details") == "1"
-            and user and getattr(user, "is_authenticated", False)
-            and getattr(user, "is_staff", False)
-        )
+    show_details = getattr(settings, "DEBUG", False) or (
+        request.GET.get("details") == "1"
+        and user
+        and getattr(user, "is_authenticated", False)
+        and getattr(user, "is_staff", False)
     )
 
     try:
@@ -77,10 +76,7 @@ def readiness(request: HttpRequest) -> HttpResponse:
 
     # Production rate limiting and other cross-process safeguards depend on the
     # configured default cache even when DatabaseCache is used instead of Redis.
-    cache_required = bool(
-        getattr(settings, "IS_PRODUCTION", False)
-        or getattr(settings, "REDIS_URL", "")
-    )
+    cache_required = bool(getattr(settings, "IS_PRODUCTION", False) or getattr(settings, "REDIS_URL", ""))
     try:
         cache_key = "readiness:cache"
         cache.set(cache_key, "ok", timeout=30)
@@ -112,11 +108,15 @@ def readiness(request: HttpRequest) -> HttpResponse:
     automation_required = bool(getattr(settings, "IS_PRODUCTION", False) and automation_enabled)
     try:
         heartbeat = cache.get(HEARTBEAT_CACHE_KEY)
+        heartbeat_status = (
+            str(heartbeat.get("status", "error")) if isinstance(heartbeat, dict) else ("ok" if heartbeat else "error")
+        )
         components["background_automation"] = {
-            "status": "ok" if heartbeat else "error",
+            "status": heartbeat_status,
             "required": automation_required,
+            "failed_tasks": heartbeat.get("failed_tasks", []) if isinstance(heartbeat, dict) else [],
         }
-        if automation_required and not heartbeat:
+        if automation_required and heartbeat_status != "ok":
             overall_ok = False
     except Exception as exc:
         logger.exception("Readiness background heartbeat check failed")
@@ -156,7 +156,9 @@ def csrf_failure(request: HttpRequest, reason: str = "", template_name: str = "4
     if is_ajax:
         payload = {
             "status": "error",
-            "message": str(_("Сессия истекла или защитный токен недействителен. Обновите страницу и повторите действие.")),
+            "message": str(
+                _("Сессия истекла или защитный токен недействителен. Обновите страницу и повторите действие.")
+            ),
             "reason": reason,
         }
         json_response = InspectableJsonResponse(

@@ -6,8 +6,11 @@ from django.core.checks import Error, Warning
 from django.test import SimpleTestCase, override_settings
 
 from legalize_site.checks import (
-    BACKUP_STORAGE_WARNING_ID,
+    ALERT_RECIPIENTS_ERROR_ID,
+    BACKUP_STORAGE_ERROR_ID,
     CRON_TOKEN_ERROR_ID,
+    DATABASE_ENGINE_ERROR_ID,
+    EMAIL_CONSOLE_ERROR_ID,
     EMAIL_CONSOLE_WARNING_ID,
     EMAIL_ERROR_ID,
     EMAIL_WARNING_ID,
@@ -21,6 +24,7 @@ from legalize_site.checks import (
     cron_token_check,
     email_configuration_check,
     encryption_configuration_check,
+    production_operations_check,
     production_storage_safety_check,
     rate_limit_cache_check,
     runtime_dependency_check,
@@ -40,6 +44,18 @@ class EmailConfigurationCheckTests(SimpleTestCase):
         self.assertEqual(len(messages), 2)
         self.assertTrue(all(isinstance(msg, Warning) for msg in messages))
         self.assertEqual({m.id for m in messages}, {EMAIL_CONSOLE_WARNING_ID, EMAIL_WARNING_ID})
+
+    @override_settings(
+        IS_PRODUCTION=True,
+        EMAIL_BACKEND="django.core.mail.backends.console.EmailBackend",
+        DEFAULT_FROM_EMAIL="noreply@example.com",
+    )
+    def test_console_backend_is_a_production_error(self):
+        messages = email_configuration_check()
+
+        self.assertEqual(len(messages), 1)
+        self.assertIsInstance(messages[0], Error)
+        self.assertEqual(messages[0].id, EMAIL_CONSOLE_ERROR_ID)
 
     @override_settings(
         EMAIL_BACKEND="anymail.backends.sendgrid.EmailBackend",
@@ -112,6 +128,41 @@ class EmailConfigurationCheckTests(SimpleTestCase):
         self.assertEqual(messages[0].id, FERNET_KEYS_ERROR_ID)
 
 
+class ProductionOperationsCheckTests(SimpleTestCase):
+    @override_settings(
+        IS_PRODUCTION=True,
+        DATABASES={"default": {"ENGINE": "django.db.backends.sqlite3"}},
+        CRON_FAILURE_EMAIL_ALERTS=False,
+    )
+    def test_production_rejects_sqlite(self):
+        messages = production_operations_check()
+
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(messages[0].id, DATABASE_ENGINE_ERROR_ID)
+        self.assertIsInstance(messages[0], Error)
+
+    @override_settings(
+        IS_PRODUCTION=True,
+        DATABASES={"default": {"ENGINE": "django.db.backends.postgresql"}},
+        CRON_FAILURE_EMAIL_ALERTS=True,
+        ADMINS=[],
+    )
+    def test_enabled_cron_alerts_require_recipients(self):
+        messages = production_operations_check()
+
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(messages[0].id, ALERT_RECIPIENTS_ERROR_ID)
+
+    @override_settings(
+        IS_PRODUCTION=True,
+        DATABASES={"default": {"ENGINE": "django.db.backends.postgresql"}},
+        CRON_FAILURE_EMAIL_ALERTS=True,
+        ADMINS=[("Alerts", "alerts@example.com")],
+    )
+    def test_postgresql_and_alert_recipient_pass(self):
+        self.assertEqual(production_operations_check(), [])
+
+
 class RuntimeDependencyCheckTests(SimpleTestCase):
     @patch("legalize_site.checks.collect_runtime_dependency_statuses")
     def test_runtime_dependency_check_warns_about_missing_dependencies(self, collect_mock):
@@ -169,8 +220,12 @@ class RateLimitCacheCheckTests(SimpleTestCase):
         IS_PRODUCTION=True,
         CACHES={"default": {"BACKEND": "django.core.cache.backends.db.DatabaseCache"}},
     )
-    def test_production_database_cache_silences_rate_limit_warning(self):
-        self.assertEqual(rate_limit_cache_check(), [])
+    def test_production_database_cache_is_rejected_as_non_atomic(self):
+        messages = rate_limit_cache_check()
+
+        self.assertEqual(len(messages), 1)
+        self.assertIsInstance(messages[0], Error)
+        self.assertEqual(messages[0].id, RATE_LIMIT_CACHE_ERROR_ID)
 
     @override_settings(IS_PRODUCTION=False)
     def test_non_production_does_not_warn_when_shared_cache_is_missing(self):
@@ -213,12 +268,12 @@ class ProductionStorageSafetyCheckTests(SimpleTestCase):
 
     @override_settings(IS_PRODUCTION=True, USE_S3_MEDIA_STORAGE=False, USE_DATABASE_MEDIA_STORAGE=True)
     @patch.dict("os.environ", {"BACKUP_REMOTE_STORAGE": "false"}, clear=False)
-    def test_database_media_mvp_without_remote_backup_warns_only(self):
+    def test_database_media_without_remote_backup_is_a_release_error(self):
         messages = production_storage_safety_check()
 
         self.assertEqual(len(messages), 1)
-        self.assertIsInstance(messages[0], Warning)
-        self.assertEqual(messages[0].id, BACKUP_STORAGE_WARNING_ID)
+        self.assertIsInstance(messages[0], Error)
+        self.assertEqual(messages[0].id, BACKUP_STORAGE_ERROR_ID)
 
     @override_settings(
         IS_PRODUCTION=True,
@@ -252,6 +307,7 @@ class ProductionStorageSafetyCheckTests(SimpleTestCase):
     )
     def test_explicit_local_media_acknowledgement_silences_media_storage_error(self):
         self.assertEqual(production_storage_safety_check(), [])
+
 
 class CronAllowedIpsCheckTests(SimpleTestCase):
     @override_settings(IS_PRODUCTION=True)
