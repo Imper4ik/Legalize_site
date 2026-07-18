@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import Any
 
 from django.conf import settings
@@ -30,7 +31,7 @@ UPLOAD_LIMIT_ERROR_ID = "legalize_site.E007"
 UPLOAD_TYPES_ERROR_ID = "legalize_site.E008"
 TRANSLATION_TOOLING_WARNING_ID = "legalize_site.W010"
 DATABASE_ENGINE_ERROR_ID = "legalize_site.E010"
-ALERT_RECIPIENTS_ERROR_ID = "legalize_site.E011"
+ALERT_RECIPIENTS_WARNING_ID = "legalize_site.W011"
 BACKUP_STORAGE_ERROR_ID = "legalize_site.E012"
 TEST_CENTER_PRODUCTION_ERROR_ID = "legalize_site.E013"
 DEMO_CENTER_PRODUCTION_ERROR_ID = "legalize_site.E014"
@@ -199,10 +200,10 @@ def production_operations_check(app_configs: Any = None, **kwargs: Any) -> list[
 
     if getattr(settings, "CRON_FAILURE_EMAIL_ALERTS", False) and not getattr(settings, "ADMINS", ()):
         messages.append(
-            Error(
+            Warning(
                 "Cron failure email alerts are enabled but ADMINS has no recipients.",
                 hint="Set DJANGO_ADMIN_EMAILS to one or more monitored email addresses.",
-                id=ALERT_RECIPIENTS_ERROR_ID,
+                id=ALERT_RECIPIENTS_WARNING_ID,
             )
         )
     return messages
@@ -383,11 +384,32 @@ def production_storage_safety_check(app_configs: Any = None, **kwargs: Any) -> l
         )
 
     backup_remote = os.environ.get("BACKUP_REMOTE_STORAGE", "").lower() in {"1", "true", "yes", "on"}
-    if not backup_remote:
+    railway_volume_dir = os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", "").strip()
+    configured_backup_dir = os.environ.get("DB_BACKUP_DIR", "").strip()
+    effective_backup_dir = configured_backup_dir or (
+        str(Path(railway_volume_dir) / "db_backups") if railway_volume_dir else ""
+    )
+    backup_on_railway_volume = bool(
+        railway_volume_dir
+        and effective_backup_dir
+        and Path(effective_backup_dir).resolve().is_relative_to(Path(railway_volume_dir).resolve())
+    )
+    if not backup_remote and backup_on_railway_volume:
+        messages.append(
+            Warning(
+                "Remote backup storage is not enabled; encrypted backups will be retained on the attached Railway Volume.",
+                hint="Configure external S3/R2/B2 storage and a tested restore procedure before a full public launch.",
+                id=BACKUP_STORAGE_WARNING_ID,
+            )
+        )
+    elif not backup_remote:
         messages.append(
             Error(
                 "Remote backup storage is not enabled in production.",
-                hint="Enable BACKUP_REMOTE_STORAGE and configure remote object storage, or ensure persistent volume retention.",
+                hint=(
+                    "Enable BACKUP_REMOTE_STORAGE with object storage, or attach a Railway Volume and place "
+                    "DB_BACKUP_DIR inside RAILWAY_VOLUME_MOUNT_PATH."
+                ),
                 id=BACKUP_STORAGE_ERROR_ID,
             )
         )

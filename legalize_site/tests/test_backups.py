@@ -9,7 +9,7 @@ from uuid import uuid4
 from django.conf import settings
 from django.test import SimpleTestCase, override_settings
 
-from legalize_site.backups import BackupError, ConfiguredBackupStorage, create_db_backup
+from legalize_site.backups import BackupError, ConfiguredBackupStorage, _backup_dir, create_db_backup
 
 
 class BackupTests(SimpleTestCase):
@@ -23,6 +23,17 @@ class BackupTests(SimpleTestCase):
             yield str(tmp_dir)
         finally:
             shutil.rmtree(tmp_dir, ignore_errors=True)
+
+    def test_backup_dir_defaults_to_attached_railway_volume(self):
+        with self._temporary_backup_dir() as volume_dir_name:
+            with patch.dict(
+                "os.environ",
+                {"DB_BACKUP_DIR": "", "RAILWAY_VOLUME_MOUNT_PATH": volume_dir_name},
+                clear=False,
+            ):
+                backup_dir = _backup_dir()
+
+            self.assertEqual(backup_dir, Path(volume_dir_name) / "db_backups")
 
     @override_settings(FERNET_KEYS=[])
     @patch("legalize_site.backups.shutil.which", return_value="/usr/bin/pg_dump")
