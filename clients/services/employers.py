@@ -125,7 +125,11 @@ def propose_employer(
     raw_fingerprint = f"{case.pk}|{normalize_company_name(name)}|{nip}|{regon}|{krs}|{source_key}"
     fingerprint = hashlib.sha256(raw_fingerprint.encode("utf-8")).hexdigest()
     with transaction.atomic():
-        case = Case.all_objects.select_for_update().select_related("client", "company").get(pk=case.pk)
+        case = (
+            Case.all_objects.select_related("client", "company")
+            .select_for_update(of=("self",))
+            .get(pk=case.pk)
+        )
         if case.archived_at is not None or case.workflow_stage == "closed" or case.application_purpose != "work":
             return None
         current_company = case.company

@@ -61,7 +61,10 @@ class CaseBackfillMigrationTests(TransactionTestCase):
         self.apps = self.executor.loader.project_state(self.migrate_to).apps
 
     def tearDown(self) -> None:
-        self.executor.migrate(self.migrate_to)
+        # Restore the installed schema before TransactionTestCase flushes the
+        # database; PostgreSQL preserves historical foreign-key constraints.
+        self.executor.loader.build_graph()
+        self.executor.migrate(self.executor.loader.graph.leaf_nodes())
         super().tearDown()
 
     def test_backfill_creates_primary_case_and_links_existing_records(self) -> None:
@@ -429,7 +432,10 @@ class CaseFamilyRoleBackfillMigrationTests(TransactionTestCase):
         self.apps = self.executor.loader.project_state(self.migrate_to).apps
 
     def tearDown(self) -> None:
-        self.executor.migrate(self.migrate_to)
+        # Restore the installed schema before TransactionTestCase flushes the
+        # database; PostgreSQL preserves historical foreign-key constraints.
+        self.executor.loader.build_graph()
+        self.executor.migrate(self.executor.loader.graph.leaf_nodes())
         super().tearDown()
 
     def test_backfill_copies_role_only_for_single_unambiguous_family_case(self) -> None:
@@ -519,7 +525,10 @@ class CaseApplicationPurposeBackfillMigrationTests(TransactionTestCase):
         self.apps = self.executor.loader.project_state(self.migrate_to).apps
 
     def tearDown(self) -> None:
-        self.executor.migrate(self.migrate_to)
+        # Restore the installed schema before TransactionTestCase flushes the
+        # database; PostgreSQL preserves historical foreign-key constraints.
+        self.executor.loader.build_graph()
+        self.executor.migrate(self.executor.loader.graph.leaf_nodes())
         super().tearDown()
 
     def test_backfill_copies_purpose_only_for_single_blank_case(self) -> None:
