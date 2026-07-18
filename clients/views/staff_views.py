@@ -21,6 +21,19 @@ from clients.views.base import role_required_view
 STAFF_AUDIT_PROFILE_FIELDS = ("email", "first_name", "last_name", "is_staff", "is_active")
 
 
+def _is_owner_level_account(account: Any) -> bool:
+    """True for accounts that only the owner (superuser) may edit or disable.
+
+    Superusers and Admin-group members are owner-equivalent. Protecting them
+    from non-superuser actors closes two audit findings: a non-superuser can
+    neither promote-then-impersonate an owner nor deactivate/lock out the
+    superuser owner from the staff-management screen.
+    """
+    if getattr(account, "is_superuser", False):
+        return True
+    return account.groups.filter(name="Admin").exists()
+
+
 def _staff_update_snapshot(staff_user: Any) -> dict[str, Any]:
     permission_object = EmployeePermission.objects.filter(user=staff_user).first()
     permissions = {
@@ -89,16 +102,16 @@ def staff_manage_view(request: HttpRequest) -> HttpResponse:
     user_model = get_user_model()
     staff_users = list(user_model.objects.filter(is_staff=True).order_by("email"))
     edit_forms = [
-        (staff_user, StaffUserUpdateForm(instance=staff_user, prefix=f"user-{staff_user.id}"))
+        (staff_user, StaffUserUpdateForm(instance=staff_user, prefix=f"user-{staff_user.id}", acting_user=request.user))
         for staff_user in staff_users
     ]
-    create_form = StaffUserCreateForm(prefix="create", initial={"is_staff": True, "is_active": True})
+    create_form = StaffUserCreateForm(prefix="create", initial={"is_staff": True, "is_active": True}, acting_user=request.user)
 
     if request.method == "POST":
         action = request.POST.get("action")
 
         if action == "create":
-            create_form = StaffUserCreateForm(request.POST, prefix="create")
+            create_form = StaffUserCreateForm(request.POST, prefix="create", acting_user=request.user)
             if create_form.is_valid():
                 create_form.save()
                 messages.success(request, _("Сотрудник создан."))
@@ -108,7 +121,10 @@ def staff_manage_view(request: HttpRequest) -> HttpResponse:
         elif action == "update":
             user_id = request.POST.get("user_id")
             staff_user = get_object_or_404(user_model, pk=user_id, is_staff=True)
-            form = StaffUserUpdateForm(request.POST, instance=staff_user, prefix=f"user-{staff_user.id}")
+            if _is_owner_level_account(staff_user) and not getattr(request.user, "is_superuser", False):
+                messages.error(request, _("Только владелец (суперпользователь) может редактировать аккаунты уровня владельца."))
+                return redirect("clients:staff_manage")
+            form = StaffUserUpdateForm(request.POST, instance=staff_user, prefix=f"user-{staff_user.id}", acting_user=request.user)
             if form.is_valid():
                 before = _staff_update_snapshot(staff_user)
                 saved_user = form.save()
@@ -117,13 +133,16 @@ def staff_manage_view(request: HttpRequest) -> HttpResponse:
                 return redirect("clients:staff_manage")
             messages.error(request, _("Не удалось обновить сотрудника. Проверьте форму."))
             edit_forms = [
-                (item, form if item.pk == staff_user.pk else StaffUserUpdateForm(instance=item, prefix=f"user-{item.id}"))
+                (item, form if item.pk == staff_user.pk else StaffUserUpdateForm(instance=item, prefix=f"user-{item.id}", acting_user=request.user))
                 for item in staff_users
             ]
 
         elif action == "toggle_active":
             user_id = request.POST.get("user_id")
             staff_user = get_object_or_404(user_model, pk=user_id, is_staff=True)
+            if _is_owner_level_account(staff_user) and not getattr(request.user, "is_superuser", False):
+                messages.error(request, _("Только владелец (суперпользователь) может менять статус аккаунтов уровня владельца."))
+                return redirect("clients:staff_manage")
             old_is_active = staff_user.is_active
             staff_user.is_active = not staff_user.is_active
             staff_user.save(update_fields=["is_active"])

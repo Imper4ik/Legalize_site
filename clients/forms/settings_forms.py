@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.auth.password_validation import validate_password
+from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 from clients.models import (
@@ -41,6 +42,26 @@ def _build_permission_fields() -> dict[str, forms.BooleanField]:
         name: forms.BooleanField(required=False, label=label)
         for name, label in EMPLOYEE_PERMISSION_FIELD_LABELS
     }
+
+
+def _assignable_groups_queryset(acting_user: Any, instance: Any = None) -> Any:
+    """Groups a given actor may assign through the staff-management screen.
+
+    Only the owner (a superuser) may grant the ``Admin`` (owner-equivalent) role.
+    For anyone else the ``Admin`` group is removed from the selectable set so a
+    crafted POST cannot escalate an account to owner level. Any ``Admin``
+    membership the edited account already holds is preserved so an unrelated
+    edit never silently strips it.
+    """
+    queryset = Group.objects.all().order_by("name")
+    if acting_user is not None and getattr(acting_user, "is_superuser", False):
+        return queryset
+    allowed = queryset.exclude(name="Admin")
+    if instance is not None and getattr(instance, "pk", None):
+        existing_admin_ids = list(instance.groups.filter(name="Admin").values_list("pk", flat=True))
+        if existing_admin_ids:
+            allowed = queryset.filter(models.Q(pk__in=allowed.values("pk")) | models.Q(pk__in=existing_admin_ids))
+    return allowed
 
 
 def _sync_verified_email_address(user: Any) -> None:
@@ -195,6 +216,11 @@ class StaffUserCreateForm(forms.ModelForm):
             "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
+    def __init__(self, *args: Any, acting_user: Any = None, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.acting_user = acting_user
+        cast(forms.ModelMultipleChoiceField, self.fields["groups"]).queryset = _assignable_groups_queryset(acting_user)
+
     def clean(self) -> dict[str, Any]:
         cleaned = super().clean() or {}
         password1 = cleaned.get("password1")
@@ -238,8 +264,10 @@ class StaffUserUpdateForm(forms.ModelForm):
             "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, acting_user: Any = None, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
+        self.acting_user = acting_user
+        cast(forms.ModelMultipleChoiceField, self.fields["groups"]).queryset = _assignable_groups_queryset(acting_user, instance=self.instance)
         for field_name, field in _build_permission_fields().items():
             field.widget.attrs.setdefault("class", "form-check-input")
             self.fields[field_name] = field

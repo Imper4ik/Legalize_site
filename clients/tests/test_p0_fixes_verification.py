@@ -360,9 +360,14 @@ class P0FixesVerificationTests(TestCase):
             self.assertEqual(act.get_event_type_display(), "Новая подача обновлена")
         self.assertEqual(act.badge_class, "bg-info text-dark")
 
-    def test_manager_allowed_to_manage_people(self):
-        """PEOPLE_ALLOWED_ROLES must include Manager so managers can edit employee roles."""
-        self.assertIn("Manager", PEOPLE_ALLOWED_ROLES)
+    def test_manager_cannot_manage_people(self):
+        """Managers are head employees, not owners: staff/role management is owner-only.
+
+        Guards the audit fix that removed Manager from PEOPLE_ALLOWED_ROLES so a
+        manager can no longer create staff or grant itself the Admin role.
+        """
+        self.assertNotIn("Manager", PEOPLE_ALLOWED_ROLES)
+        self.assertEqual(tuple(PEOPLE_ALLOWED_ROLES), ("Admin",))
 
     def test_workday_alerts_grouped_by_client(self):
         """workday_clients should return alerts grouped by client and ordered by highest priority."""
