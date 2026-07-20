@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import os
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import Mock, call, patch
@@ -11,6 +12,7 @@ from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.db import IntegrityError, transaction
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -319,7 +321,76 @@ def test_background_automation_loop_runs_core_background_tasks():
         call("run_weekly_document_reminders"),
         call("run_retention_maintenance"),
     ]
-    assert cache_set.call_count == 2
+    # Two heartbeats (start + end) plus the long-lived last-run marker.
+    assert cache_set.call_count == 3
+
+
+@pytest.mark.django_db
+def test_background_automation_loop_runs_daily_backup_once_when_enabled():
+    from django.core.cache import cache as django_cache
+
+    from legalize_site.backups import BackupResult
+
+    django_cache.clear()
+    fake_result = BackupResult(
+        backup_id="backup-20260615-000000",
+        path="/tmp/backup.sql.enc",
+        size_bytes=1234,
+        plaintext_sha256="a" * 64,
+        stored_file_sha256="b" * 64,
+        encrypted=True,
+        stored_remotely=True,
+    )
+    with patch.dict(os.environ, {"ENABLE_INPROCESS_DB_BACKUP": "true"}):
+        with patch("clients.management.commands.run_background_automation_loop.call_command"):
+            with patch("legalize_site.backups.create_db_backup", return_value=fake_result) as backup_mock:
+                call_command("run_background_automation_loop")
+                # Second cycle the same day must not back up again (daily gate).
+                call_command("run_background_automation_loop")
+
+    backup_mock.assert_called_once()
+
+
+@pytest.mark.django_db
+def test_background_automation_loop_backup_failure_alerts_and_retries():
+    from django.core.cache import cache as django_cache
+
+    from clients.management.commands.run_background_automation_loop import DB_BACKUP_DONE_KEY
+    from legalize_site.backups import BackupError
+
+    django_cache.clear()
+    with override_settings(CRON_FAILURE_EMAIL_ALERTS=True):
+        with patch.dict(os.environ, {"ENABLE_INPROCESS_DB_BACKUP": "true"}):
+            with patch("clients.management.commands.run_background_automation_loop.call_command"):
+                with patch("legalize_site.backups.create_db_backup", side_effect=BackupError("pg_dump missing")):
+                    with patch(
+                        "clients.management.commands.run_background_automation_loop.mail_admins"
+                    ) as mail_mock:
+                        call_command("run_background_automation_loop")
+
+    mail_mock.assert_called_once()
+    # A failed backup must not mark the day done, so the next cycle retries.
+    assert django_cache.get(DB_BACKUP_DONE_KEY) is None
+
+
+@pytest.mark.django_db
+def test_background_automation_loop_alerts_when_resuming_after_outage():
+    from django.core.cache import cache as django_cache
+    from django.utils import timezone
+
+    from clients.management.commands.run_background_automation_loop import LAST_RUN_CACHE_KEY
+
+    django_cache.clear()
+    stale = (timezone.now() - timezone.timedelta(hours=2)).isoformat()
+    django_cache.set(LAST_RUN_CACHE_KEY, stale, timeout=7 * 24 * 60 * 60)
+    with override_settings(CRON_FAILURE_EMAIL_ALERTS=True):
+        with patch("clients.management.commands.run_background_automation_loop.call_command"):
+            with patch(
+                "clients.management.commands.run_background_automation_loop.mail_admins"
+            ) as mail_mock:
+                call_command("run_background_automation_loop")
+
+    mail_mock.assert_called_once()
 
 
 def test_background_automation_loop_skips_task_when_lock_backend_fails():

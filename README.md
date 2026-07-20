@@ -58,8 +58,14 @@ See `docs/deployment.md` for more details.
 
 The web service starts its built-in automation loop by default. If you disable
 it, configure an external scheduler (for example Railway Cron or cron-job.org)
-to call the CRM's secure webhook endpoints. Database backups always require an
-external schedule:
+to call the CRM's secure webhook endpoints.
+
+Database backups can run **in-process**: set `ENABLE_INPROCESS_DB_BACKUP=true`
+and the automation loop performs a full `pg_dump` once per day (retried on the
+next cycle if it fails, with an admin email alert). For durable copies pair it
+with `BACKUP_REMOTE_STORAGE=true` and an S3/R2/B2 `backups` alias. With this
+flag the deployment needs no external scheduler at all. If you prefer an
+external schedule instead, leave it off and call the webhook:
 
 - **Database Backup**: `POST /cron/db-backup/`
 - **Email Campaigns**: `POST /cron/process-email-campaigns/`
