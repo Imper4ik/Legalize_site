@@ -157,14 +157,7 @@ class ClientListView(StaffRequiredMixin, ListView):
 
         query = self.request.GET.get("q", "")
         if query:
-            case_number_hash = Client.hash_case_number(query)
-            queryset = queryset.filter(
-                Q(first_name__icontains=query)
-                | Q(last_name__icontains=query)
-                | Q(email__icontains=query)
-                | Q(phone__icontains=query)
-                | Q(cases__authority_case_number_hash=case_number_hash)
-            )
+            queryset = queryset.filter(Client.build_search_filter(query))
         return queryset.distinct().order_by(*list_ordering)
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
@@ -541,14 +534,7 @@ def client_autocomplete_api(request: HttpRequest) -> HttpResponse:
         Client.objects.filter(Q(user__is_staff=False) | Q(user__isnull=True))
     )
 
-    case_number_hash = Client.hash_case_number(query)
-    queryset = queryset.filter(
-        Q(first_name__icontains=query)
-        | Q(last_name__icontains=query)
-        | Q(email__icontains=query)
-        | Q(phone__icontains=query)
-        | Q(cases__authority_case_number_hash=case_number_hash)
-    ).annotate(
+    queryset = queryset.filter(Client.build_search_filter(query)).annotate(
         # The reverse "cases" join bypasses the archived-excluding default
         # manager, so filter archived rows out explicitly.
         active_cases_count=Count(

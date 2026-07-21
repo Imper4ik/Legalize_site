@@ -165,7 +165,7 @@ class ClientCreateRedirectTests(TestCase):
             },
         )
         self.assertEqual(response.status_code, 302)
-        created = Client.objects.get(email="redirect-target@example.com")
+        created = Client.objects.get(email_hash=Client.hash_email("redirect-target@example.com"))
         self.assertEqual(
             response["Location"],
             reverse("clients:client_detail", kwargs={"pk": created.pk}),

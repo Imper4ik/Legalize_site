@@ -106,7 +106,7 @@ def test_convert_intake_requires_staff_review_for_contact_conflicts():
     submission.refresh_from_db()
     assert submission.status == ClientIntakeSubmission.STATUS_NEEDS_REVIEW
     assert submission.created_client_id is None
-    assert Client.objects.filter(email="ivan@example.com").count() == 1
+    assert Client.objects.filter(email_hash=Client.hash_email("ivan@example.com")).count() == 1
 
 
 @pytest.mark.django_db
@@ -119,7 +119,7 @@ def test_staff_can_convert_reviewed_conflicting_intake_without_merging_clients()
     assert result.client.pk != existing.pk
     assert result.client.email == "ivan@example.com"
     assert result.case.client == result.client
-    assert Client.objects.filter(email="ivan@example.com").count() == 2
+    assert Client.objects.filter(email_hash=Client.hash_email("ivan@example.com")).count() == 2
 
 
 @pytest.mark.django_db
@@ -267,7 +267,7 @@ def test_public_intake_user_creation_failure_leaves_no_orphan_client():
     # The account failed, so the whole creation is rolled back: the form is
     # re-rendered and no orphaned client/case/user is left behind.
     assert response.status_code == 200
-    assert not Client.all_objects.filter(email="public-applicant@example.com").exists()
+    assert not Client.all_objects.filter(email_hash=Client.hash_email("public-applicant@example.com")).exists()
     assert not user_model.objects.filter(email="public-applicant@example.com").exists()
     intake = ClientIntakeSubmission.objects.get(token_hash=token_hash)
     assert intake.status == ClientIntakeSubmission.STATUS_SUBMITTED
@@ -293,7 +293,7 @@ def test_public_intake_conflict_goes_to_review_without_merging():
     intake.refresh_from_db()
     assert intake.status == ClientIntakeSubmission.STATUS_NEEDS_REVIEW
     assert intake.created_client_id is None
-    assert Client.objects.filter(email="public-applicant@example.com").count() == 1
+    assert Client.objects.filter(email_hash=Client.hash_email("public-applicant@example.com")).count() == 1
 
 
 @pytest.mark.django_db

@@ -179,6 +179,14 @@ class ClientForm(forms.ModelForm):
         input_formats=['%d.%m.%Y', '%d-%m-%Y', '%Y-%m-%d'],
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': _('дд.мм.гггг')})
     )
+    # first_name/last_name/email/phone are EncryptedTextField on the model, which
+    # would otherwise generate unvalidated CharFields here — declare them
+    # explicitly to keep the previous length/email validation and widgets.
+    first_name = forms.CharField(label=_("Имя"), max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    last_name = forms.CharField(label=_("Фамилия"), max_length=100, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    email = forms.EmailField(label="Email", required=False, widget=forms.EmailInput(attrs={'class': 'form-control'}))
+    phone = forms.CharField(label=_("Телефон"), max_length=20, required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
+
     def __init__(self, *args: Any, user: AbstractBaseUser | AnonymousUser | None = None, **kwargs: Any) -> None:
         self.user = user
         super().__init__(*args, **kwargs)
@@ -222,7 +230,7 @@ class ClientForm(forms.ModelForm):
             sponsor_queryset = Client.objects.none()
 
         if hasattr(self.fields['sponsor_client'], 'queryset'):
-            setattr(self.fields['sponsor_client'], 'queryset', sponsor_queryset.order_by('last_name', 'first_name'))
+            setattr(self.fields['sponsor_client'], 'queryset', sponsor_queryset.order_by('created_at'))
 
         if self._is_limited_staff_user():
             self.fields.pop("status", None)

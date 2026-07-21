@@ -6,7 +6,7 @@ The CRM stores client names, email, phone, citizenship, passport number, case nu
 
 ## Encryption
 
-Sensitive model fields use Fernet-backed encrypted fields where the project already marks them as sensitive, including passport number, case number, email log body, recipients, and delivery errors. Configure:
+Sensitive model fields use Fernet-backed encrypted fields where the project already marks them as sensitive, including client first/last name, email, phone, passport number, case number, email log body, recipients, and delivery errors. Client name/email/phone stay searchable through keyed blind indexes (HMAC), not plaintext — see `docs/field_encryption.md`. Configure:
 
 ```bash
 FERNET_KEYS=current_key,previous_key

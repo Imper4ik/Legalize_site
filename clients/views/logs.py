@@ -45,10 +45,12 @@ class EmailLogsView(BaseLogView):
 
             search = form.cleaned_data.get("search")
             if search:
+                from clients.models import Client
+
+                matching_clients = Client.objects.filter(Client.build_search_filter(search))
                 qs = qs.filter(
                     Q(subject__icontains=search) |
-                    Q(client__first_name__icontains=search) |
-                    Q(client__last_name__icontains=search)
+                    Q(client__in=matching_clients)
                 )
 
         return qs

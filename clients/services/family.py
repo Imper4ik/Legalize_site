@@ -57,7 +57,9 @@ def family_sponsor_for(client: Client) -> Client:
 
 
 def get_family_members(sponsor: Client) -> Any:
-    return sponsor.sponsored_family_members.exclude(pk=sponsor.pk).order_by("family_role", "last_name", "first_name")
+    # last_name/first_name are encrypted (unsortable at the DB level); group by
+    # the plaintext family_role and fall back to creation order.
+    return sponsor.sponsored_family_members.exclude(pk=sponsor.pk).order_by("family_role", "created_at")
 
 
 def get_existing_family_group(sponsor: Client) -> FamilyGroup | None:
