@@ -16,19 +16,6 @@ from clients.services.cases import create_case_for_client
 from clients.testing.factories import build_pdf_upload, create_test_client, create_test_document, create_test_user
 
 
-def _restore_schema_to_latest() -> None:
-    """Migrate the shared in-memory test DB back up to the latest leaf.
-
-    These TransactionTestCase migration tests reverse the schema to an old
-    state. Because pytest reuses one in-memory database for the whole run,
-    leaving it behind the leaf would hide later-added columns (e.g. the
-    encrypted-PII blind indexes) from every subsequent test's inserts.
-    """
-    executor = MigrationExecutor(connection)
-    executor.loader.build_graph()
-    executor.migrate(executor.loader.graph.leaf_nodes())
-
-
 class CaseBackfillMigrationTests(TransactionTestCase):
     migrate_from = [("clients", "0095_documentversion_docver_case_version_idx")]
     migrate_to = [("clients", "0096_backfill_cases_and_encrypt_json")]
@@ -74,7 +61,10 @@ class CaseBackfillMigrationTests(TransactionTestCase):
         self.apps = self.executor.loader.project_state(self.migrate_to).apps
 
     def tearDown(self) -> None:
-        _restore_schema_to_latest()
+        # Restore the installed schema before TransactionTestCase flushes the
+        # database; PostgreSQL preserves historical foreign-key constraints.
+        self.executor.loader.build_graph()
+        self.executor.migrate(self.executor.loader.graph.leaf_nodes())
         super().tearDown()
 
     def test_backfill_creates_primary_case_and_links_existing_records(self) -> None:
@@ -442,7 +432,10 @@ class CaseFamilyRoleBackfillMigrationTests(TransactionTestCase):
         self.apps = self.executor.loader.project_state(self.migrate_to).apps
 
     def tearDown(self) -> None:
-        _restore_schema_to_latest()
+        # Restore the installed schema before TransactionTestCase flushes the
+        # database; PostgreSQL preserves historical foreign-key constraints.
+        self.executor.loader.build_graph()
+        self.executor.migrate(self.executor.loader.graph.leaf_nodes())
         super().tearDown()
 
     def test_backfill_copies_role_only_for_single_unambiguous_family_case(self) -> None:
@@ -532,7 +525,10 @@ class CaseApplicationPurposeBackfillMigrationTests(TransactionTestCase):
         self.apps = self.executor.loader.project_state(self.migrate_to).apps
 
     def tearDown(self) -> None:
-        _restore_schema_to_latest()
+        # Restore the installed schema before TransactionTestCase flushes the
+        # database; PostgreSQL preserves historical foreign-key constraints.
+        self.executor.loader.build_graph()
+        self.executor.migrate(self.executor.loader.graph.leaf_nodes())
         super().tearDown()
 
     def test_backfill_copies_purpose_only_for_single_blank_case(self) -> None:

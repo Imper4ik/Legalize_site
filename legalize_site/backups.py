@@ -44,7 +44,13 @@ def _normalize_database_url(database_url: str) -> str:
 
 def _backup_dir() -> Path:
     configured_dir = os.environ.get("DB_BACKUP_DIR")
-    backup_dir = Path(configured_dir) if configured_dir else Path(settings.BASE_DIR) / "tmp" / "db_backups"
+    railway_volume_dir = os.environ.get("RAILWAY_VOLUME_MOUNT_PATH")
+    if configured_dir:
+        backup_dir = Path(configured_dir)
+    elif railway_volume_dir:
+        backup_dir = Path(railway_volume_dir) / "db_backups"
+    else:
+        backup_dir = Path(settings.BASE_DIR) / "tmp" / "db_backups"
     backup_dir.mkdir(parents=True, exist_ok=True)
     try:
         os.chmod(backup_dir, 0o700)

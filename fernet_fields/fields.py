@@ -126,6 +126,11 @@ class EncryptedJSONField(models.TextField):
     so existing rows can be migrated safely by re-saving them.
     """
 
+    # django-stubs otherwise inherits TextField's str-only descriptor type.
+    # Runtime values are decoded JSON (or the safe unavailable marker).
+    _pyi_private_set_type: Any
+    _pyi_private_get_type: Any
+
     description = "Fernet-encrypted JSON"
 
     if TYPE_CHECKING:

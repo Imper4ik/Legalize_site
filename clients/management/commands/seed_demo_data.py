@@ -44,9 +44,7 @@ class Command(BaseCommand):
             raise CommandError("Refusing to seed demo data without --confirm.")
 
         if getattr(settings, "IS_PRODUCTION", False) and not options["allow_production"]:
-            raise CommandError(
-                "Refusing to seed demo data in production without --allow-production."
-            )
+            raise CommandError("Refusing to seed demo data in production without --allow-production.")
 
         today = timezone.localdate()
         with transaction.atomic():
@@ -149,6 +147,7 @@ class Command(BaseCommand):
                 idempotency_key="demo:missing-documents",
                 defaults={
                     "client": waiting_client,
+                    "case": waiting_client.active_case,
                     "subject": "Demo missing documents",
                     "body": "Safe demo email body without real PII.",
                     "recipients": waiting_client.email,

@@ -74,9 +74,9 @@ MALWARE_SCAN_ENABLED = env_flag("MALWARE_SCAN_ENABLED", "False")
 CLAMD_TCP_ADDR = os.environ.get("CLAMD_TCP_ADDR", "127.0.0.1")
 CLAMD_TCP_PORT = int(os.environ.get("CLAMD_TCP_PORT", "3310"))
 CLAMD_TIMEOUT_SECONDS = float(os.environ.get("CLAMD_TIMEOUT_SECONDS", "15"))
-ENABLE_TEST_CENTER = env_flag("ENABLE_TEST_CENTER", "True")
+ENABLE_TEST_CENTER = env_flag("ENABLE_TEST_CENTER", "False" if IS_PRODUCTION else "True")
 TEST_CENTER_MEDIA_ROOT = os.environ.get("TEST_CENTER_MEDIA_ROOT", "")
-DEMO_MODE_ENABLED = env_flag("DEMO_MODE_ENABLED", "True")
+DEMO_MODE_ENABLED = env_flag("DEMO_MODE_ENABLED", "False" if IS_PRODUCTION else "True")
 DEMO_CENTER_MEDIA_ROOT = os.environ.get("DEMO_CENTER_MEDIA_ROOT", "")
 
 # --- БАЗОВЫЕ НАСТРОЙКИ ---
@@ -144,10 +144,7 @@ def _sanitize_sentry_value(value: Any, *, key_hint: str | None = None) -> Any:
     if _is_sensitive_key(key_hint):
         return REDACTION_TOKEN
     if isinstance(value, dict):
-        return {
-            key: _sanitize_sentry_value(item, key_hint=str(key))
-            for key, item in value.items()
-        }
+        return {key: _sanitize_sentry_value(item, key_hint=str(key)) for key, item in value.items()}
     if isinstance(value, list):
         return [_sanitize_sentry_value(item, key_hint=key_hint) for item in value]
     if isinstance(value, tuple):
@@ -220,6 +217,7 @@ def _sentry_before_send(event: Any, hint: Any) -> Any:
 
 def _sentry_before_breadcrumb(crumb: Any, hint: Any) -> Any:
     return _sanitize_sentry_value(crumb)
+
 
 # --- ПРИЛОЖЕНИЯ И MIDDLEWARE ---
 INSTALLED_APPS = [
@@ -320,6 +318,7 @@ TEMPLATES = [
                 "django.template.context_processors.i18n",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "legalize_site.context_processors.support_contact",
                 "legalize_site.context_processors.feature_flags",
                 "legalize_site.context_processors.staff_capabilities",
                 "legalize_site.context_processors.onboarding_notifications",
@@ -444,6 +443,7 @@ def _s3_storage_options(location: str) -> dict[str, Any]:
         "file_overwrite": False,
         "location": location,
     }
+
 
 if USE_DATABASE_MEDIA_STORAGE:
     STORAGES = {
@@ -686,6 +686,9 @@ RATE_LIMIT_CACHE_FAILURE_MODE = os.environ.get(
     "open",
 ).lower()
 CRON_FAILURE_EMAIL_ALERTS = env_flag("CRON_FAILURE_EMAIL_ALERTS", "True" if IS_PRODUCTION else "False")
+ADMINS = [
+    (email, email) for email in (item.strip() for item in os.environ.get("DJANGO_ADMIN_EMAILS", "").split(",")) if email
+]
 
 # --- SENTRY ---
 SENTRY_DSN = os.environ.get("SENTRY_DSN")

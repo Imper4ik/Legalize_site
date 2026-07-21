@@ -32,6 +32,8 @@ DEMO_MODE_ENABLED=True
 DEMO_CENTER_MEDIA_ROOT=
 ```
 
+The Demo Center is enabled by default only outside production. Production startup checks reject `DEMO_MODE_ENABLED=True`; keep it disabled on every live service.
+
 ## Management Commands
 
 To clean up all demo data from the command line:

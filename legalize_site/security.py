@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import secrets
 from dataclasses import dataclass
+from ipaddress import ip_address
 from typing import Any, Callable
 
 from django.conf import settings
@@ -29,11 +30,30 @@ class RateLimitRule:
     fail_closed: bool = False
 
 
+def _normalized_ip(value: Any) -> str:
+    try:
+        return str(ip_address(str(value).strip()))
+    except ValueError:
+        return ""
+
+
 def _client_ip(request: HttpRequest) -> str:
+    remote_addr = _normalized_ip(request.META.get("REMOTE_ADDR")) or "unknown"
+
+    if getattr(settings, "TRUST_RAILWAY_CLIENT_IP", False):
+        railway_ip = _normalized_ip(request.META.get("HTTP_X_REAL_IP"))
+        if railway_ip:
+            return railway_ip
+
+    trusted_proxies = {
+        normalized for item in getattr(settings, "TRUSTED_PROXY_IPS", ()) if (normalized := _normalized_ip(item))
+    }
     forwarded_for = str(request.META.get("HTTP_X_FORWARDED_FOR", ""))
-    if forwarded_for:
-        return forwarded_for.split(",")[0].strip()
-    return str(request.META.get("REMOTE_ADDR", "") or "unknown")
+    if forwarded_for and remote_addr in trusted_proxies:
+        forwarded_ip = _normalized_ip(forwarded_for.split(",")[0])
+        if forwarded_ip:
+            return forwarded_ip
+    return remote_addr
 
 
 def _build_rate_limit_key(request: HttpRequest, url_name: str, rule: RateLimitRule) -> str:
@@ -62,9 +82,7 @@ def is_rate_limited(request: HttpRequest, url_name: str, rule: RateLimitRule) ->
         cache.set(cache_key, 1, timeout=rule.window_seconds)
         return False
     except Exception:
-        failure_mode = "closed" if rule.fail_closed else getattr(
-            settings, "RATE_LIMIT_CACHE_FAILURE_MODE", "closed"
-        )
+        failure_mode = "closed" if rule.fail_closed else getattr(settings, "RATE_LIMIT_CACHE_FAILURE_MODE", "closed")
         logger.exception(
             "Rate limit cache backend failed for url_name=%s failure_mode=%s",
             url_name,
@@ -106,9 +124,7 @@ class RateLimitMiddleware:
                 retry_after = str(rule.window_seconds)
                 response["Retry-After"] = retry_after
                 response["X-RateLimit-Limit"] = str(rule.limit)
-                response["X-RateLimit-Reset"] = str(
-                    int(timezone.now().timestamp()) + rule.window_seconds
-                )
+                response["X-RateLimit-Reset"] = str(int(timezone.now().timestamp()) + rule.window_seconds)
                 return response
 
         return self.get_response(request)
@@ -139,9 +155,7 @@ class ContentSecurityPolicyMiddleware:
         # Optional stricter policy emitted in Report-Only mode alongside the
         # enforced one. Lets us inventory inline-script/style violations before
         # dropping 'unsafe-inline' for real (the A3 hardening path).
-        self.strict_report_only_value: str = getattr(
-            settings, "LEGALIZE_CONTENT_SECURITY_POLICY_REPORT_ONLY", ""
-        )
+        self.strict_report_only_value: str = getattr(settings, "LEGALIZE_CONTENT_SECURITY_POLICY_REPORT_ONLY", "")
 
     def __call__(self, request: HttpRequest) -> HttpResponse:
         # Per-request nonce for inline <script nonce="{{ request.csp_nonce }}">.
@@ -155,20 +169,14 @@ class ContentSecurityPolicyMiddleware:
 
         response = self.get_response(request)
         if self.header_value:
-            header_name = (
-                "Content-Security-Policy-Report-Only"
-                if self.report_only
-                else "Content-Security-Policy"
-            )
+            header_name = "Content-Security-Policy-Report-Only" if self.report_only else "Content-Security-Policy"
             if header_name not in response:
                 policy = self.header_value
                 # Bind the per-request nonce to script-src so inline scripts that
                 # carry nonce="{{ request.csp_nonce }}" execute under a policy that
                 # no longer needs 'unsafe-inline' for scripts (audit P-02).
                 if "script-src " in policy and "'nonce-" not in policy:
-                    policy = policy.replace(
-                        "script-src ", f"script-src 'nonce-{nonce}' ", 1
-                    )
+                    policy = policy.replace("script-src ", f"script-src 'nonce-{nonce}' ", 1)
                 response[header_name] = policy
 
         # Attach the strict report-only policy only when the main policy is being
@@ -181,8 +189,6 @@ class ContentSecurityPolicyMiddleware:
                 # Nonced <style> blocks pass the strict policy the same way
                 # nonced scripts do, so the remaining style telemetry is only
                 # about style="..." attributes (the A3 migration backlog).
-                strict_policy = strict_policy.replace(
-                    "style-src 'self'", f"style-src 'self' 'nonce-{nonce}'"
-                )
+                strict_policy = strict_policy.replace("style-src 'self'", f"style-src 'self' 'nonce-{nonce}'")
                 response["Content-Security-Policy-Report-Only"] = strict_policy
         return response

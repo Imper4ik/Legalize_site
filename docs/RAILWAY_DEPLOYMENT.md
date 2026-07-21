@@ -11,7 +11,7 @@ FERNET_KEYS=...
 ALLOWED_HOSTS=your-app.railway.app
 CSRF_TRUSTED_ORIGINS=https://your-app.railway.app
 DATABASE_URL=...
-REDIS_URL=...  # optional; PostgreSQL DatabaseCache is used when omitted
+REDIS_URL=...  # required for atomic cross-worker rate limits
 DJANGO_CACHE_TABLE=cache_table
 DEFAULT_FROM_EMAIL=...
 EMAIL_HOST=...
@@ -21,13 +21,14 @@ EMAIL_HOST_PASSWORD=...
 CRON_TOKEN=...
 CRON_ALLOWED_IPS=
 SENTRY_DSN=
-BACKUP_REMOTE_STORAGE=
+BACKUP_REMOTE_STORAGE=True
+DJANGO_ADMIN_EMAILS=alerts@example.com
 ENABLE_TRANSLATION_TOOLING=True
 TRANSLATION_STUDIO_STORAGE=database
 TRANSLATION_DB_OVERRIDES_ENABLED=True
 ```
 
-Railway may provide `RAILWAY_PUBLIC_DOMAIN` or `RAILWAY_STATIC_URL`; production settings can derive hosts and CSRF origins from those. `REDIS_URL` is optional: when it is absent, production rate limiting uses Django `DatabaseCache` on the PostgreSQL cache table named by `DJANGO_CACHE_TABLE` (default `cache_table`). `release.sh` runs `python manage.py createcachetable`, so the table is created during release.
+Railway may provide `RAILWAY_PUBLIC_DOMAIN` or `RAILWAY_STATIC_URL`; production settings can derive hosts and CSRF origins from those. `REDIS_URL` is mandatory because rate-limit counters must be atomic across workers. Railway deployments automatically trust platform `X-Real-IP` when Railway platform variables are present; override `TRUST_RAILWAY_CLIENT_IP` only for a verified custom topology.
 
 ## Build and release
 
@@ -83,9 +84,11 @@ For production growth, use S3/R2/B2 and set the S3-compatible variables. A Railw
 
 Run daily DB backups and verify restore with `python manage.py test_restore`. If media is in PostgreSQL, DB backups include files. If media is local or S3, backup media separately.
 
-For a thesis/MVP deployment, `BACKUP_REMOTE_STORAGE=false` is allowed and emits a warning rather than an error. For real business use, set `BACKUP_REMOTE_STORAGE=true`, keep `BACKUP_STORAGE_ALIAS=backups`, set `BACKUP_STORAGE_LOCATION=db_backups`, and configure S3/R2/B2 credentials including `AWS_STORAGE_BUCKET_NAME`. Backups must not use `DatabaseMediaStorage`.
+For a full public launch, set `BACKUP_REMOTE_STORAGE=true`, keep `BACKUP_STORAGE_ALIAS=backups`, set `BACKUP_STORAGE_LOCATION=db_backups`, and configure S3/R2/B2 credentials including `AWS_STORAGE_BUCKET_NAME`. Backups must not use `DatabaseMediaStorage`.
 
-Expected `check --deploy` warnings for MVP are limited to Django's standard HTTPS/HSTS reminders if you intentionally changed those settings and the project warning that remote backup storage is not enabled. Media storage and cache misconfiguration should be treated as errors.
+When a Railway Volume is attached, local encrypted backups default to `$RAILWAY_VOLUME_MOUNT_PATH/db_backups` if `DB_BACKUP_DIR` is unset. This is accepted for the MVP with a production warning; external storage and a restore drill remain required before full launch.
+
+A deploy must fail if PostgreSQL, Redis, real email delivery, persistent media, or all persistent backup storage is missing. Missing alert recipients remains a visible warning. Run `python manage.py check --deploy --fail-level ERROR` before every release.
 
 ## Health and readiness
 

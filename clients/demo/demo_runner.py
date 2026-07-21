@@ -18,7 +18,9 @@ DEMO_CENTER_LOCK_KEY = "demo_center:run_or_cleanup"
 
 
 def ensure_demo_center_enabled(*, user: Any | None = None) -> None:
-    """Only superusers can use the Demo Center — no env flag needed."""
+    """Allow explicitly enabled superusers to use the Demo Center."""
+    if not getattr(settings, "DEMO_MODE_ENABLED", False):
+        raise PermissionDenied(_("Demo Center is disabled."))
     if user is not None and not getattr(user, "is_superuser", False):
         raise PermissionDenied(_("Demo Center requires a superuser."))
 

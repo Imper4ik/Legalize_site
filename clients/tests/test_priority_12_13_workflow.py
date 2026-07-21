@@ -82,8 +82,7 @@ def client_form_data(**overrides):
 
 def tiny_png(name: str = "document.png") -> SimpleUploadedFile:
     payload = base64.b64decode(
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1Pe"
-        "AAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC"
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC"
     )
     return SimpleUploadedFile(name, payload, content_type="image/png")
 
@@ -296,8 +295,13 @@ def test_weekly_document_reminder_loop_allows_1710_retry_slot():
     morning = timezone.make_aware(datetime(2026, 6, 15, 8, 5))
     retry_time = timezone.make_aware(datetime(2026, 6, 15, 17, 10))
 
-    with patch("clients.management.commands.run_weekly_document_reminders.timezone.localtime", side_effect=[morning, retry_time]):
-        with patch("clients.management.commands.run_weekly_document_reminders.cache.add", return_value=True) as cache_add:
+    with patch(
+        "clients.management.commands.run_weekly_document_reminders.timezone.localtime",
+        side_effect=[morning, retry_time],
+    ):
+        with patch(
+            "clients.management.commands.run_weekly_document_reminders.cache.add", return_value=True
+        ) as cache_add:
             with patch("clients.management.commands.run_weekly_document_reminders.call_command") as call_mock:
                 call_command("run_weekly_document_reminders")
                 call_command("run_weekly_document_reminders")
@@ -321,8 +325,13 @@ def test_background_automation_loop_runs_core_background_tasks():
         call("run_weekly_document_reminders"),
         call("run_retention_maintenance"),
     ]
-    # Two heartbeats (start + end) plus the long-lived last-run marker.
-    assert cache_set.call_count == 3
+    # One heartbeat (dict payload with failures) plus the long-lived last-run marker.
+    assert cache_set.call_count == 2
+    heartbeat_calls = [c for c in cache_set.call_args_list if isinstance(c.args[1], dict)]
+    assert len(heartbeat_calls) == 1
+    heartbeat = heartbeat_calls[0].args[1]
+    assert heartbeat["status"] == "ok"
+    assert heartbeat["failed_tasks"] == []
 
 
 @pytest.mark.django_db
@@ -401,9 +410,7 @@ def test_background_automation_loop_skips_task_when_lock_backend_fails():
         "clients.management.commands.run_background_automation_loop.cache.add",
         side_effect=RuntimeError("cache down"),
     ):
-        with patch(
-            "clients.management.commands.run_background_automation_loop.cache.delete"
-        ) as cache_delete:
+        with patch("clients.management.commands.run_background_automation_loop.cache.delete") as cache_delete:
             result = Command()._run_locked("document-jobs", timeout=60, task=task)
 
     assert result is False
@@ -720,11 +727,10 @@ def test_family_role_checklist_used_for_workflow_notifications_and_wniosek():
     assert match_attachment_to_document_type(spouse, "Spouse-only document", "en") == "spouse_only_document"
 
     from clients.testing.factories import build_pdf_upload
+
     for code, _label in DocumentRequirement.required_for("family_spouse", "en"):
         Document.objects.get_or_create(
-            client=spouse,
-            document_type=code,
-            defaults={"file": build_pdf_upload(f"{code}.pdf")}
+            client=spouse, document_type=code, defaults={"file": build_pdf_upload(f"{code}.pdf")}
         )
     result = validate_case_workflow_transition(
         case=spouse.cases.get(),
