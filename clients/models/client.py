@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import logging
+import re
 from datetime import date, timedelta
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Self, cast
@@ -184,12 +186,19 @@ class Client(SoftDeleteModel):
         ("approved", _("Одобрен")),
         ("rejected", _("Отклонён")),
     ]
-    first_name = models.CharField(max_length=100, verbose_name=_("Имя"))
-    last_name = models.CharField(max_length=100, verbose_name=_("Фамилия"))
+    # Client identity PII is encrypted at rest. Because Fernet ciphertext is not
+    # deterministic, exact-match/ordering/substring queries no longer work on
+    # these columns; searchable access goes through the blind-index columns
+    # (email_hash, phone_hash) and the ClientSearchToken prefix index instead.
+    first_name = EncryptedTextField(verbose_name=_("Имя"))
+    last_name = EncryptedTextField(verbose_name=_("Фамилия"))
     citizenship = models.CharField(max_length=100, blank=True, verbose_name=_("Гражданство"))
     birth_date = models.DateField(null=True, blank=True, verbose_name=_("Дата рождения"))
-    phone = models.CharField(max_length=20, blank=True, verbose_name=_("Телефон"))
-    email = models.EmailField(blank=True, verbose_name="Email")
+    phone = EncryptedTextField(blank=True, default="", verbose_name=_("Телефон"))
+    email = EncryptedTextField(blank=True, default="", verbose_name="Email")
+    # Keyed blind indexes for exact-match search over the encrypted contacts.
+    email_hash = models.CharField(max_length=64, blank=True, default="", db_index=True, editable=False)
+    phone_hash = models.CharField(max_length=64, blank=True, default="", db_index=True, editable=False)
     passport_num = EncryptedTextField(null=True, blank=True, verbose_name=_("Номер паспорта"))
     application_purpose = models.CharField(
         max_length=64,
@@ -339,9 +348,9 @@ class Client(SoftDeleteModel):
         indexes = [
             models.Index(fields=["created_at"], name="client_created_at_idx"),
             models.Index(fields=["sponsor_client", "family_role"], name="client_family_role_idx"),
-            models.Index(fields=["email"], name="client_email_idx"),
-            models.Index(fields=["phone"], name="client_phone_idx"),
-            models.Index(fields=["last_name", "first_name"], name="client_name_idx"),
+            # first_name/last_name/email/phone are encrypted; indexing ciphertext
+            # is useless. Searchable access is via email_hash/phone_hash
+            # (db_index on the field) and the ClientSearchToken prefix index.
         ]
         constraints = [
             models.CheckConstraint(
@@ -520,10 +529,138 @@ class Client(SoftDeleteModel):
 
     @classmethod
     def hash_case_number(cls, case_number: str) -> str:
-        import hmac
         normalized = cls.normalize_case_number(case_number)
         secret = str(getattr(settings, "SECRET_KEY", ""))
         return hmac.new(secret.encode("utf-8"), normalized.encode("utf-8"), hashlib.sha256).hexdigest()
+
+    # --- searchable-encryption helpers (blind indexes + name prefix tokens) ---
+    NAME_TOKEN_MIN_PREFIX = 3
+
+    @staticmethod
+    def normalize_email(value: str | None) -> str:
+        return (value or "").strip().casefold()
+
+    @staticmethod
+    def normalize_phone(value: str | None) -> str:
+        # Reduce to digits only so "+48 123 456 789", "48 123 456 789" and
+        # "48123456789" all collapse to the same searchable token.
+        return re.sub(r"\D", "", value or "")
+
+    @classmethod
+    def _blind_hash(cls, namespace: str, normalized: str) -> str:
+        secret = str(getattr(settings, "SECRET_KEY", ""))
+        message = f"{namespace}:{normalized}".encode("utf-8")
+        return hmac.new(secret.encode("utf-8"), message, hashlib.sha256).hexdigest()
+
+    @classmethod
+    def hash_email(cls, value: str | None) -> str:
+        normalized = cls.normalize_email(value)
+        return cls._blind_hash("email", normalized) if normalized else ""
+
+    @classmethod
+    def hash_phone(cls, value: str | None) -> str:
+        normalized = cls.normalize_phone(value)
+        return cls._blind_hash("phone", normalized) if normalized else ""
+
+    @classmethod
+    def hash_name_token(cls, token: str) -> str:
+        return cls._blind_hash("name", token)
+
+    @classmethod
+    def name_prefix_tokens(cls, *names: str | None) -> set[str]:
+        """Prefix tokens (len >= NAME_TOKEN_MIN_PREFIX) for each name word.
+
+        Indexing every prefix of every word lets a "starts-with" query of three
+        or more characters match without decrypting; a whole short word (< 3
+        chars) is indexed verbatim so rare short names stay findable.
+        """
+        tokens: set[str] = set()
+        for name in names:
+            for word in re.split(r"\s+", (name or "").strip().casefold()):
+                if not word:
+                    continue
+                if len(word) < cls.NAME_TOKEN_MIN_PREFIX:
+                    tokens.add(word)
+                    continue
+                for end in range(cls.NAME_TOKEN_MIN_PREFIX, len(word) + 1):
+                    tokens.add(word[:end])
+        return tokens
+
+    @classmethod
+    def name_query_words(cls, query: str | None) -> list[str]:
+        return [word for word in re.split(r"\s+", (query or "").strip().casefold()) if word]
+
+    @classmethod
+    def build_search_filter(cls, query: str | None) -> Q:
+        """Q matching clients by encrypted name (word/prefix), email, phone or case number.
+
+        Name words are AND-combined through the ClientSearchToken prefix index
+        (all words must match), then OR-ed with exact blind-index matches on
+        email/phone and the case-number hash — the searchable-encryption
+        replacement for the old plaintext ``icontains`` query.
+        """
+        query = (query or "").strip()
+        if not query:
+            return Q(pk__in=[])
+
+        combined = Q()
+        matched_any = False
+
+        words = cls.name_query_words(query)
+        if words:
+            name_qs = cls.objects.all()
+            for word in words:
+                name_qs = name_qs.filter(search_tokens__token_hash=cls.hash_name_token(word))
+            combined |= Q(pk__in=name_qs.values("pk"))
+            matched_any = True
+
+        email_hash = cls.hash_email(query)
+        if email_hash:
+            combined |= Q(email_hash=email_hash)
+            matched_any = True
+
+        phone_hash = cls.hash_phone(query)
+        if phone_hash:
+            combined |= Q(phone_hash=phone_hash)
+            matched_any = True
+
+        combined |= Q(cases__authority_case_number_hash=cls.hash_case_number(query))
+
+        return combined if matched_any or query else Q(pk__in=[])
+
+    def rebuild_search_tokens(self) -> None:
+        """Sync this client's ClientSearchToken rows with its current name."""
+        if not self.pk:
+            return
+        desired = {self.hash_name_token(token) for token in self.name_prefix_tokens(self.first_name, self.last_name)}
+        existing = set(self.search_tokens.values_list("token_hash", flat=True))
+        stale = existing - desired
+        if stale:
+            self.search_tokens.filter(token_hash__in=stale).delete()
+        missing = desired - existing
+        if missing:
+            ClientSearchToken.objects.bulk_create(
+                [ClientSearchToken(client=self, token_hash=token_hash) for token_hash in missing],
+                ignore_conflicts=True,
+            )
+
+    def save(self, *args: Any, **kwargs: Any) -> None:
+        update_fields = kwargs.get("update_fields")
+        self.email_hash = self.hash_email(self.email)
+        self.phone_hash = self.hash_phone(self.phone)
+        if update_fields is not None:
+            update_fields = set(update_fields)
+            if "email" in update_fields:
+                update_fields.add("email_hash")
+            if "phone" in update_fields:
+                update_fields.add("phone_hash")
+            kwargs["update_fields"] = list(update_fields)
+        should_rebuild_tokens = update_fields is None or bool(
+            {"first_name", "last_name"} & set(update_fields)
+        )
+        super().save(*args, **kwargs)
+        if should_rebuild_tokens:
+            self.rebuild_search_tokens()
 
 
     def clean(self) -> None:
@@ -773,3 +910,33 @@ class Client(SoftDeleteModel):
             "main_issue": main_issue,
             "next_action": next_action,
         }
+
+
+class ClientSearchToken(models.Model):
+    """Keyed prefix-token index for searching encrypted client names.
+
+    Each row is an HMAC of one lowercase name prefix (see
+    ``Client.name_prefix_tokens``). Searching hashes the query word and matches
+    ``token_hash`` exactly, so staff can find clients by a name word or its
+    beginning without the plaintext ever leaving the encrypted column.
+    """
+
+    client = models.ForeignKey(
+        "clients.Client",
+        on_delete=models.CASCADE,
+        related_name="search_tokens",
+    )
+    token_hash = models.CharField(max_length=64, db_index=True)
+
+    class Meta:
+        verbose_name = _("Поисковый токен клиента")
+        verbose_name_plural = _("Поисковые токены клиентов")
+        constraints = [
+            models.UniqueConstraint(fields=["client", "token_hash"], name="uniq_client_search_token"),
+        ]
+        indexes = [
+            models.Index(fields=["token_hash"], name="client_search_token_hash_idx"),
+        ]
+
+    def __str__(self) -> str:
+        return f"ClientSearchToken(client_id={self.client_id})"

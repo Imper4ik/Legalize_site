@@ -207,12 +207,14 @@
                   </a>
                 </li>
                 {% endif %}
-                {% if user|has_any_role:"Admin,Manager" %}
+                {% if user|has_any_role:"Admin" %}
                 <li>
                   <a class="dropdown-item" href="{% url 'clients:document_template_hub' %}">
                     <i class="bi bi-file-earmark-text me-2 text-muted"></i>{% translate "Шаблоны документов" %}
                   </a>
                 </li>
+                {% endif %}
+                {% if user|has_any_role:"Admin,Manager" %}
                 <li>
                   <a class="dropdown-item" href="{% url 'clients:email_logs' %}">
                     <i class="bi bi-envelope-paper me-2 text-muted"></i>{% translate "Логи писем" %}
@@ -354,6 +356,8 @@
               <i class="bi bi-bar-chart me-2 text-muted"></i>{% translate "Метрики" %}
             </a>
           </li>
+          {% endif %}
+          {% if user|has_any_role:"Admin" %}
           <li>
             <a class="dropdown-item" href="{% url 'clients:app_settings' %}">
               <i class="bi bi-sliders me-2 text-muted"></i>{% translate "Настройки" %}

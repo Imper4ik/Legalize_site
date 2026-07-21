@@ -39,9 +39,9 @@ def _conflicts_for_personal_data(personal_data: dict[str, Any]) -> QuerySet[Clie
 
     query = Q()
     if email:
-        query |= Q(email__iexact=email)
+        query |= Q(email_hash=Client.hash_email(email))
     if phone:
-        query |= Q(phone=phone)
+        query |= Q(phone_hash=Client.hash_phone(phone))
     if not query:
         return Client.objects.none()
     return Client.objects.filter(query)

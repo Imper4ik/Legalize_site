@@ -334,7 +334,7 @@
       {% translate "Настройки работы офиса" %}
     </h2>
     <div class="ops-action-grid ops-action-grid-3">
-      {% if user|has_any_role:"Admin,Manager" %}
+      {% if user|has_any_role:"Admin" %}
       <div class="ops-card">
         <span class="ops-card-icon"><i class="bi bi-file-earmark-ruled"></i></span>
         <div class="ops-card-body">
@@ -352,7 +352,7 @@
           <a href="{% url 'clients:document_checklist_manage' %}" class="btn btn-sm btn-outline-primary">{% translate "Открыть" %}</a>
         </div>
       </div>
-      {% if user|has_any_role:"Admin,Manager" %}
+      {% if user|has_any_role:"Admin" %}
       <div class="ops-card">
         <span class="ops-card-icon" style="--ops-icon-color:#7c3aed;--ops-icon-bg:rgba(124,58,237,.1);"><i class="bi bi-stack"></i></span>
         <div class="ops-card-body">

@@ -85,7 +85,7 @@ class ReminderListView(StaffRequiredMixin, ListView):
                 "title": self.title,
                 "all_clients": accessible_clients_queryset(
                     self.request.user,
-                    Client.objects.filter(user__is_staff=False).order_by("last_name", "first_name"),
+                    Client.objects.filter(user__is_staff=False).order_by("created_at"),  # names encrypted
                 ),
                 "filter_values": self.request.GET,
                 "client_filter_id": getattr(self, "client_filter_id", None),

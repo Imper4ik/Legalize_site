@@ -8,6 +8,25 @@ Generate a key with:
 python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
 
+## Searchable client identity fields (blind indexes)
+
+`Client.first_name`, `last_name`, `email` and `phone` are encrypted at rest.
+Because Fernet ciphertext is non-deterministic, they cannot be matched, sorted,
+or substring-searched in SQL. Search is preserved with keyed **blind indexes**
+(HMAC-SHA256 over `SECRET_KEY`, mirroring the case-number hash):
+
+- `email_hash` / `phone_hash` columns hold the HMAC of the normalized value for
+  exact-match lookups (email is case/space-insensitive; phone is digits-only).
+- `ClientSearchToken` stores HMACs of every lowercase name prefix (length ≥ 3,
+  plus whole short words), so staff can search names by a word or its beginning
+  without decrypting. `Client.build_search_filter(query)` combines all of these.
+
+Hashes and tokens are rebuilt automatically in `Client.save()`; the migration
+`0127_encrypt_client_identity_pii` backfills existing rows. Rotating `SECRET_KEY`
+invalidates the blind indexes — rebuild them by re-saving clients (or re-running
+the backfill logic) after such a rotation. The Fernet key ring is independent of
+`SECRET_KEY`, so a Fernet rotation does not affect the blind indexes.
+
 ## Safe rotation procedure
 
 1. Back up the database and retain every historical Fernet key separately.

@@ -2,7 +2,7 @@ from .activity import ClientActivity
 from .app_settings import AppSettings
 from .campaign import EmailCampaign
 from .case import Case, CaseArchiveBatch, CaseParticipant, ClientArchiveBatch
-from .client import Client
+from .client import Client, ClientSearchToken
 from .company import Company
 from .consent import ConsentRecord
 from .document import (
@@ -38,6 +38,7 @@ from .wniosek import WniosekAttachment, WniosekSubmission
 
 __all__ = [
     'Client',
+    'ClientSearchToken',
     'Case',
     'ClientArchiveBatch',
     'CaseArchiveBatch',

@@ -73,7 +73,8 @@ class DemoCenterTests(TestCase):
             set(demo_clients.values_list("application_purpose", flat=True)),
             {"work"},
         )
-        anna = demo_clients.get(first_name="Anna")
+        # first_name is encrypted (no SQL exact-match); pick it out after decryption.
+        anna = next(client for client in demo_clients if client.first_name == "Anna")
         self.assertEqual(anna.family_role, "family_spouse")
 
         # Assert related models are populated

@@ -73,11 +73,13 @@ def cleanup_test_data(
     from clients.models import (
         Case,
         CaseArchiveBatch,
+        CaseEmployerAssignment,
         ClientArchiveBatch,
         ClientDocumentRequirement,
         ClientFamilyMemberMOS,
         ClientOnboardingSession,
         DocumentProcessingJob,
+        EmployerChangeCandidate,
         MOSApplicationData,
         PeselApplication,
         Reminder,
@@ -123,6 +125,9 @@ def cleanup_test_data(
             ClientFamilyMemberMOS.objects.filter(client_id__in=test_client_ids).delete()
             DocumentProcessingJob.objects.filter(case__client_id__in=test_client_ids).delete()
             CaseArchiveBatch.objects.filter(case__client_id__in=test_client_ids).delete()
+            # Employer-change workflow rows also PROTECT-reference Case.
+            EmployerChangeCandidate.objects.filter(case__client_id__in=test_client_ids).delete()
+            CaseEmployerAssignment.objects.filter(case__client_id__in=test_client_ids).delete()
             # MOSApplicationData/CaseParticipant cascade from Case; delete the
             # cases, then the client-level archive batches.
             MOSApplicationData.objects.filter(client_id__in=test_client_ids).delete()

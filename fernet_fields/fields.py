@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from cryptography.fernet import Fernet, InvalidToken, MultiFernet
 from django.conf import settings
@@ -132,6 +132,14 @@ class EncryptedJSONField(models.TextField):
     _pyi_private_get_type: Any
 
     description = "Fernet-encrypted JSON"
+
+    if TYPE_CHECKING:
+        # django-stubs derives the attribute type from TextField (``str``), but
+        # this field stores and returns arbitrary JSON (dict/list/etc.). Present
+        # it as ``Any`` to type checkers so assigning JSON values is accepted.
+        # Invisible at runtime; no behavioural change.
+        def __get__(self, instance: Any, owner: Any) -> Any: ...
+        def __set__(self, instance: Any, value: Any) -> None: ...
 
     @cached_property
     def _fernet(self) -> Fernet | MultiFernet:

@@ -9,7 +9,17 @@ from __future__ import annotations
 
 import pytest
 
-from clients.models import Case, Client, Document, Payment, Reminder, StaffTask
+from clients.models import (
+    Case,
+    CaseEmployerAssignment,
+    Client,
+    Company,
+    Document,
+    EmployerChangeCandidate,
+    Payment,
+    Reminder,
+    StaffTask,
+)
 from clients.testing.cleanup import cleanup_test_data
 
 
@@ -39,6 +49,32 @@ def test_cleanup_removes_test_client_with_case_and_children():
     assert not Document.all_objects.filter(client_id=client.pk).exists()
     assert not Payment.all_objects.filter(client_id=client.pk).exists()
     assert report.deleted.get("clients", 0) >= 1
+    assert report.deleted.get("cases", 0) >= 1
+
+
+@pytest.mark.django_db
+def test_cleanup_removes_employer_change_workflow_rows_referencing_case():
+    """Employer-change rows PROTECT-reference Case; cleanup must drop them first."""
+    client = Client.objects.create(
+        first_name="Employer",
+        last_name="Change",
+        email="test-center-employer@example.test",
+        application_purpose="work",
+        is_test_data=True,
+    )
+    case = Case.objects.filter(client=client).first()
+    assert case is not None
+    company = Company.objects.create(name="ACME Sp. z o.o.")
+
+    CaseEmployerAssignment.objects.create(case=case, company=company)
+    EmployerChangeCandidate.objects.create(case=case, proposed_name="New Employer", fingerprint="fp-cleanup-1")
+
+    report = cleanup_test_data(include_test_runs=True)
+
+    assert not Client.all_objects.filter(is_test_data=True).exists()
+    assert not Case.all_objects.filter(client_id=client.pk).exists()
+    assert not EmployerChangeCandidate.objects.filter(case__client_id=client.pk).exists()
+    assert not CaseEmployerAssignment.objects.filter(case__client_id=client.pk).exists()
     assert report.deleted.get("cases", 0) >= 1
 
 

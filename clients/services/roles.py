@@ -10,8 +10,8 @@ if TYPE_CHECKING:
 
 
 PREDEFINED_ROLES: dict[str, str] = {
-    "Admin": "All permissions (Superuser equivalent)",
-    "Manager": "CRUD clients, documents, payments, tasks; send emails; view metrics",
+    "Admin": "All permissions (Superuser equivalent). Owner role: manages staff, roles, company/legal settings and prices.",
+    "Manager": "Head employee: full operational access to clients, documents, payments, tasks, emails, reports, action logs and OCR review. Cannot manage staff/roles, company legal & GDPR settings, or prices, and cannot grant the Admin role.",
     "Staff": "Office access: clients, documents, payments, tasks, emails, reports, exports. Can add and delete documents. No settings/templates, no action logs, no client deletions by default (the admin can grant client deletions per employee).",
     "ReadOnly": "View clients and documents only",
     "Translator": "Access to Translation Studio only",
@@ -19,10 +19,15 @@ PREDEFINED_ROLES: dict[str, str] = {
 
 
 ADMIN_PANEL_ALLOWED_ROLES = ("Admin", "Manager", "Staff", "ReadOnly")
-# Settings and templates are Manager/Admin only — Staff has no access by default.
-SETTINGS_ALLOWED_ROLES = ("Admin", "Manager")
-CRITICAL_SETTINGS_ALLOWED_ROLES = ("Admin", "Manager")
-PEOPLE_ALLOWED_ROLES = ("Admin", "Manager")
+# Staff/people, company legal & GDPR settings, document templates and prices are
+# owner-only. The Manager ("head employee") runs day-to-day operations but must
+# not be able to change who works in the office, the data-controller identity,
+# the privacy policy shown to data subjects, or pricing — and must never be able
+# to grant itself the Admin (owner-equivalent) role. Keeping these at ("Admin",)
+# closes the privilege-escalation and owner-lockout paths (audit 2026-07).
+SETTINGS_ALLOWED_ROLES = ("Admin",)
+CRITICAL_SETTINGS_ALLOWED_ROLES = ("Admin",)
+PEOPLE_ALLOWED_ROLES = ("Admin",)
 # Operational overview/reports stay available to Staff (not "settings").
 REPORTS_VIEW_ROLES = ("Admin", "Manager", "Staff")
 

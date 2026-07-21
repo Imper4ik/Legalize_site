@@ -29,7 +29,9 @@ class SeedDemoDataCommandTests(TestCase):
         user = get_user_model().objects.get(email="demo-staff@example.test")
         self.assertTrue(user.is_staff)
         self.assertTrue(user.groups.filter(name="Staff").exists())
-        self.assertGreaterEqual(Client.objects.filter(email__endswith="@example.test").count(), 3)
+        # email is encrypted (no SQL suffix match); the command seeds into an
+        # otherwise empty test DB, so the total client count is the demo cohort.
+        self.assertGreaterEqual(Client.objects.count(), 3)
         self.assertTrue(Document.objects.filter(awaiting_confirmation=True).exists())
         self.assertTrue(DocumentProcessingJob.objects.filter(requires_confirmation=True).exists())
         self.assertTrue(Payment.objects.exists())

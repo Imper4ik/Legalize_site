@@ -169,12 +169,31 @@ class RolePermissionMatrixTests(TestCase):
         self.assertEqual(edit_response.status_code, 302)
 
     def test_staff_cannot_access_people_management_or_settings(self):
-        # Settings/templates are Manager/Admin only now.
+        # People management, company/legal settings, templates and prices are
+        # owner-only (Admin). Staff has no access.
         self.client.force_login(self.staff)
         self.assertEqual(self.client.get(reverse("clients:staff_manage")).status_code, 403)
         self.assertEqual(self.client.get(reverse("clients:role_manage")).status_code, 403)
         self.assertEqual(self.client.get(reverse("clients:app_settings")).status_code, 403)
         self.assertEqual(self.client.get(reverse("clients:service_price_manage")).status_code, 403)
+
+    def test_manager_cannot_access_people_management_or_settings(self):
+        # A manager is a head employee, not the owner: staff/roles, company &
+        # GDPR settings, document templates and prices are all owner-only.
+        self.client.force_login(self.manager)
+        self.assertEqual(self.client.get(reverse("clients:staff_manage")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("clients:role_manage")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("clients:app_settings")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("clients:service_price_manage")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("clients:document_template_hub")).status_code, 403)
+        self.assertEqual(self.client.get(reverse("clients:submission_manage")).status_code, 403)
+
+    def test_manager_keeps_operational_access(self):
+        # The restriction must not touch the manager's day-to-day powers.
+        self.client.force_login(self.manager)
+        self.assertEqual(self.client.get(reverse("clients:email_logs")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("clients:staff_activity_logs")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("clients:metrics_dashboard")).status_code, 200)
 
     @patch("clients.views.emails.send_mail", return_value=1)
     def test_manager_can_manage_payments_emails_reports(self, _send_mail):

@@ -125,6 +125,8 @@ class Command(BaseCommand):
 
         quote = connection.ops.quote_name
         selected_columns = [str(pk_field.column), *(str(field.column) for field in encrypted_fields)]
+        # Identifiers come from model metadata and are passed through the
+        # backend's quote_name; there is no user input in this statement.
         query = (
             f"SELECT {', '.join(quote(column) for column in selected_columns)} "  # nosec B608
             f"FROM {quote(model._meta.db_table)} "
@@ -244,6 +246,8 @@ class Command(BaseCommand):
         rotated_value: str,
     ) -> bool:
         quote = connection.ops.quote_name
+        # Identifiers come from model metadata via quote_name; all values are
+        # bound as parameters (%s), so there is no injection surface here.
         query = (
             f"UPDATE {quote(model._meta.db_table)} "  # nosec B608
             f"SET {quote(str(field.column))} = %s "

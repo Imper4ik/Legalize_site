@@ -68,7 +68,7 @@ class QuickOnboardingTests(TestCase):
         self.assertIn("Клиент добавлен", data["message"])
 
         # Check that client exists
-        client = Client.objects.get(email="quick@example.com")
+        client = Client.objects.get(email_hash=Client.hash_email("quick@example.com"))
         self.assertEqual(client.first_name, "Быстрый")
         self.assertEqual(client.last_name, "Клиент")
         self.assertEqual(client.phone, "+48999999999")
@@ -89,7 +89,7 @@ class QuickOnboardingTests(TestCase):
         })
 
         self.assertEqual(response.status_code, 200)
-        client = Client.objects.get(email="quick-family@example.com")
+        client = Client.objects.get(email_hash=Client.hash_email("quick-family@example.com"))
         self.assertEqual(client.application_purpose, "family")
         self.assertEqual(client.family_role, "family_child")
         self.assertEqual(client.get_document_requirement_purpose(), "family_child")

@@ -76,7 +76,7 @@ def _missing_document_clients(user: AbstractBaseUser | AnonymousUser | None, lim
             user,
             Client.objects.filter(
                 cases__workflow_stage__in=ACTIVE_WORKFLOW_STAGES
-            ).distinct().order_by("last_name", "first_name"),
+            ).distinct().order_by("created_at"),  # names are encrypted/unsortable
         )
         .prefetch_related(
             Prefetch("documents", queryset=Document.objects.filter(case__archived_at__isnull=True).order_by("-uploaded_at")),

@@ -147,7 +147,18 @@ class ClientAdmin(admin.ModelAdmin):
         "created_at",
     )
     list_filter = ("company", "status", "application_purpose", "family_role", "language", "is_test_data", "archived_at", "erasure_status", "legal_hold", "erasure_requested_at")
-    search_fields = ("first_name", "last_name", "email", "phone", "notes", "company__name")
+    # first_name/last_name/email/phone are encrypted and cannot be searched with
+    # the admin's default icontains; only plaintext columns stay in search_fields
+    # and get_search_results adds encrypted-field search via the blind indexes.
+    search_fields = ("notes", "company__name")
+
+    def get_search_results(self, request, queryset, search_term):
+        result_queryset, may_have_duplicates = super().get_search_results(request, queryset, search_term)
+        term = (search_term or "").strip()
+        if term:
+            encrypted_matches = self.model.objects.filter(self.model.build_search_filter(term))
+            result_queryset = (result_queryset | queryset.filter(pk__in=encrypted_matches.values("pk"))).distinct()
+        return result_queryset, may_have_duplicates
     fieldsets = (
         (
             "Основная информация",
