@@ -101,6 +101,43 @@ def _append_required_documents_update_from_codes(doc_codes: list[str] | None, au
 
 DECISION_DATE_WRITABLE_STAGES = {"waiting_decision", "decision_received", "closed"}
 
+_STATUS_CODE_PURPOSE_MAP = {"P": "work", "S": "study", "K": "family"}
+
+
+def _apply_status_code_purpose(
+    case: Any,
+    status_code: str,
+    case_fields: list[str],
+    auto_updates: list[str],
+) -> None:
+    """Fill an *empty* case purpose from the wezwanie P/S/K status code.
+
+    A purpose staff already set is never overwritten: doing so re-scopes the
+    whole document checklist of the case behind their back. "K" (family) is
+    never auto-applied at all — a family case is invalid without a
+    ``family_role`` (Case.clean), and a role-less "family" purpose resolves to
+    an empty checklist, which silently stops missing-document reminders.
+    """
+    mapped_purpose = _STATUS_CODE_PURPOSE_MAP.get(status_code)
+    if mapped_purpose is None:
+        return
+    current_purpose = str(case.application_purpose or "").strip()
+    if current_purpose:
+        if current_purpose != mapped_purpose:
+            auto_updates.append(
+                _("application purpose kept as %(current)s (wezwanie indicates %(suggested)s)")
+                % {"current": current_purpose, "suggested": mapped_purpose}
+            )
+        return
+    if mapped_purpose == "family":
+        auto_updates.append(
+            _("family purpose detected: set the purpose and family role on the case manually")
+        )
+        return
+    case.application_purpose = mapped_purpose
+    case_fields.append("application_purpose")
+    auto_updates.append(_("application purpose set to: %(val)s") % {"val": mapped_purpose})
+
 
 def _can_apply_decision_date(case: Any, actor: Any) -> bool:
     if case is None or not user_can_run_ocr_review(actor):
@@ -180,14 +217,11 @@ def _apply_parsed_client_updates(
             case_fields.append("fingerprints_list")
             auto_updates.append(_("list: %(val)s") % {"val": parsed.list_name})
 
-        # Map P/S/K to application purpose if not set
+        # Map P/S/K to application purpose only when it is not set yet
         if parsed.application_status_code:
-            purpose_map = {"P": "work", "S": "study", "K": "family"}
-            mapped_purpose = purpose_map.get(parsed.application_status_code)
-            if mapped_purpose and case.application_purpose != mapped_purpose:
-                case.application_purpose = mapped_purpose
-                case_fields.append("application_purpose")
-                auto_updates.append(_("application purpose set to: %(val)s") % {"val": mapped_purpose})
+            _apply_status_code_purpose(
+                case, parsed.application_status_code, case_fields, auto_updates
+            )
 
     # Permanent client data only: fill a missing name.
     if parsed.full_name and (not client.first_name or not client.last_name):
@@ -308,11 +342,7 @@ def _apply_confirmation_updates(
 
         status_code = (confirmation_data.get("application_status_code") or "").strip()
         if status_code:
-            purpose_map = {"P": "work", "S": "study", "K": "family"}
-            mapped_purpose = purpose_map.get(status_code)
-            if mapped_purpose and case.application_purpose != mapped_purpose:
-                case.application_purpose = mapped_purpose
-                case_fields.append("application_purpose")
+            _apply_status_code_purpose(case, status_code, case_fields, auto_updates)
 
         decision_date = parse_date(decision_date_raw) if decision_date_raw else None
         if decision_date and decision_date != case.decision_date:
