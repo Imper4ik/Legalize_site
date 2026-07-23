@@ -376,8 +376,8 @@
         </ul>
       </div>
     {% else %}
-      {% if user.client_profile %}
-        <a href="{% url 'clients:client_detail' pk=user.client_profile.pk %}" class="mobile-nav-item active">
+      {% if user.client_profile_or_none %}
+        <a href="{% url 'clients:client_detail' pk=user.client_profile_or_none.pk %}" class="mobile-nav-item active">
           <i class="bi bi-person-badge-fill"></i>
           <span>{% translate "Моё дело" %}</span>
         </a>
