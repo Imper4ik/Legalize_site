@@ -26,7 +26,7 @@ jobs:
       PYTHONDONTWRITEBYTECODE: "1"
       TEST_DATABASE_URL: postgresql://legalize:legalize-test@127.0.0.1:5432/legalize_test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-python@v5
         with:
