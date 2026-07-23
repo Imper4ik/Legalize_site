@@ -1,4 +1,5 @@
 import os
+from typing import Any, cast
 
 import dj_database_url
 
@@ -46,8 +47,7 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 # them as empty strings by default, which once left the whole admin-dashboard
 # page silently blank. The sentinel makes such pages fail assertContains-style
 # checks and is asserted against explicitly in the UI smoke script.
-_template_options = TEMPLATES[0]["OPTIONS"]  # noqa: F405
-assert isinstance(_template_options, dict)
+_template_options = cast("dict[str, Any]", TEMPLATES[0]["OPTIONS"])  # noqa: F405
 _template_options["string_if_invalid"] = "INVALID_TEMPLATE_VAR[%s]"
 
 # Static files configuration for tests
