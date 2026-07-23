@@ -438,6 +438,22 @@ class Client(SoftDeleteModel):
             items = list(self.mos_applications.all()[:2])
         return items[0] if len(items) == 1 else None
 
+    @cached_property
+    def new_card_confirmation_document(self) -> Any:
+        """Latest uploaded confirmation of a new residence-card application.
+
+        The client-overview partial links to this document; it mirrors
+        ``_latest_new_card_confirmation_document`` in the onboarding views.
+        """
+        return (
+            self.documents.filter(
+                document_type=DocumentType.NEW_RESIDENCE_CARD_APPLICATION_CONFIRMATION.value,
+                archived_at__isnull=True,
+            )
+            .order_by("-uploaded_at", "-id")
+            .first()
+        )
+
     def on_archive(self) -> None:
         with transaction.atomic():
             self._archive_related_case_records()

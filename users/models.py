@@ -115,3 +115,14 @@ class User(AbstractUser):
 
     def __str__(self) -> str:
         return self.email
+
+    @property
+    def client_profile_or_none(self) -> Any:
+        """Client profile or None, without raising RelatedObjectDoesNotExist.
+
+        Templates must use this instead of ``user.client_profile``: the bare
+        reverse accessor raises for users without a profile, which template
+        code silently swallows into ``string_if_invalid`` — an empty string in
+        production but a truthy sentinel under the test settings.
+        """
+        return getattr(self, "client_profile", None)
