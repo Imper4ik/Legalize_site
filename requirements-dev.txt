@@ -14,4 +14,4 @@ Faker==40.28.1
 # Browser for the mobile-layout regression test (test_mobile_overflow.py).
 # The test auto-skips when playwright or its chromium binary is unavailable
 # (e.g. plain CI); run `playwright install chromium` locally to enable it.
-playwright>=1.49
+playwright>=1.61.0
