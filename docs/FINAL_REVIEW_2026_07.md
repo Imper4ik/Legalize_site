@@ -9,7 +9,7 @@
 
 | Проверка | Результат |
 |---|---|
-| `pytest` (полный прогон, порог покрытия 70 %) | 1307 passed, 0 failed (+26 subtests); покрытие 82,36 % |
+| `pytest` (полный прогон, порог покрытия 70 %) | 1308 passed, 0 failed (+26 subtests); покрытие 82,50 % (финальный прогон на main после слияния) |
 | `manage.py check` | 1 предупреждение (W003 — dev SECRET_KEY, ожидаемо вне production) |
 | `manage.py check --deploy --fail-level ERROR` (production-окружение) | Пройдено; 1 advisory W014 (malware-scan выключен — осознанный опциональный компонент) |
 | `manage.py makemigrations --check` | Дрейфа миграций нет |
