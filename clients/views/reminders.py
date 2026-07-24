@@ -87,7 +87,14 @@ class ReminderListView(StaffRequiredMixin, ListView):
                     self.request.user,
                     Client.objects.filter(user__is_staff=False).order_by("created_at"),  # names encrypted
                 ),
-                "filter_values": self.request.GET,
+                # Plain dict with every key the template reads: a QueryDict
+                # lookup for an absent parameter is an invalid template
+                # variable, not an empty string.
+                "filter_values": {
+                    self.client_param: self.request.GET.get(self.client_param, ""),
+                    self.start_date_param: self.request.GET.get(self.start_date_param, ""),
+                    self.end_date_param: self.request.GET.get(self.end_date_param, ""),
+                },
                 "client_filter_id": getattr(self, "client_filter_id", None),
                 "reminders_count": reminders_count,
             }

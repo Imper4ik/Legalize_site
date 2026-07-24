@@ -1,4 +1,5 @@
 import os
+from typing import Any, cast
 
 import dj_database_url
 
@@ -10,6 +11,10 @@ from .base import *  # noqa: F403
 
 ENABLE_TRANSLATION_TOOLING = True
 TESTING = True
+
+# Empty by default (Django's test client uses "testserver" regardless).
+# scripts/ui_smoke.py sets this so runserver can boot under test settings.
+ALLOWED_HOSTS = [host for host in os.environ.get("ALLOWED_HOSTS", "").split(",") if host]
 
 # Tests exercise the synchronous OCR path by default (like CELERY_TASK_ALWAYS_EAGER);
 # async-pipeline tests opt in with override_settings.
@@ -37,6 +42,13 @@ else:
 
 # Use in-memory email backend for tests
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+
+# Surface template variables that the view forgot to supply. Django renders
+# them as empty strings by default, which once left the whole admin-dashboard
+# page silently blank. The sentinel makes such pages fail assertContains-style
+# checks and is asserted against explicitly in the UI smoke script.
+_template_options = cast("dict[str, Any]", TEMPLATES[0]["OPTIONS"])  # noqa: F405
+_template_options["string_if_invalid"] = "INVALID_TEMPLATE_VAR[%s]"
 
 # Static files configuration for tests
 STATIC_URL = "/static/"

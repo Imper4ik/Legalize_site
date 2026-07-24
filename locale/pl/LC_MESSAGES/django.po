@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Legalize Site\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-22 15:55+0200\n"
+"POT-Creation-Date: 2026-07-24 08:59+0200\n"
 "PO-Revision-Date: 2026-07-10 23:42+0200\n"
 "Last-Translator: Legalize Site Team\n"
 "Language-Team: Polish\n"
@@ -158,11 +158,11 @@ msgstr "Wybierz sponsora."
 msgid "Family members must be spouse or child."
 msgstr "Członkami rodziny muszą być małżonek lub dziecko."
 
-#: clients/forms/case_client_forms.py:315 clients/models/client.py:671
+#: clients/forms/case_client_forms.py:315 clients/models/client.py:687
 msgid "A client cannot sponsor themselves."
 msgstr "Klient nie może sam sponsorować."
 
-#: clients/forms/case_client_forms.py:325 clients/models/client.py:677
+#: clients/forms/case_client_forms.py:325 clients/models/client.py:693
 msgid "Sponsor relationship cannot create a cycle."
 msgstr "Relacja sponsorska nie może stworzyć cyklu."
 
@@ -527,7 +527,7 @@ msgstr "Klient podał numer sprawy w bloku nowego złożenia, ale główny numer
 msgid "Клиент сообщил о новой подаче на карту пребывания, но номер дела ещё не заполнен. Если клиент уже был на отпечатках, проверьте присоединение к делу."
 msgstr "Klient zgłosił nowe złożenie na kartę pobytu, ale numer sprawy nie jest jeszcze uzupełniony. Jeśli klient był już na odciskach, sprawdź dołączenie do sprawy."
 
-#: clients/models/_client_health.py:281 clients/models/client.py:895
+#: clients/models/_client_health.py:281 clients/models/client.py:911
 msgid "Новая подача требует проверки дела"
 msgstr "Nowe złożenie wymaga sprawdzenia sprawy"
 
@@ -1721,27 +1721,27 @@ msgstr "Blokada prawna (legal hold)"
 msgid "Причина юридической блокировки"
 msgstr "Powód blokady prawnej"
 
-#: clients/models/client.py:875
+#: clients/models/client.py:891
 msgid "Нет критических проблем"
 msgstr "Brak krytycznych problemów"
 
-#: clients/models/client.py:876
+#: clients/models/client.py:892
 msgid "Все процессы идут по плану."
 msgstr "Wszystkie procesy przebiegają zgodnie z planem."
 
-#: clients/models/client.py:880
+#: clients/models/client.py:896
 msgid "Ожидать действий от клиента или ведомства"
 msgstr "Oczekiwanie na działanie klienta lub urzędu"
 
-#: clients/models/client.py:896 clients/services/workday.py:195
+#: clients/models/client.py:912 clients/services/workday.py:195
 msgid "Проверить подачу"
 msgstr "Sprawdź zgłoszenie"
 
-#: clients/models/client.py:932
+#: clients/models/client.py:948
 msgid "Поисковый токен клиента"
 msgstr "Token wyszukiwania klienta"
 
-#: clients/models/client.py:933
+#: clients/models/client.py:949
 msgid "Поисковые токены клиентов"
 msgstr "Tokeny wyszukiwania klientów"
 
@@ -11152,48 +11152,48 @@ msgstr "Nie znaleziono dokumentu"
 msgid "Wniosek confirmed. Submitted attachments were saved to the client checklist."
 msgstr "Prośba potwierdzona. Przesłane załączniki zostały zapisane na liście kontrolnej klienta."
 
-#: clients/views/reminders.py:267
+#: clients/views/reminders.py:274
 msgid "Проверка напоминаний уже выполняется. Попробуйте позже."
 msgstr "Sprawdzanie przypomnień już trwa. Spróbuj później."
 
-#: clients/views/reminders.py:271
+#: clients/views/reminders.py:278
 msgid "Проверка завершена. Новые напоминания, если были найдены, успешно созданы!"
 msgstr "Sprawdzanie zakończone. Nowe przypomnienia, jeśli znaleziono, zostały utworzone!"
 
-#: clients/views/reminders.py:273
+#: clients/views/reminders.py:280
 #, python-format
 msgid "Произошла ошибка при создании напоминаний: %(err)s"
 msgstr "Wystąpił błąd podczas tworzenia przypomnień: %(err)s"
 
-#: clients/views/reminders.py:281
+#: clients/views/reminders.py:288
 msgid "Эту операцию можно выполнить только через специальную кнопку."
 msgstr "Operację tę można wykonać wyłącznie za pomocą specjalnego przycisku."
 
-#: clients/views/reminders.py:292
+#: clients/views/reminders.py:299
 msgid "Напоминание удалено."
 msgstr "Przypomnienie zostało usunięte."
 
-#: clients/views/reminders.py:295
+#: clients/views/reminders.py:302
 msgid "Напоминание отмечено как выполненное."
 msgstr "Przypomnienie oznaczono jako wykonane."
 
-#: clients/views/reminders.py:303
+#: clients/views/reminders.py:310
 msgid "Отправили письмо клиенту об истекающем документе."
 msgstr "Wysłano do klienta e-mail o wygasającym dokumencie."
 
-#: clients/views/reminders.py:305
+#: clients/views/reminders.py:312
 msgid "Не удалось отправить письмо: нет email или даты истечения."
 msgstr "Nie udało się wysłać e-maila: brak e-maila lub daty ważności."
 
-#: clients/views/reminders.py:323
+#: clients/views/reminders.py:330
 msgid "Отправили письмо клиенту по документам."
 msgstr "Wysłano do klienta e-mail w sprawie dokumentów."
 
-#: clients/views/reminders.py:325
+#: clients/views/reminders.py:332
 msgid "Не удалось отправить письмо: нет email или документов с датой истечения."
 msgstr "Nie udało się wysłać wiadomości e-mail: brak wiadomości e-mail lub dokumentów z datą ważności."
 
-#: clients/views/reminders.py:331
+#: clients/views/reminders.py:338
 msgid "Эту операцию можно выполнить только через кнопку отправки."
 msgstr "Tę operację można wykonać wyłącznie za pomocą przycisku przesyłania."
 
