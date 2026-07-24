@@ -27,6 +27,12 @@ def purpose_for_case(case: Any) -> str:
             return family_role
         if case_purpose == "family" and family_role == "sponsor":
             return "work"
+        if case_purpose == "family":
+            # A family case without a role has no checklist of its own
+            # (DOCUMENT_CHECKLIST only knows family_spouse/family_child), so
+            # treat it as "purpose not selected yet" rather than returning a
+            # purpose that silently resolves to an empty checklist.
+            return ""
         return case_purpose
     return ""
 

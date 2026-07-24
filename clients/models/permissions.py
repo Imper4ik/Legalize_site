@@ -37,12 +37,14 @@ class StaffAuditEvent(models.Model):
     EVENT_STAFF_ACTIVE_TOGGLED = "staff_active_toggled"
     EVENT_TEST_CENTER_RUN = "test_center_run"
     EVENT_TEST_CENTER_CLEANUP = "test_center_cleanup"
+    EVENT_DEMO_CENTER_RUN = "demo_center_run"
 
     EVENT_TYPE_CHOICES = (
         (EVENT_STAFF_UPDATED, "Staff user updated"),
         (EVENT_STAFF_ACTIVE_TOGGLED, "Staff active status toggled"),
         (EVENT_TEST_CENTER_RUN, "Test Center run"),
         (EVENT_TEST_CENTER_CLEANUP, "Test Center cleanup"),
+        (EVENT_DEMO_CENTER_RUN, "Demo Center run"),
     )
 
     actor = models.ForeignKey(

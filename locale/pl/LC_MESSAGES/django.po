@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Legalize Site\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-23 14:49+0200\n"
+"POT-Creation-Date: 2026-07-24 08:59+0200\n"
 "PO-Revision-Date: 2026-07-10 23:42+0200\n"
 "Last-Translator: Legalize Site Team\n"
 "Language-Team: Polish\n"
@@ -347,7 +347,7 @@ msgstr "Temat lub imię klienta..."
 msgid "Все сотрудники"
 msgstr "Wszyscy pracownicy"
 
-#: clients/forms/misc_forms.py:105 clients/models/activity.py:57
+#: clients/forms/misc_forms.py:105 clients/models/activity.py:73
 #: clients/models/consent.py:65
 #: clients/templates/clients/logs/staff_activity_logs.html:41
 #: clients/templates/clients/logs/staff_activity_logs.html:50
@@ -955,83 +955,148 @@ msgid "Статус клиента изменён"
 msgstr "Status klienta uległ zmianie"
 
 #: clients/models/activity.py:16
+msgid "Клиент архивирован"
+msgstr "Klient zarchiwizowany"
+
+#: clients/models/activity.py:17
+msgid "Клиент восстановлен"
+msgstr "Klient przywrócony"
+
+#: clients/models/activity.py:18
+msgid "Дело обновлено"
+msgstr "Sprawa zaktualizowana"
+
+#: clients/models/activity.py:19
+msgid "Дело архивировано"
+msgstr "Sprawa zarchiwizowana"
+
+#: clients/models/activity.py:20
+msgid "Дело восстановлено"
+msgstr "Sprawa przywrócona"
+
+#: clients/models/activity.py:21
 msgid "Этап workflow изменён"
 msgstr "Etap workflow został zmieniony"
 
-#: clients/models/activity.py:17
+#: clients/models/activity.py:22
+msgid "Этап дела изменён"
+msgstr "Etap sprawy zmieniony"
+
+#: clients/models/activity.py:23
 msgid "Ключевая дата изменена"
 msgstr "Kluczowa data została zmieniona"
 
-#: clients/models/activity.py:18
+#: clients/models/activity.py:24
 msgid "Документ загружен"
 msgstr "Dokument przesłany"
 
-#: clients/models/activity.py:19
+#: clients/models/activity.py:25
 msgid "Документ открыт"
 msgstr "Dokument jest otwarty"
 
-#: clients/models/activity.py:20 submissions/views/api.py:151
+#: clients/models/activity.py:26 submissions/views/api.py:151
 #: submissions/views/documents.py:82
 msgid "Документ удалён"
 msgstr "Dokument usunięty"
 
-#: clients/models/activity.py:21
+#: clients/models/activity.py:27
 msgid "Статус документа изменён"
 msgstr "Zmieniono status dokumentu"
 
-#: clients/models/activity.py:22
+#: clients/models/activity.py:28 submissions/views/api.py:177
+#: submissions/views/documents.py:67
+msgid "Документ обновлён"
+msgstr "Dokument zaktualizowany"
+
+#: clients/models/activity.py:29
+msgid "Данные документа подтверждены"
+msgstr "Dane dokumentu potwierdzone"
+
+#: clients/models/activity.py:30
 msgid "Версия документа восстановлена"
 msgstr "Przywrócono wersję dokumentu"
 
-#: clients/models/activity.py:23
+#: clients/models/activity.py:31
 msgid "Письмо отправлено"
 msgstr "E-mail wysłany"
 
-#: clients/models/activity.py:24
+#: clients/models/activity.py:32
 msgid "Данные клиента экспортированы"
 msgstr "Wyeksportowano dane klientów"
 
-#: clients/models/activity.py:25
+#: clients/models/activity.py:33
 msgid "Отметка wniosek удалена"
 msgstr "Oznaczenie wniosek zostało usunięte"
 
-#: clients/models/activity.py:26
+#: clients/models/activity.py:34
+msgid "Wniosek обновлён"
+msgstr "Wniosek zaktualizowany"
+
+#: clients/models/activity.py:35
 msgid "Напоминание отмечено выполненным"
 msgstr "Przypomnienie zostało oznaczone jako zakończone"
 
-#: clients/models/activity.py:27
+#: clients/models/activity.py:36
 msgid "Напоминание удалено"
 msgstr "Przypomnienie zostało usunięte"
 
-#: clients/models/activity.py:28
+#: clients/models/activity.py:37
+msgid "Напоминание обновлено"
+msgstr "Przypomnienie zaktualizowane"
+
+#: clients/models/activity.py:38
 msgid "Платёж создан"
 msgstr "Płatność utworzona"
 
-#: clients/models/activity.py:29
+#: clients/models/activity.py:39
 msgid "Платёж обновлён"
 msgstr "Płatność zaktualizowana"
 
-#: clients/models/activity.py:30
+#: clients/models/activity.py:40
 msgid "Платёж удалён"
 msgstr "Płatność usunięta"
 
-#: clients/models/activity.py:31
+#: clients/models/activity.py:41
 msgid "Задача создана"
 msgstr "Zadanie utworzone"
 
-#: clients/models/activity.py:32
+#: clients/models/activity.py:42
 msgid "Задача завершена"
 msgstr "Zadanie zakończone"
 
-#: clients/models/activity.py:33
+#: clients/models/activity.py:43
+msgid "Задача обновлена"
+msgstr "Zadanie zaktualizowane"
+
+#: clients/models/activity.py:44
 msgid "Заметка обновлена"
 msgstr "Notatka zaktualizowana"
 
-#: clients/models/activity.py:34
+#: clients/models/activity.py:45
 msgid "Новая подача обновлена"
 msgstr "Nowe złożenie zaktualizowane"
 
-#: clients/models/activity.py:41 clients/models/document.py:171
+#: clients/models/activity.py:46
+msgid "Данные MOS обновлены"
+msgstr "Dane MOS zaktualizowane"
+
+#: clients/models/activity.py:47
+msgid "Данные MOS применены"
+msgstr "Dane MOS zastosowane"
+
+#: clients/models/activity.py:48
+msgid "Заявка PESEL обновлена"
+msgstr "Wniosek PESEL zaktualizowany"
+
+#: clients/models/activity.py:49
+msgid "Требование документа обновлено"
+msgstr "Wymóg dokumentu zaktualizowany"
+
+#: clients/models/activity.py:50
+msgid "Комментарий клиента"
+msgstr "Komentarz klienta"
+
+#: clients/models/activity.py:57 clients/models/document.py:171
 #: clients/models/email.py:33 clients/models/payment.py:46
 #: clients/models/reminder.py:28 clients/models/task.py:57
 #: clients/templates/clients/case_detail.html:191
@@ -1047,7 +1112,7 @@ msgstr "Nowe złożenie zaktualizowane"
 msgid "Клиент"
 msgstr "Klient"
 
-#: clients/models/activity.py:49 clients/models/case.py:182
+#: clients/models/activity.py:65 clients/models/case.py:182
 #: clients/models/document.py:178 clients/models/document_version.py:27
 #: clients/models/email.py:41 clients/models/payment.py:53
 #: clients/models/reminder.py:35 clients/models/task.py:65
@@ -1058,58 +1123,58 @@ msgstr "Klient"
 msgid "Дело"
 msgstr "Sprawa"
 
-#: clients/models/activity.py:66
+#: clients/models/activity.py:82
 msgid "Кто выполнил"
 msgstr "Wykonał(a)"
 
-#: clients/models/activity.py:68
+#: clients/models/activity.py:84
 msgid "Тип события"
 msgstr "Typ wydarzenia"
 
-#: clients/models/activity.py:69
+#: clients/models/activity.py:85
 msgid "Краткое описание"
 msgstr "Krótki opis"
 
-#: clients/models/activity.py:70 clients/models/reminder.py:49
+#: clients/models/activity.py:86 clients/models/reminder.py:49
 msgid "Детали"
 msgstr "Szczegóły"
 
-#: clients/models/activity.py:71
+#: clients/models/activity.py:87
 msgid "Метаданные"
 msgstr "Metadane"
 
-#: clients/models/activity.py:78 clients/models/document.py:239
+#: clients/models/activity.py:94 clients/models/document.py:239
 #: clients/models/document_version.py:19 clients/models/reminder.py:23
 #: clients/models/task.py:114
 msgid "Документ"
 msgstr "Dokument"
 
-#: clients/models/activity.py:86 clients/models/payment.py:197
+#: clients/models/activity.py:102 clients/models/payment.py:197
 #: clients/models/task.py:122
 msgid "Платёж"
 msgstr "Płatność"
 
-#: clients/models/activity.py:94 clients/models/task.py:77
+#: clients/models/activity.py:110 clients/models/task.py:77
 #: clients/templates/clients/partials/client_tasks.html:17
 #: clients/templates/clients/tasks_list.html:45
 msgid "Задача"
 msgstr "Zadanie"
 
-#: clients/models/activity.py:97 clients/models/campaign.py:44
+#: clients/models/activity.py:113 clients/models/campaign.py:44
 #: clients/models/case.py:172 clients/models/document_version.py:61
 #: clients/models/family.py:39 clients/models/payment.py:63
 msgid "Создано"
 msgstr "Utworzono"
 
-#: clients/models/activity.py:101
+#: clients/models/activity.py:117
 msgid "Событие клиента"
 msgstr "Wydarzenie u klienta"
 
-#: clients/models/activity.py:102 templates/base.html:84
+#: clients/models/activity.py:118 templates/base.html:84
 msgid "События клиентов"
 msgstr "Wydarzenia klientów"
 
-#: clients/models/activity.py:119 clients/models/document_version.py:90
+#: clients/models/activity.py:135 clients/models/document_version.py:90
 #: clients/templates/clients/logs/email_logs.html:90
 msgid "Система"
 msgstr "System"
@@ -2964,44 +3029,53 @@ msgstr "Dokument przesłany. Przejrzyj rozpoznane dane przed ich zastosowaniem."
 msgid "required documents detected: %(val)s"
 msgstr "wykryto wymagane dokumenty: %(val)s"
 
-#: clients/services/document_workflow_wezwanie.py:144
-#: clients/services/document_workflow_wezwanie.py:280
-msgid "case number updated"
-msgstr "numer sprawy zaktualizowany"
-
-#: clients/services/document_workflow_wezwanie.py:150
-#: clients/services/document_workflow_wezwanie.py:287
+#: clients/services/document_workflow_wezwanie.py:128
 #, python-format
-msgid "fingerprints date: %(val)s"
-msgstr "data odcisków: %(val)s"
+msgid "application purpose kept as %(current)s (wezwanie indicates %(suggested)s)"
+msgstr "cel złożenia pozostawiono: %(current)s (wezwanie wskazuje %(suggested)s)"
 
-#: clients/services/document_workflow_wezwanie.py:168
-#: clients/services/document_workflow_wezwanie.py:323
-#, python-format
-msgid "decision date: %(val)s"
-msgstr "data decyzji: %(val)s"
+#: clients/services/document_workflow_wezwanie.py:134
+msgid "family purpose detected: set the purpose and family role on the case manually"
+msgstr "wykryto cel rodzinny: ustaw cel i rolę rodzinną w sprawie ręcznie"
 
-#: clients/services/document_workflow_wezwanie.py:171
-#: clients/services/document_workflow_wezwanie.py:326
-msgid "decision date skipped: case must already be waiting for decision"
-msgstr "pominięto datę decyzji: sprawa musi już oczekiwać na decyzję"
-
-#: clients/services/document_workflow_wezwanie.py:176
-#, python-format
-msgid "ticket number: %(val)s"
-msgstr "numer biletu: %(val)s"
-
-#: clients/services/document_workflow_wezwanie.py:181
-#, python-format
-msgid "list: %(val)s"
-msgstr "lista: %(val)s"
-
-#: clients/services/document_workflow_wezwanie.py:190
+#: clients/services/document_workflow_wezwanie.py:139
 #, python-format
 msgid "application purpose set to: %(val)s"
 msgstr "cel wniosku ustawiony na: %(val)s"
 
-#: clients/services/document_workflow_wezwanie.py:199
+#: clients/services/document_workflow_wezwanie.py:181
+#: clients/services/document_workflow_wezwanie.py:314
+msgid "case number updated"
+msgstr "numer sprawy zaktualizowany"
+
+#: clients/services/document_workflow_wezwanie.py:187
+#: clients/services/document_workflow_wezwanie.py:321
+#, python-format
+msgid "fingerprints date: %(val)s"
+msgstr "data odcisków: %(val)s"
+
+#: clients/services/document_workflow_wezwanie.py:205
+#: clients/services/document_workflow_wezwanie.py:353
+#, python-format
+msgid "decision date: %(val)s"
+msgstr "data decyzji: %(val)s"
+
+#: clients/services/document_workflow_wezwanie.py:208
+#: clients/services/document_workflow_wezwanie.py:356
+msgid "decision date skipped: case must already be waiting for decision"
+msgstr "pominięto datę decyzji: sprawa musi już oczekiwać na decyzję"
+
+#: clients/services/document_workflow_wezwanie.py:213
+#, python-format
+msgid "ticket number: %(val)s"
+msgstr "numer biletu: %(val)s"
+
+#: clients/services/document_workflow_wezwanie.py:218
+#, python-format
+msgid "list: %(val)s"
+msgstr "lista: %(val)s"
+
+#: clients/services/document_workflow_wezwanie.py:233
 msgid "client name updated"
 msgstr "imię i nazwisko klienta zostały zaktualizowane"
 
@@ -10402,7 +10476,7 @@ msgid "Failed to prepare demo environment: "
 msgstr "Nie udało się przygotować środowiska demonstracyjnego: "
 
 #: clients/views/document_upload_safe.py:62 clients/views/documents.py:116
-#: clients/views/print_views.py:203
+#: clients/views/print_views.py:219
 msgid "Для этой операции необходимо выбрать дело."
 msgstr "Do tej operacji należy wybrać sprawę."
 
@@ -11074,7 +11148,7 @@ msgstr "Twoje pytanie zostało wysłane. Pracownik skontaktuje się z Tobą!"
 msgid "Документ не найден"
 msgstr "Nie znaleziono dokumentu"
 
-#: clients/views/print_views.py:233
+#: clients/views/print_views.py:249
 msgid "Wniosek confirmed. Submitted attachments were saved to the client checklist."
 msgstr "Prośba potwierdzona. Przesłane załączniki zostały zapisane na liście kontrolnej klienta."
 
@@ -11541,10 +11615,6 @@ msgstr "Podstawa usunięta"
 #: submissions/views/api.py:121 submissions/views/documents.py:41
 msgid "Документ создан"
 msgstr "Dokument utworzony"
-
-#: submissions/views/api.py:177 submissions/views/documents.py:67
-msgid "Документ обновлён"
-msgstr "Dokument zaktualizowany"
 
 #: submissions/views/submissions.py:39 submissions/views/submissions.py:52
 msgid "Основание подачи создано"

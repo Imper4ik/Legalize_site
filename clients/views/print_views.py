@@ -84,6 +84,22 @@ class ClientDocumentPrintView(ClientPrintBaseView):
         context["doc_type"] = self.kwargs.get("doc_type")
         if context["doc_type"] == "mazowiecki_application":
             client = context["client"]
+            # The printed application is about a concrete case: purpose and
+            # basis of stay come from the single active case (spec §4). The
+            # client-level columns are a legacy mirror that is never synced
+            # back after staff change the case, so they go stale; fall back to
+            # them only when no single active case can be resolved.
+            active_case = client.active_case
+            case_purpose = (
+                str(active_case.application_purpose or "").strip()
+                if active_case is not None
+                else str(client.application_purpose or "").strip()
+            )
+            case_basis_of_stay = (
+                str(active_case.basis_of_stay or "")
+                if active_case is not None
+                else str(client.basis_of_stay or "")
+            )
             application_date = client.effective_submission_date or client.created_at.date()
             attachment_names = self._get_attachment_names(client)
 
@@ -109,7 +125,7 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                     "application_date": application_date,
                     "full_name": f"{client.first_name} {client.last_name}",
                     "citizenship": client.citizenship or "",
-                    "case_number": (safe_encrypted_attr(client.active_case, "authority_case_number") if client.active_case is not None else ""),
+                    "case_number": (safe_encrypted_attr(active_case, "authority_case_number") if active_case is not None else ""),
                     "mos_id": getattr(client, "mos_id", "") or "",
                     "inpol_id": getattr(client, "inpol_id", "") or "",
                     "birth_date": getattr(client, "birth_date", ""),
@@ -124,8 +140,8 @@ class ClientDocumentPrintView(ClientPrintBaseView):
                     "auto_print": self.request.GET.get("auto_print") == "1",
                     "last_submission_id": self.request.GET.get("submission_id") or "",
                     "proof_qr_data_uri": proof_qr_data_uri,
-                    "other_text": (client.basis_of_stay or "").strip(),
-                    "check_pobyt_czasowy": client.application_purpose in {"study", "work", "family"},
+                    "other_text": case_basis_of_stay.strip(),
+                    "check_pobyt_czasowy": case_purpose in {"study", "work", "family"},
                     "check_pobyt_staly": False,
                     "check_rezydent_ue": False,
                     "check_uznanie_obywatel": False,
