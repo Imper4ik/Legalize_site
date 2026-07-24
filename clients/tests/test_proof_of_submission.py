@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+from unittest import mock
 
 import segno
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -135,14 +136,24 @@ class ProofOfSubmissionTests(TestCase):
         self.assertGreater(newer.pk, older.pk)  # newer is the "latest" default
 
         pending = Document(file=_qr_png_upload(older.pk), is_test_data=True)
-        result = upload_client_document(
-            client=self.client_obj,
-            doc_type=DocumentType.PROOF_OF_SUBMISSION.value,
-            uploaded_document=pending,
-            actor=self.staff,
-            parse_requested=False,
-            case=self.case,
-        )
+        # OpenCV's QRCodeDetector fails to decode a small fraction of even clean
+        # generated codes, which made this assertion flaky in CI (it fell back
+        # to the "latest submission" heuristic on decode misses). This test is
+        # about the linking *precedence*, not OpenCV's decode reliability, so we
+        # pin the decode result. The token round-trip itself is covered
+        # deterministically by test_qr_token_roundtrip_and_rejects_tampering.
+        with mock.patch(
+            "clients.services.proof_qr.decode_proof_submission_id",
+            return_value=older.pk,
+        ):
+            result = upload_client_document(
+                client=self.client_obj,
+                doc_type=DocumentType.PROOF_OF_SUBMISSION.value,
+                uploaded_document=pending,
+                actor=self.staff,
+                parse_requested=False,
+                case=self.case,
+            )
         # The QR wins over the "latest submission" heuristic.
         self.assertEqual(result.document.confirms_submission_id, older.pk)
 
